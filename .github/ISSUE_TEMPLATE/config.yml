@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ubuntu Pro service description
+    url: https://ubuntu.com/pro
+    about: Read about how to enable Ubuntu Pro on your machine
+  - name: Contact Canonical
+    url: https://ubuntu.com/contact-us/form?product=pro
+    about: Contact us to get more information on Ubuntu Pro
