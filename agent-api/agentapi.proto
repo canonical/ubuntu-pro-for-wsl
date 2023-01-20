@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/canonical/ubuntu-pro-for-windows/agent-api";
+
+package agentapi;
+
+service UI {
+    rpc Ping (PingRequest) returns (PongRequest) {}
+}
+
+service WSLInstance {
+    rpc Ping (PingRequest) returns (PongRequest) {}
+}
+
+message PingRequest {
+    string content = 1;
+}
+
+message PongRequest {
+    string answer = 1;
+}
