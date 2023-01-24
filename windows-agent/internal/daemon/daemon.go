@@ -3,6 +3,8 @@ package daemon
 import (
 	"context"
 	"net"
+	"os"
+	"path/filepath"
 
 	"google.golang.org/grpc"
 
@@ -11,6 +13,10 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/loghooks"
 	"github.com/kardianos/service"
 	"github.com/ubuntu/decorate"
+)
+
+const (
+	listeningPortFileName = "ubuntu-pro.addr"
 )
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
@@ -24,12 +30,34 @@ type Daemon struct {
 	winService service.Service
 }
 
+// options are the configurable functional options for the daemon.
+type options struct {
+	userCacheDir string
+}
+type option func(*options) error
+
 // New returns an new, initialized daemon server that is ready to register GRPC services.
 // It hooks up to windows service management handler.
-func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer) (d Daemon, err error) {
+func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts ...option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
+
+	// Set default options.
+	defaultUserCacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return d, err
+	}
+	args := options{
+		userCacheDir: defaultUserCacheDir,
+	}
+
+	// Apply given options.
+	for _, o := range opts {
+		if err := o(&args); err != nil {
+			return d, err
+		}
+	}
 
 	// FIXME: To look at: https://learn.microsoft.com/en-us/windows/win32/services/interactive-services
 
@@ -40,6 +68,8 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer) (d Dae
 	}
 
 	listener := listener{
+		listeningPortFilePath: filepath.Join(args.userCacheDir, listeningPortFileName),
+
 		grpcServer: registerGRPCServices(ctx),
 	}
 
@@ -106,6 +136,8 @@ func (d Daemon) Quit(force bool) {
 type listener struct {
 	ctx context.Context
 
+	listeningPortFilePath string
+
 	grpcServer *grpc.Server
 	errs       chan error
 }
@@ -138,6 +170,7 @@ func (l *listener) Stop(s service.Service) (err error) {
 }
 
 // listen returns a free tcp socket to listen on.
+// It writes before a file on disk on which port it’s listening on for client.
 func (l listener) listen() (lis net.Listener, err error) {
 	defer decorate.OnError(&err, i18n.G("can't listen"))
 
@@ -146,18 +179,23 @@ func (l listener) listen() (lis net.Listener, err error) {
 		return nil, err
 	}
 
+	// Write a file on disk to signal selected ports to clients.
+	// We write it here to signal error when calling service.Start().
+	if err := os.WriteFile(l.listeningPortFilePath, []byte(lis.Addr().String()), 0750); err != nil {
+		return nil, err
+	}
+
 	return lis, nil
 }
 
 // serve serves the grpc server on the listener.
-// It writes before a file on disk on which port it’s listening on for client.
-// This file is removed once the server stop listening.
+// This listeningPortFile is removed once the server stop listening.
 func (l listener) serve(lis net.Listener) (err error) {
 	addr := lis.Addr().String()
 	defer decorate.OnError(&err, i18n.G("error while serving on %s"), addr)
+	defer os.RemoveAll(l.listeningPortFilePath)
 
 	log.Infof(l.ctx, "Serving GRPC requests on %v", addr)
 
-	// TODO: Write a file on disk for the selected port.
 	return l.grpcServer.Serve(lis)
 }
