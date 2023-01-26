@@ -10,8 +10,12 @@
 *.h text
 *.hpp text
 *.json text
+*.lock
 *.md text
 *.mod text
+*.pot
+*.proto text
+*.sum text
 *.txt text
 *.work
 *.yaml text
