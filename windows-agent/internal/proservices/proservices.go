@@ -7,8 +7,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/services/ui"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/services/wslinstance"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
