@@ -6,11 +6,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/decorate"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/loghooks"
 	"github.com/kardianos/service"
+	"github.com/ubuntu/decorate"
 )
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
