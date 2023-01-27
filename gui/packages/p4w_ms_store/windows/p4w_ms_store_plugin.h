@@ -10,7 +10,7 @@ namespace p4w_ms_store {
 
 class P4wMsStorePlugin : public flutter::Plugin {
  public:
-  static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
+  static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 
   P4wMsStorePlugin();
 
@@ -23,7 +23,7 @@ class P4wMsStorePlugin : public flutter::Plugin {
  private:
   // Called when a method is called on this plugin's channel from Dart.
   void HandleMethodCall(
-      const flutter::MethodCall<flutter::EncodableValue> &method_call,
+      const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 };
 
