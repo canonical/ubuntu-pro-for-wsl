@@ -10,6 +10,7 @@ FlutterWindow::FlutterWindow(const flutter::DartProject& project)
 FlutterWindow::~FlutterWindow() {}
 
 bool FlutterWindow::OnCreate() {
+  SetWindowText(GetHandle(), L"Ubuntu Pro");
   if (!Win32Window::OnCreate()) {
     return false;
   }
