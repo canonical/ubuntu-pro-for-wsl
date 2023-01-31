@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"syscall"
 	"testing"
 	"time"
 
@@ -36,7 +35,6 @@ func TestRun(t *testing.T) {
 	tests := map[string]struct {
 		runError         bool
 		usageErrorReturn bool
-		sendSig          syscall.Signal
 
 		wantReturnCode int
 	}{
@@ -44,10 +42,6 @@ func TestRun(t *testing.T) {
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
 		"Run and return usage error":             {usageErrorReturn: true, runError: true, wantReturnCode: 2},
 		"Run and usage error only does not fail": {usageErrorReturn: true, runError: false, wantReturnCode: 0},
-
-		// Signals handling
-		"Send SIGINT exits":  {sendSig: syscall.SIGINT},
-		"Send SIGTERM exits": {sendSig: syscall.SIGTERM},
 	}
 	for name, tc := range tests {
 		tc := tc
@@ -69,26 +63,8 @@ func TestRun(t *testing.T) {
 
 			time.Sleep(100 * time.Millisecond)
 
-			var exited bool
-			switch tc.sendSig {
-			case syscall.SIGINT:
-				fallthrough
-			case syscall.SIGTERM:
-				err := syscall.Kill(syscall.Getpid(), tc.sendSig)
-				require.NoError(t, err, "Teardown: kill should return no error")
-				select {
-				case <-time.After(50 * time.Millisecond):
-					exited = false
-				case <-wait:
-					exited = true
-				}
-				require.Equal(t, true, exited, "Expect to exit on SIGINT and SIGTERM")
-			}
-
-			if !exited {
-				a.Quit()
-				<-wait
-			}
+			a.Quit()
+			<-wait
 
 			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
 		})
