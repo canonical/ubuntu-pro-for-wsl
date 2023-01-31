@@ -7,3 +7,7 @@ var (
 	// NG is the shorthand for NGettext.
 	NG = func(msgid string, msgidPlural string, n uint32) string { return msgid }
 )
+
+// InitI18nDomain calls bind + set locale to system values.
+func InitI18nDomain(domain string) {
+}
