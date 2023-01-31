@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agent-api v0.0.0-20230126133936-ada7f9d2fa75
 	github.com/golang/protobuf v1.5.2
-	github.com/kardianos/service v1.2.2
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
