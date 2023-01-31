@@ -14,7 +14,6 @@ type myApp struct {
 
 	runError         bool
 	usageErrorReturn bool
-	hupReturn        bool
 }
 
 func (a *myApp) Run() error {
@@ -29,10 +28,6 @@ func (a myApp) UsageError() bool {
 	return a.usageErrorReturn
 }
 
-func (a myApp) Hup() bool {
-	return a.hupReturn
-}
-
 func (a *myApp) Quit() {
 	close(a.done)
 }
@@ -41,7 +36,6 @@ func TestRun(t *testing.T) {
 	tests := map[string]struct {
 		runError         bool
 		usageErrorReturn bool
-		hupReturn        bool
 		sendSig          syscall.Signal
 
 		wantReturnCode int
@@ -64,7 +58,6 @@ func TestRun(t *testing.T) {
 				done:             make(chan struct{}),
 				runError:         tc.runError,
 				usageErrorReturn: tc.usageErrorReturn,
-				hupReturn:        tc.hupReturn,
 			}
 
 			var rc int
