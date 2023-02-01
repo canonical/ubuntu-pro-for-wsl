@@ -50,9 +50,9 @@ func TestVersion(t *testing.T) {
 	fields := strings.Fields(out)
 	require.Len(t, fields, 2, "wrong number of fields in version: %s", out)
 
-	require.True(t, strings.HasPrefix(out, "ubuntu-pro\t"), "Start printing daemon name")
-	version := strings.TrimSpace(strings.TrimPrefix(out, "ubuntu-pro\t"))
-	require.NotEmpty(t, version, "Version is printed")
+	// When running under tests, the binary is "agent.test".
+	require.Equal(t, "agent.test", fields[0], "Wrong executable name")
+	require.Equal(t, "Dev", fields[1], "Wrong version")
 }
 
 func TestNoUsageError(t *testing.T) {
