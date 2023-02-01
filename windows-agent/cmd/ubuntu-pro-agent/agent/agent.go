@@ -167,7 +167,7 @@ func (a App) RootCmd() cobra.Command {
 	return a.rootCmd
 }
 
-// SetArgs changes the root command args. Shouldn't be in general necessary apart for integration tests.
-func (a *App) SetArgs(args []string) {
+// SetArgs changes the root command args. Shouldn't be in general necessary apart for tests.
+func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
 }
