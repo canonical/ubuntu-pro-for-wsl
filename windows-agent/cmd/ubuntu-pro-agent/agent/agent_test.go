@@ -17,8 +17,8 @@ import (
 )
 
 func TestHelp(t *testing.T) {
-	changeArgs(t, "ubuntu-pro", "--help")
 	a := agent.New()
+	a.SetArgs("--help")
 
 	getStdout := captureStdout(t)
 
@@ -27,8 +27,8 @@ func TestHelp(t *testing.T) {
 }
 
 func TestCompletion(t *testing.T) {
-	changeArgs(t, "ubuntu-pro", "completion", "bash")
 	a := agent.New()
+	a.SetArgs("completion", "bash")
 
 	getStdout := captureStdout(t)
 
@@ -37,8 +37,8 @@ func TestCompletion(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	changeArgs(t, "ubuntu-pro", "version")
 	a := agent.New()
+	a.SetArgs("version")
 
 	getStdout := captureStdout(t)
 
@@ -56,8 +56,8 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNoUsageError(t *testing.T) {
-	changeArgs(t, "ubuntu-pro", "completion", "bash")
 	a := agent.New()
+	a.SetArgs("completion", "bash")
 
 	getStdout := captureStdout(t)
 	err := a.Run()
@@ -68,8 +68,10 @@ func TestNoUsageError(t *testing.T) {
 }
 
 func TestUsageError(t *testing.T) {
-	changeArgs(t, "ubuntu-pro", "doesnotexist")
+	t.Parallel()
+
 	a := agent.New()
+	a.SetArgs("doesnotexist")
 
 	err := a.Run()
 	require.Error(t, err, "Run should return an error, stdout: %v")
@@ -78,6 +80,8 @@ func TestUsageError(t *testing.T) {
 }
 
 func TestCanQuitWhenExecute(t *testing.T) {
+	t.Parallel()
+
 	a, wait := startDaemon(t)
 	defer wait()
 
@@ -85,6 +89,8 @@ func TestCanQuitWhenExecute(t *testing.T) {
 }
 
 func TestCanQuitTwice(t *testing.T) {
+	t.Parallel()
+
 	a, wait := startDaemon(t)
 	a.Quit()
 	wait()
@@ -94,8 +100,10 @@ func TestCanQuitTwice(t *testing.T) {
 }
 
 func TestAppCanQuitWithoutExecute(t *testing.T) {
-	changeArgs(t, "ubuntu-pro")
+	t.Parallel()
+
 	a := agent.New()
+	a.SetArgs()
 
 	requireGoroutineStarted(t, a.Quit)
 	err := a.Run()
@@ -117,9 +125,10 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
-			changeArgs(t, "ubuntu-pro")
 			a := agent.New()
+			a.SetArgs()
 			cachedir := filepath.Join(t.TempDir(), "file")
 
 			err := os.WriteFile(cachedir, []byte("I'm here to break the service"), 0640)
@@ -164,8 +173,8 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 func startDaemon(t *testing.T) (app *agent.App, done func()) {
 	t.Helper()
 
-	changeArgs(t, "ubuntu-pro")
 	a := agent.New()
+	a.SetArgs()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -180,15 +189,6 @@ func startDaemon(t *testing.T) (app *agent.App, done func()) {
 	return a, func() {
 		wg.Wait()
 	}
-}
-
-// changeArgs allows changing command line arguments and restore it when the test ends.
-func changeArgs(t *testing.T, args ...string) {
-	t.Helper()
-
-	orig := os.Args
-	os.Args = args
-	t.Cleanup(func() { os.Args = orig })
 }
 
 // captureStdout capture current process stdout and returns a function to get the captured buffer
