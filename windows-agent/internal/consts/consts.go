@@ -6,4 +6,6 @@ const (
 	TEXTDOMAIN = `ubuntu-pro`
 
 	DefaultLogLevel = log.WarnLevel
+
+	CacheSubdirectory = "Ubuntu Pro"
 )

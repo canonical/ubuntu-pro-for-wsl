@@ -85,15 +85,25 @@ func cmdName() string {
 	return filepath.Base(os.Args[0])
 }
 
+// daemonOpts sets the options for the daemon.
+// Having it be a global variable allows tests to change them.
+var daemonOpts []daemon.Option
+
+// proservicesOpts sets the options for the pro services.
+// Having it be a global variable allows tests to change them.
+var proservicesOpts []proservices.Option
+
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve() error {
-	proservice, err := proservices.New(context.Background())
+	proservice, err := proservices.New(context.Background(), proservicesOpts...)
 	if err != nil {
+		close(a.ready)
 		return err
 	}
 
-	daemon, err := daemon.New(context.Background(), proservice.RegisterGRPCServices)
+	daemon, err := daemon.New(context.Background(), proservice.RegisterGRPCServices, daemonOpts...)
 	if err != nil {
+		close(a.ready)
 		return err
 	}
 
@@ -152,12 +162,12 @@ func (a *App) WaitReady() {
 	<-a.ready
 }
 
-// // RootCmd returns a copy of the root command for the app. Shouldn't be in general necessary apart when running generators.
-// func (a App) RootCmd() cobra.Command {
-// 	return a.rootCmd
-// }
+// RootCmd returns a copy of the root command for the app. Shouldn't be in general necessary apart when running generators.
+func (a App) RootCmd() cobra.Command {
+	return a.rootCmd
+}
 
-// // SetArgs changes the root command args. Shouldn't be in general necessary apart for integration tests.
-// func (a *App) SetArgs(args []string) {
-// 	a.rootCmd.SetArgs(args)
-// }
+// SetArgs changes the root command args. Shouldn't be in general necessary apart for integration tests.
+func (a *App) SetArgs(args []string) {
+	a.rootCmd.SetArgs(args)
+}

@@ -6,6 +6,8 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/agent-api v0.0.0-20230126133936-ada7f9d2fa75
 	github.com/golang/protobuf v1.5.2
 	github.com/sirupsen/logrus v1.9.0
+	github.com/spf13/cobra v1.6.1
+	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	google.golang.org/grpc v1.52.0
@@ -24,10 +26,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.15.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect

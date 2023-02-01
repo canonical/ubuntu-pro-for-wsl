@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/ubuntu/decorate"
@@ -15,7 +16,6 @@ import (
 
 const (
 	listeningPortFileName = "addr"
-	cacheSubdirectory     = "Ubuntu Pro"
 )
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
@@ -32,11 +32,21 @@ type Daemon struct {
 type options struct {
 	cacheDir string
 }
-type option func(*options) error
+
+// Option is the function signature we are passing to tweak the daemon creation.
+type Option func(*options) error
+
+// WithCacheDir overrides the cache directory used in the daemon.
+func WithCacheDir(cachedir string) func(o *options) error {
+	return func(o *options) error {
+		o.cacheDir = cachedir
+		return nil
+	}
+}
 
 // New returns an new, initialized daemon server that is ready to register GRPC services.
 // It hooks up to windows service management handler.
-func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts ...option) (d Daemon, err error) {
+func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts ...Option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
@@ -47,7 +57,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts .
 		return d, err
 	}
 	args := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, cacheSubdirectory),
+		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheSubdirectory),
 	}
 
 	// Apply given options.
@@ -62,6 +72,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts .
 		return d, err
 	}
 	listeningPortFilePath := filepath.Join(args.cacheDir, listeningPortFileName)
+	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
 	return Daemon{
 		listeningPortFilePath: listeningPortFilePath,
@@ -74,7 +85,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts .
 // to be able to reach our server.
 // This file is removed once the server stops listening.
 func (d Daemon) Serve(ctx context.Context) (err error) {
-	defer decorate.OnError(&err, i18n.G("error while running"))
+	defer decorate.OnError(&err, i18n.G("error while serving"))
 
 	log.Debug(ctx, "Starting to serve requests")
 
@@ -87,7 +98,7 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	// Write a file on disk to signal selected ports to clients.
 	// We write it here to signal error when calling service.Start().
-	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 06400); err != nil {
+	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0640); err != nil {
 		return err
 	}
 	defer os.Remove(d.listeningPortFilePath)
