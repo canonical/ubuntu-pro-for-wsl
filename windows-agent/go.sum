@@ -40,6 +40,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agent-api v0.0.0-20230126133936-ada7f9d2fa75 h1:LkbjPM0fMaw/aGyRN+uvG+yxHwOCLK/E07690aGF3uM=
 github.com/canonical/ubuntu-pro-for-windows/agent-api v0.0.0-20230126133936-ada7f9d2fa75/go.mod h1:T5L8GhB5rjd2bpeV4j2K8xfpTwjyUg+CMFepvzDzjx8=
+github.com/canonical/ubuntu-pro-for-windows/version v0.0.0-20230201103756-21b1dbd83cd0 h1:ImfG4o6Awfy+G5+U3viOKFdi/yEcaS3WjEJOed9Voa0=
+github.com/canonical/ubuntu-pro-for-windows/version v0.0.0-20230201103756-21b1dbd83cd0/go.mod h1:fpRwWXyQR5CAv7zPWRUlYg/b5gQ+4hOfNnqasPzKJs8=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
