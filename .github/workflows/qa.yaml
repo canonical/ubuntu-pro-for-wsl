@@ -79,3 +79,48 @@ jobs:
           args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml
           working-directory: ${{ matrix.subproject }}
 
+
+  tests-go-with-mocks:
+    name: "Run Go tests with mocks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows]
+        subproject: ["agent-api", "windows-agent"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ${{ matrix.subproject }}/go.mod
+      - name: Set up git
+        shell: bash
+        run: |
+          # Set up git so Go can import modules in private repos, and set autocrlf to avoid spurious diffs on Windows.
+          set -eu
+
+          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+          # Remove secret after a timeout, just in case
+          (sleep 10m; git config --global --remove-section "https://api:${GITHUB_TOKEN}@github.com/" ) &
+      - name: Run tests
+        shell: bash
+        if: always() && !cancelled()
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go test -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./...
+      - name: Run tests (with race detector)
+        shell: bash
+        # -race not supported on Windows
+        if: matrix.os != 'windows'
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go test ./... -race
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v3
+      #  with:
+      #    file: /tmp/coverage.out
+
