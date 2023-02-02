@@ -124,3 +124,75 @@ jobs:
       #  with:
       #    file: /tmp/coverage.out
 
+  generated-grpc:
+    name: GRPC files are up to date
+    runs-on: ubuntu-latest
+    container: ubuntu:rolling
+    steps:
+      - name: Install dependencies
+        run: |
+          # Install Protobuf compiler and git
+          set -eu
+
+          DEBIAN_FRONTEND=noninteractive apt update
+          DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: agent-api/go.mod
+      - name: Set up git
+        shell: bash
+        run: |
+          # Set up git so Go can import modules in private repos, and set autocrlf to avoid spurious diffs on Windows.
+          set -eu
+
+          # Allow access to private repos
+          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+          # Remove secret after a timeout, just in case
+          (sleep 10m; git config --global --remove-section "https://api:${GITHUB_TOKEN}@github.com/" ) &
+
+          # Set autocrlf to true so that it is not counted in go.mod and go.sum diffs
+          git config core.autocrlf true
+      - name: Install go grpc protoc generator
+        working-directory: tools
+        run: |
+          # Install GRPC with go install
+          set -eu
+          go install google.golang.org/protobuf/cmd/protoc-gen-go \
+            google.golang.org/grpc/cmd/protoc-gen-go-grpc
+      - name: Check GRPC generated files
+        working-directory: agent-api
+        run: |
+          # Check GRPC generated files
+          set -eu
+
+          # Ignore mod file changes. They are handled in another check.
+          git update-index --assume-unchanged go.*
+          on_exit() {
+              # Restore files
+              git update-index --no-assume-unchanged go.*
+          }
+          trap on_exit EXIT INT QUIT ABRT PIPE TERM
+
+          go generate .
+
+          # Remove carriage returns on Windows
+          sed -i 's/\r$//g' *.go
+
+          MODIFIED=`git status --porcelain`
+
+          # Check generated files
+          if [ -n "$MODIFIED" ]; then
+              echo "Error: 'go generate' GRPC files aren't up to date" >&2
+              echo "$MODIFIED"
+              echo "::group::See diff"
+              git --no-pager diff
+              echo "::endgroup::"
+              exit 1
+          fi
+
+          echo "Success"
