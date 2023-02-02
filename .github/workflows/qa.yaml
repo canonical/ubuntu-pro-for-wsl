@@ -1,0 +1,81 @@
+name: QA
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quality-go:
+    name: "Quality checks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows]
+        subproject: ["agent-api", "windows-agent"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ${{ matrix.subproject }}/go.mod
+      - name: Set up git
+        shell: bash
+        run: |
+          # Set up git so Go can import modules in private repos, and set autocrlf to avoid spurious diffs on Windows.
+          set -eu
+
+          # Allow access to private repos
+          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+          # Remove secret after a timeout, just in case
+          (sleep 10m; git config --global --remove-section "https://api:${GITHUB_TOKEN}@github.com/" ) &
+
+          # Set autocrlf to true so that it is not counted in go.mod and go.sum diffs
+          git config core.autocrlf true
+
+      - name: Module files are up to date
+        shell: bash
+        if: always() && !cancelled()
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          # Ensuring there is no diff between current and generated go.mod and go.sum files
+          set -eu
+
+          echo "::group::Download dependencies"
+          go mod tidy
+          echo "::endgroup::"
+
+          # Replace CRLF with LF
+          sed -i 's/\r$//g' go.mod
+          sed -i 's/\r$//g' go.sum
+
+          MODIFIED=`git status --porcelain go.sum go.mod`
+          if [ -n "$MODIFIED" ]; then
+              echo "Error: go module files aren't up to date" >&2
+              echo $MODIFIED
+              echo "::group::See diff"
+              git --no-pager diff go.mod go.sum
+              echo "::endgroup::"
+              exit 1
+          fi
+
+          echo "Success"
+      - name: Build
+        shell: bash
+        if: always() && !cancelled()
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go build ./...
+      - name: Linter
+        uses: golangci/golangci-lint-action@v3
+        if: always() && !cancelled()
+        with:
+          version: latest
+          args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml
+          working-directory: ${{ matrix.subproject }}
+
