@@ -23,21 +23,9 @@ jobs:
         with:
           go-version-file: ${{ matrix.subproject }}/go.mod
       - name: Set up git
-        shell: bash
-        run: |
-          # Set up git so Go can import modules in private repos, and set autocrlf to avoid spurious diffs on Windows.
-          set -eu
-
-          # Allow access to private repos
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-          # Remove secret after a timeout, just in case
-          (sleep 10m; git config --global --remove-section "https://api:${GITHUB_TOKEN}@github.com/" ) &
-
-          # Set autocrlf to true so that it is not counted in go.mod and go.sum diffs
-          git config core.autocrlf true
-
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Module files are up to date
         shell: bash
         if: always() && !cancelled()
@@ -96,16 +84,9 @@ jobs:
         with:
           go-version-file: ${{ matrix.subproject }}/go.mod
       - name: Set up git
-        shell: bash
-        run: |
-          # Set up git so Go can import modules in private repos, and set autocrlf to avoid spurious diffs on Windows.
-          set -eu
-
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-          # Remove secret after a timeout, just in case
-          (sleep 10m; git config --global --remove-section "https://api:${GITHUB_TOKEN}@github.com/" ) &
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run tests
         shell: bash
         if: always() && !cancelled()
@@ -143,20 +124,9 @@ jobs:
         with:
           go-version-file: agent-api/go.mod
       - name: Set up git
-        shell: bash
-        run: |
-          # Set up git so Go can import modules in private repos, and set autocrlf to avoid spurious diffs on Windows.
-          set -eu
-
-          # Allow access to private repos
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-          # Remove secret after a timeout, just in case
-          (sleep 10m; git config --global --remove-section "https://api:${GITHUB_TOKEN}@github.com/" ) &
-
-          # Set autocrlf to true so that it is not counted in go.mod and go.sum diffs
-          git config core.autocrlf true
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install go grpc protoc generator
         working-directory: tools
         run: |
