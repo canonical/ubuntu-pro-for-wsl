@@ -171,7 +171,7 @@ func TestAppGetRootCmd(t *testing.T) {
 
 // requireGoroutineStarted starts a goroutine and blocks until it has been launched
 //
-// nolint: unused // It is used in a skipped test.
+//nolint:unused // It is used in a skipped test.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()
 
