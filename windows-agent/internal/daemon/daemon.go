@@ -99,7 +99,7 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	// Write a file on disk to signal selected ports to clients.
 	// We write it here to signal error when calling service.Start().
-	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0640); err != nil {
+	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
 		return err
 	}
 	defer os.Remove(d.listeningPortFilePath)

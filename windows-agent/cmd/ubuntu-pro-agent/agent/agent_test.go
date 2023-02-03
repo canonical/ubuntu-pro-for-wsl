@@ -131,7 +131,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 			a.SetArgs()
 			cachedir := filepath.Join(t.TempDir(), "file")
 
-			err := os.WriteFile(cachedir, []byte("I'm here to break the service"), 0640)
+			err := os.WriteFile(cachedir, []byte("I'm here to break the service"), 0600)
 			require.NoError(t, err, "Failed to write file")
 
 			if tc.invalidProServicesCache {
