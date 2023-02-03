@@ -16,6 +16,11 @@ jobs:
         subproject: ["agent-api", "windows-agent"]
     runs-on: ${{ matrix.os }}-latest
     steps:
+      - name: Set up git
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@ci
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Set up Go
