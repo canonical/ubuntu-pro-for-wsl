@@ -80,6 +80,8 @@ func New(ctx context.Context, opts ...Option) (s Manager, err error) {
 	}, nil
 }
 
+// RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.
+// It also gets the correct middlewares hooked in.
 func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 	log.Debug(ctx, "Registering GRPC services")
 
