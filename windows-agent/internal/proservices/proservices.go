@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	agent_api "github.com/canonical/ubuntu-pro-for-windows/agent-api"
+	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logconnections"

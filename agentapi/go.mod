@@ -1,4 +1,4 @@
-module github.com/canonical/ubuntu-pro-for-windows/agent-api
+module github.com/canonical/ubuntu-pro-for-windows/agentapi
 
 go 1.19
 

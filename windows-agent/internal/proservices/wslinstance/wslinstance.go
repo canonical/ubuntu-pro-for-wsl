@@ -4,13 +4,13 @@ package wslinstance
 import (
 	"context"
 
-	agent_api "github.com/canonical/ubuntu-pro-for-windows/agent-api"
+	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 )
 
 // Service is the WSL Instance GRPC service implementation.
 type Service struct {
-	agent_api.UnimplementedWSLInstanceServer
+	agentapi.UnimplementedWSLInstanceServer
 }
 
 // New returns a new service handling WSL Instance API.
