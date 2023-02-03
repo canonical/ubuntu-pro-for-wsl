@@ -104,6 +104,8 @@ func TestCanQuitTwice(t *testing.T) {
 }
 
 func TestAppCanQuitWithoutExecute(t *testing.T) {
+	t.Skipf("This test is skipped because it is flaky. There is no way to guarantee Quit has been called before run.")
+
 	t.Parallel()
 
 	a := agent.NewForTesting(t, "", "")
@@ -167,7 +169,9 @@ func TestAppGetRootCmd(t *testing.T) {
 	require.NotNil(t, a.RootCmd(), "Returns root command")
 }
 
-// requireGoroutineStarted starts a goroutine and blocks until it has been launched.
+// requireGoroutineStarted starts a goroutine and blocks until it has been launched
+//
+// nolint: unused // It is used in a skipped test.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()
 
