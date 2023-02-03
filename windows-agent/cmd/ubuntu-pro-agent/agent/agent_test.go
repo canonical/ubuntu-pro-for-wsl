@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -48,8 +49,13 @@ func TestVersion(t *testing.T) {
 	fields := strings.Fields(out)
 	require.Len(t, fields, 2, "wrong number of fields in version: %s", out)
 
-	// When running under tests, the binary is "agent.test".
-	require.Equal(t, "agent.test", fields[0], "Wrong executable name")
+	// When running under tests, the binary is "agent.test[.exe]".
+	want := "agent.test"
+	if runtime.GOOS == "windows" {
+		want += ".exe"
+	}
+
+	require.Equal(t, want, fields[0], "Wrong executable name")
 	require.Equal(t, "Dev", fields[1], "Wrong version")
 }
 
