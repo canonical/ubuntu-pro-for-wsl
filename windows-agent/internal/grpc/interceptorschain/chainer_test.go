@@ -106,7 +106,9 @@ func TestStreamClient(t *testing.T) {
 	require.Equal(t, clientStream, someStream, "chain must return invokers's clientstream")
 }
 
-// nolint:revive // Helper function for a require assertion (expected, got)
+// requireContextValue asserts that the key has a context attached for the given key.
+//
+//nolint:revive // This is a test assertion, context is after expected.
 func requireContextValue(t *testing.T, expected interface{}, ctx context.Context, key string, msg ...interface{}) {
 	t.Helper()
 	val := ctx.Value(keyCtxType(key))

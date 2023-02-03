@@ -4,7 +4,7 @@
 // - protoc             v3.12.4
 // source: agentapi.proto
 
-package agent_api
+package agentapi
 
 import (
 	context "context"

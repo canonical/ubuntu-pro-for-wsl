@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/canonical/ubuntu-pro-for-windows/agent-api";
+option go_package = "github.com/canonical/ubuntu-pro-for-windows/agentapi";
 
 package agentapi;
 

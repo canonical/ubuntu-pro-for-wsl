@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agent-api", "windows-agent"]
+        subproject: ["agentapi", "windows-agent"]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Set up git
@@ -63,7 +63,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agent-api", "windows-agent"]
+        subproject: ["agentapi", "windows-agent"]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Check out repository
@@ -116,7 +116,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version-file: agent-api/go.mod
+          go-version-file: agentapi/go.mod
       - name: Install go grpc protoc generator
         working-directory: tools
         run: |
@@ -125,9 +125,9 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go \
             google.golang.org/grpc/cmd/protoc-gen-go-grpc
       - name: Generate GRPC files
-        working-directory: agent-api
+        working-directory: agentapi
         run: go generate .
       - name: Ensure generated GRPC files are up to date
         uses: ./.github/actions/check-diff
         with:
-          files-to-validate: 'agent-api/*.go'
+          files-to-validate: 'agentapi/*.go'

@@ -1,3 +1,4 @@
+// Package daemon is handling the TCP connection and connecting a GRPC service to it.
 package daemon
 
 import (
@@ -6,12 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"google.golang.org/grpc"
-
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/ubuntu/decorate"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
 type GRPCServiceRegisterer func(ctx context.Context) *grpc.Server
 
-// Daemon is a daemon for windows agents with grpc support
+// Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
 	listeningPortFilePath string
 
@@ -57,7 +57,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts .
 		return d, err
 	}
 	args := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheSubdirectory),
+		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
 	}
 
 	// Apply given options.
@@ -98,7 +98,7 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	// Write a file on disk to signal selected ports to clients.
 	// We write it here to signal error when calling service.Start().
-	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0640); err != nil {
+	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
 		return err
 	}
 	defer os.Remove(d.listeningPortFilePath)

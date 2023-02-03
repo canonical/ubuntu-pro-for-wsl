@@ -18,10 +18,6 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-const (
-	Version = "dev"
-)
-
 // App encapsulate commands and options of the daemon, which can be controlled by env variables and config files.
 type App struct {
 	rootCmd cobra.Command

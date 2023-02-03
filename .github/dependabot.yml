@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-    directory: "/agent-api"
+    directory: "/agentapi"
     schedule:
       interval: "daily"
 

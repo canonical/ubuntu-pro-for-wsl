@@ -1,3 +1,4 @@
+// Package proservices is in charge of managing the GRPC services and all business-logic side.
 package proservices
 
 import (
@@ -5,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	agent_api "github.com/canonical/ubuntu-pro-for-windows/agent-api"
+	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logconnections"
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Manager is the orchestrator of GRPC API services and business logic.
 type Manager struct {
 	uiService          ui.Service
 	wslInstanceService wslinstance.Service
@@ -48,7 +50,7 @@ func New(ctx context.Context, opts ...Option) (s Manager, err error) {
 		return s, err
 	}
 	args := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheSubdirectory),
+		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
 	}
 
 	// Apply given options.
@@ -78,6 +80,8 @@ func New(ctx context.Context, opts ...Option) (s Manager, err error) {
 	}, nil
 }
 
+// RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.
+// It also gets the correct middlewares hooked in.
 func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 	log.Debug(ctx, "Registering GRPC services")
 
