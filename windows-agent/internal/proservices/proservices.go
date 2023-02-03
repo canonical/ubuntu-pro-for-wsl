@@ -1,3 +1,4 @@
+// Package proservices is in charge of managing the GRPC services and all business-logic side.
 package proservices
 
 import (
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Manager is the orchestrator of GRPC API services and business logic.
 type Manager struct {
 	uiService          ui.Service
 	wslInstanceService wslinstance.Service
@@ -48,7 +50,7 @@ func New(ctx context.Context, opts ...Option) (s Manager, err error) {
 		return s, err
 	}
 	args := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheSubdirectory),
+		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
 	}
 
 	// Apply given options.

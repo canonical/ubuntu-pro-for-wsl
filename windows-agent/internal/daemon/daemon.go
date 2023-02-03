@@ -57,7 +57,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts .
 		return d, err
 	}
 	args := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheSubdirectory),
+		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
 	}
 
 	// Apply given options.
