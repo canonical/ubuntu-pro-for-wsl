@@ -7,12 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"google.golang.org/grpc"
-
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/ubuntu/decorate"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
 type GRPCServiceRegisterer func(ctx context.Context) *grpc.Server
 
-// Daemon is a daemon for windows agents with grpc support
+// Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
 	listeningPortFilePath string
 

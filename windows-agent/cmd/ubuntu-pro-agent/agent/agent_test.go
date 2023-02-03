@@ -154,7 +154,7 @@ func TestAppGetRootCmd(t *testing.T) {
 	require.NotNil(t, a.RootCmd(), "Returns root command")
 }
 
-// requireGoroutineStarted starts a goroutine and blocks until it has been launched
+// requireGoroutineStarted starts a goroutine and blocks until it has been launched.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()
 
@@ -191,7 +191,7 @@ func startDaemon(t *testing.T) (app *agent.App, done func()) {
 	}
 }
 
-// captureStdout capture current process stdout and returns a function to get the captured buffer
+// captureStdout capture current process stdout and returns a function to get the captured buffer.
 func captureStdout(t *testing.T) func() string {
 	t.Helper()
 

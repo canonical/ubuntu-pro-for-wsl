@@ -107,6 +107,8 @@ func TestStreamClient(t *testing.T) {
 }
 
 // requireContextValue asserts that the key has a context attached for the given key.
+//
+//nolint:revive // This is a test assertion, context is after expected.
 func requireContextValue(t *testing.T, expected interface{}, ctx context.Context, key string, msg ...interface{}) {
 	t.Helper()
 	val := ctx.Value(keyCtxType(key))
