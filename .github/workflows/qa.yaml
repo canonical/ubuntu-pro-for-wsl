@@ -1,0 +1,133 @@
+name: QA
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quality-go:
+    name: "Quality checks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows]
+        subproject: ["agent-api", "windows-agent"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Set up git
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ${{ matrix.subproject }}/go.mod
+      - name: Update module files
+        shell: bash
+        if: always() && !cancelled()
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          # Ensuring there is no diff between current and generated go.mod and go.sum files
+          set -eu
+
+          echo "::group::Download dependencies"
+          go mod tidy
+          echo "::endgroup::"
+      - name: Ensure module files are up to date
+        uses: ./.github/actions/check-diff
+        with:
+          files-to-validate: ${{ matrix.subproject }}/go.mod ${{ matrix.subproject }}/go.sum
+      - name: Build
+        shell: bash
+        if: always() && !cancelled()
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go build ./...
+      - name: Linter
+        uses: golangci/golangci-lint-action@v3
+        if: always() && !cancelled()
+        with:
+          version: latest
+          args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml
+          working-directory: ${{ matrix.subproject }}
+
+
+  tests-go-with-mocks:
+    name: "Run Go tests with mocks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows]
+        subproject: ["agent-api", "windows-agent"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ${{ matrix.subproject }}/go.mod
+      - name: Set up git
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run tests
+        shell: bash
+        if: always() && !cancelled()
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go test -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./...
+      - name: Run tests (with race detector)
+        shell: bash
+        # -race not supported on Windows
+        if: matrix.os != 'windows'
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go test ./... -race
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v3
+      #  with:
+      #    file: /tmp/coverage.out
+
+  generated-grpc:
+    name: GRPC files are up to date
+    runs-on: ubuntu-latest
+    container: ubuntu:rolling
+    steps:
+      - name: Install dependencies
+        run: |
+          # Install Protobuf compiler and git
+          set -eu
+
+          DEBIAN_FRONTEND=noninteractive apt update
+          DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler
+      - name: Set up git
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: agent-api/go.mod
+      - name: Install go grpc protoc generator
+        working-directory: tools
+        run: |
+          # Install GRPC with go install
+          set -eu
+          go install google.golang.org/protobuf/cmd/protoc-gen-go \
+            google.golang.org/grpc/cmd/protoc-gen-go-grpc
+      - name: Generate GRPC files
+        working-directory: agent-api
+        run: go generate .
+      - name: Ensure generated GRPC files are up to date
+        uses: ./.github/actions/check-diff
+        with:
+          files-to-validate: 'agent-api/*.go'

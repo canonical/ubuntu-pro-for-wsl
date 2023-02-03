@@ -1,0 +1,27 @@
+name: Set up Git
+description: Some boilerplate to avoid Git's idiosyncrasies getting in the way of the CI
+
+inputs:
+  token:
+    description: Github token
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Git
+      shell: bash
+      run : |
+        #  Set up Git
+        set -eu
+
+        # Ensure that our current directory is seen as safe (necessary in containers).
+        git config --global --add safe.directory ${PWD}
+
+        # Allow access to private repos
+        GITHUB_TOKEN="${{ inputs.token }}"
+        git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+        # Set autocrlf to true so that line-endings are not counted in diffs
+        git config --global core.autocrlf false
+        git config --global core.eol lf
