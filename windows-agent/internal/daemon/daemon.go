@@ -1,3 +1,4 @@
+// Package daemon is handling the TCP connection and connecting a GRPC service to it.
 package daemon
 
 import (
