@@ -22,11 +22,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: ${{ matrix.subproject }}/go.mod
-      - name: Set up git
-        uses: ./.github/actions/setup-git
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Module files are up to date
+      - name: Update module files
         shell: bash
         if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
@@ -37,22 +33,11 @@ jobs:
           echo "::group::Download dependencies"
           go mod tidy
           echo "::endgroup::"
-
-          # Replace CRLF with LF
-          sed -i 's/\r$//g' go.mod
-          sed -i 's/\r$//g' go.sum
-
-          MODIFIED=`git status --porcelain go.sum go.mod`
-          if [ -n "$MODIFIED" ]; then
-              echo "Error: go module files aren't up to date" >&2
-              echo $MODIFIED
-              echo "::group::See diff"
-              git --no-pager diff go.mod go.sum
-              echo "::endgroup::"
-              exit 1
-          fi
-
-          echo "Success"
+      - name: Ensure module files are up to date
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/check-diff@ci
+        with:
+          files-to-validate: ${{ matrix.subproject }}/go.mod ${{ matrix.subproject }}/go.sum
       - name: Build
         shell: bash
         if: always() && !cancelled()
@@ -134,35 +119,10 @@ jobs:
           set -eu
           go install google.golang.org/protobuf/cmd/protoc-gen-go \
             google.golang.org/grpc/cmd/protoc-gen-go-grpc
-      - name: Check GRPC generated files
+      - name: Generate GRPC files
         working-directory: agent-api
-        run: |
-          # Check GRPC generated files
-          set -eu
-
-          # Ignore mod file changes. They are handled in another check.
-          git update-index --assume-unchanged go.*
-          on_exit() {
-              # Restore files
-              git update-index --no-assume-unchanged go.*
-          }
-          trap on_exit EXIT INT QUIT ABRT PIPE TERM
-
-          go generate .
-
-          # Remove carriage returns on Windows
-          sed -i 's/\r$//g' *.go
-
-          MODIFIED=`git status --porcelain`
-
-          # Check generated files
-          if [ -n "$MODIFIED" ]; then
-              echo "Error: 'go generate' GRPC files aren't up to date" >&2
-              echo "$MODIFIED"
-              echo "::group::See diff"
-              git --no-pager diff
-              echo "::endgroup::"
-              exit 1
-          fi
-
-          echo "Success"
+        run: go generate .
+      - name: Ensure generated GRPC files are up to date
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/check-diff@ci
+        with:
+          files-to-validate: 'agent-api/*.go'
