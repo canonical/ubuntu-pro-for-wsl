@@ -107,16 +107,17 @@ jobs:
 
           DEBIAN_FRONTEND=noninteractive apt update
           DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler
+      - name: Set up git
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version-file: agent-api/go.mod
-      - name: Set up git
-        uses: ./.github/actions/setup-git
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install go grpc protoc generator
         working-directory: tools
         run: |
