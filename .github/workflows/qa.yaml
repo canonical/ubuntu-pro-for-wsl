@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@ci
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
@@ -39,8 +39,7 @@ jobs:
           go mod tidy
           echo "::endgroup::"
       - name: Ensure module files are up to date
-        # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/check-diff@ci
+        uses: ./.github/actions/check-diff
         with:
           files-to-validate: ${{ matrix.subproject }}/go.mod ${{ matrix.subproject }}/go.sum
       - name: Build
@@ -129,6 +128,6 @@ jobs:
         working-directory: agent-api
         run: go generate .
       - name: Ensure generated GRPC files are up to date
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/check-diff@ci
+        uses: ./.github/actions/check-diff
         with:
           files-to-validate: 'agent-api/*.go'
