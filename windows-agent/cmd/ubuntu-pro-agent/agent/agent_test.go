@@ -169,7 +169,7 @@ func TestAppGetRootCmd(t *testing.T) {
 	require.NotNil(t, a.RootCmd(), "Returns root command")
 }
 
-// requireGoroutineStarted starts a goroutine and blocks until it has been launched
+// requireGoroutineStarted starts a goroutine and blocks until it has been launched.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()
 
