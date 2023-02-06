@@ -38,10 +38,10 @@ type options struct {
 	proservicesCacheDir string
 }
 
-type Option func(*options)
+type option func(*options)
 
 // New registers commands and return a new App.
-func New(o ...Option) *App {
+func New(o ...option) *App {
 	a := App{ready: make(chan struct{})}
 	a.rootCmd = cobra.Command{
 		Use:   fmt.Sprintf("%s COMMAND", cmdName()),
@@ -89,7 +89,7 @@ func cmdName() string {
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve(args ...Option) error {
+func (a *App) serve(args ...option) error {
 	var opt options
 	for _, f := range args {
 		f(&opt)
