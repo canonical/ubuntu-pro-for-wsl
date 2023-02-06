@@ -11,13 +11,11 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHelp(t *testing.T) {
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("--help")
 
 	getStdout := captureStdout(t)
@@ -27,7 +25,7 @@ func TestHelp(t *testing.T) {
 }
 
 func TestCompletion(t *testing.T) {
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("completion", "bash")
 
 	getStdout := captureStdout(t)
@@ -37,7 +35,7 @@ func TestCompletion(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("version")
 
 	getStdout := captureStdout(t)
@@ -56,7 +54,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNoUsageError(t *testing.T) {
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("completion", "bash")
 
 	getStdout := captureStdout(t)
@@ -70,7 +68,7 @@ func TestNoUsageError(t *testing.T) {
 func TestUsageError(t *testing.T) {
 	t.Parallel()
 
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("doesnotexist")
 
 	err := a.Run()
@@ -102,7 +100,7 @@ func TestCanQuitTwice(t *testing.T) {
 func TestAppCanQuitWithoutExecute(t *testing.T) {
 	t.Parallel()
 
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs()
 
 	requireGoroutineStarted(t, a.Quit)
@@ -113,6 +111,7 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 }
 
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
+	t.Parallel()
 	// Trigger the error with a cache directory that cannot be created over an
 	// existing file
 
@@ -127,18 +126,26 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			a := agent.New()
-			a.SetArgs()
-			cachedir := filepath.Join(t.TempDir(), "file")
+			t.Parallel()
 
-			err := os.WriteFile(cachedir, []byte("I'm here to break the service"), 0600)
-			require.NoError(t, err, "Failed to write file")
+			badCache := filepath.Join(t.TempDir(), "file")
+
+			daemonCache := ""
+			serviceCache := ""
 
 			if tc.invalidProServicesCache {
-				overrideSliceAndRestore(t, agent.ProServicesOpts, proservices.WithCacheDir(cachedir))
-			} else if tc.invalidDaemonCache {
-				overrideSliceAndRestore(t, agent.DaemonOpts, daemon.WithCacheDir(cachedir))
+				serviceCache = badCache
 			}
+
+			if tc.invalidDaemonCache {
+				daemonCache = badCache
+			}
+
+			a := agent.NewForTesting(t, daemonCache, serviceCache)
+			a.SetArgs()
+
+			err := os.WriteFile(badCache, []byte("I'm here to break the service"), 0600)
+			require.NoError(t, err, "Failed to write file")
 
 			err = a.Run()
 			require.Error(t, err, "Run should exit with an error")
@@ -150,7 +157,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 func TestAppGetRootCmd(t *testing.T) {
 	t.Parallel()
 
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	require.NotNil(t, a.RootCmd(), "Returns root command")
 }
 
@@ -173,7 +180,7 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 func startDaemon(t *testing.T) (app *agent.App, done func()) {
 	t.Helper()
 
-	a := agent.New()
+	a := agent.NewForTesting(t, "", "")
 	a.SetArgs()
 
 	wg := sync.WaitGroup{}
