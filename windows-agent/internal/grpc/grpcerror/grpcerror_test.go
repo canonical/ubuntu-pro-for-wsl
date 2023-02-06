@@ -19,17 +19,17 @@ func TestFormat(t *testing.T) {
 	tests := map[string]struct {
 		err error
 
-		wantNilError         bool
-		wantStatusName       string
-		wantDaemonName       bool
-		wantOverridenMessage bool
+		wantNilError          bool
+		wantStatusName        string
+		wantDaemonName        bool
+		wantOverriddenMessage bool
 	}{
 		"Non GRPC errors are returned as is": {err: errors.New(errMSG)},
 		"Nil returns nil":                    {err: nil, wantNilError: true},
 
 		"GRPC Unavailable errors prints daemon name":                     {err: status.Error(codes.Unavailable, errMSG), wantDaemonName: true},
-		"GRPC Deadline errors don’t print status nor daemon nor message": {err: status.Error(codes.DeadlineExceeded, errMSG), wantOverridenMessage: true},
-		"GRPC Unknown errors don’t print status and daemon":              {err: status.Error(codes.Unknown, errMSG)},
+		"GRPC Deadline errors don't print status nor daemon nor message": {err: status.Error(codes.DeadlineExceeded, errMSG), wantOverriddenMessage: true},
+		"GRPC Unknown errors don't print status and daemon":              {err: status.Error(codes.Unknown, errMSG)},
 		"GRPC Random errors prints status and message":                   {err: status.Error(codes.Internal, errMSG)},
 	}
 
@@ -56,7 +56,7 @@ func TestFormat(t *testing.T) {
 
 			assert.Contains(t, err.Error(), tc.wantStatusName, "Status name is contained in error or empty")
 
-			if tc.wantOverridenMessage {
+			if tc.wantOverriddenMessage {
 				assert.NotContains(t, err.Error(), errMSG, "Real error message is not printed")
 			} else {
 				assert.Contains(t, err.Error(), errMSG, "Real error message is printed")

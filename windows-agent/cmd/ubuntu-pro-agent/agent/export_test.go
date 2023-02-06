@@ -16,7 +16,7 @@ func withProServicesCacheDir(dir string) func(*options) {
 	}
 }
 
-// NewForTesting creates a new App with overriden paths for the service and daemon caches.
+// NewForTesting creates a new App with overridden paths for the service and daemon caches.
 func NewForTesting(t *testing.T, daemonCacheDir, serviceCacheDir string) *App {
 	t.Helper()
 
