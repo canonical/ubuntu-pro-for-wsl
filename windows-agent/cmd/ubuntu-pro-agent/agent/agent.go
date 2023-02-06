@@ -33,8 +33,15 @@ type daemonConfig struct {
 	Verbosity int
 }
 
+type options struct {
+	daemonCacheDir      string
+	proservicesCacheDir string
+}
+
+type option func(*options)
+
 // New registers commands and return a new App.
-func New() *App {
+func New(o ...option) *App {
 	a := App{ready: make(chan struct{})}
 	a.rootCmd = cobra.Command{
 		Use:   fmt.Sprintf("%s COMMAND", cmdName()),
@@ -61,7 +68,7 @@ func New() *App {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return a.serve()
+			return a.serve(o...)
 		},
 		// We display usage error ourselves
 		SilenceErrors: true,
@@ -81,23 +88,20 @@ func cmdName() string {
 	return filepath.Base(os.Args[0])
 }
 
-// daemonOpts sets the options for the daemon.
-// Having it be a global variable allows tests to change them.
-var daemonOpts []daemon.Option
-
-// proservicesOpts sets the options for the pro services.
-// Having it be a global variable allows tests to change them.
-var proservicesOpts []proservices.Option
-
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve() error {
-	proservice, err := proservices.New(context.Background(), proservicesOpts...)
+func (a *App) serve(args ...option) error {
+	var opt options
+	for _, f := range args {
+		f(&opt)
+	}
+
+	proservice, err := proservices.New(context.Background(), proservices.WithCacheDir(opt.proservicesCacheDir))
 	if err != nil {
 		close(a.ready)
 		return err
 	}
 
-	daemon, err := daemon.New(context.Background(), proservice.RegisterGRPCServices, daemonOpts...)
+	daemon, err := daemon.New(context.Background(), proservice.RegisterGRPCServices, daemon.WithCacheDir(opt.daemonCacheDir))
 	if err != nil {
 		close(a.ready)
 		return err
