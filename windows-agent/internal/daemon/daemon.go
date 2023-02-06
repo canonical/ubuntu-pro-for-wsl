@@ -46,7 +46,7 @@ func WithCacheDir(cachedir string) func(o *options) error {
 
 // New returns an new, initialized daemon server that is ready to register GRPC services.
 // It hooks up to windows service management handler.
-func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts ...Option) (d Daemon, err error) {
+func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
@@ -56,22 +56,22 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, opts .
 	if err != nil {
 		return d, err
 	}
-	args := options{
+	opts := options{
 		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
 	}
 
 	// Apply given options.
-	for _, o := range opts {
-		if err := o(&args); err != nil {
+	for _, f := range args {
+		if err := f(&opts); err != nil {
 			return d, err
 		}
 	}
 
 	// Create our cache directory if needed
-	if err := os.MkdirAll(args.cacheDir, 0750); err != nil {
+	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
 		return d, err
 	}
-	listeningPortFilePath := filepath.Join(args.cacheDir, listeningPortFileName)
+	listeningPortFilePath := filepath.Join(opts.cacheDir, listeningPortFileName)
 	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
 	return Daemon{

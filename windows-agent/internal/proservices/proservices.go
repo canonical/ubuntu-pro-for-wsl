@@ -41,7 +41,7 @@ func WithCacheDir(cachedir string) func(o *options) error {
 
 // New returns a new GRPC services manager.
 // It instantiates both ui and wsl instance services.
-func New(ctx context.Context, opts ...Option) (s Manager, err error) {
+func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	// Set default options.
@@ -49,20 +49,20 @@ func New(ctx context.Context, opts ...Option) (s Manager, err error) {
 	if err != nil {
 		return s, err
 	}
-	args := options{
+	opts := options{
 		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
 	}
 
 	// Apply given options.
-	for _, o := range opts {
-		if err := o(&args); err != nil {
+	for _, f := range args {
+		if err := f(&opts); err != nil {
 			return s, err
 		}
 	}
 
-	log.Debugf(ctx, "Manager service cache directory: %s", args.cacheDir)
+	log.Debugf(ctx, "Manager service cache directory: %s", opts.cacheDir)
 
-	if err := os.MkdirAll(args.cacheDir, 0750); err != nil {
+	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
 		return s, err
 	}
 
