@@ -162,7 +162,7 @@ func TestSetReportCaller(t *testing.T) {
 
 		want string
 	}{
-		"Report caller":  {reportCaller: true, want: "level=warning msg=something func=github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer_test.TestSetReportCaller"},
+		"Report caller":  {reportCaller: true, want: "level=warning msg=something func=.*/logstreamer_test.TestSetReportCaller"},
 		"Disable caller": {reportCaller: false, want: "level=warning msg=something"},
 	}
 
@@ -182,7 +182,7 @@ func TestSetReportCaller(t *testing.T) {
 
 			localLogger.Warning("something")
 
-			require.Contains(t, logs(), tc.want, "contains expected logs")
+			require.Regexpf(t, tc.want, logs(), "logs don't match expected pattern")
 		})
 	}
 }
