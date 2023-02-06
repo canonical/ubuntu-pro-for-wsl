@@ -229,15 +229,3 @@ func captureStdout(t *testing.T) func() string {
 		return out.String()
 	}
 }
-
-func overrideSliceAndRestore[T any](t *testing.T, variable *[]T, values ...T) {
-	t.Helper()
-
-	orig := *variable
-
-	*variable = append([]T{}, values...)
-
-	t.Cleanup(func() {
-		*variable = orig
-	})
-}
