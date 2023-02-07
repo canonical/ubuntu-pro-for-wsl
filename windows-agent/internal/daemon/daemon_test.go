@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -227,7 +228,7 @@ func grpcPersistentCall(t *testing.T, addr string, msg string) (drop func() code
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure())
+	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoErrorf(t, err, "Could not dial GRPC server.\nMessage: %s", msg)
 
 	c := grpctestservice.NewTestServiceClient(conn)
@@ -261,12 +262,12 @@ func grpcPersistentCall(t *testing.T, addr string, msg string) (drop func() code
 	}
 }
 
-// requireCannotDialGRPC attempts to
+// requireCannotDialGRPC attempts to.
 func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 	t.Helper()
 
 	// Try to connect and return once the connection dropped.
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoErrorf(t, err, "error dialing GRPC server.\nMessage: %s", msg)
 	defer conn.Close()
 
@@ -320,8 +321,6 @@ type testGRPCService struct {
 }
 
 func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (*grpctestservice.Empty, error) {
-	select {
-	case <-ctx.Done():
-	}
+	<-ctx.Done()
 	return &grpctestservice.Empty{}, nil
 }
