@@ -15,10 +15,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	listeningPortFileName = "addr"
-)
-
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
 type GRPCServiceRegisterer func(ctx context.Context) *grpc.Server
 
@@ -74,7 +70,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
 		return d, err
 	}
-	listeningPortFilePath := filepath.Join(opts.cacheDir, listeningPortFileName)
+	listeningPortFilePath := filepath.Join(opts.cacheDir, consts.ListeningPortFileName)
 	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
 	return Daemon{
