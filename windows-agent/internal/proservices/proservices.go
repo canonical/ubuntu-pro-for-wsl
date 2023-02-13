@@ -8,12 +8,11 @@ import (
 
 	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -34,7 +33,9 @@ type Option func(*options) error
 // WithCacheDir overrides the cache directory used in the daemon.
 func WithCacheDir(cachedir string) func(o *options) error {
 	return func(o *options) error {
-		o.cacheDir = cachedir
+		if cachedir != "" {
+			o.cacheDir = cachedir
+		}
 		return nil
 	}
 }
@@ -66,11 +67,16 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
+	db, err := distroDB.New(opts.cacheDir)
+	if err != nil {
+		return s, err
+	}
+
 	uiService, err := ui.New(ctx)
 	if err != nil {
 		return s, err
 	}
-	wslInstanceService, err := wslinstance.New(ctx)
+	wslInstanceService, err := wslinstance.New(ctx, db)
 	if err != nil {
 		return s, err
 	}
@@ -87,11 +93,11 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 
 	grpcServer := grpc.NewServer(grpc.StreamInterceptor(
 		interceptorschain.StreamServer(
-			log.StreamServerInterceptor(logrus.StandardLogger()),
-			logconnections.StreamServerInterceptor(),
+		/*log.StreamServerInterceptor(logrus.StandardLogger()),
+		logconnections.StreamServerInterceptor(),*/
 		)))
 	agent_api.RegisterUIServer(grpcServer, m.uiService)
-	agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
+	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)
 
 	return grpcServer
 }

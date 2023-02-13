@@ -3,6 +3,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -39,7 +40,9 @@ type Option func(*options) error
 // WithCacheDir overrides the cache directory used in the daemon.
 func WithCacheDir(cachedir string) func(o *options) error {
 	return func(o *options) error {
-		o.cacheDir = cachedir
+		if cachedir != "" {
+			o.cacheDir = cachedir
+		}
 		return nil
 	}
 }
@@ -89,23 +92,30 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	log.Debug(ctx, "Starting to serve requests")
 
+	// TODO: get a local port only, please :)
 	lis, err := net.Listen("tcp", "")
 	if err != nil {
-		return err
+		return fmt.Errorf("can't listen: %v", err)
 	}
 
 	addr := lis.Addr().String()
 
 	// Write a file on disk to signal selected ports to clients.
 	// We write it here to signal error when calling service.Start().
-	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
+	if err := os.WriteFile(d.listeningPortFilePath+".new", []byte(addr), 0600); err != nil {
+		return err
+	}
+	if err := os.Rename(d.listeningPortFilePath+".new", d.listeningPortFilePath); err != nil {
 		return err
 	}
 	defer os.Remove(d.listeningPortFilePath)
 
 	log.Infof(ctx, "Serving GRPC requests on %v", addr)
 
-	return d.grpcServer.Serve(lis)
+	if err := d.grpcServer.Serve(lis); err != nil {
+		return fmt.Errorf("grpc error: %v", err)
+	}
+	return nil
 }
 
 // Quit gracefully quits listening loop and stops the grpc server.
