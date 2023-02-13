@@ -3,6 +3,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -39,7 +40,9 @@ type Option func(*options) error
 // WithCacheDir overrides the cache directory used in the daemon.
 func WithCacheDir(cachedir string) func(o *options) error {
 	return func(o *options) error {
-		o.cacheDir = cachedir
+		if cachedir != "" {
+			o.cacheDir = cachedir
+		}
 		return nil
 	}
 }
