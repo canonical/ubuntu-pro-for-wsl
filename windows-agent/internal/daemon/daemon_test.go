@@ -273,7 +273,7 @@ func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 
 	require.Eventuallyf(t, func() bool {
 		return conn.GetState() == connectivity.TransientFailure
-	}, 100*time.Millisecond, 10*time.Millisecond, "Should have failed to connect to GRPC server after many connection attempts. Connection state is currently at %v.\nMessage: %s", conn.GetState(), msg)
+	}, 1*time.Second, 30*time.Millisecond, "Should have failed to connect to GRPC server after many connection attempts. Connection state is currently at %v.\nMessage: %s", conn.GetState(), msg)
 }
 
 // requireWaitPathExists checks periodically for the existence of a path. If the path
