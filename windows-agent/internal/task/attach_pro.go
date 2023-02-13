@@ -1,4 +1,4 @@
-// package task implements tasks to be submitted to distros.
+// Package task implements tasks to be submitted to distros.
 package task
 
 import (

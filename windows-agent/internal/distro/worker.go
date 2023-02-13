@@ -25,7 +25,6 @@ func (d *Distro) startProcessingTasks(ctx context.Context) {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() { d.processTasks(ctx) }()
 	d.cancel = cancel
-	return
 }
 
 // stopProcessingTasks stops the main task processing goroutine and wait for it to be done.
@@ -47,13 +46,13 @@ func (d *Distro) SubmitTask(t Task) error {
 	select {
 	case d.tasks <- t:
 	default:
-		return fmt.Errorf("distro %q: task %q not queued: queue is full.", d.Name, t)
+		return fmt.Errorf("distro %q: task %q not queued: queue is full", d.Name, t)
 	}
 	return nil
 }
 
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
-// locks to distro,
+// locks to distro,.
 func (d *Distro) processTasks(ctx context.Context) {
 	defer close(d.tasksInProgress)
 
@@ -63,7 +62,7 @@ func (d *Distro) processTasks(ctx context.Context) {
 			return
 		case t := <-d.tasks:
 			if err := d.processSingleTask(ctx, t); err != nil {
-				log.Debugf(context.TODO(), "Distro %q: task %q: %v", err)
+				log.Debugf(context.TODO(), "Distro %q: task %q: %v", d, t, err)
 			}
 		}
 	}
@@ -77,7 +76,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 
 	err := d.keepAwake(ctx)
 	if err != nil {
-		d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
+		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
 		return errors.New("task could not start started: could not wake distro up")
 	}
@@ -89,7 +88,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	// FIXME TODO FIXME
 	client, err := d.waitForClient(ctx)
 	if err != nil {
-		d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
+		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
 		return errors.New("task could not start started: could not contact distro")
 	}
@@ -107,7 +106,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 			return fmt.Errorf("task errored out: %v", err)
 		}
 
-		log.Debugf(context.TODO(), "Distro %q: task %q: task completed succesfully", d.Name, t)
+		log.Debugf(context.TODO(), "Distro %q: task %q: task completed successfully", d.Name, t)
 		break
 	}
 

@@ -34,19 +34,22 @@ type Distro struct {
 	connMu *sync.RWMutex
 }
 
-// DistroDoesNotExist is a type returned when the (distroName, GUID) combination is not in the registry.
-type DistroDoesNotExist struct{}
+// NotExistError is a type returned when the (distroName, GUID) combination is not in the registry.
+type NotExistError struct{}
 
-func (*DistroDoesNotExist) Error() string {
-	return "DistroDoesNotExist"
+func (*NotExistError) Error() string {
+	return "distro does not exist"
 }
 
 type options struct {
 	guid windows.GUID
 }
 
+// Option is an optional argument for distro.New.
 type Option func(*options)
 
+// WithGUID is an optional parameter for distro.New that enforces GUID
+// validation.
 func WithGUID(guid windows.GUID) Option {
 	return func(o *options) {
 		o.guid = guid
@@ -83,7 +86,7 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 		if err == nil {
 			id.GUID = guid
 		} else {
-			return nil, fmt.Errorf("no distro with this name exists: %w", &DistroDoesNotExist{})
+			return nil, fmt.Errorf("no distro with this name exists: %w", &NotExistError{})
 		}
 	} else {
 		// Check the name/GUID pair is valid.
@@ -92,7 +95,7 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 			return nil, err
 		}
 		if !valid {
-			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &DistroDoesNotExist{})
+			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &NotExistError{})
 		}
 	}
 
@@ -125,7 +128,7 @@ func (d Distro) getWSLDistro() (wsl.Distro, error) {
 		return wsl.NewDistro(""), err
 	}
 	if !verified {
-		return wsl.NewDistro(""), fmt.Errorf("distro with name %q and GUID %q not found in registry: %w", d.Name, d.GUID.String(), &DistroDoesNotExist{})
+		return wsl.NewDistro(""), fmt.Errorf("distro with name %q and GUID %q not found in registry: %w", d.Name, d.GUID.String(), &NotExistError{})
 	}
 	return wsl.NewDistro(d.Name), nil
 }
@@ -150,7 +153,7 @@ func (d *Distro) keepAwake(ctx context.Context) error {
 
 	go func() {
 		<-ctx.Done()
-		cmd.Wait()
+		_ = cmd.Wait()
 	}()
 
 	return nil

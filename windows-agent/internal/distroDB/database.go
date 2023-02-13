@@ -40,7 +40,7 @@ type DistroDB struct {
 //
 // Creating multiple databases with the same disk backing will result in
 // undefined behaviour.
-// TODO: write about the auto gc
+// TODO: write about the auto gc.
 func New(storageDir string) (*DistroDB, error) {
 	db := &DistroDB{
 		storagePath:     filepath.Join(storageDir, storageBaseFileName),
@@ -97,8 +97,8 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 			return nil, err
 		}
 		db.distros[normalizedName] = d
-		db.dump()
-		return d, nil
+		err = db.dump()
+		return d, err
 	}
 
 	// Check that the distro exists and GUId of registered object still matching the one on the system
@@ -119,19 +119,20 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 			return nil, err
 		}
 		db.distros[normalizedName] = d
-		db.dump()
-		return d, nil
+		err = db.dump()
+		return d, err
 	}
 
 	log.Debugf(ctx, "Cache hit. Overwriting properties for %q", name)
 
 	// Name in database, correct GUID: refresh with latest properties of a valid distro
+	err = nil
 	if d.Properties != props {
 		d.Properties = props
-		db.dump()
+		err = db.dump()
 	}
 
-	return d, nil
+	return d, err
 }
 
 // Dump stores the current database state to disk, overriding old dumps.
@@ -160,8 +161,8 @@ func (db *DistroDB) autoCleanup(ctx context.Context) error {
 			continue
 		}
 
-		log.Infof(context.Background(), "Distro %q became invalid, cleaning up: %v", name, d.UnreachableErr)
-		go d.Cleanup(context.Background())
+		log.Infof(ctx, "Distro %q became invalid, cleaning up: %v", name, d.UnreachableErr)
+		go d.Cleanup(ctx)
 		delete(db.distros, name)
 		needsDBDump = true
 	}

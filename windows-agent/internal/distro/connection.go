@@ -1,3 +1,5 @@
+// Package distro contains wrappers around actions concerning WSL instances and
+// task processing.
 package distro
 
 import (
@@ -28,7 +30,7 @@ func (d *Distro) SetConnection(conn *grpc.ClientConn) {
 
 	if d.conn != nil {
 		if err := d.conn.Close(); err != nil {
-			log.Warning(context.TODO(), "distro %q: could not close previous grpc connection: %v", d.Name, err)
+			log.Warningf(context.TODO(), "distro %q: could not close previous grpc connection: %v", d.Name, err)
 		}
 	}
 	d.conn = conn

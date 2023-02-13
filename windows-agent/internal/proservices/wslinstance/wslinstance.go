@@ -34,6 +34,8 @@ func New(ctx context.Context, db *distroDB.DistroDB) (s Service, err error) {
 	return Service{db: db}, nil
 }
 
+// Connected establishes a connection with a WSL instance and keeps its properties
+// in the database up-to-date.
 func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	log.Debug(context.TODO(), "New connection detected")
 
@@ -67,7 +69,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	defer d.SetConnection(nil)
 
 	// TODO: This is for testing, remove it when we're done
-	d.SubmitTask(&task.Ping{})
+	_ = d.SubmitTask(&task.Ping{})
 
 	// Blocking connection for the lifetime of the WSL service.
 	for {
