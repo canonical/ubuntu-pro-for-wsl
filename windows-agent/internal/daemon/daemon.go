@@ -92,9 +92,10 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	log.Debug(ctx, "Starting to serve requests")
 
+	// TODO: get a local port only, please :)
 	lis, err := net.Listen("tcp", "")
 	if err != nil {
-		return err
+		return fmt.Errorf("can't listen: %v", err)
 	}
 
 	addr := lis.Addr().String()
@@ -111,7 +112,10 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	log.Infof(ctx, "Serving GRPC requests on %v", addr)
 
-	return d.grpcServer.Serve(lis)
+	if err := d.grpcServer.Serve(lis); err != nil {
+		return fmt.Errorf("grpc error: %v", err)
+	}
+	return nil
 }
 
 // Quit gracefully quits listening loop and stops the grpc server.
