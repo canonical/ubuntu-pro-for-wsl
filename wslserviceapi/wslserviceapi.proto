@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "github.com/canonical/ubuntu-pro-for-windows/wslserviceapi";
+
+package wslserviceapi;
+
+service WSL {
+    rpc ProAttach (AttachInfo) returns (Empty) {}
+    rpc Ping(Empty) returns (Empty) {}
+}
+
+message AttachInfo {
+    string token = 1;
+}
+
+message Empty {}
