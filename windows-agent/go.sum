@@ -36,8 +36,11 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
+github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
+github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230213122606-5002a70da5c1 h1:5z4VtxtcGpAAel3QRXUCzTgkX2rnU8j0Qtg0QGGmM5w=
+github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230213122606-5002a70da5c1/go.mod h1:qFE3nfycqhcaxyJdCv7uqMWmZdtu3DNV81ure93ia+M=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230203093503-0dd0b76aab8f h1:v0hvbKDQNU2faUZ0EvwR6JexgoBxlUxorF8VDJa5rvI=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230203093503-0dd0b76aab8f/go.mod h1:RxWMWlmdFVHiaCrhEtvRB5v9dzo8Zlf9Nyg2uX2jp9I=
 github.com/canonical/ubuntu-pro-for-windows/version v0.0.0-20230201103756-21b1dbd83cd0 h1:ImfG4o6Awfy+G5+U3viOKFdi/yEcaS3WjEJOed9Voa0=
@@ -185,6 +188,8 @@ github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117 h1:XQpsQG5lqRJlx4mUVHcJvyyc1rdTI9nHvwrdfcuy8aM=
 github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117/go.mod h1:mx0TjbqsaDD9DUT5gA1s3hw47U6RIbbIBfvGzR85K0g=
+github.com/ubuntu/gowsl v0.0.0-20230127173124-810a9a9a748d h1:njaFRW2eMHm85mPhUyk7Qeov8aUpkh2UCZBB2JFRN7w=
+github.com/ubuntu/gowsl v0.0.0-20230127173124-810a9a9a748d/go.mod h1:5ZtsVClWLOvexgsKsqsQn9NNi1AMnzQ4PSnb5JdHiCs=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
