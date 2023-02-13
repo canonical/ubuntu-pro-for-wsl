@@ -5,17 +5,23 @@ option go_package = "github.com/canonical/ubuntu-pro-for-windows/agentapi";
 package agentapi;
 
 service UI {
-    rpc Ping (PingRequest) returns (PongRequest) {}
+    rpc Ping (Empty) returns (Empty) {}
 }
 
 service WSLInstance {
-    rpc Ping (PingRequest) returns (PongRequest) {}
+    rpc Connected (stream DistroInfo) returns (stream Port) {}
 }
 
-message PingRequest {
-    string content = 1;
+message DistroInfo {
+    string wsl_name = 1;
+    string id = 2;
+    string version_id = 3;
+    string pretty_name = 4;
+    bool pro_attached = 5;
 }
 
-message PongRequest {
-    string answer = 1;
+message Port {
+    uint32 port = 1;
 }
+
+message Empty {}

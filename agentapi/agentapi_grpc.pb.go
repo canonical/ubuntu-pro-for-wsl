@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UIClient interface {
-	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PongRequest, error)
+	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type uIClient struct {
@@ -33,8 +33,8 @@ func NewUIClient(cc grpc.ClientConnInterface) UIClient {
 	return &uIClient{cc}
 }
 
-func (c *uIClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PongRequest, error) {
-	out := new(PongRequest)
+func (c *uIClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/agentapi.UI/Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *uIClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallO
 // All implementations must embed UnimplementedUIServer
 // for forward compatibility
 type UIServer interface {
-	Ping(context.Context, *PingRequest) (*PongRequest, error)
+	Ping(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedUIServer()
 }
 
@@ -54,7 +54,7 @@ type UIServer interface {
 type UnimplementedUIServer struct {
 }
 
-func (UnimplementedUIServer) Ping(context.Context, *PingRequest) (*PongRequest, error) {
+func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedUIServer) mustEmbedUnimplementedUIServer() {}
@@ -71,7 +71,7 @@ func RegisterUIServer(s grpc.ServiceRegistrar, srv UIServer) {
 }
 
 func _UI_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PingRequest)
+	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func _UI_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 		FullMethod: "/agentapi.UI/Ping",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UIServer).Ping(ctx, req.(*PingRequest))
+		return srv.(UIServer).Ping(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -108,7 +108,7 @@ var UI_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WSLInstanceClient interface {
-	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PongRequest, error)
+	Connected(ctx context.Context, opts ...grpc.CallOption) (WSLInstance_ConnectedClient, error)
 }
 
 type wSLInstanceClient struct {
@@ -119,20 +119,42 @@ func NewWSLInstanceClient(cc grpc.ClientConnInterface) WSLInstanceClient {
 	return &wSLInstanceClient{cc}
 }
 
-func (c *wSLInstanceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PongRequest, error) {
-	out := new(PongRequest)
-	err := c.cc.Invoke(ctx, "/agentapi.WSLInstance/Ping", in, out, opts...)
+func (c *wSLInstanceClient) Connected(ctx context.Context, opts ...grpc.CallOption) (WSLInstance_ConnectedClient, error) {
+	stream, err := c.cc.NewStream(ctx, &WSLInstance_ServiceDesc.Streams[0], "/agentapi.WSLInstance/Connected", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &wSLInstanceConnectedClient{stream}
+	return x, nil
+}
+
+type WSLInstance_ConnectedClient interface {
+	Send(*DistroInfo) error
+	Recv() (*Port, error)
+	grpc.ClientStream
+}
+
+type wSLInstanceConnectedClient struct {
+	grpc.ClientStream
+}
+
+func (x *wSLInstanceConnectedClient) Send(m *DistroInfo) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *wSLInstanceConnectedClient) Recv() (*Port, error) {
+	m := new(Port)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // WSLInstanceServer is the server API for WSLInstance service.
 // All implementations must embed UnimplementedWSLInstanceServer
 // for forward compatibility
 type WSLInstanceServer interface {
-	Ping(context.Context, *PingRequest) (*PongRequest, error)
+	Connected(WSLInstance_ConnectedServer) error
 	mustEmbedUnimplementedWSLInstanceServer()
 }
 
@@ -140,8 +162,8 @@ type WSLInstanceServer interface {
 type UnimplementedWSLInstanceServer struct {
 }
 
-func (UnimplementedWSLInstanceServer) Ping(context.Context, *PingRequest) (*PongRequest, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+func (UnimplementedWSLInstanceServer) Connected(WSLInstance_ConnectedServer) error {
+	return status.Errorf(codes.Unimplemented, "method Connected not implemented")
 }
 func (UnimplementedWSLInstanceServer) mustEmbedUnimplementedWSLInstanceServer() {}
 
@@ -156,22 +178,30 @@ func RegisterWSLInstanceServer(s grpc.ServiceRegistrar, srv WSLInstanceServer) {
 	s.RegisterService(&WSLInstance_ServiceDesc, srv)
 }
 
-func _WSLInstance_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PingRequest)
-	if err := dec(in); err != nil {
+func _WSLInstance_Connected_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(WSLInstanceServer).Connected(&wSLInstanceConnectedServer{stream})
+}
+
+type WSLInstance_ConnectedServer interface {
+	Send(*Port) error
+	Recv() (*DistroInfo, error)
+	grpc.ServerStream
+}
+
+type wSLInstanceConnectedServer struct {
+	grpc.ServerStream
+}
+
+func (x *wSLInstanceConnectedServer) Send(m *Port) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *wSLInstanceConnectedServer) Recv() (*DistroInfo, error) {
+	m := new(DistroInfo)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(WSLInstanceServer).Ping(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/agentapi.WSLInstance/Ping",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WSLInstanceServer).Ping(ctx, req.(*PingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 // WSLInstance_ServiceDesc is the grpc.ServiceDesc for WSLInstance service.
@@ -180,12 +210,14 @@ func _WSLInstance_Ping_Handler(srv interface{}, ctx context.Context, dec func(in
 var WSLInstance_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "agentapi.WSLInstance",
 	HandlerType: (*WSLInstanceServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "Ping",
-			Handler:    _WSLInstance_Ping_Handler,
+			StreamName:    "Connected",
+			Handler:       _WSLInstance_Connected_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "agentapi.proto",
 }
