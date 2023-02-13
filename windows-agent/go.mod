@@ -3,8 +3,9 @@ module github.com/canonical/ubuntu-pro-for-windows/windows-agent
 go 1.19
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230203093503-0dd0b76aab8f
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230209145520-6092bc4f2339
 	github.com/canonical/ubuntu-pro-for-windows/version v0.0.0-20230201103756-21b1dbd83cd0
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230213122905-9c522fb66d0f
 	github.com/golang/protobuf v1.5.2
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
@@ -12,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	github.com/ubuntu/gowsl v0.0.0-20230127173124-810a9a9a748d
-	golang.org/x/sys v0.4.0
+	golang.org/x/sys v0.5.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.28.1
@@ -20,7 +21,6 @@ require (
 )
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230213122606-5002a70da5c1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -34,8 +34,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
+	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
+	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
