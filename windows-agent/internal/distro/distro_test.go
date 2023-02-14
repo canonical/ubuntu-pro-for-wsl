@@ -86,6 +86,7 @@ type testTask struct {
 }
 
 func (t *testTask) Execute(context.Context, wslserviceapi.WSLClient) error {
+	t.NExecutions++
 	return nil
 }
 
