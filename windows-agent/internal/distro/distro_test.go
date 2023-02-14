@@ -161,6 +161,18 @@ func TestTaskProcessing(t *testing.T) {
 			time.Sleep(1200 * time.Millisecond)
 			require.Equal(t, tc.wantNExecutions, task.NExecutions, "Task executed an unexpected amount of times after establishing a connection")
 
+			// Saturate queue
+			err = nil
+			for err == nil {
+				if d.QueueLen() > distro.TaskQueueBufferSize+20 { // +20 to protect from races
+					break
+				}
+				// Delayed task to avoid pulling tasks as they are added
+				err = d.SubmitTask(&testTask{Delay: time.Second})
+			}
+			require.Error(t, err, "queue never saturated despite filling it ")
+			d.FlushTaskQueue()
+
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
 
