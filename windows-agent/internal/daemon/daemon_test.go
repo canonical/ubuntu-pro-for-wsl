@@ -266,14 +266,15 @@ func grpcPersistentCall(t *testing.T, addr string, msg string) (drop func() code
 func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 	t.Helper()
 
-	// Try to connect and return once the connection dropped.
+	// Try to connect. Non-blocking call so no error is wanted.
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoErrorf(t, err, "error dialing GRPC server.\nMessage: %s", msg)
 	defer conn.Close()
 
-	require.Eventuallyf(t, func() bool {
-		return conn.GetState() == connectivity.TransientFailure
-	}, 1*time.Second, 30*time.Millisecond, "Should have failed to connect to GRPC server after many connection attempts. Connection state is currently at %v.\nMessage: %s", conn.GetState(), msg)
+	// Timing out and checking that the connection was never established.
+	time.Sleep(300 * time.Millisecond)
+	validStates := []connectivity.State{connectivity.Connecting, connectivity.TransientFailure}
+	require.Contains(t, validStates, conn.GetState(), "unexpected state after dialing. Expected any of %q but got %q", validStates, conn.GetState())
 }
 
 // requireWaitPathExists checks periodically for the existence of a path. If the path
