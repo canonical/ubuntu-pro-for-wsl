@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows"
@@ -118,7 +119,10 @@ func (d Distro) String() string {
 
 // Cleanup releases all resources associated with the distro.
 func (d *Distro) Cleanup(ctx context.Context) {
-	d.stopProcessingTasks(ctx)
+	err := d.stopProcessingTasks(ctx)
+	if err != nil {
+		log.Infof(ctx, "Distro %q: error during cleanup: %v", d.Name, err)
+	}
 }
 
 // getWSLDistro gets underlying GoWSL distro after verifying it.

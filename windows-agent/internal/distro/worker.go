@@ -22,21 +22,22 @@ func (d *Distro) startProcessingTasks(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: starting task processing", d.Name)
 
 	d.tasksInProgress = make(chan struct{})
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	go func() { d.processTasks(ctx) }()
 	d.cancel = cancel
 }
 
 // stopProcessingTasks stops the main task processing goroutine and wait for it to be done.
-func (d *Distro) stopProcessingTasks(ctx context.Context) {
+func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 	log.Debugf(ctx, "Distro %q: stopping task processing", d.Name)
 	if d.tasksInProgress == nil {
-		log.Infof(ctx, "Distro %q: could not stop tasks: task processing is not running.", d.Name)
+		return errors.New("could not stop tasks: task processing is not running.")
 	}
 	d.cancel()
 	<-d.tasksInProgress
 	d.tasksInProgress = nil
 	log.Debugf(ctx, "Distro %q: stopped task processing", d.Name)
+	return nil
 }
 
 // SubmitTask enqueue a new task on our current worker list. If the queue is full, it will return
@@ -131,9 +132,9 @@ func (d *Distro) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, er
 			client := d.Client()
 
 			if client == nil {
+				log.Debugf(ctx, "Distro %q: client not available yet\n", d.Name)
 				continue
 			}
-			log.Debugf(ctx, "Distro %q not reachable yet\n", d.Name)
 			return client, nil
 		}
 	}
