@@ -96,6 +96,14 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	log.Debugf(context.TODO(), "Distro %q: task %q: connection to distro established, running task.", d.Name, t)
 
 	for {
+		// Avoid retrying if the task failed due to a cancelled or timed out context
+		// It also avoids executing in the much rarer case that we cancel or time out right after getting the client
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		err = t.Execute(ctx, client)
 		if err != nil && t.ShouldRetry() {
 			log.Debugf(ctx, "Distro %q: task %q: retrying after obtaining error: %v", d.Name, t, err)

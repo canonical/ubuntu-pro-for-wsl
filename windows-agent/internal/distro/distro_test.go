@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -101,15 +102,16 @@ func TestTaskProcessing(t *testing.T) {
 	testCases := map[string]struct {
 		earlyUnregister        bool // Triggers error in trying to get distro in keepAwake
 		taskError              bool // Causes the task to always return an error
-		forceConnectionTimeout bool // Cancels the timeout in task processing (real timeout is one minute; too long)
+		forceConnectionTimeout bool // Cancels the while waiting for the client
+		cancelTaskInProgress   bool // Cancels as the task is running
 
-		// Will not be executed if an error is triggered in another goroutine
-		wantNExecutions int
+		wantExecuteCalls int32
 	}{
-		"happy path":          {wantNExecutions: 1},
-		"unregistered distro": {earlyUnregister: true, wantNExecutions: 0},
-		"connection timeout":  {forceConnectionTimeout: true, wantNExecutions: 0},
-		"erroneous task":      {taskError: true, wantNExecutions: testTaskMaxRetries},
+		"happy path":              {wantExecuteCalls: 1},
+		"unregistered distro":     {earlyUnregister: true, wantExecuteCalls: 0},
+		"connection timeout":      {forceConnectionTimeout: true, wantExecuteCalls: 0},
+		"cancel task in progress": {cancelTaskInProgress: true, wantExecuteCalls: 1},
+		"erroneous task":          {taskError: true, wantExecuteCalls: testTaskMaxRetries},
 	}
 
 	for name, tc := range testCases {
@@ -123,7 +125,6 @@ func TestTaskProcessing(t *testing.T) {
 				distroName, _ = registerDistro(t, true)
 			}
 
-			distroName, _ := registerDistro(t, true)
 			d, err := distro.New(distroName, distro.Properties{})
 			require.NoError(t, err, "Could not create distro")
 			defer d.Cleanup(ctx)
@@ -136,20 +137,26 @@ func TestTaskProcessing(t *testing.T) {
 			}
 
 			// Submit a task and wait for slightly more than a second (1 second is the refresh rate)
+			const clientTickPeriod = 1200 * time.Millisecond
+
 			task := &testTask{}
 			if tc.taskError {
 				task.Returns = errors.New("error made on purpose")
 			}
+			if tc.cancelTaskInProgress {
+				// Long delay to ensure we catch it in the act
+				task.Delay = 10 * time.Second
+			}
 			require.NoError(t, d.SubmitTask(task), "Could not submit task")
-			time.Sleep(1200 * time.Millisecond)
+			time.Sleep(clientTickPeriod)
 
 			// Testing task without an active connection
 			require.Equal(t, nil, d.Client(), "Client should have returned nil when there is no connection")
-			require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed without a connection")
+			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 
 			if tc.forceConnectionTimeout {
 				d.Cleanup(ctx)
-				require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed without a connection")
+				require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 				return
 			}
 
@@ -157,9 +164,25 @@ func TestTaskProcessing(t *testing.T) {
 			d.SetConnection(conn)
 			require.NotEqual(t, nil, d.Client(), "Client should not have returned nil when there is a connection")
 
-			// Wait for slightly more than a second (1 second is the refresh rate)
-			time.Sleep(1200 * time.Millisecond)
-			require.Equal(t, tc.wantNExecutions, task.NExecutions, "Task executed an unexpected amount of times after establishing a connection")
+			if tc.wantExecuteCalls == 0 {
+				time.Sleep(2 * clientTickPeriod)
+				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed unexpectedly")
+				return
+			}
+
+			if tc.cancelTaskInProgress {
+				require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls },
+					2*clientTickPeriod, 100*time.Millisecond, "Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
+				d.Cleanup(ctx)
+				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task was retried after being cancelled")
+				return
+			}
+
+			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls },
+				2*clientTickPeriod, 100*time.Millisecond, "Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
+
+			time.Sleep(clientTickPeriod)
+			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed an unexpected amount of times after establishing a connection")
 
 			// Saturate queue
 			err = nil
@@ -178,7 +201,7 @@ func TestTaskProcessing(t *testing.T) {
 
 			task = &testTask{}
 			require.NoError(t, d.SubmitTask(task), "Could not submit task")
-			require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed after distro was cleaned up")
+			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed after distro was cleaned up")
 		})
 	}
 
@@ -255,13 +278,24 @@ func onCleanupOrCancel(t *testing.T, ctx context.Context, f func()) {
 const testTaskMaxRetries = 5
 
 type testTask struct {
-	NExecutions int
-	Returns     error
+	// ExecuteCalls counts the number of times Execute is called
+	ExecuteCalls atomic.Int32
+
+	// Delay simulates a processing time for the task
+	Delay time.Duration
+
+	// Returns is the value that Execute will return
+	Returns error
 }
 
-func (t *testTask) Execute(context.Context, wslserviceapi.WSLClient) error {
-	t.NExecutions++
-	return t.Returns
+func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+	t.ExecuteCalls.Add(1)
+	select {
+	case <-time.After(t.Delay):
+		return t.Returns
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (t *testTask) String() string {
@@ -269,7 +303,7 @@ func (t *testTask) String() string {
 }
 
 func (t *testTask) ShouldRetry() bool {
-	return t.NExecutions < testTaskMaxRetries
+	return t.ExecuteCalls.Load() < testTaskMaxRetries
 }
 
 // generateDistroName generates a distroName that is not registered.
