@@ -68,7 +68,9 @@ func TestDistro(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, props, d.Properties, "Unexpected mismatch in properties")
+			require.Equal(t, tc.distro, d.Name, "Unexpected mismatch in distro name")
+			require.Equal(t, realGUID.String(), d.GUID.String(), "Unexpected mismatch in distro GUID")
+			require.Equal(t, props, d.Properties, "Unexpected mismatch in distro properties")
 
 			task := &testTask{}
 			d.SubmitTask(task)
