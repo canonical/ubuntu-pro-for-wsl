@@ -18,7 +18,7 @@ import (
 )
 
 func TestDistro(t *testing.T) {
-	realDistro, realGUID := requireTestDistro(t)
+	realDistro, realGUID := registerEmptyDistro(t)
 
 	fakeDistro := createDistroName(t)
 	fakeGUID, err := windows.GUIDFromString(`{12345678-1234-1234-1234-123456789ABC}`)
@@ -114,21 +114,17 @@ func createDistroName(t *testing.T) (name string) {
 	return ""
 }
 
-func requireTestDistro(t *testing.T) (distroName string, GUID windows.GUID) {
+func registerEmptyDistro(t *testing.T) (distroName string, GUID windows.GUID) {
 	t.Helper()
-	const appx = "UbuntuPreview"
-	t.Logf("Registering clone of %s", appx)
-
-	tarball := requirePwshf(t, `echo "$((Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation)\install.tar.gz"`, appx)
-	tarball = strings.TrimSpace(tarball)
-
-	_, err := os.Lstat(tarball)
-	require.NoError(t, err, "Setup: Could not stat tarball:\n%s", tarball)
-
 	tmpDir := t.TempDir()
+	fakeRootfs := tmpDir + "/install.tar.gz"
+
+	err := os.WriteFile(fakeRootfs, []byte{}, 0600)
+	require.NoError(t, err, "could not write empty file")
+
 	distroName = createDistroName(t)
 
-	requirePwshf(t, "wsl.exe --import %q %q %q", distroName, tmpDir, tarball)
+	requirePwshf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, fakeRootfs)
 	d := gowsl.NewDistro(distroName)
 
 	t.Cleanup(func() {
