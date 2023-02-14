@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -237,7 +238,9 @@ func registerDistro(t *testing.T, realDistro bool) (distroName string, GUID wind
 		require.NoError(t, err, "could not write empty file")
 	} else {
 		const appx = "UbuntuPreview"
-		rootFsPath = requirePwshf(t, `echo "$((Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation)\install.tar.gz"`, appx)
+		rootFsPath = requirePwshf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
+		require.NotEmpty(t, rootFsPath, "could not find rootfs tarball. Is %s installed?", appx)
+		rootFsPath = filepath.Join(rootFsPath, "install.tar.gz")
 	}
 
 	_, err := os.Lstat(rootFsPath)
