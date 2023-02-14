@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func TestDistro(t *testing.T) {
+func TestNew(t *testing.T) {
 	setLogger(t, log.DebugLevel)
 
 	realDistro, realGUID := registerDistro(t, false)
@@ -81,6 +81,16 @@ func TestDistro(t *testing.T) {
 			require.Equal(t, props, d.Properties, "Unexpected mismatch in distro properties")
 		})
 	}
+}
+
+func TestString(t *testing.T) {
+	name, guid := registerDistro(t, false)
+	d, err := distro.New(name, distro.Properties{}, distro.WithGUID(guid))
+	require.NoError(t, err, "unexpected error in distro.New")
+
+	s := d.String()
+	require.Contains(t, s, name, "Distro String does not show the name of the distro")
+	require.Contains(t, s, strings.ToLower(guid.String()), "Distro String does not show the GUID of the distro")
 }
 
 func TestTaskProcessing(t *testing.T) {
