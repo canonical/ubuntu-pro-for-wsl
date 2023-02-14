@@ -96,6 +96,7 @@ func TestString(t *testing.T) {
 
 func TestTaskProcessing(t *testing.T) {
 	setLogger(t, log.DebugLevel)
+	reusableDistro, _ := registerDistro(t, true)
 
 	testCases := map[string]struct {
 		earlyUnregister        bool // Triggers error in trying to get distro in keepAwake
@@ -117,6 +118,10 @@ func TestTaskProcessing(t *testing.T) {
 			ctx := context.Background()
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
+			distroName := reusableDistro
+			if tc.earlyUnregister {
+				distroName, _ = registerDistro(t, true)
+			}
 
 			distroName, _ := registerDistro(t, true)
 			d, err := distro.New(distroName, distro.Properties{})
