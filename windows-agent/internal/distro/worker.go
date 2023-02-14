@@ -125,10 +125,6 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 // waitForClient waits for a valid GRPC client to connect to. It will retry for a while before
 // erroring out.
 func (d *Distro) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, error) {
-	if d.UnreachableErr != nil {
-		return nil, d.UnreachableErr
-	}
-
 	timedOutCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
