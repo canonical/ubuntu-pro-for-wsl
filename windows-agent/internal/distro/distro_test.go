@@ -2,6 +2,7 @@ package distro_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -96,40 +97,74 @@ func TestString(t *testing.T) {
 func TestTaskProcessing(t *testing.T) {
 	setLogger(t, log.DebugLevel)
 
-	realDistro, realGUID := registerDistro(t, true)
-	d, err := distro.New(realDistro, distro.Properties{}, distro.WithGUID(realGUID))
-	require.NoError(t, err, "Could not create distro")
+	testCases := map[string]struct {
+		earlyUnregister        bool // Triggers error in trying to get distro in keepAwake
+		taskError              bool // Causes the task to always return an error
+		forceConnectionTimeout bool // Cancels the timeout in task processing (real timeout is one minute; too long)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	port := requireServeUnimplementedWSLServer(t, ctx, "Setup: could not serve")
-	conn := requireNewConnection(t, ctx, port)
+		// Will not be executed if an error is triggered in another goroutine
+		wantNExecutions int
+	}{
+		"happy path":          {wantNExecutions: 1},
+		"unregistered distro": {earlyUnregister: true, wantNExecutions: 0},
+		"connection timeout":  {forceConnectionTimeout: true, wantNExecutions: 0},
+		"erroneous task":      {taskError: true, wantNExecutions: testTaskMaxRetries},
+	}
 
-	// Testing task without an active connection
-	task := &testTask{}
-	require.NoError(t, d.SubmitTask(task), "Could not submit task")
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			ctx, cancel := context.WithCancel(ctx)
+			defer cancel()
 
-	require.Equal(t, nil, d.Client(), "Client should have returned nil when there is no connection")
+			distroName, _ := registerDistro(t, true)
+			d, err := distro.New(distroName, distro.Properties{})
+			require.NoError(t, err, "Could not create distro")
+			defer d.Cleanup(ctx)
 
-	// Wait for slightly more than a second (1 second is the refresh rate)
-	time.Sleep(1200 * time.Millisecond)
-	require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed without a connection")
-	// (Timeout is one minute, can't really afort to waste this time to enforce a timeout)
+			port := requireServeUnimplementedWSLServer(t, ctx, "Setup: could not serve")
+			conn := requireNewConnection(t, ctx, port)
 
-	// Testing task without with active connection
-	d.SetConnection(conn)
-	require.NotEqual(t, nil, d.Client(), "Client should not have returned nil when there is a connection")
+			if tc.earlyUnregister {
+				unregisterDistro(t, distroName)
+			}
 
-	// Wait for slightly more than a second (1 second is the refresh rate)
-	time.Sleep(1200 * time.Millisecond)
-	require.Equal(t, 1, task.NExecutions, "Task executed an unexpected amount of times after establishing a connection")
+			// Submit a task and wait for slightly more than a second (1 second is the refresh rate)
+			task := &testTask{}
+			if tc.taskError {
+				task.Returns = errors.New("error made on purpose")
+			}
+			require.NoError(t, d.SubmitTask(task), "Could not submit task")
+			time.Sleep(1200 * time.Millisecond)
 
-	// Testing task without with a cleaned up distro
-	d.Cleanup(ctx)
+			// Testing task without an active connection
+			require.Equal(t, nil, d.Client(), "Client should have returned nil when there is no connection")
+			require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed without a connection")
 
-	task = &testTask{}
-	require.NoError(t, d.SubmitTask(task), "Could not submit task")
-	require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed after distro was cleaned up")
+			if tc.forceConnectionTimeout {
+				d.Cleanup(ctx)
+				require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed without a connection")
+				return
+			}
+
+			// Testing task with with active connection
+			d.SetConnection(conn)
+			require.NotEqual(t, nil, d.Client(), "Client should not have returned nil when there is a connection")
+
+			// Wait for slightly more than a second (1 second is the refresh rate)
+			time.Sleep(1200 * time.Millisecond)
+			require.Equal(t, tc.wantNExecutions, task.NExecutions, "Task executed an unexpected amount of times after establishing a connection")
+
+			// Testing task without with a cleaned up distro
+			d.Cleanup(ctx)
+
+			task = &testTask{}
+			require.NoError(t, d.SubmitTask(task), "Could not submit task")
+			require.Equal(t, 0, task.NExecutions, "Task unexpectedly executed after distro was cleaned up")
+		})
+	}
+
 }
 
 func setLogger(t *testing.T, setLvl log.Level) {
@@ -200,13 +235,16 @@ func onCleanupOrCancel(t *testing.T, ctx context.Context, f func()) {
 	}()
 }
 
+const testTaskMaxRetries = 5
+
 type testTask struct {
 	NExecutions int
+	Returns     error
 }
 
 func (t *testTask) Execute(context.Context, wslserviceapi.WSLClient) error {
 	t.NExecutions++
-	return nil
+	return t.Returns
 }
 
 func (t *testTask) String() string {
@@ -214,7 +252,7 @@ func (t *testTask) String() string {
 }
 
 func (t *testTask) ShouldRetry() bool {
-	return false
+	return t.NExecutions < testTaskMaxRetries
 }
 
 // generateDistroName generates a distroName that is not registered.
@@ -264,15 +302,25 @@ func registerDistro(t *testing.T, realDistro bool) (distroName string, GUID wind
 	requirePwshf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
 	tk.Stop()
 
-	d := gowsl.NewDistro(distroName)
 	t.Cleanup(func() {
-		_ = d.Unregister()
+		unregisterDistro(t, distroName)
 	})
 
+	d := gowsl.NewDistro(distroName)
 	GUID, err = d.GUID()
 	require.NoError(t, err, "Setup: could not get distro GUID")
 
 	return distroName, GUID
+}
+
+func unregisterDistro(t *testing.T, distroName string) {
+	t.Helper()
+
+	// Unregister distro with a two minute timeout
+	tk := time.AfterFunc(2*time.Minute, func() { requirePwshf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
+	defer tk.Stop()
+	d := gowsl.NewDistro(distroName)
+	d.Unregister()
 }
 
 func requirePwshf(t *testing.T, command string, args ...any) string {
@@ -280,7 +328,7 @@ func requirePwshf(t *testing.T, command string, args ...any) string {
 
 	cmd := fmt.Sprintf(command, args...)
 
-	//nolint: gosec // This fnction is only used in tests so no arbitrary code execution here
+	//nolint: gosec // This function is only used in tests so no arbitrary code execution here
 	out, err := exec.Command("powershell", "-Command", cmd).CombinedOutput()
 	require.NoError(t, err, "Non-zero return code for command:\n%s\nOutput:%s", cmd, out)
 
