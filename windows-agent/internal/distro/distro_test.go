@@ -98,11 +98,12 @@ func (t *testTask) ShouldRetry() bool {
 	return false
 }
 
-// createDistroName generates a distroName that is not registered.
-func createDistroName(t *testing.T) (name string) {
+// generateDistroName generates a distroName that is not registered.
+func generateDistroName(t *testing.T) (name string) {
 	t.Helper()
 
 	for i := 0; i < 10; i++ {
+		//nolint: gosec // No need to be cryptographically secure in a distro name generator
 		name := fmt.Sprintf("testDistro_UP4W_%d", rand.Uint32())
 		d := gowsl.NewDistro(name)
 		collision, err := d.IsRegistered()
@@ -145,6 +146,7 @@ func requirePwshf(t *testing.T, command string, args ...any) string {
 
 	cmd := fmt.Sprintf(command, args...)
 
+	//nolint: gosec // This fnction is only used in tests so no arbitrary code execution here
 	out, err := exec.Command("powershell", "-Command", cmd).CombinedOutput()
 	require.NoError(t, err, "Non-zero return code for command:\n%s\nOutput:%s", cmd, out)
 
