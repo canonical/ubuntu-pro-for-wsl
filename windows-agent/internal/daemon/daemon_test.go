@@ -292,6 +292,10 @@ func requireWaitPathExists(t *testing.T, path string, msg string) {
 	}
 
 	require.Eventually(t, fileExists, 100*time.Millisecond, time.Millisecond, "%q does not exists: %v", path, msg)
+
+	// Prevent error when accessing the file right after:
+	// 'The process cannot access the file because it is being used by another process'
+	time.Sleep(10 * time.Millisecond)
 }
 
 // requireWaitPathDoesNotExist checks periodically for the existence of a path. If the path
