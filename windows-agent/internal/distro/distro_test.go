@@ -95,6 +95,48 @@ func TestString(t *testing.T) {
 	require.Contains(t, s, strings.ToLower(guid.String()), "Distro String does not show the GUID of the distro")
 }
 
+func TestIsValid(t *testing.T) {
+	distro1, guid1 := registerDistro(t, false)
+	_, guid2 := registerDistro(t, false)
+
+	nonRegisteredDistro := generateDistroName(t)
+	fakeGUID, err := windows.GUIDFromString(`{12345678-1234-1234-1234-123456789ABC}`)
+	require.NoError(t, err, "Setup: could not construct fake GUID")
+
+	testCases := map[string]struct {
+		distro string
+		guid   windows.GUID
+
+		want bool
+	}{
+		"registered distro with matching GUID": {distro: distro1, guid: guid1, want: true},
+
+		// Invalid cases
+		"registered distro with diferent, another distro's GUID": {distro: distro1, guid: guid2, want: false},
+		"registered distro with diferent, fake GUID":             {distro: distro1, guid: fakeGUID, want: false},
+		"non-registered distro, registered distro's GUID":        {distro: nonRegisteredDistro, guid: guid1, want: false},
+		"non-registered distro, non-registered distro's GUID":    {distro: nonRegisteredDistro, guid: fakeGUID, want: false},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			// Create an always valid distro
+			d, err := distro.New(distro1, distro.Properties{})
+			require.NoError(t, err, "Setup: distro New() should return no errors")
+
+			// Change values and assert on IsValid
+			d.Name = tc.distro
+			d.GUID = tc.guid
+
+			got, err := d.IsValid()
+			require.NoError(t, err, "IsValid should never return an error")
+
+			require.Equal(t, tc.want, got, "IsValid should return expected value")
+		})
+	}
+}
+
 func TestTaskProcessing(t *testing.T) {
 	setLogger(t, log.DebugLevel)
 	reusableDistro, _ := registerDistro(t, true)
