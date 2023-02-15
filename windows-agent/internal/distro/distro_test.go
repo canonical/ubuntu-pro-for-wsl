@@ -179,8 +179,9 @@ func TestTaskProcessing(t *testing.T) {
 			require.NoError(t, err, "Could not create distro")
 			defer d.Cleanup(ctx)
 
-			port := requireServeUnimplementedWSLServer(t, ctx, "Setup: could not serve")
-			conn := requireNewConnection(t, ctx, port)
+			wslInstanceService := newTestService(t)
+			conn := wslInstanceService.newClientConnection(t)
+
 
 			if tc.earlyUnregister {
 				unregisterDistro(t, distroName)
@@ -256,66 +257,58 @@ func TestTaskProcessing(t *testing.T) {
 	}
 }
 
+type testService struct {
+	wslserviceapi.UnimplementedWSLServer
+	port      uint16
+}
+
+// newTestService creates a testService and starts serving asyncronously.
 // nolint: revive
 // Putting the context in front of the testing.T would be a sacrilege.
-func requireServeUnimplementedWSLServer(t *testing.T, ctx context.Context, msg string) (port uint16) {
+func newTestService(t *testing.T) *testService {
 	t.Helper()
 
 	server := grpc.NewServer()
 
 	lis, err := net.Listen("tcp4", "localhost:")
-	require.NoErrorf(t, err, "%s: could not listen.", msg)
-
-	wslserviceapi.RegisterWSLServer(server, &wslserviceapi.UnimplementedWSLServer{})
-	go func() {
-		err := server.Serve(lis)
-		if err != nil {
-			t.Logf("server.Serve returned non-nil error: %v", err)
-		}
-	}()
-
-	onCleanupOrCancel(t, ctx, func() { server.Stop() })
-
-	t.Logf("Started listening at %q", lis.Addr())
+	require.NoErrorf(t, err, "Setup: could not listen.")
 
 	fields := strings.Split(lis.Addr().String(), ":")
 	portTmp, err := strconv.ParseUint(fields[len(fields)-1], 10, 16)
-	require.NoError(t, err, "could not parse address")
+	require.NoError(t, err, "Setup: could not parse address")
 
-	return uint16(portTmp)
+	service := testService{port: uint16(portTmp)}
+	wslserviceapi.RegisterWSLServer(server, &service)
+	go func() {
+		err := server.Serve(lis)
+		if err != nil {
+			t.Logf("Setup: server.Serve returned non-nil error: %v", err)
+		}
+	}()
+
+	t.Cleanup(server.Stop)
+
+	t.Logf("Setup: Started listening at %q", lis.Addr())
+
+	return &service
 }
 
-// nolint: revive
-// Putting the context in front of the testing.T would be a sacrilege.
-func requireNewConnection(t *testing.T, ctx context.Context, port uint16) *grpc.ClientConn {
+func (s testService) newClientConnection(t *testing.T) *grpc.ClientConn {
 	t.Helper()
 
-	addr := fmt.Sprintf("localhost:%d", port)
+	addr := fmt.Sprintf("localhost:%d", s.port)
 
-	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctxTimeout, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock())
-	require.NoError(t, err, "could not contact the grpc server at %q", addr)
+	require.NoError(t, err, "Setup: could not contact the grpc server at %q", addr)
 
-	onCleanupOrCancel(t, ctx, func() { conn.Close() })
+	t.Cleanup(func() { conn.Close() })
 
 	return conn
-}
-
-// nolint: revive
-// Putting the context in front of the testing.T would be a sacrilege.
-func onCleanupOrCancel(t *testing.T, ctx context.Context, f func()) {
-	t.Helper()
-
-	ctx, cancel := context.WithCancel(ctx)
-	t.Cleanup(cancel)
-	go func() {
-		<-ctx.Done()
-		f()
-	}()
 }
 
 const testTaskMaxRetries = 5
