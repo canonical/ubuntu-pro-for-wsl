@@ -97,11 +97,11 @@ func TestNew(t *testing.T) {
 func TestString(t *testing.T) {
 	name, guid := registerDistro(t, false)
 	d, err := distro.New(name, distro.Properties{}, distro.WithGUID(guid))
-	require.NoError(t, err, "unexpected error in distro.New")
+	require.NoError(t, err, "Setup: unexpected error in distro.New")
 
 	s := d.String()
-	require.Contains(t, s, name, "Distro String does not show the name of the distro")
-	require.Contains(t, s, strings.ToLower(guid.String()), "Distro String does not show the GUID of the distro")
+	require.Contains(t, s, name, "String() should contain the name of the distro")
+	require.Contains(t, s, strings.ToLower(guid.String()), "String() should contain the GUID of the distro")
 }
 
 func TestIsValid(t *testing.T) {
