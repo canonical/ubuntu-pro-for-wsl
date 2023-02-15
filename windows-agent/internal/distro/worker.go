@@ -88,7 +88,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	if err != nil {
 		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
-		return errors.New("task could not start started: could not wake distro up")
+		return errors.New("task could not start task: could not wake distro up")
 	}
 	log.Debugf(context.TODO(), "Distro %q: task %q: distro is active.", d.Name, t)
 
@@ -100,7 +100,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	if err != nil {
 		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
-		return errors.New("task could not start started: could not contact distro")
+		return errors.New("task could not start task: could not contact distro")
 	}
 	log.Debugf(context.TODO(), "Distro %q: task %q: connection to distro established, running task.", d.Name, t)
 
