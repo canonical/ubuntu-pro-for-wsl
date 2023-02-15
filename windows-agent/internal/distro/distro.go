@@ -119,6 +119,12 @@ func (d Distro) String() string {
 	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name, strings.ToLower(d.GUID.String()))
 }
 
+// Is active returns true when the distro is running, and there exists an active
+// connection to its GRPC service.
+func (d *Distro) IsActive() bool {
+	return d.Client() != nil
+}
+
 // Cleanup releases all resources associated with the distro.
 func (d *Distro) Cleanup(ctx context.Context) {
 	err := d.stopProcessingTasks(ctx)
