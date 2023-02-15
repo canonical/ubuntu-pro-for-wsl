@@ -25,8 +25,14 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+func TestMain(m *testing.M) {
+	log.SetLevel(log.DebugLevel)
+
+	exit := m.Run()
+	defer os.Exit(exit)
+}
+
 func TestNew(t *testing.T) {
-	setLogger(t, log.DebugLevel)
 
 	realDistro, realGUID := registerDistro(t, false)
 
@@ -138,7 +144,6 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestTaskProcessing(t *testing.T) {
-	setLogger(t, log.DebugLevel)
 	reusableDistro, _ := registerDistro(t, true)
 
 	testCases := map[string]struct {
@@ -246,13 +251,6 @@ func TestTaskProcessing(t *testing.T) {
 			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed after distro was cleaned up")
 		})
 	}
-
-}
-
-func setLogger(t *testing.T, setLvl log.Level) {
-	lvl := log.GetLevel()
-	log.SetLevel(setLvl)
-	t.Cleanup(func() { log.SetLevel(lvl) })
 }
 
 // nolint: revive
