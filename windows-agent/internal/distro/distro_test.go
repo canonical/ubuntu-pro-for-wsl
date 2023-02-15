@@ -235,9 +235,8 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
 
-			task = &testTask{}
-			require.NoError(t, d.SubmitTask(task), "Could not submit task")
-			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed after distro was cleaned up")
+			err = d.SubmitTask(&testTask{})
+			require.Error(t, err, "SubmitTask should fail after a distro has been cleaned up")
 		})
 	}
 }

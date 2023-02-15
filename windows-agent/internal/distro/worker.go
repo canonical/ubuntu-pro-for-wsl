@@ -8,6 +8,7 @@ import (
 
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/ubuntu/decorate"
 )
 
 // Task represents a given task that could be retried to dispatch to GRPC.
@@ -40,14 +41,22 @@ func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 	return nil
 }
 
-// SubmitTask enqueue a new task on our current worker list. If the queue is full, it will return
-// an error.
-func (d *Distro) SubmitTask(t Task) error {
+// SubmitTask enqueue a new task on our current worker list.
+// It will return an error in these cases:
+// - The queue is full
+// - The distro has been cleaned up.
+func (d *Distro) SubmitTask(t Task) (err error) {
+	defer decorate.OnError(&err, "distro %q: task %q: could not submit", d.Name, t)
+
+	if d.canProcessTasks == nil {
+		return errors.New("task processing is not running.")
+	}
+
 	log.Infof(context.TODO(), "Distro %q: Submitting task %q to queue", d.Name, t)
 	select {
 	case d.tasks <- t:
 	default:
-		return fmt.Errorf("distro %q: task %q not queued: queue is full", d.Name, t)
+		return errors.New("queue is full")
 	}
 	return nil
 }
