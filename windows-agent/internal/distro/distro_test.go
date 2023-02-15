@@ -150,18 +150,18 @@ func TestTaskProcessing(t *testing.T) {
 	reusableDistro, _ := registerDistro(t, true)
 
 	testCases := map[string]struct {
-		earlyUnregister        bool // Triggers error in trying to get distro in keepAwake
-		taskError              bool // Causes the task to always return an error
-		forceConnectionTimeout bool // Cancels the while waiting for the client
-		cancelTaskInProgress   bool // Cancels as the task is running
+		unregisterAfterConstructor bool // Triggers error in trying to get distro in keepAwake
+		taskError                  bool // Causes the task to always return an error
+		forceConnectionTimeout     bool // Cancels the context while waiting for the GRPC connection to be established
+		cancelTaskInProgress       bool // Cancels as the task is running
 
 		wantExecuteCalls int32
 	}{
-		"happy path":              {wantExecuteCalls: 1},
-		"unregistered distro":     {earlyUnregister: true, wantExecuteCalls: 0},
-		"connection timeout":      {forceConnectionTimeout: true, wantExecuteCalls: 0},
-		"cancel task in progress": {cancelTaskInProgress: true, wantExecuteCalls: 1},
-		"erroneous task":          {taskError: true, wantExecuteCalls: testTaskMaxRetries},
+		"Task is executed successfully": {wantExecuteCalls: 1},
+		"Unregistered distro":           {unregisterAfterConstructor: true, wantExecuteCalls: 0},
+		"Connection timeout":            {forceConnectionTimeout: true, wantExecuteCalls: 0},
+		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalls: 1},
+		"Erroneous task":                {taskError: true, wantExecuteCalls: testTaskMaxRetries},
 	}
 
 	for name, tc := range testCases {
@@ -170,73 +170,103 @@ func TestTaskProcessing(t *testing.T) {
 			ctx := context.Background()
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
+
+			// Optimization: we re-use the same distro for cases when
+			// the distro is not modified
 			distroName := reusableDistro
-			if tc.earlyUnregister {
+			if tc.unregisterAfterConstructor {
+				// Otherwise, we use a new distro
 				distroName, _ = registerDistro(t, true)
 			}
 
-			d, err := distro.New(distroName, distro.Properties{})
-			require.NoError(t, err, "Could not create distro")
+			d, err := distro.New(distroName, distro.Properties{}, distro.WithTaskProcessingContext(ctx))
+			require.NoError(t, err, "Setup: distro New() should return no error")
 			defer d.Cleanup(ctx)
 
 			wslInstanceService := newTestService(t)
 			conn := wslInstanceService.newClientConnection(t)
 
+			// End of setup
+			require.Equal(t, nil, d.Client(), "Client() should return nil when there is no connection")
 
-			if tc.earlyUnregister {
+			if tc.unregisterAfterConstructor {
 				unregisterDistro(t, distroName)
 			}
 
-			// Submit a task and wait for slightly more than a second (1 second is the refresh rate)
+			// Submit a task, wait for distro to wake up, and wait for slightly
+			// more than the client waiting tickrate
+			const distroWakeUpTime = 5 * time.Second
 			const clientTickPeriod = 1200 * time.Millisecond
 
 			task := &testTask{}
 			if tc.taskError {
-				task.Returns = errors.New("error made on purpose")
+				task.Returns = errors.New("testTask error")
 			}
 			if tc.cancelTaskInProgress {
-				// Long delay to ensure we catch it in the act
+				// This particular task will always retry in a loop
+				// Long delay to ensure we can reliably cancell it in progress
 				task.Delay = 10 * time.Second
+				task.Returns = errors.New("testTask error: this error should never be triggered.")
 			}
-			require.NoError(t, d.SubmitTask(task), "Could not submit task")
-			time.Sleep(clientTickPeriod)
 
-			// Testing task without an active connection
-			require.Equal(t, nil, d.Client(), "Client should have returned nil when there is no connection")
+			err = d.SubmitTask(task)
+			require.NoError(t, err, "SubmitTask() should work without returning any errors")
+
+			// Ensuring the distro is awakened (if registered) after task submission
+			wantState := "Running"
+			if tc.unregisterAfterConstructor {
+				wantState = "Unregistered"
+			}
+			require.Eventuallyf(t, func() bool { return distroState(t, distroName) == wantState }, distroWakeUpTime, 200*time.Millisecond,
+				"distro should have been %q after SubmitTask(). Current state is %q", wantState, distroState(t, distroName))
+
+			// Testing task before an active connection is established
+			// We sleep to ensure at least one tick has gone by in the "wait for connection"
+			time.Sleep(clientTickPeriod)
+			require.Equal(t, nil, d.Client(), "Client should return nil when there is no connection")
 			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 
 			if tc.forceConnectionTimeout {
-				d.Cleanup(ctx)
-				require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
-				return
+				cancel() // Simulates a timeout
+				time.Sleep(clientTickPeriod)
 			}
 
 			// Testing task with with active connection
 			d.SetConnection(conn)
-			require.NotEqual(t, nil, d.Client(), "Client should not have returned nil when there is a connection")
 
 			if tc.wantExecuteCalls == 0 {
 				time.Sleep(2 * clientTickPeriod)
-				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed unexpectedly")
+				require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task executed unexpectedly")
 				return
 			}
+
+			require.Eventuallyf(t, func() bool { return d.Client() != nil }, clientTickPeriod, 100*time.Millisecond,
+				"Client should become non-nil after setting the connection")
+
+			// Wait for task to start
+			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls }, 2*clientTickPeriod, 100*time.Millisecond,
+				"Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
 
 			if tc.cancelTaskInProgress {
-				require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls },
-					2*clientTickPeriod, 100*time.Millisecond, "Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
-				d.Cleanup(ctx)
-				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task was retried after being cancelled")
+				// Cancelling and waiting for cancellation to propagate, then ensure it did so.
+				cancel()
+				require.Eventually(t, func() bool { return task.WasCancelled }, 100*time.Millisecond, time.Millisecond,
+					"Task should be cancelled when the task processing context is cancelled")
+
+				// Giving some time to ensure retry is never attempted.
+				time.Sleep(100 * time.Millisecond)
+				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task should not be retried after being cancelled")
 				return
 			}
 
-			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls },
-				2*clientTickPeriod, 100*time.Millisecond, "Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
+			time.Sleep(time.Second)
+			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed too many times after establishing a connection")
 
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
 
 			err = d.SubmitTask(&testTask{})
-			require.Error(t, err, "SubmitTask should fail after a distro has been cleaned up")
+			require.Error(t, err, "SubmitTask() should fail after a distro has been cleaned up")
 		})
 	}
 }
@@ -417,6 +447,9 @@ type testTask struct {
 
 	// Returns is the value that Execute will return
 	Returns error
+
+	// WasCancelled is true if the task Execute context is Done
+	WasCancelled bool
 }
 
 func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
@@ -425,6 +458,7 @@ func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 	case <-time.After(t.Delay):
 		return t.Returns
 	case <-ctx.Done():
+		t.WasCancelled = true
 		return ctx.Err()
 	}
 }
@@ -516,4 +550,32 @@ func requirePwshf(t *testing.T, command string, args ...any) string {
 
 	// Convert to string and get rid of trailing endline
 	return strings.TrimSuffix(string(out), "\r\n")
+}
+
+// distroState returns the state of the distro as specified by wsl.exe. Possible states:
+// - Installing
+// - Running
+// - Stopped
+// - Unregistered
+func distroState(t *testing.T, distroName string) string {
+	t.Helper()
+
+	cmd := "$env:WSL_UTF8=1 ; wsl --list --all --verbose"
+	out := poweshellOutputf(t, cmd)
+
+	rows := strings.Split(string(out), "\n")[1:] // [1:] to skip header
+	for _, row := range rows[1:] {
+		fields := strings.Fields(row)
+		if fields[0] == "*" {
+			fields = fields[1:]
+		}
+		t.Logf("Searching: %q Found:%q", distroName, fields)
+		require.Len(t, fields, 3, "Output of %q should contain three columns. Row %q was parsed into %q", cmd, row, fields)
+		if fields[0] != distroName {
+			continue
+		}
+		t.Log("OK!")
+		return fields[1]
+	}
+	return "Unregistered"
 }

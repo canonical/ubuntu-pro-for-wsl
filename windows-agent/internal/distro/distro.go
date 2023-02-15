@@ -45,7 +45,8 @@ func (*NotExistError) Error() string {
 }
 
 type options struct {
-	guid windows.GUID
+	guid                  windows.GUID
+	taskProcessingContext context.Context
 }
 
 // Option is an optional argument for distro.New.
@@ -71,7 +72,11 @@ func WithGUID(guid windows.GUID) Option {
 func New(name string, props Properties, args ...Option) (distro *Distro, err error) {
 	decorate.OnError(&err, "could not initialize distro %q", name)
 
-	var opts options
+	var nilGUID windows.GUID
+	opts := options{
+		guid:                  nilGUID,
+		taskProcessingContext: context.Background(),
+	}
 	for _, f := range args {
 		f(&opts)
 	}
@@ -82,7 +87,6 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 	}
 
 	// GUID is not initialized.
-	var nilGUID windows.GUID
 	if id.GUID == nilGUID {
 		d := wsl.NewDistro(name)
 		guid, err := d.GUID()
@@ -110,7 +114,7 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 		connMu: &sync.RWMutex{},
 	}
 
-	distro.startProcessingTasks(context.TODO())
+	distro.startProcessingTasks(opts.taskProcessingContext)
 
 	return distro, nil
 }
