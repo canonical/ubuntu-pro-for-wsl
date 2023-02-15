@@ -32,7 +32,7 @@ func (d *Distro) startProcessingTasks(ctx context.Context) {
 func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 	log.Debugf(ctx, "Distro %q: stopping task processing", d.Name)
 	if d.canProcessTasks == nil {
-		return errors.New("could not stop tasks: task processing is not running.")
+		return errors.New("could not stop tasks: task processing is not running")
 	}
 	d.cancel()
 	<-d.canProcessTasks
@@ -49,7 +49,7 @@ func (d *Distro) SubmitTask(t Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: task %q: could not submit", d.Name, t)
 
 	if d.canProcessTasks == nil {
-		return errors.New("task processing is not running.")
+		return errors.New("task processing is not running")
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting task %q to queue", d.Name, t)

@@ -121,10 +121,10 @@ func TestIsValid(t *testing.T) {
 		"registered distro with matching GUID": {distro: distro1, guid: guid1, want: true},
 
 		// Invalid cases
-		"registered distro with diferent, another distro's GUID": {distro: distro1, guid: guid2, want: false},
-		"registered distro with diferent, fake GUID":             {distro: distro1, guid: fakeGUID, want: false},
-		"non-registered distro, registered distro's GUID":        {distro: nonRegisteredDistro, guid: guid1, want: false},
-		"non-registered distro, non-registered distro's GUID":    {distro: nonRegisteredDistro, guid: fakeGUID, want: false},
+		"registered distro with different, another distro's GUID": {distro: distro1, guid: guid2, want: false},
+		"registered distro with different, fake GUID":             {distro: distro1, guid: fakeGUID, want: false},
+		"non-registered distro, registered distro's GUID":         {distro: nonRegisteredDistro, guid: guid1, want: false},
+		"non-registered distro, non-registered distro's GUID":     {distro: nonRegisteredDistro, guid: fakeGUID, want: false},
 	}
 
 	for name, tc := range testCases {
@@ -206,7 +206,7 @@ func TestTaskProcessing(t *testing.T) {
 				// This particular task will always retry in a loop
 				// Long delay to ensure we can reliably cancell it in progress
 				task.Delay = 10 * time.Second
-				task.Returns = errors.New("testTask error: this error should never be triggered.")
+				task.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
 			err = d.SubmitTask(task)
@@ -333,22 +333,22 @@ func TestSetConnection(t *testing.T) {
 	d.SetConnection(conn2)
 	require.True(t, d.IsActive(), "IsActive() should return true even if the connection has changed")
 
-	// Ping on renewed connection (new wsl instance service) and ensure only the second service recieves the pings
+	// Ping on renewed connection (new wsl instance service) and ensure only the second service receives the pings
 	c := d.Client()
 	require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
 	_, err = c.Ping(ctx, &wslserviceapi.Empty{})
 	require.NoError(t, err, "Ping should have been done successfully")
 	require.Equal(t, 1, wslInstanceService2.pingCount, "second server should be pinged after c.Ping")
 
-	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have recieved pings after setting the connection to the second service")
+	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have received pings after setting the connection to the second service")
 
 	// Set connection to nil and ensure that no pings are made
 	d.SetConnection(nil)
 	require.Equal(t, nil, d.Client(), "Client() should return a nil because the connection has been set to nil")
 	require.False(t, d.IsActive(), "IsActive() should return false because the connection has been set to nil")
 
-	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have recieved pings after setting the connection to nil")
-	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should not have recieved pings after setting the connection to nil")
+	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have received pings after setting the connection to nil")
+	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should not have received pings after setting the connection to nil")
 }
 
 func TestSetConnectionOnClosedConnection(t *testing.T) {
@@ -388,8 +388,6 @@ func (s *testService) Ping(context.Context, *wslserviceapi.Empty) (*wslserviceap
 }
 
 // newTestService creates a testService and starts serving asyncronously.
-// nolint: revive
-// Putting the context in front of the testing.T would be a sacrilege.
 func newTestService(t *testing.T) *testService {
 	t.Helper()
 
@@ -536,7 +534,7 @@ func unregisterDistro(t *testing.T, distroName string) {
 	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
 	d := gowsl.NewDistro(distroName)
-	d.Unregister()
+	_ = d.Unregister()
 }
 
 // poweshellOutputf runs the command (with any printf-style directives and args). It fails if the
@@ -558,14 +556,14 @@ func poweshellOutputf(t *testing.T, command string, args ...any) string {
 // - Installing
 // - Running
 // - Stopped
-// - Unregistered
+// - Unregistered.
 func distroState(t *testing.T, distroName string) string {
 	t.Helper()
 
 	cmd := "$env:WSL_UTF8=1 ; wsl --list --all --verbose"
 	out := poweshellOutputf(t, cmd)
 
-	rows := strings.Split(string(out), "\n")[1:] // [1:] to skip header
+	rows := strings.Split(out, "\n")[1:] // [1:] to skip header
 	for _, row := range rows[1:] {
 		fields := strings.Fields(row)
 		if fields[0] == "*" {
