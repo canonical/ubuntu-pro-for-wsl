@@ -251,22 +251,110 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
 	err = d.SubmitTask(&testTask{})
-	require.NoErrorf(t, err, "SubmitTask() should only fail when the queue is full.\nSubmitted: %d.\nMax: %d", 1, distro.TaskQueueSize)
+	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, distro.TaskQueueSize)
 
 	// We fill up the queue
 	var i int
 	for ; i < distro.TaskQueueSize; i++ {
 		err := d.SubmitTask(&testTask{})
-		require.NoErrorf(t, err, "SubmitTask() should only fail when the queue is full.\nSubmitted: %d.\nMax: %d", i+1, distro.TaskQueueSize)
+		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, distro.TaskQueueSize)
 	}
 
 	// We ensure that adding one more task will return an error
 	err = d.SubmitTask(&testTask{})
 	require.Errorf(t, err, "SubmitTask() should fail when the queue is full\nSubmitted: %d.\nMax: %d", i+2, distro.TaskQueueSize)
 }
+
+func TestSetConnection(t *testing.T) {
+	ctx := context.Background()
+	distroName, _ := registerDistro(t, false)
+
+	d, err := distro.New(distroName, distro.Properties{})
+	require.NoError(t, err, "Setup: unexpected error creating the distro")
+	defer d.Cleanup(context.Background())
+
+	wslInstanceService1 := newTestService(t)
+	conn1 := wslInstanceService1.newClientConnection(t)
+
+	wslInstanceService2 := newTestService(t)
+	conn2 := wslInstanceService2.newClientConnection(t)
+
+	require.Equal(t, nil, d.Client(), "Client() should return nil because the connection has not been set yet")
+	require.False(t, d.IsActive(), "IsActive() should return false because the connection has not been set yet")
+
+	// Set first connection as active
+	d.SetConnection(conn1)
+
+	require.True(t, d.IsActive(), "IsActive() should return true because the connection has been set")
+
+	// GetClient twice and ensure we ping the same service
+	const service1pings = 2
+	for i := 0; i < service1pings; i++ {
+		c := d.Client()
+		require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
+		_, err = c.Ping(ctx, &wslserviceapi.Empty{})
+		require.NoError(t, err, "Ping attempt #%d should have been done successfully", i)
+		require.Equal(t, i+1, wslInstanceService1.pingCount, "second server should be pinged after c.Ping (iteration #%d)", i)
+	}
+
+	require.Equal(t, 0, wslInstanceService2.pingCount, "second service should not be called yet")
+
+	// Set second connection as active
+	d.SetConnection(conn2)
+	require.True(t, d.IsActive(), "IsActive() should return true even if the connection has changed")
+
+	// Ping on renewed connection (new wsl instance service) and ensure only the second service recieves the pings
+	c := d.Client()
+	require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
+	_, err = c.Ping(ctx, &wslserviceapi.Empty{})
+	require.NoError(t, err, "Ping should have been done successfully")
+	require.Equal(t, 1, wslInstanceService2.pingCount, "second server should be pinged after c.Ping")
+
+	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have recieved pings after setting the connection to the second service")
+
+	// Set connection to nil and ensure that no pings are made
+	d.SetConnection(nil)
+	require.Equal(t, nil, d.Client(), "Client() should return a nil because the connection has been set to nil")
+	require.False(t, d.IsActive(), "IsActive() should return false because the connection has been set to nil")
+
+	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have recieved pings after setting the connection to nil")
+	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should not have recieved pings after setting the connection to nil")
+}
+
+func TestSetConnectionOnClosedConnection(t *testing.T) {
+	ctx := context.Background()
+	distroName, _ := registerDistro(t, false)
+
+	d, err := distro.New(distroName, distro.Properties{})
+	require.NoError(t, err, "Setup: unexpected error creating the distro")
+	defer d.Cleanup(context.Background())
+
+	wslInstanceService1 := newTestService(t)
+	conn1 := wslInstanceService1.newClientConnection(t)
+
+	wslInstanceService2 := newTestService(t)
+	conn2 := wslInstanceService2.newClientConnection(t)
+
+	d.SetConnection(conn1)
+	_ = conn1.Close()
+
+	d.SetConnection(conn2)
+
+	// New connection is functional.
+	_, err = d.Client().Ping(ctx, &wslserviceapi.Empty{})
+	require.NoError(t, err, "Ping should have been done successfully")
+	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should be called once")
+}
+
 type testService struct {
 	wslserviceapi.UnimplementedWSLServer
+	pingCount int
 	port      uint16
+}
+
+func (s *testService) Ping(context.Context, *wslserviceapi.Empty) (*wslserviceapi.Empty, error) {
+	s.pingCount++
+	return &wslserviceapi.Empty{}, nil
 }
 
 // newTestService creates a testService and starts serving asyncronously.
