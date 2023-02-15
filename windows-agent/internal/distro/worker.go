@@ -8,6 +8,7 @@ import (
 
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/ubuntu/decorate"
 )
 
 // Task represents a given task that could be retried to dispatch to GRPC.
@@ -21,32 +22,41 @@ type Task interface {
 func (d *Distro) startProcessingTasks(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: starting task processing", d.Name)
 
-	d.tasksInProgress = make(chan struct{})
-	ctx, cancel := context.WithCancel(context.Background())
+	d.canProcessTasks = make(chan struct{})
+	ctx, cancel := context.WithCancel(ctx)
 	go func() { d.processTasks(ctx) }()
 	d.cancel = cancel
 }
 
 // stopProcessingTasks stops the main task processing goroutine and wait for it to be done.
-func (d *Distro) stopProcessingTasks(ctx context.Context) {
+func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 	log.Debugf(ctx, "Distro %q: stopping task processing", d.Name)
-	if d.tasksInProgress == nil {
-		log.Infof(ctx, "Distro %q: could not stop tasks: task processing is not running.", d.Name)
+	if d.canProcessTasks == nil {
+		return errors.New("could not stop tasks: task processing is not running")
 	}
 	d.cancel()
-	<-d.tasksInProgress
-	d.tasksInProgress = nil
+	<-d.canProcessTasks
+	d.canProcessTasks = nil
 	log.Debugf(ctx, "Distro %q: stopped task processing", d.Name)
+	return nil
 }
 
-// SubmitTask enqueue a new task on our current worker list. If the queue is full, it will return
-// an error.
-func (d *Distro) SubmitTask(t Task) error {
+// SubmitTask enqueue a new task on our current worker list.
+// It will return an error in these cases:
+// - The queue is full
+// - The distro has been cleaned up.
+func (d *Distro) SubmitTask(t Task) (err error) {
+	defer decorate.OnError(&err, "distro %q: task %q: could not submit", d.Name, t)
+
+	if d.canProcessTasks == nil {
+		return errors.New("task processing is not running")
+	}
+
 	log.Infof(context.TODO(), "Distro %q: Submitting task %q to queue", d.Name, t)
 	select {
 	case d.tasks <- t:
 	default:
-		return fmt.Errorf("distro %q: task %q not queued: queue is full", d.Name, t)
+		return errors.New("queue is full")
 	}
 	return nil
 }
@@ -54,7 +64,7 @@ func (d *Distro) SubmitTask(t Task) error {
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
 // locks to distro,.
 func (d *Distro) processTasks(ctx context.Context) {
-	defer close(d.tasksInProgress)
+	defer close(d.canProcessTasks)
 
 	for d.UnreachableErr == nil {
 		select {
@@ -78,7 +88,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	if err != nil {
 		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
-		return errors.New("task could not start started: could not wake distro up")
+		return errors.New("task could not start task: could not wake distro up")
 	}
 	log.Debugf(context.TODO(), "Distro %q: task %q: distro is active.", d.Name, t)
 
@@ -90,11 +100,19 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	if err != nil {
 		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
-		return errors.New("task could not start started: could not contact distro")
+		return errors.New("task could not start task: could not contact distro")
 	}
 	log.Debugf(context.TODO(), "Distro %q: task %q: connection to distro established, running task.", d.Name, t)
 
 	for {
+		// Avoid retrying if the task failed due to a cancelled or timed out context
+		// It also avoids executing in the much rarer case that we cancel or time out right after getting the client
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		err = t.Execute(ctx, client)
 		if err != nil && t.ShouldRetry() {
 			log.Debugf(ctx, "Distro %q: task %q: retrying after obtaining error: %v", d.Name, t, err)
@@ -116,10 +134,6 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 // waitForClient waits for a valid GRPC client to connect to. It will retry for a while before
 // erroring out.
 func (d *Distro) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, error) {
-	if d.UnreachableErr != nil {
-		return nil, d.UnreachableErr
-	}
-
 	timedOutCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
@@ -131,9 +145,9 @@ func (d *Distro) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, er
 			client := d.Client()
 
 			if client == nil {
+				log.Debugf(ctx, "Distro %q: client not available yet\n", d.Name)
 				continue
 			}
-			log.Debugf(ctx, "Distro %q not reachable yet\n", d.Name)
 			return client, nil
 		}
 	}

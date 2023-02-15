@@ -6,11 +6,14 @@ import (
 	"strings"
 	"sync"
 
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows"
 	"google.golang.org/grpc"
 )
+
+const taskQueueSize = 100
 
 // Distro is a wrapper around gowsl.Distro that tracks both the distroname and
 // the GUID, ensuring that the distro has not been unregistered and re-registered.
@@ -28,7 +31,7 @@ type Distro struct {
 	// The following fields may change without afecting long-term storage of the distro
 	cancel          context.CancelFunc
 	tasks           chan Task
-	tasksInProgress chan struct{}
+	canProcessTasks chan struct{}
 
 	conn   *grpc.ClientConn
 	connMu *sync.RWMutex
@@ -42,7 +45,8 @@ func (*NotExistError) Error() string {
 }
 
 type options struct {
-	guid windows.GUID
+	guid                  windows.GUID
+	taskProcessingContext context.Context
 }
 
 // Option is an optional argument for distro.New.
@@ -68,7 +72,11 @@ func WithGUID(guid windows.GUID) Option {
 func New(name string, props Properties, args ...Option) (distro *Distro, err error) {
 	decorate.OnError(&err, "could not initialize distro %q", name)
 
-	var opts options
+	var nilGUID windows.GUID
+	opts := options{
+		guid:                  nilGUID,
+		taskProcessingContext: context.Background(),
+	}
 	for _, f := range args {
 		f(&opts)
 	}
@@ -79,7 +87,6 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 	}
 
 	// GUID is not initialized.
-	var nilGUID windows.GUID
 	if id.GUID == nilGUID {
 		d := wsl.NewDistro(name)
 		guid, err := d.GUID()
@@ -103,11 +110,11 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 		identity:   id,
 		Properties: props,
 
-		tasks:  make(chan Task, 100),
+		tasks:  make(chan Task, taskQueueSize),
 		connMu: &sync.RWMutex{},
 	}
 
-	distro.startProcessingTasks(context.TODO())
+	distro.startProcessingTasks(opts.taskProcessingContext)
 
 	return distro, nil
 }
@@ -116,9 +123,18 @@ func (d Distro) String() string {
 	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name, strings.ToLower(d.GUID.String()))
 }
 
+// IsActive returns true when the distro is running, and there exists an active
+// connection to its GRPC service.
+func (d *Distro) IsActive() bool {
+	return d.Client() != nil
+}
+
 // Cleanup releases all resources associated with the distro.
 func (d *Distro) Cleanup(ctx context.Context) {
-	d.stopProcessingTasks(ctx)
+	err := d.stopProcessingTasks(ctx)
+	if err != nil {
+		log.Infof(ctx, "Distro %q: error during cleanup: %v", d.Name, err)
+	}
 }
 
 // getWSLDistro gets underlying GoWSL distro after verifying it.
