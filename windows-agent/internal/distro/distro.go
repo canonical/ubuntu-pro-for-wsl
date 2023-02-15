@@ -31,7 +31,7 @@ type Distro struct {
 	// The following fields may change without afecting long-term storage of the distro
 	cancel          context.CancelFunc
 	tasks           chan Task
-	tasksInProgress chan struct{}
+	canProcessTasks chan struct{}
 
 	conn   *grpc.ClientConn
 	connMu *sync.RWMutex

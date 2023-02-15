@@ -21,7 +21,7 @@ type Task interface {
 func (d *Distro) startProcessingTasks(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: starting task processing", d.Name)
 
-	d.tasksInProgress = make(chan struct{})
+	d.canProcessTasks = make(chan struct{})
 	ctx, cancel := context.WithCancel(ctx)
 	go func() { d.processTasks(ctx) }()
 	d.cancel = cancel
@@ -30,12 +30,12 @@ func (d *Distro) startProcessingTasks(ctx context.Context) {
 // stopProcessingTasks stops the main task processing goroutine and wait for it to be done.
 func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 	log.Debugf(ctx, "Distro %q: stopping task processing", d.Name)
-	if d.tasksInProgress == nil {
+	if d.canProcessTasks == nil {
 		return errors.New("could not stop tasks: task processing is not running.")
 	}
 	d.cancel()
-	<-d.tasksInProgress
-	d.tasksInProgress = nil
+	<-d.canProcessTasks
+	d.canProcessTasks = nil
 	log.Debugf(ctx, "Distro %q: stopped task processing", d.Name)
 	return nil
 }
@@ -55,7 +55,7 @@ func (d *Distro) SubmitTask(t Task) error {
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
 // locks to distro,.
 func (d *Distro) processTasks(ctx context.Context) {
-	defer close(d.tasksInProgress)
+	defer close(d.canProcessTasks)
 
 	for d.UnreachableErr == nil {
 		select {
