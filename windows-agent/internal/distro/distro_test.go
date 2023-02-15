@@ -33,10 +33,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
+	registeredDistro, registeredGUID := registerDistro(t, false)
+	_, anotherRegisteredGUID := registerDistro(t, false)
 
-	realDistro, realGUID := registerDistro(t, false)
-
-	fakeDistro := generateDistroName(t)
+	nonRegisteredDistro := generateDistroName(t)
 	fakeGUID, err := windows.GUIDFromString(`{12345678-1234-1234-1234-123456789ABC}`)
 	require.NoError(t, err, "Setup: could not construct fake GUID")
 
@@ -51,14 +51,17 @@ func TestNew(t *testing.T) {
 		distro   string
 		withGUID windows.GUID
 
-		wantErr bool
+		wantErrType error
 	}{
-		"real distro":             {distro: realDistro},
-		"real distro, real GUID":  {distro: realDistro, withGUID: realGUID},
-		"real distro, wrong GUID": {distro: realDistro, withGUID: fakeGUID, wantErr: true},
-		"fake distro":             {distro: fakeDistro, wantErr: true},
-		"fake distro, real GUID":  {distro: fakeDistro, withGUID: realGUID, wantErr: true},
-		"fake distro, wrong GUID": {distro: fakeDistro, withGUID: fakeGUID, wantErr: true},
+		"Registered distro":               {distro: registeredDistro},
+		"Registered distro with its GUID": {distro: registeredDistro, withGUID: registeredGUID},
+
+		// Error cases
+		"Registered distro, another distro's GUID":          {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErrType: &distro.NotExistError{}},
+		"Registered distro, non-matching GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErrType: &distro.NotExistError{}},
+		"Non-registered distro":                             {distro: nonRegisteredDistro, wantErrType: &distro.NotExistError{}},
+		"Non-registered distro, another distro's GUID":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErrType: &distro.NotExistError{}},
+		"Non-registered distro, with a non-registered GUID": {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErrType: &distro.NotExistError{}},
 	}
 
 	for name, tc := range testCases {
@@ -67,26 +70,26 @@ func TestNew(t *testing.T) {
 			var d *distro.Distro
 			var err error
 
+			var args []distro.Option
 			nilGUID := windows.GUID{}
-			if tc.withGUID == nilGUID {
-				d, err = distro.New(tc.distro, props)
-			} else {
-				d, err = distro.New(tc.distro, props, distro.WithGUID(tc.withGUID))
+			if tc.withGUID != nilGUID {
+				args = append(args, distro.WithGUID(tc.withGUID))
 			}
 
+			d, err = distro.New(tc.distro, props, args...)
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
-
-			if tc.wantErr {
-				require.Error(t, err, "Unexpected success constructing distro")
-				require.ErrorIs(t, err, &distro.NotExistError{})
+			if tc.wantErrType != nil {
+				require.Error(t, err, "New() should have returned an error")
+				require.ErrorIsf(t, err, tc.wantErrType, "New() should have returned an error of type %T", tc.wantErrType)
 				return
 			}
 
-			require.Equal(t, tc.distro, d.Name, "Unexpected mismatch in distro name")
-			require.Equal(t, realGUID.String(), d.GUID.String(), "Unexpected mismatch in distro GUID")
-			require.Equal(t, props, d.Properties, "Unexpected mismatch in distro properties")
+			require.NoError(t, err, "New() should have returned no error")
+			require.Equal(t, tc.distro, d.Name, "distro.Name should match the one it was constructed with")
+			require.Equal(t, registeredGUID.String(), d.GUID.String(), "distro.GUID should match the one it was constructed with")
+			require.Equal(t, props, d.Properties, "distro.Properties should match the one it was constructed with because they were never directly modified")
 		})
 	}
 }
