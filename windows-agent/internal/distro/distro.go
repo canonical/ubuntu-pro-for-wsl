@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const taskQueueBufferSize = 100
+const taskQueueSize = 100
 
 // Distro is a wrapper around gowsl.Distro that tracks both the distroname and
 // the GUID, ensuring that the distro has not been unregistered and re-registered.
@@ -106,7 +106,7 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 		identity:   id,
 		Properties: props,
 
-		tasks:  make(chan Task, taskQueueBufferSize),
+		tasks:  make(chan Task, taskQueueSize),
 		connMu: &sync.RWMutex{},
 	}
 

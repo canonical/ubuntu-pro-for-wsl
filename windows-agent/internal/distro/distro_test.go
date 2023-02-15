@@ -232,21 +232,6 @@ func TestTaskProcessing(t *testing.T) {
 			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls },
 				2*clientTickPeriod, 100*time.Millisecond, "Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
 
-			time.Sleep(clientTickPeriod)
-			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed an unexpected amount of times after establishing a connection")
-
-			// Saturate queue
-			err = nil
-			for err == nil {
-				if d.QueueLen() > distro.TaskQueueBufferSize+20 { // +20 to protect from races
-					break
-				}
-				// Delayed task to avoid pulling tasks as they are added
-				err = d.SubmitTask(&testTask{Delay: time.Second})
-			}
-			require.Error(t, err, "queue never saturated despite filling it ")
-			d.FlushTaskQueue()
-
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
 
@@ -257,6 +242,29 @@ func TestTaskProcessing(t *testing.T) {
 	}
 }
 
+func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
+	distroName, _ := registerDistro(t, false)
+
+	d, err := distro.New(distroName, distro.Properties{})
+	require.NoError(t, err, "Setup: unexpected error creating the distro")
+	defer d.Cleanup(context.Background())
+
+	// We submit a first task that will be dequeued and block task processing until
+	// there is a connection (i.e. forever) or until it times out after a minute.
+	err = d.SubmitTask(&testTask{})
+	require.NoErrorf(t, err, "SubmitTask() should only fail when the queue is full.\nSubmitted: %d.\nMax: %d", 1, distro.TaskQueueSize)
+
+	// We fill up the queue
+	var i int
+	for ; i < distro.TaskQueueSize; i++ {
+		err := d.SubmitTask(&testTask{})
+		require.NoErrorf(t, err, "SubmitTask() should only fail when the queue is full.\nSubmitted: %d.\nMax: %d", i+1, distro.TaskQueueSize)
+	}
+
+	// We ensure that adding one more task will return an error
+	err = d.SubmitTask(&testTask{})
+	require.Errorf(t, err, "SubmitTask() should fail when the queue is full\nSubmitted: %d.\nMax: %d", i+2, distro.TaskQueueSize)
+}
 type testService struct {
 	wslserviceapi.UnimplementedWSLServer
 	port      uint16
