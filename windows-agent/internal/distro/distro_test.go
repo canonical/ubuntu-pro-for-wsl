@@ -502,7 +502,7 @@ func registerDistro(t *testing.T, realDistro bool) (distroName string, GUID wind
 		require.NoError(t, err, "could not write empty file")
 	} else {
 		const appx = "UbuntuPreview"
-		rootFsPath = requirePwshf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
+		rootFsPath = poweshellOutputf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
 		require.NotEmpty(t, rootFsPath, "could not find rootfs tarball. Is %s installed?", appx)
 		rootFsPath = filepath.Join(rootFsPath, "install.tar.gz")
 	}
@@ -513,9 +513,9 @@ func registerDistro(t *testing.T, realDistro bool) (distroName string, GUID wind
 	distroName = generateDistroName(t)
 
 	// Register distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { requirePwshf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
+	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
-	requirePwshf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
+	poweshellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
 	tk.Stop()
 
 	t.Cleanup(func() {
@@ -533,13 +533,15 @@ func unregisterDistro(t *testing.T, distroName string) {
 	t.Helper()
 
 	// Unregister distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { requirePwshf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
+	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
 	d := gowsl.NewDistro(distroName)
 	d.Unregister()
 }
 
-func requirePwshf(t *testing.T, command string, args ...any) string {
+// poweshellOutputf runs the command (with any printf-style directives and args). It fails if the
+// return value of the command is non-zero. Otherwise, it returns its combined stdout and stderr.
+func poweshellOutputf(t *testing.T, command string, args ...any) string {
 	t.Helper()
 
 	cmd := fmt.Sprintf(command, args...)
