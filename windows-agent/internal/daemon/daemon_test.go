@@ -89,7 +89,7 @@ func TestStartQuit(t *testing.T) {
 				err := os.MkdirAll(cacheDir, 0600)
 				require.NoError(t, err, "Setup: failed to create pre-exisiting cache directory")
 				err = os.WriteFile(filepath.Join(cacheDir, consts.ListeningPortFileName), []byte("# Old port file"), 0600)
-				require.NoError(t, err, "Setup: failed to create pre-exisiting port file")
+				require.NoError(t, err, "Setup: failed to create pre-existing port file")
 			}
 
 			var regCount int
