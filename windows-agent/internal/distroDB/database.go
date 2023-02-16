@@ -190,7 +190,7 @@ func (db *DistroDB) load() error {
 	}
 
 	// Parse database into intermediate objects
-	distros := make([]inertDistro, 0)
+	distros := make([]serializableDistro, 0)
 	err = yaml.Unmarshal(out, &distros)
 	if err != nil {
 		return err
@@ -220,9 +220,9 @@ func (db *DistroDB) dump() error {
 	sort.Strings(normalizedNames)
 
 	// Create intermediate easy-to-marshall objects
-	distros := make([]inertDistro, 0, len(db.distros))
+	distros := make([]serializableDistro, 0, len(db.distros))
 	for _, n := range normalizedNames {
-		distros = append(distros, newInertDistro(db.distros[n]))
+		distros = append(distros, newSerializableDistro(db.distros[n]))
 	}
 
 	// Generate dump

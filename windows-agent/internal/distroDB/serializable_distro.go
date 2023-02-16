@@ -5,12 +5,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// inertDistro is an helper struct for marshalling and unmarshalling into and
+// serializableDistro is an helper struct for marshalling and unmarshalling into and
 // from the database's disk backing.
 //
 // It contains all the persistent information in plain data structures,
 // with none of the short-term information or functionality.
-type inertDistro struct {
+type serializableDistro struct {
 	Name string
 	GUID string
 	distro.Properties
@@ -18,7 +18,7 @@ type inertDistro struct {
 
 // newDistro calls distro.New with the name, GUID and properties specified
 // in its inert counterpart.
-func (in inertDistro) newDistro() (*distro.Distro, error) {
+func (in serializableDistro) newDistro() (*distro.Distro, error) {
 	GUID, err := windows.GUIDFromString(in.GUID)
 	if err != nil {
 		return nil, err
@@ -26,10 +26,10 @@ func (in inertDistro) newDistro() (*distro.Distro, error) {
 	return distro.New(in.Name, in.Properties, distro.WithGUID(GUID))
 }
 
-// newDistro takes the information in distro.Distro relevant to the database
+// newSerializableDistro takes the information in distro.Distro relevant to the database
 // and stores it the helper objct.
-func newInertDistro(d *distro.Distro) inertDistro {
-	return inertDistro{
+func newSerializableDistro(d *distro.Distro) serializableDistro {
+	return serializableDistro{
 		Name:       d.Name,
 		GUID:       d.GUID.String(),
 		Properties: d.Properties,
