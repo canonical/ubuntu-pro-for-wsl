@@ -31,15 +31,14 @@ type options struct {
 }
 
 // Option is the function signature we are passing to tweak the daemon creation.
-type Option func(*options) error
+type Option func(*options)
 
 // WithCacheDir overrides the cache directory used in the daemon.
-func WithCacheDir(cachedir string) func(o *options) error {
-	return func(o *options) error {
+func WithCacheDir(cachedir string) Option {
+	return func(o *options) {
 		if cachedir != "" {
 			o.cacheDir = cachedir
 		}
-		return nil
 	}
 }
 
@@ -61,9 +60,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 
 	// Apply given options.
 	for _, f := range args {
-		if err := f(&opts); err != nil {
-			return d, err
-		}
+		f(&opts)
 	}
 
 	// Create our cache directory if needed
