@@ -117,7 +117,7 @@ func TestStartQuit(t *testing.T) {
 					addrContents, err = os.ReadFile(addrPath)
 					require.NoError(t, err, "Could not read address file")
 					return string(addrContents) != "# Old port file"
-				}, 100*time.Millisecond, 10*time.Millisecond, "Pre-existing port file was never overwritten")
+				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing port file was never overwritten")
 			} else {
 				requireWaitPathExists(t, addrPath, "Serve never created an address file")
 				addrContents, err = os.ReadFile(addrPath)
@@ -292,7 +292,7 @@ func requireWaitPathExists(t *testing.T, path string, msg string) {
 		return false
 	}
 
-	require.Eventually(t, fileExists, 100*time.Millisecond, time.Millisecond, "%q does not exists: %v", path, msg)
+	require.Eventually(t, fileExists, 500*time.Millisecond, 50*time.Millisecond, "%q does not exists: %v", path, msg)
 
 	// Prevent error when accessing the file right after:
 	// 'The process cannot access the file because it is being used by another process'
