@@ -27,7 +27,7 @@ func (in serializableDistro) newDistro() (*distro.Distro, error) {
 }
 
 // newSerializableDistro takes the information in distro.Distro relevant to the database
-// and stores it the helper objct.
+// and stores it the helper object.
 func newSerializableDistro(d *distro.Distro) serializableDistro {
 	return serializableDistro{
 		Name:       d.Name,
