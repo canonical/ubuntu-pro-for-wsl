@@ -131,7 +131,7 @@ func TestStartQuit(t *testing.T) {
 			require.NotEqual(t, nil, net.ParseIP(address), "Address should be valid")
 
 			// We start a connection but don't close it yet, so as to test graceful vs. forceful Quit
-			closeHangingConn := grpcPersistentCall(t, address, "Could not dial daemon")
+			closeHangingConn := grpcPersistentCall(t, address)
 			defer closeHangingConn()
 
 			// Now we know the GRPC server has started serving.
@@ -220,16 +220,15 @@ func TestQuitBeforeServe(t *testing.T) {
 // grpcPersistentCall will create a persistent GRPC connection to the server.
 // It will return immediately. drop() should be called to ends the connection from
 // the client side. It returns the GRPC error code if any.
-func grpcPersistentCall(t *testing.T, addr string, msg string) (drop func() codes.Code) {
+func grpcPersistentCall(t *testing.T, addr string) (drop func() codes.Code) {
 	t.Helper()
-
 	const timeout = 100 * time.Millisecond
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoErrorf(t, err, "Could not dial GRPC server.\nMessage: %s", msg)
+	require.NoErrorf(t, err, "Could not dial GRPC server.")
 
 	c := grpctestservice.NewTestServiceClient(conn)
 	ctx, cancel = context.WithCancel(context.Background())
