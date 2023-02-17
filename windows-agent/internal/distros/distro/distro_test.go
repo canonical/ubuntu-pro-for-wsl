@@ -200,7 +200,7 @@ func TestTaskProcessing(t *testing.T) {
 				task.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = d.SubmitTask(task)
+			err = d.SubmitTasks(task)
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -256,7 +256,7 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
 
-			err = d.SubmitTask(&testTask{})
+			err = d.SubmitTasks(&testTask{})
 			require.Error(t, err, "SubmitTask() should fail after a distro has been cleaned up")
 		})
 	}
@@ -271,18 +271,18 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
-	err = d.SubmitTask(&testTask{})
+	err = d.SubmitTasks(&testTask{})
 	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, distro.TaskQueueSize)
 
 	// We fill up the queue
 	var i int
 	for ; i < distro.TaskQueueSize; i++ {
-		err := d.SubmitTask(&testTask{})
+		err := d.SubmitTasks(&testTask{})
 		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, distro.TaskQueueSize)
 	}
 
 	// We ensure that adding one more task will return an error
-	err = d.SubmitTask(&testTask{})
+	err = d.SubmitTasks(&testTask{})
 	require.Errorf(t, err, "SubmitTask() should fail when the queue is full\nSubmitted: %d.\nMax: %d", i+2, distro.TaskQueueSize)
 }
 

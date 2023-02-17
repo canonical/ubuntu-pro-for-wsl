@@ -40,19 +40,19 @@ func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 	return nil
 }
 
-// SubmitTask enqueue a new task on our current worker list.
+// SubmitTasks enqueue a new task on our current worker list.
 // It will return an error in these cases:
 // - The queue is full
 // - The distro has been cleaned up.
-func (d *Distro) SubmitTask(t Task) (err error) {
-	defer decorate.OnError(&err, "distro %q: task %q: could not submit", d.Name, t)
+func (d *Distro) SubmitTasks(tasks ...Task) (err error) {
+	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", d.Name, tasks)
 
 	if d.canProcessTasks == nil {
 		return errors.New("task processing is not running")
 	}
 
-	log.Infof(context.TODO(), "Distro %q: Submitting task %q to queue", d.Name, t)
-	return d.taskManager.submit(t)
+	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", d.Name, tasks)
+	return d.taskManager.submit(tasks...)
 }
 
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing

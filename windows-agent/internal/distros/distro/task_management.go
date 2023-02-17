@@ -48,23 +48,25 @@ func newTaskManager(ctx context.Context, storagePath string) (*taskManager, erro
 	return &tm, nil
 }
 
-func (tm *taskManager) submit(task Task) error {
+func (tm *taskManager) submit(tasks ...Task) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	tm.largestID++
-	t := &managedTask{
-		ID:   tm.largestID,
-		Task: task,
-	}
+	for i := range tasks {
+		tm.largestID++
+		t := &managedTask{
+			ID:   tm.largestID,
+			Task: tasks[i],
+		}
 
-	select {
-	case tm.queue <- t:
-	default:
-		return errors.New("queue is full")
-	}
+		select {
+		case tm.queue <- t:
+		default:
+			return errors.New("queue is full")
+		}
 
-	tm.tasks = append(tm.tasks, t)
+		tm.tasks = append(tm.tasks, t)
+	}
 	return tm.save()
 }
 
