@@ -55,7 +55,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err, "Unexpected error when calling New")
+			require.NoError(t, err, "New() should have return no error")
 			require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
 
 			require.DirExists(t, cacheDir, "Cache dir should've been created in New")
@@ -100,7 +100,7 @@ func TestStartQuit(t *testing.T) {
 			}
 
 			d, err := daemon.New(ctx, registerer, daemon.WithCacheDir(cacheDir))
-			require.NoError(t, err, "New should return the daemon handler")
+			require.NoError(t, err, "New() should return the daemon handler")
 
 			serveErr := make(chan error)
 			go func() {
@@ -113,13 +113,13 @@ func TestStartQuit(t *testing.T) {
 			if tc.preexistingPortFile {
 				require.Eventually(t, func() bool {
 					addrContents, err = os.ReadFile(addrPath)
-					require.NoError(t, err, "Could not read address file")
+					require.NoError(t, err, "Address file should be readable")
 					return string(addrContents) != "# Old port file"
-				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing port file was never overwritten")
+				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
 			} else {
-				requireWaitPathExists(t, addrPath, "Serve never created an address file")
+				requireWaitPathExists(t, addrPath, "Serve should create an address file")
 				addrContents, err = os.ReadFile(addrPath)
-				require.NoError(t, err, "Could not read address file")
+				require.NoError(t, err, "Address file should be readable")
 			}
 
 			// Now we know the TCP server has started.
@@ -149,24 +149,24 @@ func TestStartQuit(t *testing.T) {
 			}
 
 			if tc.wantConnectionsDropped {
-				require.True(t, immediateQuit, "Force quit should have quit immediately regardless of exisiting connections")
+				require.True(t, immediateQuit, "Force quit should quit immediately regardless of exisiting connections")
 
 				code := closeHangingConn()
-				require.Equal(t, codes.Unavailable, code, "Unexpected error in GRPC call: %v", code.String())
+				require.Equal(t, codes.Unavailable, code, "GRPC call should return an error of type %q, instead got %q", codes.Unavailable, code)
 			} else {
 				// We have an hanging connection which should make us time out
-				require.False(t, immediateQuit, "Quit should have waited for exisiting connections to close before quitting")
-				requireCannotDialGRPC(t, address, "Server is running, but no new connection should be allowed")
+				require.False(t, immediateQuit, "Quit should wait for exisiting connections to close before quitting")
+				requireCannotDialGRPC(t, address, "No new connection should be allowed after calling Quit")
 
 				// release hanging connection and wait for Quit to exit.
 				code := closeHangingConn()
-				require.Equal(t, codes.Canceled, code, "Unexpected error in GRPC call: %v", code.String())
+				require.Equal(t, codes.Canceled, code, "GRPC call should return an error of type %q, instead got %q", codes.Canceled, code)
 				<-serverStopped
 			}
 
 			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
-			requireCannotDialGRPC(t, address, "Server is not running, no new connection should be allowed")
-			requireWaitPathDoesNotExist(t, addrPath, "Address file is not removed after quitting")
+			requireCannotDialGRPC(t, address, "No new connection should be allowed when the server is no longer running")
+			requireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after quitting the server")
 		})
 	}
 }
@@ -189,7 +189,7 @@ func TestServeError(t *testing.T) {
 	require.NoError(t, os.RemoveAll(cacheDir), "Setup: could not remove cache directory")
 
 	err = d.Serve(ctx)
-	require.Error(t, err, "Unexpected success serving while we could not write the listening port file")
+	require.Error(t, err, "Serve should fail when the cache dir does not exist")
 }
 
 func TestQuitBeforeServe(t *testing.T) {
@@ -208,9 +208,9 @@ func TestQuitBeforeServe(t *testing.T) {
 	d.Quit(ctx, false)
 
 	err = d.Serve(ctx)
-	require.Error(t, err, "Unexpected success serving after having quit")
+	require.Error(t, err, "Calling Serve() after Quit() should result in an error")
 
-	requireWaitPathDoesNotExist(t, filepath.Join(cacheDir, consts.ListeningPortFileName), "Port file exists after failed Serve")
+	requireWaitPathDoesNotExist(t, filepath.Join(cacheDir, consts.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }
 
 // grpcPersistentCall will create a persistent GRPC connection to the server.
