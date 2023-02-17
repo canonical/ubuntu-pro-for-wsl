@@ -28,8 +28,8 @@ func TestNew(t *testing.T) {
 
 		wantErr bool
 	}{
-		"happy path":    {},
-		"bad cache dir": {badCacheDir: true, wantErr: true},
+		"Success":                        {},
+		"Error because of bad cache dir": {badCacheDir: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -72,9 +72,9 @@ func TestStartQuit(t *testing.T) {
 
 		wantConnectionsDropped bool
 	}{
-		"graceful":                      {},
-		"graceful, overwrite port file": {preexistingPortFile: true},
-		"forceful":                      {forceQuit: true, wantConnectionsDropped: true},
+		"Graceful quit":                      {},
+		"Graceful quit, overwrite port file": {preexistingPortFile: true},
+		"Forceful quit":                      {forceQuit: true, wantConnectionsDropped: true},
 	}
 
 	for name, tc := range testsCases {
