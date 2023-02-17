@@ -218,8 +218,8 @@ func TestQuitBeforeServe(t *testing.T) {
 // the client side. It returns the GRPC error code if any.
 func grpcPersistentCall(t *testing.T, addr string) (drop func() codes.Code) {
 	t.Helper()
-	const timeout = 100 * time.Millisecond
 
+	const timeout = 100 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
