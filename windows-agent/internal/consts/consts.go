@@ -12,4 +12,7 @@ const (
 
 	// CacheBaseDirectory is the directory name used in user's cache dir to store process transient data.
 	CacheBaseDirectory = "Ubuntu Pro"
+
+	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
+	ListeningPortFileName = "addr"
 )
