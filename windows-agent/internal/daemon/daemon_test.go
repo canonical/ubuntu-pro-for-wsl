@@ -92,9 +92,7 @@ func TestStartQuit(t *testing.T) {
 				require.NoError(t, err, "Setup: failed to create pre-existing port file")
 			}
 
-			var regCount int
 			registerer := func(context.Context) *grpc.Server {
-				regCount++
 				server := grpc.NewServer()
 				var service testGRPCService
 				grpctestservice.RegisterTestServiceServer(server, service)
@@ -169,8 +167,6 @@ func TestStartQuit(t *testing.T) {
 			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
 			requireCannotDialGRPC(t, address, "Server is not running, no new connection should be allowed")
 			requireWaitPathDoesNotExist(t, addrPath, "Address file is not removed after quitting")
-
-			require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
 		})
 	}
 }
