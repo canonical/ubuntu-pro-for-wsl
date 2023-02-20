@@ -238,5 +238,10 @@ func (db *DistroDB) dump() error {
 		return err
 	}
 
-	return os.Rename(db.storagePath+".new", db.storagePath)
+	err = os.Rename(db.storagePath+".new", db.storagePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
