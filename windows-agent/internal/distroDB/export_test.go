@@ -16,3 +16,11 @@ func (in SerializableDistro) NewDistro() (*distro.Distro, error) {
 func NewSerializableDistro(d *distro.Distro) SerializableDistro {
 	return newSerializableDistro(d)
 }
+
+// DistroNames returns the names of all distros in the database.
+func (db *DistroDB) DistroNames() (out []string) {
+	for _, d := range db.distros {
+		out = append(out, d.Name)
+	}
+	return out
+}

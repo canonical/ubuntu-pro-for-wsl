@@ -15,4 +15,7 @@ const (
 
 	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
 	ListeningPortFileName = "addr"
+
+	// DatabaseFileName corresponds to the base name of the file containing the database.
+	DatabaseFileName = "distros.db"
 )

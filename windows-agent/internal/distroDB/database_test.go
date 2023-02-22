@@ -1,12 +1,13 @@
 package distroDB_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"text/template"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
@@ -15,6 +16,69 @@ import (
 	"golang.org/x/sys/windows"
 	"gopkg.in/yaml.v3"
 )
+
+type dbDirState int
+
+const (
+	emptyDbDir dbDirState = iota
+	goodDbFile
+	badDbDir
+	badDbFile
+	badDbFileContents
+)
+
+//nolint: tparallel
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+func TestNew(t *testing.T) {
+	distro, guid := testutils.RegisterDistro(t, false)
+
+	testCases := map[string]struct {
+		dirState dbDirState
+
+		wantDistros []string
+		wantErr     bool
+	}{
+		"Success on no pre-exisiting database file": {dirState: emptyDbDir, wantDistros: []string{}},
+		"Success at loading distro from database":   {dirState: goodDbFile, wantDistros: []string{distro}},
+
+		"Error with syntax error in database file":             {dirState: badDbFileContents, wantErr: true},
+		"Error due to database file exists but cannot be read": {dirState: badDbFile, wantErr: true},
+		"Error because it cannot create a database dir":        {dirState: badDbDir, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dbDir := t.TempDir()
+			switch tc.dirState {
+			case badDbDir:
+				dbDir = filepath.Join(dbDir, "database")
+				err := os.WriteFile(dbDir, []byte("I am here to interfere"), 0600)
+				require.NoError(t, err, "Setup: could not write file where the database dir will go")
+			case badDbFile:
+				err := os.MkdirAll(filepath.Join(dbDir, consts.DatabaseFileName), 0600)
+				require.NoError(t, err, "Setup: could not create folder where database file is supposed to go")
+			case badDbFileContents:
+				err := os.WriteFile(filepath.Join(dbDir, consts.DatabaseFileName), []byte("\tThis is not\nvalid yaml"), 0600)
+				require.NoError(t, err, "Setup: could not write wrong database file")
+			case goodDbFile:
+				databaseFromTemplate(t, dbDir, distroID{distro, guid})
+			}
+
+			db, err := distroDB.New(dbDir)
+			if tc.wantErr {
+				require.Error(t, err, "New() should have returned an error")
+				return
+			}
+			require.NoError(t, err, "New() should have returned no error")
+
+			distros := db.DistroNames()
+			require.ElementsMatch(t, tc.wantDistros, distros, "database should contain all the registered distros read from file")
+		})
+	}
+}
 
 func fileModTime(t *testing.T, path string) time.Time {
 	t.Helper()

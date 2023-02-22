@@ -5,6 +5,7 @@ package distroDB
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,14 +14,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	storageBaseFileName = "distros.db"
-	timeBetweenGC       = time.Hour
+	timeBetweenGC = time.Hour
 )
 
 // DistroDB is a thread-safe single-table database of WSL distribution instances. This
@@ -42,8 +43,12 @@ type DistroDB struct {
 // undefined behaviour.
 // TODO: write about the auto gc.
 func New(storageDir string) (*DistroDB, error) {
+	if err := os.MkdirAll(storageDir, 0600); err != nil {
+		return nil, fmt.Errorf("could not create database directory: %w", err)
+	}
+
 	db := &DistroDB{
-		storagePath:     filepath.Join(storageDir, storageBaseFileName),
+		storagePath:     filepath.Join(storageDir, consts.DatabaseFileName),
 		scheduleTrigger: make(chan struct{}),
 	}
 	if err := db.load(); err != nil {
@@ -174,11 +179,6 @@ func (db *DistroDB) autoCleanup(ctx context.Context) error {
 
 // load reads the database from disk.
 func (db *DistroDB) load() error {
-	// Remove pre-existing distros
-	for _, distro := range db.distros {
-		go distro.Cleanup(context.TODO())
-	}
-
 	// Read raw database from disk
 	out, err := os.ReadFile(db.storagePath)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -202,6 +202,7 @@ func (db *DistroDB) load() error {
 		d, err := inert.newDistro()
 		if err != nil {
 			log.Warningf(context.TODO(), "Read invalid distro from database: %#+v", inert)
+			continue
 		}
 		db.distros[strings.ToLower(d.Name)] = d
 	}
