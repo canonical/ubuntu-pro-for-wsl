@@ -1,6 +1,7 @@
 package distroDB_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
@@ -28,7 +30,7 @@ const (
 	badDbFileContents
 )
 
-//nolint: tparallel
+// nolint: tparallel
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestNew(t *testing.T) {
 	distro, guid := testutils.RegisterDistro(t, false)
@@ -81,7 +83,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
+// nolint: tparallel
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGet(t *testing.T) {
 	registeredDistroInDB, registeredGUID := testutils.RegisterDistro(t, false)
@@ -131,7 +133,7 @@ func TestDatabaseGet(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
+// nolint: tparallel
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseDump(t *testing.T) {
 	distro1, guid1 := testutils.RegisterDistro(t, false)
@@ -220,6 +222,140 @@ func TestDatabaseDump(t *testing.T) {
 			// Testing against and optionally updating golden file
 			want := testutils.LoadWithUpdateFromGoldenYAML(t, sd.data)
 			require.Equal(t, want, sd.data, "Database dump should match expected format")
+		})
+	}
+}
+
+func TestGetDistroAndUpdateProperties(t *testing.T) {
+	var distroInDB, distroNotInDB, reRegisteredDistro, nonRegisteredDistro string
+	var guids map[string]windows.GUID
+
+	// Scope to avoid leaking guid variables
+	{
+		var guid1, guid2, guid3, guid4 windows.GUID
+
+		distroInDB, guid1 = testutils.RegisterDistro(t, false)
+		distroNotInDB, guid2 = testutils.RegisterDistro(t, false)
+		reRegisteredDistro, guid3 = testutils.RegisterDistro(t, false)
+		nonRegisteredDistro, guid4 = testutils.NonRegisteredDistro(t)
+
+		guids = map[string]windows.GUID{
+			distroInDB:          guid1,
+			distroNotInDB:       guid2,
+			reRegisteredDistro:  guid3,
+			nonRegisteredDistro: guid4,
+		}
+	}
+
+	props := map[string]distro.Properties{
+		distroInDB: {
+			DistroID:    "SuperUbuntu",
+			VersionID:   "122.04",
+			PrettyName:  "Ubuntu 122.04 LTS (Jolly Jellyfish)",
+			ProAttached: false,
+		},
+		distroNotInDB: {
+			DistroID:    "HyperUbuntu",
+			VersionID:   "222.04",
+			PrettyName:  "Ubuntu 122.04 LTS (Joker Jellyfish)",
+			ProAttached: false,
+		},
+		reRegisteredDistro: {
+			DistroID:    "Ubuntu",
+			VersionID:   "22.04",
+			PrettyName:  "Ubuntu 22.04 LTS (Jammy Jellyfish)",
+			ProAttached: true,
+		},
+	}
+
+	type searchResult = int
+	const (
+		fullHit searchResult = iota
+		hitUnregisteredDistro
+		hitAndRefreshProps
+		missedAndAdded
+	)
+
+	testCases := map[string]struct {
+		distroName   string
+		props        distro.Properties
+		breakDBbDump bool
+
+		want                searchResult
+		wantDbDumpRefreshed bool
+		wantErr             bool
+		wantErrType         error
+	}{
+		"Distro exists in database and properties match it": {distroName: distroInDB, props: props[distroInDB], want: fullHit},
+
+		// Refresh/update database handling
+		"Distro exists in database, with different properties updates the stored db": {distroName: distroInDB, props: props[distroNotInDB], want: hitAndRefreshProps, wantDbDumpRefreshed: true},
+		"Distro exists in database, but no longer valid updates the stored db":       {distroName: reRegisteredDistro, props: props[reRegisteredDistro], want: hitUnregisteredDistro, wantDbDumpRefreshed: true},
+		"Distro is not in database, we add it and update the stored db":              {distroName: distroNotInDB, props: props[distroNotInDB], want: missedAndAdded, wantDbDumpRefreshed: true},
+
+		"Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Error on database refresh failing":                     {distroName: distroInDB, props: props[distroNotInDB], breakDBbDump: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			dbDir := t.TempDir()
+			databaseFromTemplate(t, dbDir,
+				distroID{distroInDB, guids[distroInDB]},
+				distroID{reRegisteredDistro, guids[reRegisteredDistro]})
+
+			db, err := distroDB.New(dbDir)
+			require.NoError(t, err, "Setup: New() should return no error")
+
+			if tc.distroName == reRegisteredDistro {
+				guids[reRegisteredDistro] = testutils.ReregisterDistro(t, reRegisteredDistro, false)
+			}
+
+			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
+			if tc.breakDBbDump {
+				err := os.RemoveAll(dbFile)
+				require.NoError(t, err, "Setup: could not remove database dump")
+				err = os.MkdirAll(dbFile, 0600)
+				require.NoError(t, err, "Setup: could not create directory to interfere with database dump")
+			}
+			initialDumpModTime := fileModTime(t, dbFile)
+
+			d, err := db.GetDistroAndUpdateProperties(context.Background(), tc.distroName, tc.props)
+			if tc.wantErr {
+				require.Error(t, err, "GetDistroAndUpdateProperties should return an error and has not")
+				if tc.wantErrType == nil {
+					return
+				}
+
+				require.ErrorIs(t, err, tc.wantErrType, "GetDistroAndUpdateProperties should return an error of type %T", tc.wantErrType)
+				return
+			}
+			require.NoError(t, err, "GetDistroAndUpdateProperties should return no error when the requested distro is registered")
+
+			require.NotNil(t, d, "GetDistroAndUpdateProperties should return a non-nil distro when the requested one is registered")
+
+			require.Equal(t, tc.distroName, d.Name, "GetDistroAndUpdateProperties should return a distro with the same name as requested")
+			require.Equal(t, guids[tc.distroName].String(), d.GUID.String(), "GetDistroAndUpdateProperties should return a GUID that matches the requested distro's")
+			require.Equal(t, tc.props, d.Properties, "GetDistroAndUpdateProperties should return the same properties as requested")
+
+			// Ensure writing one distro does not modify another
+			if tc.distroName != distroInDB {
+				d, ok := db.Get(distroInDB)
+				require.True(t, ok, "GetDistroAndUpdateProperties should not remove other distros from the database")
+				require.NotNil(t, d, "GetDistroAndUpdateProperties should return a non-nil distro when the returned error is nil")
+
+				require.Equal(t, distroInDB, d.Name, "GetDistroAndUpdateProperties should not modify other distros' name")
+				require.Equal(t, guids[distroInDB].String(), d.GUID.String(), "GetDistroAndUpdateProperties should not modify other distros' GUID")
+				require.Equal(t, props[distroInDB], d.Properties, "GetDistroAndUpdateProperties should not modify other distros' properties")
+			}
+
+			lastDumpModTime := fileModTime(t, dbFile)
+			if tc.wantDbDumpRefreshed {
+				require.True(t, lastDumpModTime.After(initialDumpModTime), "GetDistroAndUpdateProperties should modify the database dump file after writing on the database")
+				return
+			}
+			require.Equal(t, initialDumpModTime, lastDumpModTime, "GetDistroAndUpdateProperties should not modify database dump file")
 		})
 	}
 }
