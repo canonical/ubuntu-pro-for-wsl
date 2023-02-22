@@ -2,7 +2,9 @@ package distroDB_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -356,6 +358,84 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				return
 			}
 			require.Equal(t, initialDumpModTime, lastDumpModTime, "GetDistroAndUpdateProperties should not modify database dump file")
+		})
+	}
+}
+
+func TestDatabaseCleanup(t *testing.T) {
+	distro1, guid1 := testutils.RegisterDistro(t, false)
+	distro2, guid2 := testutils.RegisterDistro(t, false)
+
+	testCases := map[string]struct {
+		reregisterDistro      bool
+		markDistroUnreachable string
+		breakDbDump           bool
+
+		wantDistros       []string
+		wantDumpRefreshed bool
+	}{
+		"Success with no changes":    {wantDistros: []string{distro1, distro2}},
+		"Remove unregistered distro": {reregisterDistro: true, wantDumpRefreshed: true, wantDistros: []string{distro1, distro2}},
+		"Remove unreachable distro":  {markDistroUnreachable: distro2, wantDumpRefreshed: true, wantDistros: []string{distro1}},
+
+		"Error on unwritable db file after removing an unregistered distro": {markDistroUnreachable: distro2, breakDbDump: true, wantDumpRefreshed: false, wantDistros: []string{distro1}},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			dbDir := t.TempDir()
+			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
+
+			distros := []distroID{
+				{distro1, guid1},
+				{distro2, guid2}}
+
+			var reregisteredDistro string
+			if tc.reregisterDistro {
+				var guid windows.GUID
+				reregisteredDistro, guid = testutils.RegisterDistro(t, false)
+				distros = append(distros, distroID{reregisteredDistro, guid})
+			}
+
+			databaseFromTemplate(t, dbDir, distros...)
+
+			db, err := distroDB.New(dbDir)
+			require.NoError(t, err, "Setup: New() should have returned no error")
+
+			if tc.markDistroUnreachable != "" {
+				d3, ok := db.Get(distro2)
+				require.True(t, ok, "Setup: Distro %q should have been in the database", distro2)
+				d3.UnreachableErr = errors.New("This error should cause the distro to be cleaned up")
+			}
+
+			if tc.reregisterDistro {
+				testutils.ReregisterDistro(t, reregisteredDistro, false)
+			}
+
+			if tc.breakDbDump {
+				err := os.RemoveAll(dbFile)
+				require.NoError(t, err, "Setup: when attempting to interfere with a Dump(): could not remove database file")
+				err = os.MkdirAll(dbFile, 0600)
+				require.NoError(t, err, "Setup: when attempting to interfere with a Dump(): could not create directory in database file's location")
+			}
+
+			initialModTime := fileModTime(t, dbFile)
+			fileUpdated := func() bool {
+				return initialModTime != fileModTime(t, dbFile)
+			}
+
+			db.TriggerCleanup()
+
+			const delay = 500 * time.Millisecond
+			if tc.wantDumpRefreshed {
+				require.Eventually(t, fileUpdated, delay, 10*time.Millisecond, "Database file should be created after a cleanup when a distro has been unregistered")
+			} else {
+				time.Sleep(delay)
+				require.False(t, fileUpdated(), "Database file should not be refreshed by a cleanup when no distro has been cleaned up")
+			}
+
+			require.ElementsMatch(t, tc.wantDistros, db.DistroNames(), "Database contents after cleanup do not match expectations")
 		})
 	}
 }

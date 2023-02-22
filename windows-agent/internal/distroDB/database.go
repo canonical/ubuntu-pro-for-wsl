@@ -163,10 +163,18 @@ func (db *DistroDB) autoCleanup(ctx context.Context) error {
 	var needsDBDump bool
 	for name, d := range db.distros {
 		if d.UnreachableErr == nil {
-			continue
+			v, err := d.IsValid()
+			if err != nil {
+				log.Infof(ctx, "Cleanup: Could not acertain distro %q validity, skipping: %v", d.Name, d.UnreachableErr)
+				continue
+			}
+
+			if v {
+				continue
+			}
 		}
 
-		log.Infof(ctx, "Distro %q became invalid, cleaning up: %v", name, d.UnreachableErr)
+		log.Infof(ctx, "Cleanup: Distro %q became invalid, cleaning up: %v", d.Name, d.UnreachableErr)
 		go d.Cleanup(ctx)
 		delete(db.distros, name)
 		needsDBDump = true
