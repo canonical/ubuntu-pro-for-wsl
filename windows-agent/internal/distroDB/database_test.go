@@ -80,6 +80,56 @@ func TestNew(t *testing.T) {
 	}
 }
 
+//nolint: tparallel
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+func TestDatabaseGet(t *testing.T) {
+	registeredDistroInDB, registeredGUID := testutils.RegisterDistro(t, false)
+	registeredDistroNotInDB, _ := testutils.RegisterDistro(t, false)
+
+	nonRegisteredDistroNotInDB, _ := testutils.NonRegisteredDistro(t)
+	nonRegisteredDistroInDB, oldGUID := testutils.RegisterDistro(t, false)
+
+	databaseDir := t.TempDir()
+	databaseFromTemplate(t, databaseDir,
+		distroID{registeredDistroInDB, registeredGUID},
+		distroID{nonRegisteredDistroInDB, oldGUID})
+
+	db, err := distroDB.New(databaseDir)
+	require.NoError(t, err, "Setup: New() should return no error")
+
+	// Unregister the distro now, so that it's in the db object but not on system properly.
+	testutils.UnregisterDistro(t, nonRegisteredDistroInDB)
+
+	testCases := map[string]struct {
+		distroName string
+
+		wantNotFound bool
+	}{
+		"Get a registered distro in database":          {distroName: registeredDistroInDB},
+		"Get an unregistered distro still in database": {distroName: nonRegisteredDistroInDB},
+
+		"Cannot get a registered distro not present in the database":         {distroName: registeredDistroNotInDB, wantNotFound: true},
+		"Cannot get a distro that is neither registered nor in the database": {distroName: nonRegisteredDistroNotInDB, wantNotFound: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			d, found := db.Get(tc.distroName)
+			if tc.wantNotFound {
+				require.False(t, found, "The second return value of Get(distro) should be false when asked for a distro not in the database")
+				return
+			}
+			require.True(t, found, "The second return value of Get(distro) should be true when asked for a distro in the database")
+			require.NotNil(t, d, "The first return value of Get(distro) should return a *Distro when asked for a distro in the database")
+
+			require.Equal(t, d.Name, tc.distroName, "The distro returned by Get should match the one in the database")
+		})
+	}
+}
+
 func fileModTime(t *testing.T, path string) time.Time {
 	t.Helper()
 
