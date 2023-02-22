@@ -61,7 +61,7 @@ func New(storageDir string) (*DistroDB, error) {
 			case <-time.After(timeBetweenGC):
 			case <-db.scheduleTrigger:
 			}
-			if err := db.autoCleanup(context.TODO()); err != nil {
+			if err := db.cleanup(context.TODO()); err != nil {
 				log.Errorf(context.TODO(), "Failed to clean up potentially unused distros: %v", err)
 			}
 		}
@@ -155,8 +155,8 @@ func (db *DistroDB) TriggerCleanup() {
 	db.scheduleTrigger <- struct{}{}
 }
 
-// autoCleanup removes any distro that no longer exists or has been reset from the database.
-func (db *DistroDB) autoCleanup(ctx context.Context) error {
+// cleanup removes any distro that no longer exists or has been reset from the database.
+func (db *DistroDB) cleanup(ctx context.Context) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
