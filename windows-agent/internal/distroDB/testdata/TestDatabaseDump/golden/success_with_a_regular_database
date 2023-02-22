@@ -1,0 +1,14 @@
+- name: '%DISTRONAME0%'
+  guid: '%GUID0%'
+  properties:
+    distroid: SuperUbuntu
+    versionid: "122.04"
+    prettyname: Ubuntu 122.04 LTS (Jolly Jellyfish)
+    proattached: false
+- name: '%DISTRONAME1%'
+  guid: '%GUID1%'
+  properties:
+    distroid: Ubuntu
+    versionid: "22.04"
+    prettyname: Ubuntu 22.04 LTS (Jammy Jellyfish)
+    proattached: false

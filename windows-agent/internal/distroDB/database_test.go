@@ -13,6 +13,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	"golang.org/x/sys/windows"
 	"gopkg.in/yaml.v3"
 )
@@ -130,6 +131,99 @@ func TestDatabaseGet(t *testing.T) {
 	}
 }
 
+//nolint: tparallel
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+func TestDatabaseDump(t *testing.T) {
+	distro1, guid1 := testutils.RegisterDistro(t, false)
+	distro2, guid2 := testutils.RegisterDistro(t, false)
+
+	// Ensuring lexicographical ordering
+	if strings.ToLower(distro1) > strings.ToLower(distro2) {
+		distro1, distro2 = distro2, distro1
+		guid1, guid2 = guid2, guid1
+	}
+
+	testCases := map[string]struct {
+		dirState dbDirState
+		emptyDB  bool
+
+		wantErr bool
+	}{
+		"Success with a regular database":       {dirState: goodDbFile},
+		"Success with an empty DB":              {dirState: goodDbFile, emptyDB: true},
+		"Success writing on an empty directory": {dirState: emptyDbDir},
+
+		"Error when it cannot write the dump to file": {dirState: badDbFile, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			dbDir := t.TempDir()
+
+			if !tc.emptyDB {
+				databaseFromTemplate(t, dbDir, distroID{distro1, guid1}, distroID{distro2, guid2})
+			}
+
+			db, err := distroDB.New(dbDir)
+			require.NoError(t, err, "Setup: empty database should be created without issue")
+
+			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
+			switch tc.dirState {
+			case badDbFile:
+				err := os.RemoveAll(dbFile)
+				require.NoError(t, err, "Setup: could not remove database dump")
+				err = os.MkdirAll(dbFile, 0600)
+				require.NoError(t, err, "Setup: could not create directory to interfere with database dump")
+			case goodDbFile:
+				// generateDatabaseFile already generated it
+			case emptyDbDir:
+				err := os.RemoveAll(dbFile)
+				require.NoError(t, err, "Setup: could not remove pre-existing database dump")
+			default:
+				require.FailNow(t, "Setup: test case not implemented")
+			}
+
+			err = db.Dump()
+			if tc.wantErr {
+				require.Error(t, err, "Dump() should return an error when the database file (or its directory) is not valid")
+				return
+			}
+			require.NoError(t, err, "Dump() should return no error when the database file and its directory are both valid")
+
+			dump, err := os.ReadFile(filepath.Join(dbDir, consts.DatabaseFileName))
+			require.NoError(t, err, "The database dump should be readable after calling Dump()")
+
+			t.Logf("Generated dump:\n%s", dump)
+
+			sd := newStructuredDump(t, dump)
+
+			if tc.emptyDB {
+				require.Empty(t, len(sd.data), "Database dump should contain no distros")
+			} else {
+				require.Equal(t, 2, len(sd.data), "Database dump should contain exactly two distros")
+
+				idx1 := slices.IndexFunc(sd.data, func(s distroDB.SerializableDistro) bool { return s.Name == distro1 })
+				idx2 := slices.IndexFunc(sd.data, func(s distroDB.SerializableDistro) bool { return s.Name == distro2 })
+
+				require.NotEqualf(t, -1, idx1, "Database dump should contain distro1 (%s). Dump:\n%s", distro1, dump)
+				require.NotEqualf(t, -1, idx2, "Database dump should contain distro2 (%s). Dump:\n%s", distro2, dump)
+
+				require.Equal(t, sd.data[idx1].GUID, guid1.String(), "Database dump GUID for distro1 should match the one it was constructed with. Dump:\n%s", dump)
+				require.Equal(t, sd.data[idx2].GUID, guid2.String(), "Database dump GUID for distro2 should match the one it was constructed with. Dump:\n%s", dump)
+			}
+
+			// Anonymizing
+			sd.anonymise(t)
+
+			// Testing against and optionally updating golden file
+			want := testutils.LoadWithUpdateFromGoldenYAML(t, sd.data)
+			require.Equal(t, want, sd.data, "Database dump should match expected format")
+		})
+	}
+}
+
 func fileModTime(t *testing.T, path string) time.Time {
 	t.Helper()
 
@@ -189,10 +283,4 @@ func (sd *structuredDump) anonymise(t *testing.T) {
 		sd.data[i].Name = fmt.Sprintf("%%DISTRONAME%d%%", i)
 		sd.data[i].GUID = fmt.Sprintf("%%GUID%d%%", i)
 	}
-}
-
-func (sd *structuredDump) dump(t *testing.T) []byte {
-	out, err := yaml.Marshal(sd.data)
-	require.NoError(t, err, "In attempt to anonymise a database dump: Marshal failed for dump:\n%s")
-	return out
 }
