@@ -61,3 +61,24 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
+
+func TestRegisterGRPCServices(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	ps, err := proservices.New(ctx, proservices.WithCacheDir(t.TempDir()))
+	require.NoError(t, err, "Setup: New should return no error")
+
+	server := ps.RegisterGRPCServices(context.Background())
+	info := server.GetServiceInfo()
+
+	_, ok := info["agentapi.UI"]
+	require.True(t, ok, "UI service should be registered after calling RegisterGRPCServices")
+
+	_, ok = info["agentapi.WSLInstance"]
+	require.True(t, ok, "WSLInstance service should be registered after calling RegisterGRPCServices")
+
+	require.Lenf(t, info, 2, "Info should contain exactly two elements")
+}
