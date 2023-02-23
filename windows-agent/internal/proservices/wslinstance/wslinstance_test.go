@@ -75,6 +75,8 @@ func (w step) String() string {
 	return fmt.Sprintf("Unknown when (%d)", int(w))
 }
 
+//nolint: tparallel
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestConnected(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 
@@ -220,15 +222,17 @@ func TestConnected(t *testing.T) {
 			// The database has been updated after the second info
 			now = afterPropertiesRefreshed
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
+			checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv)
 		})
 	}
 }
 
 // testLoggerInterceptor replaces the logging middleware by printing the return
 // error of Connected to the test Log.
+//
+//nolint: thelper
+// The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to
+// see that it is the middleware reporting.
 func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := handler(srv, stream); err != nil {
@@ -240,7 +244,7 @@ func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
 }
 
 // wrappedService is a wrapper around the tested wslinstance.Service in order to
-// get some information about what and when Connected() returns
+// get some information about what and when Connected() returns.
 type wrappedService struct {
 	wslinstance.Service
 	Errch chan error
@@ -266,6 +270,10 @@ func (s *wrappedService) Connected(stream agentapi.WSLInstance_ConnectedServer) 
 // Wait waits until the function Connected has returned.
 // - if ok is true, returnErr is the return value of Connected.
 // - if ok is false, the wait times out hence Connected has not returned yet. returnedErr is therefore not valid.
+//
+//nolint: revive
+// Returning the error as first argument is strange but it makes sense here, we mimic the
+// (value, ok) return type of a map access.
 func (s *wrappedService) Wait(timeout time.Duration) (returnedErr error, connectedHasReturned bool) {
 	select {
 	case returnedErr = <-s.Errch:
@@ -275,6 +283,8 @@ func (s *wrappedService) Wait(timeout time.Duration) (returnedErr error, connect
 	}
 }
 
+//nolint: revive
+// testing.T should go before context, I won't listen to anyone arguing the contrary.
 func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (server *grpc.Server, address string) {
 	t.Helper()
 
@@ -301,6 +311,9 @@ type wslDistroMock struct {
 }
 
 // newWslDistroMock creates a wslDistroMock, establishing a connection to the control stream.
+//
+//nolint: revive
+// testing.T should go before context, regardless of what these linters say.
 func newWslDistroMock(t *testing.T, ctx context.Context, ctrlAddr string) (mock *wslDistroMock) {
 	t.Helper()
 
