@@ -440,6 +440,8 @@ func TestDatabaseCleanup(t *testing.T) {
 	}
 }
 
+// fileModTime returns the ModTime of the provided path. If the path
+// does not exist, the time is reported as Unix 0.
 func fileModTime(t *testing.T, path string) time.Time {
 	t.Helper()
 
@@ -452,6 +454,8 @@ func fileModTime(t *testing.T, path string) time.Time {
 	return info.ModTime()
 }
 
+// distroID is a convenience struct to package a distro's identifying data.
+// Used to deanonymize fixtures.
 type distroID struct {
 	Name string
 	GUID windows.GUID
@@ -477,21 +481,26 @@ func databaseFromTemplate(t *testing.T, dest string, distros ...distroID) {
 	f.Close()
 }
 
+// structuredDump is a convenience struct used to parse the database dump and make
+// assertions on it with better accuracy that just a strings.Contains.
 type structuredDump struct {
 	data []distroDB.SerializableDistro
 }
 
+// newStructuredDump takes a database dump and parses it to generate a structuredDump.
 func newStructuredDump(t *testing.T, rawDump []byte) structuredDump {
 	t.Helper()
 
 	var data []distroDB.SerializableDistro
 
 	err := yaml.Unmarshal(rawDump, &data)
-	require.NoError(t, err, "In attempt to parse a database dump: Unmarshal failed for dump:\n%s", rawDump)
+	require.NoError(t, err, "In an attempt to parse a database dump: Unmarshal failed for dump:\n%s", rawDump)
 
 	return structuredDump{data: data}
 }
 
+// anonymise takes a structured dump and removes all dynamically-generated information,
+// leaving behind only information that is invariant accross test runs.
 func (sd *structuredDump) anonymise(t *testing.T) {
 	t.Helper()
 

@@ -41,7 +41,10 @@ type DistroDB struct {
 //
 // Creating multiple databases with the same disk backing will result in
 // undefined behaviour.
-// TODO: write about the auto gc.
+//
+// Every certain amount of times, the database wil purge all distros that
+// are no longer registered or that have been marked as unreachable. This
+// cleanup can be triggered on demmand with TriggerCleanup.
 func New(storageDir string) (*DistroDB, error) {
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
 		return nil, fmt.Errorf("could not create database directory: %w", err)
