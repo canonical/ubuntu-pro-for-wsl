@@ -500,7 +500,7 @@ func newStructuredDump(t *testing.T, rawDump []byte) structuredDump {
 }
 
 // anonymise takes a structured dump and removes all dynamically-generated information,
-// leaving behind only information that is invariant accross test runs.
+// leaving behind only information that is invariant across test runs.
 func (sd *structuredDump) anonymise(t *testing.T) {
 	t.Helper()
 
