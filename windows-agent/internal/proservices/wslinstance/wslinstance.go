@@ -14,7 +14,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/task"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -66,9 +65,6 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 
 	log.Debugf(context.TODO(), "Connection to Linux-side service established")
 
-	// TODO: This is for testing, remove it when we're done
-	_ = d.SubmitTask(&task.Ping{})
-
 	// Blocking connection for the lifetime of the WSL service.
 	for {
 		info, err := stream.Recv()
@@ -80,12 +76,12 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		if err != nil {
 			return fmt.Errorf("connection from %q: invalid DistroInfo: %v", d.Name, err)
 		}
-		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", info.WslName, props)
+		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", d.Name, props)
 
 		if d.Properties != props {
 			d.Properties = props
 			if err := s.db.Dump(); err != nil {
-				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", info.WslName, err)
+				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", d.Name, err)
 			}
 		}
 	}
@@ -105,7 +101,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 		}
 		conn, err = func() (conn *grpc.ClientConn, err error) {
 			// Port reservation.
-			lis, err := net.Listen("tcp4", "")
+			lis, err := net.Listen("tcp4", "localhost:")
 			if err != nil {
 				return nil, err
 			}
@@ -129,7 +125,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 			addr := fmt.Sprintf("localhost:%d", p)
 			log.Debugf(ctx, "Connection from %q: connecting to Linux-side service via %s", distroName, addr)
 
-			ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+			ctxTimeout, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
 
 			conn, err = grpc.DialContext(ctxTimeout, addr,
