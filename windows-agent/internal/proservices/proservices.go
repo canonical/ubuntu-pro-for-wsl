@@ -28,15 +28,14 @@ type options struct {
 }
 
 // Option is the function signature we are passing to tweak the daemon creation.
-type Option func(*options) error
+type Option func(*options)
 
 // WithCacheDir overrides the cache directory used in the daemon.
-func WithCacheDir(cachedir string) func(o *options) error {
-	return func(o *options) error {
+func WithCacheDir(cachedir string) func(o *options) {
+	return func(o *options) {
 		if cachedir != "" {
 			o.cacheDir = cachedir
 		}
-		return nil
 	}
 }
 
@@ -56,9 +55,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 
 	// Apply given options.
 	for _, f := range args {
-		if err := f(&opts); err != nil {
-			return s, err
-		}
+		f(&opts)
 	}
 
 	log.Debugf(ctx, "Manager service cache directory: %s", opts.cacheDir)
