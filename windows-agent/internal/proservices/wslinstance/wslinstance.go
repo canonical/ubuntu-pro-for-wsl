@@ -41,32 +41,30 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 
 	info, err := stream.Recv()
 	if err != nil {
-		log.Error(context.TODO(), fmt.Errorf("new connection: %v", err)) // TODO: should be printed by middleware
-		return err
+		return fmt.Errorf("new connection: did not receive info from WSL distro: %v", err)
 	}
 
 	props, err := propsFromInfo(info)
 	if err != nil {
-		log.Error(context.TODO(), fmt.Errorf("connection from %q: %v", info.WslName, err))
-		return err
+		return fmt.Errorf("connection from %q: invalid DistroInfo: %v", info.WslName, err)
 	}
 
 	log.Debugf(context.TODO(), "Connection from %q: received properties: %v", info.WslName, props)
 
 	d, err := s.db.GetDistroAndUpdateProperties(context.TODO(), info.WslName, props)
 	if err != nil {
-		log.Error(context.TODO(), fmt.Errorf("connection from %q: %v", info.WslName, err))
-		return err
+		return fmt.Errorf("connection from %q: %v", info.WslName, err)
 	}
 
-	conn, err := newWslServiceConn(context.TODO(), info.WslName, stream)
+	conn, err := newWslServiceConn(context.TODO(), d.Name, stream)
 	if err != nil {
-		log.Error(context.TODO(), fmt.Errorf("connection from %q: %v", info.WslName, err))
-		return err
+		return fmt.Errorf("connection from %q: could not connect to Linux-side service: %v", d.Name, err)
 	}
 
 	d.SetConnection(conn)
 	defer d.SetConnection(nil)
+
+	log.Debugf(context.TODO(), "Connection to Linux-side service established")
 
 	// TODO: This is for testing, remove it when we're done
 	_ = d.SubmitTask(&task.Ping{})
@@ -75,12 +73,12 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	for {
 		info, err := stream.Recv()
 		if err != nil {
-			return err // TODO: Better error message
+			return fmt.Errorf("connection from %q: Failed to receive info: %v", d.Name, err)
 		}
 
 		props, err = propsFromInfo(info)
 		if err != nil {
-			return err // TODO: better error message
+			return fmt.Errorf("connection from %q: invalid DistroInfo: %v", d.Name, err)
 		}
 		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", info.WslName, props)
 
@@ -116,7 +114,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 			if err != nil {
 				return nil, err
 			}
-			log.Debugf(ctx, "Connection from %q: Found port %d", distroName, p)
+			log.Debugf(ctx, "Connection from %q: Reserved port %d", distroName, p)
 
 			if err := lis.Close(); err != nil {
 				return nil, err
@@ -129,7 +127,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 
 			// Connection.
 			addr := fmt.Sprintf("localhost:%d", p)
-			log.Debugf(ctx, "Connection from %q: connecting back via %s", distroName, addr)
+			log.Debugf(ctx, "Connection from %q: connecting to Linux-side service via %s", distroName, addr)
 
 			ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()

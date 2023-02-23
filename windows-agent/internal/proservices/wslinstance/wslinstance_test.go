@@ -227,6 +227,17 @@ func TestConnected(t *testing.T) {
 	}
 }
 
+// testLoggerInterceptor replaces the logging middleware by printing the return
+// error of Connected to the test Log.
+func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
+	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		if err := handler(srv, stream); err != nil {
+			t.Logf("Connected returned error: %v", err)
+		}
+		t.Log("Connected returned with no error")
+		return nil
+	}
+}
 
 // wrappedService is a wrapper around the tested wslinstance.Service in order to
 // get some information about what and when Connected() returns
@@ -267,7 +278,7 @@ func (s *wrappedService) Wait(timeout time.Duration) (returnedErr error, connect
 func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (server *grpc.Server, address string) {
 	t.Helper()
 
-	server = grpc.NewServer()
+	server = grpc.NewServer(grpc.StreamInterceptor(testLoggerInterceptor(t)))
 	agentapi.RegisterWSLInstanceServer(server, &srv)
 
 	var cfg net.ListenConfig
