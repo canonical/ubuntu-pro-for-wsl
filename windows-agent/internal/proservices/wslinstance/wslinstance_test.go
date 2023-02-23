@@ -267,14 +267,14 @@ func (s *wrappedService) Connected(stream agentapi.WSLInstance_ConnectedServer) 
 	return err
 }
 
-// Wait waits until the function Connected has returned.
+// wait waits until the function Connected has returned.
 // - if ok is true, returnErr is the return value of Connected.
 // - if ok is false, the wait times out hence Connected has not returned yet. returnedErr is therefore not valid.
 //
 //nolint: revive
 // Returning the error as first argument is strange but it makes sense here, we mimic the
 // (value, ok) return type of a map access.
-func (s *wrappedService) Wait(timeout time.Duration) (returnedErr error, connectedHasReturned bool) {
+func (s *wrappedService) wait(timeout time.Duration) (returnedErr error, connectedHasReturned bool) {
 	select {
 	case returnedErr = <-s.Errch:
 		return returnedErr, true
@@ -394,7 +394,7 @@ func stopWSLClientOnMatchingStep(wantStopStep, currentStep step, wsl *wslDistroM
 func checkConnectedStatus(t *testing.T, wantDoneStep step, wantErr bool, currentStep step, srv wrappedService) (continueTest bool) {
 	t.Helper()
 
-	connectedErr, stopped := srv.Wait(100 * time.Millisecond)
+	connectedErr, stopped := srv.wait(100 * time.Millisecond)
 	if currentStep != wantDoneStep {
 		require.False(t, stopped, "Connect() function should still be running at step %q but is has now stopped (should stop at step %q)", currentStep, wantDoneStep)
 		return true
