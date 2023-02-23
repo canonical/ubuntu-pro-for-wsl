@@ -5,6 +5,7 @@ package distroDB
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,14 +14,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	storageBaseFileName = "distros.db"
-	timeBetweenGC       = time.Hour
+	timeBetweenGC = time.Hour
 )
 
 // DistroDB is a thread-safe single-table database of WSL distribution instances. This
@@ -40,10 +41,17 @@ type DistroDB struct {
 //
 // Creating multiple databases with the same disk backing will result in
 // undefined behaviour.
-// TODO: write about the auto gc.
+//
+// Every certain amount of times, the database wil purge all distros that
+// are no longer registered or that have been marked as unreachable. This
+// cleanup can be triggered on demmand with TriggerCleanup.
 func New(storageDir string) (*DistroDB, error) {
+	if err := os.MkdirAll(storageDir, 0600); err != nil {
+		return nil, fmt.Errorf("could not create database directory: %w", err)
+	}
+
 	db := &DistroDB{
-		storagePath:     filepath.Join(storageDir, storageBaseFileName),
+		storagePath:     filepath.Join(storageDir, consts.DatabaseFileName),
 		scheduleTrigger: make(chan struct{}),
 	}
 	if err := db.load(); err != nil {
@@ -56,7 +64,7 @@ func New(storageDir string) (*DistroDB, error) {
 			case <-time.After(timeBetweenGC):
 			case <-db.scheduleTrigger:
 			}
-			if err := db.autoCleanup(context.TODO()); err != nil {
+			if err := db.cleanup(context.TODO()); err != nil {
 				log.Errorf(context.TODO(), "Failed to clean up potentially unused distros: %v", err)
 			}
 		}
@@ -150,18 +158,26 @@ func (db *DistroDB) TriggerCleanup() {
 	db.scheduleTrigger <- struct{}{}
 }
 
-// autoCleanup removes any distro that no longer exists or has been reset from the database.
-func (db *DistroDB) autoCleanup(ctx context.Context) error {
+// cleanup removes any distro that no longer exists or has been reset from the database.
+func (db *DistroDB) cleanup(ctx context.Context) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	var needsDBDump bool
 	for name, d := range db.distros {
 		if d.UnreachableErr == nil {
-			continue
+			v, err := d.IsValid()
+			if err != nil {
+				log.Infof(ctx, "Cleanup: Could not acertain distro %q validity, skipping: %v", d.Name, d.UnreachableErr)
+				continue
+			}
+
+			if v {
+				continue
+			}
 		}
 
-		log.Infof(ctx, "Distro %q became invalid, cleaning up: %v", name, d.UnreachableErr)
+		log.Infof(ctx, "Cleanup: Distro %q became invalid, cleaning up: %v", d.Name, d.UnreachableErr)
 		go d.Cleanup(ctx)
 		delete(db.distros, name)
 		needsDBDump = true
@@ -174,11 +190,6 @@ func (db *DistroDB) autoCleanup(ctx context.Context) error {
 
 // load reads the database from disk.
 func (db *DistroDB) load() error {
-	// Remove pre-existing distros
-	for _, distro := range db.distros {
-		go distro.Cleanup(context.TODO())
-	}
-
 	// Read raw database from disk
 	out, err := os.ReadFile(db.storagePath)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -190,7 +201,7 @@ func (db *DistroDB) load() error {
 	}
 
 	// Parse database into intermediate objects
-	distros := make([]inertDistro, 0)
+	distros := make([]serializableDistro, 0)
 	err = yaml.Unmarshal(out, &distros)
 	if err != nil {
 		return err
@@ -202,6 +213,7 @@ func (db *DistroDB) load() error {
 		d, err := inert.newDistro()
 		if err != nil {
 			log.Warningf(context.TODO(), "Read invalid distro from database: %#+v", inert)
+			continue
 		}
 		db.distros[strings.ToLower(d.Name)] = d
 	}
@@ -220,9 +232,9 @@ func (db *DistroDB) dump() error {
 	sort.Strings(normalizedNames)
 
 	// Create intermediate easy-to-marshall objects
-	distros := make([]inertDistro, 0, len(db.distros))
+	distros := make([]serializableDistro, 0, len(db.distros))
 	for _, n := range normalizedNames {
-		distros = append(distros, newInertDistro(db.distros[n]))
+		distros = append(distros, newSerializableDistro(db.distros[n]))
 	}
 
 	// Generate dump
@@ -237,5 +249,10 @@ func (db *DistroDB) dump() error {
 		return err
 	}
 
-	return os.Rename(db.storagePath+".new", db.storagePath)
+	err = os.Rename(db.storagePath+".new", db.storagePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

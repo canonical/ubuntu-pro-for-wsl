@@ -1,0 +1,14 @@
+- name: '{{(index . 0).Name}}'
+  guid: '{{(index . 0).GUID.String}}'
+  properties:
+    distroid: SuperUbuntu
+    versionid: "122.04"
+    prettyname: Ubuntu 122.04 LTS (Jolly Jellyfish)
+    proattached: false
+- name: '{{(index . 1).Name}}'
+  guid: '{{(index . 1).GUID.String}}'
+  properties:
+    distroid: Ubuntu
+    versionid: "22.04"
+    prettyname: Ubuntu 22.04 LTS (Jammy Jellyfish)
+    proattached: false

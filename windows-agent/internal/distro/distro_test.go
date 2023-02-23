@@ -4,11 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -16,10 +13,10 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -33,12 +30,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
-	registeredDistro, registeredGUID := registerDistro(t, false)
-	_, anotherRegisteredGUID := registerDistro(t, false)
-
-	nonRegisteredDistro := generateDistroName(t)
-	fakeGUID, err := windows.GUIDFromString(`{12345678-1234-1234-1234-123456789ABC}`)
-	require.NoError(t, err, "Setup: could not construct fake GUID")
+	registeredDistro, registeredGUID := testutils.RegisterDistro(t, false)
+	_, anotherRegisteredGUID := testutils.RegisterDistro(t, false)
+	nonRegisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
 
 	props := distro.Properties{
 		DistroID:    "ubuntu",
@@ -95,7 +89,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	name, guid := registerDistro(t, false)
+	name, guid := testutils.RegisterDistro(t, false)
 	d, err := distro.New(name, distro.Properties{}, distro.WithGUID(guid))
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
 
@@ -105,12 +99,9 @@ func TestString(t *testing.T) {
 }
 
 func TestIsValid(t *testing.T) {
-	distro1, guid1 := registerDistro(t, false)
-	_, guid2 := registerDistro(t, false)
-
-	nonRegisteredDistro := generateDistroName(t)
-	fakeGUID, err := windows.GUIDFromString(`{12345678-1234-1234-1234-123456789ABC}`)
-	require.NoError(t, err, "Setup: could not construct fake GUID")
+	distro1, guid1 := testutils.RegisterDistro(t, false)
+	_, guid2 := testutils.RegisterDistro(t, false)
+	nonRegisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
 
 	testCases := map[string]struct {
 		distro string
@@ -147,7 +138,7 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestTaskProcessing(t *testing.T) {
-	reusableDistro, _ := registerDistro(t, true)
+	reusableDistro, _ := testutils.RegisterDistro(t, true)
 
 	testCases := map[string]struct {
 		unregisterAfterConstructor bool // Triggers error in trying to get distro in keepAwake
@@ -176,7 +167,7 @@ func TestTaskProcessing(t *testing.T) {
 			distroName := reusableDistro
 			if tc.unregisterAfterConstructor {
 				// Otherwise, we use a new distro
-				distroName, _ = registerDistro(t, true)
+				distroName, _ = testutils.RegisterDistro(t, true)
 			}
 
 			d, err := distro.New(distroName, distro.Properties{}, distro.WithTaskProcessingContext(ctx))
@@ -190,7 +181,7 @@ func TestTaskProcessing(t *testing.T) {
 			require.Equal(t, nil, d.Client(), "Client() should return nil when there is no connection")
 
 			if tc.unregisterAfterConstructor {
-				unregisterDistro(t, distroName)
+				testutils.UnregisterDistro(t, distroName)
 			}
 
 			// Submit a task, wait for distro to wake up, and wait for slightly
@@ -217,8 +208,8 @@ func TestTaskProcessing(t *testing.T) {
 			if tc.unregisterAfterConstructor {
 				wantState = "Unregistered"
 			}
-			require.Eventuallyf(t, func() bool { return distroState(t, distroName) == wantState }, distroWakeUpTime, 200*time.Millisecond,
-				"distro should have been %q after SubmitTask(). Current state is %q", wantState, distroState(t, distroName))
+			require.Eventuallyf(t, func() bool { return testutils.DistroState(t, distroName) == wantState }, distroWakeUpTime, 200*time.Millisecond,
+				"distro should have been %q after SubmitTask(). Current state is %q", wantState, testutils.DistroState(t, distroName))
 
 			// Testing task before an active connection is established
 			// We sleep to ensure at least one tick has gone by in the "wait for connection"
@@ -272,7 +263,7 @@ func TestTaskProcessing(t *testing.T) {
 }
 
 func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
-	distroName, _ := registerDistro(t, false)
+	distroName, _ := testutils.RegisterDistro(t, false)
 
 	d, err := distro.New(distroName, distro.Properties{})
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
@@ -297,7 +288,7 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 
 func TestSetConnection(t *testing.T) {
 	ctx := context.Background()
-	distroName, _ := registerDistro(t, false)
+	distroName, _ := testutils.RegisterDistro(t, false)
 
 	d, err := distro.New(distroName, distro.Properties{})
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
@@ -353,7 +344,7 @@ func TestSetConnection(t *testing.T) {
 
 func TestSetConnectionOnClosedConnection(t *testing.T) {
 	ctx := context.Background()
-	distroName, _ := registerDistro(t, false)
+	distroName, _ := testutils.RegisterDistro(t, false)
 
 	d, err := distro.New(distroName, distro.Properties{})
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
@@ -467,115 +458,4 @@ func (t *testTask) String() string {
 
 func (t *testTask) ShouldRetry() bool {
 	return t.ExecuteCalls.Load() < testTaskMaxRetries
-}
-
-// generateDistroName generates a distroName that is not registered.
-func generateDistroName(t *testing.T) (name string) {
-	t.Helper()
-
-	for i := 0; i < 10; i++ {
-		//nolint: gosec // No need to be cryptographically secure in a distro name generator
-		name := fmt.Sprintf("testDistro_UP4W_%d", rand.Uint32())
-		d := gowsl.NewDistro(name)
-		collision, err := d.IsRegistered()
-		require.NoError(t, err, "Setup: could not asssert if distro already exists")
-		if collision {
-			t.Logf("Name %s is already taken. Retrying", name)
-			continue
-		}
-		return name
-	}
-	require.Fail(t, "could not generate unique distro name")
-	return ""
-}
-
-func registerDistro(t *testing.T, realDistro bool) (distroName string, GUID windows.GUID) {
-	t.Helper()
-	tmpDir := t.TempDir()
-
-	var rootFsPath string
-	if !realDistro {
-		rootFsPath = tmpDir + "/install.tar.gz"
-		err := os.WriteFile(rootFsPath, []byte{}, 0600)
-		require.NoError(t, err, "could not write empty file")
-	} else {
-		const appx = "UbuntuPreview"
-		rootFsPath = poweshellOutputf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
-		require.NotEmpty(t, rootFsPath, "could not find rootfs tarball. Is %s installed?", appx)
-		rootFsPath = filepath.Join(rootFsPath, "install.tar.gz")
-	}
-
-	_, err := os.Lstat(rootFsPath)
-	require.NoError(t, err, "Setup: Could not stat rootFs:\n%s", rootFsPath)
-
-	distroName = generateDistroName(t)
-
-	// Register distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
-	defer tk.Stop()
-	poweshellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
-	tk.Stop()
-
-	t.Cleanup(func() {
-		unregisterDistro(t, distroName)
-	})
-
-	d := gowsl.NewDistro(distroName)
-	GUID, err = d.GUID()
-	require.NoError(t, err, "Setup: could not get distro GUID")
-
-	return distroName, GUID
-}
-
-func unregisterDistro(t *testing.T, distroName string) {
-	t.Helper()
-
-	// Unregister distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
-	defer tk.Stop()
-	d := gowsl.NewDistro(distroName)
-	_ = d.Unregister()
-}
-
-// poweshellOutputf runs the command (with any printf-style directives and args). It fails if the
-// return value of the command is non-zero. Otherwise, it returns its combined stdout and stderr.
-func poweshellOutputf(t *testing.T, command string, args ...any) string {
-	t.Helper()
-
-	cmd := fmt.Sprintf(command, args...)
-
-	//nolint: gosec // This function is only used in tests so no arbitrary code execution here
-	out, err := exec.Command("powershell", "-Command", cmd).CombinedOutput()
-	require.NoError(t, err, "Non-zero return code for command:\n%s\nOutput:%s", cmd, out)
-
-	// Convert to string and get rid of trailing endline
-	return strings.TrimSuffix(string(out), "\r\n")
-}
-
-// distroState returns the state of the distro as specified by wsl.exe. Possible states:
-// - Installing
-// - Running
-// - Stopped
-// - Unregistered.
-func distroState(t *testing.T, distroName string) string {
-	t.Helper()
-
-	cmd := "$env:WSL_UTF8=1 ; wsl --list --all --verbose"
-	out := poweshellOutputf(t, cmd)
-
-	rows := strings.Split(out, "\n")[1:] // [1:] to skip header
-	for _, row := range rows[1:] {
-		fields := strings.Fields(row)
-		if fields[0] == "*" {
-			fields = fields[1:]
-		}
-		t.Logf("Searching: %q Found:%q", distroName, fields)
-		require.Len(t, fields, 3, "Output of %q should contain three columns. Row %q was parsed into %q", cmd, row, fields)
-		if fields[0] != distroName {
-			continue
-		}
-		t.Log("OK!")
-		return fields[1]
-	}
-	return "Unregistered"
 }
