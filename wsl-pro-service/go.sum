@@ -1,0 +1,4 @@
+github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
+github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
+github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 h1:nETXPg0CiJrMAwC2gqkcam9BiBWYGvTsSYRfrjOz2Kg=
+github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2/go.mod h1:D3SsWAXK7wCCBZu+Vk5hc1EuKj/L3XN1puEMXTU4LrQ=

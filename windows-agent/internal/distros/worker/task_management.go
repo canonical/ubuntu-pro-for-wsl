@@ -93,6 +93,8 @@ func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
 	}
 
 	// Task failed during execution, nothing else to be done.
+	log.Errorf(context.TODO(), "Task %s failed: %v", *t, errResult)
+
 	return nil
 }
 

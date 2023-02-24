@@ -5,4 +5,5 @@ use (
 	./common
 	./windows-agent
 	./wslserviceapi
+	./wsl-pro-service
 )
