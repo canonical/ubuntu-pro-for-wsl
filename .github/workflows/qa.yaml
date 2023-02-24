@@ -13,7 +13,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agentapi", "windows-agent"]
+        subproject: ["agentapi", "windows-agent", "wsl-pro-service"]
+        exclude:
+          - os: windows
+            subproject: wsl-pro-service
+
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Set up git
@@ -85,7 +89,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agentapi", "windows-agent"]
+        subproject: ["agentapi", "windows-agent", "wsl-pro-service"]
+        exclude:
+          - os: windows
+            subproject: wsl-pro-service
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Check out repository
