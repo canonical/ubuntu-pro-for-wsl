@@ -2,7 +2,7 @@ go 1.19
 
 use (
 	./agentapi
-	./version
+	./common
 	./windows-agent
 	./wslserviceapi
 )

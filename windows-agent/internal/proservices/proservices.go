@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
@@ -50,12 +50,13 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	// Set default options.
-	defaultUserCacheDir, err := os.UserCacheDir()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return s, err
 	}
+
 	opts := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
+		cacheDir: filepath.Join(home, common.CacheRelativePath),
 	}
 
 	// Apply given options.

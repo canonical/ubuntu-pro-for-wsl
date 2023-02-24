@@ -8,8 +8,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	log "github.com/sirupsen/logrus"
 )
@@ -30,7 +30,7 @@ type app interface {
 }
 
 func run(a app) int {
-	i18n.InitI18nDomain(consts.TEXTDOMAIN)
+	i18n.InitI18nDomain(common.TEXTDOMAIN)
 	defer installSignalHandler(a)()
 
 	log.SetFormatter(&log.TextFormatter{
