@@ -1,7 +1,7 @@
-package distroDB
+package database
 
 import (
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"golang.org/x/sys/windows"
 )
 

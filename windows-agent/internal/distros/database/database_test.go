@@ -1,4 +1,4 @@
-package distroDB_test
+package database_test
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -72,7 +72,7 @@ func TestNew(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro, guid})
 			}
 
-			db, err := distroDB.New(dbDir)
+			db, err := database.New(dbDir)
 			if tc.wantErr {
 				require.Error(t, err, "New() should have returned an error")
 				return
@@ -99,7 +99,7 @@ func TestDatabaseGet(t *testing.T) {
 		distroID{registeredDistroInDB, registeredGUID},
 		distroID{nonRegisteredDistroInDB, oldGUID})
 
-	db, err := distroDB.New(databaseDir)
+	db, err := database.New(databaseDir)
 	require.NoError(t, err, "Setup: New() should return no error")
 
 	// Unregister the distro now, so that it's in the db object but not on system properly.
@@ -170,7 +170,7 @@ func TestDatabaseDump(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro1, guid1}, distroID{distro2, guid2})
 			}
 
-			db, err := distroDB.New(dbDir)
+			db, err := database.New(dbDir)
 			require.NoError(t, err, "Setup: empty database should be created without issue")
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
@@ -208,8 +208,8 @@ func TestDatabaseDump(t *testing.T) {
 			} else {
 				require.Equal(t, 2, len(sd.data), "Database dump should contain exactly two distros")
 
-				idx1 := slices.IndexFunc(sd.data, func(s distroDB.SerializableDistro) bool { return s.Name == distro1 })
-				idx2 := slices.IndexFunc(sd.data, func(s distroDB.SerializableDistro) bool { return s.Name == distro2 })
+				idx1 := slices.IndexFunc(sd.data, func(s database.SerializableDistro) bool { return s.Name == distro1 })
+				idx2 := slices.IndexFunc(sd.data, func(s database.SerializableDistro) bool { return s.Name == distro2 })
 
 				require.NotEqualf(t, -1, idx1, "Database dump should contain distro1 (%s). Dump:\n%s", distro1, dump)
 				require.NotEqualf(t, -1, idx2, "Database dump should contain distro2 (%s). Dump:\n%s", distro2, dump)
@@ -307,7 +307,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				distroID{distroInDB, guids[distroInDB]},
 				distroID{reRegisteredDistro, guids[reRegisteredDistro]})
 
-			db, err := distroDB.New(dbDir)
+			db, err := database.New(dbDir)
 			require.NoError(t, err, "Setup: New() should return no error")
 
 			if tc.distroName == reRegisteredDistro {
@@ -400,7 +400,7 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			databaseFromTemplate(t, dbDir, distros...)
 
-			db, err := distroDB.New(dbDir)
+			db, err := database.New(dbDir)
 			require.NoError(t, err, "Setup: New() should have returned no error")
 
 			if tc.markDistroUnreachable != "" {
@@ -484,14 +484,14 @@ func databaseFromTemplate(t *testing.T, dest string, distros ...distroID) {
 // structuredDump is a convenience struct used to parse the database dump and make
 // assertions on it with better accuracy that just a strings.Contains.
 type structuredDump struct {
-	data []distroDB.SerializableDistro
+	data []database.SerializableDistro
 }
 
 // newStructuredDump takes a database dump and parses it to generate a structuredDump.
 func newStructuredDump(t *testing.T, rawDump []byte) structuredDump {
 	t.Helper()
 
-	var data []distroDB.SerializableDistro
+	var data []database.SerializableDistro
 
 	err := yaml.Unmarshal(rawDump, &data)
 	require.NoError(t, err, "In an attempt to parse a database dump: Unmarshal failed for dump:\n%s", rawDump)

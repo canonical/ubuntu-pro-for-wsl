@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
@@ -23,11 +23,11 @@ import (
 type Service struct {
 	agentapi.UnimplementedWSLInstanceServer
 
-	db *distroDB.DistroDB
+	db *database.DistroDB
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *distroDB.DistroDB) (s Service, err error) {
+func New(ctx context.Context, db *database.DistroDB) (s Service, err error) {
 	log.Debug(ctx, "Building new GRPC WSL Instance service")
 
 	return Service{db: db}, nil

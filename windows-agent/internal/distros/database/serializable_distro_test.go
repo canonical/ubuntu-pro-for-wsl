@@ -1,11 +1,11 @@
-package distroDB_test
+package database_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -14,7 +14,7 @@ import (
 func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]distroDB.SerializableDistro{
+	testCases := map[string]database.SerializableDistro{
 		"Normal case": {
 			Name: "Ubuntu",
 			GUID: "{12345678-1234-1234-1234-123456789abc}",
@@ -59,7 +59,7 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 			// object can be recovered. We log it here for informational purposes.
 			t.Logf("%s", marshalled)
 
-			var got distroDB.SerializableDistro
+			var got database.SerializableDistro
 			err = yaml.Unmarshal(marshalled, &got)
 			require.NoError(t, err, "serializableDistro should be successfully unmarshalled")
 
@@ -94,7 +94,7 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			s := distroDB.SerializableDistro{
+			s := database.SerializableDistro{
 				Name: tc.distro,
 				GUID: tc.guid,
 			}
@@ -126,7 +126,7 @@ func TestNewSerializableDistro(t *testing.T) {
 	d, err := distro.New(registeredDistro, props)
 	require.NoError(t, err, "Setup: distro New() should return no error")
 
-	s := distroDB.NewSerializableDistro(d)
+	s := database.NewSerializableDistro(d)
 	require.Equal(t, registeredDistro, s.Name)
 	require.Equal(t, registeredGUID.String(), s.GUID)
 	require.Equal(t, props, s.Properties)

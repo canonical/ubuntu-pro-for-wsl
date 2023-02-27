@@ -1,6 +1,6 @@
-// Package distroDB contains the DistroDB object and its methods. It manages a database
+// Package database contains the DistroDB object and its methods. It manages a database
 // of Windows Subsystem for Linux distribution instances (aka distros).
-package distroDB
+package database
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"gopkg.in/yaml.v3"
 )

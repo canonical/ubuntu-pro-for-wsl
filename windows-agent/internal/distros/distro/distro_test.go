@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"

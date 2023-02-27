@@ -1,6 +1,6 @@
-package distroDB
+package database
 
-import "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+import "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 
 type SerializableDistro = serializableDistro
 

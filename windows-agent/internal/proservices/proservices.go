@@ -8,7 +8,7 @@ import (
 
 	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
@@ -64,7 +64,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
-	db, err := distroDB.New(opts.cacheDir)
+	db, err := database.New(opts.cacheDir)
 	if err != nil {
 		return s, err
 	}
