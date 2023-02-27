@@ -1,9 +1,10 @@
-// Package task implements tasks to be submitted to distros.
-package task
+// Package tasks implements tasks to be submitted to distros.
+package tasks
 
 import (
 	"context"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 )
 
@@ -27,4 +28,10 @@ func (t AttachPro) String() string {
 // ShouldRetry is needed to fulfil Task.
 func (t AttachPro) ShouldRetry() bool {
 	return false
+}
+
+// Is is a custom comparator. All AttachPro tasks are considered equivalent.
+func (t AttachPro) Is(other task.Task) bool {
+	_, ok := other.(AttachPro)
+	return ok
 }

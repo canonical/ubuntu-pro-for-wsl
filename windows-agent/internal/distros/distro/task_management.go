@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/exp/slices"
@@ -18,7 +19,7 @@ const taskQueueSize = 100
 
 type managedTask struct {
 	ID uint64
-	Task
+	task.Task
 }
 
 func (tm managedTask) String() string {
@@ -48,7 +49,7 @@ func newTaskManager(ctx context.Context, storagePath string) (*taskManager, erro
 	return &tm, nil
 }
 
-func (tm *taskManager) submit(tasks ...Task) error {
+func (tm *taskManager) submit(tasks ...task.Task) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 

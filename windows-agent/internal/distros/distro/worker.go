@@ -6,16 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/ubuntu/decorate"
 )
-
-// Task represents a given task that could be retried to dispatch to GRPC.
-type Task interface {
-	Execute(context.Context, wslserviceapi.WSLClient) error
-	ShouldRetry() bool
-}
 
 // startProcessingTasks starts the main task processing goroutine.
 func (d *Distro) startProcessingTasks(ctx context.Context) {
@@ -44,7 +39,7 @@ func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 // It will return an error in these cases:
 // - The queue is full
 // - The distro has been cleaned up.
-func (d *Distro) SubmitTasks(tasks ...Task) (err error) {
+func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", d.Name, tasks)
 
 	if d.canProcessTasks == nil {
