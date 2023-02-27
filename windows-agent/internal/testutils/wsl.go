@@ -77,12 +77,10 @@ func DistroState(t *testing.T, distroName string) string {
 		if fields[0] == "*" {
 			fields = fields[1:]
 		}
-		t.Logf("Searching: %q Found:%q", distroName, fields)
 		require.Len(t, fields, 3, "Output of %q should contain three columns. Row %q was parsed into %q", cmd, row, fields)
 		if fields[0] != distroName {
 			continue
 		}
-		t.Log("OK!")
 		return fields[1]
 	}
 	return "Unregistered"

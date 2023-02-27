@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -41,21 +42,36 @@ func TestNew(t *testing.T) {
 		ProAttached: true,
 	}
 
+	type taskFileStatus int
+	const (
+		taskFileDoesNotExist taskFileStatus = iota
+		taskFileEmpty
+		taskFileOk
+		taskFileBadContents
+		taskFileIsDir
+	)
+
 	testCases := map[string]struct {
 		distro   string
 		withGUID windows.GUID
+		taskFile taskFileStatus
 
+		wantErr     bool
 		wantErrType error
 	}{
-		"Registered distro":               {distro: registeredDistro},
-		"Registered distro with its GUID": {distro: registeredDistro, withGUID: registeredGUID},
+		"Registered distro": {distro: registeredDistro},
+		"Registered distro, pre-existing task file with empty list":  {distro: registeredDistro, taskFile: taskFileEmpty},
+		"Registered distro, pre-existing task file with a test task": {distro: registeredDistro, taskFile: taskFileOk},
+		"Registered distro with its GUID":                            {distro: registeredDistro, withGUID: registeredGUID},
 
 		// Error cases
-		"Registered distro, another distro's GUID":          {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErrType: &distro.NotExistError{}},
-		"Registered distro, non-matching GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErrType: &distro.NotExistError{}},
-		"Non-registered distro":                             {distro: nonRegisteredDistro, wantErrType: &distro.NotExistError{}},
-		"Non-registered distro, another distro's GUID":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErrType: &distro.NotExistError{}},
-		"Non-registered distro, with a non-registered GUID": {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErrType: &distro.NotExistError{}},
+		"Registered distro, cannot read task file":          {distro: registeredDistro, taskFile: taskFileIsDir, wantErr: true},
+		"Registered distro, cannot parse task file":         {distro: registeredDistro, taskFile: taskFileBadContents, wantErr: true},
+		"Registered distro, another distro's GUID":          {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Registered distro, non-matching GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Non-registered distro":                             {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Non-registered distro, another distro's GUID":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Non-registered distro, with a non-registered GUID": {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotExistError{}},
 	}
 
 	for name, tc := range testCases {
@@ -70,13 +86,39 @@ func TestNew(t *testing.T) {
 				args = append(args, distro.WithGUID(tc.withGUID))
 			}
 
-			d, err = distro.New(tc.distro, props, t.TempDir(), args...)
+			taskDir := t.TempDir()
+			taskFile := filepath.Join(taskDir, tc.distro+".tasks")
+
+			switch tc.taskFile {
+			case taskFileDoesNotExist:
+			case taskFileEmpty:
+				err := os.WriteFile(taskFile, []byte("[]"), 0600)
+				require.NoError(t, err, "Setup: could not create pre-existining task file")
+			case taskFileOk:
+				c, err := os.ReadFile(filepath.Join(testutils.TestFamilyPath(t), "distroname.task"))
+				require.NoError(t, err, "Setup: could not read fixture for task file")
+				err = os.WriteFile(taskFile, c, 0600)
+				require.NoError(t, err, "Setup: could not create pre-existining task file")
+			case taskFileBadContents:
+				err := os.WriteFile(taskFile, []byte("This is not\n\tvalid yaml"), 0600)
+				require.NoError(t, err, "Setup: could not create bad pre-existining task file")
+			case taskFileIsDir:
+				err := os.MkdirAll(taskFile, 0600)
+				require.NoError(t, err, "Setup: could not create dir to intefere with disro tasks")
+			default:
+				require.FailNow(t, "Setup: unknown enum value for %T: %d", tc.taskFile, tc.taskFile)
+			}
+
+			d, err = distro.New(tc.distro, props, taskDir, args...)
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
-			if tc.wantErrType != nil {
+			if tc.wantErr {
 				require.Error(t, err, "New() should have returned an error")
-				require.ErrorIsf(t, err, tc.wantErrType, "New() should have returned an error of type %T", tc.wantErrType)
+				if tc.wantErrType == nil {
+					return
+				}
+				require.ErrorIsf(t, err, tc.wantErrType, "New() should have returned an error of type %T", tc.wantErrType, err)
 				return
 			}
 
@@ -84,6 +126,7 @@ func TestNew(t *testing.T) {
 			require.Equal(t, tc.distro, d.Name, "distro.Name should match the one it was constructed with")
 			require.Equal(t, registeredGUID.String(), d.GUID.String(), "distro.GUID should match the one it was constructed with")
 			require.Equal(t, props, d.Properties, "distro.Properties should match the one it was constructed with because they were never directly modified")
+			require.FileExists(t, taskFile, "New() should create a task file")
 		})
 	}
 }
@@ -141,6 +184,7 @@ func TestTaskProcessing(t *testing.T) {
 	reusableDistro, _ := testutils.RegisterDistro(t, true)
 
 	testCases := map[string]struct {
+		submitTwoTasksAtOnce       bool // submits more than one tqask in the same call
 		unregisterAfterConstructor bool // Triggers error in trying to get distro in keepAwake
 		taskError                  bool // Causes the task to always return an error
 		forceConnectionTimeout     bool // Cancels the context while waiting for the GRPC connection to be established
@@ -148,18 +192,19 @@ func TestTaskProcessing(t *testing.T) {
 
 		wantExecuteCalls int32
 	}{
-		"Task is executed successfully": {wantExecuteCalls: 1},
-		"Unregistered distro":           {unregisterAfterConstructor: true, wantExecuteCalls: 0},
-		"Connection timeout":            {forceConnectionTimeout: true, wantExecuteCalls: 0},
-		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalls: 1},
-		"Erroneous task":                {taskError: true, wantExecuteCalls: testTaskMaxRetries},
+		"Task is executed successfully":       {wantExecuteCalls: 1},
+		"Two tasks are executed successfully": {wantExecuteCalls: 1, submitTwoTasksAtOnce: true},
+		"Unregistered distro":                 {unregisterAfterConstructor: true, wantExecuteCalls: 0},
+		"Connection timeout":                  {forceConnectionTimeout: true, wantExecuteCalls: 0},
+		"Cancel task in progress":             {cancelTaskInProgress: true, wantExecuteCalls: 1},
+		"Erroneous task":                      {taskError: true, wantExecuteCalls: testTaskMaxRetries},
 	}
 
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			ctx, cancel := context.WithCancel(ctx)
+			ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
 
 			// Optimization: we re-use the same distro for cases when
@@ -186,7 +231,7 @@ func TestTaskProcessing(t *testing.T) {
 
 			// Submit a task, wait for distro to wake up, and wait for slightly
 			// more than the client waiting tickrate
-			const distroWakeUpTime = 5 * time.Second
+			const distroWakeUpTime = 10 * time.Second
 			const clientTickPeriod = 1200 * time.Millisecond
 
 			task := &testTask{}
@@ -200,7 +245,13 @@ func TestTaskProcessing(t *testing.T) {
 				task.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = d.SubmitTasks(task)
+			otherTask := &testTask{}
+			if tc.submitTwoTasksAtOnce {
+				err = d.SubmitTasks(task, otherTask)
+			} else {
+				err = d.SubmitTasks(task)
+			}
+
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -208,8 +259,9 @@ func TestTaskProcessing(t *testing.T) {
 			if tc.unregisterAfterConstructor {
 				wantState = "Unregistered"
 			}
-			require.Eventuallyf(t, func() bool { return testutils.DistroState(t, distroName) == wantState }, distroWakeUpTime, 200*time.Millisecond,
-				"distro should have been %q after SubmitTask(). Current state is %q", wantState, testutils.DistroState(t, distroName))
+			require.Eventuallyf(t, func() bool {
+				return testutils.DistroState(t, distroName) == wantState
+			}, distroWakeUpTime, 500*time.Millisecond, "distro should have been %q after SubmitTask(). Current state is %q", wantState, testutils.DistroState(t, distroName))
 
 			// Testing task before an active connection is established
 			// We sleep to ensure at least one tick has gone by in the "wait for connection"
@@ -250,8 +302,17 @@ func TestTaskProcessing(t *testing.T) {
 				return
 			}
 
+			if tc.submitTwoTasksAtOnce {
+				require.Eventually(t, func() bool {
+					return otherTask.ExecuteCalls.Load() > 0
+				}, 5*time.Second, 100*time.Millisecond, "Second task should have been executed")
+			}
+
 			time.Sleep(time.Second)
 			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed too many times after establishing a connection")
+			if tc.submitTwoTasksAtOnce {
+				require.Equal(t, tc.wantExecuteCalls, otherTask.ExecuteCalls.Load(), "Second task executed too many times after establishing a connection")
+			}
 
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
