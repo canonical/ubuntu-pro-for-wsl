@@ -72,7 +72,7 @@ func TestNew(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro, guid})
 			}
 
-			db, err := database.New(dbDir)
+			db, err := database.New(dbDir, nil)
 			if tc.wantErr {
 				require.Error(t, err, "New() should have returned an error")
 				return
@@ -99,7 +99,7 @@ func TestDatabaseGet(t *testing.T) {
 		distroID{registeredDistroInDB, registeredGUID},
 		distroID{nonRegisteredDistroInDB, oldGUID})
 
-	db, err := database.New(databaseDir)
+	db, err := database.New(databaseDir, nil)
 	require.NoError(t, err, "Setup: New() should return no error")
 
 	// Unregister the distro now, so that it's in the db object but not on system properly.
@@ -170,7 +170,7 @@ func TestDatabaseDump(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro1, guid1}, distroID{distro2, guid2})
 			}
 
-			db, err := database.New(dbDir)
+			db, err := database.New(dbDir, nil)
 			require.NoError(t, err, "Setup: empty database should be created without issue")
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
@@ -307,7 +307,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				distroID{distroInDB, guids[distroInDB]},
 				distroID{reRegisteredDistro, guids[reRegisteredDistro]})
 
-			db, err := database.New(dbDir)
+			db, err := database.New(dbDir, nil)
 			require.NoError(t, err, "Setup: New() should return no error")
 
 			if tc.distroName == reRegisteredDistro {
@@ -400,7 +400,7 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			databaseFromTemplate(t, dbDir, distros...)
 
-			db, err := database.New(dbDir)
+			db, err := database.New(dbDir, nil)
 			require.NoError(t, err, "Setup: New() should have returned no error")
 
 			if tc.markDistroUnreachable != "" {

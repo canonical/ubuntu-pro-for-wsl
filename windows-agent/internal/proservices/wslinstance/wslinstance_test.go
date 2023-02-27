@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	db, err := database.New(t.TempDir())
+	db, err := database.New(t.TempDir(), nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 
 	_, err = wslinstance.New(context.Background(), db)
@@ -111,7 +111,7 @@ func TestConnected(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(func() { cancel() })
 
-			db, err := database.New(t.TempDir())
+			db, err := database.New(t.TempDir(), nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 
 			srv, err := newWrappedService(context.Background(), db)

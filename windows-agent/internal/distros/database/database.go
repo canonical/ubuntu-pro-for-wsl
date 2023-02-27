@@ -16,6 +16,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"gopkg.in/yaml.v3"
 )
@@ -33,7 +34,8 @@ type DistroDB struct {
 
 	scheduleTrigger chan struct{}
 
-	storageDir string
+	storageDir   string
+	initialTasks *initialTasks.InitialTasks
 }
 
 // New creates a database and populates it with data in the file located
@@ -45,7 +47,7 @@ type DistroDB struct {
 // Every certain amount of times, the database wil purge all distros that
 // are no longer registered or that have been marked as unreachable. This
 // cleanup can be triggered on demmand with TriggerCleanup.
-func New(storageDir string) (*DistroDB, error) {
+func New(storageDir string, initialTasks *initialTasks.InitialTasks) (*DistroDB, error) {
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
 		return nil, fmt.Errorf("could not create database directory: %w", err)
 	}
@@ -53,6 +55,7 @@ func New(storageDir string) (*DistroDB, error) {
 	db := &DistroDB{
 		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
+		initialTasks:    initialTasks,
 	}
 	if err := db.load(); err != nil {
 		return nil, err
@@ -100,7 +103,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(name, props, db.storageDir)
+		d, err := distro.New(name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +125,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		go d.Cleanup(context.TODO())
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(name, props, db.storageDir)
+		d, err := distro.New(name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
