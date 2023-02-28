@@ -70,7 +70,7 @@ func TestNew(t *testing.T) {
 				args = append(args, distro.WithGUID(tc.withGUID))
 			}
 
-			d, err = distro.New(tc.distro, props, args...)
+			d, err = distro.New(tc.distro, props, t.TempDir(), args...)
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
@@ -90,7 +90,7 @@ func TestNew(t *testing.T) {
 
 func TestString(t *testing.T) {
 	name, guid := testutils.RegisterDistro(t, false)
-	d, err := distro.New(name, distro.Properties{}, distro.WithGUID(guid))
+	d, err := distro.New(name, distro.Properties{}, t.TempDir(), distro.WithGUID(guid))
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
 
 	s := d.String()
@@ -122,7 +122,7 @@ func TestIsValid(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// Create an always valid distro
-			d, err := distro.New(distro1, distro.Properties{})
+			d, err := distro.New(distro1, distro.Properties{}, t.TempDir())
 			require.NoError(t, err, "Setup: distro New() should return no errors")
 
 			// Change values and assert on IsValid
@@ -170,7 +170,7 @@ func TestTaskProcessing(t *testing.T) {
 				distroName, _ = testutils.RegisterDistro(t, true)
 			}
 
-			d, err := distro.New(distroName, distro.Properties{}, distro.WithTaskProcessingContext(ctx))
+			d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), distro.WithTaskProcessingContext(ctx))
 			require.NoError(t, err, "Setup: distro New() should return no error")
 			defer d.Cleanup(ctx)
 
@@ -265,7 +265,7 @@ func TestTaskProcessing(t *testing.T) {
 func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 
-	d, err := distro.New(distroName, distro.Properties{})
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
 	defer d.Cleanup(context.Background())
 
@@ -290,7 +290,7 @@ func TestSetConnection(t *testing.T) {
 	ctx := context.Background()
 	distroName, _ := testutils.RegisterDistro(t, false)
 
-	d, err := distro.New(distroName, distro.Properties{})
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
 	defer d.Cleanup(context.Background())
 
@@ -346,7 +346,7 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	ctx := context.Background()
 	distroName, _ := testutils.RegisterDistro(t, false)
 
-	d, err := distro.New(distroName, distro.Properties{})
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
 	defer d.Cleanup(context.Background())
 

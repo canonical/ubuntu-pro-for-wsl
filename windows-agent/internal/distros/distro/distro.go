@@ -3,6 +3,7 @@ package distro
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -12,8 +13,6 @@ import (
 	"golang.org/x/sys/windows"
 	"google.golang.org/grpc"
 )
-
-const taskQueueSize = 100
 
 // Distro is a wrapper around gowsl.Distro that tracks both the distroname and
 // the GUID, ensuring that the distro has not been unregistered and re-registered.
@@ -30,8 +29,8 @@ type Distro struct {
 
 	// The following fields may change without afecting long-term storage of the distro
 	cancel          context.CancelFunc
-	tasks           chan Task
 	canProcessTasks chan struct{}
+	taskManager     *taskManager
 
 	conn   *grpc.ClientConn
 	connMu *sync.RWMutex
@@ -69,7 +68,7 @@ func WithGUID(guid windows.GUID) Option {
 //
 //   - To avoid the latter check, you can pass a default-constructed identity.GUID. In that
 //     case, the distro will be created with its currently registered GUID.
-func New(name string, props Properties, args ...Option) (distro *Distro, err error) {
+func New(name string, props Properties, storageDir string, args ...Option) (distro *Distro, err error) {
 	decorate.OnError(&err, "could not initialize distro %q", name)
 
 	var nilGUID windows.GUID
@@ -106,12 +105,17 @@ func New(name string, props Properties, args ...Option) (distro *Distro, err err
 		}
 	}
 
+	tm, err := newTaskManager(opts.taskProcessingContext, filepath.Join(storageDir, id.Name+".tasks"))
+	if err != nil {
+		return nil, err
+	}
+
 	distro = &Distro{
 		identity:   id,
 		Properties: props,
 
-		tasks:  make(chan Task, taskQueueSize),
-		connMu: &sync.RWMutex{},
+		taskManager: tm,
+		connMu:      &sync.RWMutex{},
 	}
 
 	distro.startProcessingTasks(opts.taskProcessingContext)

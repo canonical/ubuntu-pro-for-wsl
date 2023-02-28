@@ -99,7 +99,7 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 				GUID: tc.guid,
 			}
 
-			d, err := s.NewDistro()
+			d, err := s.NewDistro(t.TempDir())
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
@@ -123,7 +123,7 @@ func TestNewSerializableDistro(t *testing.T) {
 		ProAttached: true,
 	}
 
-	d, err := distro.New(registeredDistro, props)
+	d, err := distro.New(registeredDistro, props, t.TempDir())
 	require.NoError(t, err, "Setup: distro New() should return no error")
 
 	s := database.NewSerializableDistro(d)

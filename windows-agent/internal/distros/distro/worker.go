@@ -14,7 +14,6 @@ import (
 // Task represents a given task that could be retried to dispatch to GRPC.
 type Task interface {
 	Execute(context.Context, wslserviceapi.WSLClient) error
-	fmt.Stringer
 	ShouldRetry() bool
 }
 
@@ -53,12 +52,7 @@ func (d *Distro) SubmitTask(t Task) (err error) {
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting task %q to queue", d.Name, t)
-	select {
-	case d.tasks <- t:
-	default:
-		return errors.New("queue is full")
-	}
-	return nil
+	return d.taskManager.submit(t)
 }
 
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
@@ -70,15 +64,25 @@ func (d *Distro) processTasks(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case t := <-d.tasks:
-			if err := d.processSingleTask(ctx, t); err != nil {
-				log.Debugf(context.TODO(), "Distro %q: task %q: %v", d, t, err)
+		case t := <-d.taskManager.queue:
+			err := d.processSingleTask(ctx, *t)
+			err = d.taskManager.done(t, err)
+			if err != nil {
+				log.Errorf(ctx, "distro %q: %v", d.Name, err)
 			}
 		}
 	}
 }
 
-func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
+type taskExecutionError struct {
+	err error
+}
+
+func (e taskExecutionError) Error() string {
+	return fmt.Sprintf("failed to execute: %v", e.err)
+}
+
+func (d *Distro) processSingleTask(ctx context.Context, t managedTask) error {
 	log.Debugf(context.TODO(), "Distro %q: task %q: dequeued", d.Name, t)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -86,9 +90,8 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 
 	err := d.keepAwake(ctx)
 	if err != nil {
-		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
-		return errors.New("task could not start task: could not wake distro up")
+		return errors.New("could not start task: could not wake distro up")
 	}
 	log.Debugf(context.TODO(), "Distro %q: task %q: distro is active.", d.Name, t)
 
@@ -98,9 +101,8 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 	// FIXME TODO FIXME
 	client, err := d.waitForClient(ctx)
 	if err != nil {
-		_ = d.SubmitTask(t) // requeue the task for good measure, we will purge it anyway.
 		d.UnreachableErr = err
-		return errors.New("task could not start task: could not contact distro")
+		return errors.New("could not start task: could not contact distro")
 	}
 	log.Debugf(context.TODO(), "Distro %q: task %q: connection to distro established, running task.", d.Name, t)
 
@@ -121,7 +123,7 @@ func (d *Distro) processSingleTask(ctx context.Context, t Task) error {
 
 		// No retry: abandon task potentially in error.
 		if err != nil {
-			return fmt.Errorf("task errored out: %v", err)
+			return taskExecutionError{err}
 		}
 
 		log.Debugf(context.TODO(), "Distro %q: task %q: task completed successfully", d.Name, t)

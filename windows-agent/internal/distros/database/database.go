@@ -33,7 +33,7 @@ type DistroDB struct {
 
 	scheduleTrigger chan struct{}
 
-	storagePath string
+	storageDir string
 }
 
 // New creates a database and populates it with data in the file located
@@ -51,7 +51,7 @@ func New(storageDir string) (*DistroDB, error) {
 	}
 
 	db := &DistroDB{
-		storagePath:     filepath.Join(storageDir, consts.DatabaseFileName),
+		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
 	}
 	if err := db.load(); err != nil {
@@ -100,7 +100,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(name, props)
+		d, err := distro.New(name, props, db.storageDir)
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +122,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		go d.Cleanup(context.TODO())
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(name, props)
+		d, err := distro.New(name, props, db.storageDir)
 		if err != nil {
 			return nil, err
 		}
@@ -191,7 +191,7 @@ func (db *DistroDB) cleanup(ctx context.Context) error {
 // load reads the database from disk.
 func (db *DistroDB) load() error {
 	// Read raw database from disk
-	out, err := os.ReadFile(db.storagePath)
+	out, err := os.ReadFile(filepath.Join(db.storageDir, consts.DatabaseFileName))
 	if errors.Is(err, fs.ErrNotExist) {
 		db.distros = make(map[string]*distro.Distro)
 		return nil
@@ -210,7 +210,7 @@ func (db *DistroDB) load() error {
 	// Initializing distros into database
 	db.distros = make(map[string]*distro.Distro, len(distros))
 	for _, inert := range distros {
-		d, err := inert.newDistro()
+		d, err := inert.newDistro(db.storageDir)
 		if err != nil {
 			log.Warningf(context.TODO(), "Read invalid distro from database: %#+v", inert)
 			continue
@@ -221,7 +221,7 @@ func (db *DistroDB) load() error {
 	return nil
 }
 
-// dump writes the database contents into the file specified by db.storagePath.
+// dump writes the database contents into the file inside db.storageDir.
 // The dump is deterministic, with distros always sorted alphabetically.
 func (db *DistroDB) dump() error {
 	// Sort distros case-independently.
@@ -244,12 +244,13 @@ func (db *DistroDB) dump() error {
 	}
 
 	// Write dump
-	err = os.WriteFile(db.storagePath+".new", out, 0600)
+	storagePath := filepath.Join(db.storageDir, consts.DatabaseFileName)
+	err = os.WriteFile(storagePath+".new", out, 0600)
 	if err != nil {
 		return err
 	}
 
-	err = os.Rename(db.storagePath+".new", db.storagePath)
+	err = os.Rename(storagePath+".new", storagePath)
 	if err != nil {
 		return err
 	}
