@@ -1,0 +1,4 @@
+type: task_test.unregisteredTask
+payload:
+  id: 11
+  task: {}

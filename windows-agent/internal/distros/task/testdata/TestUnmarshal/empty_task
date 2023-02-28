@@ -1,0 +1,4 @@
+type: task_test.emptyTask
+payload:
+  id: 1997
+  task: {}

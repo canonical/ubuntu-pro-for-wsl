@@ -1,0 +1,6 @@
+payload:
+    id: 123456
+    task:
+        message: Not representable as a float64
+        number: 9007199254740993
+type: task_test.testTask

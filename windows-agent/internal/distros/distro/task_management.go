@@ -3,7 +3,6 @@ package distro
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"sync"
@@ -17,20 +16,11 @@ import (
 
 const taskQueueSize = 100
 
-type managedTask struct {
-	ID uint64
-	task.Task
-}
-
-func (tm managedTask) String() string {
-	return fmt.Sprintf("%d (%T)", tm.ID, tm.Task)
-}
-
 type taskManager struct {
 	storagePath string
 
-	tasks []*managedTask
-	queue chan *managedTask
+	tasks []*task.Managed
+	queue chan *task.Managed
 
 	largestID uint64
 
@@ -40,7 +30,7 @@ type taskManager struct {
 func newTaskManager(ctx context.Context, storagePath string) (*taskManager, error) {
 	tm := taskManager{
 		storagePath: storagePath,
-		queue:       make(chan *managedTask, taskQueueSize),
+		queue:       make(chan *task.Managed, taskQueueSize),
 	}
 
 	if err := tm.load(ctx); err != nil {
@@ -55,7 +45,7 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 
 	for i := range tasks {
 		tm.largestID++
-		t := &managedTask{
+		t := &task.Managed{
 			ID:   tm.largestID,
 			Task: tasks[i],
 		}
@@ -71,7 +61,7 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 	return tm.save()
 }
 
-func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
+func (tm *taskManager) done(t *task.Managed, errResult error) (err error) {
 	decorate.OnError(&err, "task %s", t)
 
 	tm.mu.Lock()

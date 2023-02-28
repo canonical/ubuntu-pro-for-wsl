@@ -1,0 +1,5 @@
+payload:
+    id: 9635
+    task:
+        dummyimplementer: {}
+type: task_test.emptyTask

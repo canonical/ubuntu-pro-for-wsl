@@ -8,6 +8,10 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 )
 
+func init() {
+	task.Register[AttachPro]()
+}
+
 // AttachPro is a task that sends a token to a distro so it can
 // attach itself to Ubuntu Pro.
 type AttachPro struct {
