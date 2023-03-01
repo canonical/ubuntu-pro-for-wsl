@@ -72,6 +72,10 @@ func (i *InitialTasks) Add(t task.Task) error {
 
 	i.tasks = append(i.tasks, t)
 
+	if err := i.save(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
