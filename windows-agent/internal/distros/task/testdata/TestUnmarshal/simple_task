@@ -1,0 +1,6 @@
+payload:
+    id: 1
+    task:
+        message: Hello, world!
+        number: 42
+type: task_test.testTask

@@ -92,9 +92,19 @@ func TestFamilyPath(t *testing.T) string {
 	t.Helper()
 
 	// Ensures that only the name of the parent test is used.
-	super, _, _ := strings.Cut(t.Name(), "/")
+	familyName, _, _ := strings.Cut(t.Name(), "/")
 
-	return filepath.Join("testdata", super)
+	return filepath.Join("testdata", familyName)
+}
+
+// TestFixturePath returns the path of the dir or file for storing fixture specific to the subtest name.
+func TestFixturePath(t *testing.T) string {
+	t.Helper()
+
+	// Ensures that only the name of the parent test is used.
+	familyName, subtestName, _ := strings.Cut(t.Name(), "/")
+
+	return filepath.Join("testdata", familyName, normalizeName(t, subtestName))
 }
 
 // GoldenPath returns the golden path for the provided test.
@@ -104,15 +114,15 @@ func GoldenPath(t *testing.T) string {
 	path := filepath.Join(TestFamilyPath(t), "golden")
 	_, sub, found := strings.Cut(t.Name(), "/")
 	if found {
-		path = filepath.Join(path, normalizeGoldenName(t, sub))
+		path = filepath.Join(path, normalizeName(t, sub))
 	}
 
 	return path
 }
 
-// normalizeGoldenName returns the name of the golden file with illegal Windows
+// normalizeName returns a path from name with illegal Windows
 // characters replaced or removed.
-func normalizeGoldenName(t *testing.T, name string) string {
+func normalizeName(t *testing.T, name string) string {
 	t.Helper()
 
 	name = strings.ReplaceAll(name, `\`, "_")

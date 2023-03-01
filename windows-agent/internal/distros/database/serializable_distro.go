@@ -1,7 +1,7 @@
-package distroDB
+package database
 
 import (
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"golang.org/x/sys/windows"
 )
 
@@ -18,12 +18,12 @@ type serializableDistro struct {
 
 // newDistro calls distro.New with the name, GUID and properties specified
 // in its inert counterpart.
-func (in serializableDistro) newDistro() (*distro.Distro, error) {
+func (in serializableDistro) newDistro(storageDir string) (*distro.Distro, error) {
 	GUID, err := windows.GUIDFromString(in.GUID)
 	if err != nil {
 		return nil, err
 	}
-	return distro.New(in.Name, in.Properties, distro.WithGUID(GUID))
+	return distro.New(in.Name, in.Properties, storageDir, distro.WithGUID(GUID))
 }
 
 // newSerializableDistro takes the information in distro.Distro relevant to the database

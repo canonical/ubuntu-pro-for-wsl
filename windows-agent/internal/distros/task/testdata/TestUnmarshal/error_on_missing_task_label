@@ -1,0 +1,4 @@
+type: task_test.emptyTask
+wrong_label_here:
+  id: 1863120
+  task: {}

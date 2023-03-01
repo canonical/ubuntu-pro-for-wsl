@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distroDB"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	db, err := distroDB.New(t.TempDir())
+	db, err := database.New(t.TempDir(), nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 
 	_, err = wslinstance.New(context.Background(), db)
@@ -111,7 +111,7 @@ func TestConnected(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(func() { cancel() })
 
-			db, err := distroDB.New(t.TempDir())
+			db, err := database.New(t.TempDir(), nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 
 			srv, err := newWrappedService(context.Background(), db)
@@ -252,7 +252,7 @@ type wrappedService struct {
 
 // newWrappedService is a wrapper around wslinstance.New. It initializes the monitoring
 // around the service.
-func newWrappedService(ctx context.Context, db *distroDB.DistroDB) (s wrappedService, err error) {
+func newWrappedService(ctx context.Context, db *database.DistroDB) (s wrappedService, err error) {
 	inst, err := wslinstance.New(ctx, db)
 	return wrappedService{
 		Service: inst,

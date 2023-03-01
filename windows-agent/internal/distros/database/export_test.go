@@ -1,12 +1,12 @@
-package distroDB
+package database
 
-import "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+import "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 
 type SerializableDistro = serializableDistro
 
 // NewDistro is a wrapper around newDistro so as to make it accessible to tests.
-func (in SerializableDistro) NewDistro() (*distro.Distro, error) {
-	return in.newDistro()
+func (in SerializableDistro) NewDistro(storageDir string) (*distro.Distro, error) {
+	return in.newDistro(storageDir)
 }
 
 // NewSerializableDistro is a wrapper around newSerializableDistro so as to make it accessible to tests.

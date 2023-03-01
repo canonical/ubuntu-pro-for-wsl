@@ -31,7 +31,7 @@ func TestNew(t *testing.T) {
 		"Success": {},
 
 		"Error when Manager cannot create its cache dir":  {breakMkDir: true, wantErr: true},
-		"Error when distroDB cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
+		"Error when database cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {

@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
@@ -70,7 +70,7 @@ func TestNew(t *testing.T) {
 				args = append(args, distro.WithGUID(tc.withGUID))
 			}
 
-			d, err = distro.New(tc.distro, props, args...)
+			d, err = distro.New(tc.distro, props, t.TempDir(), args...)
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
@@ -90,7 +90,7 @@ func TestNew(t *testing.T) {
 
 func TestString(t *testing.T) {
 	name, guid := testutils.RegisterDistro(t, false)
-	d, err := distro.New(name, distro.Properties{}, distro.WithGUID(guid))
+	d, err := distro.New(name, distro.Properties{}, t.TempDir(), distro.WithGUID(guid))
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
 
 	s := d.String()
@@ -122,7 +122,7 @@ func TestIsValid(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// Create an always valid distro
-			d, err := distro.New(distro1, distro.Properties{})
+			d, err := distro.New(distro1, distro.Properties{}, t.TempDir())
 			require.NoError(t, err, "Setup: distro New() should return no errors")
 
 			// Change values and assert on IsValid
@@ -170,7 +170,7 @@ func TestTaskProcessing(t *testing.T) {
 				distroName, _ = testutils.RegisterDistro(t, true)
 			}
 
-			d, err := distro.New(distroName, distro.Properties{}, distro.WithTaskProcessingContext(ctx))
+			d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), distro.WithTaskProcessingContext(ctx))
 			require.NoError(t, err, "Setup: distro New() should return no error")
 			defer d.Cleanup(ctx)
 
@@ -200,7 +200,7 @@ func TestTaskProcessing(t *testing.T) {
 				task.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = d.SubmitTask(task)
+			err = d.SubmitTasks(task)
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -256,7 +256,7 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task without with a cleaned up distro
 			d.Cleanup(ctx)
 
-			err = d.SubmitTask(&testTask{})
+			err = d.SubmitTasks(&testTask{})
 			require.Error(t, err, "SubmitTask() should fail after a distro has been cleaned up")
 		})
 	}
@@ -265,24 +265,24 @@ func TestTaskProcessing(t *testing.T) {
 func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 
-	d, err := distro.New(distroName, distro.Properties{})
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
 	defer d.Cleanup(context.Background())
 
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
-	err = d.SubmitTask(&testTask{})
+	err = d.SubmitTasks(&testTask{})
 	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, distro.TaskQueueSize)
 
 	// We fill up the queue
 	var i int
 	for ; i < distro.TaskQueueSize; i++ {
-		err := d.SubmitTask(&testTask{})
+		err := d.SubmitTasks(&testTask{})
 		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, distro.TaskQueueSize)
 	}
 
 	// We ensure that adding one more task will return an error
-	err = d.SubmitTask(&testTask{})
+	err = d.SubmitTasks(&testTask{})
 	require.Errorf(t, err, "SubmitTask() should fail when the queue is full\nSubmitted: %d.\nMax: %d", i+2, distro.TaskQueueSize)
 }
 
@@ -290,7 +290,7 @@ func TestSetConnection(t *testing.T) {
 	ctx := context.Background()
 	distroName, _ := testutils.RegisterDistro(t, false)
 
-	d, err := distro.New(distroName, distro.Properties{})
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
 	defer d.Cleanup(context.Background())
 
@@ -346,7 +346,7 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	ctx := context.Background()
 	distroName, _ := testutils.RegisterDistro(t, false)
 
-	d, err := distro.New(distroName, distro.Properties{})
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the distro")
 	defer d.Cleanup(context.Background())
 
