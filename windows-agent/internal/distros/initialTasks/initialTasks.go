@@ -40,7 +40,7 @@ func New(storageDir string) (*InitialTasks, error) {
 	out, err := os.ReadFile(init.storagePath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return nil, nil
+			return &init, nil
 		}
 		return nil, err
 	}
