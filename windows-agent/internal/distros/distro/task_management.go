@@ -129,7 +129,7 @@ func (tm *taskManager) save() (err error) {
 func (tm *taskManager) load(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not load previous work in progress")
 
-	tm.queue = make(chan *managedTask)
+	tm.queue = make(chan *managedTask, taskQueueSize)
 	tm.largestID = 0
 
 	out, err := os.ReadFile(tm.storagePath)
