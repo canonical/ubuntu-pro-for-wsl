@@ -104,7 +104,7 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 		/*log.StreamServerInterceptor(logrus.StandardLogger()),
 		logconnections.StreamServerInterceptor(),*/
 		)))
-	agent_api.RegisterUIServer(grpcServer, m.uiService)
+	agent_api.RegisterUIServer(grpcServer, &m.uiService)
 	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)
 
 	return grpcServer
