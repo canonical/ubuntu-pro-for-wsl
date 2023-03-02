@@ -179,13 +179,13 @@ type testTask struct {
 }
 
 type emptyTask struct {
-	DummyImplementer
+	DummyImplementer `yaml:"-"`
 }
 
 type unregisteredTask struct {
 	Score int
 
-	DummyImplementer
+	DummyImplementer `yaml:"-"`
 }
 
 // Boilerplate to implement the interface.
