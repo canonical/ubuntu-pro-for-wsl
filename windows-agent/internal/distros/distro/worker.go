@@ -42,8 +42,16 @@ func (d *Distro) stopProcessingTasks(ctx context.Context) error {
 func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", d.Name, tasks)
 
+	if d.UnreachableErr != nil {
+		return d.UnreachableErr
+	}
+
 	if d.canProcessTasks == nil {
 		return errors.New("task processing is not running")
+	}
+
+	if len(tasks) == 0 {
+		return nil
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", d.Name, tasks)
