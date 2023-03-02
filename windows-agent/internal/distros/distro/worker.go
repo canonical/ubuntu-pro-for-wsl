@@ -69,14 +69,6 @@ func (d *Distro) processTasks(ctx context.Context) {
 	}
 }
 
-type taskExecutionError struct {
-	err error
-}
-
-func (e taskExecutionError) Error() string {
-	return fmt.Sprintf("failed to execute: %v", e.err)
-}
-
 func (d *Distro) processSingleTask(ctx context.Context, t managedTask) error {
 	log.Debugf(context.TODO(), "Distro %q: task %q: dequeued", d.Name, t)
 
@@ -111,18 +103,17 @@ func (d *Distro) processSingleTask(ctx context.Context, t managedTask) error {
 		}
 
 		err = t.Execute(ctx, client)
-		if err != nil && t.ShouldRetry() {
-			log.Debugf(ctx, "Distro %q: task %q: retrying after obtaining error: %v", d.Name, t, err)
-			continue
+		if err == nil {
+			log.Debugf(context.TODO(), "Distro %q: task %q: task completed successfully", d.Name, t)
+			break
 		}
 
-		// No retry: abandon task potentially in error.
-		if err != nil {
-			return taskExecutionError{err}
+		// No retry: abandon task regardless of error result.
+		if !t.ShouldRetry() {
+			return err
 		}
 
-		log.Debugf(context.TODO(), "Distro %q: task %q: task completed successfully", d.Name, t)
-		break
+		log.Warningf(ctx, "Distro %q: task %q: retrying after obtaining error: %v", d.Name, t, err)
 	}
 
 	return nil

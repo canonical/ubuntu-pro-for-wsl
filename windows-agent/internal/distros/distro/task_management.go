@@ -92,12 +92,6 @@ func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
 		return
 	}
 
-	// Task failed during attempt to connect to distro, resubmit.
-	var target taskExecutionError
-	if !errors.As(errResult, &target) {
-		return tm.submit(t)
-	}
-
 	// Task failed during execution, nothing else to be done.
 	return nil
 }
