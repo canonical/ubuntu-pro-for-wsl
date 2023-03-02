@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc"
 
 	// Importing tasks so they are registered and initialTasks can load them.
+	// TODO: as soon as we use any task anywhere in the windows agent, this will no longer be necessary.
 	_ "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 )
 

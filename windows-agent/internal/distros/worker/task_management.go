@@ -1,4 +1,4 @@
-package distro
+package worker
 
 import (
 	"context"

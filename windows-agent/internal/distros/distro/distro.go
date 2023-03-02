@@ -1,14 +1,19 @@
+// Package distro abstracts a WSL distribution and deals manages all iteractions
+// with it.
 package distro
 
 import (
 	"context"
 	"fmt"
-	"path/filepath"
+	"os"
 	"strings"
-	"sync"
+	"sync/atomic"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/ubuntu/decorate"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows"
@@ -25,16 +30,10 @@ type Distro struct {
 	// Properties contains non-volatile information that is stored in the database
 	Properties
 
-	// UnreachableErr is not nil if distro can't be contacted through GRPC
-	UnreachableErr error
+	// invalidated is an internal value if distro can't be contacted through GRPC
+	invalidated atomic.Bool
 
-	// The following fields may change without afecting long-term storage of the distro
-	cancel          context.CancelFunc
-	canProcessTasks chan struct{}
-	taskManager     *taskManager
-
-	conn   *grpc.ClientConn
-	connMu *sync.RWMutex
+	worker *worker.Worker
 }
 
 // NotExistError is a type returned when the (distroName, GUID) combination is not in the registry.
@@ -106,75 +105,115 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 		}
 	} else {
 		// Check the name/GUID pair is valid.
-		valid, err := id.IsValid()
-		if err != nil {
-			return nil, err
-		}
-		if !valid {
+		if !id.isValid() {
 			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &NotExistError{})
 		}
-	}
-
-	tm, err := newTaskManager(opts.taskProcessingContext, filepath.Join(storageDir, id.Name+".tasks"))
-	if err != nil {
-		return nil, err
 	}
 
 	distro = &Distro{
 		identity:   id,
 		Properties: props,
-
-		taskManager: tm,
-		connMu:      &sync.RWMutex{},
 	}
 
-	distro.startProcessingTasks(opts.taskProcessingContext)
+	if err := os.MkdirAll(storageDir, 0600); err != nil {
+		return nil, err
+	}
 
-	// load and submit initial tasks if they were passed to us. (case of first contact with distro)
-	if err := distro.SubmitTasks(opts.initialTasks.GetAll()...); err != nil {
-		return distro, err
+	distro.worker, err = worker.New(opts.taskProcessingContext, distro, opts.initialTasks, storageDir)
+	if err != nil {
+		return nil, err
 	}
 
 	return distro, nil
 }
 
-func (d Distro) String() string {
-	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name, strings.ToLower(d.GUID.String()))
+func (d *Distro) String() string {
+	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), strings.ToLower(d.GUID().String()))
+}
+
+// Name is a getter for the distro's name.
+func (d *Distro) Name() string {
+	return d.identity.Name
+}
+
+// GUID is a getter for the distro's GUID.
+func (d *Distro) GUID() windows.GUID {
+	return d.identity.GUID
 }
 
 // IsActive returns true when the distro is running, and there exists an active
 // connection to its GRPC service.
 func (d *Distro) IsActive() bool {
-	return d.Client() != nil
+	return d.worker.IsActive()
+}
+
+// Client returns the client to the WSL task service.
+// Client returns nil when no connection is set up.
+func (d *Distro) Client() wslserviceapi.WSLClient {
+	return d.worker.Client()
+}
+
+// SetConnection removes the connection associated with the distro.
+func (d *Distro) SetConnection(conn *grpc.ClientConn) {
+	d.worker.SetConnection(conn)
+}
+
+// SubmitTasks enqueues one or more task on our current worker list.
+// See Worker.SubmitTasks for details.
+func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
+	return d.worker.SubmitTasks(tasks...)
 }
 
 // Cleanup releases all resources associated with the distro.
 func (d *Distro) Cleanup(ctx context.Context) {
-	err := d.stopProcessingTasks(ctx)
-	if err != nil {
-		log.Infof(ctx, "Distro %q: error during cleanup: %v", d.Name, err)
-	}
+	d.worker.Stop(ctx)
 }
 
 // getWSLDistro gets underlying GoWSL distro after verifying it.
-func (d Distro) getWSLDistro() (wsl.Distro, error) {
-	verified, err := d.IsValid()
-	if err != nil {
-		return wsl.NewDistro(""), err
+func (d *Distro) getWSLDistro() (wsl.Distro, error) {
+	if !d.IsValid() {
+		return wsl.NewDistro(""), fmt.Errorf("distro with name %q and GUID %q not found in registry: %w", d.Name(), d.GUID(), &NotExistError{})
 	}
-	if !verified {
-		return wsl.NewDistro(""), fmt.Errorf("distro with name %q and GUID %q not found in registry: %w", d.Name, d.GUID.String(), &NotExistError{})
-	}
-	return wsl.NewDistro(d.Name), nil
+	return wsl.NewDistro(d.Name()), nil
 }
 
-// keepAwake ensures the distro is started by running a long life command inside
+// Invalidate sets the invalid flag to true. The state of this flag can be read with IsValid.
+// This is irreversible, once the flag is true there is no way of setting it bag to false.
+func (d *Distro) Invalidate(err error) {
+	if err == nil {
+		log.Warningf(context.TODO(), "distro %q: attempted to invalidate with a nil error", d.Name())
+		return
+	}
+
+	updated := d.invalidated.CompareAndSwap(false, true)
+	if updated {
+		log.Debugf(context.TODO(), "distro %q: marked as no longer valid", d.Name())
+	}
+}
+
+// IsValid checks the registry to see if the distro is valid. If it is not, an internal flag
+// is set and all subsequent calls will return false automatically. This flag may also be set
+// directly via Invalidate.
+func (d *Distro) IsValid() bool {
+	if d.invalidated.Load() {
+		return false
+	}
+
+	if !d.identity.isValid() {
+		d.Invalidate(&NotExistError{})
+		return false
+	}
+
+	return true
+}
+
+// KeepAwake ensures the distro is started by running a long life command inside
 // WSL. It will thus start it if it's not already the case.
 // Cancelling the context will remove this keep awake lock, but does not necessarily mean
 // that the distribution will be shutdown right away.
 //
 // The command is reentrant, and you need to cancel the amount of time you keep it awake.
-func (d *Distro) keepAwake(ctx context.Context) error {
+func (d *Distro) KeepAwake(ctx context.Context) error {
 	wslDistro, err := d.getWSLDistro()
 	if err != nil {
 		return err

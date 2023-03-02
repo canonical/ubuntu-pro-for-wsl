@@ -1,7 +1,8 @@
 package distro
 
 import (
-	"github.com/ubuntu/decorate"
+	"fmt"
+
 	"golang.org/x/sys/windows"
 
 	wsl "github.com/ubuntu/gowsl"
@@ -24,32 +25,30 @@ type Properties struct {
 	ProAttached bool
 }
 
-// IsValid checks that the properties against the registry.
-// TODO: check all calls for IsValid(), and if when !ok -> return error in the caller, just returns an error.
-func (id identity) IsValid() (ok bool, err error) {
-	decorate.OnError(&err, "combination does not match the registry: {distroName: %q, GUID: %q}", id.Name, id.GUID)
-
+// isValid checks that the properties against the registry.
+// TODO: check all calls for isValid(), and if when !ok -> return error in the caller, just returns an error.
+func (id identity) isValid() (ok bool) {
 	distro := wsl.NewDistro(id.Name)
 
 	// Ensuring distro still exists.
 	registered, err := distro.IsRegistered()
 	if err != nil {
-		return false, err
+		panic(fmt.Errorf("could not access the registry: %v", err))
 	}
 	if !registered {
-		return false, nil
+		return false
 	}
 
 	// Ensuring it has not been unregistered and re-registered again.
 	inProperties := id.GUID
 	inRegistry, err := distro.GUID()
 	if err != nil {
-		return false, err
+		panic(fmt.Errorf("could not access the registry: %v", err))
 	}
 	if inProperties != inRegistry {
-		return false, nil
+		return false
 	}
 
 	// Distro with matching name and GUID exists
-	return true, nil
+	return true
 }

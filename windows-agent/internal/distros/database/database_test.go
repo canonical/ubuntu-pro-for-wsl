@@ -130,7 +130,7 @@ func TestDatabaseGet(t *testing.T) {
 			require.True(t, found, "The second return value of Get(distro) should be true when asked for a distro in the database")
 			require.NotNil(t, d, "The first return value of Get(distro) should return a *Distro when asked for a distro in the database")
 
-			require.Equal(t, d.Name, tc.distroName, "The distro returned by Get should match the one in the database")
+			require.Equal(t, d.Name(), tc.distroName, "The distro returned by Get should match the one in the database")
 		})
 	}
 }
@@ -337,8 +337,8 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 
 			require.NotNil(t, d, "GetDistroAndUpdateProperties should return a non-nil distro when the requested one is registered")
 
-			require.Equal(t, tc.distroName, d.Name, "GetDistroAndUpdateProperties should return a distro with the same name as requested")
-			require.Equal(t, guids[tc.distroName].String(), d.GUID.String(), "GetDistroAndUpdateProperties should return a GUID that matches the requested distro's")
+			require.Equal(t, tc.distroName, d.Name(), "GetDistroAndUpdateProperties should return a distro with the same name as requested")
+			require.Equal(t, guids[tc.distroName], d.GUID(), "GetDistroAndUpdateProperties should return a GUID that matches the requested distro's")
 			require.Equal(t, tc.props, d.Properties, "GetDistroAndUpdateProperties should return the same properties as requested")
 
 			// Ensure writing one distro does not modify another
@@ -347,8 +347,8 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				require.True(t, ok, "GetDistroAndUpdateProperties should not remove other distros from the database")
 				require.NotNil(t, d, "GetDistroAndUpdateProperties should return a non-nil distro when the returned error is nil")
 
-				require.Equal(t, distroInDB, d.Name, "GetDistroAndUpdateProperties should not modify other distros' name")
-				require.Equal(t, guids[distroInDB].String(), d.GUID.String(), "GetDistroAndUpdateProperties should not modify other distros' GUID")
+				require.Equal(t, distroInDB, d.Name(), "GetDistroAndUpdateProperties should not modify other distros' name")
+				require.Equal(t, guids[distroInDB], d.GUID(), "GetDistroAndUpdateProperties should not modify other distros' GUID")
 				require.Equal(t, props[distroInDB], d.Properties, "GetDistroAndUpdateProperties should not modify other distros' properties")
 			}
 
@@ -406,7 +406,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			if tc.markDistroUnreachable != "" {
 				d3, ok := db.Get(distro2)
 				require.True(t, ok, "Setup: Distro %q should have been in the database", distro2)
-				d3.UnreachableErr = errors.New("This error should cause the distro to be cleaned up")
+				d3.Invalidate(errors.New("This error should cause the distro to be cleaned up"))
 			}
 
 			if tc.reregisterDistro {

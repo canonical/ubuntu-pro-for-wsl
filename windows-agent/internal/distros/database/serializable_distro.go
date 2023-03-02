@@ -30,8 +30,8 @@ func (in serializableDistro) newDistro(storageDir string) (*distro.Distro, error
 // and stores it the helper object.
 func newSerializableDistro(d *distro.Distro) serializableDistro {
 	return serializableDistro{
-		Name:       d.Name,
-		GUID:       d.GUID.String(),
+		Name:       d.Name(),
+		GUID:       d.GUID().String(),
 		Properties: d.Properties,
 	}
 }

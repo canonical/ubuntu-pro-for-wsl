@@ -62,7 +62,7 @@ func (i *InitialTasks) GetAll() (tasks []task.Task) {
 
 	tasks = make([]task.Task, len(i.tasks))
 	copy(tasks, i.tasks)
-	log.Debugf(context.TODO(), "Requested all initial tasks: %q", tasks)
+	log.Debugf(context.TODO(), "Returning all initial tasks: %q", tasks)
 
 	return tasks
 }
