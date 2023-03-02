@@ -77,7 +77,7 @@ func (e taskExecutionError) Error() string {
 	return fmt.Sprintf("failed to execute: %v", e.err)
 }
 
-func (d *Distro) processSingleTask(ctx context.Context, t task.Managed) error {
+func (d *Distro) processSingleTask(ctx context.Context, t managedTask) error {
 	log.Debugf(context.TODO(), "Distro %q: task %q: dequeued", d.Name, t)
 
 	ctx, cancel := context.WithCancel(ctx)
