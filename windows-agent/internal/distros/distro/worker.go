@@ -83,23 +83,10 @@ func (d *Distro) processSingleTask(ctx context.Context, t managedTask) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	err := d.keepAwake(ctx)
+	client, err := d.keepAwakeAndWaitForClient(ctx)
 	if err != nil {
-		d.UnreachableErr = err
-		return errors.New("could not start task: could not wake distro up")
+		return fmt.Errorf("task %v: could not start task: %v", t, err)
 	}
-	log.Debugf(context.TODO(), "Distro %q: task %q: distro is active.", d.Name, t)
-
-	// ensure/wait distro is active + timeout when
-	// TODO: test stopping a service, which is marked Restart=Always, to ensure that only disabling the service really mark it as invalid.
-	// TODO: test wsl --shutdown with a sleep here.
-	// FIXME TODO FIXME
-	client, err := d.waitForClient(ctx)
-	if err != nil {
-		d.UnreachableErr = err
-		return errors.New("could not start task: could not contact distro")
-	}
-	log.Debugf(context.TODO(), "Distro %q: task %q: connection to distro established, running task.", d.Name, t)
 
 	for {
 		// Avoid retrying if the task failed due to a cancelled or timed out context
@@ -127,23 +114,71 @@ func (d *Distro) processSingleTask(ctx context.Context, t managedTask) error {
 	return nil
 }
 
+func (d *Distro) keepAwakeAndWaitForClient(ctx context.Context) (client wslserviceapi.WSLClient, err error) {
+	log.Debugf(context.TODO(), "Distro %q: ensuring active connection.", d.Name)
+
+	defer func() {
+		if err != nil {
+			d.UnreachableErr = err
+		}
+	}()
+
+	for i := 0; i < 5; i++ {
+		client, err = func() (wslserviceapi.WSLClient, error) {
+			ctx, cancel := context.WithCancel(ctx)
+			defer func() {
+				if err != nil {
+					// On success, the caller will cancel the parent context
+					return
+				}
+				// On error, we avoid stacking keepAwake calls with each retry.
+				cancel()
+			}()
+
+			err := d.keepAwake(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("could not wake distro up: %v", err)
+			}
+
+			log.Debugf(context.TODO(), "Distro %q: distro is running.", d.Name)
+
+			client, err := d.waitForClient(ctx)
+			if err != nil {
+				return nil, errors.New("could not contact distro")
+			}
+
+			log.Debugf(context.TODO(), "Distro %q: connection is active.", d.Name)
+			return client, nil
+		}()
+
+		if err == nil {
+			break
+		}
+	}
+
+	return client, err
+}
+
 // waitForClient waits for a valid GRPC client to connect to. It will retry for a while before
 // erroring out.
 func (d *Distro) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, error) {
-	timedOutCtx, cancel := context.WithTimeout(ctx, time.Minute)
+	timedOutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
+	tickRate := 0 * time.Second
 	for {
 		select {
 		case <-timedOutCtx.Done():
+			log.Warningf(ctx, "Distro %q: timed out waiting for client\n", d.Name)
 			return nil, timedOutCtx.Err()
-		case <-time.After(1 * time.Second):
+		case <-time.After(tickRate):
 			client := d.Client()
 
 			if client == nil {
-				log.Debugf(ctx, "Distro %q: client not available yet\n", d.Name)
+				tickRate = time.Second
 				continue
 			}
+
 			return client, nil
 		}
 	}
