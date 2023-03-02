@@ -1,4 +1,2 @@
-type: task_test.emptyTask
-payload:
-  id: 1997
+- type: task_test.emptyTask
   task: {}

@@ -1,6 +1,4 @@
-type: task_test.testTask
-payload:
-  id: 15
+- type: task_test.testTask
   task:
     message: |-
       Hello, world!

@@ -1,6 +1,3 @@
-payload:
-    id: 9635
-    task:
-        score: 9001
-        dummyimplementer: {}
-type: task_test.unregisteredTask
+- task:
+    score: 9001
+  type: task_test.unregisteredTask

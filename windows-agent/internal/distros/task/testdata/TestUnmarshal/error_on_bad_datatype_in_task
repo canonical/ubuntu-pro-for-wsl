@@ -1,6 +1,4 @@
-payload:
-    id: 1
-    task:
-        message: Hello, world!
-        number: "this should be an int"
-type: task_test.testTask
+- type: task_test.testTask
+  task:
+    message: Hello, world!
+    number: "this should be an int"

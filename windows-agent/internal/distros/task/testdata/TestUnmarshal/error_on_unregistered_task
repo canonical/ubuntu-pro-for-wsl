@@ -1,4 +1,2 @@
-type: task_test.unregisteredTask
-payload:
-  id: 11
+- type: task_test.unregisteredTask
   task: {}
