@@ -15,6 +15,9 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
 	"google.golang.org/grpc"
+
+	// Importing tasks so they are registered and initialTasks can load them.
+	_ "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 )
 
 // Manager is the orchestrator of GRPC API services and business logic.
