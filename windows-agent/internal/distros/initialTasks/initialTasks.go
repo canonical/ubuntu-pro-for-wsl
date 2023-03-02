@@ -60,7 +60,10 @@ func (i *InitialTasks) GetAll() (tasks []task.Task) {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
 
+	tasks = make([]task.Task, len(i.tasks))
 	copy(tasks, i.tasks)
+	log.Debugf(context.TODO(), "Requested all initial tasks: %q", tasks)
+
 	return tasks
 }
 
