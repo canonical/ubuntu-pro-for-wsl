@@ -24,66 +24,61 @@ func Register[T Task]() {
 	}
 }
 
-// Managed is a type that carries a task with it, with added metadata and functionality to
-// serialize and deserialize.
-type Managed struct {
-	ID uint64
-	Task
+type yamlTaskHelper struct {
+	Task Task
+	Type string
 }
 
-// unmarshalPayload is a helper struct used to delay unmarshalling a Managed
-// task until we know the type of tasks. Its fields must be the same as Managed,
-// except for the task which must be a rawTask.
-type unmarshalPayload struct {
-	ID   uint64
-	Task rawTask
-}
-
-func (m Managed) String() string {
-	return fmt.Sprintf("Task #%d (%T)", m.ID, m.Task)
-}
-
-// MarshalYAML overrides the marshalling behaviour of Managed so that
-// the type of the underlying Task can be embedded.
-func (m Managed) MarshalYAML() (interface{}, error) {
-	// payload contains the same contents as Managed but without methods.
-	// Without this, marshalling the anonymous would recurse indefinitely.
-	type payload Managed
-
-	return struct {
-		Payload payload
-		Type    string
-	}{
-		Payload: payload(m),
-		Type:    fmt.Sprintf("%T", m.Task),
-	}, nil
-}
-
-// UnmarshalYAML overrides the unmarshalling behaviour of Managed so that
-// the type of the underlying Task can be read before parsing its contents.
-func (m *Managed) UnmarshalYAML(node *yaml.Node) error {
-	var temp struct {
-		Type    string
-		Payload unmarshalPayload
+// MarshalYAML marshals a slice of tasks in YAML format.
+func MarshalYAML(tasks []Task) (out []byte, err error) {
+	var tmp []yamlTaskHelper
+	for i := range tasks {
+		t := tasks[i]
+		tmp = append(tmp, yamlTaskHelper{
+			Type: fmt.Sprintf("%T", t),
+			Task: t,
+		})
 	}
 
-	err := node.Decode(&temp)
+	return yaml.Marshal(tmp)
+}
+
+// UnmarshalYAML unmarshals a slice of tasks from a YAML document.
+func UnmarshalYAML(in []byte) (tasks []Task, err error) {
+	var tmp []yamlTaskHelper
+	if err := yaml.Unmarshal(in, &tmp); err != nil {
+		return nil, err
+	}
+
+	for i := range tmp {
+		tasks = append(tasks, tmp[i].Task)
+	}
+	return tasks, nil
+}
+
+// UnmarshalYAML overrides the unmarshalling behaviour of yamlTaskHelper so that
+// the type of the underlying Task can be read before parsing its contents.
+func (t *yamlTaskHelper) UnmarshalYAML(node *yaml.Node) error {
+	var tmp struct {
+		Type string
+		Task rawTask
+	}
+
+	err := node.Decode(&tmp)
 	if err != nil {
 		return fmt.Errorf("could not decode intermediate struct: %v", err)
 	}
 
-	m.ID = temp.Payload.ID
-
-	m.Task, err = temp.Payload.Task.decode(temp.Type)
-	if err != nil {
+	t.Type = tmp.Type
+	if t.Task, err = tmp.Task.decode(t.Type); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// rawTask is used to delay the unmarshalling of a Task. This is necessary because
-// we don't know what type of task it is until we unmarshal part of the YAML document.
+// rawTask is used to delay the unmarshalling of a yamlTaskHelper. This is necessary because
+// we don't know what type of task it contains is until we unmarshal part of the YAML document.
 type rawTask struct {
 	Node *yaml.Node
 }

@@ -15,7 +15,6 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -45,7 +44,7 @@ func New(storageDir string) (*InitialTasks, error) {
 		return nil, err
 	}
 
-	if err := yaml.Unmarshal(out, &init.tasks); err != nil {
+	if init.tasks, err = task.UnmarshalYAML(out); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +101,7 @@ func (i *InitialTasks) Remove(ctx context.Context, target task.Task) error {
 func (i *InitialTasks) save() (err error) {
 	defer decorate.OnError(&err, "could not save new init list")
 
-	out, err := yaml.Marshal(i.tasks)
+	out, err := task.MarshalYAML(i.tasks)
 	if err != nil {
 		return err
 	}

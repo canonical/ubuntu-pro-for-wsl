@@ -3,6 +3,7 @@ package distro
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"sync"
@@ -11,16 +12,26 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 )
 
 const taskQueueSize = 100
 
+// managedTask is a type that carries a task with it, with added metadata and functionality to
+// serialize and deserialize.
+type managedTask struct {
+	ID uint64
+	task.Task
+}
+
+func (m managedTask) String() string {
+	return fmt.Sprintf("Task #%d (%T)", m.ID, m.Task)
+}
+
 type taskManager struct {
 	storagePath string
 
-	tasks []*task.Managed
-	queue chan *task.Managed
+	tasks []*managedTask
+	queue chan *managedTask
 
 	largestID uint64
 
@@ -30,7 +41,7 @@ type taskManager struct {
 func newTaskManager(ctx context.Context, storagePath string) (*taskManager, error) {
 	tm := taskManager{
 		storagePath: storagePath,
-		queue:       make(chan *task.Managed, taskQueueSize),
+		queue:       make(chan *managedTask, taskQueueSize),
 	}
 
 	if err := tm.load(ctx); err != nil {
@@ -45,7 +56,7 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 
 	for i := range tasks {
 		tm.largestID++
-		t := &task.Managed{
+		t := &managedTask{
 			ID:   tm.largestID,
 			Task: tasks[i],
 		}
@@ -61,7 +72,7 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 	return tm.save()
 }
 
-func (tm *taskManager) done(t *task.Managed, errResult error) (err error) {
+func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
 	decorate.OnError(&err, "task %s", t)
 
 	tm.mu.Lock()
@@ -94,7 +105,12 @@ func (tm *taskManager) done(t *task.Managed, errResult error) (err error) {
 func (tm *taskManager) save() (err error) {
 	defer decorate.OnError(&err, "could not save current work in progress")
 
-	out, err := yaml.Marshal(tm.tasks)
+	var tasks []task.Task
+	for i := range tm.tasks {
+		tasks = append(tasks, tm.tasks[i].Task)
+	}
+
+	out, err := task.MarshalYAML(tasks)
 	if err != nil {
 		return err
 	}
@@ -113,6 +129,9 @@ func (tm *taskManager) save() (err error) {
 func (tm *taskManager) load(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not load previous work in progress")
 
+	tm.queue = make(chan *managedTask)
+	tm.largestID = 0
+
 	out, err := os.ReadFile(tm.storagePath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -121,23 +140,19 @@ func (tm *taskManager) load(ctx context.Context) (err error) {
 		return err
 	}
 
-	if err := yaml.Unmarshal(out, &tm.tasks); err != nil {
+	var tasks []task.Task
+	if tasks, err = task.UnmarshalYAML(out); err != nil {
 		return err
 	}
 
-	if len(tm.tasks) >= taskQueueSize {
-		excess := taskQueueSize - len(tm.tasks)
+	if len(tasks) >= taskQueueSize {
+		excess := taskQueueSize - len(tasks)
 		log.Warningf(ctx, "dropped %d tasks because at most %d can be queued up", excess, taskQueueSize)
-		tm.tasks = tm.tasks[:taskQueueSize]
+		tasks = tasks[:taskQueueSize]
 	}
 
-	tm.largestID = 0
-	for _, task := range tm.tasks {
-		if tm.largestID <= task.ID {
-			tm.largestID = task.ID + 1
-		}
-
-		tm.queue <- task
+	if err := tm.submit(tasks...); err != nil {
+		return err
 	}
 
 	return nil
