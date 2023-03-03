@@ -43,6 +43,33 @@ func ReregisterDistro(t *testing.T, distroName string, realDistro bool) (GUID st
 	return registerDistro(t, distroName, realDistro)
 }
 
+// DistroState returns the state of the distro as specified by wsl.exe. Possible states:
+// - Installing
+// - Running
+// - Stopped
+// - Unregistered
+func DistroState(t *testing.T, distroName string) string {
+	t.Helper()
+
+	cmd := "$env:WSL_UTF8=1 ; wsl --list --all --verbose"
+	out := poweshellOutputf(t, cmd)
+
+	rows := strings.Split(out, "\n")[1:] // [1:] to skip header
+	for _, row := range rows[1:] {
+		fields := strings.Fields(row)
+		if fields[0] == "*" {
+			fields = fields[1:]
+		}
+
+		require.Len(t, fields, 3, "Output of %q should contain three columns. Row %q was parsed into %q", cmd, row, fields)
+		if fields[0] != distroName {
+			continue
+		}
+
+		return fields[1]
+	}
+	return "Unregistered"
+}
 
 // TerminateDistro shuts down that distro in particular.
 // Wrapper for `wsl -t distro`.

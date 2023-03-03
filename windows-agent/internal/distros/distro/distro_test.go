@@ -2,8 +2,10 @@ package distro_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
@@ -129,6 +131,71 @@ func TestIsValid(t *testing.T) {
 
 			got := d.IsValid()
 			require.Equal(t, tc.want, got, "IsValid should return expected value")
+		})
+	}
+}
+
+func TestKeepAwake(t *testing.T) {
+	const wslSleepDelay = 8 * time.Second
+
+	testCases := map[string]struct {
+		unregisterDistro bool
+		invalidateDistro bool
+
+		wantErr bool
+	}{
+		"Registered distro is kept awake": {},
+		"Error on invalidated distro":     {invalidateDistro: true, wantErr: true},
+		"Error on uregistered distro":     {unregisterDistro: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			distroName, _ := testutils.RegisterDistro(t, false)
+
+			d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
+			require.NoError(t, err, "Setup: distro New should return no error")
+			t.Cleanup(func() { d.Cleanup(context.Background()) })
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			testutils.TerminateDistro(t, distroName)
+
+			if tc.invalidateDistro {
+				d.Invalidate(errors.New("setup: invalidating distro"))
+			}
+			if tc.unregisterDistro {
+				testutils.UnregisterDistro(t, distroName)
+			}
+
+			err = d.KeepAwake(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "KeepAwake should have returned an error")
+
+				time.Sleep(5 * time.Second)
+				state := testutils.DistroState(t, distroName)
+				require.NotEqual(t, "Running", state, "distro should not run when KeepAwake is called")
+
+				return
+			}
+			require.NoError(t, err, "KeepAwake should have returned no error")
+
+			require.Eventually(t, func() bool {
+				return testutils.DistroState(t, distroName) == "Running"
+			}, 10*time.Second, time.Second, "distro should have started after calling keepAwake")
+
+			time.Sleep(2 * wslSleepDelay)
+
+			require.Equal(t, "Running", testutils.DistroState(t, distroName), "KeepAwake should have kept the distro running")
+
+			cancel()
+
+			require.Eventually(t, func() bool {
+				return testutils.DistroState(t, distroName) == "Stopped"
+			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
+
 		})
 	}
 }
