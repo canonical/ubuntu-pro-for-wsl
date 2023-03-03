@@ -31,7 +31,7 @@ func (in serializableDistro) newDistro(storageDir string) (*distro.Distro, error
 func newSerializableDistro(d *distro.Distro) serializableDistro {
 	return serializableDistro{
 		Name:       d.Name(),
-		GUID:       d.GUID().String(),
+		GUID:       d.GUID(),
 		Properties: d.Properties,
 	}
 }

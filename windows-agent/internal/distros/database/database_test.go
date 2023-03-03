@@ -18,7 +18,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
-	"golang.org/x/sys/windows"
 	"gopkg.in/yaml.v3"
 )
 
@@ -214,8 +213,8 @@ func TestDatabaseDump(t *testing.T) {
 				require.NotEqualf(t, -1, idx1, "Database dump should contain distro1 (%s). Dump:\n%s", distro1, dump)
 				require.NotEqualf(t, -1, idx2, "Database dump should contain distro2 (%s). Dump:\n%s", distro2, dump)
 
-				require.Equal(t, sd.data[idx1].GUID, guid1.String(), "Database dump GUID for distro1 should match the one it was constructed with. Dump:\n%s", dump)
-				require.Equal(t, sd.data[idx2].GUID, guid2.String(), "Database dump GUID for distro2 should match the one it was constructed with. Dump:\n%s", dump)
+				require.Equal(t, sd.data[idx1].GUID, guid1, "Database dump GUID for distro1 should match the one it was constructed with. Dump:\n%s", dump)
+				require.Equal(t, sd.data[idx2].GUID, guid2, "Database dump GUID for distro2 should match the one it was constructed with. Dump:\n%s", dump)
 			}
 
 			// Anonymizing
@@ -230,18 +229,18 @@ func TestDatabaseDump(t *testing.T) {
 
 func TestGetDistroAndUpdateProperties(t *testing.T) {
 	var distroInDB, distroNotInDB, reRegisteredDistro, nonRegisteredDistro string
-	var guids map[string]windows.GUID
+	var guids map[string]string
 
 	// Scope to avoid leaking guid variables
 	{
-		var guid1, guid2, guid3, guid4 windows.GUID
+		var guid1, guid2, guid3, guid4 string
 
 		distroInDB, guid1 = testutils.RegisterDistro(t, false)
 		distroNotInDB, guid2 = testutils.RegisterDistro(t, false)
 		reRegisteredDistro, guid3 = testutils.RegisterDistro(t, false)
 		nonRegisteredDistro, guid4 = testutils.NonRegisteredDistro(t)
 
-		guids = map[string]windows.GUID{
+		guids = map[string]string{
 			distroInDB:          guid1,
 			distroNotInDB:       guid2,
 			reRegisteredDistro:  guid3,
@@ -393,7 +392,7 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			var reregisteredDistro string
 			if tc.reregisterDistro {
-				var guid windows.GUID
+				var guid string
 				reregisteredDistro, guid = testutils.RegisterDistro(t, false)
 				distros = append(distros, distroID{reregisteredDistro, guid})
 			}
@@ -458,7 +457,7 @@ func fileModTime(t *testing.T, path string) time.Time {
 // Used to deanonymize fixtures.
 type distroID struct {
 	Name string
-	GUID windows.GUID
+	GUID string
 }
 
 // databaseFromTemplate creates a yaml database file in the specified directory.

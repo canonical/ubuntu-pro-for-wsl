@@ -128,7 +128,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 }
 
 func (d *Distro) String() string {
-	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), strings.ToLower(d.GUID().String()))
+	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), strings.ToLower(d.GUID()))
 }
 
 // Name is a getter for the distro's name.
@@ -137,8 +137,8 @@ func (d *Distro) Name() string {
 }
 
 // GUID is a getter for the distro's GUID.
-func (d *Distro) GUID() windows.GUID {
-	return d.identity.GUID
+func (d *Distro) GUID() string {
+	return strings.ToLower(d.identity.GUID.String())
 }
 
 // IsActive returns true when the distro is running, and there exists an active

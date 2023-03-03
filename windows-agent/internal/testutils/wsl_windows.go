@@ -11,26 +11,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
-	"golang.org/x/sys/windows"
 )
 
 // RegisterDistro registers a distro and returns its randomly-generated name and its GUID.
-func RegisterDistro(t *testing.T, realDistro bool) (distroName string, GUID windows.GUID) {
+func RegisterDistro(t *testing.T, realDistro bool) (distroName string, GUID string) {
 	t.Helper()
 
 	distroName = RandomDistroName(t)
 	guid := registerDistro(t, distroName, realDistro)
 	return distroName, guid
-}
-
-// NonRegisteredDistro generates a random distroName and GUID but does not register them.
-func NonRegisteredDistro(t *testing.T) (distroName string, GUID windows.GUID) {
-	t.Helper()
-
-	distroName = RandomDistroName(t)
-	GUID, err := windows.GenerateGUID()
-	require.NoError(t, err, "Setup: could not generate a GUID for the non-registered distro")
-	return distroName, GUID
 }
 
 // UnregisterDistro unregisters a WSL distro. Errors are ignored.
@@ -50,14 +39,14 @@ func UnregisterDistro(t *testing.T, distroName string) {
 }
 
 // ReregisterDistro unregister, then registers the same distro again.
-func ReregisterDistro(t *testing.T, distroName string, realDistro bool) (GUID windows.GUID) {
+func ReregisterDistro(t *testing.T, distroName string, realDistro bool) (GUID string) {
 	t.Helper()
 
 	UnregisterDistro(t, distroName)
 	return registerDistro(t, distroName, realDistro)
 }
 
-func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID windows.GUID) {
+func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 
@@ -87,7 +76,8 @@ func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID wind
 	})
 
 	d := gowsl.NewDistro(distroName)
-	GUID, err = d.GUID()
+	guid, err := d.GUID()
+	GUID = strings.ToLower(guid.String())
 	require.NoError(t, err, "Setup: could not get distro GUID")
 
 	return GUID

@@ -3,7 +3,6 @@ package distro_test
 import (
 	"context"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
@@ -34,7 +33,7 @@ func TestNew(t *testing.T) {
 
 	testCases := map[string]struct {
 		distro   string
-		withGUID windows.GUID
+		withGUID string
 
 		wantErrType error
 	}{
@@ -56,9 +55,10 @@ func TestNew(t *testing.T) {
 			var err error
 
 			var args []distro.Option
-			nilGUID := windows.GUID{}
-			if tc.withGUID != nilGUID {
-				args = append(args, distro.WithGUID(tc.withGUID))
+			if tc.withGUID != "" {
+				GUID, err := windows.GUIDFromString(tc.withGUID)
+				require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
+				args = append(args, distro.WithGUID(GUID))
 			}
 
 			d, err = distro.New(tc.distro, props, t.TempDir(), args...)
@@ -73,7 +73,7 @@ func TestNew(t *testing.T) {
 
 			require.NoError(t, err, "New() should have returned no error")
 			require.Equal(t, tc.distro, d.Name(), "distro.Name should match the one it was constructed with")
-			require.Equal(t, registeredGUID.String(), d.GUID().String(), "distro.GUID should match the one it was constructed with")
+			require.Equal(t, registeredGUID, d.GUID(), "distro.GUID should match the one it was constructed with")
 			require.Equal(t, props, d.Properties, "distro.Properties should match the one it was constructed with because they were never directly modified")
 		})
 	}
@@ -81,12 +81,16 @@ func TestNew(t *testing.T) {
 
 func TestString(t *testing.T) {
 	name, guid := testutils.RegisterDistro(t, false)
-	d, err := distro.New(name, distro.Properties{}, t.TempDir(), distro.WithGUID(guid))
+
+	GUID, err := windows.GUIDFromString(guid)
+	require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
+	d, err := distro.New(name, distro.Properties{}, t.TempDir(), distro.WithGUID(GUID))
+
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
 
 	s := d.String()
 	require.Contains(t, s, name, "String() should contain the name of the distro")
-	require.Contains(t, s, strings.ToLower(guid.String()), "String() should contain the GUID of the distro")
+	require.Contains(t, s, guid, "String() should contain the GUID of the distro")
 }
 
 func TestIsValid(t *testing.T) {
@@ -96,7 +100,7 @@ func TestIsValid(t *testing.T) {
 
 	testCases := map[string]struct {
 		distro string
-		guid   windows.GUID
+		guid   string
 
 		want bool
 	}{
@@ -118,7 +122,10 @@ func TestIsValid(t *testing.T) {
 
 			// Change values and assert on IsValid
 			d.GetIdentity().Name = tc.distro
-			d.GetIdentity().GUID = tc.guid
+
+			GUID, err := windows.GUIDFromString(tc.guid)
+			require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
+			d.GetIdentity().GUID = GUID
 
 			got := d.IsValid()
 			require.Equal(t, tc.want, got, "IsValid should return expected value")
