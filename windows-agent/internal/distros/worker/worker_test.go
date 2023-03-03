@@ -1,18 +1,23 @@
 package worker_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"text/template"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -22,11 +27,103 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+func init() {
+	task.Register[emptyTask]()
+}
+
 func TestMain(m *testing.M) {
 	log.SetLevel(log.DebugLevel)
 
 	exit := m.Run()
 	defer os.Exit(exit)
+}
+
+func TestNew(t *testing.T) {
+	t.Parallel()
+
+	type taskFileState int
+	const (
+		fileNotExist taskFileState = iota
+		fileIsEmpty
+		fileHasOneTask
+		fileHasTooManyTasks
+
+		fileHasBadSyntax
+		fileHasNonRegisteredTask
+		fileIsDir
+	)
+
+	testCases := map[string]struct {
+		taskFile    taskFileState
+		fillUpQueue bool
+
+		wantErr    bool
+		wantNTasks int
+	}{
+		"No task file":                      {},
+		"Task file is empty":                {taskFile: fileIsEmpty},
+		"Task file contains a task":         {taskFile: fileHasOneTask, wantNTasks: 1},
+		"Task file contains too many tasks": {taskFile: fileHasTooManyTasks, wantNTasks: worker.TaskQueueSize},
+
+		// Error
+		"Error when task file reads non-registered task type": {taskFile: fileHasNonRegisteredTask, wantErr: true},
+		"Error when task file has bad syntax":                 {taskFile: fileHasBadSyntax, wantErr: true},
+		"Error when task file is unreadable":                  {taskFile: fileIsDir, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			distro := &testDistro{name: testutils.RandomDistroName(t)}
+
+			distroDir := t.TempDir()
+			taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
+			switch tc.taskFile {
+			case fileNotExist:
+			case fileIsEmpty:
+				err := os.WriteFile(taskFile, []byte{}, 0600)
+				require.NoError(t, err, "Setup: could not write empty task file")
+			case fileHasOneTask:
+				out := taskfileFromTemplate[emptyTask](t)
+				err := os.WriteFile(taskFile, out, 0600)
+				require.NoError(t, err, "Setup: could not write task file")
+			case fileHasTooManyTasks:
+				out := taskfileFromTemplate[emptyTask](t)
+				out = bytes.Repeat(out, worker.TaskQueueSize+5)
+				err := os.WriteFile(taskFile, out, 0600)
+				require.NoError(t, err, "Setup: could not write task file")
+			case fileHasNonRegisteredTask:
+				out := taskfileFromTemplate[*testTask](t)
+				err := os.WriteFile(taskFile, out, 0600)
+				require.NoError(t, err, "Setup: could not write task file")
+			case fileHasBadSyntax:
+				err := os.WriteFile(taskFile, []byte("This\nis not valid\n\t\tYAML"), 0600)
+				require.NoError(t, err, "Setup: could not write empty task file")
+			case fileIsDir:
+				err := os.MkdirAll(taskFile, 0600)
+				require.NoError(t, err, "Setup: could not make a directory in task file's location")
+			}
+
+			// We pass a cancelled context so that no tasks are popped
+			// and we can accurately assert on the task queue length.
+			cancel()
+
+			w, err := worker.New(ctx, distro, nil, distroDir)
+			if tc.wantErr {
+				require.Error(t, err, "worker.New should have returned an error")
+				return
+			}
+			require.NoError(t, err, "worker.New should not return an error")
+			require.Equal(t, tc.wantNTasks, w.QueueLen(), "Wrong number of queued tasks.")
+
+		})
+	}
+
 }
 
 func TestTaskProcessing(t *testing.T) {
@@ -146,6 +243,29 @@ func TestTaskProcessing(t *testing.T) {
 			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed too many times after establishing a connection")
 		})
 	}
+}
+
+func TestSubmitTaskFailsCannotWrite(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	distro := &testDistro{name: testutils.RandomDistroName(t)}
+	distroDir := t.TempDir()
+	taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
+
+	w, err := worker.New(ctx, distro, nil, distroDir)
+	require.NoError(t, err, "Setup: unexpected error creating the worker")
+	defer w.Stop(ctx)
+
+	err = os.RemoveAll(taskFile)
+	require.NoError(t, err, "Could not remove distro task backup file")
+
+	err = os.MkdirAll(taskFile, 0600)
+	require.NoError(t, err, "Could not make dir at distro task file's location")
+
+	err = w.SubmitTasks(&emptyTask{})
+	require.Error(t, err, "Submitting a task when the task file is not writable should cause an error")
 }
 
 func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
@@ -326,6 +446,20 @@ func (s testService) newClientConnection(t *testing.T) *grpc.ClientConn {
 	return conn
 }
 
+type emptyTask struct{}
+
+func (t emptyTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+	return nil
+}
+
+func (t emptyTask) String() string {
+	return "Empty test task"
+}
+
+func (t emptyTask) ShouldRetry() bool {
+	return false
+}
+
 const testTaskMaxRetries = 5
 
 type testTask struct {
@@ -443,4 +577,21 @@ func (d *testDistro) Invalidate(err error) {
 		panic("called invalidate with a nil error")
 	}
 	d.invalid.Store(true)
+}
+
+func taskfileFromTemplate[T task.Task](t *testing.T) []byte {
+	t.Helper()
+
+	in, err := os.ReadFile(filepath.Join(testutils.TestFamilyPath(t), "template.tasks"))
+	require.NoError(t, err, "Setup: could not read tasks template")
+
+	tmpl := template.Must(template.New(t.Name()).Parse(string(in)))
+
+	w := &bytes.Buffer{}
+
+	taskType := reflect.TypeOf((*T)(nil)).Elem().String()
+	err = tmpl.Execute(w, taskType)
+	require.NoError(t, err, "Setup: could not execute template task file")
+
+	return w.Bytes()
 }
