@@ -1,5 +1,5 @@
 - name: '{{(index . 0).Name}}'
-  guid: '{{(index . 0).GUID.String}}'
+  guid: '{{(index . 0).GUID}}'
   properties:
     distroid: Ubuntu
     versionid: '22.04'
