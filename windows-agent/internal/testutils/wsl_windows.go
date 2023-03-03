@@ -26,10 +26,7 @@ func RegisterDistro(t *testing.T, realDistro bool) (distroName string, GUID stri
 func UnregisterDistro(t *testing.T, distroName string) {
 	t.Helper()
 
-	// Avoiding misuse
-	if !strings.HasPrefix(distroName, testDistroPrefix) {
-		require.Fail(t, "UnregisterDistro can only be used with test distros", "Requested distro: %s", distroName)
-	}
+	requireIsTestDistro(t, distroName)
 
 	// Unregister distro with a two minute timeout
 	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
@@ -44,6 +41,17 @@ func ReregisterDistro(t *testing.T, distroName string, realDistro bool) (GUID st
 
 	UnregisterDistro(t, distroName)
 	return registerDistro(t, distroName, realDistro)
+}
+
+
+// TerminateDistro shuts down that distro in particular.
+// Wrapper for `wsl -t distro`.
+func TerminateDistro(t *testing.T, distroName string) {
+	t.Helper()
+
+	requireIsTestDistro(t, distroName)
+
+	poweshellOutputf(t, "wsl --terminate %q", distroName)
 }
 
 func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID string) {

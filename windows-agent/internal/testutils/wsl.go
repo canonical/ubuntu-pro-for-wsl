@@ -35,3 +35,12 @@ func RandomDistroName(t *testing.T) (name string) {
 	//nolint: gosec // No need to be cryptographically secure
 	return fmt.Sprintf(testDistroPattern, testDistroPrefix, testFullNormalized, rand.Uint64())
 }
+
+// Avoids misuse of testutils
+func requireIsTestDistro(t *testing.T, distroName string) {
+	t.Helper()
+
+	if !strings.HasPrefix(distroName, testDistroPrefix) {
+		require.Fail(t, "testutils can only be used with test distros", "Requested distro: %s", distroName)
+	}
+}
