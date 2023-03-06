@@ -267,6 +267,31 @@ func TestWorkerConstruction(t *testing.T) {
 	}
 }
 
+func TestInvalidateIdempotent(t *testing.T) {
+	distroName, _ := testutils.RegisterDistro(t, false)
+
+	inj, w := mockWorkerInjector(false)
+
+	d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), inj)
+	require.NoError(t, err, "Setup: distro New should return no error")
+
+	require.True(t, d.IsValid(), "succesfully constructed distro should be valid")
+
+	d.Invalidate(errors.New("Hi! I'm an error"))
+	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
+	require.True(t, (*w).stopCalled, "worker Stop should be called during the first invalidation")
+
+	(*w).stopCalled = false
+
+	d.Invalidate(errors.New("Hi! I'm another error"))
+	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
+	require.False(t, (*w).stopCalled, "worker Stop should not be called in subsequent invalidations")
+
+	d.Invalidate(errors.New("Hi! I'm another error"))
+	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
+	require.False(t, (*w).stopCalled, "worker Stop should not be called in subsequent invalidations")
+}
+
 //nolint: tparallel
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerWrappers(t *testing.T) {
