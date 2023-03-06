@@ -3,6 +3,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -151,8 +152,15 @@ func (w *Worker) processTasks(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case t := <-w.manager.queue:
-			err := w.processSingleTask(ctx, *t)
-			err = w.manager.done(t, err)
+			resultErr := w.processSingleTask(ctx, *t)
+
+			var target unreachableDistroError
+			if errors.Is(resultErr, &target) {
+				w.distro.Invalidate(target)
+				continue
+			}
+
+			err := w.manager.done(t, resultErr)
 			if err != nil {
 				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 			}
@@ -160,11 +168,28 @@ func (w *Worker) processTasks(ctx context.Context) {
 	}
 }
 
+type unreachableDistroError struct {
+	sourceErr error
+}
+
+func newUnreachableDistroErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	return unreachableDistroError{
+		sourceErr: err,
+	}
+}
+
+func (err unreachableDistroError) Error() string {
+	return fmt.Sprintf("distro cannot be reached: %v", err.sourceErr)
+}
+
 func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	log.Debugf(context.TODO(), "Distro %q: task %q: dequeued", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {
-		return fmt.Errorf("Distro %q: task %q: aborted because distro is no longer valid", w.distro.Name(), t)
+		return newUnreachableDistroErr(errors.New("distro marked as invalid"))
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -172,7 +197,6 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 
 	client, err := w.keepAwakeAndWaitForClient(ctx)
 	if err != nil {
-		w.distro.Invalidate(err)
 		return fmt.Errorf("task %v: could not start task: %v", t, err)
 	}
 
@@ -219,14 +243,14 @@ func (w *Worker) keepAwakeAndWaitForClient(ctx context.Context) (client wslservi
 
 			err := w.distro.KeepAwake(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("could not wake distro up: %v", err)
+				return nil, newUnreachableDistroErr(err)
 			}
 
 			log.Debugf(context.TODO(), "Distro %q: distro is running.", w.distro.Name())
 
 			client, err := w.waitForClient(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("could not contact distro: %v", err)
+				return nil, newUnreachableDistroErr(err)
 			}
 
 			log.Debugf(context.TODO(), "Distro %q: connection is active.", w.distro.Name())
