@@ -125,6 +125,7 @@ func (w *Worker) start(ctx context.Context) {
 func (w *Worker) Stop(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: stopping task processing", w.distro.Name())
 	w.cancel()
+	w.SetConnection(nil)
 }
 
 // SubmitTasks enqueues one or more task on our current worker list.
