@@ -29,7 +29,7 @@ func UnregisterDistro(t *testing.T, distroName string) {
 	requireIsTestDistro(t, distroName)
 
 	// Unregister distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
+	tk := time.AfterFunc(2*time.Minute, func() { powershellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
 	d := gowsl.NewDistro(distroName)
 	_ = d.Unregister()
@@ -52,7 +52,7 @@ func DistroState(t *testing.T, distroName string) string {
 	t.Helper()
 
 	cmd := "$env:WSL_UTF8=1 ; wsl --list --all --verbose"
-	out := poweshellOutputf(t, cmd)
+	out := powershellOutputf(t, cmd)
 
 	rows := strings.Split(out, "\n")[1:] // [1:] to skip header
 	for _, row := range rows[1:] {
@@ -78,7 +78,7 @@ func TerminateDistro(t *testing.T, distroName string) {
 
 	requireIsTestDistro(t, distroName)
 
-	poweshellOutputf(t, "wsl --terminate %q", distroName)
+	powershellOutputf(t, "wsl --terminate %q", distroName)
 }
 
 func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID string) {
@@ -92,7 +92,7 @@ func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID stri
 		require.NoError(t, err, "could not write empty file")
 	} else {
 		const appx = "UbuntuPreview"
-		rootFsPath = poweshellOutputf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
+		rootFsPath = powershellOutputf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
 		require.NotEmpty(t, rootFsPath, "could not find rootfs tarball. Is %s installed?", appx)
 		rootFsPath = filepath.Join(rootFsPath, "install.tar.gz")
 	}
@@ -101,9 +101,9 @@ func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID stri
 	require.NoError(t, err, "Setup: Could not stat rootFs:\n%s", rootFsPath)
 
 	// Register distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { poweshellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
+	tk := time.AfterFunc(2*time.Minute, func() { powershellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
-	poweshellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
+	powershellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
 	tk.Stop()
 
 	t.Cleanup(func() {
@@ -118,9 +118,9 @@ func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID stri
 	return GUID
 }
 
-// poweshellOutputf runs the command (with any printf-style directives and args). It fails if the
+// powershellOutputf runs the command (with any printf-style directives and args). It fails if the
 // return value of the command is non-zero. Otherwise, it returns its combined stdout and stderr.
-func poweshellOutputf(t *testing.T, command string, args ...any) string {
+func powershellOutputf(t *testing.T, command string, args ...any) string {
 	t.Helper()
 
 	cmd := fmt.Sprintf(command, args...)
