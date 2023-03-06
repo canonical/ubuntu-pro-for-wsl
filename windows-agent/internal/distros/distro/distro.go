@@ -195,6 +195,9 @@ func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
 
 // Cleanup releases all resources associated with the distro.
 func (d *Distro) Cleanup(ctx context.Context) {
+	if d == nil {
+		return
+	}
 	d.worker.Stop(ctx)
 }
 

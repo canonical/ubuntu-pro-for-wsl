@@ -103,6 +103,7 @@ func TestString(t *testing.T) {
 	GUID, err := windows.GUIDFromString(guid)
 	require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
 	d, err := distro.New(name, distro.Properties{}, t.TempDir(), distro.WithGUID(GUID))
+	defer d.Cleanup(context.Background())
 
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
 
@@ -136,6 +137,8 @@ func TestIsValid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Create an always valid distro
 			d, err := distro.New(distro1, distro.Properties{}, t.TempDir())
+			defer d.Cleanup(context.Background())
+
 			require.NoError(t, err, "Setup: distro New() should return no errors")
 
 			// Change values and assert on IsValid
@@ -171,8 +174,9 @@ func TestKeepAwake(t *testing.T) {
 			distroName, _ := testutils.RegisterDistro(t, false)
 
 			d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
+			defer d.Cleanup(context.Background())
+
 			require.NoError(t, err, "Setup: distro New should return no error")
-			t.Cleanup(func() { d.Cleanup(context.Background()) })
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -249,14 +253,13 @@ func TestWorkerConstruction(t *testing.T) {
 				distro.WithTaskProcessingContext(ctx),
 				distro.WithInitialTasks(initialTasks),
 				withMockWorker)
+			defer d.Cleanup(context.Background())
 
 			if tc.wantErr {
 				require.Error(t, err, "distro New should return an error when the worker construction errors out")
 				return
 			}
 			require.NoError(t, err, "distro New should return no error")
-
-			t.Cleanup(func() { d.Cleanup(context.Background()) })
 
 			require.NotNil(t, *worker, "Worker's constructor should be called in the distro's constructor")
 			require.NotNil(t, (*worker).newCtx.Value(testContextMarker(42)), "Worker's constructor should be called with the distro's context or a child of it")
@@ -273,9 +276,10 @@ func TestInvalidateIdempotent(t *testing.T) {
 	inj, w := mockWorkerInjector(false)
 
 	d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), inj)
+	defer d.Cleanup(context.Background())
 	require.NoError(t, err, "Setup: distro New should return no error")
 
-	require.True(t, d.IsValid(), "succesfully constructed distro should be valid")
+	require.True(t, d.IsValid(), "successfully constructed distro should be valid")
 
 	d.Invalidate(errors.New("Hi! I'm an error"))
 	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
