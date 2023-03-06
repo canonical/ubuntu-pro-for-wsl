@@ -36,7 +36,7 @@ func RandomDistroName(t *testing.T) (name string) {
 	return fmt.Sprintf(testDistroPattern, testDistroPrefix, testFullNormalized, rand.Uint64())
 }
 
-// Avoids misuse of testutils
+// Avoids misuse of testutils.
 func requireIsTestDistro(t *testing.T, distroName string) {
 	t.Helper()
 

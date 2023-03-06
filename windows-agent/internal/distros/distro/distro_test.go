@@ -195,7 +195,6 @@ func TestKeepAwake(t *testing.T) {
 			require.Eventually(t, func() bool {
 				return testutils.DistroState(t, distroName) == "Stopped"
 			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
-
 		})
 	}
 }

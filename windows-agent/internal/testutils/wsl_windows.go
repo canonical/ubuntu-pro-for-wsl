@@ -47,7 +47,7 @@ func ReregisterDistro(t *testing.T, distroName string, realDistro bool) (GUID st
 // - Installing
 // - Running
 // - Stopped
-// - Unregistered
+// - Unregistered.
 func DistroState(t *testing.T, distroName string) string {
 	t.Helper()
 

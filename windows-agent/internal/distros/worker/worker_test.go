@@ -120,10 +120,8 @@ func TestNew(t *testing.T) {
 			}
 			require.NoError(t, err, "worker.New should not return an error")
 			require.Equal(t, tc.wantNTasks, w.QueueLen(), "Wrong number of queued tasks.")
-
 		})
 	}
-
 }
 
 func TestTaskProcessing(t *testing.T) {
