@@ -41,7 +41,7 @@ jobs:
       - name: Ensure module files are up to date
         uses: ./.github/actions/check-diff
         with:
-          files-to-validate: ${{ matrix.subproject }}/go.mod ${{ matrix.subproject }}/go.sum
+          files-to-validate: ${{ matrix.subproject }}/**/go.mod ${{ matrix.subproject }}/**/go.sum
       - name: Build
         shell: bash
         if: always() && !cancelled()
@@ -112,7 +112,7 @@ jobs:
         uses: actions/checkout@v3
       - uses: canonical/ubuntu-pro-for-windows/.github/actions/go-generate-grpc@main
         with:
-          go-version-file: ${{ matrix.subproject }}/go.mod
+          go-version-file: ${{ matrix.subproject }}/**/go.mod
           tools-directory: tools
           protos-directory: ${{ matrix.subproject }}
           enable-dart: ${{ matrix.subproject == 'agentapi' }}
