@@ -1,0 +1,7 @@
+name: agentapi
+description: A starting point for Dart libraries or applications.
+version: 0.0.1
+
+environment:
+  sdk: '>=2.19.0 <3.0.0'
+
