@@ -95,7 +95,7 @@ jobs:
       #    file: /tmp/coverage.out
 
   generated-grpc:
-    name: GRPC files are up to date
+    name: gRPC files are up to date
     runs-on: ubuntu-latest
     container: ubuntu:rolling
     strategy:
@@ -103,13 +103,6 @@ jobs:
       matrix:
         subproject: ["agentapi", "wslserviceapi"]
     steps:
-      - name: Install dependencies
-        run: |
-          # Install Protobuf compiler and git
-          set -eu
-
-          DEBIAN_FRONTEND=noninteractive apt update
-          DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
         uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
@@ -117,21 +110,13 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: canonical/ubuntu-pro-for-windows/.github/actions/go-generate-grpc@main
         with:
           go-version-file: ${{ matrix.subproject }}/go.mod
-      - name: Install go grpc protoc generator
-        working-directory: tools
-        run: |
-          # Install GRPC with go install
-          set -eu
-          go install google.golang.org/protobuf/cmd/protoc-gen-go \
-            google.golang.org/grpc/cmd/protoc-gen-go-grpc
-      - name: Generate GRPC files
-        working-directory: ${{ matrix.subproject }}
-        run: go generate .
+          tools-directory: tools
+          protos-directory: ${{ matrix.subproject }}
+          enable-dart: ${{ matrix.subproject == 'agentapi' }}
       - name: Ensure generated GRPC files are up to date
         uses: ./.github/actions/check-diff
         with:
-          files-to-validate: '${{ matrix.subproject }}/*.go'
+            files-to-validate: '${{ matrix.subproject }}/**/*.{dart,go}'

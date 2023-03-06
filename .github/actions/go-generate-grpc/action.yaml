@@ -1,0 +1,59 @@
+name: Go Generate gRPC
+description: Setup go and dependencies to generate gRPC code.
+
+inputs:
+  go-version-file:
+    required: true
+    description: "The go.mod file to be passed to the setup-go action. Globbing is allowed, the first match is the accepted one."
+  tools-directory:
+    required: true
+    description: "The tools module directory."
+  protos-directory:
+    required: true
+    description: "The directory under which the generation must happen"
+  enable-dart:
+    required: true
+    description: "Whether the Dart plugin is required"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        # Install Protobuf compiler and git
+        set -eu
+
+        DEBIAN_FRONTEND=noninteractive apt update
+        DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler jq curl unzip xz-utils
+    - name: unglobs the go-version-file
+      shell: bash
+      run: |
+        shopt -s globstar extglob
+        echo "GOVERSIONFILE=$(ls ${{ inputs.go-version-file }} | head -n 1 )" >> $GITHUB_ENV
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: ${{ env.GOVERSIONFILE }}
+    - name: Install go gRPC protoc generator
+      shell: bash
+      working-directory: ${{ inputs.tools-directory }}
+      run: |
+        # Install GRPC with go install
+        set -eu
+        go install google.golang.org/protobuf/cmd/protoc-gen-go \
+            google.golang.org/grpc/cmd/protoc-gen-go-grpc
+    - uses: subosito/flutter-action@v2
+      if: ${{ inputs.enable-dart == 'true' }}
+      with:
+        channel: 'stable'
+        flutter-version: '3.7.x'
+    - name: Install Dart protoc plugin
+      if: ${{ inputs.enable-dart == 'true' }}
+      shell: bash
+      run: |
+        dart pub global activate protoc_plugin
+    - name: Generate GRPC files
+      shell: bash
+      working-directory: ${{ inputs.protos-directory }}
+      run: go generate .
