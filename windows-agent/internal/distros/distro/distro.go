@@ -15,6 +15,7 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/ubuntu/decorate"
+	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows"
 	"google.golang.org/grpc"
@@ -143,38 +144,43 @@ func (d *Distro) GUID() string {
 
 // IsActive returns true when the distro is running, and there exists an active
 // connection to its GRPC service.
-func (d *Distro) IsActive() bool {
-	return d.worker.IsActive()
+func (d *Distro) IsActive() (bool, error) {
+	if !d.isValid() {
+		return false, &NotValidError{}
+	}
+	return d.worker.IsActive(), nil
 }
 
 // Client returns the client to the WSL task service.
 // Client returns nil when no connection is set up.
-func (d *Distro) Client() wslserviceapi.WSLClient {
-	return d.worker.Client()
+func (d *Distro) Client() (wslserviceapi.WSLClient, error) {
+	if !d.isValid() {
+		return nil, &NotValidError{}
+	}
+	return d.worker.Client(), nil
 }
 
 // SetConnection removes the connection associated with the distro.
-func (d *Distro) SetConnection(conn *grpc.ClientConn) {
+func (d *Distro) SetConnection(conn *grpc.ClientConn) error {
+	if !d.isValid() {
+		return &NotValidError{}
+	}
 	d.worker.SetConnection(conn)
+	return nil
 }
 
 // SubmitTasks enqueues one or more task on our current worker list.
 // See Worker.SubmitTasks for details.
 func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
+	if !d.isValid() {
+		return &NotValidError{}
+	}
 	return d.worker.SubmitTasks(tasks...)
 }
 
 // Cleanup releases all resources associated with the distro.
 func (d *Distro) Cleanup(ctx context.Context) {
 	d.worker.Stop(ctx)
-}
-
-// getWSLDistro gets underlying GoWSL distro after verifying it.
-func (d *Distro) getWSLDistro() (wsl.Distro, error) {
-	if !d.IsValid() {
-		return wsl.NewDistro(""), fmt.Errorf("distro with name %q and GUID %q not found in registry: %w", d.Name(), d.GUID(), &NotExistError{})
-	}
-	return wsl.NewDistro(d.Name()), nil
 }
 
 // Invalidate sets the invalid flag to true. The state of this flag can be read with IsValid.
@@ -200,7 +206,7 @@ func (d *Distro) IsValid() bool {
 	}
 
 	if !d.identity.isValid() {
-		d.Invalidate(&NotExistError{})
+		d.Invalidate(&NotValidError{})
 		return false
 	}
 
@@ -214,13 +220,14 @@ func (d *Distro) IsValid() bool {
 //
 // The command is reentrant, and you need to cancel the amount of time you keep it awake.
 func (d *Distro) KeepAwake(ctx context.Context) error {
-	wslDistro, err := d.getWSLDistro()
-	if err != nil {
-		return err
+	if !d.IsValid() {
+		return &NotValidError{}
 	}
 
+	wslDistro := gowsl.NewDistro(d.identity.Name)
+
 	cmd := wslDistro.Command(ctx, "sleep infinity")
-	err = cmd.Start()
+	err := cmd.Start()
 	if err != nil {
 		return err
 	}

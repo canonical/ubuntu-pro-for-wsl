@@ -114,10 +114,6 @@ func (w *Worker) Stop(ctx context.Context) {
 func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", w.distro.Name(), tasks)
 
-	if !w.distro.IsValid() {
-		return err
-	}
-
 	if len(tasks) == 0 {
 		return nil
 	}
