@@ -88,7 +88,7 @@ func (i *InitialTasks) Remove(ctx context.Context, target task.Task) error {
 	defer i.mu.Unlock()
 
 	idx := slices.IndexFunc(i.tasks, func(t task.Task) bool { return task.Is(target, t) })
-	if idx != -1 {
+	if idx == -1 {
 		log.Infof(ctx, "task %q is not in the init task list. Ignoring removal.", target)
 		return nil
 	}
