@@ -103,6 +103,10 @@ jobs:
       matrix:
         subproject: ["agentapi", "wslserviceapi"]
     steps:
+      - name: Installs git into the container
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt update
+          DEBIAN_FRONTEND=noninteractive apt install -y git
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
         uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
