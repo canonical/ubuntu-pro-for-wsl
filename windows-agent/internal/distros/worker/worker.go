@@ -117,7 +117,7 @@ func (w *Worker) start(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: starting task processing", w.distro.Name())
 
 	ctx, cancel := context.WithCancel(ctx)
-	go func() { w.processTasks(ctx) }()
+	go w.processTasks(ctx)
 	w.cancel = cancel
 }
 
