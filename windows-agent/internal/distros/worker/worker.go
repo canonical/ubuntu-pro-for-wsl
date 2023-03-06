@@ -35,9 +35,29 @@ type Worker struct {
 	connMu sync.RWMutex
 }
 
+type options struct {
+	initialTasks *initialTasks.InitialTasks
+}
+
+// Option is an optional argument for worker.New.
+type Option func(*options)
+
+// WithInitialTasks is an optional parameter for worker.New that allows for
+// conditionally importing initial tasks.
+func WithInitialTasks(init *initialTasks.InitialTasks) Option {
+	return func(o *options) {
+		o.initialTasks = init
+	}
+}
+
 // New creates a new worker and starts it. Call Stop when you're done to avoid leaking the task execution goroutine.
-func New(ctx context.Context, d distro, initial *initialTasks.InitialTasks, storageDir string) (*Worker, error) {
+func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Worker, error) {
 	storagePath := filepath.Join(storageDir, d.Name()+".tasks")
+
+	var opts options
+	for _, f := range args {
+		f(&opts)
+	}
 
 	tm, err := newTaskManager(ctx, storagePath)
 	if err != nil {
@@ -52,7 +72,7 @@ func New(ctx context.Context, d distro, initial *initialTasks.InitialTasks, stor
 	w.start(ctx)
 
 	// load and submit initial tasks if they were passed to us. (case of first contact with distro)
-	if err := w.SubmitTasks(initial.GetAll()...); err != nil {
+	if err := w.SubmitTasks(opts.initialTasks.GetAll()...); err != nil {
 		w.Stop(ctx)
 		return nil, err
 	}

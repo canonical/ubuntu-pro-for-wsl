@@ -120,7 +120,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 		return nil, err
 	}
 
-	distro.worker, err = worker.New(opts.taskProcessingContext, distro, opts.initialTasks, storageDir)
+	distro.worker, err = worker.New(opts.taskProcessingContext, distro, storageDir, worker.WithInitialTasks(opts.initialTasks))
 	if err != nil {
 		return nil, err
 	}

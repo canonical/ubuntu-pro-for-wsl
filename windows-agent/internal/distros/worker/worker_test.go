@@ -113,7 +113,7 @@ func TestNew(t *testing.T) {
 			// and we can accurately assert on the task queue length.
 			cancel()
 
-			w, err := worker.New(ctx, distro, nil, distroDir)
+			w, err := worker.New(ctx, distro, distroDir)
 			if tc.wantErr {
 				require.Error(t, err, "worker.New should have returned an error")
 				return
@@ -155,7 +155,7 @@ func TestTaskProcessing(t *testing.T) {
 				name: testutils.RandomDistroName(t),
 			}
 
-			w, err := worker.New(ctx, d, nil, t.TempDir())
+			w, err := worker.New(ctx, d, t.TempDir())
 			require.NoError(t, err, "Setup: worker New() should return no error")
 			t.Cleanup(func() { w.Stop(ctx) })
 
@@ -252,7 +252,7 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 	distroDir := t.TempDir()
 	taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
 
-	w, err := worker.New(ctx, distro, nil, distroDir)
+	w, err := worker.New(ctx, distro, distroDir)
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
@@ -275,7 +275,7 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	w, err := worker.New(ctx, d, nil, t.TempDir())
+	w, err := worker.New(ctx, d, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
@@ -304,7 +304,7 @@ func TestSetConnection(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	w, err := worker.New(ctx, d, nil, t.TempDir())
+	w, err := worker.New(ctx, d, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
@@ -365,7 +365,7 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	w, err := worker.New(ctx, d, nil, t.TempDir())
+	w, err := worker.New(ctx, d, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
