@@ -8,10 +8,14 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
+	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
+	"google.golang.org/grpc"
 )
 
 func TestMain(m *testing.M) {
@@ -197,4 +201,197 @@ func TestKeepAwake(t *testing.T) {
 			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
 		})
 	}
+}
+
+//nolint: tparallel
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+func TestWorkerConstruction(t *testing.T) {
+	distroName, _ := testutils.RegisterDistro(t, false)
+
+	testCases := map[string]struct {
+		constructorReturnErr bool
+
+		wantErr bool
+	}{
+		"succeed when worker construction succeeds": {},
+		"fail when worker construction fails":       {constructorReturnErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			type testContextMarker int
+			ctx := context.WithValue(context.Background(), testContextMarker(42), 27)
+
+			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
+
+			workDir := t.TempDir()
+			initialTasks, err := initialTasks.New(workDir)
+			require.NoError(t, err, "Setup: initialTasks should construct without issues")
+
+			d, err := distro.New(distroName,
+				distro.Properties{},
+				workDir,
+				distro.WithTaskProcessingContext(ctx),
+				distro.WithInitialTasks(initialTasks),
+				withMockWorker)
+
+			if tc.wantErr {
+				require.Error(t, err, "distro New should return an error when the worker construction errors out")
+				return
+			}
+			require.NoError(t, err, "distro New should return no error")
+
+			t.Cleanup(func() { d.Cleanup(context.Background()) })
+
+			require.NotNil(t, *worker, "Worker's constructor should be called in the distro's constructor")
+			require.NotNil(t, (*worker).newCtx.Value(testContextMarker(42)), "Worker's constructor should be called with the distro's context or a child of it")
+			require.Equal(t, d, (*worker).newDistro, "Worker's constructor should be called with the distro it is attached to")
+			require.Equal(t, workDir, (*worker).newDir, "Worker's constructor should be called with the same workdir as the distro's")
+			require.Equal(t, initialTasks, (*worker).newInit, "Worker's constructor should be called with the initial tasks passed to the distro")
+		})
+	}
+}
+
+//nolint: tparallel
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+func TestWorkerWrappers(t *testing.T) {
+	distroName, _ := testutils.RegisterDistro(t, false)
+
+	testCases := map[string]struct {
+		function      string
+		invalidDistro bool
+
+		wantErr          bool
+		wantWorkerCalled bool
+	}{
+		"IsActive succeeds":                 {function: "IsActive", wantWorkerCalled: true},
+		"IsActive errors on invalid distro": {function: "IsActive", invalidDistro: true, wantErr: true},
+
+		"Client succeeds":                 {function: "Client", wantWorkerCalled: true},
+		"Client errors on invalid distro": {function: "Client", invalidDistro: true, wantErr: true},
+
+		"SetConnection succeeds":                 {function: "SetConnection", wantWorkerCalled: true},
+		"SetConnection errors on invalid distro": {function: "SetConnection", invalidDistro: true, wantErr: true},
+
+		"SubmitTasks succeeds":                 {function: "SubmitTasks", wantWorkerCalled: true},
+		"SubmitTasks errors on invalid distro": {function: "SubmitTasks", invalidDistro: true, wantErr: true},
+
+		"Stop succeeds":                 {function: "Stop", wantWorkerCalled: true},
+		"Stop errors on invalid distro": {function: "Stop", invalidDistro: true, wantWorkerCalled: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			inj, w := mockWorkerInjector(false)
+
+			d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), inj)
+			defer d.Cleanup(context.Background())
+			require.NoError(t, err, "Setup: distro New should return no error")
+
+			if tc.invalidDistro {
+				d.Invalidate(errors.New("test invalidation"))
+			}
+
+			worker := *w
+			var funcCalled bool
+
+			switch tc.function {
+			case "IsActive":
+				_, err = d.IsActive()
+				funcCalled = worker.isActiveCalled
+
+			case "Client":
+				_, err = d.Client()
+				funcCalled = worker.clientCalled
+
+			case "SetConnection":
+				err = d.SetConnection(nil)
+				funcCalled = worker.setConnectionCalled
+
+			case "SubmitTasks":
+				err = d.SubmitTasks()
+				funcCalled = worker.submitTasksCalled
+
+			case "Stop":
+				d.Cleanup(context.Background())
+				funcCalled = worker.stopCalled
+				err = nil
+			default:
+				require.Fail(t, "Setup: Unexpected tc.function")
+			}
+
+			if tc.wantErr {
+				require.Error(t, err, "function %q should have returned an error when the distro is invalid", tc.function)
+			} else {
+				require.NoError(t, err, "function %q should have returned no error when the distro is valid", tc.function)
+			}
+
+			if tc.wantWorkerCalled {
+				require.True(t, funcCalled, "Worker function should have been called")
+			} else {
+				require.False(t, funcCalled, "Worker function should not have been called")
+			}
+		})
+	}
+}
+
+type mockWorker struct {
+	newCtx    context.Context
+	newDistro *distro.Distro
+	newDir    string
+	newInit   *initialTasks.InitialTasks
+
+	isActiveCalled      bool
+	clientCalled        bool
+	setConnectionCalled bool
+	submitTasksCalled   bool
+	stopCalled          bool
+}
+
+func mockWorkerInjector(constructorReturnsError bool) (distro.Option, **mockWorker) {
+	worker := new(*mockWorker)
+	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, init *initialTasks.InitialTasks) (distro.Worker, error) {
+		w := &mockWorker{
+			newCtx:    ctx,
+			newDistro: d,
+			newDir:    tmpDir,
+			newInit:   init,
+		}
+		*worker = w
+		if constructorReturnsError {
+			return nil, errors.New("test error")
+		}
+		return w, nil
+	}
+
+	return distro.WithNewWorker(newMockWorker), worker
+}
+
+func (w *mockWorker) IsActive() bool {
+	w.isActiveCalled = true
+	return false
+}
+
+func (w *mockWorker) Client() wslserviceapi.WSLClient {
+	w.clientCalled = true
+	return nil
+}
+
+func (w *mockWorker) SetConnection(conn *grpc.ClientConn) {
+	w.setConnectionCalled = true
+}
+
+func (w *mockWorker) SubmitTasks(...task.Task) error {
+	w.submitTasksCalled = true
+	return nil
+}
+
+func (w *mockWorker) Stop(context.Context) {
+	w.stopCalled = true
 }
