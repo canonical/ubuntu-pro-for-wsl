@@ -160,7 +160,7 @@ func (d *Distro) GUID() string {
 // IsActive returns true when the distro is running, and there exists an active
 // connection to its GRPC service.
 func (d *Distro) IsActive() (bool, error) {
-	if !d.isValid() {
+	if !d.IsValid() {
 		return false, &NotValidError{}
 	}
 	return d.worker.IsActive(), nil
@@ -169,7 +169,7 @@ func (d *Distro) IsActive() (bool, error) {
 // Client returns the client to the WSL task service.
 // Client returns nil when no connection is set up.
 func (d *Distro) Client() (wslserviceapi.WSLClient, error) {
-	if !d.isValid() {
+	if !d.IsValid() {
 		return nil, &NotValidError{}
 	}
 	return d.worker.Client(), nil
@@ -177,7 +177,7 @@ func (d *Distro) Client() (wslserviceapi.WSLClient, error) {
 
 // SetConnection removes the connection associated with the distro.
 func (d *Distro) SetConnection(conn *grpc.ClientConn) error {
-	if !d.isValid() {
+	if !d.IsValid() {
 		return &NotValidError{}
 	}
 	d.worker.SetConnection(conn)
@@ -187,7 +187,7 @@ func (d *Distro) SetConnection(conn *grpc.ClientConn) error {
 // SubmitTasks enqueues one or more task on our current worker list.
 // See Worker.SubmitTasks for details.
 func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
-	if !d.isValid() {
+	if !d.IsValid() {
 		return &NotValidError{}
 	}
 	return d.worker.SubmitTasks(tasks...)
