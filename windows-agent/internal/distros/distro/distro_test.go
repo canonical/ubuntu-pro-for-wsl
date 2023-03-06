@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -38,20 +39,23 @@ func TestNew(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		distro   string
-		withGUID string
+		distro                 string
+		withGUID               string
+		preventWorkDirCreation bool
 
+		wantErr     bool
 		wantErrType error
 	}{
 		"Registered distro":               {distro: registeredDistro},
 		"Registered distro with its GUID": {distro: registeredDistro, withGUID: registeredGUID},
 
 		// Error cases
-		"Registered distro, another distro's GUID":          {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErrType: &distro.NotValidError{}},
-		"Registered distro, non-matching GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErrType: &distro.NotValidError{}},
-		"Non-registered distro":                             {distro: nonRegisteredDistro, wantErrType: &distro.NotValidError{}},
-		"Non-registered distro, another distro's GUID":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErrType: &distro.NotValidError{}},
-		"Non-registered distro, with a non-registered GUID": {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErrType: &distro.NotValidError{}},
+		"Registered distro, cannot create workdir":          {distro: registeredDistro, preventWorkDirCreation: true, wantErr: true},
+		"Registered distro, another distro's GUID":          {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Registered distro, non-matching GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Non-registered distro":                             {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Non-registered distro, another distro's GUID":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Non-registered distro, with a non-registered GUID": {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 	}
 
 	for name, tc := range testCases {
@@ -67,13 +71,21 @@ func TestNew(t *testing.T) {
 				args = append(args, distro.WithGUID(GUID))
 			}
 
-			d, err = distro.New(tc.distro, props, t.TempDir(), args...)
-			if err == nil {
-				defer d.Cleanup(context.Background())
+			workDir := t.TempDir()
+			if tc.preventWorkDirCreation {
+				workDir = filepath.Join(workDir, "workdir")
+				err := os.WriteFile(workDir, []byte("I'm here to interfere"), 0600)
+				require.NoError(t, err, "Setup: could not write file to interfere with distro's MkDir")
 			}
-			if tc.wantErrType != nil {
+
+			d, err = distro.New(tc.distro, props, workDir, args...)
+			defer d.Cleanup(context.Background())
+
+			if tc.wantErr {
 				require.Error(t, err, "New() should have returned an error")
-				require.ErrorIsf(t, err, tc.wantErrType, "New() should have returned an error of type %T", tc.wantErrType)
+				if tc.wantErrType != nil {
+					require.ErrorIsf(t, err, tc.wantErrType, "New() should have returned an error of type %T", tc.wantErrType)
+				}
 				return
 			}
 
