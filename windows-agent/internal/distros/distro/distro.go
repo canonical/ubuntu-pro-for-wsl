@@ -36,10 +36,10 @@ type Distro struct {
 	worker *worker.Worker
 }
 
-// NotExistError is a type returned when the (distroName, GUID) combination is not in the registry.
-type NotExistError struct{}
+// NotValidError is a type returned when the (distroName, GUID) combination is not in the registry.
+type NotValidError struct{}
 
-func (*NotExistError) Error() string {
+func (*NotValidError) Error() string {
 	return "distro does not exist"
 }
 
@@ -101,12 +101,12 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 		if err == nil {
 			id.GUID = guid
 		} else {
-			return nil, fmt.Errorf("no distro with this name exists: %w", &NotExistError{})
+			return nil, fmt.Errorf("no distro with this name exists: %w", &NotValidError{})
 		}
 	} else {
 		// Check the name/GUID pair is valid.
 		if !id.isValid() {
-			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &NotExistError{})
+			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &NotValidError{})
 		}
 	}
 

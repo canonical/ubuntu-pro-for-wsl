@@ -294,7 +294,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 		"Distro exists in database, but no longer valid updates the stored db":       {distroName: reRegisteredDistro, props: props[reRegisteredDistro], want: hitUnregisteredDistro, wantDbDumpRefreshed: true},
 		"Distro is not in database, we add it and update the stored db":              {distroName: distroNotInDB, props: props[distroNotInDB], want: missedAndAdded, wantDbDumpRefreshed: true},
 
-		"Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error on database refresh failing":                     {distroName: distroInDB, props: props[distroNotInDB], breakDBbDump: true, wantErr: true},
 	}
 
