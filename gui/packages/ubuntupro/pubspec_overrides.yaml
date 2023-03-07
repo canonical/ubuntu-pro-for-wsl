@@ -1,0 +1,5 @@
+dependency_overrides:
+  agentapi:
+    path: ../../../agentapi/dart
+  p4w_ms_store:
+    path: ../p4w_ms_store
