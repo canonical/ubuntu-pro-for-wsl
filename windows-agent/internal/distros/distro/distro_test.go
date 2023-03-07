@@ -302,8 +302,9 @@ func TestWorkerWrappers(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 
 	testCases := map[string]struct {
-		function      string
-		invalidDistro bool
+		function      string // What method to call
+		invalidDistro bool   // Whether to use an invalid distro
+		nilArg        bool   // If the function takes an argument other than a context, nil will be used
 
 		wantErr          bool
 		wantWorkerCalled bool
@@ -314,10 +315,13 @@ func TestWorkerWrappers(t *testing.T) {
 		"Client succeeds":                 {function: "Client", wantWorkerCalled: true},
 		"Client errors on invalid distro": {function: "Client", invalidDistro: true, wantErr: true},
 
-		"SetConnection succeeds":                 {function: "SetConnection", wantWorkerCalled: true},
-		"SetConnection errors on invalid distro": {function: "SetConnection", invalidDistro: true, wantErr: true},
+		"SetConnection succeeds":                                       {function: "SetConnection", wantWorkerCalled: true},
+		"SetConnection succeeds with nil connection":                   {function: "SetConnection", nilArg: true, wantWorkerCalled: true},
+		"SetConnection succeeds with nil connection on invalid distro": {function: "SetConnection", nilArg: true, wantWorkerCalled: true},
+		"SetConnection errors on invalid distro":                       {function: "SetConnection", invalidDistro: true, wantErr: true},
 
-		"SubmitTasks succeeds":                 {function: "SubmitTasks", wantWorkerCalled: true},
+		"SubmitTasks succeeds with zero tasks": {function: "SubmitTasks", nilArg: true, wantWorkerCalled: true},
+		"SubmitTasks succeeds with arguments":  {function: "SubmitTasks", wantWorkerCalled: true},
 		"SubmitTasks errors on invalid distro": {function: "SubmitTasks", invalidDistro: true, wantErr: true},
 
 		"Stop succeeds":                 {function: "Stop", wantWorkerCalled: true},
@@ -352,11 +356,19 @@ func TestWorkerWrappers(t *testing.T) {
 				funcCalled = worker.clientCalled
 
 			case "SetConnection":
-				err = d.SetConnection(nil)
+				var conn *grpc.ClientConn
+				if !tc.nilArg {
+					conn = &grpc.ClientConn{}
+				}
+				err = d.SetConnection(conn)
 				funcCalled = worker.setConnectionCalled
 
 			case "SubmitTasks":
-				err = d.SubmitTasks()
+				var t []task.Task
+				if !tc.nilArg {
+					t = make([]task.Task, 5)
+				}
+				err = d.SubmitTasks(t...)
 				funcCalled = worker.submitTasksCalled
 
 			case "Stop":
