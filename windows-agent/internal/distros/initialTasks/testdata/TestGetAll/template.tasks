@@ -1,3 +1,0 @@
-- type: '{{- . -}}'
-  task:
-    data: loaded task

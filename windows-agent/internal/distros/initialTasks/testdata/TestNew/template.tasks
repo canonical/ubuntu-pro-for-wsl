@@ -1,3 +1,5 @@
-- type: '{{- . -}}'
+{{range $idx, $val := .}}
+- type: '{{- $val -}}'
   task:
-    data: Hello!
+    data: loaded task {{ $idx }}
+{{end}}

@@ -6,6 +6,6 @@ import (
 
 const InitialTasksFileName = initialTasksFileName
 
-func (it *InitialTasks) Peek() []task.Task {
+func (it *InitialTasks) Tasks() []task.Task {
 	return it.tasks
 }

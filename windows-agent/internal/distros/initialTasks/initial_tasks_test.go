@@ -44,9 +44,9 @@ func TestNew(t *testing.T) {
 		wantErr bool
 		want    []task.Task
 	}{
-		"Success with no file":                 {},
-		"Success with load from an empty file": {fileState: fileIsEmpty},
-		"Success with load from file":          {fileState: fileHasValidTask, want: []task.Task{registeredTask{Data: "Hello!"}}},
+		"Success with no file":                           {},
+		"Success with load from registered task in file": {fileState: fileHasValidTask, want: []task.Task{registeredTask{Data: "loaded task 0"}}},
+		"Success with load from an empty file":           {fileState: fileIsEmpty},
 
 		"Error with load from file with non-registered task": {fileState: fileHasNonRegisteredTask, wantErr: true},
 		"Error with load from file with invalid YAML":        {fileState: fileIsInvalid, wantErr: true},
@@ -68,8 +68,8 @@ func TestNew(t *testing.T) {
 			}
 			require.NoError(t, err, "initialTasks.New should have returned no error")
 
-			tasks := it.Peek()
-			require.ElementsMatch(t, tc.want, tasks, "Mismatch between expected and obtained tasks after construction")
+			got := it.Tasks()
+			require.ElementsMatch(t, tc.want, got, "Mismatch between expected and obtained tasks after construction")
 		})
 	}
 }
@@ -81,24 +81,22 @@ func TestAdd(t *testing.T) {
 		fileStateBeforeNew saveFileState
 		fileStateBeforeAdd saveFileState
 
-		task task.Task
-
 		wantErr bool
 		want    []task.Task
 	}{
 		// Appending to empty tasklist
-		"Success upon adding a first task when there is no save file":          {fileStateBeforeAdd: fileDoesNotExist, task: registeredTask{Data: "42"}, want: []task.Task{registeredTask{Data: "42"}}},
-		"Success upon adding a first task when there is an empty save file":    {fileStateBeforeAdd: fileIsEmpty, task: registeredTask{Data: "42"}, want: []task.Task{registeredTask{Data: "42"}}},
-		"Success upon adding a first task when there is a non-empty save file": {fileStateBeforeAdd: fileHasValidTask, task: registeredTask{Data: "42"}, want: []task.Task{registeredTask{Data: "42"}}},
+		"Success upon adding a first task with no save file":          {fileStateBeforeAdd: fileDoesNotExist, want: []task.Task{registeredTask{Data: "added task"}}},
+		"Success upon adding a first task with an empty save file":    {fileStateBeforeAdd: fileIsEmpty, want: []task.Task{registeredTask{Data: "added task"}}},
+		"Success upon adding a first task with a non-empty save file": {fileStateBeforeAdd: fileHasValidTask, want: []task.Task{registeredTask{Data: "added task"}}},
 
 		// Appending to non-empty tasklist
-		"Success upon adding a second task when there is no save file":          {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileDoesNotExist, task: registeredTask{Data: "added task"}, want: []task.Task{registeredTask{Data: "loaded task"}, registeredTask{Data: "added task"}}},
-		"Success upon adding a second task when there is an empty save file":    {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileIsEmpty, task: registeredTask{Data: "added task"}, want: []task.Task{registeredTask{Data: "loaded task"}, registeredTask{Data: "added task"}}},
-		"Success upon adding a second task when there is a non-empty save file": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileHasValidTask, task: registeredTask{Data: "added task"}, want: []task.Task{registeredTask{Data: "loaded task"}, registeredTask{Data: "added task"}}},
+		"Success upon adding a second task with no save file":          {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileDoesNotExist, want: []task.Task{registeredTask{Data: "loaded task 0"}, registeredTask{Data: "added task"}}},
+		"Success upon adding a second task with an empty save file":    {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileIsEmpty, want: []task.Task{registeredTask{Data: "loaded task 0"}, registeredTask{Data: "added task"}}},
+		"Success upon adding a second task with a non-empty save file": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileHasValidTask, want: []task.Task{registeredTask{Data: "loaded task 0"}, registeredTask{Data: "added task"}}},
 
 		// Error cases
-		"Error upon adding a first task when the save file cannot be written":  {fileStateBeforeAdd: fileIsDirectory, task: registeredTask{Data: "42"}, wantErr: true},
-		"Error upon adding a second task when the save file cannot be written": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileIsDirectory, task: registeredTask{Data: "42"}, wantErr: true},
+		"Error upon adding a first task with save file that cannot be written on":  {fileStateBeforeAdd: fileIsDirectory, wantErr: true},
+		"Error upon adding a second task with save file that cannot be written on": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeAdd: fileIsDirectory, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -114,16 +112,16 @@ func TestAdd(t *testing.T) {
 
 			setUpSaveFile(t, tc.fileStateBeforeAdd, dir)
 
-			err = it.Add(tc.task)
+			err = it.Add(context.Background(), registeredTask{Data: "added task"})
 			if tc.wantErr {
 				require.Error(t, err, "initalTasks.New should have returned an error")
 				return
 			}
 
 			require.NoError(t, err, "initalTasks.Add should have returned no error")
-			tasks := it.Peek()
+			tasks := it.Tasks()
 
-			require.ElementsMatch(t, tc.want, tasks, "Mismatch between expected and obtained tasks after call to Add")
+			require.ElementsMatch(t, tc.want, tasks, "Add should have appended the expected new task to the list")
 		})
 	}
 }
@@ -132,26 +130,25 @@ func TestRemove(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		fileStateBeforeNew    saveFileState
-		fileStateBeforeRemove saveFileState
-
 		task task.Task
+
+		fileStateBeforeRemove saveFileState
 
 		wantErr bool
 		want    []task.Task
 	}{
 		// Appending to non-empty tasklist
-		"Success upon removing a task when there is no save file":          {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileDoesNotExist, task: registeredTask{Data: "loaded task"}, want: []task.Task{}},
-		"Success upon removing a task when there is an empty save file":    {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileIsEmpty, task: registeredTask{Data: "loaded task"}, want: []task.Task{}},
-		"Success upon removing a task when there is a non-empty save file": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileHasValidTask, task: registeredTask{Data: "loaded task"}, want: []task.Task{}},
+		"Success upon removing a task with no save file":          {task: registeredTask{Data: "loaded task 0"}, fileStateBeforeRemove: fileDoesNotExist, want: []task.Task{}},
+		"Success upon removing a task with an empty save file":    {task: registeredTask{Data: "loaded task 0"}, fileStateBeforeRemove: fileIsEmpty, want: []task.Task{}},
+		"Success upon removing a task with a non-empty save file": {task: registeredTask{Data: "loaded task 0"}, fileStateBeforeRemove: fileHasValidTask, want: []task.Task{}},
 
-		// Removeing a task that does not exist
-		"Success upon removing a non-existent task when there is no save file":          {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileDoesNotExist, task: registeredTask{Data: "This task does not exist"}, want: []task.Task{registeredTask{Data: "loaded task"}}},
-		"Success upon removing a non-existent task when there is an empty save file":    {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileIsEmpty, task: registeredTask{Data: "This task does not exist"}, want: []task.Task{registeredTask{Data: "loaded task"}}},
-		"Success upon removing a non-existent task when there is a non-empty save file": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileHasValidTask, task: registeredTask{Data: "This task does not exist"}, want: []task.Task{registeredTask{Data: "loaded task"}}},
+		// Removing a task that does not exist
+		"Success upon removing a non-existent task with no save file":          {task: registeredTask{Data: "This task does not exist"}, fileStateBeforeRemove: fileDoesNotExist, want: []task.Task{registeredTask{Data: "loaded task 0"}}},
+		"Success upon removing a non-existent task with an empty save file":    {task: registeredTask{Data: "This task does not exist"}, fileStateBeforeRemove: fileIsEmpty, want: []task.Task{registeredTask{Data: "loaded task 0"}}},
+		"Success upon removing a non-existent task with a non-empty save file": {task: registeredTask{Data: "This task does not exist"}, fileStateBeforeRemove: fileHasValidTask, want: []task.Task{registeredTask{Data: "loaded task 0"}}},
 
 		// Error cases
-		"Error upon removing a task when the save file cannot be written": {fileStateBeforeNew: fileHasValidTask, fileStateBeforeRemove: fileIsDirectory, task: registeredTask{Data: "loaded task"}, wantErr: true},
+		"Error upon removing a task when the save file cannot be written": {task: registeredTask{Data: "loaded task 0"}, fileStateBeforeRemove: fileIsDirectory, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -161,7 +158,7 @@ func TestRemove(t *testing.T) {
 			ctx := context.Background()
 
 			dir := t.TempDir()
-			setUpSaveFile(t, tc.fileStateBeforeNew, dir)
+			setUpSaveFile(t, fileHasValidTask, dir)
 
 			it, err := initialTasks.New(dir)
 			require.NoError(t, err, "Setup: could not create initial tasks")
@@ -175,14 +172,14 @@ func TestRemove(t *testing.T) {
 			}
 			require.NoError(t, err, "initalTasks.Add should have returned no error")
 
-			tasks := it.Peek()
+			tasks := it.Tasks()
 
-			require.ElementsMatch(t, tc.want, tasks, "Mismatch between expected and obtained tasks after call to Remove")
+			require.ElementsMatch(t, tc.want, tasks, "Remove should have deleted the provided task from the list")
 		})
 	}
 }
 
-func TestGetAll(t *testing.T) {
+func TestAll(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -192,8 +189,12 @@ func TestGetAll(t *testing.T) {
 		want []task.Task
 	}{
 		"Success upon getting an empty tasklist": {},
-		"Success upon getting a single task":     {fileState: fileHasValidTask, want: []task.Task{registeredTask{Data: "loaded task"}}},
-		"Success upon getting many tasks":        {fileState: fileHasThreeValidTasks, want: []task.Task{registeredTask{Data: "loaded task"}, registeredTask{Data: "loaded task"}, registeredTask{Data: "loaded task"}}},
+		"Success upon getting a single task": {fileState: fileHasValidTask, want: []task.Task{
+			registeredTask{Data: "loaded task 0"}}},
+		"Success upon getting many tasks": {fileState: fileHasThreeValidTasks, want: []task.Task{
+			registeredTask{Data: "loaded task 0"},
+			registeredTask{Data: "loaded task 1"},
+			registeredTask{Data: "loaded task 2"}}},
 
 		"Success upon getting an empty tasklist from a nil initalTasks": {nilTaskList: true},
 	}
@@ -213,7 +214,7 @@ func TestGetAll(t *testing.T) {
 				it = i
 			}
 
-			got := it.GetAll()
+			got := it.All()
 			require.ElementsMatch(t, tc.want, got, "Mismatch between expected and obtained tasks after call to GetAll")
 		})
 	}
@@ -244,17 +245,17 @@ func setUpSaveFile(t *testing.T, fileState saveFileState, dir string) {
 		f.Close()
 	case fileHasValidTask:
 		removeFile()
-		out := taskfileFromTemplate[registeredTask](t)
+		out := taskfileFromTemplate[registeredTask](t, 1)
 		err := os.WriteFile(file, out, 0600)
 		require.NoError(t, err, "Setup: could not create task file with a single task")
 	case fileHasThreeValidTasks:
 		removeFile()
-		out := taskfileFromTemplate[registeredTask](t)
-		err := os.WriteFile(file, bytes.Repeat(out, 3), 0600)
+		out := taskfileFromTemplate[registeredTask](t, 3)
+		err := os.WriteFile(file, out, 0600)
 		require.NoError(t, err, "Setup: could not create task file with a single task")
 	case fileHasNonRegisteredTask:
 		removeFile()
-		out := taskfileFromTemplate[unregisteredTask](t)
+		out := taskfileFromTemplate[unregisteredTask](t, 1)
 		err := os.WriteFile(file, out, 0600)
 		require.NoError(t, err, "Setup: could not create task file with a single task")
 	case fileIsInvalid:
@@ -270,7 +271,7 @@ func setUpSaveFile(t *testing.T, fileState saveFileState, dir string) {
 	}
 }
 
-func taskfileFromTemplate[T task.Task](t *testing.T) []byte {
+func taskfileFromTemplate[T task.Task](t *testing.T, n int) []byte {
 	t.Helper()
 
 	in, err := os.ReadFile(filepath.Join(testutils.TestFamilyPath(t), "template.tasks"))
@@ -281,7 +282,13 @@ func taskfileFromTemplate[T task.Task](t *testing.T) []byte {
 	w := &bytes.Buffer{}
 
 	taskType := reflect.TypeOf((*T)(nil)).Elem().String()
-	err = tmpl.Execute(w, taskType)
+
+	tasks := make([]string, n)
+	for i := range tasks {
+		tasks[i] = taskType
+	}
+
+	err = tmpl.Execute(w, tasks)
 	require.NoError(t, err, "Setup: could not execute template task file")
 
 	return w.Bytes()
