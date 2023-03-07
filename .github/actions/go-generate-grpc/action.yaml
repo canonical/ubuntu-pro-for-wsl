@@ -1,4 +1,4 @@
-name: Go Generate gRPC
+name: Generate gRPC
 description: Setup go and dependencies to generate gRPC code.
 
 inputs:
@@ -26,7 +26,7 @@ runs:
 
         DEBIAN_FRONTEND=noninteractive apt update
         DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler jq curl unzip xz-utils
-    - name: unglobs the go-version-file
+    - name: Unglob the go-version-file
       shell: bash
       run: |
         shopt -s globstar extglob

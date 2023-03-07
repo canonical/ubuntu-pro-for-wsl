@@ -103,7 +103,7 @@ jobs:
       matrix:
         subproject: ["agentapi", "wslserviceapi"]
     steps:
-      - name: Installs git into the container
+      - name: Install git into the container
         run: |
           DEBIAN_FRONTEND=noninteractive apt update
           DEBIAN_FRONTEND=noninteractive apt install -y git
@@ -120,7 +120,7 @@ jobs:
           tools-directory: tools
           protos-directory: ${{ matrix.subproject }}
           enable-dart: ${{ matrix.subproject == 'agentapi' }}
-      - name: Ensure generated GRPC files are up to date
+      - name: Ensure generated gRPC files are up to date
         uses: ./.github/actions/check-diff
         with:
             files-to-validate: '${{ matrix.subproject }}/**/*.{dart,go}'
