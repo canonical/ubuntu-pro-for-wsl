@@ -4,8 +4,15 @@ option go_package = "github.com/canonical/ubuntu-pro-for-windows/agentapi";
 
 package agentapi;
 
+message Empty {}
+
 service UI {
+    rpc ProAttach (AttachInfo) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
+}
+
+message AttachInfo {
+    string token = 1;
 }
 
 service WSLInstance {
@@ -24,4 +31,3 @@ message Port {
     uint32 port = 1;
 }
 
-message Empty {}
