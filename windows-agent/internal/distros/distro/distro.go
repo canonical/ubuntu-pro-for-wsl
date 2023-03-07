@@ -34,12 +34,12 @@ type Distro struct {
 	// invalidated is an internal value if distro can't be contacted through GRPC
 	invalidated atomic.Bool
 
-	worker Worker
+	worker workerInterface
 }
 
-// Worker is an interface that is implements the task processing worker. It is intended
-// for woker.Worker, and to allow dependency injection in tests.
-type Worker interface {
+// workerInterface is an interface that is implements the task processing worker. It is intended
+// for woker.workerInterface, and to allow dependency injection in tests.
+type workerInterface interface {
 	IsActive() bool
 	Client() wslserviceapi.WSLClient
 	SetConnection(*grpc.ClientConn)
@@ -58,7 +58,7 @@ type options struct {
 	guid                  windows.GUID
 	initialTasks          *initialTasks.InitialTasks
 	taskProcessingContext context.Context
-	newWorkerFunc         func(context.Context, *Distro, string, *initialTasks.InitialTasks) (Worker, error)
+	newWorkerFunc         func(context.Context, *Distro, string, *initialTasks.InitialTasks) (workerInterface, error)
 }
 
 // Option is an optional argument for distro.New.
@@ -96,7 +96,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 	opts := options{
 		guid:                  nilGUID,
 		taskProcessingContext: context.Background(),
-		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, init *initialTasks.InitialTasks) (Worker, error) {
+		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, init *initialTasks.InitialTasks) (workerInterface, error) {
 			return worker.New(ctx, d, dir, worker.WithInitialTasks(init))
 		},
 	}

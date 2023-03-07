@@ -16,11 +16,13 @@ func WithTaskProcessingContext(ctx context.Context) Option {
 
 // WithNewWorker is an optional parameter for distro.New that allows for overriding
 // the worker.New constructor. It is meant for dependency injection.
-func WithNewWorker(newWorkerFunc func(context.Context, *Distro, string, *initialTasks.InitialTasks) (Worker, error)) Option {
+func WithNewWorker(newWorkerFunc func(context.Context, *Distro, string, *initialTasks.InitialTasks) (workerInterface, error)) Option {
 	return func(o *options) {
 		o.newWorkerFunc = newWorkerFunc
 	}
 }
+
+type Worker = workerInterface
 
 // Identity contains persistent and uniquely identifying information about the distro.
 type Identity = identity
