@@ -177,6 +177,12 @@ func (d *Distro) Client() (wslserviceapi.WSLClient, error) {
 
 // SetConnection removes the connection associated with the distro.
 func (d *Distro) SetConnection(conn *grpc.ClientConn) error {
+	// Allowing IsValid check to be bypassed when resetting the connection
+	if conn == nil {
+		d.worker.SetConnection(nil)
+		return nil
+	}
+
 	if !d.IsValid() {
 		return &NotValidError{}
 	}
