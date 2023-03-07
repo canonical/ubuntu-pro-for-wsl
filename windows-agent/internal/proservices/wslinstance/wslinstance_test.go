@@ -184,10 +184,16 @@ func TestConnected(t *testing.T) {
 			if tc.skipLinuxServe {
 				// Distro should not become active: there is no service on Linux to connect to.
 				time.Sleep(maxDelay)
-				require.False(t, d.IsActive(), "Distro should never become active if there is no Linux-side service to connect to")
+				active, err := d.IsActive()
+				require.NoError(t, err, "IsActive should return no error as the distro should still be valid")
+				require.False(t, active, "Distro should never become active if there is no Linux-side service to connect to")
 			} else {
 				// Distro should become active (establish a connection to the Linux-side service).
-				require.Eventually(t, d.IsActive, maxDelay, 10*time.Millisecond,
+				require.Eventually(t, func() bool {
+					v, err := d.IsActive()
+					require.NoError(t, err, "IsActive should return no error as the distro should still be valid")
+					return v
+				}, maxDelay, 10*time.Millisecond,
 					"Distro should become active after sending its info for the first time")
 			}
 

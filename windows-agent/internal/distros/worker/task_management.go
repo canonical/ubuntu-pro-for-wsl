@@ -1,4 +1,4 @@
-package distro
+package worker
 
 import (
 	"context"
@@ -92,12 +92,6 @@ func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
 		return
 	}
 
-	// Task failed during attempt to connect to distro, resubmit.
-	var target taskExecutionError
-	if !errors.As(errResult, &target) {
-		return tm.submit(t)
-	}
-
 	// Task failed during execution, nothing else to be done.
 	return nil
 }
@@ -129,7 +123,7 @@ func (tm *taskManager) save() (err error) {
 func (tm *taskManager) load(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not load previous work in progress")
 
-	tm.queue = make(chan *managedTask)
+	tm.queue = make(chan *managedTask, taskQueueSize)
 	tm.largestID = 0
 
 	out, err := os.ReadFile(tm.storagePath)

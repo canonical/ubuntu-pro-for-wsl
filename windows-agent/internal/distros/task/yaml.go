@@ -35,7 +35,7 @@ func MarshalYAML(tasks []Task) (out []byte, err error) {
 	for i := range tasks {
 		t := tasks[i]
 		tmp = append(tmp, yamlTaskHelper{
-			Type: fmt.Sprintf("%T", t),
+			Type: reflect.TypeOf(t).String(),
 			Task: t,
 		})
 	}

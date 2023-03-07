@@ -113,13 +113,9 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	}
 
 	// Check that the distro exists and GUId of registered object still matching the one on the system
-	isvalid, err := d.IsValid()
-	if err != nil {
-		return nil, err
-	}
 
 	// Name in database, wrong GUID: stops previous distro runner and creates a new one.
-	if !isvalid {
+	if !d.IsValid() {
 		log.Debugf(ctx, "Cache overwrite. Distro %q removed and added again", name)
 
 		go d.Cleanup(context.TODO())
@@ -137,7 +133,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	log.Debugf(ctx, "Cache hit. Overwriting properties for %q", name)
 
 	// Name in database, correct GUID: refresh with latest properties of a valid distro
-	err = nil
+	var err error
 	if d.Properties != props {
 		d.Properties = props
 		err = db.dump()
@@ -168,19 +164,11 @@ func (db *DistroDB) cleanup(ctx context.Context) error {
 
 	var needsDBDump bool
 	for name, d := range db.distros {
-		if d.UnreachableErr == nil {
-			v, err := d.IsValid()
-			if err != nil {
-				log.Infof(ctx, "Cleanup: Could not acertain distro %q validity, skipping: %v", d.Name, d.UnreachableErr)
-				continue
-			}
-
-			if v {
-				continue
-			}
+		if d.IsValid() {
+			continue
 		}
 
-		log.Infof(ctx, "Cleanup: Distro %q became invalid, cleaning up: %v", d.Name, d.UnreachableErr)
+		log.Infof(ctx, "Cleanup: Distro %q became invalid, cleaning up.", d.Name())
 		go d.Cleanup(ctx)
 		delete(db.distros, name)
 		needsDBDump = true
@@ -218,7 +206,7 @@ func (db *DistroDB) load() error {
 			log.Warningf(context.TODO(), "Read invalid distro from database: %#+v", inert)
 			continue
 		}
-		db.distros[strings.ToLower(d.Name)] = d
+		db.distros[strings.ToLower(d.Name())] = d
 	}
 
 	return nil

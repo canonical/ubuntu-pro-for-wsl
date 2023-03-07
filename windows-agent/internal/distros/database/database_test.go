@@ -18,7 +18,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
-	"golang.org/x/sys/windows"
 	"gopkg.in/yaml.v3"
 )
 
@@ -130,7 +129,7 @@ func TestDatabaseGet(t *testing.T) {
 			require.True(t, found, "The second return value of Get(distro) should be true when asked for a distro in the database")
 			require.NotNil(t, d, "The first return value of Get(distro) should return a *Distro when asked for a distro in the database")
 
-			require.Equal(t, d.Name, tc.distroName, "The distro returned by Get should match the one in the database")
+			require.Equal(t, d.Name(), tc.distroName, "The distro returned by Get should match the one in the database")
 		})
 	}
 }
@@ -214,8 +213,8 @@ func TestDatabaseDump(t *testing.T) {
 				require.NotEqualf(t, -1, idx1, "Database dump should contain distro1 (%s). Dump:\n%s", distro1, dump)
 				require.NotEqualf(t, -1, idx2, "Database dump should contain distro2 (%s). Dump:\n%s", distro2, dump)
 
-				require.Equal(t, sd.data[idx1].GUID, guid1.String(), "Database dump GUID for distro1 should match the one it was constructed with. Dump:\n%s", dump)
-				require.Equal(t, sd.data[idx2].GUID, guid2.String(), "Database dump GUID for distro2 should match the one it was constructed with. Dump:\n%s", dump)
+				require.Equal(t, sd.data[idx1].GUID, guid1, "Database dump GUID for distro1 should match the one it was constructed with. Dump:\n%s", dump)
+				require.Equal(t, sd.data[idx2].GUID, guid2, "Database dump GUID for distro2 should match the one it was constructed with. Dump:\n%s", dump)
 			}
 
 			// Anonymizing
@@ -230,18 +229,18 @@ func TestDatabaseDump(t *testing.T) {
 
 func TestGetDistroAndUpdateProperties(t *testing.T) {
 	var distroInDB, distroNotInDB, reRegisteredDistro, nonRegisteredDistro string
-	var guids map[string]windows.GUID
+	var guids map[string]string
 
 	// Scope to avoid leaking guid variables
 	{
-		var guid1, guid2, guid3, guid4 windows.GUID
+		var guid1, guid2, guid3, guid4 string
 
 		distroInDB, guid1 = testutils.RegisterDistro(t, false)
 		distroNotInDB, guid2 = testutils.RegisterDistro(t, false)
 		reRegisteredDistro, guid3 = testutils.RegisterDistro(t, false)
 		nonRegisteredDistro, guid4 = testutils.NonRegisteredDistro(t)
 
-		guids = map[string]windows.GUID{
+		guids = map[string]string{
 			distroInDB:          guid1,
 			distroNotInDB:       guid2,
 			reRegisteredDistro:  guid3,
@@ -295,7 +294,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 		"Distro exists in database, but no longer valid updates the stored db":       {distroName: reRegisteredDistro, props: props[reRegisteredDistro], want: hitUnregisteredDistro, wantDbDumpRefreshed: true},
 		"Distro is not in database, we add it and update the stored db":              {distroName: distroNotInDB, props: props[distroNotInDB], want: missedAndAdded, wantDbDumpRefreshed: true},
 
-		"Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotExistError{}},
+		"Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error on database refresh failing":                     {distroName: distroInDB, props: props[distroNotInDB], breakDBbDump: true, wantErr: true},
 	}
 
@@ -337,8 +336,8 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 
 			require.NotNil(t, d, "GetDistroAndUpdateProperties should return a non-nil distro when the requested one is registered")
 
-			require.Equal(t, tc.distroName, d.Name, "GetDistroAndUpdateProperties should return a distro with the same name as requested")
-			require.Equal(t, guids[tc.distroName].String(), d.GUID.String(), "GetDistroAndUpdateProperties should return a GUID that matches the requested distro's")
+			require.Equal(t, tc.distroName, d.Name(), "GetDistroAndUpdateProperties should return a distro with the same name as requested")
+			require.Equal(t, guids[tc.distroName], d.GUID(), "GetDistroAndUpdateProperties should return a GUID that matches the requested distro's")
 			require.Equal(t, tc.props, d.Properties, "GetDistroAndUpdateProperties should return the same properties as requested")
 
 			// Ensure writing one distro does not modify another
@@ -347,8 +346,8 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				require.True(t, ok, "GetDistroAndUpdateProperties should not remove other distros from the database")
 				require.NotNil(t, d, "GetDistroAndUpdateProperties should return a non-nil distro when the returned error is nil")
 
-				require.Equal(t, distroInDB, d.Name, "GetDistroAndUpdateProperties should not modify other distros' name")
-				require.Equal(t, guids[distroInDB].String(), d.GUID.String(), "GetDistroAndUpdateProperties should not modify other distros' GUID")
+				require.Equal(t, distroInDB, d.Name(), "GetDistroAndUpdateProperties should not modify other distros' name")
+				require.Equal(t, guids[distroInDB], d.GUID(), "GetDistroAndUpdateProperties should not modify other distros' GUID")
 				require.Equal(t, props[distroInDB], d.Properties, "GetDistroAndUpdateProperties should not modify other distros' properties")
 			}
 
@@ -393,7 +392,7 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			var reregisteredDistro string
 			if tc.reregisterDistro {
-				var guid windows.GUID
+				var guid string
 				reregisteredDistro, guid = testutils.RegisterDistro(t, false)
 				distros = append(distros, distroID{reregisteredDistro, guid})
 			}
@@ -406,7 +405,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			if tc.markDistroUnreachable != "" {
 				d3, ok := db.Get(distro2)
 				require.True(t, ok, "Setup: Distro %q should have been in the database", distro2)
-				d3.UnreachableErr = errors.New("This error should cause the distro to be cleaned up")
+				d3.Invalidate(errors.New("This error should cause the distro to be cleaned up"))
 			}
 
 			if tc.reregisterDistro {
@@ -458,7 +457,7 @@ func fileModTime(t *testing.T, path string) time.Time {
 // Used to deanonymize fixtures.
 type distroID struct {
 	Name string
-	GUID windows.GUID
+	GUID string
 }
 
 // databaseFromTemplate creates a yaml database file in the specified directory.

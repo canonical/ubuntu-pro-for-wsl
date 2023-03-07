@@ -81,12 +81,12 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Deserialize registered distro with matching GUID": {distro: registeredDistro, guid: registeredGUID.String()},
+		"Deserialize registered distro with matching GUID": {distro: registeredDistro, guid: registeredGUID},
 
-		"Error with registered distro with non-matching GUID":       {distro: registeredDistro, guid: fakeGUID.String(), wantErr: true},
+		"Error with registered distro with non-matching GUID":       {distro: registeredDistro, guid: fakeGUID, wantErr: true},
 		"Error on registered distro with ill-formed GUID":           {distro: registeredDistro, guid: illFormedGUID, wantErr: true},
-		"Error on non-registered distro with a registered GUID":     {distro: unregisteredDistro, guid: registeredGUID.String(), wantErr: true},
-		"Error on non-registered distro with a non-registered GUID": {distro: unregisteredDistro, guid: fakeGUID.String(), wantErr: true},
+		"Error on non-registered distro with a registered GUID":     {distro: unregisteredDistro, guid: registeredGUID, wantErr: true},
+		"Error on non-registered distro with a non-registered GUID": {distro: unregisteredDistro, guid: fakeGUID, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -128,6 +128,6 @@ func TestNewSerializableDistro(t *testing.T) {
 
 	s := database.NewSerializableDistro(d)
 	require.Equal(t, registeredDistro, s.Name)
-	require.Equal(t, registeredGUID.String(), s.GUID)
+	require.Equal(t, registeredGUID, s.GUID)
 	require.Equal(t, props, s.Properties)
 }

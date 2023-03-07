@@ -55,12 +55,16 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		return fmt.Errorf("connection from %q: %v", info.WslName, err)
 	}
 
-	conn, err := newWslServiceConn(context.TODO(), d.Name, stream)
+	conn, err := newWslServiceConn(context.TODO(), d.Name(), stream)
 	if err != nil {
-		return fmt.Errorf("connection from %q: could not connect to Linux-side service: %v", d.Name, err)
+		return fmt.Errorf("connection from %q: could not connect to Linux-side service: %v", d.Name(), err)
 	}
 
-	d.SetConnection(conn)
+	if err := d.SetConnection(conn); err != nil {
+		return fmt.Errorf("connection from %q: %v", info.WslName, err)
+	}
+
+	//nolint: errcheck // We don't care about this error because we're cleaning up
 	defer d.SetConnection(nil)
 
 	log.Debugf(context.TODO(), "Connection to Linux-side service established")
@@ -69,19 +73,19 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	for {
 		info, err := stream.Recv()
 		if err != nil {
-			return fmt.Errorf("connection from %q: Failed to receive info: %v", d.Name, err)
+			return fmt.Errorf("connection from %q: Failed to receive info: %v", d.Name(), err)
 		}
 
 		props, err = propsFromInfo(info)
 		if err != nil {
-			return fmt.Errorf("connection from %q: invalid DistroInfo: %v", d.Name, err)
+			return fmt.Errorf("connection from %q: invalid DistroInfo: %v", d.Name(), err)
 		}
-		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", d.Name, props)
+		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", d.Name(), props)
 
 		if d.Properties != props {
 			d.Properties = props
 			if err := s.db.Dump(); err != nil {
-				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", d.Name, err)
+				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", d.Name(), err)
 			}
 		}
 	}
