@@ -51,8 +51,8 @@ func New(storageDir string) (*InitialTasks, error) {
 	return &init, nil
 }
 
-// GetAll returns a copy of all the tasks in the list of initial tasks.
-func (i *InitialTasks) GetAll() (tasks []task.Task) {
+// All returns a copy of all the tasks in the list of initial tasks.
+func (i *InitialTasks) All() (tasks []task.Task) {
 	if i == nil {
 		return nil
 	}
@@ -68,10 +68,11 @@ func (i *InitialTasks) GetAll() (tasks []task.Task) {
 }
 
 // Add appends a task to the list of initial tasks.
-func (i *InitialTasks) Add(t task.Task) error {
+func (i *InitialTasks) Add(ctx context.Context, t task.Task) error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
+	log.Infof(ctx, "Adding %q to list of initial tasks", t)
 	i.tasks = append(i.tasks, t)
 
 	if err := i.save(); err != nil {
@@ -83,20 +84,23 @@ func (i *InitialTasks) Add(t task.Task) error {
 
 // Remove drops a task from the list of initial tasks. task.Is(t, target) is used to
 // identify the task.
-func (i *InitialTasks) Remove(ctx context.Context, target task.Task) error {
+func (i *InitialTasks) Remove(ctx context.Context, t task.Task) error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	idx := slices.IndexFunc(i.tasks, func(t task.Task) bool { return task.Is(target, t) })
+	idx := slices.IndexFunc(i.tasks, func(target task.Task) bool { return task.Is(t, target) })
 	if idx == -1 {
-		log.Infof(ctx, "task %q is not in the init task list. Ignoring removal.", target)
+		log.Infof(ctx, "task %q is not in the init task list. Ignoring removal.", t)
 		return nil
 	}
+
+	log.Infof(ctx, "Removing %q to list of initial tasks", t)
 	i.tasks = slices.Delete(i.tasks, idx, idx+1)
 
 	if err := i.save(); err != nil {
-		return fmt.Errorf("removal of task %q from the init list: %w", target, err)
+		return fmt.Errorf("removal of task %q from the init list: %w", t, err)
 	}
+
 	return nil
 }
 

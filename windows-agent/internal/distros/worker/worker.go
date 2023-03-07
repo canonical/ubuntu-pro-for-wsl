@@ -73,7 +73,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 	w.start(ctx)
 
 	// load and submit initial tasks if they were passed to us. (case of first contact with distro)
-	if err := w.SubmitTasks(opts.initialTasks.GetAll()...); err != nil {
+	if err := w.SubmitTasks(opts.initialTasks.All()...); err != nil {
 		w.Stop(ctx)
 		return nil, err
 	}
