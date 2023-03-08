@@ -105,6 +105,7 @@ jobs:
     steps:
       - name: Install git into the container
         run: |
+          set -eu
           DEBIAN_FRONTEND=noninteractive apt update
           DEBIAN_FRONTEND=noninteractive apt install -y git
       - name: Set up git
