@@ -4,11 +4,9 @@ packages:
   agentapi:
     dependency: "direct main"
     description:
-      path: "agentapi/dart"
-      ref: dart-grpc-wsl-429
-      resolved-ref: "55388f761cde18cf7175fef9f8c53f35623407ff"
-      url: "https://github.com/canonical/ubuntu-pro-for-windows"
-    source: git
+      path: "../../../agentapi/dart"
+      relative: true
+    source: path
     version: "0.0.1"
   archive:
     dependency: transitive
@@ -74,14 +72,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      sha256: e35129dc44c9118cee2a5603506d823bab99c68393879edb440e0090d07586be
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
   fake_async:
     dependency: transitive
     description:
@@ -199,11 +189,9 @@ packages:
   p4w_ms_store:
     dependency: "direct main"
     description:
-      path: "gui/packages/p4w_ms_store"
-      ref: HEAD
-      resolved-ref: "3020db7c75d35fb6931a5e32d3e4267fc4f8ec64"
-      url: "https://github.com/canonical/ubuntu-pro-for-windows"
-    source: git
+      path: "../p4w_ms_store"
+      relative: true
+    source: path
     version: "0.0.1"
   path:
     dependency: transitive
@@ -308,4 +296,3 @@ packages:
     version: "2.1.4"
 sdks:
   dart: ">=2.19.0 <3.0.0"
-  flutter: ">=2.5.0"
