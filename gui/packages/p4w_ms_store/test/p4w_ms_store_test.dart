@@ -7,7 +7,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockP4wMsStorePlatform
     with MockPlatformInterfaceMixin
     implements P4wMsStorePlatform {
-
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 }
