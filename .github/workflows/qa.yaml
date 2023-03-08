@@ -124,4 +124,4 @@ jobs:
       - name: Ensure generated gRPC files are up to date
         uses: ./.github/actions/check-diff
         with:
-            files-to-validate: '${{ matrix.subproject }}/**/*.{dart,go}'
+          files-to-validate: '${{ matrix.subproject }}/**/*.{dart,go}'
