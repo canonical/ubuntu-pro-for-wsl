@@ -3,6 +3,7 @@ package daemon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -50,13 +51,13 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 	log.Debug(ctx, "Building new daemon")
 
 	// Set default options.
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return d, err
+	home := os.Getenv("LocalAppData")
+	if home == "" {
+		return d, errors.New("Could not read env variable LocalAppData")
 	}
 
 	opts := options{
-		cacheDir: filepath.Join(home, common.CacheRelativePath),
+		cacheDir: filepath.Join(home, common.LocalAppDataDir),
 	}
 
 	// Apply given args.

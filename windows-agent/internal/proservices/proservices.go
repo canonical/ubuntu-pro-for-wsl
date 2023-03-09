@@ -3,6 +3,7 @@ package proservices
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -50,13 +51,13 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	// Set default options.
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return s, err
+	home := os.Getenv("LocalAppData")
+	if home == "" {
+		return s, errors.New("Could not read env variable LocalAppData")
 	}
 
 	opts := options{
-		cacheDir: filepath.Join(home, common.CacheRelativePath),
+		cacheDir: filepath.Join(home, common.LocalAppDataDir),
 	}
 
 	// Apply given options.

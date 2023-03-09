@@ -3,10 +3,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
@@ -91,13 +92,14 @@ func cmdName() string {
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve(args ...option) error {
-	winhome := os.Getenv("WINHOME")
-	if winhome == "" {
-		return errors.New("WINHOME environment variable is not set. It should point to your Windows user dir")
+	winhome, err := exec.Command("bash", "-ec", "wslpath -ua `powershell.exe 'echo ${env:LocalAppData}'`").Output()
+	if err != nil {
+		return fmt.Errorf("Could not find $env:LocalAppData: %v", err)
 	}
 
+	localAppData := strings.TrimSpace(string(winhome))
 	opt := options{
-		agentPortFilePath: filepath.Join(winhome, common.CacheRelativePath, common.ListeningPortFileName),
+		agentPortFilePath: filepath.Join(localAppData, common.LocalAppDataDir, common.ListeningPortFileName),
 	}
 	for _, f := range args {
 		f(&opt)
