@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
+	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"gopkg.in/ini.v1"
 )
 

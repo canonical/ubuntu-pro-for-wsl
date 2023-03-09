@@ -4,7 +4,7 @@ package ui
 import (
 	"context"
 
-	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
+	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 )
 

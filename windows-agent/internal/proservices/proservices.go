@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
+	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"

@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
+	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
