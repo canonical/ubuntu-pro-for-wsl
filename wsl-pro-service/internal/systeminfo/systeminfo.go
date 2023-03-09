@@ -63,7 +63,7 @@ func fillOsRelease(info *agentapi.DistroInfo) error {
 	return nil
 }
 
-// TODO: document
+// TODO: document.
 func wslDistroName() (string, error) {
 	// TODO: request Microsoft to expose this to systemd services.
 	env := os.Getenv("WSL_DISTRO_NAME")
