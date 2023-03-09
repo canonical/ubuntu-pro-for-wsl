@@ -1,0 +1,36 @@
+name: Flutter Quality Checks
+description: Setup Flutter and run the quality checks.
+
+inputs:
+  flutter-version:
+    required: true
+    description: "The Flutter SDK version to use."
+  package-dir:
+    required: true
+    description: "The root directory of the package to lint."
+
+runs:
+  using: "composite"
+  steps:
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: '${{ inputs.flutter-version }}'
+    - name: Format
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: |
+        find . -name '*.dart' \
+          ! -name '*.g.dart' \
+          ! -name '*.freezed.dart' \
+          ! -path '*/l10n/*' \
+          ! -path "*/.*/*" \
+          | xargs flutter format --set-exit-if-changed
+    - name: Analyze
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: flutter analyze 
+    - name: Test
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: flutter test 

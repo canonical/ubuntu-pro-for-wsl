@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  p4w_ms_store
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

@@ -26,3 +26,17 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+
+  - package-ecosystem: "pub"
+    # So we update grpc and protobuf packages
+    directory: "/agentapi/dart"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/gui/packages/p4w_ms_store"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pub"
+    directory: "/gui/packages/ubuntupro"
+    schedule:
+      interval: "daily"

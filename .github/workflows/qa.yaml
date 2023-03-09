@@ -8,7 +8,7 @@ on:
 
 jobs:
   quality-go:
-    name: "Quality checks"
+    name: "Go Quality checks"
     strategy:
       fail-fast: false
       matrix:
@@ -55,6 +55,28 @@ jobs:
           version: latest
           args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml
           working-directory: ${{ matrix.subproject }}
+
+  quality-flutter:
+    name: "Flutter Quality checks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows]
+        package: ["gui/packages/p4w_ms_store", "gui/packages/ubuntupro"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Set up git
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Flutter QA
+        uses: ./.github/actions/flutter-qa/
+        with:
+          flutter-version: '3.7.x'
+          package-dir: '${{ matrix.package }}'
 
 
   tests-go-with-mocks:
