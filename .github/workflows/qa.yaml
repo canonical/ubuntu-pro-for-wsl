@@ -8,7 +8,7 @@ on:
 
 jobs:
   quality-go:
-    name: "Quality checks"
+    name: "Go Quality checks"
     strategy:
       fail-fast: false
       matrix:
@@ -57,7 +57,7 @@ jobs:
           working-directory: ${{ matrix.subproject }}
 
   quality-flutter:
-    name: "Quality checks"
+    name: "Flutter Quality checks"
     strategy:
       fail-fast: false
       matrix:
