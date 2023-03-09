@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/agentapi"
+	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
