@@ -6,7 +6,4 @@ import log "github.com/sirupsen/logrus"
 const (
 	// DefaultLogLevel is the default logging level selected without any option.
 	DefaultLogLevel = log.WarnLevel
-
-	// DatabaseFileName corresponds to the base name of the file containing the database.
-	DatabaseFileName = "distros.db"
 )

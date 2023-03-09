@@ -3,11 +3,12 @@ package proservices
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
@@ -50,12 +51,13 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	// Set default options.
-	defaultUserCacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return s, err
+	home := os.Getenv("LocalAppData")
+	if home == "" {
+		return s, errors.New("Could not read env variable LocalAppData")
 	}
+
 	opts := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
+		cacheDir: filepath.Join(home, common.LocalAppDataDir),
 	}
 
 	// Apply given options.
@@ -103,7 +105,7 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 		/*log.StreamServerInterceptor(logrus.StandardLogger()),
 		logconnections.StreamServerInterceptor(),*/
 		)))
-	agent_api.RegisterUIServer(grpcServer, m.uiService)
+	agent_api.RegisterUIServer(grpcServer, &m.uiService)
 	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)
 
 	return grpcServer

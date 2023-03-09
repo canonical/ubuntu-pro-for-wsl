@@ -1,10 +1,10 @@
-package agent
+package service
 
 import (
 	"fmt"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	"github.com/spf13/cobra"
 )
 

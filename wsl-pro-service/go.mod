@@ -1,25 +1,23 @@
-module github.com/canonical/ubuntu-pro-for-windows/windows-agent
+module github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
 
-go 1.19
+go 1.20
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230213150148-f0a87b4aec12
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230223151706-e965dd625023
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230213150148-f0a87b4aec12
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230223151706-e965dd625023
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.3.0
 	github.com/sirupsen/logrus v1.9.0
+	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.1
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
-	github.com/ubuntu/gowsl v0.0.0-20230127173124-810a9a9a748d
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
-	golang.org/x/sys v0.5.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.28.1
-	gopkg.in/yaml.v3 v3.0.1
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (
@@ -37,7 +35,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

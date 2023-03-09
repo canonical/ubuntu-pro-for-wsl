@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
@@ -88,7 +88,7 @@ func TestStartQuit(t *testing.T) {
 			if tc.preexistingPortFile {
 				err := os.MkdirAll(cacheDir, 0600)
 				require.NoError(t, err, "Setup: failed to create pre-exisiting cache directory")
-				err = os.WriteFile(filepath.Join(cacheDir, consts.ListeningPortFileName), []byte("# Old port file"), 0600)
+				err = os.WriteFile(filepath.Join(cacheDir, common.ListeningPortFileName), []byte("# Old port file"), 0600)
 				require.NoError(t, err, "Setup: failed to create pre-existing port file")
 			}
 
@@ -107,7 +107,7 @@ func TestStartQuit(t *testing.T) {
 				serveErr <- d.Serve(ctx)
 			}()
 
-			addrPath := filepath.Join(cacheDir, consts.ListeningPortFileName)
+			addrPath := filepath.Join(cacheDir, common.ListeningPortFileName)
 			var addrContents []byte
 
 			if tc.preexistingPortFile {
@@ -210,7 +210,7 @@ func TestQuitBeforeServe(t *testing.T) {
 	err = d.Serve(ctx)
 	require.Error(t, err, "Calling Serve() after Quit() should result in an error")
 
-	requireWaitPathDoesNotExist(t, filepath.Join(cacheDir, consts.ListeningPortFileName), "Port file should not exist after returning from Serve()")
+	requireWaitPathDoesNotExist(t, filepath.Join(cacheDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }
 
 // grpcPersistentCall will create a persistent GRPC connection to the server.

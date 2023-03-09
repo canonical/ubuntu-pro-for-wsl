@@ -36,6 +36,8 @@ func New(ctx context.Context, db *database.DistroDB) (s Service, err error) {
 // Connected establishes a connection with a WSL instance and keeps its properties
 // in the database up-to-date.
 func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
+	// TODO: fix it.
+	defer log.Debug(context.TODO(), "Connection dropped")
 	log.Debug(context.TODO(), "New connection detected")
 
 	info, err := stream.Recv()

@@ -3,12 +3,13 @@ package daemon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/ubuntu/decorate"
@@ -50,15 +51,16 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 	log.Debug(ctx, "Building new daemon")
 
 	// Set default options.
-	defaultUserCacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return d, err
-	}
-	opts := options{
-		cacheDir: filepath.Join(defaultUserCacheDir, consts.CacheBaseDirectory),
+	home := os.Getenv("LocalAppData")
+	if home == "" {
+		return d, errors.New("Could not read env variable LocalAppData")
 	}
 
-	// Apply given options.
+	opts := options{
+		cacheDir: filepath.Join(home, common.LocalAppDataDir),
+	}
+
+	// Apply given args.
 	for _, f := range args {
 		f(&opts)
 	}
@@ -67,7 +69,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
 		return d, err
 	}
-	listeningPortFilePath := filepath.Join(opts.cacheDir, consts.ListeningPortFileName)
+	listeningPortFilePath := filepath.Join(opts.cacheDir, common.ListeningPortFileName)
 	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
 	return Daemon{
@@ -86,7 +88,8 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 	log.Debug(ctx, "Starting to serve requests")
 
 	// TODO: get a local port only, please :)
-	lis, err := net.Listen("tcp", "")
+	var cfg net.ListenConfig
+	lis, err := cfg.Listen(ctx, "tcp", "")
 	if err != nil {
 		return fmt.Errorf("can't listen: %v", err)
 	}

@@ -9,8 +9,8 @@ import (
 	"syscall"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,7 +19,7 @@ import (
 //go:generate go run ../generate_completion_documentation.go update-doc-cli-ref
 
 func main() {
-	a := agent.New()
+	a := service.New()
 	os.Exit(run(a))
 }
 
