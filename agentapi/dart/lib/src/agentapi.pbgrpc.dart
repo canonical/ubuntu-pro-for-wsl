@@ -14,6 +14,10 @@ import 'agentapi.pb.dart' as $0;
 export 'agentapi.pb.dart';
 
 class UIClient extends $grpc.Client {
+  static final _$proAttach = $grpc.ClientMethod<$0.AttachInfo, $0.Empty>(
+      '/agentapi.UI/ProAttach',
+      ($0.AttachInfo value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.Empty.fromBuffer(value));
   static final _$ping = $grpc.ClientMethod<$0.Empty, $0.Empty>(
       '/agentapi.UI/Ping',
       ($0.Empty value) => value.writeToBuffer(),
@@ -23,6 +27,11 @@ class UIClient extends $grpc.Client {
       {$grpc.CallOptions? options,
       $core.Iterable<$grpc.ClientInterceptor>? interceptors})
       : super(channel, options: options, interceptors: interceptors);
+
+  $grpc.ResponseFuture<$0.Empty> proAttach($0.AttachInfo request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$proAttach, request, options: options);
+  }
 
   $grpc.ResponseFuture<$0.Empty> ping($0.Empty request,
       {$grpc.CallOptions? options}) {
@@ -34,6 +43,13 @@ abstract class UIServiceBase extends $grpc.Service {
   $core.String get $name => 'agentapi.UI';
 
   UIServiceBase() {
+    $addMethod($grpc.ServiceMethod<$0.AttachInfo, $0.Empty>(
+        'ProAttach',
+        proAttach_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.AttachInfo.fromBuffer(value),
+        ($0.Empty value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.Empty, $0.Empty>(
         'Ping',
         ping_Pre,
@@ -43,11 +59,18 @@ abstract class UIServiceBase extends $grpc.Service {
         ($0.Empty value) => value.writeToBuffer()));
   }
 
+  $async.Future<$0.Empty> proAttach_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.AttachInfo> request) async {
+    return proAttach(call, await request);
+  }
+
   $async.Future<$0.Empty> ping_Pre(
       $grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
     return ping(call, await request);
   }
 
+  $async.Future<$0.Empty> proAttach(
+      $grpc.ServiceCall call, $0.AttachInfo request);
   $async.Future<$0.Empty> ping($grpc.ServiceCall call, $0.Empty request);
 }
 

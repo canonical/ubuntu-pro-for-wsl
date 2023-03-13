@@ -81,10 +81,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
-	uiService, err := ui.New(ctx)
-	if err != nil {
-		return s, err
-	}
+	uiService := ui.New(ctx, db, initTasks)
 	wslInstanceService, err := wslinstance.New(ctx, db)
 	if err != nil {
 		return s, err
