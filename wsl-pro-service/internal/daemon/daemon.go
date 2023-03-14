@@ -73,9 +73,6 @@ func New(ctx context.Context, agentPortFilePath string, resolvConfFilePath strin
 }
 
 // Serve listens on a tcp socket and starts serving GRPC requests on it.
-// Before serving, it writes a file on disk on which port it's listening on for client
-// to be able to reach our server.
-// This file is removed once the server stops listening.
 func (d Daemon) Serve(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, i18n.G("error while serving"))
 
