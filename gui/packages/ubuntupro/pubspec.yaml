@@ -34,6 +34,8 @@ dependencies:
       # TODO: remove this ref line once PR #33 is merged.
       ref: dart-grpc-wsl-429
       path: agentapi/dart
+  base_x: ^2.0.0
+  crypto: ^3.0.2
   dart_either: ^1.0.0
   flutter:
     sdk: flutter
