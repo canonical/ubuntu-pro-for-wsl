@@ -49,8 +49,8 @@ func TestVersion(t *testing.T) {
 	fields := strings.Fields(out)
 	require.Len(t, fields, 2, "wrong number of fields in version: %s", out)
 
-	// When running under tests, the binary is "agent.test[.exe]".
-	want := "agent.test"
+	// When running under tests, the binary is "service.test[.exe]".
+	want := "service.test"
 	if runtime.GOOS == "windows" {
 		want += ".exe"
 	}
