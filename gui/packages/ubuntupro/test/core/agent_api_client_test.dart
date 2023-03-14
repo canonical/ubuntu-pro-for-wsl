@@ -26,8 +26,8 @@ Future<Process> startAgent() async {
 }
 
 void main() {
-  test('ping fails', () async {
-    final client = AgentApiClient(host: '127.0.0.1', port: 80);
+  test('ping fails', timeout: const Timeout(Duration(seconds: 5)), () async {
+    final client = AgentApiClient(host: '127.0.0.1', port: 81);
     // There should be no service running at this port.
     expect(await client.ping(), isFalse);
   });
