@@ -37,7 +37,8 @@ type daemonConfig struct {
 }
 
 type options struct {
-	agentPortFilePath string
+	agentPortFilePath  string
+	resolvConfFilePath string
 }
 
 type option func(*options)
@@ -99,7 +100,8 @@ func (a *App) serve(args ...option) error {
 
 	localAppData := strings.TrimSpace(string(winhome))
 	opt := options{
-		agentPortFilePath: filepath.Join(localAppData, common.LocalAppDataDir, common.ListeningPortFileName),
+		agentPortFilePath:  filepath.Join(localAppData, common.LocalAppDataDir, common.ListeningPortFileName),
+		resolvConfFilePath: "/etc/resolv.conf",
 	}
 	for _, f := range args {
 		f(&opt)
@@ -108,7 +110,7 @@ func (a *App) serve(args ...option) error {
 	srv := wslinstanceservice.Service{}
 
 	// Connect with the agent.
-	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, srv.RegisterGRPCService)
+	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, opt.resolvConfFilePath, srv.RegisterGRPCService)
 	if err != nil {
 		close(a.ready)
 		return err

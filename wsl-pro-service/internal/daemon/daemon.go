@@ -40,7 +40,7 @@ type GRPCServiceRegisterer func(context.Context, agentapi.WSLInstance_ConnectedC
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
+func New(ctx context.Context, agentPortFilePath string, resolvConfFilePath string, registerGRPCService GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
@@ -55,7 +55,7 @@ func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPC
 		f(&opts)
 	}
 
-	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath)
+	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath, resolvConfFilePath)
 	if err != nil {
 		return d, err
 	}
@@ -118,10 +118,10 @@ func (d Daemon) Quit(ctx context.Context, force bool) {
 
 // connectToControlStream connects to the control stream and initiates communication
 // by sending the distro's info.
-func connectToControlStream(ctx context.Context, agentPortFilePath string) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
+func connectToControlStream(ctx context.Context, agentPortFilePath, resolvConfFilePath string) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
 	defer decorate.OnError(&err, "could not connect to windows agent via the control stream")
 
-	ctrlAddr, err := getControlStreamAddress(agentPortFilePath)
+	ctrlAddr, err := getControlStreamAddress(agentPortFilePath, resolvConfFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("could not get address: %v", err)
 	}
@@ -150,7 +150,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath string) (ctrl
 	return ctrlStream, nil
 }
 
-func getControlStreamAddress(agentPortFilePath string) (string, error) {
+func getControlStreamAddress(agentPortFilePath string, resolvConfFilePath string) (string, error) {
 	/*
 		We parse the the port from the file written by the windows agent.
 	*/
@@ -172,7 +172,7 @@ func getControlStreamAddress(agentPortFilePath string) (string, error) {
 		nameserver 172.22.16.1
 	*/
 
-	r, err := os.Open("/etc/resolv.conf")
+	r, err := os.Open(resolvConfFilePath)
 	if err != nil {
 		return "", err
 	}
