@@ -36,6 +36,7 @@ dependencies:
       path: agentapi/dart
   flutter:
     sdk: flutter
+  grpc: ^3.1.0
   p4w_ms_store:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-windows
