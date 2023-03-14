@@ -40,6 +40,7 @@ dependencies:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-windows
       path: gui/packages/p4w_ms_store
+  path: ^1.8.0
 
 dev_dependencies:
   # The "flutter_lints" package below contains a set of recommended lints to
