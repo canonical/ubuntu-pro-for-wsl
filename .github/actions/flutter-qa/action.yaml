@@ -26,6 +26,11 @@ runs:
           ! -path '*/l10n/*' \
           ! -path "*/.*/*" \
           | xargs flutter format --set-exit-if-changed
+    - name: Dart Codegen
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: flutter pub run build_runner build --delete-conflicting-outputs
+    - uses: .github/actions/check-diff
     - name: Analyze
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
