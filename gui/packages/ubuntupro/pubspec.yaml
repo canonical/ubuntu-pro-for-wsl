@@ -48,6 +48,8 @@ dependencies:
   path: ^1.8.0
   provider: ^6.0.5
   ubuntu_service: ^0.2.1
+  yaru: ^0.5.7
+  yaru_widgets: ^2.2.1
 
 dev_dependencies:
   # The "flutter_lints" package below contains a set of recommended lints to
