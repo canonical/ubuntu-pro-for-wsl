@@ -34,6 +34,6 @@ void main() {
     // Exercises the expected usage: reading from a file
     final res = await readAgentPortFromFile(filePath);
 
-    expect(res, port);
+    expect(res.orNull(), port);
   });
 }
