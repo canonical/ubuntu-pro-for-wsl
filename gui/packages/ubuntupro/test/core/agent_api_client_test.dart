@@ -1,6 +1,6 @@
 @TestOn('windows')
-import 'dart:io';
 
+import 'dart:io';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
@@ -19,7 +19,7 @@ Future<Process> startAgent() async {
     mode: ProcessStartMode.inheritStdio,
   );
 
-  final file = agentAddrFilePath('Ubuntu Pro', 'addr');
+  final file = agentAddrFilePath('Ubuntu Pro', 'addr')!;
 
   await File(file)
       .parent
@@ -50,7 +50,7 @@ void main() {
     setUp(() async {
       agent = await startAgent();
       final port = await readAgentPortFromFile(
-        agentAddrFilePath('Ubuntu Pro', 'addr'),
+        agentAddrFilePath('Ubuntu Pro', 'addr')!,
       );
       // either works or crashes
       client = AgentApiClient(host: '127.0.0.1', port: port.getOrThrow());

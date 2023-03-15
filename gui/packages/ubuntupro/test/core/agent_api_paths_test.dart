@@ -9,7 +9,7 @@ void main() {
   test('dir should not contain "Roaming"', () {
     const appName = 'AwesomeApp';
 
-    final dir = agentAddrFilePath(appName, 'addr');
+    final dir = agentAddrFilePath(appName, 'addr')!;
 
     expect(dir.contains('Roaming'), isFalse);
     expect(dir.contains('Local'), isTrue);
