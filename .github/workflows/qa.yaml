@@ -81,7 +81,10 @@ jobs:
         with:
           flutter-version: '3.7.x'
           package-dir: '${{ matrix.package }}'
-
+          run-build-runner: ${{ contains(matrix.package, 'ubuntupro') }}
+      - uses: ./.github/actions/check-diff
+        with:
+          files-to-validate: '${{ matrix.package }}/**/*.dart'
 
   tests-go-with-mocks:
     name: "Run Go tests with mocks"
