@@ -12,7 +12,12 @@ Future<Process> startAgent() async {
     Directory.current.parent.parent.parent.path,
     'windows-agent/cmd/ubuntu-pro-agent/main.go',
   );
-  final agent = Process.start('go', ['run', mainGo]);
+  final agent = Process.start(
+    'go',
+    ['run', mainGo, '-vvv'],
+    mode: ProcessStartMode.inheritStdio,
+  );
+
   final file = agentAddrFilePath('Ubuntu Pro', 'addr');
 
   await File(file)
