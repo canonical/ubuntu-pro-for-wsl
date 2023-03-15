@@ -1,3 +1,4 @@
+import '../../core/agent_api_client.dart';
 import '../../core/either_value_notifier.dart';
 import '../../core/pro_token.dart';
 
@@ -27,9 +28,9 @@ extension TokenErrorl10n on TokenError {
 /// Since we don't want to start the UI with an error due the text field being
 /// empty, this stores a nullable [ProToken] object
 class EnterProTokenModel extends EitherValueNotifier<TokenError, ProToken?> {
-  EnterProTokenModel() : super.ok(null);
+  EnterProTokenModel(this.client) : super.ok(null);
 
-  // final AgentApiClient client;
+  final AgentApiClient client;
 
   String? get token => valueOrNull?.value;
 
@@ -39,10 +40,9 @@ class EnterProTokenModel extends EitherValueNotifier<TokenError, ProToken?> {
     value = ProToken.create(token);
   }
 
-  void apply() {
-    // TODO: Communicate through gRPC to trigger a ProAttach task.
-    // if (value.isRight) {
-    //   client.proAttach(valueOrNull!.value);
-    // }
+  Future<void> apply() async {
+    if (value.isRight) {
+      return client.proAttach(valueOrNull!.value);
+    }
   }
 }
