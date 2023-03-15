@@ -11,6 +11,9 @@ void main() {
   });
   test('without overrides', () {
     final windir = Platform.isWindows ? 'C:\\WINDOWS' : null;
-    expect(Environment.instance['windir'], windir);
+    expect(
+      Environment.instance['windir']?.toLowerCase(),
+      windir?.toLowerCase(),
+    );
   });
 }
