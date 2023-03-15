@@ -1,6 +1,7 @@
 @TestOn('windows')
 import 'dart:io';
 
+import 'package:dart_either/dart_either.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:path/path.dart' as p;
@@ -51,7 +52,8 @@ void main() {
       final port = await readAgentPortFromFile(
         agentAddrFilePath('Ubuntu Pro', 'addr'),
       );
-      client = AgentApiClient(host: '127.0.0.1', port: port);
+      // either works or crashes
+      client = AgentApiClient(host: '127.0.0.1', port: port.getOrThrow());
     });
 
     tearDown(() => agent!.kill());

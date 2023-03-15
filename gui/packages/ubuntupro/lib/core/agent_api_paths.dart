@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dart_either/dart_either.dart';
 import 'package:path/path.dart' as p;
 
 /// Provides the full path of the "[appDir]/[filename]" file
@@ -11,12 +12,30 @@ String agentAddrFilePath(String appDir, String filename) {
   return p.join(localAppDir!, appDir, filename);
 }
 
+enum AgentAddrFileError { inexistent, isEmpty, formatError }
+
 /// Reads the agent port from the addr file located at the full path [filepath].
-Future<int> readAgentPortFromFile(String filepath) async {
+Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
+  String filepath,
+) async {
   final addr = File(filepath);
+  // This returns false without crashing even if the [filepath] was invalid.
+  if (!await addr.exists()) {
+    // error: file doesn't exist.
+    return const Left(AgentAddrFileError.inexistent);
+  }
   final lines = await addr.readAsLines();
-  return readAgentPortFromLine(lines[0]);
+  if (lines.isEmpty) {
+    // error: file is empty
+    return const Left(AgentAddrFileError.isEmpty);
+  }
+  final port = readAgentPortFromLine(lines[0]);
+  if (port == null) {
+    // error: format error
+    return const Left(AgentAddrFileError.formatError);
+  }
+  return Right(port);
 }
 
-/// Parses [line] assuming it's from Windows Agent addr file.
-int readAgentPortFromLine(String line) => int.parse(line.split(':').last);
+/// Parses [line] assuming it's from Windows Agent addr file. Returns null on error.
+int? readAgentPortFromLine(String line) => int.tryParse(line.split(':').last);
