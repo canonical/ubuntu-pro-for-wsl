@@ -8,6 +8,7 @@ import 'package:ubuntupro/pages/enter_token/enter_token_model.dart';
 import 'package:ubuntupro/pages/enter_token/enter_token_page.dart';
 
 import 'enter_token_model_test.mocks.dart';
+import 'token_samples.dart';
 
 MaterialApp buildApp(MockAgentApiClient mock) => MaterialApp(
       home: ChangeNotifierProvider(
@@ -17,7 +18,6 @@ MaterialApp buildApp(MockAgentApiClient mock) => MaterialApp(
     );
 
 void main() {
-  const good = 'CJd8MMN8wXSWsv7wJT8c8dDK';
   group('basic flow', () {
     final app = buildApp(MockAgentApiClient());
 
@@ -72,10 +72,7 @@ void main() {
       await tester.pumpWidget(app);
       final textFieldFinder = find.byType(TextField);
 
-      await tester.enterText(
-        textFieldFinder,
-        'CJd8MMN8wXSWsv7wJT8c8dDK',
-      );
+      await tester.enterText(textFieldFinder, good);
       await tester.pump();
 
       final input = tester.firstWidget<TextField>(textFieldFinder);

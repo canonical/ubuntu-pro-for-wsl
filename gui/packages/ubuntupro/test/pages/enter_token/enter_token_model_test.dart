@@ -6,6 +6,7 @@ import 'package:ubuntupro/core/pro_token.dart';
 import 'package:ubuntupro/pages/enter_token/enter_token_model.dart';
 
 import 'enter_token_model_test.mocks.dart';
+import 'token_samples.dart' as tks;
 
 @GenerateMocks([AgentApiClient])
 void main() {
@@ -16,35 +17,34 @@ void main() {
 
     expect(model.errorOrNull, TokenError.empty);
 
-    model.update('ZmNb8uQn5zv');
+    model.update(tks.tooShort);
 
     expect(model.errorOrNull, TokenError.tooShort);
 
-    model.update('K2RYDcKfupxwXdWhSAxQPCeiULntKm63UXyx5MvEH2');
+    model.update(tks.tooLong);
 
     expect(model.errorOrNull, TokenError.tooLong);
 
-    model.update('K2RYDcKfupxwXdWhSAxQPCeiULntKm');
+    model.update(tks.invalidPrefix);
 
     expect(model.errorOrNull, TokenError.invalidPrefix);
 
-    model.update('CK2RYDcKfupxwXdWhSAxQPCeiULntK');
+    model.update(tks.invalidEncoding);
 
     expect(model.errorOrNull, TokenError.invalidEncoding);
   });
   test('accessors on success', () {
     final model = EnterProTokenModel(MockAgentApiClient());
-    const token = 'CJd8MMN8wXSWsv7wJT8c8dDK';
-    final tokenInstance = ProToken.create(token).orNull();
+    final tokenInstance = ProToken.create(tks.good).orNull();
 
-    model.update(token);
+    model.update(tks.good);
 
     expect(model.hasError, isFalse);
     expect(model.errorOrNull, isNull);
-    expect(model.token, token);
-    expect(model.valueOrNull!.value, token);
+    expect(model.token, tks.good);
+    expect(model.valueOrNull!.value, tks.good);
     expect(model.valueOrNull, tokenInstance);
-    expect(model.value, equals(ProToken.create(token)));
+    expect(model.value, equals(ProToken.create(tks.good)));
   });
 
   test('notify listeners', () {
@@ -53,9 +53,8 @@ void main() {
     model.addListener(() {
       notified = true;
     });
-    const token = 'CJd8MMN8wXSWsv7wJT8c8dDK';
 
-    model.update(token);
+    model.update(tks.good);
 
     expect(notified, isTrue);
   });
@@ -64,19 +63,16 @@ void main() {
     final mock = MockAgentApiClient();
     final model = EnterProTokenModel(mock);
 
-    const good = 'CJd8MMN8wXSWsv7wJT8c8dDK';
-    const bad = 'K2RYDcKfupxwXdWhSAxQPCeiULntKm63UXyx5MvEH2';
-
-    model.update(bad);
+    model.update(tks.tooLong);
     model.apply();
 
     expect(model.hasError, isTrue);
-    verifyNever(mock.proAttach(bad));
+    verifyNever(mock.proAttach(tks.tooLong));
 
-    model.update(good);
+    model.update(tks.good);
     model.apply();
 
     expect(model.hasError, isFalse);
-    verify(mock.proAttach(good)).called(1);
+    verify(mock.proAttach(tks.good)).called(1);
   });
 }
