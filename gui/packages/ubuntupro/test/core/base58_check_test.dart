@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/core/base58_check.dart';
 
@@ -14,24 +11,20 @@ void main() {
       expect(base58.checkDecode(testString), equals(B58Error.invalidFormat));
     }
   });
-  test('base 58 NO errors', () {
+  test('base 58 no errors', () {
     const table = [
-      'Ubuntu',
-      'What a wonderful world',
-      'Immigrant song',
-      'Rock you like a hurricane'
+      '923EWFTMwpJNkmp',
+      '5NXNrWAFJtV2CXu23AfaUGtDA9kzreQ4NYMQc',
+      '6upsMkjncyvghsh1Dosg2n5hHj',
+      '7Udovn9QXcSM7rTnb6oG4MoFrsvWvcZPm6E4QLrAp'
     ];
     for (final element in table) {
-      final raw = Uint8List.fromList(utf8.encode(element));
-      final encoded = base58.checkEncode(raw);
-      expect(base58.checkDecode(encoded), isNull);
+      expect(base58.checkDecode(element), isNull);
     }
   });
 
   test('simulating real data', () {
-    final raw = Uint8List.fromList(utf8.encode('Hello World'));
-    final encoded = base58.checkEncode(raw);
-    final token = 'C$encoded';
+    const token = 'C5NXNrWAFJtV2CXu23AfaUGtDA9kzreQ4NYMQc';
     // ignore: avoid_print
     print('\tThis looks like a contract token: "$token"');
     expect(base58.checkDecode(token.substring(1, token.length)), isNull);
