@@ -84,6 +84,48 @@ func TestNew(t *testing.T) {
 	}
 }
 
+// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//
+//nolint:tparallel
+func TestDatabaseGetAll(t *testing.T) {
+	distro1, _ := testutils.RegisterDistro(t, false)
+	distro2, _ := testutils.RegisterDistro(t, false)
+
+	testCases := map[string]struct {
+		distros []string
+
+		want []string
+	}{
+		"empty database":            {},
+		"database with one entry":   {distros: []string{distro1}, want: []string{distro1}},
+		"database with two entries": {distros: []string{distro1, distro2}, want: []string{distro1, distro2}},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			db, err := database.New(t.TempDir(), nil)
+			require.NoError(t, err, "Setup: database creation should not fail")
+
+			for i := range tc.distros {
+				_, err := db.GetDistroAndUpdateProperties(ctx, tc.distros[i], distro.Properties{})
+				require.NoError(t, err, "Setup: could not add %q to database", tc.distros[i])
+			}
+
+			distros := db.GetAll()
+			var got []string
+			for _, d := range distros {
+				got = append(got, d.Name())
+			}
+
+			require.ElementsMatch(t, tc.want, got, "Unexpected set of distros returned by GetAll")
+		})
+	}
+}
+
 //nolint: tparallel
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGet(t *testing.T) {

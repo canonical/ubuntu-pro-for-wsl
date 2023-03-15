@@ -87,6 +87,18 @@ func (db *DistroDB) Get(name string) (distro *distro.Distro, ok bool) {
 	return d, ok
 }
 
+// GetAll returns a slice with all the distros in the database.
+func (db *DistroDB) GetAll() (all []*distro.Distro) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	for _, v := range db.distros {
+		all = append(all, v)
+	}
+
+	return all
+}
+
 // GetDistroAndUpdateProperties fetches a distro from the database, guranteeing that the
 // returned distro is valid, is in the database, and matches the given properties. If needed:
 // * A pre-existing distro with the same name may be removed from the database.
