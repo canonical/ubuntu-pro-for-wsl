@@ -102,4 +102,21 @@ void main() {
     await tester.tap(find.byType(ElevatedButton));
     verify(mock.proAttach(good)).called(1);
   });
+
+  testWidgets('creates a model', (tester) async {
+    final mock = MockAgentApiClient();
+    registerServiceInstance<AgentApiClient>(mock);
+    await tester.pumpWidget(
+      const MaterialApp(
+        routes: {'/': EnterProTokenPage.create},
+      ),
+    );
+
+    final page = find.byType(EnterProTokenPage);
+    expect(page, findsOneWidget);
+
+    final context = tester.element(page);
+    final model = Provider.of<EnterProTokenModel>(context, listen: false);
+    expect(model, isNotNull);
+  });
 }

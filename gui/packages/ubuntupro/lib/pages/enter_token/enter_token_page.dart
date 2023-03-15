@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
 
 import '../../constants.dart';
+import '../../core/agent_api_client.dart';
 import 'enter_token_model.dart';
 
 class EnterProTokenPage extends StatelessWidget {
   const EnterProTokenPage({super.key, required this.title});
 
   final String title;
-
   static Widget create(BuildContext context) {
+    final client = getService<AgentApiClient>();
     return ChangeNotifierProvider(
-      create: (_) => EnterProTokenModel(),
-      child: const EnterProTokenPage(title: 'Some title'),
+      create: (_) => EnterProTokenModel(client),
+      child: const EnterProTokenPage(title: 'Ubuntu Pro For Windows'),
     );
   }
 
