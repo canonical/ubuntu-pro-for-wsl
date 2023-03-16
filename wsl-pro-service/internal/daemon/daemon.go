@@ -25,12 +25,14 @@ type Daemon struct {
 	grpcServer *grpc.Server
 	addr       string
 
-	systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
+	systemdSdNotifier systemdSdNotifier
 }
 
 type options struct {
-	systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
+	systemdSdNotifier systemdSdNotifier
 }
+
+type systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
 
 // Option is the function signature used to tweak the daemon creation.
 type Option func(*options)
