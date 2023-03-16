@@ -1,17 +1,17 @@
 package distro
 
 import (
+	"context"
 	"fmt"
 
-	"golang.org/x/sys/windows"
-
+	"github.com/google/uuid"
 	wsl "github.com/ubuntu/gowsl"
 )
 
 // identity contains persistent and uniquely identifying information about the distro.
 type identity struct {
 	Name string
-	GUID windows.GUID
+	GUID uuid.UUID
 }
 
 // Properties contains persistent non-identifying information about the distro.
@@ -27,8 +27,8 @@ type Properties struct {
 
 // isValid checks that the properties against the registry.
 // TODO: check all calls for isValid(), and if when !ok -> return error in the caller, just returns an error.
-func (id identity) isValid() (ok bool) {
-	distro := wsl.NewDistro(id.Name)
+func (id identity) isValid(ctx context.Context) (ok bool) {
+	distro := wsl.NewDistro(ctx, id.Name)
 
 	// Ensuring distro still exists.
 	registered, err := distro.IsRegistered()

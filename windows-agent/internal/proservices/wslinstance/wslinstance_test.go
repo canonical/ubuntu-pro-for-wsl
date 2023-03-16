@@ -29,8 +29,9 @@ func TestMain(m *testing.M) {
 
 func TestNew(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 
-	db, err := database.New(t.TempDir(), nil)
+	db, err := database.New(ctx, t.TempDir(), nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 
 	_, err = wslinstance.New(context.Background(), db)
@@ -77,7 +78,8 @@ func (w step) String() string {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestConnected(t *testing.T) {
-	distroName, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		useEmptyDistroName  bool
@@ -107,13 +109,13 @@ func TestConnected(t *testing.T) {
 				distroName = ""
 			}
 
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(ctx)
 			t.Cleanup(func() { cancel() })
 
-			db, err := database.New(t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 
-			srv, err := newWrappedService(context.Background(), db)
+			srv, err := newWrappedService(ctx, db)
 			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
 
 			grpcServer, ctrlAddr := serveWSLInstance(t, ctx, srv)

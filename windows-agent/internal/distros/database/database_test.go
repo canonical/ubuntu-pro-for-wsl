@@ -33,7 +33,9 @@ const (
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestNew(t *testing.T) {
-	distro, guid := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+
+	distro, guid := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		dirState dbDirState
@@ -70,7 +72,7 @@ func TestNew(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro, guid})
 			}
 
-			db, err := database.New(dbDir, nil)
+			db, err := database.New(ctx, dbDir, nil)
 			if tc.wantErr {
 				require.Error(t, err, "New() should have returned an error")
 				return
@@ -85,8 +87,10 @@ func TestNew(t *testing.T) {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGetAll(t *testing.T) {
-	distro1, _ := testutils.RegisterDistro(t, false)
-	distro2, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+
+	distro1, _ := testutils.RegisterDistro(t, ctx, false)
+	distro2, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		distros []string
@@ -102,9 +106,8 @@ func TestDatabaseGetAll(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			ctx := context.Background()
 
-			db, err := database.New(t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: database creation should not fail")
 
 			for i := range tc.distros {
@@ -125,22 +128,24 @@ func TestDatabaseGetAll(t *testing.T) {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGet(t *testing.T) {
-	registeredDistroInDB, registeredGUID := testutils.RegisterDistro(t, false)
-	registeredDistroNotInDB, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+
+	registeredDistroInDB, registeredGUID := testutils.RegisterDistro(t, ctx, false)
+	registeredDistroNotInDB, _ := testutils.RegisterDistro(t, ctx, false)
 
 	nonRegisteredDistroNotInDB, _ := testutils.NonRegisteredDistro(t)
-	nonRegisteredDistroInDB, oldGUID := testutils.RegisterDistro(t, false)
+	nonRegisteredDistroInDB, oldGUID := testutils.RegisterDistro(t, ctx, false)
 
 	databaseDir := t.TempDir()
 	databaseFromTemplate(t, databaseDir,
 		distroID{registeredDistroInDB, registeredGUID},
 		distroID{nonRegisteredDistroInDB, oldGUID})
 
-	db, err := database.New(databaseDir, nil)
+	db, err := database.New(ctx, databaseDir, nil)
 	require.NoError(t, err, "Setup: New() should return no error")
 
 	// Unregister the distro now, so that it's in the db object but not on system properly.
-	testutils.UnregisterDistro(t, nonRegisteredDistroInDB)
+	testutils.UnregisterDistro(t, ctx, nonRegisteredDistroInDB)
 
 	testCases := map[string]struct {
 		distroName string
@@ -174,8 +179,10 @@ func TestDatabaseGet(t *testing.T) {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseDump(t *testing.T) {
-	distro1, guid1 := testutils.RegisterDistro(t, false)
-	distro2, guid2 := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+
+	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
+	distro2, guid2 := testutils.RegisterDistro(t, ctx, false)
 
 	// Ensuring lexicographical ordering
 	if strings.ToLower(distro1) > strings.ToLower(distro2) {
@@ -206,7 +213,7 @@ func TestDatabaseDump(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro1, guid1}, distroID{distro2, guid2})
 			}
 
-			db, err := database.New(dbDir, nil)
+			db, err := database.New(ctx, dbDir, nil)
 			require.NoError(t, err, "Setup: empty database should be created without issue")
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
@@ -265,6 +272,8 @@ func TestDatabaseDump(t *testing.T) {
 }
 
 func TestGetDistroAndUpdateProperties(t *testing.T) {
+	ctx := context.Background()
+
 	var distroInDB, distroNotInDB, reRegisteredDistro, nonRegisteredDistro string
 	var guids map[string]string
 
@@ -272,9 +281,9 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 	{
 		var guid1, guid2, guid3, guid4 string
 
-		distroInDB, guid1 = testutils.RegisterDistro(t, false)
-		distroNotInDB, guid2 = testutils.RegisterDistro(t, false)
-		reRegisteredDistro, guid3 = testutils.RegisterDistro(t, false)
+		distroInDB, guid1 = testutils.RegisterDistro(t, ctx, false)
+		distroNotInDB, guid2 = testutils.RegisterDistro(t, ctx, false)
+		reRegisteredDistro, guid3 = testutils.RegisterDistro(t, ctx, false)
 		nonRegisteredDistro, guid4 = testutils.NonRegisteredDistro(t)
 
 		guids = map[string]string{
@@ -343,11 +352,11 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				distroID{distroInDB, guids[distroInDB]},
 				distroID{reRegisteredDistro, guids[reRegisteredDistro]})
 
-			db, err := database.New(dbDir, nil)
+			db, err := database.New(ctx, dbDir, nil)
 			require.NoError(t, err, "Setup: New() should return no error")
 
 			if tc.distroName == reRegisteredDistro {
-				guids[reRegisteredDistro] = testutils.ReregisterDistro(t, reRegisteredDistro, false)
+				guids[reRegisteredDistro] = testutils.ReregisterDistro(t, ctx, reRegisteredDistro, false)
 			}
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
@@ -399,8 +408,10 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 }
 
 func TestDatabaseCleanup(t *testing.T) {
-	distro1, guid1 := testutils.RegisterDistro(t, false)
-	distro2, guid2 := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+
+	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
+	distro2, guid2 := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		reregisterDistro      bool
@@ -430,13 +441,13 @@ func TestDatabaseCleanup(t *testing.T) {
 			var reregisteredDistro string
 			if tc.reregisterDistro {
 				var guid string
-				reregisteredDistro, guid = testutils.RegisterDistro(t, false)
+				reregisteredDistro, guid = testutils.RegisterDistro(t, ctx, false)
 				distros = append(distros, distroID{reregisteredDistro, guid})
 			}
 
 			databaseFromTemplate(t, dbDir, distros...)
 
-			db, err := database.New(dbDir, nil)
+			db, err := database.New(ctx, dbDir, nil)
 			require.NoError(t, err, "Setup: New() should have returned no error")
 
 			if tc.markDistroUnreachable != "" {
@@ -446,7 +457,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			}
 
 			if tc.reregisterDistro {
-				testutils.ReregisterDistro(t, reregisteredDistro, false)
+				testutils.ReregisterDistro(t, ctx, reregisteredDistro, false)
 			}
 
 			if tc.breakDbDump {

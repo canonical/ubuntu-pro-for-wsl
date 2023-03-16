@@ -1,8 +1,10 @@
 package database
 
 import (
+	"context"
+
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"golang.org/x/sys/windows"
+	"github.com/google/uuid"
 )
 
 // serializableDistro is an helper struct for marshalling and unmarshalling into and
@@ -18,12 +20,12 @@ type serializableDistro struct {
 
 // newDistro calls distro.New with the name, GUID and properties specified
 // in its inert counterpart.
-func (in serializableDistro) newDistro(storageDir string) (*distro.Distro, error) {
-	GUID, err := windows.GUIDFromString(in.GUID)
+func (in serializableDistro) newDistro(ctx context.Context, storageDir string) (*distro.Distro, error) {
+	GUID, err := uuid.Parse(in.GUID)
 	if err != nil {
 		return nil, err
 	}
-	return distro.New(in.Name, in.Properties, storageDir, distro.WithGUID(GUID))
+	return distro.New(ctx, in.Name, in.Properties, storageDir, distro.WithGUID(GUID))
 }
 
 // newSerializableDistro takes the information in distro.Distro relevant to the database

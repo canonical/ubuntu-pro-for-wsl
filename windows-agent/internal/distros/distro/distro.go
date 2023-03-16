@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync/atomic"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
@@ -14,10 +13,10 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/google/uuid"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
-	"golang.org/x/sys/windows"
 	"google.golang.org/grpc"
 )
 
@@ -33,6 +32,8 @@ type Distro struct {
 
 	// invalidated is an internal value if distro can't be contacted through GRPC
 	invalidated atomic.Bool
+
+	ctx context.Context
 
 	worker workerInterface
 }
@@ -55,7 +56,7 @@ func (*NotValidError) Error() string {
 }
 
 type options struct {
-	guid                  windows.GUID
+	guid                  uuid.UUID
 	initialTasks          *initialtasks.InitialTasks
 	taskProcessingContext context.Context
 	newWorkerFunc         func(context.Context, *Distro, string, *initialtasks.InitialTasks) (workerInterface, error)
@@ -66,7 +67,7 @@ type Option func(*options)
 
 // WithGUID is an optional parameter for distro.New that enforces GUID
 // validation.
-func WithGUID(guid windows.GUID) Option {
+func WithGUID(guid uuid.UUID) Option {
 	return func(o *options) {
 		o.guid = guid
 	}
@@ -89,10 +90,10 @@ func WithInitialTasks(i *initialtasks.InitialTasks) Option {
 //
 //   - To avoid the latter check, you can pass a default-constructed identity.GUID. In that
 //     case, the distro will be created with its currently registered GUID.
-func New(name string, props Properties, storageDir string, args ...Option) (distro *Distro, err error) {
+func New(ctx context.Context, name string, props Properties, storageDir string, args ...Option) (distro *Distro, err error) {
 	decorate.OnError(&err, "could not initialize distro %q", name)
 
-	var nilGUID windows.GUID
+	var nilGUID uuid.UUID
 	opts := options{
 		guid:                  nilGUID,
 		taskProcessingContext: context.Background(),
@@ -112,7 +113,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 
 	// GUID is not initialized.
 	if id.GUID == nilGUID {
-		d := wsl.NewDistro(name)
+		d := wsl.NewDistro(ctx, name)
 		guid, err := d.GUID()
 		if err == nil {
 			id.GUID = guid
@@ -121,7 +122,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 		}
 	} else {
 		// Check the name/GUID pair is valid.
-		if !id.isValid() {
+		if !id.isValid(ctx) {
 			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &NotValidError{})
 		}
 	}
@@ -144,7 +145,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 }
 
 func (d *Distro) String() string {
-	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), strings.ToLower(d.GUID()))
+	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), d.GUID())
 }
 
 // Name is a getter for the distro's name.
@@ -154,7 +155,7 @@ func (d *Distro) Name() string {
 
 // GUID is a getter for the distro's GUID.
 func (d *Distro) GUID() string {
-	return strings.ToLower(d.identity.GUID.String())
+	return d.identity.GUID.String()
 }
 
 // IsActive returns true when the distro is running, and there exists an active
@@ -229,7 +230,7 @@ func (d *Distro) IsValid() bool {
 		return false
 	}
 
-	if !d.identity.isValid() {
+	if !d.identity.isValid(d.ctx) {
 		d.Invalidate(&NotValidError{})
 		return false
 	}
@@ -248,7 +249,7 @@ func (d *Distro) KeepAwake(ctx context.Context) error {
 		return &NotValidError{}
 	}
 
-	wslDistro := gowsl.NewDistro(d.identity.Name)
+	wslDistro := gowsl.NewDistro(ctx, d.identity.Name)
 
 	cmd := wslDistro.Command(ctx, "sleep infinity")
 	err := cmd.Start()

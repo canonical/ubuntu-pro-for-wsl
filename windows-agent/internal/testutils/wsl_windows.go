@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,16 +15,20 @@ import (
 )
 
 // RegisterDistro registers a distro and returns its randomly-generated name and its GUID.
-func RegisterDistro(t *testing.T, realDistro bool) (distroName string, GUID string) {
+//
+//nolint:revive // The context is better after the testing.T
+func RegisterDistro(t *testing.T, ctx context.Context, realDistro bool) (distroName string, GUID string) {
 	t.Helper()
 
 	distroName = RandomDistroName(t)
-	guid := registerDistro(t, distroName, realDistro)
+	guid := registerDistro(t, ctx, distroName, realDistro)
 	return distroName, guid
 }
 
 // UnregisterDistro unregisters a WSL distro. Errors are ignored.
-func UnregisterDistro(t *testing.T, distroName string) {
+//
+//nolint:revive // The context is better after the testing.T
+func UnregisterDistro(t *testing.T, ctx context.Context, distroName string) {
 	t.Helper()
 
 	requireIsTestDistro(t, distroName)
@@ -31,16 +36,18 @@ func UnregisterDistro(t *testing.T, distroName string) {
 	// Unregister distro with a two minute timeout
 	tk := time.AfterFunc(2*time.Minute, func() { powershellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
-	d := gowsl.NewDistro(distroName)
+	d := gowsl.NewDistro(ctx, distroName)
 	_ = d.Unregister()
 }
 
 // ReregisterDistro unregister, then registers the same distro again.
-func ReregisterDistro(t *testing.T, distroName string, realDistro bool) (GUID string) {
+//
+//nolint:revive // The context is better after the testing.T
+func ReregisterDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
 	t.Helper()
 
-	UnregisterDistro(t, distroName)
-	return registerDistro(t, distroName, realDistro)
+	UnregisterDistro(t, ctx, distroName)
+	return registerDistro(t, ctx, distroName, realDistro)
 }
 
 // DistroState returns the state of the distro as specified by wsl.exe. Possible states:
@@ -81,7 +88,8 @@ func TerminateDistro(t *testing.T, distroName string) {
 	powershellOutputf(t, "wsl --terminate %q", distroName)
 }
 
-func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID string) {
+//nolint:revive // The context is better after the testing.T
+func registerDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 
@@ -107,10 +115,10 @@ func registerDistro(t *testing.T, distroName string, realDistro bool) (GUID stri
 	tk.Stop()
 
 	t.Cleanup(func() {
-		UnregisterDistro(t, distroName)
+		UnregisterDistro(t, ctx, distroName)
 	})
 
-	d := gowsl.NewDistro(distroName)
+	d := gowsl.NewDistro(ctx, distroName)
 	guid, err := d.GUID()
 	GUID = strings.ToLower(guid.String())
 	require.NoError(t, err, "Setup: could not get distro GUID")
