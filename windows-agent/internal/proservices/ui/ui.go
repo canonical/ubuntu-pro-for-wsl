@@ -3,7 +3,6 @@ package ui
 
 import (
 	"context"
-	"errors"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
@@ -40,15 +39,18 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 		return nil, err
 	}
 
-	// TODO: Replace this by getting all active distros.
-	distro, ok := s.db.Get("Ubuntu-Preview")
-	if !ok {
-		return nil, errors.New("Ubuntu-Preview doesn't exist")
+	distros := s.db.GetAll()
+	if len(distros) == 0 {
+		return &agentapi.Empty{}, nil
 	}
-	if err := distro.SubmitTasks(task); err != nil {
-		return nil, err
+
+	for _, d := range distros {
+		if err := d.SubmitTasks(task); err != nil {
+			return nil, err
+		}
 	}
-	return nil, nil
+
+	return &agentapi.Empty{}, nil
 }
 
 // Ping replies a keep-alive request.
