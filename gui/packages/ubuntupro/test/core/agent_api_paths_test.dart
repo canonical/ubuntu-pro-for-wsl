@@ -1,4 +1,3 @@
-@TestOn('windows')
 import 'dart:io';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,6 +66,22 @@ void main() {
     final res = await readAgentPortFromFile(filePath);
 
     expect(res, const Left(AgentAddrFileError.isEmpty));
+  });
+
+  test('access denied', () async {
+    const filePath = './addr';
+    final addr = File(filePath);
+    addr.writeAsStringSync('');
+
+    await IOOverrides.runZoned(
+      () async {
+        // Exercises the expected usage: reading from a file
+        final res = await readAgentPortFromFile(filePath);
+
+        expect(res, const Left(AgentAddrFileError.accessDenied));
+      },
+      createFile: (_) => throw const FileSystemException('access denied'),
+    );
   });
 
   test('bad format', () async {
