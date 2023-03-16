@@ -22,6 +22,7 @@ import (
 type options struct {
 	sendBadPort                 bool
 	dropStreamBeforeSendingPort bool
+	dropStreamBeforeFirstRecv   bool
 }
 
 // AgentOption is used for optional arguments in New.
@@ -35,11 +36,17 @@ func WithSendBadPort() AgentOption {
 	}
 }
 
+// WithDropStreamBeforeReceivingInfo orders the WslInstance service mock
+// to drop the connection before receiving the first info.
+func WithDropStreamBeforeReceivingInfo() AgentOption {
+	return func(o *options) {
+		o.dropStreamBeforeFirstRecv = true
+	}
+}
+
 // WithDropStreamBeforeSendingPort orders the WslInstance service mock
 // to drop the connection before sending the port.
 func WithDropStreamBeforeSendingPort() AgentOption {
-	// If necessary, we can expand this functionality by turning this into
-	//     WithDropConnection(when enumWhen)
 	return func(o *options) {
 		o.dropStreamBeforeSendingPort = true
 	}
@@ -101,6 +108,11 @@ type wslInstanceMockService struct {
 func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	s.logf("wslInstanceMockService: Received incoming connection")
 
+	if s.opts.dropStreamBeforeFirstRecv {
+		s.logf("wslInstanceMockService: dropping stream before first Recv as instructed")
+		return nil
+	}
+
 	info, err := stream.Recv()
 	if err != nil {
 		return fmt.Errorf("new connection: did not receive info from WSL distro: %v", err)
@@ -110,7 +122,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	s.logf("wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
 
 	if s.opts.dropStreamBeforeSendingPort {
-		s.logf("wslInstanceMockService: Connection with %q: dropping connection as instructed", distro)
+		s.logf("wslInstanceMockService: Connection with %q: dropping stream before sending port as instructed", distro)
 		return nil
 	}
 
