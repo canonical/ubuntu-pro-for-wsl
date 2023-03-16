@@ -188,7 +188,7 @@ func TestKeepAwake(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			testutils.TerminateDistro(t, distroName)
+			testutils.TerminateDistro(t, ctx, distroName)
 
 			if tc.invalidateDistro {
 				d.Invalidate(errors.New("setup: invalidating distro"))

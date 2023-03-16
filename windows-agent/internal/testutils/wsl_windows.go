@@ -14,54 +14,8 @@ import (
 	"github.com/ubuntu/gowsl"
 )
 
-// RegisterDistro registers a distro and returns its randomly-generated name and its GUID.
-//
 //nolint:revive // The context is better after the testing.T
-func RegisterDistro(t *testing.T, ctx context.Context, realDistro bool) (distroName string, GUID string) {
-	t.Helper()
-
-	distroName = RandomDistroName(t)
-	guid := registerDistro(t, ctx, distroName, realDistro)
-	return distroName, guid
-}
-
-// UnregisterDistro unregisters a WSL distro. Errors are ignored.
-//
-//nolint:revive // The context is better after the testing.T
-func UnregisterDistro(t *testing.T, ctx context.Context, distroName string) {
-	t.Helper()
-
-	requireIsTestDistro(t, distroName)
-
-	// Unregister distro with a two minute timeout
-	tk := time.AfterFunc(2*time.Minute, func() { powershellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
-	defer tk.Stop()
-	d := gowsl.NewDistro(ctx, distroName)
-	_ = d.Unregister()
-}
-
-// ReregisterDistro unregister, then registers the same distro again.
-//
-//nolint:revive // The context is better after the testing.T
-func ReregisterDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
-	t.Helper()
-
-	UnregisterDistro(t, ctx, distroName)
-	return registerDistro(t, ctx, distroName, realDistro)
-}
-
-// TerminateDistro shuts down that distro in particular.
-// Wrapper for `wsl -t distro`.
-func TerminateDistro(t *testing.T, distroName string) {
-	t.Helper()
-
-	requireIsTestDistro(t, distroName)
-
-	powershellOutputf(t, "wsl --terminate %q", distroName)
-}
-
-//nolint:revive // The context is better after the testing.T
-func registerDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
+func powershellInstallDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 
@@ -92,10 +46,9 @@ func registerDistro(t *testing.T, ctx context.Context, distroName string, realDi
 
 	d := gowsl.NewDistro(ctx, distroName)
 	guid, err := d.GUID()
-	GUID = strings.ToLower(guid.String())
 	require.NoError(t, err, "Setup: could not get distro GUID")
 
-	return GUID
+	return guid.String()
 }
 
 // powershellOutputf runs the command (with any printf-style directives and args). It fails if the

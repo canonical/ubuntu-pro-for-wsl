@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"github.com/ubuntu/gowsl"
+	wsl "github.com/ubuntu/gowsl"
 )
 
 const (
@@ -44,10 +46,12 @@ func RandomDistroName(t *testing.T) (name string) {
 // - Running
 // - Stopped
 // - Unregistered.
+//
+//nolint:revive // The context is better after the testing.T
 func DistroState(t *testing.T, ctx context.Context, distroName string) string {
 	t.Helper()
 
-	d := gowsl.NewDistro(ctx, distroName)
+	d := wsl.NewDistro(ctx, distroName)
 	s, err := d.State()
 	require.NoError(t, err) // Error message is explanatory enough
 	return s.String()
@@ -61,4 +65,77 @@ func requireIsTestDistro(t *testing.T, distroName string) {
 	if !strings.HasPrefix(distroName, testDistroPrefix) {
 		require.Fail(t, "testutils can only be used with test distros", "Requested distro: %s", distroName)
 	}
+}
+
+// RegisterDistro registers a distro and returns its randomly-generated name and its GUID.
+//
+//nolint:revive // The context is better after the testing.T
+func RegisterDistro(t *testing.T, ctx context.Context, realDistro bool) (distroName string, GUID string) {
+	t.Helper()
+
+	distroName = RandomDistroName(t)
+	guid := registerDistro(t, ctx, distroName, realDistro)
+	return distroName, guid
+}
+
+// UnregisterDistro unregisters a WSL distro. Errors are ignored.
+//
+//nolint:revive // The context is better after the testing.T
+func UnregisterDistro(t *testing.T, ctx context.Context, distroName string) {
+	t.Helper()
+
+	requireIsTestDistro(t, distroName)
+
+	d := wsl.NewDistro(ctx, distroName)
+	_ = d.Unregister()
+}
+
+// ReregisterDistro unregister, then registers the same distro again.
+//
+//nolint:revive // The context is better after the testing.T
+func ReregisterDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
+	t.Helper()
+
+	UnregisterDistro(t, ctx, distroName)
+	return registerDistro(t, ctx, distroName, realDistro)
+}
+
+// TerminateDistro shuts down that distro in particular.
+// Wrapper for `wsl -t distro`.
+//
+//nolint:revive // The context is better after the testing.T
+func TerminateDistro(t *testing.T, ctx context.Context, distroName string) {
+	t.Helper()
+
+	requireIsTestDistro(t, distroName)
+
+	d := wsl.NewDistro(ctx, distroName)
+	_ = d.Terminate()
+}
+
+//nolint:revive // The context is better after the testing.T
+func registerDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
+	t.Helper()
+
+	if !wsl.MockAvailable() {
+		return powershellInstallDistro(t, ctx, distroName, realDistro)
+	}
+
+	t.Cleanup(func() {
+		UnregisterDistro(t, ctx, distroName)
+	})
+
+	dir := t.TempDir()
+	rootfs := filepath.Join(dir, "empty.tar.gz")
+	err := os.WriteFile(rootfs, []byte{}, 0600)
+	require.NoError(t, err, "could not write empty fake rootfs")
+
+	d := wsl.NewDistro(ctx, distroName)
+	err = d.Register(rootfs)
+	require.NoError(t, err) // Error messsage is explanatory enough
+
+	guid, err := d.GUID()
+	require.NoError(t, err, "Setup: could not get distro GUID")
+
+	return guid.String()
 }
