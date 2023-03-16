@@ -70,8 +70,8 @@ func New(ctx context.Context, storageDir string, initialTasks *initialtasks.Init
 			case <-time.After(timeBetweenGC):
 			case <-db.scheduleTrigger:
 			}
-			if err := db.cleanup(context.TODO()); err != nil {
-				log.Errorf(context.TODO(), "Failed to clean up potentially unused distros: %v", err)
+			if err := db.cleanup(ctx); err != nil {
+				log.Errorf(ctx, "Failed to clean up potentially unused distros: %v", err)
 			}
 		}
 	}()
@@ -133,7 +133,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !d.IsValid() {
 		log.Debugf(ctx, "Cache overwrite. Distro %q removed and added again", name)
 
-		go d.Cleanup(context.TODO())
+		go d.Cleanup(ctx)
 		delete(db.distros, normalizedName)
 
 		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
@@ -218,7 +218,7 @@ func (db *DistroDB) load(ctx context.Context) error {
 	for _, inert := range distros {
 		d, err := inert.newDistro(ctx, db.storageDir)
 		if err != nil {
-			log.Warningf(context.TODO(), "Read invalid distro from database: %#+v", inert)
+			log.Warningf(ctx, "Read invalid distro from database: %#+v", inert)
 			continue
 		}
 		db.distros[strings.ToLower(d.Name())] = d

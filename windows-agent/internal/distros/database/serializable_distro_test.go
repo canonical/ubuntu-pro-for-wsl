@@ -8,6 +8,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"gopkg.in/yaml.v3"
 )
 
@@ -71,6 +73,10 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestSerializableDistroNewDistro(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
 
 	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
 	unregisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
@@ -116,6 +122,10 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 
 func TestNewSerializableDistro(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
 
 	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
 
