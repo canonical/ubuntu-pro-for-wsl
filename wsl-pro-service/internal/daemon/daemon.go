@@ -60,6 +60,8 @@ func New(ctx context.Context, agentPortFilePath string, resolvConfFilePath strin
 		return d, err
 	}
 
+	log.Debugf(ctx, "Connected to control stream")
+
 	addr, err := getAddressToListenTo(ctrlStream)
 	if err != nil {
 		return d, err
@@ -123,7 +125,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath, resolvConfFi
 		return nil, fmt.Errorf("could not get address: %v", err)
 	}
 
-	log.Infof(ctx, "Connecting to control stream at %q", ctrlAddr)
+	log.Debugf(ctx, "Connecting to control stream at %q", ctrlAddr)
 	ctrlConn, err := grpc.DialContext(ctx, ctrlAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("could not dial: %v", err)
