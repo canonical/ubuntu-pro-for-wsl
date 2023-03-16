@@ -188,13 +188,14 @@ func getControlStreamAddress(agentPortFilePath string, resolvConfFilePath string
 		}
 		winIP = strings.TrimSpace(suffix)
 		break
-
-	if winIP == "" {
-		return "", errors.New("could not parse '/etc/resolv.conf': did not find line matching 'nameserver <IP>'")
 	}
 
 	if err := sc.Err(); err != nil {
 		return "", err
+	}
+
+	if winIP == "" {
+		return "", errors.New("could not parse '/etc/resolv.conf': did not find line matching 'nameserver <IP>'")
 	}
 
 	return fmt.Sprintf("%s:%s", winIP, port), nil
