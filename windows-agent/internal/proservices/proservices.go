@@ -49,19 +49,20 @@ func WithCacheDir(cachedir string) func(o *options) {
 func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
-	// Set default options.
-	home := os.Getenv("LocalAppData")
-	if home == "" {
-		return s, errors.New("Could not read env variable LocalAppData")
-	}
-
-	opts := options{
-		cacheDir: filepath.Join(home, common.LocalAppDataDir),
-	}
-
 	// Apply given options.
+	var opts options
 	for _, f := range args {
 		f(&opts)
+	}
+
+	if opts.cacheDir == "" {
+		// Set default cache dir.
+		appData := os.Getenv("LocalAppData")
+		if appData == "" {
+			return s, errors.New("Could not read env variable LocalAppData")
+		}
+
+		opts.cacheDir = filepath.Join(appData, common.LocalAppDataDir)
 	}
 
 	log.Debugf(ctx, "Manager service cache directory: %s", opts.cacheDir)
