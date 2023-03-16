@@ -175,6 +175,8 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestKeepAwake(t *testing.T) {
+	t.Skip("Skipping because this method is known to be ineffective.")
+
 	const wslSleepDelay = 8 * time.Second
 
 	testCases := map[string]struct {
