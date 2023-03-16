@@ -20,6 +20,14 @@ runs:
           exit 0
         fi
 
+        # Ignore modification time and protoc version.
+        FILTERED=`git difftool -y -x "diff -I 'modTime' -I '^//.*protoc.*v'" -- ${{ inputs.files-to-validate }}`
+
+        if [ -z "${FILTERED}" ]; then
+          echo "Success"
+          exit 0
+        fi
+
         echo "Error: the following files don't match their committed version:"
         echo "${MODIFIED}"
         
