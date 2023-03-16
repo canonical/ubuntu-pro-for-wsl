@@ -36,6 +36,8 @@ type DistroDB struct {
 
 	storageDir   string
 	initialTasks *initialtasks.InitialTasks
+
+	backend context.Context
 }
 
 // New creates a database and populates it with data in the file located
@@ -56,6 +58,7 @@ func New(ctx context.Context, storageDir string, initialTasks *initialtasks.Init
 		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
 		initialTasks:    initialTasks,
+		backend:         ctx,
 	}
 	if err := db.load(ctx); err != nil {
 		return nil, err
@@ -115,7 +118,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(ctx, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
@@ -133,7 +136,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		go d.Cleanup(context.TODO())
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(ctx, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
