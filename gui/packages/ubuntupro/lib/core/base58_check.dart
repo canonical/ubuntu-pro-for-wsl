@@ -1,4 +1,3 @@
-
 import 'package:base_x/base_x.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
