@@ -16,6 +16,8 @@ import (
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 )
 
@@ -28,6 +30,10 @@ func TestMain(m *testing.M) {
 
 func TestNew(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
 
 	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
 	_, anotherRegisteredGUID := testutils.RegisterDistro(t, ctx, false)
@@ -101,6 +107,10 @@ func TestNew(t *testing.T) {
 
 func TestString(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
 
 	name, guid := testutils.RegisterDistro(t, ctx, false)
 
@@ -118,6 +128,10 @@ func TestString(t *testing.T) {
 
 func TestIsValid(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
 
 	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
 	_, guid2 := testutils.RegisterDistro(t, ctx, false)
@@ -178,6 +192,10 @@ func TestKeepAwake(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
+			if wsl.MockAvailable() {
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
 			distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
@@ -229,6 +247,11 @@ func TestKeepAwake(t *testing.T) {
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerConstruction(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
 	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
@@ -280,6 +303,11 @@ func TestWorkerConstruction(t *testing.T) {
 
 func TestInvalidateIdempotent(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
 	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	inj, w := mockWorkerInjector(false)
@@ -308,6 +336,11 @@ func TestInvalidateIdempotent(t *testing.T) {
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerWrappers(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
 	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
