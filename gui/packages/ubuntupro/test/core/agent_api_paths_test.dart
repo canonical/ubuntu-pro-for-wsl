@@ -69,6 +69,22 @@ void main() {
     expect(res, const Left(AgentAddrFileError.isEmpty));
   });
 
+  test('access denied', () async {
+    const filePath = './addr';
+    final addr = File(filePath);
+    addr.writeAsStringSync('');
+
+    await IOOverrides.runZoned(
+      () async {
+        // Exercises the expected usage: reading from a file
+        final res = await readAgentPortFromFile(filePath);
+
+        expect(res, const Left(AgentAddrFileError.accessDenied));
+      },
+      createFile: (_) => throw const FileSystemException('access denied'),
+    );
+  });
+
   test('bad format', () async {
     const filePath = './addr';
     const port = 56768;

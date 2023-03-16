@@ -25,29 +25,36 @@ String? agentAddrFilePath(String appDir, String filename) {
   return null;
 }
 
-enum AgentAddrFileError { inexistent, isEmpty, formatError }
+enum AgentAddrFileError { inexistent, isEmpty, formatError, accessDenied }
 
 /// Reads the agent port from the addr file located at the full path [filepath].
 Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
   String filepath,
 ) async {
-  final addr = File(filepath);
-  // This returns false without crashing even if the [filepath] was invalid.
-  if (!await addr.exists()) {
-    // error: file doesn't exist.
-    return const Left(AgentAddrFileError.inexistent);
+  try {
+    final addr = File(filepath);
+    // This returns false without crashing even if the [filepath] is invalid.
+    if (!await addr.exists()) {
+      // error: file doesn't exist.
+      return const Left(AgentAddrFileError.inexistent);
+    }
+
+    final lines = await addr.readAsLines();
+
+    if (lines.isEmpty) {
+      // error: file is empty
+      return const Left(AgentAddrFileError.isEmpty);
+    }
+    final port = readAgentPortFromLine(lines[0]);
+    if (port == null) {
+      // error: format error
+      return const Left(AgentAddrFileError.formatError);
+    }
+    return Right(port);
+  } on FileSystemException catch (_) {
+    // error: permission denied
+    return const Left(AgentAddrFileError.accessDenied);
   }
-  final lines = await addr.readAsLines();
-  if (lines.isEmpty) {
-    // error: file is empty
-    return const Left(AgentAddrFileError.isEmpty);
-  }
-  final port = readAgentPortFromLine(lines[0]);
-  if (port == null) {
-    // error: format error
-    return const Left(AgentAddrFileError.formatError);
-  }
-  return Right(port);
 }
 
 /// Parses [line] assuming it's from Windows Agent addr file. Returns null on error.
