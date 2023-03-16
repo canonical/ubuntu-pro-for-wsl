@@ -320,7 +320,7 @@ func TestInvalidateIdempotent(t *testing.T) {
 
 	d.Invalidate(errors.New("Hi! I'm an error"))
 	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
-	require.True(t, (*w).stopCalled, "worker Stop should be called during the first invalidation")
+	require.False(t, (*w).stopCalled, "worker Stop should only be called during cleanup")
 
 	(*w).stopCalled = false
 
