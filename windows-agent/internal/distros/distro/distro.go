@@ -15,7 +15,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/google/uuid"
 	"github.com/ubuntu/decorate"
-	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
 )
@@ -32,8 +31,6 @@ type Distro struct {
 
 	// invalidated is an internal value if distro can't be contacted through GRPC
 	invalidated atomic.Bool
-
-	ctx context.Context
 
 	worker workerInterface
 }
@@ -109,6 +106,7 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 	id := identity{
 		Name: name,
 		GUID: opts.guid,
+		ctx:  ctx,
 	}
 
 	// GUID is not initialized.
@@ -122,7 +120,7 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 		}
 	} else {
 		// Check the name/GUID pair is valid.
-		if !id.isValid(ctx) {
+		if !id.isValid() {
 			return nil, fmt.Errorf("no distro with this name and GUID %q in registry: %w", id.GUID.String(), &NotValidError{})
 		}
 	}
@@ -230,7 +228,7 @@ func (d *Distro) IsValid() bool {
 		return false
 	}
 
-	if !d.identity.isValid(d.ctx) {
+	if !d.identity.isValid() {
 		d.Invalidate(&NotValidError{})
 		return false
 	}
@@ -245,14 +243,13 @@ func (d *Distro) IsValid() bool {
 //
 // The command is reentrant, and you need to cancel the amount of time you keep it awake.
 func (d *Distro) KeepAwake(ctx context.Context) error {
-	if !d.IsValid() {
-		return &NotValidError{}
+	wslDistro, err := d.identity.getDistro()
+	if err != nil {
+		return err
 	}
 
-	wslDistro := gowsl.NewDistro(ctx, d.identity.Name)
-
 	cmd := wslDistro.Command(ctx, "sleep infinity")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return err
 	}

@@ -12,6 +12,9 @@ import (
 type identity struct {
 	Name string
 	GUID uuid.UUID
+
+	// This context contains GoWSL's backend
+	ctx context.Context
 }
 
 // Properties contains persistent non-identifying information about the distro.
@@ -27,8 +30,8 @@ type Properties struct {
 
 // isValid checks that the properties against the registry.
 // TODO: check all calls for isValid(), and if when !ok -> return error in the caller, just returns an error.
-func (id identity) isValid(ctx context.Context) (ok bool) {
-	distro := wsl.NewDistro(ctx, id.Name)
+func (id identity) isValid() (ok bool) {
+	distro := wsl.NewDistro(id.ctx, id.Name)
 
 	// Ensuring distro still exists.
 	registered, err := distro.IsRegistered()
@@ -51,4 +54,11 @@ func (id identity) isValid(ctx context.Context) (ok bool) {
 
 	// Distro with matching name and GUID exists
 	return true
+}
+
+func (id identity) getDistro() (d wsl.Distro, err error) {
+	if !id.isValid() {
+		return d, &NotValidError{}
+	}
+	return wsl.NewDistro(id.ctx, id.Name), nil
 }
