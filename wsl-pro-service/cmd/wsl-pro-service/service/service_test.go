@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/require"
@@ -143,10 +144,12 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 	testCases := map[string]struct {
 		invalidProServicesCache bool
+		invalidResolvConfFile   bool
 		invalidDaemonCache      bool
 	}{
-		"Invalid service cache": {invalidProServicesCache: true},
-		"Invalid daemon cache":  {invalidDaemonCache: true},
+		"Invalid service cache":    {invalidProServicesCache: true},
+		"Invalid resolv.conf file": {invalidResolvConfFile: true},
+		"Invalid daemon cache":     {invalidDaemonCache: true},
 	}
 
 	for name, tc := range testCases {
@@ -156,13 +159,22 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			badCache := filepath.Join(t.TempDir(), "file")
 
-			daemonCache := ""
-
+			var daemonCache string
 			if tc.invalidDaemonCache {
 				daemonCache = badCache
 			}
 
-			a := service.New(service.WithAgentPortFilePath(daemonCache))
+			dir := t.TempDir()
+			resolvConf := filepath.Join(dir, "resolv.conf")
+			if tc.invalidResolvConfFile {
+				err := os.MkdirAll(resolvConf, 0600)
+				require.NoError(t, err, "Setup: could not create resolv.conf directory to interfere with service")
+			} else {
+				err := os.WriteFile(resolvConf, []byte("nameserver localhost"), 0600)
+				require.NoError(t, err, "Setup: could not write resolv.conf file")
+			}
+
+			a := service.New(service.WithAgentPortFilePath(daemonCache), service.WithResolvConfFilePath(resolvConf))
 			a.SetArgs()
 
 			err := os.WriteFile(badCache, []byte("I'm here to break the service"), 0600)
@@ -198,18 +210,26 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and start the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T) (app *service.App, done func()) {
+func startDaemon(t *testing.T, winAgentDir string) (app *service.App, done func()) {
 	t.Helper()
 
-	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
-	a.SetArgs()
+	resolv := filepath.Join(t.TempDir(), "resolv.conf")
+	err := os.WriteFile(resolv, []byte("nameserver localhost"), 0600)
+	require.NoError(t, err, "Setup: could not write resolv.conf")
 
-	wg := sync.WaitGroup{}
+	a := service.New(
+		service.WithAgentPortFilePath(filepath.Join(winAgentDir, common.ListeningPortFileName)),
+		service.WithResolvConfFilePath(resolv),
+	)
+
+	a.SetArgs("-vvv")
+
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		err := a.Run()
-		require.NoError(t, err, "Run should exits without any error")
+		require.NoError(t, err, "Run should exit without any error")
 	}()
 	a.WaitReady()
 	time.Sleep(50 * time.Millisecond)
