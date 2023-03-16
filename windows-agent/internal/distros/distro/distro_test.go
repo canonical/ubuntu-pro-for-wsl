@@ -202,7 +202,7 @@ func TestKeepAwake(t *testing.T) {
 				require.Error(t, err, "KeepAwake should have returned an error")
 
 				time.Sleep(5 * time.Second)
-				state := testutils.DistroState(t, distroName)
+				state := testutils.DistroState(t, ctx, distroName)
 				require.NotEqual(t, "Running", state, "distro should not run when KeepAwake is called")
 
 				return
@@ -210,17 +210,17 @@ func TestKeepAwake(t *testing.T) {
 			require.NoError(t, err, "KeepAwake should have returned no error")
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, distroName) == "Running"
+				return testutils.DistroState(t, ctx, distroName) == "Running"
 			}, 10*time.Second, time.Second, "distro should have started after calling keepAwake")
 
 			time.Sleep(2 * wslSleepDelay)
 
-			require.Equal(t, "Running", testutils.DistroState(t, distroName), "KeepAwake should have kept the distro running")
+			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "KeepAwake should have kept the distro running")
 
 			cancel()
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, distroName) == "Stopped"
+				return testutils.DistroState(t, ctx, distroName) == "Stopped"
 			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
 		})
 	}
