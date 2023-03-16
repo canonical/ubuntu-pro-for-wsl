@@ -182,12 +182,12 @@ func getControlStreamAddress(agentPortFilePath string, resolvConfFilePath string
 	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		var found bool
-		winIP, found = strings.CutPrefix(sc.Text(), "nameserver")
+		suffix, found := strings.CutPrefix(sc.Text(), "nameserver")
 		if !found {
 			continue
 		}
-		winIP = strings.TrimSpace(winIP)
-	}
+		winIP = strings.TrimSpace(suffix)
+		break
 
 	if winIP == "" {
 		return "", errors.New("could not parse '/etc/resolv.conf': did not find line matching 'nameserver <IP>'")
