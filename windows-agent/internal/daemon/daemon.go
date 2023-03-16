@@ -50,19 +50,20 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 
 	log.Debug(ctx, "Building new daemon")
 
-	// Set default options.
-	home := os.Getenv("LocalAppData")
-	if home == "" {
-		return d, errors.New("Could not read env variable LocalAppData")
-	}
-
-	opts := options{
-		cacheDir: filepath.Join(home, common.LocalAppDataDir),
-	}
-
 	// Apply given args.
+	var opts options
 	for _, f := range args {
 		f(&opts)
+	}
+
+	if opts.cacheDir == "" {
+		// Set default cache dir.
+		localAppData := os.Getenv("LocalAppData")
+		if localAppData == "" {
+			return d, errors.New("Could not read env variable LocalAppData")
+		}
+
+		opts.cacheDir = filepath.Join(localAppData, common.LocalAppDataDir)
 	}
 
 	// Create our cache directory if needed
