@@ -160,6 +160,11 @@ func getControlStreamAddress(agentPortFilePath string, resolvConfFilePath string
 	}
 
 	fields := strings.Split(string(addr), ":")
+	if len(fields) == 0 {
+		// Avoid a panic. As far as I know, there is no way of triggering this,
+		// but we may as well protect against it.
+		return "", fmt.Errorf("could not extract port out of address %q", addr)
+	}
 	port := fields[len(fields)-1]
 
 	/*
