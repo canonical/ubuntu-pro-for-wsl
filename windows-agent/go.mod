@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/windows-agent
 
-go 1.19
+go 1.20
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10
