@@ -55,13 +55,13 @@ jobs:
         if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
         run: |
-          go build ./...
+          go build -tags=gowslmock ./...
       - name: Linter
         uses: golangci/golangci-lint-action@v3
         if: always() && !cancelled()
         with:
           version: v1.52.0
-          args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml
+          args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml --build-tags=gowslmock
           working-directory: ${{ matrix.subproject }}
 
   quality-flutter:
@@ -114,14 +114,14 @@ jobs:
         if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
         run: |
-          go test -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./...
+          go test -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
         if: matrix.os != 'windows'
         working-directory: ${{ matrix.subproject }}
         run: |
-          go test ./... -race
+          go test ./... -race -tags=gowslmock
       #- name: Upload coverage to Codecov
       #  uses: codecov/codecov-action@v3
       #  with:
