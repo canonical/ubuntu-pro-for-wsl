@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
 
+// TODO: Move this to an integration test suite when we get one.
 Future<Process> startAgent() async {
   final mainGo = p.join(
     Directory.current.parent.parent.parent.path,
