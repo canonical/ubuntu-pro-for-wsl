@@ -40,16 +40,17 @@ Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
     }
 
     final lines = await addr.readAsLines();
-
     if (lines.isEmpty) {
       // error: file is empty
       return const Left(AgentAddrFileError.isEmpty);
     }
+
     final port = readAgentPortFromLine(lines[0]);
     if (port == null) {
       // error: format error
       return const Left(AgentAddrFileError.formatError);
     }
+
     return Right(port);
   } on FileSystemException catch (_) {
     // error: permission denied
