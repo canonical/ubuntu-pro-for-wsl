@@ -16,6 +16,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -79,6 +81,11 @@ func (w step) String() string {
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestConnected(t *testing.T) {
 	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
 	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
