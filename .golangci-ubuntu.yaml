@@ -43,6 +43,10 @@ issues:
     - Potential file inclusion via variable
     # We don't wrap errors on purpose
     - non-wrapping format verb for fmt.Errorf. Use `%w` to format errors
+    # We want named parameters even if unused, as they help better document the function
+    - unused-parameter
+    # Sometimes it is more readable it do a `if err:=a(); err != nil` tha simpy `return a()`
+    - if-return
 
 nolintlint:
   require-explanation: true
