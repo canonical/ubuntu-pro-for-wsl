@@ -131,7 +131,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 			addr := fmt.Sprintf("localhost:%d", p)
 			log.Debugf(ctx, "Connection from %q: connecting to Linux-side service via %s", distroName, addr)
 
-			ctxTimeout, cancel := context.WithTimeout(ctx, time.Second)
+			ctxTimeout, cancel := context.WithTimeout(ctx, 2*time.Second)
 			defer cancel()
 
 			conn, err = grpc.DialContext(ctxTimeout, addr,

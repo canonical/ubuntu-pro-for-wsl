@@ -186,8 +186,8 @@ func TestConnected(t *testing.T) {
 				return
 			}
 
-			// newWslServiceConn has a 1 second timeout with 5 retries
-			maxDelay := 5100 * time.Millisecond
+			// newWslServiceConn has a 2 second timeout with 5 retries
+			maxDelay := 10*time.Second + 100*time.Millisecond
 
 			if tc.skipLinuxServe {
 				// Distro should not become active: there is no service on Linux to connect to.
@@ -300,13 +300,18 @@ func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (se
 	server = grpc.NewServer(grpc.StreamInterceptor(testLoggerInterceptor(t)))
 	agentapi.RegisterWSLInstanceServer(server, &srv)
 
+	t.Logf("serveWSLInstance: selecting port")
+
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:")
 	require.NoError(t, err, "Setup: could not listen to autoselected port")
 
-	// Not checking the returned error because we're testing only the Connected function and this is the "other side"
-	// of the pipe.
-	go func() { _ = server.Serve(lis) }()
+	t.Logf("serveWSLInstance: serving on: %v", lis.Addr().String())
+
+	go func() {
+		err := server.Serve(lis)
+		t.Logf("serveWSLInstance: serve exited with status: %v", err)
+	}()
 
 	return server, lis.Addr().String()
 }
@@ -357,6 +362,8 @@ func (m *wslDistroMock) serve(t *testing.T, wantErrNeverReceivePort bool) {
 	}
 	require.NoError(t, err, "wslDistroMock should have received the port to listen to from the control stream")
 
+	t.Logf("wslDistroMock: Received msg: %v", msg)
+
 	p := msg.GetPort()
 	require.NotEqual(t, 0, p, "Received invalid port :0 from server")
 
@@ -365,10 +372,13 @@ func (m *wslDistroMock) serve(t *testing.T, wantErrNeverReceivePort bool) {
 	lis, err := net.Listen("tcp4", addr)
 	require.NoError(t, err, "wslDistroMock: startServe: could not listen to %q", addr)
 
+	t.Logf("wslDistroMock: Listening to: %s", addr)
+
 	wslserviceapi.RegisterWSLServer(m.grpcServer, &wslserviceapi.UnimplementedWSLServer{})
 
 	// TODO
-	_ = m.grpcServer.Serve(lis)
+	err = m.grpcServer.Serve(lis)
+	t.Logf("wslDistroMock: Serve finshed with exit status: %v", err)
 }
 
 // sendInfo sends the specified info from the Linux-side client to the wslinstance service.
