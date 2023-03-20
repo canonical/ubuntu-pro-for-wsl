@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -244,7 +244,7 @@ func TestWorkerConstruction(t *testing.T) {
 			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
 
 			workDir := t.TempDir()
-			initialTasks, err := initialTasks.New(workDir)
+			initialTasks, err := initialtasks.New(workDir)
 			require.NoError(t, err, "Setup: initialTasks should construct without issues")
 
 			d, err := distro.New(distroName,
@@ -398,7 +398,7 @@ type mockWorker struct {
 	newCtx    context.Context
 	newDistro *distro.Distro
 	newDir    string
-	newInit   *initialTasks.InitialTasks
+	newInit   *initialtasks.InitialTasks
 
 	isActiveCalled      bool
 	clientCalled        bool
@@ -409,7 +409,7 @@ type mockWorker struct {
 
 func mockWorkerInjector(constructorReturnsError bool) (distro.Option, **mockWorker) {
 	worker := new(*mockWorker)
-	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, init *initialTasks.InitialTasks) (distro.Worker, error) {
+	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, init *initialtasks.InitialTasks) (distro.Worker, error) {
 		w := &mockWorker{
 			newCtx:    ctx,
 			newDistro: d,

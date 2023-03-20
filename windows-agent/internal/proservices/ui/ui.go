@@ -7,7 +7,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 )
@@ -15,13 +15,13 @@ import (
 // Service it the UI GRPC service implementation.
 type Service struct {
 	db           *database.DistroDB
-	initialTasks *initialTasks.InitialTasks
+	initialTasks *initialtasks.InitialTasks
 
 	agentapi.UnimplementedUIServer
 }
 
 // New returns a new service handling the UI API.
-func New(ctx context.Context, db *database.DistroDB, initialTasks *initialTasks.InitialTasks) (s Service) {
+func New(ctx context.Context, db *database.DistroDB, initialTasks *initialtasks.InitialTasks) (s Service) {
 	log.Debug(ctx, "Building new GRPC UI service")
 
 	return Service{

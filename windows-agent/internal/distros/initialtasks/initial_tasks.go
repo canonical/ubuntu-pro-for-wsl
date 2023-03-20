@@ -1,6 +1,6 @@
-// Package initialTasks keeps track of tasks that must be performed on all
+// Package initialtasks keeps track of tasks that must be performed on all
 // new distros.
-package initialTasks
+package initialtasks
 
 import (
 	"context"
