@@ -60,7 +60,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         if: always() && !cancelled()
         with:
-          version: latest
+          version: v1.52.0
           args: --config=${{ github.workspace }}/.golangci-${{ matrix.os }}.yaml
           working-directory: ${{ matrix.subproject }}
 
