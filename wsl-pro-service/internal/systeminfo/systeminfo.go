@@ -14,6 +14,9 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// DistroNameEnv is the environment variable read to check what the distro name is.
+const DistroNameEnv = "WSL_DISTRO_NAME"
+
 // Get returns the current information about the system relevant to the GRPC
 // connection to the agent.
 func Get() (*agentapi.DistroInfo, error) {
@@ -41,7 +44,7 @@ func Get() (*agentapi.DistroInfo, error) {
 
 // fillOSRelease extends info with os-release file content.
 func fillOsRelease(info *agentapi.DistroInfo) error {
-	out, err := os.ReadFile("/etc/os-release")
+	out, err := osRelease()
 	if err != nil {
 		return fmt.Errorf("could not read /etc/os-release file: %v", err)
 	}
@@ -53,7 +56,7 @@ func fillOsRelease(info *agentapi.DistroInfo) error {
 	}
 
 	if err := ini.MapToWithMapper(&marshaller, ini.SnackCase, out); err != nil {
-		return fmt.Errorf("could not parse /etc/os-release file: %v", err)
+		return fmt.Errorf("could not parse /etc/os-release file contents:\n%v", err)
 	}
 
 	info.PrettyName = marshaller.PrettyName
@@ -63,23 +66,26 @@ func fillOsRelease(info *agentapi.DistroInfo) error {
 	return nil
 }
 
-// TODO: document.
+// wslDistroName obtains the name of the current WSL distro from these sources
+// 1. From environment variable WSL_DISTRO_NAME, as long as it is not empty
+// 2. From the Windows path to the distro's root ("\\wsl.localhost\<DISTRO_NAME>\").
 func wslDistroName() (string, error) {
 	// TODO: request Microsoft to expose this to systemd services.
-	env := os.Getenv("WSL_DISTRO_NAME")
+	env := os.Getenv(DistroNameEnv)
 	if env != "" {
 		return env, nil
 	}
 
-	out, err := exec.Command("wslpath", "-w", "/").Output()
+	out, err := wslRootPath()
 	if err != nil {
 		return "", fmt.Errorf("could not get distro root path: %v. Stdout: %s", err, string(out))
 	}
 
-	// Example output: "\\wsl.localhost\Ubuntu-Preview\"
+	// Example output for Windows 11: "\\wsl.localhost\Ubuntu-Preview\"
+	// Example output for Windows 10: "\\wsl$\Ubuntu-Preview\"
 	fields := strings.Split(string(out), `\`)
 	if len(fields) < 4 {
-		return "", fmt.Errorf("could not parse distro name from path: %s", string(out))
+		return "", fmt.Errorf("could not parse distro name from path %q", out)
 	}
 
 	return fields[3], nil
@@ -87,9 +93,9 @@ func wslDistroName() (string, error) {
 
 // ProStatus returns whether Ubuntu Pro is enabled on this distro.
 func ProStatus(ctx context.Context) (attached bool, err error) {
-	out, err := exec.CommandContext(ctx, "pro", "status", "--format=json").Output()
+	out, err := proStatusCmdOutput(ctx)
 	if err != nil {
-		return false, fmt.Errorf("command returned error: %v\nStdout:%s", err, string(out))
+		return false, fmt.Errorf("pro status command returned error: %v\nStdout:%s", err, string(out))
 	}
 
 	var attachedStatus struct {
@@ -100,4 +106,22 @@ func ProStatus(ctx context.Context) (attached bool, err error) {
 	}
 
 	return attachedStatus.Attached, nil
+}
+
+// wslRootPath returns the Windows path to "/". Extracted as a variable to
+// allow for dependency injection.
+var wslRootPath = func() ([]byte, error) {
+	return exec.Command("wslpath", "-w", "/").Output()
+}
+
+// proStatusCmdOutput returns the output of `pro status --format=json`. Extracted as a variable to
+// allow for dependency injection.
+var proStatusCmdOutput = func(ctx context.Context) ([]byte, error) {
+	return exec.CommandContext(ctx, "pro", "status", "--format=json").Output()
+}
+
+// osRelease returns the contents of /etc/os-release. Extracted as a variable to
+// allow for dependency injection.
+var osRelease = func() ([]byte, error) {
+	return os.ReadFile("/etc/os-release")
 }
