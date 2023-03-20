@@ -32,12 +32,16 @@ type Worker struct {
 
 	cancel context.CancelFunc
 
+	// stopCallback will be called the worker has stopped and task processing has stopped.
+	stopCallback func()
+
 	conn   *grpc.ClientConn
 	connMu sync.RWMutex
 }
 
 type options struct {
 	initialTasks *initialtasks.InitialTasks
+	stopCallback func()
 }
 
 // Option is an optional argument for worker.New.
@@ -55,7 +59,9 @@ func WithInitialTasks(init *initialtasks.InitialTasks) Option {
 func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Worker, error) {
 	storagePath := filepath.Join(storageDir, d.Name()+".tasks")
 
-	var opts options
+	opts := options{
+		stopCallback: func() {},
+	}
 	for _, f := range args {
 		f(&opts)
 	}
@@ -66,8 +72,9 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 	}
 
 	w := &Worker{
-		distro:  d,
-		manager: tm,
+		distro:       d,
+		manager:      tm,
+		stopCallback: opts.stopCallback,
 	}
 
 	w.start(ctx)
@@ -147,6 +154,8 @@ func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
 // locks to distro,.
 func (w *Worker) processTasks(ctx context.Context) {
+	defer w.stopCallback()
+
 	for {
 		select {
 		case <-ctx.Done():

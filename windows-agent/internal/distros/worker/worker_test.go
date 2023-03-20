@@ -252,9 +252,14 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 	distroDir := t.TempDir()
 	taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
 
-	w, err := worker.New(ctx, distro, distroDir)
+	done := make(chan struct{})
+	w, err := worker.New(ctx, distro, distroDir, worker.WithStopCallback(func() { close(done) }))
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer w.Stop(ctx)
+	defer func() {
+		w.Stop(ctx)
+		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
+		<-done
+	}()
 
 	err = os.RemoveAll(taskFile)
 	require.NoError(t, err, "Could not remove distro task backup file")
@@ -275,9 +280,14 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	w, err := worker.New(ctx, d, t.TempDir())
+	done := make(chan struct{})
+	w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer w.Stop(ctx)
+	defer func() {
+		w.Stop(ctx)
+		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
+		<-done
+	}()
 
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
@@ -304,9 +314,14 @@ func TestSetConnection(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	w, err := worker.New(ctx, d, t.TempDir())
+	done := make(chan struct{})
+	w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer w.Stop(ctx)
+	defer func() {
+		w.Stop(ctx)
+		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
+		<-done
+	}()
 
 	wslInstanceService1 := newTestService(t)
 	conn1 := wslInstanceService1.newClientConnection(t)
@@ -365,9 +380,14 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	w, err := worker.New(ctx, d, t.TempDir())
+	done := make(chan struct{})
+	w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer w.Stop(ctx)
+	defer func() {
+		w.Stop(ctx)
+		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
+		<-done
+	}()
 
 	wslInstanceService1 := newTestService(t)
 	conn1 := wslInstanceService1.newClientConnection(t)
