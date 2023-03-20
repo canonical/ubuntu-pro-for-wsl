@@ -38,10 +38,6 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309134037-d129f165c253 h1:dY8PoYzN9bHKWXgYmQtn+W62G0kX5BdhJFM8vOtSArc=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309134037-d129f165c253/go.mod h1:Nc36avB1J6WelMc0jgI34WXKhvr3oi+UWuBdfT9rky0=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309162328-4015ad37935e h1:lq/J9/GxX/U15laURk6JMR2bFlxBQfIy+LxY6H5EkH8=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309162328-4015ad37935e/go.mod h1:Nc36avB1J6WelMc0jgI34WXKhvr3oi+UWuBdfT9rky0=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10 h1:Mi6BOi3vo+4UGg/InTa/Vu5DsOk+cXy4ldEHWZIn4JU=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10/go.mod h1:DQDIMwYsPr4n3Ck5BSZo8uVIu2aKlTUJ245TPiATJcU=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50 h1:zIt41CWHTC4SJmiX7i5P67QXCcPQrw+Pf3qCL0lJm94=
@@ -495,8 +491,6 @@ google.golang.org/protobuf v1.25.0/go.mod h1:9JNX74DMeImyA3h4bdi1ymwjUzf21/xIlba
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.27.1/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
-google.golang.org/protobuf v1.28.1 h1:d0NfwRgPtno5B1Wa6L2DAG+KivqkdutMf1UhdNx175w=
-google.golang.org/protobuf v1.28.1/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 google.golang.org/protobuf v1.29.0 h1:44S3JjaKmLEE4YIkjzexaP+NzZsudE3Zin5Njn/pYX0=
 google.golang.org/protobuf v1.29.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
