@@ -3,7 +3,7 @@ import 'package:grpc/grpc.dart';
 
 /// AgentApiClient hides the gRPC details in a more convenient API.
 class AgentApiClient {
-  AgentApiClient({required this.host, required this.port})
+  AgentApiClient({required String host, required int port})
       : _client = UIClient(
           ClientChannel(
             host,
@@ -13,12 +13,6 @@ class AgentApiClient {
             ),
           ),
         );
-
-  /// The Agent gRPC Service host address.
-  final String host;
-
-  /// The Agent gRPC Service port.
-  final int port;
 
   final UIClient _client;
 
