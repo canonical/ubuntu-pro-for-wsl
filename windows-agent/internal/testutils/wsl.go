@@ -33,7 +33,7 @@ func RandomDistroName(t *testing.T) (name string) {
 
 	testFullNormalized := normalizeName(t, strings.ReplaceAll(t.Name(), "/", "--"))
 
-	//nolint: gosec // No need to be cryptographically secure
+	//nolint:gosec // No need to be cryptographically secure
 	return fmt.Sprintf("%s_%s_%d", testDistroPrefix, testFullNormalized, rand.Uint64())
 }
 

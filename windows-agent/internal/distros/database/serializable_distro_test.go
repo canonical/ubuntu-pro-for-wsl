@@ -68,8 +68,7 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestSerializableDistroNewDistro(t *testing.T) {
 	registeredDistro, registeredGUID := testutils.RegisterDistro(t, false)
 	unregisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)

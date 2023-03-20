@@ -219,8 +219,7 @@ func TestKeepAwake(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerConstruction(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 
@@ -296,8 +295,7 @@ func TestInvalidateIdempotent(t *testing.T) {
 	require.False(t, (*w).stopCalled, "worker Stop should not be called in subsequent invalidations")
 }
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerWrappers(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 

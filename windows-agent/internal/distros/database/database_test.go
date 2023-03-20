@@ -31,8 +31,7 @@ const (
 	badDbFileContents
 )
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestNew(t *testing.T) {
 	distro, guid := testutils.RegisterDistro(t, false)
 
@@ -84,9 +83,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
-//
-//nolint:tparallel
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGetAll(t *testing.T) {
 	distro1, _ := testutils.RegisterDistro(t, false)
 	distro2, _ := testutils.RegisterDistro(t, false)
@@ -126,8 +123,7 @@ func TestDatabaseGetAll(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGet(t *testing.T) {
 	registeredDistroInDB, registeredGUID := testutils.RegisterDistro(t, false)
 	registeredDistroNotInDB, _ := testutils.RegisterDistro(t, false)
@@ -176,8 +172,7 @@ func TestDatabaseGet(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseDump(t *testing.T) {
 	distro1, guid1 := testutils.RegisterDistro(t, false)
 	distro2, guid2 := testutils.RegisterDistro(t, false)
