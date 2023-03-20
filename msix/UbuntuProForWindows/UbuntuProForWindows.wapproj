@@ -104,6 +104,7 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\agent\agent.vcxproj" />
     <ProjectReference Include="..\gui\gui.vcxproj" />
   </ItemGroup>
 </Project>
