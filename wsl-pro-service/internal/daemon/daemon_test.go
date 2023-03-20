@@ -11,6 +11,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	log "github.com/sirupsen/logrus"
@@ -25,8 +26,9 @@ func TestMain(m *testing.M) {
 	defer os.Exit(exit)
 }
 
+//nolint:tparallel // Cannot be parallel because of InjectMock
 func TestNew(t *testing.T) {
-	t.Parallel()
+	systeminfo.InjectMock(t)
 
 	type dataFileState int
 
@@ -174,8 +176,9 @@ func TestNew(t *testing.T) {
 	}
 }
 
+//nolint:tparallel // Cannot be parallel because of InjectMock
 func TestServeAndQuit(t *testing.T) {
-	t.Parallel()
+	systeminfo.InjectMock(t)
 
 	testCases := map[string]struct {
 		precancelContext bool

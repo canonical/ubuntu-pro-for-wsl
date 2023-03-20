@@ -14,11 +14,14 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHelp(t *testing.T) {
+	systeminfo.InjectMock(t)
+
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("--help")
 
@@ -29,6 +32,8 @@ func TestHelp(t *testing.T) {
 }
 
 func TestCompletion(t *testing.T) {
+	systeminfo.InjectMock(t)
+
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("completion", "bash")
 
@@ -39,6 +44,8 @@ func TestCompletion(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
+	systeminfo.InjectMock(t)
+
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("version")
 
@@ -63,6 +70,8 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNoUsageError(t *testing.T) {
+	systeminfo.InjectMock(t)
+
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("completion", "bash")
 
@@ -75,7 +84,7 @@ func TestNoUsageError(t *testing.T) {
 }
 
 func TestUsageError(t *testing.T) {
-	t.Parallel()
+	systeminfo.InjectMock(t)
 
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("doesnotexist")
@@ -87,7 +96,7 @@ func TestUsageError(t *testing.T) {
 }
 
 func TestCanQuitWhenExecute(t *testing.T) {
-	t.Parallel()
+	systeminfo.InjectMock(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -105,7 +114,7 @@ func TestCanQuitWhenExecute(t *testing.T) {
 }
 
 func TestCanQuitTwice(t *testing.T) {
-	t.Parallel()
+	systeminfo.InjectMock(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -123,6 +132,8 @@ func TestCanQuitTwice(t *testing.T) {
 }
 
 func TestAppCanQuitWithoutExecute(t *testing.T) {
+	systeminfo.InjectMock(t)
+
 	t.Skipf("This test is skipped because it is flaky. There is no way to guarantee Quit has been called before run.")
 
 	t.Parallel()
@@ -137,10 +148,12 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 	require.Containsf(t, err.Error(), "grpc: the server has been stopped", "Unexpected error message")
 }
 
+//nolint:tparallel // Cannot be parallel because of InjectMock
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
-	t.Parallel()
 	// Trigger the error with a cache directory that cannot be created over an
 	// existing file
+
+	systeminfo.InjectMock(t)
 
 	testCases := map[string]struct {
 		invalidProServicesCache bool
