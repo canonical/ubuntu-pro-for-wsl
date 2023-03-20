@@ -244,9 +244,7 @@ func TestConnected(t *testing.T) {
 // testLoggerInterceptor replaces the logging middleware by printing the return
 // error of Connected to the test Log.
 //
-// see that it is the middleware reporting.
-//
-//nolint:thelper // The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to
+//nolint:thelper // The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to see that it is the middleware reporting.
 func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := handler(srv, stream); err != nil {
