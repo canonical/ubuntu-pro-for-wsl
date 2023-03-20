@@ -228,7 +228,7 @@ func TestTaskProcessing(t *testing.T) {
 			if tc.cancelTaskInProgress {
 				// Cancelling and waiting for cancellation to propagate, then ensure it did so.
 				cancel()
-				require.Eventually(t, func() bool { return task.WasCancelled }, 100*time.Millisecond, time.Millisecond,
+				require.Eventually(t, func() bool { return task.WasCancelled.Load() }, 100*time.Millisecond, time.Millisecond,
 					"Task should be cancelled when the task processing context is cancelled")
 
 				// Giving some time to ensure retry is never attempted.
@@ -491,7 +491,7 @@ type testTask struct {
 	Returns error
 
 	// WasCancelled is true if the task Execute context is Done
-	WasCancelled bool
+	WasCancelled atomic.Bool
 }
 
 func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
@@ -500,7 +500,7 @@ func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 	case <-time.After(t.Delay):
 		return t.Returns
 	case <-ctx.Done():
-		t.WasCancelled = true
+		t.WasCancelled.Store(true)
 		return ctx.Err()
 	}
 }
