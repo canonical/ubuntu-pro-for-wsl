@@ -2,9 +2,11 @@
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="desktop uap uap5 rescap">
 
   <Identity
     Name="b32657fc-5d35-4b27-a1ff-9c38d0f8456f"
@@ -39,6 +41,22 @@
         <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"  Square71x71Logo="Images\SmallTile.png" Square310x310Logo="Images\LargeTile.png"/>
         <uap:SplashScreen Image="Images\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+			<uap5:Extension
+			  Category="windows.startupTask"
+			  Executable="agent\ubuntu-pro-agent.exe"
+			  EntryPoint="Windows.FullTrustApplication">
+				<uap5:StartupTask
+				  TaskId="P4Wagent"
+				  Enabled="true"
+				  DisplayName="Ubuntu Pro For Windows background agent" />
+			</uap5:Extension>
+			<desktop:Extension Category="windows.fullTrustProcess" Executable="agent\ubuntu-pro-agent.exe">
+				<desktop:FullTrustProcess>
+					<desktop:ParameterGroup GroupId="agent" Parameters=""/>
+				</desktop:FullTrustProcess>
+			</desktop:Extension>
+		</Extensions>
     </Application>
   </Applications>
 
