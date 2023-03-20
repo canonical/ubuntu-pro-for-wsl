@@ -100,7 +100,7 @@ func TestNew(t *testing.T) {
 			require.NoError(t, err, "New() should have returned no error")
 			require.Equal(t, tc.distro, d.Name(), "distro.Name should match the one it was constructed with")
 			require.Equal(t, registeredGUID, d.GUID(), "distro.GUID should match the one it was constructed with")
-			require.Equal(t, props, d.Properties, "distro.Properties should match the one it was constructed with because they were never directly modified")
+			require.Equal(t, props, d.Properties(), "distro.Properties should match the one it was constructed with because they were never directly modified")
 		})
 	}
 }

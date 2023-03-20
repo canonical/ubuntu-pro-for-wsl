@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"sync/atomic"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
@@ -27,7 +28,8 @@ type Distro struct {
 	identity
 
 	// Properties contains non-volatile information that is stored in the database
-	Properties
+	properties   Properties
+	propertiesMu sync.RWMutex
 
 	// invalidated is an internal value if distro can't be contacted through GRPC
 	invalidated atomic.Bool
@@ -127,7 +129,7 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 
 	distro = &Distro{
 		identity:   id,
-		Properties: props,
+		properties: props,
 	}
 
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
@@ -154,6 +156,27 @@ func (d *Distro) Name() string {
 // GUID is a getter for the distro's GUID.
 func (d *Distro) GUID() string {
 	return d.identity.GUID.String()
+}
+
+// Properties is a getter for the distro's Properties.
+func (d *Distro) Properties() Properties {
+	d.propertiesMu.RLock()
+	defer d.propertiesMu.RUnlock()
+
+	return d.properties
+}
+
+// SetProperties sets the specified properties, and returns true if the set properties are
+// different from the original ones.
+func (d *Distro) SetProperties(p Properties) bool {
+	d.propertiesMu.Lock()
+	defer d.propertiesMu.Unlock()
+
+	if d.properties == p {
+		return false
+	}
+	d.properties = p
+	return true
 }
 
 // IsActive returns true when the distro is running, and there exists an active

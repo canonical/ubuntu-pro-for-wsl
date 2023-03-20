@@ -177,7 +177,7 @@ func TestConnected(t *testing.T) {
 
 			// Ensure we got matching properties on the agent side.
 			props := propsFromInfo(t, info)
-			require.Equal(t, props, d.Properties, "Distro properties should match those sent via the SendInfo.")
+			require.Equal(t, props, d.Properties(), "Distro properties should match those sent via the SendInfo.")
 
 			// Connected has added the distro to the database.
 			now = afterDatabaseQuery
@@ -230,7 +230,7 @@ func TestConnected(t *testing.T) {
 			// One of the property should have changed.
 			props = propsFromInfo(t, info)
 			require.Eventually(t, func() bool {
-				return d.Properties == props
+				return d.Properties() == props
 			}, time.Second, 10*time.Millisecond, "Distro properties should be refreshed after every call to SendInfo to the control stream")
 
 			// The database has been updated after the second info

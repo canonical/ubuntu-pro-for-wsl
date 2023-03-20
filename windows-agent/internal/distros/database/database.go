@@ -149,8 +149,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 
 	// Name in database, correct GUID: refresh with latest properties of a valid distro
 	var err error
-	if d.Properties != props {
-		d.Properties = props
+	if d.SetProperties(props) {
 		err = db.dump()
 	}
 

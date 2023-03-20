@@ -407,7 +407,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 
 			require.Equal(t, tc.distroName, d.Name(), "GetDistroAndUpdateProperties should return a distro with the same name as requested")
 			require.Equal(t, guids[tc.distroName], d.GUID(), "GetDistroAndUpdateProperties should return a GUID that matches the requested distro's")
-			require.Equal(t, tc.props, d.Properties, "GetDistroAndUpdateProperties should return the same properties as requested")
+			require.Equal(t, tc.props, d.Properties(), "GetDistroAndUpdateProperties should return the same properties as requested")
 
 			// Ensure writing one distro does not modify another
 			if tc.distroName != distroInDB {
@@ -417,7 +417,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 
 				require.Equal(t, distroInDB, d.Name(), "GetDistroAndUpdateProperties should not modify other distros' name")
 				require.Equal(t, guids[distroInDB], d.GUID(), "GetDistroAndUpdateProperties should not modify other distros' GUID")
-				require.Equal(t, props[distroInDB], d.Properties, "GetDistroAndUpdateProperties should not modify other distros' properties")
+				require.Equal(t, props[distroInDB], d.Properties(), "GetDistroAndUpdateProperties should not modify other distros' properties")
 			}
 
 			lastDumpModTime := fileModTime(t, dbFile)

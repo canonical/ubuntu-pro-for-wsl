@@ -34,6 +34,6 @@ func newSerializableDistro(d *distro.Distro) serializableDistro {
 	return serializableDistro{
 		Name:       d.Name(),
 		GUID:       d.GUID(),
-		Properties: d.Properties,
+		Properties: d.Properties(),
 	}
 }

@@ -84,8 +84,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		}
 		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", d.Name(), props)
 
-		if d.Properties != props {
-			d.Properties = props
+		if d.SetProperties(props) {
 			if err := s.db.Dump(); err != nil {
 				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", d.Name(), err)
 			}
