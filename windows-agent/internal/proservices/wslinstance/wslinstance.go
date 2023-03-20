@@ -66,7 +66,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		return fmt.Errorf("connection from %q: %v", info.WslName, err)
 	}
 
-	//nolint: errcheck // We don't care about this error because we're cleaning up
+	//nolint:errcheck // We don't care about this error because we're cleaning up
 	defer d.SetConnection(nil)
 
 	log.Debugf(context.TODO(), "Connection to Linux-side service established")

@@ -35,8 +35,7 @@ func TestRegistry(t *testing.T) {
 	require.ElementsMatch(t, want, got, "registry should contain only the registered tasks")
 }
 
-//nolint: tparallel
-// Cannot make test parallel because of BackupRegistry.
+//nolint:tparallel // Cannot make test parallel because of BackupRegistry.
 func TestMarshal(t *testing.T) {
 	task.BackupRegistry(t)
 	task.Register[testTask]()
@@ -69,8 +68,7 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
-// Cannot make test parallel because of BackupRegistry.
+//nolint:tparallel // Cannot make test parallel because of BackupRegistry.
 func TestUnmarshal(t *testing.T) {
 	task.BackupRegistry(t)
 	task.Register[testTask]()
@@ -116,8 +114,7 @@ func TestUnmarshal(t *testing.T) {
 	}
 }
 
-//nolint: tparallel
-// Cannot make test parallel because of BackupRegistry.
+//nolint:tparallel // Cannot make test parallel because of BackupRegistry.
 func TestMarsallUnmarshall(t *testing.T) {
 	task.BackupRegistry(t)
 	task.Register[testTask]()

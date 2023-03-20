@@ -1,4 +1,4 @@
-package initialTasks
+package initialtasks
 
 import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"

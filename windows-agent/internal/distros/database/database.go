@@ -16,7 +16,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"gopkg.in/yaml.v3"
 )
@@ -35,7 +35,7 @@ type DistroDB struct {
 	scheduleTrigger chan struct{}
 
 	storageDir   string
-	initialTasks *initialTasks.InitialTasks
+	initialTasks *initialtasks.InitialTasks
 }
 
 // New creates a database and populates it with data in the file located
@@ -47,7 +47,7 @@ type DistroDB struct {
 // Every certain amount of times, the database wil purge all distros that
 // are no longer registered or that have been marked as unreachable. This
 // cleanup can be triggered on demmand with TriggerCleanup.
-func New(storageDir string, initialTasks *initialTasks.InitialTasks) (*DistroDB, error) {
+func New(storageDir string, initialTasks *initialtasks.InitialTasks) (*DistroDB, error) {
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
 		return nil, fmt.Errorf("could not create database directory: %w", err)
 	}

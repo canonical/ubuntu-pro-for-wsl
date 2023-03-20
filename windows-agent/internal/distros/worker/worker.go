@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -37,7 +37,7 @@ type Worker struct {
 }
 
 type options struct {
-	initialTasks *initialTasks.InitialTasks
+	initialTasks *initialtasks.InitialTasks
 }
 
 // Option is an optional argument for worker.New.
@@ -45,7 +45,7 @@ type Option func(*options)
 
 // WithInitialTasks is an optional parameter for worker.New that allows for
 // conditionally importing initial tasks.
-func WithInitialTasks(init *initialTasks.InitialTasks) Option {
+func WithInitialTasks(init *initialtasks.InitialTasks) Option {
 	return func(o *options) {
 		o.initialTasks = init
 	}

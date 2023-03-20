@@ -11,8 +11,7 @@ func (in SerializableDistro) NewDistro(storageDir string) (*distro.Distro, error
 
 // NewSerializableDistro is a wrapper around newSerializableDistro so as to make it accessible to tests.
 //
-//nolint: revive
-// unexported-return false positive! SerializableDistro is exported, even if it is an alias to an unexported type.
+//nolint:revive // unexported-return false positive! SerializableDistro is exported, even if it is an alias to an unexported type.
 func NewSerializableDistro(d *distro.Distro) SerializableDistro {
 	return newSerializableDistro(d)
 }

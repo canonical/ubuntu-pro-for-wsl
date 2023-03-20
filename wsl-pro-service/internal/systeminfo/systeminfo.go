@@ -47,7 +47,7 @@ func fillOsRelease(info *agentapi.DistroInfo) error {
 	}
 
 	var marshaller struct {
-		//nolint: revive
+		//nolint:revive
 		// ini mapper is strict with naming, so we cannot rename Id -> ID as the linter suggests
 		Id, VersionId, PrettyName string
 	}

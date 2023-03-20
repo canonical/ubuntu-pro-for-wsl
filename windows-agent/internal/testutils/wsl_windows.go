@@ -125,7 +125,7 @@ func powershellOutputf(t *testing.T, command string, args ...any) string {
 
 	cmd := fmt.Sprintf(command, args...)
 
-	//nolint: gosec // This function is only used in tests so no arbitrary code execution here
+	//nolint:gosec // This function is only used in tests so no arbitrary code execution here
 	out, err := exec.Command("powershell", "-Command", cmd).CombinedOutput()
 	require.NoError(t, err, "Non-zero return code for command:\n%s\nOutput:%s", cmd, out)
 

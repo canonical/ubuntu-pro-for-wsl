@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
@@ -56,9 +56,9 @@ func (*NotValidError) Error() string {
 
 type options struct {
 	guid                  windows.GUID
-	initialTasks          *initialTasks.InitialTasks
+	initialTasks          *initialtasks.InitialTasks
 	taskProcessingContext context.Context
-	newWorkerFunc         func(context.Context, *Distro, string, *initialTasks.InitialTasks) (workerInterface, error)
+	newWorkerFunc         func(context.Context, *Distro, string, *initialtasks.InitialTasks) (workerInterface, error)
 }
 
 // Option is an optional argument for distro.New.
@@ -74,7 +74,7 @@ func WithGUID(guid windows.GUID) Option {
 
 // WithInitialTasks is an optional parameter for distro.New so that the
 // distro con perform the tasks expected from any new distro.
-func WithInitialTasks(i *initialTasks.InitialTasks) Option {
+func WithInitialTasks(i *initialtasks.InitialTasks) Option {
 	return func(o *options) {
 		o.initialTasks = i
 	}
@@ -96,7 +96,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 	opts := options{
 		guid:                  nilGUID,
 		taskProcessingContext: context.Background(),
-		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, init *initialTasks.InitialTasks) (workerInterface, error) {
+		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, init *initialtasks.InitialTasks) (workerInterface, error) {
 			return worker.New(ctx, d, dir, worker.WithInitialTasks(init))
 		},
 	}

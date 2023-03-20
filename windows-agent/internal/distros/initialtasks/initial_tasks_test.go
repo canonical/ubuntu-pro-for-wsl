@@ -1,4 +1,4 @@
-package initialTasks_test
+package initialtasks_test
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -61,12 +61,12 @@ func TestNew(t *testing.T) {
 			dir := t.TempDir()
 			setUpSaveFile(t, tc.fileState, dir)
 
-			it, err := initialTasks.New(dir)
+			it, err := initialtasks.New(dir)
 			if tc.wantErr {
-				require.Error(t, err, "initialTasks.New should have returned an error")
+				require.Error(t, err, "initialtasks.New should have returned an error")
 				return
 			}
-			require.NoError(t, err, "initialTasks.New should have returned no error")
+			require.NoError(t, err, "initialtasks.New should have returned no error")
 
 			got := it.Tasks()
 			require.ElementsMatch(t, tc.want, got, "Mismatch between expected and obtained tasks after construction")
@@ -107,7 +107,7 @@ func TestAdd(t *testing.T) {
 			dir := t.TempDir()
 			setUpSaveFile(t, tc.fileStateBeforeNew, dir)
 
-			it, err := initialTasks.New(dir)
+			it, err := initialtasks.New(dir)
 			require.NoError(t, err, "Setup: could not create initial tasks")
 
 			setUpSaveFile(t, tc.fileStateBeforeAdd, dir)
@@ -160,7 +160,7 @@ func TestRemove(t *testing.T) {
 			dir := t.TempDir()
 			setUpSaveFile(t, fileHasValidTask, dir)
 
-			it, err := initialTasks.New(dir)
+			it, err := initialtasks.New(dir)
 			require.NoError(t, err, "Setup: could not create initial tasks")
 
 			setUpSaveFile(t, tc.fileStateBeforeRemove, dir)
@@ -207,9 +207,9 @@ func TestAll(t *testing.T) {
 			dir := t.TempDir()
 			setUpSaveFile(t, tc.fileState, dir)
 
-			var it *initialTasks.InitialTasks
+			var it *initialtasks.InitialTasks
 			if !tc.nilTaskList {
-				i, err := initialTasks.New(dir)
+				i, err := initialtasks.New(dir)
 				require.NoError(t, err, "Setup: could not create initial tasks")
 				it = i
 			}
@@ -223,7 +223,7 @@ func TestAll(t *testing.T) {
 func setUpSaveFile(t *testing.T, fileState saveFileState, dir string) {
 	t.Helper()
 
-	file := filepath.Join(dir, initialTasks.InitialTasksFileName)
+	file := filepath.Join(dir, initialtasks.InitialTasksFileName)
 
 	removeFile := func() {
 		t.Helper()

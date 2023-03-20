@@ -75,8 +75,7 @@ func (w step) String() string {
 	return fmt.Sprintf("Unknown when (%d)", int(w))
 }
 
-//nolint: tparallel
-// Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestConnected(t *testing.T) {
 	distroName, _ := testutils.RegisterDistro(t, false)
 
@@ -236,9 +235,9 @@ func TestConnected(t *testing.T) {
 // testLoggerInterceptor replaces the logging middleware by printing the return
 // error of Connected to the test Log.
 //
-//nolint: thelper
-// The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to
 // see that it is the middleware reporting.
+//
+//nolint:thelper // The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to
 func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := handler(srv, stream); err != nil {
@@ -277,9 +276,7 @@ func (s *wrappedService) Connected(stream agentapi.WSLInstance_ConnectedServer) 
 // - if ok is true, returnErr is the return value of Connected.
 // - if ok is false, the wait times out hence Connected has not returned yet. returnedErr is therefore not valid.
 //
-//nolint: revive
-// Returning the error as first argument is strange but it makes sense here, we mimic the
-// (value, ok) return type of a map access.
+//nolint:revive // Returning the error as first argument is strange but it makes sense here, we mimic the (value, ok) return type of a map access.
 func (s *wrappedService) wait(timeout time.Duration) (returnedErr error, connectedHasReturned bool) {
 	select {
 	case returnedErr = <-s.Errch:
@@ -289,8 +286,7 @@ func (s *wrappedService) wait(timeout time.Duration) (returnedErr error, connect
 	}
 }
 
-//nolint: revive
-// testing.T should go before context, I won't listen to anyone arguing the contrary.
+//nolint:revive // testing.T should go before context, I won't listen to anyone arguing the contrary.
 func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (server *grpc.Server, address string) {
 	t.Helper()
 
@@ -318,8 +314,7 @@ type wslDistroMock struct {
 
 // newWslDistroMock creates a wslDistroMock, establishing a connection to the control stream.
 //
-//nolint: revive
-// testing.T should go before context, regardless of what these linters say.
+//nolint:revive // testing.T should go before context, regardless of what these linters say.
 func newWslDistroMock(t *testing.T, ctx context.Context, ctrlAddr string) (mock *wslDistroMock) {
 	t.Helper()
 

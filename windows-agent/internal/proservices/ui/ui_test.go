@@ -6,7 +6,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialTasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 	dir := t.TempDir()
 	db, err := database.New(dir, nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
-	initTasks, err := initialTasks.New(dir)
+	initTasks, err := initialtasks.New(dir)
 	require.NoError(t, err, "Setup: initial tasks New() should return no error")
 
 	_ = ui.New(context.Background(), db, initTasks)
@@ -45,7 +45,7 @@ func TestAttachProInitial(t *testing.T) {
 			dir := t.TempDir()
 			db, err := database.New(dir, nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
-			initTasks, err := initialTasks.New(dir)
+			initTasks, err := initialtasks.New(dir)
 			require.NoError(t, err, "Setup: initial tasks New() should return no error")
 			serv := ui.New(context.Background(), db, initTasks)
 
