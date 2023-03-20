@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<AppRoot>..\..\gui\</AppRoot>
+		<AppDir>$(AppRoot)packages\ubuntupro\</AppDir>
+		<AppOutDir>$(AppDir)build\windows\runner\$(Configuration)\</AppOutDir>
+		<AppIconPath>$(AppDir)windows\runner\resources\app_icon.ico</AppIconPath>
+        <!-- TODO: replace this location by a common icon path for the whole app -->
+		<MsixIconPath>$(MSBuildThisFileDirectory)\icon.ico</MsixIconPath>
+		<AppConfiguration>$(Configuration.ToLower())</AppConfiguration>
+	</PropertyGroup>
+	<ItemGroup>
+		<AppIcon Include="$(AppIconPath)" />
+		<MsixAppIcon Include="$(MsixIconPath)" />
+	</ItemGroup>
+	<ItemGroup>
+		<AppContent Include="$(AppOutDir)**\*.*" Visible="False" />
+		<None Include="@(AppContent)" Visible="False">
+			<Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<DeploymentContent>true</DeploymentContent>
+		</None>
+	</ItemGroup>
+	<Target Name="Build" Outputs="@(AppContent)">
+		<Message Text="Building Flutter artifacts to $(AppOutDir)" Importance="high"/>
+        <Copy SourceFiles="@(MsixAppIcon)" DestinationFiles="@(AppIcon)" />
+		<Exec Command="flutter pub get" WorkingDirectory="$(AppDir)" />
+		<Exec Command="flutter build windows --$(AppConfiguration) " WorkingDirectory="$(AppDir)" />
+	</Target>
+    <Target Name="Clean" Condition="Exists($(AppOutDir))">
+		<Message Text="Cleaning $(AppOutDir)" Importance="high" />
+		<Exec Command="flutter clean"  WorkingDirectory="$(AppDir)" />
+	</Target>
+</Project>
