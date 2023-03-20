@@ -41,8 +41,6 @@ issues:
     - (G104|G307)
     # EXC0010 gosec: False positive is triggered by 'src, err := ioutil.ReadFile(filename)'
     - Potential file inclusion via variable
-    # Use of unsafe is unavoidable in this package
-    - G103
     # We don't wrap errors on purpose
     - non-wrapping format verb for fmt.Errorf. Use `%w` to format errors
 
