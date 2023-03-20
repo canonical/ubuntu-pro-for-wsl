@@ -55,7 +55,7 @@ void main() {
     // Exercises the expected usage: reading from a file
     final res = await readAgentPortFromFile(filePath);
 
-    expect(res, const Left(AgentAddrFileError.inexistent));
+    expect(res, const Left(AgentAddrFileError.nonexistent));
   });
 
   test('empty file', () async {

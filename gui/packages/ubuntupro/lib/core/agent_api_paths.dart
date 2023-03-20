@@ -25,7 +25,7 @@ String? agentAddrFilePath(String appDir, String filename) {
   return null;
 }
 
-enum AgentAddrFileError { inexistent, isEmpty, formatError, accessDenied }
+enum AgentAddrFileError { nonexistent, isEmpty, formatError, accessDenied }
 
 /// Reads the agent port from the addr file located at the full path [filepath].
 Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
@@ -36,7 +36,7 @@ Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
     // This returns false without crashing even if the [filepath] is invalid.
     if (!await addr.exists()) {
       // error: file doesn't exist.
-      return const Left(AgentAddrFileError.inexistent);
+      return const Left(AgentAddrFileError.nonexistent);
     }
 
     final lines = await addr.readAsLines();
