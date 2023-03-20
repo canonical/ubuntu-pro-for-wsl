@@ -186,8 +186,11 @@ func TestConnected(t *testing.T) {
 				return
 			}
 
+			// Small amount of time to mitigate races
+			const epsilon = 100 * time.Millisecond
+
 			// newWslServiceConn has a 2 second timeout with 5 retries
-			maxDelay := 10*time.Second + 100*time.Millisecond
+			const maxDelay = 5*2*time.Second + epsilon
 
 			if tc.skipLinuxServe {
 				// Distro should not become active: there is no service on Linux to connect to.
