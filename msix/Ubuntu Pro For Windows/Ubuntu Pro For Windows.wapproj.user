@@ -9,5 +9,9 @@
     <AppIconSource>D:\p4w\packaging\msix\Ubuntu Pro For Windows\Images\Square400x400Logo.png</AppIconSource>
     <SplashScreenSource>D:\p4w\packaging\msix\Ubuntu Pro For Windows\Images\Square400x400Logo.png</SplashScreenSource>
     <PackageLogoSource>D:\p4w\packaging\msix\Ubuntu Pro For Windows\Images\Square400x400Logo.png</PackageLogoSource>
+    <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
+    <AppxShowAllApps>False</AppxShowAllApps>
+    <AppxBuildConfigurationSelection>x64</AppxBuildConfigurationSelection>
+    <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
   </PropertyGroup>
 </Project>
