@@ -33,7 +33,7 @@ packages:
     source: hosted
     version: "3.3.6"
   args:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: args
       sha256: "4cab82a83ffef80b262ddedf47a0a8e56ee6fbf7fe21e6e768b02792034dd440"
@@ -144,6 +144,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  cli_util:
+    dependency: transitive
+    description:
+      name: cli_util
+      sha256: "66f86e916d285c1a93d3b79587d94bd71984a66aac4ff74e524cfa7877f1395c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.5"
   clock:
     dependency: transitive
     description:
@@ -168,6 +176,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.0"
+  console:
+    dependency: transitive
+    description:
+      name: console
+      sha256: e04e7824384c5b39389acdd6dc7d33f3efe6b232f6f16d7626f194f6a01ad69a
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   convert:
     dependency: transitive
     description:
@@ -343,6 +359,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  image:
+    dependency: transitive
+    description:
+      name: image
+      sha256: "483a389d6ccb292b570c31b3a193779b1b0178e7eb571986d9a49904b6861227"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.15"
   io:
     dependency: transitive
     description:
@@ -376,7 +400,7 @@ packages:
     source: hosted
     version: "2.0.1"
   logging:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: logging
       sha256: "04094f2eb032cbb06c6f6e8d3607edcfcb0455e2bb6cbc010cb01171dcb64e6d"
@@ -423,6 +447,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.3.2"
+  msix:
+    dependency: "direct dev"
+    description:
+      name: msix
+      sha256: "68679afc7d7117467250363dea4fb62db7520a23a9490bf4b65794655235a1d5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.9.1"
   nested:
     dependency: transitive
     description:
@@ -454,6 +486,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.2"
+  petitparser:
+    dependency: transitive
+    description:
+      name: petitparser
+      sha256: "49392a45ced973e8d94a85fdb21293fbb40ba805fc49f2965101ae748a3683b4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.0"
   platform:
     dependency: transitive
     description:
@@ -667,8 +707,16 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.1"
+  xml:
+    dependency: "direct dev"
+    description:
+      name: xml
+      sha256: "979ee37d622dec6365e2efa4d906c37470995871fe9ae080d967e192d88286b5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.2.2"
   yaml:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: yaml
       sha256: "23812a9b125b48d4007117254bca50abb6c712352927eece9e155207b1db2370"
