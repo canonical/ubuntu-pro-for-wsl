@@ -1,5 +1,5 @@
-# This is for linting on Linux. To run it, please use:
-# golangci-lint run -c .golangci-linux.yaml
+# This is for linting. To run it, please use:
+# golangci-lint run -c .golangci-lint.yaml ${MODULE}/... [--fix]
 
 linters:
   # linters to run in addition to default ones
