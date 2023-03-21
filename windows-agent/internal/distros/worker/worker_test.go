@@ -159,9 +159,14 @@ func TestTaskProcessing(t *testing.T) {
 				name: testutils.RandomDistroName(t),
 			}
 
-			w, err := worker.New(ctx, d, t.TempDir())
+			done := make(chan struct{})
+			w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
 			require.NoError(t, err, "Setup: worker New() should return no error")
-			t.Cleanup(func() { w.Stop(ctx) })
+			t.Cleanup(func() {
+				w.Stop(ctx)
+				// Ensuring worker has finished writing before TempDir cleans up the dumpfile
+				<-done
+			})
 
 			wslInstanceService := newTestService(t)
 			conn := wslInstanceService.newClientConnection(t)
