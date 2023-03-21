@@ -40,6 +40,7 @@ dependencies:
   flutter:
     sdk: flutter
   grpc: ^3.1.0
+  logging: ^1.1.1
   mockito: ^5.3.0
   p4w_ms_store:
     git:
@@ -62,6 +63,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   msix: ^3.9.1
+  xml: ^6.2.2
 
 
 # For information on the generic Dart part of this file, see the
