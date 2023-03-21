@@ -61,6 +61,7 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   flutter_test:
     sdk: flutter
+  msix: ^3.9.1
 
 
 # For information on the generic Dart part of this file, see the
@@ -104,3 +105,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+msix_config:
+  display_name: Ubuntu Pro For Windows
+  publisher: CN=CanonicalGroupLimited, O=Canonical, C=US
+  publisher_display_name: Canonical Group Limited
+  identity_name: CanonicalGroupLimited.UbuntuProForWindows
+  logo_path: assets/logo.png
+  capabilities: internetClient
+  store: true
