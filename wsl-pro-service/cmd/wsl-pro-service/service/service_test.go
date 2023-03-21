@@ -170,14 +170,14 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			badCache := filepath.Join(t.TempDir(), "file")
+			dir := t.TempDir()
+			badCache := filepath.Join(dir, "file")
 
-			var daemonCache string
+			daemonCache := dir
 			if tc.invalidDaemonCache {
 				daemonCache = badCache
 			}
 
-			dir := t.TempDir()
 			resolvConf := filepath.Join(dir, "resolv.conf")
 			if tc.invalidResolvConfFile {
 				err := os.MkdirAll(resolvConf, 0600)
