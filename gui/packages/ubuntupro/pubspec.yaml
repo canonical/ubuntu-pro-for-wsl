@@ -64,6 +64,7 @@ dev_dependencies:
     sdk: flutter
   msix: ^3.9.1
   xml: ^6.2.2
+  yaml: ^3.1.1
 
 
 # For information on the generic Dart part of this file, see the

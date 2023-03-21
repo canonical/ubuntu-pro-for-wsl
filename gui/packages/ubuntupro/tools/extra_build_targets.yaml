@@ -1,0 +1,7 @@
+agent: 
+  # Relative to the Flutter build output
+  output: agent/ubuntu-pro-agent.exe
+  command: go
+  args: [ build, '-ldflags', '-H=windowsgui']
+  # Relative to the repository root.
+  source-tree: windows-agent/cmd/ubuntu-pro-agent
