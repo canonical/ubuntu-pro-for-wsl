@@ -113,13 +113,17 @@ func TestNew(t *testing.T) {
 			// and we can accurately assert on the task queue length.
 			cancel()
 
-			w, err := worker.New(ctx, distro, distroDir)
+			done := make(chan struct{})
+			w, err := worker.New(ctx, distro, distroDir, worker.WithStopCallback(func() { close(done) }))
 			if tc.wantErr {
 				require.Error(t, err, "worker.New should have returned an error")
 				return
 			}
 			require.NoError(t, err, "worker.New should not return an error")
 			require.Equal(t, tc.wantNTasks, w.QueueLen(), "Wrong number of queued tasks.")
+
+			// Ensuring worker has finished writing before TempDir cleans up the dumpfile
+			<-done
 		})
 	}
 }
