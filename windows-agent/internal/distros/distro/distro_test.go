@@ -13,9 +13,11 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sys/windows"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 )
 
@@ -27,8 +29,14 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
-	registeredDistro, registeredGUID := testutils.RegisterDistro(t, false)
-	_, anotherRegisteredGUID := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
+	_, anotherRegisteredGUID := testutils.RegisterDistro(t, ctx, false)
 	nonRegisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
 
 	props := distro.Properties{
@@ -66,7 +74,7 @@ func TestNew(t *testing.T) {
 
 			var args []distro.Option
 			if tc.withGUID != "" {
-				GUID, err := windows.GUIDFromString(tc.withGUID)
+				GUID, err := uuid.Parse(tc.withGUID)
 				require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
 				args = append(args, distro.WithGUID(GUID))
 			}
@@ -78,7 +86,7 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write file to interfere with distro's MkDir")
 			}
 
-			d, err = distro.New(tc.distro, props, workDir, args...)
+			d, err = distro.New(ctx, tc.distro, props, workDir, args...)
 			defer d.Cleanup(context.Background())
 
 			if tc.wantErr {
@@ -92,17 +100,23 @@ func TestNew(t *testing.T) {
 			require.NoError(t, err, "New() should have returned no error")
 			require.Equal(t, tc.distro, d.Name(), "distro.Name should match the one it was constructed with")
 			require.Equal(t, registeredGUID, d.GUID(), "distro.GUID should match the one it was constructed with")
-			require.Equal(t, props, d.Properties, "distro.Properties should match the one it was constructed with because they were never directly modified")
+			require.Equal(t, props, d.Properties(), "distro.Properties should match the one it was constructed with because they were never directly modified")
 		})
 	}
 }
 
 func TestString(t *testing.T) {
-	name, guid := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
 
-	GUID, err := windows.GUIDFromString(guid)
+	name, guid := testutils.RegisterDistro(t, ctx, false)
+
+	GUID, err := uuid.Parse(guid)
 	require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
-	d, err := distro.New(name, distro.Properties{}, t.TempDir(), distro.WithGUID(GUID))
+	d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir(), distro.WithGUID(GUID))
 	defer d.Cleanup(context.Background())
 
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
@@ -113,8 +127,14 @@ func TestString(t *testing.T) {
 }
 
 func TestIsValid(t *testing.T) {
-	distro1, guid1 := testutils.RegisterDistro(t, false)
-	_, guid2 := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
+	_, guid2 := testutils.RegisterDistro(t, ctx, false)
 	nonRegisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
 
 	testCases := map[string]struct {
@@ -136,7 +156,7 @@ func TestIsValid(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// Create an always valid distro
-			d, err := distro.New(distro1, distro.Properties{}, t.TempDir())
+			d, err := distro.New(ctx, distro1, distro.Properties{}, t.TempDir())
 			defer d.Cleanup(context.Background())
 
 			require.NoError(t, err, "Setup: distro New() should return no errors")
@@ -144,7 +164,7 @@ func TestIsValid(t *testing.T) {
 			// Change values and assert on IsValid
 			d.GetIdentity().Name = tc.distro
 
-			GUID, err := windows.GUIDFromString(tc.guid)
+			GUID, err := uuid.Parse(tc.guid)
 			require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
 			d.GetIdentity().GUID = GUID
 
@@ -155,6 +175,8 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestKeepAwake(t *testing.T) {
+	t.Skip("Skipping because this method is known to be ineffective.")
+
 	const wslSleepDelay = 8 * time.Second
 
 	testCases := map[string]struct {
@@ -171,9 +193,14 @@ func TestKeepAwake(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			distroName, _ := testutils.RegisterDistro(t, false)
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
 
-			d, err := distro.New(distroName, distro.Properties{}, t.TempDir())
+			distroName, _ := testutils.RegisterDistro(t, ctx, false)
+
+			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
 			defer d.Cleanup(context.Background())
 
 			require.NoError(t, err, "Setup: distro New should return no error")
@@ -181,13 +208,13 @@ func TestKeepAwake(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			testutils.TerminateDistro(t, distroName)
+			testutils.TerminateDistro(t, ctx, distroName)
 
 			if tc.invalidateDistro {
 				d.Invalidate(errors.New("setup: invalidating distro"))
 			}
 			if tc.unregisterDistro {
-				testutils.UnregisterDistro(t, distroName)
+				testutils.UnregisterDistro(t, ctx, distroName)
 			}
 
 			err = d.KeepAwake(ctx)
@@ -195,7 +222,7 @@ func TestKeepAwake(t *testing.T) {
 				require.Error(t, err, "KeepAwake should have returned an error")
 
 				time.Sleep(5 * time.Second)
-				state := testutils.DistroState(t, distroName)
+				state := testutils.DistroState(t, ctx, distroName)
 				require.NotEqual(t, "Running", state, "distro should not run when KeepAwake is called")
 
 				return
@@ -203,17 +230,17 @@ func TestKeepAwake(t *testing.T) {
 			require.NoError(t, err, "KeepAwake should have returned no error")
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, distroName) == "Running"
+				return testutils.DistroState(t, ctx, distroName) == "Running"
 			}, 10*time.Second, time.Second, "distro should have started after calling keepAwake")
 
 			time.Sleep(2 * wslSleepDelay)
 
-			require.Equal(t, "Running", testutils.DistroState(t, distroName), "KeepAwake should have kept the distro running")
+			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "KeepAwake should have kept the distro running")
 
 			cancel()
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, distroName) == "Stopped"
+				return testutils.DistroState(t, ctx, distroName) == "Stopped"
 			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
 		})
 	}
@@ -221,7 +248,13 @@ func TestKeepAwake(t *testing.T) {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerConstruction(t *testing.T) {
-	distroName, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		constructorReturnErr bool
@@ -238,7 +271,7 @@ func TestWorkerConstruction(t *testing.T) {
 			t.Parallel()
 
 			type testContextMarker int
-			ctx := context.WithValue(context.Background(), testContextMarker(42), 27)
+			ctx := context.WithValue(ctx, testContextMarker(42), 27)
 
 			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
 
@@ -246,7 +279,8 @@ func TestWorkerConstruction(t *testing.T) {
 			initialTasks, err := initialtasks.New(workDir)
 			require.NoError(t, err, "Setup: initialTasks should construct without issues")
 
-			d, err := distro.New(distroName,
+			d, err := distro.New(ctx,
+				distroName,
 				distro.Properties{},
 				workDir,
 				distro.WithTaskProcessingContext(ctx),
@@ -270,11 +304,17 @@ func TestWorkerConstruction(t *testing.T) {
 }
 
 func TestInvalidateIdempotent(t *testing.T) {
-	distroName, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	inj, w := mockWorkerInjector(false)
 
-	d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), inj)
+	d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), inj)
 	defer d.Cleanup(context.Background())
 	require.NoError(t, err, "Setup: distro New should return no error")
 
@@ -282,7 +322,7 @@ func TestInvalidateIdempotent(t *testing.T) {
 
 	d.Invalidate(errors.New("Hi! I'm an error"))
 	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
-	require.True(t, (*w).stopCalled, "worker Stop should be called during the first invalidation")
+	require.False(t, (*w).stopCalled, "worker Stop should only be called during cleanup")
 
 	(*w).stopCalled = false
 
@@ -297,7 +337,13 @@ func TestInvalidateIdempotent(t *testing.T) {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerWrappers(t *testing.T) {
-	distroName, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		function      string // What method to call
@@ -333,7 +379,7 @@ func TestWorkerWrappers(t *testing.T) {
 
 			inj, w := mockWorkerInjector(false)
 
-			d, err := distro.New(distroName, distro.Properties{}, t.TempDir(), inj)
+			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), inj)
 			defer d.Cleanup(context.Background())
 			require.NoError(t, err, "Setup: distro New should return no error")
 

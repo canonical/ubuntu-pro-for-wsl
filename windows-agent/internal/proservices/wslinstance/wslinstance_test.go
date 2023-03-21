@@ -16,6 +16,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -29,8 +31,9 @@ func TestMain(m *testing.M) {
 
 func TestNew(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 
-	db, err := database.New(t.TempDir(), nil)
+	db, err := database.New(ctx, t.TempDir(), nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 
 	_, err = wslinstance.New(context.Background(), db)
@@ -77,7 +80,13 @@ func (w step) String() string {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestConnected(t *testing.T) {
-	distroName, _ := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		useEmptyDistroName  bool
@@ -107,13 +116,13 @@ func TestConnected(t *testing.T) {
 				distroName = ""
 			}
 
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(ctx)
 			t.Cleanup(func() { cancel() })
 
-			db, err := database.New(t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 
-			srv, err := newWrappedService(context.Background(), db)
+			srv, err := newWrappedService(ctx, db)
 			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
 
 			grpcServer, ctrlAddr := serveWSLInstance(t, ctx, srv)
@@ -168,7 +177,7 @@ func TestConnected(t *testing.T) {
 
 			// Ensure we got matching properties on the agent side.
 			props := propsFromInfo(t, info)
-			require.Equal(t, props, d.Properties, "Distro properties should match those sent via the SendInfo.")
+			require.Equal(t, props, d.Properties(), "Distro properties should match those sent via the SendInfo.")
 
 			// Connected has added the distro to the database.
 			now = afterDatabaseQuery
@@ -177,8 +186,11 @@ func TestConnected(t *testing.T) {
 				return
 			}
 
-			// newWslServiceConn has a 1 second timeout with 5 retries
-			maxDelay := 5100 * time.Millisecond
+			// Small amount of time to mitigate races
+			const epsilon = 100 * time.Millisecond
+
+			// newWslServiceConn has a 2 second timeout with 5 retries
+			const maxDelay = 5*2*time.Second + epsilon
 
 			if tc.skipLinuxServe {
 				// Distro should not become active: there is no service on Linux to connect to.
@@ -221,7 +233,7 @@ func TestConnected(t *testing.T) {
 			// One of the property should have changed.
 			props = propsFromInfo(t, info)
 			require.Eventually(t, func() bool {
-				return d.Properties == props
+				return d.Properties() == props
 			}, time.Second, 10*time.Millisecond, "Distro properties should be refreshed after every call to SendInfo to the control stream")
 
 			// The database has been updated after the second info
@@ -235,9 +247,7 @@ func TestConnected(t *testing.T) {
 // testLoggerInterceptor replaces the logging middleware by printing the return
 // error of Connected to the test Log.
 //
-// see that it is the middleware reporting.
-//
-//nolint:thelper // The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to
+//nolint:thelper // The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to see that it is the middleware reporting.
 func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := handler(srv, stream); err != nil {
@@ -293,13 +303,18 @@ func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (se
 	server = grpc.NewServer(grpc.StreamInterceptor(testLoggerInterceptor(t)))
 	agentapi.RegisterWSLInstanceServer(server, &srv)
 
+	t.Logf("serveWSLInstance: selecting port")
+
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:")
 	require.NoError(t, err, "Setup: could not listen to autoselected port")
 
-	// Not checking the returned error because we're testing only the Connected function and this is the "other side"
-	// of the pipe.
-	go func() { _ = server.Serve(lis) }()
+	t.Logf("serveWSLInstance: serving on: %v", lis.Addr().String())
+
+	go func() {
+		err := server.Serve(lis)
+		t.Logf("serveWSLInstance: serve exited with status: %v", err)
+	}()
 
 	return server, lis.Addr().String()
 }
@@ -350,6 +365,8 @@ func (m *wslDistroMock) serve(t *testing.T, wantErrNeverReceivePort bool) {
 	}
 	require.NoError(t, err, "wslDistroMock should have received the port to listen to from the control stream")
 
+	t.Logf("wslDistroMock: Received msg: %v", msg)
+
 	p := msg.GetPort()
 	require.NotEqual(t, 0, p, "Received invalid port :0 from server")
 
@@ -358,10 +375,13 @@ func (m *wslDistroMock) serve(t *testing.T, wantErrNeverReceivePort bool) {
 	lis, err := net.Listen("tcp4", addr)
 	require.NoError(t, err, "wslDistroMock: startServe: could not listen to %q", addr)
 
+	t.Logf("wslDistroMock: Listening to: %s", addr)
+
 	wslserviceapi.RegisterWSLServer(m.grpcServer, &wslserviceapi.UnimplementedWSLServer{})
 
 	// TODO
-	_ = m.grpcServer.Serve(lis)
+	err = m.grpcServer.Serve(lis)
+	t.Logf("wslDistroMock: Serve finshed with exit status: %v", err)
 }
 
 // sendInfo sends the specified info from the Linux-side client to the wslinstance service.

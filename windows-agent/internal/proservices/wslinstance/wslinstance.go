@@ -84,8 +84,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		}
 		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", d.Name(), props)
 
-		if d.Properties != props {
-			d.Properties = props
+		if d.SetProperties(props) {
 			if err := s.db.Dump(); err != nil {
 				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", d.Name(), err)
 			}
@@ -131,7 +130,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 			addr := fmt.Sprintf("localhost:%d", p)
 			log.Debugf(ctx, "Connection from %q: connecting to Linux-side service via %s", distroName, addr)
 
-			ctxTimeout, cancel := context.WithTimeout(ctx, time.Second)
+			ctxTimeout, cancel := context.WithTimeout(ctx, 2*time.Second)
 			defer cancel()
 
 			conn, err = grpc.DialContext(ctxTimeout, addr,

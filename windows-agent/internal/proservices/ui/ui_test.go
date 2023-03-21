@@ -13,10 +13,11 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	ctx := context.Background()
 	t.Parallel()
 
 	dir := t.TempDir()
-	db, err := database.New(dir, nil)
+	db, err := database.New(ctx, dir, nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	initTasks, err := initialtasks.New(dir)
 	require.NoError(t, err, "Setup: initial tasks New() should return no error")
@@ -41,9 +42,10 @@ func TestAttachProInitial(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+			ctx := context.Background()
 
 			dir := t.TempDir()
-			db, err := database.New(dir, nil)
+			db, err := database.New(ctx, dir, nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 			initTasks, err := initialtasks.New(dir)
 			require.NoError(t, err, "Setup: initial tasks New() should return no error")

@@ -8,6 +8,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"gopkg.in/yaml.v3"
 )
 
@@ -70,7 +72,13 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestSerializableDistroNewDistro(t *testing.T) {
-	registeredDistro, registeredGUID := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
 	unregisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
 	illFormedGUID := "{this string is not a valid GUID}"
 
@@ -98,7 +106,7 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 				GUID: tc.guid,
 			}
 
-			d, err := s.NewDistro(t.TempDir())
+			d, err := s.NewDistro(ctx, t.TempDir())
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
@@ -113,7 +121,13 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 }
 
 func TestNewSerializableDistro(t *testing.T) {
-	registeredDistro, registeredGUID := testutils.RegisterDistro(t, false)
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
 
 	props := distro.Properties{
 		DistroID:    "ubuntu",
@@ -122,7 +136,7 @@ func TestNewSerializableDistro(t *testing.T) {
 		ProAttached: true,
 	}
 
-	d, err := distro.New(registeredDistro, props, t.TempDir())
+	d, err := distro.New(ctx, registeredDistro, props, t.TempDir())
 	require.NoError(t, err, "Setup: distro New() should return no error")
 
 	s := database.NewSerializableDistro(d)

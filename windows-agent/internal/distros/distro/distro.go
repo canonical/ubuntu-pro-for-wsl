@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
+	"sync"
 	"sync/atomic"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
@@ -14,10 +14,9 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/google/uuid"
 	"github.com/ubuntu/decorate"
-	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
-	"golang.org/x/sys/windows"
 	"google.golang.org/grpc"
 )
 
@@ -29,7 +28,8 @@ type Distro struct {
 	identity
 
 	// Properties contains non-volatile information that is stored in the database
-	Properties
+	properties   Properties
+	propertiesMu sync.RWMutex
 
 	// invalidated is an internal value if distro can't be contacted through GRPC
 	invalidated atomic.Bool
@@ -55,7 +55,7 @@ func (*NotValidError) Error() string {
 }
 
 type options struct {
-	guid                  windows.GUID
+	guid                  uuid.UUID
 	initialTasks          *initialtasks.InitialTasks
 	taskProcessingContext context.Context
 	newWorkerFunc         func(context.Context, *Distro, string, *initialtasks.InitialTasks) (workerInterface, error)
@@ -66,7 +66,7 @@ type Option func(*options)
 
 // WithGUID is an optional parameter for distro.New that enforces GUID
 // validation.
-func WithGUID(guid windows.GUID) Option {
+func WithGUID(guid uuid.UUID) Option {
 	return func(o *options) {
 		o.guid = guid
 	}
@@ -89,10 +89,10 @@ func WithInitialTasks(i *initialtasks.InitialTasks) Option {
 //
 //   - To avoid the latter check, you can pass a default-constructed identity.GUID. In that
 //     case, the distro will be created with its currently registered GUID.
-func New(name string, props Properties, storageDir string, args ...Option) (distro *Distro, err error) {
+func New(ctx context.Context, name string, props Properties, storageDir string, args ...Option) (distro *Distro, err error) {
 	decorate.OnError(&err, "could not initialize distro %q", name)
 
-	var nilGUID windows.GUID
+	var nilGUID uuid.UUID
 	opts := options{
 		guid:                  nilGUID,
 		taskProcessingContext: context.Background(),
@@ -108,11 +108,12 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 	id := identity{
 		Name: name,
 		GUID: opts.guid,
+		ctx:  ctx,
 	}
 
 	// GUID is not initialized.
 	if id.GUID == nilGUID {
-		d := wsl.NewDistro(name)
+		d := wsl.NewDistro(ctx, name)
 		guid, err := d.GUID()
 		if err == nil {
 			id.GUID = guid
@@ -128,7 +129,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 
 	distro = &Distro{
 		identity:   id,
-		Properties: props,
+		properties: props,
 	}
 
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
@@ -144,7 +145,7 @@ func New(name string, props Properties, storageDir string, args ...Option) (dist
 }
 
 func (d *Distro) String() string {
-	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), strings.ToLower(d.GUID()))
+	return fmt.Sprintf("Distro{ name: %q, guid: %q }", d.Name(), d.GUID())
 }
 
 // Name is a getter for the distro's name.
@@ -154,7 +155,28 @@ func (d *Distro) Name() string {
 
 // GUID is a getter for the distro's GUID.
 func (d *Distro) GUID() string {
-	return strings.ToLower(d.identity.GUID.String())
+	return d.identity.GUID.String()
+}
+
+// Properties is a getter for the distro's Properties.
+func (d *Distro) Properties() Properties {
+	d.propertiesMu.RLock()
+	defer d.propertiesMu.RUnlock()
+
+	return d.properties
+}
+
+// SetProperties sets the specified properties, and returns true if the set properties are
+// different from the original ones.
+func (d *Distro) SetProperties(p Properties) bool {
+	d.propertiesMu.Lock()
+	defer d.propertiesMu.Unlock()
+
+	if d.properties == p {
+		return false
+	}
+	d.properties = p
+	return true
 }
 
 // IsActive returns true when the distro is running, and there exists an active
@@ -244,14 +266,13 @@ func (d *Distro) IsValid() bool {
 //
 // The command is reentrant, and you need to cancel the amount of time you keep it awake.
 func (d *Distro) KeepAwake(ctx context.Context) error {
-	if !d.IsValid() {
-		return &NotValidError{}
+	wslDistro, err := d.identity.getDistro()
+	if err != nil {
+		return err
 	}
 
-	wslDistro := gowsl.NewDistro(d.identity.Name)
-
 	cmd := wslDistro.Command(ctx, "sleep infinity")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return err
 	}

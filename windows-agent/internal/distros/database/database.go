@@ -36,6 +36,8 @@ type DistroDB struct {
 
 	storageDir   string
 	initialTasks *initialtasks.InitialTasks
+
+	backend context.Context
 }
 
 // New creates a database and populates it with data in the file located
@@ -47,7 +49,7 @@ type DistroDB struct {
 // Every certain amount of times, the database wil purge all distros that
 // are no longer registered or that have been marked as unreachable. This
 // cleanup can be triggered on demmand with TriggerCleanup.
-func New(storageDir string, initialTasks *initialtasks.InitialTasks) (*DistroDB, error) {
+func New(ctx context.Context, storageDir string, initialTasks *initialtasks.InitialTasks) (*DistroDB, error) {
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
 		return nil, fmt.Errorf("could not create database directory: %w", err)
 	}
@@ -56,8 +58,9 @@ func New(storageDir string, initialTasks *initialtasks.InitialTasks) (*DistroDB,
 		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
 		initialTasks:    initialTasks,
+		backend:         ctx,
 	}
-	if err := db.load(); err != nil {
+	if err := db.load(ctx); err != nil {
 		return nil, err
 	}
 
@@ -67,8 +70,8 @@ func New(storageDir string, initialTasks *initialtasks.InitialTasks) (*DistroDB,
 			case <-time.After(timeBetweenGC):
 			case <-db.scheduleTrigger:
 			}
-			if err := db.cleanup(context.TODO()); err != nil {
-				log.Errorf(context.TODO(), "Failed to clean up potentially unused distros: %v", err)
+			if err := db.cleanup(ctx); err != nil {
+				log.Errorf(ctx, "Failed to clean up potentially unused distros: %v", err)
 			}
 		}
 	}()
@@ -115,7 +118,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
@@ -130,10 +133,10 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !d.IsValid() {
 		log.Debugf(ctx, "Cache overwrite. Distro %q removed and added again", name)
 
-		go d.Cleanup(context.TODO())
+		go d.Cleanup(ctx)
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
@@ -146,8 +149,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 
 	// Name in database, correct GUID: refresh with latest properties of a valid distro
 	var err error
-	if d.Properties != props {
-		d.Properties = props
+	if d.SetProperties(props) {
 		err = db.dump()
 	}
 
@@ -192,7 +194,7 @@ func (db *DistroDB) cleanup(ctx context.Context) error {
 }
 
 // load reads the database from disk.
-func (db *DistroDB) load() error {
+func (db *DistroDB) load(ctx context.Context) error {
 	// Read raw database from disk
 	out, err := os.ReadFile(filepath.Join(db.storageDir, consts.DatabaseFileName))
 	if errors.Is(err, fs.ErrNotExist) {
@@ -213,9 +215,9 @@ func (db *DistroDB) load() error {
 	// Initializing distros into database
 	db.distros = make(map[string]*distro.Distro, len(distros))
 	for _, inert := range distros {
-		d, err := inert.newDistro(db.storageDir)
+		d, err := inert.newDistro(ctx, db.storageDir)
 		if err != nil {
-			log.Warningf(context.TODO(), "Read invalid distro from database: %#+v", inert)
+			log.Warningf(ctx, "Read invalid distro from database: %#+v", inert)
 			continue
 		}
 		db.distros[strings.ToLower(d.Name())] = d

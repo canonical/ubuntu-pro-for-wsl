@@ -15,11 +15,10 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
-	"google.golang.org/grpc"
-
 	// Importing tasks so they are registered and initialTasks can load them.
 	// TODO: as soon as we use any task anywhere in the windows agent, this will no longer be necessary.
 	_ "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
+	"google.golang.org/grpc"
 )
 
 // Manager is the orchestrator of GRPC API services and business logic.
@@ -50,19 +49,20 @@ func WithCacheDir(cachedir string) func(o *options) {
 func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
-	// Set default options.
-	home := os.Getenv("LocalAppData")
-	if home == "" {
-		return s, errors.New("Could not read env variable LocalAppData")
-	}
-
-	opts := options{
-		cacheDir: filepath.Join(home, common.LocalAppDataDir),
-	}
-
 	// Apply given options.
+	var opts options
 	for _, f := range args {
 		f(&opts)
+	}
+
+	if opts.cacheDir == "" {
+		// Set default cache dir.
+		appData := os.Getenv("LocalAppData")
+		if appData == "" {
+			return s, errors.New("Could not read env variable LocalAppData")
+		}
+
+		opts.cacheDir = filepath.Join(appData, common.LocalAppDataDir)
 	}
 
 	log.Debugf(ctx, "Manager service cache directory: %s", opts.cacheDir)
@@ -76,7 +76,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
-	db, err := database.New(opts.cacheDir, initTasks)
+	db, err := database.New(ctx, opts.cacheDir, initTasks)
 	if err != nil {
 		return s, err
 	}
