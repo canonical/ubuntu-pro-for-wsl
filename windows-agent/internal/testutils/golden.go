@@ -5,6 +5,7 @@ package testutils
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -67,7 +68,11 @@ func LoadWithUpdateFromGolden(t *testing.T, data string, opts ...GoldenOption) s
 	t.Log(o.goldenPath)
 	require.NoError(t, err, "Cannot load golden file")
 
-	return string(want)
+	r := string(want)
+	if runtime.GOOS == "windows" {
+		r = strings.ReplaceAll(r, "\r\n", "\n")
+	}
+	return r
 }
 
 // LoadWithUpdateFromGoldenYAML load the generic element from a YAML serialized golden file.
