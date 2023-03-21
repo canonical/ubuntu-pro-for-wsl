@@ -12,6 +12,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
+	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
@@ -68,7 +69,6 @@ func MockWindowsAgent(t *testing.T, ctx context.Context, portFileDir string, arg
 
 	server := grpc.NewServer()
 	agentapi.RegisterWSLInstanceServer(server, &wslInstanceMockService{
-		logf: t.Logf,
 		opts: opts,
 	})
 
@@ -79,16 +79,16 @@ func MockWindowsAgent(t *testing.T, ctx context.Context, portFileDir string, arg
 	addrFile := filepath.Join(portFileDir, common.ListeningPortFileName)
 
 	go func() {
-		t.Logf("MockWindowsAgent: Windows-agent mock serving on %q", lis.Addr().String())
+		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on %q", lis.Addr().String())
 
 		t.Cleanup(server.Stop)
 
 		if err := server.Serve(lis); err != nil {
-			t.Logf("MockWindowsAgent: Serve returned an error: %v", err)
+			log.Infof(ctx, "MockWindowsAgent: Serve returned an error: %v", err)
 		}
 
 		if err := os.Remove(addrFile); err != nil {
-			t.Logf("MockWindowsAgent: Remove address file returned an error: %v", err)
+			log.Infof(ctx, "MockWindowsAgent: Remove address file returned an error: %v", err)
 		}
 	}()
 
@@ -101,15 +101,16 @@ func MockWindowsAgent(t *testing.T, ctx context.Context, portFileDir string, arg
 type wslInstanceMockService struct {
 	agentapi.UnimplementedWSLInstanceServer
 
-	logf func(string, ...any)
 	opts options
 }
 
 func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
-	s.logf("wslInstanceMockService: Received incoming connection")
+	ctx := context.Background()
+
+	log.Infof(ctx, "wslInstanceMockService: Received incoming connection")
 
 	if s.opts.dropStreamBeforeFirstRecv {
-		s.logf("wslInstanceMockService: dropping stream before first Recv as instructed")
+		log.Infof(ctx, "wslInstanceMockService: dropping stream before first Recv as instructed")
 		return nil
 	}
 
@@ -119,10 +120,10 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	}
 
 	distro := info.GetWslName()
-	s.logf("wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
+	log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
 
 	if s.opts.dropStreamBeforeSendingPort {
-		s.logf("wslInstanceMockService: Connection with %q: dropping stream before sending port as instructed", distro)
+		log.Infof(ctx, "wslInstanceMockService: Connection with %q: dropping stream before sending port as instructed", distro)
 		return nil
 	}
 
@@ -136,7 +137,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	// localhost:0 is a bad address to send, as 0 is not a real port, but rather instructs
 	// net.Listen to autoselect a new port; hence defeating the point of pre-autoselection.
 	if s.opts.sendBadPort {
-		s.logf("wslInstanceMockService: Connection with %q: Sending bad port %d", distro, port)
+		log.Infof(ctx, "wslInstanceMockService: Connection with %q: Sending bad port %d", distro, port)
 	} else {
 		port, err = portFromAddress(lis.Addr().String())
 		if err != nil {
@@ -147,7 +148,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 			return fmt.Errorf("could not close port reserved for %q: %v", distro, err)
 		}
 
-		s.logf("wslInstanceMockService: Connection with %q: Reserved port %d", distro, port)
+		log.Infof(ctx, "wslInstanceMockService: Connection with %q: Reserved port %d", distro, port)
 	}
 
 	if err := stream.Send(&agentapi.Port{Port: port}); err != nil {
@@ -160,16 +161,16 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 		return fmt.Errorf("could not dial %q: %v", distro, err)
 	}
 
-	s.logf("wslInstanceMockService: Connection with %q: connected back via reserved port", distro)
+	log.Infof(ctx, "wslInstanceMockService: Connection with %q: connected back via reserved port", distro)
 
 	// Stay connected
 	for {
 		_, err = stream.Recv()
 		if err != nil {
-			s.logf("wslInstanceMockService: Connection with %q ended: %v", distro, err)
+			log.Infof(ctx, "wslInstanceMockService: Connection with %q ended: %v", distro, err)
 			break
 		}
-		s.logf("wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
+		log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
 	}
 
 	return nil
