@@ -15,4 +15,13 @@
 windows-agent/cmd/ubuntu-pro-agent/ubuntu-pro-agent
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+**/vendor/
+
+# Debian package build artifacts
+wsl-pro-service_*
+wsl-pro-service/_build
+wsl-pro-service/debian/*debhelper*
+wsl-pro-service/debian/*.substvars
+wsl-pro-service/debian/files
+wsl-pro-service/debian/wsl-pro-service
+
