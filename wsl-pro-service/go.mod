@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230223151706-e965dd625023
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230322100459-1ec4d0175382
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/golang/protobuf v1.5.2
 	github.com/sirupsen/logrus v1.9.0
