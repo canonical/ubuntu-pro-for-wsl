@@ -50,3 +50,8 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 	}
 	return nil, nil
 }
+
+// Ping replies a keep-alive request.
+func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.Empty, error) {
+	return request, nil
+}
