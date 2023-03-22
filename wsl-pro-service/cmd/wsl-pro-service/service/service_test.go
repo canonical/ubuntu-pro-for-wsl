@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -86,8 +88,17 @@ func TestUsageError(t *testing.T) {
 func TestCanQuitWhenExecute(t *testing.T) {
 	t.Parallel()
 
-	a, wait := startDaemon(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	dir := t.TempDir()
+	srv := testutils.MockWindowsAgent(t, ctx, dir)
+
+	a, wait := startDaemon(t, dir)
 	defer wait()
+
+	time.Sleep(time.Second)
+	srv.Stop()
 
 	a.Quit()
 }
@@ -95,7 +106,14 @@ func TestCanQuitWhenExecute(t *testing.T) {
 func TestCanQuitTwice(t *testing.T) {
 	t.Parallel()
 
-	a, wait := startDaemon(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	dir := t.TempDir()
+	testutils.MockWindowsAgent(t, ctx, dir)
+
+	a, wait := startDaemon(t, dir)
+
 	a.Quit()
 	wait()
 
@@ -201,7 +219,8 @@ func startDaemon(t *testing.T) (app *service.App, done func()) {
 	}
 }
 
-// captureStdout capture current process stdout and returns a function to get the captured buffer.
+// captureStdout captures current process stdout and returns a function to get the captured buffer.
+// Do NOT use in parallel tests.
 func captureStdout(t *testing.T) func() string {
 	t.Helper()
 
