@@ -1,0 +1,11 @@
+[Unit]
+Description=Bridge to Ubuntu Pro agent on Windows
+
+[Service]
+Type=notify
+ExecStart=/usr/libexec/wsl-pro-service
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target
