@@ -86,7 +86,10 @@ func TestNew(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			testDir := t.TempDir()
+			rootDir := testutils.MockFilesystem(t)
+			portDir := testutils.PortDir(rootDir)
+			portFile := filepath.Join(portDir, common.ListeningPortFileName)
+			resolvConf := filepath.Join(rootDir, "etc/resolv.conf")
 
 			var agentArgs []testutils.AgentOption
 			if tc.agentDoesntRecv {
@@ -97,10 +100,7 @@ func TestNew(t *testing.T) {
 				agentArgs = append(agentArgs, testutils.WithSendBadPort())
 			}
 
-			testutils.MockWindowsAgent(t, ctx, testDir, agentArgs...)
-
-			portFile := filepath.Join(testDir, common.ListeningPortFileName)
-			resolvConf := filepath.Join(testDir, "resolv.conf")
+			testutils.MockWindowsAgent(t, ctx, filepath.Dir(portFile), agentArgs...)
 
 			switch tc.portFile {
 			case dataFileGood:
@@ -108,7 +108,10 @@ func TestNew(t *testing.T) {
 				err := os.Remove(portFile)
 				require.NoError(t, err, "Setup: could not remove port file")
 			case dataFileUnreadable:
-				portFile = testDir
+				err := os.Remove(portFile)
+				require.NoError(t, err, "Setup: could not remove port file")
+				err = os.Mkdir(portFile, 0600)
+				require.NoError(t, err, "Setup: could not create directory where port file should be")
 			case dataFileEmpty:
 				f, err := os.Create(portFile)
 				require.NoError(t, err, "Setup: failed to create empty port file")
@@ -134,8 +137,13 @@ func TestNew(t *testing.T) {
 			case dataFileGood:
 				copyFile(t, "testdata/resolv.conf", resolvConf)
 			case dataFileNotExist:
+				err := os.Remove(resolvConf)
+				require.NoError(t, err, "Setup: could not remove resolv.conf file")
 			case dataFileUnreadable:
-				resolvConf = testDir
+				err := os.Remove(resolvConf)
+				require.NoError(t, err, "Setup: could not remove resolv.conf file")
+				err = os.Mkdir(resolvConf, 0600)
+				require.NoError(t, err, "Setup: could not write /etc/resolv.conf/ directory")
 			case dataFileEmpty:
 				f, err := os.Create(resolvConf)
 				require.NoError(t, err, "Setup: could not create empty resolv.conf file")
@@ -162,7 +170,7 @@ func TestNew(t *testing.T) {
 			_, err := daemon.New(
 				ctx,
 				portFile,
-				resolvConf,
+				rootDir,
 				countRegistrations,
 			)
 			if tc.wantErr {
@@ -170,7 +178,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err, "New() should have return no error")
+			require.NoError(t, err, "New() should have returned no error")
 			require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
 		})
 	}
@@ -212,10 +220,11 @@ func TestServeAndQuit(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			dir := t.TempDir()
-			portFile := filepath.Join(dir, common.ListeningPortFileName)
+			rootDir := testutils.MockFilesystem(t)
+			portDir := testutils.PortDir(rootDir)
+			portFile := filepath.Join(portDir, common.ListeningPortFileName)
 
-			testutils.MockWindowsAgent(t, ctx, dir)
+			testutils.MockWindowsAgent(t, ctx, portDir)
 
 			registerer := func(ctx context.Context, ctrl wslinstanceservice.ControlStreamClient) *grpc.Server {
 				// No need for a real GRPC service
@@ -227,12 +236,11 @@ func TestServeAndQuit(t *testing.T) {
 				returnErr: tc.notifierErr,
 			}
 
-			resolvConf := filepath.Join(dir, "resolv.conf")
-			copyFile(t, "testdata/resolv.conf", resolvConf)
+			copyFile(t, "testdata/resolv.conf", filepath.Join(rootDir, "etc/resolv.conf"))
 
 			d, err := daemon.New(ctx,
 				portFile,
-				resolvConf,
+				rootDir,
 				registerer,
 				daemon.WithSystemdNotifier(systemd.notify),
 			)

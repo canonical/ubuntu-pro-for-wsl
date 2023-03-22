@@ -14,10 +14,6 @@ import (
 // It is restored during test cleanup.
 var InjectWslRootPath = testutils.DefineInjector(&wslRootPath)
 
-// InjectOsRelease changes the definition of private function osRelease.
-// It is restored during test cleanup.
-var InjectOsRelease = testutils.DefineInjector(&osRelease)
-
 // InjectProStatusCmdOutput changes the definition of private function proStatusCmdOutput.
 // It is restored during test cleanup.
 var InjectProStatusCmdOutput = testutils.DefineInjector(&proStatusCmdOutput)
@@ -38,21 +34,6 @@ func InjectMock(t *testing.T) *agentapi.DistroInfo {
 
 	InjectProStatusCmdOutput(t, func(ctx context.Context) ([]byte, error) {
 		return []byte(`{"attached": false}`), nil
-	})
-
-	InjectOsRelease(t, func() ([]byte, error) {
-		return []byte(`PRETTY_NAME="Ubuntu 22.04.1 LTS"
-NAME="Ubuntu"
-VERSION_ID="22.04"
-VERSION="22.04.1 LTS (Jammy Jellyfish)"
-VERSION_CODENAME=jammy
-ID=ubuntu
-ID_LIKE=debian
-HOME_URL="https://www.ubuntu.com/"
-SUPPORT_URL="https://help.ubuntu.com/"
-BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
-PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-UBUNTU_CODENAME=jammy"`), nil
 	})
 
 	return &agentapi.DistroInfo{

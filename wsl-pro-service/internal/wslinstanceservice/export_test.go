@@ -2,8 +2,6 @@ package wslinstanceservice
 
 import (
 	"context"
-
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 )
 
 // WithProAttach replaces exec.Command.Output with a custom function to pro-attach.
@@ -27,15 +25,6 @@ func WithProStatus(proStatus bool, err error) Option {
 	return func(o *options) {
 		o.proStatus = func(ctx context.Context) (bool, error) {
 			return proStatus, err
-		}
-	}
-}
-
-// WithGetSystemInfo replaces systeminfo.Get with a custom function.
-func WithGetSystemInfo(info *agentapi.DistroInfo, err error) Option {
-	return func(o *options) {
-		o.getSystemInfo = func() (*agentapi.DistroInfo, error) {
-			return info, err
 		}
 	}
 }

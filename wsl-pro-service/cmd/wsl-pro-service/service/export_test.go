@@ -6,8 +6,8 @@ func WithAgentPortFilePath(path string) func(*options) {
 	}
 }
 
-func WithResolvConfFilePath(path string) func(*options) {
+func WithFilesystemRoot(path string) func(*options) {
 	return func(o *options) {
-		o.resolvConfFilePath = path
+		o.rootPath = path
 	}
 }

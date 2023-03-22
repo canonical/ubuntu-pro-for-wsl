@@ -28,20 +28,21 @@ type Service struct {
 }
 
 type options struct {
-	proAttachCmd  func(ctx context.Context, token string) ([]byte, error)
-	proDetachCmd  func(ctx context.Context) ([]byte, error)
-	proStatus     func(ctx context.Context) (attached bool, err error)
-	getSystemInfo func() (*agentapi.DistroInfo, error)
+	proAttachCmd func(ctx context.Context, token string) ([]byte, error)
+	proDetachCmd func(ctx context.Context) ([]byte, error)
+	proStatus    func(ctx context.Context) (attached bool, err error)
+
+	rootDir string
 }
 
 type Option func(*options)
 
-func New(args ...Option) *Service {
+func New(rootDir string, args ...Option) *Service {
 	opts := options{
-		proAttachCmd:  attachProCmd,
-		proDetachCmd:  detachProCmd,
-		proStatus:     systeminfo.ProStatus,
-		getSystemInfo: systeminfo.Get,
+		proAttachCmd: attachProCmd,
+		proDetachCmd: detachProCmd,
+		proStatus:    systeminfo.ProStatus,
+		rootDir:      rootDir,
 	}
 
 	for _, f := range args {
@@ -93,7 +94,7 @@ func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo)
 	log.Debugf(ctx, "ProAttach call: pro attachment complete, sending back result")
 
 	// Check the status again
-	sysinfo, err := s.getSystemInfo()
+	sysinfo, err := systeminfo.Get(s.rootDir)
 	if err != nil {
 		log.Warning(ctx, "Could not gather system info, skipping send-back to the control stream")
 		return nil, nil

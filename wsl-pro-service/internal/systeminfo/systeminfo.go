@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -19,7 +20,7 @@ const DistroNameEnv = "WSL_DISTRO_NAME"
 
 // Get returns the current information about the system relevant to the GRPC
 // connection to the agent.
-func Get() (*agentapi.DistroInfo, error) {
+func Get(fileSystemRoot string) (*agentapi.DistroInfo, error) {
 	distroName, err := wslDistroName()
 	if err != nil {
 		return nil, err
@@ -35,7 +36,7 @@ func Get() (*agentapi.DistroInfo, error) {
 		ProAttached: pro,
 	}
 
-	if err := fillOsRelease(info); err != nil {
+	if err := fillOsRelease(info, fileSystemRoot); err != nil {
 		return nil, err
 	}
 
@@ -43,8 +44,8 @@ func Get() (*agentapi.DistroInfo, error) {
 }
 
 // fillOSRelease extends info with os-release file content.
-func fillOsRelease(info *agentapi.DistroInfo) error {
-	out, err := osRelease()
+func fillOsRelease(info *agentapi.DistroInfo, fileSystemRoot string) error {
+	out, err := os.ReadFile(filepath.Join(fileSystemRoot, "etc/os-release"))
 	if err != nil {
 		return fmt.Errorf("could not read /etc/os-release file: %v", err)
 	}
@@ -118,10 +119,4 @@ var wslRootPath = func() ([]byte, error) {
 // allow for dependency injection.
 var proStatusCmdOutput = func(ctx context.Context) ([]byte, error) {
 	return exec.CommandContext(ctx, "pro", "status", "--format=json").Output()
-}
-
-// osRelease returns the contents of /etc/os-release. Extracted as a variable to
-// allow for dependency injection.
-var osRelease = func() ([]byte, error) {
-	return os.ReadFile("/etc/os-release")
 }

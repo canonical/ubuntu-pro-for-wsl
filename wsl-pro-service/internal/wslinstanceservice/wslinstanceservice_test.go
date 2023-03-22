@@ -4,10 +4,15 @@ import (
 	"context"
 	"errors"
 	"net"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/stretchr/testify/require"
@@ -16,7 +21,7 @@ import (
 )
 
 func TestProAttach(t *testing.T) {
-	t.Parallel()
+	t.Setenv(systeminfo.DistroNameEnv, "TEST_DISTRO")
 
 	type detachResult int
 	const (
@@ -66,7 +71,7 @@ func TestProAttach(t *testing.T) {
 				Id:          "ubuntu",
 				VersionId:   "22.04",
 				PrettyName:  "Ubuntu 22.04.1 LTS",
-				ProAttached: true,
+				ProAttached: false,
 			}
 
 			ctrlClient, controlService := newCtrlStream(t, ctx)
@@ -74,15 +79,13 @@ func TestProAttach(t *testing.T) {
 
 			const wantToken = "1000"
 
+			rootDir := testutils.MockFilesystem(t)
 			var args []wslinstanceservice.Option
 
 			// Setting up system info
-			{
-				info, err := wantSysInfo, error(nil)
-				if tc.getSystemInfoErr {
-					info, err = nil, errors.New("test error")
-				}
-				args = append(args, wslinstanceservice.WithGetSystemInfo(info, err))
+
+			if tc.getSystemInfoErr {
+				os.Remove(filepath.Join(rootDir, "etc/os-release"))
 			}
 
 			// Setting up pro status
@@ -129,7 +132,7 @@ func TestProAttach(t *testing.T) {
 				}))
 			}
 
-			wslClient := setupWSLInstanceService(t, ctx, ctrlClient, args...)
+			wslClient := setupWSLInstanceService(t, ctx, ctrlClient, rootDir, args...)
 
 			errCh := make(chan error)
 			go func() {
@@ -152,13 +155,13 @@ func TestProAttach(t *testing.T) {
 }
 
 //nolint:revive // We've decided testing.T always preceedes the context.
-func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, args ...wslinstanceservice.Option) wslserviceapi.WSLClient {
+func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, rootDir string, args ...wslinstanceservice.Option) wslserviceapi.WSLClient {
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
 
-	sv := wslinstanceservice.New(args...)
+	sv := wslinstanceservice.New(rootDir, args...)
 	server := sv.RegisterGRPCService(context.Background(), ctrlClient)
 
 	var conf net.ListenConfig

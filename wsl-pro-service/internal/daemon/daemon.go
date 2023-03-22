@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -43,7 +44,7 @@ type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStrea
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, agentPortFilePath string, resolvConfFilePath string, registerGRPCService GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
+func New(ctx context.Context, agentPortFilePath string, fileSystemRoot string, registerGRPCService GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
@@ -58,7 +59,7 @@ func New(ctx context.Context, agentPortFilePath string, resolvConfFilePath strin
 		f(&opts)
 	}
 
-	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath, resolvConfFilePath)
+	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath, fileSystemRoot)
 	if err != nil {
 		return d, err
 	}
@@ -120,10 +121,10 @@ func (d Daemon) Quit(ctx context.Context, force bool) {
 
 // connectToControlStream connects to the control stream and initiates communication
 // by sending the distro's info.
-func connectToControlStream(ctx context.Context, agentPortFilePath, resolvConfFilePath string) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
+func connectToControlStream(ctx context.Context, agentPortFilePath, fileSystemRoot string) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
 	defer decorate.OnError(&err, "could not connect to windows agent via the control stream")
 
-	ctrlAddr, err := getControlStreamAddress(agentPortFilePath, resolvConfFilePath)
+	ctrlAddr, err := getControlStreamAddress(agentPortFilePath, fileSystemRoot)
 	if err != nil {
 		return nil, fmt.Errorf("could not get address: %v", err)
 	}
@@ -140,7 +141,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath, resolvConfFi
 		return ctrlStream, fmt.Errorf("could not connect to GRPC service: %v", err)
 	}
 
-	sysinfo, err := systeminfo.Get()
+	sysinfo, err := systeminfo.Get(fileSystemRoot)
 	if err != nil {
 		return ctrlStream, fmt.Errorf("could not obtain system info: %v", err)
 	}
@@ -152,7 +153,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath, resolvConfFi
 	return ctrlStream, nil
 }
 
-func getControlStreamAddress(agentPortFilePath string, resolvConfFilePath string) (string, error) {
+func getControlStreamAddress(agentPortFilePath, fileSystemRoot string) (string, error) {
 	/*
 		We parse the the port from the file written by the windows agent.
 	*/
@@ -179,7 +180,7 @@ func getControlStreamAddress(agentPortFilePath string, resolvConfFilePath string
 		nameserver 172.22.16.1
 	*/
 
-	r, err := os.Open(resolvConfFilePath)
+	r, err := os.Open(filepath.Join(fileSystemRoot, "/etc/resolv.conf"))
 	if err != nil {
 		return "", err
 	}

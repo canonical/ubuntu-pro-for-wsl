@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
@@ -36,8 +37,8 @@ type daemonConfig struct {
 }
 
 type options struct {
-	agentPortFilePath  string
-	resolvConfFilePath string
+	agentPortFilePath string
+	rootPath          string
 }
 
 type option func(*options)
@@ -93,7 +94,7 @@ func cmdName() string {
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve(args ...option) error {
 	opt := options{
-		resolvConfFilePath: "/etc/resolv.conf",
+		rootPath: "/",
 	}
 	for _, f := range args {
 		f(&opt)
@@ -104,13 +105,13 @@ func (a *App) serve(args ...option) error {
 		if err != nil {
 			return fmt.Errorf("Could not find $env:LocalAppData: %v", err)
 		}
-		opt.agentPortFilePath = strings.TrimSpace(string(out))
+		opt.agentPortFilePath = filepath.Join(strings.TrimSpace(string(out)), common.LocalAppDataDir, common.ListeningPortFileName)
 	}
 
 	srv := wslinstanceservice.Service{}
 
 	// Connect with the agent.
-	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, opt.resolvConfFilePath, srv.RegisterGRPCService)
+	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, opt.rootPath, srv.RegisterGRPCService)
 	if err != nil {
 		close(a.ready)
 		return err

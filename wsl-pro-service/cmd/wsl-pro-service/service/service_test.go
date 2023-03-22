@@ -101,10 +101,10 @@ func TestCanQuitWhenExecute(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	dir := t.TempDir()
-	srv := testutils.MockWindowsAgent(t, ctx, dir)
+	rootDir := testutils.MockFilesystem(t)
+	srv := testutils.MockWindowsAgent(t, ctx, testutils.PortDir(rootDir))
 
-	a, wait := startDaemon(t, dir)
+	a, wait := startDaemon(t, rootDir)
 	defer wait()
 
 	time.Sleep(time.Second)
@@ -119,10 +119,10 @@ func TestCanQuitTwice(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	dir := t.TempDir()
-	testutils.MockWindowsAgent(t, ctx, dir)
+	rootDir := testutils.MockFilesystem(t)
+	testutils.MockWindowsAgent(t, ctx, testutils.PortDir(rootDir))
 
-	a, wait := startDaemon(t, dir)
+	a, wait := startDaemon(t, rootDir)
 
 	a.Quit()
 	wait()
@@ -170,31 +170,28 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			dir := t.TempDir()
-			badCache := filepath.Join(dir, "file")
+			rootDir := testutils.MockFilesystem(t)
+			portFile := filepath.Join(testutils.PortDir(rootDir), common.ListeningPortFileName)
 
-			daemonCache := dir
-			if tc.invalidDaemonCache {
-				daemonCache = badCache
-			}
-
-			resolvConf := filepath.Join(dir, "resolv.conf")
+			resolvConf := filepath.Join(rootDir, "etc/resolv.conf")
 			if tc.invalidResolvConfFile {
-				err := os.MkdirAll(resolvConf, 0600)
+				err := os.Remove(resolvConf)
+				require.NoError(t, err, "Setup: could not remove mock resolv.conf")
+				err = os.MkdirAll(resolvConf, 0600)
 				require.NoError(t, err, "Setup: could not create resolv.conf directory to interfere with service")
-			} else {
-				err := os.WriteFile(resolvConf, []byte("nameserver localhost"), 0600)
-				require.NoError(t, err, "Setup: could not write resolv.conf file")
 			}
 
-			a := service.New(service.WithAgentPortFilePath(daemonCache), service.WithResolvConfFilePath(resolvConf))
+			a := service.New(service.WithAgentPortFilePath(portFile), service.WithFilesystemRoot(rootDir))
 			a.SetArgs()
 
-			err := os.WriteFile(badCache, []byte("I'm here to break the service"), 0600)
-			require.NoError(t, err, "Failed to write file")
+			if tc.invalidDaemonCache {
+				err := os.WriteFile(portFile, []byte("I'm here to break the service"), 0600)
+				require.NoError(t, err, "Failed to write file")
+			}
 
-			err = a.Run()
+			err := a.Run()
 			require.Error(t, err, "Run should exit with an error")
+
 			a.Quit()
 		})
 	}
@@ -223,16 +220,12 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and start the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T, winAgentDir string) (app *service.App, done func()) {
+func startDaemon(t *testing.T, rootDir string) (app *service.App, done func()) {
 	t.Helper()
 
-	resolv := filepath.Join(t.TempDir(), "resolv.conf")
-	err := os.WriteFile(resolv, []byte("nameserver localhost"), 0600)
-	require.NoError(t, err, "Setup: could not write resolv.conf")
-
 	a := service.New(
-		service.WithAgentPortFilePath(filepath.Join(winAgentDir, common.ListeningPortFileName)),
-		service.WithResolvConfFilePath(resolv),
+		service.WithAgentPortFilePath(filepath.Join(testutils.PortDir(rootDir), common.ListeningPortFileName)),
+		service.WithFilesystemRoot(rootDir),
 	)
 
 	a.SetArgs("-vvv")
