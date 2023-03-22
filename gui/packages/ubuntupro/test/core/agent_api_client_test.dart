@@ -40,7 +40,7 @@ void main() {
   });
 
   final skip = Platform.environment['GOPATH'] == null
-      ? 'Those tests require Go to start the agent'
+      ? 'These tests require Go to start the agent'
       : false;
 
   // The following group is conditionally skipped based on the absence of the
