@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -148,7 +148,7 @@ func TestNew(t *testing.T) {
 			}
 
 			var regCount int
-			countRegistrations := func(context.Context, agentapi.WSLInstance_ConnectedClient) *grpc.Server {
+			countRegistrations := func(context.Context, wslinstanceservice.ControlStreamClient) *grpc.Server {
 				regCount++
 				return nil
 			}
@@ -214,7 +214,7 @@ func TestServeAndQuit(t *testing.T) {
 
 			testutils.MockWindowsAgent(t, ctx, dir)
 
-			registerer := func(ctx context.Context, ctrl agentapi.WSLInstance_ConnectedClient) *grpc.Server {
+			registerer := func(ctx context.Context, ctrl wslinstanceservice.ControlStreamClient) *grpc.Server {
 				// No need for a real GRPC service
 				return grpc.NewServer()
 			}

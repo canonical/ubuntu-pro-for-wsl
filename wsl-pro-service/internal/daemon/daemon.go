@@ -14,6 +14,7 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
@@ -38,7 +39,7 @@ type systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
 type Option func(*options)
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
-type GRPCServiceRegisterer func(context.Context, agentapi.WSLInstance_ConnectedClient) *grpc.Server
+type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStreamClient) *grpc.Server
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.

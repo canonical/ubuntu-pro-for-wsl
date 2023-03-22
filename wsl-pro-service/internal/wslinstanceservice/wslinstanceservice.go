@@ -14,9 +14,14 @@ import (
 	"google.golang.org/grpc"
 )
 
+// ControlStreamClient is the client to the stream between the Windows Agent and the WSL instance service.
+type ControlStreamClient interface {
+	Send(*agentapi.DistroInfo) error
+}
+
 // Service is the object in charge of commuicating to the Windows agent.
 type Service struct {
-	ctrlStream agentapi.WSLInstance_ConnectedClient
+	ctrlStream ControlStreamClient
 
 	wslserviceapi.UnimplementedWSLServer
 }
