@@ -311,10 +311,7 @@ func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (se
 
 	t.Logf("serveWSLInstance: serving on: %v", lis.Addr().String())
 
-	go func() {
-		err := server.Serve(lis)
-		t.Logf("serveWSLInstance: serve exited with status: %v", err)
-	}()
+	go func() { _ = server.Serve(lis) }()
 
 	return server, lis.Addr().String()
 }
@@ -379,9 +376,7 @@ func (m *wslDistroMock) serve(t *testing.T, wantErrNeverReceivePort bool) {
 
 	wslserviceapi.RegisterWSLServer(m.grpcServer, &wslserviceapi.UnimplementedWSLServer{})
 
-	// TODO
-	err = m.grpcServer.Serve(lis)
-	t.Logf("wslDistroMock: Serve finshed with exit status: %v", err)
+	_ = m.grpcServer.Serve(lis)
 }
 
 // sendInfo sends the specified info from the Linux-side client to the wslinstance service.

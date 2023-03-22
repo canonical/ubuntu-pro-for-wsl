@@ -22,6 +22,9 @@ func NewSerializableDistro(d *distro.Distro) SerializableDistro {
 
 // DistroNames returns the names of all distros in the database.
 func (db *DistroDB) DistroNames() (out []string) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
 	for _, d := range db.distros {
 		out = append(out, d.Name())
 	}
