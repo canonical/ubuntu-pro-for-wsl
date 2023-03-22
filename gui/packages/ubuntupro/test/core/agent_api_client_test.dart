@@ -3,7 +3,6 @@
 import 'dart:io';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grpc/grpc.dart';
 import 'package:path/path.dart' as p;
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
@@ -62,13 +61,8 @@ void main() {
       expect(await client!.ping(), isTrue);
     });
     test('pro attach', () async {
-      // This currently errors out because of implementation details on the agent.
-      // soon this will require a better implementation.
-      try {
-        await client!.proAttach('C123');
-      } on GrpcError catch (err) {
-        expect(err.code, StatusCode.unknown);
-      }
+      // expect no throw.
+      await client!.proAttach('C123');
     });
   });
 }
