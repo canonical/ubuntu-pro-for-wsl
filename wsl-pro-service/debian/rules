@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+export GOCACHE=$(shell mktemp -d /tmp/gocache-XXXX)
+
+# We want to copy special files from our monorepo like "common/version".
+export DH_GOLANG_INSTALL_ALL=1
+
+%:
+	dh $@ --builddirectory=_build --with=apport
+
+execute_after_dh_auto_clean:
+	# Create the vendor directory when building the source package
+	[ -d vendor/ ] || go mod vendor
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source
+
+	# systemd services
+	mkdir -p debian/wsl-pro-service/lib/systemd/system
+	cp -a services/* debian/wsl-pro-service/lib/systemd/system/
+
+	# Install our service in libexec as it's not intended for end user
+	mv debian/wsl-pro-service/usr/bin/ debian/wsl-pro-service/usr/libexec/
+
+# dwz does not support golang binaries yet
+override_dh_dwz:
