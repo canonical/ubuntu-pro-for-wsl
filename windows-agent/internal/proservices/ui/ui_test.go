@@ -23,7 +23,6 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: initial tasks New() should return no error")
 
 	_ = ui.New(context.Background(), db, initTasks)
-
 }
 
 func TestAttachProInitial(t *testing.T) {
