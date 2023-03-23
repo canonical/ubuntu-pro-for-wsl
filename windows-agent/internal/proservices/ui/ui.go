@@ -40,10 +40,6 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 	}
 
 	distros := s.db.GetAll()
-	if len(distros) == 0 {
-		return &agentapi.Empty{}, nil
-	}
-
 	for _, d := range distros {
 		if err := d.SubmitTasks(task); err != nil {
 			return nil, err
