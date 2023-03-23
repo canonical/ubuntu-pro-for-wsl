@@ -38,6 +38,7 @@ func TestAttachPro(t *testing.T) {
 		t.Parallel()
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
+
 	distro1, _ := testutils.RegisterDistro(t, ctx, false)
 	distro2, _ := testutils.RegisterDistro(t, ctx, false)
 
@@ -45,12 +46,10 @@ func TestAttachPro(t *testing.T) {
 	testCases := map[string]struct {
 		token string
 
-		distros     []string
-		initialErrs bool
-		distroErrs  bool
+		distros []string
 	}{
-		"Empty database succeeds with only initial tasks": {token: info.Token, distros: []string{}, initialErrs: false, distroErrs: false},
-		"Non-empty database succeeds":                     {token: info.Token, distros: []string{distro1, distro2}, initialErrs: false, distroErrs: false},
+		"Empty database succeeds with only initial tasks": {token: info.Token},
+		"Success with a non-empty database":               {token: info.Token, distros: []string{distro1, distro2}},
 	}
 
 	for name, tc := range testCases {
@@ -66,26 +65,18 @@ func TestAttachPro(t *testing.T) {
 				_, err := db.GetDistroAndUpdateProperties(context.Background(), tc.distros[i], distro.Properties{})
 				require.NoError(t, err, "Setup: could not add %q to database", tc.distros[i])
 			}
+
 			initTasks, err := initialtasks.New(dir)
 			require.NoError(t, err, "Setup: initial tasks New() should return no error")
 			serv := ui.New(context.Background(), db, initTasks)
 
 			_, err = serv.ProAttach(context.Background(), &info)
-
-			if tc.distroErrs {
-				require.Error(t, err, "Adding the task to existing distros should fail.")
-			} else {
-				require.NoError(t, err, "Adding the task to existing distros should succeed.")
-				// Could it be nice to retrieve the distro's pending tasks?
-			}
+			require.NoError(t, err, "Adding the task to existing distros should succeed.")
+			// Could it be nice to retrieve the distro's pending tasks?
 
 			it := initTasks.All()
-			if tc.initialErrs {
-				require.Error(t, err, "Adding to initial tasks should fail.")
-			} else {
-				require.Equal(t, len(it), 1, "Only one task should have been added")
-				require.Equal(t, it[0], tasks.AttachPro{Token: tc.token})
-			}
+			require.Equal(t, len(it), 1, "Only one task should have been added")
+			require.Equal(t, it[0], tasks.AttachPro{Token: tc.token})
 		})
 	}
 }
