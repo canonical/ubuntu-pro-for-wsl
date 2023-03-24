@@ -3,6 +3,7 @@ package ui
 
 import (
 	"context"
+	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
@@ -29,10 +30,20 @@ func New(ctx context.Context, db *database.DistroDB, initialTasks *initialtasks.
 	}
 }
 
+func obfuscate(contents string) string {
+	const endsToReveal = 2
+	asterisksLength := len(contents) - 2*endsToReveal
+	if asterisksLength < 1 {
+		return strings.Repeat("*", len(contents))
+	}
+
+	return contents[0:endsToReveal] + strings.Repeat("*", asterisksLength) + contents[asterisksLength+endsToReveal:]
+}
+
 // ProAttach handles the gRPC call to pro attach all distros using a token provided by the GUI.
 func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*agentapi.Empty, error) {
 	token := info.Token
-	log.Debugf(ctx, "Received token %s", token)
+	log.Debugf(ctx, "Received token %s", obfuscate(token))
 
 	task := tasks.AttachPro{Token: token}
 	if err := s.initialTasks.Add(ctx, task); err != nil {
