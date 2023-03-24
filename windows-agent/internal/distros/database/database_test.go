@@ -550,11 +550,10 @@ func databaseFromTemplate(t *testing.T, dest string, distros ...distroID) {
 
 	f, err := os.Create(filepath.Join(dest, consts.DatabaseFileName))
 	require.NoError(t, err, "Setup: could not create database file")
+	defer f.Close()
 
 	err = tmpl.Execute(f, distros)
 	require.NoError(t, err, "Setup: could not execute template database file")
-
-	f.Close()
 }
 
 // structuredDump is a convenience struct used to parse the database dump and make
