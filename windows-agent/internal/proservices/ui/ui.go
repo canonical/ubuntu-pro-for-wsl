@@ -3,6 +3,7 @@ package ui
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -51,10 +52,14 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 	}
 
 	distros := s.db.GetAll()
+	var err error
 	for _, d := range distros {
-		if err := d.SubmitTasks(task); err != nil {
-			return nil, err
-		}
+		err = errors.Join(err, d.SubmitTasks(task))
+	}
+
+	if err != nil {
+		log.Debugf(ctx, "Found errors while submitting the ProAttach task to existing distros.\n%s", err)
+		return nil, err
 	}
 
 	return &agentapi.Empty{}, nil
