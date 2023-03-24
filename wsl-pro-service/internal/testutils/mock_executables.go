@@ -111,7 +111,7 @@ func (m *SystemInfoMock) GetenvWslDistroName() string {
 	return ""
 }
 
-func (m *SystemInfoMock) mockExec(exec string, argv ...string) string {
+func (m *SystemInfoMock) mockExec(exec string, argv ...string) (string, []string) {
 	// Otherwise we get the exit error of the final "| head"
 	pipefail := "set -o pipefail &&"
 
@@ -138,16 +138,17 @@ func (m *SystemInfoMock) mockExec(exec string, argv ...string) string {
 	clean := "| head -n -2"
 
 	// Merging all into a single command
-	return strings.Join([]string{pipefail, env, exec, arg, clean}, " ")
+	script := strings.Join([]string{pipefail, env, exec, arg, clean}, " ")
+	return "bash", []string{"-ec", script}
 }
 
 // ProExecutable mocks `pro $args...`.
-func (m *SystemInfoMock) ProExecutable(args ...string) string {
+func (m *SystemInfoMock) ProExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithProMock", args...)
 }
 
 // WslpathExecutable mocks `wslpath $args...`.
-func (m *SystemInfoMock) WslpathExecutable(args ...string) string {
+func (m *SystemInfoMock) WslpathExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithWslPathMock", args...)
 }
 

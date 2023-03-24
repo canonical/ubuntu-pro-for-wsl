@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -28,32 +27,8 @@ type System struct {
 type Backend interface {
 	Path(p ...string) string
 	GetenvWslDistroName() string
-	ProExecutable(args ...string) string
-	WslpathExecutable(args ...string) string
-}
-
-type realBackend struct{}
-
-// Path translates an absolute path into its analogous provided for the back-end.
-func (b realBackend) Path(p ...string) string {
-	return filepath.Join(p...)
-}
-
-// GetenvWslDistroName obtains the value of environment variable WSL_DISTRO_NAME.
-func (b realBackend) GetenvWslDistroName() string {
-	return os.Getenv("WSL_DISTRO_NAME")
-}
-
-// ProExecutable returns the full command to run the pro executable with the provided arguments.
-func (b realBackend) ProExecutable(args ...string) string {
-	command := append([]string{"pro"}, args...)
-	return strings.Join(command, " ")
-}
-
-// ProExecutable returns the full command to run the wslpath executable with the provided arguments.
-func (b realBackend) WslpathExecutable(args ...string) string {
-	command := append([]string{"wslpath"}, args...)
-	return strings.Join(command, " ")
+	ProExecutable(args ...string) (string, []string)
+	WslpathExecutable(args ...string) (string, []string)
 }
 
 type options struct {
@@ -144,8 +119,9 @@ func (s System) wslDistroName(ctx context.Context) (string, error) {
 		return env, nil
 	}
 
+	exe, args := s.backend.WslpathExecutable("-w", "/")
 	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
-	out, err := exec.CommandContext(ctx, "bash", "-ec", s.Backend.WslpathExecutable("-w", "/")).Output()
+	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
 		return "", fmt.Errorf("could not get distro root path: %v. Stdout: %s", err, string(out))
 	}
@@ -163,8 +139,9 @@ func (s System) wslDistroName(ctx context.Context) (string, error) {
 // LocalAppData provides the path to Windows' local app data directory from WSL,
 // usually `/mnt/c/Users/JohnDoe/AppData/Local`.
 func (s *System) LocalAppData(ctx context.Context) (wslPath string, err error) {
+	exe, args := s.backend.WslpathExecutable("-ua", "$(powershell.exe 'echo ${env:LocalAppData}')")
 	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
-	out, err := exec.CommandContext(ctx, "bash", "-ec", s.Backend.WslpathExecutable("-ua", "$(powershell.exe 'echo ${env:LocalAppData}')")).Output()
+	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
 		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
 	}

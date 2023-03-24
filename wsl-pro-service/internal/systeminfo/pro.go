@@ -9,8 +9,9 @@ import (
 
 // ProStatus returns whether this distro is pro-attached.
 func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
-	//nolint:gosec //outside of tests, this function simply prepends "pro" to the args.
-	out, err := exec.CommandContext(ctx, "bash", "-ec", s.Backend.ProExecutable("status", "--format=json")).Output()
+	exe, args := s.backend.ProExecutable("status", "--format=json")
+	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
+	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
 		return false, fmt.Errorf("pro status command returned error: %v\nStdout:%s", err, string(out))
 	}
@@ -34,8 +35,9 @@ func (s *System) ProAttach(ctx context.Context, token string) error {
 		{"_schema_version": "0.1", "errors": [], "failed_services": [], "needs_reboot": false, "processed_services": [], "result": "success", "warnings": []}
 	*/
 
-	//nolint:gosec //outside of tests, this function simply prepends "pro" to the args.
-	out, err := exec.CommandContext(ctx, "bash", "-ec", s.Backend.ProExecutable("attach", token, "--format=json")).Output()
+	exe, args := s.backend.ProExecutable("attach", token, "--format=json")
+	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
+	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
 		return fmt.Errorf("command returned error: %v\nOutput:%s", err, string(out))
 	}
@@ -46,8 +48,9 @@ func (s *System) ProAttach(ctx context.Context, token string) error {
 // ProDetach detaches the current distro from Ubuntu Pro.
 // If the distro was already detached, nothing is done.
 func (s *System) ProDetach(ctx context.Context) error {
-	//nolint:gosec //outside of tests, this function simply prepends "pro" to the args.
-	out, detachErr := exec.CommandContext(ctx, "bash", "-ec", s.Backend.ProExecutable("detach", "--assume-yes", "--format=json")).Output()
+	exe, args := s.backend.ProExecutable("detach", "--assume-yes", "--format=json")
+	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
+	out, detachErr := exec.CommandContext(ctx, exe, args...).Output()
 	if detachErr != nil {
 		// check that the error is not that the machine is already detached
 		var detachedError struct {
