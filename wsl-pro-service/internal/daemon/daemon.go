@@ -14,6 +14,7 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
@@ -25,22 +26,24 @@ type Daemon struct {
 	grpcServer *grpc.Server
 	addr       string
 
-	systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
+	systemdSdNotifier systemdSdNotifier
 }
 
 type options struct {
-	systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
+	systemdSdNotifier systemdSdNotifier
 }
+
+type systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
 
 // Option is the function signature used to tweak the daemon creation.
 type Option func(*options)
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
-type GRPCServiceRegisterer func(context.Context, agentapi.WSLInstance_ConnectedClient) *grpc.Server
+type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStreamClient) *grpc.Server
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
+func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, system systeminfo.System, args ...Option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
@@ -55,10 +58,12 @@ func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPC
 		f(&opts)
 	}
 
-	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath)
+	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath, system)
 	if err != nil {
 		return d, err
 	}
+
+	log.Debugf(ctx, "Connected to control stream")
 
 	addr, err := getAddressToListenTo(ctrlStream)
 	if err != nil {
@@ -73,9 +78,6 @@ func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPC
 }
 
 // Serve listens on a tcp socket and starts serving GRPC requests on it.
-// Before serving, it writes a file on disk on which port it's listening on for client
-// to be able to reach our server.
-// This file is removed once the server stops listening.
 func (d Daemon) Serve(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, i18n.G("error while serving"))
 
@@ -118,10 +120,10 @@ func (d Daemon) Quit(ctx context.Context, force bool) {
 
 // connectToControlStream connects to the control stream and initiates communication
 // by sending the distro's info.
-func connectToControlStream(ctx context.Context, agentPortFilePath string) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
+func connectToControlStream(ctx context.Context, agentPortFilePath string, system systeminfo.System) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
 	defer decorate.OnError(&err, "could not connect to windows agent via the control stream")
 
-	ctrlAddr, err := getControlStreamAddress(agentPortFilePath)
+	ctrlAddr, err := getControlStreamAddress(agentPortFilePath, system)
 	if err != nil {
 		return nil, fmt.Errorf("could not get address: %v", err)
 	}
@@ -138,7 +140,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath string) (ctrl
 		return ctrlStream, fmt.Errorf("could not connect to GRPC service: %v", err)
 	}
 
-	sysinfo, err := systeminfo.Get()
+	sysinfo, err := system.Info(ctx)
 	if err != nil {
 		return ctrlStream, fmt.Errorf("could not obtain system info: %v", err)
 	}
@@ -150,7 +152,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath string) (ctrl
 	return ctrlStream, nil
 }
 
-func getControlStreamAddress(agentPortFilePath string) (string, error) {
+func getControlStreamAddress(agentPortFilePath string, system systeminfo.System) (string, error) {
 	/*
 		We parse the the port from the file written by the windows agent.
 	*/
@@ -160,6 +162,11 @@ func getControlStreamAddress(agentPortFilePath string) (string, error) {
 	}
 
 	fields := strings.Split(string(addr), ":")
+	if len(fields) == 0 {
+		// Avoid a panic. As far as I know, there is no way of triggering this,
+		// but we may as well protect against it.
+		return "", fmt.Errorf("could not extract port out of address %q", addr)
+	}
 	port := fields[len(fields)-1]
 
 	/*
@@ -172,7 +179,7 @@ func getControlStreamAddress(agentPortFilePath string) (string, error) {
 		nameserver 172.22.16.1
 	*/
 
-	r, err := os.Open("/etc/resolv.conf")
+	r, err := os.Open(system.Path("/etc/resolv.conf"))
 	if err != nil {
 		return "", err
 	}
@@ -182,19 +189,20 @@ func getControlStreamAddress(agentPortFilePath string) (string, error) {
 	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		var found bool
-		winIP, found = strings.CutPrefix(sc.Text(), "nameserver")
+		suffix, found := strings.CutPrefix(sc.Text(), "nameserver")
 		if !found {
 			continue
 		}
-		winIP = strings.TrimSpace(winIP)
-	}
-
-	if winIP == "" {
-		return "", errors.New("could not parse '/etc/resolv.conf': did not find line matching 'nameserver <IP>'")
+		winIP = strings.TrimSpace(suffix)
+		break
 	}
 
 	if err := sc.Err(); err != nil {
 		return "", err
+	}
+
+	if winIP == "" {
+		return "", errors.New("could not parse '/etc/resolv.conf': did not find line matching 'nameserver <IP>'")
 	}
 
 	return fmt.Sprintf("%s:%s", winIP, port), nil

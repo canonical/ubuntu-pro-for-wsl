@@ -40,12 +40,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10 h1:Mi6BOi3vo+4UGg/InTa/Vu5DsOk+cXy4ldEHWZIn4JU=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10/go.mod h1:DQDIMwYsPr4n3Ck5BSZo8uVIu2aKlTUJ245TPiATJcU=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50 h1:zIt41CWHTC4SJmiX7i5P67QXCcPQrw+Pf3qCL0lJm94=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50/go.mod h1:JHLSjUKanL0PdGSVPPOBJVhFwb93SAl4lo5vFu/g0rU=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230322100459-1ec4d0175382 h1:m4hhiZn7Ci1tJvjrnGLb2zJhvDI5GqZbF5sytrqVTNo=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230322100459-1ec4d0175382/go.mod h1:JHLSjUKanL0PdGSVPPOBJVhFwb93SAl4lo5vFu/g0rU=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230223151706-e965dd625023 h1:+QXacuZbLcp4Fle6g3V8L21BGQI3lBT2m3mg6cTNkpc=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230223151706-e965dd625023/go.mod h1:PFkkFVMVw1W8/bDMl35zR2Jduh1RCpRvmqj7rlpQHaY=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382 h1:Zq/NxM9EZrZFVVO90Rm2EtcwNwLF4Q5A7kUgr02PRY8=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382/go.mod h1:IJphMXBES/d3n/pXddrP08VNMYaQM3edlKeV3GSxrXU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -189,8 +185,9 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
-github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
+github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
+github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117 h1:XQpsQG5lqRJlx4mUVHcJvyyc1rdTI9nHvwrdfcuy8aM=
@@ -460,8 +457,8 @@ google.golang.org/genproto v0.0.0-20201210142538-e3217bee35cc/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210108203827-ffc7fda8c3d7/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210226172003-ab064af71705/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
-google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc h1:ijGwO+0vL2hJt5gaygqP2j6PfflOBrRot0IczKbmtio=
-google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc/go.mod h1:RGgjbofJ8xD9Sq1VVhDM1Vok1vRONV+rg+CjzG4SZKM=
+google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f h1:BWUVssLB0HVOSY78gIdvk1dTVYtT1y8SBWtPYuTJ/6w=
+google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f/go.mod h1:RGgjbofJ8xD9Sq1VVhDM1Vok1vRONV+rg+CjzG4SZKM=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=
