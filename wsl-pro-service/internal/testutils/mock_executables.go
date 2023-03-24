@@ -349,8 +349,8 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 		t.Skip("Skipped because it is not a real test, but rather a mocked executable")
 	}
 
-	argv := os.Args
-	begin := slices.Index(argv, "--")
+	var argv []string
+	begin := slices.Index(os.Args, "--")
 	if begin != -1 {
 		argv = os.Args[begin+1:]
 	}
