@@ -66,9 +66,10 @@ func TestNoUsageError(t *testing.T) {
 	a.SetArgs("completion", "bash")
 
 	getStdout := captureStdout(t)
-	err := a.Run()
 
+	err := a.Run()
 	require.NoError(t, err, "Run should not return an error, stdout: %v", getStdout())
+
 	isUsageError := a.UsageError()
 	require.False(t, isUsageError, "No usage error is reported as such")
 }
@@ -117,8 +118,7 @@ func TestCanQuitTwice(t *testing.T) {
 	a.Quit()
 	wait()
 
-	// second Quit after Execution should
-	a.Quit()
+	require.NotPanics(t, a.Quit)
 }
 
 func TestAppCanQuitWithoutExecute(t *testing.T) {
@@ -126,10 +126,9 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 
 	t.Skipf("This test is skipped because it is flaky. There is no way to guarantee Quit has been called before run.")
 
-	t.Parallel()
-
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs()
+	defer a.Quit()
 
 	requireGoroutineStarted(t, a.Quit)
 	err := a.Run()
@@ -171,6 +170,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 			}
 
 			a := service.New(service.WithAgentPortFilePath(addrFile), service.WithSystem(system))
+
 			a.SetArgs()
 
 			if tc.invalidDaemonCache {
@@ -178,10 +178,10 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 				require.NoError(t, err, "Failed to write file")
 			}
 
+			defer a.Quit()
 			err := a.Run()
 			require.Error(t, err, "Run should exit with an error")
 
-			a.Quit()
 		})
 	}
 }
@@ -232,9 +232,15 @@ func TestDefaultAddrFile(t *testing.T) {
 
 			// Passing no port file means the daemon has to use $env:LocalAppData
 			a := service.New(service.WithSystem(system))
+
 			a.SetArgs("-vvv")
 
-			time.AfterFunc(5*time.Second, a.Quit)
+			tk := time.AfterFunc(5*time.Second, a.Quit)
+			defer func() {
+				if tk.Stop() {
+					a.Quit()
+				}
+			}()
 
 			err := a.Run()
 			if tc.wantErr {
@@ -279,6 +285,8 @@ func startDaemon(t *testing.T, system systeminfo.System, addrFile string) (app *
 		err := a.Run()
 		require.NoError(t, err, "Run should exit without any error")
 	}()
+
+	t.Cleanup(a.Quit)
 
 	a.WaitReady()
 	time.Sleep(50 * time.Millisecond)
