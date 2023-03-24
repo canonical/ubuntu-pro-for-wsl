@@ -74,7 +74,7 @@ const (
 	// wslpathDistroName indicates what is the name of the distro to the mock wslpath so that
 	// it can generate the \\wsl.localhost\<DISTRONAME>\ path.
 	//
-	// We cannot relly on WSL_DISTRO_NAME because one of the mock options disables it.
+	// We cannot rely on WSL_DISTRO_NAME because one of the mock options disables it.
 	wslpathDistroName = "UP4W_WSLPATH_DISTRONAME"
 
 	// mockExecutable is an environement variable used so the mock executables now they need to

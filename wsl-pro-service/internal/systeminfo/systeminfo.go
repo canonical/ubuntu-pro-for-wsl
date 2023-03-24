@@ -13,7 +13,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-// System is an object with an easily replaceable back-end that allows accessing
+// System is an object with an easily pluggable back-end that allows accessing
 // the filesystem, a few key executables, and some information about the system.
 //
 // Do not replace the backend after construction, and use one of the provided
@@ -46,7 +46,7 @@ func WithTestBackend(b Backend) Option {
 	}
 }
 
-// New instantiates a stateless obejct that mediates interactions with the filesystem
+// New instantiates a stateless object that mediates interactions with the filesystem
 // as well as a few key executables.
 func New(args ...Option) System {
 	opts := options{backend: realBackend{}}
