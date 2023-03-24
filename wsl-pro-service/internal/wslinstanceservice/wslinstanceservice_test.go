@@ -24,7 +24,7 @@ func TestProAttach(t *testing.T) {
 	type detachResult int
 	const (
 		detachOK detachResult = iota
-		detachErrAlreadyDetached
+		detachAlreadyDetached
 		detachErr
 	)
 
@@ -37,15 +37,15 @@ func TestProAttach(t *testing.T) {
 
 		wantErr bool
 	}{
-		"success on attached machine": {},
-		"success on detached machine": {proDetachErr: detachErrAlreadyDetached},
+		"success on attached machine":     {},
+		"success on non-attached machine": {proDetachErr: detachAlreadyDetached},
 
 		// Pro status errors
 		"Error calling pro status":  {proStatusErr: true, wantErr: true},
 		"Error getting system info": {getSystemInfoErr: true, wantErr: true},
 
 		// Detach errors
-		"Error detaching pro, reason can be parsed": {proDetachErr: detachErr, wantErr: true},
+		"Error detaching pro on attached machine": {proDetachErr: detachErr, wantErr: true},
 
 		// Other errors
 		"Error calling pro attach":         {attachErr: true, wantErr: true},
@@ -84,7 +84,7 @@ func TestProAttach(t *testing.T) {
 
 			switch tc.proDetachErr {
 			case detachOK:
-			case detachErrAlreadyDetached:
+			case detachAlreadyDetached:
 				mock.SetControlArg(testutils.ProDetachErrAlreadyDetached)
 			case detachErr:
 				mock.SetControlArg(testutils.ProDetachErrGeneric)
