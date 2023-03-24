@@ -20,7 +20,7 @@ import (
 // SystemInfoMock is used to override systeminfo's behaviour. Its control parameters are not thread safe.
 // You can modify them in test setup, but after that you risk a race.
 type SystemInfoMock struct {
-	// Path to what will be used as root for the test filesystem
+	// FsRoot is the path to what will be used as root for the test filesystem
 	FsRoot string
 
 	// WslDistroNameEnv is the value that the mocked Getenv(WSL_DISTRO_NAME) or wslpath -w / will display
@@ -35,8 +35,10 @@ type SystemInfoMock struct {
 }
 
 var (
-	defaultAddrFile        = filepath.Join(defaultLocalAppDataDir, common.LocalAppDataDir, common.ListeningPortFileName)
+	// defaultLocalAppDataDir is the default path used in tests to store the address path.
 	defaultLocalAppDataDir = "/mnt/c/Users/TestUser/AppData/Local/"
+
+	defaultAddrFile = filepath.Join(defaultLocalAppDataDir, common.LocalAppDataDir, common.ListeningPortFileName)
 
 	//go:embed filesystem_defaults/os-release
 	defaultOsReleaseContents []byte
@@ -63,11 +65,14 @@ const (
 	ProDetachErrGeneric         = "UP4W_PRO_DETACH_ERR_GENERIC"
 	ProDetachErrNoReason        = "UP4W_PRO_DETACH_ERR_UNKNOWN"
 
-	WslpathErr        = "UP4W_WSLPATH_ERR"
-	WslpathBadOutput  = "UP4W_WSLPATH_BAD_OUTPUT"
-	wslpathDistroName = "UP4W_WSLPATH_DISTRONAME"
+	WslpathErr       = "UP4W_WSLPATH_ERR"
+	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
+)
 
-	mockExecutable = "UP4W_MOCK_EXECUTABLE"
+// TODO: comment these.
+const (
+	wslpathDistroName = "UP4W_WSLPATH_DISTRONAME"
+	mockExecutable    = "UP4W_MOCK_EXECUTABLE"
 )
 
 // MockSystemInfo sets up a few mocks:
