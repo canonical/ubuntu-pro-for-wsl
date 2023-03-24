@@ -61,7 +61,7 @@ jobs:
         if: always() && !cancelled()
         with:
           version: v1.52.0
-          args: --config=${{ github.workspace }}/.golangci-lint.yaml --build-tags=gowslmock
+          args: --config=${{ github.workspace }}/.golangci.yaml --build-tags=gowslmock
           working-directory: ${{ matrix.subproject }}
 
   quality-flutter:

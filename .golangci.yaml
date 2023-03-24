@@ -1,5 +1,5 @@
 # This is for linting. To run it, please use:
-# golangci-lint run -c .golangci-lint.yaml ${MODULE}/... [--fix]
+# golangci-lint run ${MODULE}/... [--fix]
 
 linters:
   # linters to run in addition to default ones
