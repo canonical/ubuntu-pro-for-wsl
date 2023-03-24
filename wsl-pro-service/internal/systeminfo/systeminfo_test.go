@@ -16,7 +16,7 @@ type mockBehaviour int
 const (
 	mockOK        mockBehaviour = iota // A mock that mimicks the happy path
 	mockError                          // A mock that returns an error
-	mockBadReturn                      // A mock that returns a bad value with no error
+	mockBadOutput                      // A mock that returns a bad value with no error
 )
 
 func TestInfo(t *testing.T) {
@@ -38,13 +38,13 @@ func TestInfo(t *testing.T) {
 		"Success using wslpath":                {distroNameEnvDisabled: true},
 
 		"Error when WSL_DISTRO_NAME is empty and wslpath fails":            {distroNameEnvDisabled: true, distroNameWslPath: mockError, wantErr: true},
-		"Error when WSL_DISTRO_NAME is empty and wslpath returns bad text": {distroNameEnvDisabled: true, distroNameWslPath: mockBadReturn, wantErr: true},
+		"Error when WSL_DISTRO_NAME is empty and wslpath returns bad text": {distroNameEnvDisabled: true, distroNameWslPath: mockBadOutput, wantErr: true},
 
 		"Error when pro status command fails":           {proStatusCommand: mockError, wantErr: true},
-		"Error when pro status output cannot be parsed": {proStatusCommand: mockBadReturn, wantErr: true},
+		"Error when pro status output cannot be parsed": {proStatusCommand: mockBadOutput, wantErr: true},
 
 		"Error when /etc/os-release cannot be read":       {osRelease: mockError, wantErr: true},
-		"Error whem /etc/os-release returns bad contents": {osRelease: mockBadReturn, wantErr: true},
+		"Error whem /etc/os-release returns bad contents": {osRelease: mockBadOutput, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -64,7 +64,7 @@ func TestInfo(t *testing.T) {
 			case mockOK:
 			case mockError:
 				mock.SetControlArg(testutils.WslpathErr)
-			case mockBadReturn:
+			case mockBadOutput:
 				mock.SetControlArg(testutils.WslpathBadOutput)
 			default:
 				require.Fail(t, "Unknown enum value for distroNameWslPath", "Value: %d", tc.distroNameWslPath)
@@ -74,21 +74,21 @@ func TestInfo(t *testing.T) {
 			case mockOK:
 			case mockError:
 				mock.SetControlArg(testutils.ProStatusErr)
-			case mockBadReturn:
+			case mockBadOutput:
 				mock.SetControlArg(testutils.ProStatusBadJSON)
 			default:
-				require.Fail(t, "Unknown enum value for proStatusCommand", "Value: %d", tc.proStatusCommand)
+				require.Failf(t, "Unknown enum value for proStatusCommand", "Value: %d", tc.proStatusCommand)
 			}
 
 			switch tc.osRelease {
 			case mockOK:
 			case mockError:
 				os.Remove(mock.Path("/etc/os-release"))
-			case mockBadReturn:
+			case mockBadOutput:
 				err := os.WriteFile(mock.Path("/etc/os-release"), []byte("This file has the wrong syntax"), 0600)
 				require.NoError(t, err, "Setup: could not overwrite /etc/os-release")
 			default:
-				require.Fail(t, "Unknown enum value for osRelease", "Value: %d", tc.osRelease)
+				require.Failf(t, "Unknown enum value for osRelease", "Value: %d", tc.osRelease)
 			}
 
 			info, err := system.Info(ctx)
@@ -154,7 +154,7 @@ func TestProStatus(t *testing.T) {
 		"success on unattached distro": {},
 		"success on attached distro":   {attached: true},
 
-		"error on 'pro attach' returning bad output": {proMock: mockBadReturn, wantErr: true},
+		"error on 'pro attach' returning bad output": {proMock: mockBadOutput, wantErr: true},
 		"error on 'pro attach' error":                {proMock: mockError, wantErr: true},
 	}
 
@@ -166,7 +166,7 @@ func TestProStatus(t *testing.T) {
 			system, mock := testutils.MockSystemInfo(t)
 			switch tc.proMock {
 			case mockOK:
-			case mockBadReturn:
+			case mockBadOutput:
 				mock.SetControlArg(testutils.ProStatusBadJSON)
 			case mockError:
 				mock.SetControlArg(testutils.ProStatusErr)
