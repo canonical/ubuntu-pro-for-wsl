@@ -35,9 +35,10 @@ type SystemInfoMock struct {
 }
 
 var (
-	// defaultLocalAppDataDir is the default path used in tests to store the address path.
+	// defaultLocalAppDataDir is the default path used in tests to store Windows agent data.
 	defaultLocalAppDataDir = "/mnt/c/Users/TestUser/AppData/Local/"
 
+	// defaultLocalAppDataDir is the default path used in tests to store the address of the Windows Agent service.
 	defaultAddrFile = filepath.Join(defaultLocalAppDataDir, common.LocalAppDataDir, common.ListeningPortFileName)
 
 	//go:embed filesystem_defaults/os-release
@@ -47,7 +48,7 @@ var (
 	defaultResolvConfContents []byte
 )
 
-// Mock-controlling constants.
+// controlArg Mock-controlling constants.
 type controlArg string
 
 // Arguments that control how the mocked executable will behave.
@@ -69,10 +70,16 @@ const (
 	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
 )
 
-// TODO: comment these.
 const (
+	// wslpathDistroName indicates what is the name of the distro to the mock wslpath so that
+	// it can generate the \\wsl.localhost\<DISTRONAME>\ path.
+	//
+	// We cannot relly on WSL_DISTRO_NAME because one of the mock options disables it.
 	wslpathDistroName = "UP4W_WSLPATH_DISTRONAME"
-	mockExecutable    = "UP4W_MOCK_EXECUTABLE"
+
+	// mockExecutable is an environement variable used so the mock executables now they need to
+	// be executed instead of being ignored as faux tests.
+	mockExecutable = "UP4W_MOCK_EXECUTABLE"
 )
 
 // MockSystemInfo sets up a few mocks:
@@ -85,8 +92,6 @@ func MockSystemInfo(t *testing.T) (systeminfo.System, *SystemInfoMock) {
 		WslDistroName:           "TEST_DISTRO",
 		WslDistroNameEnvEnabled: true,
 	}
-
-	mock.SetControlArg(mockExecutable)
 
 	return systeminfo.New(systeminfo.WithTestBackend(mock)), mock
 }
@@ -116,16 +121,36 @@ func (m *SystemInfoMock) GetenvWslDistroName() string {
 	return ""
 }
 
-func (m *SystemInfoMock) mockExec(exec string, argv ...string) (string, []string) {
-	// Otherwise we get the exit error of the final "| head"
-	pipefail := "set -o pipefail &&"
-
-	// Control environment variables
-	env := strings.Join(m.extraEnv, " ")
-	env += fmt.Sprintf("%s %s=%q", env, wslpathDistroName, m.WslDistroName)
+// mockExec generates a command of the form `bash -ec <SCRIPT>` that will call an alternate binary
+// to the one we are mocking.
+//
+// At the core of the script we have
+//
+//	```
+//	SWITCH1=1 SWITCH1=2 go test -run <FAUX_TEST> -- <ARGS...>
+//	````
+//
+// The switches control the behaviour of the mock, and FAUX_TEST is the name of a Test* function
+// that mocks the behaviour of the executable. The ARGS are the arguments that would be passed to
+// the real binary, in this case being passed to the mocked one.
+//
+// The faux test is in charge of interpreting the switches and the args.
+//
+// The script has some more boilerplate to trim out text from the testing module.
+// In order to make the mock work, the faux test needs to be defined in the test module,
+// see the documentation on ProMock for an example.
+func (m *SystemInfoMock) mockExec(fauxTestName string, argv ...string) (string, []string) {
+	// Switches
+	env := make([]string, len(m.extraEnv))
+	copy(env, m.extraEnv)
+	env = append(env,
+		fmt.Sprintf("%s=1", mockExecutable),                      // Ensures the faux test is not skipped
+		fmt.Sprintf("%s=%q", wslpathDistroName, m.WslDistroName), // Informs the faux tests what the mock distro name is
+	)
+	switches := strings.Join(env, " ")
 
 	// Supplanted executable
-	exec = fmt.Sprintf("go test -run %s --", exec)
+	exec := fmt.Sprintf("go test -run ^%s$", fauxTestName)
 
 	// Arguments (with some sanitation to avoid expanding variables)
 	for i := range argv {
@@ -137,13 +162,14 @@ func (m *SystemInfoMock) mockExec(exec string, argv ...string) (string, []string
 			argv[i] = fmt.Sprintf("%q", argv[i])
 		}
 	}
-	arg := strings.Join(argv, " ")
+	args := strings.Join(argv, " ")
+
+	// Heart of the script
+	script := fmt.Sprintf("%s %s -- %s", switches, exec, args)
 
 	// Trimming testing framework text
-	clean := "| head -n -2"
+	script = fmt.Sprintf("set -o pipefail && %s | head -n -2", script)
 
-	// Merging all into a single command
-	script := strings.Join([]string{pipefail, env, exec, arg, clean}, " ")
 	return "bash", []string{"-ec", script}
 }
 
