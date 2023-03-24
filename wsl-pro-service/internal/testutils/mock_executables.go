@@ -196,8 +196,12 @@ const (
 //
 //	func TestWithProMock(t *testing.T) { testutils.ProMock(t) }
 //
-//nolint:thelper // This is not a real test
+//nolint:thelper // This is a faux test used to mock the executable `pro`
 func ProMock(t *testing.T) {
+	if t.Name() != "TestWithProMock" {
+		panic("The ProMock faux test must be named TestWithProMock")
+	}
+
 	mockMain(t, func(argv []string) exitCode {
 		if len(argv) == 0 {
 			fmt.Fprintln(os.Stderr, "Pro command expects a verb")
@@ -262,8 +266,12 @@ func ProMock(t *testing.T) {
 //
 //	func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
 //
-//nolint:thelper // This is not a real test
+//nolint:thelper // This is a faux test used to mock the executable `wslpath`
 func WslPathMock(t *testing.T) {
+	if t.Name() != "TestWithWslPathMock" {
+		panic("The WslPathMock faux test must be named TestWithWslPathMock")
+	}
+
 	mockMain(t, func(argv []string) exitCode {
 		if len(argv) != 2 {
 			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
