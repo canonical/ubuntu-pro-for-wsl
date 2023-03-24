@@ -260,7 +260,7 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 	<-launched
 }
 
-// startDaemon prepares and start the daemon in the background. The done function should be called
+// startDaemon prepares and starts the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
 func startDaemon(t *testing.T, system systeminfo.System, addrFile string) (app *service.App, done func()) {
 	t.Helper()

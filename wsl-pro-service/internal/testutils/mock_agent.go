@@ -54,7 +54,7 @@ func WithDropStreamBeforeSendingPort() AgentOption {
 // MockWindowsAgent mocks the windows-agent. It starts a GRPC service that will perform
 // the port dance and stay connected. It'll write the port file as well.
 //
-// You can stop the server maunally, otherwise it'll stop during cleanup.
+// You can stop the server manually, otherwise it'll stop during cleanup.
 //
 //nolint:revive // testing.T should go before context, regardless of what these linters say.
 func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args ...AgentOption) *grpc.Server {

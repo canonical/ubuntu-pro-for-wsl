@@ -16,7 +16,7 @@ type ControlStreamClient interface {
 	Send(*agentapi.DistroInfo) error
 }
 
-// Service is the object in charge of commuicating to the Windows agent.
+// Service is the object in charge of communicating to the Windows agent.
 type Service struct {
 	ctrlStream ControlStreamClient
 
