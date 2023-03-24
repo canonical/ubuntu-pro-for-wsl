@@ -193,6 +193,59 @@ func TestAppGetRootCmd(t *testing.T) {
 	require.NotNil(t, a.RootCmd(), "Returns root command")
 }
 
+func TestDefaultAddrFile(t *testing.T) {
+	t.Parallel()
+
+	type wslpathBehaviour int
+	const (
+		wslpathOK wslpathBehaviour = iota
+		WslpathBadOutput
+		wslpathErr
+	)
+
+	testCases := map[string]struct {
+		wslpath wslpathBehaviour
+
+		wantErr bool
+	}{
+		"Success using wslpath": {},
+
+		"Error when wslpath errors out":           {wslpath: wslpathErr, wantErr: true},
+		"Error when wslpath returns a bad output": {wslpath: WslpathBadOutput, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			system, mock := testutils.MockSystemInfo(t)
+			testutils.MockWindowsAgent(t, context.Background(), mock.DefaultAddrFile())
+
+			switch tc.wslpath {
+			case wslpathOK:
+			case WslpathBadOutput:
+				mock.SetControlArg(testutils.WslpathBadOutput)
+			case wslpathErr:
+				mock.SetControlArg(testutils.WslpathErr)
+			}
+
+			// Passing no port file means the daemon has to use $env:LocalAppData
+			a := service.New(service.WithSystem(system))
+			a.SetArgs("-vvv")
+
+			time.AfterFunc(5*time.Second, a.Quit)
+
+			err := a.Run()
+			if tc.wantErr {
+				require.Error(t, err, "Run should have returned an error")
+				return
+			}
+			require.NoError(t, err, "Run should have returned no errors")
+		})
+	}
+}
+
 // requireGoroutineStarted starts a goroutine and blocks until it has been launched.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()
@@ -226,6 +279,7 @@ func startDaemon(t *testing.T, system systeminfo.System, addrFile string) (app *
 		err := a.Run()
 		require.NoError(t, err, "Run should exit without any error")
 	}()
+
 	a.WaitReady()
 	time.Sleep(50 * time.Millisecond)
 
