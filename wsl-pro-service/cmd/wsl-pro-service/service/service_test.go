@@ -14,8 +14,15 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMain(m *testing.M) {
+	log.SetLevel(log.DebugLevel)
+
+	m.Run()
+}
 
 func TestHelp(t *testing.T) {
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))

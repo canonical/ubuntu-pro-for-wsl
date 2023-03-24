@@ -13,10 +13,17 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+func TestMain(m *testing.M) {
+	log.SetLevel(log.DebugLevel)
+
+	m.Run()
+}
 
 func TestProAttach(t *testing.T) {
 	t.Parallel()
