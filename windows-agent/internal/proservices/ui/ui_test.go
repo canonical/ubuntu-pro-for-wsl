@@ -48,8 +48,8 @@ func TestAttachPro(t *testing.T) {
 
 		distros []string
 	}{
-		"Empty database succeeds with only initial tasks": {token: info.Token},
-		"Success with a non-empty database":               {token: info.Token, distros: []string{distro1, distro2}},
+		"Success with an empty database":    {token: info.Token},
+		"Success with a non-empty database": {token: info.Token, distros: []string{distro1, distro2}},
 	}
 
 	for name, tc := range testCases {
@@ -75,8 +75,7 @@ func TestAttachPro(t *testing.T) {
 			// Could it be nice to retrieve the distro's pending tasks?
 
 			it := initTasks.All()
-			require.Equal(t, len(it), 1, "Only one task should have been added")
-			require.Equal(t, it[0], tasks.AttachPro{Token: tc.token})
+			require.ElementsMatch(t, it, []tasks.AttachPro{{Token: tc.token}}, "Only one task should have been added")
 		})
 	}
 }
