@@ -4,7 +4,6 @@ package systeminfo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,18 +14,65 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-// DistroNameEnv is the environment variable read to check what the distro name is.
-const DistroNameEnv = "WSL_DISTRO_NAME"
+// System is an object with an easily replaceable back-end that allows accessing
+// the filesystem, a few key executables, and some information about the system.
+//
+// Do not replace the backend after construction, and use one of the provided
+// constructors.
+type System struct {
+	Backend Backend // Not embedding to avoid calling its backend directly
+}
 
-// Get returns the current information about the system relevant to the GRPC
+// Backend is the engine behind the System object, and defines the interactions
+// it can perform with the operating system.
+type Backend interface {
+	Path(p ...string) string
+	GetenvWslDistroName() string
+	ProExecutable(args ...string) string
+	WslpathExecutable(args ...string) string
+}
+
+type realBackend struct{}
+
+// Path translates an absolute path into its analogous provided for the back-end.
+func (b realBackend) Path(p ...string) string {
+	return filepath.Join(p...)
+}
+
+// GetenvWslDistroName obtains the value of environment variable WSL_DISTRO_NAME.
+func (b realBackend) GetenvWslDistroName() string {
+	return os.Getenv("WSL_DISTRO_NAME")
+}
+
+// ProExecutable returns the full command to run the pro executable with the provided arguments.
+func (b realBackend) ProExecutable(args ...string) string {
+	command := append([]string{"pro"}, args...)
+	return strings.Join(command, " ")
+}
+
+// ProExecutable returns the full command to run the wslpath executable with the provided arguments.
+func (b realBackend) WslpathExecutable(args ...string) string {
+	command := append([]string{"wslpath"}, args...)
+	return strings.Join(command, " ")
+}
+
+// New instantiates a stateless obejct that mediates interactions with the filesystem
+// as well as a few key executables.
+func New() System {
+	return System{
+		Backend: realBackend{},
+	}
+}
+
+// Info returns the current information about the system relevant to the GRPC
 // connection to the agent.
-func Get(fileSystemRoot string) (*agentapi.DistroInfo, error) {
-	distroName, err := wslDistroName()
+func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
+	distroName, err := s.wslDistroName(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	pro, err := ProStatus(context.TODO())
+	pro, err := s.ProStatus(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not obtain pro status: %v", err)
 	}
@@ -36,7 +82,7 @@ func Get(fileSystemRoot string) (*agentapi.DistroInfo, error) {
 		ProAttached: pro,
 	}
 
-	if err := fillOsRelease(info, fileSystemRoot); err != nil {
+	if err := s.fillOsRelease(info); err != nil {
 		return nil, err
 	}
 
@@ -44,8 +90,8 @@ func Get(fileSystemRoot string) (*agentapi.DistroInfo, error) {
 }
 
 // fillOSRelease extends info with os-release file content.
-func fillOsRelease(info *agentapi.DistroInfo, fileSystemRoot string) error {
-	out, err := os.ReadFile(filepath.Join(fileSystemRoot, "etc/os-release"))
+func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
+	out, err := os.ReadFile(s.Backend.Path("etc/os-release"))
 	if err != nil {
 		return fmt.Errorf("could not read /etc/os-release file: %v", err)
 	}
@@ -70,14 +116,15 @@ func fillOsRelease(info *agentapi.DistroInfo, fileSystemRoot string) error {
 // wslDistroName obtains the name of the current WSL distro from these sources
 // 1. From environment variable WSL_DISTRO_NAME, as long as it is not empty
 // 2. From the Windows path to the distro's root ("\\wsl.localhost\<DISTRO_NAME>\").
-func wslDistroName() (string, error) {
+func (s System) wslDistroName(ctx context.Context) (string, error) {
 	// TODO: request Microsoft to expose this to systemd services.
-	env := os.Getenv(DistroNameEnv)
+	env := s.Backend.GetenvWslDistroName()
 	if env != "" {
 		return env, nil
 	}
 
-	out, err := wslRootPath()
+	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
+	out, err := exec.CommandContext(ctx, "bash", "-ec", s.Backend.WslpathExecutable("-w", "/")).Output()
 	if err != nil {
 		return "", fmt.Errorf("could not get distro root path: %v. Stdout: %s", err, string(out))
 	}
@@ -92,31 +139,19 @@ func wslDistroName() (string, error) {
 	return fields[3], nil
 }
 
-// ProStatus returns whether Ubuntu Pro is enabled on this distro.
-func ProStatus(ctx context.Context) (attached bool, err error) {
-	out, err := proStatusCmdOutput(ctx)
+// LocalAppData provides the path to Windows' local app data directory from WSL,
+// usually `/mnt/c/Users/JohnDoe/AppData/Local`.
+func (s *System) LocalAppData(ctx context.Context) (wslPath string, err error) {
+	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
+	out, err := exec.CommandContext(ctx, "bash", "-ec", s.Backend.WslpathExecutable("-ua", "$(powershell.exe 'echo ${env:LocalAppData}')")).Output()
 	if err != nil {
-		return false, fmt.Errorf("pro status command returned error: %v\nStdout:%s", err, string(out))
+		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
 	}
-
-	var attachedStatus struct {
-		Attached bool
-	}
-	if err = json.Unmarshal(out, &attachedStatus); err != nil {
-		return false, fmt.Errorf("could not parse output of pro status: %v\nOutput: %s", err, string(out))
-	}
-
-	return attachedStatus.Attached, nil
+	rawPath := strings.TrimSpace(string(out))
+	return s.Path(rawPath), nil
 }
 
-// wslRootPath returns the Windows path to "/". Extracted as a variable to
-// allow for dependency injection.
-var wslRootPath = func() ([]byte, error) {
-	return exec.Command("wslpath", "-w", "/").Output()
-}
-
-// proStatusCmdOutput returns the output of `pro status --format=json`. Extracted as a variable to
-// allow for dependency injection.
-var proStatusCmdOutput = func(ctx context.Context) ([]byte, error) {
-	return exec.CommandContext(ctx, "pro", "status", "--format=json").Output()
+// Path converts an absolute path into one inside the mocked filesystem.
+func (s System) Path(path ...string) string {
+	return s.Backend.Path(path...)
 }
