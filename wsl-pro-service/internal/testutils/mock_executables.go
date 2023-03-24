@@ -83,7 +83,7 @@ func MockSystemInfo(t *testing.T) (systeminfo.System, *SystemInfoMock) {
 
 	mock.SetControlArg(mockExecutable)
 
-	return systeminfo.System{Backend: mock}, mock
+	return systeminfo.New(systeminfo.WithTestBackend(mock)), mock
 }
 
 // DefaultAddrFile is the location where a mocked system will expect the addr file to be located,

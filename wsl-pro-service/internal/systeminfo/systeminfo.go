@@ -20,7 +20,7 @@ import (
 // Do not replace the backend after construction, and use one of the provided
 // constructors.
 type System struct {
-	Backend Backend // Not embedding to avoid calling its backend directly
+	backend Backend // Not embedding to avoid calling its backend directly
 }
 
 // Backend is the engine behind the System object, and defines the interactions
@@ -56,11 +56,32 @@ func (b realBackend) WslpathExecutable(args ...string) string {
 	return strings.Join(command, " ")
 }
 
+type options struct {
+	backend Backend
+}
+
+// Option is an optional argument for New.
+type Option = func(*options)
+
+// WithTestBackend is an optional argument for New that injects a backend into the system.
+// For testing purposes only.
+func WithTestBackend(b Backend) Option {
+	return func(o *options) {
+		o.backend = b
+	}
+}
+
 // New instantiates a stateless obejct that mediates interactions with the filesystem
 // as well as a few key executables.
-func New() System {
+func New(args ...Option) System {
+	opts := options{backend: realBackend{}}
+	for _, f := range args {
+		f(&opts)
+	}
+
+	//nolint:gosimple // Technically, we could do "return System(opts)", but conceptually they are different objects so I'd rather not.
 	return System{
-		Backend: realBackend{},
+		backend: opts.backend,
 	}
 }
 
@@ -89,9 +110,9 @@ func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
 	return info, nil
 }
 
-// fillOSRelease extends info with os-release file content.
+// fillOSRelease fills the info with os-release file content.
 func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
-	out, err := os.ReadFile(s.Backend.Path("etc/os-release"))
+	out, err := os.ReadFile(s.backend.Path("etc/os-release"))
 	if err != nil {
 		return fmt.Errorf("could not read /etc/os-release file: %v", err)
 	}
@@ -118,7 +139,7 @@ func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
 // 2. From the Windows path to the distro's root ("\\wsl.localhost\<DISTRO_NAME>\").
 func (s System) wslDistroName(ctx context.Context) (string, error) {
 	// TODO: request Microsoft to expose this to systemd services.
-	env := s.Backend.GetenvWslDistroName()
+	env := s.backend.GetenvWslDistroName()
 	if env != "" {
 		return env, nil
 	}
@@ -153,5 +174,5 @@ func (s *System) LocalAppData(ctx context.Context) (wslPath string, err error) {
 
 // Path converts an absolute path into one inside the mocked filesystem.
 func (s System) Path(path ...string) string {
-	return s.Backend.Path(path...)
+	return s.backend.Path(path...)
 }
