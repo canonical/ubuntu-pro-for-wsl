@@ -113,7 +113,7 @@ func (a *App) serve(args ...option) error {
 	srv := wslinstanceservice.Service{}
 
 	// Connect with the agent.
-	daemon, err := daemon.New(context.Background(), opt.system, opt.agentPortFilePath, srv.RegisterGRPCService)
+	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, srv.RegisterGRPCService, opt.system)
 	if err != nil {
 		close(a.ready)
 		return err

@@ -163,9 +163,9 @@ func TestNew(t *testing.T) {
 
 			_, err := daemon.New(
 				ctx,
-				system,
 				portFile,
 				countRegistrations,
+				system,
 			)
 			if tc.wantErr {
 				require.Error(t, err, "New should have errored out but hasn't")
@@ -231,9 +231,9 @@ func TestServeAndQuit(t *testing.T) {
 			copyFile(t, "testdata/resolv.conf", mock.Path("etc/resolv.conf"))
 
 			d, err := daemon.New(ctx,
-				system,
 				portFile,
 				registerer,
+				system,
 				daemon.WithSystemdNotifier(systemd.notify),
 			)
 			require.NoError(t, err, "Setup: daemon.New should return no errors")

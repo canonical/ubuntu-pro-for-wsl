@@ -43,7 +43,7 @@ type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStrea
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, system systeminfo.System, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
+func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, system systeminfo.System, args ...Option) (d Daemon, err error) {
 	defer decorate.OnError(&err, i18n.G("can't create daemon"))
 
 	log.Debug(ctx, "Building new daemon")
@@ -58,7 +58,7 @@ func New(ctx context.Context, system systeminfo.System, agentPortFilePath string
 		f(&opts)
 	}
 
-	ctrlStream, err := connectToControlStream(ctx, system, agentPortFilePath)
+	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath, system)
 	if err != nil {
 		return d, err
 	}
@@ -120,15 +120,15 @@ func (d Daemon) Quit(ctx context.Context, force bool) {
 
 // connectToControlStream connects to the control stream and initiates communication
 // by sending the distro's info.
-func connectToControlStream(ctx context.Context, system systeminfo.System, agentPortFilePath string) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
+func connectToControlStream(ctx context.Context, agentPortFilePath string, system systeminfo.System) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
 	defer decorate.OnError(&err, "could not connect to windows agent via the control stream")
 
-	ctrlAddr, err := getControlStreamAddress(system, agentPortFilePath)
+	ctrlAddr, err := getControlStreamAddress(agentPortFilePath, system)
 	if err != nil {
 		return nil, fmt.Errorf("could not get address: %v", err)
 	}
 
-	log.Debugf(ctx, "Connecting to control stream at %q", ctrlAddr)
+	log.Infof(ctx, "Connecting to control stream at %q", ctrlAddr)
 	ctrlConn, err := grpc.DialContext(ctx, ctrlAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("could not dial: %v", err)
@@ -152,7 +152,7 @@ func connectToControlStream(ctx context.Context, system systeminfo.System, agent
 	return ctrlStream, nil
 }
 
-func getControlStreamAddress(system systeminfo.System, agentPortFilePath string) (string, error) {
+func getControlStreamAddress(agentPortFilePath string, system systeminfo.System) (string, error) {
 	/*
 		We parse the the port from the file written by the windows agent.
 	*/
