@@ -5,12 +5,10 @@ import (
 	"errors"
 	"net"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
@@ -21,37 +19,33 @@ import (
 )
 
 func TestProAttach(t *testing.T) {
-	t.Setenv(systeminfo.DistroNameEnv, "TEST_DISTRO")
+	t.Parallel()
 
 	type detachResult int
 	const (
 		detachOK detachResult = iota
-		detachErrNoReason
 		detachErrAlreadyDetached
-		detachErrOtherReason
-		detachErrCannotParseReason
+		detachErr
 	)
 
 	testCases := map[string]struct {
 		proStatusErr      bool
 		getSystemInfoErr  bool
-		detachResult      detachResult
+		proDetachErr      detachResult
 		attachErr         bool
 		ctrlStreamSendErr bool
 
 		wantErr bool
 	}{
 		"success on attached machine": {},
-		"success on detached machine": {detachResult: detachErrAlreadyDetached},
+		"success on detached machine": {proDetachErr: detachErrAlreadyDetached},
 
 		// Pro status errors
 		"Error calling pro status":  {proStatusErr: true, wantErr: true},
 		"Error getting system info": {getSystemInfoErr: true, wantErr: true},
 
 		// Detach errors
-		"Error detaching pro, reason can be parsed":    {detachResult: detachErrOtherReason, wantErr: true},
-		"Error detaching pro, reason cannot be parsed": {detachResult: detachErrCannotParseReason, wantErr: true},
-		"Error detaching pro, no reasons specified":    {detachResult: detachErrNoReason, wantErr: true},
+		"Error detaching pro, reason can be parsed": {proDetachErr: detachErr, wantErr: true},
 
 		// Other errors
 		"Error calling pro attach":         {attachErr: true, wantErr: true},
@@ -63,7 +57,7 @@ func TestProAttach(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Hour)
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 
 			wantSysInfo := &agentapi.DistroInfo{
@@ -71,72 +65,42 @@ func TestProAttach(t *testing.T) {
 				Id:          "ubuntu",
 				VersionId:   "22.04",
 				PrettyName:  "Ubuntu 22.04.1 LTS",
-				ProAttached: false,
+				ProAttached: true,
 			}
 
 			ctrlClient, controlService := newCtrlStream(t, ctx)
 			ctrlClient.sendErr = tc.ctrlStreamSendErr
 
-			const wantToken = "1000"
-
-			rootDir := testutils.MockFilesystem(t)
-			var args []wslinstanceservice.Option
-
-			// Setting up system info
+			system, mock := testutils.MockSystemInfo(t)
 
 			if tc.getSystemInfoErr {
-				os.Remove(filepath.Join(rootDir, "etc/os-release"))
+				os.Remove(mock.Path("etc/os-release"))
 			}
 
-			// Setting up pro status
-			{
-				attached, err := true, error(nil)
-				if tc.proStatusErr {
-					attached, err = false, errors.New("test error")
-				}
-				args = append(args, wslinstanceservice.WithProStatus(attached, err))
+			mock.SetControlArg(testutils.ProStatusAttached)
+			if tc.proStatusErr {
+				mock.SetControlArg(testutils.ProStatusErr)
 			}
 
-			// Setting up pro detach
-			{
-				out, err := "", error(nil)
-				switch tc.detachResult {
-				case detachOK:
-				case detachErrNoReason:
-					out = "{}"
-					err = errors.New("test error")
-				case detachErrAlreadyDetached:
-					out = `{"errors": [{"message_code": "unattached", "message": "test error"}]}`
-					err = errors.New("test error")
-				case detachErrOtherReason:
-					out = `{"errors": [{"message_code": "test", "message": "test error"}]}`
-					err = errors.New("test error")
-				case detachErrCannotParseReason:
-					out = "This is not valid JSON"
-					err = errors.New("test error")
-				default:
-					require.Fail(t, "Unknown enum value for detachResult", "Value: %d", tc.detachResult)
-				}
-				args = append(args, wslinstanceservice.WithProDetach(out, err))
+			switch tc.proDetachErr {
+			case detachOK:
+			case detachErrAlreadyDetached:
+				mock.SetControlArg(testutils.ProDetachErrAlreadyDetached)
+			case detachErr:
+				mock.SetControlArg(testutils.ProDetachErrGeneric)
+			default:
+				require.Fail(t, "Unknown enum value for detachResult", "Value: %d", tc.proDetachErr)
 			}
 
-			// Setting up pro attach
-			{
-				out, err := "", error(nil)
-				if tc.attachErr {
-					out, err = `test error`, errors.New("test error")
-				}
-				args = append(args, wslinstanceservice.WithProAttach(func(ctx context.Context, token string) ([]byte, error) {
-					require.Equal(t, wantToken, token, "Called attach pro with the wrong token")
-					return []byte(out), err
-				}))
+			if tc.attachErr {
+				mock.SetControlArg(testutils.ProAttachErr)
 			}
 
-			wslClient := setupWSLInstanceService(t, ctx, ctrlClient, rootDir, args...)
+			wslClient := setupWSLInstanceService(t, ctx, ctrlClient, system)
 
 			errCh := make(chan error)
 			go func() {
-				_, err := wslClient.ProAttach(ctx, &wslserviceapi.AttachInfo{Token: wantToken})
+				_, err := wslClient.ProAttach(ctx, &wslserviceapi.AttachInfo{Token: "1000"})
 				errCh <- err
 			}()
 
@@ -155,13 +119,13 @@ func TestProAttach(t *testing.T) {
 }
 
 //nolint:revive // We've decided testing.T always preceedes the context.
-func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, rootDir string, args ...wslinstanceservice.Option) wslserviceapi.WSLClient {
+func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, system systeminfo.System) wslserviceapi.WSLClient {
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
 
-	sv := wslinstanceservice.New(rootDir, args...)
+	sv := wslinstanceservice.New(system)
 	server := sv.RegisterGRPCService(context.Background(), ctrlClient)
 
 	var conf net.ListenConfig
@@ -235,3 +199,6 @@ func (s *controlService) recv() (*agentapi.DistroInfo, error) {
 		return info, nil
 	}
 }
+
+func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
+func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }

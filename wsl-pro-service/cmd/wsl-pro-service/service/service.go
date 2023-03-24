@@ -5,15 +5,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -38,7 +37,7 @@ type daemonConfig struct {
 
 type options struct {
 	agentPortFilePath string
-	rootPath          string
+	system            systeminfo.System
 }
 
 type option func(*options)
@@ -93,25 +92,28 @@ func cmdName() string {
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve(args ...option) error {
+	ctx := context.Background()
+
 	opt := options{
-		rootPath: "/",
+		system: systeminfo.New(),
 	}
 	for _, f := range args {
 		f(&opt)
 	}
 
 	if len(opt.agentPortFilePath) == 0 {
-		out, err := exec.Command("bash", "-ec", "wslpath -ua `powershell.exe 'echo ${env:LocalAppData}'`").Output()
+		localAppData, err := opt.system.LocalAppData(ctx)
 		if err != nil {
+			close(a.ready)
 			return fmt.Errorf("Could not find $env:LocalAppData: %v", err)
 		}
-		opt.agentPortFilePath = filepath.Join(strings.TrimSpace(string(out)), common.LocalAppDataDir, common.ListeningPortFileName)
+		opt.agentPortFilePath = filepath.Join(localAppData, common.LocalAppDataDir, common.ListeningPortFileName)
 	}
 
 	srv := wslinstanceservice.Service{}
 
 	// Connect with the agent.
-	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, opt.rootPath, srv.RegisterGRPCService)
+	daemon, err := daemon.New(context.Background(), opt.system, opt.agentPortFilePath, srv.RegisterGRPCService)
 	if err != nil {
 		close(a.ready)
 		return err

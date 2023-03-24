@@ -5,14 +5,12 @@ import (
 	"context"
 	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
@@ -20,8 +18,6 @@ import (
 )
 
 func TestHelp(t *testing.T) {
-	systeminfo.InjectMock(t)
-
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("--help")
 
@@ -32,8 +28,6 @@ func TestHelp(t *testing.T) {
 }
 
 func TestCompletion(t *testing.T) {
-	systeminfo.InjectMock(t)
-
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("completion", "bash")
 
@@ -44,8 +38,6 @@ func TestCompletion(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	systeminfo.InjectMock(t)
-
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("version")
 
@@ -70,8 +62,6 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNoUsageError(t *testing.T) {
-	systeminfo.InjectMock(t)
-
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("completion", "bash")
 
@@ -84,7 +74,7 @@ func TestNoUsageError(t *testing.T) {
 }
 
 func TestUsageError(t *testing.T) {
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	a := service.New(service.WithAgentPortFilePath(t.TempDir()))
 	a.SetArgs("doesnotexist")
@@ -96,15 +86,15 @@ func TestUsageError(t *testing.T) {
 }
 
 func TestCanQuitWhenExecute(t *testing.T) {
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	rootDir := testutils.MockFilesystem(t)
-	srv := testutils.MockWindowsAgent(t, ctx, testutils.PortDir(rootDir))
+	system, mock := testutils.MockSystemInfo(t)
+	srv := testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
 
-	a, wait := startDaemon(t, rootDir)
+	a, wait := startDaemon(t, system, mock.DefaultAddrFile())
 	defer wait()
 
 	time.Sleep(time.Second)
@@ -114,15 +104,15 @@ func TestCanQuitWhenExecute(t *testing.T) {
 }
 
 func TestCanQuitTwice(t *testing.T) {
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	rootDir := testutils.MockFilesystem(t)
-	testutils.MockWindowsAgent(t, ctx, testutils.PortDir(rootDir))
+	system, mock := testutils.MockSystemInfo(t)
+	testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
 
-	a, wait := startDaemon(t, rootDir)
+	a, wait := startDaemon(t, system, mock.DefaultAddrFile())
 
 	a.Quit()
 	wait()
@@ -132,7 +122,7 @@ func TestCanQuitTwice(t *testing.T) {
 }
 
 func TestAppCanQuitWithoutExecute(t *testing.T) {
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	t.Skipf("This test is skipped because it is flaky. There is no way to guarantee Quit has been called before run.")
 
@@ -148,12 +138,11 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 	require.Containsf(t, err.Error(), "grpc: the server has been stopped", "Unexpected error message")
 }
 
-//nolint:tparallel // Cannot be parallel because of InjectMock
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 	// Trigger the error with a cache directory that cannot be created over an
 	// existing file
 
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	testCases := map[string]struct {
 		invalidProServicesCache bool
@@ -170,10 +159,10 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			rootDir := testutils.MockFilesystem(t)
-			portFile := filepath.Join(testutils.PortDir(rootDir), common.ListeningPortFileName)
+			system, mock := testutils.MockSystemInfo(t)
+			addrFile := mock.DefaultAddrFile()
 
-			resolvConf := filepath.Join(rootDir, "etc/resolv.conf")
+			resolvConf := mock.Path("/etc/resolv.conf")
 			if tc.invalidResolvConfFile {
 				err := os.Remove(resolvConf)
 				require.NoError(t, err, "Setup: could not remove mock resolv.conf")
@@ -181,11 +170,11 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 				require.NoError(t, err, "Setup: could not create resolv.conf directory to interfere with service")
 			}
 
-			a := service.New(service.WithAgentPortFilePath(portFile), service.WithFilesystemRoot(rootDir))
+			a := service.New(service.WithAgentPortFilePath(addrFile), service.WithSystem(system))
 			a.SetArgs()
 
 			if tc.invalidDaemonCache {
-				err := os.WriteFile(portFile, []byte("I'm here to break the service"), 0600)
+				err := os.WriteFile(addrFile, []byte("I'm here to break the service"), 0600)
 				require.NoError(t, err, "Failed to write file")
 			}
 
@@ -220,12 +209,12 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and start the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T, rootDir string) (app *service.App, done func()) {
+func startDaemon(t *testing.T, system systeminfo.System, addrFile string) (app *service.App, done func()) {
 	t.Helper()
 
 	a := service.New(
-		service.WithAgentPortFilePath(filepath.Join(testutils.PortDir(rootDir), common.ListeningPortFileName)),
-		service.WithFilesystemRoot(rootDir),
+		service.WithAgentPortFilePath(addrFile),
+		service.WithSystem(system),
 	)
 
 	a.SetArgs("-vvv")
@@ -277,3 +266,6 @@ func captureStdout(t *testing.T) func() string {
 		return out.String()
 	}
 }
+
+func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
+func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }

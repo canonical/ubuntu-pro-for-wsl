@@ -5,13 +5,10 @@ import (
 	"errors"
 	"net"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	log "github.com/sirupsen/logrus"
@@ -26,9 +23,8 @@ func TestMain(m *testing.M) {
 	defer os.Exit(exit)
 }
 
-//nolint:tparallel // Cannot be parallel because of InjectMock
 func TestNew(t *testing.T) {
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	type dataFileState int
 
@@ -86,10 +82,7 @@ func TestNew(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			rootDir := testutils.MockFilesystem(t)
-			portDir := testutils.PortDir(rootDir)
-			portFile := filepath.Join(portDir, common.ListeningPortFileName)
-			resolvConf := filepath.Join(rootDir, "etc/resolv.conf")
+			system, mock := testutils.MockSystemInfo(t)
 
 			var agentArgs []testutils.AgentOption
 			if tc.agentDoesntRecv {
@@ -100,7 +93,8 @@ func TestNew(t *testing.T) {
 				agentArgs = append(agentArgs, testutils.WithSendBadPort())
 			}
 
-			testutils.MockWindowsAgent(t, ctx, filepath.Dir(portFile), agentArgs...)
+			portFile := mock.DefaultAddrFile()
+			testutils.MockWindowsAgent(t, ctx, portFile, agentArgs...)
 
 			switch tc.portFile {
 			case dataFileGood:
@@ -133,6 +127,7 @@ func TestNew(t *testing.T) {
 				require.Fail(t, "Test setup error", "Unexpected enum value %d for portFile state", tc.portFile)
 			}
 
+			resolvConf := mock.Path("etc/resolv.conf")
 			switch tc.resolvFile {
 			case dataFileGood:
 				copyFile(t, "testdata/resolv.conf", resolvConf)
@@ -169,8 +164,8 @@ func TestNew(t *testing.T) {
 
 			_, err := daemon.New(
 				ctx,
+				system,
 				portFile,
-				rootDir,
 				countRegistrations,
 			)
 			if tc.wantErr {
@@ -184,9 +179,8 @@ func TestNew(t *testing.T) {
 	}
 }
 
-//nolint:tparallel // Cannot be parallel because of InjectMock
 func TestServeAndQuit(t *testing.T) {
-	systeminfo.InjectMock(t)
+	t.Parallel()
 
 	testCases := map[string]struct {
 		precancelContext bool
@@ -220,11 +214,10 @@ func TestServeAndQuit(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			rootDir := testutils.MockFilesystem(t)
-			portDir := testutils.PortDir(rootDir)
-			portFile := filepath.Join(portDir, common.ListeningPortFileName)
+			system, mock := testutils.MockSystemInfo(t)
 
-			testutils.MockWindowsAgent(t, ctx, portDir)
+			portFile := mock.DefaultAddrFile()
+			testutils.MockWindowsAgent(t, ctx, portFile)
 
 			registerer := func(ctx context.Context, ctrl wslinstanceservice.ControlStreamClient) *grpc.Server {
 				// No need for a real GRPC service
@@ -236,11 +229,11 @@ func TestServeAndQuit(t *testing.T) {
 				returnErr: tc.notifierErr,
 			}
 
-			copyFile(t, "testdata/resolv.conf", filepath.Join(rootDir, "etc/resolv.conf"))
+			copyFile(t, "testdata/resolv.conf", mock.Path("etc/resolv.conf"))
 
 			d, err := daemon.New(ctx,
+				system,
 				portFile,
-				rootDir,
 				registerer,
 				daemon.WithSystemdNotifier(systemd.notify),
 			)
@@ -317,3 +310,6 @@ func copyFile(t *testing.T, src, dst string) {
 	err = os.WriteFile(dst, out, 0600)
 	require.NoErrorf(t, err, "Setup: could not write resolv.conf file at %q", dst)
 }
+
+func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
+func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }

@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/common"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -59,7 +57,7 @@ func WithDropStreamBeforeSendingPort() AgentOption {
 // You can stop the server maunally, otherwise it'll stop during cleanup.
 //
 //nolint:revive // testing.T should go before context, regardless of what these linters say.
-func MockWindowsAgent(t *testing.T, ctx context.Context, portFileDir string, args ...AgentOption) *grpc.Server {
+func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args ...AgentOption) *grpc.Server {
 	t.Helper()
 
 	var opts options
@@ -75,8 +73,6 @@ func MockWindowsAgent(t *testing.T, ctx context.Context, portFileDir string, arg
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
 	require.NoError(t, err, "Setup: could not listen to agent address")
-
-	addrFile := filepath.Join(portFileDir, common.ListeningPortFileName)
 
 	go func() {
 		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on %q", lis.Addr().String())
