@@ -102,7 +102,7 @@ func TestCanQuitWhenExecute(t *testing.T) {
 	system, mock := testutils.MockSystemInfo(t)
 	srv := testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
 
-	a, wait := startDaemon(t, system, mock.DefaultAddrFile())
+	a, wait := startDaemon(t, mock.DefaultAddrFile(), system)
 	defer wait()
 
 	time.Sleep(time.Second)
@@ -120,7 +120,7 @@ func TestCanQuitTwice(t *testing.T) {
 	system, mock := testutils.MockSystemInfo(t)
 	testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
 
-	a, wait := startDaemon(t, system, mock.DefaultAddrFile())
+	a, wait := startDaemon(t, mock.DefaultAddrFile(), system)
 
 	a.Quit()
 	wait()
@@ -188,7 +188,6 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 			defer a.Quit()
 			err := a.Run()
 			require.Error(t, err, "Run should exit with an error")
-
 		})
 	}
 }
@@ -275,7 +274,7 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and starts the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T, system systeminfo.System, addrFile string) (app *service.App, done func()) {
+func startDaemon(t *testing.T, addrFile string, system systeminfo.System) (app *service.App, done func()) {
 	t.Helper()
 
 	a := service.New(
