@@ -344,6 +344,7 @@ func filterCommandMarkdown(cmds []cobra.Command, w io.Writer) {
 
 	go func() {
 		for _, cmd := range cmds {
+			cmd := cmd
 			if err := doc.GenMarkdown(&cmd, pw); err != nil {
 				pw.CloseWithError(fmt.Errorf("couldn't generate markdown for %s: %v", cmd.Name(), err))
 				return
