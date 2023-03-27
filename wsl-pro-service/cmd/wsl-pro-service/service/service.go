@@ -4,7 +4,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
@@ -19,6 +18,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/ubuntu/decorate"
 )
+
+// cmdName is the binary name for the service.
+const cmdName = "wsl-pro-service"
 
 // App encapsulate commands and options of the daemon, which can be controlled by env variables and config files.
 type App struct {
@@ -46,7 +48,7 @@ type option func(*options)
 func New(o ...option) *App {
 	a := App{ready: make(chan struct{})}
 	a.rootCmd = cobra.Command{
-		Use:   fmt.Sprintf("%s COMMAND", cmdName()),
+		Use:   fmt.Sprintf("%s COMMAND", cmdName),
 		Short: i18n.G("WSL Pro Service"),
 		Long:  i18n.G("WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -83,11 +85,6 @@ func New(o ...option) *App {
 	a.installVersion()
 
 	return &a
-}
-
-// cmdName is the binary name for the agent.
-func cmdName() string {
-	return filepath.Base(os.Args[0])
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
