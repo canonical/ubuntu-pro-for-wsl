@@ -12,7 +12,7 @@ Ubuntu Pro for Windows agent
 
 ##### Synopsis
 
-Ubuntu Pro for Windows agent for managing your pro-enabled distro.
+Ubuntu Pro for Windows agent for managing your pro-enabled distro. SAMPLE TEXT TO TRIGGER THE CI.
 
 ```
 ubuntu-pro-agent COMMAND [flags]
