@@ -1,0 +1,79 @@
+name: Update module versions
+on:
+  push:
+    branches:
+      - main
+
+env:
+  modified: false
+  apt_dependencies: git
+
+jobs:
+  update-readme-cli-ref:
+    name: Update readme and CLI ref files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt update
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y ${{ env.apt_dependencies }}
+      - name: Set up git
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+        name: Check out repository
+        with:
+          ref: main
+      - uses: actions/setup-go@v4
+        name: Set up Go
+        with:
+          go-version-file: go.work
+      - name: Check README file
+        run: |
+          set -eu
+
+          commit=`git rev-parse --short HEAD`
+
+          for subproject in */ ; do
+              cd "${{ github.workspace }}/${subproject}"
+              [ -f "go.mod" ] || continue
+              
+              subproject=${subproject%/}
+
+              # Detect internal dependencies
+              url="github.com\/canonical\/ubuntu-pro-for-windows"
+              pattern="s/${url}\/${subproject} \(${url}\/[^@]\+\)@.*/\1/p"
+              modules=`go mod graph | sed -n "$pattern"`
+
+              [ "${modules}" = "" ] && continue
+
+              # Get latest version
+              echo "::group::${subproject}"
+              for mod in $modules ; do
+                  go get "${mod}@${commit}"
+              done
+
+              go mod tidy
+          done
+
+          hasModif="false"
+          MODIFIED=$(git status --porcelain --untracked-files=no)
+          if [ -n "$MODIFIED" ]; then
+              hasModif="true"
+          fi
+          echo "modified=${hasModif}" >> $GITHUB_ENV
+      - uses: peter-evans/create-pull-request@v4
+        name: Create Pull Request
+        if: ${{ env.modified == 'true' }}
+        with:
+          commit-message: Auto update Go module dependencies
+          title: Auto update Go module dependencies
+          labels: gomod, automated pr
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-update-modules.yaml) by GitHub Action"
+          branch: "auto-gomod/${{ github.run_id }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push branch
+        if: ${{ env.modified == 'true' }}
+        run: |
+          git push origin auto-update-readme-cli-ref:main
