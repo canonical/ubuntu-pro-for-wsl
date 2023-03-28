@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - documentation # TODO: Test entry, remove before merging
     paths:
       - "doc/**"
   gollum:

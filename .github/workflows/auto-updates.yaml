@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - documentation # TODO: Test entry, remove before merging
     paths-ignore:
       - po/*
       - README.md
@@ -32,8 +33,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v3
         name: Check out repository
-        with:
-          ref: main
+        # with:
+        #   ref: main
+        # TODO: Test ##, uncomment before merging 
       - uses: actions/setup-go@v4
         name: Set up Go
         with:
