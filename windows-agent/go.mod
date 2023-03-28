@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230328092209-0fe3996e993b
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230213150148-f0a87b4aec12
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
@@ -22,6 +22,7 @@ require (
 )
 
 require (
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -30,6 +31,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
