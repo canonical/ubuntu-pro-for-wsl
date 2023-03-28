@@ -5,12 +5,14 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/internal/generators"
@@ -20,7 +22,7 @@ const usage = `Usage of %s:
 
    create-po POT DIRECTORY LOC [LOC...]
      Create new LOC.po file(s) in DIRECTORY from an existing pot file.
-   update-po POT DIRECTORY
+   update-po POT DIRECTORY PACKAGE [PACKAGES...]
      Create/Update a pot file and refresh any existing po files in DIRECTORY.
    generate-mo DOMAIN PODIR DIRECTORY
      Create .mo files for any .po in PODIR in an structured hierarchy in DIRECTORY.
@@ -44,13 +46,13 @@ func main() {
 		}
 
 	case "update-po":
-		if len(os.Args) != 4 {
+		if len(os.Args) < 5 {
 			log.Fatalf(usage, os.Args[0])
 		}
 		if generators.InstallOnlyMode() {
 			return
 		}
-		if err := updatePo(os.Args[2], os.Args[3]); err != nil {
+		if err := updatePo(os.Args[2], os.Args[3], os.Args[4:]...); err != nil {
 			log.Fatalf("Error when updating po files: %v", err)
 		}
 
@@ -89,30 +91,40 @@ func createPo(potfile, localeDir string, locs []string) error {
 }
 
 // updatePo creates pot files and update any existing .po ones.
-func updatePo(potfile, localeDir string) error {
+func updatePo(potfile, localeDir string, packages ...string) error {
 	if err := os.MkdirAll(localeDir, 0755); err != nil {
 		return fmt.Errorf("couldn't create directory for %q: %v", localeDir, err)
 	}
 
+	_, current, _, ok := runtime.Caller(0)
+	if !ok {
+		return errors.New("could not get repository root")
+	}
+
+	// ROOT/common/i18n
+	root := dir(current, 3)
+
 	// Create pot file
 	var files []string
-	root := filepath.Dir(localeDir)
-	err := filepath.WalkDir(root, func(p string, de fs.DirEntry, err error) error {
-		if err != nil {
-			return fmt.Errorf("fail to access %q: %v", p, err)
-		}
-		// Only deal with files
-		if de.IsDir() {
-			return nil
-		}
+	var err error
+	for _, dir := range packages {
+		err = errors.Join(err, filepath.WalkDir(dir, func(p string, de fs.DirEntry, err error) error {
+			if err != nil {
+				return fmt.Errorf("fail to access %q: %v", p, err)
+			}
+			// Only deal with files
+			if de.IsDir() {
+				return nil
+			}
 
-		if !strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, ".go.template") {
-			return nil
-		}
-		files = append(files, strings.TrimPrefix(p, root+"/"))
+			if !strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, ".go.template") {
+				return nil
+			}
 
-		return nil
-	})
+			files = append(files, p)
+			return nil
+		}))
+	}
 
 	if err != nil {
 		return err
@@ -165,6 +177,13 @@ func updatePo(potfile, localeDir string) error {
 	}
 
 	return nil
+}
+
+func dir(path string, levels uint) string {
+	if levels == 0 {
+		return path
+	}
+	return dir(filepath.Dir(path), levels-1)
 }
 
 // generateMo generates a locale directory structure with a mo for each po in localeDir.
