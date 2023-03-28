@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/common/autocompletiondocumentation/internal/generators"
 	"github.com/stretchr/testify/require"
 )
 
