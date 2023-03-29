@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - translate-go # TODO: This line is only for testing, remove before merging
     paths-ignore:
       - po/*
       - README.md
@@ -21,8 +22,9 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt install -y gettext
       - uses: actions/checkout@v3
         name: Check out repo
-        with:
-          ref: main
+        # with:
+        #   ref: main
+        # TODO: These lines are commented out only for testing, enable before merging
       - uses: actions/setup-go@v4
         with:
           go-version-file: common/go.mod
