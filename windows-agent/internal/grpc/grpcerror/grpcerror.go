@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
