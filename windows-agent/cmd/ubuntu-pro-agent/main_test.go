@@ -32,8 +32,6 @@ func (a *myApp) Quit() {
 }
 
 func TestRun(t *testing.T) {
-	t.Parallel()
-
 	tests := map[string]struct {
 		runError         bool
 		usageErrorReturn bool
@@ -48,8 +46,6 @@ func TestRun(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			a := myApp{
 				done:             make(chan struct{}),
 				runError:         tc.runError,
