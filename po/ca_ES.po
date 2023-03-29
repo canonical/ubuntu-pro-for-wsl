@@ -24,10 +24,13 @@ msgstr ""
 msgid "%s\t%s"
 msgstr ""
 
-#: windows-agent/internal/grpc/logstreamer/server.go:107
 #: wsl-pro-service/internal/grpc/logstreamer/server.go:107
 msgid "%s isn't a boolean: %v"
 msgstr "%s no és booleà"
+
+#: windows-agent/internal/grpc/logstreamer/server.go:107
+msgid "%s isn't a boolean: %v SAMPLE TEXT TO TRIGGER THE CI"
+msgstr ""
 
 #: windows-agent/internal/daemon/daemon.go:129
 #: wsl-pro-service/internal/daemon/daemon.go:118
