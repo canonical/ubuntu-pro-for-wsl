@@ -48,8 +48,6 @@ func TestRun(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			a := myApp{
 				done:             make(chan struct{}),
 				runError:         tc.runError,
