@@ -18,7 +18,7 @@ type i18n struct {
 	loc       string
 
 	gettext.Catalog
-	translations gettext.Translations
+	translations gettext.TextDomain
 }
 
 var (
@@ -30,14 +30,17 @@ var (
 	NG = func(msgid string, msgidPlural string, n uint32) string { return msgid }
 )
 
+type Option func(l *i18n)
+
 // InitI18nDomain calls bind + set locale to system values.
-func InitI18nDomain(domain string, options ...func(l *i18n)) {
+func InitI18nDomain(domain string, args ...Option) {
 	locale = i18n{
 		domain:    domain,
 		localeDir: "/usr/share/locale",
 	}
-	for _, option := range options {
-		option(&locale)
+
+	for _, f := range args {
+		f(&locale)
 	}
 
 	locale.bindTextDomain(locale.domain, locale.localeDir)
@@ -74,7 +77,11 @@ func langpackResolver(root string, locale string, domain string) string {
 }
 
 func (l *i18n) bindTextDomain(domain, dir string) {
-	l.translations = gettext.NewTranslations(dir, domain, langpackResolver)
+	l.translations = gettext.TextDomain{
+		Name:         domain,
+		LocaleDir:    dir,
+		PathResolver: langpackResolver,
+	}
 }
 
 // setLocale initializes the locale name and simplify it.
