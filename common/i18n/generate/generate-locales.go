@@ -105,7 +105,7 @@ func updatePo(potfile, localeDir string, packages ...string) error {
 	}
 
 	// ROOT/common/i18n
-	root := dir(current, 3)
+	root := dir(current, 4)
 
 	// Create pot file
 	var files []string
