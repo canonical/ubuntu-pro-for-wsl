@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/internal/generators"
 )
 
@@ -60,10 +61,10 @@ func main() {
 		}
 
 	case "generate-mo":
-		if len(os.Args) != 5 {
+		if len(os.Args) != 4 {
 			log.Fatalf(usage, os.Args[0])
 		}
-		if err := generateMo(os.Args[2], os.Args[3], filepath.Join(generators.DestDirectory(os.Args[4]), "usr", "share")); err != nil {
+		if err := generateMo(os.Args[2], filepath.Join(generators.DestDirectory(os.Args[3]), "usr", "share")); err != nil {
 			log.Fatalf("Error when generating mo files: %v", err)
 		}
 	default:
@@ -190,7 +191,7 @@ func dir(path string, levels uint) string {
 }
 
 // generateMo generates a locale directory structure with a mo for each po in localeDir.
-func generateMo(domain, in, out string) error {
+func generateMo(in, out string) error {
 	baseLocaleDir := filepath.Join(out, "locale")
 	if err := generators.CleanDirectory(baseLocaleDir); err != nil {
 		log.Fatalln(err)
@@ -211,7 +212,7 @@ func generateMo(domain, in, out string) error {
 			return fmt.Errorf("couldn't create %q: %v", out, err)
 		}
 		if out, err := exec.Command("msgfmt",
-			"--output-file="+filepath.Join(outDir, domain+".mo"),
+			"--output-file="+filepath.Join(outDir, common.TEXTDOMAIN+".mo"),
 			candidate).CombinedOutput(); err != nil {
 			return fmt.Errorf("couldn't compile mo file from %q: %v.\nCommand output: %s", candidate, err, out)
 		}

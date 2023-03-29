@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-DOMAIN="ubuntu-pro"
+POT="po/ubuntu-pro.pot"
 PO_DIR="po"
 MO_DIR="generated"
 
@@ -26,5 +26,5 @@ fi
 
 # Generating locales
 cd "$REPO_ROOT"
-go run "$REPO_ROOT/common/i18n/generate/generate-locales.go" update-po "$PO_DIR/$DOMAIN.pot" "$PO_DIR" $PACKAGES
-go run "$REPO_ROOT/common/i18n/generate/generate-locales.go" generate-mo "$DOMAIN" "$PO_DIR" "$MO_DIR"
+go run "$REPO_ROOT/common/i18n/generate/generate-locales.go" update-po "$POT" "$PO_DIR" $PACKAGES
+go run "$REPO_ROOT/common/i18n/generate/generate-locales.go" generate-mo "$PO_DIR" "$MO_DIR"
