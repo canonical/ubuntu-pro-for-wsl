@@ -58,7 +58,7 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 	}
 
 	if err != nil {
-		log.Debugf(ctx, "Found errors while submitting the ProAttach task to existing distros.\n%s", err)
+		log.Debugf(ctx, "Found errors while submitting the ProAttach task to existing distros:\n%v", err)
 		return nil, err
 	}
 
