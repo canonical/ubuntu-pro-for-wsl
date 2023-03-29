@@ -1,14 +1,6 @@
 // Package i18n is responsible for internationalization/translation handling and generation.
 package i18n
 
-/*
- * This package is inspired from https://github.com/snapcore/snapd/blob/master/i18n, with other snap dependecies removed
- * and adapted to follow common go best practices.
- */
-
-//go:generate go run generate-locales.go update-po ../../po/adsys.pot ../../po
-//go:generate go run generate-locales.go generate-mo adsys ../../po ../../generated
-
 import (
 	"fmt"
 	"os"
@@ -24,7 +16,7 @@ type i18n struct {
 	loc       string
 
 	gettext.Catalog
-	translations *gettext.TextDomain
+	translations gettext.Translations
 }
 
 var (
@@ -80,11 +72,7 @@ func langpackResolver(root string, locale string, domain string) string {
 }
 
 func (l *i18n) bindTextDomain(domain, dir string) {
-	l.translations = &gettext.TextDomain{
-		Name:         domain,
-		LocaleDir:    dir,
-		PathResolver: langpackResolver,
-	}
+	l.translations = gettext.NewTranslations(dir, domain, langpackResolver)
 }
 
 // setLocale initializes the locale name and simplify it.

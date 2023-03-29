@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/sirupsen/logrus"

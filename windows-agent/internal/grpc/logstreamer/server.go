@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

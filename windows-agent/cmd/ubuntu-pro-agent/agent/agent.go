@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
