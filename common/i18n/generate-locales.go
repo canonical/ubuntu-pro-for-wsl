@@ -34,6 +34,9 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "help":
+		fmt.Printf(usage, os.Args[0])
+		return
 	case "create-po":
 		if len(os.Args) < 5 {
 			log.Fatalf(usage, os.Args[0])
