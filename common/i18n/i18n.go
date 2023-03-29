@@ -10,6 +10,8 @@ import (
 	"github.com/snapcore/go-gettext"
 )
 
+//go:generate ./generate/generate.sh
+
 type i18n struct {
 	domain    string
 	localeDir string
