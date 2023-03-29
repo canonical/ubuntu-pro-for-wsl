@@ -79,8 +79,16 @@ msgstr ""
 msgid "Ubuntu Pro for Windows agent"
 msgstr ""
 
+#: windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:49
+msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
+msgstr ""
+
 #: wsl-pro-service/cmd/wsl-pro-service/service/service.go:50
 msgid "WSL Pro Service"
+msgstr ""
+
+#: wsl-pro-service/cmd/wsl-pro-service/service/service.go:51
+msgid "WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."
 msgstr ""
 
 #: windows-agent/internal/daemon/daemon.go:127

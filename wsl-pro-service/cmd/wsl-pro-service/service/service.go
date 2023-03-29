@@ -48,7 +48,7 @@ func New(o ...option) *App {
 	a.rootCmd = cobra.Command{
 		Use:   fmt.Sprintf("%s COMMAND", cmdName()),
 		Short: i18n.G("WSL Pro Service"),
-		Long:  i18n.G(`WSL Pro Service connects Ubuntu Pro for Windows agent to your distro.`),
+		Long:  i18n.G("WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Force a visit of the local flags so persistent flags for all parents are merged.
 			cmd.LocalFlags()
