@@ -80,6 +80,12 @@ msgstr "El servei ha trigat massa en respondre. Desconnectant client."
 msgid "Ubuntu Pro for Windows agent"
 msgstr "Agent d'Ubuntu Pro per a Windows"
 
+#: windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:49
+msgid ""
+"Ubuntu Pro for Windows agent for managing your pro-enabled distro. SAMPLE "
+"TEXT CHANGE TO TRIGGER THE CI"
+msgstr ""
+
 #: wsl-pro-service/cmd/wsl-pro-service/service/service.go:50
 msgid "WSL Pro Service"
 msgstr "Servei WSL Pro"
