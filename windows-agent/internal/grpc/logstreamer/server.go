@@ -104,7 +104,7 @@ func extractMetaFromContext(ctx context.Context) (clientID string, withCaller bo
 	}
 	withCaller, err = strconv.ParseBool(withCallerRaw)
 	if err != nil {
-		return "", false, fmt.Errorf(i18n.G("%s isn't a boolean: %v"), clientWantCallerKey, err)
+		return "", false, fmt.Errorf(i18n.G("%s isn't a boolean: %v SAMPLE TEXT TO TRIGGER THE CI"), clientWantCallerKey, err)
 	}
 
 	return clientID, withCaller, nil
