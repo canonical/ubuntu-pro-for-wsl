@@ -40,8 +40,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10 h1:Mi6BOi3vo+4UGg/InTa/Vu5DsOk+cXy4ldEHWZIn4JU=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10/go.mod h1:DQDIMwYsPr4n3Ck5BSZo8uVIu2aKlTUJ245TPiATJcU=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230322100459-1ec4d0175382 h1:m4hhiZn7Ci1tJvjrnGLb2zJhvDI5GqZbF5sytrqVTNo=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230322100459-1ec4d0175382/go.mod h1:JHLSjUKanL0PdGSVPPOBJVhFwb93SAl4lo5vFu/g0rU=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230329084852-5e048033e27e h1:AmRswIhVnXSftqh4uNCj+TORl13tmMjAmjpElzbJSNQ=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230329084852-5e048033e27e/go.mod h1:kujNO2DR/OaDq3g4uQAF3v6eio5wo2976yO2Z7UFdsg=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382 h1:Zq/NxM9EZrZFVVO90Rm2EtcwNwLF4Q5A7kUgr02PRY8=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382/go.mod h1:IJphMXBES/d3n/pXddrP08VNMYaQM3edlKeV3GSxrXU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -219,6 +219,8 @@ golang.org/x/exp v0.0.0-20191227195350-da58074b4299/go.mod h1:2RIsYlXP63K8oxa1u0
 golang.org/x/exp v0.0.0-20200119233911-0405dc783f0a/go.mod h1:2RIsYlXP63K8oxa1u096TMicItID8zy7Y6sNkU49FU4=
 golang.org/x/exp v0.0.0-20200207192155-f17229e696bd/go.mod h1:J/WKrq2StrnmMY6+EHIKF9dgMWnmCNThgcyBT1FY9mM=
 golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6/go.mod h1:3jZMyOhIsHpP37uCMkUooju7aAi5cS1Q23tOzKc+0MU=
+golang.org/x/exp v0.0.0-20230321023759-10a507213a29 h1:ooxPy7fPvB4kwsA2h+iBNHkAbp/4JxTSwCmvdjEYmug=
+golang.org/x/exp v0.0.0-20230321023759-10a507213a29/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
 golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
 golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=

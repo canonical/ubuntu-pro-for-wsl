@@ -41,10 +41,10 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10 h1:Mi6BOi3vo+4UGg/InTa/Vu5DsOk+cXy4ldEHWZIn4JU=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10/go.mod h1:DQDIMwYsPr4n3Ck5BSZo8uVIu2aKlTUJ245TPiATJcU=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50 h1:zIt41CWHTC4SJmiX7i5P67QXCcPQrw+Pf3qCL0lJm94=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230309123333-7ce6af4b6f50/go.mod h1:JHLSjUKanL0PdGSVPPOBJVhFwb93SAl4lo5vFu/g0rU=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230213150148-f0a87b4aec12 h1:sKYZ0jSHYTCG9Xw2/pZ3RzNWyZRMlNly2YaAxcOulew=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230213150148-f0a87b4aec12/go.mod h1:PFkkFVMVw1W8/bDMl35zR2Jduh1RCpRvmqj7rlpQHaY=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230329084852-5e048033e27e h1:AmRswIhVnXSftqh4uNCj+TORl13tmMjAmjpElzbJSNQ=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230329084852-5e048033e27e/go.mod h1:kujNO2DR/OaDq3g4uQAF3v6eio5wo2976yO2Z7UFdsg=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382 h1:Zq/NxM9EZrZFVVO90Rm2EtcwNwLF4Q5A7kUgr02PRY8=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382/go.mod h1:IJphMXBES/d3n/pXddrP08VNMYaQM3edlKeV3GSxrXU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
@@ -163,6 +163,8 @@ github.com/rogpeppe/go-internal v1.6.1 h1:/FiVV8dS/e+YqF2JvO3yXRFbBLTIuSDkuC7aBO
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/sirupsen/logrus v1.9.0 h1:trlNQbNUG3OdDrDil03MCb1H2o9nJ1x4/5LYw7byDE0=
 github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
+github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 h1:nETXPg0CiJrMAwC2gqkcam9BiBWYGvTsSYRfrjOz2Kg=
+github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2/go.mod h1:D3SsWAXK7wCCBZu+Vk5hc1EuKj/L3XN1puEMXTU4LrQ=
 github.com/spf13/afero v1.9.3 h1:41FoI0fD7OR7mGcKE/aOiLkGreyf8ifIOQmJANWogMk=
 github.com/spf13/afero v1.9.3/go.mod h1:iUV7ddyEEZPO5gA3zD4fJt6iStLlL+Lg4m2cihcDf8Y=
 github.com/spf13/cast v1.5.0 h1:rj3WzYc11XZaIZMPKmwP96zkFEnnAmV8s6XbB2aY32w=
