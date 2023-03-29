@@ -63,6 +63,14 @@ jobs:
           version: v1.52.0
           args: --config=${{ github.workspace }}/.golangci.yaml --build-tags=gowslmock
           working-directory: ${{ matrix.subproject }}
+      - name: Gettext validation
+        run: |
+          grep -nr --include="*.go" 'i18n.G([^"]' ./* | grep -Pv '_test.go:' > text.log
+          [ -z "$(cat text.log)" ] && exit 0
+
+          echo 'Bad i18n.G calls. Gettext will only detect calls of type G("text"), with double quotes.'
+          cat text.log
+          exit 1
 
   quality-flutter:
     name: "Flutter Quality checks"
