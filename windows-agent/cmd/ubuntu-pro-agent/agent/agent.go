@@ -46,7 +46,7 @@ func New(o ...option) *App {
 	a.rootCmd = cobra.Command{
 		Use:   fmt.Sprintf("%s COMMAND", cmdName()),
 		Short: i18n.G("Ubuntu Pro for Windows agent"),
-		Long:  i18n.G(`Ubuntu Pro for Windows agent for managing your pro-enabled distro.`),
+		Long:  i18n.G("Ubuntu Pro for Windows agent for managing your pro-enabled distro."),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Force a visit of the local flags so persistent flags for all parents are merged.
 			cmd.LocalFlags()
