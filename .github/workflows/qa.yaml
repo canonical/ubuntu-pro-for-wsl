@@ -64,6 +64,7 @@ jobs:
           args: --config=${{ github.workspace }}/.golangci.yaml --build-tags=gowslmock
           working-directory: ${{ matrix.subproject }}
       - name: Gettext validation
+        shell: bash
         run: |
           set -eu
 
