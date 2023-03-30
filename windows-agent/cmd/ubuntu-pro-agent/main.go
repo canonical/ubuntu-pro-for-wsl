@@ -19,6 +19,7 @@ import (
 //go:generate go run ../generate_completion_documentation.go update-doc-cli-ref
 
 func main() {
+	i18n.InitI18nDomain(common.TEXTDOMAIN)
 	a := agent.New()
 	os.Exit(run(a))
 }
@@ -30,7 +31,6 @@ type app interface {
 }
 
 func run(a app) int {
-	i18n.InitI18nDomain(common.TEXTDOMAIN)
 	defer installSignalHandler(a)()
 
 	log.SetFormatter(&log.TextFormatter{
