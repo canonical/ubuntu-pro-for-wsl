@@ -31,6 +31,9 @@ func New(ctx context.Context, db *database.DistroDB, initialTasks *initialtasks.
 	}
 }
 
+// obfuscate returns a partially hidden version of the contents, suitable for logging low-sensitive information.
+// Hidden enough to prevent others from reading the value while still allowing the contents author to recognize it.
+// Useful for reading logs with test data. For example: `obfuscate("Blahkilull")=="Bl******ll`".
 func obfuscate(contents string) string {
 	const endsToReveal = 2
 	asterisksLength := len(contents) - 2*endsToReveal
