@@ -42,14 +42,14 @@ func TestAttachPro(t *testing.T) {
 	distro1, _ := testutils.RegisterDistro(t, ctx, false)
 	distro2, _ := testutils.RegisterDistro(t, ctx, false)
 
-	info := agentapi.AttachInfo{Token: "funny_token"}
 	testCases := map[string]struct {
 		token string
 
 		distros []string
 	}{
-		"Success with an empty database":    {token: info.Token},
-		"Success with a non-empty database": {token: info.Token, distros: []string{distro1, distro2}},
+		"No panic due empty token":          {token: ""},
+		"Success with an empty database":    {token: "funny_token"},
+		"Success with a non-empty database": {token: "whatever_token", distros: []string{distro1, distro2}},
 	}
 
 	for name, tc := range testCases {
@@ -70,6 +70,7 @@ func TestAttachPro(t *testing.T) {
 			require.NoError(t, err, "Setup: initial tasks New() should return no error")
 			serv := ui.New(context.Background(), db, initTasks)
 
+			info := agentapi.AttachInfo{Token: tc.token}
 			_, err = serv.ProAttach(context.Background(), &info)
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 			// Could it be nice to retrieve the distro's pending tasks?
