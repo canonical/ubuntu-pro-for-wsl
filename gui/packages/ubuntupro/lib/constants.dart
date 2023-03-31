@@ -7,5 +7,5 @@ const kAppName = 'Ubuntu Pro';
 /// The name of the file where the Agent's drop its service connection information.
 const kAddrFileName = 'addr';
 
-/// The default border marging.
-const kDefaultMarging = 32.0;
+/// The default border margin.
+const kDefaultMargin = 32.0;

@@ -27,7 +27,7 @@ class EnterProTokenPage extends StatelessWidget {
         title: Text(title),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(kDefaultMarging),
+        padding: const EdgeInsets.all(kDefaultMargin),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -39,7 +39,7 @@ class EnterProTokenPage extends StatelessWidget {
                 ),
                 onChanged: model.update,
               ),
-              const SizedBox(height: kDefaultMarging),
+              const SizedBox(height: kDefaultMargin),
               ElevatedButton(
                 onPressed: model.hasError
                     ? null
