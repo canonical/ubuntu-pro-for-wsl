@@ -8,6 +8,9 @@ inputs:
   package-dir:
     required: true
     description: "The root directory of the package to lint."
+  run-build-runner:
+    default: 'false'
+    description: "Whether we must run build-runner for this package."    
 
 runs:
   using: "composite"
@@ -26,6 +29,11 @@ runs:
           ! -path '*/l10n/*' \
           ! -path "*/.*/*" \
           | xargs flutter format --set-exit-if-changed
+    - name: Dart Codegen
+      if: ${{ inputs.run-build-runner == 'true' }}
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs
     - name: Analyze
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
