@@ -46,3 +46,12 @@ class EnterProTokenModel extends EitherValueNotifier<TokenError, ProToken?> {
     }
   }
 }
+
+/// Computes the required width to display comfortable a Pro token with maximum
+///  length in logical pixels.
+double? maxTokenWidth({
+  required double fontSize,
+  required double textScale,
+}) {
+  return fontSize * textScale * ProToken.maxLength;
+}

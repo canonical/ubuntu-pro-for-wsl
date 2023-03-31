@@ -19,6 +19,18 @@ class EnterProTokenPage extends StatelessWidget {
     );
   }
 
+  double? textFieldWidth(BuildContext context) {
+    final fontSize = Theme.of(context).textTheme.bodySmall?.fontSize;
+    if (fontSize == null) {
+      return null;
+    }
+    final textScale = MediaQuery.of(context).textScaleFactor;
+    return maxTokenWidth(
+      fontSize: fontSize,
+      textScale: textScale,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final model = context.watch<EnterProTokenModel>();
@@ -31,13 +43,18 @@ class EnterProTokenPage extends StatelessWidget {
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Paste here your Ubuntu Pro token',
-                  errorText: model.errorOrNull?.localize(),
+              SizedBox(
+                width: textFieldWidth(context),
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Paste here your Ubuntu Pro token',
+                    errorText: model.errorOrNull?.localize(),
+                    counterText: '',
+                  ),
+                  onChanged: model.update,
                 ),
-                onChanged: model.update,
               ),
               const SizedBox(height: kDefaultMargin),
               ElevatedButton(

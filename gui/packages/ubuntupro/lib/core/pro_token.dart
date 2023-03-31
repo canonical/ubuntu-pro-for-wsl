@@ -12,10 +12,10 @@ TokenError? _validate(String? value) {
   if (value == null || value.isEmpty) {
     return TokenError.empty;
   }
-  if (value.length < 24) {
+  if (value.length < ProToken.minLength) {
     return TokenError.tooShort;
   }
-  if (value.length > 30) {
+  if (value.length > ProToken.maxLength) {
     return TokenError.tooLong;
   }
   // For now only Contract tokens are expected.
@@ -51,6 +51,12 @@ class ProToken {
 
   @override
   int get hashCode => _value.hashCode;
+
+  /// Token string minimum length.
+  static const minLength = 24;
+
+  /// Token string maximum length.
+  static const maxLength = 30;
 
   @override
   bool operator ==(Object other) {
