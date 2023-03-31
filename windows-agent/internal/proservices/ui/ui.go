@@ -4,6 +4,7 @@ package ui
 import (
 	"context"
 	"errors"
+	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
@@ -30,25 +31,41 @@ func New(ctx context.Context, db *database.DistroDB, initialTasks *initialtasks.
 	}
 }
 
+// obfuscate returns a partially hidden version of the contents, suitable for logging low-sensitive information.
+// Hidden enough to prevent others from reading the value while still allowing the contents author to recognize it.
+// Useful for reading logs with test data. For example: `obfuscate("Blahkilull")=="Bl******ll`".
+func obfuscate(contents string) string {
+	const endsToReveal = 2
+	asterisksLength := len(contents) - 2*endsToReveal
+	if asterisksLength < 1 {
+		return strings.Repeat("*", len(contents))
+	}
+
+	return contents[0:endsToReveal] + strings.Repeat("*", asterisksLength) + contents[asterisksLength+endsToReveal:]
+}
+
 // ProAttach handles the gRPC call to pro attach all distros using a token provided by the GUI.
 func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*agentapi.Empty, error) {
 	token := info.Token
-	log.Debugf(ctx, "Received token %s", token)
+	log.Debugf(ctx, "Received token %s", obfuscate(token))
 
 	task := tasks.AttachPro{Token: token}
 	if err := s.initialTasks.Add(ctx, task); err != nil {
 		return nil, err
 	}
 
-	// TODO: Replace this by getting all active distros.
-	distro, ok := s.db.Get("Ubuntu-Preview")
-	if !ok {
-		return nil, errors.New("Ubuntu-Preview doesn't exist")
+	distros := s.db.GetAll()
+	var err error
+	for _, d := range distros {
+		err = errors.Join(err, d.SubmitTasks(task))
 	}
-	if err := distro.SubmitTasks(task); err != nil {
+
+	if err != nil {
+		log.Debugf(ctx, "Found errors while submitting the ProAttach task to existing distros:\n%v", err)
 		return nil, err
 	}
-	return nil, nil
+
+	return &agentapi.Empty{}, nil
 }
 
 // Ping replies a keep-alive request.
