@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403154428-5588dd0340ed
-	github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403154428-5588dd0340ed
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403155807-7314d40cd7d1
+	github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403155807-7314d40cd7d1
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0

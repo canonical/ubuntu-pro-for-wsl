@@ -43,8 +43,12 @@ github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10/go.mod h1:DQDIMwYsPr4n3Ck5BSZo8uVIu2aKlTUJ245TPiATJcU=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403154428-5588dd0340ed h1:sShwjSCyHgpPalsXXyg7yZ/XsG1fW5o7cbvyqAxG9fU=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403154428-5588dd0340ed/go.mod h1:kujNO2DR/OaDq3g4uQAF3v6eio5wo2976yO2Z7UFdsg=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403155807-7314d40cd7d1 h1:FBsBzl1vF2gWxEzlnIJdTwQRlKFS6pY5/gZnCFwjY2E=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403155807-7314d40cd7d1/go.mod h1:kujNO2DR/OaDq3g4uQAF3v6eio5wo2976yO2Z7UFdsg=
 github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403154428-5588dd0340ed h1:MEDAHzudT68GzOj87T6U8m03qUk0tTNiMOwAd3ZQR5A=
 github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403154428-5588dd0340ed/go.mod h1:snoc4K5jWAKa9XDKiiDyuiDQ08tyJuQz9yfccwvUhoQ=
+github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403155807-7314d40cd7d1 h1:XISKdEGKgw/1acHlOTkbycGrTvEA4Sj8Xv3WNQiVs5w=
+github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403155807-7314d40cd7d1/go.mod h1:MPID7jYgfqwz3bQHfOXArIhLOKYq2RP7d51VPc0iHMU=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382 h1:Zq/NxM9EZrZFVVO90Rm2EtcwNwLF4Q5A7kUgr02PRY8=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382/go.mod h1:IJphMXBES/d3n/pXddrP08VNMYaQM3edlKeV3GSxrXU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

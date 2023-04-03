@@ -7,4 +7,4 @@ require (
 	google.golang.org/protobuf v1.30.0
 )
 
-require github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403154428-5588dd0340ed
+require github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403155807-7314d40cd7d1
