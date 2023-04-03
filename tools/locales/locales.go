@@ -181,7 +181,12 @@ func updatePo(potfile, localeDir, rootDir string) error {
 			return nil
 		}
 
-		files = append(files, p)
+		rel, err := filepath.Rel(rootDir, p)
+		if err != nil {
+			return fmt.Errorf("Path %q cannot be made relative to %q", p, rootDir)
+		}
+
+		files = append(files, rel)
 		return nil
 	}))
 
