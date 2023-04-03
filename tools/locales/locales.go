@@ -1,7 +1,4 @@
-//go:build tools
-// +build tools
-
-package main
+package locales
 
 import (
 	"bufio"
@@ -16,69 +13,136 @@ import (
 	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/common/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/common/generators"
 )
 
-const usage = `Usage of %s:
+func usage(c Configuration) string {
+	return fmt.Sprintf(`Usage of %s:
 
-   create-po POT DIRECTORY LOC [LOC...]
-     Create new LOC.po file(s) in DIRECTORY from an existing pot file.
-   update-po POT DIRECTORY PACKAGE [PACKAGES...]
-     Create/Update a pot file and refresh any existing po files in DIRECTORY.
+   create-po LOC [LOC...]
+     Create new LOC.po file(s) in %q from pot file %q.
+   update-po POT DIRECTORY PACKAGE
+     Create/Update a pot file %q and refresh any existing po files in %q.
    generate-mo DOMAIN PODIR DIRECTORY
-     Create .mo files for any .po in PODIR in an structured hierarchy in DIRECTORY.
-`
+     Create .mo files for any .po in %q in an structured hierarchy in %q.
+`,
+		os.Args[0],             // Usage of
+		c.LocaleDir, c.PotFile, // create-po
+		c.PotFile, c.LocaleDir, // update-po
+		c.LocaleDir, c.MoDir, // generate-mo
+	)
+}
 
-func main() {
-	if len(os.Args) < 2 {
-		log.Fatalf(usage, os.Args[0])
+type Configuration struct {
+	// Domain is the name of the TEXTDOMAIN to use
+	Domain string
+
+	// RootDir is the directory containing the entire module
+	RootDir string
+
+	// PotFile is the path to the Portable Object Template (POT) file.
+	PotFile string
+
+	// LocaleDir is the directory where all the Portable Object (PO) files are located.
+	LocaleDir string
+
+	// MoDir is the directory where all the Machine Object (MO) files are located.
+	// It'll be appended to the install dir.
+	MoDir string
+}
+
+func Generate(verb string, c Configuration, locales ...string) {
+	if err := c.validate(); err != nil {
+		log.Fatalf("Error in configuration: %v", err)
 	}
 
-	switch os.Args[1] {
+	_, caller, _, ok := runtime.Caller(1)
+	if !ok {
+		log.Fatalf("Error fixing paths: could not get caller file")
+	}
+	dir := filepath.Dir(caller)
+	c.prependPaths(dir)
+
+	switch verb {
 	case "help":
-		fmt.Printf(usage, os.Args[0])
+		fmt.Printf(usage(c))
 		return
 	case "create-po":
-		if len(os.Args) < 5 {
-			log.Fatalf(usage, os.Args[0])
-		}
 		if generators.InstallOnlyMode() {
 			return
 		}
-		if err := createPo(os.Args[2], os.Args[3], os.Args[4:]); err != nil {
+		if err := createPo(c.PotFile, c.LocaleDir, locales); err != nil {
 			log.Fatalf("Error when creating po files: %v", err)
 		}
 
 	case "update-po":
-		if len(os.Args) < 5 {
-			log.Fatalf(usage, os.Args[0])
-		}
 		if generators.InstallOnlyMode() {
 			return
 		}
-		if err := updatePo(os.Args[2], os.Args[3], os.Args[4:]...); err != nil {
+		if err := updatePo(c.PotFile, c.LocaleDir, c.RootDir); err != nil {
 			log.Fatalf("Error when updating po files: %v", err)
 		}
 
 	case "generate-mo":
-		if len(os.Args) != 4 {
-			log.Fatalf(usage, os.Args[0])
-		}
-		if err := generateMo(os.Args[2], filepath.Join(generators.DestDirectory(os.Args[3]), "usr", "share")); err != nil {
+		if err := generateMo(c.LocaleDir, filepath.Join(generators.DestDirectory(c.MoDir), "usr", "share")); err != nil {
 			log.Fatalf("Error when generating mo files: %v", err)
 		}
 	default:
-		log.Fatalf(usage, os.Args[0])
+		log.Fatalf(usage(c))
+	}
+}
+
+// validate makes a few safety checks on the configuration object.
+func (c Configuration) validate() (err error) {
+	if len(c.RootDir) == 0 {
+		err = errors.Join(err, errors.New("configuration parameter RootDir is empty"))
+	}
+	if len(c.Domain) == 0 {
+		err = errors.Join(err, errors.New("configuration parameter Domain is empty"))
+	}
+	if len(c.PotFile) == 0 {
+		err = errors.Join(err, errors.New("configuration parameter PotFile is empty"))
+	}
+	if len(c.LocaleDir) == 0 {
+		err = errors.Join(err, errors.New("configuration parameter LocaleDir is empty"))
+	}
+	if len(c.MoDir) == 0 {
+		err = errors.Join(err, errors.New("configuration parameter MoDir is empty"))
+	}
+	return err
+}
+
+// prependPaths takes any relative paths in the Configuration and makes
+// them absolute under dir.
+func (c *Configuration) prependPaths(dir string) {
+	if !filepath.IsAbs(c.RootDir) {
+		c.RootDir = filepath.Join(dir, c.RootDir)
+	}
+
+	if !filepath.IsAbs(c.PotFile) {
+		c.PotFile = filepath.Join(dir, c.PotFile)
+	}
+
+	if !filepath.IsAbs(c.LocaleDir) {
+		c.LocaleDir = filepath.Join(dir, c.LocaleDir)
+	}
+
+	if !filepath.IsAbs(c.MoDir) {
+		c.MoDir = filepath.Join(dir, c.MoDir)
 	}
 }
 
 // createPo creates new po files.
-func createPo(potfile, localeDir string, locs []string) error {
+func createPo(potfile, localeDir string, locales []string) error {
 	if _, err := os.Stat(potfile); err != nil {
 		return fmt.Errorf("%q can't be read: %v", potfile, err)
 	}
 
-	for _, loc := range locs {
+	if len(locales) == 0 {
+		return errors.New("create-po: No locales provided")
+	}
+
+	for _, loc := range locales {
 		pofile := filepath.Join(localeDir, loc+".po")
 		if _, err := os.Stat(pofile); err == nil {
 			log.Printf("Skipping %q as already exists. Please use update-po to refresh it or delete it first.", loc)
@@ -95,40 +159,31 @@ func createPo(potfile, localeDir string, locs []string) error {
 }
 
 // updatePo creates pot files and update any existing .po ones.
-func updatePo(potfile, localeDir string, packages ...string) error {
+func updatePo(potfile, localeDir, rootDir string) error {
 	if err := os.MkdirAll(localeDir, 0755); err != nil {
 		return fmt.Errorf("couldn't create directory for %q: %v", localeDir, err)
 	}
 
-	_, current, _, ok := runtime.Caller(0)
-	if !ok {
-		return errors.New("could not get repository root")
-	}
-
-	// ROOT/common/i18n
-	root := dir(current, 4)
-
 	// Create pot file
 	var files []string
 	var err error
-	for _, dir := range packages {
-		err = errors.Join(err, filepath.WalkDir(dir, func(p string, de fs.DirEntry, err error) error {
-			if err != nil {
-				return fmt.Errorf("fail to access %q: %v", p, err)
-			}
-			// Only deal with files
-			if de.IsDir() {
-				return nil
-			}
 
-			if !strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, ".go.template") {
-				return nil
-			}
-
-			files = append(files, p)
+	err = errors.Join(err, filepath.WalkDir(rootDir, func(p string, de fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("fail to access %q: %v", p, err)
+		}
+		// Only deal with files
+		if de.IsDir() {
 			return nil
-		}))
-	}
+		}
+
+		if !strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, ".go.template") {
+			return nil
+		}
+
+		files = append(files, p)
+		return nil
+	}))
 
 	if err != nil {
 		return err
@@ -143,7 +198,7 @@ func updatePo(potfile, localeDir string, packages ...string) error {
 	}
 	args := append([]string{
 		"--keyword=G", "--keyword=GN", "--add-comments", "--sort-output", "--package-name=" + strings.TrimSuffix(filepath.Base(potfile), ".pot"),
-		"-D", root, "--output=" + potfile}, files...)
+		"-D", rootDir, "--output=" + potfile}, files...)
 	if out, err := exec.Command("xgettext", args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("couldn't compile pot file: %v\nCommand output: %s", err, out)
 	}

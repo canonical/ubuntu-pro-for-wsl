@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/common/generators"
 )
 
 func main() {
