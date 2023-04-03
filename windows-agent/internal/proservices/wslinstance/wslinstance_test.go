@@ -117,7 +117,7 @@ func TestConnected(t *testing.T) {
 			}
 
 			ctx, cancel := context.WithCancel(ctx)
-			t.Cleanup(func() { cancel() })
+			defer cancel()
 
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
@@ -126,10 +126,10 @@ func TestConnected(t *testing.T) {
 			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
 
 			grpcServer, ctrlAddr := serveWSLInstance(t, ctx, srv)
-			t.Cleanup(grpcServer.Stop)
+			defer grpcServer.Stop()
 
 			wsl := newWslDistroMock(t, ctx, ctrlAddr)
-			t.Cleanup(wsl.stopClient)
+			defer wsl.stopClient()
 
 			// WSL-side server is not serving yet.
 			now := beforeLinuxServe
@@ -141,7 +141,7 @@ func TestConnected(t *testing.T) {
 			wantErrNeverReceivePort := tc.wantDone < afterDatabaseQuery && tc.wantDone != never
 			if !tc.skipLinuxServe {
 				go wsl.serve(t, wantErrNeverReceivePort)
-				t.Cleanup(wsl.stopServer)
+				defer wsl.stopServer()
 			}
 
 			// WSL-side server is serving, but no info has been sent yet.
