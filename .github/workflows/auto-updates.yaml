@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       modified: false
+      subprojects: windows-agent wsl-pro-service
     steps:
       - name: Install dependencies
         run: |
@@ -33,10 +34,13 @@ jobs:
 
           hasModif="false"
 
-          go generate common/i18n/i18n.go
+          for subproject in ${{ env.subprojects }} ; do
+            go run "${subproject}/cmd/generate_locales.go" update-po
+            go run "${subproject}/cmd/generate_locales.go" generate-mo
+          done
 
           # Exclude line diffs only
-          MODIFIED=$(git difftool -y -x "diff -Nup -I '^#: '" po/)
+          MODIFIED=$(git difftool -y -x "diff -Nup -I '^#: '" "*/po/*")
           if [ -n "$MODIFIED" ]; then
             hasModif="true"
           fi
