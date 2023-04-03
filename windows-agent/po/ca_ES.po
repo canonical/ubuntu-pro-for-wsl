@@ -18,108 +18,86 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: windows-agent/cmd/ubuntu-pro-agent/agent/version.go:23
-#: wsl-pro-service/cmd/wsl-pro-service/service/version.go:23
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/version.go:23
 #, c-format
 msgid "%s\t%s"
 msgstr ""
 
-#: windows-agent/internal/grpc/logstreamer/server.go:107
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:107
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:107
 msgid "%s isn't a boolean: %v"
 msgstr "%s no és booleà"
 
-#: windows-agent/internal/daemon/daemon.go:129
-#: wsl-pro-service/internal/daemon/daemon.go:118
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:129
 msgid "All connections have now ended."
 msgstr "Totes les connexions han acabat"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:43
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:43
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:43
 #, c-format
 msgid "Connecting as [[%s]]"
 msgstr "Connectant com a [[%s]]"
 
-#: windows-agent/internal/grpc/grpcerror/grpcerror.go:29
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:29
 msgid "Couldn't connect to %s daemon: %v"
 msgstr "No s'ha pogut realitzar la connexió amb el dimoni: %v"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:44
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:44
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:44
 msgid "Couldn't send initial connection log to client"
 msgstr "No s'ha pogut enviar el registre"
 
-#: windows-agent/internal/grpc/grpcerror/grpcerror.go:38
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:38
 msgid "Error %s from server: %v"
 msgstr "Error %s provinent del servidor: %v"
 
-#: windows-agent/internal/grpc/grpcerror/grpcerror.go:35
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:35
 msgid "Error from server: %v"
 msgstr "Error provinent del servidor: %v"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:46
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:46
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:46
 #, c-format
 msgid "New connection from client [[%s]]"
 msgstr "Nova connexió del client [[%s]]"
 
-#: wsl-pro-service/internal/daemon/daemon.go:98
-msgid "Ready state sent to systemd"
-msgstr "Estat «ready» enviat al systemd"
-
-#: windows-agent/cmd/ubuntu-pro-agent/agent/version.go:14
-#: wsl-pro-service/cmd/wsl-pro-service/service/version.go:14
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/version.go:14
 msgid "Returns version of agent and exits"
 msgstr "Retorna la versió de l'agent i surt"
 
-#: windows-agent/internal/grpc/grpcerror/grpcerror.go:32
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:32
 msgid "Service took too long to respond. Disconnecting client."
 msgstr "El servei ha trigat massa en respondre. Desconnectant client."
 
-#: windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:48
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:48
 msgid "Ubuntu Pro for Windows agent"
 msgstr "Agent d'Ubuntu Pro per a Windows"
 
-#: wsl-pro-service/cmd/wsl-pro-service/service/service.go:50
-msgid "WSL Pro Service"
-msgstr "Servei WSL Pro"
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:49
+msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
+msgstr ""
 
-#: windows-agent/internal/daemon/daemon.go:127
-#: wsl-pro-service/internal/daemon/daemon.go:116
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:127
 msgid "Wait for active requests to close."
 msgstr "Espera a que les peticions actives acabin"
 
-#: windows-agent/internal/daemon/daemon.go:49
-#: wsl-pro-service/internal/daemon/daemon.go:47
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:49
 msgid "can't create daemon"
 msgstr "no es pot crear el dimoni"
 
-#: windows-agent/internal/grpc/logstreamer/log.go:184
-#: wsl-pro-service/internal/grpc/logstreamer/log.go:184
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/log.go:184
 msgid "can't send logs to client: %v"
 msgstr "no es poden enviar registres al client: %v"
 
-#: windows-agent/internal/grpc/logstreamer/log.go:176
-#: wsl-pro-service/internal/grpc/logstreamer/log.go:176
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/log.go:176
 msgid "couldn't send logs to client"
 msgstr "no s'ha pogut enviar registres al client"
 
-#: wsl-pro-service/internal/daemon/daemon.go:96
-msgid "couldn't send ready notification to systemd: %v"
-msgstr "no s'ha pogut enviar l'estat «ready» al systemd"
-
-#: windows-agent/internal/daemon/daemon.go:87
-#: wsl-pro-service/internal/daemon/daemon.go:82
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:87
 msgid "error while serving"
 msgstr "error mentre es servia"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:119
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:119
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:119
 msgid "invalid metadata %s for incoming request: %q"
 msgstr "metadada %s invalida per la petició entrant: %q"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:88
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:88
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:88
 msgid ""
 "invalid metdata from client: %v\n"
 ". Please use the StreamClientInterceptor: %v"
@@ -127,18 +105,24 @@ msgstr ""
 "metadada %s invalida provenint del client: %v\n"
 " Si us plau, utilitzi el StreamClientInterceptor"
 
-#: windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:118
-#: wsl-pro-service/cmd/wsl-pro-service/service/service.go:131
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:118
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
 msgstr "informació (-v), depuració (-vv) o depuració amb ubicació (-vvv)"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:95
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:95
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:95
 msgid "missing client metadata"
 msgstr "manquen metadades del client"
 
-#: windows-agent/internal/grpc/logstreamer/server.go:116
-#: wsl-pro-service/internal/grpc/logstreamer/server.go:116
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:116
 #, c-format
 msgid "missing metadata %s for incoming request"
 msgstr "manca la metadada %s del client"
+
+#~ msgid "Ready state sent to systemd"
+#~ msgstr "Estat «ready» enviat al systemd"
+
+#~ msgid "WSL Pro Service"
+#~ msgstr "Servei WSL Pro"
+
+#~ msgid "couldn't send ready notification to systemd: %v"
+#~ msgstr "no s'ha pogut enviar l'estat «ready» al systemd"

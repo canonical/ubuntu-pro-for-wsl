@@ -1,6 +1,6 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the ubuntu-pro-for-windows package.
+# This file is distributed under the same license as the ubuntu-pro package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
@@ -16,3 +16,101 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/version.go:23
+#, c-format
+msgid "%s\t%s"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:107
+msgid "%s isn't a boolean: %v"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:129
+msgid "All connections have now ended."
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:43
+#, c-format
+msgid "Connecting as [[%s]]"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:29
+msgid "Couldn't connect to %s daemon: %v"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:44
+msgid "Couldn't send initial connection log to client"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:38
+msgid "Error %s from server: %v"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:35
+msgid "Error from server: %v"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:46
+#, c-format
+msgid "New connection from client [[%s]]"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/version.go:14
+msgid "Returns version of agent and exits"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/grpcerror/grpcerror.go:32
+msgid "Service took too long to respond. Disconnecting client."
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:48
+msgid "Ubuntu Pro for Windows agent"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:49
+msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:127
+msgid "Wait for active requests to close."
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:49
+msgid "can't create daemon"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/log.go:184
+msgid "can't send logs to client: %v"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/log.go:176
+msgid "couldn't send logs to client"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/daemon/daemon.go:87
+msgid "error while serving"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:119
+msgid "invalid metadata %s for incoming request: %q"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:88
+msgid ""
+"invalid metdata from client: %v\n"
+". Please use the StreamClientInterceptor: %v"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent/agent.go:118
+msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:95
+msgid "missing client metadata"
+msgstr ""
+
+#: /home/eduard/Work/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer/server.go:116
+#, c-format
+msgid "missing metadata %s for incoming request"
+msgstr ""

@@ -1,20 +1,21 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the ubuntu-pro package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Catalan translations for ubuntu-pro package.
+# Copyright (C) 2023 THE ubuntu-pro'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the ubuntu-pro-for-windows package.
+# Canonical, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ubuntu-pro\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-28 14:36:24"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
+"MI+ZONE\n"
+"PO-Revision-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
+"MI+ZONE\n"
+"Last-Translator: Edu Gómez Escandell <edu.gomez.escandell@canonical.com>\n"
+"Language-Team: none\n"
+"Language: ca\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/version.go:23
@@ -24,37 +25,37 @@ msgstr ""
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:107
 msgid "%s isn't a boolean: %v"
-msgstr ""
+msgstr "%s no és booleà"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:118
 msgid "All connections have now ended."
-msgstr ""
+msgstr "Totes les connexions han acabat"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:43
 #, c-format
 msgid "Connecting as [[%s]]"
-msgstr ""
+msgstr "Connectant com a [[%s]]"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:44
 msgid "Couldn't send initial connection log to client"
-msgstr ""
+msgstr "No s'ha pogut enviar el registre"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:46
 #, c-format
 msgid "New connection from client [[%s]]"
-msgstr ""
+msgstr "Nova connexió del client [[%s]]"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:98
 msgid "Ready state sent to systemd"
-msgstr ""
+msgstr "Estat «ready» enviat al systemd"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/version.go:14
 msgid "Returns version of agent and exits"
-msgstr ""
+msgstr "Retorna la versió de l'agent i surt"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/service.go:50
 msgid "WSL Pro Service"
-msgstr ""
+msgstr "Servei WSL Pro"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/service.go:51
 msgid "WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."
@@ -62,47 +63,64 @@ msgstr ""
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:116
 msgid "Wait for active requests to close."
-msgstr ""
+msgstr "Espera a que les peticions actives acabin"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:47
 msgid "can't create daemon"
-msgstr ""
+msgstr "no es pot crear el dimoni"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/log.go:184
 msgid "can't send logs to client: %v"
-msgstr ""
+msgstr "no es poden enviar registres al client: %v"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/log.go:176
 msgid "couldn't send logs to client"
-msgstr ""
+msgstr "no s'ha pogut enviar registres al client"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:96
 msgid "couldn't send ready notification to systemd: %v"
-msgstr ""
+msgstr "no s'ha pogut enviar l'estat «ready» al systemd"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:82
 msgid "error while serving"
-msgstr ""
+msgstr "error mentre es servia"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:119
 msgid "invalid metadata %s for incoming request: %q"
-msgstr ""
+msgstr "metadada %s invalida per la petició entrant: %q"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:88
 msgid ""
 "invalid metdata from client: %v\n"
 ". Please use the StreamClientInterceptor: %v"
 msgstr ""
+"metadada %s invalida provenint del client: %v\n"
+" Si us plau, utilitzi el StreamClientInterceptor"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/service.go:131
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
-msgstr ""
+msgstr "informació (-v), depuració (-vv) o depuració amb ubicació (-vvv)"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:95
 msgid "missing client metadata"
-msgstr ""
+msgstr "manquen metadades del client"
 
 #: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:116
 #, c-format
 msgid "missing metadata %s for incoming request"
-msgstr ""
+msgstr "manca la metadada %s del client"
+
+#~ msgid "Couldn't connect to %s daemon: %v"
+#~ msgstr "No s'ha pogut realitzar la connexió amb el dimoni: %v"
+
+#~ msgid "Error %s from server: %v"
+#~ msgstr "Error %s provinent del servidor: %v"
+
+#~ msgid "Error from server: %v"
+#~ msgstr "Error provinent del servidor: %v"
+
+#~ msgid "Service took too long to respond. Disconnecting client."
+#~ msgstr "El servei ha trigat massa en respondre. Desconnectant client."
+
+#~ msgid "Ubuntu Pro for Windows agent"
+#~ msgstr "Agent d'Ubuntu Pro per a Windows"
