@@ -4,7 +4,8 @@ go 1.20
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230330133623-9a235d936dce
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230403154428-5588dd0340ed
+	github.com/canonical/ubuntu-pro-for-windows/tools v0.0.0-20230403154428-5588dd0340ed
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/golang/protobuf v1.5.2
@@ -15,8 +16,8 @@ require (
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/grpc v1.53.0
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
-	google.golang.org/protobuf v1.29.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
+	google.golang.org/protobuf v1.30.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
