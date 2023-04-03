@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
@@ -34,6 +35,7 @@ class EnterProTokenPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<EnterProTokenModel>();
+    final lang = AppLocalizations.of(context);
     return Scaffold(
       appBar: YaruWindowTitleBar(
         title: Text(title),
@@ -49,8 +51,8 @@ class EnterProTokenPage extends StatelessWidget {
                 width: textFieldWidth(context),
                 child: TextField(
                   decoration: InputDecoration(
-                    labelText: 'Paste here your Ubuntu Pro token',
-                    errorText: model.errorOrNull?.localize(),
+                    labelText: lang.tokenInputLabel,
+                    errorText: model.errorOrNull?.localize(lang),
                     counterText: '',
                   ),
                   onChanged: model.update,
@@ -64,11 +66,14 @@ class EnterProTokenPage extends StatelessWidget {
                         model.apply();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Applying token ${model.token}'),
+                            content: Text(
+                              AppLocalizations.of(context)
+                                  .applyingProToken(model.token!),
+                            ),
                           ),
                         );
                       },
-                child: const Text('Apply Pro Token'),
+                child: Text(lang.applyProToken),
               )
             ],
           ),

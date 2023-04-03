@@ -1,0 +1,19 @@
+{
+    "appTitle": "Ubuntu Pro For Windows",
+    "tokenErrorEmpty": "Token cannot be empty",
+    "tokenErrorTooShort": "Token is too short",
+    "tokenErrorTooLong": "Token is too long",
+    "tokenErrorInvalidPrefix": "Token prefix is invalid",
+    "tokenErrorInvalidEncoding": "Token is corrupted",
+    "tokenInputLabel": "Paste here your Ubuntu Pro token",
+    "applyProToken": "Apply Pro Token",
+    "applyingProToken": "Applying token {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    }
+}
+

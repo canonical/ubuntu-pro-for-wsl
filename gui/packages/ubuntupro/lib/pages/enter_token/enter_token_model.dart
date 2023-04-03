@@ -1,23 +1,22 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/agent_api_client.dart';
 import '../../core/either_value_notifier.dart';
 import '../../core/pro_token.dart';
 
 extension TokenErrorl10n on TokenError {
   /// Allows representing the [TokenError] enum as a String.
-  // TODO: Replace this by a localizable version when l10n gets setup.
-  // String localize(AppLocalizations lang) {
-  String localize() {
+  String localize(AppLocalizations lang) {
     switch (this) {
       case TokenError.empty:
-        return 'Token cannot be empty';
+        return lang.tokenErrorEmpty;
       case TokenError.tooShort:
-        return 'Token is too short';
+        return lang.tokenErrorTooShort;
       case TokenError.tooLong:
-        return 'Token is too long';
+        return lang.tokenErrorTooLong;
       case TokenError.invalidPrefix:
-        return 'Token prefix is invalid';
+        return lang.tokenErrorInvalidPrefix;
       case TokenError.invalidEncoding:
-        return 'Token is corrupted';
+        return lang.tokenErrorInvalidEncoding;
       default:
         throw UnimplementedError(toString());
     }
