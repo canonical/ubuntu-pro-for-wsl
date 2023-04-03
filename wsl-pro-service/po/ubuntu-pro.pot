@@ -17,92 +17,92 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/version.go:23
+#: cmd/wsl-pro-service/service/version.go:23
 #, c-format
 msgid "%s\t%s"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:107
+#: internal/grpc/logstreamer/server.go:107
 msgid "%s isn't a boolean: %v"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:118
+#: internal/daemon/daemon.go:118
 msgid "All connections have now ended."
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:43
+#: internal/grpc/logstreamer/server.go:43
 #, c-format
 msgid "Connecting as [[%s]]"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:44
+#: internal/grpc/logstreamer/server.go:44
 msgid "Couldn't send initial connection log to client"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:46
+#: internal/grpc/logstreamer/server.go:46
 #, c-format
 msgid "New connection from client [[%s]]"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:98
+#: internal/daemon/daemon.go:98
 msgid "Ready state sent to systemd"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/version.go:14
+#: cmd/wsl-pro-service/service/version.go:14
 msgid "Returns version of agent and exits"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/service.go:50
+#: cmd/wsl-pro-service/service/service.go:50
 msgid "WSL Pro Service"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/service.go:51
+#: cmd/wsl-pro-service/service/service.go:51
 msgid "WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:116
+#: internal/daemon/daemon.go:116
 msgid "Wait for active requests to close."
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:47
+#: internal/daemon/daemon.go:47
 msgid "can't create daemon"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/log.go:184
+#: internal/grpc/logstreamer/log.go:184
 msgid "can't send logs to client: %v"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/log.go:176
+#: internal/grpc/logstreamer/log.go:176
 msgid "couldn't send logs to client"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:96
+#: internal/daemon/daemon.go:96
 msgid "couldn't send ready notification to systemd: %v"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon/daemon.go:82
+#: internal/daemon/daemon.go:82
 msgid "error while serving"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:119
+#: internal/grpc/logstreamer/server.go:119
 msgid "invalid metadata %s for incoming request: %q"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:88
+#: internal/grpc/logstreamer/server.go:88
 msgid ""
 "invalid metdata from client: %v\n"
 ". Please use the StreamClientInterceptor: %v"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service/service.go:131
+#: cmd/wsl-pro-service/service/service.go:131
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:95
+#: internal/grpc/logstreamer/server.go:95
 msgid "missing client metadata"
 msgstr ""
 
-#: /home/eduard/Work/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer/server.go:116
+#: internal/grpc/logstreamer/server.go:116
 #, c-format
 msgid "missing metadata %s for incoming request"
 msgstr ""
