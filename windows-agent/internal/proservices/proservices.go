@@ -9,12 +9,13 @@ import (
 
 	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-windows/common/grpc/interceptorschain"
+	log "github.com/canonical/ubuntu-pro-for-windows/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
+
 	// Importing tasks so they are registered and initialTasks can load them.
 	// TODO: as soon as we use any task anywhere in the windows agent, this will no longer be necessary.
 	_ "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-windows/common/grpc/logstreamer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )

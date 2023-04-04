@@ -9,8 +9,8 @@ import (
 	"syscall"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/i18n"
 	log "github.com/sirupsen/logrus"
 )
 
