@@ -44,9 +44,10 @@ jobs:
           if [ -n "$MODIFIED" ]; then
             hasModif="true"
           fi
-          echo "modified=${hasModif}" >> $GITHUB_ENV
+
+          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
       - name: Create Pull Request
-        if: ${{ env.modified == 'true' }}
+        if: steps.checkpo.outputs.modified == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: Auto update po files
@@ -56,6 +57,6 @@ jobs:
           branch: auto-update/po
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
-        if: ${{ env.modified == 'true' }}
+        if: steps.checkpo.outputs.modified == 'true'
         run: |
           git push origin auto-update/po:main
