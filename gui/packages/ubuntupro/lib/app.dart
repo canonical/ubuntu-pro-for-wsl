@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:yaru/yaru.dart';
 
 import 'constants.dart';
@@ -15,12 +16,8 @@ class Pro4WindowsApp extends StatelessWidget {
         theme: yaru.theme,
         darkTheme: yaru.darkTheme,
         debugShowCheckedModeBanner: false,
-        supportedLocales: {
-          const Locale('en'), // make sure 'en' comes first
-          // TODO: Setup l10n
-          // ...List.of(AppLocalizations.supportedLocales)
-          //   ..remove(const Locale('en')),
-        },
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         onGenerateTitle: (context) => kAppName,
         routes: const {
           '/': EnterProTokenPage.create,

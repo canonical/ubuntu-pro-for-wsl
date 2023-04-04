@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ MaterialApp buildApp(MockAgentApiClient mock) => MaterialApp(
         create: (_) => EnterProTokenModel(mock),
         child: const EnterProTokenPage(title: 'p4W'),
       ),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
     );
 
 void main() {
@@ -106,6 +108,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         routes: {'/': EnterProTokenPage.create},
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
       ),
     );
 
