@@ -145,7 +145,7 @@ func createPo(potfile, localeDir string, locales []string) error {
 	for _, loc := range locales {
 		pofile := filepath.Join(localeDir, loc+".po")
 		if _, err := os.Stat(pofile); err == nil {
-			log.Printf("Skipping %q as already exists. Please use update-po to refresh it or delete it first.", loc)
+			log.Printf("Skipping %q as it already exists. Please use update-po to refresh it or delete it first.", loc)
 			continue
 		}
 
@@ -183,7 +183,7 @@ func updatePo(potfile, localeDir, rootDir string) error {
 
 		rel, err := filepath.Rel(rootDir, p)
 		if err != nil {
-			return fmt.Errorf("Path %q cannot be made relative to %q", p, rootDir)
+			return fmt.Errorf("path %q cannot be made relative to %q", p, rootDir)
 		}
 
 		files = append(files, rel)
