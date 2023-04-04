@@ -109,8 +109,3 @@ msgstr ""
 #: internal/grpc/logstreamer/server.go:95
 msgid "missing client metadata"
 msgstr ""
-
-#: internal/grpc/logstreamer/server.go:116
-#, c-format
-msgid "missing metadata %s for incoming request"
-msgstr ""

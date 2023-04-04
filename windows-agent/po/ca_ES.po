@@ -113,11 +113,6 @@ msgstr "informació (-v), depuració (-vv) o depuració amb ubicació (-vvv)"
 msgid "missing client metadata"
 msgstr "manquen metadades del client"
 
-#: internal/grpc/logstreamer/server.go:116
-#, c-format
-msgid "missing metadata %s for incoming request"
-msgstr "manca la metadada %s del client"
-
 #~ msgid "Ready state sent to systemd"
 #~ msgstr "Estat «ready» enviat al systemd"
 

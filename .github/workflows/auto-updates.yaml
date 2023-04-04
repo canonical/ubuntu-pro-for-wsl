@@ -1,5 +1,8 @@
 name: Update translations
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -29,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
         name: Check out repo
         with:
-          ref: main
+          ref: translate-go
       - uses: actions/setup-go@v4
         with:
           go-version-file: common/go.mod
@@ -61,7 +64,7 @@ jobs:
           labels: po, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-update/po
-          base: main
+          base: translate-go
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
         if: steps.checkpo.outputs.modified == 'true'
