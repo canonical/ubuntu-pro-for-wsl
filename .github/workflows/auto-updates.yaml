@@ -61,6 +61,7 @@ jobs:
           labels: po, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-update/po
+          base: main
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
         if: steps.checkpo.outputs.modified == 'true'
