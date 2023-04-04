@@ -19,7 +19,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt update
-          sudo DEBIAN_FRONTEND=noninteractive apt install -y gettext
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y gettext git
+      - name: Set up git
+        # This step needs to be done before checkout so that the private repo dependencies
+        # can be downloaded
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v3
         name: Check out repo
         with:
