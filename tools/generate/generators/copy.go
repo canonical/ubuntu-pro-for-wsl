@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/generators"
 )
 
 func main() {
