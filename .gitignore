@@ -25,3 +25,5 @@ wsl-pro-service/debian/*.substvars
 wsl-pro-service/debian/files
 wsl-pro-service/debian/wsl-pro-service
 
+# Localization
+*.mo
