@@ -1,0 +1,6 @@
+project-root: ".."
+docs:
+  readme: README.md
+  docs: ../doc/3.-WSL-Pro-Service-command-line-reference.md
+  man: generated/usr/share,
+  completions: generated/usr/share
