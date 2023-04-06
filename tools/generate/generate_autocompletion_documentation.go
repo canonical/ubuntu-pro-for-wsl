@@ -1,4 +1,4 @@
-// Package autocompletiondocumentation generates a readme, man, autocompletion, cli refs
+// Package main generates a readme, man, autocompletion, cli refs
 package main
 
 import (
@@ -102,7 +102,9 @@ func parseConfiguration(confPath string) (c configuration, err error) {
 		return c, fmt.Errorf("invalid configuration: %v", err)
 	}
 
-	conf.Docs.fixPaths(confPath)
+	if err := conf.Docs.fixPaths(confPath); err != nil {
+		return c, err
+	}
 
 	return conf.Docs, nil
 }
@@ -116,7 +118,6 @@ func getCommands(module string) []cobra.Command {
 
 // Generate generates the autocompletion and documentation for the module.
 func generate(verb string, config configuration) {
-
 	if err := config.validate(); err != nil {
 		log.Fatalf("Wrong config: %v", err)
 	}
@@ -403,6 +404,7 @@ func filterCommandMarkdown(cmds []cobra.Command, w io.Writer) {
 
 	go func() {
 		for _, cmd := range cmds {
+			cmd := cmd
 			if err := doc.GenMarkdown(&cmd, pw); err != nil {
 				pw.CloseWithError(fmt.Errorf("couldn't generate markdown for %s: %v", cmd.Name(), err))
 				return
