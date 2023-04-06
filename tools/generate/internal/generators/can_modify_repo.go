@@ -5,7 +5,7 @@ package main
 import (
 	"os"
 
-	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/internal/generators"
 )
 
 func main() {
