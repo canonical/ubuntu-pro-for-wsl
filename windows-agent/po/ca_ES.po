@@ -1,0 +1,128 @@
+# Catalan translations for ubuntu-pro package.
+# Copyright (C) 2023 THE ubuntu-pro'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the ubuntu-pro-for-windows package.
+# Canonical, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ubuntu-pro\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
+"MI+ZONE\n"
+"PO-Revision-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
+"MI+ZONE\n"
+"Last-Translator: Edu Gómez Escandell <edu.gomez.escandell@canonical.com>\n"
+"Language-Team: none\n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: cmd/ubuntu-pro-agent/agent/version.go:23
+#, c-format
+msgid "%s\t%s"
+msgstr ""
+
+#: internal/grpc/logstreamer/server.go:107
+msgid "%s isn't a boolean: %v"
+msgstr "%s no és booleà"
+
+#: internal/daemon/daemon.go:129
+msgid "All connections have now ended."
+msgstr "Totes les connexions han acabat"
+
+#: internal/grpc/logstreamer/server.go:43
+#, c-format
+msgid "Connecting as [[%s]]"
+msgstr "Connectant com a [[%s]]"
+
+#: internal/grpc/grpcerror/grpcerror.go:29
+msgid "Couldn't connect to %s daemon: %v"
+msgstr "No s'ha pogut realitzar la connexió amb el dimoni: %v"
+
+#: internal/grpc/logstreamer/server.go:44
+msgid "Couldn't send initial connection log to client"
+msgstr "No s'ha pogut enviar el registre"
+
+#: internal/grpc/grpcerror/grpcerror.go:38
+msgid "Error %s from server: %v"
+msgstr "Error %s provinent del servidor: %v"
+
+#: internal/grpc/grpcerror/grpcerror.go:35
+msgid "Error from server: %v"
+msgstr "Error provinent del servidor: %v"
+
+#: internal/grpc/logstreamer/server.go:46
+#, c-format
+msgid "New connection from client [[%s]]"
+msgstr "Nova connexió del client [[%s]]"
+
+#: cmd/ubuntu-pro-agent/agent/version.go:14
+msgid "Returns version of agent and exits"
+msgstr "Retorna la versió de l'agent i surt"
+
+#: internal/grpc/grpcerror/grpcerror.go:32
+msgid "Service took too long to respond. Disconnecting client."
+msgstr "El servei ha trigat massa en respondre. Desconnectant client."
+
+#: cmd/ubuntu-pro-agent/agent/agent.go:55
+msgid "Ubuntu Pro for Windows agent"
+msgstr "Agent d'Ubuntu Pro per a Windows"
+
+#: cmd/ubuntu-pro-agent/agent/agent.go:56
+msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
+msgstr ""
+
+#: internal/daemon/daemon.go:127
+msgid "Wait for active requests to close."
+msgstr "Espera a que les peticions actives acabin"
+
+#: internal/daemon/daemon.go:49
+msgid "can't create daemon"
+msgstr "no es pot crear el dimoni"
+
+#: internal/grpc/logstreamer/log.go:184
+msgid "can't send logs to client: %v"
+msgstr "no es poden enviar registres al client: %v"
+
+#: internal/grpc/logstreamer/log.go:176
+msgid "couldn't send logs to client"
+msgstr "no s'ha pogut enviar registres al client"
+
+#: internal/daemon/daemon.go:87
+msgid "error while serving"
+msgstr "error mentre es servia"
+
+#: internal/grpc/logstreamer/server.go:119
+msgid "invalid metadata %s for incoming request: %q"
+msgstr "metadada %s invalida per la petició entrant: %q"
+
+#: internal/grpc/logstreamer/server.go:88
+msgid ""
+"invalid metdata from client: %v\n"
+". Please use the StreamClientInterceptor: %v"
+msgstr ""
+"metadada %s invalida provenint del client: %v\n"
+" Si us plau, utilitzi el StreamClientInterceptor"
+
+#: cmd/ubuntu-pro-agent/agent/agent.go:120
+msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
+msgstr "informació (-v), depuració (-vv) o depuració amb ubicació (-vvv)"
+
+#: internal/grpc/logstreamer/server.go:95
+msgid "missing client metadata"
+msgstr "manquen metadades del client"
+
+#: internal/grpc/logstreamer/server.go:116
+#, c-format
+msgid "missing metadata %s for incoming request"
+msgstr "manca la metadada %s del client"
+
+#~ msgid "Ready state sent to systemd"
+#~ msgstr "Estat «ready» enviat al systemd"
+
+#~ msgid "WSL Pro Service"
+#~ msgstr "Servei WSL Pro"
+
+#~ msgid "couldn't send ready notification to systemd: %v"
+#~ msgstr "no s'ha pogut enviar l'estat «ready» al systemd"
