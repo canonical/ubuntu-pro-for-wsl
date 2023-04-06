@@ -39,9 +39,7 @@ jobs:
           set -eu
 
           for subproject in ${{ env.subprojects }} ; do
-            cd "${{ github.workspace }}/${subproject}/cmd/"
-            go run generate_completion_documentation.go update-readme
-            go run generate_completion_documentation.go update-doc-cli-ref
+            go generate "${subproject}/generate/generate.go"
           done
 
           hasModif="false"
