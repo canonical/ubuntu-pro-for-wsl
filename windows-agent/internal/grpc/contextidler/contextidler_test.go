@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/grpc/contextidler"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/contextidler"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/grpc/grpcerror"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/grpcerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"

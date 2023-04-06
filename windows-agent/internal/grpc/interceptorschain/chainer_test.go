@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/grpc/interceptorschain"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	log "github.com/canonical/ubuntu-pro-for-windows/common/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/sirupsen/logrus"
 )
 
