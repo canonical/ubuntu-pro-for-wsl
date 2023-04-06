@@ -18,6 +18,7 @@
     </ItemGroup>
 	<Target Name="Build">
 		<Message Text="Building Go artifacts to $(OutDir)" Importance="high"/>
+        <MakeDir Directories="$(OutDir)" />
 		<Exec Command="go build $(GoFlags) $(GoAppDir) " WorkingDirectory="$(OutDir)" />
 	</Target>
     <Target Name="Clean" Condition="Exists($(TargetPath))">
