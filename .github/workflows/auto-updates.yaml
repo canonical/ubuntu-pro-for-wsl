@@ -56,9 +56,9 @@ jobs:
           title: Auto update readme files
           labels: readme, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
-          branch: auto-update-readme-cli-ref
+          branch: auto-updates/readme-cli-ref
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
         if: steps.check-readme.outputs.modified == 'true'
         run: |
-          git push origin auto-update-readme-cli-ref:main
+          git push origin auto-updates/readme-cli-ref:main
