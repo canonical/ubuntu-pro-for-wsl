@@ -24,7 +24,7 @@ const usage = `Usage:
 VERB:
 
 	help
-		Print this message and exit
+		Print this message and exit.
 	completion 
 		Create completions files in a structured hierarchy in CONFIG.completions.
 	man 
