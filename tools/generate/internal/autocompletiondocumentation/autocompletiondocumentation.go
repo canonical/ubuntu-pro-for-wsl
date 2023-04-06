@@ -85,9 +85,11 @@ func parseConfiguration(confPath string) (c configuration, projectRoot string, e
 		return c, projectRoot, fmt.Errorf("could not open config file: %v", err)
 	}
 
-	var conf struct {
+	conf := struct {
 		ProjectRoot string `yaml:"project-root"`
 		Docs        configuration
+	}{
+		ProjectRoot: filepath.Dir(confPath), // By default, project root is where config.yaml is located
 	}
 
 	if err := yaml.Unmarshal(raw, &conf); err != nil {
