@@ -119,7 +119,7 @@ func parseConfiguration(confPath string) (c configuration, projectRoot string, e
 		return c, projectRoot, fmt.Errorf("invalid configuration: %v", err)
 	}
 
-	if err := docs.fixPaths(confPath, &projectRoot); err != nil {
+	if projectRoot, err = docs.makePathsAbsolute(confPath, projectRoot); err != nil {
 		return c, projectRoot, err
 	}
 
@@ -171,28 +171,29 @@ func (c configuration) validate() (err error) {
 	return err
 }
 
-// fixPaths takes any relative paths in the Configuration and makes
-// them absolute under dir.
-func (c *configuration) fixPaths(confPath string, projectRoot *string) (err error) {
-	if !filepath.IsAbs(*projectRoot) {
+// makePathsAbsolute takes any relative paths in the Configuration and makes
+// them absolute. It also returns the project root as an absolute path.
+func (c *configuration) makePathsAbsolute(confPath, projectRoot string) (absProjectRoot string, err error) {
+	absProjectRoot = projectRoot
+	if !filepath.IsAbs(absProjectRoot) {
 		// If project root is relative, make it relative to the config dir
 		confDir := filepath.Dir(confPath)
-		*projectRoot = filepath.Join(confDir, *projectRoot)
+		absProjectRoot = filepath.Join(confDir, absProjectRoot)
 
-		if *projectRoot, err = filepath.Abs(*projectRoot); err != nil {
-			return err
+		if absProjectRoot, err = filepath.Abs(absProjectRoot); err != nil {
+			return absProjectRoot, err
 		}
 	}
 
 	// Make other paths relative to the project root
 	for _, p := range []*string{&c.CompletionPath, &c.DocsPath, &c.ManPath, &c.ReadmePath} {
 		if !filepath.IsAbs(*p) {
-			*p = filepath.Join(*projectRoot, *p)
+			*p = filepath.Join(absProjectRoot, *p)
 		}
 		*p = filepath.Clean(*p)
 	}
 
-	return nil
+	return absProjectRoot, nil
 }
 
 // genCompletions for bash and zsh directories.
