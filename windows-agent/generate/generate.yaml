@@ -1,0 +1,6 @@
+project-root: ".."
+docs:
+  readme: README.md
+  docs: ../doc/2.-Windows-Agent-command-line-reference.md
+  man: generated/usr/share,
+  completions: generated/usr/share

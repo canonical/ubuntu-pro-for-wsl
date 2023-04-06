@@ -4,19 +4,26 @@ package agent
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
+	"runtime"
 
+	log "github.com/canonical/ubuntu-pro-for-windows/common/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/ubuntu/decorate"
 )
+
+// cmdName is the binary name for the agent.
+func cmdName() string {
+	if runtime.GOOS == "windows" {
+		return "ubuntu-pro-agent.exe"
+	}
+	return "ubuntu-pro-agent"
+}
 
 // App encapsulate commands and options of the daemon, which can be controlled by env variables and config files.
 type App struct {
@@ -81,11 +88,6 @@ func New(o ...option) *App {
 	a.installVersion()
 
 	return &a
-}
-
-// cmdName is the binary name for the agent.
-func cmdName() string {
-	return filepath.Base(os.Args[0])
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.

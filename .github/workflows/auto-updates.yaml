@@ -1,0 +1,64 @@
+name: Documentation auto-update
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/README.md'
+      - '**/debian/control'
+
+env:
+  subprojects: windows-agent wsl-pro-service
+  apt_dependencies: >-
+    git
+
+jobs:
+  update-readme-cli-ref:
+    name: Update readme and CLI ref files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt update
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y ${{ env.apt_dependencies }}
+      - uses: actions/checkout@v3
+        name: Check out repository
+        with:
+          ref: main
+      - name: Set up git
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-go@v4
+        name: Set up Go
+        with:
+          go-version-file: go.work
+      - name: Check README file
+        id: check-readme
+        run: |
+          set -eu
+
+          for subproject in ${{ env.subprojects }} ; do
+            go generate "${subproject}/generate/generate-docs.go"
+          done
+
+          hasModif="false"
+          MODIFIED=$(git status --porcelain --untracked-files=no)
+          if [ -n "$MODIFIED" ]; then
+            hasModif="true"
+          fi
+          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
+      - uses: peter-evans/create-pull-request@v4
+        name: Create Pull Request
+        if: steps.check-readme.outputs.modified == 'true'
+        with:
+          commit-message: Auto update readme files
+          title: Auto update readme files
+          labels: readme, automated pr
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
+          branch: auto-updates/readme-cli-ref
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push branch
+        if: steps.check-readme.outputs.modified == 'true'
+        run: |
+          git push origin auto-updates/readme-cli-ref:main

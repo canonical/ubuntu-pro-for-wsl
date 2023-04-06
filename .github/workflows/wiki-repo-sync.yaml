@@ -1,0 +1,71 @@
+name: Wiki-repository sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "doc/**"
+  gollum:
+  
+env:
+  doc_dir: "doc"
+
+jobs:
+  wiki-to-repo-doc :
+    name: Update repository documentation to match Wiki
+    runs-on: ubuntu-latest
+    if: github.event_name == 'gollum'
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Checkout wiki
+        uses: actions/checkout@v3
+        with:
+          path: wiki
+          repository: canonical/ubuntu-pro-for-windows.wiki
+      - name: Update repository documentation to match Wiki
+        run: |
+          set -eu
+
+          DIFF=$(diff -qr --exclude=.git repo/"${{ env.doc_dir }}/" wiki/ || true)
+          [ "$DIFF" == "" ] && exit 0
+
+          rsync -avzr --delete --exclude='.git/' wiki/ repo/"${{ env.doc_dir }}/"
+          cd repo/ || exit 1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Auto-update documentation triggered by Wiki changes"
+          git push
+
+  repo-doc-to-wiki:
+    name: Update Wiki to match repository documentation
+    if: github.event_name != 'gollum'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Checkout wiki
+        uses: actions/checkout@v3
+        with:
+          path: wiki
+          repository: canonical/ubuntu-pro-for-windows.wiki
+      - name: Update Wiki to match repository documentation
+        run: |
+          set -eu
+
+          DIFF=$(diff -qr --exclude=.git repo/"${{ env.doc_dir }}/" wiki/ || true)
+          [ "$DIFF" == "" ] && exit 0
+
+          rsync -avzr --delete --exclude='.git/' repo/"${{ env.doc_dir }}/" wiki/
+          cd wiki/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Auto-update WIKI triggered by documentation changes"
+          git push origin master
