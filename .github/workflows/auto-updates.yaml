@@ -39,7 +39,7 @@ jobs:
           set -eu
 
           for subproject in ${{ env.subprojects }} ; do
-            go generate "${subproject}/generate/generate.go"
+            go generate "${subproject}/generate/generate-docs.go"
           done
 
           hasModif="false"
