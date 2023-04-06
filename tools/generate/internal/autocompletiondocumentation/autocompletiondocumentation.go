@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/internal/generators"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"gopkg.in/yaml.v3"

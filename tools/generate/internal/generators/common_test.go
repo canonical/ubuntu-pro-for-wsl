@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/generators"
+	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/internal/generators"
 	"github.com/stretchr/testify/require"
 )
 
