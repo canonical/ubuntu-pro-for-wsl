@@ -33,9 +33,6 @@ const usage = `Usage of %s:
 // Configuration is a set of options for the paths where the generated documentation
 // is to be stored.
 type configuration struct {
-	// ProjectRoot is the directory containing the entire module
-	ProjectRoot string `yaml:"-"`
-
 	// ReadmePath is the path to the REAMDE file to be updated
 	// If the path is relative, it'll be computed from the dir the caller is in.
 	ReadmePath string `yaml:"readme"`
@@ -74,18 +71,18 @@ func Main(getCommands func(module string) []cobra.Command) {
 	}
 	confPath := os.Args[2]
 
-	config, err := parseConfiguration(confPath)
+	config, projectRoot, err := parseConfiguration(confPath)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
-	generate(verb, config, getCommands(filepath.Base(config.ProjectRoot))...)
+	generate(verb, config, getCommands(filepath.Base(projectRoot))...)
 }
 
-func parseConfiguration(confPath string) (c configuration, err error) {
+func parseConfiguration(confPath string) (c configuration, projectRoot string, err error) {
 	raw, err := os.ReadFile(confPath)
 	if err != nil {
-		return c, fmt.Errorf("could not open config file: %v", err)
+		return c, projectRoot, fmt.Errorf("could not open config file: %v", err)
 	}
 
 	var conf struct {
@@ -94,19 +91,21 @@ func parseConfiguration(confPath string) (c configuration, err error) {
 	}
 
 	if err := yaml.Unmarshal(raw, &conf); err != nil {
-		return c, fmt.Errorf("could not parse config file: %v", err)
-	}
-	conf.Docs.ProjectRoot = conf.ProjectRoot
-
-	if err := conf.Docs.validate(); err != nil {
-		return c, fmt.Errorf("invalid configuration: %v", err)
+		return c, projectRoot, fmt.Errorf("could not parse config file: %v", err)
 	}
 
-	if err := conf.Docs.fixPaths(confPath); err != nil {
-		return c, err
+	projectRoot = conf.ProjectRoot
+	docs := conf.Docs
+
+	if err := docs.validate(); err != nil {
+		return c, projectRoot, fmt.Errorf("invalid configuration: %v", err)
 	}
 
-	return conf.Docs, nil
+	if err := docs.fixPaths(confPath, &projectRoot); err != nil {
+		return c, projectRoot, err
+	}
+
+	return docs, projectRoot, nil
 }
 
 // generate generates the autocompletion and documentation for the module.
@@ -156,15 +155,13 @@ func (c configuration) validate() (err error) {
 
 // fixPaths takes any relative paths in the Configuration and makes
 // them absolute under dir.
-func (c *configuration) fixPaths(confPath string) (err error) {
-	if !filepath.IsAbs(c.ProjectRoot) {
+func (c *configuration) fixPaths(confPath string, projectRoot *string) (err error) {
+	if !filepath.IsAbs(*projectRoot) {
 		// If project root is relative, make it relative to the config dir
 		confDir := filepath.Dir(confPath)
-		if !filepath.IsAbs(c.ProjectRoot) {
-			c.ProjectRoot = filepath.Join(confDir, c.ProjectRoot)
-		}
+		*projectRoot = filepath.Join(confDir, *projectRoot)
 
-		if c.ProjectRoot, err = filepath.Abs(c.ProjectRoot); err != nil {
+		if *projectRoot, err = filepath.Abs(*projectRoot); err != nil {
 			return err
 		}
 	}
@@ -172,7 +169,7 @@ func (c *configuration) fixPaths(confPath string) (err error) {
 	// Make other paths relative to the project root
 	for _, p := range []*string{&c.CompletionPath, &c.DocsPath, &c.ManPath, &c.ReadmePath} {
 		if !filepath.IsAbs(*p) {
-			*p = filepath.Join(c.ProjectRoot, *p)
+			*p = filepath.Join(*projectRoot, *p)
 		}
 		*p = filepath.Clean(*p)
 	}
