@@ -4,3 +4,8 @@ docs:
   docs: ../doc/2.-Windows-Agent-command-line-reference.md
   man: generated/usr/share,
   completions: generated/usr/share
+i18n:
+  domain: ubuntu-pro
+  pot-file: po/ubuntu-pro.pot
+  locale-dir: po/
+  mo-dir: generated
