@@ -17,17 +17,33 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const usage = `Usage of %s:
-   help
-     Print this message and exit
-   completion CONFIG
-     Create completions files in a structured hierarchy in DIRECTORY.
-   man CONFIG
-     Create man pages files in a structured hierarchy in DIRECTORY.
-   update-readme CONFIG
-     Update repository README with commands.
-   update-doc-cli-ref CONFIG
-	Update repository doc with commands.
+const usage = `Usage:
+
+   %s VERB CONFIG
+
+VERB:
+
+	help
+		Print this message and exit
+	completion 
+		Create completions files in a structured hierarchy in CONFIG.completions.
+	man 
+		Create man pages files in a structured hierarchy in CONFIG.man.
+	update-readme 
+		Update CONFIG.readme with commands.
+	update-doc-cli-ref 
+		Update CONFIG.docs with commands.
+
+CONFIG:
+	It is the path to the configuration yaml file. It expects a yaml with the following pattern:
+	---
+	project-root: Root of the project. All other paths are relative to the project root.
+	docs:
+	  completions: The directory where completion files will be stored
+	  docs:        The path to the doc chapter to update
+	  man:         The directory where man files will be stored
+	  readme:      The path to the README to update
+	---
 `
 
 // Configuration is a set of options for the paths where the generated documentation
