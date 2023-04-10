@@ -12,6 +12,63 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # not be changed
 set(PLUGIN_NAME "p4w_ms_store_plugin")
 
+## Setting up the WinRT dependency support:
+## CppWinRT stuff starts here. =======================================================================================================================
+## Using the same NuGet and CppWinRT versions used in the official Flutter LocalAuth plugin.
+set(CPPWINRT_VERSION "2.0.220418.1")
+include(FetchContent)
+FetchContent_Declare(nuget
+  URL "https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe"
+  URL_HASH SHA256=04eb6c4fe4213907e2773e1be1bbbd730e9a655a3c9c58387ce8d4a714a5b9e1
+  DOWNLOAD_NO_EXTRACT true
+)
+
+# Finds or fetches NuGet.
+find_program(NUGET nuget)
+if (NOT NUGET)
+    message(VERBOSE "Nuget.exe not found, trying to download or use cached version.")
+    FetchContent_MakeAvailable(nuget)
+    set(NUGET ${nuget_SOURCE_DIR}/nuget.exe)
+endif()
+
+# Installs CppWinRT via NuGet.
+execute_process(COMMAND
+    ${NUGET} install Microsoft.Windows.CppWinRT -Version ${CPPWINRT_VERSION} -OutputDirectory packages
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    RESULT_VARIABLE ret)
+if (NOT ret EQUAL 0)
+    message(FATAL_ERROR "Failed to install nuget package Microsoft.Windows.CppWinRT.${CPPWINRT_VERSION}")
+endif()
+
+## cppwinrt.exe won't generate bindings for extension SDK's by default, thus we need to find the metadata file (.winmd)
+## and pass it explicitly as an `-input`. This looks for the `Windows.ApplicationModel.FullTrustAppContract.winmd`
+## metadata file in the active Windows SDK dir and stop building if it cannot find it.
+if(DEFINED ENV{WindowsSdkDir})
+    set(FULLTRUST_WINMD "Windows.ApplicationModel.FullTrustAppContract")
+    set(SDK_WINMD_DIR "$ENV{WindowsSdkDir}References\\$ENV{WindowsSDKLibVersion}")
+
+    FILE(GLOB_RECURSE FULLTRUST_WINMD_PATH LIST_DIRECTORIES false "${SDK_WINMD_DIR}${FULLTRUST_WINMD}/*/${FULLTRUST_WINMD}.winmd")
+else()
+    message(FATAL_ERROR "Cannot find the required .winmd files. Make sure to run flutter from either the Developer cmd or powershell.")
+endif()
+if (NOT EXISTS ${FULLTRUST_WINMD_PATH})
+    message(FATAL_ERROR "Additional API Contracts are required but not accessible: \"${FULLTRUST_WINMD}.winmd\" not found in \"${SDK_WINMD_DIR}\"")
+endif()
+
+## Runs cppwinrt.exe to generate the Windows Runtime C++ bindings (projections).
+set(CPPWINRT ${CMAKE_BINARY_DIR}/packages/Microsoft.Windows.CppWinRT.${CPPWINRT_VERSION}/bin/cppwinrt.exe)
+execute_process(COMMAND
+    ${CPPWINRT} -input sdk -input ${FULLTRUST_WINMD_PATH} -output include
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    RESULT_VARIABLE ret)
+if (NOT ret EQUAL 0)
+    message(FATAL_ERROR "Failed to run cppwinrt.exe")
+endif()
+## Adds the CppWinRT output directory to the include path.
+include_directories(BEFORE SYSTEM ${CMAKE_BINARY_DIR}/include)
+
+## CppWinRT stuff ends here. =======================================================================================================================
+
 # Any new source files that you add to the plugin should be added here.
 list(APPEND PLUGIN_SOURCES
   "p4w_ms_store_plugin.cpp"
@@ -36,6 +93,12 @@ apply_standard_settings(${PLUGIN_NAME})
 # exported should be explicitly exported with the FLUTTER_PLUGIN_EXPORT macro.
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
+
+## Enabling C++20 for WinRT
+target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_20)
+## Notice that the WinRT generated bindings for C++ are header-only,
+## thus, no `target_link_libraries(...)`.
+
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 
 # Source include directories and library dependencies. Add any plugin-specific
