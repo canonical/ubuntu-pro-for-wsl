@@ -1,0 +1,8 @@
+AppPackages/
+BundleArtifacts/
+/.vs/
+x64/
+obj/
+*.user
+*.filters
+*.cache

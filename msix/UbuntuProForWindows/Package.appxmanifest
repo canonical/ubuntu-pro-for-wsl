@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="desktop uap uap5 rescap">
+
+  <Identity
+    Name="CanonicalGroupLimited.UbuntuProForWindows"
+    Publisher="CN=CanonicalGroupLimited, O=Canonical, C=US"
+    Version="1.0.0.0" />
+
+  <Properties>
+    <DisplayName>Ubuntu Pro For Windows</DisplayName>
+    <PublisherDisplayName>Canonical Group Limited</PublisherDisplayName>
+    <Logo>Images\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14393.0" MaxVersionTested="10.0.14393.0" />
+    <PackageDependency Name="Microsoft.VCLibs.140.00.UWPDesktop" MinVersion="14.0.24217.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="Ubuntu Pro For Windows"
+        Description="Ubuntu Pro For Windows"
+        BackgroundColor="transparent"
+        Square150x150Logo="Images\Square150x150Logo.png"
+        Square44x44Logo="Images\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"  Square71x71Logo="Images\SmallTile.png" Square310x310Logo="Images\LargeTile.png"/>
+        <uap:SplashScreen Image="Images\SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+			<uap5:Extension
+			  Category="windows.startupTask"
+			  Executable="agent\ubuntu-pro-agent.exe"
+			  EntryPoint="Windows.FullTrustApplication">
+				<uap5:StartupTask
+				  TaskId="UbuntuPro"
+				  Enabled="true"
+				  DisplayName="Ubuntu Pro For Windows background agent" />
+			</uap5:Extension>
+			<desktop:Extension Category="windows.fullTrustProcess" Executable="agent\ubuntu-pro-agent.exe">
+				<desktop:FullTrustProcess>
+					<desktop:ParameterGroup GroupId="agent" Parameters=""/>
+				</desktop:FullTrustProcess>
+			</desktop:Extension>
+		</Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
