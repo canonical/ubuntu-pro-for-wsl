@@ -73,6 +73,12 @@ include_directories(BEFORE SYSTEM ${CMAKE_BINARY_DIR}/include)
 list(APPEND PLUGIN_SOURCES
   "p4w_ms_store_plugin.cpp"
   "p4w_ms_store_plugin.h"
+# The sources we added
+  "p4w_channel_constants.h"
+  "p4w_methods.cpp"
+  "p4w_methods.h"
+  "p4w_winrt_api.cpp"
+  "p4w_winrt_api.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment
