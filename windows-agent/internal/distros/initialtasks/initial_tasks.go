@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	log "github.com/canonical/ubuntu-pro-for-windows/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/exp/slices"
 )

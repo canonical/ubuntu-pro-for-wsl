@@ -11,9 +11,9 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	log "github.com/canonical/ubuntu-pro-for-windows/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
