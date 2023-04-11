@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:p4w_ms_store/p4w_ms_store_method_channel.dart';
@@ -11,18 +12,39 @@ void main() {
     expect(initialPlatform, isInstanceOf<MethodChannelP4wMsStore>());
   });
 
-  test('getPlatformVersion', () async {
-    final p4wMsStorePlugin = P4wMsStore();
-    final fakePlatform = MockP4wMsStorePlatform();
-    P4wMsStorePlatform.instance = fakePlatform;
+  group('launchFullTrustProcess', () {
+    test('completes ok', () async {
+      final p4wMsStorePlugin = P4wMsStore();
+      final fakePlatform = OkP4wMsStorePlatform();
+      P4wMsStorePlatform.instance = fakePlatform;
 
-    expect(await p4wMsStorePlugin.getPlatformVersion(), '42');
+      expect(p4wMsStorePlugin.launchFullTrustProcess(), completes);
+    });
+
+    test('expected failure', () async {
+      final p4wMsStorePlugin = P4wMsStore();
+      final fakePlatform = FailingP4wMsStorePlatform();
+      P4wMsStorePlatform.instance = fakePlatform;
+
+      await expectLater(
+        p4wMsStorePlugin.launchFullTrustProcess(),
+        throwsA(isA<PlatformException>()),
+      );
+    });
   });
 }
 
-class MockP4wMsStorePlatform
+class OkP4wMsStorePlatform
     with MockPlatformInterfaceMixin
     implements P4wMsStorePlatform {
   @override
-  Future<String?> getPlatformVersion() => Future.value('42');
+  Future<void> launchFullTrustProcess([List<String>? args]) async {}
+}
+
+class FailingP4wMsStorePlatform
+    with MockPlatformInterfaceMixin
+    implements P4wMsStorePlatform {
+  @override
+  Future<void> launchFullTrustProcess([List<String>? args]) async =>
+      throw PlatformException(code: 'test');
 }

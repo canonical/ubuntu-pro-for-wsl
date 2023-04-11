@@ -1,7 +1,6 @@
 name: p4w_ms_store
-description: Flutter plugin for Windows to expose WinRT Microsoft Store APIs
+description: Flutter plugin for Windows to expose WinRT Microsoft Store and app model APIs
 version: 0.0.1
-homepage:
 
 environment:
   sdk: '>=2.19.0 <3.0.0'

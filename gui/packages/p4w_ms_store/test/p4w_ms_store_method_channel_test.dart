@@ -3,22 +3,44 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:p4w_ms_store/p4w_ms_store_method_channel.dart';
 
 void main() {
+  final messenger =
+      TestWidgetsFlutterBinding.ensureInitialized().defaultBinaryMessenger;
   final platform = MethodChannelP4wMsStore();
-  const channel = MethodChannel('p4w_ms_store');
-
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final channel = platform.methodChannel;
 
   setUp(() {
-    channel.setMockMethodCallHandler((methodCall) async {
-      return '42';
-    });
+    // Overrides the binary messenger method call handler with a stub that
+    // pretends to succeed but does nothing.
+    messenger.setMockMethodCallHandler(
+      channel,
+      (methodCall) async {
+        return;
+      },
+    );
   });
 
   tearDown(() {
-    channel.setMockMethodCallHandler(null);
+    // Resets the binary messenger method call handler.
+    messenger.setMockMethodCallHandler(channel, null);
   });
 
-  test('getPlatformVersion', () async {
-    expect(await platform.getPlatformVersion(), '42');
+  test('launchFullTrustProcess completes', () async {
+    expect(platform.launchFullTrustProcess(), completes);
+  });
+
+  test('launchFullTrustProcess fails', () async {
+    // Overrides the binary messenger method call handler with a stub that
+    // mimics a launch failure.
+    messenger.setMockMethodCallHandler(
+      channel,
+      (methodCall) async {
+        throw PlatformException(code: 'test');
+      },
+    );
+
+    expect(
+      platform.launchFullTrustProcess(),
+      throwsA(isA<PlatformException>()),
+    );
   });
 }

@@ -23,7 +23,9 @@ abstract class P4wMsStorePlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+  Future<void> launchFullTrustProcess([List<String>? args]) {
+    throw UnimplementedError(
+      'launchFullTrustProcess() has not been implemented.',
+    );
   }
 }
