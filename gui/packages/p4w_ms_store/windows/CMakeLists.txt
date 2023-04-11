@@ -114,3 +114,56 @@ set(p4w_ms_store_bundled_libraries
   ""
   PARENT_SCOPE
 )
+
+# === Native Code Tests ===
+#
+# The current best practice for building plugin native tests is to trigger the
+# build from the example application, usually part of the plugin repository.
+# Since our sample app is the `ubuntupro` which is the only client this plugin
+# is ever supposed to have, we'll build the plugin tests based on the presence
+# of the `INCLUDE_PRO_PLUGIN_TESTS` environment variable at configuration time.
+#
+# On Linux Shell `export INCLUDE_PRO_PLUGIN_TESTS=1` and `unset INCLUDE_PRO_PLUGIN_TESTS`
+# On Windows Powershell set `$env:INCLUDE_PRO_PLUGIN_TESTS=1` and unset it with
+# `$env:INCLUDE_PRO_PLUGIN_TESTS=$null`.
+# This way CMake will see it.
+#
+
+if (DEFINED ENV{INCLUDE_PRO_PLUGIN_TESTS})
+    enable_testing()
+    message(STATUS "Building ${PROJECT} tests")
+    FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/release-1.11.0.zip
+    )
+    # Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    # Disable install commands for gtest so it doesn't end up in the bundle.
+    set(INSTALL_GTEST OFF CACHE BOOL "Disable installation of googletest" FORCE)
+
+    FetchContent_MakeAvailable(googletest)
+
+    set(TEST_RUNNER "${PROJECT_NAME}_test")
+    # The plugin's C API is not very useful for unit testing, so build the sources
+    # directly into the test binary rather than using the DLL.
+    add_executable(${TEST_RUNNER}
+    #   mocks.h
+    test/mocks.h
+    test/launch_test.cpp
+    ${PLUGIN_SOURCES}
+    )
+    apply_standard_settings(${TEST_RUNNER})
+    target_include_directories(${TEST_RUNNER} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_compile_features(${TEST_RUNNER} PRIVATE cxx_std_20)
+    target_link_libraries(${TEST_RUNNER} PRIVATE flutter_wrapper_plugin)
+    target_link_libraries(${TEST_RUNNER} PRIVATE gtest_main gmock)
+
+    # flutter_wrapper_plugin has link dependencies on the Flutter DLL.
+    add_custom_command(TARGET ${TEST_RUNNER} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${FLUTTER_LIBRARY}" $<TARGET_FILE_DIR:${TEST_RUNNER}>
+    )
+
+    include(GoogleTest)
+    gtest_discover_tests(${TEST_RUNNER})
+endif()
