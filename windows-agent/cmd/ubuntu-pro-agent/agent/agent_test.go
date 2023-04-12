@@ -98,7 +98,7 @@ func TestCanQuitTwice(t *testing.T) {
 	a.Quit()
 	wait()
 
-	// second Quit after Execution should
+	// second Quit after Execution should not fail
 	a.Quit()
 }
 
