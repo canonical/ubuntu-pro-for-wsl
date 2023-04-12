@@ -316,7 +316,7 @@ func generateMo(textdomain, in, out string) error {
 
 		candidate := filepath.Join(in, f.Name())
 		outDir := filepath.Join(baseLocaleDir, strings.TrimSuffix(f.Name(), ".po"), "LC_MESSAGES")
-		if err := os.MkdirAll(outDir, 0750); err != nil {
+		if err := os.MkdirAll(outDir, 0755); err != nil {
 			return fmt.Errorf("couldn't create %q: %v", out, err)
 		}
 		if out, err := exec.Command("msgfmt",
