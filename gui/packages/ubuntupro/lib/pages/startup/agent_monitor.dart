@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import '../../core/agent_api_client.dart';
 import '../../core/agent_api_paths.dart';
 
@@ -36,29 +34,6 @@ enum AgentState {
         this == cannotStart ||
         this == unknownEnv ||
         this == unreachable;
-  }
-
-  /// Allows representing the [AgentState] enum as a translatable String.
-  String localize(AppLocalizations lang) {
-    switch (this) {
-      case AgentState.starting:
-        return lang.agentStateStarting;
-      case AgentState.pingNonResponsive:
-        return lang.agentStatePingNonResponsive;
-      case AgentState.invalid:
-        return lang.agentStateInvalid;
-      case AgentState.cannotStart:
-        return lang.agentStateCannotStart;
-      case AgentState.unknownEnv:
-        return lang.agentStateUnknownEnv;
-      case AgentState.querying:
-        return lang.agentStateQuerying;
-      case AgentState.unreachable:
-        return lang.agentStateUnreachable;
-      case AgentState.ok:
-        // This state should not need translations.
-        return '';
-    }
   }
 }
 
