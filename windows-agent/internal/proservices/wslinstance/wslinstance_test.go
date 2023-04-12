@@ -251,9 +251,9 @@ func TestConnected(t *testing.T) {
 func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := handler(srv, stream); err != nil {
-			t.Logf("Connected returned error: %v", err)
+			fmt.Printf("Connected returned error: %v\n", err)
 		}
-		t.Log("Connected returned with no error")
+		fmt.Println("Connected returned with no error")
 		return nil
 	}
 }
