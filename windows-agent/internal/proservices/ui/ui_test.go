@@ -70,8 +70,8 @@ func TestAttachPro(t *testing.T) {
 			require.NoError(t, err, "Setup: initial tasks New() should return no error")
 			serv := ui.New(context.Background(), db, initTasks)
 
-			info := agentapi.AttachInfo{Token: tc.token}
-			_, err = serv.ProAttach(context.Background(), &info)
+			info := agentapi.ProAttachInfo{Token: tc.token}
+			_, err = serv.ApplyProToken(context.Background(), &info)
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 			// Could it be nice to retrieve the distro's pending tasks?
 
