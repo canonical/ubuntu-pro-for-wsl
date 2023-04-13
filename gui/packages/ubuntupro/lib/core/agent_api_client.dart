@@ -16,9 +16,9 @@ class AgentApiClient {
 
   final UIClient _client;
 
-  /// Dispatches a ProAttach request with the supplied Pro [token].
-  Future<void> proAttach(String token) async =>
-      await _client.proAttach(AttachInfo(token: token));
+  /// Dispatches a applyProToken request with the supplied Pro [token].
+  Future<void> applyProToken(String token) async =>
+      await _client.applyProToken(ProAttachInfo(token: token));
 
   /// Attempts to ping the Agent Service at the supplied endpoint
   /// ([host] and [port]). Returns true on success.

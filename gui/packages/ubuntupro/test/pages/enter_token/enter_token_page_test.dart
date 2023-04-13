@@ -86,7 +86,7 @@ void main() {
     });
   });
 
-  testWidgets('calls proAttach', (tester) async {
+  testWidgets('calls applyProToken', (tester) async {
     final mock = MockAgentApiClient();
     final app = buildApp(mock);
     await tester.pumpWidget(app);
@@ -99,7 +99,7 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.byType(ElevatedButton));
-    verify(mock.proAttach(good)).called(1);
+    verify(mock.applyProToken(good)).called(1);
   });
 
   testWidgets('creates a model', (tester) async {

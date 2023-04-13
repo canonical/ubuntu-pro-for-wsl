@@ -41,7 +41,7 @@ class EnterProTokenModel extends EitherValueNotifier<TokenError, ProToken?> {
 
   Future<void> apply() async {
     if (value.isRight) {
-      return client.proAttach(valueOrNull!.value);
+      return client.applyProToken(valueOrNull!.value);
     }
   }
 }
