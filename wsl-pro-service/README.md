@@ -176,7 +176,7 @@ to enable it.  You can execute the following once:
 
 To load completions in your current shell session:
 
-	source <(wsl-pro-service completion zsh); compdef _wsl-pro-service wsl-pro-service
+	source <(wsl-pro-service completion zsh)
 
 To load completions for every new session, execute once:
 
