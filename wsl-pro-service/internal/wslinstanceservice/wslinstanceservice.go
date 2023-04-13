@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -59,7 +60,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 	if info.Token == "" {
 		log.Info(ctx, "ApplyProToken: Received empty token: detaching")
 	} else {
-		log.Infof(ctx, "ApplyProToken: Received token %q: attaching", info.Token)
+		log.Infof(ctx, "ApplyProToken: Received token %q: attaching", common.Obfuscate(info.Token))
 	}
 
 	if err := s.system.ProDetach(ctx); err != nil {
