@@ -19,15 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	WSL_ProAttach_FullMethodName = "/wslserviceapi.WSL/ProAttach"
-	WSL_Ping_FullMethodName      = "/wslserviceapi.WSL/Ping"
+	WSL_ApplyProToken_FullMethodName = "/wslserviceapi.WSL/ApplyProToken"
+	WSL_Ping_FullMethodName          = "/wslserviceapi.WSL/Ping"
 )
 
 // WSLClient is the client API for WSL service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WSLClient interface {
-	ProAttach(ctx context.Context, in *AttachInfo, opts ...grpc.CallOption) (*Empty, error)
+	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -39,9 +39,9 @@ func NewWSLClient(cc grpc.ClientConnInterface) WSLClient {
 	return &wSLClient{cc}
 }
 
-func (c *wSLClient) ProAttach(ctx context.Context, in *AttachInfo, opts ...grpc.CallOption) (*Empty, error) {
+func (c *wSLClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, WSL_ProAttach_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, WSL_ApplyProToken_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (c *wSLClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption
 // All implementations must embed UnimplementedWSLServer
 // for forward compatibility
 type WSLServer interface {
-	ProAttach(context.Context, *AttachInfo) (*Empty, error)
+	ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error)
 	Ping(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedWSLServer()
 }
@@ -70,8 +70,8 @@ type WSLServer interface {
 type UnimplementedWSLServer struct {
 }
 
-func (UnimplementedWSLServer) ProAttach(context.Context, *AttachInfo) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProAttach not implemented")
+func (UnimplementedWSLServer) ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ApplyProToken not implemented")
 }
 func (UnimplementedWSLServer) Ping(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
@@ -89,20 +89,20 @@ func RegisterWSLServer(s grpc.ServiceRegistrar, srv WSLServer) {
 	s.RegisterService(&WSL_ServiceDesc, srv)
 }
 
-func _WSL_ProAttach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AttachInfo)
+func _WSL_ApplyProToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProAttachInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WSLServer).ProAttach(ctx, in)
+		return srv.(WSLServer).ApplyProToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: WSL_ProAttach_FullMethodName,
+		FullMethod: WSL_ApplyProToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WSLServer).ProAttach(ctx, req.(*AttachInfo))
+		return srv.(WSLServer).ApplyProToken(ctx, req.(*ProAttachInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -133,8 +133,8 @@ var WSL_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*WSLServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ProAttach",
-			Handler:    _WSL_ProAttach_Handler,
+			MethodName: "ApplyProToken",
+			Handler:    _WSL_ApplyProToken_Handler,
 		},
 		{
 			MethodName: "Ping",

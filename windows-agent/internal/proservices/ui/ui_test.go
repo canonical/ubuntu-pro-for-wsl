@@ -76,7 +76,7 @@ func TestAttachPro(t *testing.T) {
 			// Could it be nice to retrieve the distro's pending tasks?
 
 			it := initTasks.All()
-			require.ElementsMatch(t, it, []tasks.AttachPro{{Token: tc.token}}, "Only one task should have been added")
+			require.ElementsMatch(t, it, []tasks.ProAttachment{{Token: tc.token}}, "Only one task should have been added")
 		})
 	}
 }
