@@ -36,6 +36,7 @@ func TestProAttach(t *testing.T) {
 	)
 
 	testCases := map[string]struct {
+		token             string
 		proStatusErr      bool
 		getSystemInfoErr  bool
 		proDetachErr      detachResult
@@ -44,18 +45,18 @@ func TestProAttach(t *testing.T) {
 
 		wantErr bool
 	}{
-		"success on attached machine":     {},
-		"success on non-attached machine": {proDetachErr: detachAlreadyDetached},
+		"success attaching attached machine":     {token: "123"},
+		"success attaching non-attached machine": {token: "123", proDetachErr: detachAlreadyDetached},
+		"success detaching attached machine":     {},
+		"success detaching non-attached machine": {proDetachErr: detachAlreadyDetached},
 
-		// Pro status errors
-		"Error calling pro status":  {proStatusErr: true, wantErr: true},
-		"Error getting system info": {getSystemInfoErr: true, wantErr: true},
+		// Attach/detach errors
+		"Error calling pro attach": {token: "123", attachErr: true, wantErr: true},
+		"Error detaching pro":      {proDetachErr: detachErr, wantErr: true},
 
-		// Detach errors
-		"Error detaching pro on attached machine": {proDetachErr: detachErr, wantErr: true},
-
-		// Other errors
-		"Error calling pro attach":         {attachErr: true, wantErr: true},
+		// System info
+		"Error calling pro status":         {proStatusErr: true, wantErr: true},
+		"Error getting system info":        {getSystemInfoErr: true, wantErr: true},
 		"Error cannot send info to stream": {ctrlStreamSendErr: true, wantErr: true},
 	}
 
@@ -107,7 +108,7 @@ func TestProAttach(t *testing.T) {
 
 			errCh := make(chan error)
 			go func() {
-				_, err := wslClient.ProAttach(ctx, &wslserviceapi.AttachInfo{Token: "1000"})
+				_, err := wslClient.ProAttach(ctx, &wslserviceapi.AttachInfo{Token: tc.token})
 				errCh <- err
 			}()
 
