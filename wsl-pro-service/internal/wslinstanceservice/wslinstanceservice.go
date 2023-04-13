@@ -56,7 +56,11 @@ func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo)
 		}
 	}()
 
-	log.Infof(ctx, "Received ProAttach call with token %q", info.Token)
+	if info.Token == "" {
+		log.Info(ctx, "ProAttach: Received empty token: detaching")
+	} else {
+		log.Infof(ctx, "ProAttach: Received token %q: attaching", info.Token)
+	}
 
 	attached, err := s.system.ProStatus(ctx)
 	if err != nil {
@@ -70,6 +74,10 @@ func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo)
 			log.Errorf(ctx, "Error in ProAttach: detachPro: %v", err)
 			return nil, err
 		}
+	}
+
+	if info.Token == "" {
+		return &wslserviceapi.Empty{}, nil
 	}
 
 	if err := s.system.ProAttach(ctx, info.Token); err != nil {
