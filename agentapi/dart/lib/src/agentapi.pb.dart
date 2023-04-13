@@ -38,14 +38,14 @@ class Empty extends $pb.GeneratedMessage {
   static Empty? _defaultInstance;
 }
 
-class AttachInfo extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'AttachInfo', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'agentapi'), createEmptyInstance: create)
+class ProAttachInfo extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'ProAttachInfo', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'agentapi'), createEmptyInstance: create)
     ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'token')
     ..hasRequiredFields = false
   ;
 
-  AttachInfo._() : super();
-  factory AttachInfo({
+  ProAttachInfo._() : super();
+  factory ProAttachInfo({
     $core.String? token,
   }) {
     final _result = create();
@@ -54,26 +54,26 @@ class AttachInfo extends $pb.GeneratedMessage {
     }
     return _result;
   }
-  factory AttachInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory AttachInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory ProAttachInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ProAttachInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  AttachInfo clone() => AttachInfo()..mergeFromMessage(this);
+  ProAttachInfo clone() => ProAttachInfo()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  AttachInfo copyWith(void Function(AttachInfo) updates) => super.copyWith((message) => updates(message as AttachInfo)) as AttachInfo; // ignore: deprecated_member_use
+  ProAttachInfo copyWith(void Function(ProAttachInfo) updates) => super.copyWith((message) => updates(message as ProAttachInfo)) as ProAttachInfo; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
-  static AttachInfo create() => AttachInfo._();
-  AttachInfo createEmptyInstance() => create();
-  static $pb.PbList<AttachInfo> createRepeated() => $pb.PbList<AttachInfo>();
+  static ProAttachInfo create() => ProAttachInfo._();
+  ProAttachInfo createEmptyInstance() => create();
+  static $pb.PbList<ProAttachInfo> createRepeated() => $pb.PbList<ProAttachInfo>();
   @$core.pragma('dart2js:noInline')
-  static AttachInfo getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AttachInfo>(create);
-  static AttachInfo? _defaultInstance;
+  static ProAttachInfo getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProAttachInfo>(create);
+  static ProAttachInfo? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get token => $_getSZ(0);

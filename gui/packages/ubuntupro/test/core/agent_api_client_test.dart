@@ -62,7 +62,7 @@ void main() {
     });
     test('pro attach', () async {
       // expect no throw.
-      await client!.proAttach('C123');
+      await client!.applyProToken('C123');
     });
   });
 }

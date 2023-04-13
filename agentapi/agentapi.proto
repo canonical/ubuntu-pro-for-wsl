@@ -7,11 +7,11 @@ package agentapi;
 message Empty {}
 
 service UI {
-    rpc ProAttach (AttachInfo) returns (Empty) {}
+    rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
 }
 
-message AttachInfo {
+message ProAttachInfo {
     string token = 1;
 }
 

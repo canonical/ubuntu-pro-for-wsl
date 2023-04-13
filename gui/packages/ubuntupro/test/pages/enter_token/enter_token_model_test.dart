@@ -67,12 +67,12 @@ void main() {
     model.apply();
 
     expect(model.hasError, isTrue);
-    verifyNever(mock.proAttach(tks.tooLong));
+    verifyNever(mock.applyProToken(tks.tooLong));
 
     model.update(tks.good);
     model.apply();
 
     expect(model.hasError, isFalse);
-    verify(mock.proAttach(tks.good)).called(1);
+    verify(mock.applyProToken(tks.good)).called(1);
   });
 }

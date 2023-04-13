@@ -28,19 +28,9 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
   }
 
   @override
-  String get host => (super.noSuchMethod(
-        Invocation.getter(#host),
-        returnValue: '',
-      ) as String);
-  @override
-  int get port => (super.noSuchMethod(
-        Invocation.getter(#port),
-        returnValue: 0,
-      ) as int);
-  @override
-  _i3.Future<void> proAttach(String? token) => (super.noSuchMethod(
+  _i3.Future<void> applyProToken(String? token) => (super.noSuchMethod(
         Invocation.method(
-          #proAttach,
+          #applyProToken,
           [token],
         ),
         returnValue: _i3.Future<void>.value(),

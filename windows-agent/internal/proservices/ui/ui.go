@@ -31,8 +31,8 @@ func New(ctx context.Context, db *database.DistroDB, initialTasks *initialtasks.
 	}
 }
 
-// ProAttach handles the gRPC call to pro attach all distros using a token provided by the GUI.
-func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*agentapi.Empty, error) {
+// ApplyProToken handles the gRPC call to pro attach all distros using a token provided by the GUI.
+func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*agentapi.Empty, error) {
 	token := info.Token
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
@@ -48,7 +48,7 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 	}
 
 	if err != nil {
-		log.Debugf(ctx, "Found errors while submitting the ProAttach task to existing distros:\n%v", err)
+		log.Debugf(ctx, "Found errors while submitting the ProAttachment task to existing distros:\n%v", err)
 		return nil, err
 	}
 

@@ -19,15 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UI_ProAttach_FullMethodName = "/agentapi.UI/ProAttach"
-	UI_Ping_FullMethodName      = "/agentapi.UI/Ping"
+	UI_ApplyProToken_FullMethodName = "/agentapi.UI/ApplyProToken"
+	UI_Ping_FullMethodName          = "/agentapi.UI/Ping"
 )
 
 // UIClient is the client API for UI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UIClient interface {
-	ProAttach(ctx context.Context, in *AttachInfo, opts ...grpc.CallOption) (*Empty, error)
+	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -39,9 +39,9 @@ func NewUIClient(cc grpc.ClientConnInterface) UIClient {
 	return &uIClient{cc}
 }
 
-func (c *uIClient) ProAttach(ctx context.Context, in *AttachInfo, opts ...grpc.CallOption) (*Empty, error) {
+func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, UI_ProAttach_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, UI_ApplyProToken_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (c *uIClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption)
 // All implementations must embed UnimplementedUIServer
 // for forward compatibility
 type UIServer interface {
-	ProAttach(context.Context, *AttachInfo) (*Empty, error)
+	ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error)
 	Ping(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedUIServer()
 }
@@ -70,8 +70,8 @@ type UIServer interface {
 type UnimplementedUIServer struct {
 }
 
-func (UnimplementedUIServer) ProAttach(context.Context, *AttachInfo) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProAttach not implemented")
+func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ApplyProToken not implemented")
 }
 func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
@@ -89,20 +89,20 @@ func RegisterUIServer(s grpc.ServiceRegistrar, srv UIServer) {
 	s.RegisterService(&UI_ServiceDesc, srv)
 }
 
-func _UI_ProAttach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AttachInfo)
+func _UI_ApplyProToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProAttachInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UIServer).ProAttach(ctx, in)
+		return srv.(UIServer).ApplyProToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UI_ProAttach_FullMethodName,
+		FullMethod: UI_ApplyProToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UIServer).ProAttach(ctx, req.(*AttachInfo))
+		return srv.(UIServer).ApplyProToken(ctx, req.(*ProAttachInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -133,8 +133,8 @@ var UI_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ProAttach",
-			Handler:    _UI_ProAttach_Handler,
+			MethodName: "ApplyProToken",
+			Handler:    _UI_ApplyProToken_Handler,
 		},
 		{
 			MethodName: "Ping",
