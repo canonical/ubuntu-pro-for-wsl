@@ -5,11 +5,11 @@ option go_package = "github.com/canonical/ubuntu-pro-for-windows/wslserviceapi";
 package wslserviceapi;
 
 service WSL {
-    rpc ProAttach (AttachInfo) returns (Empty) {}
+    rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping(Empty) returns (Empty) {}
 }
 
-message AttachInfo {
+message ProAttachInfo {
     string token = 1;
 }
 
