@@ -3,6 +3,8 @@ package wslinstanceservice
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
@@ -45,7 +47,15 @@ func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStr
 }
 
 // ProAttach serves ProAttach messages sent by the agent.
-func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo) (*wslserviceapi.Empty, error) {
+func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo) (empty *wslserviceapi.Empty, err error) {
+	defer func() {
+		// Regardless of success or failure, we send back an updated system info
+		if e := s.sendInfo(ctx); e != nil {
+			log.Warningf(ctx, "Error in ProAttach: %v", e)
+			err = errors.Join(err, e)
+		}
+	}()
+
 	log.Infof(ctx, "Received ProAttach call with token %q", info.Token)
 
 	attached, err := s.system.ProStatus(ctx)
@@ -62,26 +72,23 @@ func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo)
 		}
 	}
 
-	err = s.system.ProAttach(ctx, info.Token)
-	if err != nil {
+	if err := s.system.ProAttach(ctx, info.Token); err != nil {
 		log.Errorf(ctx, "Error in ProAttach: attachPro:: %v", err)
 		return nil, err
 	}
 
-	log.Debugf(ctx, "ProAttach call: pro attachment complete, sending back result")
+	return &wslserviceapi.Empty{}, nil
+}
 
-	// Check the status again
+func (s *Service) sendInfo(ctx context.Context) error {
 	sysinfo, err := s.system.Info(ctx)
 	if err != nil {
-		log.Warning(ctx, "Could not gather system info, skipping send-back to the control stream")
-		return nil, nil
+		return fmt.Errorf("could not gather system info: %v", err)
 	}
 
 	if err := s.ctrlStream.Send(sysinfo); err != nil {
-		log.Errorf(ctx, "Error in ProAttach: Send:: %v", err)
-		return nil, err
+		return fmt.Errorf("could not send back system info: %v", err)
 	}
 
-	log.Debugf(ctx, "ProAttach call: finished successfully")
-	return &wslserviceapi.Empty{}, nil
+	return nil
 }
