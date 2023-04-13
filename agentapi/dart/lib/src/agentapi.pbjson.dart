@@ -15,16 +15,16 @@ const Empty$json = const {
 
 /// Descriptor for `Empty`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List emptyDescriptor = $convert.base64Decode('CgVFbXB0eQ==');
-@$core.Deprecated('Use attachInfoDescriptor instead')
-const AttachInfo$json = const {
-  '1': 'AttachInfo',
+@$core.Deprecated('Use proAttachInfoDescriptor instead')
+const ProAttachInfo$json = const {
+  '1': 'ProAttachInfo',
   '2': const [
     const {'1': 'token', '3': 1, '4': 1, '5': 9, '10': 'token'},
   ],
 };
 
-/// Descriptor for `AttachInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List attachInfoDescriptor = $convert.base64Decode('CgpBdHRhY2hJbmZvEhQKBXRva2VuGAEgASgJUgV0b2tlbg==');
+/// Descriptor for `ProAttachInfo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List proAttachInfoDescriptor = $convert.base64Decode('Cg1Qcm9BdHRhY2hJbmZvEhQKBXRva2VuGAEgASgJUgV0b2tlbg==');
 @$core.Deprecated('Use distroInfoDescriptor instead')
 const DistroInfo$json = const {
   '1': 'DistroInfo',
