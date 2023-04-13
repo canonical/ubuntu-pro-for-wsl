@@ -49,7 +49,7 @@ func (s *Service) ProAttach(ctx context.Context, info *agentapi.AttachInfo) (*ag
 	token := info.Token
 	log.Debugf(ctx, "Received token %s", obfuscate(token))
 
-	task := tasks.AttachPro{Token: token}
+	task := tasks.ProAttachment{Token: token}
 	if err := s.initialTasks.Add(ctx, task); err != nil {
 		return nil, err
 	}

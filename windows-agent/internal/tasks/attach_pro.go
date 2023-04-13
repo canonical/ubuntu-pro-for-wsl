@@ -9,33 +9,34 @@ import (
 )
 
 func init() {
-	task.Register[AttachPro]()
+	task.Register[ProAttachment]()
 }
 
-// AttachPro is a task that sends a token to a distro so it can
-// attach itself to Ubuntu Pro.
-type AttachPro struct {
+// ProAttachment is a task that attaches/dettaches Ubuntu Pro to a distro:
+// - to attach: send the token to attach with.
+// - to detach: send an empty token.
+type ProAttachment struct {
 	Token string
 }
 
 // Execute is needed to fulfil Task.
-func (t AttachPro) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
+func (t ProAttachment) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
 	_, err := client.ApplyProToken(context.TODO(), &wslserviceapi.ProAttachInfo{Token: t.Token})
 	return err
 }
 
 // String is needed to fulfil Task.
-func (t AttachPro) String() string {
+func (t ProAttachment) String() string {
 	return "AttachPro"
 }
 
 // ShouldRetry is needed to fulfil Task.
-func (t AttachPro) ShouldRetry() bool {
+func (t ProAttachment) ShouldRetry() bool {
 	return false
 }
 
 // Is is a custom comparator. All AttachPro tasks are considered equivalent.
-func (t AttachPro) Is(other task.Task) bool {
-	_, ok := other.(AttachPro)
+func (t ProAttachment) Is(other task.Task) bool {
+	_, ok := other.(ProAttachment)
 	return ok
 }
