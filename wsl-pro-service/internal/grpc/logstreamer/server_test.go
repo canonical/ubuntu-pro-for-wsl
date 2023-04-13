@@ -159,7 +159,7 @@ func addMetaToContext(ctx context.Context, reportCaller bool) context.Context {
 func msgContains(t *testing.T, expected string, msg interface{}, description string) {
 	t.Helper()
 
-	l, ok := msg.(*log.Log)
+	l, ok := msg.(*log.LogMsg)
 	if !ok {
 		t.Fatalf("Expected a log, but send: %+v", msg)
 	}
@@ -189,7 +189,7 @@ func createLogStream(t *testing.T, level logrus.Level, callerForLocal, callerFor
 	return stream, localLogs, func() string {
 		var out []string
 		for _, m := range myS.msgs {
-			l, ok := m.(*log.Log)
+			l, ok := m.(*log.LogMsg)
 			if !ok {
 				t.Fatalf("Expected a log, but send: %+v", m)
 			}

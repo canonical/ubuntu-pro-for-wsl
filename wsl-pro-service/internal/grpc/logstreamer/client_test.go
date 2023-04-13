@@ -24,7 +24,7 @@ func TestRecvLogMsg(t *testing.T) {
 	recvMsgError := errors.New("Error from RecvMsg")
 
 	tests := map[string]struct {
-		logMsgs           []*log.Log
+		logMsgs           []*log.LogMsg
 		errRecv           error
 		withCaller        bool
 		invalidObjectCall bool
@@ -33,7 +33,7 @@ func TestRecvLogMsg(t *testing.T) {
 		wantNotInLogs []string
 		wantErr       bool
 	}{
-		"One log (and one closing empty message)": {logMsgs: []*log.Log{
+		"One log (and one closing empty message)": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     logrus.InfoLevel.String(),
@@ -43,7 +43,7 @@ func TestRecvLogMsg(t *testing.T) {
 			wantLogs:      [][]string{{"level=info", `msg="My server log"`}},
 			wantNotInLogs: []string{"my/caller/function"},
 		},
-		"Two logs with different debug level": {logMsgs: []*log.Log{
+		"Two logs with different debug level": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     logrus.InfoLevel.String(),
@@ -59,7 +59,7 @@ func TestRecvLogMsg(t *testing.T) {
 				{"level=info", `msg="My first server log"`},
 				{"level=debug", `msg="My second server log"`}},
 		},
-		"Log with caller": {logMsgs: []*log.Log{
+		"Log with caller": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     logrus.InfoLevel.String(),
@@ -69,7 +69,7 @@ func TestRecvLogMsg(t *testing.T) {
 			withCaller: true,
 			wantLogs:   [][]string{{"level=info", `My server log`, "my/caller/function"}},
 		},
-		"No caller when not requested": {logMsgs: []*log.Log{
+		"No caller when not requested": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     logrus.InfoLevel.String(),
@@ -79,7 +79,7 @@ func TestRecvLogMsg(t *testing.T) {
 			wantLogs:      [][]string{{"level=info", `msg="My server log"`}},
 			wantNotInLogs: []string{"my/caller/function"},
 		},
-		"No caller on any logs": {logMsgs: []*log.Log{
+		"No caller on any logs": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     logrus.InfoLevel.String(),
@@ -100,7 +100,7 @@ func TestRecvLogMsg(t *testing.T) {
 		"One message, no log":                                {},
 		"One message with error, no log, error is preserved": {errRecv: recvMsgError, wantErr: true},
 		"Logs and then message with error, error is preserved": {
-			logMsgs: []*log.Log{
+			logMsgs: []*log.LogMsg{
 				{
 					LogHeader: log.LogIdentifier,
 					Level:     logrus.InfoLevel.String(),
@@ -111,7 +111,7 @@ func TestRecvLogMsg(t *testing.T) {
 			wantErr:  true,
 		},
 
-		"Unknown log level triggers a client error (protocole issue)": {logMsgs: []*log.Log{
+		"Unknown log level triggers a client error (protocole issue)": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     "Unknown",
@@ -119,7 +119,7 @@ func TestRecvLogMsg(t *testing.T) {
 			}},
 			wantErr: true,
 		},
-		"Invalid object passed to RecvMsg is gracefully skipped": {logMsgs: []*log.Log{
+		"Invalid object passed to RecvMsg is gracefully skipped": {logMsgs: []*log.LogMsg{
 			{
 				LogHeader: log.LogIdentifier,
 				Level:     logrus.InfoLevel.String(),
@@ -193,7 +193,7 @@ func TestRecvLogMsg(t *testing.T) {
 }
 
 type clientStream struct {
-	logCalls       []*log.Log
+	logCalls       []*log.LogMsg
 	wantErrRecvMsg error
 
 	grpc.ClientStream

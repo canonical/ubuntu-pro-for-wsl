@@ -211,7 +211,7 @@ func logLocallyMaybeRemote(level logrus.Level, caller, msg string, localLogger *
 	// Send remotely local message to global listeners
 	streamsForwarders.mu.RLock()
 	for stream := range streamsForwarders.fw {
-		if err := stream.SendMsg(&Log{
+		if err := stream.SendMsg(&LogMsg{
 			LogHeader: logIdentifier,
 			Level:     level.String(),
 			Caller:    caller,
