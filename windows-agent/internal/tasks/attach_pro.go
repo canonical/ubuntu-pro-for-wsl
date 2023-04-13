@@ -20,7 +20,7 @@ type AttachPro struct {
 
 // Execute is needed to fulfil Task.
 func (t AttachPro) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
-	_, err := client.ProAttach(context.TODO(), &wslserviceapi.AttachInfo{Token: t.Token})
+	_, err := client.ApplyProToken(context.TODO(), &wslserviceapi.ProAttachInfo{Token: t.Token})
 	return err
 }
 

@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestProAttach(t *testing.T) {
+func TestApplyProToken(t *testing.T) {
 	t.Parallel()
 
 	type detachResult int
@@ -108,7 +108,7 @@ func TestProAttach(t *testing.T) {
 
 			errCh := make(chan error)
 			go func() {
-				_, err := wslClient.ProAttach(ctx, &wslserviceapi.AttachInfo{Token: tc.token})
+				_, err := wslClient.ApplyProToken(ctx, &wslserviceapi.ProAttachInfo{Token: tc.token})
 				errCh <- err
 			}()
 

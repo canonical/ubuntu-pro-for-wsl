@@ -46,24 +46,24 @@ func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStr
 	return grpcServer
 }
 
-// ProAttach serves ProAttach messages sent by the agent.
-func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo) (empty *wslserviceapi.Empty, err error) {
+// ApplyProToken serves ApplyProToken messages sent by the agent.
+func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAttachInfo) (empty *wslserviceapi.Empty, err error) {
 	defer func() {
 		// Regardless of success or failure, we send back an updated system info
 		if e := s.sendInfo(ctx); e != nil {
-			log.Warningf(ctx, "Error in ProAttach: %v", e)
+			log.Warningf(ctx, "Error in ApplyProToken: %v", e)
 			err = errors.Join(err, e)
 		}
 	}()
 
 	if info.Token == "" {
-		log.Info(ctx, "ProAttach: Received empty token: detaching")
+		log.Info(ctx, "ApplyProToken: Received empty token: detaching")
 	} else {
-		log.Infof(ctx, "ProAttach: Received token %q: attaching", info.Token)
+		log.Infof(ctx, "ApplyProToken: Received token %q: attaching", info.Token)
 	}
 
 	if err := s.system.ProDetach(ctx); err != nil {
-		log.Errorf(ctx, "Error in ProAttach: detachPro: %v", err)
+		log.Errorf(ctx, "Error in ApplyProToken: detachPro: %v", err)
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo)
 	}
 
 	if err := s.system.ProAttach(ctx, info.Token); err != nil {
-		log.Errorf(ctx, "Error in ProAttach: attachPro:: %v", err)
+		log.Errorf(ctx, "Error in ApplyProToken: attachPro:: %v", err)
 		return nil, err
 	}
 
