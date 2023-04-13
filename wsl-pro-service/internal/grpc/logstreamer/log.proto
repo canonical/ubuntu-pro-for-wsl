@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "github.com/canonical/ubuntu-pro-for-windows/internal/grpc/log";
 
-message Log {
+message LogMsg {
   // use logHeader instead of header as the result will be polymorphic and we want
   // to give the more chances to not decode by error.
   // this will contain an unique identifier string.
