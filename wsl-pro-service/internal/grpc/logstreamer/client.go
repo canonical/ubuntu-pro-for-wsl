@@ -59,7 +59,7 @@ func (ss *logClientStream) RecvMsg(m interface{}) error {
 			// similarly, we just received this message but it’s invalid, let the client handling it
 			return nil
 		}
-		var logMsg Log
+		var logMsg LogMsg
 		if err = proto.Unmarshal(bytes, &logMsg); err != nil {
 			Warning(context.Background(), err)
 		}

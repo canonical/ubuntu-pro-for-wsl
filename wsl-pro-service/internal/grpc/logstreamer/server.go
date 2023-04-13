@@ -71,7 +71,7 @@ func (ss serverStreamWithLogs) Context() context.Context {
 // its structure, preventing to hit the client.
 // A harcoded header is set to double check and ensure we have Log message.
 func (ss serverStreamWithLogs) sendLogs(logLevel, caller, msg string) error {
-	return ss.SendMsg(&Log{
+	return ss.SendMsg(&LogMsg{
 		LogHeader: logIdentifier,
 		Level:     logLevel,
 		Caller:    caller,
