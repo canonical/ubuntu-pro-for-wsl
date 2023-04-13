@@ -107,7 +107,7 @@ func (a *App) serve(args ...option) error {
 		opt.agentPortFilePath = filepath.Join(localAppData, common.LocalAppDataDir, common.ListeningPortFileName)
 	}
 
-	srv := wslinstanceservice.Service{}
+	srv := wslinstanceservice.New(opt.system)
 
 	// Connect with the agent.
 	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, srv.RegisterGRPCService, opt.system)
