@@ -7,7 +7,6 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230406100749-ffa5425ad6ea
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230406100749-ffa5425ad6ea
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
-	github.com/golang/protobuf v1.5.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
@@ -23,6 +22,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
