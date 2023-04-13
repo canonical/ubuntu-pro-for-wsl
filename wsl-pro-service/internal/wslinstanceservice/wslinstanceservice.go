@@ -62,18 +62,9 @@ func (s *Service) ProAttach(ctx context.Context, info *wslserviceapi.AttachInfo)
 		log.Infof(ctx, "ProAttach: Received token %q: attaching", info.Token)
 	}
 
-	attached, err := s.system.ProStatus(ctx)
-	if err != nil {
-		// TODO: middleware to print errors from task
-		log.Errorf(ctx, "Error in ProAttach: ProStatus: %v", err)
+	if err := s.system.ProDetach(ctx); err != nil {
+		log.Errorf(ctx, "Error in ProAttach: detachPro: %v", err)
 		return nil, err
-	}
-
-	if attached {
-		if err := s.system.ProDetach(ctx); err != nil {
-			log.Errorf(ctx, "Error in ProAttach: detachPro: %v", err)
-			return nil, err
-		}
 	}
 
 	if info.Token == "" {
