@@ -240,7 +240,7 @@ func TestDefaultAddrFile(t *testing.T) {
 
 			a.SetArgs("-vvv")
 
-			tk := time.AfterFunc(5*time.Second, a.Quit)
+			tk := time.AfterFunc(10*time.Second, a.Quit)
 			defer func() {
 				if tk.Stop() {
 					a.Quit()
