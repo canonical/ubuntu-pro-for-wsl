@@ -30,7 +30,8 @@ type Worker struct {
 	distro  distro
 	manager *taskManager
 
-	cancel context.CancelFunc
+	cancel     context.CancelFunc
+	processing chan struct{}
 
 	// stopCallback will be called the worker has stopped and task processing has stopped.
 	stopCallback func()
@@ -125,6 +126,7 @@ func (w *Worker) start(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: starting task processing", w.distro.Name())
 
 	ctx, cancel := context.WithCancel(ctx)
+	w.processing = make(chan struct{})
 	go w.processTasks(ctx)
 	w.cancel = cancel
 }
@@ -133,6 +135,7 @@ func (w *Worker) start(ctx context.Context) {
 func (w *Worker) Stop(ctx context.Context) {
 	log.Debugf(ctx, "Distro %q: stopping task processing", w.distro.Name())
 	w.cancel()
+	<-w.processing
 	w.SetConnection(nil)
 }
 
@@ -155,6 +158,7 @@ func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 // locks to distro,.
 func (w *Worker) processTasks(ctx context.Context) {
 	defer w.stopCallback()
+	defer close(w.processing)
 
 	for {
 		select {
