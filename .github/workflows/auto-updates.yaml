@@ -51,7 +51,7 @@ jobs:
           echo "modified=${hasModif}" >> $GITHUB_OUTPUT
       - name: Create Pull Request
         if: steps.checkpo.outputs.modified == 'true'
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           commit-message: Auto update po files
           title: Auto update po files
@@ -102,7 +102,7 @@ jobs:
             hasModif="true"
           fi
           echo "modified=${hasModif}" >> $GITHUB_OUTPUT
-      - uses: peter-evans/create-pull-request@v4
+      - uses: peter-evans/create-pull-request@v5
         name: Create Pull Request
         if: steps.check-readme.outputs.modified == 'true'
         with:
