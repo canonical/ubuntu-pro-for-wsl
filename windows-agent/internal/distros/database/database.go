@@ -324,5 +324,28 @@ func (db *DistroDB) Close(ctx context.Context) {
 		}
 
 		close(db.scheduleTrigger)
+		db.cleanupAllDistros(ctx)
 	})
+}
+
+// cleanupAllDistros signals all distro task processing goroutines to stop
+// and blocks until all of them have done so.
+func (db *DistroDB) cleanupAllDistros(ctx context.Context) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var wg sync.WaitGroup
+	for _, d := range db.distros {
+		d := d
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			d.Cleanup(ctx)
+		}()
+	}
+
+	wg.Wait()
+
+	// Leave behind an empty map to avoid operating on stopped distros
+	db.distros = map[string]*distro.Distro{}
 }
