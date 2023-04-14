@@ -194,10 +194,11 @@ func startDaemon(t *testing.T) (app *agent.App, done func()) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_ = a.Run()
+		err := a.Run()
+		require.NoError(t, err, "Run should exits without any error")
 	}()
 	a.WaitReady()
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(10 * time.Second)
 
 	return a, func() {
 		wg.Wait()
