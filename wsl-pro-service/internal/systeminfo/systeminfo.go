@@ -87,7 +87,7 @@ func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
 
 // fillOSRelease fills the info with os-release file content.
 func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
-	out, err := os.ReadFile(s.backend.Path("etc/os-release"))
+	out, err := os.ReadFile(s.backend.Path("/etc/os-release"))
 	if err != nil {
 		return fmt.Errorf("could not read /etc/os-release file: %v", err)
 	}
