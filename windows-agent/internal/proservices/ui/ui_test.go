@@ -23,6 +23,8 @@ func TestNew(t *testing.T) {
 	dir := t.TempDir()
 	db, err := database.New(ctx, dir, nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
+	defer db.Close(ctx)
+
 	initTasks, err := initialtasks.New(dir)
 	require.NoError(t, err, "Setup: initial tasks New() should return no error")
 
@@ -60,10 +62,13 @@ func TestAttachPro(t *testing.T) {
 			dir := t.TempDir()
 			db, err := database.New(ctx, dir, nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
+			defer db.Close(ctx)
+
 			// Populate the database
 			for i := range tc.distros {
-				_, err := db.GetDistroAndUpdateProperties(context.Background(), tc.distros[i], distro.Properties{})
+				d, err := db.GetDistroAndUpdateProperties(context.Background(), tc.distros[i], distro.Properties{})
 				require.NoError(t, err, "Setup: could not add %q to database", tc.distros[i])
+				defer d.Cleanup(ctx)
 			}
 
 			initTasks, err := initialtasks.New(dir)
@@ -73,8 +78,8 @@ func TestAttachPro(t *testing.T) {
 			info := agentapi.ProAttachInfo{Token: tc.token}
 			_, err = serv.ApplyProToken(context.Background(), &info)
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
-			// Could it be nice to retrieve the distro's pending tasks?
 
+			// Could it be nice to retrieve the distro's pending tasks?
 			it := initTasks.All()
 			require.ElementsMatch(t, it, []tasks.ProAttachment{{Token: tc.token}}, "Only one task should have been added")
 		})

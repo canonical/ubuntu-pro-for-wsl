@@ -79,6 +79,10 @@ func TestNew(t *testing.T) {
 			}
 
 			db, err := database.New(ctx, dbDir, nil)
+			if err == nil {
+				defer db.Close(ctx)
+			}
+
 			if tc.wantErr {
 				require.Error(t, err, "New() should have returned an error")
 				return
@@ -119,6 +123,7 @@ func TestDatabaseGetAll(t *testing.T) {
 
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: database creation should not fail")
+			defer db.Close(ctx)
 
 			for i := range tc.distros {
 				_, err := db.GetDistroAndUpdateProperties(ctx, tc.distros[i], distro.Properties{})
@@ -132,6 +137,10 @@ func TestDatabaseGetAll(t *testing.T) {
 			}
 
 			require.ElementsMatch(t, tc.want, got, "Unexpected set of distros returned by GetAll")
+
+			// Testing use after close
+			db.Close(ctx)
+			require.Panics(t, func() { db.GetAll() }, "Database GetAll should panic when used after Close.")
 		})
 	}
 }
@@ -157,6 +166,7 @@ func TestDatabaseGet(t *testing.T) {
 
 	db, err := database.New(ctx, databaseDir, nil)
 	require.NoError(t, err, "Setup: New() should return no error")
+	t.Cleanup(func() { db.Close(ctx) })
 
 	// Unregister the distro now, so that it's in the db object but not on system properly.
 	testutils.UnregisterDistro(t, ctx, nonRegisteredDistroInDB)
@@ -189,6 +199,21 @@ func TestDatabaseGet(t *testing.T) {
 			require.Equal(t, d.Name(), tc.distroName, "The distro returned by Get should match the one in the database")
 		})
 	}
+}
+
+func TestDatabaseGetAfterClose(t *testing.T) {
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	db, err := database.New(ctx, t.TempDir(), nil)
+	require.NoError(t, err, "Setup: New() should return no error")
+
+	db.Close(ctx)
+
+	require.Panics(t, func() { db.Get(testutils.RandomDistroName(t)) }, "Database Get should panic when used after Close.")
 }
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
@@ -233,6 +258,7 @@ func TestDatabaseDump(t *testing.T) {
 
 			db, err := database.New(ctx, dbDir, nil)
 			require.NoError(t, err, "Setup: empty database should be created without issue")
+			defer db.Close(ctx)
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
 			switch tc.dirState {
@@ -285,6 +311,10 @@ func TestDatabaseDump(t *testing.T) {
 			// Testing against and optionally updating golden file
 			want := testutils.LoadWithUpdateFromGoldenYAML(t, sd.data)
 			require.Equal(t, want, sd.data, "Database dump should match expected format")
+
+			// Testing use after close
+			db.Close(ctx)
+			require.Panics(t, func() { _ = db.Dump() }, "Database dump should panic when used after Close.")
 		})
 	}
 }
@@ -376,6 +406,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 
 			db, err := database.New(ctx, dbDir, nil)
 			require.NoError(t, err, "Setup: New() should return no error")
+			defer db.Close(ctx)
 
 			if tc.distroName == reRegisteredDistro {
 				guids[reRegisteredDistro] = testutils.ReregisterDistro(t, ctx, reRegisteredDistro, false)
@@ -426,6 +457,10 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				return
 			}
 			require.Equal(t, initialDumpModTime, lastDumpModTime, "GetDistroAndUpdateProperties should not modify database dump file")
+
+			// Testing use after close
+			db.Close(ctx)
+			require.Panics(t, func() { _, _ = db.GetDistroAndUpdateProperties(ctx, tc.distroName, tc.props) }, "Database GetDistroAndUpdateProperties should panic when used after Close.")
 		})
 	}
 }
@@ -476,6 +511,7 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			db, err := database.New(ctx, dbDir, nil)
 			require.NoError(t, err, "Setup: New() should have returned no error")
+			defer db.Close(ctx)
 
 			if tc.markDistroUnreachable != "" {
 				d3, ok := db.Get(distro2)
@@ -512,6 +548,10 @@ func TestDatabaseCleanup(t *testing.T) {
 			}
 
 			require.ElementsMatch(t, tc.wantDistros, db.DistroNames(), "Database contents after cleanup do not match expectations")
+
+			// Testing use after close
+			db.Close(ctx)
+			require.Panics(t, func() { db.TriggerCleanup() }, "Database TriggerCleanup should panic when used after Close.")
 		})
 	}
 }
