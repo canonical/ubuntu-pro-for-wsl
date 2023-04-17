@@ -3,10 +3,11 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:desktop2="http://schemas.microsoft.com/appx/manifest/desktop/windows10/2"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="desktop uap uap5 rescap">
+  IgnorableNamespaces="desktop desktop2 uap uap5 rescap">
 
   <Identity
     Name="CanonicalGroupLimited.UbuntuProForWindows"
@@ -60,6 +61,15 @@
 		</Extensions>
     </Application>
   </Applications>
+
+  <Extensions>
+    <desktop2:Extension Category="windows.firewallRules" Executable="agent\ubuntu-pro-agent.exe" EntryPoint="Windows.FullTrustApplication">
+      <desktop2:FirewallRules Executable="agent\ubuntu-pro-agent.exe">
+        <desktop2:Rule Profile="private" IPProtocol="TCP" Direction="in"></desktop2:Rule>
+        <desktop2:Rule Profile="private" IPProtocol="TCP" Direction="out"></desktop2:Rule>
+      </desktop2:FirewallRules>
+    </desktop2:Extension>
+  </Extensions>
 
   <Capabilities>
     <Capability Name="internetClient" />
