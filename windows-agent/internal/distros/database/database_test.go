@@ -166,6 +166,8 @@ func TestDatabaseGet(t *testing.T) {
 
 	db, err := database.New(ctx, databaseDir, nil)
 	require.NoError(t, err, "Setup: New() should return no error")
+
+	// Must use Cleanup. If we use defer, it'll run before the subtests are launched.
 	t.Cleanup(func() { db.Close(ctx) })
 
 	// Unregister the distro now, so that it's in the db object but not on system properly.
