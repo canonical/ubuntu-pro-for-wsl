@@ -355,15 +355,15 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 		wantErr             bool
 		wantErrType         error
 	}{
-		// "Distro exists in database and properties match it": {distroName: distroInDB, props: props[distroInDB], want: fullHit},
+		"Distro exists in database and properties match it": {distroName: distroInDB, props: props[distroInDB], want: fullHit},
 
 		// Refresh/update database handling
 		"Distro exists in database, with different properties updates the stored db": {distroName: distroInDB, props: props[distroNotInDB], want: hitAndRefreshProps, wantDbDumpRefreshed: true},
-		// "Distro exists in database, but no longer valid updates the stored db":       {distroName: reRegisteredDistro, props: props[reRegisteredDistro], want: hitUnregisteredDistro, wantDbDumpRefreshed: true},
-		// "Distro is not in database, we add it and update the stored db":              {distroName: distroNotInDB, props: props[distroNotInDB], want: missedAndAdded, wantDbDumpRefreshed: true},
+		"Distro exists in database, but no longer valid updates the stored db":       {distroName: reRegisteredDistro, props: props[reRegisteredDistro], want: hitUnregisteredDistro, wantDbDumpRefreshed: true},
+		"Distro is not in database, we add it and update the stored db":              {distroName: distroNotInDB, props: props[distroNotInDB], want: missedAndAdded, wantDbDumpRefreshed: true},
 
-		// "Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
-		// "Error on database refresh failing":                     {distroName: distroInDB, props: props[distroNotInDB], breakDBbDump: true, wantErr: true},
+		"Error on distro not in database and we do not add it ": {distroName: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error on database refresh failing":                     {distroName: distroInDB, props: props[distroNotInDB], breakDBbDump: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
