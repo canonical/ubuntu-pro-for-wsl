@@ -73,6 +73,7 @@ func (i *InitialTasks) Add(ctx context.Context, t task.Task) error {
 	defer i.mu.Unlock()
 
 	log.Infof(ctx, "Adding %q to list of initial tasks", t)
+	i.tasks = removeDuplicates(i.tasks, t)
 	i.tasks = append(i.tasks, t)
 
 	if err := i.save(); err != nil {
@@ -122,4 +123,33 @@ func (i *InitialTasks) save() (err error) {
 	}
 
 	return nil
+}
+
+// removeDuplicates removes all tasks that are the same as the target.
+//
+// In order to determine equality, tasks.Is(target, task[i]) is used.
+func removeDuplicates(tasks []task.Task, target task.Task) []task.Task {
+	if len(tasks) == 0 {
+		return tasks
+	}
+
+	// Partition algorithm
+	//
+	// Split the array into two intervals [0, p) and [p, end) such that tasks.Is(target, tasks[i])
+	// is false for all entries in the first interval (i<p), and true for all entries in the second one (i>=p).
+	var p int
+	for i := range tasks {
+		if task.Is(target, tasks[i]) {
+			continue
+		}
+		if i == p {
+			p++
+			continue
+		}
+		tasks[i], tasks[p] = tasks[p], tasks[i]
+		p++
+	}
+
+	// End of partition, remove task duplicates
+	return tasks[:p]
 }
