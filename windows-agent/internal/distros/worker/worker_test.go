@@ -283,20 +283,53 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
-	// We submit a first task that will be dequeued and block task processing until
-	// there is a connection (i.e. forever) or until it times out after a minute.
-	err = w.SubmitTasks(&testTask{})
+	// We submit a first task that will be dequeued and block task processing.
+	err = w.SubmitTasks(&testTask{Delay: time.Hour, Data: -1})
 	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, worker.TaskQueueSize)
 
 	// We fill up the queue
 	for i := 0; i < worker.TaskQueueSize; i++ {
-		err := w.SubmitTasks(&testTask{})
+		err := w.SubmitTasks(&testTask{Data: i})
 		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, worker.TaskQueueSize)
 	}
 
 	// We ensure that adding one more task will return an error
 	err = w.SubmitTasks(&testTask{})
 	require.Errorf(t, err, "SubmitTask() should fail when the queue is full")
+}
+
+func TestSubmitTaskTwice(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	distro := &testDistro{name: testutils.RandomDistroName(t)}
+	distroDir := t.TempDir()
+
+	w, err := worker.New(ctx, distro, distroDir)
+	require.NoError(t, err, "Setup: unexpected error creating the worker")
+	defer w.Stop(ctx)
+
+	// Long delay to ensure it never finishes
+	task1 := &testTask{Delay: time.Hour}
+	task2 := &testTask{Delay: time.Hour}
+
+	err = w.SubmitTasks(task1)
+	require.NoError(t, err, "Submitting a first task when should return no error")
+
+	q := w.TaskQueue()
+	require.Equal(t, []*worker.ManagedTask{
+		{ID: 1, Skip: false, Task: task1},
+	}, q, "Unexpected task queue after first submission")
+
+	err = w.SubmitTasks(task2)
+	require.NoError(t, err, "Submitting a second task when should return no error")
+
+	q = w.TaskQueue()
+	require.Equal(t, []*worker.ManagedTask{
+		{ID: 1, Skip: true, Task: task1},
+		{ID: 2, Skip: false, Task: task2},
+	}, q, "Unexpected task queue after second submission")
 }
 
 func TestSetConnection(t *testing.T) {
@@ -476,6 +509,15 @@ type testTask struct {
 
 	// WasCancelled is true if the task Execute context is Done
 	WasCancelled atomic.Bool
+
+	// Data is just a payload that alows tasks to not be all equal
+	Data int
+}
+
+// Is overloads the equality comparison so that all test tasks are the equivalent.
+func (t *testTask) Is(other task.Task) bool {
+	o, ok := other.(*testTask)
+	return ok && t.Data == o.Data
 }
 
 func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {

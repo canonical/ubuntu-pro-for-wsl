@@ -11,3 +11,10 @@ func (w *Worker) QueueLen() int {
 
 	return len(w.manager.queue)
 }
+
+type ManagedTask = managedTask
+
+//nolint:revive //unexported-return: Known false-positive: It is exported with an alias
+func (w *Worker) TaskQueue() []*ManagedTask {
+	return w.manager.tasks
+}
