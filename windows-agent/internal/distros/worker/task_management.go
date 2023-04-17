@@ -19,7 +19,8 @@ const taskQueueSize = 100
 // managedTask is a type that carries a task with it, with added metadata and functionality to
 // serialize and deserialize.
 type managedTask struct {
-	ID uint64
+	ID   uint64
+	Skip bool
 	task.Task
 }
 
@@ -61,15 +62,37 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 			Task: tasks[i],
 		}
 
+		for _, queued := range tm.tasks {
+			if !task.Is(t.Task, queued.Task) {
+				continue
+			}
+			queued.Skip = true
+		}
+
+		tm.tasks = append(tm.tasks, t)
+
 		select {
 		case tm.queue <- t:
 		default:
 			return errors.New("queue is full")
 		}
-
-		tm.tasks = append(tm.tasks, t)
 	}
+
 	return tm.save()
+}
+
+func (tm *taskManager) nextTask(ctx context.Context) (t *managedTask, err error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case t = <-tm.queue:
+		}
+
+		if !t.Skip {
+			return t, nil
+		}
+	}
 }
 
 func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
@@ -103,6 +126,9 @@ func (tm *taskManager) save() (err error) {
 
 	var tasks []task.Task
 	for i := range tm.tasks {
+		if tm.tasks[i].Skip {
+			continue
+		}
 		tasks = append(tasks, tm.tasks[i].Task)
 	}
 

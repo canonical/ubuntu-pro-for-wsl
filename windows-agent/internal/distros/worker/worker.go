@@ -153,22 +153,21 @@ func (w *Worker) processTasks(ctx context.Context) {
 	defer close(w.processing)
 
 	for {
-		select {
-		case <-ctx.Done():
+		t, err := w.manager.nextTask(ctx)
+		if err != nil {
+			log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 			return
-		case t := <-w.manager.queue:
-			resultErr := w.processSingleTask(ctx, *t)
+		}
+		resultErr := w.processSingleTask(ctx, *t)
 
-			var target unreachableDistroError
-			if errors.Is(resultErr, &target) {
-				w.distro.Invalidate(target)
-				continue
-			}
+		var target unreachableDistroError
+		if errors.Is(resultErr, &target) {
+			w.distro.Invalidate(target)
+			continue
+		}
 
-			err := w.manager.done(t, resultErr)
-			if err != nil {
-				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
-			}
+		if err := w.manager.done(t, resultErr); err != nil {
+			log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 		}
 	}
 }
