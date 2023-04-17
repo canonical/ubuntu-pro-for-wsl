@@ -14,7 +14,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -89,14 +88,7 @@ func (i *InitialTasks) Remove(ctx context.Context, t task.Task) error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	idx := slices.IndexFunc(i.tasks, func(target task.Task) bool { return task.Is(t, target) })
-	if idx == -1 {
-		log.Infof(ctx, "task %q is not in the init task list. Ignoring removal.", t)
-		return nil
-	}
-
-	log.Infof(ctx, "Removing %q to list of initial tasks", t)
-	i.tasks = slices.Delete(i.tasks, idx, idx+1)
+	i.tasks = removeDuplicates(i.tasks, t)
 
 	if err := i.save(); err != nil {
 		return fmt.Errorf("removal of task %q from the init list: %w", t, err)
