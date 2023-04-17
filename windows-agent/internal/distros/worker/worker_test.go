@@ -113,17 +113,17 @@ func TestNew(t *testing.T) {
 			// and we can accurately assert on the task queue length.
 			cancel()
 
-			done := make(chan struct{})
-			w, err := worker.New(ctx, distro, distroDir, worker.WithStopCallback(func() { close(done) }))
+			w, err := worker.New(ctx, distro, distroDir)
+			if err == nil {
+				defer w.Stop(ctx)
+			}
+
 			if tc.wantErr {
 				require.Error(t, err, "worker.New should have returned an error")
 				return
 			}
 			require.NoError(t, err, "worker.New should not return an error")
 			require.Equal(t, tc.wantNTasks, w.QueueLen(), "Wrong number of queued tasks.")
-
-			// Ensuring worker has finished writing before TempDir cleans up the dumpfile
-			<-done
 		})
 	}
 }
@@ -159,14 +159,9 @@ func TestTaskProcessing(t *testing.T) {
 				name: testutils.RandomDistroName(t),
 			}
 
-			done := make(chan struct{})
-			w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
+			w, err := worker.New(ctx, d, t.TempDir())
 			require.NoError(t, err, "Setup: worker New() should return no error")
-			t.Cleanup(func() {
-				w.Stop(ctx)
-				// Ensuring worker has finished writing before TempDir cleans up the dumpfile
-				<-done
-			})
+			defer w.Stop(ctx)
 
 			wslInstanceService := newTestService(t)
 			conn := wslInstanceService.newClientConnection(t)
@@ -261,14 +256,9 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 	distroDir := t.TempDir()
 	taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
 
-	done := make(chan struct{})
-	w, err := worker.New(ctx, distro, distroDir, worker.WithStopCallback(func() { close(done) }))
+	w, err := worker.New(ctx, distro, distroDir)
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer func() {
-		w.Stop(ctx)
-		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
-		<-done
-	}()
+	defer w.Stop(ctx)
 
 	err = os.RemoveAll(taskFile)
 	require.NoError(t, err, "Could not remove distro task backup file")
@@ -289,14 +279,9 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	done := make(chan struct{})
-	w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
+	w, err := worker.New(ctx, d, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer func() {
-		w.Stop(ctx)
-		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
-		<-done
-	}()
+	defer w.Stop(ctx)
 
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
@@ -323,14 +308,9 @@ func TestSetConnection(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	done := make(chan struct{})
-	w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
+	w, err := worker.New(ctx, d, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer func() {
-		w.Stop(ctx)
-		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
-		<-done
-	}()
+	defer w.Stop(ctx)
 
 	wslInstanceService1 := newTestService(t)
 	conn1 := wslInstanceService1.newClientConnection(t)
@@ -389,14 +369,9 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 		name: testutils.RandomDistroName(t),
 	}
 
-	done := make(chan struct{})
-	w, err := worker.New(ctx, d, t.TempDir(), worker.WithStopCallback(func() { close(done) }))
+	w, err := worker.New(ctx, d, t.TempDir())
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer func() {
-		w.Stop(ctx)
-		// Ensuring worker has finished writing before TempDir cleans up the dumpfile
-		<-done
-	}()
+	defer w.Stop(ctx)
 
 	wslInstanceService1 := newTestService(t)
 	conn1 := wslInstanceService1.newClientConnection(t)

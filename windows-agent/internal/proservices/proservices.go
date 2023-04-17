@@ -25,6 +25,7 @@ import (
 type Manager struct {
 	uiService          ui.Service
 	wslInstanceService wslinstance.Service
+	db                 *database.DistroDB
 }
 
 // options are the configurable functional options for the daemon.
@@ -46,6 +47,8 @@ func WithCacheDir(cachedir string) func(o *options) {
 
 // New returns a new GRPC services manager.
 // It instantiates both ui and wsl instance services.
+//
+// Once done, Stop must be called to deallocate resources.
 func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
@@ -80,6 +83,11 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	if err != nil {
 		return s, err
 	}
+	defer func() {
+		if err != nil {
+			db.Close(ctx)
+		}
+	}()
 
 	uiService := ui.New(ctx, db, initTasks)
 	wslInstanceService, err := wslinstance.New(ctx, db)
@@ -89,7 +97,13 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	return Manager{
 		uiService:          uiService,
 		wslInstanceService: wslInstanceService,
+		db:                 db,
 	}, nil
+}
+
+// Stop deallocates resources in the services.
+func (m Manager) Stop(ctx context.Context) {
+	m.db.Close(ctx)
 }
 
 // RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.

@@ -37,11 +37,15 @@ type DistroDB struct {
 	storageDir   string
 	initialTasks *initialtasks.InitialTasks
 
-	backend context.Context
+	ctx       context.Context
+	cancelCtx func()
+	once      sync.Once
 }
 
 // New creates a database and populates it with data in the file located
 // at "storagePath". Changes to the database will be written on this file.
+//
+// You must call Close to deallocate resources.
 //
 // Creating multiple databases with the same disk backing will result in
 // undefined behaviour.
@@ -54,12 +58,22 @@ func New(ctx context.Context, storageDir string, initialTasks *initialtasks.Init
 		return nil, fmt.Errorf("could not create database directory: %w", err)
 	}
 
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("Database New: %v", ctx.Err())
+	default:
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+
 	db := &DistroDB{
 		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
 		initialTasks:    initialTasks,
-		backend:         ctx,
+		ctx:             ctx,
+		cancelCtx:       cancel,
 	}
+
 	if err := db.load(ctx); err != nil {
 		return nil, err
 	}
@@ -67,9 +81,12 @@ func New(ctx context.Context, storageDir string, initialTasks *initialtasks.Init
 	go func() {
 		for {
 			select {
+			case <-db.ctx.Done():
+				return
 			case <-time.After(timeBetweenGC):
 			case <-db.scheduleTrigger:
 			}
+
 			if err := db.cleanup(ctx); err != nil {
 				log.Errorf(ctx, "Failed to clean up potentially unused distros: %v", err)
 			}
@@ -83,6 +100,10 @@ func New(ctx context.Context, storageDir string, initialTasks *initialtasks.Init
 // flag indicating if it was found.
 // TODO: check if useful as public.
 func (db *DistroDB) Get(name string) (distro *distro.Distro, ok bool) {
+	if db.stopped() {
+		panic("Get: database already stopped")
+	}
+
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
@@ -92,6 +113,10 @@ func (db *DistroDB) Get(name string) (distro *distro.Distro, ok bool) {
 
 // GetAll returns a slice with all the distros in the database.
 func (db *DistroDB) GetAll() (all []*distro.Distro) {
+	if db.stopped() {
+		panic("GetAll: database already stopped")
+	}
+
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
@@ -108,6 +133,10 @@ func (db *DistroDB) GetAll() (all []*distro.Distro) {
 // * An existing distro in the database may have their properties updated.
 // * A new distro may be added to the database.
 func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name string, props distro.Properties) (*distro.Distro, error) {
+	if db.stopped() {
+		panic("GetDistroAndUpdateProperties: database already stopped")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -118,7 +147,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +165,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		go d.Cleanup(ctx)
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(db.backend, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
 		if err != nil {
 			return nil, err
 		}
@@ -159,6 +188,10 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 // Dump stores the current database state to disk, overriding old dumps.
 // Next time we start the agent, the database will be loaded from this dump.
 func (db *DistroDB) Dump() error {
+	if db.stopped() {
+		panic("Dump: database already stopped")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -168,6 +201,10 @@ func (db *DistroDB) Dump() error {
 // TriggerCleanup forces the database cleanup loop to skip its current delay and
 // call autoCleanup immediately. It is blocking until the cleanup starts.
 func (db *DistroDB) TriggerCleanup() {
+	if db.stopped() {
+		panic("TriggerCleanup: database already stopped")
+	}
+
 	db.scheduleTrigger <- struct{}{}
 }
 
@@ -261,4 +298,54 @@ func (db *DistroDB) dump() error {
 	}
 
 	return nil
+}
+
+func (db *DistroDB) stopped() bool {
+	select {
+	case <-db.ctx.Done():
+		return true
+	default:
+		return false
+	}
+}
+
+// Close frees up resources allocated to database maintenance and
+// ensures the database contents are written to file.
+func (db *DistroDB) Close(ctx context.Context) {
+	db.once.Do(func() {
+		db.cancelCtx()
+
+		if err := db.cleanup(ctx); err != nil {
+			log.Warningf(ctx, "Database close: Error cleaning up the database: %v", err)
+		}
+
+		if err := db.dump(); err != nil {
+			log.Warningf(ctx, "Database close: Error dumping database contents to disk: %v", err)
+		}
+
+		close(db.scheduleTrigger)
+		db.cleanupAllDistros(ctx)
+	})
+}
+
+// cleanupAllDistros signals all distro task processing goroutines to stop
+// and blocks until all of them have done so.
+func (db *DistroDB) cleanupAllDistros(ctx context.Context) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	var wg sync.WaitGroup
+	for _, d := range db.distros {
+		d := d
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			d.Cleanup(ctx)
+		}()
+	}
+
+	wg.Wait()
+
+	// Leave behind an empty map to avoid operating on stopped distros
+	db.distros = map[string]*distro.Distro{}
 }

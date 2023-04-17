@@ -11,11 +11,3 @@ func (w *Worker) QueueLen() int {
 
 	return len(w.manager.queue)
 }
-
-// WithStopCallback sets a function to be called once the Worker has stopped and
-// task processing has stopped.
-func WithStopCallback(f func()) Option {
-	return func(o *options) {
-		o.stopCallback = f
-	}
-}

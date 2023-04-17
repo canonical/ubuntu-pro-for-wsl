@@ -35,6 +35,7 @@ func TestNew(t *testing.T) {
 
 	db, err := database.New(ctx, t.TempDir(), nil)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
+	defer db.Close(ctx)
 
 	_, err = wslinstance.New(context.Background(), db)
 	require.NoError(t, err, "New should never return an error")
@@ -121,6 +122,7 @@ func TestConnected(t *testing.T) {
 
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
+			defer db.Close(ctx)
 
 			srv, err := newWrappedService(ctx, db)
 			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
