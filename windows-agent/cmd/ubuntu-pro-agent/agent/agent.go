@@ -92,18 +92,21 @@ func New(o ...option) *App {
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve(args ...option) error {
+	ctx := context.TODO()
+
 	var opt options
 	for _, f := range args {
 		f(&opt)
 	}
 
-	proservice, err := proservices.New(context.Background(), proservices.WithCacheDir(opt.proservicesCacheDir))
+	proservice, err := proservices.New(ctx, proservices.WithCacheDir(opt.proservicesCacheDir))
 	if err != nil {
 		close(a.ready)
 		return err
 	}
+	defer proservice.Stop(ctx)
 
-	daemon, err := daemon.New(context.Background(), proservice.RegisterGRPCServices, daemon.WithCacheDir(opt.daemonCacheDir))
+	daemon, err := daemon.New(ctx, proservice.RegisterGRPCServices, daemon.WithCacheDir(opt.daemonCacheDir))
 	if err != nil {
 		close(a.ready)
 		return err
@@ -112,7 +115,7 @@ func (a *App) serve(args ...option) error {
 	a.daemon = &daemon
 	close(a.ready)
 
-	return daemon.Serve(context.Background())
+	return daemon.Serve(ctx)
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.
