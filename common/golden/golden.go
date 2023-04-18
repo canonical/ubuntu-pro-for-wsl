@@ -1,6 +1,6 @@
-// Package testutils implements helper functions for frequently needed functionality
-// in tests.
-package testutils
+// Package golden implements helper functions for golden file and fixture-related
+// functionality in tests.
+package golden
 
 import (
 	"os"
@@ -31,11 +31,11 @@ type goldenOptions struct {
 	goldenPath string
 }
 
-// GoldenOption is a supported option reference to change the golden files comparison.
-type GoldenOption func(*goldenOptions)
+// Option is a supported option reference to change the golden files comparison.
+type Option func(*goldenOptions)
 
 // WithGoldenPath overrides the default path for golden files used.
-func WithGoldenPath(path string) GoldenOption {
+func WithGoldenPath(path string) Option {
 	return func(o *goldenOptions) {
 		if path != "" {
 			o.goldenPath = path
@@ -45,11 +45,11 @@ func WithGoldenPath(path string) GoldenOption {
 
 // LoadWithUpdateFromGolden loads the element from a plaintext golden file.
 // It will update the file if the update flag is used prior to loading it.
-func LoadWithUpdateFromGolden(t *testing.T, data string, opts ...GoldenOption) string {
+func LoadWithUpdateFromGolden(t *testing.T, data string, opts ...Option) string {
 	t.Helper()
 
 	o := goldenOptions{
-		goldenPath: GoldenPath(t),
+		goldenPath: Path(t),
 	}
 
 	for _, opt := range opts {
@@ -77,7 +77,7 @@ func LoadWithUpdateFromGolden(t *testing.T, data string, opts ...GoldenOption) s
 
 // LoadWithUpdateFromGoldenYAML load the generic element from a YAML serialized golden file.
 // It will update the file if the update flag is used prior to deserializing it.
-func LoadWithUpdateFromGoldenYAML[E any](t *testing.T, got E, opts ...GoldenOption) E {
+func LoadWithUpdateFromGoldenYAML[E any](t *testing.T, got E, opts ...Option) E {
 	t.Helper()
 
 	t.Logf("Serializing object for golden file")
@@ -112,8 +112,8 @@ func TestFixturePath(t *testing.T) string {
 	return filepath.Join("testdata", familyName, normalizeName(t, subtestName))
 }
 
-// GoldenPath returns the golden path for the provided test.
-func GoldenPath(t *testing.T) string {
+// Path returns the golden path for the provided test.
+func Path(t *testing.T) string {
 	t.Helper()
 
 	path := filepath.Join(TestFamilyPath(t), "golden")
