@@ -10,8 +10,7 @@ export DH_GOLANG_INSTALL_ALL=1
 	dh $@ --builddirectory=_build --with=apport
 
 execute_after_dh_auto_clean:
-	# Create the vendor directory when building the source package
-	[ -d vendor/ ] || go mod vendor
+	[ -d vendor/ ] || ./debian/update-internal-dependencies && go mod vendor
 
 override_dh_auto_install:
 	dh_auto_install -- --no-source
