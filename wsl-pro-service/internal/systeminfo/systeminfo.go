@@ -58,7 +58,6 @@ func New(args ...Option) System {
 		f(&opts)
 	}
 
-	//nolint:gosimple // Technically, we could do "return System(opts)", but conceptually they are different objects so I'd rather not.
 	return System{
 		backend: opts.backend,
 	}
