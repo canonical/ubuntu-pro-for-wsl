@@ -14,7 +14,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -73,6 +72,7 @@ func (i *InitialTasks) Add(ctx context.Context, t task.Task) error {
 	defer i.mu.Unlock()
 
 	log.Infof(ctx, "Adding %q to list of initial tasks", t)
+	i.tasks = removeDuplicates(i.tasks, t)
 	i.tasks = append(i.tasks, t)
 
 	if err := i.save(); err != nil {
@@ -88,14 +88,7 @@ func (i *InitialTasks) Remove(ctx context.Context, t task.Task) error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	idx := slices.IndexFunc(i.tasks, func(target task.Task) bool { return task.Is(t, target) })
-	if idx == -1 {
-		log.Infof(ctx, "task %q is not in the init task list. Ignoring removal.", t)
-		return nil
-	}
-
-	log.Infof(ctx, "Removing %q to list of initial tasks", t)
-	i.tasks = slices.Delete(i.tasks, idx, idx+1)
+	i.tasks = removeDuplicates(i.tasks, t)
 
 	if err := i.save(); err != nil {
 		return fmt.Errorf("removal of task %q from the init list: %w", t, err)
@@ -122,4 +115,33 @@ func (i *InitialTasks) save() (err error) {
 	}
 
 	return nil
+}
+
+// removeDuplicates removes all tasks that are the same as the target.
+//
+// In order to determine equality, tasks.Is(target, task[i]) is used.
+func removeDuplicates(tasks []task.Task, target task.Task) []task.Task {
+	if len(tasks) == 0 {
+		return tasks
+	}
+
+	// Partition algorithm
+	//
+	// Split the array into two intervals [0, p) and [p, end) such that tasks.Is(target, tasks[i])
+	// is false for all entries in the first interval (i<p), and true for all entries in the second one (i>=p).
+	var p int
+	for i := range tasks {
+		if task.Is(target, tasks[i]) {
+			continue
+		}
+		if i == p {
+			p++
+			continue
+		}
+		tasks[i], tasks[p] = tasks[p], tasks[i]
+		p++
+	}
+
+	// End of partition, remove task duplicates
+	return tasks[:p]
 }

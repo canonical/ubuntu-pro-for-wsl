@@ -126,6 +126,60 @@ func TestAdd(t *testing.T) {
 	}
 }
 
+func TestAddTheSameTaskTwice(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// The tasks to add one by one
+		tasks [3]task.Task
+
+		// The wanted internal list of tasks after adding each task one by one
+		want [3][]task.Task
+	}{
+		"Task with default Is": {
+			tasks: [3]task.Task{
+				unregisteredTask{Data: 5},
+				unregisteredTask{Data: 100},
+				unregisteredTask{Data: 5},
+			}, want: [3][]task.Task{
+				{unregisteredTask{Data: 5}},
+				{unregisteredTask{Data: 5}, unregisteredTask{Data: 100}},
+				{unregisteredTask{Data: 100}, unregisteredTask{Data: 5}},
+			}},
+		"Task with overloaded Is": {
+			tasks: [3]task.Task{
+				unregisteredTaskAlwaysEqual{Data: 5},
+				unregisteredTaskAlwaysEqual{Data: 100},
+				unregisteredTaskAlwaysEqual{Data: 5},
+			}, want: [3][]task.Task{
+				{unregisteredTaskAlwaysEqual{Data: 5}},
+				{unregisteredTaskAlwaysEqual{Data: 100}},
+				{unregisteredTaskAlwaysEqual{Data: 5}},
+			}},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			setUpSaveFile(t, fileIsEmpty, dir)
+
+			it, err := initialtasks.New(dir)
+			require.NoError(t, err, "Setup: could not create initial tasks")
+
+			for i := range tc.tasks {
+				err = it.Add(context.Background(), tc.tasks[i])
+				require.NoErrorf(t, err, "initalTasks.Add should have returned no error after adding task #%d", i+1)
+
+				got := it.Tasks()
+				require.ElementsMatch(t, tc.want[i], got, "Mismatch in tasks after adding task #%d", i+1)
+			}
+		})
+	}
+}
+
 func TestRemove(t *testing.T) {
 	t.Parallel()
 
@@ -316,4 +370,17 @@ func (TaskBoilerplate) Execute(context.Context, wslserviceapi.WSLClient) error {
 
 func (TaskBoilerplate) ShouldRetry() bool {
 	return false
+}
+
+// unregisteredTaskAlwaysEqual is a test task that is always equal to other tasks of
+// the same type. This is accomplished by defining the Is method.
+type unregisteredTaskAlwaysEqual struct {
+	TaskBoilerplate `yaml:"-"`
+
+	Data int
+}
+
+func (t unregisteredTaskAlwaysEqual) Is(other task.Task) bool {
+	_, ok := other.(unregisteredTaskAlwaysEqual)
+	return ok
 }
