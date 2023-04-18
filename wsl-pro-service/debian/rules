@@ -22,5 +22,8 @@ override_dh_auto_install:
 	# Install our service in libexec as it's not intended for end user
 	mv debian/wsl-pro-service/usr/bin/ debian/wsl-pro-service/usr/libexec/
 
+override_dh_auto_test:
+	cd _build && go test -v -parallel=5 github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/...
+
 # dwz does not support golang binaries yet
 override_dh_dwz:
