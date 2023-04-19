@@ -9,3 +9,6 @@ const kAddrFileName = 'addr';
 
 /// The default border margin.
 const kDefaultMargin = 32.0;
+
+/// The consistent duration fur quick animations throughout the app.
+const kQuickAnimationDuration = Duration(milliseconds: 250);
