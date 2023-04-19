@@ -1,0 +1,19 @@
+#!/bin/bash
+set -eu
+
+# Add repo as private
+go env -w GOPRIVATE=github.com/canonical/ubuntu-pro-for-windows
+
+# Find internal dependencies
+url='github\.com\/canonical\/ubuntu-pro-for-windows'
+pattern="s/${url}\/wsl-pro-service \(${url}\/[^@]\+\)@.*/\1/p"
+modules=`go mod graph | sed -n "${pattern}"`
+
+# Get latest version
+commit=`git rev-parse --short HEAD`
+for mod in ${modules} ; do
+    go get "${mod}@${commit}"
+done
+
+# Tidying up
+go mod tidy
