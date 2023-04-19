@@ -5,10 +5,10 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: "98d1d33ed129b372846e862de23a0fc365745f4d7b5e786ce667fcbbb7ac5c07"
+      sha256: a36ec4843dc30ea6bf652bf25e3448db6c5e8bcf4aa55f063a5d1dad216d8214
       url: "https://pub.dev"
     source: hosted
-    version: "55.0.0"
+    version: "58.0.0"
   agentapi:
     dependency: "direct main"
     description:
@@ -20,18 +20,18 @@ packages:
     dependency: transitive
     description:
       name: analyzer
-      sha256: "881348aed9b0b425882c97732629a6a31093c8ff20fc4b3b03fb9d3d50a3a126"
+      sha256: cc4242565347e98424ce9945c819c192ec0838cb9d1f6aa4a97cc96becbc5b27
       url: "https://pub.dev"
     source: hosted
-    version: "5.7.1"
+    version: "5.10.0"
   archive:
     dependency: transitive
     description:
       name: archive
-      sha256: d6347d54a2d8028e0437e3c099f66fdb8ae02c4720c1e7534c9f24c10351f85d
+      sha256: "0c8368c9b3f0abbc193b9d6133649a614204b528982bebc7026372d61677ce3a"
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.6"
+    version: "3.3.7"
   args:
     dependency: transitive
     description:
@@ -432,10 +432,10 @@ packages:
     dependency: "direct main"
     description:
       name: mockito
-      sha256: "2a8a17b82b1bde04d514e75d90d634a0ac23f6cb4991f6098009dd56836aeafe"
+      sha256: dd61809f04da1838a680926de50a9e87385c1de91c6579629c3d1723946e8059
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.2"
+    version: "5.4.0"
   nested:
     dependency: transitive
     description:
@@ -487,10 +487,10 @@ packages:
     dependency: transitive
     description:
       name: pointycastle
-      sha256: db7306cf0249f838d1a24af52b5a5887c5bf7f31d8bb4e827d071dc0939ad346
+      sha256: "7c1e5f0d23c9016c5bbd8b1473d0d3fb3fc851b876046039509e18e0c7485f2c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.6.2"
+    version: "3.7.3"
   pool:
     dependency: transitive
     description:
@@ -644,10 +644,10 @@ packages:
     dependency: "direct main"
     description:
       name: ubuntu_service
-      sha256: "49ce2fd255176a4d108c5c6821ddd54ca430e2a5c7356e758e44d1ba0ed77f45"
+      sha256: "79b81c146c9fb1aedefa4a6f63724405de3aba0f525afe39b72c513df04a8c13"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.1"
+    version: "0.2.2"
   vector_math:
     dependency: transitive
     description:
@@ -668,18 +668,18 @@ packages:
     dependency: transitive
     description:
       name: web_socket_channel
-      sha256: ca49c0bc209c687b887f30527fb6a9d80040b072cc2990f34b9bec3e7663101b
+      sha256: d88238e5eac9a42bb43ca4e721edba3c08c6354d4a53063afaa568516217621b
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.0"
+    version: "2.4.0"
   window_manager:
     dependency: transitive
     description:
       name: window_manager
-      sha256: "492806c69879f0d28e95472bbe5e8d5940ac8c6e99cc07052fe14946974555ba"
+      sha256: "2b2572442b2a5178642730442dc625ac088244f5827b1f0811371b1b7485eb62"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.1"
+    version: "0.3.2"
   yaml:
     dependency: transitive
     description:
@@ -708,10 +708,10 @@ packages:
     dependency: transitive
     description:
       name: yaru_colors
-      sha256: "36c49111b812a00eccab265b613882b7d04f5af486c7163ef2da2344405b841f"
+      sha256: "42814cafa3c4a6876962559ae9d8b9ff088a59635e649e4eae86d35905496063"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.6"
+    version: "0.1.7"
   yaru_icons:
     dependency: transitive
     description:
