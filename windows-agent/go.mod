@@ -3,9 +3,9 @@ module github.com/canonical/ubuntu-pro-for-windows/windows-agent
 go 1.20
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230406100749-ffa5425ad6ea
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420063648-ca210dbe89dd
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230406100749-ffa5425ad6ea
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230420065438-5e70ebcb4d27
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
 	github.com/sirupsen/logrus v1.9.0
