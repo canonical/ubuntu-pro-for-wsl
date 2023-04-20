@@ -1,0 +1,1 @@
+drvfs /mnt/d 9p rw,dirsync,noatime,aname=drvfs;path=C:\;uid=1000;gid=1000;symlinkroot=/mnt/,mmap,access=client,msize=262144,trans=virtio 0 0

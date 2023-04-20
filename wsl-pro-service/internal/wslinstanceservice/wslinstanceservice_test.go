@@ -210,3 +210,4 @@ func (s *controlService) recv() (*agentapi.DistroInfo, error) {
 
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
 func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
+func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }
