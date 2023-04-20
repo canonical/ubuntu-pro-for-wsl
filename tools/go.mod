@@ -3,8 +3,8 @@ module github.com/canonical/ubuntu-pro-for-windows/tools
 go 1.20
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230406100749-ffa5425ad6ea
-	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230406100749-ffa5425ad6ea
+	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230420065438-5e70ebcb4d27
+	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230420065438-5e70ebcb4d27
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
@@ -18,9 +18,9 @@ require (
 )
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230309195548-950dc216ba10 // indirect
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230404152238-73fd12dba9e4 // indirect
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230420065438-5e70ebcb4d27 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -33,6 +33,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

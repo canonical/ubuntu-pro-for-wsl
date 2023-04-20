@@ -3,9 +3,9 @@ module github.com/canonical/ubuntu-pro-for-windows/windows-agent
 go 1.20
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230406100749-ffa5425ad6ea
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420063648-ca210dbe89dd
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230406100749-ffa5425ad6ea
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230420065438-5e70ebcb4d27
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
 	github.com/sirupsen/logrus v1.9.0
@@ -14,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	github.com/ubuntu/gowsl v0.0.0-20230316122856-7330b9a2e761
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/grpc v1.54.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.30.0
