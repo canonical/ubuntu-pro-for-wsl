@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/stretchr/testify/require"
 )
@@ -61,7 +61,7 @@ func TestMarshal(t *testing.T) {
 			require.NoError(t, err, "input task should marshal with no errors")
 
 			// Avoiding LoadWithUpdateFromGoldenYAML to decouple marshalling and unmarshalling
-			want := testutils.LoadWithUpdateFromGolden(t, string(got))
+			want := golden.LoadWithUpdateFromGolden(t, string(got))
 
 			require.Equal(t, want, string(got), "Task was not properly marshaled")
 		})
@@ -96,8 +96,8 @@ func TestUnmarshal(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			data, err := os.ReadFile(testutils.TestFixturePath(t))
-			t.Log(testutils.TestFixturePath(t))
+			data, err := os.ReadFile(golden.TestFixturePath(t))
+			t.Log(golden.TestFixturePath(t))
 
 			require.NoError(t, err, "Setup: could not find fixture")
 

@@ -26,3 +26,7 @@ func (b realBackend) ProExecutable(args ...string) (string, []string) {
 func (b realBackend) WslpathExecutable(args ...string) (string, []string) {
 	return "wslpath", args
 }
+
+func (b realBackend) CmdExe(path string, args ...string) (string, []string) {
+	return path, args
+}

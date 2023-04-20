@@ -1,3 +1,5 @@
+// Package testutils implements helper functions for frequently needed functionality
+// in Windows-Agent tests.
 package testutils
 
 import (
@@ -6,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -35,10 +38,11 @@ func NonRegisteredDistro(t *testing.T) (distroName string, GUID string) {
 func RandomDistroName(t *testing.T) (name string) {
 	t.Helper()
 
-	testFullNormalized := normalizeName(t, strings.ReplaceAll(t.Name(), "/", "--"))
+	p := regexp.MustCompile(`[^a-zA-Z0-9_\-\.]+`)
+	name = p.ReplaceAllString(t.Name(), "_")
 
 	//nolint:gosec // No need to be cryptographically secure
-	return fmt.Sprintf("%s_%s_%d", testDistroPrefix, testFullNormalized, rand.Uint64())
+	return fmt.Sprintf("%s_%s_%d", testDistroPrefix, name, rand.Uint64())
 }
 
 // DistroState returns the state of the distro as specified by wsl.exe. Possible states:

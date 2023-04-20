@@ -35,8 +35,11 @@ type SystemInfoMock struct {
 }
 
 var (
+	// defaultWindowsMount is the default path used in tests to set the windows filesystem mount.
+	defaultWindowsMount = "/mnt/d/"
+
 	// defaultLocalAppDataDir is the default path used in tests to store Windows agent data.
-	defaultLocalAppDataDir = "/mnt/c/Users/TestUser/AppData/Local/"
+	defaultLocalAppDataDir = filepath.Join(defaultWindowsMount, "/mnt/c/Users/TestUser/AppData/Local/")
 
 	// defaultLocalAppDataDir is the default path used in tests to store the address of the Windows Agent service.
 	defaultAddrFile = filepath.Join(defaultLocalAppDataDir, common.LocalAppDataDir, common.ListeningPortFileName)
@@ -46,6 +49,9 @@ var (
 
 	//go:embed filesystem_defaults/resolv.conf
 	defaultResolvConfContents []byte
+
+	//go:embed filesystem_defaults/proc.mounts
+	defaultProcMountsContents []byte
 )
 
 // controlArg Mock-controlling constants.
@@ -68,6 +74,8 @@ const (
 
 	WslpathErr       = "UP4W_WSLPATH_ERR"
 	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
+
+	CmdExeErr = "UP4W_CMDEXE_ERR"
 )
 
 const (
@@ -152,15 +160,9 @@ func (m *SystemInfoMock) mockExec(fauxTestName string, argv ...string) (string, 
 	// Supplanted executable
 	exec := fmt.Sprintf("go test -run ^%s$", fauxTestName)
 
-	// Arguments (with some sanitation to avoid expanding variables)
+	// Arguments
 	for i := range argv {
-		switch argv[i] {
-		case `$(powershell.exe 'echo ${env:LocalAppData}')`:
-			argv[i] = `"\$(powershell.exe 'echo \${env:LocalAppData}')"`
-		default:
-			// Surround with quotes because it'll be all merged into a single string
-			argv[i] = fmt.Sprintf("%q", argv[i])
-		}
+		argv[i] = fmt.Sprintf("%q", argv[i])
 	}
 	args := strings.Join(argv, " ")
 
@@ -181,6 +183,11 @@ func (m *SystemInfoMock) ProExecutable(args ...string) (string, []string) {
 // WslpathExecutable mocks `wslpath $args...`.
 func (m *SystemInfoMock) WslpathExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithWslPathMock", args...)
+}
+
+// CmdExe mocks `cmd.exe $args...`.
+func (m *SystemInfoMock) CmdExe(path string, args ...string) (string, []string) {
+	return m.mockExec("TestWithCmdExeMock", args...)
 }
 
 type exitCode int
@@ -311,7 +318,7 @@ func WslPathMock(t *testing.T) {
 				return exitError
 			}
 
-			if argv[1] != `$(powershell.exe 'echo ${env:LocalAppData}')` {
+			if argv[1] != defaultLocalAppDataDir {
 				fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 				return exitBadUsage
 			}
@@ -328,6 +335,42 @@ func WslPathMock(t *testing.T) {
 			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
+	})
+}
+
+// CmdExeMock mocks the executable for `cmd.exe`.
+// Add it to your package_test with:
+//
+//	func TestWithCmdExeMock(t *testing.T) { testutils.CmdExeMock(t) }
+//
+//nolint:thelper // This is a faux test used to mock the executable `cmd.exe`
+func CmdExeMock(t *testing.T) {
+	if t.Name() != "TestWithCmdExeMock" {
+		panic("The CmdExeMock faux test must be named TestWithCmdExeMock")
+	}
+
+	mockMain(t, func(argv []string) exitCode {
+		if len(argv) != 2 {
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			return exitBadUsage
+		}
+
+		if argv[0] != "/C" {
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			return exitBadUsage
+		}
+
+		if argv[1] != "echo %LocalAppData%" {
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			return exitBadUsage
+		}
+
+		if envExists(CmdExeErr) {
+			return exitError
+		}
+
+		fmt.Fprintln(os.Stdout, defaultLocalAppDataDir)
+		return exitOk
 	})
 }
 
@@ -371,6 +414,7 @@ func mockFilesystemRoot(t *testing.T) (rootDir string) {
 
 	rootDir = t.TempDir()
 
+	// Mock /etc/
 	err := os.MkdirAll(filepath.Join(rootDir, "etc"), 0750)
 	require.NoError(t, err, "Setup: could not create mock /etc/")
 
@@ -380,9 +424,24 @@ func mockFilesystemRoot(t *testing.T) (rootDir string) {
 	err = os.WriteFile(filepath.Join(rootDir, "etc/os-release"), defaultOsReleaseContents, 0600)
 	require.NoError(t, err, "Setup: could not write mock /etc/os-release")
 
+	// Mock /proc/
+	err = os.MkdirAll(filepath.Join(rootDir, "/proc"), 0750)
+	require.NoError(t, err, "Setup: could not create mock /proc/")
+
+	err = os.WriteFile(filepath.Join(rootDir, "/proc/mounts"), defaultProcMountsContents, 0600)
+	require.NoError(t, err, "Setup: could not write mock /proc/mounts")
+
+	// Mock Windows FS
 	portDir := filepath.Join(rootDir, defaultAddrFile)
 	err = os.MkdirAll(filepath.Dir(portDir), 0750)
 	require.NoErrorf(t, err, "Setup: could not create mock %s", portDir)
+
+	system32 := filepath.Join(rootDir, defaultWindowsMount, "WINDOWS/system32")
+	err = os.MkdirAll(system32, 0750)
+	require.NoError(t, err, "Setup: could not create mock system32")
+
+	err = os.WriteFile(filepath.Join(system32, "cmd.exe"), []byte{}, 0600)
+	require.NoError(t, err, "Setup: could not write mock cmd.exe")
 
 	return rootDir
 }

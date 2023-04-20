@@ -17,6 +17,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
@@ -584,7 +585,7 @@ func (d *testDistro) Invalidate(err error) {
 func taskfileFromTemplate[T task.Task](t *testing.T) []byte {
 	t.Helper()
 
-	in, err := os.ReadFile(filepath.Join(testutils.TestFamilyPath(t), "template.tasks"))
+	in, err := os.ReadFile(filepath.Join(golden.TestFamilyPath(t), "template.tasks"))
 	require.NoError(t, err, "Setup: could not read tasks template")
 
 	tmpl := template.Must(template.New(t.Name()).Parse(string(in)))

@@ -3,9 +3,11 @@ package systeminfo_test
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -111,12 +113,25 @@ func TestLocalAppData(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		wslpathErr bool
+		cachedCmdExe      bool
+		cmdExeNotExist    bool
+		cmdExeErr         bool
+		wslpathErr        bool
+		overrideProcMount bool
 
 		wantErr bool
 	}{
-		"success":                {},
-		"error on wslpath error": {wslpathErr: true, wantErr: true},
+		"Success with cached cmd.exe path": {cachedCmdExe: true},
+
+		"Success with a single 9P filesystem mount":        {overrideProcMount: true},
+		"Success with multiple 9P filesystem mounts":       {overrideProcMount: true},
+		"Success with multiple types of filesystem mounts": {overrideProcMount: true},
+
+		"Error finding cmd.exe because there is no /proc/mounts":               {wantErr: true, overrideProcMount: true},
+		"Error finding cmd.exe because there is no Windows FS in /proc/mounts": {wantErr: true, overrideProcMount: true},
+		"Error when cmd.exe does not exist":                                    {cmdExeNotExist: true, overrideProcMount: true, wantErr: true},
+		"Error on cmd.exe error":                                               {cmdExeErr: true, wantErr: true},
+		"Error on wslpath error":                                               {wslpathErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -125,8 +140,23 @@ func TestLocalAppData(t *testing.T) {
 			t.Parallel()
 
 			system, mock := testutils.MockSystemInfo(t)
+			if tc.cmdExeErr {
+				mock.SetControlArg(testutils.CmdExeErr)
+			}
 			if tc.wslpathErr {
 				mock.SetControlArg(testutils.WslpathErr)
+			}
+			if tc.overrideProcMount {
+				overrideProcMount(t, mock)
+			}
+
+			cmdExePath := mock.Path("/mnt/d/WINDOWS/system32/cmd.exe")
+			if tc.cachedCmdExe {
+				cmdExePath = mock.Path("/mnt/z/WINDOWS/system32/cmd.exe")
+				*system.CmdExeCache() = cmdExePath
+			}
+			if tc.cmdExeNotExist {
+				os.RemoveAll(cmdExePath)
 			}
 
 			got, err := system.LocalAppData(context.Background())
@@ -136,10 +166,36 @@ func TestLocalAppData(t *testing.T) {
 			}
 			require.NoError(t, err, "Expected LocalAppData to return no errors")
 
+			// Validating CMD path
+			require.Equal(t, cmdExePath, *system.CmdExeCache(), "Unexpected path for cmd.exe")
+
+			// Validating LocalAppData
 			wantSuffix := `/mnt/c/Users/TestUser/AppData/Local`
 			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by LocalAppData.\nWant suffix: %s\nGot: %s", wantSuffix, got)
 		})
 	}
+}
+
+func overrideProcMount(t *testing.T, mock *testutils.SystemInfoMock) {
+	t.Helper()
+
+	procMount := filepath.Join(golden.TestFixturePath(t), "proc/mounts")
+	if _, err := os.Stat(procMount); err != nil {
+		require.ErrorIsf(t, err, os.ErrNotExist, "Setup: could not stat %q", procMount)
+
+		// If the file is not present, we remove the default
+		t.Log("Removing default proc/mounts")
+		err := os.RemoveAll(mock.Path("/proc/mounts"))
+		require.NoError(t, err, "Setup: could not remove override for /proc/mounts")
+
+		return
+	}
+
+	contents, err := os.ReadFile(procMount)
+	require.NoError(t, err, "Setup: could not read override for /proc/mounts")
+
+	err = os.WriteFile(mock.Path("/proc/mounts"), contents, 0600)
+	require.NoError(t, err, "Setup: could not override /proc/mounts")
 }
 
 func TestProStatus(t *testing.T) {
@@ -280,3 +336,4 @@ func TestProDetach(t *testing.T) {
 
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
 func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
+func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }

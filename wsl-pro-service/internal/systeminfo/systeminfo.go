@@ -3,7 +3,9 @@
 package systeminfo
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -20,6 +22,7 @@ import (
 // constructors.
 type System struct {
 	backend Backend // Not embedding to avoid calling its backend directly
+	cmdExe  string  // Linux path to cmd.exe
 }
 
 // Backend is the engine behind the System object, and defines the interactions
@@ -29,6 +32,7 @@ type Backend interface {
 	GetenvWslDistroName() string
 	ProExecutable(args ...string) (string, []string)
 	WslpathExecutable(args ...string) (string, []string)
+	CmdExe(path string, args ...string) (string, []string)
 }
 
 type options struct {
@@ -54,7 +58,6 @@ func New(args ...Option) System {
 		f(&opts)
 	}
 
-	//nolint:gosimple // Technically, we could do "return System(opts)", but conceptually they are different objects so I'd rather not.
 	return System{
 		backend: opts.backend,
 	}
@@ -139,17 +142,80 @@ func (s System) wslDistroName(ctx context.Context) (string, error) {
 // LocalAppData provides the path to Windows' local app data directory from WSL,
 // usually `/mnt/c/Users/JohnDoe/AppData/Local`.
 func (s *System) LocalAppData(ctx context.Context) (wslPath string, err error) {
-	exe, args := s.backend.WslpathExecutable("-ua", "$(powershell.exe 'echo ${env:LocalAppData}')")
-	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
+	// Find folder where windows is mounted on
+	cmdExe, err := s.findCmdExe()
+	if err != nil {
+		return wslPath, err
+	}
+
+	exe, args := s.backend.CmdExe(cmdExe, "/C", "echo %LocalAppData%")
+	//nolint:gosec //this function simply prepends the WSL path to "cmd.exe" to the args.
 	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
 		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
 	}
-	rawPath := strings.TrimSpace(string(out))
-	return s.Path(rawPath), nil
+
+	// Path from Windows' perspective ( C:\Users\... )
+	// It must be converted to linux ( /mnt/c/Users/... )
+	localAppDataWindows := strings.TrimSpace(string(out))
+
+	exe, args = s.backend.WslpathExecutable("-ua", localAppDataWindows)
+	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
+	out, err = exec.CommandContext(ctx, exe, args...).Output()
+	if err != nil {
+		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
+	}
+	localAppDataLinux := strings.TrimSpace(string(out))
+	return s.Path(localAppDataLinux), nil
 }
 
 // Path converts an absolute path into one inside the mocked filesystem.
 func (s System) Path(path ...string) string {
 	return s.backend.Path(path...)
+}
+
+// findCmdExe looks at all the mounts for those that could be Windows drives,
+// and checks if ${DRIVE}/WINDOWS/system32/cmd.exe exists. If it does, it returns it.
+// Err will be non-nil if the search cannot be conducted or if no such path exists.
+//
+// The result is cached so the search only happens once.
+func (s *System) findCmdExe() (cmdExe string, err error) {
+	// Path can be cached
+	if s.cmdExe != "" {
+		return s.cmdExe, nil
+	}
+	defer func() { s.cmdExe = cmdExe }()
+
+	f, err := os.Open(s.backend.Path("/proc/mounts"))
+	if err != nil {
+		return "", fmt.Errorf("could not read mounts: %v", err)
+	}
+	defer f.Close()
+
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		// Fields: Device | Mount point | FsType | other fields we don't care about
+		fields := strings.Fields(sc.Text())
+		if len(fields) < 3 {
+			continue // Not enough fields
+		}
+
+		// Filesystem type
+		if fields[2] != "9p" {
+			continue
+		}
+
+		path := s.backend.Path(fields[1], "WINDOWS/system32/cmd.exe")
+		if _, err := os.Stat(path); err != nil {
+			continue
+		}
+
+		return path, nil
+	}
+
+	if err := sc.Err(); err != nil {
+		return "", err
+	}
+
+	return "", errors.New("could not find cmd.exe")
 }

@@ -12,6 +12,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
@@ -311,7 +312,7 @@ func TestDatabaseDump(t *testing.T) {
 			sd.anonymise(t)
 
 			// Testing against and optionally updating golden file
-			want := testutils.LoadWithUpdateFromGoldenYAML(t, sd.data)
+			want := golden.LoadWithUpdateFromGoldenYAML(t, sd.data)
 			require.Equal(t, want, sd.data, "Database dump should match expected format")
 
 			// Testing use after close
@@ -585,7 +586,7 @@ type distroID struct {
 func databaseFromTemplate(t *testing.T, dest string, distros ...distroID) {
 	t.Helper()
 
-	in, err := os.ReadFile(filepath.Join(testutils.TestFamilyPath(t), "database_template.yaml"))
+	in, err := os.ReadFile(filepath.Join(golden.TestFamilyPath(t), "database_template.yaml"))
 	require.NoError(t, err, "Setup: could not read database template")
 
 	tmpl := template.Must(template.New(t.Name()).Parse(string(in)))
