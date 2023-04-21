@@ -3,27 +3,42 @@ package systeminfo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
+
+	"gopkg.in/yaml.v3"
 )
 
 // ProStatus returns whether this distro is pro-attached.
-func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
+func (s System) ProStatus(ctx context.Context) (attached bool, services []string, err error) {
 	exe, args := s.backend.ProExecutable("status", "--format=json")
 	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
 	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
-		return false, fmt.Errorf("pro status command returned error: %v\nStdout:%s", err, string(out))
+		return attached, services, fmt.Errorf("pro status command returned error: %v\nStdout:%s", err, string(out))
 	}
 
 	var attachedStatus struct {
 		Attached bool
-	}
-	if err = json.Unmarshal(out, &attachedStatus); err != nil {
-		return false, fmt.Errorf("could not parse output of pro status: %v\nOutput: %s", err, string(out))
+		Services []struct {
+			Name   string
+			Status string
+		}
 	}
 
-	return attachedStatus.Attached, nil
+	if err = json.Unmarshal(out, &attachedStatus); err != nil {
+		return attached, services, fmt.Errorf("could not parse output of pro status: %v\nOutput: %s", err, string(out))
+	}
+
+	for _, s := range attachedStatus.Services {
+		if s.Status != "enabled" {
+			continue
+		}
+		services = append(services, s.Name)
+	}
+
+	return attachedStatus.Attached, services, nil
 }
 
 // ProAttach attaches the current distro to Ubuntu Pro.

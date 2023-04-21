@@ -71,7 +71,7 @@ func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
 		return nil, err
 	}
 
-	pro, err := s.ProStatus(ctx)
+	pro, services, err := s.ProStatus(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not obtain pro status: %v", err)
 	}
@@ -79,6 +79,7 @@ func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
 	info := &agentapi.DistroInfo{
 		WslName:     distroName,
 		ProAttached: pro,
+		ProServices: services,
 	}
 
 	if err := s.fillOsRelease(info); err != nil {

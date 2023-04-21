@@ -234,7 +234,7 @@ func TestProStatus(t *testing.T) {
 				mock.SetControlArg(testutils.ProStatusAttached)
 			}
 
-			got, err := system.ProStatus(context.Background())
+			got, services, err := system.ProStatus(context.Background())
 			if tc.wantErr {
 				require.Error(t, err, "Expected ProStatus to return an error")
 				return
@@ -242,6 +242,9 @@ func TestProStatus(t *testing.T) {
 			require.NoError(t, err, "Expected ProStatus to return no errors")
 
 			require.Equal(t, tc.attached, got, "Unexpected return from ProStatus")
+			if tc.attached {
+				require.ElementsMatch(t, []string{"example-service"}, services, "Unexpected services returned from ProStatus")
+			}
 		})
 	}
 }

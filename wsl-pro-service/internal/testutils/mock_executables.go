@@ -226,7 +226,12 @@ func ProMock(t *testing.T) {
 				return exitOk
 			}
 
-			fmt.Fprintf(os.Stdout, `{"attached": %t, "anotherfield": "potato"}%s`, envExists(ProStatusAttached), "\n")
+			if envExists(ProStatusAttached) {
+				fmt.Fprintln(os.Stdout, `{"attached": true, "services": [{"name": "example-service","status": "enabled"},{"name": "example-disabled-service","status": "disabled"}]}`)
+			} else {
+				fmt.Fprintln(os.Stdout, `{"attached": false, "services": []}`)
+			}
+
 			return exitOk
 
 		case "attach":
