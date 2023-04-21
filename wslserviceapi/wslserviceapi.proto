@@ -6,6 +6,7 @@ package wslserviceapi;
 
 service WSL {
     rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
+    rpc ProServiceEnablement(ProService) returns (Empty) {}
     rpc Ping(Empty) returns (Empty) {}
 }
 
@@ -14,3 +15,8 @@ message ProAttachInfo {
 }
 
 message Empty {}
+
+message ProService {
+    string service = 1;
+    bool enable = 2; // True to enable, false to disable
+}
