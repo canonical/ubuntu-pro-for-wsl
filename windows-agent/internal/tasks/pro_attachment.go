@@ -27,7 +27,7 @@ func (t ProAttachment) Execute(ctx context.Context, client wslserviceapi.WSLClie
 
 // String is needed to fulfil Task.
 func (t ProAttachment) String() string {
-	return "AttachPro"
+	return "ProAttachment"
 }
 
 // ShouldRetry is needed to fulfil Task.
