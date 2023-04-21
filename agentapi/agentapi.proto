@@ -25,6 +25,7 @@ message DistroInfo {
     string version_id = 3;
     string pretty_name = 4;
     bool pro_attached = 5;
+    repeated string pro_services = 6;
 }
 
 message Port {
