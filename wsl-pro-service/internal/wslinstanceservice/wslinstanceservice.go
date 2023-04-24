@@ -80,6 +80,24 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 	return &wslserviceapi.Empty{}, nil
 }
 
+// ProServiceEnablement serves ProServiceEnablement messages sent by the agent.
+func (s *Service) ProServiceEnablement(ctx context.Context, service *wslserviceapi.ProService) (empty *wslserviceapi.Empty, err error) {
+	defer func() {
+		// Regardless of success or failure, we send back an updated system info
+		if e := s.sendInfo(ctx); e != nil {
+			log.Warningf(ctx, "Error in ApplyProToken: %v", e)
+			err = errors.Join(err, e)
+		}
+	}()
+
+	err = s.system.ProEnablement(ctx, service.GetService(), service.GetEnable())
+	if err != nil {
+		return &wslserviceapi.Empty{}, err
+	}
+
+	return &wslserviceapi.Empty{}, nil
+}
+
 func (s *Service) sendInfo(ctx context.Context) error {
 	sysinfo, err := s.system.Info(ctx)
 	if err != nil {

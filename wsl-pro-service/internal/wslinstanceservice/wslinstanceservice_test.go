@@ -74,6 +74,7 @@ func TestApplyProToken(t *testing.T) {
 				VersionId:   "22.04",
 				PrettyName:  "Ubuntu 22.04.1 LTS",
 				ProAttached: true,
+				ProServices: []string{"example-service"},
 			}
 
 			ctrlClient, controlService := newCtrlStream(t, ctx)
@@ -118,6 +119,83 @@ func TestApplyProToken(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "ProAttach call should return no error")
+
+			got, err := controlService.recv()
+			require.NoError(t, err, "ctrlClient should receive an info sent from the wslinstanceservice")
+			require.Equal(t, wantSysInfo, got, "System info sent to agent does not match the expected one")
+		})
+	}
+}
+
+func TestProServiceEnablement(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		proEnableErr      bool
+		proStatusErr      bool
+		getSystemInfoErr  bool
+		ctrlStreamSendErr bool
+
+		wantErr bool
+	}{
+		"Success enabling a service": {},
+
+		"Error when pro enable fails":      {proEnableErr: true, wantErr: true},
+		"Error calling pro status":         {proStatusErr: true, wantErr: true},
+		"Error getting system info":        {getSystemInfoErr: true, wantErr: true},
+		"Error cannot send info to stream": {ctrlStreamSendErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+
+			wantSysInfo := &agentapi.DistroInfo{
+				WslName:     "TEST_DISTRO",
+				Id:          "ubuntu",
+				VersionId:   "22.04",
+				PrettyName:  "Ubuntu 22.04.1 LTS",
+				ProAttached: true,
+				ProServices: []string{"example-service"},
+			}
+
+			ctrlClient, controlService := newCtrlStream(t, ctx)
+			ctrlClient.sendErr = tc.ctrlStreamSendErr
+
+			system, mock := testutils.MockSystemInfo(t)
+
+			if tc.getSystemInfoErr {
+				os.Remove(mock.Path("etc/os-release"))
+			}
+
+			mock.SetControlArg(testutils.ProStatusAttached)
+
+			if tc.proStatusErr {
+				mock.SetControlArg(testutils.ProStatusErr)
+			}
+
+			if tc.proEnableErr {
+				mock.SetControlArg(testutils.ProEnableErr)
+			}
+
+			wslClient := setupWSLInstanceService(t, ctx, ctrlClient, system)
+
+			errCh := make(chan error)
+			go func() {
+				_, err := wslClient.ProServiceEnablement(ctx, &wslserviceapi.ProService{Service: "esm-infra", Enable: true})
+				errCh <- err
+			}()
+
+			err := <-errCh
+			if tc.wantErr {
+				require.Error(t, err, "ProServiceEnablement call should return an error")
+				return
+			}
+			require.NoError(t, err, "ProServiceEnablement call should return no error")
 
 			got, err := controlService.recv()
 			require.NoError(t, err, "ctrlClient should receive an info sent from the wslinstanceservice")
