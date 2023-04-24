@@ -337,6 +337,89 @@ func TestProDetach(t *testing.T) {
 	}
 }
 
+func TestProEnablement(t *testing.T) {
+	t.Parallel()
+
+	type action int
+	const (
+		enable action = iota
+		disable
+	)
+
+	type returns int
+	const (
+		ok = iota
+		err
+		errAlreadyDone
+		errNoExplanation
+		errBadJSON
+	)
+
+	testCases := map[string]struct {
+		action        action
+		proExeReturns returns
+
+		wantErr bool
+	}{
+		"Success enabling a service":  {action: enable},
+		"Success disabling a service": {action: disable},
+
+		"Success enabling a service that was already enabled":   {action: enable, proExeReturns: errAlreadyDone},
+		"Success disabling a service that was already disabled": {action: disable, proExeReturns: errAlreadyDone},
+
+		"Error when pro enable returns an error":  {action: enable, proExeReturns: err, wantErr: true},
+		"Error when pro disable returns an error": {action: disable, proExeReturns: err, wantErr: true},
+
+		"Error when pro enable returns an unexplained error":  {action: enable, proExeReturns: errNoExplanation, wantErr: true},
+		"Error when pro disable returns an unexplained error": {action: disable, proExeReturns: errNoExplanation, wantErr: true},
+
+		"Error when pro enable returns an error with bad JSON":  {action: enable, proExeReturns: errBadJSON, wantErr: true},
+		"Error when pro disable returns an error with bad JSON": {action: disable, proExeReturns: errBadJSON, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			system, mock := testutils.MockSystemInfo(t)
+			switch tc.proExeReturns {
+			case ok:
+			case err:
+				mock.SetControlArg(testutils.ProEnableErr)
+				mock.SetControlArg(testutils.ProDisableErr)
+			case errBadJSON:
+				mock.SetControlArg(testutils.ProEnableErrBadJSON)
+				mock.SetControlArg(testutils.ProDisableErrBadJSON)
+			case errNoExplanation:
+				mock.SetControlArg(testutils.ProEnableErrNoReason)
+				mock.SetControlArg(testutils.ProDisableErrNoReason)
+			case errAlreadyDone:
+				mock.SetControlArg(testutils.ProEnableErrAlreadyEnabled)
+				mock.SetControlArg(testutils.ProDisableErrAlreadyDisabled)
+			default:
+				require.Fail(t, "Setup: unknown enum value %v for proExeReturns", tc.proExeReturns)
+			}
+
+			var err error
+			switch tc.action {
+			case enable:
+				err = system.ProEnablement(context.Background(), "esm-infra", true)
+			case disable:
+				err = system.ProEnablement(context.Background(), "esm-infra", false)
+			default:
+				require.Fail(t, "Setup: unknown enum value %v for afterState", tc.action)
+			}
+
+			if tc.wantErr {
+				require.Error(t, err, "ProEnablement should return an error")
+				return
+			}
+			require.NoError(t, err, "ProEnablement should return no error")
+		})
+	}
+}
+
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
 func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
 func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }

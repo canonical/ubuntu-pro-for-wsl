@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"gopkg.in/yaml.v3"
+	"github.com/ubuntu/decorate"
 )
 
 // ProStatus returns whether this distro is pro-attached.
@@ -89,4 +89,58 @@ func (s *System) ProDetach(ctx context.Context) error {
 		return fmt.Errorf("command returned error: %s: %s", detachedError.Errors[0].MessageCode, detachedError.Errors[0].Message)
 	}
 	return nil
+}
+
+// ProEnablement enables or disables a Ubuntu Pro service.
+func (s *System) ProEnablement(ctx context.Context, service string, enable bool) (err error) {
+	verb := "enable"
+	if !enable {
+		verb = "disable"
+	}
+	defer decorate.OnError(&err, "could not %v service %q", verb, service)
+
+	cmd, args := s.backend.ProExecutable(verb, service, "--assume-yes", "--format=json")
+	//nolint:gosec // In production code, these variables are hard-coded (except for the service).
+	out, err := exec.CommandContext(ctx, cmd, args...).Output()
+	if err == nil {
+		return nil
+	}
+
+	// pro enable/disable returns error if the service was already enabled/disabled.
+	// We want this function to be indempotent so we must catch these cases and return no error.
+	var response struct {
+		Errors []struct {
+			MessageCode string `json:"message_code"`
+			Message     string
+		}
+	}
+
+	if e := json.Unmarshal(out, &response); e != nil {
+		return errors.Join(
+			fmt.Errorf("error: %v. Stdout: %s", err, string(out)),
+			fmt.Errorf("could not parse json: %v", e),
+		)
+	}
+
+	if len(response.Errors) == 0 {
+		return errors.Join(
+			fmt.Errorf("error: %v. Stdout: %s", err, string(out)),
+			errors.New("no errors specified in response"),
+		)
+	}
+
+	target := "service-already-enabled"
+	if !enable {
+		target = "service-already-disabled"
+	}
+
+	err = nil
+	for _, e := range response.Errors {
+		if e.MessageCode == target {
+			return nil
+		}
+		err = errors.Join(err, fmt.Errorf("%s: %s", e.MessageCode, e.Message))
+	}
+
+	return err
 }

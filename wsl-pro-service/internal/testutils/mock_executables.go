@@ -72,6 +72,16 @@ const (
 	ProDetachErrGeneric         = "UP4W_PRO_DETACH_ERR_GENERIC"
 	ProDetachErrNoReason        = "UP4W_PRO_DETACH_ERR_UNKNOWN"
 
+	ProEnableErr               = "UP4W_PRO_ENABLE_ERR"
+	ProEnableErrAlreadyEnabled = "UP4W_PRO_ENABLE_ENABLED"
+	ProEnableErrBadJSON        = "UP4W_PRO_ENABLE_ERR_BAD_JSON"
+	ProEnableErrNoReason       = "UP4W_PRO_ENABLE_ERR_UNEXPLAINED"
+
+	ProDisableErr                = "UP4W_PRO_DISABLE_ERR"
+	ProDisableErrAlreadyDisabled = "UP4W_PRO_DISABLE_DISABLED"
+	ProDisableErrBadJSON         = "UP4W_PRO_DISABLE_ERR_BAD_JSON"
+	ProDisableErrNoReason        = "UP4W_PRO_DISABLE_ERR_UNEXPLAINED"
+
 	WslpathErr       = "UP4W_WSLPATH_ERR"
 	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
 
@@ -265,6 +275,62 @@ func ProMock(t *testing.T) {
 				return exitError
 			}
 
+			return exitOk
+		case "enable":
+			if len(argv) == 1 {
+				fmt.Fprintln(os.Stderr, "'pro enable' command expects arguments")
+				return exitBadUsage
+			}
+
+			if envExists(ProEnableErrBadJSON) {
+				fmt.Fprintln(os.Stdout, "This error is produced by a mock instructed to fail on pro enable.\nAlso, this is not valid JSON")
+				return exitError
+			}
+
+			if envExists(ProEnableErrNoReason) {
+				fmt.Fprintln(os.Stdout, `{"errors": [], "processed_services": [], "result": "failure"}`)
+				return exitError
+			}
+
+			if envExists(ProEnableErr) {
+				fmt.Fprintln(os.Stdout, `{"errors": [{"message": "This error is produced by a mock instructed to fail on pro enable", "message_code": "mock_error"}]}`)
+				return exitError
+			}
+
+			if envExists(ProEnableErrAlreadyEnabled) {
+				fmt.Fprintln(os.Stdout, `{"_schema_version": "0.1", "errors": [{"message": "Ubuntu Pro: ESM Infra is already enabled.\nSee: sudo pro status", "message_code": "service-already-enabled", "service": "esm-infra", "type": "service"}], "failed_services": ["esm-infra"], "needs_reboot": false, "processed_services": [], "result": "failure", "warnings": []}`)
+				return exitError
+			}
+
+			fmt.Fprintf(os.Stdout, `{"errors": [], "processed_services": [%q], "result": "success"}%s`, argv[1], "\n")
+			return exitOk
+		case "disable":
+			if len(argv) == 1 {
+				fmt.Fprintln(os.Stderr, "'pro disable' command expects arguments")
+				return exitBadUsage
+			}
+
+			if envExists(ProDisableErrBadJSON) {
+				fmt.Fprintln(os.Stdout, "This error is produced by a mock instructed to fail on pro disable.\nAlso, this is not valid JSON")
+				return exitError
+			}
+
+			if envExists(ProDisableErrNoReason) {
+				fmt.Fprintln(os.Stdout, `{"errors": [], "processed_services": [], "result": "failure"}`)
+				return exitError
+			}
+
+			if envExists(ProDisableErr) {
+				fmt.Fprintln(os.Stdout, `{"errors": [{"message": "This error is produced by a mock instructed to fail on pro disable", "message_code": "mock_error"}]}`)
+				return exitError
+			}
+
+			if envExists(ProDisableErrAlreadyDisabled) {
+				fmt.Fprintln(os.Stdout, `{"_schema_version": "0.1", "errors": [{"message": "Ubuntu Pro: ESM Infra is not currently enabled\nSee: sudo pro status", "message_code": "service-already-disabled", "service": "esm-infra", "type": "service"}], "failed_services": ["esm-infra"], "needs_reboot": false, "processed_services": [], "result": "failure", "warnings": []}`)
+				return exitError
+			}
+
+			fmt.Fprintf(os.Stdout, `{"errors": [], "processed_services": [%q], "result": "success"}%s`, argv[1], "\n")
 			return exitOk
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown verb %q", argv[0])
