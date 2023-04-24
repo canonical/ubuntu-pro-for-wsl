@@ -9,6 +9,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 )
@@ -36,15 +37,25 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.Token
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
-	task := tasks.ProAttachment{Token: token}
-	if err := s.initialTasks.Add(ctx, task); err != nil {
-		return nil, err
+	tasks := []task.Task{
+		tasks.ProAttachment{Token: token},
+
+		// TODO: Be more fine grained (Only LTS can apply ESM services)
+		tasks.ProEnablement{Service: "esm-infra", Enable: true},
+		tasks.ProEnablement{Service: "esm-apps", Enable: true},
+		tasks.ProEnablement{Service: "usg", Enable: true},
+	}
+
+	for i := range tasks {
+		if err := s.initialTasks.Add(ctx, tasks[i]); err != nil {
+			return nil, err
+		}
 	}
 
 	distros := s.db.GetAll()
 	var err error
 	for _, d := range distros {
-		err = errors.Join(err, d.SubmitTasks(task))
+		err = errors.Join(err, d.SubmitTasks(tasks...))
 	}
 
 	if err != nil {
