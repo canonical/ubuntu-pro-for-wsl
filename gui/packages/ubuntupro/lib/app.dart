@@ -18,7 +18,7 @@ class Pro4WindowsApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        onGenerateTitle: (context) => kAppName,
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         routes: const {
           '/': EnterProTokenPage.create,
         },
