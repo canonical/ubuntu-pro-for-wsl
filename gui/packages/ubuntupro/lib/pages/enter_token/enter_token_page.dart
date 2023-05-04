@@ -45,7 +45,6 @@ class EnterProTokenPage extends StatelessWidget {
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               SizedBox(
                 width: textFieldWidth(context),
