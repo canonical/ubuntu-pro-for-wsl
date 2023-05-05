@@ -15,7 +15,7 @@ require (
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	github.com/ubuntu/gowsl v0.0.0-20230316122856-7330b9a2e761
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	google.golang.org/grpc v1.54.0
+	google.golang.org/grpc v1.55.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -39,6 +39,6 @@ require (
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
