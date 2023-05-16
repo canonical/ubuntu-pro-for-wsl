@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"gopkg.in/yaml.v3"
 )
@@ -34,8 +34,8 @@ type DistroDB struct {
 
 	scheduleTrigger chan struct{}
 
-	storageDir   string
-	initialTasks *initialtasks.InitialTasks
+	storageDir string
+	conf       *config.Config
 
 	ctx       context.Context
 	cancelCtx func()
@@ -53,7 +53,7 @@ type DistroDB struct {
 // Every certain amount of times, the database wil purge all distros that
 // are no longer registered or that have been marked as unreachable. This
 // cleanup can be triggered on demmand with TriggerCleanup.
-func New(ctx context.Context, storageDir string, initialTasks *initialtasks.InitialTasks) (*DistroDB, error) {
+func New(ctx context.Context, storageDir string, conf *config.Config) (*DistroDB, error) {
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
 		return nil, fmt.Errorf("could not create database directory: %w", err)
 	}
@@ -69,7 +69,7 @@ func New(ctx context.Context, storageDir string, initialTasks *initialtasks.Init
 	db := &DistroDB{
 		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
-		initialTasks:    initialTasks,
+		conf:            conf,
 		ctx:             ctx,
 		cancelCtx:       cancel,
 	}
@@ -147,7 +147,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithConfig(db.conf))
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +165,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		go d.Cleanup(ctx)
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithInitialTasks(db.initialTasks))
+		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithConfig(db.conf))
 		if err != nil {
 			return nil, err
 		}

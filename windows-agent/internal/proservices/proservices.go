@@ -9,15 +9,12 @@ import (
 
 	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
-	// Importing tasks so they are registered and initialTasks can load them.
-	// TODO: as soon as we use any task anywhere in the windows agent, this will no longer be necessary.
-	_ "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"google.golang.org/grpc"
 )
 
@@ -49,7 +46,7 @@ func WithCacheDir(cachedir string) func(o *options) {
 // It instantiates both ui and wsl instance services.
 //
 // Once done, Stop must be called to deallocate resources.
-func New(ctx context.Context, args ...Option) (s Manager, err error) {
+func New(ctx context.Context, config *config.Config, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	// Apply given options.
@@ -74,12 +71,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
-	initTasks, err := initialtasks.New(opts.cacheDir)
-	if err != nil {
-		return s, err
-	}
-
-	db, err := database.New(ctx, opts.cacheDir, initTasks)
+	db, err := database.New(ctx, opts.cacheDir, config)
 	if err != nil {
 		return s, err
 	}
@@ -89,7 +81,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		}
 	}()
 
-	uiService := ui.New(ctx, db, initTasks)
+	uiService := ui.New(ctx, config, db)
 	wslInstanceService, err := wslinstance.New(ctx, db)
 	if err != nil {
 		return s, err

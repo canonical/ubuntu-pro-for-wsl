@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
 	log "github.com/sirupsen/logrus"
@@ -38,6 +40,7 @@ func TestNew(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+			ctx := context.Background()
 			dir := t.TempDir()
 
 			if tc.breakMkDir {
@@ -52,9 +55,11 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
 			}
 
-			s, err := proservices.New(context.Background(), proservices.WithCacheDir(dir))
+			conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+
+			s, err := proservices.New(ctx, conf, proservices.WithCacheDir(dir))
 			if err == nil {
-				defer s.Stop(context.Background())
+				defer s.Stop(ctx)
 			}
 
 			if tc.wantErr {
@@ -72,7 +77,9 @@ func TestRegisterGRPCServices(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	ps, err := proservices.New(ctx, proservices.WithCacheDir(t.TempDir()))
+	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+
+	ps, err := proservices.New(ctx, conf, proservices.WithCacheDir(t.TempDir()))
 	require.NoError(t, err, "Setup: New should return no error")
 	defer ps.Stop(ctx)
 

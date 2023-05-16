@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -38,17 +38,17 @@ type Worker struct {
 }
 
 type options struct {
-	initialTasks *initialtasks.InitialTasks
+	conf *config.Config
 }
 
 // Option is an optional argument for worker.New.
 type Option func(*options)
 
-// WithInitialTasks is an optional parameter for worker.New that allows for
-// conditionally importing initial tasks.
-func WithInitialTasks(init *initialtasks.InitialTasks) Option {
+// WithConfig is an optional parameter for worker.New that allows for
+// conditionally importing the provisioning tasks.
+func WithConfig(conf *config.Config) Option {
 	return func(o *options) {
-		o.initialTasks = init
+		o.conf = conf
 	}
 }
 
@@ -73,8 +73,17 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 
 	w.start(ctx)
 
-	// load and submit initial tasks if they were passed to us. (case of first contact with distro)
-	if err := w.SubmitTasks(opts.initialTasks.All()...); err != nil {
+	// load and submit provisioning tasks. (case of first contact with distro)
+	if opts.conf == nil {
+		return w, nil
+	}
+
+	provisioning, err := opts.conf.ProvisioningTasks(ctx)
+	if err != nil {
+		return w, err
+	}
+
+	if err := w.SubmitTasks(provisioning...); err != nil {
 		w.Stop(ctx)
 		return nil, err
 	}

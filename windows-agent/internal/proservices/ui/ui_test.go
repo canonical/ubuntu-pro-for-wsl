@@ -5,11 +5,10 @@ import (
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/configmanager"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
@@ -25,10 +24,10 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	initTasks, err := initialtasks.New(dir)
-	require.NoError(t, err, "Setup: initial tasks New() should return no error")
+	config, err := configmanager.New(ctx, configmanager.WithRegistry(registry.NewMock()))
+	require.NoError(t, err, "Setup: configmanager New() should return no error")
 
-	_ = ui.New(context.Background(), db, initTasks)
+	_ = ui.New(context.Background(), config, db)
 }
 
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
@@ -71,17 +70,18 @@ func TestAttachPro(t *testing.T) {
 				defer d.Cleanup(ctx)
 			}
 
-			initTasks, err := initialtasks.New(dir)
-			require.NoError(t, err, "Setup: initial tasks New() should return no error")
-			serv := ui.New(context.Background(), db, initTasks)
+			conf, err := configmanager.New(ctx)
+			require.NoError(t, err, "Setup: configmanager New() should return no error")
+			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}
 			_, err = serv.ApplyProToken(context.Background(), &info)
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 
 			// Could it be nice to retrieve the distro's pending tasks?
-			it := initTasks.All()
-			require.ElementsMatch(t, it, []tasks.ProAttachment{{Token: tc.token}}, "Only one task should have been added")
+			token, err := conf.ProToken()
+			require.NoError(t, err, "conf.ProToken should return no error")
+			require.ElementsMatch(t, tc.token, token, "mismatch between submitted and retrieved tokens")
 		})
 	}
 }
