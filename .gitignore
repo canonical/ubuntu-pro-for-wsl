@@ -28,3 +28,7 @@ wsl-pro-service/debian/wsl-pro-service
 
 # Localization
 *.mo
+
+# Visual Studio and CMake
+.vs/
+out/
