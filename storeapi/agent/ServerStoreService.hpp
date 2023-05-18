@@ -10,7 +10,7 @@ namespace StoreApi {
 // Models the interesting user information the application can correlate
 // when talking to external business servers about the subscription.
 struct UserInfo {
-  // The user ID that must be tracked in the Contract Server.
+  // The user ID that should be tracked in the Contract Server.
   winrt::hstring id;
 
   // An asynchronous factory returning [UserInfo] of the current user.

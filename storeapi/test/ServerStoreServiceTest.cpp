@@ -6,10 +6,14 @@
 
 namespace StoreApi {
 
-TEST(UserInfo, NeverEmpty) {
+using namespace ::testing;
+
+TEST(UserInfo, PredictableSizes) {
   auto user = UserInfo::Current().get();
-  EXPECT_NE(user.id.size(), 0);
-  std::cerr << winrt::to_string(user.id) << '\n';
+  auto size = user.id.size();
+  EXPECT_TRUE(size == 0 || size == 64)
+      << "User ID of unexpected size: " << size << " <"
+      << winrt::to_string(user.id) << '\n';
 }
 
 TEST(ServerStoreService, EmptyJwtThrows) {
