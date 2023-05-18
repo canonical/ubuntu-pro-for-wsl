@@ -103,6 +103,21 @@ jobs:
         with:
           files-to-validate: '${{ matrix.package }}/**/*.dart'
 
+  quality-cpp:
+    name: "C++ Quality Checks"
+    runs-on: windows-latest
+    steps:
+      - name: Set up git
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: C++ QA
+        uses: ./.github/actions/cpp-qa/
+        with:
+          subproject-dir: 'storeapi/test'
+
   tests-go-with-mocks:
     name: "Run Go tests with mocks"
     strategy:
