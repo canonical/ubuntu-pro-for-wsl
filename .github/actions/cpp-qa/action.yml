@@ -20,9 +20,8 @@ runs:
       working-directory:  ${{ inputs.subproject-dir }}
       shell: powershell
       run: |
-        Write-Output $PWD
         cmake -E make_directory ${{ inputs.build-dir }}
-        cmake -S . -B ${{ inputs.build-dir }} -DCMAKE_BUILD_TYPE=${{ inputs.config }}
+        cmake -S . -B ${{ inputs.build-dir }} -DCMAKE_BUILD_TYPE=${{ inputs.config }} --debug-output
     - name: Run tests
       working-directory:  ${{ inputs.subproject-dir }}
       shell: powershell
