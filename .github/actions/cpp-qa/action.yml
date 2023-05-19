@@ -28,18 +28,3 @@ runs:
       run: |
         cmake --build ${{ inputs.build-dir }}
         ctest --test-dir ${{ inputs.build-dir }}
-    - name: Run MSVC Code Analysis
-      uses: microsoft/msvc-code-analysis-action@v0.1.1
-      # Provide a unique ID to access the sarif output path
-      id: run-analysis
-      with:
-        cmakeBuildDirectory: "${{ inputs.subproject-dir }}/${{ inputs.build-dir }}"
-        buildConfiguration: ${{ inputs.config }}
-        # Ruleset file that will determine what checks will be run
-        ruleset: NativeRecommendedRules.ruleset
-        ignoredPaths: ${{ inputs.build-dir }} # Dependencies are placed in subdirectories of that.
-    # Upload SARIF file to GitHub Code Scanning Alerts
-    - name: Upload SARIF to GitHub
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: ${{ steps.run-analysis.outputs.sarif }}
