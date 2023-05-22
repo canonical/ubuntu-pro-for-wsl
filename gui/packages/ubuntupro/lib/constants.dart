@@ -10,8 +10,5 @@ const kAddrFileName = 'addr';
 /// The default border margin.
 const kDefaultMargin = 32.0;
 
-/// The consistent duration fur quick animations throughout the app.
-const kQuickAnimationDuration = Duration(milliseconds: 250);
-
 /// The path of the agent executable relative to the msix root directory.
 const kAgentRelativePath = 'agent/ubuntu-pro-agent.exe';

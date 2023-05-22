@@ -114,7 +114,7 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
       child: AnimatedSwitcher(
         switchInCurve: Curves.easeInExpo,
         switchOutCurve: Curves.easeOutExpo,
-        duration: kQuickAnimationDuration,
+        duration: kThemeAnimationDuration,
         child: buildChild(model.view, model.message(lang)),
       ),
     );
