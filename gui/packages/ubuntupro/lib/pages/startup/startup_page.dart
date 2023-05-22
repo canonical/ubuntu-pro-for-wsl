@@ -14,46 +14,23 @@ part 'startup_widgets.dart';
 /// A widget that decouples the instantiation of a [StartupModel] and its
 /// consumer [StartupAnimatedChild] while offering the caller the [onClient] callback to
 /// be executed when/if the [AgentApiClient] is made available by the view-model.
-class StartupPage extends StatefulWidget {
+class StartupPage extends StatelessWidget {
   const StartupPage({
     super.key,
-    required this.launcher,
     required this.nextRoute,
-    required this.clientFactory,
-    required this.onClient,
   });
-  final AgentLauncher launcher;
-  final ApiClientFactory clientFactory;
+
   final String nextRoute;
-  final void Function(AgentApiClient) onClient;
-
-  @override
-  State<StartupPage> createState() => _StartupPageState();
-}
-
-class _StartupPageState extends State<StartupPage> {
-  late AgentStartupMonitor monitor;
-  @override
-  void initState() {
-    super.initState();
-    monitor = AgentStartupMonitor(
-      appName: kAppName,
-      addrFileName: kAddrFileName,
-      agentLauncher: widget.launcher,
-      clientFactory: widget.clientFactory,
-      onClient: widget.onClient,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<StartupModel>(
       create: (context) {
+        final monitor = context.read<AgentStartupMonitor>();
         final model = StartupModel(monitor);
-        model.init();
         return model;
       },
-      child: StartupAnimatedChild(nextRoute: widget.nextRoute),
+      child: StartupAnimatedChild(nextRoute: nextRoute),
     );
   }
 }
@@ -76,6 +53,7 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
   void initState() {
     super.initState();
     final model = context.read<StartupModel>();
+    model.init();
     model.addListener(() {
       if (model.view == ViewState.ok) {
         Navigator.of(context).pushReplacementNamed(widget.nextRoute);

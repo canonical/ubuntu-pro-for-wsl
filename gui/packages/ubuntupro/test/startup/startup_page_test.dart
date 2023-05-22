@@ -116,14 +116,8 @@ void main() {
     // Builds a less trivial app using the higher level Startup widget
     // to evaluate whether the instantiation of the model happens.
     final app = MaterialApp(
-      home: StartupPage(
-        launcher: () async {
-          /// A launch request will always succeed.
-          return true;
-        },
+      home: const StartupPage(
         nextRoute: '/next',
-        clientFactory: (port) => mockClient,
-        onClient: (_) {},
       ),
       routes: {'/next': (_) => const Text(lastText)},
       localizationsDelegates: AppLocalizations.localizationsDelegates,
