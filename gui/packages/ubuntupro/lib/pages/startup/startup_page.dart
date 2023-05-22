@@ -95,7 +95,7 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
         return _StartupRetryWidget(
           message: message,
           retry: OutlinedButton(
-            onPressed: () => context.read<StartupModel>().resetAgent(),
+            onPressed: context.read<StartupModel>().resetAgent,
             child: Text(AppLocalizations.of(context).agentRetryButton),
           ),
         );
