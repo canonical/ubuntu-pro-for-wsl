@@ -10,9 +10,20 @@ class MethodChannelP4wMsStore extends P4wMsStorePlatform {
   final methodChannel = const MethodChannel('p4w_ms_store');
 
   @override
-  Future<String?> getPlatformVersion() async {
-    final version =
-        await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
+  Future<PurchaseStatus> purchaseSubscription(String productId) async {
+    final enumIndex = await methodChannel.invokeMethod<int>(
+      'purchaseSubscription', // the method being invoked
+      productId, // its arguments.
+    );
+    // Should never happen.
+    if (enumIndex == null || enumIndex < 0) {
+      throw PlatformException(code: 'invalid status $enumIndex');
+    }
+    // Ideally shouldn't happen, but depends on code being in sync.
+    if (enumIndex >= PurchaseStatus.values.length) {
+      throw PlatformException(code: 'possible mismatched status $enumIndex');
+    }
+
+    return PurchaseStatus.values[enumIndex];
   }
 }
