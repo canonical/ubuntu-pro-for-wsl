@@ -19,7 +19,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,8 +32,6 @@ dependencies:
   agentapi:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-windows
-      # TODO: remove this ref line once PR #33 is merged.
-      ref: dart-grpc-wsl-429
       path: agentapi/dart
   base_x: ^2.0.0
   crypto: ^3.0.2
@@ -42,7 +41,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   grpc: ^3.1.0
-  intl: ^0.17.0
+  intl: ^0.18.0
   mockito: ^5.3.0
   p4w_ms_store:
     git:
@@ -51,7 +50,7 @@ dependencies:
   path: ^1.8.0
   provider: ^6.0.5
   ubuntu_service: ^0.2.1
-  yaru: ^0.5.7
+  yaru: ^0.7.0
   yaru_widgets: ^2.2.1
 
 dev_dependencies:

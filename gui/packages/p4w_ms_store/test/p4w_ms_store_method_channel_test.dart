@@ -6,16 +6,17 @@ void main() {
   final platform = MethodChannelP4wMsStore();
   const channel = MethodChannel('p4w_ms_store');
 
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    channel.setMockMethodCallHandler((methodCall) async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (methodCall) async {
       return '42';
     });
   });
 
   tearDown(() {
-    channel.setMockMethodCallHandler(null);
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
   });
 
   test('getPlatformVersion', () async {

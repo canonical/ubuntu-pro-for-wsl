@@ -96,7 +96,7 @@ jobs:
       - name: Flutter QA
         uses: ./.github/actions/flutter-qa/
         with:
-          flutter-version: '3.7.x'
+          flutter-version: '3.10.x'
           package-dir: '${{ matrix.package }}'
           run-build-runner: ${{ contains(matrix.package, 'ubuntupro') }}
       - uses: ./.github/actions/check-diff
