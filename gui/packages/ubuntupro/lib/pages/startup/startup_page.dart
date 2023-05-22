@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import '../../constants.dart';
 import '../../core/agent_api_client.dart';
-import '../widgets/page_widgets.dart';
 import 'agent_monitor.dart';
-
 import 'startup_model.dart';
-
-part 'startup_widgets.dart';
+import 'startup_widgets.dart';
 
 /// A widget that decouples the instantiation of a [StartupModel] and its
 /// consumer [StartupAnimatedChild] while offering the caller the [onClient] callback to
@@ -64,13 +60,13 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
   Widget buildChild(ViewState view, String message) {
     switch (view) {
       case ViewState.inProgress:
-        return _StartupInProgressWidget(message);
+        return StartupInProgressWidget(message);
 
       case ViewState.ok:
         return const SizedBox.shrink();
 
       case ViewState.retry:
-        return _StartupRetryWidget(
+        return StartupRetryWidget(
           message: message,
           retry: OutlinedButton(
             onPressed: context.read<StartupModel>().resetAgent,
@@ -79,7 +75,7 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
         );
 
       case ViewState.crash:
-        return _StartupErrorWidget(message);
+        return StartupErrorWidget(message);
     }
   }
 

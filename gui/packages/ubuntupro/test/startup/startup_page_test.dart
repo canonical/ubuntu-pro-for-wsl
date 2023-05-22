@@ -116,8 +116,18 @@ void main() {
     // Builds a less trivial app using the higher level Startup widget
     // to evaluate whether the instantiation of the model happens.
     final app = MaterialApp(
-      home: const StartupPage(
-        nextRoute: '/next',
+      home: Provider<AgentStartupMonitor>(
+        create: (context) => AgentStartupMonitor(
+          appName: 'app name',
+          addrFileName: 'anywhere',
+          agentLauncher: () async => true,
+          clientFactory: (port) =>
+              AgentApiClient(host: 'localhost', port: port),
+          onClient: (_) {},
+        ),
+        child: const StartupPage(
+          nextRoute: '/next',
+        ),
       ),
       routes: {'/next': (_) => const Text(lastText)},
       localizationsDelegates: AppLocalizations.localizationsDelegates,
