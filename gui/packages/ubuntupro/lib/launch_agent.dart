@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 /// Starts the Windows background agent from its well-known location relative
@@ -25,7 +26,7 @@ Future<bool> launchAgent(String agentRelativePath) async {
   } on ProcessException catch (err) {
     // TODO: Proper logging.
     //ignore: avoid_print
-    print(err);
+    debugPrint(err.message);
     return false;
   }
 }
