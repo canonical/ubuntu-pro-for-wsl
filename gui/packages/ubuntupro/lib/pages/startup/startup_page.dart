@@ -115,8 +115,33 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
         switchInCurve: Curves.easeInExpo,
         switchOutCurve: Curves.easeOutExpo,
         duration: kThemeAnimationDuration,
-        child: buildChild(model.view, model.message(lang)),
+        child: buildChild(model.view, model.details.localize(lang)),
       ),
     );
+  }
+}
+
+extension AgentStateL10n on AgentState {
+  /// Allows representing the [AgentState] enum as a translatable String.
+  String localize(AppLocalizations lang) {
+    switch (this) {
+      case AgentState.starting:
+        return lang.agentStateStarting;
+      case AgentState.pingNonResponsive:
+        return lang.agentStatePingNonResponsive;
+      case AgentState.invalid:
+        return lang.agentStateInvalid;
+      case AgentState.cannotStart:
+        return lang.agentStateCannotStart;
+      case AgentState.unknownEnv:
+        return lang.agentStateUnknownEnv;
+      case AgentState.querying:
+        return lang.agentStateQuerying;
+      case AgentState.unreachable:
+        return lang.agentStateUnreachable;
+      case AgentState.ok:
+        // This state should not need translations.
+        return '';
+    }
   }
 }

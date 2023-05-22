@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'agent_monitor.dart';
 
@@ -29,29 +28,6 @@ extension ViewStateX on AgentState {
         return ViewState.ok;
     }
   }
-
-  /// Allows representing the [AgentState] enum as a translatable String.
-  String localize(AppLocalizations lang) {
-    switch (this) {
-      case AgentState.starting:
-        return lang.agentStateStarting;
-      case AgentState.pingNonResponsive:
-        return lang.agentStatePingNonResponsive;
-      case AgentState.invalid:
-        return lang.agentStateInvalid;
-      case AgentState.cannotStart:
-        return lang.agentStateCannotStart;
-      case AgentState.unknownEnv:
-        return lang.agentStateUnknownEnv;
-      case AgentState.querying:
-        return lang.agentStateQuerying;
-      case AgentState.unreachable:
-        return lang.agentStateUnreachable;
-      case AgentState.ok:
-        // This state should not need translations.
-        return '';
-    }
-  }
 }
 
 /// A view-model providing listeners with the up-to-date state of the Windows
@@ -61,10 +37,10 @@ class StartupModel extends ChangeNotifier {
   final AgentStartupMonitor monitor;
 
   ViewState _view = ViewState.inProgress;
+  // Provides the details of the agent state. Useful for generating user-facing messages.
   AgentState _agentState = AgentState.querying;
+  AgentState get details => _agentState;
   ViewState get view => _view;
-  String message(AppLocalizations localizations) =>
-      _agentState.localize(localizations);
 
   StreamSubscription<AgentState>? _subs;
 
