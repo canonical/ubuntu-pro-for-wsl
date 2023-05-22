@@ -6,7 +6,7 @@ inputs:
     required: true
     description: "Subdirectory of the repository root where lies the code to be checked." 
   build-dir:
-    default: 'out'
+    default: '$TEMP/cpp-qa_${{ github.run_id }}_${{ github.run_attempt }}/out'
     description: "CMake build directory relative to the subproject dir."
   config:
     default: 'Debug'
