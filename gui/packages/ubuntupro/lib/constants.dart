@@ -9,3 +9,6 @@ const kAddrFileName = 'addr';
 
 /// The default border margin.
 const kDefaultMargin = 32.0;
+
+/// The path of the agent executable relative to the msix root directory.
+const kAgentRelativePath = 'agent/ubuntu-pro-agent.exe';

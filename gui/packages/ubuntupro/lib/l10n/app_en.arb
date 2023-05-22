@@ -14,6 +14,15 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "agent": "Ubuntu Pro background agent",
+    "agentStateStarting": "Ubuntu Pro background agent is starting.",
+    "agentStatePingNonResponsive": "Ubuntu Pro background agent is not responding.",
+    "agentStateInvalid": "Waiting for Ubuntu Pro background agent initialization.",
+    "agentStateCannotStart": "Ubuntu Pro background agent cannot be started.",
+    "agentStateUnknownEnv": "Ubuntu Pro background agent state cannot be verified. Check your environment settings.",
+    "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
+    "agentStateUnreachable": "Ubuntu Pro background agent is unreachable.",
+    "agentRetryButton": "Click to restart it"
 }
 
