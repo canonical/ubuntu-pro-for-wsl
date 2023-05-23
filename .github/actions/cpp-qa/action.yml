@@ -1,0 +1,30 @@
+name: C++ Quality Checks
+description: Do some quality checks via CMake and MSVC Code Analysis
+
+inputs:
+  subproject-dir:
+    required: true
+    description: "Subdirectory of the repository root where lies the code to be checked." 
+  build-dir:
+    default: '$TEMP/cpp-qa_${{ github.run_id }}_${{ github.run_attempt }}/out'
+    description: "CMake build directory relative to the subproject dir."
+  config:
+    default: 'Debug'
+    description: "The build configuration. Most likely you want Debug."   
+
+# Assumes the repo is already checked out and we run on Windows.
+runs:
+  using: "composite"
+  steps:
+    - name: Configure CMake
+      working-directory:  ${{ inputs.subproject-dir }}
+      shell: powershell
+      run: |
+        cmake -E make_directory ${{ inputs.build-dir }}
+        cmake -S . -B ${{ inputs.build-dir }} -DCMAKE_BUILD_TYPE=${{ inputs.config }} --debug-output
+    - name: Run tests
+      working-directory:  ${{ inputs.subproject-dir }}
+      shell: powershell
+      run: |
+        cmake --build ${{ inputs.build-dir }}
+        ctest --test-dir ${{ inputs.build-dir }}
