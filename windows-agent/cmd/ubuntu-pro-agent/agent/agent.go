@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
@@ -43,6 +44,7 @@ type daemonConfig struct {
 type options struct {
 	daemonCacheDir      string
 	proservicesCacheDir string
+	registry            config.Registry
 }
 
 type option func(*options)
@@ -99,7 +101,9 @@ func (a *App) serve(args ...option) error {
 		f(&opt)
 	}
 
-	proservice, err := proservices.New(ctx, proservices.WithCacheDir(opt.proservicesCacheDir))
+	conf := config.New(ctx, config.WithRegistry(opt.registry))
+
+	proservice, err := proservices.New(ctx, conf, proservices.WithCacheDir(opt.proservicesCacheDir))
 	if err != nil {
 		close(a.ready)
 		return err

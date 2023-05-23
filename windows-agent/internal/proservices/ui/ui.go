@@ -7,27 +7,27 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 )
 
 // Service it the UI GRPC service implementation.
 type Service struct {
-	db           *database.DistroDB
-	initialTasks *initialtasks.InitialTasks
+	db     *database.DistroDB
+	config *config.Config
 
 	agentapi.UnimplementedUIServer
 }
 
 // New returns a new service handling the UI API.
-func New(ctx context.Context, db *database.DistroDB, initialTasks *initialtasks.InitialTasks) (s Service) {
+func New(ctx context.Context, config *config.Config, db *database.DistroDB) (s Service) {
 	log.Debug(ctx, "Building new GRPC UI service")
 
 	return Service{
-		db:           db,
-		initialTasks: initialTasks,
+		db:     db,
+		config: config,
 	}
 }
 
@@ -36,15 +36,14 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.Token
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
-	task := tasks.ProAttachment{Token: token}
-	if err := s.initialTasks.Add(ctx, task); err != nil {
+	if err := s.config.SetProToken(ctx, token); err != nil {
 		return nil, err
 	}
 
 	distros := s.db.GetAll()
 	var err error
 	for _, d := range distros {
-		err = errors.Join(err, d.SubmitTasks(task))
+		err = errors.Join(err, d.SubmitTasks(tasks.ProAttachment{Token: token}))
 	}
 
 	if err != nil {

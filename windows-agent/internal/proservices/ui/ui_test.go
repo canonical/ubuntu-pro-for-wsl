@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
@@ -25,10 +25,9 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	initTasks, err := initialtasks.New(dir)
-	require.NoError(t, err, "Setup: initial tasks New() should return no error")
+	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
 
-	_ = ui.New(context.Background(), db, initTasks)
+	_ = ui.New(context.Background(), conf, db)
 }
 
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
@@ -45,13 +44,17 @@ func TestAttachPro(t *testing.T) {
 	distro2, _ := testutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
-		token string
+		distros          []string
+		token            string
+		registryReadOnly bool
 
-		distros []string
+		wantErr bool
 	}{
 		"No panic due empty token":          {token: ""},
 		"Success with an empty database":    {token: "funny_token"},
 		"Success with a non-empty database": {token: "whatever_token", distros: []string{distro1, distro2}},
+
+		"Error due to no write permission on token": {registryReadOnly: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -71,17 +74,26 @@ func TestAttachPro(t *testing.T) {
 				defer d.Cleanup(ctx)
 			}
 
-			initTasks, err := initialtasks.New(dir)
-			require.NoError(t, err, "Setup: initial tasks New() should return no error")
-			serv := ui.New(context.Background(), db, initTasks)
+			m := registry.NewMock()
+			m.KeyIsReadOnly = tc.registryReadOnly
+			m.KeyExists = true
+			m.UbuntuProData["ProToken"] = "OLD_TOKEN"
+
+			conf := config.New(ctx, config.WithRegistry(m))
+			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}
 			_, err = serv.ApplyProToken(context.Background(), &info)
+			if tc.wantErr {
+				require.Error(t, err, "Unexpected success in ApplyProToken")
+				return
+			}
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 
 			// Could it be nice to retrieve the distro's pending tasks?
-			it := initTasks.All()
-			require.ElementsMatch(t, it, []tasks.ProAttachment{{Token: tc.token}}, "Only one task should have been added")
+			token, err := conf.ProToken(ctx)
+			require.NoError(t, err, "conf.ProToken should return no error")
+			require.Equal(t, tc.token, token, "mismatch between submitted and retrieved tokens")
 		})
 	}
 }

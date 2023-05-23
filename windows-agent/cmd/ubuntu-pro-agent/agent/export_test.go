@@ -2,6 +2,9 @@ package agent
 
 import (
 	"testing"
+
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 )
 
 func withDaemonCacheDir(dir string) func(*options) {
@@ -13,6 +16,12 @@ func withDaemonCacheDir(dir string) func(*options) {
 func withProServicesCacheDir(dir string) func(*options) {
 	return func(o *options) {
 		o.proservicesCacheDir = dir
+	}
+}
+
+func withRegistry(r config.Registry) func(*options) {
+	return func(o *options) {
+		o.registry = r
 	}
 }
 
@@ -30,5 +39,5 @@ func NewForTesting(t *testing.T, daemonCacheDir, serviceCacheDir string) *App {
 		serviceCacheDir = t.TempDir()
 	}
 
-	return New(withProServicesCacheDir(serviceCacheDir), withDaemonCacheDir(daemonCacheDir))
+	return New(withProServicesCacheDir(serviceCacheDir), withDaemonCacheDir(daemonCacheDir), withRegistry(registry.NewMock()))
 }

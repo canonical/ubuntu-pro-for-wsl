@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/initialtasks"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -276,15 +277,14 @@ func TestWorkerConstruction(t *testing.T) {
 			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
 
 			workDir := t.TempDir()
-			initialTasks, err := initialtasks.New(workDir)
-			require.NoError(t, err, "Setup: initialTasks should construct without issues")
+			conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
 
 			d, err := distro.New(ctx,
 				distroName,
 				distro.Properties{},
 				workDir,
 				distro.WithTaskProcessingContext(ctx),
-				distro.WithInitialTasks(initialTasks),
+				distro.WithConfig(conf),
 				withMockWorker)
 			defer d.Cleanup(context.Background())
 
@@ -298,7 +298,7 @@ func TestWorkerConstruction(t *testing.T) {
 			require.NotNil(t, (*worker).newCtx.Value(testContextMarker(42)), "Worker's constructor should be called with the distro's context or a child of it")
 			require.Equal(t, d, (*worker).newDistro, "Worker's constructor should be called with the distro it is attached to")
 			require.Equal(t, workDir, (*worker).newDir, "Worker's constructor should be called with the same workdir as the distro's")
-			require.Equal(t, initialTasks, (*worker).newInit, "Worker's constructor should be called with the initial tasks passed to the distro")
+			require.Equal(t, conf, (*worker).newConfig, "Worker's constructor should be called with the config passed to the distro")
 		})
 	}
 }
@@ -442,7 +442,7 @@ type mockWorker struct {
 	newCtx    context.Context
 	newDistro *distro.Distro
 	newDir    string
-	newInit   *initialtasks.InitialTasks
+	newConfig *config.Config
 
 	isActiveCalled      bool
 	clientCalled        bool
@@ -453,12 +453,12 @@ type mockWorker struct {
 
 func mockWorkerInjector(constructorReturnsError bool) (distro.Option, **mockWorker) {
 	worker := new(*mockWorker)
-	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, init *initialtasks.InitialTasks) (distro.Worker, error) {
+	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, conf *config.Config) (distro.Worker, error) {
 		w := &mockWorker{
 			newCtx:    ctx,
 			newDistro: d,
 			newDir:    tmpDir,
-			newInit:   init,
+			newConfig: conf,
 		}
 		*worker = w
 		if constructorReturnsError {

@@ -1,5 +1,0 @@
-{{range $idx, $val := .}}
-- type: '{{- $val -}}'
-  task:
-    data: loaded task {{ $idx }}
-{{end}}
