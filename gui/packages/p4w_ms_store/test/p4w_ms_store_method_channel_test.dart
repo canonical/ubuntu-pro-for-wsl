@@ -10,21 +10,50 @@ void main() {
 
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
-        (methodCall) async {
-      return PurchaseStatus.succeeded.index;
-    });
-  });
-
   tearDown(() {
     binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
   });
 
-  test('purchaseSubscription', () async {
+  test('purchaseSubscription success', () async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (methodCall) async {
+      return PurchaseStatus.succeeded.index;
+    });
     expect(
       await platform.purchaseSubscription(productId),
       PurchaseStatus.succeeded,
+    );
+  });
+  test('purchaseSubscription throws on invalid response', () async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (methodCall) async {
+      return -10;
+    });
+    await expectLater(
+      platform.purchaseSubscription(productId),
+      throwsA(isA<PlatformException>()),
+    );
+  });
+
+  test('purchaseSubscription throws on null response', () async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (methodCall) async {
+      return null;
+    });
+    await expectLater(
+      platform.purchaseSubscription(productId),
+      throwsA(isA<PlatformException>()),
+    );
+  });
+
+  test('purchaseSubscription throws out of sync response', () async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (methodCall) async {
+      return PurchaseStatus.values.length;
+    });
+    await expectLater(
+      platform.purchaseSubscription(productId),
+      throwsA(isA<PlatformException>()),
     );
   });
 }
