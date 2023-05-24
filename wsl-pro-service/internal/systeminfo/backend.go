@@ -12,6 +12,10 @@ func (b realBackend) Path(p ...string) string {
 	return filepath.Join(p...)
 }
 
+func (b realBackend) Hostname() (string, error) {
+	return os.Hostname()
+}
+
 // GetenvWslDistroName obtains the value of environment variable WSL_DISTRO_NAME.
 func (b realBackend) GetenvWslDistroName() string {
 	return os.Getenv("WSL_DISTRO_NAME")

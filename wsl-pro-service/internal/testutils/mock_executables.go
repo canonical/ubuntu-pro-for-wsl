@@ -4,6 +4,7 @@ package testutils
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,6 +23,9 @@ import (
 type SystemInfoMock struct {
 	// FsRoot is the path to what will be used as root for the test filesystem
 	FsRoot string
+
+	// DistroHostname is the hostname of the distro. Make nil to cause an error.
+	DistroHostname *string
 
 	// WslDistroNameEnv is the value that the mocked Getenv(WSL_DISTRO_NAME) or wslpath -w / will display
 	WslDistroName string
@@ -95,9 +99,11 @@ const (
 func MockSystemInfo(t *testing.T) (systeminfo.System, *SystemInfoMock) {
 	t.Helper()
 
+	distroHostname := "TEST_DISTRO_HOSTNAME"
 	mock := &SystemInfoMock{
 		FsRoot:                  mockFilesystemRoot(t),
 		WslDistroName:           "TEST_DISTRO",
+		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
 	}
 
@@ -119,6 +125,14 @@ func (m *SystemInfoMock) SetControlArg(arg controlArg) {
 func (m *SystemInfoMock) Path(path ...string) string {
 	path = append([]string{m.FsRoot}, path...)
 	return filepath.Join(path...)
+}
+
+// Hostname returns a mock hostname.
+func (m SystemInfoMock) Hostname() (string, error) {
+	if m.DistroHostname == nil {
+		return "", errors.New("Mock Hostname error")
+	}
+	return *m.DistroHostname, nil
 }
 
 // GetenvWslDistroName mocks os.GetEnv("WSL_DISTRO_NAME").
