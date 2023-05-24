@@ -15,7 +15,7 @@ void P4wMsStorePlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows* registrar) {
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "p4w_ms_store",
+          registrar->messenger(), channelName,
           &flutter::StandardMethodCodec::GetInstance());
 
   auto plugin = std::make_unique<P4wMsStorePlugin>(

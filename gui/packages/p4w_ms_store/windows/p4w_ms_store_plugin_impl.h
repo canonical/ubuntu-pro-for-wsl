@@ -7,6 +7,9 @@ namespace p4w_ms_store {
 
 // Auxiliary functions and implementation details for the plugin.
 
+// The method channel name as a constant. It'll be referred in different places.
+static const char* channelName = "p4w_ms_store";
+
 // Returns the window's HWND for a given FlutterView.
 inline HWND GetRootWindow(flutter::FlutterView* view) {
   return ::GetAncestor(view->GetNativeWindow(), GA_ROOT);
