@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include "p4w_ms_store_plugin_impl.h"
+
 namespace p4w_ms_store {
 
 // static
@@ -16,7 +18,8 @@ void P4wMsStorePlugin::RegisterWithRegistrar(
           registrar->messenger(), "p4w_ms_store",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<P4wMsStorePlugin>();
+  auto plugin = std::make_unique<P4wMsStorePlugin>(
+      [registrar] { return GetRootWindow(registrar->GetView()); });
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto& call, auto result) {
@@ -26,7 +29,8 @@ void P4wMsStorePlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-P4wMsStorePlugin::P4wMsStorePlugin() {}
+P4wMsStorePlugin::P4wMsStorePlugin(std::function<HWND()> windowProvider)
+    : getRootWindow{std::move(windowProvider)} {}
 
 P4wMsStorePlugin::~P4wMsStorePlugin() {}
 
