@@ -92,6 +92,7 @@ class DistroInfo extends $pb.GeneratedMessage {
     ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'versionId')
     ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'prettyName')
     ..aOB(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'proAttached')
+    ..aOS(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'hostname')
     ..hasRequiredFields = false
   ;
 
@@ -102,6 +103,7 @@ class DistroInfo extends $pb.GeneratedMessage {
     $core.String? versionId,
     $core.String? prettyName,
     $core.bool? proAttached,
+    $core.String? hostname,
   }) {
     final _result = create();
     if (wslName != null) {
@@ -118,6 +120,9 @@ class DistroInfo extends $pb.GeneratedMessage {
     }
     if (proAttached != null) {
       _result.proAttached = proAttached;
+    }
+    if (hostname != null) {
+      _result.hostname = hostname;
     }
     return _result;
   }
@@ -186,6 +191,15 @@ class DistroInfo extends $pb.GeneratedMessage {
   $core.bool hasProAttached() => $_has(4);
   @$pb.TagNumber(5)
   void clearProAttached() => clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get hostname => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set hostname($core.String v) { $_setString(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasHostname() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearHostname() => clearField(6);
 }
 
 class Port extends $pb.GeneratedMessage {

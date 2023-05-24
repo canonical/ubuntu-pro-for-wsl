@@ -34,11 +34,12 @@ const DistroInfo$json = const {
     const {'1': 'version_id', '3': 3, '4': 1, '5': 9, '10': 'versionId'},
     const {'1': 'pretty_name', '3': 4, '4': 1, '5': 9, '10': 'prettyName'},
     const {'1': 'pro_attached', '3': 5, '4': 1, '5': 8, '10': 'proAttached'},
+    const {'1': 'hostname', '3': 6, '4': 1, '5': 9, '10': 'hostname'},
   ],
 };
 
 /// Descriptor for `DistroInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List distroInfoDescriptor = $convert.base64Decode('CgpEaXN0cm9JbmZvEhkKCHdzbF9uYW1lGAEgASgJUgd3c2xOYW1lEg4KAmlkGAIgASgJUgJpZBIdCgp2ZXJzaW9uX2lkGAMgASgJUgl2ZXJzaW9uSWQSHwoLcHJldHR5X25hbWUYBCABKAlSCnByZXR0eU5hbWUSIQoMcHJvX2F0dGFjaGVkGAUgASgIUgtwcm9BdHRhY2hlZA==');
+final $typed_data.Uint8List distroInfoDescriptor = $convert.base64Decode('CgpEaXN0cm9JbmZvEhkKCHdzbF9uYW1lGAEgASgJUgd3c2xOYW1lEg4KAmlkGAIgASgJUgJpZBIdCgp2ZXJzaW9uX2lkGAMgASgJUgl2ZXJzaW9uSWQSHwoLcHJldHR5X25hbWUYBCABKAlSCnByZXR0eU5hbWUSIQoMcHJvX2F0dGFjaGVkGAUgASgIUgtwcm9BdHRhY2hlZBIaCghob3N0bmFtZRgGIAEoCVIIaG9zdG5hbWU=');
 @$core.Deprecated('Use portDescriptor instead')
 const Port$json = const {
   '1': 'Port',
