@@ -16,6 +16,8 @@ set(PLUGIN_NAME "p4w_ms_store_plugin")
 list(APPEND PLUGIN_SOURCES
   "p4w_ms_store_plugin.cpp"
   "p4w_ms_store_plugin.h"
+  "p4w_ms_store_plugin_impl.cpp"
+  "p4w_ms_store_plugin_impl.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment
