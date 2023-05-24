@@ -12,12 +12,23 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # not be changed
 set(PLUGIN_NAME "p4w_ms_store_plugin")
 
+# Relative to the top level cmake project which will be either this plugin or the app
+# consuming it. Either way, same relative distance to the directory we are looking for.
+set(STORE_API_DIR "${CMAKE_SOURCE_DIR}/../../../../storeapi/")
+set(STORE_API_SRC
+    "${STORE_API_DIR}/gui/ClientStoreService.hpp"
+    "${STORE_API_DIR}/base/StoreService.hpp"
+    "${STORE_API_DIR}/base/Exception.hpp"
+    "${STORE_API_DIR}/base/Context.cpp"
+    "${STORE_API_DIR}/base/Context.hpp"
+)
 # Any new source files that you add to the plugin should be added here.
 list(APPEND PLUGIN_SOURCES
   "p4w_ms_store_plugin.cpp"
   "p4w_ms_store_plugin.h"
   "p4w_ms_store_plugin_impl.cpp"
   "p4w_ms_store_plugin_impl.h"
+  ${STORE_API_SRC}
 )
 
 # Define the plugin library target. Its name must not be changed (see comment
@@ -43,7 +54,7 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 # Source include directories and library dependencies. Add any plugin-specific
 # dependencies here.
 target_include_directories(${PLUGIN_NAME} INTERFACE
-  "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  "${CMAKE_CURRENT_SOURCE_DIR}/include" PRIVATE ${STORE_API_DIR})
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
