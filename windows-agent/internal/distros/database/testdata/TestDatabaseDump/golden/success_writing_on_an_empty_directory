@@ -4,6 +4,7 @@
     distroid: SuperUbuntu
     versionid: "122.04"
     prettyname: Ubuntu 122.04 LTS (Jolly Jellyfish)
+    hostname: SuperTestMachine
     proattached: false
 - name: '%DISTRONAME1%'
   guid: '%GUID1%'
@@ -11,4 +12,5 @@
     distroid: Ubuntu
     versionid: "22.04"
     prettyname: Ubuntu 22.04 LTS (Jammy Jellyfish)
+    hostname: NormalTestMachine
     proattached: false

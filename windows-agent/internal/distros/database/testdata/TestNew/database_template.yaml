@@ -5,6 +5,7 @@
     versionid: '22.04'
     prettyname: Ubuntu 22.04 LTS (Jammy Jellyfish)
     proattached: false
+    hostname: NormalTestMachine
 - name: This distro is not real
   guid: '{12345678-1234-1234-1234-123456789ABC}'
   properties:
@@ -12,3 +13,4 @@
     versionid: '122.04'
     prettyname: Ubuntu 122.04 LTS (Jolly Jellyfish)
     proattached: false
+    hostname: SuperTestMachine
