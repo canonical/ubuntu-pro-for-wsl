@@ -300,7 +300,6 @@ func TestKeepAwake(t *testing.T) {
 }
 
 func TestState(t *testing.T) {
-	ctx := context.Background()
 	if wsl.MockAvailable() {
 		t.Parallel()
 	}
@@ -323,6 +322,7 @@ func TestState(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
 			if wsl.MockAvailable() {
 				t.Parallel()
 
