@@ -74,6 +74,7 @@ func TestApplyProToken(t *testing.T) {
 				VersionId:   "22.04",
 				PrettyName:  "Ubuntu 22.04.1 LTS",
 				ProAttached: true,
+				Hostname:    "TEST_DISTRO_HOSTNAME",
 			}
 
 			ctrlClient, controlService := newCtrlStream(t, ctx)

@@ -5,6 +5,7 @@
     versionid: "122.04"
     prettyname: Ubuntu 122.04 LTS (Jolly Jellyfish)
     proattached: false
+    hostname: SuperTestMachine
 - name: '{{(index . 1).Name}}'
   guid: '{{(index . 1).GUID}}'
   properties:
@@ -12,6 +13,7 @@
     versionid: "22.04"
     prettyname: Ubuntu 22.04 LTS (Jammy Jellyfish)
     proattached: true
+    hostname: NormalTestMachine
 {{if gt (len .)  2 }}
 - name: '{{(index . 2).Name}}'
   guid: '{{(index . 2).GUID}}'
@@ -20,4 +22,5 @@
     versionid: "18.04"
     prettyname: Ubuntu 18.04 LTS (Bionic Beaver)
     proattached: true
+    hostname: OldTestMachine
 {{end}}

@@ -169,5 +169,6 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 		VersionID:   info.VersionId,
 		PrettyName:  info.PrettyName,
 		ProAttached: info.ProAttached,
+		Hostname:    info.Hostname,
 	}, nil
 }

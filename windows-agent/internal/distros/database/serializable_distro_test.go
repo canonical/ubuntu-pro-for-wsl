@@ -25,6 +25,7 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 				VersionID:   "98.04",
 				PrettyName:  "Ubuntu 98.04.0 LTS",
 				ProAttached: true,
+				Hostname:    "Machine98",
 			},
 		},
 		"Escaped characters": {
@@ -35,6 +36,7 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 				VersionID:   "122.04",
 				PrettyName:  `Ubuntu '122.04.0 LTS "Jammiest Jellifish"`,
 				ProAttached: true,
+				Hostname:    "Machine122",
 			},
 		},
 		"Control characters": {
@@ -45,6 +47,7 @@ func TestSerializableDistroMarshallUnmarshall(t *testing.T) {
 				VersionID:   "122.04",
 				PrettyName:  `Ubuntu 122.04.0 LTS\t (Evil\x00 character eðition)`,
 				ProAttached: true,
+				Hostname:    "Machine122",
 			},
 		},
 	}
@@ -134,6 +137,7 @@ func TestNewSerializableDistro(t *testing.T) {
 		VersionID:   "-5.04",
 		PrettyName:  "Ubuntu -5.04 (Invented Idea)",
 		ProAttached: true,
+		Hostname:    "NegativeMachine",
 	}
 
 	d, err := distro.New(ctx, registeredDistro, props, t.TempDir())

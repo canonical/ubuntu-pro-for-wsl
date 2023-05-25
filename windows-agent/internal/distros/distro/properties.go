@@ -24,6 +24,9 @@ type Properties struct {
 	VersionID  string
 	PrettyName string
 
+	// Instance info
+	Hostname string
+
 	// Ubuntu Pro
 	ProAttached bool
 }

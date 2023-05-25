@@ -29,6 +29,7 @@ type System struct {
 // it can perform with the operating system.
 type Backend interface {
 	Path(p ...string) string
+	Hostname() (string, error)
 	GetenvWslDistroName() string
 	ProExecutable(args ...string) (string, []string)
 	WslpathExecutable(args ...string) (string, []string)
@@ -76,9 +77,15 @@ func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
 		return nil, fmt.Errorf("could not obtain pro status: %v", err)
 	}
 
+	hostname, err := s.backend.Hostname()
+	if err != nil {
+		return nil, fmt.Errorf("could not obtain hostname: %v", err)
+	}
+
 	info := &agentapi.DistroInfo{
 		WslName:     distroName,
 		ProAttached: pro,
+		Hostname:    hostname,
 	}
 
 	if err := s.fillOsRelease(info); err != nil {

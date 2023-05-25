@@ -34,6 +34,8 @@ func TestInfo(t *testing.T) {
 		proStatusCommand mockBehaviour
 		osRelease        mockBehaviour
 
+		hostnameErr bool
+
 		wantErr bool
 	}{
 		"Success reading from WSL_DISTRO_NAME": {},
@@ -47,6 +49,8 @@ func TestInfo(t *testing.T) {
 
 		"Error when /etc/os-release cannot be read":       {osRelease: mockError, wantErr: true},
 		"Error whem /etc/os-release returns bad contents": {osRelease: mockBadOutput, wantErr: true},
+
+		"Error when hostname cannot be obtained": {hostnameErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -60,6 +64,10 @@ func TestInfo(t *testing.T) {
 
 			if tc.distroNameEnvDisabled {
 				mock.WslDistroNameEnvEnabled = false
+			}
+
+			if tc.hostnameErr {
+				mock.DistroHostname = nil
 			}
 
 			switch tc.distroNameWslPath {
@@ -104,6 +112,7 @@ func TestInfo(t *testing.T) {
 			assert.Equal(t, "ubuntu", info.Id, "Id does not match expected value")
 			assert.Equal(t, "22.04", info.VersionId, "VersionId does not match expected value")
 			assert.Equal(t, "Ubuntu 22.04.1 LTS", info.PrettyName, "PrettyName does not match expected value")
+			assert.Equal(t, "TEST_DISTRO_HOSTNAME", info.Hostname, "Hostname does not match expected value")
 			assert.Equal(t, true, info.ProAttached, "ProAttached does not match expected value")
 		})
 	}
