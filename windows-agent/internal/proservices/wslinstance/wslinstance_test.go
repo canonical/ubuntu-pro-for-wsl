@@ -160,6 +160,7 @@ func TestConnected(t *testing.T) {
 				VersionId:   "22.04",
 				PrettyName:  "Ubuntu 22.04.1 LTS",
 				ProAttached: false,
+				Hostname:    "TestMachine",
 			}
 			wsl.sendInfo(t, info)
 
