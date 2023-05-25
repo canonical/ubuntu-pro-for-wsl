@@ -247,6 +247,68 @@ func TestKeepAwake(t *testing.T) {
 	}
 }
 
+func TestState(t *testing.T) {
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testCases := map[string]struct {
+		unregister bool
+		stop       bool
+		wslError   bool
+
+		want    wsl.State
+		wantErr bool
+	}{
+		"Success with a running distro": {want: wsl.Running},
+		"Success with a stopped distro": {stop: true, want: wsl.Stopped},
+
+		"Error on unregistered distro":  {unregister: true, wantErr: true},
+		"Error due to WSL erroring out": {wslError: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			if wsl.MockAvailable() {
+				t.Parallel()
+
+				mock := wslmock.New()
+				mock.StateError = tc.wslError
+				ctx = wsl.WithMock(ctx, mock)
+			}
+
+			distroName, _ := testutils.RegisterDistro(t, ctx, true)
+			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
+			require.NoError(t, err, "Setup: distro New should return no errors")
+
+			gowslDistro := wsl.NewDistro(ctx, distroName)
+			out, err := gowslDistro.Command(ctx, "exit 0").CombinedOutput()
+			require.NoError(t, err, "Setup: could not start WSL distro (%v): %s", err, string(out))
+
+			if tc.stop {
+				err := gowslDistro.Terminate()
+				require.NoError(t, err, "Setup: could not terminate: %v", err)
+			}
+
+			if tc.unregister {
+				err := gowslDistro.Unregister()
+				require.NoError(t, err, "Setup: could not unregister: %v", err)
+			}
+
+			got, err := d.State()
+			if tc.wantErr {
+				require.Error(t, err, "expected distro.State to return an error")
+				return
+			}
+
+			require.NoError(t, err, "expected distro.State to return no error")
+			require.Equal(t, tc.want, got, "Mismatch between expected and reported states")
+		})
+	}
+}
+
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestWorkerConstruction(t *testing.T) {
 	ctx := context.Background()

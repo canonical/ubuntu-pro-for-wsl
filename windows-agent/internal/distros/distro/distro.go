@@ -284,3 +284,13 @@ func (d *Distro) KeepAwake(ctx context.Context) error {
 
 	return nil
 }
+
+// State returns the state of the WSL distro, as implemeted by GoWSL.
+func (d *Distro) State() (s wsl.State, err error) {
+	wslDistro, err := d.identity.getDistro()
+	if err != nil {
+		return s, err
+	}
+
+	return wslDistro.State()
+}
