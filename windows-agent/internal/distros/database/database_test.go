@@ -355,18 +355,21 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 			VersionID:   "122.04",
 			PrettyName:  "Ubuntu 122.04 LTS (Jolly Jellyfish)",
 			ProAttached: false,
+			Hostname:    "SuperTestMachine",
 		},
 		distroNotInDB: {
 			DistroID:    "HyperUbuntu",
 			VersionID:   "222.04",
 			PrettyName:  "Ubuntu 122.04 LTS (Joker Jellyfish)",
 			ProAttached: false,
+			Hostname:    "HyperTestMachine",
 		},
 		reRegisteredDistro: {
 			DistroID:    "Ubuntu",
 			VersionID:   "22.04",
 			PrettyName:  "Ubuntu 22.04 LTS (Jammy Jellyfish)",
 			ProAttached: true,
+			Hostname:    "NormalTestMachine",
 		},
 	}
 

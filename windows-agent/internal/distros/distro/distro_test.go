@@ -45,6 +45,7 @@ func TestNew(t *testing.T) {
 		VersionID:   "100.04",
 		PrettyName:  "Ubuntu 100.04.0 LTS",
 		ProAttached: true,
+		Hostname:    "testMachine",
 	}
 
 	testCases := map[string]struct {
