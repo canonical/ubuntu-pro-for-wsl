@@ -175,6 +175,58 @@ func TestIsValid(t *testing.T) {
 	}
 }
 
+func TestSetProperties(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	props1 := distro.Properties{
+		DistroID:    "ubuntu",
+		VersionID:   "100.04",
+		PrettyName:  "Ubuntu 100.04.0 LTS",
+		ProAttached: true,
+	}
+
+	props2 := distro.Properties{
+		DistroID:    "ubuntu",
+		VersionID:   "200.04",
+		PrettyName:  "Ubuntu 200.04.0 LTS",
+		ProAttached: false,
+	}
+
+	testCases := map[string]struct {
+		sameProps bool
+
+		want bool
+	}{
+		"Return true when setting a new set of properties":     {want: true},
+		"Return false when setting the same set of properties": {sameProps: true, want: false},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			dname, _ := testutils.RegisterDistro(t, ctx, false)
+			d, err := distro.New(ctx, dname, props1, t.TempDir())
+			require.NoError(t, err, "Setup: distro New should return no errors")
+
+			p := props2
+			if tc.sameProps {
+				p = props1
+			}
+
+			got := d.SetProperties(p)
+			require.Equal(t, tc.want, got, "Unexpected return value from SetProperties")
+		})
+	}
+}
+
 func TestKeepAwake(t *testing.T) {
 	t.Skip("Skipping because this method is known to be ineffective.")
 
