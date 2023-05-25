@@ -16,12 +16,13 @@ import (
 type registryState int
 
 const (
-	untouched          registryState = iota // Nothing UbuntuPro-related exists, as though the program had never ran before
-	keyExists                               // Key exists but is empty
-	tokenFieldExists                        // Key exists, token field exists but is empty
-	tokenFieldHasValue                      // Key exists, token field exists and is not empty
+	untouched         registryState = iota // Nothing UbuntuPro-related exists, as though the program had never ran before
+	keyExists                              // Key exists but is empty
+	valuesExist                            // Key exists, token field exists but is empty
+	valuesAreNotEmpty                      // Key exists, token field exists and is not empty
 )
 
+//nolint:dupl // This test setup is very similar to TestProToken, that is because they are both getters.
 func TestProToken(t *testing.T) {
 	t.Parallel()
 
@@ -31,12 +32,12 @@ func TestProToken(t *testing.T) {
 
 		wantError bool
 	}{
-		"Success":                             {registryState: tokenFieldHasValue},
-		"Success when the key does not exist": {registryState: untouched},
-		"Success when the pro token field does not exist": {registryState: keyExists},
+		"Success":                               {registryState: valuesAreNotEmpty},
+		"Success when the key does not exist":   {registryState: untouched},
+		"Success when the value does not exist": {registryState: keyExists},
 
-		"Error when the registry key cannot be opened":    {registryState: tokenFieldHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: tokenFieldHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
+		"Error when the registry key cannot be opened":    {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrReadValue, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -52,10 +53,10 @@ func TestProToken(t *testing.T) {
 			if tc.registryState >= keyExists {
 				r.KeyExists = true
 			}
-			if tc.registryState == tokenFieldExists {
+			if tc.registryState == valuesExist {
 				r.UbuntuProData["ProToken"] = ""
 			}
-			if tc.registryState == tokenFieldHasValue {
+			if tc.registryState == valuesAreNotEmpty {
 				r.UbuntuProData["ProToken"] = "EXAMPLE_TOKEN"
 			}
 
@@ -66,12 +67,72 @@ func TestProToken(t *testing.T) {
 			}
 			require.NoError(t, err, "ProToken should return no error")
 
-			if tc.registryState < tokenFieldHasValue {
-				require.Equal(t, token, "", "Unexpected token value")
+			// Test default values
+			if tc.registryState < valuesAreNotEmpty {
+				require.Equal(t, "", token, "Unexpected token value")
 				return
 			}
 
-			require.Equal(t, token, "EXAMPLE_TOKEN", "Unexpected token value")
+			// Test non-default values
+			assert.Equal(t, "EXAMPLE_TOKEN", token, "Unexpected token value")
+			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
+		})
+	}
+}
+
+//nolint:dupl // This test setup is very similar to TestProToken, that is because they are both getters.
+func TestLandscapeURL(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		mockErrors    uint32
+		registryState registryState
+
+		wantError bool
+	}{
+		"Success":                               {registryState: valuesAreNotEmpty},
+		"Success when the key does not exist":   {registryState: untouched},
+		"Success when the value does not exist": {registryState: keyExists},
+
+		"Error when the registry key cannot be opened":    {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrReadValue, wantError: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			r := registry.NewMock()
+			conf := config.New(ctx, config.WithRegistry(r))
+
+			r.Errors = tc.mockErrors
+			if tc.registryState >= keyExists {
+				r.KeyExists = true
+			}
+			if tc.registryState == valuesExist {
+				r.UbuntuProData["LandscapeURL"] = ""
+			}
+			if tc.registryState == valuesAreNotEmpty {
+				r.UbuntuProData["LandscapeURL"] = "www.example.com/another-example"
+			}
+
+			landscapeURL, err := conf.LandscapeURL(ctx)
+			if tc.wantError {
+				require.Error(t, err, "LandscapeURL should return an error")
+				return
+			}
+			require.NoError(t, err, "LandscapeURL should return no error")
+
+			// Test default values
+			if tc.registryState < valuesAreNotEmpty {
+				require.Equal(t, "www.example.com", landscapeURL, "Unexpected Landscape URL value")
+				return
+			}
+
+			// Test non-default values
+			assert.Equal(t, "www.example.com/another-example", landscapeURL, "Unexpected Landscape URL value")
 			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
 		})
 	}
@@ -86,12 +147,12 @@ func TestProvisioningTasks(t *testing.T) {
 
 		wantError bool
 	}{
-		"Success":                             {registryState: tokenFieldHasValue},
+		"Success":                             {registryState: valuesAreNotEmpty},
 		"Success when the key does not exist": {registryState: untouched},
 		"Success when the pro token field does not exist": {registryState: keyExists},
 
-		"Error when the registry key cannot be opened":    {registryState: tokenFieldHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: tokenFieldHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
+		"Error when the registry key cannot be opened":    {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrReadValue, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -107,10 +168,10 @@ func TestProvisioningTasks(t *testing.T) {
 			if tc.registryState >= keyExists {
 				r.KeyExists = true
 			}
-			if tc.registryState == tokenFieldExists {
+			if tc.registryState == valuesExist {
 				r.UbuntuProData["ProToken"] = ""
 			}
-			if tc.registryState == tokenFieldHasValue {
+			if tc.registryState == valuesAreNotEmpty {
 				r.UbuntuProData["ProToken"] = "EXAMPLE_TOKEN"
 			}
 
@@ -122,7 +183,7 @@ func TestProvisioningTasks(t *testing.T) {
 			require.NoError(t, err, "ProvisioningTasks should return no error")
 
 			var wantToken string
-			if tc.registryState >= tokenFieldHasValue {
+			if tc.registryState >= valuesAreNotEmpty {
 				wantToken = "EXAMPLE_TOKEN"
 			}
 
@@ -143,13 +204,13 @@ func TestSetProToken(t *testing.T) {
 
 		wantError error
 	}{
-		"Success":                             {registryState: tokenFieldHasValue},
+		"Success":                             {registryState: valuesAreNotEmpty},
 		"Success when the key does not exist": {registryState: untouched},
 		"Success when the pro token field does not exist": {registryState: keyExists},
 
-		"Error when the registry key cannot be written on due to lack of permission": {registryState: tokenFieldHasValue, accessIsReadOnly: true, wantError: registry.ErrAccessDenied},
-		"Error when the registry key cannot be opened":                               {registryState: tokenFieldHasValue, mockErrors: registry.MockErrOnCreateKey, wantError: registry.ErrMock},
-		"Error when the registry key cannot be written on":                           {registryState: tokenFieldHasValue, mockErrors: registry.MockErrOnWriteValue, wantError: registry.ErrMock},
+		"Error when the registry key cannot be written on due to lack of permission": {registryState: valuesAreNotEmpty, accessIsReadOnly: true, wantError: registry.ErrAccessDenied},
+		"Error when the registry key cannot be opened":                               {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrOnCreateKey, wantError: registry.ErrMock},
+		"Error when the registry key cannot be written on":                           {registryState: valuesAreNotEmpty, mockErrors: registry.MockErrOnWriteValue, wantError: registry.ErrMock},
 	}
 
 	for name, tc := range testCases {
@@ -167,10 +228,10 @@ func TestSetProToken(t *testing.T) {
 			if tc.registryState >= keyExists {
 				r.KeyExists = true
 			}
-			if tc.registryState == tokenFieldExists {
+			if tc.registryState == valuesExist {
 				r.UbuntuProData["ProToken"] = ""
 			}
-			if tc.registryState == tokenFieldHasValue {
+			if tc.registryState == valuesAreNotEmpty {
 				wantToken = "ORIGINAL_TOKEN"
 				r.UbuntuProData["ProToken"] = "ORIGINAL_TOKEN"
 			}

@@ -18,6 +18,10 @@ const (
 	registryPath = `Software\Canonical\UbuntuPro`
 
 	fieldProToken = "ProToken"
+	defaultToken  = ""
+
+	fieldLandscapeURL   = "LandscapeURL"
+	defaultLandscapeURL = "www.example.com"
 )
 
 // Registry abstracts away access to the windows registry.
@@ -32,7 +36,9 @@ type Registry interface {
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
 type Config struct {
-	proToken string
+	proToken     string
+	landscapeURL string
+
 	registry Registry
 	mu       *sync.RWMutex
 }
@@ -110,11 +116,24 @@ func (c *Config) SetProToken(ctx context.Context, token string) error {
 	return nil
 }
 
+// LandscapeURL returns the value of the landscape server URL.
+func (c *Config) LandscapeURL(ctx context.Context) (string, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if err := c.load(ctx); err != nil {
+		return "", fmt.Errorf("could not load: %v", err)
+	}
+
+	return c.landscapeURL, nil
+}
+
 func (c *Config) load(ctx context.Context) error {
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
-		log.Debug(ctx, "Registry key does not exist, defaulting to empty token")
-		c.proToken = ""
+		log.Debug(ctx, "Registry key does not exist, using default values")
+		c.proToken = defaultToken
+		c.landscapeURL = defaultLandscapeURL
 		return nil
 	}
 	if err != nil {
@@ -122,19 +141,32 @@ func (c *Config) load(ctx context.Context) error {
 	}
 	defer c.registry.CloseKey(k)
 
-	token, err := c.registry.ReadValue(k, fieldProToken)
-	if errors.Is(err, registry.ErrFieldNotExist) {
-		log.Debugf(ctx, "Registry value %s does not exist, defaulting to empty token", fieldProToken)
-		c.proToken = ""
-		return nil
-	}
+	proToken, err := c.readValue(ctx, k, fieldProToken, defaultToken)
 	if err != nil {
 		return err
 	}
 
-	c.proToken = token
+	landscapeURL, err := c.readValue(ctx, k, fieldLandscapeURL, defaultLandscapeURL)
+	if err != nil {
+		return err
+	}
+
+	c.proToken = proToken
+	c.landscapeURL = landscapeURL
 
 	return nil
+}
+
+func (c *Config) readValue(ctx context.Context, key uintptr, field string, defaultValue string) (string, error) {
+	value, err := c.registry.ReadValue(key, field)
+	if errors.Is(err, registry.ErrFieldNotExist) {
+		log.Debugf(ctx, "Registry value %q does not exist, defaulting to %q", field, defaultValue)
+		return defaultValue, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return value, nil
 }
 
 func (c *Config) dump() error {
@@ -147,6 +179,10 @@ func (c *Config) dump() error {
 
 	if err := c.registry.WriteValue(k, fieldProToken, c.proToken); err != nil {
 		return fmt.Errorf("could not write into registry key: %w", err)
+	}
+
+	if err := c.registry.WriteValue(k, fieldLandscapeURL, c.landscapeURL); err != nil {
+		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 
 	return nil
