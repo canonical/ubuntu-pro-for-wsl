@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -37,18 +36,23 @@ type Worker struct {
 	connMu sync.RWMutex
 }
 
+// Provisioning is an interface which provides provisioning tasks.
+type Provisioning interface {
+	ProvisioningTasks(context.Context) ([]task.Task, error)
+}
+
 type options struct {
-	conf *config.Config
+	provisioning Provisioning
 }
 
 // Option is an optional argument for worker.New.
 type Option func(*options)
 
-// WithConfig is an optional parameter for worker.New that allows for
+// WithProvisioning is an optional parameter for worker.New that allows for
 // conditionally importing the provisioning tasks.
-func WithConfig(conf *config.Config) Option {
+func WithProvisioning(provisioning Provisioning) Option {
 	return func(o *options) {
-		o.conf = conf
+		o.provisioning = provisioning
 	}
 }
 
@@ -74,11 +78,11 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 	w.start(ctx)
 
 	// load and submit provisioning tasks. (case of first contact with distro)
-	if opts.conf == nil {
+	if opts.provisioning == nil {
 		return w, nil
 	}
 
-	provisioning, err := opts.conf.ProvisioningTasks(ctx)
+	provisioning, err := opts.provisioning.ProvisioningTasks(ctx)
 	if err != nil {
 		return w, err
 	}

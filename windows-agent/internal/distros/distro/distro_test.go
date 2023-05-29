@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/google/uuid"
@@ -558,7 +559,7 @@ type mockWorker struct {
 	newCtx    context.Context
 	newDistro *distro.Distro
 	newDir    string
-	newConfig *config.Config
+	newConfig worker.Config
 
 	isActiveCalled      bool
 	clientCalled        bool
@@ -568,22 +569,22 @@ type mockWorker struct {
 }
 
 func mockWorkerInjector(constructorReturnsError bool) (distro.Option, **mockWorker) {
-	worker := new(*mockWorker)
-	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, conf *config.Config) (distro.Worker, error) {
+	mock := new(*mockWorker)
+	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, conf worker.Config) (distro.Worker, error) {
 		w := &mockWorker{
 			newCtx:    ctx,
 			newDistro: d,
 			newDir:    tmpDir,
 			newConfig: conf,
 		}
-		*worker = w
+		*mock = w
 		if constructorReturnsError {
 			return nil, errors.New("test error")
 		}
 		return w, nil
 	}
 
-	return distro.WithNewWorker(newMockWorker), worker
+	return distro.WithNewWorker(newMockWorker), mock
 }
 
 func (w *mockWorker) IsActive() bool {

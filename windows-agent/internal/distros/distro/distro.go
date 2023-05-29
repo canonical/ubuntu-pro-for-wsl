@@ -9,7 +9,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
@@ -56,9 +55,9 @@ func (*NotValidError) Error() string {
 
 type options struct {
 	guid                  uuid.UUID
-	conf                  *config.Config
+	provisioning          worker.Provisioning
 	taskProcessingContext context.Context
-	newWorkerFunc         func(context.Context, *Distro, string, *config.Config) (workerInterface, error)
+	newWorkerFunc         func(context.Context, *Distro, string, worker.Provisioning) (workerInterface, error)
 }
 
 // Option is an optional argument for distro.New.
@@ -72,11 +71,11 @@ func WithGUID(guid uuid.UUID) Option {
 	}
 }
 
-// WithConfig allows for providing a config. If that is done, it'll be queried for
-// the provisioning tasks and these will be submitted.
-func WithConfig(c *config.Config) Option {
+// WithProvisioning allows for providing a worker.Provisioning. If that is done,
+// it'll be queried for the provisioning tasks and these will be submitted.
+func WithProvisioning(c worker.Provisioning) Option {
 	return func(o *options) {
-		o.conf = c
+		o.provisioning = c
 	}
 }
 
@@ -96,8 +95,8 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 	opts := options{
 		guid:                  nilGUID,
 		taskProcessingContext: context.Background(),
-		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, config *config.Config) (workerInterface, error) {
-			return worker.New(ctx, d, dir, worker.WithConfig(config))
+		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, provisioning worker.Provisioning) (workerInterface, error) {
+			return worker.New(ctx, d, dir, worker.WithProvisioning(provisioning))
 		},
 	}
 
@@ -136,7 +135,7 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 		return nil, err
 	}
 
-	distro.worker, err = opts.newWorkerFunc(opts.taskProcessingContext, distro, storageDir, opts.conf)
+	distro.worker, err = opts.newWorkerFunc(opts.taskProcessingContext, distro, storageDir, opts.provisioning)
 	if err != nil {
 		return nil, err
 	}
