@@ -166,6 +166,17 @@ func (w *Worker) processTasks(ctx context.Context) {
 	defer close(w.processing)
 
 	for {
+		// This double-select gives priority to the context over the manager queue. Not very
+		// important in production code but it makes the code more predictable for testing.
+		//
+		// Without this, there is always a chance that the worker will select the task
+		// channel rather than the context.Done.
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		select {
 		case <-ctx.Done():
 			return
