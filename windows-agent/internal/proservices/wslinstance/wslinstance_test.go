@@ -2,9 +2,11 @@ package wslinstance_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -91,17 +93,27 @@ func TestConnected(t *testing.T) {
 
 	distroName, _ := testutils.RegisterDistro(t, ctx, false)
 
+	type landscapeState int
+	const (
+		connected landscapeState = iota
+		disconnected
+		connectedWithError
+	)
+
 	testCases := map[string]struct {
 		useEmptyDistroName  bool
 		stopLinuxSideClient step
 		sendSecondInfo      bool
 		skipLinuxServe      bool
+		landscape           landscapeState
 
 		wantDone step
 		wantErr  bool
 	}{
-		"Successful connection with WSL distro":      {},
-		"Successful connection and property refresh": {sendSecondInfo: true},
+		"Successful connection with WSL distro":                           {},
+		"Successful connection and property refresh":                      {sendSecondInfo: true},
+		"Successful connection and property refresh without Landscape":    {sendSecondInfo: true, landscape: disconnected},
+		"Successful connection and property refresh with Landscape error": {sendSecondInfo: true, landscape: connectedWithError},
 
 		"Error on never serving on Linux":              {skipLinuxServe: true, wantDone: afterDistroShouldBeActive, wantErr: true},
 		"Error on disconnect before send info":         {stopLinuxSideClient: beforeLinuxServe, wantDone: beforeLinuxServe, wantErr: true},
@@ -120,6 +132,13 @@ func TestConnected(t *testing.T) {
 			}
 
 			landscape := &landscapeClientMock{}
+			switch tc.landscape {
+			case disconnected:
+				landscape.disconnected = true
+			case connectedWithError:
+				landscape.err = true
+			}
+
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
 
@@ -185,6 +204,13 @@ func TestConnected(t *testing.T) {
 			props := propsFromInfo(t, info)
 			require.Equal(t, props, d.Properties(), "Distro properties should match those sent via the SendInfo.")
 
+			// Ensure landscape sent an update
+			if tc.landscape == disconnected {
+				require.Equal(t, int32(0), landscape.updateCount.Load(), "No updates should have been sent to a disconnected Landscape.")
+			} else {
+				require.Equal(t, int32(1), landscape.updateCount.Load(), "Landscape should have had an update sent")
+			}
+
 			// Connected has added the distro to the database.
 			now = afterDatabaseQuery
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
@@ -245,6 +271,14 @@ func TestConnected(t *testing.T) {
 			// The database has been updated after the second info
 			now = afterPropertiesRefreshed
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+
+			// Ensure landscape sent an update
+			if tc.landscape == disconnected {
+				require.Equal(t, int32(0), landscape.updateCount.Load(), "No updates should have been sent to a disconnected Landscape.")
+			} else {
+				require.Equal(t, int32(2), landscape.updateCount.Load(), "Landscape should have had a second update sent")
+			}
+
 			checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv)
 		})
 	}
@@ -324,15 +358,30 @@ func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (se
 
 // landscapeClientMock mocks the landscape client.
 //
+// disconnected and err are inputs to manipulate mock behaviour.
+// updateCount is used to assert that the SendUpdatedInfo function has been called.
 type landscapeClientMock struct {
+	disconnected bool
+	err          bool
+
+	updateCount atomic.Int32
 }
 
 func (c *landscapeClientMock) SendUpdatedInfo(ctx context.Context) error {
-	return errors.New("Sending updated info to disconnected landscape")
+	if c.disconnected {
+		return errors.New("Sending updated info to disconnected landscape")
+	}
+
+	c.updateCount.Add(1)
+
+	if c.err {
+		return errors.New("mock error")
+	}
+	return nil
 }
 
 func (c *landscapeClientMock) Connected() bool {
-	return false
+	return !c.disconnected
 }
 
 // wslDistroMock mocks the actions performed by the Linux-side client and services.
