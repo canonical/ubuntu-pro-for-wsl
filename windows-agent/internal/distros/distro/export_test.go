@@ -3,7 +3,7 @@ package distro
 import (
 	"context"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 )
 
 func WithTaskProcessingContext(ctx context.Context) Option {
@@ -16,7 +16,7 @@ func WithTaskProcessingContext(ctx context.Context) Option {
 
 // WithNewWorker is an optional parameter for distro.New that allows for overriding
 // the worker.New constructor. It is meant for dependency injection.
-func WithNewWorker(newWorkerFunc func(context.Context, *Distro, string, *config.Config) (workerInterface, error)) Option {
+func WithNewWorker(newWorkerFunc func(context.Context, *Distro, string, worker.Provisioning) (workerInterface, error)) Option {
 	return func(o *options) {
 		o.newWorkerFunc = newWorkerFunc
 	}

@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/google/uuid"
@@ -52,12 +51,14 @@ func TestNew(t *testing.T) {
 		distro                 string
 		withGUID               string
 		preventWorkDirCreation bool
+		withProvisioning       bool
 
 		wantErr     bool
 		wantErrType error
 	}{
-		"Success with a registered distro":              {distro: registeredDistro},
-		"Success with a registered distro and its GUID": {distro: registeredDistro, withGUID: registeredGUID},
+		"Success with a registered distro":                   {distro: registeredDistro},
+		"Success with a registered distro and its GUID":      {distro: registeredDistro, withGUID: registeredGUID},
+		"Success with a registered distro with provisioning": {distro: registeredDistro, withProvisioning: true},
 
 		// Error cases
 		"Error when workdir cannot be created":                          {distro: registeredDistro, preventWorkDirCreation: true, wantErr: true},
@@ -79,6 +80,10 @@ func TestNew(t *testing.T) {
 				GUID, err := uuid.Parse(tc.withGUID)
 				require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
 				args = append(args, distro.WithGUID(GUID))
+			}
+
+			if tc.withProvisioning {
+				args = append(args, distro.WithProvisioning(&mockProvisioning{}))
 			}
 
 			workDir := t.TempDir()
@@ -393,14 +398,14 @@ func TestWorkerConstruction(t *testing.T) {
 			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
 
 			workDir := t.TempDir()
-			conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+			provisioning := mockProvisioning{}
 
 			d, err := distro.New(ctx,
 				distroName,
 				distro.Properties{},
 				workDir,
 				distro.WithTaskProcessingContext(ctx),
-				distro.WithConfig(conf),
+				distro.WithProvisioning(provisioning),
 				withMockWorker)
 			defer d.Cleanup(context.Background())
 
@@ -414,7 +419,7 @@ func TestWorkerConstruction(t *testing.T) {
 			require.NotNil(t, (*worker).newCtx.Value(testContextMarker(42)), "Worker's constructor should be called with the distro's context or a child of it")
 			require.Equal(t, d, (*worker).newDistro, "Worker's constructor should be called with the distro it is attached to")
 			require.Equal(t, workDir, (*worker).newDir, "Worker's constructor should be called with the same workdir as the distro's")
-			require.Equal(t, conf, (*worker).newConfig, "Worker's constructor should be called with the config passed to the distro")
+			require.Equal(t, provisioning, (*worker).newProvisioning, "Worker's constructor should be called with the config passed to the distro")
 		})
 	}
 }
@@ -555,10 +560,10 @@ func TestWorkerWrappers(t *testing.T) {
 }
 
 type mockWorker struct {
-	newCtx    context.Context
-	newDistro *distro.Distro
-	newDir    string
-	newConfig *config.Config
+	newCtx          context.Context
+	newDistro       *distro.Distro
+	newDir          string
+	newProvisioning worker.Provisioning
 
 	isActiveCalled      bool
 	clientCalled        bool
@@ -568,22 +573,22 @@ type mockWorker struct {
 }
 
 func mockWorkerInjector(constructorReturnsError bool) (distro.Option, **mockWorker) {
-	worker := new(*mockWorker)
-	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, conf *config.Config) (distro.Worker, error) {
+	mock := new(*mockWorker)
+	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, conf worker.Provisioning) (distro.Worker, error) {
 		w := &mockWorker{
-			newCtx:    ctx,
-			newDistro: d,
-			newDir:    tmpDir,
-			newConfig: conf,
+			newCtx:          ctx,
+			newDistro:       d,
+			newDir:          tmpDir,
+			newProvisioning: conf,
 		}
-		*worker = w
+		*mock = w
 		if constructorReturnsError {
 			return nil, errors.New("test error")
 		}
 		return w, nil
 	}
 
-	return distro.WithNewWorker(newMockWorker), worker
+	return distro.WithNewWorker(newMockWorker), mock
 }
 
 func (w *mockWorker) IsActive() bool {
@@ -607,4 +612,10 @@ func (w *mockWorker) SubmitTasks(...task.Task) error {
 
 func (w *mockWorker) Stop(context.Context) {
 	w.stopCalled = true
+}
+
+type mockProvisioning struct{}
+
+func (c mockProvisioning) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+	return nil, nil
 }

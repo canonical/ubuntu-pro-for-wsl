@@ -58,6 +58,10 @@ func TestNew(t *testing.T) {
 		taskFile    taskFileState
 		fillUpQueue bool
 
+		withProvisioning     bool
+		emptyProvisioning    bool
+		provisioningTasksErr bool
+
 		wantErr    bool
 		wantNTasks int
 	}{
@@ -66,10 +70,14 @@ func TestNew(t *testing.T) {
 		"Success with task file containing a single task":  {taskFile: fileHasOneTask, wantNTasks: 1},
 		"Success with task file containing too many tasks": {taskFile: fileHasTooManyTasks, wantNTasks: worker.TaskQueueSize},
 
+		"Success with empty provisioning":       {withProvisioning: true, emptyProvisioning: true},
+		"Success with single-task provisioning": {withProvisioning: true, wantNTasks: 1},
+
 		// Error
 		"Error when task file reads non-registered task type": {taskFile: fileHasNonRegisteredTask, wantErr: true},
 		"Error when task file has bad syntax":                 {taskFile: fileHasBadSyntax, wantErr: true},
 		"Error when task file is unreadable":                  {taskFile: fileIsDir, wantErr: true},
+		"Error when ProvisioningTasks fails":                  {withProvisioning: true, provisioningTasksErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -110,11 +118,20 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not make a directory in task file's location")
 			}
 
+			var args []worker.Option
+			if tc.withProvisioning {
+				c := &mockProvisioning{
+					provisioningTasksErr:        tc.provisioningTasksErr,
+					privisioningTasksReturnsNil: tc.emptyProvisioning,
+				}
+				args = append(args, worker.WithProvisioning(c))
+			}
+
 			// We pass a cancelled context so that no tasks are popped
 			// and we can accurately assert on the task queue length.
 			cancel()
 
-			w, err := worker.New(ctx, distro, distroDir)
+			w, err := worker.New(ctx, distro, distroDir, args...)
 			if err == nil {
 				defer w.Stop(ctx)
 			}
@@ -597,4 +614,19 @@ func taskfileFromTemplate[T task.Task](t *testing.T) []byte {
 	require.NoError(t, err, "Setup: could not execute template task file")
 
 	return w.Bytes()
+}
+
+type mockProvisioning struct {
+	provisioningTasksErr        bool
+	privisioningTasksReturnsNil bool
+}
+
+func (c mockProvisioning) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+	if c.provisioningTasksErr {
+		return nil, errors.New("mock error")
+	}
+	if c.privisioningTasksReturnsNil {
+		return nil, nil
+	}
+	return []task.Task{&testTask{}}, nil
 }
