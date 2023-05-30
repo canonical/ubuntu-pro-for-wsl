@@ -11,7 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	github.com/ubuntu/gowsl v0.0.0-20230517121008-ea3201c6d0bb
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
