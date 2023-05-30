@@ -84,13 +84,18 @@ func New(ctx context.Context, config *config.Config, args ...Option) (s Manager,
 	}()
 
 	uiService := ui.New(ctx, config, db)
-	wslInstanceService, err := wslinstance.New(ctx, db)
+
+	landscape, err := landscape.NewClient(config, db)
 	if err != nil {
 		return s, err
 	}
 
-	landscape := landscape.NewClient(config, db)
 	if err := landscape.Connect(ctx); err != nil {
+		log.Warningf(ctx, err.Error())
+	}
+
+	wslInstanceService, err := wslinstance.New(ctx, db, landscape)
+	if err != nil {
 		return s, err
 	}
 

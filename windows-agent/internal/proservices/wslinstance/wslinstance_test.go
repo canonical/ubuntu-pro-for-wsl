@@ -37,7 +37,9 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	_, err = wslinstance.New(context.Background(), db)
+	c := &landscapeClientMock{}
+
+	_, err = wslinstance.New(context.Background(), db, c)
 	require.NoError(t, err, "New should never return an error")
 }
 
@@ -117,6 +119,7 @@ func TestConnected(t *testing.T) {
 				distroName = ""
 			}
 
+			landscape := &landscapeClientMock{}
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
 
@@ -124,7 +127,7 @@ func TestConnected(t *testing.T) {
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 			defer db.Close(ctx)
 
-			srv, err := newWrappedService(ctx, db)
+			srv, err := newWrappedService(ctx, db, landscape)
 			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
 
 			grpcServer, ctrlAddr := serveWSLInstance(t, ctx, srv)
@@ -270,8 +273,8 @@ type wrappedService struct {
 
 // newWrappedService is a wrapper around wslinstance.New. It initializes the monitoring
 // around the service.
-func newWrappedService(ctx context.Context, db *database.DistroDB) (s wrappedService, err error) {
-	inst, err := wslinstance.New(ctx, db)
+func newWrappedService(ctx context.Context, db *database.DistroDB, landscape *landscapeClientMock) (s wrappedService, err error) {
+	inst, err := wslinstance.New(ctx, db, landscape)
 	return wrappedService{
 		Service: inst,
 		Errch:   make(chan error),
@@ -317,6 +320,19 @@ func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (se
 	go func() { _ = server.Serve(lis) }()
 
 	return server, lis.Addr().String()
+}
+
+// landscapeClientMock mocks the landscape client.
+//
+type landscapeClientMock struct {
+}
+
+func (c *landscapeClientMock) SendUpdatedInfo(ctx context.Context) error {
+	return errors.New("Sending updated info to disconnected landscape")
+}
+
+func (c *landscapeClientMock) Connected() bool {
+	return false
 }
 
 // wslDistroMock mocks the actions performed by the Linux-side client and services.

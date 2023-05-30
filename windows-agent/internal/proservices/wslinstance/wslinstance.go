@@ -19,18 +19,25 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// LandscapeClient is the client connected to the Landscape server.
+type LandscapeClient interface {
+	Connected() bool
+	SendUpdatedInfo(context.Context) error
+}
+
 // Service is the WSL Instance GRPC service implementation.
 type Service struct {
 	agentapi.UnimplementedWSLInstanceServer
 
-	db *database.DistroDB
+	db        *database.DistroDB
+	landscape LandscapeClient
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *database.DistroDB) (s Service, err error) {
+func New(ctx context.Context, db *database.DistroDB, landscape LandscapeClient) (s Service, err error) {
 	log.Debug(ctx, "Building new GRPC WSL Instance service")
 
-	return Service{db: db}, nil
+	return Service{db: db, landscape: landscape}, nil
 }
 
 // Connected establishes a connection with a WSL instance and keeps its properties
@@ -58,6 +65,10 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	if err != nil {
 		return fmt.Errorf("connection from %q: %v", info.WslName, err)
 	}
+
+	// Update landscape when connecting and disconnecting
+	s.landscapeSendUpdatedInfo(ctx)
+	defer s.landscapeSendUpdatedInfo(ctx)
 
 	conn, err := newWslServiceConn(ctx, d.Name(), stream)
 	if err != nil {
@@ -91,6 +102,8 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 				log.Warningf(ctx, "Connection from %q: could not dump database to disk: %v", d.Name(), err)
 			}
 		}
+
+		s.landscapeSendUpdatedInfo(ctx)
 	}
 }
 
@@ -173,4 +186,16 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 		ProAttached: info.ProAttached,
 		Hostname:    info.Hostname,
 	}, nil
+}
+
+// landscapeSendUpdatedInfo is syntactic sugar to update landscape when available and
+// log in the case error.
+func (s *Service) landscapeSendUpdatedInfo(ctx context.Context) {
+	if !s.landscape.Connected() {
+		return
+	}
+
+	if err := s.landscape.SendUpdatedInfo(ctx); err != nil {
+		log.Warningf(ctx, err.Error())
+	}
 }
