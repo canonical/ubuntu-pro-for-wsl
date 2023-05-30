@@ -6,7 +6,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230420065438-5e70ebcb4d27
 	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230420065438-5e70ebcb4d27
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
