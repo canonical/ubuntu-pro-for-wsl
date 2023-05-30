@@ -61,10 +61,10 @@ func TestNew(t *testing.T) {
 		wantErr    bool
 		wantNTasks int
 	}{
-		"No task file":                      {},
-		"Task file is empty":                {taskFile: fileIsEmpty},
-		"Task file contains a task":         {taskFile: fileHasOneTask, wantNTasks: 1},
-		"Task file contains too many tasks": {taskFile: fileHasTooManyTasks, wantNTasks: worker.TaskQueueSize},
+		"Success with no task file":                        {},
+		"Success with empty task file":                     {taskFile: fileIsEmpty},
+		"Success with task file containing a single task":  {taskFile: fileHasOneTask, wantNTasks: 1},
+		"Success with task file containing too many tasks": {taskFile: fileHasTooManyTasks, wantNTasks: worker.TaskQueueSize},
 
 		// Error
 		"Error when task file reads non-registered task type": {taskFile: fileHasNonRegisteredTask, wantErr: true},
