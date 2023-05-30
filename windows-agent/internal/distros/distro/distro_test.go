@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
@@ -394,7 +392,7 @@ func TestWorkerConstruction(t *testing.T) {
 			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
 
 			workDir := t.TempDir()
-			conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+			conf := mockConfig{}
 
 			d, err := distro.New(ctx,
 				distroName,
@@ -608,4 +606,10 @@ func (w *mockWorker) SubmitTasks(...task.Task) error {
 
 func (w *mockWorker) Stop(context.Context) {
 	w.stopCalled = true
+}
+
+type mockConfig struct{}
+
+func (c mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+	return nil, nil
 }
