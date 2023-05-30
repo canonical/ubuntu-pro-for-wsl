@@ -56,16 +56,16 @@ func TestNew(t *testing.T) {
 		wantErr     bool
 		wantErrType error
 	}{
-		"Registered distro":               {distro: registeredDistro},
-		"Registered distro with its GUID": {distro: registeredDistro, withGUID: registeredGUID},
+		"Success with a registered distro":              {distro: registeredDistro},
+		"Success with a registered distro and its GUID": {distro: registeredDistro, withGUID: registeredGUID},
 
 		// Error cases
-		"Registered distro, cannot create workdir":          {distro: registeredDistro, preventWorkDirCreation: true, wantErr: true},
-		"Registered distro, another distro's GUID":          {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
-		"Registered distro, non-matching GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
-		"Non-registered distro":                             {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
-		"Non-registered distro, another distro's GUID":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
-		"Non-registered distro, with a non-registered GUID": {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when workdir cannot be created":                          {distro: registeredDistro, preventWorkDirCreation: true, wantErr: true},
+		"Error when a constructing a distro with another distro's GUID": {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when a registered distro with a wrong GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when the distro is not registered":                       {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when the distro is not registered, but the GUID is":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when neither the distro nor the GUID are registered":     {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 	}
 
 	for name, tc := range testCases {
@@ -145,13 +145,13 @@ func TestIsValid(t *testing.T) {
 
 		want bool
 	}{
-		"registered distro with matching GUID": {distro: distro1, guid: guid1, want: true},
+		"True with a registered distro and its GUID": {distro: distro1, guid: guid1, want: true},
 
 		// Invalid cases
-		"registered distro with different, another distro's GUID": {distro: distro1, guid: guid2, want: false},
-		"registered distro with different, fake GUID":             {distro: distro1, guid: fakeGUID, want: false},
-		"non-registered distro, registered distro's GUID":         {distro: nonRegisteredDistro, guid: guid1, want: false},
-		"non-registered distro, non-registered distro's GUID":     {distro: nonRegisteredDistro, guid: fakeGUID, want: false},
+		"False with a registered distro another distro's GUID":               {distro: distro1, guid: guid2, want: false},
+		"False with a registered distro with a fake GUID":                    {distro: distro1, guid: fakeGUID, want: false},
+		"False with a non-registered distro with a registered distro's GUID": {distro: nonRegisteredDistro, guid: guid1, want: false},
+		"False with a non-registered distro with a fake GUID":                {distro: nonRegisteredDistro, guid: fakeGUID, want: false},
 	}
 
 	for name, tc := range testCases {
@@ -240,8 +240,9 @@ func TestKeepAwake(t *testing.T) {
 		wantErr bool
 	}{
 		"Registered distro is kept awake": {},
-		"Error on invalidated distro":     {invalidateDistro: true, wantErr: true},
-		"Error on uregistered distro":     {unregisterDistro: true, wantErr: true},
+
+		"Error on invalidated distro": {invalidateDistro: true, wantErr: true},
+		"Error on uregistered distro": {unregisterDistro: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -377,8 +378,8 @@ func TestWorkerConstruction(t *testing.T) {
 
 		wantErr bool
 	}{
-		"succeed when worker construction succeeds": {},
-		"fail when worker construction fails":       {constructorReturnErr: true, wantErr: true},
+		"Success when worker construction succeeds": {},
+		"Error when worker construction fails":      {constructorReturnErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
