@@ -1,16 +1,12 @@
 #include "p4w_ms_store_plugin.h"
 
-// This must be included before many other Windows headers.
-#include <windows.h>
-
-// For getPlatformVersion; remove unless needed for your plugin implementation.
-#include <VersionHelpers.h>
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 
 #include <memory>
-#include <sstream>
+
+#include "p4w_ms_store_plugin_impl.h"
 
 namespace p4w_ms_store {
 
@@ -19,10 +15,11 @@ void P4wMsStorePlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows* registrar) {
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "p4w_ms_store",
+          registrar->messenger(), channelName,
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<P4wMsStorePlugin>();
+  auto plugin = std::make_unique<P4wMsStorePlugin>(
+      [registrar] { return GetRootWindow(registrar->GetView()); });
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto& call, auto result) {
@@ -32,24 +29,26 @@ void P4wMsStorePlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-P4wMsStorePlugin::P4wMsStorePlugin() {}
+P4wMsStorePlugin::P4wMsStorePlugin(std::function<HWND()> windowProvider)
+    : getRootWindow{std::move(windowProvider)} {}
 
 P4wMsStorePlugin::~P4wMsStorePlugin() {}
 
 void P4wMsStorePlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue>& method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (method_call.method_name().compare("getPlatformVersion") == 0) {
-    std::ostringstream version_stream;
-    version_stream << "Windows ";
-    if (IsWindows10OrGreater()) {
-      version_stream << "10+";
-    } else if (IsWindows8OrGreater()) {
-      version_stream << "8";
-    } else if (IsWindows7OrGreater()) {
-      version_stream << "7";
+  if (method_call.method_name().compare("purchaseSubscription") == 0) {
+    // std::get_if can handle a nullptr argument.
+    auto* product = std::get_if<std::string>(method_call.arguments());
+    if (product == nullptr) {
+      result->Error(channelName, "A <productId> string argument was expected");
     }
-    result->Success(flutter::EncodableValue(version_stream.str()));
+
+    // When HandleMethodCall gets called we already have a running app, thus a
+    // top level window.
+    HWND topLevel = getRootWindow();
+    PurchaseSubscription(topLevel, *product, std::move(result));
+    return;
   } else {
     result->NotImplemented();
   }

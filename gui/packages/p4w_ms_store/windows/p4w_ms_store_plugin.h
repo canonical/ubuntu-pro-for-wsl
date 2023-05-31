@@ -4,6 +4,7 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 
+#include <functional>
 #include <memory>
 
 namespace p4w_ms_store {
@@ -12,7 +13,7 @@ class P4wMsStorePlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 
-  P4wMsStorePlugin();
+  P4wMsStorePlugin(std::function<HWND()> windowProvider);
 
   virtual ~P4wMsStorePlugin();
 
@@ -21,6 +22,8 @@ class P4wMsStorePlugin : public flutter::Plugin {
   P4wMsStorePlugin& operator=(const P4wMsStorePlugin&) = delete;
 
  private:
+  // Lazy getter for the top level window.
+  std::function<HWND()> getRootWindow;
   // Called when a method is called on this plugin's channel from Dart.
   void HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
