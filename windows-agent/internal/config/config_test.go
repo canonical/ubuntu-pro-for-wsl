@@ -22,6 +22,17 @@ const (
 	tokenFieldHasValue                      // Key exists, token field exists and is not empty
 )
 
+func TestNewAndGetters(t *testing.T) {
+	ctx := context.Background()
+
+	conf, err := config.New(ctx, config.WithRegistry(registry.NewMock()))
+	require.NoError(t, err, "New should not return an error")
+
+	require.NotEmpty(t, conf.Hostname(), "Hostname should not be an empty string")
+	require.NotEmpty(t, conf.Username(), "Username should not be an empty string")
+	require.NotEmpty(t, conf.Pseudonym(), "Pseudonym should not be an empty string")
+}
+
 func TestProToken(t *testing.T) {
 	t.Parallel()
 
