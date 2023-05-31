@@ -31,7 +31,7 @@ if (NOT NUGET)
     FetchContent_MakeAvailable(nuget)
     set(NUGET ${nuget_SOURCE_DIR}/nuget.exe)
 endif()
-# The cppwinrt.exe version choosen is the same of the [local_auth] plugin.
+# The cppwinrt.exe version chosen is the same of the [local_auth] plugin.
 # It's higher than the one shipped with SDK version 10.0.22621.0 (the current SDK version),
 # but not the latest available in NuGet repos.
 # The only machine-level side effect of this is the download of CppWinRT's nuget file to 
