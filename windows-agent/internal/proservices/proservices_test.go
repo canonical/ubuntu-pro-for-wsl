@@ -55,7 +55,8 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
 			}
 
-			conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+			conf, err := config.New(ctx, config.WithRegistry(registry.NewMock()))
+			require.NoError(t, err, "Setup: could not initialize Config")
 
 			s, err := proservices.New(ctx, conf, proservices.WithCacheDir(dir))
 			if err == nil {
@@ -77,7 +78,8 @@ func TestRegisterGRPCServices(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+	conf, err := config.New(ctx, config.WithRegistry(registry.NewMock()))
+	require.NoError(t, err, "Setup: could not initialize Config")
 
 	ps, err := proservices.New(ctx, conf, proservices.WithCacheDir(t.TempDir()))
 	require.NoError(t, err, "Setup: New should return no error")

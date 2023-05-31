@@ -46,7 +46,8 @@ func TestProToken(t *testing.T) {
 			ctx := context.Background()
 
 			r := registry.NewMock()
-			conf := config.New(ctx, config.WithRegistry(r))
+			conf, err := config.New(ctx, config.WithRegistry(r))
+			require.NoError(t, err, "Setup: could not initialize Config")
 
 			r.Errors = tc.mockErrors
 			if tc.registryState >= keyExists {
@@ -101,7 +102,8 @@ func TestProvisioningTasks(t *testing.T) {
 			ctx := context.Background()
 
 			r := registry.NewMock()
-			conf := config.New(ctx, config.WithRegistry(r))
+			conf, err := config.New(ctx, config.WithRegistry(r))
+			require.NoError(t, err, "Setup: could not initialize Config")
 
 			r.Errors = tc.mockErrors
 			if tc.registryState >= keyExists {
@@ -159,7 +161,8 @@ func TestSetProToken(t *testing.T) {
 			ctx := context.Background()
 
 			r := registry.NewMock()
-			conf := config.New(ctx, config.WithRegistry(r))
+			conf, err := config.New(ctx, config.WithRegistry(r))
+			require.NoError(t, err, "Setup: could not initialize Config")
 
 			r.KeyIsReadOnly = tc.accessIsReadOnly
 			r.Errors = tc.mockErrors
@@ -175,7 +178,7 @@ func TestSetProToken(t *testing.T) {
 				r.UbuntuProData["ProToken"] = "ORIGINAL_TOKEN"
 			}
 
-			err := conf.SetProToken(ctx, "NEW_TOKEN")
+			err = conf.SetProToken(ctx, "NEW_TOKEN")
 
 			if tc.wantError != nil {
 				require.Error(t, err, "ProvisioningTasks should return an error")

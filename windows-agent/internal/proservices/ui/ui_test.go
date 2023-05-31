@@ -25,7 +25,8 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+	conf, err := config.New(ctx, config.WithRegistry(registry.NewMock()))
+	require.NoError(t, err, "Setup: could not initialize Config")
 
 	_ = ui.New(context.Background(), conf, db)
 }
@@ -79,7 +80,9 @@ func TestAttachPro(t *testing.T) {
 			m.KeyExists = true
 			m.UbuntuProData["ProToken"] = "OLD_TOKEN"
 
-			conf := config.New(ctx, config.WithRegistry(m))
+			conf, err := config.New(ctx, config.WithRegistry(m))
+			require.NoError(t, err, "Setup: could not initialize Config")
+
 			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}

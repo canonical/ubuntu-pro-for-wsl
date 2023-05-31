@@ -4,8 +4,12 @@ package config
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
+	"os/user"
 	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
@@ -35,6 +39,9 @@ type Config struct {
 	proToken string
 	registry Registry
 	mu       *sync.RWMutex
+
+	username string
+	hostname string
 }
 
 type options struct {
@@ -52,7 +59,7 @@ func WithRegistry(r Registry) Option {
 }
 
 // New creates and initializes a new Config object.
-func New(ctx context.Context, args ...Option) (m *Config) {
+func New(ctx context.Context, args ...Option) (m *Config, err error) {
 	var opts options
 
 	for _, f := range args {
@@ -63,12 +70,24 @@ func New(ctx context.Context, args ...Option) (m *Config) {
 		opts.registry = registry.Windows{}
 	}
 
+	user, err := user.Current()
+	if err != nil {
+		return m, fmt.Errorf("could not get username: %v", err)
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return m, fmt.Errorf("could not get hostname: %v", err)
+	}
+
 	m = &Config{
 		registry: opts.registry,
 		mu:       &sync.RWMutex{},
+		username: user.Username,
+		hostname: hostname,
 	}
 
-	return m
+	return m, nil
 }
 
 // ProToken returns the value of the pro token.
@@ -150,4 +169,27 @@ func (c *Config) dump() error {
 	}
 
 	return nil
+}
+
+// Hostname returns a the cached hostname.
+func (c Config) Hostname() string {
+	return c.hostname
+}
+
+// Username returns a the cached Username.
+func (c Config) Username() string {
+	return c.username
+}
+
+// Pseudonym creates a pseudonymous identifier for the machine/user combination.
+// This identity can be used by an external server to track the user/machine across
+// sessions, but it cannot be used for any of:
+// - Obtaining the user ID.
+// - Obtaining the hostname.
+// - Tracking the user across different hosts.
+func (c Config) Pseudonym() string {
+	unencoded := c.Username() + c.Hostname()
+	hasher := sha512.New()
+	hasher.Write([]byte(unencoded))
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 }
