@@ -13,6 +13,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
 	"google.golang.org/grpc"
@@ -22,6 +23,7 @@ import (
 type Manager struct {
 	uiService          ui.Service
 	wslInstanceService wslinstance.Service
+	landscapeService   *landscape.Client
 	db                 *database.DistroDB
 }
 
@@ -82,19 +84,32 @@ func New(ctx context.Context, config *config.Config, args ...Option) (s Manager,
 	}()
 
 	uiService := ui.New(ctx, config, db)
-	wslInstanceService, err := wslinstance.New(ctx, db)
+
+	landscape, err := landscape.NewClient(config, db)
 	if err != nil {
 		return s, err
 	}
+
+	if err := landscape.Connect(ctx); err != nil {
+		log.Warningf(ctx, err.Error())
+	}
+
+	wslInstanceService, err := wslinstance.New(ctx, db, landscape)
+	if err != nil {
+		return s, err
+	}
+
 	return Manager{
 		uiService:          uiService,
 		wslInstanceService: wslInstanceService,
 		db:                 db,
+		landscapeService:   landscape,
 	}, nil
 }
 
 // Stop deallocates resources in the services.
 func (m Manager) Stop(ctx context.Context) {
+	m.landscapeService.Disconnect()
 	m.db.Close(ctx)
 }
 

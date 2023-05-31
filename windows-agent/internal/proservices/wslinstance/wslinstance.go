@@ -19,26 +19,35 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// LandscapeClient is the client connected to the Landscape server.
+type LandscapeClient interface {
+	Connected() bool
+	SendUpdatedInfo(context.Context) error
+}
+
 // Service is the WSL Instance GRPC service implementation.
 type Service struct {
 	agentapi.UnimplementedWSLInstanceServer
 
-	db *database.DistroDB
+	db        *database.DistroDB
+	landscape LandscapeClient
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *database.DistroDB) (s Service, err error) {
+func New(ctx context.Context, db *database.DistroDB, landscape LandscapeClient) (s Service, err error) {
 	log.Debug(ctx, "Building new GRPC WSL Instance service")
 
-	return Service{db: db}, nil
+	return Service{db: db, landscape: landscape}, nil
 }
 
 // Connected establishes a connection with a WSL instance and keeps its properties
 // in the database up-to-date.
 func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
+	ctx := context.TODO()
+
 	// TODO: fix it.
-	defer log.Debug(context.TODO(), "Connection dropped")
-	log.Debug(context.TODO(), "New connection detected")
+	defer log.Debug(ctx, "Connection dropped")
+	log.Debug(ctx, "New connection detected")
 
 	info, err := stream.Recv()
 	if err != nil {
@@ -50,14 +59,18 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		return fmt.Errorf("connection from %q: invalid DistroInfo: %v", info.WslName, err)
 	}
 
-	log.Debugf(context.TODO(), "Connection from %q: received properties: %v", info.WslName, props)
+	log.Debugf(ctx, "Connection from %q: received properties: %v", info.WslName, props)
 
-	d, err := s.db.GetDistroAndUpdateProperties(context.TODO(), info.WslName, props)
+	d, err := s.db.GetDistroAndUpdateProperties(ctx, info.WslName, props)
 	if err != nil {
 		return fmt.Errorf("connection from %q: %v", info.WslName, err)
 	}
 
-	conn, err := newWslServiceConn(context.TODO(), d.Name(), stream)
+	// Update landscape when connecting and disconnecting
+	s.landscapeSendUpdatedInfo(ctx)
+	defer s.landscapeSendUpdatedInfo(ctx)
+
+	conn, err := newWslServiceConn(ctx, d.Name(), stream)
 	if err != nil {
 		return fmt.Errorf("connection from %q: could not connect to Linux-side service: %v", d.Name(), err)
 	}
@@ -69,7 +82,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	//nolint:errcheck // We don't care about this error because we're cleaning up
 	defer d.SetConnection(nil)
 
-	log.Debugf(context.TODO(), "Connection to Linux-side service established")
+	log.Debugf(ctx, "Connection to Linux-side service established")
 
 	// Blocking connection for the lifetime of the WSL service.
 	for {
@@ -82,13 +95,15 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		if err != nil {
 			return fmt.Errorf("connection from %q: invalid DistroInfo: %v", d.Name(), err)
 		}
-		log.Infof(context.TODO(), "Connection from %q: Updated properties to %+v", d.Name(), props)
+		log.Infof(ctx, "Connection from %q: Updated properties to %+v", d.Name(), props)
 
 		if d.SetProperties(props) {
 			if err := s.db.Dump(); err != nil {
-				log.Warningf(context.TODO(), "Connection from %q: could not dump database to disk: %v", d.Name(), err)
+				log.Warningf(ctx, "Connection from %q: could not dump database to disk: %v", d.Name(), err)
 			}
 		}
+
+		s.landscapeSendUpdatedInfo(ctx)
 	}
 }
 
@@ -171,4 +186,16 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 		ProAttached: info.ProAttached,
 		Hostname:    info.Hostname,
 	}, nil
+}
+
+// landscapeSendUpdatedInfo is syntactic sugar to update landscape when available and
+// log in the case error.
+func (s *Service) landscapeSendUpdatedInfo(ctx context.Context) {
+	if !s.landscape.Connected() {
+		return
+	}
+
+	if err := s.landscape.SendUpdatedInfo(ctx); err != nil {
+		log.Warningf(ctx, err.Error())
+	}
 }
