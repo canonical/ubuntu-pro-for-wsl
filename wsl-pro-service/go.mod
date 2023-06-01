@@ -3,9 +3,9 @@ module github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
 go 1.20
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230420065438-5e70ebcb4d27
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230601072749-e7ce40e197de
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	google.golang.org/grpc v1.54.0
+	google.golang.org/grpc v1.55.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/ini.v1 v1.67.0
@@ -38,6 +38,6 @@ require (
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
