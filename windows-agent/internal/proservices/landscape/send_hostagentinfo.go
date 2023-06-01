@@ -89,11 +89,7 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 		instanceState = landscapeapi.InstanceState_Running
 	case gowsl.Stopped:
 		instanceState = landscapeapi.InstanceState_Stopped
-	case gowsl.Installing:
-		fallthrough
-	case gowsl.NonRegistered:
-		fallthrough
-	case gowsl.Uninstalling:
+	case gowsl.Installing, gowsl.NonRegistered, gowsl.Uninstalling:
 		return nil, newInstanceInfoMinorError{err: fmt.Errorf("distro %q is in state %q. Only %q and %q are accepted", d.Name(), state, gowsl.Running, gowsl.Stopped)}
 	default:
 		return nil, fmt.Errorf("distro %q is in unknown state %q", d.Name(), state)
