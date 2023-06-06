@@ -11,12 +11,22 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "gomod"
-    directory: "/wsl-service"
+    directory: "/common"
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/tools"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "gomod"
+    directory: "/wsl-pro-service"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "gomod"
+    directory: "/wslserviceapi"
     schedule:
       interval: "daily"
 
