@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type HttpMock struct {
+type HTTPMock struct {
 	EmptyBody            bool
 	UnknownContentLength bool
 	Key                  string
@@ -22,9 +22,9 @@ type HttpMock struct {
 	StatusCode           int
 }
 
-func (m HttpMock) Do(*http.Request) (*http.Response, error) {
+func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
 	if m.EmptyBody {
-		// empty body response
+		// empty body response.
 		return &http.Response{}, nil
 	}
 
@@ -39,7 +39,7 @@ func (m HttpMock) Do(*http.Request) (*http.Response, error) {
 	}
 
 	response := http.Response{
-		Body:          ioutil.NopCloser(bytes.NewBuffer(b)),
+		Body:          io.NopCloser(bytes.NewBuffer(b)),
 		StatusCode:    m.StatusCode,
 		ContentLength: cl,
 	}
@@ -59,7 +59,7 @@ func TestGetServerAccessToken(t *testing.T) {
 		emptyBody bool
 		wantErr   bool
 	}{
-		"Sucess": {responseValue: strings.Repeat("Token", 256), responseCode: 200},
+		"Success": {responseValue: strings.Repeat("Token", 256), responseCode: 200},
 
 		"Fail with a too big token":                 {responseValue: strings.Repeat("Token", 1000), responseCode: 200, wantErr: true},
 		"Fail with empty response":                  {responseCode: 200, emptyBody: true, wantErr: true},
@@ -74,10 +74,10 @@ func TestGetServerAccessToken(t *testing.T) {
 			t.Parallel()
 
 			if tc.responseKey == "" {
-				tc.responseKey = contracts.JsonKeyAdToken
+				tc.responseKey = contracts.JSONKeyAdToken
 			}
 
-			h := HttpMock{
+			h := HTTPMock{
 				EmptyBody:            tc.emptyBody,
 				Key:                  tc.responseKey,
 				Value:                tc.responseValue,
@@ -97,7 +97,6 @@ func TestGetServerAccessToken(t *testing.T) {
 			require.NoError(t, err, "GetServerAccessToken should return no errors")
 		})
 	}
-
 }
 
 func TestGetProToken(t *testing.T) {
@@ -113,12 +112,12 @@ func TestGetProToken(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Sucess": {jwt: "JWT", responseValue: strings.Repeat("Token", 256), responseCode: 200},
+		"Success": {jwt: "JWT", responseValue: strings.Repeat("Token", 256), responseCode: 200},
 
 		"Fail with a too big jwt":                {jwt: strings.Repeat("USER_JWT", 550), wantErr: true},
 		"Fail with empty jwt":                    {jwt: "", wantErr: true},
 		"Fail with bad JWT":                      {jwt: "bad", responseValue: "BAD REQUEST", responseCode: 401, wantErr: true},
-		"Fail with MS API failure":               {jwt: "good", responseValue: "UNKOWN SERVER ERROR", responseCode: 500, wantErr: true},
+		"Fail with MS API failure":               {jwt: "good", responseValue: "UNKNOWN SERVER ERROR", responseCode: 500, wantErr: true},
 		"Fail with expected key not in response": {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
 	}
 
@@ -129,10 +128,10 @@ func TestGetProToken(t *testing.T) {
 			t.Parallel()
 
 			if tc.responseKey == "" {
-				tc.responseKey = contracts.JsonKeyProToken
+				tc.responseKey = contracts.JSONKeyProToken
 			}
 
-			h := HttpMock{
+			h := HTTPMock{
 				EmptyBody:  tc.emptyBody,
 				Key:        tc.responseKey,
 				Value:      tc.responseValue,
@@ -151,5 +150,4 @@ func TestGetProToken(t *testing.T) {
 			require.NoError(t, err, "GetProToken should return no errors")
 		})
 	}
-
 }
