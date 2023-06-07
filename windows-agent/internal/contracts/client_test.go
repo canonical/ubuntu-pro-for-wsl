@@ -99,3 +99,57 @@ func TestGetServerAccessToken(t *testing.T) {
 	}
 
 }
+
+func TestGetProToken(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		jwt string
+
+		responseKey   string
+		responseValue string
+		responseCode  int
+		emptyBody     bool
+
+		wantErr bool
+	}{
+		"Sucess": {jwt: "JWT", responseValue: strings.Repeat("Token", 256), responseCode: 200},
+
+		"Fail with a too big jwt":                {jwt: strings.Repeat("USER_JWT", 550), wantErr: true},
+		"Fail with empty jwt":                    {jwt: "", wantErr: true},
+		"Fail with bad JWT":                      {jwt: "bad", responseValue: "BAD REQUEST", responseCode: 401, wantErr: true},
+		"Fail with MS API failure":               {jwt: "good", responseValue: "UNKOWN SERVER ERROR", responseCode: 500, wantErr: true},
+		"Fail with expected key not in response": {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if tc.responseKey == "" {
+				tc.responseKey = contracts.JsonKeyProToken
+			}
+
+			h := HttpMock{
+				EmptyBody:  tc.emptyBody,
+				Key:        tc.responseKey,
+				Value:      tc.responseValue,
+				StatusCode: tc.responseCode,
+			}
+			u, _ := url.Parse("https://localhost.org")
+			client := contracts.NewClient(u, h)
+
+			proToken, err := client.GetProToken(context.Background(), tc.jwt)
+
+			if tc.wantErr {
+				require.Errorf(t, err, "Got token \"%s\" when failure was expected", proToken)
+				return
+			}
+
+			require.NoError(t, err, "GetProToken should return no errors")
+		})
+	}
+
+}
