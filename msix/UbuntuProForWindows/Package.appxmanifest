@@ -22,12 +22,18 @@
     <Logo>Images\StoreLogo.png</Logo>
 	<!-- Prior to Windows 10 21H1 Build 19043 -->
 	<desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
+  <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
 	<!-- Windows 10 21H1 Build 19043 or later -->
 	<virtualization:RegistryWriteVirtualization>
 		<virtualization:ExcludedKeys>
 			<virtualization:ExcludedKey>HKEY_CURRENT_USER\Software\Canonical\UbuntuPro</virtualization:ExcludedKey>
 		</virtualization:ExcludedKeys>
 	</virtualization:RegistryWriteVirtualization>
+  <virtualization:FileSystemWriteVirtualization>
+      <virtualization:ExcludedDirectories>
+        <virtualization:ExcludedDirectory>$(KnownFolder:LocalAppData)\Ubuntu Pro</virtualization:ExcludedDirectory>
+      </virtualization:ExcludedDirectories>
+    </virtualization:FileSystemWriteVirtualization>
   </Properties>
 
   <Dependencies>
