@@ -51,7 +51,7 @@ func checkContentLength(cl int64) error {
 func (c *Client) GetServerAccessToken(ctx context.Context) (string, error) {
 	// baseurl/v1/token.
 	u := c.baseURL.JoinPath(apiVersion, getToken)
-	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +98,7 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (string, error
 		return "", err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(jsonData))
 	if err != nil {
 		return "", err
 	}
