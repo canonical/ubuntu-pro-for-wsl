@@ -112,22 +112,26 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (string, error
 		return "", err
 	}
 
+	defer res.Body.Close()
 	switch res.StatusCode { // add other error codes as CS team documents them.
+	case 200:
+		var data map[string]string
+		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+			return "", err
+		}
+
+		val, ok := data[jsonKeyProToken]
+		if !ok {
+			return "", fmt.Errorf("expected key %q not found in the response", jsonKeyProToken)
+		}
+
+		return val, nil
+
 	case 401:
 		return "", fmt.Errorf("bad user ID key: %v", userJwt)
 	case 500:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
+	default:
+		return "", errors.New("unknown error from the contracts server response")
 	}
-
-	defer res.Body.Close()
-	var data map[string]string
-	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return "", err
-	}
-
-	if val, ok := data[jsonKeyProToken]; ok {
-		return val, nil
-	}
-
-	return "", fmt.Errorf("expected key \"%s\" not found in the response", jsonKeyProToken)
 }
