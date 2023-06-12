@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,6 +16,7 @@ import (
 )
 
 type HTTPMock struct {
+	ErrorOnDo            bool
 	EmptyBody            bool
 	UnknownContentLength bool
 	Key                  string
@@ -23,6 +25,11 @@ type HTTPMock struct {
 }
 
 func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
+	if m.ErrorOnDo {
+		// desired error. Unrelated to non-2xx status codes.
+		return nil, errors.New("Wanted error")
+	}
+
 	if m.EmptyBody {
 		// empty body response.
 		return &http.Response{}, nil
@@ -56,6 +63,7 @@ func TestGetServerAccessToken(t *testing.T) {
 		responseCode          int
 		responseLengthUnknown bool
 		emptyBody             bool
+		errorOnDo             bool
 
 		wantErr bool
 	}{
@@ -65,6 +73,7 @@ func TestGetServerAccessToken(t *testing.T) {
 		"Fail with empty response":                  {responseCode: 200, emptyBody: true, wantErr: true},
 		"Fail with unknown content length response": {responseValue: "unbounded", responseCode: 200, responseLengthUnknown: true, wantErr: true},
 		"Fail with expected key not in response":    {responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
+		"Fail to speak HTTP":                        {errorOnDo: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -78,6 +87,7 @@ func TestGetServerAccessToken(t *testing.T) {
 			}
 
 			h := HTTPMock{
+				ErrorOnDo:            tc.errorOnDo,
 				EmptyBody:            tc.emptyBody,
 				Key:                  tc.responseKey,
 				Value:                tc.responseValue,
@@ -111,6 +121,7 @@ func TestGetProToken(t *testing.T) {
 		responseValue string
 		responseCode  int
 		emptyBody     bool
+		errorOnDo     bool
 
 		wantErr bool
 	}{
@@ -121,6 +132,7 @@ func TestGetProToken(t *testing.T) {
 		"Fail with bad JWT":                      {jwt: "bad", responseValue: "BAD REQUEST", responseCode: 401, wantErr: true},
 		"Fail with MS API failure":               {jwt: "good", responseValue: "UNKNOWN SERVER ERROR", responseCode: 500, wantErr: true},
 		"Fail with expected key not in response": {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
+		"Fail to speak HTTP":                     {errorOnDo: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -134,6 +146,7 @@ func TestGetProToken(t *testing.T) {
 			}
 
 			h := HTTPMock{
+				ErrorOnDo:  tc.errorOnDo,
 				EmptyBody:  tc.emptyBody,
 				Key:        tc.responseKey,
 				Value:      tc.responseValue,
