@@ -16,32 +16,32 @@ import (
 )
 
 type HTTPMock struct {
-	ErrorOnDo            bool
-	EmptyBody            bool
-	InvalidJSON          bool
-	UnknownContentLength bool
-	Key                  string
-	Value                string
-	StatusCode           int
+	errorOnDo            bool
+	emptyBody            bool
+	invalidJSON          bool
+	unknownContentLength bool
+	key                  string
+	value                string
+	statusCode           int
 }
 
 func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
-	if m.ErrorOnDo {
+	if m.errorOnDo {
 		// desired error. Unrelated to non-2xx status codes.
 		return nil, errors.New("Wanted error")
 	}
 
-	if m.EmptyBody {
+	if m.emptyBody {
 		// empty body response.
 		return &http.Response{}, nil
 	}
 
 	var b []byte
 	var err error
-	if m.InvalidJSON {
-		b = []byte(m.Key + m.Value)
+	if m.invalidJSON {
+		b = []byte(m.key + m.value)
 	} else {
-		b, err = json.Marshal(map[string]string{m.Key: m.Value})
+		b, err = json.Marshal(map[string]string{m.key: m.value})
 	}
 
 	if err != nil {
@@ -49,13 +49,13 @@ func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
 	}
 
 	cl := int64(-1)
-	if !m.UnknownContentLength {
+	if !m.unknownContentLength {
 		cl = int64(len(b))
 	}
 
 	response := http.Response{
 		Body:          io.NopCloser(bytes.NewBuffer(b)),
-		StatusCode:    m.StatusCode,
+		StatusCode:    m.statusCode,
 		ContentLength: cl,
 	}
 
@@ -97,13 +97,13 @@ func TestGetServerAccessToken(t *testing.T) {
 			}
 
 			h := HTTPMock{
-				ErrorOnDo:            tc.errorOnDo,
-				EmptyBody:            tc.emptyBody,
-				InvalidJSON:          tc.invalidJSON,
-				Key:                  tc.responseKey,
-				Value:                tc.responseValue,
-				StatusCode:           tc.responseCode,
-				UnknownContentLength: tc.responseLengthUnknown,
+				errorOnDo:            tc.errorOnDo,
+				emptyBody:            tc.emptyBody,
+				invalidJSON:          tc.invalidJSON,
+				key:                  tc.responseKey,
+				value:                tc.responseValue,
+				statusCode:           tc.responseCode,
+				unknownContentLength: tc.responseLengthUnknown,
 			}
 			u, err := url.Parse("https://localhost.org")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
@@ -158,12 +158,12 @@ func TestGetProToken(t *testing.T) {
 			}
 
 			h := HTTPMock{
-				ErrorOnDo:   tc.errorOnDo,
-				EmptyBody:   tc.emptyBody,
-				InvalidJSON: tc.invalidJSON,
-				Key:         tc.responseKey,
-				Value:       tc.responseValue,
-				StatusCode:  tc.responseCode,
+				errorOnDo:   tc.errorOnDo,
+				emptyBody:   tc.emptyBody,
+				invalidJSON: tc.invalidJSON,
+				key:         tc.responseKey,
+				value:       tc.responseValue,
+				statusCode:  tc.responseCode,
 			}
 			u, err := url.Parse("https://localhost.org")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
