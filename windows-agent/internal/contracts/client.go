@@ -30,7 +30,7 @@ func NewClient(base *url.URL, doer httpDoer) *Client {
 	}
 }
 
-// sanity checks to make sure the decoder won't blow up with strange responses.
+// checkContentLength sanity checks to make sure the decoder won't blow up with strange responses.
 func checkContentLength(cl int64) error {
 	if cl == -1 {
 		return errors.New("cannot accept response of unknown content length")
