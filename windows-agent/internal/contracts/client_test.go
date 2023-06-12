@@ -31,12 +31,12 @@ func TestGetServerAccessToken(t *testing.T) {
 	}{
 		"Success": {responseValue: strings.Repeat("Token", 256), responseCode: 200},
 
-		"Fail with a too big token":                 {responseValue: strings.Repeat("Token", 1000), responseCode: 200, wantErr: true},
-		"Fail with empty response":                  {responseCode: 200, emptyBody: true, wantErr: true},
-		"Fail with unknown content length response": {responseValue: "unbounded", responseCode: 200, responseLengthUnknown: true, wantErr: true},
-		"Fail with expected key not in response":    {responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
-		"Fail to speak HTTP":                        {errorOnDo: true, wantErr: true},
-		"Fail with invalid JSON":                    {responseKey: "another_token", responseValue: "good", invalidJSON: true, wantErr: true},
+		"Error with a too big token":                 {responseValue: strings.Repeat("Token", 1000), responseCode: 200, wantErr: true},
+		"Error with empty response":                  {responseCode: 200, emptyBody: true, wantErr: true},
+		"Error with unknown content length response": {responseValue: "unbounded", responseCode: 200, responseLengthUnknown: true, wantErr: true},
+		"Error with expected key not in response":    {responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
+		"Error on http.Do":                           {errorOnDo: true, wantErr: true},
+		"Error with invalid JSON":                    {responseKey: "another_token", responseValue: "good", invalidJSON: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -92,12 +92,12 @@ func TestGetProToken(t *testing.T) {
 	}{
 		"Success": {jwt: "JWT", responseValue: strings.Repeat("Token", 256), responseCode: 200},
 
-		"Fail with a too big jwt":                {jwt: strings.Repeat("USER_JWT", 550), wantErr: true},
-		"Fail with empty jwt":                    {jwt: "", wantErr: true},
-		"Fail with bad JWT":                      {jwt: "bad", responseValue: "BAD REQUEST", responseCode: 401, wantErr: true},
-		"Fail with MS API failure":               {jwt: "good", responseValue: "UNKNOWN SERVER ERROR", responseCode: 500, wantErr: true},
-		"Fail with expected key not in response": {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
-		"Fail to speak HTTP":                     {errorOnDo: true, wantErr: true},
+		"Error with a too big jwt":                {jwt: strings.Repeat("USER_JWT", 550), wantErr: true},
+		"Error with empty jwt":                    {jwt: "", wantErr: true},
+		"Error with bad JWT":                      {jwt: "bad", responseValue: "BAD REQUEST", responseCode: 401, wantErr: true},
+		"Error with MS API failure":               {jwt: "good", responseValue: "UNKNOWN SERVER ERROR", responseCode: 500, wantErr: true},
+		"Error with expected key not in response": {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
+		"Error on http.Do":                        {errorOnDo: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
