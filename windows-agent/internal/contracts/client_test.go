@@ -15,53 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type HTTPMock struct {
-	errorOnDo            bool
-	emptyBody            bool
-	invalidJSON          bool
-	unknownContentLength bool
-	key                  string
-	value                string
-	statusCode           int
-}
-
-func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
-	if m.errorOnDo {
-		// desired error. Unrelated to non-2xx status codes.
-		return nil, errors.New("Wanted error")
-	}
-
-	if m.emptyBody {
-		// empty body response.
-		return &http.Response{}, nil
-	}
-
-	var b []byte
-	var err error
-	if m.invalidJSON {
-		b = []byte(m.key + m.value)
-	} else {
-		b, err = json.Marshal(map[string]string{m.key: m.value})
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	cl := int64(-1)
-	if !m.unknownContentLength {
-		cl = int64(len(b))
-	}
-
-	response := http.Response{
-		Body:          io.NopCloser(bytes.NewBuffer(b)),
-		StatusCode:    m.statusCode,
-		ContentLength: cl,
-	}
-
-	return &response, nil
-}
-
 func TestGetServerAccessToken(t *testing.T) {
 	t.Parallel()
 
@@ -180,4 +133,51 @@ func TestGetProToken(t *testing.T) {
 			require.NoError(t, err, "GetProToken should return no errors")
 		})
 	}
+}
+
+type HTTPMock struct {
+	errorOnDo            bool
+	emptyBody            bool
+	invalidJSON          bool
+	unknownContentLength bool
+	key                  string
+	value                string
+	statusCode           int
+}
+
+func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
+	if m.errorOnDo {
+		// desired error. Unrelated to non-2xx status codes.
+		return nil, errors.New("Wanted error")
+	}
+
+	if m.emptyBody {
+		// empty body response.
+		return &http.Response{}, nil
+	}
+
+	var b []byte
+	var err error
+	if m.invalidJSON {
+		b = []byte(m.key + m.value)
+	} else {
+		b, err = json.Marshal(map[string]string{m.key: m.value})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	cl := int64(-1)
+	if !m.unknownContentLength {
+		cl = int64(len(b))
+	}
+
+	response := http.Response{
+		Body:          io.NopCloser(bytes.NewBuffer(b)),
+		StatusCode:    m.statusCode,
+		ContentLength: cl,
+	}
+
+	return &response, nil
 }
