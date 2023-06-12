@@ -90,7 +90,7 @@ func TestGetServerAccessToken(t *testing.T) {
 			aad, err := client.GetServerAccessToken(context.Background())
 
 			if tc.wantErr {
-				require.Errorf(t, err, "Got token \"%s\" when failure was expected", aad)
+				require.Errorf(t, err, "Got token %q when failure was expected", aad)
 				return
 			}
 
@@ -143,7 +143,7 @@ func TestGetProToken(t *testing.T) {
 			proToken, err := client.GetProToken(context.Background(), tc.jwt)
 
 			if tc.wantErr {
-				require.Errorf(t, err, "Got token \"%s\" when failure was expected", proToken)
+				require.Errorf(t, err, "Got token %q when failure was expected", proToken)
 				return
 			}
 

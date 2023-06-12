@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/ubuntu/decorate"
 )
 
 // httpDoer is an interface to allow injecting an HTTP Client.
@@ -48,19 +50,20 @@ func checkContentLength(cl int64) error {
 }
 
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
-func (c *Client) GetServerAccessToken(ctx context.Context) (string, error) {
+func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error) {
+	defer decorate.OnError(&err, "GetServerAccessToken")
 	// baseurl/v1/token.
 	u := c.baseURL.JoinPath(apiVersion, getToken)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not create a GET request: %v", err)
 	}
 
 	req.Header.Set("Accept", "application/json")
 
 	res, err := c.http.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to exeecute the GET request: %v", err)
 	}
 
 	if err := checkContentLength(res.ContentLength); err != nil {
@@ -70,18 +73,20 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (string, error) {
 	defer res.Body.Close()
 	var data map[string]string
 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	if val, ok := data[jsonKeyAdToken]; ok {
-		return val, nil
+	val, ok := data[jsonKeyAdToken]
+	if !ok {
+		return "", fmt.Errorf("expected key %q not found in the response", jsonKeyAdToken)
 	}
 
-	return "", fmt.Errorf("expected key \"%s\" not found in the response", jsonKeyAdToken)
+	return val, nil
 }
 
 // GetProToken returns the (possibly known) Pro Token provided by the Contract Server backend by POST'ing the user JWT.
-func (c *Client) GetProToken(ctx context.Context, userJwt string) (string, error) {
+func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err error) {
+	defer decorate.OnError(&err, "GetProToken")
 	jwtLen := len(userJwt)
 	if jwtLen == 0 {
 		return "", errors.New("user JWT cannot be empty")
