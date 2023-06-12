@@ -104,18 +104,27 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err
 
 	defer res.Body.Close()
 	switch res.StatusCode { // add other error codes as CS team documents them.
+	case 401:
+		return "", fmt.Errorf("bad user ID key: %v", userJwt)
+	case 500:
+		return "", errors.New("couldn't validate the user entitlement against MS Store")
+	default:
+		return "", fmt.Errorf("unknown error from the contracts server response. Code=%d. Body=%s", res.StatusCode, res.Body)
 	case 200:
-		var data map[string]string
-		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return "", err
-		}
+	}
 
-		val, ok := data[jsonKeyProToken]
-		if !ok {
-			return "", fmt.Errorf("expected key %q not found in the response", jsonKeyProToken)
-		}
+	var data map[string]string
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+		return "", err
+	}
 
-		return val, nil
+	val, ok := data[jsonKeyProToken]
+	if !ok {
+		return "", fmt.Errorf("expected key %q not found in the response", jsonKeyProToken)
+	}
+
+	return val, nil
+}
 
 // checkContentLength sanity checks to make sure the decoder won't blow up with strange responses.
 func checkContentLength(cl int64) error {
