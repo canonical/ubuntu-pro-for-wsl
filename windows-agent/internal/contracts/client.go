@@ -18,14 +18,14 @@ type httpDoer interface {
 
 // Client knows how to talk to the Contracts Server backend.
 type Client struct {
-	baseURL url.URL
+	baseURL *url.URL
 	http    httpDoer
 }
 
 // NewClient returns a Client instance caching a base URL.
 func NewClient(base *url.URL, doer httpDoer) *Client {
 	return &Client{
-		baseURL: *base,
+		baseURL: base,
 		http:    doer,
 	}
 }
