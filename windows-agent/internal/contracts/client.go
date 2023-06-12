@@ -35,6 +35,7 @@ func NewClient(base *url.URL, doer httpDoer) *Client {
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
 func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error) {
 	defer decorate.OnError(&err, "GetServerAccessToken")
+
 	// baseurl/v1/token.
 	u := c.baseURL.JoinPath(apiVersion, getToken)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -70,6 +71,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error)
 // GetProToken returns the (possibly known) Pro Token provided by the Contract Server backend by POST'ing the user JWT.
 func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err error) {
 	defer decorate.OnError(&err, "GetProToken")
+
 	jwtLen := len(userJwt)
 	if jwtLen == 0 {
 		return "", errors.New("user JWT cannot be empty")
