@@ -97,7 +97,9 @@ func TestGetProToken(t *testing.T) {
 		"Error with bad JWT":                      {jwt: "bad", responseValue: "BAD REQUEST", responseCode: 401, wantErr: true},
 		"Error with MS API failure":               {jwt: "good", responseValue: "UNKNOWN SERVER ERROR", responseCode: 500, wantErr: true},
 		"Error with expected key not in response": {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
-		"Error on http.Do":                        {errorOnDo: true, wantErr: true},
+		"Error on http.Do":                        {jwt: "good", errorOnDo: true, wantErr: true},
+		"Error with invalid JSON":                 {responseKey: "another_token", responseValue: "good", invalidJSON: true, wantErr: true},
+		"Error with unexpected status code":       {jwt: "good", responseKey: "another_token", responseValue: "good", responseCode: 422, wantErr: true},
 	}
 
 	for name, tc := range testCases {
