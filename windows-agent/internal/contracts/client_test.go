@@ -84,7 +84,9 @@ func TestGetServerAccessToken(t *testing.T) {
 				StatusCode:           tc.responseCode,
 				UnknownContentLength: tc.responseLengthUnknown,
 			}
-			u, _ := url.Parse("https://localhost.org")
+			u, err := url.Parse("https://localhost.org")
+			require.NoError(t, err, "Setup: URL parsing should not fail")
+
 			client := contracts.NewClient(u, h)
 
 			aad, err := client.GetServerAccessToken(context.Background())
@@ -137,7 +139,9 @@ func TestGetProToken(t *testing.T) {
 				Value:      tc.responseValue,
 				StatusCode: tc.responseCode,
 			}
-			u, _ := url.Parse("https://localhost.org")
+			u, err := url.Parse("https://localhost.org")
+			require.NoError(t, err, "Setup: URL parsing should not fail")
+
 			client := contracts.NewClient(u, h)
 
 			proToken, err := client.GetProToken(context.Background(), tc.jwt)
