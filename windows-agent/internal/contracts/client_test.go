@@ -18,6 +18,7 @@ import (
 type HTTPMock struct {
 	ErrorOnDo            bool
 	EmptyBody            bool
+	InvalidJSON          bool
 	UnknownContentLength bool
 	Key                  string
 	Value                string
@@ -35,7 +36,14 @@ func (m HTTPMock) Do(*http.Request) (*http.Response, error) {
 		return &http.Response{}, nil
 	}
 
-	b, err := json.Marshal(map[string]string{m.Key: m.Value})
+	var b []byte
+	var err error
+	if m.InvalidJSON {
+		b = []byte(m.Key + m.Value)
+	} else {
+		b, err = json.Marshal(map[string]string{m.Key: m.Value})
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +72,7 @@ func TestGetServerAccessToken(t *testing.T) {
 		responseLengthUnknown bool
 		emptyBody             bool
 		errorOnDo             bool
+		invalidJSON           bool
 
 		wantErr bool
 	}{
@@ -74,6 +83,7 @@ func TestGetServerAccessToken(t *testing.T) {
 		"Fail with unknown content length response": {responseValue: "unbounded", responseCode: 200, responseLengthUnknown: true, wantErr: true},
 		"Fail with expected key not in response":    {responseKey: "another_token", responseValue: "good", responseCode: 200, wantErr: true},
 		"Fail to speak HTTP":                        {errorOnDo: true, wantErr: true},
+		"Fail with invalid JSON":                    {responseKey: "another_token", responseValue: "good", invalidJSON: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -89,6 +99,7 @@ func TestGetServerAccessToken(t *testing.T) {
 			h := HTTPMock{
 				ErrorOnDo:            tc.errorOnDo,
 				EmptyBody:            tc.emptyBody,
+				InvalidJSON:          tc.invalidJSON,
 				Key:                  tc.responseKey,
 				Value:                tc.responseValue,
 				StatusCode:           tc.responseCode,
@@ -122,6 +133,7 @@ func TestGetProToken(t *testing.T) {
 		responseCode  int
 		emptyBody     bool
 		errorOnDo     bool
+		invalidJSON   bool
 
 		wantErr bool
 	}{
@@ -146,11 +158,12 @@ func TestGetProToken(t *testing.T) {
 			}
 
 			h := HTTPMock{
-				ErrorOnDo:  tc.errorOnDo,
-				EmptyBody:  tc.emptyBody,
-				Key:        tc.responseKey,
-				Value:      tc.responseValue,
-				StatusCode: tc.responseCode,
+				ErrorOnDo:   tc.errorOnDo,
+				EmptyBody:   tc.emptyBody,
+				InvalidJSON: tc.invalidJSON,
+				Key:         tc.responseKey,
+				Value:       tc.responseValue,
+				StatusCode:  tc.responseCode,
 			}
 			u, err := url.Parse("https://localhost.org")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
