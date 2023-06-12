@@ -32,23 +32,6 @@ func NewClient(base *url.URL, doer httpDoer) *Client {
 	}
 }
 
-// checkContentLength sanity checks to make sure the decoder won't blow up with strange responses.
-func checkContentLength(cl int64) error {
-	if cl == -1 {
-		return errors.New("cannot accept response of unknown content length")
-	}
-
-	if cl == 0 {
-		return errors.New("unexpected empty response")
-	}
-
-	if cl > apiTokenMaxSize {
-		return fmt.Errorf("response is too big: %d bytes", cl)
-	}
-
-	return nil
-}
-
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
 func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error) {
 	defer decorate.OnError(&err, "GetServerAccessToken")
@@ -132,11 +115,19 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err
 
 		return val, nil
 
-	case 401:
-		return "", fmt.Errorf("bad user ID key: %v", userJwt)
-	case 500:
-		return "", errors.New("couldn't validate the user entitlement against MS Store")
-	default:
-		return "", errors.New("unknown error from the contracts server response")
+// checkContentLength sanity checks to make sure the decoder won't blow up with strange responses.
+func checkContentLength(cl int64) error {
+	if cl == -1 {
+		return errors.New("cannot accept response of unknown content length")
 	}
+
+	if cl == 0 {
+		return errors.New("unexpected empty response")
+	}
+
+	if cl > apiTokenMaxSize {
+		return fmt.Errorf("response is too big: %d bytes", cl)
+	}
+
+	return nil
 }
