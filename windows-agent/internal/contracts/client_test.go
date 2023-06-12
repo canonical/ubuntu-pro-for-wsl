@@ -55,9 +55,9 @@ func TestGetServerAccessToken(t *testing.T) {
 		responseValue         string
 		responseCode          int
 		responseLengthUnknown bool
+		emptyBody             bool
 
-		emptyBody bool
-		wantErr   bool
+		wantErr bool
 	}{
 		"Success": {responseValue: strings.Repeat("Token", 256), responseCode: 200},
 
