@@ -233,9 +233,7 @@ func TestSetProperties(t *testing.T) {
 	}
 }
 
-func TestKeepAwake(t *testing.T) {
-	t.Skip("Skipping because this method is known to be ineffective.")
-
+func TestPushPopAwake(t *testing.T) {
 	const wslSleepDelay = 8 * time.Second
 
 	testCases := map[string]struct {
