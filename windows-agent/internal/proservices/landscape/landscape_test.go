@@ -199,7 +199,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			if tc.distroIsRunning {
-				err := distro.KeepAwake(ctx)
+				err := distro.PushAwake()
+				//nolint:errcheck // Nothing we can do about it
+				defer distro.PopAwake()
 				require.NoError(t, err, "Setup: could not keep distro alive")
 			} else {
 				d := wsl.NewDistro(ctx, distroName)
