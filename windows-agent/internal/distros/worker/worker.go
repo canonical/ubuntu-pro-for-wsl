@@ -266,7 +266,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 }
 
 func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslserviceapi.WSLClient, err error) {
-	log.Debugf(context.TODO(), "Distro %q: ensuring active connection.", w.distro.Name())
+	log.Debugf(ctx, "Distro %q: ensuring active connection.", w.distro.Name())
 
 	for i := 0; i < 5; i++ {
 		client, err = func() (wslserviceapi.WSLClient, error) {
@@ -283,7 +283,7 @@ func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslservice
 				return nil, newUnreachableDistroErr(err)
 			}
 
-			log.Debugf(context.TODO(), "Distro %q: connection is active.", w.distro.Name())
+			log.Debugf(ctx, "Distro %q: connection is active.", w.distro.Name())
 			return client, nil
 		}()
 
