@@ -51,7 +51,7 @@ const (
 )
 
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
-func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error) {
+func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err error) {
 	defer decorate.OnError(&err, "couldn't download access token from server")
 
 	// baseurl/v1/token.
@@ -87,7 +87,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error)
 }
 
 // GetProToken returns the (possibly known) Pro Token provided by the Contract Server backend by POST'ing the user JWT.
-func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err error) {
+func (c *Client) GetProToken(ctx context.Context, userJwt string) (token string, err error) {
 	defer decorate.OnError(&err, "couldn't download a Pro Token from server")
 
 	jwtLen := len(userJwt)
