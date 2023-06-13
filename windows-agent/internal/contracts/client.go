@@ -37,7 +37,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error)
 	defer decorate.OnError(&err, "GetServerAccessToken")
 
 	// baseurl/v1/token.
-	u := c.baseURL.JoinPath(apiVersion, getToken)
+	u := c.baseURL.JoinPath(apiVersion, tokenPath)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("could not create a GET request: %v", err)
@@ -60,9 +60,9 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error)
 		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	val, ok := data[jsonKeyAdToken]
+	val, ok := data[adTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", jsonKeyAdToken)
+		return "", fmt.Errorf("expected key %q not found in the response", adTokenKey)
 	}
 
 	return val, nil
@@ -82,8 +82,8 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err
 	}
 
 	// baseurl/v1/subscription.
-	u := c.baseURL.JoinPath(apiVersion, postSubscription)
-	jsonData, err := json.Marshal(map[string]string{jsonKeyJwt: userJwt})
+	u := c.baseURL.JoinPath(apiVersion, subscriptionPath)
+	jsonData, err := json.Marshal(map[string]string{jwtKey: userJwt})
 	if err != nil {
 		return "", err
 	}
@@ -118,9 +118,9 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (t string, err
 		return "", err
 	}
 
-	val, ok := data[jsonKeyProToken]
+	val, ok := data[proTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", jsonKeyProToken)
+		return "", fmt.Errorf("expected key %q not found in the response", proTokenKey)
 	}
 
 	return val, nil
