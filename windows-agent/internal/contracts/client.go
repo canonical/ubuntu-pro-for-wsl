@@ -103,12 +103,12 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(jsonData))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not create a POST request: %v", err)
 	}
 
 	res, err := c.http.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to execute the POST request: %v", err)
 	}
 
 	if err := checkLength(res.ContentLength); err != nil {
