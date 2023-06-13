@@ -65,7 +65,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (t string, err error)
 
 	res, err := c.http.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to exeecute the GET request: %v", err)
+		return "", fmt.Errorf("failed to execute the GET request: %v", err)
 	}
 
 	if err := checkContentLength(res.ContentLength); err != nil {
