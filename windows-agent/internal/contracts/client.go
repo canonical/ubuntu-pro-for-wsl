@@ -68,8 +68,8 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 		return "", fmt.Errorf("failed to execute the GET request: %v", err)
 	}
 
-	if err := checkContentLength(res.ContentLength); err != nil {
-		return "", err
+	if err := checkLength(res.ContentLength); err != nil {
+		return "", fmt.Errorf("invalid response content length: %v", err)
 	}
 
 	defer res.Body.Close()
@@ -90,13 +90,8 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string, err error) {
 	defer decorate.OnError(&err, "couldn't download a Pro Token from server")
 
-	l := len(userJWT)
-	if l == 0 {
-		return "", errors.New("user JWT cannot be empty")
-	}
-
-	if l > apiTokenMaxSize {
-		return "", errors.New("too big JWT")
+	if err := checkLength(int64(len(userJWT))); err != nil {
+		return "", fmt.Errorf("invalid user JWT: %v", err)
 	}
 
 	// baseurl/v1/subscription.
@@ -116,8 +111,8 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 		return "", err
 	}
 
-	if err := checkContentLength(res.ContentLength); err != nil {
-		return "", err
+	if err := checkLength(res.ContentLength); err != nil {
+		return "", fmt.Errorf("invalid response content length: %v", err)
 	}
 
 	defer res.Body.Close()
@@ -144,18 +139,18 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	return val, nil
 }
 
-// checkContentLength sanity checks to make sure the decoder won't blow up with strange responses.
-func checkContentLength(cl int64) error {
-	if cl == -1 {
-		return errors.New("cannot accept response of unknown content length")
+// checkLength sanity checks that 0 < length < apiTokenMaxSize.
+func checkLength(length int64) error {
+	if length < 0 {
+		return errors.New("negative length")
 	}
 
-	if cl == 0 {
-		return errors.New("unexpected empty response")
+	if length == 0 {
+		return errors.New("empty")
 	}
 
-	if cl > apiTokenMaxSize {
-		return fmt.Errorf("response is too big: %d bytes", cl)
+	if length > apiTokenMaxSize {
+		return fmt.Errorf("too big: %d bytes, limit is %d", length, apiTokenMaxSize)
 	}
 
 	return nil
