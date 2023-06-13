@@ -87,21 +87,21 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 }
 
 // GetProToken returns the (possibly known) Pro Token provided by the Contract Server backend by POST'ing the user JWT.
-func (c *Client) GetProToken(ctx context.Context, userJwt string) (token string, err error) {
+func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string, err error) {
 	defer decorate.OnError(&err, "couldn't download a Pro Token from server")
 
-	jwtLen := len(userJwt)
-	if jwtLen == 0 {
+	l := len(userJWT)
+	if l == 0 {
 		return "", errors.New("user JWT cannot be empty")
 	}
 
-	if jwtLen > apiTokenMaxSize {
+	if l > apiTokenMaxSize {
 		return "", errors.New("too big JWT")
 	}
 
 	// baseurl/v1/subscription.
 	u := c.baseURL.JoinPath(apiVersion, subscriptionPath)
-	jsonData, err := json.Marshal(map[string]string{jwtKey: userJwt})
+	jsonData, err := json.Marshal(map[string]string{jwtKey: userJWT})
 	if err != nil {
 		return "", err
 	}
@@ -123,7 +123,7 @@ func (c *Client) GetProToken(ctx context.Context, userJwt string) (token string,
 	defer res.Body.Close()
 	switch res.StatusCode { // add other error codes as CS team documents them.
 	case 401:
-		return "", fmt.Errorf("bad user ID key: %v", userJwt)
+		return "", fmt.Errorf("bad user ID key: %v", userJWT)
 	case 500:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
 	default:
