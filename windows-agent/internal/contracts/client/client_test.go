@@ -1,4 +1,4 @@
-package contracts_test
+package client_test
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,7 +32,7 @@ func TestGetServerAccessToken(t *testing.T) {
 	}{
 		"Success": {},
 
-		"Error with a too big token":                 {responseContents: []byte(fmt.Sprintf("{%q:%q}", contracts.JSONKeyAdToken, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
+		"Error with a too big token":                 {responseContents: []byte(fmt.Sprintf("{%q:%q}", client.JSONKeyAdToken, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
 		"Error with empty response":                  {responseContents: []byte(""), wantErr: true},
 		"Error with unknown content length response": {unknownContentLength: true, wantErr: true},
 		"Error with expected key not in response":    {responseContents: []byte(`{"unexpected_key": "unexpected_value"}`), wantErr: true},
@@ -49,7 +49,7 @@ func TestGetServerAccessToken(t *testing.T) {
 
 			if tc.responseContents == nil {
 				var err error
-				tc.responseContents, err = json.Marshal(map[string]string{contracts.JSONKeyAdToken: goodToken})
+				tc.responseContents, err = json.Marshal(map[string]string{client.JSONKeyAdToken: goodToken})
 				require.NoError(t, err, "Setup: unexpected error when marshalling the test token")
 			}
 
@@ -64,7 +64,7 @@ func TestGetServerAccessToken(t *testing.T) {
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := contracts.NewClient(u, h)
+			client := client.NewClient(u, h)
 			ctx := context.Background()
 			if tc.nilContext {
 				ctx = nil
@@ -126,7 +126,7 @@ func TestGetProToken(t *testing.T) {
 
 			if tc.responseContents == nil {
 				var err error
-				tc.responseContents, err = json.Marshal(map[string]string{contracts.JSONKeyProToken: goodToken})
+				tc.responseContents, err = json.Marshal(map[string]string{client.JSONKeyProToken: goodToken})
 				require.NoError(t, err, "Setup: unexpected error when marshalling the good token")
 			}
 
@@ -141,7 +141,7 @@ func TestGetProToken(t *testing.T) {
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := contracts.NewClient(u, h)
+			client := client.NewClient(u, h)
 			ctx := context.Background()
 			if tc.nilContext {
 				ctx = nil

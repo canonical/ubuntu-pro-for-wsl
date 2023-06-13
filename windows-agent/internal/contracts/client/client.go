@@ -1,5 +1,5 @@
-// Package contracts interfaces with the Contracts Server backend.
-package contracts
+// Package client interfaces with the Contracts Server backend.
+package client
 
 import (
 	"bytes"
