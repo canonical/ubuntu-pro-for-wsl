@@ -104,16 +104,16 @@ func TestGetProToken(t *testing.T) {
 		"Success": {jwt: "JWT", want: goodToken},
 
 		"Error with a too big jwt":                {jwt: strings.Repeat("REPEAT_TOO_BIG_JWT", 230), wantErr: true},
-		"Error with empty jwt":                    {jwt: "", wantErr: true},
-		"Error with bad request":                  {statusCode: 401, jwt: "bad", responseContent: []byte("BAD REQUEST"), wantErr: true}, // that would mean a JWT the server found to be invalid.
-		"Error with MS API failure":               {statusCode: 500, jwt: "JWT", responseContent: []byte("UNKNOWN SERVER ERROR"), wantErr: true},
-		"Error with expected key not in response": {responseContent: []byte(`{"unexpected_key": "unexpected_value"}`), jwt: "JWT", wantErr: true},
-		"Error on http.Do":                        {errorOnDo: true, jwt: "JWT", wantErr: true},
-		"Error with invalid JSON":                 {responseContent: []byte("invalid JSON"), jwt: "JWT", wantErr: true},
-		"Error with unexpected status code":       {statusCode: 422, jwt: "JWT", wantErr: true},
-		"Error with empty response body":          {responseContent: []byte(""), jwt: "JWT", wantErr: true},
-		"Error with unknown response length":      {unknownContentLength: true, jwt: "JWT", wantErr: true},
-		"Error with a nil context":                {nilContext: true, jwt: "JWT", wantErr: true},
+		"Error with empty jwt":                    {jwt: "-", wantErr: true},
+		"Error with bad request":                  {statusCode: 401, jwt: "bad JWT", responseContent: []byte("BAD REQUEST"), wantErr: true}, // that would mean a JWT the server found to be invalid.
+		"Error with MS API failure":               {statusCode: 500, responseContent: []byte("UNKNOWN SERVER ERROR"), wantErr: true},
+		"Error with expected key not in response": {responseContent: []byte(`{"unexpected_key": "unexpected_value"}`), wantErr: true},
+		"Error on http.Do":                        {errorOnDo: true, wantErr: true},
+		"Error with invalid JSON":                 {responseContent: []byte("invalid JSON"), wantErr: true},
+		"Error with unexpected status code":       {statusCode: 422, wantErr: true},
+		"Error with empty response body":          {responseContent: []byte(""), wantErr: true},
+		"Error with unknown response length":      {unknownContentLength: true, wantErr: true},
+		"Error with a nil context":                {nilContext: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -121,6 +121,14 @@ func TestGetProToken(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			if len(tc.jwt) == 0 { // we want a simple default.
+				tc.jwt = "JWT"
+			}
+
+			if tc.jwt == "-" { // we want to exercise the case of the empty string.
+				tc.jwt = ""
+			}
 
 			if tc.statusCode == 0 {
 				tc.statusCode = 200
