@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os/exec"
 	"sync"
-	"syscall"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro/touchdistro"
 	wsl "github.com/ubuntu/gowsl"
 )
 
@@ -34,7 +33,9 @@ func (m *distroStateManager) state() (s wsl.State, err error) {
 }
 
 // push increases the internal counter. If it was zero, the distro is awaken and locked awake.
-func (m *distroStateManager) push() error {
+// The context should be used to pass the GoWSL backend, and cancelling it does not override
+// the need to call pop.
+func (m *distroStateManager) push(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -54,7 +55,7 @@ func (m *distroStateManager) push() error {
 	}
 
 	//nolint:staticcheck // False positive. 'cancel' is used in both paths.
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	if err := m.keepAwake(ctx); err != nil {
 		cancel()
 		return err
@@ -107,7 +108,7 @@ func (m *distroStateManager) reset() {
 // The distro will be running by the time keepAwake returns.
 func (m *distroStateManager) keepAwake(ctx context.Context) (err error) {
 	// Wake up distro
-	if err := m.touch(ctx); err != nil {
+	if err := touchdistro.Touch(ctx, m.distroIdentity.Name); err != nil {
 		return fmt.Errorf("could not wake distro up: %v", err)
 	}
 
@@ -118,36 +119,10 @@ func (m *distroStateManager) keepAwake(ctx context.Context) (err error) {
 			case <-ctx.Done():
 				return
 			case <-time.After(5 * time.Second):
-				_ = m.touch(ctx)
+				_ = touchdistro.Touch(ctx, m.distroIdentity.Name)
 			}
 		}
 	}()
-
-	return nil
-}
-
-func (m *distroStateManager) touch(ctx context.Context) error {
-	// https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags
-	//
-	// CREATE_NO_WINDOW:
-	// The process is a console application that is being run without
-	// a console window. Therefore, the console handle for the
-	// application is not set.
-	const createNoWindow = 0x08000000
-
-	//nolint: gosec
-	// The distroname is a read-only property that is validated against the registry
-	// in the earlier call to IsValid.
-	cmd := exec.CommandContext(ctx, "wsl.exe", "-d", m.distroIdentity.Name, "--", "exit", "0")
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow:    true,
-		CreationFlags: createNoWindow,
-	}
-
-	// We use output so that stderr is captured in the error message
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("could not run 'exit 0': %v. Output: %s", err, out)
-	}
 
 	return nil
 }
