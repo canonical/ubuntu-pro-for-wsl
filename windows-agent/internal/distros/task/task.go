@@ -3,16 +3,14 @@ package task
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 )
 
 // Task represents a given task that is ging to be executed by a distro.
-// Execute is the job to be done, and ShouldRetry should not return true forever,
-// and rather contain some logic to stop retrying at some point.
 type Task interface {
 	Execute(context.Context, wslserviceapi.WSLClient) error
-	ShouldRetry() bool
 }
 
 // taskWithIs are tasks that implement the Is method as a custom comparator.
@@ -30,4 +28,24 @@ func Is(t, target Task) bool {
 		return T.Is(target)
 	}
 	return t == target
+}
+
+// NeedsRetryError is an error that should be emitted by tasks that, in case of failure,
+// should be retried at the next startup sequence.
+type NeedsRetryError struct {
+	err      error
+	taskName string
+}
+
+// NewNeedsRetryError constructs a NeedsRetryError. This error can be used to signal the
+// task manager that the task needs be retried upon restarting the agent.
+func NewNeedsRetryError(t Task, err error) error {
+	return NeedsRetryError{
+		err:      err,
+		taskName: fmt.Sprintf("%s", t),
+	}
+}
+
+func (e NeedsRetryError) Error() string {
+	return fmt.Sprintf("task %q needs to be retried: %v", e.taskName, e.err)
 }
