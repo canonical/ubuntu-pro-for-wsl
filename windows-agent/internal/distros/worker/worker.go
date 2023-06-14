@@ -191,7 +191,7 @@ func (w *Worker) processTasks(ctx context.Context) {
 				continue
 			}
 
-			err := w.manager.done(t, resultErr)
+			err := w.manager.taskDone(t, resultErr)
 			if err != nil {
 				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 			}
@@ -239,29 +239,12 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 		return fmt.Errorf("task %v: could not start task: %v", t, err)
 	}
 
-	for {
-		// Avoid retrying if the task failed due to a cancelled or timed out context
-		// It also avoids executing in the much rarer case that we cancel or time out right after getting the client
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		err = t.Execute(ctx, client)
-		if err == nil {
-			log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
-			break
-		}
-
-		// No retry: abandon task regardless of error result.
-		if !t.ShouldRetry() {
-			return err
-		}
-
-		log.Warningf(ctx, "Distro %q: task %q: retrying after obtaining error: %v", w.distro.Name(), t, err)
+	if err := t.Execute(ctx, client); err != nil {
+		log.Errorf(ctx, "Distro %q: task %q failed: %v", w.distro.Name(), t, err)
+		return err
 	}
 
+	log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
 	return nil
 }
 
