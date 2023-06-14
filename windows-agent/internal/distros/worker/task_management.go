@@ -89,7 +89,7 @@ func (tm *taskManager) done(t *managedTask, errResult error) (err error) {
 
 	// Task succeeded.
 	if errResult == nil {
-		return
+		return nil
 	}
 
 	// Task failed during execution, nothing else to be done.
