@@ -64,7 +64,7 @@ func TestGetServerAccessToken(t *testing.T) {
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.NewClient(u, h)
+			client := client.New(u, h)
 			ctx := context.Background()
 			if tc.nilContext {
 				ctx = nil
@@ -141,7 +141,7 @@ func TestGetProToken(t *testing.T) {
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.NewClient(u, h)
+			client := client.New(u, h)
 			ctx := context.Background()
 			if tc.nilContext {
 				ctx = nil

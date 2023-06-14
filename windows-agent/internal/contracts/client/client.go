@@ -24,8 +24,8 @@ type Client struct {
 	http    httpDoer
 }
 
-// NewClient returns a Client instance caching a base URL.
-func NewClient(base *url.URL, doer httpDoer) *Client {
+// New returns a Client instance caching a base URL.
+func New(base *url.URL, doer httpDoer) *Client {
 	return &Client{
 		baseURL: base,
 		http:    doer,
