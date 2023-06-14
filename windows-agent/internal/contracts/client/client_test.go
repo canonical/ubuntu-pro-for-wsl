@@ -123,9 +123,7 @@ func TestGetProToken(t *testing.T) {
 
 			if len(tc.jwt) == 0 { // we want a simple default.
 				tc.jwt = "JWT"
-			}
-
-			if tc.jwt == "-" { // we want to exercise the case of the empty string.
+			} else if tc.jwt == "-" { // we want to exercise the case of the empty string.
 				tc.jwt = ""
 			}
 
