@@ -265,9 +265,6 @@ func TestKeepAwake(t *testing.T) {
 
 			require.NoError(t, err, "Setup: distro New should return no error")
 
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
 			testutils.TerminateDistro(t, ctx, distroName)
 
 			if tc.invalidateDistro {
@@ -277,7 +274,7 @@ func TestKeepAwake(t *testing.T) {
 				testutils.UnregisterDistro(t, ctx, distroName)
 			}
 
-			err = d.KeepAwake(ctx)
+			err = d.PushAwake()
 			if tc.wantErr {
 				require.Error(t, err, "KeepAwake should have returned an error")
 
@@ -297,11 +294,21 @@ func TestKeepAwake(t *testing.T) {
 
 			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "KeepAwake should have kept the distro running")
 
-			cancel()
+			err = d.PopAwake()
+			require.NoError(t, err, "PopAwake should return no error")
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, ctx, distroName) == "Stopped"
-			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
+				d := wsl.NewDistro(ctx, distroName)
+				state, err := d.State()
+				if err != nil {
+					t.Logf("d.State returned error: %v", err)
+					return false
+				}
+				return state == wsl.Stopped
+			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity.")
+
+			err = d.PopAwake()
+			require.Error(t, err, "PopAwake should return and error when called more times than PushAwake")
 		})
 	}
 }

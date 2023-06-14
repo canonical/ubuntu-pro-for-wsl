@@ -33,7 +33,8 @@ type Distro struct {
 	// invalidated is an internal value if distro can't be contacted through GRPC
 	invalidated atomic.Bool
 
-	worker workerInterface
+	worker       workerInterface
+	stateManager *distroStateManager
 }
 
 // workerInterface is an interface that is implements the task processing worker. It is intended
@@ -129,6 +130,9 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 	distro = &Distro{
 		identity:   id,
 		properties: props,
+		stateManager: &distroStateManager{
+			distroIdentity: id,
+		},
 	}
 
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
@@ -226,6 +230,7 @@ func (d *Distro) Cleanup(ctx context.Context) {
 		return
 	}
 	d.worker.Stop(ctx)
+	d.stateManager.reset()
 }
 
 // Invalidate sets the invalid flag to true. The state of this flag can be read with IsValid.
@@ -258,38 +263,29 @@ func (d *Distro) IsValid() bool {
 	return true
 }
 
-// KeepAwake ensures the distro is started by running a long life command inside
-// WSL. It will thus start it if it's not already the case.
-// Cancelling the context will remove this keep awake lock, but does not necessarily mean
-// that the distribution will be shutdown right away.
-//
-// The command is reentrant, and you need to cancel the amount of time you keep it awake.
-func (d *Distro) KeepAwake(ctx context.Context) error {
-	wslDistro, err := d.identity.getDistro()
-	if err != nil {
-		return err
-	}
-
-	cmd := wslDistro.Command(ctx, "sleep infinity")
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		<-ctx.Done()
-		_ = cmd.Wait()
-	}()
-
-	return nil
-}
-
 // State returns the state of the WSL distro, as implemeted by GoWSL.
 func (d *Distro) State() (s wsl.State, err error) {
-	wslDistro, err := d.identity.getDistro()
-	if err != nil {
-		return s, err
-	}
+	return d.stateManager.state()
+}
 
-	return wslDistro.State()
+// PushAwake ensures that the distro will stay awake until PopAwake is called.
+// PopAwake must be called the same amount of times for the distro to be
+// allowed to stop.
+//
+// The distro is guaranteed to be running by the time this function returns,
+// otherwise an error is returned.
+func (d *Distro) PushAwake() error {
+	if !d.IsValid() {
+		return &NotValidError{}
+	}
+	return d.stateManager.push(d.ctx)
+}
+
+// PopAwake undoes the last call to PushAwake. If this was the last call, the
+// distro is allowed to auto-shutdown.
+func (d *Distro) PopAwake() error {
+	if !d.IsValid() {
+		return &NotValidError{}
+	}
+	return d.stateManager.pop()
 }
