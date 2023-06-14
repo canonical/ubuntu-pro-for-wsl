@@ -28,9 +28,10 @@ func TestGetServerAccessToken(t *testing.T) {
 		statusCode           int
 		nilContext           bool
 
+		want    string
 		wantErr bool
 	}{
-		"Success": {},
+		"Success": {want: goodToken},
 
 		"Error with a too big token":                 {responseContent: []byte(fmt.Sprintf("{%q:%q}", client.JSONKeyAdToken, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
 		"Error with empty response":                  {responseContent: []byte(""), wantErr: true},
@@ -78,7 +79,7 @@ func TestGetServerAccessToken(t *testing.T) {
 
 			require.NoError(t, err, "GetServerAccessToken should return no errors")
 
-			require.Equal(t, goodToken, got)
+			require.Equal(t, tc.want, got)
 		})
 	}
 }
@@ -97,9 +98,10 @@ func TestGetProToken(t *testing.T) {
 		statusCode           int
 		nilContext           bool
 
+		want    string
 		wantErr bool
 	}{
-		"Success": {jwt: "JWT"},
+		"Success": {jwt: "JWT", want: goodToken},
 
 		"Error with a too big jwt":                {jwt: strings.Repeat("REPEAT_TOO_BIG_JWT", 230), wantErr: true},
 		"Error with empty jwt":                    {jwt: "", wantErr: true},
@@ -155,7 +157,7 @@ func TestGetProToken(t *testing.T) {
 
 			require.NoError(t, err, "GetProToken should return no errors")
 
-			require.Equal(t, goodToken, got)
+			require.Equal(t, tc.want, got)
 		})
 	}
 }
