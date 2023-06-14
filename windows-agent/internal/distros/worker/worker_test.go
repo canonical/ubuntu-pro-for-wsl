@@ -476,10 +476,6 @@ func (t emptyTask) String() string {
 	return "Empty test task"
 }
 
-func (t emptyTask) ShouldRetry() bool {
-	return false
-}
-
 const testTaskMaxRetries = 5
 
 type testTask struct {
@@ -509,10 +505,6 @@ func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 
 func (t *testTask) String() string {
 	return "Test task"
-}
-
-func (t *testTask) ShouldRetry() bool {
-	return t.ExecuteCalls.Load() < testTaskMaxRetries
 }
 
 type testDistro struct {

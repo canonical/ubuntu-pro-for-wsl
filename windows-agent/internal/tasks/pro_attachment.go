@@ -21,18 +21,16 @@ type ProAttachment struct {
 
 // Execute is needed to fulfil Task.
 func (t ProAttachment) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
-	_, err := client.ApplyProToken(context.TODO(), &wslserviceapi.ProAttachInfo{Token: t.Token})
-	return err
+	_, err := client.ApplyProToken(ctx, &wslserviceapi.ProAttachInfo{Token: t.Token})
+	if err != nil {
+		return task.NewNeedsRetryError(t, err)
+	}
+	return nil
 }
 
 // String is needed to fulfil Task.
 func (t ProAttachment) String() string {
 	return "AttachPro"
-}
-
-// ShouldRetry is needed to fulfil Task.
-func (t ProAttachment) ShouldRetry() bool {
-	return false
 }
 
 // Is is a custom comparator. All AttachPro tasks are considered equivalent.
