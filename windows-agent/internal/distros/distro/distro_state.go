@@ -35,6 +35,8 @@ func (m *distroStateManager) state() (s wsl.State, err error) {
 // push increases the internal counter. If it was zero, the distro is awaken and locked awake.
 // The context should be used to pass the GoWSL backend, and cancelling it does not override
 // the need to call pop.
+//
+//nolint:nolintlint  // Golangci-lint gives false positives only without --build-tags=gowslmock
 func (m *distroStateManager) push(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
