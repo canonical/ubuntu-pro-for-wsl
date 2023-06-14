@@ -76,7 +76,6 @@ func TestGetServerAccessToken(t *testing.T) {
 				require.Errorf(t, err, "Got token %q when failure was expected", got)
 				return
 			}
-
 			require.NoError(t, err, "GetServerAccessToken should return no errors")
 
 			require.Equal(t, tc.want, got)
@@ -162,7 +161,6 @@ func TestGetProToken(t *testing.T) {
 				require.Errorf(t, err, "Got token %q when failure was expected", got)
 				return
 			}
-
 			require.NoError(t, err, "GetProToken should return no errors")
 
 			require.Equal(t, tc.want, got)
