@@ -23,7 +23,7 @@ func TestGetServerAccessToken(t *testing.T) {
 
 	testCases := map[string]struct {
 		errorOnDo            bool
-		responseContents     []byte
+		responseContent      []byte
 		unknownContentLength bool
 		statusCode           int
 		nilContext           bool
@@ -32,12 +32,12 @@ func TestGetServerAccessToken(t *testing.T) {
 	}{
 		"Success": {},
 
-		"Error with a too big token":                 {responseContents: []byte(fmt.Sprintf("{%q:%q}", client.JSONKeyAdToken, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
-		"Error with empty response":                  {responseContents: []byte(""), wantErr: true},
+		"Error with a too big token":                 {responseContent: []byte(fmt.Sprintf("{%q:%q}", client.JSONKeyAdToken, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
+		"Error with empty response":                  {responseContent: []byte(""), wantErr: true},
 		"Error with unknown content length response": {unknownContentLength: true, wantErr: true},
-		"Error with expected key not in response":    {responseContents: []byte(`{"unexpected_key": "unexpected_value"}`), wantErr: true},
+		"Error with expected key not in response":    {responseContent: []byte(`{"unexpected_key": "unexpected_value"}`), wantErr: true},
 		"Error on http.Do":                           {errorOnDo: true, wantErr: true},
-		"Error with invalid JSON":                    {responseContents: []byte("invalid JSON"), wantErr: true},
+		"Error with invalid JSON":                    {responseContent: []byte("invalid JSON"), wantErr: true},
 		"Error with a nil context":                   {nilContext: true, wantErr: true},
 	}
 
@@ -47,19 +47,19 @@ func TestGetServerAccessToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if tc.responseContents == nil {
+			if tc.responseContent == nil {
 				var err error
-				tc.responseContents, err = json.Marshal(map[string]string{client.JSONKeyAdToken: goodToken})
+				tc.responseContent, err = json.Marshal(map[string]string{client.JSONKeyAdToken: goodToken})
 				require.NoError(t, err, "Setup: unexpected error when marshalling the test token")
 			}
 
-			l := int64(len(tc.responseContents))
+			l := int64(len(tc.responseContent))
 			if tc.unknownContentLength {
 				l = -1
 			}
 			h := HTTPMock{
 				errorOnDo: tc.errorOnDo,
-				response:  http.Response{Body: io.NopCloser(bytes.NewReader(tc.responseContents)), StatusCode: tc.statusCode, ContentLength: l},
+				response:  http.Response{Body: io.NopCloser(bytes.NewReader(tc.responseContent)), StatusCode: tc.statusCode, ContentLength: l},
 			}
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
@@ -92,7 +92,7 @@ func TestGetProToken(t *testing.T) {
 		jwt string
 
 		errorOnDo            bool
-		responseContents     []byte
+		responseContent      []byte
 		unknownContentLength bool
 		statusCode           int
 		nilContext           bool
@@ -103,13 +103,13 @@ func TestGetProToken(t *testing.T) {
 
 		"Error with a too big jwt":                {jwt: strings.Repeat("REPEAT_TOO_BIG_JWT", 230), wantErr: true},
 		"Error with empty jwt":                    {jwt: "", wantErr: true},
-		"Error with bad request":                  {statusCode: 401, jwt: "bad", responseContents: []byte("BAD REQUEST"), wantErr: true}, // that would mean a JWT the server found to be invalid.
-		"Error with MS API failure":               {statusCode: 500, jwt: "JWT", responseContents: []byte("UNKNOWN SERVER ERROR"), wantErr: true},
-		"Error with expected key not in response": {responseContents: []byte(`{"unexpected_key": "unexpected_value"}`), jwt: "JWT", wantErr: true},
+		"Error with bad request":                  {statusCode: 401, jwt: "bad", responseContent: []byte("BAD REQUEST"), wantErr: true}, // that would mean a JWT the server found to be invalid.
+		"Error with MS API failure":               {statusCode: 500, jwt: "JWT", responseContent: []byte("UNKNOWN SERVER ERROR"), wantErr: true},
+		"Error with expected key not in response": {responseContent: []byte(`{"unexpected_key": "unexpected_value"}`), jwt: "JWT", wantErr: true},
 		"Error on http.Do":                        {errorOnDo: true, jwt: "JWT", wantErr: true},
-		"Error with invalid JSON":                 {responseContents: []byte("invalid JSON"), jwt: "JWT", wantErr: true},
+		"Error with invalid JSON":                 {responseContent: []byte("invalid JSON"), jwt: "JWT", wantErr: true},
 		"Error with unexpected status code":       {statusCode: 422, jwt: "JWT", wantErr: true},
-		"Error with empty response body":          {responseContents: []byte(""), jwt: "JWT", wantErr: true},
+		"Error with empty response body":          {responseContent: []byte(""), jwt: "JWT", wantErr: true},
 		"Error with unknown response length":      {unknownContentLength: true, jwt: "JWT", wantErr: true},
 		"Error with a nil context":                {nilContext: true, jwt: "JWT", wantErr: true},
 	}
@@ -124,19 +124,19 @@ func TestGetProToken(t *testing.T) {
 				tc.statusCode = 200
 			}
 
-			if tc.responseContents == nil {
+			if tc.responseContent == nil {
 				var err error
-				tc.responseContents, err = json.Marshal(map[string]string{client.JSONKeyProToken: goodToken})
+				tc.responseContent, err = json.Marshal(map[string]string{client.JSONKeyProToken: goodToken})
 				require.NoError(t, err, "Setup: unexpected error when marshalling the good token")
 			}
 
-			l := int64(len(tc.responseContents))
+			l := int64(len(tc.responseContent))
 			if tc.unknownContentLength {
 				l = -1
 			}
 			h := HTTPMock{
 				errorOnDo: tc.errorOnDo,
-				response:  http.Response{Body: io.NopCloser(bytes.NewReader(tc.responseContents)), StatusCode: tc.statusCode, ContentLength: l},
+				response:  http.Response{Body: io.NopCloser(bytes.NewReader(tc.responseContent)), StatusCode: tc.statusCode, ContentLength: l},
 			}
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
