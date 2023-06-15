@@ -187,11 +187,11 @@ func (w *Worker) processTasks(ctx context.Context) {
 
 			var target unreachableDistroError
 			if errors.Is(resultErr, &target) {
-				w.distro.Invalidate(target)
+				log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", target.sourceErr)
 				continue
 			}
 
-			err := w.manager.taskDone(t, resultErr)
+			err := w.manager.taskDone(ctx, t, resultErr)
 			if err != nil {
 				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 			}
@@ -240,8 +240,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	}
 
 	if err := t.Execute(ctx, client); err != nil {
-		log.Errorf(ctx, "Distro %q: task %q failed: %v", w.distro.Name(), t, err)
-		return err
+		return fmt.Errorf("distro %q: task %q failed: %w", w.distro.Name(), t, err)
 	}
 
 	log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)

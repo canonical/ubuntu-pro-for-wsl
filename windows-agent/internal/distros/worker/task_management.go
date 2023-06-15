@@ -72,13 +72,17 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 	return tm.save()
 }
 
-func (tm *taskManager) taskDone(t *managedTask, errResult error) (err error) {
+func (tm *taskManager) taskDone(ctx context.Context, t *managedTask, taskResult error) (err error) {
 	decorate.OnError(&err, "task %s", t)
 
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	if errors.As(errResult, &task.NeedsRetryError{}) {
+	if taskResult != nil {
+		log.Errorf(ctx, "%v", taskResult)
+	}
+
+	if errors.As(taskResult, &task.NeedsRetryError{}) {
 		// Task needs to be retried: we don't delete it from the list
 		// It'll be picked up on the next call to load()
 		return nil
