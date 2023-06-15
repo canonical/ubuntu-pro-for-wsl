@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro/touchdistro"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	wsl "github.com/ubuntu/gowsl"
 )
 
@@ -122,8 +123,9 @@ func (m *stateManager) keepAwake(ctx context.Context) (err error) {
 			case <-ctx.Done():
 				return
 			case <-time.After(5 * time.Second):
-				// TODO: Log on error
-				_ = touchdistro.Touch(ctx, m.distroIdentity.Name)
+				if err := touchdistro.Touch(ctx, m.distroIdentity.Name); err != nil {
+					log.Errorf(ctx, "Distro %q: %v", m.distroIdentity.Name, err)
+				}
 			}
 		}
 	}()
