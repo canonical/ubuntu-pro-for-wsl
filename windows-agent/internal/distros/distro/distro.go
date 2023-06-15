@@ -268,24 +268,24 @@ func (d *Distro) State() (s wsl.State, err error) {
 	return d.stateManager.state()
 }
 
-// PushAwake ensures that the distro will stay awake until PopAwake is called.
-// PopAwake must be called the same amount of times for the distro to be
+// LockAwake ensures that the distro will stay awake until ReleaseAwake is called.
+// ReleaseAwake must be called the same amount of times for the distro to be
 // allowed to stop.
 //
 // The distro is guaranteed to be running by the time this function returns,
 // otherwise an error is returned.
-func (d *Distro) PushAwake() error {
+func (d *Distro) LockAwake() error {
 	if !d.IsValid() {
 		return &NotValidError{}
 	}
-	return d.stateManager.push(d.ctx)
+	return d.stateManager.lock(d.ctx)
 }
 
-// PopAwake undoes the last call to PushAwake. If this was the last call, the
+// ReleaseAwake undoes the last call to LockAwake. If this was the last call, the
 // distro is allowed to auto-shutdown.
-func (d *Distro) PopAwake() error {
+func (d *Distro) ReleaseAwake() error {
 	if !d.IsValid() {
 		return &NotValidError{}
 	}
-	return d.stateManager.pop()
+	return d.stateManager.release()
 }

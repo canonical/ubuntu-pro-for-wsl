@@ -233,7 +233,7 @@ func TestSetProperties(t *testing.T) {
 	}
 }
 
-func TestPushPopAwake(t *testing.T) {
+func TestLockReleaseAwake(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
 	}
@@ -241,42 +241,42 @@ func TestPushPopAwake(t *testing.T) {
 	const wslSleepDelay = 8 * time.Second
 
 	testCases := map[string]struct {
-		// Breaking push
-		unregisterDistro     bool
-		invalidateBeforePush bool
-		invalidateBeforePop  bool
-		errorOnKeepAwake     bool
+		// Breaking lock
+		unregisterDistro        bool
+		invalidateBeforeLock    bool
+		invalidateBeforeRelease bool
+		errorOnLock             bool
 
 		// Stacking
-		doublePush                bool
-		stopDistroInbetweenPushes bool
-		errorOnSecondKeepAwake    bool
-		errorStateOnSecondPush    bool
+		doubleLock               bool
+		stopDistroInbetweenLocks bool
+		errorOnSecondLock        bool
+		errorStateOnSecondLock   bool
 
-		// Alternatives to Pop
+		// Alternatives to Release
 		cleanupDistro bool
 
 		// Backend
 		mockOnly bool
 
-		wantPushErr       bool
-		wantSecondPushErr bool
-		wantPopErr        bool
+		wantLockErr       bool
+		wantSecondLockErr bool
+		wantReleaseErr    bool
 	}{
-		"Registered distro is kept awake until PopAwake":                       {},
-		"Registered distro is kept awake until PopAwake (two pushes and pops)": {doublePush: true},
-		"Registered distro is awaken by second PushAwake":                      {doublePush: true, stopDistroInbetweenPushes: true},
+		"Registered distro is kept awake until ReleaseAwake":                              {},
+		"Registered distro is kept awake until ReleaseAwake (two locks and two releases)": {doubleLock: true},
+		"Registered distro is awaken by second LockAwake":                                 {doubleLock: true, stopDistroInbetweenLocks: true},
 
 		"Registered distro is kept awake until distro cleanup": {cleanupDistro: true},
 
-		"Error on invalidated distro before Push": {invalidateBeforePush: true, wantPushErr: true},
-		"Error on invalidated distro before Pop":  {invalidateBeforePop: true, wantPopErr: true},
-		"Error on uregistered distro":             {unregisterDistro: true, wantPushErr: true},
+		"Error on invalidated distro before Lock":    {invalidateBeforeLock: true, wantLockErr: true},
+		"Error on invalidated distro before Release": {invalidateBeforeRelease: true, wantReleaseErr: true},
+		"Error on uregistered distro":                {unregisterDistro: true, wantLockErr: true},
 
 		// Mocked errors
-		"Error due to inability to start distro":                  {mockOnly: true, errorOnKeepAwake: true, wantPushErr: true},
-		"Error due to inability to get state in second PushAwake": {mockOnly: true, doublePush: true, stopDistroInbetweenPushes: true, errorStateOnSecondPush: true, wantSecondPushErr: true},
-		"Error due to inability to start distro a second time":    {mockOnly: true, doublePush: true, stopDistroInbetweenPushes: true, errorOnSecondKeepAwake: true, wantSecondPushErr: true},
+		"Error due to inability to start distro":                  {mockOnly: true, errorOnLock: true, wantLockErr: true},
+		"Error due to inability to get state in second LockAwake": {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorStateOnSecondLock: true, wantSecondLockErr: true},
+		"Error due to inability to start distro a second time":    {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorOnSecondLock: true, wantSecondLockErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -287,12 +287,10 @@ func TestPushPopAwake(t *testing.T) {
 			if wsl.MockAvailable() {
 				t.Parallel()
 				mock = wslmock.New()
-				mock.WslLaunchInteractiveError = tc.errorOnKeepAwake
+				mock.WslLaunchInteractiveError = tc.errorOnLock
 				ctx = wsl.WithMock(ctx, mock)
-			} else {
-				if tc.mockOnly {
-					t.Skip("This test is only available for the mock back-end")
-				}
+			} else if tc.mockOnly {
+				t.Skip("This test is only available for the mock back-end")
 			}
 
 			distroName, _ := testutils.RegisterDistro(t, ctx, true)
@@ -304,7 +302,7 @@ func TestPushPopAwake(t *testing.T) {
 
 			testutils.TerminateDistro(t, ctx, distroName)
 
-			if tc.invalidateBeforePush {
+			if tc.invalidateBeforeLock {
 				d.Invalidate(errors.New("setup: invalidating distro"))
 			}
 			if tc.unregisterDistro {
@@ -312,71 +310,80 @@ func TestPushPopAwake(t *testing.T) {
 			}
 
 			// Start distro
-			err = d.PushAwake()
-			if tc.wantPushErr {
-				require.Errorf(t, err, "PushAwake should have returned an error")
+			err = d.LockAwake()
+			if tc.wantLockErr {
+				require.Errorf(t, err, "LockAwake should have returned an error")
 				state := testutils.DistroState(t, ctx, distroName)
-				require.NotEqualf(t, "Running", state, "distro should not run when PushAwake fails")
+				require.NotEqualf(t, "Running", state, "distro should not run when LockAwake fails")
 
 				return
 			}
-			require.NoErrorf(t, err, "PushAwake should have returned no error")
+			require.NoErrorf(t, err, "LockAwake should have returned no error")
 
 			require.Eventually(t, func() bool {
 				return testutils.DistroState(t, ctx, distroName) == "Running"
-			}, 10*time.Second, time.Second, "distro should have started after calling PushAwake")
+			}, 10*time.Second, time.Second, "distro should have started after calling LockAwake")
 
-			// Second push
-			if tc.doublePush {
-				if tc.stopDistroInbetweenPushes {
+			// Second lock
+			if tc.doubleLock {
+				if tc.stopDistroInbetweenLocks {
 					testutils.TerminateDistro(t, ctx, distroName)
 				}
 
-				if tc.errorOnSecondKeepAwake {
+				if tc.errorOnSecondLock {
 					mock.WslLaunchInteractiveError = true
 				}
 
-				if tc.errorStateOnSecondPush {
+				if tc.errorStateOnSecondLock {
 					mock.StateError = true
 				}
 
-				err = d.PushAwake()
-				if tc.wantSecondPushErr {
-					require.Errorf(t, err, "Second PushAwake should have returned an error")
+				err = d.LockAwake()
+				if tc.wantSecondLockErr {
+					require.Errorf(t, err, "Second LockAwake should have returned an error")
 					return
 				}
-				require.NoErrorf(t, err, "Second PushAwake should have returned no error")
+				require.NoErrorf(t, err, "Second LockAwake should have returned no error")
 
 				require.Eventually(t, func() bool {
-					return testutils.DistroState(t, ctx, distroName) == "Running"
-				}, 10*time.Second, time.Second, "distro should have started after calling PushAwake")
+					d := wsl.NewDistro(ctx, distroName)
+					state, err := d.State()
+					if err != nil {
+						t.Logf("d.State returned error: %v", err)
+						return false
+					}
+					return state == wsl.Running
+				}, wslSleepDelay+2*time.Second, time.Second, "distro should have started after calling LockAwake")
 			}
 
-			time.Sleep(2 * wslSleepDelay)
+			time.Sleep(wslSleepDelay + 2*time.Second)
 
-			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "PushAwake should have kept the distro running")
+			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "LockAwake should have kept the distro running")
 
+			// Stopping distro
 			if tc.cleanupDistro {
+				// Method 1: Cleanup
 				d.Cleanup(ctx)
 			} else {
-				if tc.invalidateBeforePop {
+				// Method 2: ReleaseAwake
+				if tc.invalidateBeforeRelease {
 					d.Invalidate(errors.New("distro invalidated by test"))
 				}
 
-				err = d.PopAwake()
-				if tc.wantPopErr {
-					require.Error(t, err, "PopAwake should return an error")
+				err = d.ReleaseAwake()
+				if tc.wantReleaseErr {
+					require.Error(t, err, "ReleaseAwake should return an error")
 					return
 				}
-				require.NoError(t, err, "PopAwake should return no error")
+				require.NoError(t, err, "ReleaseAwake should return no error")
 
-				if tc.doublePush {
+				if tc.doubleLock {
 					time.Sleep(wslSleepDelay + 2*time.Second)
-					require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "Distro should stay awake after two calls to PushAwake and only one to PopAwake")
+					require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "Distro should stay awake after two calls to LockAwake and only one to ReleaseAwake")
 
-					// Need two pops
-					err = d.PopAwake()
-					require.NoError(t, err, "PopAwake should return no error")
+					// Need two releases
+					err = d.ReleaseAwake()
+					require.NoError(t, err, "ReleaseAwake should return no error")
 				}
 			}
 
@@ -388,10 +395,11 @@ func TestPushPopAwake(t *testing.T) {
 					return false
 				}
 				return state == wsl.Stopped
-			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling PopAwake due to inactivity.")
+			}, wslSleepDelay+2*time.Second, time.Second, "distro should have stopped after calling ReleaseAwake due to inactivity.")
 
-			err = d.PopAwake()
-			require.Error(t, err, "PopAwake should return and error when called more times than PushAwake")
+			// Try one more ReleaseAwake than needed
+			err = d.ReleaseAwake()
+			require.Error(t, err, "ReleaseAwake should return and error when called more times than LockAwake")
 		})
 	}
 }

@@ -19,8 +19,8 @@ import (
 type distro interface {
 	Name() string
 
-	PushAwake() error
-	PopAwake() error
+	LockAwake() error
+	ReleaseAwake() error
 
 	IsValid() bool
 	Invalidate(error)
@@ -226,11 +226,11 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if err := w.distro.PushAwake(); err != nil {
+	if err := w.distro.LockAwake(); err != nil {
 		return newUnreachableDistroErr(err)
 	}
 	//nolint:errcheck // Nothing we can do about it
-	defer w.distro.PopAwake()
+	defer w.distro.ReleaseAwake()
 
 	log.Debugf(context.TODO(), "Distro %q: distro is running.", w.distro.Name())
 
@@ -271,11 +271,11 @@ func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslservice
 	for i := 0; i < 5; i++ {
 		client, err = func() (wslserviceapi.WSLClient, error) {
 			// Potentially restart distro if it was stopped for some reason
-			if err := w.distro.PushAwake(); err != nil {
+			if err := w.distro.LockAwake(); err != nil {
 				return nil, newUnreachableDistroErr(err)
 			}
 			//nolint:errcheck // Nothing we can do about it
-			defer w.distro.PopAwake()
+			defer w.distro.ReleaseAwake()
 
 			// Connect to GRPC client
 			client, err := w.waitForClient(ctx)

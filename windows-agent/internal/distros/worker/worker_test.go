@@ -150,7 +150,7 @@ func TestTaskProcessing(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		unregisterAfterConstructor bool // Triggers error in trying to get distro in PushAwake
+		unregisterAfterConstructor bool // Triggers error in trying to get distro in LockAwake
 		taskError                  bool // Causes the task to always return an error
 		forceConnectionTimeout     bool // Cancels the context while waiting for the GRPC connection to be established
 		cancelTaskInProgress       bool // Cancels as the task is running
@@ -521,7 +521,7 @@ type testDistro struct {
 	invalid atomic.Bool // Whether the distro is valid or not
 
 	// TODO: Is this used?
-	pushAwakeError error // PushAwake will throw this error (unless it is nil)
+	LockAwakeError error // LockAwake will throw this error (unless it is nil)
 
 	// Do not use directly
 	runningRefCount int
@@ -552,13 +552,13 @@ func (d *testDistro) Name() string {
 	return d.name
 }
 
-func (d *testDistro) PushAwake() error {
-	if err := d.pushAwakeError; err != nil {
+func (d *testDistro) LockAwake() error {
+	if err := d.LockAwakeError; err != nil {
 		return err
 	}
 
 	if !d.IsValid() {
-		return fmt.Errorf("PushAwake: testDistro %q is not valid", d.name)
+		return fmt.Errorf("LockAwake: testDistro %q is not valid", d.name)
 	}
 
 	d.runningMu.Lock()
@@ -568,12 +568,12 @@ func (d *testDistro) PushAwake() error {
 	return nil
 }
 
-func (d *testDistro) PopAwake() error {
+func (d *testDistro) ReleaseAwake() error {
 	d.runningMu.Lock()
 	defer d.runningMu.Unlock()
 
 	if d.runningRefCount == 0 {
-		return errors.New("excess calls to PopAwake")
+		return errors.New("excess calls to ReleaseAwake")
 	}
 
 	d.runningRefCount--

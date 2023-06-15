@@ -32,12 +32,12 @@ func (m *stateManager) state() (s wsl.State, err error) {
 	return wslDistro.State()
 }
 
-// push increases the internal counter. If it was zero, the distro is awaken and locked awake.
+// lock increases the internal counter. If it was zero, the distro is awaken and locked awake.
 // The context should be used to pass the GoWSL backend, and cancelling it does not override
-// the need to call pop.
+// the need to call unlock.
 //
 //nolint:nolintlint  // Golangci-lint gives false positives only without --build-tags=gowslmock
-func (m *stateManager) push(ctx context.Context) error {
+func (m *stateManager) lock(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -69,13 +69,13 @@ func (m *stateManager) push(ctx context.Context) error {
 	return nil
 }
 
-// pop decreases the internal counter. If it becomes zero, the distro awake lock is released.
-func (m *stateManager) pop() error {
+// release decreases the internal counter. If it becomes zero, the distro awake lock is released.
+func (m *stateManager) release() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.refcount == 0 {
-		return errors.New("excess calls to pop")
+		return errors.New("excess calls to release")
 	}
 
 	m.refcount--
@@ -89,6 +89,7 @@ func (m *stateManager) pop() error {
 	return nil
 }
 
+// reset returns the count back to zero. Equivalent to unlocking all standing locks.
 func (m *stateManager) reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -108,7 +109,7 @@ func (m *stateManager) reset() {
 // that the distribution will be shutdown right away.
 //
 // The distro will be running by the time keepAwake returns.
-func (m *distroStateManager) keepAwake(ctx context.Context) (err error) {
+func (m *stateManager) keepAwake(ctx context.Context) (err error) {
 	// Wake up distro
 	if err := touchdistro.Touch(ctx, m.distroIdentity.Name); err != nil {
 		return fmt.Errorf("could not wake distro up: %v", err)
@@ -121,6 +122,7 @@ func (m *distroStateManager) keepAwake(ctx context.Context) (err error) {
 			case <-ctx.Done():
 				return
 			case <-time.After(5 * time.Second):
+				// TODO: Log on error
 				_ = touchdistro.Touch(ctx, m.distroIdentity.Name)
 			}
 		}
