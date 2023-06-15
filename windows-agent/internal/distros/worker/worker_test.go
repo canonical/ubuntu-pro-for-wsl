@@ -280,10 +280,10 @@ func TestTaskProcessing(t *testing.T) {
 				fallthrough
 			case taskReturnsErr:
 				require.Equal(t, 0, w.QueueLen(), "No tasks should remain in the queue")
-				require.Equal(t, 0, w.StorageLen(), "No tasks should remain in storage")
+				require.NoError(t, w.CheckStoredTasks(0), "No tasks should remain in storage")
 			case taskReturnsNeedsRetryErr:
 				require.Equal(t, 0, w.QueueLen(), "No tasks should remain in the queue")
-				require.Equal(t, 1, w.StorageLen(), "The task that failed with NeedsRetryError should be in storage")
+				require.NoError(t, w.CheckStoredTasks(1), "The task that failed with NeedsRetryError should be in storage")
 			}
 		})
 	}

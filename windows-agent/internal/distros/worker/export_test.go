@@ -1,5 +1,7 @@
 package worker
 
+import "fmt"
+
 // TaskQueueSize is the number of tasks that can be enqueued.
 const TaskQueueSize = taskQueueSize
 
@@ -12,11 +14,12 @@ func (w *Worker) QueueLen() int {
 	return len(w.manager.queue)
 }
 
-// StorageLen returns the number of tasks in storage. Tasks currently being
-// processed, and tasks that failed with NeedsRetryError will be counted.
-func (w *Worker) StorageLen() int {
+func (w *Worker) CheckStoredTasks(want int) error {
 	w.manager.mu.Lock()
 	defer w.manager.mu.Unlock()
 
-	return len(w.manager.tasks)
+	if got := len(w.manager.tasks); got != want {
+		return fmt.Errorf("Mismatch in number of stored tasks. Want: %d. Got: %d", want, got)
+	}
+	return nil
 }
