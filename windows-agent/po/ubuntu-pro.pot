@@ -64,11 +64,11 @@ msgstr ""
 msgid "Service took too long to respond. Disconnecting client."
 msgstr ""
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:55
+#: cmd/ubuntu-pro-agent/agent/agent.go:57
 msgid "Ubuntu Pro for Windows agent"
 msgstr ""
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:56
+#: cmd/ubuntu-pro-agent/agent/agent.go:58
 msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
 msgstr ""
 
@@ -102,7 +102,7 @@ msgid ""
 ". Please use the StreamClientInterceptor: %v"
 msgstr ""
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:120
+#: cmd/ubuntu-pro-agent/agent/agent.go:127
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
 msgstr ""
 

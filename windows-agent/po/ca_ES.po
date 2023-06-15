@@ -65,11 +65,11 @@ msgstr "Retorna la versió de l'agent i surt"
 msgid "Service took too long to respond. Disconnecting client."
 msgstr "El servei ha trigat massa en respondre. Desconnectant client."
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:55
+#: cmd/ubuntu-pro-agent/agent/agent.go:57
 msgid "Ubuntu Pro for Windows agent"
 msgstr "Agent d'Ubuntu Pro per a Windows"
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:56
+#: cmd/ubuntu-pro-agent/agent/agent.go:58
 msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
 msgstr ""
 
@@ -105,7 +105,7 @@ msgstr ""
 "metadada %s invalida provenint del client: %v\n"
 " Si us plau, utilitzi el StreamClientInterceptor"
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:120
+#: cmd/ubuntu-pro-agent/agent/agent.go:127
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
 msgstr "informació (-v), depuració (-vv) o depuració amb ubicació (-vvv)"
 
