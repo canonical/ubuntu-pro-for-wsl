@@ -701,7 +701,7 @@ packages:
     source: hosted
     version: "0.7.0"
   yaru_icons:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: yaru_icons
       sha256: "8ddd40522c882de898a493094f2f41687f7a0faaf3434b9c854a7605a53a2477"
