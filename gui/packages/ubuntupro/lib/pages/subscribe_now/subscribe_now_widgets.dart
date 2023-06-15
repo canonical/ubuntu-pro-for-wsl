@@ -1,6 +1,89 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:yaru/yaru.dart';
+import 'package:yaru_icons/yaru_icons.dart';
+import 'package:yaru_widgets/yaru_widgets.dart';
 import '../../core/either_value_notifier.dart';
 import '../../core/pro_token.dart';
+
+/// A validated text field with a submit button that calls the supplied [onApply]
+/// callback with the validated Pro Token when the submit button is clicked.
+class ProTokenInputField extends StatefulWidget {
+  const ProTokenInputField({
+    super.key,
+    this.isExpanded = false,
+    required this.onApply,
+  });
+
+  /// A function to be called when the user submits a valid Pro Token.
+  final void Function(ProToken token) onApply;
+
+  /// Whether the field should be shown expanded or collapsed by default.
+  final bool isExpanded;
+
+  @override
+  State<ProTokenInputField> createState() => _ProTokenInputFieldState();
+}
+
+class _ProTokenInputFieldState extends State<ProTokenInputField> {
+  // The value notifier behind this widget state.
+  final _token = ProTokenValue();
+  // Only used to clear the text field after submission.
+  final _controller = TextEditingController();
+  // Whether the submit action and the apply button should be enabled.
+  bool get canSubmit => _token.valueOrNull != null;
+
+  // This is never called if the token is invalid.
+  void _handleApplyButton() {
+    widget.onApply(_token.valueOrNull!);
+    _controller.clear();
+  }
+
+  void _onSubmitted(String value) {
+    if (canSubmit) {
+      return _handleApplyButton();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context);
+    return YaruExpandable(
+      header: Text(
+        lang.tokenInputTitle,
+        style: yaruDark.textTheme.bodyMedium!
+            .copyWith(fontWeight: FontWeight.w100),
+      ),
+      expandIcon: Icon(
+        YaruIcons.pan_end,
+        color: yaruDark.textTheme.bodyMedium!.color,
+      ),
+      isExpanded: widget.isExpanded,
+      child: ValueListenableBuilder(
+        valueListenable: _token,
+        builder: (context, _, __) => TextField(
+          autofocus: false,
+          controller: _controller,
+          decoration: InputDecoration(
+            hintText: lang.tokenInputHint,
+            errorText: _token.errorOrNull?.localize(lang),
+            counterText: '',
+            suffixIcon: TextButton(
+              onPressed: canSubmit ? _handleApplyButton : null,
+              style: TextButton.styleFrom(
+                // allows the suffix button to stand out when enabled while keeping its custom look.
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              child: Text(lang.apply),
+            ),
+          ),
+          onChanged: _token.update,
+          onSubmitted: _onSubmitted,
+        ),
+      ),
+    );
+  }
+}
 
 /// A value-notifier for the [ProToken] with validation.
 /// Since we don't want to start the UI with an error due the text field being

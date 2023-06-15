@@ -5,7 +5,9 @@
     "tokenErrorTooLong": "Token is too long",
     "tokenErrorInvalidPrefix": "Token prefix is invalid",
     "tokenErrorInvalidEncoding": "Token is corrupted",
-    "tokenInputLabel": "Paste here your Ubuntu Pro token",
+    "tokenInputTitle": "I already have a token",
+    "tokenInputHint": "Paste here your Ubuntu Pro token",
+    "apply": "Apply",
     "applyProToken": "Apply Pro Token",
     "applyingProToken": "Applying token {token}",
     "@applyingProToken": {
