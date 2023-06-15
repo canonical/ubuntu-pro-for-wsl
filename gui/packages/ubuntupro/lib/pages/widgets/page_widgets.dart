@@ -23,6 +23,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:yaru/yaru.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
 
 /// The simplest material page that covers most of the use cases in this app,
@@ -54,6 +55,46 @@ class Pro4WindowsPage extends StatelessWidget {
             )
           : null,
       body: body,
+    );
+  }
+}
+
+// A more stylized page that mimics the design of the https://ubuntu.com/pro
+// landing page, with a dark background and a title with some opacity, rendering
+// the [children] in a column layout.
+class DarkStyledLandingPage extends StatelessWidget {
+  const DarkStyledLandingPage({super.key, required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pro4WindowsPage(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/05_suru2_dark_2K.jpg',
+              fit: BoxFit.fill,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(48.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Opacity(
+                  opacity: 0.7, // mimics the SVG in the u.c/pro website.
+                  child: Text(
+                    'Ubuntu Pro',
+                    style: yaruDark.textTheme.displayMedium,
+                  ),
+                ),
+                ...children,
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
