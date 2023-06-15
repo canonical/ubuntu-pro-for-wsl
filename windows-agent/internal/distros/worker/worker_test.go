@@ -164,10 +164,11 @@ func TestTaskProcessing(t *testing.T) {
 
 		wantExecuteCalled bool
 	}{
-		"Task is executed successfully": {wantExecuteCalled: true},
-		"Unregistered distro":           {unregisterAfterConstructor: true},
-		"Connection timeout":            {forceConnectionTimeout: true},
-		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalled: true},
+		"Success executing a task": {wantExecuteCalled: true},
+
+		"Error when the distro is not registered":    {unregisterAfterConstructor: true},
+		"Error when the connection times out":        {forceConnectionTimeout: true},
+		"Error when a task in progress is cancelled": {cancelTaskInProgress: true, wantExecuteCalled: true},
 
 		"Error when the task returns a generic error":   {taskReturns: taskReturnsErr, wantExecuteCalled: true},
 		"Error when the task returns a NeedsRetryError": {taskReturns: taskReturnsNeedsRetryErr, wantExecuteCalled: true},
