@@ -155,13 +155,13 @@ func TestTaskProcessing(t *testing.T) {
 		forceConnectionTimeout     bool // Cancels the context while waiting for the GRPC connection to be established
 		cancelTaskInProgress       bool // Cancels as the task is running
 
-		wantExecuteCalls int32
+		wantExecuteCalled bool
 	}{
-		"Task is executed successfully": {wantExecuteCalls: 1},
-		"Unregistered distro":           {unregisterAfterConstructor: true, wantExecuteCalls: 0},
-		"Connection timeout":            {forceConnectionTimeout: true, wantExecuteCalls: 0},
-		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalls: 1},
-		"Erroneous task":                {taskError: true, wantExecuteCalls: testTaskMaxRetries},
+		"Task is executed successfully": {wantExecuteCalled: true},
+		"Unregistered distro":           {unregisterAfterConstructor: true},
+		"Connection timeout":            {forceConnectionTimeout: true},
+		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalled: true},
+		"Erroneous task":                {taskError: true, wantExecuteCalled: true},
 	}
 
 	for name, tc := range testCases {
@@ -234,7 +234,7 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task with with active connection
 			w.SetConnection(conn)
 
-			if tc.wantExecuteCalls == 0 {
+			if !tc.wantExecuteCalled {
 				time.Sleep(2 * clientTickPeriod)
 				require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task executed unexpectedly")
 				return
@@ -244,8 +244,8 @@ func TestTaskProcessing(t *testing.T) {
 				"Client should become non-nil after setting the connection")
 
 			// Wait for task to start
-			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls }, 2*clientTickPeriod, 100*time.Millisecond,
-				"Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
+			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == 1 }, 2*clientTickPeriod, 100*time.Millisecond,
+				"Task was executed fewer times than expected. Expected 1 and executed %d.", task.ExecuteCalls.Load())
 
 			if tc.cancelTaskInProgress {
 				// Cancelling and waiting for cancellation to propagate, then ensure it did so.
@@ -255,12 +255,12 @@ func TestTaskProcessing(t *testing.T) {
 
 				// Giving some time to ensure retry is never attempted.
 				time.Sleep(100 * time.Millisecond)
-				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task should not be retried after being cancelled")
+				require.Equal(t, int32(1), task.ExecuteCalls.Load(), "Task should never be retried")
 				return
 			}
 
 			time.Sleep(time.Second)
-			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed too many times after establishing a connection")
+			require.Equal(t, int32(1), task.ExecuteCalls.Load(), "Task should not execute more than once")
 		})
 	}
 }
@@ -475,8 +475,6 @@ func (t emptyTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 func (t emptyTask) String() string {
 	return "Empty test task"
 }
-
-const testTaskMaxRetries = 5
 
 type testTask struct {
 	// ExecuteCalls counts the number of times Execute is called
