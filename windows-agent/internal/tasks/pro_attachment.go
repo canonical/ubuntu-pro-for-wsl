@@ -23,7 +23,7 @@ type ProAttachment struct {
 func (t ProAttachment) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
 	_, err := client.ApplyProToken(ctx, &wslserviceapi.ProAttachInfo{Token: t.Token})
 	if err != nil {
-		return task.NewNeedsRetryError(t, err)
+		return task.NeedsRetryError{SourceErr: err}
 	}
 	return nil
 }

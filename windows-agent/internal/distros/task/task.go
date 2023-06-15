@@ -33,19 +33,9 @@ func Is(t, target Task) bool {
 // NeedsRetryError is an error that should be emitted by tasks that, in case of failure,
 // should be retried at the next startup sequence.
 type NeedsRetryError struct {
-	err      error
-	taskName string
-}
-
-// NewNeedsRetryError constructs a NeedsRetryError. This error can be used to signal the
-// task manager that the task needs be retried upon restarting the agent.
-func NewNeedsRetryError(t Task, err error) error {
-	return NeedsRetryError{
-		err:      err,
-		taskName: fmt.Sprintf("%s", t),
-	}
+	SourceErr error
 }
 
 func (e NeedsRetryError) Error() string {
-	return fmt.Sprintf("task %q needs to be retried: %v", e.taskName, e.err)
+	return fmt.Sprintf("%v. Marked for retrial.", e.SourceErr)
 }

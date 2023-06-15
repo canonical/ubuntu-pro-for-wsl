@@ -211,7 +211,7 @@ func TestTaskProcessing(t *testing.T) {
 			case taskReturnsErr:
 				ttask.Returns = errors.New("testTask error")
 			case taskReturnsNeedsRetryErr:
-				ttask.Returns = task.NewNeedsRetryError(ttask, errors.New("testTask error"))
+				ttask.Returns = task.NeedsRetryError{SourceErr: errors.New("testTask error")}
 			}
 
 			if tc.cancelTaskInProgress {
