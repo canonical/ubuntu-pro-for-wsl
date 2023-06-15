@@ -9,6 +9,7 @@ import 'core/agent_api_client.dart';
 import 'launch_agent.dart';
 import 'pages/startup/agent_monitor.dart';
 import 'pages/startup/startup_page.dart';
+import 'pages/subscribe_now/subscribe_now_page.dart';
 import 'routes.dart';
 
 class Pro4WindowsApp extends StatelessWidget {
@@ -37,6 +38,9 @@ class Pro4WindowsApp extends StatelessWidget {
             nextRoute: Routes.subscribeNow,
           ),
         ),
+        routes: const {
+          Routes.subscribeNow: SubscribeNowPage.create,
+        },
       ),
     );
   }
