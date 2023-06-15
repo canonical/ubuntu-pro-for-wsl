@@ -11,3 +11,12 @@ func (w *Worker) QueueLen() int {
 
 	return len(w.manager.queue)
 }
+
+// StorageLen returns the number of tasks in storage. Tasks currently being
+// processed, and tasks that failed with NeedsRetryError will be counted.
+func (w *Worker) StorageLen() int {
+	w.manager.mu.Lock()
+	defer w.manager.mu.Unlock()
+
+	return len(w.manager.tasks)
+}

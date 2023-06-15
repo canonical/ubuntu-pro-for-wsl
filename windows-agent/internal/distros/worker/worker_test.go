@@ -149,11 +149,18 @@ func TestNew(t *testing.T) {
 func TestTaskProcessing(t *testing.T) {
 	t.Parallel()
 
+	type taskReturns int
+	const (
+		taskReturnsNil taskReturns = iota
+		taskReturnsErr
+		taskReturnsNeedsRetryErr
+	)
+
 	testCases := map[string]struct {
-		unregisterAfterConstructor bool // Triggers error in trying to get distro in LockAwake
-		taskError                  bool // Causes the task to always return an error
-		forceConnectionTimeout     bool // Cancels the context while waiting for the GRPC connection to be established
-		cancelTaskInProgress       bool // Cancels as the task is running
+		unregisterAfterConstructor bool        // Triggers error in trying to get distro in LockAwake
+		taskReturns                taskReturns // Causes the task to always return an error
+		forceConnectionTimeout     bool        // Cancels the context while waiting for the GRPC connection to be established
+		cancelTaskInProgress       bool        // Cancels as the task is running
 
 		wantExecuteCalled bool
 	}{
@@ -161,7 +168,9 @@ func TestTaskProcessing(t *testing.T) {
 		"Unregistered distro":           {unregisterAfterConstructor: true},
 		"Connection timeout":            {forceConnectionTimeout: true},
 		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalled: true},
-		"Erroneous task":                {taskError: true, wantExecuteCalled: true},
+
+		"Error when the task returns a generic error":   {taskReturns: taskReturnsErr, wantExecuteCalled: true},
+		"Error when the task returns a NeedsRetryError": {taskReturns: taskReturnsNeedsRetryErr, wantExecuteCalled: true},
 	}
 
 	for name, tc := range testCases {
@@ -196,19 +205,22 @@ func TestTaskProcessing(t *testing.T) {
 			const distroWakeUpTime = 1 * time.Second
 			const clientTickPeriod = 1200 * time.Millisecond
 
-			task := &testTask{}
-			if tc.taskError {
-				task.Returns = errors.New("testTask error")
+			ttask := &testTask{}
+			switch tc.taskReturns {
+			case taskReturnsErr:
+				ttask.Returns = errors.New("testTask error")
+			case taskReturnsNeedsRetryErr:
+				ttask.Returns = task.NewNeedsRetryError(ttask, errors.New("testTask error"))
 			}
 
 			if tc.cancelTaskInProgress {
 				// This particular task will always retry in a loop
 				// Long delay to ensure we can reliably cancell it in progress
-				task.Delay = 10 * time.Second
-				task.Returns = errors.New("testTask error: this error should never be triggered")
+				ttask.Delay = 10 * time.Second
+				ttask.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = w.SubmitTasks(task)
+			err = w.SubmitTasks(ttask)
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -224,7 +236,7 @@ func TestTaskProcessing(t *testing.T) {
 			// We sleep to ensure at least one tick has gone by in the "wait for connection"
 			time.Sleep(clientTickPeriod)
 			require.Equal(t, nil, w.Client(), "Client should return nil when there is no connection")
-			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
+			require.Equal(t, int32(0), ttask.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 
 			if tc.forceConnectionTimeout {
 				cancel() // Simulates a timeout
@@ -236,7 +248,7 @@ func TestTaskProcessing(t *testing.T) {
 
 			if !tc.wantExecuteCalled {
 				time.Sleep(2 * clientTickPeriod)
-				require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task executed unexpectedly")
+				require.Equal(t, int32(0), ttask.ExecuteCalls.Load(), "Task executed unexpectedly")
 				return
 			}
 
@@ -244,23 +256,34 @@ func TestTaskProcessing(t *testing.T) {
 				"Client should become non-nil after setting the connection")
 
 			// Wait for task to start
-			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == 1 }, 2*clientTickPeriod, 100*time.Millisecond,
-				"Task was executed fewer times than expected. Expected 1 and executed %d.", task.ExecuteCalls.Load())
+			require.Eventuallyf(t, func() bool { return ttask.ExecuteCalls.Load() == 1 }, 2*clientTickPeriod, 100*time.Millisecond,
+				"Task was executed fewer times than expected. Expected 1 and executed %d.", ttask.ExecuteCalls.Load())
 
 			if tc.cancelTaskInProgress {
 				// Cancelling and waiting for cancellation to propagate, then ensure it did so.
 				cancel()
-				require.Eventually(t, func() bool { return task.WasCancelled.Load() }, 100*time.Millisecond, time.Millisecond,
+				require.Eventually(t, func() bool { return ttask.WasCancelled.Load() }, 100*time.Millisecond, time.Millisecond,
 					"Task should be cancelled when the task processing context is cancelled")
 
 				// Giving some time to ensure retry is never attempted.
 				time.Sleep(100 * time.Millisecond)
-				require.Equal(t, int32(1), task.ExecuteCalls.Load(), "Task should never be retried")
+				require.Equal(t, int32(1), ttask.ExecuteCalls.Load(), "Task should never be retried")
 				return
 			}
 
 			time.Sleep(time.Second)
-			require.Equal(t, int32(1), task.ExecuteCalls.Load(), "Task should not execute more than once")
+			require.Equal(t, int32(1), ttask.ExecuteCalls.Load(), "Task should not execute more than once")
+
+			switch tc.taskReturns {
+			case taskReturnsNil:
+				fallthrough
+			case taskReturnsErr:
+				require.Equal(t, 0, w.QueueLen(), "No tasks should remain in the queue")
+				require.Equal(t, 0, w.StorageLen(), "No tasks should remain in storage")
+			case taskReturnsNeedsRetryErr:
+				require.Equal(t, 0, w.QueueLen(), "No tasks should remain in the queue")
+				require.Equal(t, 1, w.StorageLen(), "The task that failed with NeedsRetryError should be in storage")
+			}
 		})
 	}
 }
