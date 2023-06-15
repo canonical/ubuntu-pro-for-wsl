@@ -1,3 +1,3 @@
 abstract class Routes {
-  static const enterToken = '/enter-token';
+  static const subscribeNow = '/subscribe-now';
 }
