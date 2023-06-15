@@ -141,7 +141,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "worker.New should not return an error")
-			require.Equal(t, tc.wantNTasks, w.QueueLen(), "Wrong number of queued tasks.")
+			require.NoError(t, w.CheckQueuedTasks(tc.wantNTasks), "Wrong number of queued tasks.")
 		})
 	}
 }
@@ -279,10 +279,10 @@ func TestTaskProcessing(t *testing.T) {
 			case taskReturnsNil:
 				fallthrough
 			case taskReturnsErr:
-				require.Equal(t, 0, w.QueueLen(), "No tasks should remain in the queue")
+				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
 				require.NoError(t, w.CheckStoredTasks(0), "No tasks should remain in storage")
 			case taskReturnsNeedsRetryErr:
-				require.Equal(t, 0, w.QueueLen(), "No tasks should remain in the queue")
+				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
 				require.NoError(t, w.CheckStoredTasks(1), "The task that failed with NeedsRetryError should be in storage")
 			}
 		})

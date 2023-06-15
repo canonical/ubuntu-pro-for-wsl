@@ -7,11 +7,14 @@ const TaskQueueSize = taskQueueSize
 
 // QueueLen returns the number of tasks queued up. Any task currently being
 // processed is not counted.
-func (w *Worker) QueueLen() int {
+func (w *Worker) CheckQueuedTasks(want int) error {
 	w.manager.mu.Lock()
 	defer w.manager.mu.Unlock()
 
-	return len(w.manager.queue)
+	if got := len(w.manager.queue); got != want {
+		return fmt.Errorf("Mismatch in number of queued tasks. Want: %d. Got: %d", want, got)
+	}
+	return nil
 }
 
 func (w *Worker) CheckStoredTasks(want int) error {
