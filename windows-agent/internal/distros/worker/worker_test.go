@@ -198,7 +198,7 @@ func TestTaskProcessing(t *testing.T) {
 			require.Equal(t, nil, w.Client(), "Client() should return nil when there is no connection")
 
 			if tc.unregisterAfterConstructor {
-				d.Invalidate(errors.New("setup: unregistered distro"))
+				d.Invalidate(ctx)
 			}
 
 			// Submit a task, wait for distro to wake up, and wait for slightly
@@ -599,10 +599,7 @@ func (d *testDistro) IsValid() bool {
 	return !d.invalid.Load()
 }
 
-func (d *testDistro) Invalidate(err error) {
-	if err == nil {
-		panic("called invalidate with a nil error")
-	}
+func (d *testDistro) Invalidate(ctx context.Context) {
 	d.invalid.Store(true)
 }
 

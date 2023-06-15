@@ -23,7 +23,7 @@ type distro interface {
 	ReleaseAwake() error
 
 	IsValid() bool
-	Invalidate(error)
+	Invalidate(context.Context)
 }
 
 // Worker contains all the logic around task queueing and execution for one particular distro.
@@ -187,7 +187,8 @@ func (w *Worker) processTasks(ctx context.Context) {
 
 			var target unreachableDistroError
 			if errors.Is(resultErr, &target) {
-				log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", target.sourceErr)
+				log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
+				w.distro.Invalidate(ctx)
 				continue
 			}
 
@@ -236,7 +237,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 
 	client, err := w.waitForActiveConnection(ctx)
 	if err != nil {
-		return fmt.Errorf("task %v: could not start task: %v", t, err)
+		return fmt.Errorf("task %v: could not start task: %w", t, err)
 	}
 
 	if err := t.Execute(ctx, client); err != nil {

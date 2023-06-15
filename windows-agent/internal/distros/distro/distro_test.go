@@ -303,7 +303,7 @@ func TestLockReleaseAwake(t *testing.T) {
 			testutils.TerminateDistro(t, ctx, distroName)
 
 			if tc.invalidateBeforeLock {
-				d.Invalidate(errors.New("setup: invalidating distro"))
+				d.Invalidate(ctx)
 			}
 			if tc.unregisterDistro {
 				testutils.UnregisterDistro(t, ctx, distroName)
@@ -367,7 +367,7 @@ func TestLockReleaseAwake(t *testing.T) {
 			} else {
 				// Method 2: ReleaseAwake
 				if tc.invalidateBeforeRelease {
-					d.Invalidate(errors.New("distro invalidated by test"))
+					d.Invalidate(ctx)
 				}
 
 				err = d.ReleaseAwake()
@@ -539,17 +539,17 @@ func TestInvalidateIdempotent(t *testing.T) {
 
 	require.True(t, d.IsValid(), "successfully constructed distro should be valid")
 
-	d.Invalidate(errors.New("Hi! I'm an error"))
+	d.Invalidate(ctx)
 	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
 	require.False(t, (*w).stopCalled, "worker Stop should only be called during cleanup")
 
 	(*w).stopCalled = false
 
-	d.Invalidate(errors.New("Hi! I'm another error"))
+	d.Invalidate(ctx)
 	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
 	require.False(t, (*w).stopCalled, "worker Stop should not be called in subsequent invalidations")
 
-	d.Invalidate(errors.New("Hi! I'm another error"))
+	d.Invalidate(ctx)
 	require.False(t, d.IsValid(), "distro should stop being valid after calling invalidate")
 	require.False(t, (*w).stopCalled, "worker Stop should not be called in subsequent invalidations")
 }
@@ -603,7 +603,7 @@ func TestWorkerWrappers(t *testing.T) {
 			require.NoError(t, err, "Setup: distro New should return no error")
 
 			if tc.invalidDistro {
-				d.Invalidate(errors.New("test invalidation"))
+				d.Invalidate(ctx)
 			}
 
 			worker := *w

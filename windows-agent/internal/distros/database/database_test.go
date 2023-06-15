@@ -522,7 +522,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			if tc.markDistroUnreachable != "" {
 				d3, ok := db.Get(distro2)
 				require.True(t, ok, "Setup: Distro %q should have been in the database", distro2)
-				d3.Invalidate(errors.New("This error should cause the distro to be cleaned up"))
+				d3.Invalidate(ctx) // This should cause the distro to be cleaned up
 			}
 
 			if tc.reregisterDistro {
