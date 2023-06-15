@@ -34,7 +34,7 @@ type Distro struct {
 	invalidated atomic.Bool
 
 	worker       workerInterface
-	stateManager *distroStateManager
+	stateManager *stateManager
 }
 
 // workerInterface is an interface that is implements the task processing worker. It is intended
@@ -130,7 +130,7 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 	distro = &Distro{
 		identity:   id,
 		properties: props,
-		stateManager: &distroStateManager{
+		stateManager: &stateManager{
 			distroIdentity: id,
 		},
 	}

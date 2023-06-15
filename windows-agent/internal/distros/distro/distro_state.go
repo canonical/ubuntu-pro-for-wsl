@@ -11,10 +11,10 @@ import (
 	wsl "github.com/ubuntu/gowsl"
 )
 
-// distroStateManager manages the state (running/stopped) of the distro with an internal counter.
+// stateManager manages the state (running/stopped) of the distro with an internal counter.
 // The distro is guaranteed to be running so long as the counter is above 0. This counter can
 // be increased or decreased on demand, and is thread-safe.
-type distroStateManager struct {
+type stateManager struct {
 	refcount uint32
 	cancel   func()
 	mu       sync.Mutex
@@ -23,7 +23,7 @@ type distroStateManager struct {
 }
 
 // State returns the state of the WSL distro, as implemeted by GoWSL.
-func (m *distroStateManager) state() (s wsl.State, err error) {
+func (m *stateManager) state() (s wsl.State, err error) {
 	wslDistro, err := m.distroIdentity.getDistro()
 	if err != nil {
 		return s, err
@@ -37,7 +37,7 @@ func (m *distroStateManager) state() (s wsl.State, err error) {
 // the need to call pop.
 //
 //nolint:nolintlint  // Golangci-lint gives false positives only without --build-tags=gowslmock
-func (m *distroStateManager) push(ctx context.Context) error {
+func (m *stateManager) push(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -70,7 +70,7 @@ func (m *distroStateManager) push(ctx context.Context) error {
 }
 
 // pop decreases the internal counter. If it becomes zero, the distro awake lock is released.
-func (m *distroStateManager) pop() error {
+func (m *stateManager) pop() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -89,7 +89,7 @@ func (m *distroStateManager) pop() error {
 	return nil
 }
 
-func (m *distroStateManager) reset() {
+func (m *stateManager) reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
