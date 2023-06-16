@@ -14,6 +14,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/apidef"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsmockserver"
 	"github.com/stretchr/testify/require"
 )
 
@@ -163,6 +164,74 @@ func TestGetProToken(t *testing.T) {
 			require.NoError(t, err, "GetProToken should return no errors")
 
 			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestGetServerAccessTokenNet(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		dontServe  bool
+		preCancel  bool
+		withToken  string
+		withStatus int
+
+		want    string
+		wantErr bool
+	}{
+		"Success": {want: contractsmockserver.DefaultADToken},
+
+		"Error due no server":           {dontServe: true, wantErr: true},
+		"Error due precanceled context": {preCancel: true, wantErr: true},
+		"Error due non-200 status code": {withStatus: 418, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			addr := "localhost:1"
+			var err error
+			if !tc.dontServe {
+				var args []contractsmockserver.Option
+
+				if len(tc.withToken) > 0 {
+					args = append(args, contractsmockserver.WithTokenResponse(tc.withToken))
+				}
+
+				if tc.withStatus != 0 && tc.withStatus != 200 {
+					args = append(args, contractsmockserver.WithTokenStatusCode(tc.withStatus))
+				}
+
+				addr, err = contractsmockserver.Serve(ctx, args...)
+				require.NoError(t, err, "Setup: Server should return no error")
+			}
+
+			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
+			require.NoError(t, err, "Setup: URL parsing should not fail")
+
+			client := client.New(u, &http.Client{})
+
+			clientCtx, clientCancel := context.WithCancel(ctx)
+			if tc.preCancel {
+				clientCancel()
+			}
+			defer clientCancel()
+
+			got, err := client.GetServerAccessToken(clientCtx)
+			if tc.wantErr {
+				require.Errorf(t, err, "Got token %q when failure was expected", got)
+				return
+			}
+			require.NoError(t, err, "GetServerAccessToken should return no errors")
+
+			require.Equal(t, tc.want, got, "GetServerAccessToken's return value does not match the expected one")
 		})
 	}
 }

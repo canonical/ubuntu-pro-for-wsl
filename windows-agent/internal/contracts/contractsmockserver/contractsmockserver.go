@@ -76,6 +76,7 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc(apidef.Version+apidef.TokenPath, handleTokenFunc(opts.token))
 
 	go http.Serve(lis, mux)
 
@@ -83,3 +84,27 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 
 }
 
+// handleTokenFunc returns a function to handle requests to the /token endpoint according to the response options supplied.
+func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			fmt.Fprintln(w, "this endpoint only supports GET")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if res.statusCode != 200 {
+			fmt.Fprintf(w, `mock error`)
+			w.WriteHeader(res.statusCode)
+			return
+		}
+
+		if _, err := fmt.Fprintf(w, fmt.Sprintf(`{%q: %q}`, apidef.ADTokenKey, res.value)); err != nil {
+			fmt.Fprintf(w, "failed to write the response: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
