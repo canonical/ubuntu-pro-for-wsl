@@ -18,7 +18,9 @@ import (
 
 type distro interface {
 	Name() string
-	KeepAwake(context.Context) error
+
+	LockAwake() error
+	ReleaseAwake() error
 
 	IsValid() bool
 	Invalidate(error)
@@ -215,7 +217,7 @@ func (err unreachableDistroError) Error() string {
 }
 
 func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
-	log.Debugf(context.TODO(), "Distro %q: task %q: dequeued", w.distro.Name(), t)
+	log.Debugf(ctx, "Distro %q: task %q: dequeued", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {
 		return newUnreachableDistroErr(errors.New("distro marked as invalid"))
@@ -224,7 +226,15 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	client, err := w.keepAwakeAndWaitForClient(ctx)
+	if err := w.distro.LockAwake(); err != nil {
+		return newUnreachableDistroErr(err)
+	}
+	//nolint:errcheck // Nothing we can do about it
+	defer w.distro.ReleaseAwake()
+
+	log.Debugf(ctx, "Distro %q: distro is running.", w.distro.Name())
+
+	client, err := w.waitForActiveConnection(ctx)
 	if err != nil {
 		return fmt.Errorf("task %v: could not start task: %v", t, err)
 	}
@@ -240,7 +250,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 
 		err = t.Execute(ctx, client)
 		if err == nil {
-			log.Debugf(context.TODO(), "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
+			log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
 			break
 		}
 
@@ -255,34 +265,25 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	return nil
 }
 
-func (w *Worker) keepAwakeAndWaitForClient(ctx context.Context) (client wslserviceapi.WSLClient, err error) {
-	log.Debugf(context.TODO(), "Distro %q: ensuring active connection.", w.distro.Name())
+func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslserviceapi.WSLClient, err error) {
+	log.Debugf(ctx, "Distro %q: ensuring active connection.", w.distro.Name())
 
 	for i := 0; i < 5; i++ {
 		client, err = func() (wslserviceapi.WSLClient, error) {
-			ctx, cancel := context.WithCancel(ctx)
-			defer func() {
-				if err == nil {
-					// On success, the caller will cancel the parent context
-					return
-				}
-				// On error, we avoid stacking keepAwake calls with each retry.
-				cancel()
-			}()
-
-			err := w.distro.KeepAwake(ctx)
-			if err != nil {
+			// Potentially restart distro if it was stopped for some reason
+			if err := w.distro.LockAwake(); err != nil {
 				return nil, newUnreachableDistroErr(err)
 			}
+			//nolint:errcheck // Nothing we can do about it
+			defer w.distro.ReleaseAwake()
 
-			log.Debugf(context.TODO(), "Distro %q: distro is running.", w.distro.Name())
-
+			// Connect to GRPC client
 			client, err := w.waitForClient(ctx)
 			if err != nil {
 				return nil, newUnreachableDistroErr(err)
 			}
 
-			log.Debugf(context.TODO(), "Distro %q: connection is active.", w.distro.Name())
+			log.Debugf(ctx, "Distro %q: connection is active.", w.distro.Name())
 			return client, nil
 		}()
 

@@ -233,75 +233,173 @@ func TestSetProperties(t *testing.T) {
 	}
 }
 
-func TestKeepAwake(t *testing.T) {
-	t.Skip("Skipping because this method is known to be ineffective.")
+func TestLockReleaseAwake(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
 
 	const wslSleepDelay = 8 * time.Second
 
 	testCases := map[string]struct {
-		unregisterDistro bool
-		invalidateDistro bool
+		// Breaking lock
+		unregisterDistro        bool
+		invalidateBeforeLock    bool
+		invalidateBeforeRelease bool
+		errorOnLock             bool
 
-		wantErr bool
+		// Stacking
+		doubleLock               bool
+		stopDistroInbetweenLocks bool
+		errorOnSecondLock        bool
+		errorStateOnSecondLock   bool
+
+		// Alternatives to Release
+		cleanupDistro bool
+
+		// Backend
+		mockOnly bool
+
+		wantLockErr       bool
+		wantSecondLockErr bool
+		wantReleaseErr    bool
 	}{
-		"Registered distro is kept awake": {},
+		"Registered distro is kept awake until ReleaseAwake":                              {},
+		"Registered distro is kept awake until ReleaseAwake (two locks and two releases)": {doubleLock: true},
+		"Registered distro is awaken by second LockAwake":                                 {doubleLock: true, stopDistroInbetweenLocks: true},
 
-		"Error on invalidated distro": {invalidateDistro: true, wantErr: true},
-		"Error on uregistered distro": {unregisterDistro: true, wantErr: true},
+		"Registered distro is kept awake until distro cleanup": {cleanupDistro: true},
+
+		"Error on invalidated distro before Lock":    {invalidateBeforeLock: true, wantLockErr: true},
+		"Error on invalidated distro before Release": {invalidateBeforeRelease: true, wantReleaseErr: true},
+		"Error on uregistered distro":                {unregisterDistro: true, wantLockErr: true},
+
+		// Mocked errors
+		"Error due to inability to start distro":                  {mockOnly: true, errorOnLock: true, wantLockErr: true},
+		"Error due to inability to get state in second LockAwake": {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorStateOnSecondLock: true, wantSecondLockErr: true},
+		"Error due to inability to start distro a second time":    {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorOnSecondLock: true, wantSecondLockErr: true},
 	}
 
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
+			var mock *wslmock.Backend
 			if wsl.MockAvailable() {
-				ctx = wsl.WithMock(ctx, wslmock.New())
+				t.Parallel()
+				mock = wslmock.New()
+				mock.WslLaunchInteractiveError = tc.errorOnLock
+				ctx = wsl.WithMock(ctx, mock)
+			} else if tc.mockOnly {
+				t.Skip("This test is only available for the mock back-end")
 			}
 
-			distroName, _ := testutils.RegisterDistro(t, ctx, false)
+			distroName, _ := testutils.RegisterDistro(t, ctx, true)
 
 			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
 			defer d.Cleanup(context.Background())
 
 			require.NoError(t, err, "Setup: distro New should return no error")
 
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
 			testutils.TerminateDistro(t, ctx, distroName)
 
-			if tc.invalidateDistro {
+			if tc.invalidateBeforeLock {
 				d.Invalidate(errors.New("setup: invalidating distro"))
 			}
 			if tc.unregisterDistro {
 				testutils.UnregisterDistro(t, ctx, distroName)
 			}
 
-			err = d.KeepAwake(ctx)
-			if tc.wantErr {
-				require.Error(t, err, "KeepAwake should have returned an error")
-
-				time.Sleep(5 * time.Second)
+			// Start distro
+			err = d.LockAwake()
+			if tc.wantLockErr {
+				require.Errorf(t, err, "LockAwake should have returned an error")
 				state := testutils.DistroState(t, ctx, distroName)
-				require.NotEqual(t, "Running", state, "distro should not run when KeepAwake is called")
+				require.NotEqualf(t, "Running", state, "distro should not run when LockAwake fails")
 
 				return
 			}
-			require.NoError(t, err, "KeepAwake should have returned no error")
+			require.NoErrorf(t, err, "LockAwake should have returned no error")
 
 			require.Eventually(t, func() bool {
 				return testutils.DistroState(t, ctx, distroName) == "Running"
-			}, 10*time.Second, time.Second, "distro should have started after calling keepAwake")
+			}, 10*time.Second, time.Second, "distro should have started after calling LockAwake")
 
-			time.Sleep(2 * wslSleepDelay)
+			// Second lock
+			if tc.doubleLock {
+				if tc.stopDistroInbetweenLocks {
+					testutils.TerminateDistro(t, ctx, distroName)
+				}
 
-			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "KeepAwake should have kept the distro running")
+				if tc.errorOnSecondLock {
+					mock.WslLaunchInteractiveError = true
+				}
 
-			cancel()
+				if tc.errorStateOnSecondLock {
+					mock.StateError = true
+				}
+
+				err = d.LockAwake()
+				if tc.wantSecondLockErr {
+					require.Errorf(t, err, "Second LockAwake should have returned an error")
+					return
+				}
+				require.NoErrorf(t, err, "Second LockAwake should have returned no error")
+
+				require.Eventually(t, func() bool {
+					d := wsl.NewDistro(ctx, distroName)
+					state, err := d.State()
+					if err != nil {
+						t.Logf("d.State returned error: %v", err)
+						return false
+					}
+					return state == wsl.Running
+				}, wslSleepDelay+2*time.Second, time.Second, "distro should have started after calling LockAwake")
+			}
+
+			time.Sleep(wslSleepDelay + 2*time.Second)
+
+			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "LockAwake should have kept the distro running")
+
+			// Stopping distro
+			if tc.cleanupDistro {
+				// Method 1: Cleanup
+				d.Cleanup(ctx)
+			} else {
+				// Method 2: ReleaseAwake
+				if tc.invalidateBeforeRelease {
+					d.Invalidate(errors.New("distro invalidated by test"))
+				}
+
+				err = d.ReleaseAwake()
+				if tc.wantReleaseErr {
+					require.Error(t, err, "ReleaseAwake should return an error")
+					return
+				}
+				require.NoError(t, err, "ReleaseAwake should return no error")
+
+				if tc.doubleLock {
+					time.Sleep(wslSleepDelay + 2*time.Second)
+					require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "Distro should stay awake after two calls to LockAwake and only one to ReleaseAwake")
+
+					// Need two releases
+					err = d.ReleaseAwake()
+					require.NoError(t, err, "ReleaseAwake should return no error")
+				}
+			}
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, ctx, distroName) == "Stopped"
-			}, 2*wslSleepDelay, time.Second, "distro should have stopped after calling keepAwake due to inactivity")
+				d := wsl.NewDistro(ctx, distroName)
+				state, err := d.State()
+				if err != nil {
+					t.Logf("d.State returned error: %v", err)
+					return false
+				}
+				return state == wsl.Stopped
+			}, wslSleepDelay+2*time.Second, time.Second, "distro should have stopped after calling ReleaseAwake due to inactivity.")
+
+			// Try one more ReleaseAwake than needed
+			err = d.ReleaseAwake()
+			require.Error(t, err, "ReleaseAwake should return and error when called more times than LockAwake")
 		})
 	}
 }
