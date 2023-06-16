@@ -217,7 +217,7 @@ func (err unreachableDistroError) Error() string {
 }
 
 func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
-	log.Debugf(context.TODO(), "Distro %q: task %q: dequeued", w.distro.Name(), t)
+	log.Debugf(ctx, "Distro %q: task %q: dequeued", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {
 		return newUnreachableDistroErr(errors.New("distro marked as invalid"))
@@ -232,7 +232,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	//nolint:errcheck // Nothing we can do about it
 	defer w.distro.ReleaseAwake()
 
-	log.Debugf(context.TODO(), "Distro %q: distro is running.", w.distro.Name())
+	log.Debugf(ctx, "Distro %q: distro is running.", w.distro.Name())
 
 	client, err := w.waitForActiveConnection(ctx)
 	if err != nil {
@@ -250,7 +250,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 
 		err = t.Execute(ctx, client)
 		if err == nil {
-			log.Debugf(context.TODO(), "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
+			log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
 			break
 		}
 
