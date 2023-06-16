@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -56,6 +57,14 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 	}
 
 	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", fmt.Errorf("server replied with an error: Code %d, %v", res.StatusCode, err)
+		}
+		return "", fmt.Errorf("server replied with an error: Code %d, %s", res.StatusCode, bodyBytes)
+	}
+
 	var data map[string]string
 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		return "", fmt.Errorf("failed to decode response body: %v", err)
@@ -105,7 +114,11 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	case 500:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
 	default:
-		return "", fmt.Errorf("unknown error from the contracts server response. Code=%d. Body=%s", res.StatusCode, res.Body)
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", fmt.Errorf("unknown error from the contracts server: Code %d, %v", res.StatusCode, err)
+		}
+		return "", fmt.Errorf("unknown error from the contracts server: Code %d, %s", res.StatusCode, bodyBytes)
 	case 200:
 	}
 
