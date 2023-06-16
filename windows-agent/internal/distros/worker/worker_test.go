@@ -276,9 +276,7 @@ func TestTaskProcessing(t *testing.T) {
 			require.Equal(t, int32(1), ttask.ExecuteCalls.Load(), "Task should not execute more than once")
 
 			switch tc.taskReturns {
-			case taskReturnsNil:
-				fallthrough
-			case taskReturnsErr:
+			case taskReturnsNil, taskReturnsErr:
 				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
 				require.NoError(t, w.CheckStoredTasks(0), "No tasks should remain in storage")
 			case taskReturnsNeedsRetryErr:
