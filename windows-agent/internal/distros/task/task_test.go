@@ -171,7 +171,3 @@ type DummyImplementer struct{}
 func (DummyImplementer) Execute(context.Context, wslserviceapi.WSLClient) error {
 	return nil
 }
-
-func (DummyImplementer) ShouldRetry() bool {
-	return false
-}

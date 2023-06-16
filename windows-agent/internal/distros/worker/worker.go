@@ -23,7 +23,7 @@ type distro interface {
 	ReleaseAwake() error
 
 	IsValid() bool
-	Invalidate(error)
+	Invalidate(context.Context)
 }
 
 // Worker contains all the logic around task queueing and execution for one particular distro.
@@ -187,11 +187,12 @@ func (w *Worker) processTasks(ctx context.Context) {
 
 			var target unreachableDistroError
 			if errors.Is(resultErr, &target) {
-				w.distro.Invalidate(target)
+				log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
+				w.distro.Invalidate(ctx)
 				continue
 			}
 
-			err := w.manager.done(t, resultErr)
+			err := w.manager.taskDone(ctx, t, resultErr)
 			if err != nil {
 				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 			}
@@ -236,32 +237,14 @@ func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 
 	client, err := w.waitForActiveConnection(ctx)
 	if err != nil {
-		return fmt.Errorf("task %v: could not start task: %v", t, err)
+		return fmt.Errorf("task %v: could not start task: %w", t, err)
 	}
 
-	for {
-		// Avoid retrying if the task failed due to a cancelled or timed out context
-		// It also avoids executing in the much rarer case that we cancel or time out right after getting the client
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		err = t.Execute(ctx, client)
-		if err == nil {
-			log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
-			break
-		}
-
-		// No retry: abandon task regardless of error result.
-		if !t.ShouldRetry() {
-			return err
-		}
-
-		log.Warningf(ctx, "Distro %q: task %q: retrying after obtaining error: %v", w.distro.Name(), t, err)
+	if err := t.Execute(ctx, client); err != nil {
+		return fmt.Errorf("distro %q: task %q failed: %w", w.distro.Name(), t, err)
 	}
 
+	log.Debugf(ctx, "Distro %q: task %q: task completed successfully", w.distro.Name(), t)
 	return nil
 }
 

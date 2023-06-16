@@ -141,7 +141,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "worker.New should not return an error")
-			require.Equal(t, tc.wantNTasks, w.QueueLen(), "Wrong number of queued tasks.")
+			require.NoError(t, w.CheckQueuedTasks(tc.wantNTasks), "Wrong number of queued tasks.")
 		})
 	}
 }
@@ -149,19 +149,29 @@ func TestNew(t *testing.T) {
 func TestTaskProcessing(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		unregisterAfterConstructor bool // Triggers error in trying to get distro in LockAwake
-		taskError                  bool // Causes the task to always return an error
-		forceConnectionTimeout     bool // Cancels the context while waiting for the GRPC connection to be established
-		cancelTaskInProgress       bool // Cancels as the task is running
+	type taskReturns int
+	const (
+		taskReturnsNil taskReturns = iota
+		taskReturnsErr
+		taskReturnsNeedsRetryErr
+	)
 
-		wantExecuteCalls int32
+	testCases := map[string]struct {
+		unregisterAfterConstructor bool        // Triggers error in trying to get distro in LockAwake
+		taskReturns                taskReturns // Causes the task to always return an error
+		forceConnectionTimeout     bool        // Cancels the context while waiting for the GRPC connection to be established
+		cancelTaskInProgress       bool        // Cancels as the task is running
+
+		wantExecuteCalled bool
 	}{
-		"Task is executed successfully": {wantExecuteCalls: 1},
-		"Unregistered distro":           {unregisterAfterConstructor: true, wantExecuteCalls: 0},
-		"Connection timeout":            {forceConnectionTimeout: true, wantExecuteCalls: 0},
-		"Cancel task in progress":       {cancelTaskInProgress: true, wantExecuteCalls: 1},
-		"Erroneous task":                {taskError: true, wantExecuteCalls: testTaskMaxRetries},
+		"Success executing a task": {wantExecuteCalled: true},
+
+		"Error when the distro is not registered":    {unregisterAfterConstructor: true},
+		"Error when the connection times out":        {forceConnectionTimeout: true},
+		"Error when a task in progress is cancelled": {cancelTaskInProgress: true, wantExecuteCalled: true},
+
+		"Error when the task returns a generic error":   {taskReturns: taskReturnsErr, wantExecuteCalled: true},
+		"Error when the task returns a NeedsRetryError": {taskReturns: taskReturnsNeedsRetryErr, wantExecuteCalled: true},
 	}
 
 	for name, tc := range testCases {
@@ -188,7 +198,7 @@ func TestTaskProcessing(t *testing.T) {
 			require.Equal(t, nil, w.Client(), "Client() should return nil when there is no connection")
 
 			if tc.unregisterAfterConstructor {
-				d.Invalidate(errors.New("setup: unregistered distro"))
+				d.Invalidate(ctx)
 			}
 
 			// Submit a task, wait for distro to wake up, and wait for slightly
@@ -196,19 +206,22 @@ func TestTaskProcessing(t *testing.T) {
 			const distroWakeUpTime = 1 * time.Second
 			const clientTickPeriod = 1200 * time.Millisecond
 
-			task := &testTask{}
-			if tc.taskError {
-				task.Returns = errors.New("testTask error")
+			ttask := &testTask{}
+			switch tc.taskReturns {
+			case taskReturnsErr:
+				ttask.Returns = errors.New("testTask error")
+			case taskReturnsNeedsRetryErr:
+				ttask.Returns = task.NeedsRetryError{SourceErr: errors.New("testTask error")}
 			}
 
 			if tc.cancelTaskInProgress {
 				// This particular task will always retry in a loop
 				// Long delay to ensure we can reliably cancell it in progress
-				task.Delay = 10 * time.Second
-				task.Returns = errors.New("testTask error: this error should never be triggered")
+				ttask.Delay = 10 * time.Second
+				ttask.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = w.SubmitTasks(task)
+			err = w.SubmitTasks(ttask)
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -224,7 +237,7 @@ func TestTaskProcessing(t *testing.T) {
 			// We sleep to ensure at least one tick has gone by in the "wait for connection"
 			time.Sleep(clientTickPeriod)
 			require.Equal(t, nil, w.Client(), "Client should return nil when there is no connection")
-			require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
+			require.Equal(t, int32(0), ttask.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 
 			if tc.forceConnectionTimeout {
 				cancel() // Simulates a timeout
@@ -234,9 +247,9 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task with with active connection
 			w.SetConnection(conn)
 
-			if tc.wantExecuteCalls == 0 {
+			if !tc.wantExecuteCalled {
 				time.Sleep(2 * clientTickPeriod)
-				require.Equal(t, int32(0), task.ExecuteCalls.Load(), "Task executed unexpectedly")
+				require.Equal(t, int32(0), ttask.ExecuteCalls.Load(), "Task executed unexpectedly")
 				return
 			}
 
@@ -244,23 +257,32 @@ func TestTaskProcessing(t *testing.T) {
 				"Client should become non-nil after setting the connection")
 
 			// Wait for task to start
-			require.Eventuallyf(t, func() bool { return task.ExecuteCalls.Load() == tc.wantExecuteCalls }, 2*clientTickPeriod, 100*time.Millisecond,
-				"Task was executed fewer times than expected. Expected %d and executed %d.", tc.wantExecuteCalls, task.ExecuteCalls.Load())
+			require.Eventuallyf(t, func() bool { return ttask.ExecuteCalls.Load() == 1 }, 2*clientTickPeriod, 100*time.Millisecond,
+				"Task was executed fewer times than expected. Expected 1 and executed %d.", ttask.ExecuteCalls.Load())
 
 			if tc.cancelTaskInProgress {
 				// Cancelling and waiting for cancellation to propagate, then ensure it did so.
 				cancel()
-				require.Eventually(t, func() bool { return task.WasCancelled.Load() }, 100*time.Millisecond, time.Millisecond,
+				require.Eventually(t, func() bool { return ttask.WasCancelled.Load() }, 100*time.Millisecond, time.Millisecond,
 					"Task should be cancelled when the task processing context is cancelled")
 
 				// Giving some time to ensure retry is never attempted.
 				time.Sleep(100 * time.Millisecond)
-				require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task should not be retried after being cancelled")
+				require.Equal(t, int32(1), ttask.ExecuteCalls.Load(), "Task should never be retried")
 				return
 			}
 
 			time.Sleep(time.Second)
-			require.Equal(t, tc.wantExecuteCalls, task.ExecuteCalls.Load(), "Task executed too many times after establishing a connection")
+			require.Equal(t, int32(1), ttask.ExecuteCalls.Load(), "Task should not execute more than once")
+
+			switch tc.taskReturns {
+			case taskReturnsNil, taskReturnsErr:
+				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
+				require.NoError(t, w.CheckStoredTasks(0), "No tasks should remain in storage")
+			case taskReturnsNeedsRetryErr:
+				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
+				require.NoError(t, w.CheckStoredTasks(1), "The task that failed with NeedsRetryError should be in storage")
+			}
 		})
 	}
 }
@@ -476,12 +498,6 @@ func (t emptyTask) String() string {
 	return "Empty test task"
 }
 
-func (t emptyTask) ShouldRetry() bool {
-	return false
-}
-
-const testTaskMaxRetries = 5
-
 type testTask struct {
 	// ExecuteCalls counts the number of times Execute is called
 	ExecuteCalls atomic.Int32
@@ -509,10 +525,6 @@ func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 
 func (t *testTask) String() string {
 	return "Test task"
-}
-
-func (t *testTask) ShouldRetry() bool {
-	return t.ExecuteCalls.Load() < testTaskMaxRetries
 }
 
 type testDistro struct {
@@ -585,10 +597,7 @@ func (d *testDistro) IsValid() bool {
 	return !d.invalid.Load()
 }
 
-func (d *testDistro) Invalidate(err error) {
-	if err == nil {
-		panic("called invalidate with a nil error")
-	}
+func (d *testDistro) Invalidate(ctx context.Context) {
 	d.invalid.Store(true)
 }
 

@@ -235,15 +235,10 @@ func (d *Distro) Cleanup(ctx context.Context) {
 
 // Invalidate sets the invalid flag to true. The state of this flag can be read with IsValid.
 // This is irreversible, once the flag is true there is no way of setting it bag to false.
-func (d *Distro) Invalidate(err error) {
-	if err == nil {
-		log.Warningf(context.TODO(), "distro %q: attempted to invalidate with a nil error", d.Name())
-		return
-	}
-
+func (d *Distro) Invalidate(ctx context.Context) {
 	updated := d.invalidated.CompareAndSwap(false, true)
 	if updated {
-		log.Debugf(context.TODO(), "distro %q: marked as no longer valid", d.Name())
+		log.Infof(ctx, "distro %q: marked as no longer valid", d.Name())
 	}
 }
 
@@ -256,7 +251,7 @@ func (d *Distro) IsValid() bool {
 	}
 
 	if !d.identity.isValid() {
-		d.Invalidate(&NotValidError{})
+		d.Invalidate(d.ctx)
 		return false
 	}
 
