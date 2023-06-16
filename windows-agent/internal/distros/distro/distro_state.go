@@ -23,7 +23,7 @@ type stateManager struct {
 	distroIdentity identity
 }
 
-// State returns the state of the WSL distro, as implemeted by GoWSL.
+// state returns the state of the WSL distro, as implemeted by GoWSL.
 func (m *stateManager) state() (s wsl.State, err error) {
 	wslDistro, err := m.distroIdentity.getDistro()
 	if err != nil {
