@@ -12,11 +12,9 @@ packages:
   agentapi:
     dependency: "direct main"
     description:
-      path: "agentapi/dart"
-      ref: HEAD
-      resolved-ref: "6b599ca502d0723cedb3e9a9d9028853617031b7"
-      url: "https://github.com/canonical/ubuntu-pro-for-windows"
-    source: git
+      path: "../../../agentapi/dart"
+      relative: true
+    source: path
     version: "0.0.1"
   analyzer:
     dependency: transitive
@@ -449,11 +447,9 @@ packages:
   p4w_ms_store:
     dependency: "direct main"
     description:
-      path: "gui/packages/p4w_ms_store"
-      ref: HEAD
-      resolved-ref: "6b599ca502d0723cedb3e9a9d9028853617031b7"
-      url: "https://github.com/canonical/ubuntu-pro-for-windows"
-    source: git
+      path: "../p4w_ms_store"
+      relative: true
+    source: path
     version: "0.0.1"
   package_config:
     dependency: transitive
@@ -507,10 +503,10 @@ packages:
     dependency: transitive
     description:
       name: protobuf
-      sha256: "01dd9bd0fa02548bf2ceee13545d4a0ec6046459d847b6b061d8a27237108a08"
+      sha256: "4034a02b7e231e7e60bff30a8ac13a7347abfdac0798595fae0b90a3f0afe759"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.0"
+    version: "3.0.0"
   provider:
     dependency: "direct main"
     description:
