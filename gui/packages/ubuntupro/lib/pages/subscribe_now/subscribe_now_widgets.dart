@@ -46,6 +46,13 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    _token.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
     return YaruExpandable(
