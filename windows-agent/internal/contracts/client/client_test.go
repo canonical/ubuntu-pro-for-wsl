@@ -236,6 +236,74 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 	}
 }
 
+func TestGetProTokenNet(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		dontServe  bool
+		preCancel  bool
+		withToken  string
+		withStatus int
+
+		want    string
+		wantErr bool
+	}{
+		"Success": {want: contractsmockserver.DefaultProToken},
+
+		"Error due no server":           {dontServe: true, wantErr: true},
+		"Error due precanceled context": {preCancel: true, wantErr: true},
+		"Error due non-200 status code": {withStatus: 418, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			addr := "localhost:1"
+			var err error
+			if !tc.dontServe {
+				var args []contractsmockserver.Option
+
+				if len(tc.withToken) > 0 {
+					args = append(args, contractsmockserver.WithSubscriptionResponse(tc.withToken))
+				}
+
+				if tc.withStatus != 0 && tc.withStatus != 200 {
+					args = append(args, contractsmockserver.WithSubscriptionStatusCode(tc.withStatus))
+				}
+
+				addr, err = contractsmockserver.Serve(ctx, args...)
+				require.NoError(t, err, "Setup: Server should return no error")
+			}
+
+			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
+			require.NoError(t, err, "Setup: URL parsing should not fail")
+
+			client := client.New(u, &http.Client{})
+
+			clientCtx, clientCancel := context.WithCancel(ctx)
+			if tc.preCancel {
+				clientCancel()
+			}
+			defer clientCancel()
+
+			got, err := client.GetProToken(clientCtx, "JWT")
+			if tc.wantErr {
+				require.Errorf(t, err, "Got token %q when failure was expected", got)
+				return
+			}
+			require.NoError(t, err, "GetProToken should return no errors")
+
+			require.Equal(t, tc.want, got, "GetProToken's return value does not match the expected one")
+		})
+	}
+}
+
 type HTTPMock struct {
 	errorOnDo bool
 	response  http.Response

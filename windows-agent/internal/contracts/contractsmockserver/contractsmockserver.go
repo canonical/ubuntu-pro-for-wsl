@@ -77,6 +77,7 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc(apidef.Version+apidef.TokenPath, handleTokenFunc(opts.token))
+	mux.HandleFunc(apidef.Version+apidef.SubscriptionPath, handleSubscriptionFunc(opts.subscription))
 
 	go http.Serve(lis, mux)
 
@@ -100,6 +101,51 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if _, err := fmt.Fprintf(w, fmt.Sprintf(`{%q: %q}`, apidef.ADTokenKey, res.value)); err != nil {
+			fmt.Fprintf(w, "failed to write the response: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// handleSubscriptionFunc returns a function to handle requests to the /susbcription endpoint according to the response options supplied.
+func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			fmt.Fprintln(w, "this endpoint only supports POST")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if res.statusCode != 200 {
+			fmt.Fprintf(w, `mock error`)
+			w.WriteHeader(res.statusCode)
+			return
+		}
+
+		var data map[string]string
+		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+			fmt.Fprintln(w, "Bad Request")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		userJWT, ok := data[apidef.JWTKey]
+		if !ok {
+			fmt.Fprintln(w, "JSON payload does not contain the expected key")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if len(userJWT) == 0 {
+			fmt.Fprintln(w, "JWT cannot be empty")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if _, err := fmt.Fprintf(w, fmt.Sprintf(`{%q: %q}`, apidef.ProTokenKey, res.value)); err != nil {
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
