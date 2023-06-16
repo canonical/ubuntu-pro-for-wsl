@@ -5,8 +5,7 @@ import "fmt"
 // TaskQueueSize is the number of tasks that can be enqueued.
 const TaskQueueSize = taskQueueSize
 
-// QueueLen returns the number of tasks queued up. Any task currently being
-// processed is not counted.
+// CheckQueuedTasks checks that the number of tasks in the queue matches expectations.
 func (w *Worker) CheckQueuedTasks(want int) error {
 	w.manager.mu.Lock()
 	defer w.manager.mu.Unlock()
@@ -17,6 +16,7 @@ func (w *Worker) CheckQueuedTasks(want int) error {
 	return nil
 }
 
+// CheckStoredTasks checks that the number of tasks in storage matches expectations.
 func (w *Worker) CheckStoredTasks(want int) error {
 	w.manager.mu.Lock()
 	defer w.manager.mu.Unlock()
