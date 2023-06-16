@@ -7,9 +7,9 @@ import 'package:yaru/yaru.dart';
 import 'constants.dart';
 import 'core/agent_api_client.dart';
 import 'launch_agent.dart';
-import 'pages/enter_token/enter_token_page.dart';
 import 'pages/startup/agent_monitor.dart';
 import 'pages/startup/startup_page.dart';
+import 'pages/subscribe_now/subscribe_now_page.dart';
 import 'routes.dart';
 
 class Pro4WindowsApp extends StatelessWidget {
@@ -35,11 +35,11 @@ class Pro4WindowsApp extends StatelessWidget {
             onClient: registerServiceInstance<AgentApiClient>,
           ),
           child: const StartupPage(
-            nextRoute: Routes.enterToken,
+            nextRoute: Routes.subscribeNow,
           ),
         ),
         routes: const {
-          Routes.enterToken: EnterProTokenPage.create,
+          Routes.subscribeNow: SubscribeNowPage.create,
         },
       ),
     );
