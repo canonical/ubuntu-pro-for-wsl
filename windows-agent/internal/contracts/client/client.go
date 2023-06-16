@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/apidef"
 	"github.com/ubuntu/decorate"
 )
 
@@ -32,30 +33,12 @@ func New(base *url.URL, doer httpDoer) *Client {
 	}
 }
 
-const (
-	apiVersion = "/v1"
-
-	// endpoints.
-	tokenPath        = "/token"
-	subscriptionPath = "/subscription"
-
-	// A safe token response size - tests with the real MS APIs suggested that those tokens will stay in between 1.2kB to 1.7kB.
-	// Our Pro Token is much, much smaller.
-	apiTokenMaxSize = 4096
-
-	// JSON keys commonly referred in the Contracts Server backend REST API.
-	//nolint:gosec // G101 false positive, this is not a credential
-	adTokenKey  = "azure_ad_token"
-	jwtKey      = "ms_store_id_key"
-	proTokenKey = "contract_token"
-)
-
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
 func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err error) {
 	defer decorate.OnError(&err, "couldn't download access token from server")
 
 	// baseurl/v1/token.
-	u := c.baseURL.JoinPath(apiVersion, tokenPath)
+	u := c.baseURL.JoinPath(apidef.Version, apidef.TokenPath)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("could not create a GET request: %v", err)
@@ -78,9 +61,9 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	val, ok := data[adTokenKey]
+	val, ok := data[apidef.ADTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", adTokenKey)
+		return "", fmt.Errorf("expected key %q not found in the response", apidef.ADTokenKey)
 	}
 
 	return val, nil
@@ -95,8 +78,8 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	}
 
 	// baseurl/v1/subscription.
-	u := c.baseURL.JoinPath(apiVersion, subscriptionPath)
-	jsonData, err := json.Marshal(map[string]string{jwtKey: userJWT})
+	u := c.baseURL.JoinPath(apidef.Version, apidef.SubscriptionPath)
+	jsonData, err := json.Marshal(map[string]string{apidef.JWTKey: userJWT})
 	if err != nil {
 		return "", err
 	}
@@ -131,9 +114,9 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 		return "", err
 	}
 
-	val, ok := data[proTokenKey]
+	val, ok := data[apidef.ProTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", proTokenKey)
+		return "", fmt.Errorf("expected key %q not found in the response", apidef.ProTokenKey)
 	}
 
 	return val, nil
@@ -149,8 +132,8 @@ func checkLength(length int64) error {
 		return errors.New("empty")
 	}
 
-	if length > apiTokenMaxSize {
-		return fmt.Errorf("too big: %d bytes, limit is %d", length, apiTokenMaxSize)
+	if length > apidef.TokenMaxSize {
+		return fmt.Errorf("too big: %d bytes, limit is %d", length, apidef.TokenMaxSize)
 	}
 
 	return nil

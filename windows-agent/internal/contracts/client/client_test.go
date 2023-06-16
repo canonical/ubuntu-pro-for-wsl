@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/apidef"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +34,7 @@ func TestGetServerAccessToken(t *testing.T) {
 	}{
 		"Success": {want: goodToken},
 
-		"Error with a too big token":                 {responseContent: []byte(fmt.Sprintf("{%q:%q}", client.JSONKeyAdToken, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
+		"Error with a too big token":                 {responseContent: []byte(fmt.Sprintf("{%q:%q}", apidef.ADTokenKey, strings.Repeat("REPEAT_TOO_BIG_TOKEN", 220))), wantErr: true},
 		"Error with empty response":                  {responseContent: []byte(""), wantErr: true},
 		"Error with unknown content length response": {unknownContentLength: true, wantErr: true},
 		"Error with expected key not in response":    {responseContent: []byte(`{"unexpected_key": "unexpected_value"}`), wantErr: true},
@@ -50,7 +51,7 @@ func TestGetServerAccessToken(t *testing.T) {
 
 			if tc.responseContent == nil {
 				var err error
-				tc.responseContent, err = json.Marshal(map[string]string{client.JSONKeyAdToken: goodToken})
+				tc.responseContent, err = json.Marshal(map[string]string{apidef.ADTokenKey: goodToken})
 				require.NoError(t, err, "Setup: unexpected error when marshalling the test token")
 			}
 
@@ -133,7 +134,7 @@ func TestGetProToken(t *testing.T) {
 
 			if tc.responseContent == nil {
 				var err error
-				tc.responseContent, err = json.Marshal(map[string]string{client.JSONKeyProToken: goodToken})
+				tc.responseContent, err = json.Marshal(map[string]string{apidef.ProTokenKey: goodToken})
 				require.NoError(t, err, "Setup: unexpected error when marshalling the good token")
 			}
 
