@@ -50,6 +50,10 @@ func TestGetServerAccessToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			if tc.statusCode == 0 {
+				tc.statusCode = http.StatusOK
+			}
+
 			if tc.responseContent == nil {
 				var err error
 				tc.responseContent, err = json.Marshal(map[string]string{apidef.ADTokenKey: goodToken})
@@ -130,7 +134,7 @@ func TestGetProToken(t *testing.T) {
 			}
 
 			if tc.statusCode == 0 {
-				tc.statusCode = 200
+				tc.statusCode = http.StatusOK
 			}
 
 			if tc.responseContent == nil {
