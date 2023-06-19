@@ -102,24 +102,22 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			fmt.Fprintln(w, "this endpoint only supports GET")
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, "this endpoint only supports GET")
 			return
 		}
 
 		if res.statusCode != 200 {
-			fmt.Fprintln(w, "mock error")
 			w.WriteHeader(res.statusCode)
+			fmt.Fprintln(w, "mock error")
 			return
 		}
 
 		if _, err := fmt.Fprintf(w, `{%q: %q}`, apidef.ADTokenKey, res.value); err != nil {
-			fmt.Fprintf(w, "failed to write the response: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "failed to write the response: %v", err)
 			return
 		}
-
-		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -127,43 +125,41 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			fmt.Fprintln(w, "this endpoint only supports POST")
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, "this endpoint only supports POST")
 			return
 		}
 
 		if res.statusCode != 200 {
-			fmt.Fprintln(w, "mock error")
 			w.WriteHeader(res.statusCode)
+			fmt.Fprintln(w, "mock error")
 			return
 		}
 
 		var data map[string]string
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			fmt.Fprintln(w, "Bad Request")
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, "Bad Request")
 			return
 		}
 
 		userJWT, ok := data[apidef.JWTKey]
 		if !ok {
-			fmt.Fprintln(w, "JSON payload does not contain the expected key")
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, "JSON payload does not contain the expected key")
 			return
 		}
 
 		if len(userJWT) == 0 {
-			fmt.Fprintln(w, "JWT cannot be empty")
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, "JWT cannot be empty")
 			return
 		}
 
 		if _, err := fmt.Fprintf(w, `{%q: %q}`, apidef.ProTokenKey, res.value); err != nil {
-			fmt.Fprintf(w, "failed to write the response: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "failed to write the response: %v", err)
 			return
 		}
-
-		w.WriteHeader(http.StatusOK)
 	}
 }
