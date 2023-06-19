@@ -52,7 +52,7 @@ runs:
       if: ${{ inputs.enable-dart == 'true' }}
       shell: bash
       run: |
-        dart pub global activate protoc_plugin '20.0.1'
+        dart pub global activate protoc_plugin
     - name: Generate GRPC files
       shell: bash
       working-directory: ${{ inputs.protos-directory }}

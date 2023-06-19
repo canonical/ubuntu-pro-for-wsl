@@ -304,10 +304,10 @@ packages:
     dependency: "direct main"
     description:
       name: grpc
-      sha256: "6d39bf582aa2696226898749af1f5910f66c2362278cd013d16c37db83ca3c25"
+      sha256: "88623809e073843ab71bc2e2a5fc424eeb89184ce9fd4b128d66195ee61c77a2"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.0"
+    version: "3.2.1"
   gtk:
     dependency: transitive
     description:
@@ -503,10 +503,10 @@ packages:
     dependency: transitive
     description:
       name: protobuf
-      sha256: "01dd9bd0fa02548bf2ceee13545d4a0ec6046459d847b6b061d8a27237108a08"
+      sha256: "4034a02b7e231e7e60bff30a8ac13a7347abfdac0798595fae0b90a3f0afe759"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.0"
+    version: "3.0.0"
   provider:
     dependency: "direct main"
     description:

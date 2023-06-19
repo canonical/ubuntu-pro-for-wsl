@@ -40,7 +40,7 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  grpc: ^3.2.0
+  grpc: ^3.2.1
   intl: ^0.18.0
   mockito: ^5.4.2
   p4w_ms_store:
