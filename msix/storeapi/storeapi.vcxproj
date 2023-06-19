@@ -91,11 +91,13 @@
     <ClInclude Include="..\..\storeapi\base\Exception.hpp" />
     <ClInclude Include="..\..\storeapi\base\StoreService.hpp" />
     <ClInclude Include="framework.hpp" />
+    <ClInclude Include="StoreApi.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\storeapi\agent\ServerStoreService.cpp" />
     <ClCompile Include="..\..\storeapi\base\Context.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="StoreApi.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
