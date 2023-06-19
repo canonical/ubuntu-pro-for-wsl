@@ -95,7 +95,7 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if res.statusCode != 200 {
-			fmt.Fprintf(w, `mock error`)
+			fmt.Fprintf(w, "mock error")
 			w.WriteHeader(res.statusCode)
 			return
 		}
@@ -120,7 +120,7 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 		}
 
 		if res.statusCode != 200 {
-			fmt.Fprintf(w, `mock error`)
+			fmt.Fprintf(w, "mock error")
 			w.WriteHeader(res.statusCode)
 			return
 		}
