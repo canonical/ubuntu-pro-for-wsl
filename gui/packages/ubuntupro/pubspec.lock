@@ -304,10 +304,10 @@ packages:
     dependency: "direct main"
     description:
       name: grpc
-      sha256: "6d39bf582aa2696226898749af1f5910f66c2362278cd013d16c37db83ca3c25"
+      sha256: "88623809e073843ab71bc2e2a5fc424eeb89184ce9fd4b128d66195ee61c77a2"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.0"
+    version: "3.2.1"
   gtk:
     dependency: transitive
     description:
