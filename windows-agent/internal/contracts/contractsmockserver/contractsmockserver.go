@@ -1,6 +1,5 @@
 // Package contractsmockserver implements a mocked version of the Contracts Server backend.
 // DO NOT USE IN PRODUCTION
-
 package contractsmockserver
 
 import (
