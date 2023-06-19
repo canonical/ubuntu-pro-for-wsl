@@ -83,13 +83,13 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc(apidef.Version+apidef.TokenPath, handleTokenFunc(opts.token))
 	mux.HandleFunc(apidef.Version+apidef.SubscriptionPath, handleSubscriptionFunc(opts.subscription))
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
 
 	go func() {
-		server := &http.Server{
-			Addr:              addr,
-			Handler:           mux,
-			ReadHeaderTimeout: 3 * time.Second,
-		}
 		if err := server.Serve(lis); err != nil {
 			fmt.Println("failed to start the HTTP server")
 		}
