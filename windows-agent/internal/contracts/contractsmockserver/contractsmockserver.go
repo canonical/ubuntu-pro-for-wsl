@@ -108,12 +108,12 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if res.statusCode != 200 {
-			fmt.Fprintf(w, "mock error")
+			fmt.Fprintln(w, "mock error")
 			w.WriteHeader(res.statusCode)
 			return
 		}
 
-		if _, err := fmt.Fprintf(w, fmt.Sprintf(`{%q: %q}`, apidef.ADTokenKey, res.value)); err != nil {
+		if _, err := fmt.Fprintf(w, `{%q: %q}`, apidef.ADTokenKey, res.value); err != nil {
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -133,7 +133,7 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 		}
 
 		if res.statusCode != 200 {
-			fmt.Fprintf(w, "mock error")
+			fmt.Fprintln(w, "mock error")
 			w.WriteHeader(res.statusCode)
 			return
 		}
@@ -158,7 +158,7 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		if _, err := fmt.Fprintf(w, fmt.Sprintf(`{%q: %q}`, apidef.ProTokenKey, res.value)); err != nil {
+		if _, err := fmt.Fprintf(w, `{%q: %q}`, apidef.ProTokenKey, res.value); err != nil {
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
