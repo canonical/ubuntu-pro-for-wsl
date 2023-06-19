@@ -28,6 +28,7 @@ type options struct {
 	subscription response
 }
 
+// Option is an optional argument for Serve.
 type Option func(*options)
 
 // WithTokenResponse sets the value of the /token endpoint response.
@@ -44,7 +45,7 @@ func WithTokenStatusCode(statusCode int) Option {
 	}
 }
 
-// WithProTokenResponse sets the value of the /subscription endpoint response.
+// WithSubscriptionResponse sets the value of the /subscription endpoint response.
 func WithSubscriptionResponse(token string) Option {
 	return func(o *options) {
 		o.subscription.value = token
@@ -82,10 +83,9 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	go http.Serve(lis, mux)
 
 	return lis.Addr().String(), nil
-
 }
 
-// handleTokenFunc returns a function to handle requests to the /token endpoint according to the response options supplied.
+// handleTokenFunc returns a a handler function for the /token endpoint according to the response options supplied.
 func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -110,7 +110,7 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// handleSubscriptionFunc returns a function to handle requests to the /susbcription endpoint according to the response options supplied.
+// handleSubscriptionFunc returns a handler function for the /susbcription endpoint according to the response options supplied.
 func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
