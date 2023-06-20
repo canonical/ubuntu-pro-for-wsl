@@ -6,6 +6,9 @@
 // For the underlying Store API
 #include <winrt/windows.services.store.h>
 
+// To provide the WinRT coroutine types.
+#include <winrt/windows.foundation.h>
+
 // To provide coroutines capable of returning more complex non-WinRT types.
 #include <pplawait.h>
 
