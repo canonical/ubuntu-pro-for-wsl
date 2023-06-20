@@ -5,6 +5,7 @@ package landscapemockservice
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
@@ -46,7 +47,7 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 
 		if firstContact {
 			firstContact = false
-			onDisconnect, err := s.firstContact(hostinfo.Hostname, stream)
+			onDisconnect, err := s.firstContact(hostinfo.Uid, stream)
 			if err != nil {
 				s.mu.Unlock()
 				return err
@@ -63,14 +64,14 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 	}
 }
 
-func (s *Service) firstContact(hostname string, stream landscapeapi.LandscapeHostAgent_ConnectServer) (onDisconect func(), err error) {
-	if _, ok := s.activeConnections[hostname]; ok {
-		return nil, fmt.Errorf("Hostname collision: %q", hostname)
+func (s *Service) firstContact(uid string, stream landscapeapi.LandscapeHostAgent_ConnectServer) (onDisconect func(), err error) {
+	if _, ok := s.activeConnections[uid]; ok {
+		return nil, fmt.Errorf("Hostname collision: %q", uid)
 	}
 
 	// Register the connection so commands can be sent
 	ctx, cancel := context.WithCancel(context.Background())
-	s.activeConnections[hostname] = func(command *landscapeapi.Command) error {
+	sendFunc := func(command *landscapeapi.Command) error {
 		select {
 		case <-ctx.Done():
 			return err
@@ -79,29 +80,47 @@ func (s *Service) firstContact(hostname string, stream landscapeapi.LandscapeHos
 		}
 	}
 
+	// Assign a UID if none was provided
+	if uid == "" {
+		//nolint:gosec // No need to be cryptographically secure
+		uid = fmt.Sprintf("ServerAssignedUID%x", rand.Int())
+
+		cmd := &landscapeapi.Command_AssignHost_{
+			AssignHost: &landscapeapi.Command_AssignHost{
+				Uid: uid,
+			},
+		}
+		if err := sendFunc(&landscapeapi.Command{Cmd: cmd}); err != nil {
+			cancel()
+			return func() {}, err
+		}
+	}
+
+	s.activeConnections[uid] = sendFunc
+
 	return func() {
 		cancel()
-		delete(s.activeConnections, hostname)
+		delete(s.activeConnections, uid)
 	}, nil
 }
 
 // IsConnected checks if a client with the specified hostname has an active connection.
-func (s *Service) IsConnected(hostname string) bool {
+func (s *Service) IsConnected(uid string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	_, ok := s.activeConnections[hostname]
+	_, ok := s.activeConnections[uid]
 	return ok
 }
 
 // SendCommand instructs the server to send a command to the target machine with matching hostname.
-func (s *Service) SendCommand(ctx context.Context, clientHostname string, command *landscapeapi.Command) error {
+func (s *Service) SendCommand(ctx context.Context, uid string, command *landscapeapi.Command) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	send, ok := s.activeConnections[clientHostname]
+	send, ok := s.activeConnections[uid]
 	if !ok {
-		return fmt.Errorf("hostname %q not connected", clientHostname)
+		return fmt.Errorf("UID %q not connected", uid)
 	}
 
 	return send(command)
