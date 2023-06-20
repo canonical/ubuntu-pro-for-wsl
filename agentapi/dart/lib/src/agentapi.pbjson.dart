@@ -66,3 +66,26 @@ const Port$json = {
 final $typed_data.Uint8List portDescriptor = $convert.base64Decode(
     'CgRQb3J0EhIKBHBvcnQYASABKA1SBHBvcnQ=');
 
+@$core.Deprecated('Use subscriptionInfoDescriptor instead')
+const SubscriptionInfo$json = {
+  '1': 'SubscriptionInfo',
+  '2': [
+    {'1': 'none', '3': 1, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
+    {'1': 'manual', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'manual'},
+    {'1': 'microsoftStore', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
+    {'1': 'organization', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
+    {'1': 'productId', '3': 5, '4': 1, '5': 9, '10': 'productId'},
+  ],
+  '8': [
+    {'1': 'subscriptionType'},
+  ],
+};
+
+/// Descriptor for `SubscriptionInfo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
+    'ChBTdWJzY3JpcHRpb25JbmZvEiUKBG5vbmUYASABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgRub2'
+    '5lEikKBm1hbnVhbBgCIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSBm1hbnVhbBI5Cg5taWNyb3Nv'
+    'ZnRTdG9yZRgDIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSDm1pY3Jvc29mdFN0b3JlEjUKDG9yZ2'
+    'FuaXphdGlvbhgEIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSDG9yZ2FuaXphdGlvbhIcCglwcm9k'
+    'dWN0SWQYBSABKAlSCXByb2R1Y3RJZEISChBzdWJzY3JpcHRpb25UeXBl');
+
