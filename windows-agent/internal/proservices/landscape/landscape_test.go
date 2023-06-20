@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +26,58 @@ import (
 	"google.golang.org/grpc"
 )
 
+func TestNew(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testCases := map[string]struct {
+		uid     string
+		loadErr bool
+
+		wantErr bool
+	}{
+		"Success loading a new UID":     {},
+		"Success without loading a UID": {uid: "123"},
+
+		"Error reading UID": {loadErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+
+			if wsl.MockAvailable() {
+				t.Parallel()
+			}
+
+			dir := t.TempDir()
+			if tc.loadErr {
+				err := os.MkdirAll(filepath.Join(dir, landscape.CacheFile), 0700)
+				require.NoError(t, err, "Setup: could not create directory to interfere with the Landscape client")
+			} else if tc.uid != "" {
+				err := os.WriteFile(filepath.Join(dir, landscape.CacheFile), []byte(tc.uid), 0600)
+				require.NoError(t, err, "Setup: could not write Landscape client config file")
+			}
+
+			conf := &mockConfig{}
+
+			db, err := database.New(ctx, t.TempDir(), conf)
+			require.NoError(t, err, "Setup: database New should not return an error")
+
+			c, err := landscape.NewClient(conf, db, dir)
+			if tc.wantErr {
+				require.Error(t, err, "Unexpected success in NewClient")
+				return
+			}
+			require.NoError(t, err, "NewClient should return no error")
+
+			require.Equal(t, tc.uid, c.UID(), "Unexpected value for Landscape Client UID")
+		})
+	}
+}
+
 func TestConnect(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
@@ -35,15 +89,20 @@ func TestConnect(t *testing.T) {
 		landscapeURLErr    bool
 		tokenErr           bool
 
+		breakUIDFile bool
+		uid          string
+
 		wantErr           bool
 		wantDistroSkipped bool
 	}{
-		// "Success": {},
+		"Success in first contcat":     {},
+		"Success in non-first contact": {uid: "123"},
+		"Success":                      {},
 
-		// "Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
-		// "Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
-		// "Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
-		"Error when the first-contact SendUpdatedInfo fails ": {tokenErr: true, wantErr: true},
+		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
+		"Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
+		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
+		"Error when the first-contact SendUpdatedInfo fails ":  {tokenErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -81,6 +140,12 @@ func TestConnect(t *testing.T) {
 				defer server.Stop()
 			}
 
+			dir := t.TempDir()
+			if tc.uid != "" {
+				err := os.WriteFile(filepath.Join(dir, landscape.CacheFile), []byte(tc.uid), 0600)
+				require.NoError(t, err, "Setup: could not write Landscape client config file")
+			}
+
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
@@ -88,7 +153,7 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			client, err := landscape.NewClient(conf, db)
+			client, err := landscape.NewClient(conf, db, dir)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
 
 			ctx, cancel := context.WithCancel(ctx)
@@ -117,6 +182,17 @@ func TestConnect(t *testing.T) {
 			require.NotPanics(t, func() { client.Disconnect(ctx) }, "client.Disconnect should not panic, even when called twice")
 
 			require.False(t, client.Connected(), "Connected should have returned false after disconnecting")
+
+			confFile := filepath.Join(dir, landscape.CacheFile)
+			require.FileExists(t, confFile, "Landscape config file should be created after disconnecting")
+			out, err := os.ReadFile(confFile)
+			require.NoError(t, err, "Could not read landscape config file")
+
+			wantUID := tc.uid
+			if tc.uid == "" {
+				wantUID = "ServerAssignedUID"
+			}
+			requireHasPrefix(t, wantUID, string(out), "Landscape config should contain the Landscape Client UID")
 
 			server.Stop()
 			lis.Close()
@@ -198,7 +274,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
+			client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			if tc.distroIsRunning {
@@ -217,7 +293,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			defer client.Disconnect(ctx)
 
 			// Defining wants
-			wantID := "THIS_IS_AN_ID"
+			wantUIDprefix := "ServerAssignedUID"
 			wantHostname := hostname
 			wantHostToken := conf.proToken
 			wantDistroID := distroName
@@ -237,7 +313,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			require.Len(t, messages, 1, "Exactly one message should've been sent to Landscape")
 			msg := &messages[0] // Pointer to avoid copying mutex
 
-			assert.Equal(t, wantID, msg.Id, "Mismatch between local host ID and that received by the server")
+			assert.Empty(t, msg.Uid, "First UID received by the server should be empty")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
 
@@ -289,7 +365,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			require.Len(t, messages, 2, "Exactly two messages should've been sent to Landscape")
 			msg = &messages[1] // Pointer to avoid copying mutex
 
-			assert.Equal(t, wantID, msg.Id, "Mismatch between local host ID and that received by the server")
+			assertHasPrefix(t, wantUIDprefix, msg.Uid, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host hostname and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
 			if tc.wantDistroSkipped {
@@ -304,6 +380,28 @@ func TestSendUpdatedInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func requireHasPrefix(t *testing.T, wantPrefix, got string, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	if assertHasPrefix(t, wantPrefix, got, msgAndArgs...) {
+		return
+	}
+
+	t.FailNow()
+}
+
+func assertHasPrefix(t *testing.T, wantPrefix, got string, msgAndArgs ...interface{}) bool {
+	t.Helper()
+
+	if strings.HasPrefix(got, wantPrefix) {
+		return true
+	}
+
+	errMsg := fmt.Sprintf("String does not have prefix.\n    Prefix: %s\n    String: %s\n", wantPrefix, got)
+	assert.Fail(t, errMsg, msgAndArgs)
+	return false
 }
 
 type command int
@@ -409,8 +507,7 @@ func TestReceiveCommands(t *testing.T) {
 				require.NoError(t, d.LockAwake(), "Setup: could not lock distro awake")
 			}
 
-			const hostname = "HOSTNAME"
-			client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
+			client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname("HOSTNAME"))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			err = client.Connect(ctx)
@@ -418,12 +515,12 @@ func TestReceiveCommands(t *testing.T) {
 			defer client.Disconnect(ctx)
 
 			require.Eventually(t, func() bool {
-				return service.IsConnected(hostname) && client.Connected()
+				return client.Connected() && client.UID() != "" && service.IsConnected(client.UID())
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server and client never made a connection")
 
 			enableMockErrors()
 
-			err = service.SendCommand(ctx, hostname, command)
+			err = service.SendCommand(ctx, client.UID(), command)
 			require.NoError(t, err, "SendCommand should return no error")
 
 			// Allow some time for the message to be sent, received, and executed.
