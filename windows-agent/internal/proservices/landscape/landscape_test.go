@@ -3,7 +3,10 @@ package landscape_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
+	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -314,6 +317,11 @@ const (
 	cmdShutdownHost
 )
 
+const (
+	testAppx       = "CanonicalGroupLimited.Ubuntu22.04LTS" // The name of the Appx
+	testDistroAppx = "Ubuntu-22.04"                         // The name used in `wsl --install <DISTRO>`
+)
+
 func TestReceiveCommands(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
@@ -321,26 +329,50 @@ func TestReceiveCommands(t *testing.T) {
 
 	testCases := map[string]struct {
 		command command
+		mockErr bool
+
+		wantFailure bool
 	}{
-		"Success receiving a Start command":        {command: cmdStart},
-		"Success receiving a Stop command":         {command: cmdStop},
-		"Success receiving a Install command":      {command: cmdInstall},
-		"Success receiving a Uninstall command":    {command: cmdUninstall},
-		"Success receiving a SetDefault command":   {command: cmdSetDefault},
+		"Success receiving a Start command": {command: cmdStart},
+		"Error receiving a Start command":   {command: cmdStart, mockErr: true, wantFailure: true},
+
+		"Success receiving a Stop command": {command: cmdStop},
+		"Error receiving a Stop command":   {command: cmdStop, mockErr: true, wantFailure: true},
+
+		"Success receiving a Install command": {command: cmdInstall},
+		"Error receiving a Install command":   {command: cmdInstall, mockErr: true, wantFailure: true},
+
+		"Success receiving a Uninstall command": {command: cmdUninstall},
+		"Error receiving a Uninstall command":   {command: cmdUninstall, mockErr: true, wantFailure: true},
+
+		"Success receiving a SetDefault command": {command: cmdSetDefault},
+		"Error receiving a SetDefault command":   {command: cmdSetDefault, mockErr: true, wantFailure: true},
+
 		"Success receiving a ShutdownHost command": {command: cmdShutdownHost},
+		"Error receiving a ShutdownHost command":   {command: cmdShutdownHost, mockErr: true, wantFailure: true},
 	}
 
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
+			setupMock := func() {}
 			if wsl.MockAvailable() {
 				t.Parallel()
-				ctx = wsl.WithMock(ctx, wslmock.New())
+				mock := wslmock.New()
+				ctx = wsl.WithMock(ctx, mock)
+				if tc.mockErr {
+					setupMock = func() {
+						mock.WslLaunchInteractiveError = true      // Breaks start
+						mock.InstallError = true                   // Breaks install
+						mock.WslUnregisterDistributionError = true // Breaks uninstall
+						mock.SetAsDefaultError = true              // Breaks SetDefault
+						mock.ShutdownError = true                  // Breaks shutdown
+					}
+				}
+			} else if tc.mockErr {
+				t.Skip("This test can only run with the mock")
 			}
-
-			distroName, _ := testutils.RegisterDistro(t, ctx, true)
-			command := commandSetup(t, ctx, tc.command, distroName)
 
 			var cfg net.ListenConfig
 			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
@@ -363,8 +395,18 @@ func TestReceiveCommands(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			distro, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
-			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
+			var d *distro.Distro
+			if tc.command != cmdInstall {
+				distroName, _ := testutils.RegisterDistro(t, ctx, true)
+				d, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
+				require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
+			}
+
+			command := commandSetup(t, ctx, tc.command, d)
+			if tc.command == cmdStop && !tc.mockErr {
+				// We need to LockAwake, otherwise ReleaseAwake will error out
+				require.NoError(t, d.LockAwake(), "Setup: could not lock distro awake")
+			}
 
 			const hostname = "HOSTNAME"
 			client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
@@ -378,44 +420,72 @@ func TestReceiveCommands(t *testing.T) {
 				return service.IsConnected(hostname) && client.Connected()
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server and client never made a connection")
 
+			setupMock()
+
 			err = service.SendCommand(ctx, hostname, command)
 			require.NoError(t, err, "SendCommand should return no error")
 
 			// Allow some time for the message to be sent, received, and executed.
 			time.Sleep(time.Second)
 
-			requireCommandResult(t, ctx, tc.command, distro)
+			if wsl.MockAvailable() && tc.command == cmdInstall || tc.command == cmdUninstall {
+				// Appx state cannot be mocked
+				return
+			}
+
+			if tc.command == cmdStop && tc.mockErr {
+				// There is no way to assert on this function failing, as it is indistiguishable
+				// from succeeding. I can fail two ways:
+				//
+				// - If Start was not called before. But the effect is the same as in success: the distro will be asleep.
+				// - If the distro is no longer valid. Then the command takes no effect so we cannot assert on it.
+				//
+				// We still have the test case to exercise the code and ensure that it at least does not panic.
+				return
+			}
+
+			success, msg := checkCommandResult(t, ctx, tc.command, d)
+			if tc.wantFailure {
+				require.False(t, success, "The command was carried out against expectations")
+				return
+			}
+			require.True(t, success, msg)
 		})
 	}
 }
 
 //nolint:revive // testing.T goes before context
-func commandSetup(t *testing.T, ctx context.Context, command command, distroName string) *landscapeapi.Command {
+func commandSetup(t *testing.T, ctx context.Context, command command, distro *distro.Distro) *landscapeapi.Command {
 	t.Helper()
 
 	var r landscapeapi.Command
 
 	switch command {
 	case cmdStart:
-		t.Skip("Skipping because it is not implemented")
-		// r.Cmd = &landscapeapi.Command_Start_{Start: &landscapeapi.Command_Start{Id: id}}
+		r.Cmd = &landscapeapi.Command_Start_{Start: &landscapeapi.Command_Start{Id: distro.Name()}}
 	case cmdStop:
-		t.Skip("Skipping because it is not implemented")
-		// r.Cmd = &landscapeapi.Command_Stop_{Stop: &landscapeapi.Command_Stop{Id: id}}
+		r.Cmd = &landscapeapi.Command_Stop_{Stop: &landscapeapi.Command_Stop{Id: distro.Name()}}
 	case cmdInstall:
-		t.Skip("Skipping because it is not implemented")
-		// r.Cmd = &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: id}}
+		r.Cmd = &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: testDistroAppx}}
+		t.Cleanup(func() {
+			d := wsl.NewDistro(ctx, testDistroAppx)
+			_ = d.Uninstall(ctx)
+		})
 	case cmdUninstall:
-		t.Skip("Skipping because it is not implemented")
-		// r.Cmd = &landscapeapi.Command_Uninstall_{Uninstall: &landscapeapi.Command_Uninstall{Id: id}}
+		require.NoError(t, wsl.Install(ctx, testDistroAppx), "Setup: could not install Ubuntu-22.04")
+		r.Cmd = &landscapeapi.Command_Uninstall_{Uninstall: &landscapeapi.Command_Uninstall{Id: testDistroAppx}}
+		t.Cleanup(func() {
+			d := wsl.NewDistro(ctx, testDistroAppx)
+			_ = d.Uninstall(ctx)
+		})
 	case cmdSetDefault:
 		otherDistro, _ := testutils.RegisterDistro(t, ctx, false)
 		d := wsl.NewDistro(ctx, otherDistro)
 		err := d.SetAsDefault()
 		require.NoError(t, err, "Setup: could not set another distro as default")
-		r.Cmd = &landscapeapi.Command_SetDefault_{SetDefault: &landscapeapi.Command_SetDefault{Id: distroName}}
+		r.Cmd = &landscapeapi.Command_SetDefault_{SetDefault: &landscapeapi.Command_SetDefault{Id: distro.Name()}}
 	case cmdShutdownHost:
-		d := wsl.NewDistro(ctx, distroName)
+		d := wsl.NewDistro(ctx, distro.Name())
 		err := d.Command(ctx, "exit 0").Run()
 		require.NoError(t, err, "Setup: could not start distro")
 		r.Cmd = &landscapeapi.Command_ShutdownHost_{ShutdownHost: &landscapeapi.Command_ShutdownHost{}}
@@ -426,33 +496,80 @@ func commandSetup(t *testing.T, ctx context.Context, command command, distroName
 	return &r
 }
 
-// requireCommandResult asserts that a certain command has been executed in the machine
+// checkCommandResult check that a certain command has been executed in the machine
 // by measuring its effect on the targeted distro.
 //
+// If the expected effect is measured, checkCommandResult returns true.
+// Otherwise, it returns false plus an explanatory message.
+// It may fail the test if the check cannot be carried out.
+//
 //nolint:revive // testing.T goes before context
-func requireCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro) {
+func checkCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro) (ok bool, msg string) {
 	t.Helper()
 
 	switch command {
 	case cmdStart:
-		panic("this test should have been skipped")
+		return checkEventuallyState(t, distro, wsl.Running, 10*time.Second, time.Second)
 	case cmdStop:
-		panic("this test should have been skipped")
+		// We wait a bit longer than WSL sleep time, because we must account for the Landscape server-client
+		// interaction completing asyncronously with the test.
+		time.Sleep(15 * time.Second)
+		gotState, err := distro.State()
+		require.NoError(t, err, "Could not read distro state")
+		return gotState == wsl.Stopped, fmt.Sprintf("unexpected disto state. Want: %q. Got: %q", wsl.Stopped, gotState)
 	case cmdInstall:
-		panic("this test should have been skipped")
+		return isAppxInstalled(t, testAppx), "Appx should have been installed"
 	case cmdUninstall:
-		panic("this test should have been skipped")
+		return !isAppxInstalled(t, testAppx), "Appx should not stay installed"
 	case cmdSetDefault:
 		def, err := wsl.DefaultDistro(ctx)
 		require.NoError(t, err, "could not call DefaultDistro")
-		require.Equal(t, distro.Name(), def.Name(), "Distro was not set as default")
+		return distro.Name() == def.Name(), "Test distro was not set as default"
 	case cmdShutdownHost:
-		s, err := distro.State()
+		gotState, err := distro.State()
 		require.NoError(t, err, "Could not read distro state")
-		require.Equalf(t, wsl.Stopped, s, "distro should have been stopped (want: %s, got: %s)", wsl.Stopped.String(), s.String())
+		return gotState == wsl.Stopped, fmt.Sprintf("unexpected disto state. Want: %q. Got: %q", wsl.Stopped, gotState)
 	default:
 		require.FailNowf(t, "Setup", "Unknown command type %d", command)
+		return false, "" // Compiler needs a return statement here
 	}
+}
+
+func checkEventuallyState(t *testing.T, d *distro.Distro, wantState wsl.State, waitFor, tick time.Duration) (ok bool, msg string) {
+	t.Helper()
+
+	timer := time.NewTimer(waitFor)
+	defer timer.Stop()
+
+	ticker := time.NewTicker(tick)
+	defer ticker.Stop()
+
+	var gotState wsl.State
+	for {
+		select {
+		case <-timer.C:
+			return false, fmt.Sprintf("distro state never became %q. Last state: %q", wantState, gotState)
+		case <-ticker.C:
+			var err error
+			gotState, err = d.State()
+			require.NoError(t, err, "disto State should return no error")
+			if gotState == wantState {
+				return true, msg
+			}
+		}
+	}
+}
+
+func isAppxInstalled(t *testing.T, appxPackage string) bool {
+	t.Helper()
+	require.False(t, wsl.MockAvailable(), "This assertion is only valid without the WSL mock")
+
+	cmd := fmt.Sprintf("(Get-AppxPackage -Name %q).Status", appxPackage)
+	//nolint:gosec // Command with variable is acceptable in test code
+	out, err := exec.Command("powershell.exe", "-NoProfile", "-NoLogo", "-NonInteractive", "-Command", cmd).Output()
+	require.NoError(t, err, "Get-AppxPackage should return no error. Stdout: %s", string(out))
+
+	return strings.Contains(string(out), "Ok")
 }
 
 type mockConfig struct {
