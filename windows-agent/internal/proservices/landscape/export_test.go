@@ -8,7 +8,7 @@ func WithHostname(hostname string) Option {
 }
 
 func (c *Client) UID() string {
-	return c.uid
+	return c.getUID()
 }
 
 const CacheFile = cacheFile

@@ -29,7 +29,7 @@ type Client struct {
 	hostname string
 
 	// Client UID and where it is stored
-	uid      string
+	uid      atomic.Value
 	cacheDir string
 
 	connected atomic.Bool
@@ -134,7 +134,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	}
 
 	// Not the first contact between client and server: done!
-	if c.uid != "" {
+	if c.getUID() != "" {
 		return nil
 	}
 
@@ -149,12 +149,12 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 		select {
 		case <-ctx.Done():
 			c.Disconnect()
-			c.uid = "" // Avoid races where the UID arrives just after cancelling the context
+			c.setUID("") // Avoid races where the UID arrives just after cancelling the context
 			return fmt.Errorf("Landscape server did not respond with a client UID")
 		case <-ticker.C:
 		}
 
-		if c.uid != "" {
+		if c.getUID() != "" {
 			// Server sent a UID: success.
 			break
 		}
@@ -198,7 +198,7 @@ func (c *Client) load() error {
 	out, err := os.ReadFile(filepath.Join(c.cacheDir, cacheFile))
 	if errors.Is(err, fs.ErrNotExist) {
 		// No file: New client
-		c.uid = ""
+		c.setUID("")
 		return nil
 	}
 
@@ -208,7 +208,7 @@ func (c *Client) load() error {
 	}
 
 	// First contact done in previous session
-	c.uid = string(out)
+	c.setUID(string(out))
 	return nil
 }
 
@@ -217,7 +217,7 @@ func (c *Client) dump() error {
 	tmpFile := filepath.Join(c.cacheDir, fmt.Sprintf("%s.tmp", cacheFile))
 	cacheFile := filepath.Join(c.cacheDir, cacheFile)
 
-	if err := os.WriteFile(tmpFile, []byte(c.uid), 0600); err != nil {
+	if err := os.WriteFile(tmpFile, []byte(c.getUID()), 0600); err != nil {
 		return fmt.Errorf("could not store Landscape data to temporary file: %v", err)
 	}
 
@@ -226,4 +226,15 @@ func (c *Client) dump() error {
 	}
 
 	return nil
+}
+
+// getUID is syntax sugar to read the UID.
+func (c *Client) getUID() string {
+	//nolint:forcetypeassert // We know it is going to be a string
+	return c.uid.Load().(string)
+}
+
+// setUID is syntax sugar to set the UID.
+func (c *Client) setUID(s string) {
+	c.uid.Store(s)
 }

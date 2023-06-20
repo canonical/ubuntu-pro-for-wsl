@@ -76,6 +76,16 @@ func commandString(command *landscapeapi.Command) string {
 	}
 }
 
+//nolint:unparam // error is always nil but is here to be consistent with the other commands.
+func (c *Client) cmdAssignHost(ctx context.Context, cmd *landscapeapi.Command_AssignHost) error {
+	if c.getUID() != "" {
+		log.Warning(ctx, "Overriding current landscape client UID")
+	}
+
+	c.setUID(cmd.Uid)
+	return nil
+}
+
 //nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
 	d, ok := c.db.Get(cmd.Id)

@@ -60,7 +60,7 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 
 	info = &landscapeapi.HostAgentInfo{
 		Token:     token,
-		Uid:       c.uid,
+		Uid:       c.getUID(),
 		Hostname:  c.hostname,
 		Instances: instances,
 	}
