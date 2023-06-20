@@ -15,6 +15,14 @@ extern "C" {
 // subscription expiration date.
 DLL_EXPORT int64_t GetSubscriptionExpirationDate(const char* productID,
                                                  int32_t length);
+
+// Outputs the user JWT via the [jwtBuf] output parameter and returns the buffer
+// length. The caller is responsible for freeing the memory region pointed by
+// [jwtBuf] by calling CoTaskMemFree.
+DLL_EXPORT int64_t GenerateUserJWT(const char* accessToken,
+                                   int32_t accessTokenLen,
+                                   // output
+                                   char* jwtBuf);
 }
 
 // Document error constants so we can translate those as Go errors.

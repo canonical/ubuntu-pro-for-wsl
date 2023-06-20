@@ -48,6 +48,43 @@ int64_t GetSubscriptionExpirationDate(const char* productID, int32_t length) {
   }
 }
 
+int64_t GenerateUserJWT(const char* accessToken, int32_t accessTokenLen,
+                        char* jwtBuf) {
+  if (auto err = validateArg({.data = accessToken, .length = accessTokenLen},
+                             MaxTokenLen);
+      err != Errors::None) {
+    return toInt64(err);
+  }
+
+  try {
+    auto user = StoreApi::UserInfo::Current().get();
+    std::string serverToken{accessToken, static_cast<uint64_t>(accessTokenLen)};
+
+    StoreApi::ServerStoreService service{};
+    const std::string jwt = service.GenerateUserJwt(serverToken, user).get();
+
+    // Allocates memory using some OS API so we can free this buffer on the
+    // other side of the ABI without assumptions on specifics of the programming
+    // language runtime in their side.
+    int64_t length = jwt.size();
+    auto* buffer = static_cast<char*>(::CoTaskMemAlloc(length));
+    if (buffer == nullptr) {
+      return toInt64(Errors::AllocationFailure);
+    }
+
+    std::memcpy(buffer, jwt.c_str(), length);
+    jwtBuf = buffer;
+    return length;
+
+  } catch (const StoreApi::Exception&) {
+    return toInt64(Errors::StoreAPI);
+  } catch (const winrt::hresult_error&) {
+    return toInt64(Errors::WinRT);
+  } catch (const std::exception&) {
+    return toInt64(Errors::Unknown);
+  }
+}
+
 Errors validateArg(RawString input, int32_t maxLength) {
   if (input.data == nullptr) {
     return Errors::Null;
