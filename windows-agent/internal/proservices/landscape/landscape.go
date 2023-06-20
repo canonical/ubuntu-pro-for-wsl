@@ -5,7 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -27,12 +29,15 @@ type Client struct {
 	hostname string
 
 	// Client UID and where it is stored
-	uid string
+	uid      string
+	cacheDir string
 
 	connected atomic.Bool
 	cancel    func()
 	once      sync.Once
 }
+
+const cacheFile = "landscape.conf"
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
@@ -48,7 +53,7 @@ type options struct {
 type Option = func(*options)
 
 // NewClient creates a new Client for the Landscape service.
-func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, error) {
+func NewClient(conf Config, db *database.DistroDB, cacheDir string, args ...Option) (*Client, error) {
 	var opts options
 
 	for _, f := range args {
@@ -63,11 +68,18 @@ func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, err
 		opts.hostname = hostname
 	}
 
-	return &Client{
+	c := &Client{
 		conf:     conf,
 		db:       db,
 		hostname: opts.hostname,
-	}, nil
+		cacheDir: cacheDir,
+	}
+
+	if err := c.load(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // Connect starts the connection and starts talking to the server.
@@ -129,6 +141,7 @@ func (c *Client) Disconnect(ctx context.Context) {
 	c.once.Do(func() {
 		c.cancel()
 		c.waitDisconnected(ctx)
+		c.dump()
 	})
 }
 
@@ -151,4 +164,39 @@ func (c *Client) waitDisconnected(ctx context.Context) {
 // Connected returns true if the Landscape client managed to connect to the server.
 func (c *Client) Connected() bool {
 	return c.connected.Load()
+}
+
+// load reads persistent Landscape data from disk.
+func (c *Client) load() error {
+	out, err := os.ReadFile(filepath.Join(c.cacheDir, cacheFile))
+	if errors.Is(err, fs.ErrNotExist) {
+		// No file: New client
+		c.uid = ""
+		return nil
+	}
+
+	if err != nil {
+		// Something is wrong with the file
+		return fmt.Errorf("could not read landscape config file: %v", err)
+	}
+
+	// First contact done in previous session
+	c.uid = string(out)
+	return nil
+}
+
+// dump stores persistent Landscape data to disk.
+func (c *Client) dump() error {
+	tmpFile := filepath.Join(c.cacheDir, fmt.Sprintf("%s.tmp", cacheFile))
+	cacheFile := filepath.Join(c.cacheDir, cacheFile)
+
+	if err := os.WriteFile(tmpFile, []byte(c.uid), 0600); err != nil {
+		return fmt.Errorf("could not store Landscape data to temporary file: %v", err)
+	}
+
+	if err := os.Rename(tmpFile, cacheFile); err != nil {
+		return fmt.Errorf("could not move Landscape data from tmp to file: %v", err)
+	}
+
+	return nil
 }
