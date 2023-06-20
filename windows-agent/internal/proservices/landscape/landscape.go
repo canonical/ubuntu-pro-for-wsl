@@ -133,6 +133,33 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 		return err
 	}
 
+	// Not the first contact between client and server: done!
+	if c.uid != "" {
+		return nil
+	}
+
+	// First contact. Wait to receive a client UID.
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			c.Disconnect()
+			c.uid = "" // Avoid races where the UID arrives just after cancelling the context
+			return fmt.Errorf("Landscape server did not respond with a client UID")
+		case <-ticker.C:
+		}
+
+		if c.uid != "" {
+			// Server sent a UID: success.
+			break
+		}
+	}
+
 	return nil
 }
 
