@@ -14,6 +14,7 @@ import (
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -148,7 +149,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	for {
 		select {
 		case <-ctx.Done():
-			c.Disconnect()
+			c.Disconnect(ctx)
 			c.setUID("") // Avoid races where the UID arrives just after cancelling the context
 			return fmt.Errorf("Landscape server did not respond with a client UID")
 		case <-ticker.C:
@@ -168,7 +169,9 @@ func (c *Client) Disconnect(ctx context.Context) {
 	c.once.Do(func() {
 		c.cancel()
 		c.waitDisconnected(ctx)
-		c.dump()
+		if err := c.dump(); err != nil {
+			log.Errorf(ctx, "Landscape client: %v", err)
+		}
 	})
 }
 
