@@ -70,6 +70,7 @@ func commandString(command *landscapeapi.Command) string {
 	}
 }
 
+//nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
 	d, ok := c.db.Get(cmd.Id)
 	if !ok {
@@ -79,6 +80,7 @@ func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) 
 	return d.LockAwake()
 }
 
+//nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err error) {
 	d, ok := c.db.Get(cmd.Id)
 	if !ok {
@@ -110,7 +112,7 @@ func (*Client) cmdSetDefault(ctx context.Context, cmd *landscapeapi.Command_SetD
 	return d.SetAsDefault()
 }
 
-//nolint:unparam // cmd is not used, but it is passed as an argument to stick to the pattern
+//nolint:unparam // // cmd is not necessary but is here to be consistent with the other commands.
 func (*Client) cmdShutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
 	return gowsl.Shutdown(ctx)
 }
