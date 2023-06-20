@@ -36,6 +36,8 @@ func (c *Client) exec(ctx context.Context, command *landscapeapi.Command) (err e
 	defer decorate.OnError(&err, "could not execute command %s", commandString(command))
 
 	switch cmd := command.Cmd.(type) {
+	case *landscapeapi.Command_AssignHost_:
+		return c.cmdAssignHost(ctx, cmd.AssignHost)
 	case *landscapeapi.Command_Start_:
 		return c.cmdStart(ctx, cmd.Start)
 	case *landscapeapi.Command_Stop_:
@@ -55,6 +57,8 @@ func (c *Client) exec(ctx context.Context, command *landscapeapi.Command) (err e
 
 func commandString(command *landscapeapi.Command) string {
 	switch cmd := command.Cmd.(type) {
+	case *landscapeapi.Command_AssignHost_:
+		return fmt.Sprintf("Assign host (uid: %q)", cmd.AssignHost.Uid)
 	case *landscapeapi.Command_Start_:
 		return fmt.Sprintf("Start (id: %q)", cmd.Start.Id)
 	case *landscapeapi.Command_Stop_:

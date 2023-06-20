@@ -26,6 +26,9 @@ type Client struct {
 	// Cached hostname
 	hostname string
 
+	// Client UID and where it is stored
+	uid string
+
 	connected atomic.Bool
 	cancel    func()
 	once      sync.Once
