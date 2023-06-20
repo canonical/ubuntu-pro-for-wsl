@@ -9,6 +9,7 @@ message Empty {}
 service UI {
     rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
+    rpc SubscpriptionInfo(Empty) returns (SubscriptionInfo) {}
 }
 
 message ProAttachInfo {
@@ -32,3 +33,13 @@ message Port {
     uint32 port = 1;
 }
 
+message SubscriptionInfo {
+    oneof subscriptionType {
+        Empty none = 1;            // The user does not have an active subscription
+        Empty manual = 2;          // The user manages its own subscription via the GUI and the registry
+        Empty microsoftStore = 3;  // The user manages its own subscription via the Microsoft store
+        Empty organization = 4;    // An administrator manages the subscription via the registry
+    };
+
+    string productId = 5; // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
+}
