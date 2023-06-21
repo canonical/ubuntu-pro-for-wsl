@@ -405,6 +405,7 @@ func TestReceiveCommands(t *testing.T) {
 				distroName, _ := testutils.RegisterDistro(t, ctx, true)
 				d, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 				require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
+				defer d.Cleanup(ctx)
 			}
 
 			command := commandSetup(t, ctx, tc.command, d)
