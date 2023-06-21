@@ -66,7 +66,7 @@ int64_t GenerateUserJWT(const char* accessToken, int32_t accessTokenLen,
     // Allocates memory using some OS API so we can free this buffer on the
     // other side of the ABI without assumptions on specifics of the programming
     // language runtime in their side.
-    int64_t length = jwt.size();
+    const int64_t length = jwt.size();
     auto* buffer = static_cast<char*>(::CoTaskMemAlloc(length));
     if (buffer == nullptr) {
       return toInt64(Errors::AllocationFailure);
