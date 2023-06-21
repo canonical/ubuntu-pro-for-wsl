@@ -186,9 +186,9 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 	}{
 		"Success": {want: contractsmockserver.DefaultADToken},
 
-		"Error due no server":           {dontServe: true, wantErr: true},
-		"Error due precanceled context": {preCancel: true, wantErr: true},
-		"Error due non-200 status code": {withStatus: 418, wantErr: true},
+		"Error due to no server":           {dontServe: true, wantErr: true},
+		"Error due to precanceled context": {preCancel: true, wantErr: true},
+		"Error due to non-200 status code": {withStatus: 418, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -254,9 +254,9 @@ func TestGetProTokenNet(t *testing.T) {
 	}{
 		"Success": {want: contractsmockserver.DefaultProToken},
 
-		"Error due no server":           {dontServe: true, wantErr: true},
-		"Error due precanceled context": {preCancel: true, wantErr: true},
-		"Error due non-200 status code": {withStatus: 418, wantErr: true},
+		"Error due to no server":           {dontServe: true, wantErr: true},
+		"Error due to precanceled context": {preCancel: true, wantErr: true},
+		"Error due to non-200 status code": {withStatus: 418, wantErr: true},
 	}
 
 	for name, tc := range testCases {
