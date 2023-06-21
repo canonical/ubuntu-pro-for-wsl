@@ -109,7 +109,7 @@ func New(ctx context.Context, config *config.Config, args ...Option) (s Manager,
 
 // Stop deallocates resources in the services.
 func (m Manager) Stop(ctx context.Context) {
-	m.landscapeService.Disconnect()
+	m.landscapeService.Disconnect(ctx)
 	m.db.Close(ctx)
 }
 

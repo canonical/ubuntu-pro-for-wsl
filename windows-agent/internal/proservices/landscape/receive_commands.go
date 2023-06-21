@@ -11,6 +11,8 @@ import (
 )
 
 func (c *Client) receiveCommands(ctx context.Context) {
+	defer c.connected.Store(false)
+
 	for {
 		select {
 		case <-ctx.Done():
