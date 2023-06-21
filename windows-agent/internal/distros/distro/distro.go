@@ -284,3 +284,13 @@ func (d *Distro) ReleaseAwake() error {
 	}
 	return d.stateManager.release()
 }
+
+// Uninstall unregisters the distro and uninstalls its associated Appx.
+func (d *Distro) Uninstall(ctx context.Context) error {
+	distro, err := d.getDistro()
+	if err != nil {
+		return err
+	}
+
+	return distro.Uninstall(ctx)
+}

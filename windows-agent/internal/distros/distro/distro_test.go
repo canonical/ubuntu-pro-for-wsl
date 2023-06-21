@@ -657,6 +657,58 @@ func TestWorkerWrappers(t *testing.T) {
 	}
 }
 
+func TestUninstall(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testCases := map[string]struct {
+		unregisterDistro bool
+		mockErr          bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when the distro is not registered": {unregisterDistro: true, wantErr: true},
+		"Error when uninstalling fails":           {mockErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				m := wslmock.New()
+				m.WslUnregisterDistributionError = tc.mockErr
+				ctx = wsl.WithMock(ctx, m)
+				defer m.ResetErrors()
+			} else if tc.mockErr {
+				t.Skip("This test is only available with the WSL mock")
+			}
+
+			name, _ := testutils.RegisterDistro(t, ctx, false)
+
+			d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir())
+			require.NoError(t, err, "Setup: distro New should return no errors")
+
+			if tc.unregisterDistro {
+				d := wsl.NewDistro(ctx, name)
+				err := d.Unregister()
+				require.NoError(t, err, "Setup: could not unregister distro")
+			}
+
+			err = d.Uninstall(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "Uninstall should have returned an error")
+				return
+			}
+			require.NoError(t, err, "Uninstall should return no error")
+		})
+	}
+}
+
 type mockWorker struct {
 	newCtx          context.Context
 	newDistro       *distro.Distro

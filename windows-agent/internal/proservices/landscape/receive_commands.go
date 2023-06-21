@@ -11,6 +11,8 @@ import (
 )
 
 func (c *Client) receiveCommands(ctx context.Context) {
+	defer c.connected.Store(false)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -24,28 +26,28 @@ func (c *Client) receiveCommands(ctx context.Context) {
 			return
 		}
 
-		if err := exec(ctx, command); err != nil {
+		if err := c.exec(ctx, command); err != nil {
 			log.Errorf(ctx, "could not execute command: %v", err)
 		}
 	}
 }
 
-func exec(ctx context.Context, command *landscapeapi.Command) (err error) {
+func (c *Client) exec(ctx context.Context, command *landscapeapi.Command) (err error) {
 	defer decorate.OnError(&err, "could not execute command %s", commandString(command))
 
 	switch cmd := command.Cmd.(type) {
 	case *landscapeapi.Command_Start_:
-		return cmdStart(ctx, cmd.Start)
+		return c.cmdStart(ctx, cmd.Start)
 	case *landscapeapi.Command_Stop_:
-		return cmdStop(ctx, cmd.Stop)
+		return c.cmdStop(ctx, cmd.Stop)
 	case *landscapeapi.Command_Install_:
-		return cmdInstall(ctx, cmd.Install)
+		return c.cmdInstall(ctx, cmd.Install)
 	case *landscapeapi.Command_Uninstall_:
-		return cmdUninstall(ctx, cmd.Uninstall)
+		return c.cmdUninstall(ctx, cmd.Uninstall)
 	case *landscapeapi.Command_SetDefault_:
-		return cmdSetDefault(ctx, cmd.SetDefault)
+		return c.cmdSetDefault(ctx, cmd.SetDefault)
 	case *landscapeapi.Command_ShutdownHost_:
-		return cmdShutdownHost(ctx, cmd.ShutdownHost)
+		return c.cmdShutdownHost(ctx, cmd.ShutdownHost)
 	default:
 		return fmt.Errorf("unknown command type %T: %v", command.Cmd, command.Cmd)
 	}
@@ -70,28 +72,49 @@ func commandString(command *landscapeapi.Command) string {
 	}
 }
 
-func cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) error {
-	panic("not implemented")
+//nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
+func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
+	d, ok := c.db.Get(cmd.Id)
+	if !ok {
+		return fmt.Errorf("distro %q not in database", cmd.Id)
+	}
+
+	return d.LockAwake()
 }
 
-func cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) error {
-	panic("not implemented")
+//nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
+func (c *Client) cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err error) {
+	d, ok := c.db.Get(cmd.Id)
+	if !ok {
+		return fmt.Errorf("distro %q not in database", cmd.Id)
+	}
+
+	return d.ReleaseAwake()
 }
 
-func cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install) error {
-	panic("not implemented")
+func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install) error {
+	if cmd.Cloudinit != nil && *cmd.Cloudinit != "" {
+		return fmt.Errorf("Cloud Init support is not yet available")
+	}
+
+	return gowsl.Install(ctx, cmd.Id)
 }
 
-func cmdUninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) error {
-	panic("not implemented")
+func (c *Client) cmdUninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
+	d, ok := c.db.Get(cmd.Id)
+	if !ok {
+		return fmt.Errorf("distro %q not in database", cmd.Id)
+	}
+
+	return d.Uninstall(ctx)
 }
 
-func cmdSetDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault) error {
+func (*Client) cmdSetDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault) error {
 	d := gowsl.NewDistro(ctx, cmd.GetId())
 	return d.SetAsDefault()
 }
 
-//nolint:unparam // cmd is not used, but it is passed as an argument to stick to the pattern
-func cmdShutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
+//nolint:unparam // // cmd is not necessary but is here to be consistent with the other commands.
+func (*Client) cmdShutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
 	return gowsl.Shutdown(ctx)
 }

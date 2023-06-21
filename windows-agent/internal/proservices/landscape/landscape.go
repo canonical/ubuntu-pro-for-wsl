@@ -76,22 +76,24 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 		return errors.New("already connected")
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	c.cancel = cancel
+	address, err := c.conf.LandscapeURL(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Deallocating resources if first handshake fails
 	defer func() {
 		if err == nil {
 			return
 		}
-		c.Disconnect()
+		c.Disconnect(ctx)
 	}()
 
-	address, err := c.conf.LandscapeURL(ctx)
-	if err != nil {
-		return err
-	}
+	// A context to control the Landscape client with (needed for as long as the connection lasts)
+	clientCtx, cancel := context.WithCancel(ctx)
+	c.cancel = cancel
 
+	// A context to control only the Dial (only needed for this function)
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -101,7 +103,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	}
 
 	cl := landscapeapi.NewLandscapeHostAgentClient(conn)
-	client, err := cl.Connect(ctx)
+	client, err := cl.Connect(clientCtx)
 	if err != nil {
 		return err
 	}
@@ -109,10 +111,10 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 
 	// Get ready to receive commands
 	c.connected.Store(true)
-	go c.receiveCommands(ctx)
+	go c.receiveCommands(clientCtx)
 
 	// Send first message
-	if err := c.SendUpdatedInfo(ctx); err != nil {
+	if err := c.SendUpdatedInfo(clientCtx); err != nil {
 		return err
 	}
 
@@ -120,11 +122,27 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 }
 
 // Disconnect terminates the connection and deallocates resources.
-func (c *Client) Disconnect() {
+func (c *Client) Disconnect(ctx context.Context) {
 	c.once.Do(func() {
 		c.cancel()
-		c.connected.Store(false)
+		c.waitDisconnected(ctx)
 	})
+}
+
+func (c *Client) waitDisconnected(ctx context.Context) {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if connected := c.connected.Load(); !connected {
+				return
+			}
+		}
+	}
 }
 
 // Connected returns true if the Landscape client managed to connect to the server.
