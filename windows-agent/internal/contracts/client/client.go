@@ -58,11 +58,11 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		bodyBytes, err := io.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			return "", fmt.Errorf("server replied with an error: Code %d, %v", res.StatusCode, err)
 		}
-		return "", fmt.Errorf("server replied with an error: Code %d, %s", res.StatusCode, bodyBytes)
+		return "", fmt.Errorf("server replied with an error: Code %d, %s", res.StatusCode, body)
 	}
 
 	var data map[string]string
@@ -114,11 +114,11 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	case 500:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
 	default:
-		bodyBytes, err := io.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			return "", fmt.Errorf("unknown error from the contracts server: Code %d, %v", res.StatusCode, err)
 		}
-		return "", fmt.Errorf("unknown error from the contracts server: Code %d, %s", res.StatusCode, bodyBytes)
+		return "", fmt.Errorf("unknown error from the contracts server: Code %d, %s", res.StatusCode, body)
 	case 200:
 	}
 
