@@ -23,11 +23,16 @@ struct RawString {
 // (such as negative length) and against a [maxLength] allowed by the caller.
 Errors validateArg(RawString input, Int maxLength);
 
-Int GetSubscriptionExpirationDate(const char* productID, Int length) {
+Int GetSubscriptionExpirationDate(const char* productID, Int length,
+                                  Int* expirationUnix) {
   if (auto err =
           validateArg({.data = productID, .length = length}, MaxProductIdLen);
       err != Errors::None) {
     return toInt(err);
+  }
+
+  if (expirationUnix == nullptr) {
+    return toInt(Errors::NullOutputPtr);
   }
 
   try {
@@ -35,10 +40,12 @@ Int GetSubscriptionExpirationDate(const char* productID, Int length) {
 
     const std::time_t expiration =
         service
-            .CurrentExpirationDate({productID, static_cast<std::size_t>(length)})
+            .CurrentExpirationDate(
+                {productID, static_cast<std::size_t>(length)})
             .get();
 
-    return expiration;
+    *expirationUnix = static_cast<Int>(expiration);
+    return 0;
   } catch (const StoreApi::Exception&) {
     return toInt(Errors::StoreAPI);
   } catch (const winrt::hresult_error&) {
@@ -48,17 +55,22 @@ Int GetSubscriptionExpirationDate(const char* productID, Int length) {
   }
 }
 
-Int GenerateUserJWT(const char* accessToken, Int accessTokenLen,
-                        char** jwtBuf) {
+Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** jwtBuf,
+                    Int* jwtLen) {
   if (auto err = validateArg({.data = accessToken, .length = accessTokenLen},
                              MaxTokenLen);
       err != Errors::None) {
     return toInt(err);
   }
 
+  if (jwtBuf == nullptr || jwtLen == nullptr) {
+    return toInt(Errors::NullOutputPtr);
+  }
+
   try {
     auto user = StoreApi::UserInfo::Current().get();
-    std::string serverToken{accessToken, static_cast<std::size_t>(accessTokenLen)};
+    std::string serverToken{accessToken,
+                            static_cast<std::size_t>(accessTokenLen)};
 
     StoreApi::ServerStoreService service{};
     const std::string jwt = service.GenerateUserJwt(serverToken, user).get();
@@ -74,7 +86,8 @@ Int GenerateUserJWT(const char* accessToken, Int accessTokenLen,
 
     std::memcpy(buffer, jwt.c_str(), length);
     *jwtBuf = buffer;
-    return length;
+    *jwtLen = length;
+    return 0;
 
   } catch (const StoreApi::Exception&) {
     return toInt(Errors::StoreAPI);
@@ -87,7 +100,7 @@ Int GenerateUserJWT(const char* accessToken, Int accessTokenLen,
 
 Errors validateArg(RawString input, Int maxLength) {
   if (input.data == nullptr) {
-    return Errors::Null;
+    return Errors::NullInputPtr;
   }
 
   if (input.length < 0) {
