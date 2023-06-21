@@ -444,12 +444,7 @@ func TestReceiveCommands(t *testing.T) {
 				return
 			}
 
-			success, msg := checkCommandResult(t, ctx, tc.command, d)
-			if tc.wantFailure {
-				require.False(t, success, "The command was carried out against expectations")
-				return
-			}
-			require.True(t, success, msg)
+			requireCommandResult(t, ctx, tc.command, d, !tc.wantFailure)
 		})
 	}
 }
@@ -496,46 +491,69 @@ func commandSetup(t *testing.T, ctx context.Context, command command, distro *di
 	return &r
 }
 
-// checkCommandResult check that a certain command has been executed in the machine
-// by measuring its effect on the targeted distro.
-//
-// If the expected effect is measured, checkCommandResult returns true.
-// Otherwise, it returns false plus an explanatory message.
-// It may fail the test if the check cannot be carried out.
+// requireCommandResult checks that a certain command has been executed in the machine
+// by measuring its effect on the targeted distro. Set wantSuccess to true if you want
+// to assert that the command completed successfully, and set it to false to assert it
+// did not complete.
 //
 //nolint:revive // testing.T goes before context
-func checkCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro) (ok bool, msg string) {
+func requireCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro, wantSuccess bool) {
 	t.Helper()
 
 	switch command {
 	case cmdStart:
-		return checkEventuallyState(t, distro, wsl.Running, 10*time.Second, time.Second)
+		ok, state := checkEventuallyState(t, distro, wsl.Running, 10*time.Second, time.Second)
+		if wantSuccess {
+			require.True(t, ok, "Distro never reached %q state. Last state: %q", wsl.Running, state)
+		} else {
+			require.False(t, ok, "Distro unexpectedly reached state %q", wsl.Running)
+		}
 	case cmdStop:
 		// We wait a bit longer than WSL sleep time, because we must account for the Landscape server-client
 		// interaction completing asyncronously with the test.
-		time.Sleep(15 * time.Second)
-		gotState, err := distro.State()
-		require.NoError(t, err, "Could not read distro state")
-		return gotState == wsl.Stopped, fmt.Sprintf("unexpected disto state. Want: %q. Got: %q", wsl.Stopped, gotState)
+		const waitFor = 15 * time.Second
+		ok, state := checkEventuallyState(t, distro, wsl.Stopped, waitFor, time.Second)
+		if wantSuccess {
+			require.True(t, ok, "Distro never reached %q state. Last state: %q", wsl.Running, state)
+		} else {
+			require.False(t, ok, "Distro unexpectedly reached state %q", wsl.Stopped)
+		}
 	case cmdInstall:
-		return isAppxInstalled(t, testAppx), "Appx should have been installed"
+		inst := isAppxInstalled(t, testAppx)
+		if wantSuccess {
+			require.True(t, inst, "Appx should have been installed, but it wasn't")
+		} else {
+			require.False(t, inst, "Appx should not have been installed, but it was")
+		}
 	case cmdUninstall:
-		return !isAppxInstalled(t, testAppx), "Appx should not stay installed"
+		inst := isAppxInstalled(t, testAppx)
+		if wantSuccess {
+			require.False(t, inst, "Appx should no longer be installed, but it is")
+		} else {
+			require.True(t, inst, "Appx should still be installed, but it isn't")
+		}
 	case cmdSetDefault:
 		def, err := wsl.DefaultDistro(ctx)
 		require.NoError(t, err, "could not call DefaultDistro")
-		return distro.Name() == def.Name(), "Test distro was not set as default"
+		if wantSuccess {
+			require.Equal(t, distro.Name(), def.Name(), "Test distro should be the default one")
+		} else {
+			require.NotEqual(t, distro.Name(), def.Name(), "Test distro should not be the default one")
+		}
 	case cmdShutdownHost:
 		gotState, err := distro.State()
 		require.NoError(t, err, "Could not read distro state")
-		return gotState == wsl.Stopped, fmt.Sprintf("unexpected disto state. Want: %q. Got: %q", wsl.Stopped, gotState)
+		if wantSuccess {
+			require.Equal(t, wsl.Stopped, gotState, "Unexpected disto state. Want: %q. Got: %q", wsl.Stopped, gotState)
+		} else {
+			require.Equal(t, wsl.Running, gotState, "Unexpected disto state. Want: %q. Got: %q", wsl.Running, gotState)
+		}
 	default:
 		require.FailNowf(t, "Setup", "Unknown command type %d", command)
-		return false, "" // Compiler needs a return statement here
 	}
 }
 
-func checkEventuallyState(t *testing.T, d *distro.Distro, wantState wsl.State, waitFor, tick time.Duration) (ok bool, msg string) {
+func checkEventuallyState(t *testing.T, d *distro.Distro, wantState wsl.State, waitFor, tick time.Duration) (ok bool, lastState wsl.State) {
 	t.Helper()
 
 	timer := time.NewTimer(waitFor)
@@ -544,17 +562,16 @@ func checkEventuallyState(t *testing.T, d *distro.Distro, wantState wsl.State, w
 	ticker := time.NewTicker(tick)
 	defer ticker.Stop()
 
-	var gotState wsl.State
 	for {
 		select {
 		case <-timer.C:
-			return false, fmt.Sprintf("distro state never became %q. Last state: %q", wantState, gotState)
+			return false, lastState
 		case <-ticker.C:
 			var err error
-			gotState, err = d.State()
+			lastState, err = d.State()
 			require.NoError(t, err, "disto State should return no error")
-			if gotState == wantState {
-				return true, msg
+			if lastState == wantState {
+				return true, lastState
 			}
 		}
 	}
