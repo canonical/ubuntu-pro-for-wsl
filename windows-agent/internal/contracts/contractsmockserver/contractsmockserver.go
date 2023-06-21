@@ -63,7 +63,7 @@ func WithSubscriptionStatusCode(statusCode int) Option {
 	}
 }
 
-// Serve starts a new HTTP server on localhost (dynamic port) mocking the Contracts Server backend REST API with responses defined according to the Option args.
+// Serve starts a new HTTP server on localhost (dynamic port) mocking the Contracts Server backend REST API with responses defined according to the Option args. Cancel the ctx context to stop the server.
 func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	opts := options{
 		token:        response{value: DefaultADToken, statusCode: http.StatusOK},
