@@ -407,7 +407,8 @@ func assertHasPrefix(t *testing.T, wantPrefix, got string, msgAndArgs ...interfa
 type command int
 
 const (
-	cmdStart command = iota
+	cmdAssignHost command = iota
+	cmdStart
 	cmdStop
 	cmdInstall
 	cmdUninstall
@@ -426,6 +427,8 @@ func TestReceiveCommands(t *testing.T) {
 
 		wantFailure bool
 	}{
+		"Success receiving a AssignHost command": {command: cmdAssignHost},
+
 		"Success receiving a Start command": {command: cmdStart},
 		"Error receiving a Start command":   {command: cmdStart, mockErr: true, wantFailure: true},
 
@@ -545,7 +548,7 @@ func TestReceiveCommands(t *testing.T) {
 			client.Disconnect(ctx)
 
 			disableMockErrors()
-			requireCommandResult(t, ctx, tc.command, d, !tc.wantFailure)
+			requireCommandResult(t, ctx, tc.command, d, client, !tc.wantFailure)
 		})
 	}
 }
@@ -562,6 +565,8 @@ func commandSetup(t *testing.T, ctx context.Context, command command, distro *di
 	var r landscapeapi.Command
 
 	switch command {
+	case cmdAssignHost:
+		r.Cmd = &landscapeapi.Command_AssignHost_{AssignHost: &landscapeapi.Command_AssignHost{Uid: "HostUID123"}}
 	case cmdStart:
 		r.Cmd = &landscapeapi.Command_Start_{Start: &landscapeapi.Command_Start{Id: distro.Name()}}
 	case cmdStop:
@@ -603,10 +608,19 @@ func commandSetup(t *testing.T, ctx context.Context, command command, distro *di
 // did not complete.
 //
 //nolint:revive // testing.T goes before context
-func requireCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro, wantSuccess bool) {
+func requireCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro, client *landscape.Client, wantSuccess bool) {
 	t.Helper()
 
+	// Ensuring a connection was made
+	require.NotEmpty(t, client.UID(), "Landscape client should have had a UID assigned by the server")
+
 	switch command {
+	case cmdAssignHost:
+		if wantSuccess {
+			require.Equal(t, "HostUID123", client.UID(), "Landscape client should have overridden the initial UID sent by the server")
+		} else {
+			require.Fail(t, "Test not implemented")
+		}
 	case cmdStart:
 		ok, state := checkEventuallyState(t, distro, wsl.Running, 10*time.Second, time.Second)
 		if wantSuccess {
