@@ -356,13 +356,13 @@ func TestReceiveCommands(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			setupMock := func() {}
+			enableMockErrors := func() {}
 			if wsl.MockAvailable() {
 				t.Parallel()
 				mock := wslmock.New()
 				ctx = wsl.WithMock(ctx, mock)
 				if tc.mockErr {
-					setupMock = func() {
+					enableMockErrors = func() {
 						mock.WslLaunchInteractiveError = true      // Breaks start
 						mock.InstallError = true                   // Breaks install
 						mock.WslUnregisterDistributionError = true // Breaks uninstall
@@ -420,7 +420,7 @@ func TestReceiveCommands(t *testing.T) {
 				return service.IsConnected(hostname) && client.Connected()
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server and client never made a connection")
 
-			setupMock()
+			enableMockErrors()
 
 			err = service.SendCommand(ctx, hostname, command)
 			require.NoError(t, err, "SendCommand should return no error")
