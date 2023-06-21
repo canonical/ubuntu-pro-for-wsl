@@ -356,7 +356,10 @@ func TestReceiveCommands(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
+
 			enableMockErrors := func() {}
+			disableMockErrors := func() {}
+
 			if wsl.MockAvailable() {
 				t.Parallel()
 				mock := wslmock.New()
@@ -369,7 +372,9 @@ func TestReceiveCommands(t *testing.T) {
 						mock.SetAsDefaultError = true              // Breaks SetDefault
 						mock.ShutdownError = true                  // Breaks shutdown
 					}
+					disableMockErrors = mock.ResetErrors
 				}
+				defer mock.ResetErrors()
 			} else if tc.mockErr {
 				t.Skip("This test can only run with the mock")
 			}
@@ -427,7 +432,6 @@ func TestReceiveCommands(t *testing.T) {
 
 			// Allow some time for the message to be sent, received, and executed.
 			time.Sleep(time.Second)
-
 			if wsl.MockAvailable() && tc.command == cmdInstall || tc.command == cmdUninstall {
 				// Appx state cannot be mocked
 				return
@@ -444,6 +448,7 @@ func TestReceiveCommands(t *testing.T) {
 				return
 			}
 
+			disableMockErrors()
 			requireCommandResult(t, ctx, tc.command, d, !tc.wantFailure)
 		})
 	}
