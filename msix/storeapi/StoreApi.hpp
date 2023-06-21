@@ -22,7 +22,7 @@ DLL_EXPORT int64_t GetSubscriptionExpirationDate(const char* productID,
 DLL_EXPORT int64_t GenerateUserJWT(const char* accessToken,
                                    int32_t accessTokenLen,
                                    // output
-                                   char* jwtBuf);
+                                   char** jwtBuf);
 }
 
 // Document error constants so we can translate those as Go errors.

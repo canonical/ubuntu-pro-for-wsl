@@ -49,7 +49,7 @@ int64_t GetSubscriptionExpirationDate(const char* productID, int32_t length) {
 }
 
 int64_t GenerateUserJWT(const char* accessToken, int32_t accessTokenLen,
-                        char* jwtBuf) {
+                        char** jwtBuf) {
   if (auto err = validateArg({.data = accessToken, .length = accessTokenLen},
                              MaxTokenLen);
       err != Errors::None) {
@@ -73,7 +73,7 @@ int64_t GenerateUserJWT(const char* accessToken, int32_t accessTokenLen,
     }
 
     std::memcpy(buffer, jwt.c_str(), length);
-    jwtBuf = buffer;
+    *jwtBuf = buffer;
     return length;
 
   } catch (const StoreApi::Exception&) {
