@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/apidef"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
 	"github.com/ubuntu/decorate"
 )
 
@@ -39,7 +39,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 	defer decorate.OnError(&err, "couldn't download access token from server")
 
 	// baseurl/v1/token.
-	u := c.baseURL.JoinPath(apidef.Version, apidef.TokenPath)
+	u := c.baseURL.JoinPath(contractsapi.Version, contractsapi.TokenPath)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("could not create a GET request: %v", err)
@@ -70,9 +70,9 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	val, ok := data[apidef.ADTokenKey]
+	val, ok := data[contractsapi.ADTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", apidef.ADTokenKey)
+		return "", fmt.Errorf("expected key %q not found in the response", contractsapi.ADTokenKey)
 	}
 
 	return val, nil
@@ -87,8 +87,8 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	}
 
 	// baseurl/v1/subscription.
-	u := c.baseURL.JoinPath(apidef.Version, apidef.SubscriptionPath)
-	jsonData, err := json.Marshal(map[string]string{apidef.JWTKey: userJWT})
+	u := c.baseURL.JoinPath(contractsapi.Version, contractsapi.SubscriptionPath)
+	jsonData, err := json.Marshal(map[string]string{contractsapi.JWTKey: userJWT})
 	if err != nil {
 		return "", err
 	}
@@ -127,9 +127,9 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 		return "", err
 	}
 
-	val, ok := data[apidef.ProTokenKey]
+	val, ok := data[contractsapi.ProTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", apidef.ProTokenKey)
+		return "", fmt.Errorf("expected key %q not found in the response", contractsapi.ProTokenKey)
 	}
 
 	return val, nil
@@ -145,8 +145,8 @@ func checkLength(length int64) error {
 		return errors.New("empty")
 	}
 
-	if length > apidef.TokenMaxSize {
-		return fmt.Errorf("too big: %d bytes, limit is %d", length, apidef.TokenMaxSize)
+	if length > contractsapi.TokenMaxSize {
+		return fmt.Errorf("too big: %d bytes, limit is %d", length, contractsapi.TokenMaxSize)
 	}
 
 	return nil

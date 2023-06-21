@@ -11,7 +11,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/apidef"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
 )
 
 const (
@@ -82,8 +82,8 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc(path.Join(apidef.Version, apidef.TokenPath), handleTokenFunc(opts.token))
-	mux.HandleFunc(path.Join(apidef.Version, apidef.SubscriptionPath), handleSubscriptionFunc(opts.subscription))
+	mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(opts.token))
+	mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(opts.subscription))
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
@@ -114,7 +114,7 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if _, err := fmt.Fprintf(w, `{%q: %q}`, apidef.ADTokenKey, res.value); err != nil {
+		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, res.value); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			return
@@ -144,7 +144,7 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		userJWT, ok := data[apidef.JWTKey]
+		userJWT, ok := data[contractsapi.JWTKey]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintln(w, "JSON payload does not contain the expected key")
@@ -157,7 +157,7 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		if _, err := fmt.Fprintf(w, `{%q: %q}`, apidef.ProTokenKey, res.value); err != nil {
+		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, res.value); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			return

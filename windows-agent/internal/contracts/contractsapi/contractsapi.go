@@ -1,5 +1,5 @@
-// Package apidef exports some constants defining the Contracts Server backend REST API
-package apidef
+// Package contractsapi exports some constants defining the Contracts Server backend REST API
+package contractsapi
 
 const (
 	// Version is the current Contracts Server REST API version.
