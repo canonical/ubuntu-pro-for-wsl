@@ -317,11 +317,6 @@ const (
 	cmdShutdownHost
 )
 
-const (
-	testAppx       = "CanonicalGroupLimited.Ubuntu22.04LTS" // The name of the Appx
-	testDistroAppx = "Ubuntu-22.04"                         // The name used in `wsl --install <DISTRO>`
-)
-
 func TestReceiveCommands(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
@@ -457,6 +452,11 @@ func TestReceiveCommands(t *testing.T) {
 		})
 	}
 }
+
+const (
+	testAppx       = "CanonicalGroupLimited.Ubuntu22.04LTS" // The name of the Appx
+	testDistroAppx = "Ubuntu-22.04"                         // The name used in `wsl --install <DISTRO>`
+)
 
 //nolint:revive // testing.T goes before context
 func commandSetup(t *testing.T, ctx context.Context, command command, distro *distro.Distro) *landscapeapi.Command {
