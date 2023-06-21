@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/apidef"
@@ -81,8 +82,8 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc(apidef.Version+apidef.TokenPath, handleTokenFunc(opts.token))
-	mux.HandleFunc(apidef.Version+apidef.SubscriptionPath, handleSubscriptionFunc(opts.subscription))
+	mux.HandleFunc(path.Join(apidef.Version, apidef.TokenPath), handleTokenFunc(opts.token))
+	mux.HandleFunc(path.Join(apidef.Version, apidef.SubscriptionPath), handleSubscriptionFunc(opts.subscription))
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
