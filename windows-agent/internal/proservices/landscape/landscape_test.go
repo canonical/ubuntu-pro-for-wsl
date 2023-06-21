@@ -54,10 +54,10 @@ func TestNew(t *testing.T) {
 
 			dir := t.TempDir()
 			if tc.loadErr {
-				err := os.MkdirAll(filepath.Join(dir, landscape.CacheFile), 0700)
+				err := os.MkdirAll(filepath.Join(dir, landscape.CacheFileBase), 0700)
 				require.NoError(t, err, "Setup: could not create directory to interfere with the Landscape client")
 			} else if tc.uid != "" {
-				err := os.WriteFile(filepath.Join(dir, landscape.CacheFile), []byte(tc.uid), 0600)
+				err := os.WriteFile(filepath.Join(dir, landscape.CacheFileBase), []byte(tc.uid), 0600)
 				require.NoError(t, err, "Setup: could not write Landscape client config file")
 			}
 
@@ -142,7 +142,7 @@ func TestConnect(t *testing.T) {
 
 			dir := t.TempDir()
 			if tc.uid != "" {
-				err := os.WriteFile(filepath.Join(dir, landscape.CacheFile), []byte(tc.uid), 0600)
+				err := os.WriteFile(filepath.Join(dir, landscape.CacheFileBase), []byte(tc.uid), 0600)
 				require.NoError(t, err, "Setup: could not write Landscape client config file")
 			}
 
@@ -183,7 +183,7 @@ func TestConnect(t *testing.T) {
 
 			require.False(t, client.Connected(), "Connected should have returned false after disconnecting")
 
-			confFile := filepath.Join(dir, landscape.CacheFile)
+			confFile := filepath.Join(dir, landscape.CacheFileBase)
 			require.FileExists(t, confFile, "Landscape config file should be created after disconnecting")
 			out, err := os.ReadFile(confFile)
 			require.NoError(t, err, "Could not read landscape config file")

@@ -11,4 +11,4 @@ func (c *Client) UID() string {
 	return c.getUID()
 }
 
-const CacheFile = cacheFile
+const CacheFileBase = cacheFileBase

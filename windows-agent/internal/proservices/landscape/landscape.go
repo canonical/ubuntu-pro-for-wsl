@@ -30,15 +30,15 @@ type Client struct {
 	hostname string
 
 	// Client UID and where it is stored
-	uid      atomic.Value
-	cacheDir string
+	uid       atomic.Value
+	cacheFile string
 
 	connected atomic.Bool
 	cancel    func()
 	once      sync.Once
 }
 
-const cacheFile = "landscape.conf"
+const cacheFileBase = "landscape.conf"
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
@@ -70,10 +70,10 @@ func NewClient(conf Config, db *database.DistroDB, cacheDir string, args ...Opti
 	}
 
 	c := &Client{
-		conf:     conf,
-		db:       db,
-		hostname: opts.hostname,
-		cacheDir: cacheDir,
+		conf:      conf,
+		db:        db,
+		hostname:  opts.hostname,
+		cacheFile: filepath.Join(cacheDir, cacheFileBase),
 	}
 
 	if err := c.load(); err != nil {
@@ -198,7 +198,7 @@ func (c *Client) Connected() bool {
 
 // load reads persistent Landscape data from disk.
 func (c *Client) load() error {
-	out, err := os.ReadFile(filepath.Join(c.cacheDir, cacheFile))
+	out, err := os.ReadFile(c.cacheFile)
 	if errors.Is(err, fs.ErrNotExist) {
 		// No file: New client
 		c.setUID("")
@@ -217,14 +217,13 @@ func (c *Client) load() error {
 
 // dump stores persistent Landscape data to disk.
 func (c *Client) dump() error {
-	tmpFile := filepath.Join(c.cacheDir, fmt.Sprintf("%s.tmp", cacheFile))
-	cacheFile := filepath.Join(c.cacheDir, cacheFile)
+	tmpFile := fmt.Sprintf("%s.tmp", c.cacheFile)
 
 	if err := os.WriteFile(tmpFile, []byte(c.getUID()), 0600); err != nil {
 		return fmt.Errorf("could not store Landscape data to temporary file: %v", err)
 	}
 
-	if err := os.Rename(tmpFile, cacheFile); err != nil {
+	if err := os.Rename(tmpFile, c.cacheFile); err != nil {
 		return fmt.Errorf("could not move Landscape data from tmp to file: %v", err)
 	}
 
