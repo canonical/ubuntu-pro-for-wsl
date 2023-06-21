@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
@@ -176,10 +177,12 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		dontServe  bool
-		preCancel  bool
-		withToken  string
-		withStatus int
+		dontServe        bool
+		preCancel        bool
+		withToken        string
+		withStatus       int
+		disabledEndpoint bool
+		blockedEndpoint  bool
 
 		want    string
 		wantErr bool
@@ -189,6 +192,8 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 		"Error due to no server":           {dontServe: true, wantErr: true},
 		"Error due to precanceled context": {preCancel: true, wantErr: true},
 		"Error due to non-200 status code": {withStatus: 418, wantErr: true},
+		"Error due to disabled endpoint":   {disabledEndpoint: true, wantErr: true}, // 404 error.
+		"Error due to response timeout":    {blockedEndpoint: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -213,6 +218,14 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 					args = append(args, contractsmockserver.WithTokenStatusCode(tc.withStatus))
 				}
 
+				if tc.disabledEndpoint {
+					args = append(args, contractsmockserver.WithTokenEndpointDisabled(tc.disabledEndpoint))
+				}
+
+				if tc.blockedEndpoint {
+					args = append(args, contractsmockserver.WithTokenEndpointBlocked(tc.blockedEndpoint))
+				}
+
 				addr, err = contractsmockserver.Serve(ctx, args...)
 				require.NoError(t, err, "Setup: Server should return no error")
 			}
@@ -220,7 +233,7 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.New(u, &http.Client{})
+			client := client.New(u, &http.Client{Timeout: 3 * time.Second})
 
 			clientCtx, clientCancel := context.WithCancel(ctx)
 			if tc.preCancel {
@@ -244,10 +257,12 @@ func TestGetProTokenNet(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		dontServe  bool
-		preCancel  bool
-		withToken  string
-		withStatus int
+		dontServe        bool
+		preCancel        bool
+		withToken        string
+		withStatus       int
+		disabledEndpoint bool
+		blockedEndpoint  bool
 
 		want    string
 		wantErr bool
@@ -257,6 +272,8 @@ func TestGetProTokenNet(t *testing.T) {
 		"Error due to no server":           {dontServe: true, wantErr: true},
 		"Error due to precanceled context": {preCancel: true, wantErr: true},
 		"Error due to non-200 status code": {withStatus: 418, wantErr: true},
+		"Error due to disabled endpoint":   {disabledEndpoint: true, wantErr: true}, // 404 error.
+		"Error due to response timeout":    {blockedEndpoint: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -280,6 +297,13 @@ func TestGetProTokenNet(t *testing.T) {
 				if tc.withStatus != 0 && tc.withStatus != 200 {
 					args = append(args, contractsmockserver.WithSubscriptionStatusCode(tc.withStatus))
 				}
+				if tc.disabledEndpoint {
+					args = append(args, contractsmockserver.WithSubscriptionEndpointDisabled(tc.disabledEndpoint))
+				}
+
+				if tc.blockedEndpoint {
+					args = append(args, contractsmockserver.WithSubscriptionEndpointBlocked(tc.blockedEndpoint))
+				}
 
 				addr, err = contractsmockserver.Serve(ctx, args...)
 				require.NoError(t, err, "Setup: Server should return no error")
@@ -288,7 +312,7 @@ func TestGetProTokenNet(t *testing.T) {
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.New(u, &http.Client{})
+			client := client.New(u, &http.Client{Timeout: 3 * time.Second})
 
 			clientCtx, clientCancel := context.WithCancel(ctx)
 			if tc.preCancel {
