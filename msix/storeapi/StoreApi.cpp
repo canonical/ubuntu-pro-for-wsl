@@ -55,15 +55,15 @@ Int GetSubscriptionExpirationDate(const char* productID, Int length,
   }
 }
 
-Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** jwtBuf,
-                    Int* jwtLen) {
+Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** userJWT,
+                    Int* userJWTLen) {
   if (auto err = validateArg({.data = accessToken, .length = accessTokenLen},
                              MaxTokenLen);
       err != Errors::None) {
     return toInt(err);
   }
 
-  if (jwtBuf == nullptr || jwtLen == nullptr) {
+  if (userJWT == nullptr || userJWTLen == nullptr) {
     return toInt(Errors::NullOutputPtr);
   }
 
@@ -85,8 +85,8 @@ Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** jwtBuf,
     }
 
     std::memcpy(buffer, jwt.c_str(), length);
-    *jwtBuf = buffer;
-    *jwtLen = length;
+    *userJWT = buffer;
+    *userJWTLen = length;
     return 0;
 
   } catch (const StoreApi::Exception&) {

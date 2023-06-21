@@ -26,12 +26,12 @@ DLL_EXPORT Int GetSubscriptionExpirationDate(const char* productID, Int length,
                                              // output
                                              Int* expirationUnix);
 
-// Outputs the user JWT string via the [jwtBuf] output parameter and its
-// length via [jwtLen]. The caller is responsible for freeing the memory region
-// pointed by [jwtBuf] by calling CoTaskMemFree.
+// Outputs the user JWT string via the [userJWT] output parameter and its
+// length via [userJWTLen]. The caller is responsible for freeing the memory
+// region pointed by [userJWT] by calling CoTaskMemFree.
 DLL_EXPORT Int GenerateUserJWT(const char* accessToken, Int accessTokenLen,
                                // output
-                               char** jwtBuf, Int* jwtLen);
+                               char** userJWT, Int* userJWTLen);
 
 // Document error constants so we can translate those as Go errors.
 enum class Errors : Int {
