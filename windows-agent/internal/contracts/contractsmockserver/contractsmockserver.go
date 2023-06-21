@@ -28,9 +28,15 @@ type response struct {
 	statusCode int
 }
 
+type endpointOptions struct {
+	res      response
+	disabled bool
+	blocked  bool
+}
+
 type options struct {
-	token        response
-	subscription response
+	token        endpointOptions
+	subscription endpointOptions
 }
 
 // Option is an optional argument for Serve.
@@ -39,36 +45,64 @@ type Option func(*options)
 // WithTokenResponse sets the value of the /token endpoint response.
 func WithTokenResponse(token string) Option {
 	return func(o *options) {
-		o.token.value = token
+		o.token.res.value = token
 	}
 }
 
 // WithTokenStatusCode sets the /token endpoint response status code.
 func WithTokenStatusCode(statusCode int) Option {
 	return func(o *options) {
-		o.token.statusCode = statusCode
+		o.token.res.statusCode = statusCode
 	}
 }
 
 // WithSubscriptionResponse sets the value of the /subscription endpoint response.
 func WithSubscriptionResponse(token string) Option {
 	return func(o *options) {
-		o.subscription.value = token
+		o.subscription.res.value = token
 	}
 }
 
 // WithSubscriptionStatusCode sets the /subscription endpoint response status code.
 func WithSubscriptionStatusCode(statusCode int) Option {
 	return func(o *options) {
-		o.subscription.statusCode = statusCode
+		o.subscription.res.statusCode = statusCode
+	}
+}
+
+// WithTokenEndpointDisabled sets the option to disable the /token endpoint.
+func WithTokenEndpointDisabled(disable bool) Option {
+	return func(o *options) {
+		o.token.disabled = disable
+	}
+}
+
+// WithTokenEndpointBlocked sets the option to make the server wait forever when receiving a request to the /token endpoint.
+func WithTokenEndpointBlocked(blocked bool) Option {
+	return func(o *options) {
+		o.token.blocked = blocked
+	}
+}
+
+// WithSubscriptionEndpointDisabled sets the option to disable the /subscription endpoint.
+func WithSubscriptionEndpointDisabled(disable bool) Option {
+	return func(o *options) {
+		o.subscription.disabled = disable
+	}
+}
+
+// WithSubscriptionEndpointBlocked sets the option to make the server wait forever when receiving a request to the /susbcription endpoint.
+func WithSubscriptionEndpointBlocked(blocked bool) Option {
+	return func(o *options) {
+		o.subscription.blocked = blocked
 	}
 }
 
 // Serve starts a new HTTP server on localhost (dynamic port) mocking the Contracts Server backend REST API with responses defined according to the Option args. Cancel the ctx context to stop the server.
 func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	opts := options{
-		token:        response{value: DefaultADToken, statusCode: http.StatusOK},
-		subscription: response{value: DefaultProToken, statusCode: http.StatusOK},
+		token:        endpointOptions{res: response{value: DefaultADToken, statusCode: http.StatusOK}, disabled: false, blocked: false},
+		subscription: endpointOptions{res: response{value: DefaultProToken, statusCode: http.StatusOK}, disabled: false, blocked: false},
 	}
 
 	for _, f := range args {
@@ -82,8 +116,14 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(opts.token))
-	mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(opts.subscription))
+	if !opts.token.disabled {
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(opts.token))
+	}
+
+	if !opts.subscription.disabled {
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(opts.subscription))
+	}
+
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
@@ -100,7 +140,7 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 }
 
 // handleTokenFunc returns a a handler function for the /token endpoint according to the response options supplied.
-func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) {
+func handleTokenFunc(o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusBadRequest)
@@ -108,13 +148,17 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if res.statusCode != 200 {
-			w.WriteHeader(res.statusCode)
+		if o.blocked {
+			select {} // blocks forever.
+		}
+
+		if o.res.statusCode != 200 {
+			w.WriteHeader(o.res.statusCode)
 			fmt.Fprintln(w, "mock error")
 			return
 		}
 
-		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, res.value); err != nil {
+		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, o.res.value); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			return
@@ -123,7 +167,7 @@ func handleTokenFunc(res response) func(w http.ResponseWriter, r *http.Request) 
 }
 
 // handleSubscriptionFunc returns a handler function for the /susbcription endpoint according to the response options supplied.
-func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Request) {
+func handleSubscriptionFunc(o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
@@ -131,8 +175,12 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		if res.statusCode != 200 {
-			w.WriteHeader(res.statusCode)
+		if o.blocked {
+			select {} // blocks forever.
+		}
+
+		if o.res.statusCode != 200 {
+			w.WriteHeader(o.res.statusCode)
 			fmt.Fprintln(w, "mock error")
 			return
 		}
@@ -157,7 +205,7 @@ func handleSubscriptionFunc(res response) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, res.value); err != nil {
+		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, o.res.value); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "failed to write the response: %v", err)
 			return
