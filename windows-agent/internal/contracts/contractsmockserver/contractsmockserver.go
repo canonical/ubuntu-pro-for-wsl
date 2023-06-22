@@ -117,11 +117,11 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 
 	mux := http.NewServeMux()
 	if !opts.token.disabled {
-		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(opts.token))
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(ctx, opts.token))
 	}
 
 	if !opts.subscription.disabled {
-		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(opts.subscription))
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(ctx, opts.subscription))
 	}
 
 	server := &http.Server{
@@ -140,7 +140,7 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 }
 
 // handleTokenFunc returns a a handler function for the /token endpoint according to the response options supplied.
-func handleTokenFunc(o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
+func handleTokenFunc(ctx context.Context, o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusBadRequest)
@@ -149,7 +149,9 @@ func handleTokenFunc(o endpointOptions) func(w http.ResponseWriter, r *http.Requ
 		}
 
 		if o.blocked {
-			select {} // blocks forever.
+			<-ctx.Done()
+			fmt.Println("server context was cancelled, exiting...")
+			return
 		}
 
 		if o.res.statusCode != 200 {
@@ -167,7 +169,7 @@ func handleTokenFunc(o endpointOptions) func(w http.ResponseWriter, r *http.Requ
 }
 
 // handleSubscriptionFunc returns a handler function for the /susbcription endpoint according to the response options supplied.
-func handleSubscriptionFunc(o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
+func handleSubscriptionFunc(ctx context.Context, o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
@@ -176,7 +178,9 @@ func handleSubscriptionFunc(o endpointOptions) func(w http.ResponseWriter, r *ht
 		}
 
 		if o.blocked {
-			select {} // blocks forever.
+			<-ctx.Done()
+			fmt.Println("server context was cancelled, exiting...")
+			return
 		}
 
 		if o.res.statusCode != 200 {
