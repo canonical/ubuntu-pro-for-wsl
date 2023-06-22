@@ -221,6 +221,115 @@ class Port extends $pb.GeneratedMessage {
   void clearPort() => clearField(1);
 }
 
+enum SubscriptionInfo_SubscriptionType {
+  none, 
+  manual, 
+  microsoftStore, 
+  organization, 
+  notSet
+}
+
+class SubscriptionInfo extends $pb.GeneratedMessage {
+  factory SubscriptionInfo() => create();
+  SubscriptionInfo._() : super();
+  factory SubscriptionInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SubscriptionInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static const $core.Map<$core.int, SubscriptionInfo_SubscriptionType> _SubscriptionInfo_SubscriptionTypeByTag = {
+    2 : SubscriptionInfo_SubscriptionType.none,
+    3 : SubscriptionInfo_SubscriptionType.manual,
+    4 : SubscriptionInfo_SubscriptionType.microsoftStore,
+    5 : SubscriptionInfo_SubscriptionType.organization,
+    0 : SubscriptionInfo_SubscriptionType.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SubscriptionInfo', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..oo(0, [2, 3, 4, 5])
+    ..aOS(1, _omitFieldNames ? '' : 'productId', protoName: 'productId')
+    ..aOM<Empty>(2, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
+    ..aOM<Empty>(3, _omitFieldNames ? '' : 'manual', subBuilder: Empty.create)
+    ..aOM<Empty>(4, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: Empty.create)
+    ..aOM<Empty>(5, _omitFieldNames ? '' : 'organization', subBuilder: Empty.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SubscriptionInfo clone() => SubscriptionInfo()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SubscriptionInfo copyWith(void Function(SubscriptionInfo) updates) => super.copyWith((message) => updates(message as SubscriptionInfo)) as SubscriptionInfo;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SubscriptionInfo create() => SubscriptionInfo._();
+  SubscriptionInfo createEmptyInstance() => create();
+  static $pb.PbList<SubscriptionInfo> createRepeated() => $pb.PbList<SubscriptionInfo>();
+  @$core.pragma('dart2js:noInline')
+  static SubscriptionInfo getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SubscriptionInfo>(create);
+  static SubscriptionInfo? _defaultInstance;
+
+  SubscriptionInfo_SubscriptionType whichSubscriptionType() => _SubscriptionInfo_SubscriptionTypeByTag[$_whichOneof(0)]!;
+  void clearSubscriptionType() => clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get productId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set productId($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasProductId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProductId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  Empty get none => $_getN(1);
+  @$pb.TagNumber(2)
+  set none(Empty v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasNone() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearNone() => clearField(2);
+  @$pb.TagNumber(2)
+  Empty ensureNone() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  Empty get manual => $_getN(2);
+  @$pb.TagNumber(3)
+  set manual(Empty v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasManual() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearManual() => clearField(3);
+  @$pb.TagNumber(3)
+  Empty ensureManual() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  Empty get microsoftStore => $_getN(3);
+  @$pb.TagNumber(4)
+  set microsoftStore(Empty v) { setField(4, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasMicrosoftStore() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMicrosoftStore() => clearField(4);
+  @$pb.TagNumber(4)
+  Empty ensureMicrosoftStore() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  Empty get organization => $_getN(4);
+  @$pb.TagNumber(5)
+  set organization(Empty v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasOrganization() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearOrganization() => clearField(5);
+  @$pb.TagNumber(5)
+  Empty ensureOrganization() => $_ensure(4);
+}
+
 
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
 const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
