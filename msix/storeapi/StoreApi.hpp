@@ -20,16 +20,20 @@ using Int = std::intptr_t;
 
 #define DLL_EXPORT __declspec(dllexport)
 
-// Returns a positive integer representing the UNIX time of the current user
-// subscription expiration date via the [expirationUnix] output parameter.
-DLL_EXPORT Int GetSubscriptionExpirationDate(const char* productID, Int length,
+// Returns via the [expirationUnix] output parameter a positive integer
+// representing the expiration date as UNIX time of current user's subscription
+// to the product represented by the null-terminated string [productID].
+DLL_EXPORT Int GetSubscriptionExpirationDate(const char* productID,
                                              // output
                                              Int* expirationUnix);
 
 // Outputs the user JWT string via the [userJWT] output parameter and its
-// length via [userJWTLen]. The caller is responsible for freeing the memory
-// region pointed by [userJWT] by calling CoTaskMemFree.
-DLL_EXPORT Int GenerateUserJWT(const char* accessToken, Int accessTokenLen,
+// length via [userJWTLen], allowing the server identified via the [accessToken]
+// to query information about the current user's subscriptions in behalf of our
+// app. The [accessToken] is required to be a null-terminated string. The caller
+// is responsible for freeing the memory region pointed by [userJWT] by calling
+// CoTaskMemFree.
+DLL_EXPORT Int GenerateUserJWT(const char* accessToken,
                                // output
                                char** userJWT, Int* userJWTLen);
 
@@ -39,11 +43,10 @@ enum class Errors : Int {
   AllocationFailure = -10,
   // input string argument errors
   NullInputPtr = -9,
-  NegativeLength = -8,
-  TooBigLength = -7,
-  ZeroLength = -6,
+  TooBigLength = -8,
+  ZeroLength = -7,
   // output parameter errors
-  NullOutputPtr = -5,
+  NullOutputPtr = -6,
   // runtime errors (aka exceptions)
   StoreAPI = -3,
   WinRT = -2,

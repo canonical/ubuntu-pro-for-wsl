@@ -5,29 +5,20 @@
 // Syntactic sugar to convert the enum [value] into a Int.
 constexpr Int toInt(Errors value) { return static_cast<Int>(value); }
 
-// The maximum token length expected.
-static constexpr Int MaxTokenLen = 4096;
+// The maximum token length expected + 1 (the null terminator).
+static constexpr Int MaxTokenLen = 4097;
 
-// The maximum product ID string length expected as an input. In practice the
-// size is much lower. This reserves room for the future.
-static constexpr Int MaxProductIdLen = 128;
+// The maximum product ID string length expected as an input + 1 (the null
+// terminator). In practice it's much smaller. This reserves room for the
+// future.
+static constexpr Int MaxProductIdLen = 129;
 
-// Groups together a char pointer and a length to prevent easy swappable
-// parameters in function calls.
-struct RawString {
-  const char* data;
-  Int length;
-};
+// Makes sure [input] is not a nullptr and it's a null-terminated string with
+// length smaller than [maxLength].
+Errors validateArg(const char* input, Int maxLength);
 
-// Sanity checks the [input] string argument against some non-sensical mistakes
-// (such as negative length) and against a [maxLength] allowed by the caller.
-Errors validateArg(RawString input, Int maxLength);
-
-Int GetSubscriptionExpirationDate(const char* productID, Int length,
-                                  Int* expirationUnix) {
-  if (auto err =
-          validateArg({.data = productID, .length = length}, MaxProductIdLen);
-      err != Errors::None) {
+Int GetSubscriptionExpirationDate(const char* productID, Int* expirationUnix) {
+  if (auto err = validateArg(productID, MaxProductIdLen); err != Errors::None) {
     return toInt(err);
   }
 
@@ -39,10 +30,7 @@ Int GetSubscriptionExpirationDate(const char* productID, Int length,
     StoreApi::ServerStoreService service{};
 
     const std::time_t expiration =
-        service
-            .CurrentExpirationDate(
-                {productID, static_cast<std::size_t>(length)})
-            .get();
+        service.CurrentExpirationDate(productID).get();
 
     *expirationUnix = static_cast<Int>(expiration);
     return 0;
@@ -55,11 +43,8 @@ Int GetSubscriptionExpirationDate(const char* productID, Int length,
   }
 }
 
-Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** userJWT,
-                    Int* userJWTLen) {
-  if (auto err = validateArg({.data = accessToken, .length = accessTokenLen},
-                             MaxTokenLen);
-      err != Errors::None) {
+Int GenerateUserJWT(const char* accessToken, char** userJWT, Int* userJWTLen) {
+  if (auto err = validateArg(accessToken, MaxTokenLen); err != Errors::None) {
     return toInt(err);
   }
 
@@ -69,11 +54,9 @@ Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** userJWT,
 
   try {
     auto user = StoreApi::UserInfo::Current().get();
-    std::string serverToken{accessToken,
-                            static_cast<std::size_t>(accessTokenLen)};
 
     StoreApi::ServerStoreService service{};
-    const std::string jwt = service.GenerateUserJwt(serverToken, user).get();
+    const std::string jwt = service.GenerateUserJwt(accessToken, user).get();
 
     // Allocates memory using some OS API so we can free this buffer on the
     // other side of the ABI without assumptions on specifics of the programming
@@ -98,20 +81,20 @@ Int GenerateUserJWT(const char* accessToken, Int accessTokenLen, char** userJWT,
   }
 }
 
-Errors validateArg(RawString input, Int maxLength) {
-  if (input.data == nullptr) {
+Errors validateArg(const char* input, Int maxLength) {
+  if (input == nullptr) {
     return Errors::NullInputPtr;
   }
 
-  if (input.length < 0) {
-    return Errors::NegativeLength;
-  }
+  // since the null terminator is not counted by strnlen, if maxLength is
+  // returned, that means the string is longer than maxLenght.
+  const Int length = strnlen(input, maxLength);
 
-  if (input.length == 0) {
+  if (length == 0) {
     return Errors::ZeroLength;
   }
 
-  if (input.length > maxLength) {
+  if (length == maxLength) {
     return Errors::TooBigLength;
   }
 
