@@ -6,3 +6,9 @@ func WithHostname(hostname string) Option {
 		o.hostname = hostname
 	}
 }
+
+func (c *Client) UID() string {
+	return c.getUID()
+}
+
+const CacheFileBase = cacheFileBase

@@ -5,13 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -26,10 +29,16 @@ type Client struct {
 	// Cached hostname
 	hostname string
 
+	// Client UID and where it is stored
+	uid       atomic.Value
+	cacheFile string
+
 	connected atomic.Bool
 	cancel    func()
 	once      sync.Once
 }
+
+const cacheFileBase = "landscape.conf"
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
@@ -45,7 +54,7 @@ type options struct {
 type Option = func(*options)
 
 // NewClient creates a new Client for the Landscape service.
-func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, error) {
+func NewClient(conf Config, db *database.DistroDB, cacheDir string, args ...Option) (*Client, error) {
 	var opts options
 
 	for _, f := range args {
@@ -60,11 +69,18 @@ func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, err
 		opts.hostname = hostname
 	}
 
-	return &Client{
-		conf:     conf,
-		db:       db,
-		hostname: opts.hostname,
-	}, nil
+	c := &Client{
+		conf:      conf,
+		db:        db,
+		hostname:  opts.hostname,
+		cacheFile: filepath.Join(cacheDir, cacheFileBase),
+	}
+
+	if err := c.load(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // Connect starts the connection and starts talking to the server.
@@ -118,6 +134,33 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 		return err
 	}
 
+	// Not the first contact between client and server: done!
+	if c.getUID() != "" {
+		return nil
+	}
+
+	// First contact. Wait to receive a client UID.
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			c.Disconnect(ctx)
+			c.setUID("") // Avoid races where the UID arrives just after cancelling the context
+			return fmt.Errorf("Landscape server did not respond with a client UID")
+		case <-ticker.C:
+		}
+
+		if c.getUID() != "" {
+			// Server sent a UID: success.
+			break
+		}
+	}
+
 	return nil
 }
 
@@ -126,6 +169,9 @@ func (c *Client) Disconnect(ctx context.Context) {
 	c.once.Do(func() {
 		c.cancel()
 		c.waitDisconnected(ctx)
+		if err := c.dump(); err != nil {
+			log.Errorf(ctx, "Landscape client: %v", err)
+		}
 	})
 }
 
@@ -148,4 +194,49 @@ func (c *Client) waitDisconnected(ctx context.Context) {
 // Connected returns true if the Landscape client managed to connect to the server.
 func (c *Client) Connected() bool {
 	return c.connected.Load()
+}
+
+// load reads persistent Landscape data from disk.
+func (c *Client) load() error {
+	out, err := os.ReadFile(c.cacheFile)
+	if errors.Is(err, fs.ErrNotExist) {
+		// No file: New client
+		c.setUID("")
+		return nil
+	}
+
+	if err != nil {
+		// Something is wrong with the file
+		return fmt.Errorf("could not read landscape config file: %v", err)
+	}
+
+	// First contact done in previous session
+	c.setUID(string(out))
+	return nil
+}
+
+// dump stores persistent Landscape data to disk.
+func (c *Client) dump() error {
+	tmpFile := fmt.Sprintf("%s.tmp", c.cacheFile)
+
+	if err := os.WriteFile(tmpFile, []byte(c.getUID()), 0600); err != nil {
+		return fmt.Errorf("could not store Landscape data to temporary file: %v", err)
+	}
+
+	if err := os.Rename(tmpFile, c.cacheFile); err != nil {
+		return fmt.Errorf("could not move Landscape data from tmp to file: %v", err)
+	}
+
+	return nil
+}
+
+// getUID is syntax sugar to read the UID.
+func (c *Client) getUID() string {
+	//nolint:forcetypeassert // We know it is going to be a string
+	return c.uid.Load().(string)
+}
+
+// setUID is syntax sugar to set the UID.
+func (c *Client) setUID(s string) {
+	c.uid.Store(s)
 }
