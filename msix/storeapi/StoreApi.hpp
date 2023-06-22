@@ -21,11 +21,12 @@ using Int = std::intptr_t;
 #define DLL_EXPORT __declspec(dllexport)
 
 // Returns via the [expirationUnix] output parameter a positive integer
-// representing the expiration date as UNIX time of current user's subscription
-// to the product represented by the null-terminated string [productID].
+// representing the expiration date as the number of seconds since the UNIX
+// epoch of current user's subscription to the product represented by the
+// null-terminated string [productID].
 DLL_EXPORT Int GetSubscriptionExpirationDate(const char* productID,
                                              // output
-                                             Int* expirationUnix);
+                                             std::int64_t* expirationUnix);
 
 // Outputs the user JWT string via the [userJWT] output parameter and its
 // length via [userJWTLen], allowing the server identified via the [accessToken]

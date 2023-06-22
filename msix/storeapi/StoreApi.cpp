@@ -17,7 +17,8 @@ static constexpr Int MaxProductIdLen = 129;
 // length smaller than [maxLength].
 Errors validateArg(const char* input, Int maxLength);
 
-Int GetSubscriptionExpirationDate(const char* productID, Int* expirationUnix) {
+Int GetSubscriptionExpirationDate(const char* productID,
+                                  std::int64_t* expirationUnix) {
   if (auto err = validateArg(productID, MaxProductIdLen); err != Errors::None) {
     return toInt(err);
   }
@@ -29,11 +30,9 @@ Int GetSubscriptionExpirationDate(const char* productID, Int* expirationUnix) {
   try {
     StoreApi::ServerStoreService service{};
 
-    const std::time_t expiration =
-        service.CurrentExpirationDate(productID).get();
-
-    *expirationUnix = static_cast<Int>(expiration);
+    *expirationUnix = service.CurrentExpirationDate(productID).get();
     return 0;
+
   } catch (const StoreApi::Exception&) {
     return toInt(Errors::StoreAPI);
   } catch (const winrt::hresult_error&) {
