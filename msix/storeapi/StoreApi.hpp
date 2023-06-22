@@ -11,8 +11,8 @@
 extern "C" {
 // Go will call us with uintptr's, which are unsigned and large enough to hold
 // any pointer. The equivalent for that is C99 uintptr_t (also C++11 and
-// forward). On pointers we are safe, but accepting uintptrs into a int32_t is a
-// narrowing conversion on x64 platforms. On those platforms we could rely on
+// forward). On pointers we are safe, but accepting uintptrs into integer types
+// can lead to narrowing conversions. On x64 platforms we could rely on
 // uintptr_t being the same as uint64_t. To be more generic and future proof we
 // typedef from intptr_t (the signed version that can still hold any pointer),
 // so we can preserve the signed nature of actual integer (non-pointer) values.
