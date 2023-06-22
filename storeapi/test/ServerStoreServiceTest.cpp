@@ -48,7 +48,7 @@ TEST(ServerStoreService, ExpirationDateUnsubscribed) {
 
   auto expiration = service.CurrentExpirationDate("my-awesome-addon").get();
 
-  EXPECT_EQ(std::numeric_limits<std::time_t>::lowest(), expiration);
+  EXPECT_EQ(std::numeric_limits<std::int64_t>::lowest(), expiration);
 }
 
 TEST(ServerStoreService, ExpirationDateEpoch) {
@@ -65,7 +65,7 @@ TEST(ServerStoreService, ExpirationDateEpoch) {
       .tm_yday = 0,
       .tm_isdst = -1,  // Use DST value from local time zone
   };
-  auto unix_epoch = std::mktime(&tm);
+  auto unix_epoch = static_cast<int64_t>(std::mktime(&tm));
 
   auto expiration = service.CurrentExpirationDate("my-awesome-addon").get();
 

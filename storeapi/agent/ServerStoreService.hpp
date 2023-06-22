@@ -35,17 +35,22 @@ class ServerStoreService : public StoreService<ContextType> {
     co_return winrt::to_string(jwt);
   }
 
-  // Returns the expiration date of the current billing period if the current
-  // user is subscribed to this product or the lowest time_t otherwise (a date
-  // too far in the past). This raw return value suits well for crossing ABI
-  // boundaries, such as returning to a caller in Go.
-  concurrency::task<std::time_t> CurrentExpirationDate(std::string productId) {
+  // Returns the expiration time as the number of seconds since Unix epoch of
+  // the current billing period if the current user is subscribed to this
+  // product or the lowest int64_t otherwise (a date too far in the past). This
+  // raw return value suits well for crossing ABI boundaries, such as returning
+  // to a caller in Go.
+  concurrency::task<std::int64_t> CurrentExpirationDate(std::string productId) {
     auto product = co_await this->GetSubscriptionProduct(productId);
     if (!product.IsInUserCollection()) {
-      co_return std::numeric_limits<std::time_t>::lowest();
+      co_return std::numeric_limits<std::int64_t>::lowest();
     }
+    // C++20 guarantees that std::chrono::system_clock measures UNIX time.
+    const auto t = winrt::clock::to_sys(product.CurrentExpirationDate());
+    const auto dur = t.time_since_epoch();
 
-    co_return winrt::clock::to_time_t(product.CurrentExpirationDate());
+    // just need to convert the duration to seconds.
+    co_return duration_cast<std::chrono::seconds>(dur).count();
   }
 };
 
