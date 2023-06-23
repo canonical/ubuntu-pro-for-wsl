@@ -9,7 +9,7 @@ message Empty {}
 service UI {
     rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
-    rpc SubscriptionInfo(Empty) returns (SubscriptionInfo) {}
+    rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
 }
 
 message ProAttachInfo {
