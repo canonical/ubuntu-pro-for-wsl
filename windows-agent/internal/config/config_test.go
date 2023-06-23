@@ -236,7 +236,7 @@ func TestSetProToken(t *testing.T) {
 				r.UbuntuProData["ProToken"] = "ORIGINAL_TOKEN"
 			}
 
-			err := conf.SetProToken(ctx, "NEW_TOKEN")
+			err := conf.SetSubscription(ctx, config.Subscription{ProToken: "NEW_TOKEN", Source: config.SubscriptionManual})
 
 			if tc.wantError != nil {
 				require.Error(t, err, "ProvisioningTasks should return an error")

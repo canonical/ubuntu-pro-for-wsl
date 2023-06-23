@@ -36,12 +36,12 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.Token
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
-	if err := s.config.SetProToken(ctx, token); err != nil {
+	err := s.config.SetSubscription(ctx, token, config.SubscriptionUser)
+	if err != nil {
 		return nil, err
 	}
 
 	distros := s.db.GetAll()
-	var err error
 	for _, d := range distros {
 		err = errors.Join(err, d.SubmitTasks(tasks.ProAttachment{Token: token}))
 	}

@@ -36,12 +36,39 @@ type Registry interface {
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
 type Config struct {
-	proToken     string
-	landscapeURL string
+	subscription Subscription
+	data         configData
 
-	registry Registry
-	mu       *sync.RWMutex
+	registry  Registry
+
+	mu *sync.RWMutex
 }
+
+// configData is a bag of data unrelated to the subscription status.
+type configData struct {
+	landscapeURL string
+}
+
+// Subscription contains the pro token and some metadata.
+type Subscription struct {
+	ProToken string
+	Source   SubscriptionSource
+}
+
+// SubscriptionSource indicates the method the subscription was acquired.
+type SubscriptionSource int
+
+const (
+	// SubscriptionNone -> no subscription.
+	SubscriptionNone SubscriptionSource = iota
+
+	// SubscriptionManual -> the subscription was obtained by introducing a pro token
+	// via the registry or the GUI.
+	SubscriptionManual
+
+	// SubscriptionMicrosoftStore -> the subscription was acquired via the Microsoft Store.
+	SubscriptionMicrosoftStore
+)
 
 type options struct {
 	registry Registry
@@ -77,16 +104,27 @@ func New(ctx context.Context, args ...Option) (m *Config) {
 	return m
 }
 
-// ProToken returns the value of the pro token.
+// ProToken returns the Pro Token associated to the current subscription.
+// If there is no active subscription, an empty string is returned.
 func (c *Config) ProToken(ctx context.Context) (string, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if err := c.load(ctx); err != nil {
-		return c.proToken, fmt.Errorf("could not load: %v", err)
+	s, err := c.Subscription(ctx)
+	if err != nil {
+		return "", err
 	}
 
-	return c.proToken, nil
+	return s.ProToken, nil
+}
+
+// Subscription returns the ProToken and the method it was acquired with (if any).
+func (c *Config) Subscription(ctx context.Context) (s Subscription, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if err := c.load(ctx); err != nil {
+		return s, fmt.Errorf("could not load: %v", err)
+	}
+
+	return c.subscription, nil
 }
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
@@ -99,17 +137,17 @@ func (c *Config) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
 	return []task.Task{tasks.ProAttachment{Token: token}}, nil
 }
 
-// SetProToken overwrites the value of the pro token.
-func (c *Config) SetProToken(ctx context.Context, token string) error {
+// SetSubscription overwrites the value of the pro token and the method with which it has been acquired.
+func (c *Config) SetSubscription(ctx context.Context, subscription Subscription) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	var oldToken string
-	oldToken, c.proToken = c.proToken, token
+	var old Subscription
+	old, c.subscription = c.subscription, subscription
 
 	if err := c.dump(); err != nil {
 		log.Errorf(ctx, "Could not write token into registry, token will be ignored: %v", err)
-		c.proToken = oldToken
+		c.subscription = old
 		return err
 	}
 
@@ -125,36 +163,33 @@ func (c *Config) LandscapeURL(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not load: %v", err)
 	}
 
-	return c.landscapeURL, nil
+	return c.data.landscapeURL, nil
 }
 
 func (c *Config) load(ctx context.Context) error {
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		log.Debug(ctx, "Registry key does not exist, using default values")
-		c.proToken = defaultToken
-		c.landscapeURL = defaultLandscapeURL
-		return nil
+		proToken = defaultToken
+		data.landscapeURL = defaultLandscapeURL
+		return proToken, data, nil
 	}
 	if err != nil {
-		return err
+		return proToken, data, err
 	}
 	defer c.registry.CloseKey(k)
 
-	proToken, err := c.readValue(ctx, k, fieldProToken, defaultToken)
+	proToken, err = c.readValue(ctx, k, fieldProToken, defaultToken)
 	if err != nil {
-		return err
+		return proToken, data, err
 	}
 
-	landscapeURL, err := c.readValue(ctx, k, fieldLandscapeURL, defaultLandscapeURL)
+	data.landscapeURL, err = c.readValue(ctx, k, fieldLandscapeURL, defaultLandscapeURL)
 	if err != nil {
-		return err
+		return proToken, data, err
 	}
 
-	c.proToken = proToken
-	c.landscapeURL = landscapeURL
-
-	return nil
+	return proToken, data, nil
 }
 
 func (c *Config) readValue(ctx context.Context, key uintptr, field string, defaultValue string) (string, error) {
@@ -177,11 +212,11 @@ func (c *Config) dump() error {
 	}
 	defer c.registry.CloseKey(k)
 
-	if err := c.registry.WriteValue(k, fieldProToken, c.proToken); err != nil {
+	if err := c.registry.WriteValue(k, fieldProToken, c.subscription.ProToken); err != nil {
 		return fmt.Errorf("could not write into registry key: %w", err)
 	}
 
-	if err := c.registry.WriteValue(k, fieldLandscapeURL, c.landscapeURL); err != nil {
+	if err := c.registry.WriteValue(k, fieldLandscapeURL, c.data.landscapeURL); err != nil {
 		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 
