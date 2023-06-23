@@ -36,7 +36,7 @@ DLL_EXPORT Int GetSubscriptionExpirationDate(const char* productID,
 // CoTaskMemFree.
 DLL_EXPORT Int GenerateUserJWT(const char* accessToken,
                                // output
-                               char** userJWT, Int* userJWTLen);
+                               char** userJWT, std::uint64_t* userJWTLen);
 
 // Document error constants so we can translate those as Go errors.
 enum class Errors : Int {

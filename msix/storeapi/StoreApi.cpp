@@ -6,16 +6,16 @@
 constexpr Int toInt(Errors value) { return static_cast<Int>(value); }
 
 // The maximum token length expected + 1 (the null terminator).
-static constexpr Int MaxTokenLen = 4097;
+static constexpr std::size_t MaxTokenLen = 4097;
 
 // The maximum product ID string length expected as an input + 1 (the null
 // terminator). In practice it's much smaller. This reserves room for the
 // future.
-static constexpr Int MaxProductIdLen = 129;
+static constexpr std::size_t MaxProductIdLen = 129;
 
 // Makes sure [input] is not a nullptr and it's a null-terminated string with
 // length smaller than [maxLength].
-Errors validateArg(const char* input, Int maxLength);
+Errors validateArg(const char* input, std::size_t maxLength);
 
 Int GetSubscriptionExpirationDate(const char* productID,
                                   std::int64_t* expirationUnix) {
@@ -42,7 +42,8 @@ Int GetSubscriptionExpirationDate(const char* productID,
   }
 }
 
-Int GenerateUserJWT(const char* accessToken, char** userJWT, Int* userJWTLen) {
+Int GenerateUserJWT(const char* accessToken, char** userJWT,
+                    std::uint64_t* userJWTLen) {
   if (auto err = validateArg(accessToken, MaxTokenLen); err != Errors::None) {
     return toInt(err);
   }
@@ -60,7 +61,7 @@ Int GenerateUserJWT(const char* accessToken, char** userJWT, Int* userJWTLen) {
     // Allocates memory using some OS API so we can free this buffer on the
     // other side of the ABI without assumptions on specifics of the programming
     // language runtime in their side.
-    const Int length = jwt.size();
+    const auto length = jwt.size();
     auto* buffer = static_cast<char*>(::CoTaskMemAlloc(length));
     if (buffer == nullptr) {
       return toInt(Errors::AllocationFailure);
@@ -80,14 +81,14 @@ Int GenerateUserJWT(const char* accessToken, char** userJWT, Int* userJWTLen) {
   }
 }
 
-Errors validateArg(const char* input, Int maxLength) {
+Errors validateArg(const char* input, std::size_t maxLength) {
   if (input == nullptr) {
     return Errors::NullInputPtr;
   }
 
   // since the null terminator is not counted by strnlen, if maxLength is
   // returned, that means the string is longer than maxLenght.
-  const Int length = strnlen(input, maxLength);
+  const auto length = strnlen(input, maxLength);
 
   if (length == 0) {
     return Errors::ZeroLength;
