@@ -31,6 +31,11 @@
     "subscribeNow": "Subscribe Now",
     "learnMore": "Learn More",
 
-    "subscriptionIsActive": "Your subscription is active!"
+    "subscriptionIsActive": "Your subscription is active!",
+    "storeManaged": "This subscription is managed through Microsoft Store",
+    "manageSubscription": "Manage your subscription",
+    "orgManaged": "This subscription is owned and managed by your company",
+    "manuallyManaged": "Lorem ipsum...",
+    "detachPro": "Detach Pro"
 }
 
