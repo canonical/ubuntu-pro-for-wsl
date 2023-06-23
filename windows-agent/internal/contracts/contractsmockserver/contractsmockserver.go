@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 )
 
 const (
@@ -132,7 +133,7 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 
 	go func() {
 		if err := server.Serve(lis); err != nil {
-			fmt.Println("failed to start the HTTP server")
+			log.Error(ctx, "failed to start the HTTP server")
 		}
 	}()
 
@@ -150,7 +151,7 @@ func handleTokenFunc(ctx context.Context, o endpointOptions) func(w http.Respons
 
 		if o.blocked {
 			<-ctx.Done()
-			fmt.Println("server context was cancelled, exiting...")
+			log.Debug(ctx, "server context was cancelled, exiting...")
 			return
 		}
 
@@ -179,7 +180,7 @@ func handleSubscriptionFunc(ctx context.Context, o endpointOptions) func(w http.
 
 		if o.blocked {
 			<-ctx.Done()
-			fmt.Println("server context was cancelled, exiting...")
+			log.Debug(ctx, "server context was cancelled, exiting...")
 			return
 		}
 
