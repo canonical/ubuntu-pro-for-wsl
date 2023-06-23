@@ -34,6 +34,29 @@ const ProAttachInfo$json = {
 final $typed_data.Uint8List proAttachInfoDescriptor = $convert.base64Decode(
     'Cg1Qcm9BdHRhY2hJbmZvEhQKBXRva2VuGAEgASgJUgV0b2tlbg==');
 
+@$core.Deprecated('Use subscriptionInfoDescriptor instead')
+const SubscriptionInfo$json = {
+  '1': 'SubscriptionInfo',
+  '2': [
+    {'1': 'productId', '3': 1, '4': 1, '5': 9, '10': 'productId'},
+    {'1': 'none', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
+    {'1': 'manual', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'manual'},
+    {'1': 'microsoftStore', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
+    {'1': 'organization', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
+  ],
+  '8': [
+    {'1': 'subscriptionType'},
+  ],
+};
+
+/// Descriptor for `SubscriptionInfo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
+    'ChBTdWJzY3JpcHRpb25JbmZvEhwKCXByb2R1Y3RJZBgBIAEoCVIJcHJvZHVjdElkEiUKBG5vbm'
+    'UYAiABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgRub25lEikKBm1hbnVhbBgDIAEoCzIPLmFnZW50'
+    'YXBpLkVtcHR5SABSBm1hbnVhbBI5Cg5taWNyb3NvZnRTdG9yZRgEIAEoCzIPLmFnZW50YXBpLk'
+    'VtcHR5SABSDm1pY3Jvc29mdFN0b3JlEjUKDG9yZ2FuaXphdGlvbhgFIAEoCzIPLmFnZW50YXBp'
+    'LkVtcHR5SABSDG9yZ2FuaXphdGlvbkISChBzdWJzY3JpcHRpb25UeXBl');
+
 @$core.Deprecated('Use distroInfoDescriptor instead')
 const DistroInfo$json = {
   '1': 'DistroInfo',
@@ -65,27 +88,4 @@ const Port$json = {
 /// Descriptor for `Port`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List portDescriptor = $convert.base64Decode(
     'CgRQb3J0EhIKBHBvcnQYASABKA1SBHBvcnQ=');
-
-@$core.Deprecated('Use subscriptionInfoDescriptor instead')
-const SubscriptionInfo$json = {
-  '1': 'SubscriptionInfo',
-  '2': [
-    {'1': 'productId', '3': 1, '4': 1, '5': 9, '10': 'productId'},
-    {'1': 'none', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
-    {'1': 'manual', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'manual'},
-    {'1': 'microsoftStore', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
-    {'1': 'organization', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
-  ],
-  '8': [
-    {'1': 'subscriptionType'},
-  ],
-};
-
-/// Descriptor for `SubscriptionInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
-    'ChBTdWJzY3JpcHRpb25JbmZvEhwKCXByb2R1Y3RJZBgBIAEoCVIJcHJvZHVjdElkEiUKBG5vbm'
-    'UYAiABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgRub25lEikKBm1hbnVhbBgDIAEoCzIPLmFnZW50'
-    'YXBpLkVtcHR5SABSBm1hbnVhbBI5Cg5taWNyb3NvZnRTdG9yZRgEIAEoCzIPLmFnZW50YXBpLk'
-    'VtcHR5SABSDm1pY3Jvc29mdFN0b3JlEjUKDG9yZ2FuaXphdGlvbhgFIAEoCzIPLmFnZW50YXBp'
-    'LkVtcHR5SABSDG9yZ2FuaXphdGlvbkISChBzdWJzY3JpcHRpb25UeXBl');
 

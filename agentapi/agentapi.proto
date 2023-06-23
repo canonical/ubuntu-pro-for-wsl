@@ -9,11 +9,22 @@ message Empty {}
 service UI {
     rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
-    rpc SubscpriptionInfo(Empty) returns (SubscriptionInfo) {}
+    rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
 }
 
 message ProAttachInfo {
     string token = 1;
+}
+
+message SubscriptionInfo {
+    string productId = 1; // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
+
+    oneof subscriptionType {
+        Empty none = 2;            // The user does not have an active subscription
+        Empty manual = 3;          // The user manages its own subscription via the GUI and the registry
+        Empty microsoftStore = 4;  // The user manages its own subscription via the Microsoft store
+        Empty organization = 5;    // An administrator manages the subscription via the registry
+    };
 }
 
 service WSLInstance {
@@ -33,13 +44,4 @@ message Port {
     uint32 port = 1;
 }
 
-message SubscriptionInfo {
-    string productId = 1; // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
 
-    oneof subscriptionType {
-        Empty none = 2;            // The user does not have an active subscription
-        Empty manual = 3;          // The user manages its own subscription via the GUI and the registry
-        Empty microsoftStore = 4;  // The user manages its own subscription via the Microsoft store
-        Empty organization = 5;    // An administrator manages the subscription via the registry
-    };
-}
