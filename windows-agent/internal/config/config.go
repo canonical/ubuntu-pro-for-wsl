@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
@@ -299,6 +300,33 @@ func (c *Config) dump() (err error) {
 
 	if err := c.registry.WriteValue(k, fieldLandscapeURL, c.data.landscapeURL); err != nil {
 		return fmt.Errorf("could not write into registry key: %v", err)
+	}
+
+	return nil
+}
+
+// FetchMicrosoftStoreSubscription contacts Ubuntu Pro's contract server and the Microsoft Store
+// to check if the user has an active subscription that provides a pro token. If so, that token is used.
+func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error) {
+	defer decorate.OnError(&err, "could not validate subscription against Microsoft Store")
+
+	readOnly, err := c.IsReadOnly()
+	if err != nil {
+		return fmt.Errorf("could not detect if subscription is user-managed: %v", err)
+	}
+
+	if readOnly {
+		// No need to contact the store because we cannot change the subscription
+		return nil
+	}
+
+	proToken, err := contracts.ProToken(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get ProToken from Microsoft Store: %v", err)
+	}
+
+	if err := c.SetSubscription(ctx, proToken, SubscriptionMicrosoftStore); err != nil {
+		return err
 	}
 
 	return nil

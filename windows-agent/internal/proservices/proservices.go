@@ -4,7 +4,6 @@ package proservices
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
-	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 )
 
@@ -83,7 +81,10 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
-	conf := config.New(ctx, opts.cacheDir, config.WithRegistry(opts.registry))
+	conf := config.New(ctx, config.WithRegistry(opts.registry))
+	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
+		log.Warningf(ctx, "%v", err)
+	}
 
 	db, err := database.New(ctx, opts.cacheDir, conf)
 	if err != nil {

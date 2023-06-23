@@ -327,6 +327,52 @@ func TestIsReadOnly(t *testing.T) {
 	}
 }
 
+func TestFetchMicrosoftStoreSubscription(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		registryState      registryState
+		registryErr        uint32
+		registryIsReadOnly bool
+
+		wantToken string
+		wantErr   bool
+	}{
+		"Success when registry is read only": {registryState: userTokenHasValue, registryIsReadOnly: true, wantToken: "user_token"},
+
+		"Error when registry read-only check fails": {registryErr: registry.MockErrOnCreateKey, wantErr: true},
+
+		// Stub test-case: Must be replaced with Success/Error return values of contracts.ProToken
+		// when the Microsoft store dance is implemented.
+		"Error when the microsoft store is not yet implemented": {wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			r := setUpMockRegistry(tc.registryErr, tc.registryState, tc.registryIsReadOnly)
+			c := config.New(ctx, config.WithRegistry(r))
+
+			err := c.FetchMicrosoftStoreSubscription(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "FetchMicrosoftStoreSubscription should return an error")
+			} else {
+				require.NoError(t, err, "FetchMicrosoftStoreSubscription should return no errors")
+			}
+
+			// Disable errors so we can retrieve the token
+			r.Errors = 0
+			token, err := c.ProToken(ctx)
+			require.NoError(t, err, "ProToken should return no error")
+			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
+		})
+	}
+}
+
 // is is a convenience function to check if a registryState matches a certain state.
 func (state registryState) is(flag registryState) bool {
 	return state&flag == flag
