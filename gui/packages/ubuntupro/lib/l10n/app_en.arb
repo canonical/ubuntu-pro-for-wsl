@@ -29,6 +29,8 @@
 
     "proHeading": "The most comprehensive subscription\nfor open-source software security\nnow available on WSL",
     "subscribeNow": "Subscribe Now",
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+
+    "subscriptionIsActive": "Your subscription is active!"
 }
 
