@@ -58,6 +58,14 @@ class MockSubscribeNowModel extends _i1.Mock implements _i3.SubscribeNowModel {
         returnValueForMissingStub: _i4.Future<void>.value(),
       ) as _i4.Future<void>);
   @override
+  void launchProWebPage() => super.noSuchMethod(
+        Invocation.method(
+          #launchProWebPage,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+  @override
   _i4.Future<void> purchaseSubscription() => (super.noSuchMethod(
         Invocation.method(
           #purchaseSubscription,

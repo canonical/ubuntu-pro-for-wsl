@@ -3,10 +3,11 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
+import 'package:agentapi/agentapi.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
+import 'package:ubuntupro/core/agent_api_client.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -19,29 +20,55 @@ import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
+class _FakeSubscriptionInfo_0 extends _i1.SmartFake
+    implements _i2.SubscriptionInfo {
+  _FakeSubscriptionInfo_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [AgentApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
+class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
   MockAgentApiClient() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<void> applyProToken(String? token) => (super.noSuchMethod(
+  _i4.Future<void> applyProToken(String? token) => (super.noSuchMethod(
         Invocation.method(
           #applyProToken,
           [token],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
   @override
-  _i3.Future<bool> ping() => (super.noSuchMethod(
+  _i4.Future<bool> ping() => (super.noSuchMethod(
         Invocation.method(
           #ping,
           [],
         ),
-        returnValue: _i3.Future<bool>.value(false),
-      ) as _i3.Future<bool>);
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
+  @override
+  _i4.Future<_i2.SubscriptionInfo> subscriptionInfo() => (super.noSuchMethod(
+        Invocation.method(
+          #subscriptionInfo,
+          [],
+        ),
+        returnValue:
+            _i4.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_0(
+          this,
+          Invocation.method(
+            #subscriptionInfo,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.SubscriptionInfo>);
 }
