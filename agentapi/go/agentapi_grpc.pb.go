@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UI_ApplyProToken_FullMethodName     = "/agentapi.UI/ApplyProToken"
-	UI_Ping_FullMethodName              = "/agentapi.UI/Ping"
-	UI_SubscpriptionInfo_FullMethodName = "/agentapi.UI/SubscpriptionInfo"
+	UI_ApplyProToken_FullMethodName       = "/agentapi.UI/ApplyProToken"
+	UI_Ping_FullMethodName                = "/agentapi.UI/Ping"
+	UI_GetSubscriptionInfo_FullMethodName = "/agentapi.UI/GetSubscriptionInfo"
 )
 
 // UIClient is the client API for UI service.
@@ -30,7 +30,7 @@ const (
 type UIClient interface {
 	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
-	SubscpriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
+	GetSubscriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
 }
 
 type uIClient struct {
@@ -59,9 +59,9 @@ func (c *uIClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption)
 	return out, nil
 }
 
-func (c *uIClient) SubscpriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error) {
+func (c *uIClient) GetSubscriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error) {
 	out := new(SubscriptionInfo)
-	err := c.cc.Invoke(ctx, UI_SubscpriptionInfo_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, UI_GetSubscriptionInfo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (c *uIClient) SubscpriptionInfo(ctx context.Context, in *Empty, opts ...grp
 type UIServer interface {
 	ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error)
 	Ping(context.Context, *Empty) (*Empty, error)
-	SubscpriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error)
+	GetSubscriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error)
 	mustEmbedUnimplementedUIServer()
 }
 
@@ -88,8 +88,8 @@ func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*Em
 func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedUIServer) SubscpriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SubscpriptionInfo not implemented")
+func (UnimplementedUIServer) GetSubscriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubscriptionInfo not implemented")
 }
 func (UnimplementedUIServer) mustEmbedUnimplementedUIServer() {}
 
@@ -140,20 +140,20 @@ func _UI_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UI_SubscpriptionInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UI_GetSubscriptionInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UIServer).SubscpriptionInfo(ctx, in)
+		return srv.(UIServer).GetSubscriptionInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UI_SubscpriptionInfo_FullMethodName,
+		FullMethod: UI_GetSubscriptionInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UIServer).SubscpriptionInfo(ctx, req.(*Empty))
+		return srv.(UIServer).GetSubscriptionInfo(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -174,8 +174,8 @@ var UI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UI_Ping_Handler,
 		},
 		{
-			MethodName: "SubscpriptionInfo",
-			Handler:    _UI_SubscpriptionInfo_Handler,
+			MethodName: "GetSubscriptionInfo",
+			Handler:    _UI_GetSubscriptionInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
