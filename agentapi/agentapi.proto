@@ -17,13 +17,13 @@ message ProAttachInfo {
 }
 
 message SubscriptionInfo {
-    string productId = 1; // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
-
+    string productId = 1;           // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
+    bool userManaged = 2;           // True if the user is allowed to modify the subscription.
+    
     oneof subscriptionType {
-        Empty none = 2;            // The user does not have an active subscription
-        Empty manual = 3;          // The user manages its own subscription via the GUI and the registry
-        Empty microsoftStore = 4;  // The user manages its own subscription via the Microsoft store
-        Empty organization = 5;    // An administrator manages the subscription via the registry
+        Empty none = 3;             // There is no active subscription.
+        Empty manual = 4;           // The subscription is managed with a pro token from the GUI or the registry.
+        Empty microsoftStore = 5;   // The subscription is managed via the Microsoft store.
     };
 }
 
