@@ -91,7 +91,6 @@ enum SubscriptionInfo_SubscriptionType {
   none, 
   manual, 
   microsoftStore, 
-  organization, 
   notSet
 }
 
@@ -102,19 +101,18 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   factory SubscriptionInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static const $core.Map<$core.int, SubscriptionInfo_SubscriptionType> _SubscriptionInfo_SubscriptionTypeByTag = {
-    2 : SubscriptionInfo_SubscriptionType.none,
-    3 : SubscriptionInfo_SubscriptionType.manual,
-    4 : SubscriptionInfo_SubscriptionType.microsoftStore,
-    5 : SubscriptionInfo_SubscriptionType.organization,
+    3 : SubscriptionInfo_SubscriptionType.none,
+    4 : SubscriptionInfo_SubscriptionType.manual,
+    5 : SubscriptionInfo_SubscriptionType.microsoftStore,
     0 : SubscriptionInfo_SubscriptionType.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SubscriptionInfo', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5])
+    ..oo(0, [3, 4, 5])
     ..aOS(1, _omitFieldNames ? '' : 'productId', protoName: 'productId')
-    ..aOM<Empty>(2, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
-    ..aOM<Empty>(3, _omitFieldNames ? '' : 'manual', subBuilder: Empty.create)
-    ..aOM<Empty>(4, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: Empty.create)
-    ..aOM<Empty>(5, _omitFieldNames ? '' : 'organization', subBuilder: Empty.create)
+    ..aOB(2, _omitFieldNames ? '' : 'userManaged', protoName: 'userManaged')
+    ..aOM<Empty>(3, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
+    ..aOM<Empty>(4, _omitFieldNames ? '' : 'manual', subBuilder: Empty.create)
+    ..aOM<Empty>(5, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: Empty.create)
     ..hasRequiredFields = false
   ;
 
@@ -152,48 +150,46 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   void clearProductId() => clearField(1);
 
   @$pb.TagNumber(2)
-  Empty get none => $_getN(1);
+  $core.bool get userManaged => $_getBF(1);
   @$pb.TagNumber(2)
-  set none(Empty v) { setField(2, v); }
+  set userManaged($core.bool v) { $_setBool(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasNone() => $_has(1);
+  $core.bool hasUserManaged() => $_has(1);
   @$pb.TagNumber(2)
-  void clearNone() => clearField(2);
-  @$pb.TagNumber(2)
-  Empty ensureNone() => $_ensure(1);
+  void clearUserManaged() => clearField(2);
 
   @$pb.TagNumber(3)
-  Empty get manual => $_getN(2);
+  Empty get none => $_getN(2);
   @$pb.TagNumber(3)
-  set manual(Empty v) { setField(3, v); }
+  set none(Empty v) { setField(3, v); }
   @$pb.TagNumber(3)
-  $core.bool hasManual() => $_has(2);
+  $core.bool hasNone() => $_has(2);
   @$pb.TagNumber(3)
-  void clearManual() => clearField(3);
+  void clearNone() => clearField(3);
   @$pb.TagNumber(3)
-  Empty ensureManual() => $_ensure(2);
+  Empty ensureNone() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  Empty get microsoftStore => $_getN(3);
+  Empty get manual => $_getN(3);
   @$pb.TagNumber(4)
-  set microsoftStore(Empty v) { setField(4, v); }
+  set manual(Empty v) { setField(4, v); }
   @$pb.TagNumber(4)
-  $core.bool hasMicrosoftStore() => $_has(3);
+  $core.bool hasManual() => $_has(3);
   @$pb.TagNumber(4)
-  void clearMicrosoftStore() => clearField(4);
+  void clearManual() => clearField(4);
   @$pb.TagNumber(4)
-  Empty ensureMicrosoftStore() => $_ensure(3);
+  Empty ensureManual() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  Empty get organization => $_getN(4);
+  Empty get microsoftStore => $_getN(4);
   @$pb.TagNumber(5)
-  set organization(Empty v) { setField(5, v); }
+  set microsoftStore(Empty v) { setField(5, v); }
   @$pb.TagNumber(5)
-  $core.bool hasOrganization() => $_has(4);
+  $core.bool hasMicrosoftStore() => $_has(4);
   @$pb.TagNumber(5)
-  void clearOrganization() => clearField(5);
+  void clearMicrosoftStore() => clearField(5);
   @$pb.TagNumber(5)
-  Empty ensureOrganization() => $_ensure(4);
+  Empty ensureMicrosoftStore() => $_ensure(4);
 }
 
 class DistroInfo extends $pb.GeneratedMessage {
