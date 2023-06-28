@@ -13,7 +13,32 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Prepare output directory
+    - name: Parse metadata
+      shell: bash
+      working-directory: ${{ inputs.source-dir }}
+      run: |
+        # Parsing name and version
+        echo PKG_NAME="$( dpkg-parsechangelog --show-field source )" >> $GITHUB_ENV
+        echo PKG_VERSION="$( dpkg-parsechangelog --show-field version )" >> $GITHUB_ENV
+    - name: Prepare source build
+      shell: bash
+      run: |
+        echo SOURCE_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )" >> $GITHUB_ENV
+    - name: Build source package
+      uses: jtdor/build-deb-action@v1
+      with:
+        artifacts-dir: ${{ env.SOURCE_DIR }}
+        source-dir: ${{ inputs.source-dir }}
+        docker-image: ${{ inputs.docker-image }}
+        buildpackage-opts: --build=source
+        extra-build-deps: ca-certificates
+    - name: Extract source package
+      shell: bash
+      working-directory: ${{ env.SOURCE_DIR }}
+      run: |
+        dpkg-source --extract *.dsc
+        echo SOURCE_DIR="${SOURCE_DIR}/${{ env.PKG_NAME }}-${{ env.PKG_VERSION }}" >> $GITHUB_ENV
+    - name: Create output directory
       shell: bash
       run: |
         echo OUTPUT_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )" >> $GITHUB_ENV
@@ -21,15 +46,8 @@ runs:
       uses: jtdor/build-deb-action@v1
       with:
         artifacts-dir: ${{ env.OUTPUT_DIR }}
-        source-dir: ${{ inputs.source-dir }}
+        source-dir: ${{ env.SOURCE_DIR }}
         docker-image: ${{ inputs.docker-image }}
-    - name: Artifact setup
-      shell: bash
-      working-directory: ${{ inputs.source-dir }}
-      run: |
-        # Parsing name and version
-        echo PKG_NAME="$( dpkg-parsechangelog --show-field source )" >> $GITHUB_ENV
-        echo PKG_VERSION="$( dpkg-parsechangelog --show-field version )" >> $GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:

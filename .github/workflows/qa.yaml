@@ -202,10 +202,6 @@ jobs:
         uses: ./.github/actions/setup-git
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Vendor dependencies
-        shell: bash
-        working-directory: ${{ env.source-dir }}
-        run: go mod vendor
       - name: Build debian package
         uses: ./.github/actions/build-debian
         with:
