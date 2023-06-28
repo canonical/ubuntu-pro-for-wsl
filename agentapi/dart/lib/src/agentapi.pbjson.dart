@@ -39,10 +39,10 @@ const SubscriptionInfo$json = {
   '1': 'SubscriptionInfo',
   '2': [
     {'1': 'productId', '3': 1, '4': 1, '5': 9, '10': 'productId'},
-    {'1': 'none', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
-    {'1': 'manual', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'manual'},
-    {'1': 'microsoftStore', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
-    {'1': 'organization', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
+    {'1': 'userManaged', '3': 2, '4': 1, '5': 8, '10': 'userManaged'},
+    {'1': 'none', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
+    {'1': 'manual', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'manual'},
+    {'1': 'microsoftStore', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
   ],
   '8': [
     {'1': 'subscriptionType'},
@@ -51,11 +51,11 @@ const SubscriptionInfo$json = {
 
 /// Descriptor for `SubscriptionInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
-    'ChBTdWJzY3JpcHRpb25JbmZvEhwKCXByb2R1Y3RJZBgBIAEoCVIJcHJvZHVjdElkEiUKBG5vbm'
-    'UYAiABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgRub25lEikKBm1hbnVhbBgDIAEoCzIPLmFnZW50'
-    'YXBpLkVtcHR5SABSBm1hbnVhbBI5Cg5taWNyb3NvZnRTdG9yZRgEIAEoCzIPLmFnZW50YXBpLk'
-    'VtcHR5SABSDm1pY3Jvc29mdFN0b3JlEjUKDG9yZ2FuaXphdGlvbhgFIAEoCzIPLmFnZW50YXBp'
-    'LkVtcHR5SABSDG9yZ2FuaXphdGlvbkISChBzdWJzY3JpcHRpb25UeXBl');
+    'ChBTdWJzY3JpcHRpb25JbmZvEhwKCXByb2R1Y3RJZBgBIAEoCVIJcHJvZHVjdElkEiAKC3VzZX'
+    'JNYW5hZ2VkGAIgASgIUgt1c2VyTWFuYWdlZBIlCgRub25lGAMgASgLMg8uYWdlbnRhcGkuRW1w'
+    'dHlIAFIEbm9uZRIpCgZtYW51YWwYBCABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgZtYW51YWwSOQ'
+    'oObWljcm9zb2Z0U3RvcmUYBSABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUg5taWNyb3NvZnRTdG9y'
+    'ZUISChBzdWJzY3JpcHRpb25UeXBl');
 
 @$core.Deprecated('Use distroInfoDescriptor instead')
 const DistroInfo$json = {
