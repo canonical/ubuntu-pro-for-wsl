@@ -9,6 +9,9 @@ inputs:
     required: false
     default: ubuntu:rolling
     description: "The docker image used to build the package"
+  token:
+    required: false
+    description: "If provided, used for github login in the source build"
 
 runs:
   using: "composite"
@@ -31,7 +34,12 @@ runs:
         source-dir: ${{ inputs.source-dir }}
         docker-image: ${{ inputs.docker-image }}
         buildpackage-opts: --build=source
-        extra-build-deps: ca-certificates
+        extra-build-deps: ca-certificates git
+        before-build-hook: |
+          GITHUB_TOKEN="${{ inputs.token }}"
+          if [ -n "${GITHUB_TOKEN}" ]; then
+            git config --system url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+          fi
     - name: Extract source package
       shell: bash
       working-directory: ${{ env.SOURCE_DIR }}
