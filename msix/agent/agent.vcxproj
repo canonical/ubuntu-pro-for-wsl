@@ -120,6 +120,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\storeapi\storeapi.vcxproj">
+      <Project>{4ee3b168-c58d-4ae5-a259-1b5a04c018de}</Project>
+    </ProjectReference>
   </ItemGroup>
   <!-- TODO: Add a reference to the store API DLL project -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

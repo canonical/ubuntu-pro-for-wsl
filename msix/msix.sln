@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ubuntupro", "gui\gui.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agent", "agent\agent.vcxproj", "{6427BB31-C4BE-4585-A090-10EFDFB06B04}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "storeapi", "storeapi\storeapi.vcxproj", "{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,6 +31,10 @@ Global
 		{6427BB31-C4BE-4585-A090-10EFDFB06B04}.Debug|x64.Build.0 = Debug|x64
 		{6427BB31-C4BE-4585-A090-10EFDFB06B04}.Release|x64.ActiveCfg = Release|x64
 		{6427BB31-C4BE-4585-A090-10EFDFB06B04}.Release|x64.Build.0 = Release|x64
+		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Debug|x64.ActiveCfg = Debug|x64
+		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Debug|x64.Build.0 = Debug|x64
+		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Release|x64.ActiveCfg = Release|x64
+		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
