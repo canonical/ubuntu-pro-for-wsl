@@ -1,0 +1,38 @@
+name: Build debian package
+description: Builds a debian package and uploads the artifact
+
+inputs:
+  source-dir:
+    required: false
+    description: "Directory where the source is located"
+  docker-image:
+    required: false
+    default: ubuntu:rolling
+    description: "The docker image used to build the package"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare output directory
+      shell: bash
+      run: |
+        echo OUTPUT_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )" >> $GITHUB_ENV
+    - name: Build debian package
+      uses: jtdor/build-deb-action@v1
+      with:
+        artifacts-dir: ${{ env.OUTPUT_DIR }}
+        source-dir: ${{ inputs.source-dir }}
+        docker-image: ${{ inputs.docker-image }}
+    - name: Artifact setup
+      shell: bash
+      working-directory: ${{ inputs.source-dir }}
+      run: |
+        # Parsing name and version
+        echo PKG_NAME="$( dpkg-parsechangelog --show-field source )" >> $GITHUB_ENV
+        echo PKG_VERSION="$( dpkg-parsechangelog --show-field version )" >> $GITHUB_ENV
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.PKG_NAME }}_${{ env.PKG_VERSION }}+${{ github.sha }}
+        path: ${{ env.OUTPUT_DIR }}/
+        if-no-files-found: error
