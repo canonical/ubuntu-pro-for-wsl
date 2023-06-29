@@ -205,7 +205,7 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			addr := "localhost:1"
+			addr := "localhost:9" // IANA Discard Protocol.
 			var err error
 			if !tc.dontServe {
 				var args []contractsmockserver.Option
