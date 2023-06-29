@@ -50,8 +50,9 @@ runs:
       shell: bash
       working-directory: ${{ env.SOURCE_DIR }}
       run: |
-        dpkg-source --extract *.dsc
-        echo SOURCE_DIR="${SOURCE_DIR}/${{ env.PKG_NAME }}-${{ env.PKG_VERSION }}" >> $GITHUB_ENV
+        SOURCE_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )"
+        dpkg-source --extract *.dsc "${SOURCE_DIR}"
+        echo SOURCE_DIR="${SOURCE_DIR}" >> $GITHUB_ENV
     - name: Create output directory
       shell: bash
       run: |
