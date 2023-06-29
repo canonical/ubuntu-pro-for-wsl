@@ -16,6 +16,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Append commit SHA to local version
+      shell: bash
+      working-directory: ${{ inputs.source-dir }}
+      run: |
+        DEBIAN_FRONTEND=noninteractive sudo apt install -y devscripts
+        debchange --local "+${{ github.sha }}" "Github build. Job id: ${{ github.run_id }}. Attempt: ${{ github.run_number }}."
     - name: Parse metadata
       shell: bash
       working-directory: ${{ inputs.source-dir }}
@@ -59,6 +65,6 @@ runs:
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ env.PKG_NAME }}_${{ env.PKG_VERSION }}+${{ github.sha }}
+        name: ${{ env.PKG_NAME }}_${{ env.PKG_VERSION }}
         path: ${{ env.OUTPUT_DIR }}/
         if-no-files-found: error
