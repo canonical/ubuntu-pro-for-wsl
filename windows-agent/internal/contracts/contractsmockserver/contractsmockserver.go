@@ -157,7 +157,7 @@ func handleTokenFunc(ctx context.Context, o endpointOptions) func(w http.Respons
 
 		if o.res.statusCode != 200 {
 			w.WriteHeader(o.res.statusCode)
-			fmt.Fprintln(w, "mock error")
+			fmt.Fprintf(w, "mock error: %d", o.res.statusCode)
 			return
 		}
 
