@@ -17,6 +17,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.source-dir }}
       run: |
+        set -eu
         DEBIAN_FRONTEND=noninteractive sudo apt install -y devscripts
         debchange --local "_${{ inputs.docker-image }}+${{ github.sha }}" "Github build. Job id: ${{ github.run_id }}. Attempt: ${{ github.run_number }}."
     - name: Parse metadata
@@ -24,11 +25,13 @@ runs:
       working-directory: ${{ inputs.source-dir }}
       run: |
         # Parsing name and version
+        set -eu
         echo PKG_NAME="$( dpkg-parsechangelog --show-field source )" >> $GITHUB_ENV
         echo PKG_VERSION="$( dpkg-parsechangelog --show-field version )" >> $GITHUB_ENV
     - name: Prepare source build
       shell: bash
       run: |
+        set -eu
         echo SOURCE_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )" >> $GITHUB_ENV
     - name: Build source package
       uses: jtdor/build-deb-action@v1
@@ -45,12 +48,14 @@ runs:
       shell: bash
       working-directory: ${{ env.SOURCE_DIR }}
       run: |
+        set -eu
         SOURCE_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )"
         dpkg-source --extract *.dsc "${SOURCE_DIR}"
         echo SOURCE_DIR="${SOURCE_DIR}" >> $GITHUB_ENV
     - name: Create output directory
       shell: bash
       run: |
+        set -eu
         echo OUTPUT_DIR="$( mktemp --directory --tmpdir='${{ inputs.source-dir }}' )" >> $GITHUB_ENV
     - name: Build debian package
       uses: jtdor/build-deb-action@v1
