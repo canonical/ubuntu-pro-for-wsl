@@ -39,8 +39,7 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/canonical/landscape-hostagent-api v0.0.0-20230529114553-f3328c7655fc h1:XVD4auuBpfHgAd0OvPG/uUJM96YxXoyG9sym97TI8nk=
-github.com/canonical/landscape-hostagent-api v0.0.0-20230529114553-f3328c7655fc/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 h1:YfGTcFs5YaJlpR0lxVAPD3oFYcez9Pg1w0MUEbG2zB0=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27 h1:En2XNmo/RaRjZAoBizBjnspxWQIu2YfDnJQ9uV03zIE=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27/go.mod h1:XDPjGkvVzEUt0mCUu1lz/pCqB037O69ZusB7SQ8SZKM=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27 h1:k0ow95Al64F/uu3VsyO2Y5A2s7ELDzzIR4rfr95jm6Q=
@@ -203,8 +202,7 @@ github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/ubuntu/decorate v0.0.0-20230530133104-b7bd3c599bab h1:85juXvTDij5122q33fR6XfZa+21+Se9yFnjZgpCiQzM=
 github.com/ubuntu/decorate v0.0.0-20230530133104-b7bd3c599bab/go.mod h1:Mag8QkTZiZE9VQaDuLJOvc1vxL0lNnbXRhbkWrVW7AE=
-github.com/ubuntu/gowsl v0.0.0-20230531151401-824e0b1c8571 h1:qOJnT22xXutGSM55YoadN5d7bp0vqiM/WTJ1xvvl9Po=
-github.com/ubuntu/gowsl v0.0.0-20230531151401-824e0b1c8571/go.mod h1:HPW4qkYM6l4G8gNGHRFnyqFLgap39DYZuy8ydV7E+S8=
+github.com/ubuntu/gowsl v0.0.0-20230614132354-6933576ea1b6 h1:ZCf1C5X6PZgcniYwak8A+LbygX7OghNtBRtuck2Huek=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
@@ -494,8 +492,7 @@ google.golang.org/grpc v1.31.1/go.mod h1:N36X2cJ7JwdamYAgDz+s+rVMFjt3numwzf/HckM
 google.golang.org/grpc v1.33.2/go.mod h1:JMHMWHQWaTccqQQlmk3MJZS+GWXOdAesneDmEnv2fbc=
 google.golang.org/grpc v1.34.0/go.mod h1:WotjhfgOW/POjDeRt8vscBtXq+2VjORFy659qA51WJ8=
 google.golang.org/grpc v1.35.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
-google.golang.org/grpc v1.55.0 h1:3Oj82/tFSCeUrRTg/5E/7d/W5A1tj6Ky1ABAuZuv5ag=
-google.golang.org/grpc v1.55.0/go.mod h1:iYEXKGkEBhg1PjZQvoYEVPTDkHo1/bjTnfwTeGONTY8=
+google.golang.org/grpc v1.56.1 h1:z0dNfjIl0VpaZ9iSVjA6daGatAYwPGstTjt5vkRMFkQ=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0 h1:rNBFJjBCOgVr9pWD7rs/knKL4FRTKgpZmsRfV214zcA=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0/go.mod h1:Dk1tviKTvMCz5tvh7t+fh94dhmQVHuCt2OzJB3CTW9Y=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
