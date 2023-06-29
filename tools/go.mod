@@ -18,7 +18,7 @@ require (
 )
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20230529114553-f3328c7655fc // indirect
+	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 // indirect
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27 // indirect
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27 // indirect
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230420065438-5e70ebcb4d27 // indirect
@@ -42,12 +42,12 @@ require (
 	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/ubuntu/decorate v0.0.0-20230530133104-b7bd3c599bab // indirect
-	github.com/ubuntu/gowsl v0.0.0-20230531151401-824e0b1c8571 // indirect
+	github.com/ubuntu/gowsl v0.0.0-20230614132354-6933576ea1b6 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526203410-71b5a4ffd15e // indirect
-	google.golang.org/grpc v1.55.0 // indirect
+	google.golang.org/grpc v1.56.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
