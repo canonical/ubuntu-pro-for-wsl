@@ -24,7 +24,8 @@ runs:
 
         echo "::group::Append commit SHA to local version"
         DEBIAN_FRONTEND=noninteractive sudo apt install -y devscripts
-        debchange --local "_${{ inputs.docker-image }}+${{ github.sha }}" "Github build. Job id: ${{ github.run_id }}. Attempt: ${{ github.run_number }}."
+        sanitized_docker=$( echo "${{ inputs.docker-image }}" | sed 's/://' )
+        debchange --local "+${sanitized_docker}+${{ github.sha }}" "Github build. Job id: ${{ github.run_id }}. Attempt: ${{ github.run_number }}."
         echo "::endgroup::"
 
         echo "::group::Parsing name and version"
