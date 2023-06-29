@@ -207,6 +207,7 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 
 			addr := "localhost:9" // IANA Discard Protocol.
 			var err error
+			var closer contractsmockserver.Closer
 			if !tc.dontServe {
 				var args []contractsmockserver.Option
 
@@ -226,8 +227,10 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 					args = append(args, contractsmockserver.WithTokenEndpointBlocked(tc.blockedEndpoint))
 				}
 
-				addr, err = contractsmockserver.Serve(ctx, args...)
+				addr, closer, err = contractsmockserver.Serve(ctx, args...)
 				require.NoError(t, err, "Setup: Server should return no error")
+
+				defer closer()
 			}
 
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
@@ -287,6 +290,7 @@ func TestGetProTokenNet(t *testing.T) {
 
 			addr := "localhost:1"
 			var err error
+			var closer contractsmockserver.Closer
 			if !tc.dontServe {
 				var args []contractsmockserver.Option
 
@@ -305,8 +309,10 @@ func TestGetProTokenNet(t *testing.T) {
 					args = append(args, contractsmockserver.WithSubscriptionEndpointBlocked(tc.blockedEndpoint))
 				}
 
-				addr, err = contractsmockserver.Serve(ctx, args...)
+				addr, closer, err = contractsmockserver.Serve(ctx, args...)
 				require.NoError(t, err, "Setup: Server should return no error")
+
+				defer closer()
 			}
 
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))

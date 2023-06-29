@@ -99,8 +99,11 @@ func WithSubscriptionEndpointBlocked(blocked bool) Option {
 	}
 }
 
+// Closer is the function type that causes the server goroutine to stop.
+type Closer func()
+
 // Serve starts a new HTTP server on localhost (dynamic port) mocking the Contracts Server backend REST API with responses defined according to the Option args. Cancel the ctx context to stop the server.
-func Serve(ctx context.Context, args ...Option) (addr string, err error) {
+func Serve(ctx context.Context, args ...Option) (addr string, closer Closer, err error) {
 	opts := options{
 		token:        endpointOptions{res: response{value: DefaultADToken, statusCode: http.StatusOK}, disabled: false, blocked: false},
 		subscription: endpointOptions{res: response{value: DefaultProToken, statusCode: http.StatusOK}, disabled: false, blocked: false},
@@ -113,7 +116,7 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	var lc net.ListenConfig
 	lis, err := lc.Listen(ctx, "tcp", "localhost:")
 	if err != nil {
-		return "", fmt.Errorf("failed to listen over tcp: %v", err)
+		return "", nil, fmt.Errorf("failed to listen over tcp: %v", err)
 	}
 
 	mux := http.NewServeMux()
@@ -130,12 +133,18 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	}
 
 	go func() {
-		if err := server.Serve(lis); err != nil {
+		if err := server.Serve(lis); err != nil && err != http.ErrServerClosed {
 			log.Error(ctx, "failed to start the HTTP server")
 		}
 	}()
 
-	return lis.Addr().String(), nil
+	closer = func() {
+		if server != nil {
+			server.Close()
+		}
+	}
+
+	return lis.Addr().String(), closer, nil
 }
 
 // handleTokenFunc returns a a handler function for the /token endpoint according to the response options supplied.
