@@ -120,11 +120,9 @@ func Serve(ctx context.Context, args ...Option) (addr string, err error) {
 	if !opts.token.disabled {
 		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(ctx, opts.token))
 	}
-
 	if !opts.subscription.disabled {
 		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(ctx, opts.subscription))
 	}
-
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
