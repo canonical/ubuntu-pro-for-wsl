@@ -5,7 +5,7 @@ const (
 	// Version is the current Contracts Server REST API version.
 	Version = "/v1"
 
-	//TokenPath is the path where clients should GET the Azure AD ephemeral token.
+	// TokenPath is the path where clients should GET the Azure AD ephemeral token.
 	TokenPath = "/token"
 	// SubscriptionPath is the path where clients should POST the user JWT to notify the CS backend of changes in the current user subscription.
 	SubscriptionPath = "/subscription"
