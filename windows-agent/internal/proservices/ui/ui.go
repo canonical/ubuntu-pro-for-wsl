@@ -4,6 +4,7 @@ package ui
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
@@ -57,4 +58,36 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 // Ping replies a keep-alive request.
 func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.Empty, error) {
 	return request, nil
+}
+
+// GetSubscriptionInfo handles the gRPC call to return the type of subscription.
+func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
+	info := &agentapi.SubscriptionInfo{}
+
+	companyManaged, err := s.config.IsReadOnly()
+	if err != nil {
+		return nil, err
+	}
+
+	if !companyManaged {
+		info.UserManaged = true
+	}
+
+	_, source, err := s.config.Subscription(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	switch source {
+	case config.SubscriptionNone:
+		info.SubscriptionType = &agentapi.SubscriptionInfo_None{}
+	case config.SubscriptionUser, config.SubscriptionOrganization: // TODO: Separate Manual into User vs. Org in agentapi
+		info.SubscriptionType = &agentapi.SubscriptionInfo_Manual{}
+	case config.SubscriptionMicrosoftStore:
+		info.SubscriptionType = &agentapi.SubscriptionInfo_MicrosoftStore{}
+	default:
+		return nil, fmt.Errorf("unrecognized subscription source: %d", source)
+	}
+
+	return info, nil
 }
