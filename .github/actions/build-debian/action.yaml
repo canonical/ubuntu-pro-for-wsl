@@ -13,6 +13,31 @@ inputs:
     required: false
     description: "If provided, used for github login in the source build"
 
+
+# The process:
+# 1. We build the source package in a docker container with ca-certificates installed and thus,
+#    a useful internet connection.
+# 2. We the extract the source package.
+# 3. We build the .deb from the source package, in a container without ca-certificates (unless it
+#    is added as a build dependency), hence without a useful internet connection.
+#
+# To help with debugging, here are the processes and the directories they takes place in:
+#
+#  ${{ github.workspace }}
+#     ├── a/b/c/${{ inputs.source-dir }}
+#     │                 |
+#     │           Build source pkg
+#     │                 ↓
+#     ├── ${{ env.SOURCE_OUTPUT_DIR }}
+#     │                 |
+#     │          Extract source pkg
+#     │                 ↓
+#     ├── ${{ env.BUILD_INPUT_DIR }}
+#     │                 |
+#     │          Build debian pkg
+#     │                 ↓
+#     └── ${{ env.BUILD_OUTPUT_DIR }}
+
 runs:
   using: "composite"
   steps:
