@@ -18,12 +18,15 @@ runs:
   steps:
     - name: Set up source package build
       shell: bash
-      working-directory: ${{ inputs.source-dir }}
       run: |
         set -eu
 
-        echo "::group::Append commit SHA to local version"
+        echo "::group::Install devscripts"
         DEBIAN_FRONTEND=noninteractive sudo apt install -y devscripts
+        echo "::endgroup::"
+
+        echo "::group::Append commit SHA to local version"
+        cd '${{ inputs.source-dir }}'
         sanitized_docker=$( echo "${{ inputs.docker-image }}" | sed 's/://' )
         debchange --local "+${sanitized_docker}+${{ github.sha }}" "Github build. Job id: ${{ github.run_id }}. Attempt: ${{ github.run_number }}."
         echo "::endgroup::"
@@ -31,16 +34,17 @@ runs:
         echo "::group::Parsing name and version"
         echo PKG_NAME="$( dpkg-parsechangelog --show-field source )" >> $GITHUB_ENV
         echo PKG_VERSION="$( dpkg-parsechangelog --show-field version )" >> $GITHUB_ENV
+        cd -
         echo "::endgroup::"
 
         echo "::group::Prepare source build"
-        echo SOURCE_DIR="$(pwd)/$( mktemp --directory --tmpdir=. )" >> $GITHUB_ENV
+        echo SOURCE_OUTPUT_DIR="$( mktemp --directory --tmpdir=. )" >> $GITHUB_ENV
         echo "::endgroup::"
     - name: Build source package
       uses: jtdor/build-deb-action@v1
       with:
-        artifacts-dir: ${{ env.SOURCE_DIR }}
         source-dir: ${{ inputs.source-dir }}
+        artifacts-dir: ${{ env.SOURCE_OUTPUT_DIR }}
         docker-image: ${{ inputs.docker-image }}
         buildpackage-opts: --build=source
         extra-build-deps: ca-certificates git
@@ -51,28 +55,34 @@ runs:
           fi
     - name: Set up pacakge build
       shell: bash
-      working-directory: ${{ env.SOURCE_DIR }}
       run: |
         set -eu
 
-        echo "::group::Extract source package"
-        SOURCE_DIR="$(pwd)/$( mktemp --directory --tmpdir='.' )"
-        dpkg-source --extract *.dsc "${SOURCE_DIR}"
-        echo SOURCE_DIR="${SOURCE_DIR}" >> $GITHUB_ENV
+        echo "::group::Create build input directory"
+        # Appending /source because 'dpkg-source --extract' needs the output directory to be non-existant
+        BUILD_INPUT_DIR="$( mktemp --directory --tmpdir='.' )/source"
+        echo BUILD_INPUT_DIR="${BUILD_INPUT_DIR}" >> $GITHUB_ENV
         echo "::endgroup::"
         
-        echo "::group::Create output directory"
-        echo OUTPUT_DIR="$(pwd)/$( mktemp --directory --tmpdir='.' )" >> $GITHUB_ENV
+        echo "::group::Create build output directory"
+        echo BUILD_OUTPUT_DIR="$( mktemp --directory --tmpdir='.' )" >> $GITHUB_ENV
+        echo "::endgroup::"
+
+        echo "::group::Extract source package"
+        BUILD_INPUT_DIR=$(realpath "${BUILD_INPUT_DIR}")
+        cd ${{ env.SOURCE_OUTPUT_DIR }}
+        dpkg-source --extract *.dsc "${BUILD_INPUT_DIR}"
+        cd -
         echo "::endgroup::"
     - name: Build package
       uses: jtdor/build-deb-action@v1
       with:
-        artifacts-dir: ${{ env.OUTPUT_DIR }}
-        source-dir: ${{ env.SOURCE_DIR }}
+        artifacts-dir: ${{ env.BUILD_OUTPUT_DIR }}
+        source-dir: ${{ env.BUILD_INPUT_DIR }}
         docker-image: ${{ inputs.docker-image }}
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.PKG_NAME }}_${{ env.PKG_VERSION }}
-        path: ${{ env.OUTPUT_DIR }}/
+        path: ${{ env.BUILD_OUTPUT_DIR }}/
         if-no-files-found: error
