@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
-import 'package:ubuntupro/pages/subscription_status/susbcription_status_page.dart';
+import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 
 void main() {
   group('subscription info', () {
