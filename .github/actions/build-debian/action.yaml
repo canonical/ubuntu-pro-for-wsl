@@ -78,13 +78,13 @@ runs:
           if [ -n "${GITHUB_TOKEN}" ]; then
             git config --system url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
           fi
-    - name: Set up pacakge build
+    - name: Set up package build
       shell: bash
       run: |
         set -eu
 
         echo "::group::Create build input directory"
-        # Appending /source because 'dpkg-source --extract' needs the output directory to be non-existant
+        # Appending /source because 'dpkg-source --extract' needs the output directory to be non-existent
         BUILD_INPUT_DIR="$( mktemp --directory --tmpdir='.' )/source"
         echo BUILD_INPUT_DIR="${BUILD_INPUT_DIR}" >> $GITHUB_ENV
         echo "::endgroup::"
