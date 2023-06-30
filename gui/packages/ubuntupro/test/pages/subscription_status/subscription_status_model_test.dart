@@ -14,17 +14,14 @@ void main() {
     final info = SubscriptionInfo();
     info.productId = 'my prod ID';
 
-    test('unset throws', () async {
-      expect(
-        () {
-          SubscriptionStatusModel(info, client);
-        },
-        throwsUnimplementedError,
-      );
+    test('unset is org', () async {
+      final model = SubscriptionStatusModel(info, client);
+      expect(model.runtimeType, OrgSubscriptionStatusModel);
     });
 
     test('none throws', () async {
       info.ensureNone();
+      info.userManaged = true;
       expect(
         () {
           SubscriptionStatusModel(info, client);
@@ -34,6 +31,7 @@ void main() {
     });
     test('store', () async {
       info.ensureMicrosoftStore();
+      info.userManaged = true;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, StoreSubscriptionStatusModel);
@@ -41,13 +39,14 @@ void main() {
 
     test('manual', () async {
       info.ensureManual();
+      info.userManaged = true;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, ManualSubscriptionStatusModel);
     });
 
     test('organization', () async {
-      info.ensureOrganization();
+      info.userManaged = false;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, OrgSubscriptionStatusModel);

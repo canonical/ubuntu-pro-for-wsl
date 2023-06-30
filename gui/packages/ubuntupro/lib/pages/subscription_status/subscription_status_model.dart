@@ -14,18 +14,20 @@ sealed class SubscriptionStatusModel {
     SubscriptionInfo info,
     AgentApiClient client,
   ) {
-    switch (info.whichSubscriptionType()) {
-      case SubscriptionType.manual:
-        return ManualSubscriptionStatusModel(client);
-      case SubscriptionType.microsoftStore:
-        return StoreSubscriptionStatusModel(info.productId);
-      case SubscriptionType.organization:
-        return OrgSubscriptionStatusModel();
-      default:
-        throw UnimplementedError(
-          'This model should not be invoked if there is no active subscription',
-        );
+    if (info.userManaged) {
+      switch (info.whichSubscriptionType()) {
+        case SubscriptionType.manual:
+          return ManualSubscriptionStatusModel(client);
+        case SubscriptionType.microsoftStore:
+          return StoreSubscriptionStatusModel(info.productId);
+        case SubscriptionType.none:
+        case SubscriptionType.notSet:
+          throw UnimplementedError(
+            'This model should not be invoked if there is no active subscription',
+          );
+      }
     }
+    return OrgSubscriptionStatusModel();
   }
   SubscriptionStatusModel._();
 }
