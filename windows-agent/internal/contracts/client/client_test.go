@@ -230,7 +230,7 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 				addr, closer, err = contractsmockserver.Serve(ctx, args...)
 				require.NoError(t, err, "Setup: Server should return no error")
 
-				defer closer()
+				t.Cleanup(closer)
 			}
 
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
@@ -312,7 +312,7 @@ func TestGetProTokenNet(t *testing.T) {
 				addr, closer, err = contractsmockserver.Serve(ctx, args...)
 				require.NoError(t, err, "Setup: Server should return no error")
 
-				defer closer()
+				t.Cleanup(closer)
 			}
 
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
