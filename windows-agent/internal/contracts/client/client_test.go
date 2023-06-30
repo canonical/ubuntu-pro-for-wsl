@@ -207,7 +207,7 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 
 			addr := "localhost:9" // IANA Discard Protocol.
 			var err error
-			var closer contractsmockserver.Closer
+			var closer func()
 			if !tc.dontServe {
 				var args []contractsmockserver.Option
 
@@ -290,7 +290,7 @@ func TestGetProTokenNet(t *testing.T) {
 
 			addr := "localhost:1"
 			var err error
-			var closer contractsmockserver.Closer
+			var closer func()
 			if !tc.dontServe {
 				var args []contractsmockserver.Option
 
