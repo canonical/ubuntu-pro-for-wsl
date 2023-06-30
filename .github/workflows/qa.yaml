@@ -189,3 +189,19 @@ jobs:
         uses: ./.github/actions/check-diff
         with:
           files-to-validate: '${{ matrix.subproject }}/{.,**}/*.{dart,go}'
+
+  build-debian:
+    name: Build wsl-pro-service debian package
+    runs-on: ubuntu-latest
+    env:
+      source-dir: wsl-pro-service
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Build debian package
+        uses: ./.github/actions/build-debian
+        with:
+          source-dir: ${{ env.source-dir }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          UP4W_SKIP_INTERNAL_DEPENDENCY_UDATE: "1"

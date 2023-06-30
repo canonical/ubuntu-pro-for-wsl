@@ -10,7 +10,7 @@ export DH_GOLANG_INSTALL_ALL=1
 	dh $@ --builddirectory=_build --with=apport
 
 execute_after_dh_auto_clean:
-	[ -d vendor/ ] || ./debian/update-internal-dependencies && go mod vendor
+	[ -d vendor/ ] || ( ./debian/update-internal-dependencies && go mod vendor )
 
 override_dh_auto_install:
 	dh_auto_install -- --no-source
@@ -23,7 +23,7 @@ override_dh_auto_install:
 	mv debian/wsl-pro-service/usr/bin/ debian/wsl-pro-service/usr/libexec/
 
 override_dh_auto_test:
-	cd _build && go test -v -parallel=5 github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/...
+	cd _build && GOWORK=off go test -mod=vendor -parallel=4 github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/...
 
 # dwz does not support golang binaries yet
 override_dh_dwz:
