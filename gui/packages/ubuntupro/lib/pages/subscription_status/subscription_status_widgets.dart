@@ -26,14 +26,13 @@ class SubscriptionStatus extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.check_circle,
-              color: yaruDark.textTheme.bodyLarge!.color,
             ),
             const SizedBox(width: 8.0),
             Text(
               lang.subscriptionIsActive,
-              style: yaruDark.textTheme.bodyLarge!
+              style: DarkStyledLandingPage.textTheme.bodyLarge!
                   .copyWith(fontWeight: FontWeight.w100),
             ),
           ],
@@ -41,7 +40,7 @@ class SubscriptionStatus extends StatelessWidget {
         const SizedBox(height: 16.0),
         Text(
           caption,
-          style: yaruDark.textTheme.bodyMedium!.copyWith(
+          style: DarkStyledLandingPage.textTheme.bodyMedium!.copyWith(
             fontWeight: FontWeight.w100,
             color: YaruColors.warmGrey,
           ),
