@@ -11,7 +11,7 @@ inputs:
     description: "The docker image used to build the package"
   token:
     required: false
-    description: "If provided, used for github login in the source build"
+    description: "If provided, used for git authentication in the source build"
 
 
 # The process:
