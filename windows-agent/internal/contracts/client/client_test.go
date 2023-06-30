@@ -272,11 +272,11 @@ func TestGetProTokenNet(t *testing.T) {
 	}{
 		"Success": {want: contractsmockserver.DefaultProToken},
 
-		"Error due to no server":           {dontServe: true, wantErr: true},
-		"Error due to precanceled context": {preCancel: true, wantErr: true},
-		"Error due to non-200 status code": {withStatus: 418, wantErr: true},
-		"Error due to disabled endpoint":   {disabledEndpoint: true, wantErr: true}, // 404 error.
-		"Error due to response timeout":    {blockedEndpoint: true, wantErr: true},
+		"Error due to no server":               {dontServe: true, wantErr: true},
+		"Error due to precanceled context":     {preCancel: true, wantErr: true},
+		"Error due to non-200 status code":     {withStatus: 418, wantErr: true},
+		"Error due to disabled endpoint (404)": {disabledEndpoint: true, wantErr: true},
+		"Error due to response timeout":        {blockedEndpoint: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
