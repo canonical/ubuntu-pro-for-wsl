@@ -44,9 +44,7 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
         super._();
 
   /// Launches the MS account web page where the user can manage the subscription.
-  Future<void> launchManagementWebPage() async {
-    await launchUrl(uri);
-  }
+  Future<void> launchManagementWebPage() => launchUrl(uri);
 }
 
 /// Represents a subscription in which the user manually provided the Pro token.
