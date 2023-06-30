@@ -52,7 +52,7 @@ func (r *Mock) HKCUCreateKey(path string, access uint32) (newk uintptr, err erro
 		return newk, ErrMock
 	}
 
-	if r.KeyExists && r.KeyIsReadOnly && isWrite(access) {
+	if r.KeyIsReadOnly && isWrite(access) {
 		return 0, ErrAccessDenied
 	}
 
