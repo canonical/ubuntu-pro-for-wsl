@@ -37,8 +37,9 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
   final Uri uri;
 
   StoreSubscriptionStatusModel(String productID)
-      : uri = Uri.parse(
-          'https://account.microsoft.com/services/$productID/details#billing',
+      : uri = Uri.https(
+          'account.microsoft.com',
+          '/services/$productID/details#billing',
         ),
         super._();
 
