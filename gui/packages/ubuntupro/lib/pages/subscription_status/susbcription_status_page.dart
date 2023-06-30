@@ -48,12 +48,10 @@ class SubscriptionStatusPage extends StatelessWidget {
 
   /// Initializes the view-model and inject it in the widget tree so the child page can access it via the BuildContext.
   static Widget create(BuildContext context) {
-    return Provider(
-      create: (context) {
-        final client = getService<AgentApiClient>();
-        final subscriptionInfo = context.read<SubscriptionInfo>();
-        return SubscriptionStatusModel(subscriptionInfo, client);
-      },
+    final client = getService<AgentApiClient>();
+    return ProxyProvider<SubscriptionInfo, SubscriptionStatusModel>(
+      update: (context, subscriptionInfo, _) =>
+          SubscriptionStatusModel(subscriptionInfo, client),
       child: const SubscriptionStatusPage(),
     );
   }
