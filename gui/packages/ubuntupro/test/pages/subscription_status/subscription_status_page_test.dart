@@ -82,7 +82,4 @@ Widget buildApp(SubscriptionInfo info, AgentApiClient client) {
   );
 }
 
-class FakeAgentApiClient implements AgentApiClient {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+class FakeAgentApiClient extends Fake implements AgentApiClient {}
