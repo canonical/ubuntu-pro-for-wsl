@@ -4,7 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 
-import '../../core/agent_api_client.dart';
+import '/core/agent_api_client.dart';
 import 'subscription_status_model.dart';
 import 'subscription_status_widgets.dart';
 

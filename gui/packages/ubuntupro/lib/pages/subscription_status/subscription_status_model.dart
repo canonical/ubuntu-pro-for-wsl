@@ -2,7 +2,7 @@ import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/agent_api_client.dart';
+import '/core/agent_api_client.dart';
 
 /// A type alias for the gRPC message enum which by default has a big name.
 typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
