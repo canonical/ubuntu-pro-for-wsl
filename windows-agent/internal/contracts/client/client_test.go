@@ -288,7 +288,7 @@ func TestGetProTokenNet(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			addr := "localhost:1"
+			addr := "localhost:9" // IANA Discard Protocol.
 			var err error
 			var closer func()
 			if !tc.dontServe {
