@@ -194,18 +194,16 @@ jobs:
         with:
           files-to-validate: '${{ matrix.subproject }}/{.,**}/*.{dart,go}'
 
-  build-debian:
+  build-wsl-pro-service:
     name: Build wsl-pro-service debian package
     runs-on: ubuntu-latest
-    env:
-      source-dir: wsl-pro-service
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Build debian package
         uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
         with:
-          source-dir: ${{ env.source-dir }}
+          source-dir: wsl-pro-service
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
