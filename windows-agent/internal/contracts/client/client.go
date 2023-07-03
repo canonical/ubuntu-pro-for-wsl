@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
 	"github.com/ubuntu/decorate"
 )
 
@@ -32,30 +34,12 @@ func New(base *url.URL, doer httpDoer) *Client {
 	}
 }
 
-const (
-	apiVersion = "/v1"
-
-	// endpoints.
-	tokenPath        = "/token"
-	subscriptionPath = "/subscription"
-
-	// A safe token response size - tests with the real MS APIs suggested that those tokens will stay in between 1.2kB to 1.7kB.
-	// Our Pro Token is much, much smaller.
-	apiTokenMaxSize = 4096
-
-	// JSON keys commonly referred in the Contracts Server backend REST API.
-	//nolint:gosec // G101 false positive, this is not a credential
-	adTokenKey  = "azure_ad_token"
-	jwtKey      = "ms_store_id_key"
-	proTokenKey = "contract_token"
-)
-
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
 func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err error) {
 	defer decorate.OnError(&err, "couldn't download access token from server")
 
 	// baseurl/v1/token.
-	u := c.baseURL.JoinPath(apiVersion, tokenPath)
+	u := c.baseURL.JoinPath(contractsapi.Version, contractsapi.TokenPath)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("could not create a GET request: %v", err)
@@ -73,14 +57,22 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 	}
 
 	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", fmt.Errorf("server replied with an error: Code %d, %v", res.StatusCode, err)
+		}
+		return "", fmt.Errorf("server replied with an error: Code %d, %s", res.StatusCode, body)
+	}
+
 	var data map[string]string
 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	val, ok := data[adTokenKey]
+	val, ok := data[contractsapi.ADTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", adTokenKey)
+		return "", fmt.Errorf("expected key %q not found in the response", contractsapi.ADTokenKey)
 	}
 
 	return val, nil
@@ -95,8 +87,8 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	}
 
 	// baseurl/v1/subscription.
-	u := c.baseURL.JoinPath(apiVersion, subscriptionPath)
-	jsonData, err := json.Marshal(map[string]string{jwtKey: userJWT})
+	u := c.baseURL.JoinPath(contractsapi.Version, contractsapi.SubscriptionPath)
+	jsonData, err := json.Marshal(map[string]string{contractsapi.JWTKey: userJWT})
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +114,11 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	case 500:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
 	default:
-		return "", fmt.Errorf("unknown error from the contracts server response. Code=%d. Body=%s", res.StatusCode, res.Body)
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", fmt.Errorf("unknown error from the contracts server: Code %d, %v", res.StatusCode, err)
+		}
+		return "", fmt.Errorf("unknown error from the contracts server: Code %d, %s", res.StatusCode, body)
 	case 200:
 	}
 
@@ -131,9 +127,9 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 		return "", err
 	}
 
-	val, ok := data[proTokenKey]
+	val, ok := data[contractsapi.ProTokenKey]
 	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", proTokenKey)
+		return "", fmt.Errorf("expected key %q not found in the response", contractsapi.ProTokenKey)
 	}
 
 	return val, nil
@@ -149,8 +145,8 @@ func checkLength(length int64) error {
 		return errors.New("empty")
 	}
 
-	if length > apiTokenMaxSize {
-		return fmt.Errorf("too big: %d bytes, limit is %d", length, apiTokenMaxSize)
+	if length > contractsapi.TokenMaxSize {
+		return fmt.Errorf("too big: %d bytes, limit is %d", length, contractsapi.TokenMaxSize)
 	}
 
 	return nil
