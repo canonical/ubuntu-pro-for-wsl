@@ -65,6 +65,9 @@ class Pro4WindowsPage extends StatelessWidget {
 class DarkStyledLandingPage extends StatelessWidget {
   const DarkStyledLandingPage({super.key, required this.children});
   final List<Widget> children;
+  // TODO: Remove those getters once we have a background image suitable for the light mode theme.
+  static ThemeData get _data => yaruDark;
+  static TextTheme get textTheme => _data.textTheme;
 
   @override
   Widget build(BuildContext context) {
@@ -79,18 +82,21 @@ class DarkStyledLandingPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(48.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Opacity(
-                  opacity: 0.7, // mimics the SVG in the u.c/pro website.
-                  child: Text(
-                    'Ubuntu Pro',
-                    style: yaruDark.textTheme.displayMedium,
+            child: Theme(
+              data: _data,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Opacity(
+                    opacity: 0.7, // mimics the SVG in the u.c/pro website.
+                    child: Text(
+                      'Ubuntu Pro',
+                      style: _data.textTheme.displayMedium,
+                    ),
                   ),
-                ),
-                ...children,
-              ],
+                  ...children,
+                ],
+              ),
             ),
           )
         ],

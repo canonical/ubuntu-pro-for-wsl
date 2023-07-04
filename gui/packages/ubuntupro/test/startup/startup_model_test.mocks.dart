@@ -56,7 +56,7 @@ class MockAgentStartupMonitor extends _i1.Mock
   @override
   _i3.AgentApiCallback get onClient => (super.noSuchMethod(
         Invocation.getter(#onClient),
-        returnValue: (_i2.AgentApiClient __p0) {},
+        returnValue: (_i2.AgentApiClient __p0) => null,
       ) as _i3.AgentApiCallback);
   @override
   _i4.Stream<_i3.AgentState> start({

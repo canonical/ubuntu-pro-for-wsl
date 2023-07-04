@@ -3,11 +3,12 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i5;
 
+import 'package:agentapi/agentapi.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/pages/startup/agent_monitor.dart' as _i3;
+import 'package:ubuntupro/pages/startup/agent_monitor.dart' as _i4;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -31,35 +32,46 @@ class _FakeAgentApiClient_0 extends _i1.SmartFake
         );
 }
 
+class _FakeSubscriptionInfo_1 extends _i1.SmartFake
+    implements _i3.SubscriptionInfo {
+  _FakeSubscriptionInfo_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [AgentStartupMonitor].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAgentStartupMonitor extends _i1.Mock
-    implements _i3.AgentStartupMonitor {
+    implements _i4.AgentStartupMonitor {
   MockAgentStartupMonitor() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.AgentLauncher get agentLauncher => (super.noSuchMethod(
+  _i4.AgentLauncher get agentLauncher => (super.noSuchMethod(
         Invocation.getter(#agentLauncher),
-        returnValue: () => _i4.Future<bool>.value(false),
-      ) as _i3.AgentLauncher);
+        returnValue: () => _i5.Future<bool>.value(false),
+      ) as _i4.AgentLauncher);
   @override
-  _i3.ApiClientFactory get clientFactory => (super.noSuchMethod(
+  _i4.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
         returnValue: (int port) => _FakeAgentApiClient_0(
           this,
           Invocation.getter(#clientFactory),
         ),
-      ) as _i3.ApiClientFactory);
+      ) as _i4.ApiClientFactory);
   @override
-  _i3.AgentApiCallback get onClient => (super.noSuchMethod(
+  _i4.AgentApiCallback get onClient => (super.noSuchMethod(
         Invocation.getter(#onClient),
-        returnValue: (_i2.AgentApiClient __p0) {},
-      ) as _i3.AgentApiCallback);
+        returnValue: (_i2.AgentApiClient __p0) => null,
+      ) as _i4.AgentApiCallback);
   @override
-  _i4.Stream<_i3.AgentState> start({
+  _i5.Stream<_i4.AgentState> start({
     Duration? interval = const Duration(seconds: 1),
     Duration? timeout = const Duration(seconds: 30),
   }) =>
@@ -72,17 +84,17 @@ class MockAgentStartupMonitor extends _i1.Mock
             #timeout: timeout,
           },
         ),
-        returnValue: _i4.Stream<_i3.AgentState>.empty(),
-      ) as _i4.Stream<_i3.AgentState>);
+        returnValue: _i5.Stream<_i4.AgentState>.empty(),
+      ) as _i5.Stream<_i4.AgentState>);
   @override
-  _i4.Future<void> reset() => (super.noSuchMethod(
+  _i5.Future<void> reset() => (super.noSuchMethod(
         Invocation.method(
           #reset,
           [],
         ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 }
 
 /// A class which mocks [AgentApiClient].
@@ -94,20 +106,35 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
   }
 
   @override
-  _i4.Future<void> applyProToken(String? token) => (super.noSuchMethod(
+  _i5.Future<void> applyProToken(String? token) => (super.noSuchMethod(
         Invocation.method(
           #applyProToken,
           [token],
         ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
   @override
-  _i4.Future<bool> ping() => (super.noSuchMethod(
+  _i5.Future<bool> ping() => (super.noSuchMethod(
         Invocation.method(
           #ping,
           [],
         ),
-        returnValue: _i4.Future<bool>.value(false),
-      ) as _i4.Future<bool>);
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+  @override
+  _i5.Future<_i3.SubscriptionInfo> subscriptionInfo() => (super.noSuchMethod(
+        Invocation.method(
+          #subscriptionInfo,
+          [],
+        ),
+        returnValue:
+            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+          this,
+          Invocation.method(
+            #subscriptionInfo,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i3.SubscriptionInfo>);
 }
