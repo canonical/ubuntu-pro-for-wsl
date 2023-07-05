@@ -2,10 +2,13 @@ package landscape
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os/user"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )
@@ -110,12 +113,58 @@ func (c *Client) cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) (e
 	return d.ReleaseAwake()
 }
 
-func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install) error {
+func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install) (err error) {
 	if cmd.Cloudinit != nil && *cmd.Cloudinit != "" {
 		return fmt.Errorf("Cloud Init support is not yet available")
 	}
 
-	return gowsl.Install(ctx, cmd.Id)
+	distro := gowsl.NewDistro(ctx, cmd.GetId())
+	if registered, err := distro.IsRegistered(); err != nil {
+		return err
+	} else if registered {
+		return errors.New("already installed")
+	}
+
+	if err := gowsl.Install(ctx, distro.Name()); err != nil {
+		return err
+	}
+
+	defer func() {
+		if err == nil {
+			return
+		}
+		// Avoid error states by cleaning up on error
+		err := distro.Uninstall(ctx)
+		if err != nil {
+			log.Debugf(ctx, "Landscape Install: failed to clean up %q after failed Install: %v", distro.Name(), err)
+		}
+	}()
+
+	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
+		return err
+	}
+
+	windowsUser, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	const userID = 1000
+
+	userName := windowsUser.Username
+	if !distroinstall.UsernameIsValid(userName) {
+		userName = "ubuntu"
+	}
+
+	if err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name, userID); err != nil {
+		return err
+	}
+
+	if err := distro.DefaultUID(userID); err != nil {
+		return fmt.Errorf("could not set user as default: %v", err)
+	}
+
+	return nil
 }
 
 func (c *Client) cmdUninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
