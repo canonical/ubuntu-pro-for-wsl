@@ -39,7 +39,7 @@ func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullNa
 		return fmt.Errorf("Username %q is is not valid", userName)
 	}
 
-	// strip all punctuation or any math symbols, currency signs, dingbats, box-drawing characters, etc
+	// strip any punctuation or any math symbols, currency signs, dingbats, box-drawing characters, etc
 	userFullName = regexp.MustCompile(`[\p{P}\p{S}]+`).ReplaceAllString(userFullName, "")
 
 	out, err := addUserCommand(ctx, d, uid, userName, userFullName)
