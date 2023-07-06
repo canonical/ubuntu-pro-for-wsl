@@ -2,6 +2,7 @@ package ui_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -94,6 +95,85 @@ func TestAttachPro(t *testing.T) {
 			token, err := conf.ProToken(ctx)
 			require.NoError(t, err, "conf.ProToken should return no error")
 			require.Equal(t, tc.token, token, "mismatch between submitted and retrieved tokens")
+		})
+	}
+}
+
+func TestGetSubscriptionInfo(t *testing.T) {
+	t.Parallel()
+
+	const (
+		none   = "*agentapi.SubscriptionInfo_None"
+		manual = "*agentapi.SubscriptionInfo_Manual"
+		store  = "*agentapi.SubscriptionInfo_MicrosoftStore"
+	)
+
+	testCases := map[string]struct {
+		registryReadOnly bool
+		source           config.SubscriptionSource
+
+		isReadOnlyErr   bool // Config errors out in IsReadOnly function
+		subscriptionErr bool // Config errors out in Subscription function
+
+		wantType        string
+		wantUserManaged bool
+		wantErr         bool
+	}{
+		"Success with a user-managed non-subscription": {source: config.SubscriptionNone, wantType: none, wantUserManaged: true},
+		"Success with a org-managed non-subscription":  {source: config.SubscriptionNone, registryReadOnly: true, wantType: none},
+
+		"Success with a user-managed manual subscription": {source: config.SubscriptionUser, wantType: manual, wantUserManaged: true},
+		"Success with a org-managed manual subscription":  {source: config.SubscriptionUser, registryReadOnly: true, wantType: manual},
+
+		"Success with a user-managed store subscription": {source: config.SubscriptionMicrosoftStore, wantType: store, wantUserManaged: true},
+		"Success with a org-managed store subscription":  {source: config.SubscriptionMicrosoftStore, registryReadOnly: true, wantType: store},
+
+		"Error when the user/org management cannot be determined": {isReadOnlyErr: true, wantErr: true},
+		"Error when the subscription cannot be retreived":         {subscriptionErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			dir := t.TempDir()
+			db, err := database.New(ctx, dir, nil)
+			require.NoError(t, err, "Setup: empty database New() should return no error")
+			defer db.Close(ctx)
+
+			m := registry.NewMock()
+			m.KeyExists = true
+
+			conf := config.New(ctx, config.WithRegistry(m))
+			if tc.source != config.SubscriptionNone {
+				err := conf.SetSubscription(ctx, "example_token", tc.source)
+				require.NoError(t, err, "Setup: SetSubscription should return no error")
+			}
+
+			if tc.registryReadOnly {
+				m.KeyIsReadOnly = true
+			}
+
+			if tc.isReadOnlyErr {
+				m.Errors = registry.MockErrOnCreateKey
+			}
+			if tc.subscriptionErr {
+				m.Errors |= registry.MockErrReadValue
+			}
+
+			service := ui.New(context.Background(), conf, db)
+
+			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
+			if tc.wantErr {
+				require.Error(t, err, "GetSubscriptionInfo should return an error")
+				return
+			}
+			require.NoError(t, err, "GetSubscriptionInfo should return no errors")
+
+			require.Equal(t, tc.wantType, fmt.Sprintf("%T", info.SubscriptionType), "Mismatched subscription types")
+			require.Equal(t, tc.wantUserManaged, info.UserManaged, "Mismatched value for UserManaged")
 		})
 	}
 }
