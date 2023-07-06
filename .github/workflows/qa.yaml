@@ -199,7 +199,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Build debian package
-        uses: ./.github/actions/build-debian
+        uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
         with:
           source-dir: ${{ env.source-dir }}
           token: ${{ secrets.GITHUB_TOKEN }}
