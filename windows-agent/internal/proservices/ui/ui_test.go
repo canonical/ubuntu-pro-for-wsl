@@ -92,7 +92,7 @@ func TestAttachPro(t *testing.T) {
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 
 			// Could it be nice to retrieve the distro's pending tasks?
-			token, err := conf.ProToken(ctx)
+			token, _, err := conf.Subscription(ctx)
 			require.NoError(t, err, "conf.ProToken should return no error")
 			require.Equal(t, tc.token, token, "mismatch between submitted and retrieved tokens")
 		})

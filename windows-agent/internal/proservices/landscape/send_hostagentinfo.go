@@ -35,7 +35,7 @@ func (c *Client) SendUpdatedInfo(ctx context.Context) (err error) {
 
 // newHostAgentInfo assembles a HostAgentInfo message.
 func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostAgentInfo, err error) {
-	token, err := c.conf.ProToken(ctx)
+	token, _, err := c.conf.Subscription(ctx)
 	if err != nil {
 		return info, err
 	}

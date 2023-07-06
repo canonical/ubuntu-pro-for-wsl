@@ -116,17 +116,6 @@ func New(ctx context.Context, args ...Option) (m *Config) {
 	return m
 }
 
-// ProToken returns the Pro Token associated to the current subscription.
-// If there is no active subscription, an empty string is returned.
-func (c *Config) ProToken(ctx context.Context) (string, error) {
-	token, _, err := c.Subscription(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
 // Subscription returns the ProToken and the method it was acquired with (if any).
 func (c *Config) Subscription(ctx context.Context) (token string, source SubscriptionSource, err error) {
 	c.mu.Lock()
@@ -169,7 +158,7 @@ func (c *Config) IsReadOnly() (b bool, err error) {
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
 func (c *Config) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
-	token, err := c.ProToken(ctx)
+	token, _, err := c.Subscription(ctx)
 	if err != nil {
 		return nil, err
 	}

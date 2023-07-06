@@ -30,59 +30,6 @@ const (
 	landscapeURLHasValue = landscapeURLExists | 1<<19 // Key exists, landscape URL token field exists and is not empty
 )
 
-//nolint:dupl // This test and TestSubscription are almost identical because ProToken is essentially a wrapper around Subscription
-func TestProToken(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		mockErrors    uint32
-		registryState registryState
-
-		wantToken  string
-		wantSource config.SubscriptionSource
-		wantError  bool
-	}{
-		"Success":                                               {registryState: userTokenHasValue, wantToken: "user_token", wantSource: config.SubscriptionUser},
-		"Success when the key does not exist":                   {registryState: untouched},
-		"Success when the key exists but is empty":              {registryState: keyExists},
-		"Success when the key exists but contains empty fields": {registryState: orgTokenExists | userTokenExists | storeTokenExists},
-
-		"Success when there is an organization token": {registryState: orgTokenHasValue, wantToken: "org_token", wantSource: config.SubscriptionOrganization},
-		"Success when there is a user token":          {registryState: userTokenHasValue, wantToken: "user_token", wantSource: config.SubscriptionUser},
-		"Success when there is a store token":         {registryState: storeTokenHasValue, wantToken: "store_token", wantSource: config.SubscriptionMicrosoftStore},
-
-		"Success when there are organization and user tokens":                           {registryState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SubscriptionUser},
-		"Success when there are organization and store tokens":                          {registryState: orgTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SubscriptionMicrosoftStore},
-		"Success when there are organization and user tokens, and an empty store token": {registryState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SubscriptionUser},
-
-		"Error when the registry key cannot be opened":    {registryState: userTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: userTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			ctx := context.Background()
-
-			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
-			conf := config.New(ctx, config.WithRegistry(r))
-
-			token, err := conf.ProToken(ctx)
-			if tc.wantError {
-				require.Error(t, err, "ProToken should return an error")
-				return
-			}
-			require.NoError(t, err, "ProToken should return no error")
-
-			// Test values
-			require.Equal(t, tc.wantToken, token, "Unexpected token value")
-			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
-		})
-	}
-}
-
-//nolint:dupl // This test and TestProToken are almost identical because ProToken is essentially a wrapper around Subscription
 func TestSubscription(t *testing.T) {
 	t.Parallel()
 
@@ -274,7 +221,7 @@ func TestSetSubscription(t *testing.T) {
 
 			// Disable errors so we can retrieve the token
 			r.Errors = 0
-			token, err := conf.ProToken(ctx)
+			token, _, err := conf.Subscription(ctx)
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, token, "ProToken returned an unexpected value for the token")
@@ -366,7 +313,7 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 
 			// Disable errors so we can retrieve the token
 			r.Errors = 0
-			token, err := c.ProToken(ctx)
+			token, _, err := c.Subscription(ctx)
 			require.NoError(t, err, "ProToken should return no error")
 			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
 		})

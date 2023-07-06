@@ -13,6 +13,7 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
@@ -721,11 +722,11 @@ func (m mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) 
 	return nil, nil
 }
 
-func (m mockConfig) ProToken(ctx context.Context) (string, error) {
+func (m mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
 	if m.proTokenErr {
-		return "", errors.New("Mock error")
+		return "", 0, errors.New("Mock error")
 	}
-	return m.proToken, nil
+	return m.proToken, config.SubscriptionUser, nil
 }
 
 func (m mockConfig) LandscapeURL(ctx context.Context) (string, error) {
