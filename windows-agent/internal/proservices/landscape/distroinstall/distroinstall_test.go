@@ -16,26 +16,28 @@ import (
 func TestUsernameIsValid(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]bool{
-		"edu":      true,
-		"onetwo12": true,
+	testCases := map[string]struct {
+		username string
+		want     bool
+	}{
+		"Accept only letters":               {username: "edu", want: true},
+		"Accept numbers":                    {username: "onetwo12", want: true},
+		"Accept allowed special characters": {username: "johndoe_", want: true},
 
-		"outer space":         false,
-		"_xXProGamerXx_":      false,
-		"testcase@ubuntu.com": false,
-		"15€":                 false,
-		"💩emoji":              false,
+		"Reject spaces":                   {username: "outer space", want: false},
+		"Reject initial non-letter":       {username: "_xXProGamerXx_", want: false},
+		"Reject special characters":       {username: "testcase@ubuntu.com", want: false},
+		"Reject other special characters": {username: "15€", want: false},
+		"Reject emojis":                   {username: "💩", want: false},
 	}
 
-	for username, want := range testCases {
-		username := username
-		want := want
-
-		t.Run(fmt.Sprintf("test username %q", username), func(t *testing.T) {
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := distroinstall.UsernameIsValid(username)
-			require.Equal(t, want, got, "Unexpected value for UsernameIsValid")
+			got := distroinstall.UsernameIsValid(tc.username)
+			require.Equal(t, tc.want, got, "Unexpected value for UsernameIsValid")
 		})
 	}
 }
