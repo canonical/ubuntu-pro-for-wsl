@@ -14,7 +14,7 @@ const (
 	userCauseError = "mockerror"
 )
 
-// InstallFromExecutable finds the executable associated with the specified distro and installs it.
+// executableInstallCommand mocks running the command '$executable install --root --ui=none'
 func executableInstallCommand(ctx context.Context, executable string) ([]byte, error) {
 	if executable != "ubuntu2204.exe" {
 		return []byte("mock supports only ubuntu2204.exe"), fmt.Errorf("exit status 1")
