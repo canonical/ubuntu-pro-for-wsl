@@ -148,6 +148,8 @@ func TestInstallFromExecutable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
+				t.Parallel()
+
 				m := wslmock.New()
 				m.WslRegisterDistributionError = tc.mockErr
 				defer m.ResetErrors()
