@@ -42,8 +42,7 @@ func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullNa
 	// strip any punctuation or any math symbols, currency signs, dingbats, box-drawing characters, etc
 	userFullName = regexp.MustCompile(`[\p{P}\p{S}]+`).ReplaceAllString(userFullName, "")
 
-	out, err := addUserCommand(ctx, d, uid, userName, userFullName)
-	if err != nil {
+	if out, err := addUserCommand(ctx, d, uid, userName, userFullName); err != nil {
 		return fmt.Errorf("could not run 'adduser': %v. Output: %s", err, out)
 	}
 
