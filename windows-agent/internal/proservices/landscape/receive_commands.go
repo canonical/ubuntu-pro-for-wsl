@@ -136,7 +136,7 @@ func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install
 		// Avoid error states by cleaning up on error
 		err := distro.Uninstall(ctx)
 		if err != nil {
-			log.Debugf(ctx, "Landscape Install: failed to clean up %q after failed Install: %v", distro.Name(), err)
+			log.Infof(ctx, "Landscape Install: failed to clean up %q after failed Install: %v", distro.Name(), err)
 		}
 	}()
 
