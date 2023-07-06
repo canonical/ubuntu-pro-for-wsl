@@ -60,17 +60,15 @@ func executableName(distroName string) (string, error) {
 	executable = fmt.Sprintf("%s.exe", executable)
 
 	// Validate executable name to protect ourselves from code injection
-
-	if executable == "ubuntu.exe" {
+	switch executable {
+	case "ubuntu.exe":
 		return executable, nil
-	}
-
-	if executable == "ubuntu-preview.exe" {
+	case "ubuntu-preview.exe":
 		return executable, nil
-	}
-
-	if regexp.MustCompile(`^ubuntu\d\d\d\d\.exe$`).MatchString(executable) {
-		return executable, nil
+	default:
+		if regexp.MustCompile(`^ubuntu\d\d\d\d\.exe$`).MatchString(executable) {
+			return executable, nil
+		}
 	}
 
 	return "", fmt.Errorf("executable name does not match expected pattern")
