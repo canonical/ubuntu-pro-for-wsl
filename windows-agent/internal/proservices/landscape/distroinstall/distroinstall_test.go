@@ -3,7 +3,9 @@ package distroinstall_test
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
@@ -47,23 +49,39 @@ func TestCreateUser(t *testing.T) {
 		t.Parallel()
 	}
 
+	type mockErr int
+	const (
+		mockErrNone mockErr = iota
+		isRegisteredMockErr
+		addUserMockErr
+		addUserToGroupsMockErr
+		removePasswordMockErr
+		getUserIDMockErr
+		getUserIDMockBadOutput
+	)
+
 	testCases := map[string]struct {
 		invalidUserName        bool
 		invalidFullName        bool
 		skipDistroRegistration bool
 
-		addUserMockErr      bool
-		isRegisteredMockErr bool
+		mockErr mockErr
 
 		wantErr bool
 	}{
 		"Success": {},
 		"Success when the user's full name is not valid": {invalidFullName: true},
 
-		"Error when the distro is not registered":      {skipDistroRegistration: true, wantErr: true},
-		"Error when the distro registered check fails": {isRegisteredMockErr: true, wantErr: true},
-		"Error when the username is not valid":         {invalidUserName: true, wantErr: true},
-		"Error when useradd returns an error":          {addUserMockErr: true, wantErr: true},
+		"Error when the distro is not registered": {skipDistroRegistration: true, wantErr: true},
+		"Error when the username is not valid":    {invalidUserName: true, wantErr: true},
+
+		// Mock errors
+		"Error when the distro registered check fails":       {mockErr: isRegisteredMockErr, wantErr: true},
+		"Error when adduser returns an error":                {mockErr: addUserMockErr, wantErr: true},
+		"Error when usermod returns an error":                {mockErr: addUserToGroupsMockErr, wantErr: true},
+		"Error when passwd returns an error":                 {mockErr: removePasswordMockErr, wantErr: true},
+		"Error when getUserID returns an error":              {mockErr: getUserIDMockErr, wantErr: true},
+		"Error when getUserID returns a non-numerical value": {mockErr: getUserIDMockBadOutput, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -77,11 +95,11 @@ func TestCreateUser(t *testing.T) {
 				m := wslmock.New()
 				//nolint:nolintlint // False positive only when mock is disabled
 				applyMock = func() { //nolint:staticcheck
-					m.OpenLxssKeyError = tc.isRegisteredMockErr
+					m.OpenLxssKeyError = (tc.mockErr == isRegisteredMockErr)
 				}
 				defer m.ResetErrors()
 				ctx = wsl.WithMock(ctx, m)
-			} else if tc.addUserMockErr || tc.isRegisteredMockErr {
+			} else if tc.mockErr != mockErrNone {
 				t.Skip("This test is only available when the gowslmock is enabled")
 			}
 
@@ -97,8 +115,18 @@ func TestCreateUser(t *testing.T) {
 			if tc.invalidUserName {
 				username = "johndoe && echo 'code injection is fun!' && exit 5"
 			}
-			if tc.addUserMockErr {
-				username = "mockerror"
+
+			switch tc.mockErr {
+			case addUserMockErr:
+				username = "add_user_command_error"
+			case addUserToGroupsMockErr:
+				username = "add_user_to_groups_command_error"
+			case removePasswordMockErr:
+				username = "remove_password_command_error"
+			case getUserIDMockErr:
+				username = "get_user_id_command_error"
+			case getUserIDMockBadOutput:
+				username = "get_user_id_command_bad_output"
 			}
 
 			userFullName := "John Doe"
@@ -108,19 +136,31 @@ func TestCreateUser(t *testing.T) {
 
 			applyMock()
 
-			err := distroinstall.CreateUser(ctx, d, username, userFullName, 1000)
+			_, err := distroinstall.CreateUser(ctx, d, username, userFullName)
 			if tc.wantErr {
 				require.Error(t, err, "CreateUser should return an error")
 				return
 			}
 			require.NoError(t, err, "CreateUser should return no error")
 
+			_, err = distroinstall.CreateUser(ctx, d, username, userFullName)
+			require.Error(t, err, "CreateUser should return error when the user already exists")
+
 			if wsl.MockAvailable() {
 				return
 			}
 
-			err = d.Command(ctx, fmt.Sprintf(`test -d "/home/%s"`, username)).Run()
-			require.NoError(t, err, "home directory for newly created user should exist")
+			userID, err := d.Command(ctx, fmt.Sprintf(`id %q`, username)).Output()
+			require.NoError(t, err, "user should have been created")
+
+			require.Containsf(t, string(userID), "sudo", "user should be in the sudoers group")
+
+			ctx, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+
+			//nolint:gosec // Both distroName and userName are validared in CreateUser
+			_, err = exec.CommandContext(ctx, "wsl", "-d", distroName, "-u", username, "--", "sudo", "echo", "hello").Output()
+			require.NoError(t, err, "user should be able to login without a password")
 		})
 	}
 }

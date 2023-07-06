@@ -4,15 +4,26 @@ package distroinstall
 
 import (
 	"context"
-	"fmt"
-	"regexp"
+
+	wsl "github.com/ubuntu/gowsl"
 )
 
-// InstallFromExecutable finds the executable associated with the specified distro and installs it.
-func InstallFromExecutable(ctx context.Context, distroName string) error {
-	panic("InstallFromExecutable: this function can only be run on Windows")
+func executableInstallCommand(ctx context.Context, executable string) (out []byte, err error) {
+	panic("executableInstallCommand: this function can only be run on Windows")
 }
 
-func addUserCommand(ctx context.Context, distro gowsl.Distro, uid uint32, userName, userFullName string) (out []byte, err error) {
+func addUserCommand(ctx context.Context, distro wsl.Distro, userName, userFullName string) (out []byte, err error) {
 	panic("addUserCommand: this function can only be run on Windows")
+}
+
+func addUserToGroupsCommand(ctx context.Context, distro wsl.Distro, userName string) ([]byte, error) {
+	panic("addUserToGroupsCommand: this function can only be run on Windows")
+}
+
+func removePasswordCommand(ctx context.Context, distro wsl.Distro, userName string) ([]byte, error) {
+	panic("removePasswordCommand: this function can only be run on Windows")
+}
+
+func getUserIDCommand(ctx context.Context, distro wsl.Distro, userName string) ([]byte, error) {
+	panic("getUserIdCommand: this function can only be run on Windows")
 }

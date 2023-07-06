@@ -149,18 +149,17 @@ func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install
 		return err
 	}
 
-	const userID = 1000
-
 	userName := windowsUser.Username
 	if !distroinstall.UsernameIsValid(userName) {
 		userName = "ubuntu"
 	}
 
-	if err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name, userID); err != nil {
+	uid, err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name)
+	if err != nil {
 		return err
 	}
 
-	if err := distro.DefaultUID(userID); err != nil {
+	if err := distro.DefaultUID(uid); err != nil {
 		return fmt.Errorf("could not set user as default: %v", err)
 	}
 

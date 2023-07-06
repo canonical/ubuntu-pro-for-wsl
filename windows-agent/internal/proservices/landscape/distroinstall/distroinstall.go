@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )
 
@@ -28,25 +30,45 @@ func InstallFromExecutable(ctx context.Context, d gowsl.Distro) error {
 }
 
 // CreateUser creates a new user with the specified details in the target distro.
-func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullName string, uid uint32) error {
+func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullName string) (uid uint32, err error) {
+	defer decorate.OnError(&err, "could not create user %q", userName)
+
 	if r, err := d.IsRegistered(); err != nil {
-		return err
+		return 0, err
 	} else if !r {
-		return errors.New("not registered")
+		return 0, errors.New("not registered")
 	}
 
 	if valid := UsernameIsValid(userName); !valid {
-		return fmt.Errorf("Username %q is is not valid", userName)
+		return 0, errors.New("username is is not valid")
 	}
 
 	// strip any punctuation or any math symbols, currency signs, dingbats, box-drawing characters, etc
 	userFullName = regexp.MustCompile(`[\p{P}\p{S}]+`).ReplaceAllString(userFullName, "")
 
-	if out, err := addUserCommand(ctx, d, uid, userName, userFullName); err != nil {
-		return fmt.Errorf("could not run 'adduser': %v. Output: %s", err, out)
+	if out, err := addUserCommand(ctx, d, userName, userFullName); err != nil {
+		return 0, fmt.Errorf("could not run 'adduser': %v. Output: %s", err, out)
 	}
 
-	return nil
+	if out, err := addUserToGroupsCommand(ctx, d, userName); err != nil {
+		return 0, fmt.Errorf("could not add user to proper groups: %v. Output: %s", err, out)
+	}
+
+	if out, err := removePasswordCommand(ctx, d, userName); err != nil {
+		return 0, fmt.Errorf("could not enable login: %v. Output: %s", err, out)
+	}
+
+	out, err := getUserIDCommand(ctx, d, userName)
+	if err != nil {
+		return 0, fmt.Errorf("user id could not be retreived: %v. Output: %s", err, out)
+	}
+
+	id64, err := strconv.ParseUint(strings.TrimSpace(string(out)), 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse uid %q: %v", string(out), err)
+	}
+
+	return uint32(id64), nil
 }
 
 func executableName(distroName string) (string, error) {
