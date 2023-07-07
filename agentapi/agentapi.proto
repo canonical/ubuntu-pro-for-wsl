@@ -22,8 +22,9 @@ message SubscriptionInfo {
     
     oneof subscriptionType {
         Empty none = 3;             // There is no active subscription.
-        Empty manual = 4;           // The subscription is managed with a pro token from the GUI or the registry.
-        Empty microsoftStore = 5;   // The subscription is managed via the Microsoft store.
+        Empty user = 4;             // The subscription is managed by the user with a pro token from the GUI or the registry.
+        Empty organization = 5;     // The subscription is managed by the sysadmin with a pro token from the registry.
+        Empty microsoftStore = 6;   // The subscription is managed via the Microsoft store.
     };
 }
 
