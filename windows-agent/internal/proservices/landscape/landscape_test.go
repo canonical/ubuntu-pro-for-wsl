@@ -724,7 +724,7 @@ func (m mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) 
 
 func (m mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
 	if m.proTokenErr {
-		return "", 0, errors.New("Mock error")
+		return "", config.SubscriptionNone, errors.New("Mock error")
 	}
 	return m.proToken, config.SubscriptionUser, nil
 }
