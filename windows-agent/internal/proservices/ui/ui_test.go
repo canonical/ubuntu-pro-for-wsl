@@ -75,26 +75,31 @@ func TestAttachPro(t *testing.T) {
 				defer d.Cleanup(ctx)
 			}
 
+			const originalToken = "old_token"
+
 			m := registry.NewMock()
 			m.KeyIsReadOnly = tc.registryReadOnly
 			m.KeyExists = true
-			m.UbuntuProData["ProToken"] = "OLD_TOKEN"
+			m.UbuntuProData["ProTokenUser"] = originalToken
 
 			conf := config.New(ctx, config.WithRegistry(m))
 			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}
 			_, err = serv.ApplyProToken(context.Background(), &info)
+
+			var wantToken string
 			if tc.wantErr {
 				require.Error(t, err, "Unexpected success in ApplyProToken")
-				return
+				wantToken = originalToken
+			} else {
+				require.NoError(t, err, "Adding the task to existing distros should succeed.")
+				wantToken = tc.token
 			}
-			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 
-			// Could it be nice to retrieve the distro's pending tasks?
 			token, _, err := conf.Subscription(ctx)
 			require.NoError(t, err, "conf.ProToken should return no error")
-			require.Equal(t, tc.token, token, "mismatch between submitted and retrieved tokens")
+			require.Equal(t, wantToken, token, "unexpected active token")
 		})
 	}
 }
