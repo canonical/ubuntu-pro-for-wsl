@@ -14,10 +14,12 @@ sealed class SubscriptionStatusModel {
     SubscriptionInfo info,
     AgentApiClient client,
   ) {
-    if (info.userManaged) {
+    if (!info.immutable) {
       switch (info.whichSubscriptionType()) {
-        case SubscriptionType.manual:
-          return ManualSubscriptionStatusModel(client);
+        case SubscriptionType.organization:
+          return OrgSubscriptionStatusModel();
+        case SubscriptionType.user:
+          return UserSubscriptionStatusModel(client);
         case SubscriptionType.microsoftStore:
           return StoreSubscriptionStatusModel(info.productId);
         case SubscriptionType.none:
@@ -51,8 +53,8 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
 
 /// Represents a subscription in which the user manually provided the Pro token.
 /// The only action supported is Pro-detaching all instances.
-class ManualSubscriptionStatusModel extends SubscriptionStatusModel {
-  ManualSubscriptionStatusModel(this._client) : super._();
+class UserSubscriptionStatusModel extends SubscriptionStatusModel {
+  UserSubscriptionStatusModel(this._client) : super._();
 
   final AgentApiClient _client;
 

@@ -30,7 +30,7 @@ class SubscriptionStatusPage extends StatelessWidget {
             child: Text(lang.manageSubscription),
           ),
         ),
-      ManualSubscriptionStatusModel() => SubscriptionStatus(
+      UserSubscriptionStatusModel() => SubscriptionStatus(
           caption: lang.manuallyManaged,
           actionButton: FilledButton(
             style: FilledButton.styleFrom(
