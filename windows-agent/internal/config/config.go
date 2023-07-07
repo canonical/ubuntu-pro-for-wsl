@@ -130,7 +130,6 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Subscri
 		if !ok {
 			continue
 		}
-
 		if token == "" {
 			continue
 		}
