@@ -219,7 +219,7 @@ func (c *Config) load(ctx context.Context) (err error) {
 func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSource]string, data configData, err error) {
 	defer decorate.OnError(&err, "could not load from registry")
 
-	proTokens = map[SubscriptionSource]string{}
+	proTokens = make(map[SubscriptionSource]string)
 
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
