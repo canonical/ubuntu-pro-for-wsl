@@ -65,7 +65,7 @@ const (
 	// SubscriptionNone -> no subscription.
 	SubscriptionNone SubscriptionSource = iota
 
-	// SubscriptionManual -> the subscription was obtained by introducing a pro token
+	// SubscriptionOrganization -> the subscription was obtained by introducing a pro token
 	// via the registry by the sys admin.
 	SubscriptionOrganization
 
