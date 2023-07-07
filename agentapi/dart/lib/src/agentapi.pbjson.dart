@@ -39,10 +39,11 @@ const SubscriptionInfo$json = {
   '1': 'SubscriptionInfo',
   '2': [
     {'1': 'productId', '3': 1, '4': 1, '5': 9, '10': 'productId'},
-    {'1': 'userManaged', '3': 2, '4': 1, '5': 8, '10': 'userManaged'},
+    {'1': 'immutable', '3': 2, '4': 1, '5': 8, '10': 'immutable'},
     {'1': 'none', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
-    {'1': 'manual', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'manual'},
-    {'1': 'microsoftStore', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
+    {'1': 'user', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'user'},
+    {'1': 'organization', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
+    {'1': 'microsoftStore', '3': 6, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
   ],
   '8': [
     {'1': 'subscriptionType'},
@@ -51,11 +52,12 @@ const SubscriptionInfo$json = {
 
 /// Descriptor for `SubscriptionInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
-    'ChBTdWJzY3JpcHRpb25JbmZvEhwKCXByb2R1Y3RJZBgBIAEoCVIJcHJvZHVjdElkEiAKC3VzZX'
-    'JNYW5hZ2VkGAIgASgIUgt1c2VyTWFuYWdlZBIlCgRub25lGAMgASgLMg8uYWdlbnRhcGkuRW1w'
-    'dHlIAFIEbm9uZRIpCgZtYW51YWwYBCABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgZtYW51YWwSOQ'
-    'oObWljcm9zb2Z0U3RvcmUYBSABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUg5taWNyb3NvZnRTdG9y'
-    'ZUISChBzdWJzY3JpcHRpb25UeXBl');
+    'ChBTdWJzY3JpcHRpb25JbmZvEhwKCXByb2R1Y3RJZBgBIAEoCVIJcHJvZHVjdElkEhwKCWltbX'
+    'V0YWJsZRgCIAEoCFIJaW1tdXRhYmxlEiUKBG5vbmUYAyABKAsyDy5hZ2VudGFwaS5FbXB0eUgA'
+    'UgRub25lEiUKBHVzZXIYBCABKAsyDy5hZ2VudGFwaS5FbXB0eUgAUgR1c2VyEjUKDG9yZ2FuaX'
+    'phdGlvbhgFIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSDG9yZ2FuaXphdGlvbhI5Cg5taWNyb3Nv'
+    'ZnRTdG9yZRgGIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSDm1pY3Jvc29mdFN0b3JlQhIKEHN1Yn'
+    'NjcmlwdGlvblR5cGU=');
 
 @$core.Deprecated('Use distroInfoDescriptor instead')
 const DistroInfo$json = {

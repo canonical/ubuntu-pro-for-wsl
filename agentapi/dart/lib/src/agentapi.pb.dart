@@ -89,7 +89,8 @@ class ProAttachInfo extends $pb.GeneratedMessage {
 
 enum SubscriptionInfo_SubscriptionType {
   none, 
-  manual, 
+  user, 
+  organization, 
   microsoftStore, 
   notSet
 }
@@ -102,17 +103,19 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, SubscriptionInfo_SubscriptionType> _SubscriptionInfo_SubscriptionTypeByTag = {
     3 : SubscriptionInfo_SubscriptionType.none,
-    4 : SubscriptionInfo_SubscriptionType.manual,
-    5 : SubscriptionInfo_SubscriptionType.microsoftStore,
+    4 : SubscriptionInfo_SubscriptionType.user,
+    5 : SubscriptionInfo_SubscriptionType.organization,
+    6 : SubscriptionInfo_SubscriptionType.microsoftStore,
     0 : SubscriptionInfo_SubscriptionType.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SubscriptionInfo', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
-    ..oo(0, [3, 4, 5])
+    ..oo(0, [3, 4, 5, 6])
     ..aOS(1, _omitFieldNames ? '' : 'productId', protoName: 'productId')
-    ..aOB(2, _omitFieldNames ? '' : 'userManaged', protoName: 'userManaged')
+    ..aOB(2, _omitFieldNames ? '' : 'immutable')
     ..aOM<Empty>(3, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
-    ..aOM<Empty>(4, _omitFieldNames ? '' : 'manual', subBuilder: Empty.create)
-    ..aOM<Empty>(5, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: Empty.create)
+    ..aOM<Empty>(4, _omitFieldNames ? '' : 'user', subBuilder: Empty.create)
+    ..aOM<Empty>(5, _omitFieldNames ? '' : 'organization', subBuilder: Empty.create)
+    ..aOM<Empty>(6, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: Empty.create)
     ..hasRequiredFields = false
   ;
 
@@ -150,13 +153,13 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   void clearProductId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.bool get userManaged => $_getBF(1);
+  $core.bool get immutable => $_getBF(1);
   @$pb.TagNumber(2)
-  set userManaged($core.bool v) { $_setBool(1, v); }
+  set immutable($core.bool v) { $_setBool(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasUserManaged() => $_has(1);
+  $core.bool hasImmutable() => $_has(1);
   @$pb.TagNumber(2)
-  void clearUserManaged() => clearField(2);
+  void clearImmutable() => clearField(2);
 
   @$pb.TagNumber(3)
   Empty get none => $_getN(2);
@@ -170,26 +173,37 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   Empty ensureNone() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  Empty get manual => $_getN(3);
+  Empty get user => $_getN(3);
   @$pb.TagNumber(4)
-  set manual(Empty v) { setField(4, v); }
+  set user(Empty v) { setField(4, v); }
   @$pb.TagNumber(4)
-  $core.bool hasManual() => $_has(3);
+  $core.bool hasUser() => $_has(3);
   @$pb.TagNumber(4)
-  void clearManual() => clearField(4);
+  void clearUser() => clearField(4);
   @$pb.TagNumber(4)
-  Empty ensureManual() => $_ensure(3);
+  Empty ensureUser() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  Empty get microsoftStore => $_getN(4);
+  Empty get organization => $_getN(4);
   @$pb.TagNumber(5)
-  set microsoftStore(Empty v) { setField(5, v); }
+  set organization(Empty v) { setField(5, v); }
   @$pb.TagNumber(5)
-  $core.bool hasMicrosoftStore() => $_has(4);
+  $core.bool hasOrganization() => $_has(4);
   @$pb.TagNumber(5)
-  void clearMicrosoftStore() => clearField(5);
+  void clearOrganization() => clearField(5);
   @$pb.TagNumber(5)
-  Empty ensureMicrosoftStore() => $_ensure(4);
+  Empty ensureOrganization() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  Empty get microsoftStore => $_getN(5);
+  @$pb.TagNumber(6)
+  set microsoftStore(Empty v) { setField(6, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasMicrosoftStore() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearMicrosoftStore() => clearField(6);
+  @$pb.TagNumber(6)
+  Empty ensureMicrosoftStore() => $_ensure(5);
 }
 
 class DistroInfo extends $pb.GeneratedMessage {
