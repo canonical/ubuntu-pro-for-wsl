@@ -126,17 +126,17 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		wantUserManaged bool
 		wantErr         bool
 	}{
-		"Success with a user-managed non-subscription": {source: config.SubscriptionNone, wantType: none, wantUserManaged: true},
-		"Success with a org-managed non-subscription":  {source: config.SubscriptionNone, registryReadOnly: true, wantType: none},
+		"Success with a non-subscription":           {source: config.SubscriptionNone, wantType: none, wantUserManaged: true},
+		"Success with a read-only non-subscription": {source: config.SubscriptionNone, registryReadOnly: true, wantType: none},
 
-		"Success with a user-managed manual subscription": {source: config.SubscriptionUser, wantType: manual, wantUserManaged: true},
-		"Success with a org-managed manual subscription":  {source: config.SubscriptionUser, registryReadOnly: true, wantType: manual},
+		"Success with a manual subscription":           {source: config.SubscriptionUser, wantType: manual, wantUserManaged: true},
+		"Success with a read-only manual subscription": {source: config.SubscriptionUser, registryReadOnly: true, wantType: manual},
 
-		"Success with a user-managed store subscription": {source: config.SubscriptionMicrosoftStore, wantType: store, wantUserManaged: true},
-		"Success with a org-managed store subscription":  {source: config.SubscriptionMicrosoftStore, registryReadOnly: true, wantType: store},
+		"Success with a store subscription":           {source: config.SubscriptionMicrosoftStore, wantType: store, wantUserManaged: true},
+		"Success with a read-only store subscription": {source: config.SubscriptionMicrosoftStore, registryReadOnly: true, wantType: store},
 
-		"Error when the user/org management cannot be determined": {isReadOnlyErr: true, wantErr: true},
-		"Error when the subscription cannot be retreived":         {subscriptionErr: true, wantErr: true},
+		"Error when the the read-only check fails":        {isReadOnlyErr: true, wantErr: true},
+		"Error when the subscription cannot be retreived": {subscriptionErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
