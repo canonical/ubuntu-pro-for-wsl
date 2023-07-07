@@ -111,7 +111,8 @@ func TestGetSubscriptionInfo(t *testing.T) {
 	var (
 		none   = reflect.TypeOf(&agentapi.SubscriptionInfo_None{}).String()
 		manual = reflect.TypeOf(&agentapi.SubscriptionInfo_Manual{}).String()
-		store  = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
+		// TODO: Add organization
+		store = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
 	)
 
 	testCases := map[string]struct {
