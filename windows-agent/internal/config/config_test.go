@@ -203,13 +203,12 @@ func TestSetSubscription(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, tc.accessIsReadOnly)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			var err error
+			token := "new_token"
 			if tc.setEmptyToken {
-				err = conf.SetSubscription(ctx, "", config.SubscriptionUser)
-			} else {
-				err = conf.SetSubscription(ctx, "new_token", config.SubscriptionUser)
+				token = ""
 			}
 
+			err := conf.SetSubscription(ctx, token, config.SubscriptionUser)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
 				if tc.wantErrorType != nil {
@@ -221,7 +220,7 @@ func TestSetSubscription(t *testing.T) {
 
 			// Disable errors so we can retrieve the token
 			r.Errors = 0
-			token, _, err := conf.Subscription(ctx)
+			token, _, err = conf.Subscription(ctx)
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, token, "ProToken returned an unexpected value for the token")
