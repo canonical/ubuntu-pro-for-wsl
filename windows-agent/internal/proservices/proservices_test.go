@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
@@ -25,12 +24,17 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
+		configIsReadOnly bool
+
+		breakConfig      bool
 		breakMkDir       bool
 		breakNewDistroDB bool
 
 		wantErr bool
 	}{
-		"Success": {},
+		"Success":                           {},
+		"Success with a read-only registry": {configIsReadOnly: true},
+		"Success when the config cannot check if it is read-only": {breakConfig: true},
 
 		"Error when Manager cannot create its cache dir":  {breakMkDir: true, wantErr: true},
 		"Error when database cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
@@ -42,6 +46,16 @@ func TestNew(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 			dir := t.TempDir()
+
+			reg := registry.NewMock()
+			if tc.breakConfig {
+				reg.Errors = registry.MockErrOnCreateKey
+			}
+
+			if tc.configIsReadOnly {
+				reg.KeyExists = true
+				reg.KeyIsReadOnly = true
+			}
 
 			if tc.breakMkDir {
 				dir = filepath.Join(dir, "proservices")
@@ -55,15 +69,13 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
 			}
 
-			conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
-
-			s, err := proservices.New(ctx, conf, proservices.WithCacheDir(dir))
+			s, err := proservices.New(ctx, proservices.WithCacheDir(dir), proservices.WithRegistry(reg))
 			if err == nil {
 				defer s.Stop(ctx)
 			}
 
 			if tc.wantErr {
-				require.Error(t, err, "New should return an error when there is a problem with its dir")
+				require.Error(t, err, "New should return an error")
 				return
 			}
 			require.NoError(t, err, "New should return no error")
@@ -77,9 +89,7 @@ func TestRegisterGRPCServices(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
-
-	ps, err := proservices.New(ctx, conf, proservices.WithCacheDir(t.TempDir()))
+	ps, err := proservices.New(ctx, proservices.WithCacheDir(t.TempDir()), proservices.WithRegistry(registry.NewMock()))
 	require.NoError(t, err, "Setup: New should return no error")
 	defer ps.Stop(ctx)
 

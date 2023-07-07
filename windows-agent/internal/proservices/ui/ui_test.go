@@ -2,6 +2,8 @@ package ui_test
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -74,26 +76,113 @@ func TestAttachPro(t *testing.T) {
 				defer d.Cleanup(ctx)
 			}
 
+			const originalToken = "old_token"
+
 			m := registry.NewMock()
 			m.KeyIsReadOnly = tc.registryReadOnly
 			m.KeyExists = true
-			m.UbuntuProData["ProToken"] = "OLD_TOKEN"
+			m.UbuntuProData["ProTokenUser"] = originalToken
 
 			conf := config.New(ctx, config.WithRegistry(m))
 			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}
 			_, err = serv.ApplyProToken(context.Background(), &info)
+
+			var wantToken string
 			if tc.wantErr {
 				require.Error(t, err, "Unexpected success in ApplyProToken")
+				wantToken = originalToken
+			} else {
+				require.NoError(t, err, "Adding the task to existing distros should succeed.")
+				wantToken = tc.token
+			}
+
+			token, _, err := conf.Subscription(ctx)
+			require.NoError(t, err, "conf.ProToken should return no error")
+			require.Equal(t, wantToken, token, "unexpected active token")
+		})
+	}
+}
+
+func TestGetSubscriptionInfo(t *testing.T) {
+	t.Parallel()
+
+	var (
+		none   = reflect.TypeOf(&agentapi.SubscriptionInfo_None{}).String()
+		manual = reflect.TypeOf(&agentapi.SubscriptionInfo_Manual{}).String()
+		// TODO: Add organization
+		store = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
+	)
+
+	testCases := map[string]struct {
+		registryReadOnly bool
+		source           config.SubscriptionSource
+
+		isReadOnlyErr   bool // Config errors out in IsReadOnly function
+		subscriptionErr bool // Config errors out in Subscription function
+
+		wantType        string
+		wantUserManaged bool
+		wantErr         bool
+	}{
+		"Success with a non-subscription":           {source: config.SubscriptionNone, wantType: none, wantUserManaged: true},
+		"Success with a read-only non-subscription": {source: config.SubscriptionNone, registryReadOnly: true, wantType: none},
+
+		// TODO: Add organization subscription
+
+		"Success with a manual subscription":           {source: config.SubscriptionUser, wantType: manual, wantUserManaged: true},
+		"Success with a read-only manual subscription": {source: config.SubscriptionUser, registryReadOnly: true, wantType: manual},
+
+		"Success with a store subscription":           {source: config.SubscriptionMicrosoftStore, wantType: store, wantUserManaged: true},
+		"Success with a read-only store subscription": {source: config.SubscriptionMicrosoftStore, registryReadOnly: true, wantType: store},
+
+		"Error when the the read-only check fails":        {isReadOnlyErr: true, wantErr: true},
+		"Error when the subscription cannot be retreived": {subscriptionErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			dir := t.TempDir()
+			db, err := database.New(ctx, dir, nil)
+			require.NoError(t, err, "Setup: empty database New() should return no error")
+			defer db.Close(ctx)
+
+			m := registry.NewMock()
+			m.KeyExists = true
+
+			conf := config.New(ctx, config.WithRegistry(m))
+			if tc.source != config.SubscriptionNone {
+				err := conf.SetSubscription(ctx, "example_token", tc.source)
+				require.NoError(t, err, "Setup: SetSubscription should return no error")
+			}
+
+			if tc.registryReadOnly {
+				m.KeyIsReadOnly = true
+			}
+
+			if tc.isReadOnlyErr {
+				m.Errors = registry.MockErrOnCreateKey
+			}
+			if tc.subscriptionErr {
+				m.Errors |= registry.MockErrReadValue
+			}
+
+			service := ui.New(context.Background(), conf, db)
+
+			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
+			if tc.wantErr {
+				require.Error(t, err, "GetSubscriptionInfo should return an error")
 				return
 			}
-			require.NoError(t, err, "Adding the task to existing distros should succeed.")
+			require.NoError(t, err, "GetSubscriptionInfo should return no errors")
 
-			// Could it be nice to retrieve the distro's pending tasks?
-			token, err := conf.ProToken(ctx)
-			require.NoError(t, err, "conf.ProToken should return no error")
-			require.Equal(t, tc.token, token, "mismatch between submitted and retrieved tokens")
+			require.Equal(t, tc.wantType, fmt.Sprintf("%T", info.SubscriptionType), "Mismatched subscription types")
+			require.Equal(t, tc.wantUserManaged, info.UserManaged, "Mismatched value for UserManaged")
 		})
 	}
 }

@@ -101,9 +101,10 @@ func (a *App) serve(args ...option) error {
 		f(&opt)
 	}
 
-	conf := config.New(ctx, config.WithRegistry(opt.registry))
-
-	proservice, err := proservices.New(ctx, conf, proservices.WithCacheDir(opt.proservicesCacheDir))
+	proservice, err := proservices.New(ctx,
+		proservices.WithCacheDir(opt.proservicesCacheDir),
+		proservices.WithRegistry(opt.registry),
+	)
 	if err != nil {
 		close(a.ready)
 		return err

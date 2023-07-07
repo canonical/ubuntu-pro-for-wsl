@@ -15,19 +15,19 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-// httpDoer is an interface to allow injecting an HTTP Client.
-type httpDoer interface {
+// HTTPDoer is an interface to allow injecting an HTTP Client.
+type HTTPDoer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
 // Client knows how to talk to the Contracts Server backend.
 type Client struct {
 	baseURL *url.URL
-	http    httpDoer
+	http    HTTPDoer
 }
 
 // New returns a Client instance caching a base URL.
-func New(base *url.URL, doer httpDoer) *Client {
+func New(base *url.URL, doer HTTPDoer) *Client {
 	return &Client{
 		baseURL: base,
 		http:    doer,

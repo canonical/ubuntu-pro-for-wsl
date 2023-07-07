@@ -30,6 +30,7 @@ type Manager struct {
 // options are the configurable functional options for the daemon.
 type options struct {
 	cacheDir string
+	registry config.Registry
 }
 
 // Option is the function signature we are passing to tweak the daemon creation.
@@ -44,11 +45,18 @@ func WithCacheDir(cachedir string) func(o *options) {
 	}
 }
 
+// WithRegistry allows overriding the Windows registry with a different back-end.
+func WithRegistry(registry config.Registry) func(o *options) {
+	return func(o *options) {
+		o.registry = registry
+	}
+}
+
 // New returns a new GRPC services manager.
 // It instantiates both ui and wsl instance services.
 //
 // Once done, Stop must be called to deallocate resources.
-func New(ctx context.Context, config *config.Config, args ...Option) (s Manager, err error) {
+func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	// Apply given options.
@@ -73,7 +81,12 @@ func New(ctx context.Context, config *config.Config, args ...Option) (s Manager,
 		return s, err
 	}
 
-	db, err := database.New(ctx, opts.cacheDir, config)
+	conf := config.New(ctx, config.WithRegistry(opts.registry))
+	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
+		log.Warningf(ctx, "%v", err)
+	}
+
+	db, err := database.New(ctx, opts.cacheDir, conf)
 	if err != nil {
 		return s, err
 	}
@@ -83,9 +96,9 @@ func New(ctx context.Context, config *config.Config, args ...Option) (s Manager,
 		}
 	}()
 
-	uiService := ui.New(ctx, config, db)
+	uiService := ui.New(ctx, conf, db)
 
-	landscape, err := landscape.NewClient(config, db, opts.cacheDir)
+	landscape, err := landscape.NewClient(conf, db, opts.cacheDir)
 	if err != nil {
 		return s, err
 	}
