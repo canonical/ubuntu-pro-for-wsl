@@ -64,13 +64,13 @@ func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.
 func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
 	info := &agentapi.SubscriptionInfo{}
 
-	companyManaged, err := s.config.IsReadOnly()
+	immutable, err := s.config.IsReadOnly()
 	if err != nil {
 		return nil, err
 	}
 
-	if !companyManaged {
-		info.UserManaged = true
+	if immutable {
+		info.Immutable = true
 	}
 
 	_, source, err := s.config.Subscription(ctx)
@@ -81,8 +81,10 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 	switch source {
 	case config.SubscriptionNone:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_None{}
-	case config.SubscriptionUser, config.SubscriptionOrganization: // TODO: Separate Manual into User vs. Org in agentapi
-		info.SubscriptionType = &agentapi.SubscriptionInfo_Manual{}
+	case config.SubscriptionUser:
+		info.SubscriptionType = &agentapi.SubscriptionInfo_User{}
+	case config.SubscriptionOrganization:
+		info.SubscriptionType = &agentapi.SubscriptionInfo_Organization{}
 	case config.SubscriptionMicrosoftStore:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_MicrosoftStore{}
 	default:
