@@ -129,6 +129,8 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		"Success with a non-subscription":           {source: config.SubscriptionNone, wantType: none, wantUserManaged: true},
 		"Success with a read-only non-subscription": {source: config.SubscriptionNone, registryReadOnly: true, wantType: none},
 
+		// TODO: Add organization subscription
+
 		"Success with a manual subscription":           {source: config.SubscriptionUser, wantType: manual, wantUserManaged: true},
 		"Success with a read-only manual subscription": {source: config.SubscriptionUser, registryReadOnly: true, wantType: manual},
 
