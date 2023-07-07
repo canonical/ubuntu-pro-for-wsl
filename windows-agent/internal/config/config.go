@@ -49,7 +49,7 @@ type Config struct {
 
 	registry Registry
 
-	mu *sync.RWMutex
+	mu *sync.Mutex
 }
 
 // configData is a bag of data unrelated to the subscription status.
@@ -109,7 +109,7 @@ func New(ctx context.Context, args ...Option) (m *Config) {
 
 	m = &Config{
 		registry:  opts.registry,
-		mu:        &sync.RWMutex{},
+		mu:        &sync.Mutex{},
 		proTokens: make(map[SubscriptionSource]string),
 	}
 
@@ -190,8 +190,8 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source Su
 
 // LandscapeURL returns the value of the landscape server URL.
 func (c *Config) LandscapeURL(ctx context.Context) (string, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if err := c.load(ctx); err != nil {
 		return "", fmt.Errorf("could not load: %v", err)
