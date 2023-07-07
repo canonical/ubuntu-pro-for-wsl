@@ -3,6 +3,7 @@ package ui_test
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -107,10 +108,10 @@ func TestAttachPro(t *testing.T) {
 func TestGetSubscriptionInfo(t *testing.T) {
 	t.Parallel()
 
-	const (
-		none   = "*agentapi.SubscriptionInfo_None"
-		manual = "*agentapi.SubscriptionInfo_Manual"
-		store  = "*agentapi.SubscriptionInfo_MicrosoftStore"
+	var (
+		none   = reflect.TypeOf(&agentapi.SubscriptionInfo_None{}).String()
+		manual = reflect.TypeOf(&agentapi.SubscriptionInfo_Manual{}).String()
+		store  = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
 	)
 
 	testCases := map[string]struct {
