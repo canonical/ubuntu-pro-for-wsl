@@ -12,9 +12,9 @@ void main() {
   group('subscription info', () {
     final client = FakeAgentApiClient();
     final info = SubscriptionInfo();
-    testWidgets('manual', (tester) async {
-      info.ensureManual();
-      info.userManaged = true;
+    testWidgets('user', (tester) async {
+      info.ensureUser();
+      info.immutable = false;
       final app = buildApp(info, client);
 
       await tester.pumpWidget(app);
@@ -27,7 +27,7 @@ void main() {
 
     testWidgets('store', (tester) async {
       info.ensureMicrosoftStore();
-      info.userManaged = true;
+      info.immutable = false;
       final app = buildApp(info, client);
 
       await tester.pumpWidget(app);
@@ -39,7 +39,8 @@ void main() {
     });
 
     testWidgets('organization', (tester) async {
-      info.userManaged = false;
+      info.ensureOrganization();
+      info.immutable = false;
       final app = buildApp(info, client);
 
       await tester.pumpWidget(app);
@@ -53,8 +54,8 @@ void main() {
   testWidgets('creates a model', (tester) async {
     final mockClient = FakeAgentApiClient();
     final info = SubscriptionInfo();
-    info.ensureManual();
-    info.userManaged = true;
+    info.ensureUser();
+    info.immutable = false;
     registerServiceInstance<AgentApiClient>(mockClient);
     final app = Provider.value(
       value: info,

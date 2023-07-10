@@ -14,14 +14,15 @@ void main() {
     final info = SubscriptionInfo();
     info.productId = 'my prod ID';
 
-    test('unset is org', () async {
+    test('immutable is org', () async {
+      info.immutable = true;
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, OrgSubscriptionStatusModel);
     });
 
     test('none throws', () async {
       info.ensureNone();
-      info.userManaged = true;
+      info.immutable = false;
       expect(
         () {
           SubscriptionStatusModel(info, client);
@@ -31,22 +32,23 @@ void main() {
     });
     test('store', () async {
       info.ensureMicrosoftStore();
-      info.userManaged = true;
+      info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, StoreSubscriptionStatusModel);
     });
 
-    test('manual', () async {
-      info.ensureManual();
-      info.userManaged = true;
+    test('user', () async {
+      info.ensureUser();
+      info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
-      expect(model.runtimeType, ManualSubscriptionStatusModel);
+      expect(model.runtimeType, UserSubscriptionStatusModel);
     });
 
     test('organization', () async {
-      info.userManaged = false;
+      info.ensureOrganization();
+      info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, OrgSubscriptionStatusModel);
@@ -66,7 +68,7 @@ void main() {
     when(client.applyProToken(any)).thenAnswer((realInvocation) async {
       token = realInvocation.positionalArguments[0] as String;
     });
-    final model = ManualSubscriptionStatusModel(client);
+    final model = UserSubscriptionStatusModel(client);
 
     // asserts that detachPro calls applyProToken with an empty String.
     expect(token, isNull);

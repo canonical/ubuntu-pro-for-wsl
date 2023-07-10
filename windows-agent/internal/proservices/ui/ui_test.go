@@ -109,10 +109,10 @@ func TestGetSubscriptionInfo(t *testing.T) {
 	t.Parallel()
 
 	var (
-		none   = reflect.TypeOf(&agentapi.SubscriptionInfo_None{}).String()
-		manual = reflect.TypeOf(&agentapi.SubscriptionInfo_Manual{}).String()
-		// TODO: Add organization
-		store = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
+		none         = reflect.TypeOf(&agentapi.SubscriptionInfo_None{}).String()
+		user         = reflect.TypeOf(&agentapi.SubscriptionInfo_User{}).String()
+		organization = reflect.TypeOf(&agentapi.SubscriptionInfo_Organization{}).String()
+		store        = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
 	)
 
 	testCases := map[string]struct {
@@ -122,20 +122,21 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		isReadOnlyErr   bool // Config errors out in IsReadOnly function
 		subscriptionErr bool // Config errors out in Subscription function
 
-		wantType        string
-		wantUserManaged bool
-		wantErr         bool
+		wantType      string
+		wantImmutable bool
+		wantErr       bool
 	}{
-		"Success with a non-subscription":           {source: config.SubscriptionNone, wantType: none, wantUserManaged: true},
-		"Success with a read-only non-subscription": {source: config.SubscriptionNone, registryReadOnly: true, wantType: none},
+		"Success with a non-subscription":           {source: config.SubscriptionNone, wantType: none},
+		"Success with a read-only non-subscription": {source: config.SubscriptionNone, registryReadOnly: true, wantType: none, wantImmutable: true},
 
-		// TODO: Add organization subscription
+		"Success with an organization subscription":          {source: config.SubscriptionOrganization, wantType: organization},
+		"Success with a read-only organization subscription": {source: config.SubscriptionOrganization, registryReadOnly: true, wantType: organization, wantImmutable: true},
 
-		"Success with a manual subscription":           {source: config.SubscriptionUser, wantType: manual, wantUserManaged: true},
-		"Success with a read-only manual subscription": {source: config.SubscriptionUser, registryReadOnly: true, wantType: manual},
+		"Success with a user subscription":           {source: config.SubscriptionUser, wantType: user},
+		"Success with a read-only user subscription": {source: config.SubscriptionUser, registryReadOnly: true, wantType: user, wantImmutable: true},
 
-		"Success with a store subscription":           {source: config.SubscriptionMicrosoftStore, wantType: store, wantUserManaged: true},
-		"Success with a read-only store subscription": {source: config.SubscriptionMicrosoftStore, registryReadOnly: true, wantType: store},
+		"Success with a store subscription":           {source: config.SubscriptionMicrosoftStore, wantType: store},
+		"Success with a read-only store subscription": {source: config.SubscriptionMicrosoftStore, registryReadOnly: true, wantType: store, wantImmutable: true},
 
 		"Error when the the read-only check fails":        {isReadOnlyErr: true, wantErr: true},
 		"Error when the subscription cannot be retreived": {subscriptionErr: true, wantErr: true},
@@ -182,7 +183,7 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			require.NoError(t, err, "GetSubscriptionInfo should return no errors")
 
 			require.Equal(t, tc.wantType, fmt.Sprintf("%T", info.SubscriptionType), "Mismatched subscription types")
-			require.Equal(t, tc.wantUserManaged, info.UserManaged, "Mismatched value for UserManaged")
+			require.Equal(t, tc.wantImmutable, info.Immutable, "Mismatched value for ReadOnly")
 		})
 	}
 }
