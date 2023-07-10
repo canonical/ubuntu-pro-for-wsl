@@ -136,7 +136,7 @@ func TestCreateUser(t *testing.T) {
 
 			applyMock()
 
-			_, err := distroinstall.CreateUser(ctx, d, username, userFullName)
+			uid, err := distroinstall.CreateUser(ctx, d, username, userFullName)
 			if tc.wantErr {
 				require.Error(t, err, "CreateUser should return an error")
 				return
@@ -150,10 +150,11 @@ func TestCreateUser(t *testing.T) {
 				return
 			}
 
-			userID, err := d.Command(ctx, fmt.Sprintf(`id %q`, username)).Output()
+			out, err := d.Command(ctx, fmt.Sprintf(`id %q`, username)).Output()
 			require.NoError(t, err, "user should have been created")
 
-			require.Containsf(t, string(userID), "sudo", "user should be in the sudoers group")
+			require.Contains(t, string(out), fmt.Sprintf("uid=%d(%s)", uid, username), "`id USER` should contain the UID returned by CreateUser")
+			require.Contains(t, string(out), "sudo", "user should be in the sudoers group")
 
 			ctx, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
