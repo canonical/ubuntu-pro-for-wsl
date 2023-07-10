@@ -144,6 +144,7 @@ func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install
 		return err
 	}
 
+	// TODO: The rest of this function will need to be rethought once cloud-init support exists.
 	windowsUser, err := user.Current()
 	if err != nil {
 		return err
