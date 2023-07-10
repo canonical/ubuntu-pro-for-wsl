@@ -641,10 +641,21 @@ func requireCommandResult(t *testing.T, ctx context.Context, command command, di
 		}
 	case cmdInstall:
 		inst := isAppxInstalled(t, testAppx)
+
+		d := wsl.NewDistro(ctx, distro.Name())
+		reg, err := d.IsRegistered()
+		require.NoError(t, err, "IsRegistered should return no error")
+
 		if wantSuccess {
 			require.True(t, inst, "Appx should have been installed, but it wasn't")
+			require.True(t, reg, "Distro should have been registered")
+
+			conf, err := d.GetConfiguration()
+			require.NoError(t, err, "GetConfiguration should return no error")
+			require.NotEqual(t, uint32(0), conf.DefaultUID, "Default user should have been changed from root")
 		} else {
-			require.False(t, inst, "Appx should not have been installed, but it was")
+			require.False(t, inst, "Appx should not have been installed")
+			require.True(t, reg, "Distro should not have been registered")
 		}
 	case cmdUninstall:
 		inst := isAppxInstalled(t, testAppx)
