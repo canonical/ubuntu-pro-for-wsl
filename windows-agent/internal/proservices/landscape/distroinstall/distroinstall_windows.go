@@ -19,7 +19,6 @@ import (
 // application is not set.
 const createNoWindow = 0x08000000
 
-// InstallFromExecutable finds the executable associated with the specified distro and installs it.
 func executableInstallCommand(ctx context.Context, executable string) (out []byte, err error) {
 	// We need to use powershell because the Appx executable is not in the path
 	cmd := exec.CommandContext(ctx, "powershell.exe",
@@ -70,7 +69,6 @@ func getUserIDCommand(ctx context.Context, distro wsl.Distro, userName string) (
 func wslCommand(ctx context.Context, distro wsl.Distro, path string, args ...string) *exec.Cmd {
 	args = append([]string{"-u", "root", "-d", distro.Name(), "--", path}, args...)
 
-	
 	cmd := exec.CommandContext(ctx, "wsl.exe", args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow:    true,
