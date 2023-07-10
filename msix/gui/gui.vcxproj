@@ -108,7 +108,7 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!-- The targets file below overrides the standard Cpp targets so we can build the Flutter app instead. -->
-  <Import Project="My.targets" />
+  <Import Project="gui.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
