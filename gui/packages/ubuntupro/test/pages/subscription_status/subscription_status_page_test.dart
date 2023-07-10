@@ -39,6 +39,7 @@ void main() {
     });
 
     testWidgets('organization', (tester) async {
+      info.ensureOrganization();
       info.immutable = false;
       final app = buildApp(info, client);
 

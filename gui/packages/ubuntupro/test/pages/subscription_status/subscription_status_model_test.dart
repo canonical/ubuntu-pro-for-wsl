@@ -14,7 +14,8 @@ void main() {
     final info = SubscriptionInfo();
     info.productId = 'my prod ID';
 
-    test('unset is org', () async {
+    test('immutable is org', () async {
+      info.immutable = true;
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, OrgSubscriptionStatusModel);
     });
@@ -37,7 +38,7 @@ void main() {
       expect(model.runtimeType, StoreSubscriptionStatusModel);
     });
 
-    test('manual', () async {
+    test('user', () async {
       info.ensureUser();
       info.immutable = false;
 
@@ -46,6 +47,7 @@ void main() {
     });
 
     test('organization', () async {
+      info.ensureOrganization();
       info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
