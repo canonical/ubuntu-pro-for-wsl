@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ubuntu/decorate"
+var wslProServiceDebPath string
 )
 
 func TestMain(m *testing.M) {
@@ -25,7 +29,11 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertWslProServiceBuilt(ctx); err != nil {
+	path, err := locateWslProServiceDeb(ctx)
+	if err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+	wslProServiceDebPath = path
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -45,17 +53,25 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 	return nil
 }
 
-func assertWslProServiceBuilt(ctx context.Context) error {
-	out, err := powershellf(ctx, `Test-Path "../wsl-pro-service_*.deb" -PathType Leaf`).Output()
+func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
+	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
+
+	out, err := powershellf(ctx, `(Get-ChildItem -Path "../wsl-pro-service_*.deb").FullName`).Output()
 	if err != nil {
-		return fmt.Errorf("could not determine if Wsl Pro Service is built: %v. %s.", err, out)
-	}
-	s := strings.TrimSpace(string(out))
-	if s != "True" {
-		return errors.New("Wsl Pro Service is not built")
+		return "", fmt.Errorf("could not read expected location: %v. %s", err, out)
 	}
 
-	return nil
+	path := strings.TrimSpace(string(out))
+	if path == "" {
+		return "", errors.New("Wsl Pro Service is not built")
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("could not make path %q absolute: %v", path, err)
+	}
+
+	return absPath, nil
 }
 
 func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
