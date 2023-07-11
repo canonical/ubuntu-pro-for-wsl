@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -15,20 +14,15 @@ import (
 )
 
 //nolint:revive // The context is better after the testing.T
-func powershellInstallDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
+func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName string, rootFsPath string) (GUID string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 
-	var rootFsPath string
-	if !realDistro {
+	// Fake rootfs: the distro can be registered but won't run
+	if rootFsPath == "" {
 		rootFsPath = tmpDir + "/install.tar.gz"
 		err := os.WriteFile(rootFsPath, []byte{}, 0600)
 		require.NoError(t, err, "could not write empty file")
-	} else {
-		const appx = "UbuntuPreview"
-		rootFsPath = powershellOutputf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
-		require.NotEmpty(t, rootFsPath, "could not find rootfs tarball. Is %s installed?", appx)
-		rootFsPath = filepath.Join(rootFsPath, "install.tar.gz")
 	}
 
 	_, err := os.Lstat(rootFsPath)

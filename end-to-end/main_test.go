@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -16,7 +17,13 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-var wslProServiceDebPath string
+var (
+	// wslProServiceDebPath is the path to the wsl-pro-service .deb package
+	wslProServiceDebPath string
+
+	// goldenImagePath is the path to the golden image
+	goldenImagePath string
+)
 
 const (
 	registryPath = `Software\Canonical\UbuntuPro`
@@ -178,6 +185,70 @@ func cleanupRegistry() error {
 	}
 	if err != nil {
 		return fmt.Errorf("could not delete UbuntuPro key: %v", err)
+	}
+
+	return nil
+}
+
+func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func(), err error) {
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
+	if err != nil {
+		return func() {}, err
+	}
+	cleanup = func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			log.Printf("Cleanup: could not remove test tempdir: %v", err)
+		}
+	}
+
+	d := gowsl.NewDistro(ctx, sourceDistro)
+	if err := assertDistroUnregistered(d); err != nil {
+		cleanup()
+		return nil, err
+	}
+
+	r := strings.NewReplacer("-", "", ".", "")
+	launcher := r.Replace(sourceDistro)
+
+	out, err := powershellf(ctx, "%s.exe install --root --ui=none", launcher).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
+	}
+	defer d.Unregister()
+
+	out, err = d.Command(ctx, "exit 0").CombinedOutput()
+	if err != nil {
+		defer cleanup()
+		return nil, fmt.Errorf("distro could not be waken up: %v. %s", err, out)
+	}
+
+	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, filepath.Join(tmpDir, "golden.tar.gz")).CombinedOutput()
+	if err != nil {
+		defer cleanup()
+		return nil, fmt.Errorf("could not export golden image: %v. %s", err, out)
+	}
+
+	goldenImagePath = filepath.Join(tmpDir, "golden.tar.gz")
+	return cleanup, nil
+}
+
+func assertDistroUnregistered(d gowsl.Distro) error {
+	registered, err := d.IsRegistered()
+	if err != nil {
+		return fmt.Errorf("ubuntu-preview: %v", err)
+	}
+
+	if !registered {
+		return nil
+	}
+
+	if os.Getenv(overrideSafety) == "" {
+		return fmt.Errorf("distro %q should not exist. Unregister it to agree to run this potentially destructive test", d.Name())
+	}
+
+	if err := d.Unregister(); err != nil {
+		return err
 	}
 
 	return nil

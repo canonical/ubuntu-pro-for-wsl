@@ -40,3 +40,11 @@ func testSetup(t *testing.T) {
 		log.Printf("Cleanup: %v", err)
 	})
 }
+
+func registerFromGoldenImage(t *testing.T, ctx context.Context) string {
+	t.Helper()
+
+	distroName := wsltestutils.RandomDistroName(t)
+	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, goldenImagePath)
+	return distroName
+}
