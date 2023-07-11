@@ -16,6 +16,11 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "gomod"
+    directory: "/end-to-end"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "gomod"
     directory: "/tools"
     schedule:
       interval: "daily"
