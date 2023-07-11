@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/distroinstall"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
@@ -105,9 +105,9 @@ func TestCreateUser(t *testing.T) {
 
 			var distroName string
 			if tc.skipDistroRegistration {
-				distroName = testutils.RandomDistroName(t)
+				distroName = wsltestutils.RandomDistroName(t)
 			} else {
-				distroName, _ = testutils.RegisterDistro(t, ctx, true)
+				distroName, _ = wsltestutils.RegisterDistro(t, ctx, true)
 			}
 			d := gowsl.NewDistro(ctx, distroName)
 

@@ -11,10 +11,10 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -91,7 +91,7 @@ func TestConnected(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distroName, _ := testutils.RegisterDistro(t, ctx, false)
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	type landscapeState int
 	const (

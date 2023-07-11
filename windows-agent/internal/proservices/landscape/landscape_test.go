@@ -13,13 +13,13 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/landscapemockservice"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
@@ -150,7 +150,7 @@ func TestConnect(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			distroName, _ := testutils.RegisterDistro(t, ctx, true)
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
@@ -261,7 +261,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			distroName, _ := testutils.RegisterDistro(t, ctx, true)
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 			props := distro.Properties{
 				DistroID:    "Cool Ubuntu",
 				VersionID:   "NewerThanYours",
@@ -499,7 +499,7 @@ func TestReceiveCommands(t *testing.T) {
 
 			var d *distro.Distro
 			if tc.command != cmdInstall {
-				distroName, _ := testutils.RegisterDistro(t, ctx, true)
+				distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 				d, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 				require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 				defer d.Cleanup(ctx)
@@ -586,7 +586,7 @@ func commandSetup(t *testing.T, ctx context.Context, command command, distro *di
 			_ = d.Uninstall(ctx)
 		})
 	case cmdSetDefault:
-		otherDistro, _ := testutils.RegisterDistro(t, ctx, false)
+		otherDistro, _ := wsltestutils.RegisterDistro(t, ctx, false)
 		d := wsl.NewDistro(ctx, otherDistro)
 		err := d.SetAsDefault()
 		require.NoError(t, err, "Setup: could not set another distro as default")

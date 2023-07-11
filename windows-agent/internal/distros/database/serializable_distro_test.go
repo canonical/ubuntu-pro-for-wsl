@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
@@ -81,8 +81,8 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
-	unregisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
+	registeredDistro, registeredGUID := wsltestutils.RegisterDistro(t, ctx, false)
+	unregisteredDistro, fakeGUID := wsltestutils.NonRegisteredDistro(t)
 	illFormedGUID := "{this string is not a valid GUID}"
 
 	testCases := map[string]struct {
@@ -130,7 +130,7 @@ func TestNewSerializableDistro(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
+	registeredDistro, registeredGUID := wsltestutils.RegisterDistro(t, ctx, false)
 
 	props := distro.Properties{
 		DistroID:    "ubuntu",
