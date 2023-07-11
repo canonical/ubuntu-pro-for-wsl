@@ -17,10 +17,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agentapi", "windows-agent", "wsl-pro-service"]
+        subproject: ["agentapi", "windows-agent", "wsl-pro-service", "end-to-end"]
         exclude:
           - os: windows
             subproject: wsl-pro-service
+          - os: ubuntu
+            subproject: end-to-end
 
     runs-on: ${{ matrix.os }}-latest
     steps:
