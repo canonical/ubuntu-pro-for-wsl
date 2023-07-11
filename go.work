@@ -3,6 +3,7 @@ go 1.20
 use (
 	./agentapi
 	./common
+	./end-to-end
 	./tools
 	./windows-agent
 	./wsl-pro-service
