@@ -13,15 +13,15 @@ import (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	if err := assertInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
+	if err := assertAppxInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertInstalled(ctx, "CanonicalGroupLimited.Ubuntu"); err != nil {
+	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.Ubuntu"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
+	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func assertInstalled(ctx context.Context, appx string) error {
+func assertAppxInstalled(ctx context.Context, appx string) error {
 	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).Output()
 	if err != nil {
 		return fmt.Errorf("could not determine if %q is installed: %v. %s.", appx, err, out)
