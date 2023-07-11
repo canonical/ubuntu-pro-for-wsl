@@ -59,7 +59,7 @@ func assertWslProServiceBuilt(ctx context.Context) error {
 }
 
 func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
-	return exec.Command("powershell.exe",
+	return exec.CommandContext(ctx, "powershell.exe",
 		"-NoProfile",
 		"-NoLogo",
 		"-NonInteractive",
