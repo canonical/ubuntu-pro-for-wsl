@@ -204,4 +204,4 @@ jobs:
           source-dir: ${{ env.source-dir }}
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
-          UP4W_SKIP_INTERNAL_DEPENDENCY_UDATE: "1"
+          UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"

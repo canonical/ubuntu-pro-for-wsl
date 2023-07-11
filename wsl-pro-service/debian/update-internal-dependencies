@@ -4,7 +4,7 @@ set -eu
 # Add repo as private
 go env -w GOPRIVATE=github.com/canonical/ubuntu-pro-for-windows
 
-if [ -n "${UP4W_SKIP_INTERNAL_DEPENDENCY_UDATE}" ]; then
+if [ -n "${UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE}" ]; then
     echo "Skipping internal dependency update"
     exit 0
 fi
