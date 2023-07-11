@@ -51,6 +51,16 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
+	if err := assertCleanLocalAppData(); err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+
+	cleanup, err := generateGoldenImage(ctx, "Ubuntu")
+	if err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+	defer cleanup()
+
 	m.Run()
 
 	if err := cleanupRegistry(); err != nil {
@@ -98,6 +108,44 @@ func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 		"-NoLogo",
 		"-NonInteractive",
 		"-Command", fmt.Sprintf(command, args...))
+}
+
+func assertCleanLocalAppData() error {
+	path := os.Getenv("LocalAppData")
+	if path == "" {
+		return errors.New("variable $env:LocalAppData should not be empty")
+	}
+
+	path = filepath.Join(path, "Ubuntu Pro")
+
+	_, err := os.Stat(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("could not stat %q: %v", path, err)
+	}
+
+	if os.Getenv(overrideSafety) != "" {
+		return cleanupLocalAppData()
+	}
+
+	return fmt.Errorf("Directory %q should not exist. Remove it from your machine"+
+		"to agree to run this potentially destructive test.", path)
+}
+
+func cleanupLocalAppData() error {
+	path := os.Getenv("LocalAppData")
+	if path == "" {
+		return errors.New("variable $env:LocalAppData should not be empty")
+	}
+
+	path = filepath.Join(path, "Ubuntu Pro")
+	if err := os.RemoveAll(path); err != nil {
+		return fmt.Errorf("could not clean up LocalAppData: %v", err)
+	}
+
+	return nil
 }
 
 func assertCleanRegistry() error {
