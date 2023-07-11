@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/decorate"
+	"github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -137,6 +138,9 @@ func cleanupRegistry() error {
 
 func testSetup(t *testing.T) {
 	t.Helper()
+
+	err := gowsl.Shutdown(context.Background())
+	require.NoError(t, err, "Setup: could not shut WSL down")
 
 	err = assertCleanRegistry()
 	require.NoError(t, err, "Setup: registry is polluted, potentially by a previous test")
