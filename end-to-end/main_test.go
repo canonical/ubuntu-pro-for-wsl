@@ -273,8 +273,6 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 	}
 
 	path = filepath.Join(tmpDir, "golden.vhdx")
-
-	//nolint:gosec // sourceDistro is validated in common.WSLLauncher. The path is randomly generated in MkdirTemp().
 	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, path, "--vhd").CombinedOutput()
 	if err != nil {
 		defer cleanup()
