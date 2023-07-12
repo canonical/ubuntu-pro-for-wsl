@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 
 	if err := cleanupRegistry(); err != nil {
-		log.Printf("Cleanup: %v\n", err)
+		log.Printf("Cleanup: registry: %v\n", err)
 	}
 }
 
@@ -194,6 +194,9 @@ func cleanupRegistry() error {
 }
 
 func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func(), err error) {
+	log.Printf("Generating golden image from %q\n", sourceDistro)
+	defer log.Printf("Generated golden image from %q\n", sourceDistro)
+
 	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
 	if err != nil {
 		return func() {}, err

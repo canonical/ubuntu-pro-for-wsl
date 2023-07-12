@@ -41,7 +41,9 @@ func testSetup(t *testing.T) {
 			stopAgent(ctx),
 		)
 		// Cannot assert: the test is finished already
-		log.Printf("Cleanup: %v", err)
+		if err != nil {
+			log.Printf("Cleanup: %v", err)
+		}
 	})
 }
 
@@ -49,11 +51,17 @@ func registerFromGoldenImage(t *testing.T, ctx context.Context) string {
 	t.Helper()
 
 	distroName := wsltestutils.RandomDistroName(t)
+	t.Logf("Registering distro %q", distroName)
+	defer t.Logf("Registered distro %q", distroName)
+
 	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, goldenImagePath)
 	return distroName
 }
 
 func startAgent(t *testing.T, ctx context.Context) {
+	t.Log("Starting agent")
+	defer t.Log("Started agent")
+
 	out, err := powershellf(ctx, "(Get-AppxPackage CanonicalGroupLimited.UbuntuProForWindows).InstallLocation").CombinedOutput()
 	require.NoError(t, err, "could not locate ubuntupro.exe: %v. %s", err, out)
 

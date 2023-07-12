@@ -35,8 +35,10 @@ func TestProEnableDistro(t *testing.T) {
 	name := registerFromGoldenImage(t, ctx)
 	d := wsl.NewDistro(ctx, name)
 
+	t.Log("Installing wsl-pro-service")
 	out, err := d.Command(ctx, fmt.Sprintf("dpkg -i $(wslpath -ua '%s')", wslProServiceDebPath)).CombinedOutput()
 	require.NoErrorf(t, err, "Setup: could not install wsl-pro-service: %v. %s", err, out)
+	t.Log("Installed wsl-pro-service")
 
 	defer logWslProServiceJournal(t, ctx, d)
 
@@ -55,8 +57,6 @@ func TestProEnableDistro(t *testing.T) {
 	// Validate that the distro was attached
 	out, err = d.Command(ctx, "pro status --format=json").Output()
 	require.NoErrorf(t, err, "Setup: could not call pro status: %v. %s", err, out)
-
-	t.Logf("pro status: %s\n", out)
 
 	var response struct {
 		Attached bool
