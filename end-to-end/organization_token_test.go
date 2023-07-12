@@ -3,7 +3,6 @@ package endtoend_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -35,11 +34,6 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	name := registerFromGoldenImage(t, ctx)
 	d := wsl.NewDistro(ctx, name)
 
-	t.Log("Installing wsl-pro-service")
-	out, err := d.Command(ctx, fmt.Sprintf("dpkg -i $(wslpath -ua '%s')", wslProServiceDebPath)).CombinedOutput()
-	require.NoErrorf(t, err, "Setup: could not install wsl-pro-service: %v. %s", err, out)
-	t.Log("Installed wsl-pro-service")
-
 	defer logWslProServiceJournal(t, ctx, d)
 
 	err = d.Terminate()
@@ -48,7 +42,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	// Start of test: start agent and mimic first boot
 	startAgent(t, ctx)
 
-	out, err = d.Command(ctx, "exit 0").CombinedOutput()
+	out, err := d.Command(ctx, "exit 0").CombinedOutput()
 	require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
 	// Give the agent some time to pro-attach

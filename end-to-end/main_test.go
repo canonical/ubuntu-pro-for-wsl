@@ -15,6 +15,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
+	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -216,8 +217,8 @@ func cleanupRegistry() error {
 // in which case the sourceDistro is removed.
 // The source distro is then registered, exported after first boot, and unregistered.
 func generateGoldenImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
-	log.Printf("Generating golden image from %q\n", sourceDistro)
-	defer log.Printf("Generated golden image from %q\n", sourceDistro)
+	log.Printf("Setup: Generating golden image from %q\n", sourceDistro)
+	defer log.Printf("Setup: Generated golden image from %q\n", sourceDistro)
 
 	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
 	if err != nil {
@@ -225,7 +226,7 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 	}
 	cleanup = func() {
 		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Printf("Cleanup: could not remove test tempdir: %v", err)
+			log.Printf("Setup: Cleanup: could not remove test tempdir: %v", err)
 		}
 	}
 
@@ -247,16 +248,28 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
 	}
 
+	log.Printf("Setup: Installed %q\n", sourceDistro)
+
 	defer func() {
 		if err := d.Unregister(); err != nil {
-			log.Printf("Failed to unregister %q after generating the golden image\n", sourceDistro)
+			log.Printf("Setup: Failed to unregister %q after generating the golden image\n", sourceDistro)
 		}
 	}()
 
-	out, err = d.Command(ctx, "exit 0").CombinedOutput()
+	// From now on, all cleanups must be deferred because the distro
+	// must be unregistered before removing the directory it is in.
+
+	out, err = d.Command(ctx, fmt.Sprintf("dpkg -i $(wslpath -ua '%s')", wslProServiceDebPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
-		return "", nil, fmt.Errorf("distro could not be waken up: %v. %s", err, out)
+		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
+	}
+
+	log.Printf("Setup: Installed wsl-pro-service into %q\n", sourceDistro)
+
+	if err := wsl.Shutdown(ctx); err != nil {
+		defer cleanup()
+		return "", nil, fmt.Errorf("could not shut down WSL: %v", err)
 	}
 
 	//nolint:gosec // sourceDistro is validated in common.WSLLauncher. The path is randomly generated in MkdirTemp().
@@ -265,6 +278,8 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not export golden image: %v. %s", err, out)
 	}
+
+	log.Println("Setup: Exported image")
 
 	path = filepath.Join(tmpDir, "golden.tar.gz")
 	return path, cleanup, nil
