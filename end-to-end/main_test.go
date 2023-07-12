@@ -23,8 +23,8 @@ var (
 	// wslProServiceDebPath is the path to the wsl-pro-service .deb package.
 	wslProServiceDebPath string
 
-	// goldenImagePath is the path to the golden image.
-	goldenImagePath string
+	// testImagePath is the path to the test image.
+	testImagePath string
 )
 
 const (
@@ -37,10 +37,10 @@ const (
 	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
 	overrideSafety = "UP4W_TEST_OVERRIDE_DESTRUCTIVE_CHECKS"
 
-	// referenceDistro is the WSL distro that will be used to generate the golden image.
+	// referenceDistro is the WSL distro that will be used to generate the test image.
 	referenceDistro = "Ubuntu"
 
-	// referenceDistro is the WSL distro that will be used to generate the golden image.
+	// referenceDistro is the WSL distro that will be used to generate the test image.
 	referenceDistroAppx = "CanonicalGroupLimited.Ubuntu"
 )
 
@@ -73,12 +73,12 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	path, cleanup, err := generateGoldenImage(ctx, referenceDistro)
+	path, cleanup, err := generateTestImage(ctx, referenceDistro)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 	defer cleanup()
-	goldenImagePath = path
+	testImagePath = path
 
 	m.Run()
 
@@ -213,12 +213,12 @@ func cleanupRegistry() error {
 	return nil
 }
 
-// generateGoldenImage fails if the sourceDistro is registered, unless the safety checks are overridden,
+// generateTestImage fails if the sourceDistro is registered, unless the safety checks are overridden,
 // in which case the sourceDistro is removed.
 // The source distro is then registered, exported after first boot, and unregistered.
-func generateGoldenImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
-	log.Printf("Setup: Generating golden image from %q\n", sourceDistro)
-	defer log.Printf("Setup: Generated golden image from %q\n", sourceDistro)
+func generateTestImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
+	log.Printf("Setup: Generating test image from %q\n", sourceDistro)
+	defer log.Printf("Setup: Generated test image from %q\n", sourceDistro)
 
 	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
 	if err != nil {
@@ -252,7 +252,7 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 
 	defer func() {
 		if err := d.Unregister(); err != nil {
-			log.Printf("Setup: Failed to unregister %q after generating the golden image\n", sourceDistro)
+			log.Printf("Setup: Failed to unregister %q after generating the test image\n", sourceDistro)
 		}
 	}()
 
@@ -272,11 +272,11 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 		return "", nil, fmt.Errorf("could not shut down WSL: %v", err)
 	}
 
-	path = filepath.Join(tmpDir, "golden.vhdx")
+	path = filepath.Join(tmpDir, "snapshot.vhdx")
 	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, path, "--vhd").CombinedOutput()
 	if err != nil {
 		defer cleanup()
-		return "", nil, fmt.Errorf("could not export golden image: %v. %s", err, out)
+		return "", nil, fmt.Errorf("could not export test image: %v. %s", err, out)
 	}
 
 	log.Println("Setup: Exported image")

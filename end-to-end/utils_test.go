@@ -48,14 +48,14 @@ func testSetup(t *testing.T) {
 }
 
 //nolint:revive // testing.T must precede the context
-func registerFromGoldenImage(t *testing.T, ctx context.Context) string {
+func registerFromTestImage(t *testing.T, ctx context.Context) string {
 	t.Helper()
 
 	distroName := wsltestutils.RandomDistroName(t)
 	t.Logf("Registering distro %q", distroName)
 	defer t.Logf("Registered distro %q", distroName)
 
-	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, goldenImagePath)
+	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, testImagePath)
 	return distroName
 }
 

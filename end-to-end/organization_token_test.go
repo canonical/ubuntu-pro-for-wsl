@@ -31,7 +31,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	require.NoError(t, err, "could not close registry key")
 
 	// Distro setup
-	name := registerFromGoldenImage(t, ctx)
+	name := registerFromTestImage(t, ctx)
 	d := wsl.NewDistro(ctx, name)
 
 	defer logWslProServiceJournal(t, ctx, d)
