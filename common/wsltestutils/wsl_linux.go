@@ -8,7 +8,7 @@ import (
 )
 
 //nolint:revive // The context is better after the testing.T
-func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName string, realDistro bool) (GUID string) {
+func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName string, rootFsPath string) (GUID string) {
 	t.Helper()
 
 	require.Fail(t, "Attempted to register a distro on Linux", "To run this test on Linux, you must use the mock GoWSL back-end")
