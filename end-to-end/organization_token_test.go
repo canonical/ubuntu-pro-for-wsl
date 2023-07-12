@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func TestProEnableDistro(t *testing.T) {
+func TestOrganizationProvidedToken(t *testing.T) {
 	ctx := context.Background()
 	testSetup(t)
 
