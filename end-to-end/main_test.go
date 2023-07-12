@@ -34,6 +34,12 @@ const (
 
 	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
 	overrideSafety = "UP4W_TEST_OVERRIDE_DESTRUCTIVE_CHECKS"
+
+	// referenceDistro is the WSL distro that will be used to generate the golden image.
+	referenceDistro = "Ubuntu"
+
+	// referenceDistro is the WSL distro that will be used to generate the golden image.
+	referenceDistroAppx = "CanonicalGroupLimited.Ubuntu"
 )
 
 func TestMain(m *testing.M) {
@@ -43,7 +49,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.Ubuntu"); err != nil {
+	if err := assertAppxInstalled(ctx, referenceDistroAppx); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -65,11 +71,12 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	cleanup, err := generateGoldenImage(ctx, "Ubuntu")
+	path, cleanup, err := generateGoldenImage(ctx, referenceDistro)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 	defer cleanup()
+	goldenImagePath = path
 
 	m.Run()
 
@@ -195,13 +202,16 @@ func cleanupRegistry() error {
 	return nil
 }
 
-func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func(), err error) {
+// generateGoldenImage fails if the sourceDistro is registered, unless the safety checks are overridden,
+// in which case the sourceDistro is removed.
+// The source distro is then registered, exported after first boot, and unregistered.
+func generateGoldenImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
 	log.Printf("Generating golden image from %q\n", sourceDistro)
 	defer log.Printf("Generated golden image from %q\n", sourceDistro)
 
 	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
 	if err != nil {
-		return func() {}, err
+		return "", nil, err
 	}
 	cleanup = func() {
 		if err := os.RemoveAll(tmpDir); err != nil {
@@ -212,19 +222,19 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func
 	d := gowsl.NewDistro(ctx, sourceDistro)
 	if err := assertDistroUnregistered(d); err != nil {
 		cleanup()
-		return nil, err
+		return "", nil, err
 	}
 
 	launcher, err := common.WSLLauncher(sourceDistro)
 	if err != nil {
 		cleanup()
-		return nil, err
+		return "", nil, err
 	}
 
 	out, err := powershellf(ctx, "%s install --root --ui=none", launcher).CombinedOutput()
 	if err != nil {
 		cleanup()
-		return nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
+		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
 	}
 
 	defer func() {
@@ -236,18 +246,18 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func
 	out, err = d.Command(ctx, "exit 0").CombinedOutput()
 	if err != nil {
 		defer cleanup()
-		return nil, fmt.Errorf("distro could not be waken up: %v. %s", err, out)
+		return "", nil, fmt.Errorf("distro could not be waken up: %v. %s", err, out)
 	}
 
 	//nolint:gosec // sourceDistro is validated in common.WSLLauncher. The path is randomly generated in MkdirTemp().
 	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, filepath.Join(tmpDir, "golden.tar.gz")).CombinedOutput()
 	if err != nil {
 		defer cleanup()
-		return nil, fmt.Errorf("could not export golden image: %v. %s", err, out)
+		return "", nil, fmt.Errorf("could not export golden image: %v. %s", err, out)
 	}
 
-	goldenImagePath = filepath.Join(tmpDir, "golden.tar.gz")
-	return cleanup, nil
+	path = filepath.Join(tmpDir, "golden.tar.gz")
+	return path, cleanup, nil
 }
 
 func assertDistroUnregistered(d gowsl.Distro) error {
