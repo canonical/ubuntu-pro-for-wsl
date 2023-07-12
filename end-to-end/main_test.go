@@ -19,10 +19,10 @@ import (
 )
 
 var (
-	// wslProServiceDebPath is the path to the wsl-pro-service .deb package
+	// wslProServiceDebPath is the path to the wsl-pro-service .deb package.
 	wslProServiceDebPath string
 
-	// goldenImagePath is the path to the golden image
+	// goldenImagePath is the path to the golden image.
 	goldenImagePath string
 )
 
@@ -32,7 +32,7 @@ const (
 	//nolint:gosec // This is an environment variable key, not the token itself
 	proTokenKey = "UP4W_TEST_PRO_TOKEN"
 
-	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions
+	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
 	overrideSafety = "UP4W_TEST_OVERRIDE_DESTRUCTIVE_CHECKS"
 )
 
@@ -113,6 +113,7 @@ func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
 }
 
 func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
+	//nolint:gosec // Tainted input is acceptable because all callers have their values hardcoded.
 	return exec.CommandContext(ctx, "powershell.exe",
 		"-NoProfile",
 		"-NoLogo",
@@ -225,7 +226,12 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func
 		cleanup()
 		return nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
 	}
-	defer d.Unregister()
+
+	defer func() {
+		if err := d.Unregister(); err != nil {
+			log.Printf("Failed to unregister %q after generating the golden image\n", sourceDistro)
+		}
+	}()
 
 	out, err = d.Command(ctx, "exit 0").CombinedOutput()
 	if err != nil {
@@ -233,6 +239,7 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func
 		return nil, fmt.Errorf("distro could not be waken up: %v. %s", err, out)
 	}
 
+	//nolint:gosec // sourceDistro is validated in common.WSLLauncher. The path is randomly generated in MkdirTemp().
 	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, filepath.Join(tmpDir, "golden.tar.gz")).CombinedOutput()
 	if err != nil {
 		defer cleanup()

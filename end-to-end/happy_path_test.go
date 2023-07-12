@@ -66,7 +66,10 @@ func TestProEnableDistro(t *testing.T) {
 	require.True(t, response.Attached, "distro should have been Pro attached")
 }
 
+//nolint:revive // testing.T must precede the context
 func logWslProServiceJournal(t *testing.T, ctx context.Context, d wsl.Distro) {
+	t.Helper()
+
 	out, err := d.Command(ctx, "journalctl --no-pager -u wsl-pro.service").CombinedOutput()
 	if err != nil {
 		t.Logf("could not access logs: %v\n%s\n", err, out)

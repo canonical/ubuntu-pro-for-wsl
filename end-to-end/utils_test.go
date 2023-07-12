@@ -47,6 +47,7 @@ func testSetup(t *testing.T) {
 	})
 }
 
+//nolint:revive // testing.T must precede the context
 func registerFromGoldenImage(t *testing.T, ctx context.Context) string {
 	t.Helper()
 
@@ -58,7 +59,10 @@ func registerFromGoldenImage(t *testing.T, ctx context.Context) string {
 	return distroName
 }
 
+//nolint:revive // testing.T must precede the context
 func startAgent(t *testing.T, ctx context.Context) {
+	t.Helper()
+
 	t.Log("Starting agent")
 	defer t.Log("Started agent")
 
@@ -68,15 +72,16 @@ func startAgent(t *testing.T, ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	ubuntupro := filepath.Join(strings.TrimSpace(string(out)), "gui", "ubuntupro.exe")
+	//nolint:gosec // The executable is located at the Appx directory
 	cmd := exec.CommandContext(ctx, ubuntupro)
 
 	t.Cleanup(func() {
 		cancel()
+		//nolint:errcheck // This returns a "context cancelled" error.
 		cmd.Wait()
 	})
 
-	cmd.Start()
-
+	err = cmd.Start()
 	require.NoError(t, err, "Setup: could not start agent")
 
 	require.Eventually(t, func() bool {
