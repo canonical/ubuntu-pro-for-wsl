@@ -272,8 +272,10 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 		return "", nil, fmt.Errorf("could not shut down WSL: %v", err)
 	}
 
+	path = filepath.Join(tmpDir, "golden.vhdx")
+
 	//nolint:gosec // sourceDistro is validated in common.WSLLauncher. The path is randomly generated in MkdirTemp().
-	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, filepath.Join(tmpDir, "golden.tar.gz")).CombinedOutput()
+	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, path, "--vhd").CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not export golden image: %v. %s", err, out)
@@ -281,7 +283,6 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (path string,
 
 	log.Println("Setup: Exported image")
 
-	path = filepath.Join(tmpDir, "golden.tar.gz")
 	return path, cleanup, nil
 }
 

@@ -31,7 +31,13 @@ func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName strin
 	// Register distro with a two minute timeout
 	tk := time.AfterFunc(2*time.Minute, func() { powershellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
-	powershellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q", distroName, tmpDir, rootFsPath)
+
+	var vhdx string
+	if strings.HasSuffix(rootFsPath, ".vhdx") {
+		vhdx = "--vhd"
+	}
+
+	powershellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q %s", distroName, tmpDir, rootFsPath, vhdx)
 	tk.Stop()
 
 	t.Cleanup(func() {
