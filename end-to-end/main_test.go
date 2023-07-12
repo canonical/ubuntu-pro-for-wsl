@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows/registry"
@@ -213,10 +214,13 @@ func generateGoldenImage(ctx context.Context, sourceDistro string) (cleanup func
 		return nil, err
 	}
 
-	r := strings.NewReplacer("-", "", ".", "")
-	launcher := r.Replace(sourceDistro)
+	launcher, err := common.WSLLauncher(sourceDistro)
+	if err != nil {
+		cleanup()
+		return nil, err
+	}
 
-	out, err := powershellf(ctx, "%s.exe install --root --ui=none", launcher).CombinedOutput()
+	out, err := powershellf(ctx, "%s install --root --ui=none", launcher).CombinedOutput()
 	if err != nil {
 		cleanup()
 		return nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)

@@ -11,13 +11,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )
 
 // InstallFromExecutable finds the executable associated with the specified distro and installs it.
 func InstallFromExecutable(ctx context.Context, d gowsl.Distro) error {
-	executable, err := executableName(d.Name())
+	executable, err := common.WSLLauncher(d.Name())
 	if err != nil {
 		return err
 	}
@@ -69,30 +70,6 @@ func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullNa
 	}
 
 	return uint32(id64), nil
-}
-
-func executableName(distroName string) (string, error) {
-	r := strings.NewReplacer(
-		"-", "",
-		".", "",
-	)
-
-	executable := strings.ToLower(r.Replace(distroName))
-	executable = fmt.Sprintf("%s.exe", executable)
-
-	// Validate executable name to protect ourselves from code injection
-	switch executable {
-	case "ubuntu.exe":
-		return executable, nil
-	case "ubuntu-preview.exe":
-		return executable, nil
-	default:
-		if regexp.MustCompile(`^ubuntu\d\d\d\d\.exe$`).MatchString(executable) {
-			return executable, nil
-		}
-	}
-
-	return "", fmt.Errorf("executable name does not match expected pattern")
 }
 
 // UsernameIsValid returns true if the username matches the WSL regex for usernames.
