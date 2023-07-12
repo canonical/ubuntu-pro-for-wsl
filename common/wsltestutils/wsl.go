@@ -1,6 +1,6 @@
-// Package testutils implements helper functions for frequently needed functionality
+// Package wsltestutils implements helper functions for frequently needed functionality
 // in Windows-Agent tests.
-package testutils
+package wsltestutils
 
 import (
 	"context"
