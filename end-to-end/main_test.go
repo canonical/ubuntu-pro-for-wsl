@@ -31,7 +31,7 @@ const (
 	registryPath = `Software\Canonical\UbuntuPro`
 
 	//nolint:gosec // This is an environment variable key, not the token itself.
-	proTokenKey = "UP4W_TEST_PRO_TOKEN"
+	proTokenEnv = "UP4W_TEST_PRO_TOKEN"
 
 	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
 	overrideSafety = "UP4W_TEST_OVERRIDE_DESTRUCTIVE_CHECKS"

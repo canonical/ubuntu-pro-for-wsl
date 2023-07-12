@@ -17,8 +17,8 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	ctx := context.Background()
 	testSetup(t)
 
-	token := os.Getenv(proTokenKey)
-	require.NotEmptyf(t, token, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenKey)
+	token := os.Getenv(proTokenEnv)
+	require.NotEmptyf(t, token, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenEnv)
 
 	// Agent setup
 	key, _, err := registry.CreateKey(registry.CURRENT_USER, registryPath, registry.WRITE)
