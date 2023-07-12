@@ -59,7 +59,9 @@ func registerFromGoldenImage(t *testing.T, ctx context.Context) string {
 	return distroName
 }
 
-//nolint:revive // testing.T must precede the context
+// startAgent starts the GUI (without interacting with it) and waits for the Agent to start.
+//
+//nolint:revive // testing.T must precede the contex
 func startAgent(t *testing.T, ctx context.Context) {
 	t.Helper()
 
@@ -98,6 +100,7 @@ func startAgent(t *testing.T, ctx context.Context) {
 	}, 5*time.Second, 100*time.Millisecond, "Agent never started serving")
 }
 
+// stopAgent kills the process for the Windows Agent.
 func stopAgent(ctx context.Context) error {
 	const process = "ubuntu-pro-agent"
 

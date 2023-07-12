@@ -27,9 +27,10 @@ var (
 )
 
 const (
+	// registryPath is the path under HKEY_CURRENT_USER in which Ubuntu Pro data is stored.
 	registryPath = `Software\Canonical\UbuntuPro`
 
-	//nolint:gosec // This is an environment variable key, not the token itself
+	//nolint:gosec // This is an environment variable key, not the token itself.
 	proTokenKey = "UP4W_TEST_PRO_TOKEN"
 
 	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
@@ -85,6 +86,7 @@ func TestMain(m *testing.M) {
 	}
 }
 
+// assertAppxInstalled returns an error if the provided Appx is not installed.
 func assertAppxInstalled(ctx context.Context, appx string) error {
 	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).Output()
 	if err != nil {
@@ -98,6 +100,7 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 	return nil
 }
 
+// locateWslProServiceDeb locates the WSL pro service at the repository root and returns its absolute path.
 func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
 	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
 
@@ -119,6 +122,7 @@ func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
 	return absPath, nil
 }
 
+// powershellf is syntax sugar to run powrshell commands.
 func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 	//nolint:gosec // Tainted input is acceptable because all callers have their values hardcoded.
 	return exec.CommandContext(ctx, "powershell.exe",
@@ -128,6 +132,8 @@ func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 		"-Command", fmt.Sprintf(command, args...))
 }
 
+// assertCleanLocalAppData returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
+// If safety checks are overridden, then the directory is removed and no error is returned.
 func assertCleanLocalAppData() error {
 	path := os.Getenv("LocalAppData")
 	if path == "" {
@@ -152,6 +158,7 @@ func assertCleanLocalAppData() error {
 		"to agree to run this potentially destructive test.", path)
 }
 
+// cleanupLocalAppData removes directory '%LocalAppData%/Ubuntu Pro' and all its contents.
 func cleanupLocalAppData() error {
 	path := os.Getenv("LocalAppData")
 	if path == "" {
@@ -166,6 +173,8 @@ func cleanupLocalAppData() error {
 	return nil
 }
 
+// assertCleanRegistry returns error if registry key 'UbuntuPro' exists.
+// If safety checks are overridden, then the key is removed and no error is returned.
 func assertCleanRegistry() error {
 	k, err := registry.OpenKey(registry.CURRENT_USER, registryPath, registry.READ)
 	if errors.Is(err, registry.ErrNotExist) {
@@ -190,6 +199,7 @@ func assertCleanRegistry() error {
 		`HKEY_CURRENT_USER\%s`, registryPath)
 }
 
+// cleanupRegistry removes registry key 'UbuntuPro'.
 func cleanupRegistry() error {
 	err := registry.DeleteKey(registry.CURRENT_USER, registryPath)
 	if errors.Is(err, registry.ErrNotExist) {
