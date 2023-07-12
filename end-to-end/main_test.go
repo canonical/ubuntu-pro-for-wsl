@@ -154,7 +154,7 @@ func assertCleanLocalAppData() error {
 		return cleanupLocalAppData()
 	}
 
-	return fmt.Errorf("Directory %q should not exist. Remove it from your machine"+
+	return fmt.Errorf("Directory %q should not exist. Remove it from your machine "+
 		"to agree to run this potentially destructive test.", path)
 }
 
