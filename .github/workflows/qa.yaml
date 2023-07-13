@@ -130,6 +130,8 @@ jobs:
         exclude:
           - os: windows
             subproject: wsl-pro-service
+          - os: ubuntu
+            subproject: common # Excluded because we need gettext installed
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Check out repository
