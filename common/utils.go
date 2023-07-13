@@ -33,7 +33,7 @@ func WSLLauncher(distroName string) (string, error) {
 	switch executable {
 	case "ubuntu.exe":
 		return executable, nil
-	case "ubuntu-preview.exe":
+	case "ubuntupreview.exe":
 		return executable, nil
 	default:
 		if regexp.MustCompile(`^ubuntu\d\d\d\d\.exe$`).MatchString(executable) {
