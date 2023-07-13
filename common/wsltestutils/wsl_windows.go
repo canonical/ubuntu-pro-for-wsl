@@ -11,12 +11,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
+	wsl "github.com/ubuntu/gowsl"
 )
 
+// PowershellImportDistro uses powershell.exe to import a distro from a specific rootfs.
+// If the rootfs is an empty string, an empty tarball will be used.
+//
 //nolint:revive // The context is better after the testing.T
-func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName string, rootFsPath string) (GUID string) {
+func PowershellImportDistro(t *testing.T, ctx context.Context, distroName string, rootFsPath string) (GUID string) {
 	t.Helper()
 	tmpDir := t.TempDir()
+
+	require.False(t, wsl.MockAvailable(), "Called PowershellImportDistro with the gowslmock active. Use RegisterDistro for a generic implementation")
 
 	// Fake rootfs: the distro can be registered but won't run
 	if rootFsPath == "" {
