@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230601072749-e7ce40e197de
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0

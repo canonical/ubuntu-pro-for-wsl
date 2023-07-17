@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
@@ -42,8 +42,8 @@ func TestAttachPro(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distro1, _ := testutils.RegisterDistro(t, ctx, false)
-	distro2, _ := testutils.RegisterDistro(t, ctx, false)
+	distro1, _ := wsltestutils.RegisterDistro(t, ctx, false)
+	distro2, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		distros          []string

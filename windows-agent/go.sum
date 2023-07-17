@@ -43,8 +43,8 @@ github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de h1:uqGVZwsWJ3nvIqXYiu0UJNnztCZA13phoocME+wA+m0=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de/go.mod h1:t1aVvBkEdpN9+UfI6rA5o9C8HtJO16d+wFS6uhwrkUM=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230601072749-e7ce40e197de h1:x2rIbxqXcZEASoC1CQqO/SrJnmtns9MTlvuKyGdlswU=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230601072749-e7ce40e197de/go.mod h1:FPNQH+T3/wdHL0T7Jo6ztPDNhBWPRHE0JA0bzxmh4W8=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537 h1:rAzbA3JvFfIUx3TnVnsarOR4UP33FhJ9KazIiOOQuoY=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537/go.mod h1:D3cj9QISzFDK2zlj4A1v6i/J2kWg4WG52IuMflEEC5s=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de h1:fMK6z2oO43OephCJUaYkYbDJaJaO4UYfMDB2itIhgn8=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de/go.mod h1:UHmoo5NyKYwzIiWaHj8ey9yKOZtt3Etsl2N9FA2bxV4=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

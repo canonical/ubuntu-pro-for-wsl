@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
@@ -42,7 +42,7 @@ func TestNew(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distro, guid := testutils.RegisterDistro(t, ctx, false)
+	distro, guid := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		dirState dbDirState
@@ -104,8 +104,8 @@ func TestDatabaseGetAll(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distro1, _ := testutils.RegisterDistro(t, ctx, false)
-	distro2, _ := testutils.RegisterDistro(t, ctx, false)
+	distro1, _ := wsltestutils.RegisterDistro(t, ctx, false)
+	distro2, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		distros []string
@@ -154,11 +154,11 @@ func TestDatabaseGet(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	registeredDistroInDB, registeredGUID := testutils.RegisterDistro(t, ctx, false)
-	registeredDistroNotInDB, _ := testutils.RegisterDistro(t, ctx, false)
+	registeredDistroInDB, registeredGUID := wsltestutils.RegisterDistro(t, ctx, false)
+	registeredDistroNotInDB, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
-	nonRegisteredDistroNotInDB, _ := testutils.NonRegisteredDistro(t)
-	nonRegisteredDistroInDB, oldGUID := testutils.RegisterDistro(t, ctx, false)
+	nonRegisteredDistroNotInDB, _ := wsltestutils.NonRegisteredDistro(t)
+	nonRegisteredDistroInDB, oldGUID := wsltestutils.RegisterDistro(t, ctx, false)
 
 	databaseDir := t.TempDir()
 	databaseFromTemplate(t, databaseDir,
@@ -172,7 +172,7 @@ func TestDatabaseGet(t *testing.T) {
 	t.Cleanup(func() { db.Close(ctx) })
 
 	// Unregister the distro now, so that it's in the db object but not on system properly.
-	testutils.UnregisterDistro(t, ctx, nonRegisteredDistroInDB)
+	wsltestutils.UnregisterDistro(t, ctx, nonRegisteredDistroInDB)
 
 	testCases := map[string]struct {
 		distroName string
@@ -216,7 +216,7 @@ func TestDatabaseGetAfterClose(t *testing.T) {
 
 	db.Close(ctx)
 
-	require.Panics(t, func() { db.Get(testutils.RandomDistroName(t)) }, "Database Get should panic when used after Close.")
+	require.Panics(t, func() { db.Get(wsltestutils.RandomDistroName(t)) }, "Database Get should panic when used after Close.")
 }
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
@@ -227,8 +227,8 @@ func TestDatabaseDump(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
-	distro2, guid2 := testutils.RegisterDistro(t, ctx, false)
+	distro1, guid1 := wsltestutils.RegisterDistro(t, ctx, false)
+	distro2, guid2 := wsltestutils.RegisterDistro(t, ctx, false)
 
 	// Ensuring lexicographical ordering
 	if strings.ToLower(distro1) > strings.ToLower(distro2) {
@@ -336,10 +336,10 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 	{
 		var guid1, guid2, guid3, guid4 string
 
-		distroInDB, guid1 = testutils.RegisterDistro(t, ctx, false)
-		distroNotInDB, guid2 = testutils.RegisterDistro(t, ctx, false)
-		reRegisteredDistro, guid3 = testutils.RegisterDistro(t, ctx, false)
-		nonRegisteredDistro, guid4 = testutils.NonRegisteredDistro(t)
+		distroInDB, guid1 = wsltestutils.RegisterDistro(t, ctx, false)
+		distroNotInDB, guid2 = wsltestutils.RegisterDistro(t, ctx, false)
+		reRegisteredDistro, guid3 = wsltestutils.RegisterDistro(t, ctx, false)
+		nonRegisteredDistro, guid4 = wsltestutils.NonRegisteredDistro(t)
 
 		guids = map[string]string{
 			distroInDB:          guid1,
@@ -415,7 +415,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 			defer db.Close(ctx)
 
 			if tc.distroName == reRegisteredDistro {
-				guids[reRegisteredDistro] = testutils.ReregisterDistro(t, ctx, reRegisteredDistro, false)
+				guids[reRegisteredDistro] = wsltestutils.ReregisterDistro(t, ctx, reRegisteredDistro, false)
 			}
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
@@ -478,8 +478,8 @@ func TestDatabaseCleanup(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
-	distro2, guid2 := testutils.RegisterDistro(t, ctx, false)
+	distro1, guid1 := wsltestutils.RegisterDistro(t, ctx, false)
+	distro2, guid2 := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		reregisterDistro      bool
@@ -509,7 +509,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			var reregisteredDistro string
 			if tc.reregisterDistro {
 				var guid string
-				reregisteredDistro, guid = testutils.RegisterDistro(t, ctx, false)
+				reregisteredDistro, guid = wsltestutils.RegisterDistro(t, ctx, false)
 				distros = append(distros, distroID{reregisteredDistro, guid})
 			}
 
@@ -526,7 +526,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			}
 
 			if tc.reregisterDistro {
-				testutils.ReregisterDistro(t, ctx, reregisteredDistro, false)
+				wsltestutils.ReregisterDistro(t, ctx, reregisteredDistro, false)
 			}
 
 			if tc.breakDbDump {

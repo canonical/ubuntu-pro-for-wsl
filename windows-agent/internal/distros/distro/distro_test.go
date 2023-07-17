@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -35,9 +35,9 @@ func TestNew(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	registeredDistro, registeredGUID := testutils.RegisterDistro(t, ctx, false)
-	_, anotherRegisteredGUID := testutils.RegisterDistro(t, ctx, false)
-	nonRegisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
+	registeredDistro, registeredGUID := wsltestutils.RegisterDistro(t, ctx, false)
+	_, anotherRegisteredGUID := wsltestutils.RegisterDistro(t, ctx, false)
+	nonRegisteredDistro, fakeGUID := wsltestutils.NonRegisteredDistro(t)
 
 	props := distro.Properties{
 		DistroID:    "ubuntu",
@@ -119,7 +119,7 @@ func TestString(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	name, guid := testutils.RegisterDistro(t, ctx, false)
+	name, guid := wsltestutils.RegisterDistro(t, ctx, false)
 
 	GUID, err := uuid.Parse(guid)
 	require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
@@ -140,9 +140,9 @@ func TestIsValid(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distro1, guid1 := testutils.RegisterDistro(t, ctx, false)
-	_, guid2 := testutils.RegisterDistro(t, ctx, false)
-	nonRegisteredDistro, fakeGUID := testutils.NonRegisteredDistro(t)
+	distro1, guid1 := wsltestutils.RegisterDistro(t, ctx, false)
+	_, guid2 := wsltestutils.RegisterDistro(t, ctx, false)
+	nonRegisteredDistro, fakeGUID := wsltestutils.NonRegisteredDistro(t)
 
 	testCases := map[string]struct {
 		distro string
@@ -218,7 +218,7 @@ func TestSetProperties(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			dname, _ := testutils.RegisterDistro(t, ctx, false)
+			dname, _ := wsltestutils.RegisterDistro(t, ctx, false)
 			d, err := distro.New(ctx, dname, props1, t.TempDir())
 			require.NoError(t, err, "Setup: distro New should return no errors")
 
@@ -293,27 +293,27 @@ func TestLockReleaseAwake(t *testing.T) {
 				t.Skip("This test is only available for the mock back-end")
 			}
 
-			distroName, _ := testutils.RegisterDistro(t, ctx, true)
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 
 			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
 			defer d.Cleanup(context.Background())
 
 			require.NoError(t, err, "Setup: distro New should return no error")
 
-			testutils.TerminateDistro(t, ctx, distroName)
+			wsltestutils.TerminateDistro(t, ctx, distroName)
 
 			if tc.invalidateBeforeLock {
 				d.Invalidate(ctx)
 			}
 			if tc.unregisterDistro {
-				testutils.UnregisterDistro(t, ctx, distroName)
+				wsltestutils.UnregisterDistro(t, ctx, distroName)
 			}
 
 			// Start distro
 			err = d.LockAwake()
 			if tc.wantLockErr {
 				require.Errorf(t, err, "LockAwake should have returned an error")
-				state := testutils.DistroState(t, ctx, distroName)
+				state := wsltestutils.DistroState(t, ctx, distroName)
 				require.NotEqualf(t, "Running", state, "distro should not run when LockAwake fails")
 
 				return
@@ -321,13 +321,13 @@ func TestLockReleaseAwake(t *testing.T) {
 			require.NoErrorf(t, err, "LockAwake should have returned no error")
 
 			require.Eventually(t, func() bool {
-				return testutils.DistroState(t, ctx, distroName) == "Running"
+				return wsltestutils.DistroState(t, ctx, distroName) == "Running"
 			}, 10*time.Second, time.Second, "distro should have started after calling LockAwake")
 
 			// Second lock
 			if tc.doubleLock {
 				if tc.stopDistroInbetweenLocks {
-					testutils.TerminateDistro(t, ctx, distroName)
+					wsltestutils.TerminateDistro(t, ctx, distroName)
 				}
 
 				if tc.errorOnSecondLock {
@@ -358,7 +358,7 @@ func TestLockReleaseAwake(t *testing.T) {
 
 			time.Sleep(wslSleepDelay + 2*time.Second)
 
-			require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "LockAwake should have kept the distro running")
+			require.Equal(t, "Running", wsltestutils.DistroState(t, ctx, distroName), "LockAwake should have kept the distro running")
 
 			// Stopping distro
 			if tc.cleanupDistro {
@@ -379,7 +379,7 @@ func TestLockReleaseAwake(t *testing.T) {
 
 				if tc.doubleLock {
 					time.Sleep(wslSleepDelay + 2*time.Second)
-					require.Equal(t, "Running", testutils.DistroState(t, ctx, distroName), "Distro should stay awake after two calls to LockAwake and only one to ReleaseAwake")
+					require.Equal(t, "Running", wsltestutils.DistroState(t, ctx, distroName), "Distro should stay awake after two calls to LockAwake and only one to ReleaseAwake")
 
 					// Need two releases
 					err = d.ReleaseAwake()
@@ -436,7 +436,7 @@ func TestState(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			distroName, _ := testutils.RegisterDistro(t, ctx, true)
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
 			require.NoError(t, err, "Setup: distro New should return no errors")
 
@@ -474,7 +474,7 @@ func TestWorkerConstruction(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distroName, _ := testutils.RegisterDistro(t, ctx, false)
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		constructorReturnErr bool
@@ -529,7 +529,7 @@ func TestInvalidateIdempotent(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distroName, _ := testutils.RegisterDistro(t, ctx, false)
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	inj, w := mockWorkerInjector(false)
 
@@ -562,7 +562,7 @@ func TestWorkerWrappers(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	distroName, _ := testutils.RegisterDistro(t, ctx, false)
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
 		function      string // What method to call
@@ -688,7 +688,7 @@ func TestUninstall(t *testing.T) {
 				t.Skip("This test is only available with the WSL mock")
 			}
 
-			name, _ := testutils.RegisterDistro(t, ctx, false)
+			name, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 			d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir())
 			require.NoError(t, err, "Setup: distro New should return no errors")

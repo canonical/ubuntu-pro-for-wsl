@@ -1,6 +1,6 @@
-// Package testutils implements helper functions for frequently needed functionality
+// Package wsltestutils implements helper functions for frequently needed functionality
 // in Windows-Agent tests.
-package testutils
+package wsltestutils
 
 import (
 	"context"
@@ -122,7 +122,14 @@ func registerDistro(t *testing.T, ctx context.Context, distroName string, realDi
 	t.Helper()
 
 	if !wsl.MockAvailable() {
-		return powershellInstallDistro(t, ctx, distroName, realDistro)
+		var rootFsPath string
+		if realDistro {
+			const appx = "UbuntuPreview"
+			appxDir := powershellOutputf(t, `(Get-AppxPackage | Where-Object Name -like 'CanonicalGroupLimited.%s').InstallLocation`, appx)
+			require.NotEmpty(t, appxDir, "could not find rootfs tarball. Is %s installed?", appx)
+			rootFsPath = filepath.Join(appxDir, "install.tar.gz")
+		}
+		return PowershellImportDistro(t, ctx, distroName, rootFsPath)
 	}
 
 	t.Cleanup(func() {

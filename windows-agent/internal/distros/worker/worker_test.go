@@ -18,9 +18,9 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -88,7 +88,7 @@ func TestNew(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			distro := &testDistro{name: testutils.RandomDistroName(t)}
+			distro := &testDistro{name: wsltestutils.RandomDistroName(t)}
 
 			distroDir := t.TempDir()
 			taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
@@ -184,7 +184,7 @@ func TestTaskProcessing(t *testing.T) {
 			defer cancel()
 
 			d := &testDistro{
-				name: testutils.RandomDistroName(t),
+				name: wsltestutils.RandomDistroName(t),
 			}
 
 			w, err := worker.New(ctx, d, t.TempDir())
@@ -292,7 +292,7 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 
 	ctx := context.Background()
 
-	distro := &testDistro{name: testutils.RandomDistroName(t)}
+	distro := &testDistro{name: wsltestutils.RandomDistroName(t)}
 	distroDir := t.TempDir()
 	taskFile := filepath.Join(distroDir, distro.Name()+".tasks")
 
@@ -316,7 +316,7 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 	ctx := context.Background()
 
 	d := &testDistro{
-		name: testutils.RandomDistroName(t),
+		name: wsltestutils.RandomDistroName(t),
 	}
 
 	w, err := worker.New(ctx, d, t.TempDir())
@@ -345,7 +345,7 @@ func TestSetConnection(t *testing.T) {
 	ctx := context.Background()
 
 	d := &testDistro{
-		name: testutils.RandomDistroName(t),
+		name: wsltestutils.RandomDistroName(t),
 	}
 
 	w, err := worker.New(ctx, d, t.TempDir())
@@ -406,7 +406,7 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	ctx := context.Background()
 
 	d := &testDistro{
-		name: testutils.RandomDistroName(t),
+		name: wsltestutils.RandomDistroName(t),
 	}
 
 	w, err := worker.New(ctx, d, t.TempDir())

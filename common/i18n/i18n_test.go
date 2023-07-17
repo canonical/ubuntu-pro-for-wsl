@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -47,6 +48,10 @@ msgstr "translated singular"
 )
 
 func TestTranslations(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("This test is only available on Linux")
+	}
+
 	defaultLocaleDir := filepath.Join(t.TempDir(), "locale")
 	compileMoFiles(t, defaultLocaleDir)
 

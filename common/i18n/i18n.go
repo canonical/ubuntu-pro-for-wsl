@@ -28,6 +28,7 @@ var (
 	NG = func(msgid string, msgidPlural string, n uint32) string { return msgid }
 )
 
+// Option is an optional argument for InitI18nDomain.
 type Option func(l *i18n)
 
 // InitI18nDomain calls bind + set locale to system values.
