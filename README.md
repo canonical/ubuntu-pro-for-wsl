@@ -1,5 +1,7 @@
 # ubuntu-pro-for-windows
 
+[![License](https://img.shields.io/badge/License-GPL3.0-blue.svg)](https://github.com/canonical/ubuntu-pro-for-windows/blob/main/LICENSE)
+
 Ubuntu Pro for Windows is a set of applications to manage Ubuntu WSL instances to allow to:
 
 * grants ‘pro-enabled’ status to any Ubuntu instance on the device,
