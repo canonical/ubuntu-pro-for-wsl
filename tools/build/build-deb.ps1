@@ -5,7 +5,7 @@ if ( $appx -eq "" ) {
 
 ubuntupreview.exe install --root --ui=none
 
-Push-Location "${PSScriptRoot}\.."
+Push-Location "${PSScriptRoot}\..\.."
 
 $script=New-TemporaryFile
 

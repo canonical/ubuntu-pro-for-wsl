@@ -42,7 +42,7 @@ function Start-VsDevShell {
 
 function Update-Certificate {
     # Finding local certificate
-    $certificate_path = ".\end-to-end\.certificate_thumbprint"
+    $certificate_path = "${PSScriptRoot}\.certificate_thumbprint"
     if (! (Test-Path "${certificate_path}") ) {
         Write-Error "You need a certificate to build and install the Appx. `
         Create and install a certificate, and write its thumbprint in ${certificate_path}.`
@@ -73,7 +73,8 @@ function Update-Appx {
     & "${artifacts}\Install.ps1" -Force
 }
 
-Push-Location "${PSScriptRoot}\.."
+# Going to project root
+Push-Location "${PSScriptRoot}\..\.."
 
 Update-Certificate
 
