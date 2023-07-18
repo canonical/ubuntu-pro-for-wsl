@@ -13,23 +13,16 @@ $script=New-TemporaryFile
 [IO.File]::WriteAllText($script, @'
 set -eu
 
-# Install dependencies
-apt update
-apt install -y devscripts equivs
-
 # Set up directory
 build_dir="${HOME}/wsl-pro-service-build"
-mkdir -p "${build_dir}"
-rsync --recursive --quiet wsl-pro-service "${build_dir}"
+
+rsync --recursive --quiet --exclude=".git" "." "${build_dir}"
 
 # Build
-cd "${build_dir}/wsl-pro-service"
-mk-build-deps --install --tool="apt -y" --remove
-DEB_BUILD_OPTIONS=nocheck UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE=1 debuild
-cd -
+bash -e "${build_dir}/tools/build/build-deb.sh"
 
 # Export artifacts
-rsync --recursive --quiet --exclude="wsl-pro-service/" "${build_dir}/" "."
+cp -f ${build_dir}/wsl-pro-service_* .
 '@)
 
 wsl.exe -d Ubuntu-Preview -u root -- bash "`$(wslpath -ua `'${script}`')"
