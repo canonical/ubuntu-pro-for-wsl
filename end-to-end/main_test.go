@@ -20,9 +20,6 @@ import (
 )
 
 var (
-	// wslProServiceDebPath is the path to the wsl-pro-service .deb package.
-	wslProServiceDebPath string
-
 	// testImagePath is the path to the test image.
 	testImagePath string
 )
@@ -58,12 +55,6 @@ func TestMain(m *testing.M) {
 	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
-
-	path, err := locateWslProServiceDeb(ctx)
-	if err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-	wslProServiceDebPath = path
 
 	if err := assertCleanRegistry(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
@@ -259,7 +250,12 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	out, err = d.Command(ctx, fmt.Sprintf("dpkg -i $(wslpath -ua '%s')", wslProServiceDebPath)).CombinedOutput()
+	debPath, err := locateWslProServiceDeb(ctx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	out, err = d.Command(ctx, fmt.Sprintf("dpkg -i $(wslpath -ua '%s')", debPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
