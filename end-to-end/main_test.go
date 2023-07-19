@@ -52,6 +52,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
+	if err := buildProject(ctx); err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+
 	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -78,9 +82,54 @@ func TestMain(m *testing.M) {
 	}
 }
 
+func buildProject(ctx context.Context) (err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	jobs := map[string]*exec.Cmd{
+		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1`),
+		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1`),
+	}
+
+	results := make(chan error)
+	for name, job := range jobs {
+		name := name
+		job := job
+		go func() {
+			log.Printf("Started job: %s\n", name)
+
+			logFile := strings.ReplaceAll(fmt.Sprintf("%s.log", name), " ", "")
+
+			out, err := job.CombinedOutput()
+			if err != nil {
+				cancel()
+				results <- fmt.Errorf("%q: %v. Check out %q for more details", name, err, logFile)
+			} else {
+				log.Printf("Finished job: %s\n", name)
+				results <- nil
+			}
+
+			if logErr := os.WriteFile(logFile, out, 0600); logErr != nil {
+				log.Printf("could not write logs for %s", name)
+			}
+		}()
+	}
+
+	for range jobs {
+		err = errors.Join(err, <-results)
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not build project: %v", err)
+	}
+
+	log.Println("Project built")
+	return nil
+}
+
 // assertAppxInstalled returns an error if the provided Appx is not installed.
 func assertAppxInstalled(ctx context.Context, appx string) error {
-	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).Output()
+	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("could not determine if %q is installed: %v. %s", appx, err, out)
 	}
@@ -96,7 +145,7 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
 	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
 
-	out, err := powershellf(ctx, `(Get-ChildItem -Path "../wsl-pro-service_*.deb").FullName`).Output()
+	out, err := powershellf(ctx, `(Get-ChildItem -Path "../wsl-pro-service_*.deb").FullName`).CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("could not read expected location: %v. %s", err, out)
 	}
@@ -121,7 +170,7 @@ func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 		"-NoProfile",
 		"-NoLogo",
 		"-NonInteractive",
-		"-Command", fmt.Sprintf(command, args...))
+		"-Command", fmt.Sprintf(`$env:PsModulePath="" ; `+command, args...))
 }
 
 // assertCleanLocalAppData returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
