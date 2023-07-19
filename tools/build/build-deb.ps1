@@ -23,7 +23,14 @@ set -eu
 # Set up directory
 build_dir="${HOME}/wsl-pro-service-build"
 
-rsync --recursive --quiet --exclude=".git" "." "${build_dir}"
+rsync                                       \
+    --recursive                             \
+    --quiet                                 \
+    --exclude=".git"                        \
+    --exclude="msix/UbuntuProForWindows"    \
+    --exclude="*vcxproj*"                   \
+    .                                       \
+    "${build_dir}"
 
 # Build
 bash -e "${build_dir}/tools/build/build-deb.sh"
