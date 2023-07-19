@@ -51,7 +51,7 @@ function Update-Certificate {
     }
 
     $certificate_thumbprint = Get-Content ${certificate_path}
-    
+
     # Replacing with local certificate
     $wapproj = ".\msix\UbuntuProForWindows\UbuntuProForWindows.wapproj"
     (Get-Content -Path "${wapproj}")                                                                   `
@@ -67,10 +67,15 @@ function Update-Appx {
         | Sort-Object LastWriteTime                                                     `
         | Select-Object -last 1                                                         `
     )
-    
+
     Get-AppxPackage "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage 
     
     & "${artifacts}\Install.ps1" -Force
+
+    if ( "${LastExitCode}" -ne "0" ) {
+        Write-Output "could not install Appx"
+        exit 1
+    }
 }
 
 # Going to project root
