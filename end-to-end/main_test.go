@@ -52,6 +52,14 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
+	if err := assertCleanRegistry(); err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+
+	if err := assertCleanLocalAppData(); err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+
 	wslProServiceDebPath, err := buildProject(ctx)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
@@ -63,14 +71,6 @@ func TestMain(m *testing.M) {
 	}()
 
 	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
-	if err := assertCleanRegistry(); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
-	if err := assertCleanLocalAppData(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
