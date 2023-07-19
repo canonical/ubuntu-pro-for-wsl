@@ -1,3 +1,21 @@
+<#
+.Synopsis
+    Build the WSL Pro Service debian package for local use.
+#>
+
+param(
+    [Parameter(Mandatory=$False,HelpMessage="The directory where the debian build artifacts will be stored in")]
+    [string]$OutputDir
+)
+
+$projectRoot = "${PSScriptRoot}\..\.."
+
+# By default, we store artifacts in the same location dpkg-buildpackage would store them in
+if ( "${OutputDir}" -eq "" ) {
+    $OutputDir = "${projectRoot}"
+}
+
+# Ensure Ubuntu-Preview is installed and registered
 $appx = Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPreview"
 if ( $appx -eq "" ) {
     Write-Error "Ubuntu Preview is not installed"
@@ -13,7 +31,14 @@ if ( "$(wsl --list --verbose | Select-String Ubuntu-Preview)" -eq "" ) {
     }
 }
 
+# Write script to run
 $scriptWindows=New-TemporaryFile
+
+$scriptLinux=( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${scriptWindows}`' )
+if ( "${LastExitCode}" -ne "0" ) {
+    Write-Error "could not get build script's linux path"
+    exit 1
+}
 
 # Using WriteAllText to avoid CRLF
 [IO.File]::WriteAllText($scriptWindows, @'
@@ -36,13 +61,16 @@ rsync                                       \
 bash -e "${build_dir}/tools/build/build-deb.sh"
 
 # Export artifacts
-cp -f ${build_dir}/wsl-pro-service_* .
+cp -f ${build_dir}/wsl-pro-service_* "${OutputDir}"
 
 '@)
 
-$scriptLinux=( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${scriptWindows}`' )
+# Set up output directory
+New-Item -Force -ItemType "Directory" -Path "${OutputDir}" | Out-Null
+
+$outputLinux=( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${OutputDir}`' )
 if ( "${LastExitCode}" -ne "0" ) {
-    Write-Error "could not get build script's linux path"
+    Write-Error "could not get output dir's linux path"
     exit 1
 }
 
@@ -52,15 +80,13 @@ if ( "${LastExitCode}" -ne "0" ) {
     exit 1
 }
 
-Push-Location "${PSScriptRoot}\..\.."
-
-wsl.exe -d Ubuntu-Preview -u root -- bash -ec "${scriptLinux} 2>&1"
+wsl.exe -d Ubuntu-Preview -u root --cd "${projectRoot}" -- bash -ec "OutputDir=${outputLinux} ${scriptLinux} 2>&1"
 if ( "${LastExitCode}" -ne "0" ) {
     Write-Error "could not build deb"
     exit 1
 }
 
-Pop-Location
+Write-Output "Artifacts stored in ${OutputDir}"
 
 Remove-Item -Path "${scriptWindows}"
 

@@ -52,9 +52,15 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := buildProject(ctx); err != nil {
+	wslProServiceDebPath, err := buildProject(ctx)
+	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
+	defer func() {
+		if err := os.RemoveAll(wslProServiceDebPath); err != nil {
+			log.Printf("could not remove debian artifacts at %q: %v", wslProServiceDebPath, err)
+		}
+	}()
 
 	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
@@ -68,7 +74,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	path, cleanup, err := generateTestImage(ctx, referenceDistro)
+	path, cleanup, err := generateTestImage(ctx, referenceDistro, wslProServiceDebPath)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -82,13 +88,18 @@ func TestMain(m *testing.M) {
 	}
 }
 
-func buildProject(ctx context.Context) (err error) {
+func buildProject(ctx context.Context) (debPath string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	debPath, err = os.MkdirTemp(os.TempDir(), "WslProService")
+	if err != nil {
+		return "", fmt.Errorf("could not create temporary directory for debian artifacts")
+	}
+
 	jobs := map[string]*exec.Cmd{
 		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1`),
-		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1`),
+		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1 -OutputDir %q`, debPath),
 	}
 
 	results := make(chan error)
@@ -120,11 +131,11 @@ func buildProject(ctx context.Context) (err error) {
 	}
 
 	if err != nil {
-		return fmt.Errorf("could not build project: %v", err)
+		return "", fmt.Errorf("could not build project: %v", err)
 	}
 
 	log.Println("Project built")
-	return nil
+	return debPath, nil
 }
 
 // assertAppxInstalled returns an error if the provided Appx is not installed.
@@ -142,25 +153,25 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 }
 
 // locateWslProServiceDeb locates the WSL pro service at the repository root and returns its absolute path.
-func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
+func locateWslProServiceDeb(ctx context.Context, path string) (debPath string, err error) {
 	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
 
-	out, err := powershellf(ctx, `(Get-ChildItem -Path "../wsl-pro-service_*.deb").FullName`).CombinedOutput()
+	out, err := powershellf(ctx, `(Get-ChildItem -Path "%s/wsl-pro-service_*.deb").FullName`, path).CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("could not read expected location: %v. %s", err, out)
 	}
 
-	path := strings.TrimSpace(string(out))
-	if path == "" {
+	debPath = strings.TrimSpace(string(out))
+	if debPath == "" {
 		return "", errors.New("Wsl Pro Service is not built")
 	}
 
-	absPath, err := filepath.Abs(path)
+	debPath, err = filepath.Abs(debPath)
 	if err != nil {
 		return "", fmt.Errorf("could not make path %q absolute: %v", path, err)
 	}
 
-	return absPath, nil
+	return debPath, nil
 }
 
 // powershellf is syntax sugar to run powrshell commands.
@@ -256,7 +267,7 @@ func cleanupRegistry() error {
 // generateTestImage fails if the sourceDistro is registered, unless the safety checks are overridden,
 // in which case the sourceDistro is removed.
 // The source distro is then registered, exported after first boot, and unregistered.
-func generateTestImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
+func generateTestImage(ctx context.Context, sourceDistro string, wslProServiceDebPath string) (path string, cleanup func(), err error) {
 	log.Printf("Setup: Generating test image from %q\n", sourceDistro)
 	defer log.Printf("Setup: Generated test image from %q\n", sourceDistro)
 
@@ -299,7 +310,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	debPath, err := locateWslProServiceDeb(ctx)
+	debPath, err := locateWslProServiceDeb(ctx, wslProServiceDebPath)
 	if err != nil {
 		return "", nil, err
 	}

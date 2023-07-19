@@ -61,14 +61,12 @@ function Update-Certificate {
         | Set-Content -Path "${wapproj}"
 }
 
-function Update-Appx {
+function Install-Appx {
     $artifacts = (
         Get-ChildItem ".\msix\UbuntuProForWindows\AppPackages\UbuntuProForWindows_*"    `
         | Sort-Object LastWriteTime                                                     `
         | Select-Object -last 1                                                         `
     )
-
-    Get-AppxPackage "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage 
     
     & "${artifacts}\Install.ps1" -Force
 
@@ -77,6 +75,9 @@ function Update-Appx {
         exit 1
     }
 }
+
+# Uninstall currently installed version
+Get-AppxPackage "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage
 
 # Going to project root
 Push-Location "${PSScriptRoot}\..\.."
@@ -99,6 +100,6 @@ msbuild.exe                                          `
 
 if (! $?) { exit 1 }
 
-Update-Appx
+Install-Appx
 
 Pop-Location
