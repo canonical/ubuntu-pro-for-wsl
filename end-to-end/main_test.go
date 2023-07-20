@@ -267,7 +267,7 @@ func cleanupRegistry() error {
 // generateTestImage fails if the sourceDistro is registered, unless the safety checks are overridden,
 // in which case the sourceDistro is removed.
 // The source distro is then registered, exported after first boot, and unregistered.
-func generateTestImage(ctx context.Context, sourceDistro string, wslProServiceDebPath string) (path string, cleanup func(), err error) {
+func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath string) (path string, cleanup func(), err error) {
 	log.Printf("Setup: Generating test image from %q\n", sourceDistro)
 	defer log.Printf("Setup: Generated test image from %q\n", sourceDistro)
 
