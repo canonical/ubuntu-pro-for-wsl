@@ -54,6 +54,7 @@ rsync                                       \
     --exclude=".git"                        \
     --exclude="msix/UbuntuProForWindows"    \
     --exclude="*vcxproj*"                   \
+    --exclude="*/x64/*"                     \
     .                                       \
     "${build_dir}"
 
