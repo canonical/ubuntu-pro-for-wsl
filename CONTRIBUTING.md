@@ -66,17 +66,28 @@ Once merged to the main branch, `po` files, `README.md` with the command line re
 
 ### Required dependencies
 
-TODO
+You'll need a Windows Machine with the following applications installed:
+- Windows Subsystem for Linux
+- Ubuntu-Preview
+- Visual Studio Community 2019 or above
+- Go
+- Flutter
 
 ### Building and running the binaries
 
-TODO
+To build the project, you can use the following two scripts:
+- [Build the Windows Agent](tools/build/build-deb.ps1)
+- [Build the Wsl Pro Service](tools/build/build-appx.ps1)
+
+Note that you'll need to [create a self-signing certificate](https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing) to build the Windows Agent.
 
 ### About the testsuite
 
 The project includes a comprehensive testsuite made of unit and integration tests. All the tests must pass with and without the race detector.
 
-TODO
+Each module has its own package tests, and you can also find the integration tests at the [end-to-end directory](./end-to-end/). Note that you'll need all the install dependencies, plus:
+- An Ubuntu Pro token ([get it for free for personal use](https://ubuntu.com/pro))
+- The Ubuntu app from the Microsoft Store
 
 The test suite must pass before merging the PR to our main branch. Any new feature, change or fix must be covered by corresponding tests.
 
@@ -86,7 +97,7 @@ It is required to sign the [Contributor License Agreement](https://ubuntu.com/le
 
 An automated test is executed on PRs to check if it has been accepted.
 
-This project is covered by [TODO](LICENSE).
+This project is covered by [the GNU general public license](LICENSE).
 
 ## Getting Help
 
