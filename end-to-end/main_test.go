@@ -20,9 +20,6 @@ import (
 )
 
 var (
-	// wslProServiceDebPath is the path to the wsl-pro-service .deb package.
-	wslProServiceDebPath string
-
 	// testImagePath is the path to the test image.
 	testImagePath string
 )
@@ -55,16 +52,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
-	path, err := locateWslProServiceDeb(ctx)
-	if err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-	wslProServiceDebPath = path
-
 	if err := assertCleanRegistry(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -73,7 +60,21 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	path, cleanup, err := generateTestImage(ctx, referenceDistro)
+	wslProServiceDebPath, err := buildProject(ctx)
+	if err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+	defer func() {
+		if err := os.RemoveAll(wslProServiceDebPath); err != nil {
+			log.Printf("could not remove debian artifacts at %q: %v", wslProServiceDebPath, err)
+		}
+	}()
+
+	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
+		log.Fatalf("Setup: %v\n", err)
+	}
+
+	path, cleanup, err := generateTestImage(ctx, referenceDistro, wslProServiceDebPath)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -87,9 +88,59 @@ func TestMain(m *testing.M) {
 	}
 }
 
+func buildProject(ctx context.Context) (debPath string, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	debPath, err = os.MkdirTemp(os.TempDir(), "WslProService")
+	if err != nil {
+		return "", fmt.Errorf("could not create temporary directory for debian artifacts")
+	}
+
+	jobs := map[string]*exec.Cmd{
+		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1`),
+		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1 -OutputDir %q`, debPath),
+	}
+
+	results := make(chan error)
+	for name, job := range jobs {
+		name := name
+		job := job
+		go func() {
+			log.Printf("Started job: %s\n", name)
+
+			logFile := strings.ReplaceAll(fmt.Sprintf("%s.log", name), " ", "")
+
+			out, err := job.CombinedOutput()
+			if err != nil {
+				cancel()
+				results <- fmt.Errorf("%q: %v. Check out %q for more details", name, err, logFile)
+			} else {
+				log.Printf("Finished job: %s\n", name)
+				results <- nil
+			}
+
+			if logErr := os.WriteFile(logFile, out, 0600); logErr != nil {
+				log.Printf("could not write logs for %s", name)
+			}
+		}()
+	}
+
+	for range jobs {
+		err = errors.Join(err, <-results)
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("could not build project: %v", err)
+	}
+
+	log.Println("Project built")
+	return debPath, nil
+}
+
 // assertAppxInstalled returns an error if the provided Appx is not installed.
 func assertAppxInstalled(ctx context.Context, appx string) error {
-	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).Output()
+	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("could not determine if %q is installed: %v. %s", appx, err, out)
 	}
@@ -102,25 +153,25 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 }
 
 // locateWslProServiceDeb locates the WSL pro service at the repository root and returns its absolute path.
-func locateWslProServiceDeb(ctx context.Context) (s string, err error) {
+func locateWslProServiceDeb(ctx context.Context, path string) (debPath string, err error) {
 	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
 
-	out, err := powershellf(ctx, `(Get-ChildItem -Path "../wsl-pro-service_*.deb").FullName`).Output()
+	out, err := powershellf(ctx, `(Get-ChildItem -Path "%s/wsl-pro-service_*.deb").FullName`, path).CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("could not read expected location: %v. %s", err, out)
 	}
 
-	path := strings.TrimSpace(string(out))
-	if path == "" {
+	debPath = strings.TrimSpace(string(out))
+	if debPath == "" {
 		return "", errors.New("Wsl Pro Service is not built")
 	}
 
-	absPath, err := filepath.Abs(path)
+	debPath, err = filepath.Abs(debPath)
 	if err != nil {
 		return "", fmt.Errorf("could not make path %q absolute: %v", path, err)
 	}
 
-	return absPath, nil
+	return debPath, nil
 }
 
 // powershellf is syntax sugar to run powrshell commands.
@@ -130,7 +181,7 @@ func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 		"-NoProfile",
 		"-NoLogo",
 		"-NonInteractive",
-		"-Command", fmt.Sprintf(command, args...))
+		"-Command", fmt.Sprintf(`$env:PsModulePath="" ; `+command, args...))
 }
 
 // assertCleanLocalAppData returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
@@ -216,7 +267,7 @@ func cleanupRegistry() error {
 // generateTestImage fails if the sourceDistro is registered, unless the safety checks are overridden,
 // in which case the sourceDistro is removed.
 // The source distro is then registered, exported after first boot, and unregistered.
-func generateTestImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
+func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath string) (path string, cleanup func(), err error) {
 	log.Printf("Setup: Generating test image from %q\n", sourceDistro)
 	defer log.Printf("Setup: Generated test image from %q\n", sourceDistro)
 
@@ -259,7 +310,12 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	out, err = d.Command(ctx, fmt.Sprintf("dpkg -i $(wslpath -ua '%s')", wslProServiceDebPath)).CombinedOutput()
+	debPath, err := locateWslProServiceDeb(ctx, wslProServiceDebPath)
+	if err != nil {
+		return "", nil, err
+	}
+
+	out, err = d.Command(ctx, fmt.Sprintf("apt install $(wslpath -ua '%s')", debPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
