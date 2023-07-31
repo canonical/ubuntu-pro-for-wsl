@@ -38,12 +38,12 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de h1:uqGVZwsWJ3nvIqXYiu0UJNnztCZA13phoocME+wA+m0=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de/go.mod h1:t1aVvBkEdpN9+UfI6rA5o9C8HtJO16d+wFS6uhwrkUM=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230731091354-61b9e1e99223 h1:erHG99VBMo3WmnPmCyk7gkKwRbvGUXD3y7X/jRVi2PQ=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230731091354-61b9e1e99223/go.mod h1:k7xOkQlC2YCcPrr7jFFJJRgurHYoFHQQSEsLPxV4cQU=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230601072749-e7ce40e197de h1:x2rIbxqXcZEASoC1CQqO/SrJnmtns9MTlvuKyGdlswU=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230601072749-e7ce40e197de/go.mod h1:FPNQH+T3/wdHL0T7Jo6ztPDNhBWPRHE0JA0bzxmh4W8=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de h1:fMK6z2oO43OephCJUaYkYbDJaJaO4UYfMDB2itIhgn8=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de/go.mod h1:UHmoo5NyKYwzIiWaHj8ey9yKOZtt3Etsl2N9FA2bxV4=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230731091354-61b9e1e99223 h1:njAN9EI3M5qB9NoPVOX6IRUBcP4dkXO6BFgcUrCSHqQ=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230731091354-61b9e1e99223/go.mod h1:XmNkZsTQVLR93cQoUE0iprMEmJpBo+3Ve2hiebSnZpw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
