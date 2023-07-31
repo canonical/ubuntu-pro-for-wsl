@@ -6,7 +6,7 @@
 [license-image]: https://img.shields.io/badge/License-GPL3.0-blue.svg
 
 [codecov-image]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows 
+[codecov-url]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows
 
 [goreport-image]: https://goreportcard.com/badge/github.com/canonical/ubuntu-pro-for-windows
 [goreport-url]: https://goreportcard.com/report/github.com/canonical/ubuntu-pro-for-windows
@@ -14,7 +14,7 @@
 [![Code quality][actions-image]][actions-url]
 [![License][license-image]](LICENSE)
 
-<!-- 
+<!--
 Disabled while the repo is private
 
 [![Code coverage][codecov-image]][codecov-url]
@@ -52,3 +52,7 @@ This is an [open source](LICENSE) project and we warmly welcome community contri
 We're friendly! We have a community forum at [https://discourse.ubuntu.com](https://discourse.ubuntu.com) where we discuss feature plans, development news, issues, updates and troubleshooting.
 
 For news and updates, follow the [Ubuntu twitter account](https://twitter.com/ubuntu) and on [Facebook](https://www.facebook.com/ubuntu).
+
+## Troubleshooting
+
+//TODO: fill troubleshooting section
