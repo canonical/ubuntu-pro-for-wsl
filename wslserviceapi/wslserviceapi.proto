@@ -1,16 +1,16 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 option go_package = "github.com/canonical/ubuntu-pro-for-windows/wslserviceapi";
 
 package wslserviceapi;
 
 service WSL {
-    rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
-    rpc Ping(Empty) returns (Empty) {}
+    rpc ApplyProToken (ProAttachInfo) returns (google.protobuf.Empty) {}
+    rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message ProAttachInfo {
     string token = 1;
 }
-
-message Empty {}

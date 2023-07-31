@@ -1,15 +1,15 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 option go_package = "github.com/canonical/ubuntu-pro-for-windows/agentapi";
 
 package agentapi;
 
-message Empty {}
-
 service UI {
-    rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
-    rpc Ping (Empty) returns (Empty) {}
-    rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
+    rpc ApplyProToken (ProAttachInfo) returns (google.protobuf.Empty) {}
+    rpc Ping (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc GetSubscriptionInfo(google.protobuf.Empty) returns (SubscriptionInfo) {}
 }
 
 message ProAttachInfo {
@@ -21,10 +21,10 @@ message SubscriptionInfo {
     bool immutable = 2;             // True if the user is not allowed to modify the subscription.
     
     oneof subscriptionType {
-        Empty none = 3;             // There is no active subscription.
-        Empty user = 4;             // The subscription is managed by the user with a pro token from the GUI or the registry.
-        Empty organization = 5;     // The subscription is managed by the sysadmin with a pro token from the registry.
-        Empty microsoftStore = 6;   // The subscription is managed via the Microsoft store.
+        google.protobuf.Empty none = 3;             // There is no active subscription.
+        google.protobuf.Empty user = 4;             // The subscription is managed by the user with a pro token from the GUI or the registry.
+        google.protobuf.Empty organization = 5;     // The subscription is managed by the sysadmin with a pro token from the registry.
+        google.protobuf.Empty microsoftStore = 6;   // The subscription is managed via the Microsoft store.
     };
 }
 
