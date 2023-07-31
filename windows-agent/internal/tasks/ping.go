@@ -7,6 +7,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func (t *Ping) Execute(ctx context.Context, client wslserviceapi.WSLClient) (err
 			ctx, cancel := context.WithTimeout(ctx, timeoutPerAttempt)
 			defer cancel()
 
-			_, err := client.Ping(ctx, &wslserviceapi.Empty{})
+			_, err := client.Ping(ctx, &emptypb.Empty{})
 			return err
 		}()
 

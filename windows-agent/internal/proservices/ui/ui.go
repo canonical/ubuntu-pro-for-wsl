@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Service it the UI GRPC service implementation.
@@ -33,7 +34,7 @@ func New(ctx context.Context, config *config.Config, db *database.DistroDB) (s S
 }
 
 // ApplyProToken handles the gRPC call to pro attach all distros using a token provided by the GUI.
-func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*agentapi.Empty, error) {
+func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*emptypb.Empty, error) {
 	token := info.Token
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
@@ -52,16 +53,16 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 		return nil, err
 	}
 
-	return &agentapi.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // Ping replies a keep-alive request.
-func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.Empty, error) {
+func (s *Service) Ping(ctx context.Context, request *emptypb.Empty) (*emptypb.Empty, error) {
 	return request, nil
 }
 
 // GetSubscriptionInfo handles the gRPC call to return the type of subscription.
-func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
+func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *emptypb.Empty) (*agentapi.SubscriptionInfo, error) {
 	info := &agentapi.SubscriptionInfo{}
 
 	immutable, err := s.config.IsReadOnly()

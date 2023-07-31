@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func init() {
@@ -371,7 +372,7 @@ func TestSetConnection(t *testing.T) {
 	for i := 0; i < service1pings; i++ {
 		c := w.Client()
 		require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
-		_, err = c.Ping(ctx, &wslserviceapi.Empty{})
+		_, err = c.Ping(ctx, &emptypb.Empty{})
 		require.NoError(t, err, "Ping attempt #%d should have been done successfully", i)
 		require.Equal(t, i+1, wslInstanceService1.pingCount, "second server should be pinged after c.Ping (iteration #%d)", i)
 	}
@@ -385,7 +386,7 @@ func TestSetConnection(t *testing.T) {
 	// Ping on renewed connection (new wsl instance service) and ensure only the second service receives the pings
 	c := w.Client()
 	require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
-	_, err = c.Ping(ctx, &wslserviceapi.Empty{})
+	_, err = c.Ping(ctx, &emptypb.Empty{})
 	require.NoError(t, err, "Ping should have been done successfully")
 	require.Equal(t, 1, wslInstanceService2.pingCount, "second server should be pinged after c.Ping")
 
@@ -425,7 +426,7 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	w.SetConnection(conn2)
 
 	// New connection is functional.
-	_, err = w.Client().Ping(ctx, &wslserviceapi.Empty{})
+	_, err = w.Client().Ping(ctx, &emptypb.Empty{})
 	require.NoError(t, err, "Ping should have been done successfully")
 	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should be called once")
 }
@@ -436,9 +437,9 @@ type testService struct {
 	port      uint16
 }
 
-func (s *testService) Ping(context.Context, *wslserviceapi.Empty) (*wslserviceapi.Empty, error) {
+func (s *testService) Ping(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	s.pingCount++
-	return &wslserviceapi.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // newTestService creates a testService and starts serving asyncronously.

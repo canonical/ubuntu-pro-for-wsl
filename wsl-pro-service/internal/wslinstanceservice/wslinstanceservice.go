@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // ControlStreamClient is the client to the stream between the Windows Agent and the WSL instance service.
@@ -48,7 +49,7 @@ func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStr
 }
 
 // ApplyProToken serves ApplyProToken messages sent by the agent.
-func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAttachInfo) (empty *wslserviceapi.Empty, err error) {
+func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAttachInfo) (empty *emptypb.Empty, err error) {
 	defer func() {
 		// Regardless of success or failure, we send back an updated system info
 		if e := s.sendInfo(ctx); e != nil {
@@ -69,7 +70,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 	}
 
 	if info.Token == "" {
-		return &wslserviceapi.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	}
 
 	if err := s.system.ProAttach(ctx, info.Token); err != nil {
@@ -77,7 +78,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 		return nil, err
 	}
 
-	return &wslserviceapi.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (s *Service) sendInfo(ctx context.Context) error {

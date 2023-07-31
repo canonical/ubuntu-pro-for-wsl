@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func TestNew(t *testing.T) {
@@ -175,7 +176,7 @@ func TestGetSubscriptionInfo(t *testing.T) {
 
 			service := ui.New(context.Background(), conf, db)
 
-			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
+			info, err := service.GetSubscriptionInfo(ctx, &emptypb.Empty{})
 			if tc.wantErr {
 				require.Error(t, err, "GetSubscriptionInfo should return an error")
 				return
