@@ -16,22 +16,23 @@ import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'agentapi.pb.dart' as $0;
+import 'google/protobuf/empty.pb.dart' as $1;
 
 export 'agentapi.pb.dart';
 
 @$pb.GrpcServiceName('agentapi.UI')
 class UIClient extends $grpc.Client {
-  static final _$applyProToken = $grpc.ClientMethod<$0.ProAttachInfo, $0.Empty>(
+  static final _$applyProToken = $grpc.ClientMethod<$0.ProAttachInfo, $1.Empty>(
       '/agentapi.UI/ApplyProToken',
       ($0.ProAttachInfo value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $0.Empty.fromBuffer(value));
-  static final _$ping = $grpc.ClientMethod<$0.Empty, $0.Empty>(
+      ($core.List<$core.int> value) => $1.Empty.fromBuffer(value));
+  static final _$ping = $grpc.ClientMethod<$1.Empty, $1.Empty>(
       '/agentapi.UI/Ping',
-      ($0.Empty value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $0.Empty.fromBuffer(value));
-  static final _$getSubscriptionInfo = $grpc.ClientMethod<$0.Empty, $0.SubscriptionInfo>(
+      ($1.Empty value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $1.Empty.fromBuffer(value));
+  static final _$getSubscriptionInfo = $grpc.ClientMethod<$1.Empty, $0.SubscriptionInfo>(
       '/agentapi.UI/GetSubscriptionInfo',
-      ($0.Empty value) => value.writeToBuffer(),
+      ($1.Empty value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.SubscriptionInfo.fromBuffer(value));
 
   UIClient($grpc.ClientChannel channel,
@@ -40,15 +41,15 @@ class UIClient extends $grpc.Client {
       : super(channel, options: options,
         interceptors: interceptors);
 
-  $grpc.ResponseFuture<$0.Empty> applyProToken($0.ProAttachInfo request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$1.Empty> applyProToken($0.ProAttachInfo request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$applyProToken, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.Empty> ping($0.Empty request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$1.Empty> ping($1.Empty request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$ping, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.SubscriptionInfo> getSubscriptionInfo($0.Empty request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.SubscriptionInfo> getSubscriptionInfo($1.Empty request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getSubscriptionInfo, request, options: options);
   }
 }
@@ -58,44 +59,44 @@ abstract class UIServiceBase extends $grpc.Service {
   $core.String get $name => 'agentapi.UI';
 
   UIServiceBase() {
-    $addMethod($grpc.ServiceMethod<$0.ProAttachInfo, $0.Empty>(
+    $addMethod($grpc.ServiceMethod<$0.ProAttachInfo, $1.Empty>(
         'ApplyProToken',
         applyProToken_Pre,
         false,
         false,
         ($core.List<$core.int> value) => $0.ProAttachInfo.fromBuffer(value),
-        ($0.Empty value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.Empty, $0.Empty>(
+        ($1.Empty value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$1.Empty, $1.Empty>(
         'Ping',
         ping_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $0.Empty.fromBuffer(value),
-        ($0.Empty value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.Empty, $0.SubscriptionInfo>(
+        ($core.List<$core.int> value) => $1.Empty.fromBuffer(value),
+        ($1.Empty value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$1.Empty, $0.SubscriptionInfo>(
         'GetSubscriptionInfo',
         getSubscriptionInfo_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $0.Empty.fromBuffer(value),
+        ($core.List<$core.int> value) => $1.Empty.fromBuffer(value),
         ($0.SubscriptionInfo value) => value.writeToBuffer()));
   }
 
-  $async.Future<$0.Empty> applyProToken_Pre($grpc.ServiceCall call, $async.Future<$0.ProAttachInfo> request) async {
+  $async.Future<$1.Empty> applyProToken_Pre($grpc.ServiceCall call, $async.Future<$0.ProAttachInfo> request) async {
     return applyProToken(call, await request);
   }
 
-  $async.Future<$0.Empty> ping_Pre($grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
+  $async.Future<$1.Empty> ping_Pre($grpc.ServiceCall call, $async.Future<$1.Empty> request) async {
     return ping(call, await request);
   }
 
-  $async.Future<$0.SubscriptionInfo> getSubscriptionInfo_Pre($grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
+  $async.Future<$0.SubscriptionInfo> getSubscriptionInfo_Pre($grpc.ServiceCall call, $async.Future<$1.Empty> request) async {
     return getSubscriptionInfo(call, await request);
   }
 
-  $async.Future<$0.Empty> applyProToken($grpc.ServiceCall call, $0.ProAttachInfo request);
-  $async.Future<$0.Empty> ping($grpc.ServiceCall call, $0.Empty request);
-  $async.Future<$0.SubscriptionInfo> getSubscriptionInfo($grpc.ServiceCall call, $0.Empty request);
+  $async.Future<$1.Empty> applyProToken($grpc.ServiceCall call, $0.ProAttachInfo request);
+  $async.Future<$1.Empty> ping($grpc.ServiceCall call, $1.Empty request);
+  $async.Future<$0.SubscriptionInfo> getSubscriptionInfo($grpc.ServiceCall call, $1.Empty request);
 }
 @$pb.GrpcServiceName('agentapi.WSLInstance')
 class WSLInstanceClient extends $grpc.Client {

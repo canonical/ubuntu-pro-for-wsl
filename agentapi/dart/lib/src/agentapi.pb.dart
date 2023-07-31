@@ -13,37 +13,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class Empty extends $pb.GeneratedMessage {
-  factory Empty() => create();
-  Empty._() : super();
-  factory Empty.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Empty.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Empty', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  Empty clone() => Empty()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Empty copyWith(void Function(Empty) updates) => super.copyWith((message) => updates(message as Empty)) as Empty;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Empty create() => Empty._();
-  Empty createEmptyInstance() => create();
-  static $pb.PbList<Empty> createRepeated() => $pb.PbList<Empty>();
-  @$core.pragma('dart2js:noInline')
-  static Empty getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Empty>(create);
-  static Empty? _defaultInstance;
-}
+import 'google/protobuf/empty.pb.dart' as $1;
 
 class ProAttachInfo extends $pb.GeneratedMessage {
   factory ProAttachInfo() => create();
@@ -112,10 +82,10 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
     ..oo(0, [3, 4, 5, 6])
     ..aOS(1, _omitFieldNames ? '' : 'productId', protoName: 'productId')
     ..aOB(2, _omitFieldNames ? '' : 'immutable')
-    ..aOM<Empty>(3, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
-    ..aOM<Empty>(4, _omitFieldNames ? '' : 'user', subBuilder: Empty.create)
-    ..aOM<Empty>(5, _omitFieldNames ? '' : 'organization', subBuilder: Empty.create)
-    ..aOM<Empty>(6, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: Empty.create)
+    ..aOM<$1.Empty>(3, _omitFieldNames ? '' : 'none', subBuilder: $1.Empty.create)
+    ..aOM<$1.Empty>(4, _omitFieldNames ? '' : 'user', subBuilder: $1.Empty.create)
+    ..aOM<$1.Empty>(5, _omitFieldNames ? '' : 'organization', subBuilder: $1.Empty.create)
+    ..aOM<$1.Empty>(6, _omitFieldNames ? '' : 'microsoftStore', protoName: 'microsoftStore', subBuilder: $1.Empty.create)
     ..hasRequiredFields = false
   ;
 
@@ -162,48 +132,48 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   void clearImmutable() => clearField(2);
 
   @$pb.TagNumber(3)
-  Empty get none => $_getN(2);
+  $1.Empty get none => $_getN(2);
   @$pb.TagNumber(3)
-  set none(Empty v) { setField(3, v); }
+  set none($1.Empty v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasNone() => $_has(2);
   @$pb.TagNumber(3)
   void clearNone() => clearField(3);
   @$pb.TagNumber(3)
-  Empty ensureNone() => $_ensure(2);
+  $1.Empty ensureNone() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  Empty get user => $_getN(3);
+  $1.Empty get user => $_getN(3);
   @$pb.TagNumber(4)
-  set user(Empty v) { setField(4, v); }
+  set user($1.Empty v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasUser() => $_has(3);
   @$pb.TagNumber(4)
   void clearUser() => clearField(4);
   @$pb.TagNumber(4)
-  Empty ensureUser() => $_ensure(3);
+  $1.Empty ensureUser() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  Empty get organization => $_getN(4);
+  $1.Empty get organization => $_getN(4);
   @$pb.TagNumber(5)
-  set organization(Empty v) { setField(5, v); }
+  set organization($1.Empty v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasOrganization() => $_has(4);
   @$pb.TagNumber(5)
   void clearOrganization() => clearField(5);
   @$pb.TagNumber(5)
-  Empty ensureOrganization() => $_ensure(4);
+  $1.Empty ensureOrganization() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  Empty get microsoftStore => $_getN(5);
+  $1.Empty get microsoftStore => $_getN(5);
   @$pb.TagNumber(6)
-  set microsoftStore(Empty v) { setField(6, v); }
+  set microsoftStore($1.Empty v) { setField(6, v); }
   @$pb.TagNumber(6)
   $core.bool hasMicrosoftStore() => $_has(5);
   @$pb.TagNumber(6)
   void clearMicrosoftStore() => clearField(6);
   @$pb.TagNumber(6)
-  Empty ensureMicrosoftStore() => $_ensure(5);
+  $1.Empty ensureMicrosoftStore() => $_ensure(5);
 }
 
 class DistroInfo extends $pb.GeneratedMessage {
