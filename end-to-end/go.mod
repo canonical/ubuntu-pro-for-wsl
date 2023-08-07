@@ -7,7 +7,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6
 	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4
-	golang.org/x/sys v0.10.0
+	golang.org/x/sys v0.11.0
 )
 
 require (
