@@ -760,10 +760,10 @@ packages:
     dependency: "direct main"
     description:
       name: yaru
-      sha256: b0fbb5bd5fd835a530b3afab3783939b704615db4d94f2a0c4fa59e1104f399f
+      sha256: e20cbab2e057731bcc22b661d207e762c9c40dc4ca4a8e223aad7657b88dd923
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.0"
+    version: "0.10.0"
   yaru_icons:
     dependency: "direct main"
     description:
@@ -776,10 +776,10 @@ packages:
     dependency: "direct main"
     description:
       name: yaru_widgets
-      sha256: "2702c267a370aa67c86214cb44488c2f90aaf564c8a133f450f2027b4b99bcfe"
+      sha256: "2406fd6453befacfefa4f3aa40c6f02cdcc2803b6ebc959a8309353ca7e08fd8"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.1"
+    version: "2.7.0"
   yaru_window:
     dependency: transitive
     description:
