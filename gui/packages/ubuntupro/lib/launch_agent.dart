@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import 'core/environment.dart';
+
 /// Starts the Windows background agent from its well-known location relative
 /// to the root of the deployed application package [agentRelativePath].
 //
@@ -21,6 +23,7 @@ Future<bool> launchAgent(String agentRelativePath) async {
     await Process.start(
       agentPath,
       [],
+      environment: Environment.instance.merged,
     );
     return true;
   } on ProcessException catch (err) {
