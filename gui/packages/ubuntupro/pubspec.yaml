@@ -50,7 +50,7 @@ dependencies:
   path: ^1.8.0
   provider: ^6.0.5
   ubuntu_service: ^0.2.3
-  url_launcher: ^6.1.11
+  url_launcher: ^6.1.12
   yaru: ^0.10.0
   yaru_icons: ^1.0.0
   yaru_widgets: ^2.4.0
