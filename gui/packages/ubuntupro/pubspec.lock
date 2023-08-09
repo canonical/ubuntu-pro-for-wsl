@@ -648,10 +648,10 @@ packages:
     dependency: "direct main"
     description:
       name: ubuntu_service
-      sha256: f90582494cddd4c7325637930497f38598a7ec567f4f86f88fe1ac40a53832a1
+      sha256: f6ad4dfb099af41e750c59aad00d67a96e22df00f4962d2e25d56ae3db78be49
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.3"
+    version: "0.2.4"
   url_launcher:
     dependency: "direct main"
     description:
