@@ -33,4 +33,26 @@ class Environment {
 
     return Platform.environment[key];
   }
+
+  Map<String, String>? _merged;
+
+  /// Returns a merged view of the environment variables mixed with the overrides. Useful when passing to child processes.
+  Map<String, String> get merged {
+    if (_merged == null) {
+      // Start with nullable values because _overrides accepts null values as a way to remove items from the Environment.
+      // ignore: omit_local_variable_types
+      final Map<String, String?> map = {
+        ...Platform.environment,
+        ...?_overrides
+      };
+
+      // We then remove the entries where values are null.
+      map.removeWhere((key, value) => value == null);
+
+      // And finish with a map of a different type -- non-nullable String values.
+      _merged = map.map((key, value) => MapEntry(key, value!));
+    }
+
+    return _merged!;
+  }
 }
