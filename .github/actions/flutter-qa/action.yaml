@@ -47,5 +47,10 @@ runs:
       working-directory: '${{ inputs.package-dir }}'
       run: |
         if [ -d integration_test ]; then
-          flutter test integration_test/
+          if [ $(uname) = 'Linux' ]; then
+            xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
+              flutter test integration_test/
+          else
+              flutter test integration_test/
+          fi
         fi
