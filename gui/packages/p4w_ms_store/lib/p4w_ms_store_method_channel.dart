@@ -7,7 +7,7 @@ import 'p4w_ms_store_platform_interface.dart';
 class MethodChannelP4wMsStore extends P4wMsStorePlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('p4w_ms_store');
+  static const methodChannel = MethodChannel('p4w_ms_store');
 
   @override
   Future<PurchaseStatus> purchaseSubscription(String productId) async {

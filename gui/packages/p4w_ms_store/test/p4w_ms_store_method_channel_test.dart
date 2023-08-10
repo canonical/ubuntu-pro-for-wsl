@@ -5,7 +5,7 @@ import 'package:p4w_ms_store/p4w_ms_store_platform_interface.dart';
 
 void main() {
   final platform = MethodChannelP4wMsStore();
-  const channel = MethodChannel('p4w_ms_store');
+  const channel = MethodChannelP4wMsStore.methodChannel;
   const productId = 'awesome-addon';
 
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
