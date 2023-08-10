@@ -12,10 +12,6 @@ import 'core/environment.dart';
 // ../agent/ubuntu-pro-agent.exe
 // We don't provide different behavior in debug vs release to ensure maximum
 // coverage of the code run in production during test and debugging.
-// TODO: Compile and place the agent at the right place while in development.
-// The above can be achieved by setting compile time constants with `--dart-define`
-// and adding the required code to compile and move the binary to the right place.
-// We should strive to still run the same code we run in production.
 Future<bool> launchAgent(String agentRelativePath) async {
   final thisDir = File(Platform.resolvedExecutable).parent;
   final agentPath = p.join(thisDir.parent.path, agentRelativePath);
