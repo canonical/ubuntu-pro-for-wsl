@@ -42,3 +42,10 @@ runs:
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
       run: flutter test 
+    - name: Integration Test
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: |
+        if [ -d integration_test ]; then
+          flutter test integration_test/
+        fi
