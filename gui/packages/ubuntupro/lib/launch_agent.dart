@@ -13,8 +13,7 @@ import 'core/environment.dart';
 // We don't provide different behavior in debug vs release to ensure maximum
 // coverage of the code run in production during test and debugging.
 Future<bool> launchAgent(String agentRelativePath) async {
-  final thisDir = File(Platform.resolvedExecutable).parent;
-  final agentPath = p.join(thisDir.parent.path, agentRelativePath);
+  final agentPath = p.join(msixRootDir().path, agentRelativePath);
   try {
     await Process.start(
       agentPath,
@@ -29,3 +28,7 @@ Future<bool> launchAgent(String agentRelativePath) async {
     return false;
   }
 }
+
+/// Exposes what is expected to be the MSIX root directory relative to this binary's path.
+@visibleForTesting
+Directory msixRootDir() => File(Platform.resolvedExecutable).parent.parent;
