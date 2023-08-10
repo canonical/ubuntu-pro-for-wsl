@@ -52,7 +52,7 @@ dependencies:
   ubuntu_service: ^0.2.4
   url_launcher: ^6.1.12
   yaru: ^0.10.0
-  yaru_icons: ^1.0.0
+  yaru_icons: ^2.1.0
   yaru_widgets: ^2.4.0
 
 dev_dependencies:
