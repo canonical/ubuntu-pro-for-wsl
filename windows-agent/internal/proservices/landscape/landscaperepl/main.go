@@ -1,3 +1,5 @@
+// package main contains a Landscape mock REPL
+// execute the program and type "help" for usage information
 package main
 
 import (
@@ -15,18 +17,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-var exit func()
-
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatalln("This program should only have the address to host on as an argument")
+	if len(os.Args) != 2 || os.Args[1] == "--help" {
+		log.Fatalf("Usage: %s ADDRESS", os.Args[0])
 	}
 	addr := os.Args[1]
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exit = cancel
 	populateCommands()
 
 	var cfg net.ListenConfig
@@ -51,7 +50,6 @@ func main() {
 	if err := repl(ctx, service); err != nil {
 		log.Fatalf("%v", err)
 	}
-
 }
 
 // REPL: Read, Execute, Print, Loop.
@@ -66,7 +64,7 @@ func repl(ctx context.Context, s *landscapemockservice.Service) error {
 		prefix = ""
 	}
 
-	fmt.Printf(prefix)
+	fmt.Print(prefix)
 
 	// READ
 	for sc.Scan() {
@@ -88,7 +86,7 @@ func repl(ctx context.Context, s *landscapemockservice.Service) error {
 
 		// LOOP
 		fmt.Println()
-		fmt.Printf(prefix)
+		fmt.Print(prefix)
 	}
 
 	if err := sc.Err(); err != nil {

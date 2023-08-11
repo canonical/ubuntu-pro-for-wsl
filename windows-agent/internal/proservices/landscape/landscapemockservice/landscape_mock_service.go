@@ -11,6 +11,8 @@ import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 )
 
+// InstanceInfo is the same as landscapeapi.InstanceInfo, but without the mutexes and
+// all grpc implementation details (so it can be safely copied).
 type InstanceInfo struct {
 	ID            string
 	Name          string
@@ -18,6 +20,8 @@ type InstanceInfo struct {
 	InstanceState landscapeapi.InstanceState
 }
 
+// HostInfo is the same as landscapeapi.HostAgentInfo, but without the mutexes and
+// all grpc implementation details (so it can be safely copied).
 type HostInfo struct {
 	UID       string
 	Hostname  string
@@ -25,6 +29,7 @@ type HostInfo struct {
 	Instances []InstanceInfo
 }
 
+// newHostInfo recursively copies the info in a landscapeapi.HostAgentInfo to a HostInfo.
 func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
 	h := HostInfo{
 		UID:       src.Uid,
@@ -52,9 +57,7 @@ type host struct {
 	stop      func()
 }
 
-// Service is a mock server for the landscape API which can:
-// - Record all received messages.
-// - Send commands to the connected clients.
+// Service is a minimalistic server for the landscape API.
 type Service struct {
 	landscapeapi.UnimplementedLandscapeHostAgentServer
 	mu *sync.RWMutex
@@ -75,7 +78,8 @@ func New() *Service {
 }
 
 // Connect implements the Connect API call.
-// This mock simply logs all the connections it received.
+// Upon first contact ever, a UID is randombly assigned to the host and sent to it.
+// In subsequent contacts, this UID will be its unique identifier.
 func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) error {
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
@@ -199,7 +203,7 @@ func (s *Service) SendCommand(ctx context.Context, uid string, command *landscap
 	return conn.send(command)
 }
 
-// MessageLog allows looking into the history if messages received by the server.
+// MessageLog allows looking into the history of messages received by the server.
 func (s *Service) MessageLog() (log []HostInfo) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -207,6 +211,8 @@ func (s *Service) MessageLog() (log []HostInfo) {
 	return append([]HostInfo{}, s.recvLog...)
 }
 
+// Hosts returns a map of all hosts that have had a UID assigned in the past, and their most
+// recently received data.
 func (s *Service) Hosts() (hosts map[string]HostInfo) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -219,6 +225,7 @@ func (s *Service) Hosts() (hosts map[string]HostInfo) {
 	return hosts
 }
 
+// Disconnect kills the connection the host wit the specified UID.
 func (s *Service) Disconnect(uid string) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
