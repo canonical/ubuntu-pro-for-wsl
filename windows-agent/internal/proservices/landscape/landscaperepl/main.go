@@ -40,11 +40,18 @@ func main() {
 	service := landscapemockservice.New()
 	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
-	go server.Serve(lis)
+	go func() {
+		err := server.Serve(lis)
+		if err != nil {
+			log.Fatalf("Server exited with an error: %v", err)
+		}
+	}()
+	defer server.Stop()
 
 	if err := repl(ctx, service); err != nil {
 		log.Fatalf("%v", err)
 	}
+
 }
 
 // REPL: Read, Execute, Print, Loop.
