@@ -66,6 +66,11 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 		return fmt.Errorf("connection from %q: %v", info.WslName, err)
 	}
 
+	// Load deferred tasks
+	if err := d.ReloadTasks(ctx); err != nil {
+		return err
+	}
+
 	// Update landscape when connecting and disconnecting
 	s.landscapeSendUpdatedInfo(ctx)
 	defer s.landscapeSendUpdatedInfo(ctx)
