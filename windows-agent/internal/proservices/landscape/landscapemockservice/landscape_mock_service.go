@@ -136,7 +136,7 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 
 func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
 	if other, ok := s.hosts[hostInfo.UID]; ok && other.connected != nil && *other.connected {
-		return uid, nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
+		return "", nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
 	}
 
 	// Register the connection so commands can be sent
@@ -161,7 +161,7 @@ func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo Host
 		}
 		if err := sendFunc(&landscapeapi.Command{Cmd: cmd}); err != nil {
 			cancel()
-			return uid, func() {}, err
+			return "", func() {}, err
 		}
 	}
 
