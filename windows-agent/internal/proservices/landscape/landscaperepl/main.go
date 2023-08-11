@@ -78,7 +78,7 @@ func run(ctx context.Context, s *landscapemockservice.Service) error {
 		}
 
 		// EXECUTE + PRINT
-		done := execute(ctx, s, line)
+		done := executeCommand(ctx, s, line)
 		if done {
 			break
 		}
@@ -107,7 +107,7 @@ func (exitError) Error() string {
 	return "exiting"
 }
 
-func execute(ctx context.Context, s *landscapemockservice.Service, command string) (exit bool) {
+func executeCommand(ctx context.Context, s *landscapemockservice.Service, command string) (exit bool) {
 	fields := strings.Fields(command)
 
 	verb := fields[0]
