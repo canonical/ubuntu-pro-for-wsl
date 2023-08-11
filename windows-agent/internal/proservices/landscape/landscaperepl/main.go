@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -26,7 +27,7 @@ func main() {
 	defer cancel()
 
 	exit = cancel
-	initCommands()
+	populateCommands()
 
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp", addr)
@@ -46,7 +47,7 @@ func main() {
 	}
 }
 
-// REPL: Read, Execute, Print, Loop
+// REPL: Read, Execute, Print, Loop.
 func repl(ctx context.Context, s *landscapemockservice.Service) error {
 	sc := bufio.NewScanner(os.Stdin)
 
@@ -79,6 +80,7 @@ func repl(ctx context.Context, s *landscapemockservice.Service) error {
 		}
 
 		// LOOP
+		fmt.Println()
 		fmt.Printf(prefix)
 	}
 
@@ -89,6 +91,18 @@ func repl(ctx context.Context, s *landscapemockservice.Service) error {
 	return nil
 }
 
+type wrongUsageError struct{}
+
+func (err wrongUsageError) Error() string {
+	return "wrong usage"
+}
+
+type exitError struct{}
+
+func (exitError) Error() string {
+	return "exiting"
+}
+
 func execute(ctx context.Context, s *landscapemockservice.Service, command string) (exit bool) {
 	fields := strings.Fields(command)
 
@@ -97,9 +111,23 @@ func execute(ctx context.Context, s *landscapemockservice.Service, command strin
 
 	cmd, ok := commands[verb]
 	if !ok {
-		fmt.Printf("unknown verb %q. use 'help' to see available commands\n", verb)
+		fmt.Fprintf(os.Stderr, "unknown verb %q. use 'help' to see available commands.\n", verb)
 		return false
 	}
 
-	return cmd.callback(ctx, s, args...)
+	err := cmd.callback(ctx, s, args...)
+	if errors.Is(err, exitError{}) {
+		return true
+	}
+	if errors.Is(err, wrongUsageError{}) {
+		fmt.Fprintln(os.Stderr, "Error: wrong usage:")
+		showHelp(os.Stderr, verb)
+		return false
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		return false
+	}
+
+	return false
 }

@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,41 +17,37 @@ import (
 )
 
 type command struct {
-	callback func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool
+	callback func(ctx context.Context, s *landscapemockservice.Service, args ...string) error
 	usage    string
 	help     string
 }
 
 var commands map[string]command
 
-func initCommands() {
+func populateCommands() {
 	commands = map[string]command{
 		"exit": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-				return true
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+				return exitError{}
 			},
 			help: "exits the program",
 		},
 		"status": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				if len(args) != 1 {
-					fmt.Println("Wrong usage")
-					printHelp("status")
-					return false
+					return wrongUsageError{}
 				}
 
 				hosts := s.Hosts()
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
 				host, ok := hosts[uid]
 				if !ok {
-					fmt.Println("HOST_UID not found")
-					return false
+					return fmt.Errorf("HOST_UID not found")
 				}
 
 				fmt.Printf("uid:       %s\n", host.UID)
@@ -64,13 +62,13 @@ func initCommands() {
 					fmt.Printf("   state:   %s\n", d.InstanceState)
 				}
 
-				return false
+				return nil
 			},
 			usage: "status HOST_UID",
 			help:  "Shows the status of the specified host",
 		},
 		"journal": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				for _, line := range s.MessageLog() {
 					var instances []string
 					for _, inst := range line.Instances {
@@ -79,162 +77,140 @@ func initCommands() {
 
 					fmt.Printf("UID: %s, Hostname: %q, Token: %q, Instances: %q\n", line.UID, line.Hostname, common.Obfuscate(line.Token), strings.Join(instances, ", "))
 				}
-				return false
+				return nil
 			},
 			help: "Prints the log",
 		},
 		"start": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-				if len(args) < 2 {
-					fmt.Println("Wrong usage")
-					printHelp("start")
-					return false
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+				if len(args) != 2 {
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
-				for _, a := range args[1:] {
-					err := s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Start_{Start: &landscapeapi.Command_Start{Id: a}}})
-					if err != nil {
-						log.Printf("error: %v\n", err)
-					}
+				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Start_{Start: &landscapeapi.Command_Start{Id: args[1]}}})
+				if err != nil {
+					return err
 				}
-				return false
+
+				return nil
 			},
-			usage: "start HOST_UID INSTANCES...",
-			help:  "Starts the specified instance(s) at the specified host",
+			usage: "start HOST_UID INSTANCE",
+			help:  "Starts the specified instance at the specified host",
 		},
 		"stop": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-				if len(args) < 2 {
-					fmt.Println("Wrong usage")
-					printHelp("stop")
-					return false
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+				if len(args) != 2 {
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
-				for _, a := range args[1:] {
-					err := s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Stop_{Stop: &landscapeapi.Command_Stop{Id: a}}})
-					if err != nil {
-						log.Printf("error: %v\n", err)
-					}
+				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Stop_{Stop: &landscapeapi.Command_Stop{Id: args[1]}}})
+				if err != nil {
+					return err
 				}
-				return false
+
+				return nil
 			},
-			usage: "stop HOST_UID INSTANCES...",
-			help:  "Stops the specified instance(s) at the specified host",
+			usage: "stop HOST_UID INSTANCE",
+			help:  "Stops the specified instance at the specified host",
 		},
 		"install": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-				if len(args) < 2 {
-					fmt.Println("Wrong usage")
-					printHelp("install")
-					return false
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+				if len(args) != 2 {
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
-				for _, a := range args[1:] {
-					err := s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: a}}})
-					if err != nil {
-						log.Printf("error: %v\n", err)
-					}
+				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: args[1]}}})
+				if err != nil {
+					log.Printf("error: %v\n", err)
 				}
-				return false
+
+				return nil
 			},
-			usage: "install HOST_UID INSTANCES...",
-			help:  "Installs the specified instance(s) at the specified host",
+			usage: "install HOST_UID INSTANCE",
+			help:  "Installs the specified instance at the specified host",
 		},
 		"uninstall": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-				if len(args) < 2 {
-					fmt.Println("Wrong usage")
-					printHelp("uninstall")
-					return false
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+				if len(args) != 2 {
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
-				for _, a := range args[1:] {
-					err := s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Uninstall_{Uninstall: &landscapeapi.Command_Uninstall{Id: a}}})
-					if err != nil {
-						log.Printf("error: %v\n", err)
-					}
+				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Uninstall_{Uninstall: &landscapeapi.Command_Uninstall{Id: args[1]}}})
+				if err != nil {
+					return err
 				}
-				return false
+
+				return nil
 			},
-			usage: "uninstall HOST_UID INSTANCES...",
-			help:  "Uninstalls the specified instance(s) at the specified host",
+			usage: "uninstall HOST_UID INSTANCES",
+			help:  "Uninstalls the specified instance at the specified host",
 		},
 		"set-default": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-				if len(args) != 2 {
-					fmt.Println("Wrong usage")
-					printHelp("set-default")
-					return false
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+				if len(args) < 2 {
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
 				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_SetDefault_{SetDefault: &landscapeapi.Command_SetDefault{Id: args[1]}}})
 				if err != nil {
-					log.Printf("error: %v\n", err)
+					return err
 				}
-				return false
+
+				return nil
 			},
 			usage: "set-default HOST_UID INSTANCE",
 			help:  "Sets the specified instance as default at the specified host",
 		},
 		"shutdown": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				if len(args) != 1 {
-					fmt.Println("Wrong usage")
-					printHelp("shutdown")
-					return false
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
 				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_ShutdownHost_{ShutdownHost: &landscapeapi.Command_ShutdownHost{}}})
 				if err != nil {
-					log.Printf("error: %v\n", err)
+					return err
 				}
-				return false
+
+				return nil
 			},
 			usage: "shutdown HOST_UID INSTANCE",
 			help:  "Shuts down WSL at the specified host",
 		},
 		"hosts": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				if len(args) != 0 {
-					fmt.Println("Wrong usage")
-					printHelp("hosts")
-					return false
+					return wrongUsageError{}
 				}
 
 				hosts := s.Hosts()
@@ -254,24 +230,22 @@ func initCommands() {
 					fmt.Printf("%s %q %s\n", uid, hosts[uid].Hostname, connected)
 				}
 
-				return false
+				return nil
 			},
 			usage: "hosts",
 			help:  "Prints a list of all hosts and their UID and status",
 		},
 		"wait": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				if len(args) > 1 {
-					fmt.Println("Wrong usage")
-					return false
+					return wrongUsageError{}
 				}
 
 				maxT := time.Minute
 				if len(args) == 1 {
 					t, err := strconv.Atoi(args[0])
 					if err != nil {
-						fmt.Println("could not parse MAX_TIME")
-						return false
+						return fmt.Errorf("could not parse MAX_TIME")
 					}
 					maxT = time.Duration(t) * time.Second
 				}
@@ -286,13 +260,12 @@ func initCommands() {
 				for {
 					select {
 					case <-tm.C:
-						fmt.Println("timeout")
-						return false
+						return fmt.Errorf("timeout")
 					case <-tk.C:
 					}
 
 					if len(s.MessageLog()) != originalLen {
-						return false
+						return nil
 					}
 				}
 			},
@@ -300,23 +273,21 @@ func initCommands() {
 			help:  "waits until the next recv, or until MAX_TIME seconds have elapsed (default 60)",
 		},
 		"disconnect": {
-			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
+			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				if len(args) != 1 {
-					fmt.Println("Wrong usage")
-					return false
+					return wrongUsageError{}
 				}
 
 				uid, err := uidRef(s, args[0])
 				if err != nil {
-					fmt.Printf("error: %v\n", err)
-					return false
+					return err
 				}
 
 				if err := s.Disconnect(uid); err != nil {
-					fmt.Printf("error: %v", err)
+					return err
 				}
 
-				return false
+				return nil
 			},
 			usage: "disconnect HOST_UID",
 			help:  "stops the connection to the specified host",
@@ -325,50 +296,61 @@ func initCommands() {
 
 	// help must be initialized right after to avoid self-reference
 	commands["help"] = command{
-		callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) bool {
-			if len(args) == 1 {
-				printHelp(args[0])
-				return false
-			}
-
-			if len(args) > 1 {
-				fmt.Println("Wrong usage")
-				printHelp("help")
-				return false
+		callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
+			switch len(args) {
+			case 0:
+			case 1:
+				showHelp(os.Stderr, args[0])
+				return nil
+			default:
+				return wrongUsageError{}
 			}
 
 			var verbs []string
 			for verb := range commands {
+				//            ~~~~~~~~
+				// Self-reference here
 				verbs = append(verbs, verb)
 			}
 
 			sort.Strings(verbs)
 
 			for _, verb := range verbs {
-				printHelp(verb)
+				showHelp(os.Stdout, verb)
+				fmt.Println()
 			}
-			return false
+
+			return nil
 		},
 		usage: "help [COMMAND]",
 		help:  "prints the help message. If a command is specified, only that command's help is printed",
 	}
 }
 
-func printHelp(verb string) {
+func showHelp(w io.Writer, verb string) {
 	cmd, ok := commands[verb]
 	if !ok {
-		fmt.Printf("Verb %q not found\n", verb)
+		if _, err := fmt.Fprintf(w, "Verb %q not found\n", verb); err != nil {
+			log.Fatalf("could not write: %v", err)
+		}
+
+		return
 	}
 
 	if cmd.usage != "" {
-		fmt.Printf("* %s\n", cmd.usage)
+		if _, err := fmt.Fprintf(w, "* %s\n", cmd.usage); err != nil {
+			log.Fatalf("could not write: %v", err)
+		}
 	} else {
-		fmt.Printf("* %s\n", verb)
+		if _, err := fmt.Fprintf(w, "* %s\n", verb); err != nil {
+			log.Fatalf("could not write: %v", err)
+		}
 	}
 	if cmd.help != "" {
-		fmt.Printf("%s\n", cmd.help)
+		if _, err := fmt.Fprintf(w, "%s\n", cmd.help); err != nil {
+			log.Fatalf("could not write: %v", err)
+		}
 	}
-	fmt.Println()
 }
 
 // uidRef converts $n into the nth host agent UID (lexicographical order). Zero-indexed.
