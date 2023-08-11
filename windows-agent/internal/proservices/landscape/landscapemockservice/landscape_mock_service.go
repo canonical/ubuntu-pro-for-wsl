@@ -113,6 +113,8 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 
 		s.mu.Lock()
 
+		s.recvLog = append(s.recvLog, hostInfo)
+
 		if firstContact {
 			firstContact = false
 			uid, onDisconnect, err := s.firstContact(ctx, cancel, hostInfo, stream)
@@ -123,8 +125,6 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 			defer onDisconnect()
 			hostInfo.UID = uid
 		}
-
-		s.recvLog = append(s.recvLog, hostInfo)
 
 		h := s.hosts[hostInfo.UID]
 		h.info = hostInfo
