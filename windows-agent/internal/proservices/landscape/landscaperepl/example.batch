@@ -1,0 +1,15 @@
+# PS > Get-Content .\example.batch | .\landscaperepl.exe localhost:8000
+#
+# Wait for the agent to connect, print status
+wait
+status @0
+
+# Start Ubuntu and wait until the agent pings back (will happen when Ubuntu connects)
+start @0 Ubuntu
+wait
+status @0
+
+# Release Ubuntu and wait until the agent pings back (will happen when Ubuntu terminates)
+stop @0 Ubuntu
+wait
+status @0

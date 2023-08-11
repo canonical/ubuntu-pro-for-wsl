@@ -11,66 +11,135 @@ import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 )
 
-// Service is a mock server for the landscape API which can:
-// - Record all received messages.
-// - Send commands to the connected clients.
+// InstanceInfo is the same as landscapeapi.InstanceInfo, but without the mutexes and
+// all grpc implementation details (so it can be safely copied).
+type InstanceInfo struct {
+	ID            string
+	Name          string
+	VersionID     string
+	InstanceState landscapeapi.InstanceState
+}
+
+// HostInfo is the same as landscapeapi.HostAgentInfo, but without the mutexes and
+// all grpc implementation details (so it can be safely copied).
+type HostInfo struct {
+	UID       string
+	Hostname  string
+	Token     string
+	Instances []InstanceInfo
+}
+
+// newHostInfo recursively copies the info in a landscapeapi.HostAgentInfo to a HostInfo.
+func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
+	h := HostInfo{
+		UID:       src.Uid,
+		Hostname:  src.Hostname,
+		Token:     src.Token,
+		Instances: make([]InstanceInfo, 0, len(src.Instances)),
+	}
+
+	for _, inst := range src.Instances {
+		h.Instances = append(h.Instances, InstanceInfo{
+			ID:            inst.Id,
+			Name:          inst.Name,
+			VersionID:     inst.VersionId,
+			InstanceState: inst.InstanceState,
+		})
+	}
+
+	return h
+}
+
+type host struct {
+	send      func(*landscapeapi.Command) error
+	info      HostInfo
+	connected *bool
+	stop      func()
+}
+
+// Service is a minimalistic server for the landscape API.
 type Service struct {
 	landscapeapi.UnimplementedLandscapeHostAgentServer
 	mu *sync.RWMutex
 
-	// activeConnections maps from hostname to a function to Send commands to that client
-	activeConnections map[string]func(*landscapeapi.Command) error
+	// hosts maps from UID to a host
+	hosts map[string]host
 
 	// recvLog is a log of all received messages
-	recvLog []landscapeapi.HostAgentInfo
+	recvLog []HostInfo
 }
 
 // New constructs and initializes a mock Landscape service.
 func New() *Service {
 	return &Service{
-		mu:                &sync.RWMutex{},
-		activeConnections: make(map[string]func(*landscapeapi.Command) error),
+		mu:    &sync.RWMutex{},
+		hosts: make(map[string]host),
 	}
 }
 
 // Connect implements the Connect API call.
-// This mock simply logs all the connections it received.
+// Upon first contact ever, a UID is randombly assigned to the host and sent to it.
+// In subsequent contacts, this UID will be its unique identifier.
 func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) error {
+	ctx, cancel := context.WithCancel(stream.Context())
+	defer cancel()
+
 	firstContact := true
+	ch := make(chan HostInfo)
+	defer close(ch)
+
 	for {
-		hostinfo, err := stream.Recv()
-		if err != nil {
-			return fmt.Errorf("could not receive: %v", err)
+		go func() {
+			recv, err := stream.Recv()
+			if err != nil {
+				return
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			ch <- newHostInfo(recv)
+		}()
+
+		var hostInfo HostInfo
+		select {
+		case hostInfo = <-ch:
+		case <-ctx.Done():
+			return nil
 		}
 
 		s.mu.Lock()
 
+		s.recvLog = append(s.recvLog, hostInfo)
+
 		if firstContact {
 			firstContact = false
-			onDisconnect, err := s.firstContact(hostinfo.Uid, stream)
+			uid, onDisconnect, err := s.firstContact(ctx, cancel, hostInfo, stream)
 			if err != nil {
 				s.mu.Unlock()
 				return err
 			}
 			defer onDisconnect()
+			hostInfo.UID = uid
 		}
 
-		//nolint:govet
-		// Copying the mutexes is fine because the public parameters are passed
-		// by copy and this code is for tests only.
-		s.recvLog = append(s.recvLog, *hostinfo)
+		h := s.hosts[hostInfo.UID]
+		h.info = hostInfo
+		s.hosts[hostInfo.UID] = h
 
 		s.mu.Unlock()
 	}
 }
 
-func (s *Service) firstContact(uid string, stream landscapeapi.LandscapeHostAgent_ConnectServer) (onDisconect func(), err error) {
-	if _, ok := s.activeConnections[uid]; ok {
-		return nil, fmt.Errorf("Hostname collision: %q", uid)
+func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
+	if other, ok := s.hosts[hostInfo.UID]; ok && other.connected != nil && *other.connected {
+		return "", nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
 	}
 
 	// Register the connection so commands can be sent
-	ctx, cancel := context.WithCancel(context.Background())
 	sendFunc := func(command *landscapeapi.Command) error {
 		select {
 		case <-ctx.Done():
@@ -81,26 +150,34 @@ func (s *Service) firstContact(uid string, stream landscapeapi.LandscapeHostAgen
 	}
 
 	// Assign a UID if none was provided
-	if uid == "" {
+	if hostInfo.UID == "" {
 		//nolint:gosec // No need to be cryptographically secure
-		uid = fmt.Sprintf("ServerAssignedUID%x", rand.Int())
+		hostInfo.UID = fmt.Sprintf("ServerAssignedUID%x", rand.Int())
 
 		cmd := &landscapeapi.Command_AssignHost_{
 			AssignHost: &landscapeapi.Command_AssignHost{
-				Uid: uid,
+				Uid: hostInfo.UID,
 			},
 		}
 		if err := sendFunc(&landscapeapi.Command{Cmd: cmd}); err != nil {
 			cancel()
-			return func() {}, err
+			return "", func() {}, err
 		}
 	}
 
-	s.activeConnections[uid] = sendFunc
+	h := host{
+		send:      sendFunc,
+		stop:      cancel,
+		info:      hostInfo,
+		connected: new(bool),
+	}
 
-	return func() {
+	s.hosts[hostInfo.UID] = h
+	*h.connected = true
+
+	return hostInfo.UID, func() {
 		cancel()
-		delete(s.activeConnections, uid)
+		*h.connected = false
 	}, nil
 }
 
@@ -109,8 +186,8 @@ func (s *Service) IsConnected(uid string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	_, ok := s.activeConnections[uid]
-	return ok
+	host, ok := s.hosts[uid]
+	return ok && host.connected != nil && *host.connected
 }
 
 // SendCommand instructs the server to send a command to the target machine with matching hostname.
@@ -118,18 +195,46 @@ func (s *Service) SendCommand(ctx context.Context, uid string, command *landscap
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	send, ok := s.activeConnections[uid]
+	conn, ok := s.hosts[uid]
 	if !ok {
 		return fmt.Errorf("UID %q not connected", uid)
 	}
 
-	return send(command)
+	return conn.send(command)
 }
 
-// MessageLog allows looking into the history if messages received by the server.
-func (s *Service) MessageLog() (log []landscapeapi.HostAgentInfo) {
+// MessageLog allows looking into the history of messages received by the server.
+func (s *Service) MessageLog() (log []HostInfo) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return append([]landscapeapi.HostAgentInfo{}, s.recvLog...)
+	return append([]HostInfo{}, s.recvLog...)
+}
+
+// Hosts returns a map of all hosts that have had a UID assigned in the past, and their most
+// recently received data.
+func (s *Service) Hosts() (hosts map[string]HostInfo) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	hosts = make(map[string]HostInfo)
+	for uid, host := range s.hosts {
+		hosts[uid] = host.info
+	}
+
+	return hosts
+}
+
+// Disconnect kills the connection with the host assigned to the specified UID.
+func (s *Service) Disconnect(uid string) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	host, ok := s.hosts[uid]
+	if !ok {
+		return fmt.Errorf("UID %q not registered", uid)
+	}
+
+	host.stop()
+	return nil
 }

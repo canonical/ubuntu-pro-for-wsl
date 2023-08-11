@@ -314,7 +314,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			require.Len(t, messages, 1, "Exactly one message should've been sent to Landscape")
 			msg := &messages[0] // Pointer to avoid copying mutex
 
-			assert.Empty(t, msg.Uid, "First UID received by the server should be empty")
+			assert.Empty(t, msg.UID, "First UID received by the server should be empty")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
 
@@ -323,9 +323,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 			} else {
 				require.Len(t, msg.Instances, 1, "Exactly one distro should've been sent to Landscape")
 				got := msg.Instances[0]
-				assert.Equal(t, wantDistroID, got.Id, "Mismatch between local distro Id and that received by the server")
+				assert.Equal(t, wantDistroID, got.ID, "Mismatch between local distro Id and that received by the server")
 				assert.Equal(t, wantDistroName, got.Name, "Mismatch between local distro Name and that received by the server")
-				assert.Equal(t, wantDistroVersionID, got.VersionId, "Mismatch between local distro VersionId and that received by the server")
+				assert.Equal(t, wantDistroVersionID, got.VersionID, "Mismatch between local distro VersionId and that received by the server")
 				assert.Equal(t, wantDistroState, got.InstanceState, "Mismatch between local distro InstanceState and that received by the server")
 			}
 
@@ -366,7 +366,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			require.Len(t, messages, 2, "Exactly two messages should've been sent to Landscape")
 			msg = &messages[1] // Pointer to avoid copying mutex
 
-			assertHasPrefix(t, wantUIDprefix, msg.Uid, "Mismatch between local host ID and that received by the server")
+			assertHasPrefix(t, wantUIDprefix, msg.UID, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host hostname and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
 			if tc.wantDistroSkipped {
@@ -374,9 +374,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 			} else {
 				require.Len(t, msg.Instances, 1, "Exactly one distro should've been sent to Landscape")
 				got := msg.Instances[0]
-				assert.Equal(t, wantDistroID, got.Id, "Mismatch between local distro Id and that received by the server")
+				assert.Equal(t, wantDistroID, got.ID, "Mismatch between local distro Id and that received by the server")
 				assert.Equal(t, wantDistroName, got.Name, "Mismatch between local distro Name and that received by the server")
-				assert.Equal(t, wantDistroVersionID, got.VersionId, "Mismatch between local distro VersionId and that received by the server")
+				assert.Equal(t, wantDistroVersionID, got.VersionID, "Mismatch between local distro VersionId and that received by the server")
 				assert.Equal(t, wantDistroState, got.InstanceState, "Mismatch between local distro InstanceState and that received by the server ")
 			}
 		})
