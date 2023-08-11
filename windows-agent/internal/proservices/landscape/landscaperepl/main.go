@@ -46,13 +46,13 @@ func main() {
 	}()
 	defer server.Stop()
 
-	if err := repl(ctx, service); err != nil {
+	if err := run(ctx, service); err != nil {
 		log.Fatalf("%v", err)
 	}
 }
 
-// REPL: Read, Execute, Print, Loop.
-func repl(ctx context.Context, s *landscapemockservice.Service) error {
+// run contains the main execution loop.
+func run(ctx context.Context, s *landscapemockservice.Service) error {
 	sc := bufio.NewScanner(os.Stdin)
 
 	prefix := "$ "
