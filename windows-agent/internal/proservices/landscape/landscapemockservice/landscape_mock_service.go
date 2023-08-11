@@ -225,7 +225,7 @@ func (s *Service) Hosts() (hosts map[string]HostInfo) {
 	return hosts
 }
 
-// Disconnect kills the connection the host wit the specified UID.
+// Disconnect kills the connection with the host assigned to the specified UID.
 func (s *Service) Disconnect(uid string) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
