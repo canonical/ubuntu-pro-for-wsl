@@ -30,7 +30,7 @@ func populateCommands() {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
 				return exitError{}
 			},
-			help: "exits the program",
+			help: "Exits the program.",
 		},
 		"status": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -65,7 +65,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "status HOST_UID",
-			help:  "Shows the status of the specified host",
+			help:  "Shows the status of the specified host.",
 		},
 		"journal": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -79,7 +79,7 @@ func populateCommands() {
 				}
 				return nil
 			},
-			help: "Prints the log",
+			help: "Prints the log.",
 		},
 		"start": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -100,7 +100,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "start HOST_UID INSTANCE",
-			help:  "Starts the specified instance at the specified host",
+			help:  "Starts the specified instance at the specified host.",
 		},
 		"stop": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -121,7 +121,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "stop HOST_UID INSTANCE",
-			help:  "Stops the specified instance at the specified host",
+			help:  "Stops the specified instance at the specified host.",
 		},
 		"install": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -142,7 +142,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "install HOST_UID INSTANCE",
-			help:  "Installs the specified instance at the specified host",
+			help:  "Installs the specified instance at the specified host.",
 		},
 		"uninstall": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -163,7 +163,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "uninstall HOST_UID INSTANCES",
-			help:  "Uninstalls the specified instance at the specified host",
+			help:  "Uninstalls the specified instance at the specified host.",
 		},
 		"set-default": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -184,7 +184,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "set-default HOST_UID INSTANCE",
-			help:  "Sets the specified instance as default at the specified host",
+			help:  "Sets the specified instance as default at the specified host.",
 		},
 		"shutdown": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -205,7 +205,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "shutdown HOST_UID INSTANCE",
-			help:  "Shuts down WSL at the specified host",
+			help:  "Shuts down WSL at the specified host.",
 		},
 		"hosts": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -233,7 +233,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "hosts",
-			help:  "Prints a list of all hosts and their UID and status",
+			help:  "Prints a list of all hosts and their UID and status.",
 		},
 		"wait": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -270,7 +270,7 @@ func populateCommands() {
 				}
 			},
 			usage: "wait [MAX_TIME]",
-			help:  "waits until the next recv, or until MAX_TIME seconds have elapsed (default 60)",
+			help:  "Waits until the next recv, or until MAX_TIME seconds have elapsed (default 60).",
 		},
 		"disconnect": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
@@ -290,7 +290,7 @@ func populateCommands() {
 				return nil
 			},
 			usage: "disconnect HOST_UID",
-			help:  "stops the connection to the specified host",
+			help:  "Stops the connection to the specified host.",
 		},
 	}
 
@@ -323,7 +323,7 @@ func populateCommands() {
 			return nil
 		},
 		usage: "help [COMMAND]",
-		help:  "prints the help message. If a command is specified, only that command's help is printed",
+		help:  "Prints the help message. If a command is specified, only that command's help is printed.",
 	}
 }
 
