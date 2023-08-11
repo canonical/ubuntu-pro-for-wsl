@@ -18,13 +18,12 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	if len(os.Args) != 2 || os.Args[1] == "--help" {
 		log.Fatalf("Usage: %s ADDRESS", os.Args[0])
 	}
 	addr := os.Args[1]
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	populateCommands()
 
