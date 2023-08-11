@@ -353,7 +353,7 @@ func showHelp(w io.Writer, verb string) {
 	}
 }
 
-// uidRef converts $n into the nth host agent UID (lexicographical order). Zero-indexed.
+// uidRef converts @n into the nth host agent UID (lexicographical order). Zero-indexed.
 func uidRef(s *landscapemockservice.Service, uid string) (string, error) {
 	const prefix = "@"
 
