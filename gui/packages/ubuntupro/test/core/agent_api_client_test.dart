@@ -60,9 +60,35 @@ void main() {
     test('ping succeeds', () async {
       expect(await client!.ping(), isTrue);
     });
+
+    test('no subscription info', () async {
+      final info = await client!.subscriptionInfo();
+      expect(info.productId, isEmpty);
+      expect(info.immutable, isFalse);
+      expect(info.whichSubscriptionType(), SubscriptionType.none);
+    });
     test('pro attach', () async {
       // expect no throw.
       await client!.applyProToken('C123');
+    });
+
+    test('user subscription', () async {
+      final info = await client!.subscriptionInfo();
+      expect(info.productId, isEmpty);
+      expect(info.immutable, isFalse);
+      expect(info.whichSubscriptionType(), SubscriptionType.user);
+    });
+
+    test('pro detach', () async {
+      // expect no throw.
+      await client!.applyProToken('');
+    });
+
+    test('no subscription again', () async {
+      final info = await client!.subscriptionInfo();
+      expect(info.productId, isEmpty);
+      expect(info.immutable, isFalse);
+      expect(info.whichSubscriptionType(), SubscriptionType.none);
     });
   });
 }
