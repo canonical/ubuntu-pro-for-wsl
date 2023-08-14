@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
+import 'package:ubuntupro/core/environment.dart';
 
 // TODO: Move this to an integration test suite when we get one.
 Future<Process> startAgent() async {
@@ -17,12 +18,13 @@ Future<Process> startAgent() async {
     'go',
     ['run', mainGo, '-vvv'],
     mode: ProcessStartMode.inheritStdio,
+    environment: Environment.instance.merged,
   );
 
   final file = agentAddrFilePath('Ubuntu Pro', 'addr')!;
 
-  await File(file)
-      .parent
+  final runtimeDir = await File(file).parent.create(recursive: true);
+  await runtimeDir
       .watch(events: FileSystemEvent.modify, recursive: true)
       .take(1)
       // ignore: avoid_print
@@ -45,9 +47,16 @@ void main() {
   // The following group is conditionally skipped based on the absence of the
   // GOPATH environment variable.
   group('with a real agent', skip: skip, () {
+    Directory? tmp;
+
     Process? agent;
     AgentApiClient? client;
-    setUp(() async {
+    setUpAll(() async {
+      tmp = await Directory.current.createTemp('test-');
+      Environment(
+        overrides: {'LOCALAPPDATA': tmp!.path},
+      );
+
       agent = await startAgent();
       final port = await readAgentPortFromFile(
         agentAddrFilePath('Ubuntu Pro', 'addr')!,
@@ -56,7 +65,20 @@ void main() {
       client = AgentApiClient(host: '127.0.0.1', port: port.getOrThrow());
     });
 
-    tearDown(() => agent!.kill());
+    tearDownAll(() async {
+      // kill all agent processes.
+      agent?.kill();
+      if (Platform.isWindows) {
+        await Process.run('taskkill.exe', ['/f', '/im', 'main.exe']);
+      } else {
+        await Process.run(
+          'killall',
+          [p.basenameWithoutExtension('main')],
+        );
+      }
+      // Finally deletes the directory.
+      await tmp?.delete(recursive: true);
+    });
     test('ping succeeds', () async {
       expect(await client!.ping(), isTrue);
     });
