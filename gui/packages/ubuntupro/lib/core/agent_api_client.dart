@@ -1,6 +1,9 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:grpc/grpc.dart';
 
+/// A type alias for the gRPC message enum which by default has a big name.
+typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
+
 /// AgentApiClient hides the gRPC details in a more convenient API.
 class AgentApiClient {
   AgentApiClient({required String host, required int port})

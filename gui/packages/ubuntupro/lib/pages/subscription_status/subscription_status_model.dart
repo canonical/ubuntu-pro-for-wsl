@@ -4,9 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '/core/agent_api_client.dart';
 
-/// A type alias for the gRPC message enum which by default has a big name.
-typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
-
 /// A base class for the view-models that may represent different types of active subscriptions and the optional actions they allow.
 sealed class SubscriptionStatusModel {
   /// Returns the appropriate view-model subclass based on the SubscriptionInfo that was passed.
