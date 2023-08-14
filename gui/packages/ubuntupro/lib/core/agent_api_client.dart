@@ -32,4 +32,8 @@ class AgentApiClient {
       .ping(Empty())
       .then((_) => true)
       .onError<GrpcError>((_, __) => false);
+
+  /// Returns information about the current subscription, if any.
+  Future<SubscriptionInfo> subscriptionInfo() =>
+      _client.getSubscriptionInfo(Empty());
 }
