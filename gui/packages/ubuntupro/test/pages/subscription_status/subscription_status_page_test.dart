@@ -53,11 +53,11 @@ void main() {
   });
   testWidgets('creates a model', (tester) async {
     final mockClient = FakeAgentApiClient();
-    final info = SubscriptionInfo();
-    info.ensureUser();
-    info.immutable = false;
+    final info = ValueNotifier(SubscriptionInfo());
+    info.value.ensureUser();
+    info.value.immutable = false;
     registerServiceInstance<AgentApiClient>(mockClient);
-    final app = Provider.value(
+    final app = ChangeNotifierProvider.value(
       value: info,
       child: const MaterialApp(
         routes: {'/': SubscriptionStatusPage.create},
