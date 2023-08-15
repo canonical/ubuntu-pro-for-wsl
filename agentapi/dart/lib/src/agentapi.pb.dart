@@ -4,7 +4,7 @@
 //
 // @dart = 2.12
 
-// ignore_for_file: annotate_overrides, camel_case_types
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
@@ -46,7 +46,15 @@ class Empty extends $pb.GeneratedMessage {
 }
 
 class ProAttachInfo extends $pb.GeneratedMessage {
-  factory ProAttachInfo() => create();
+  factory ProAttachInfo({
+    $core.String? token,
+  }) {
+    final $result = create();
+    if (token != null) {
+      $result.token = token;
+    }
+    return $result;
+  }
   ProAttachInfo._() : super();
   factory ProAttachInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory ProAttachInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -96,7 +104,35 @@ enum SubscriptionInfo_SubscriptionType {
 }
 
 class SubscriptionInfo extends $pb.GeneratedMessage {
-  factory SubscriptionInfo() => create();
+  factory SubscriptionInfo({
+    $core.String? productId,
+    $core.bool? immutable,
+    Empty? none,
+    Empty? user,
+    Empty? organization,
+    Empty? microsoftStore,
+  }) {
+    final $result = create();
+    if (productId != null) {
+      $result.productId = productId;
+    }
+    if (immutable != null) {
+      $result.immutable = immutable;
+    }
+    if (none != null) {
+      $result.none = none;
+    }
+    if (user != null) {
+      $result.user = user;
+    }
+    if (organization != null) {
+      $result.organization = organization;
+    }
+    if (microsoftStore != null) {
+      $result.microsoftStore = microsoftStore;
+    }
+    return $result;
+  }
   SubscriptionInfo._() : super();
   factory SubscriptionInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SubscriptionInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -207,7 +243,35 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
 }
 
 class DistroInfo extends $pb.GeneratedMessage {
-  factory DistroInfo() => create();
+  factory DistroInfo({
+    $core.String? wslName,
+    $core.String? id,
+    $core.String? versionId,
+    $core.String? prettyName,
+    $core.bool? proAttached,
+    $core.String? hostname,
+  }) {
+    final $result = create();
+    if (wslName != null) {
+      $result.wslName = wslName;
+    }
+    if (id != null) {
+      $result.id = id;
+    }
+    if (versionId != null) {
+      $result.versionId = versionId;
+    }
+    if (prettyName != null) {
+      $result.prettyName = prettyName;
+    }
+    if (proAttached != null) {
+      $result.proAttached = proAttached;
+    }
+    if (hostname != null) {
+      $result.hostname = hostname;
+    }
+    return $result;
+  }
   DistroInfo._() : super();
   factory DistroInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory DistroInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -299,7 +363,15 @@ class DistroInfo extends $pb.GeneratedMessage {
 }
 
 class Port extends $pb.GeneratedMessage {
-  factory Port() => create();
+  factory Port({
+    $core.int? port,
+  }) {
+    final $result = create();
+    if (port != null) {
+      $result.port = port;
+    }
+    return $result;
+  }
   Port._() : super();
   factory Port.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Port.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
