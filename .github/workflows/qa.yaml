@@ -258,4 +258,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: UbuntuProForWindows+${{ github.sha }}
-          path: msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/*
+          path: |
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_1.0.0.0_x64.cer
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_1.0.0.0_x64.msixbundle
