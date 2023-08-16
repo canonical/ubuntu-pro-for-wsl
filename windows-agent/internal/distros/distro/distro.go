@@ -43,7 +43,7 @@ type workerInterface interface {
 	IsActive() bool
 	Client() wslserviceapi.WSLClient
 	SetConnection(*grpc.ClientConn)
-	SubmitTasks(...task.Task) error
+	SubmitTasks(bool, ...task.Task) error
 	ReloadTasks(context.Context) error
 	Stop(context.Context)
 }
@@ -218,11 +218,12 @@ func (d *Distro) SetConnection(conn *grpc.ClientConn) error {
 
 // SubmitTasks enqueues one or more task on our current worker list.
 // See Worker.SubmitTasks for details.
-func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
+func (d *Distro) SubmitTasks(deferred bool, tasks ...task.Task) (err error) {
 	if !d.IsValid() {
 		return &NotValidError{}
 	}
-	return d.worker.SubmitTasks(tasks...)
+	return d.worker.SubmitTasks(deferred, tasks...)
+}
 
 // ReloadTasks reloads all tasks from file.
 // This means adding all deferred tasks back into the queue.

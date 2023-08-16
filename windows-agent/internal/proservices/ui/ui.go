@@ -44,7 +44,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 
 	distros := s.db.GetAll()
 	for _, d := range distros {
-		err = errors.Join(err, d.SubmitTasks(tasks.ProAttachment{Token: token}))
+		err = errors.Join(err, d.SubmitTasks(false, tasks.ProAttachment{Token: token}))
 	}
 
 	if err != nil {

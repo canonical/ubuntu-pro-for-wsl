@@ -221,7 +221,7 @@ func TestTaskProcessing(t *testing.T) {
 				ttask.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = w.SubmitTasks(ttask)
+			err = w.SubmitTasks(false, ttask)
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -306,7 +306,7 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 	err = os.MkdirAll(taskFile, 0600)
 	require.NoError(t, err, "Could not make dir at distro task file's location")
 
-	err = w.SubmitTasks(&emptyTask{})
+	err = w.SubmitTasks(false, &emptyTask{})
 	require.Error(t, err, "Submitting a task when the task file is not writable should cause an error")
 }
 
@@ -325,17 +325,17 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
-	err = w.SubmitTasks(&testTask{})
+	err = w.SubmitTasks(false, &testTask{})
 	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, worker.TaskQueueSize)
 
 	// We fill up the queue
 	for i := 0; i < worker.TaskQueueSize; i++ {
-		err := w.SubmitTasks(&testTask{})
+		err := w.SubmitTasks(false, &testTask{})
 		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, worker.TaskQueueSize)
 	}
 
 	// We ensure that adding one more task will return an error
-	err = w.SubmitTasks(&testTask{})
+	err = w.SubmitTasks(false, &testTask{})
 	require.Errorf(t, err, "SubmitTask() should fail when the queue is full")
 }
 

@@ -50,10 +50,15 @@ func newTaskManager(ctx context.Context, storagePath string) (*taskManager, erro
 	return &tm, nil
 }
 
-func (tm *taskManager) submit(tasks ...task.Task) error {
+func (tm *taskManager) submit(deferred bool, tasks ...task.Task) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
+	return tm.submitUnsafe(deferred, tasks...)
+}
+
+// must be used under a mutex
+func (tm *taskManager) submitUnsafe(deferred bool, tasks ...task.Task) error {
 	for i := range tasks {
 		tm.largestID++
 		t := &managedTask{
@@ -62,6 +67,11 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 		}
 
 		tm.tasks = append(tm.tasks, t)
+		if deferred {
+			// deferred tasks will be queued next time load() is called
+			continue
+		}
+
 		select {
 		case tm.queue <- t:
 		default:
@@ -121,8 +131,8 @@ func (tm *taskManager) taskDone(ctx context.Context, t *managedTask, taskResult 
 		return nil
 	}
 
-	// Task is resubmited
-	if err := tm.submit(t.Task); err != nil {
+	// Task is resubmited as deferred
+	if err := tm.submit(true, t.Task); err != nil {
 		return err
 	}
 
@@ -182,7 +192,7 @@ func (tm *taskManager) load(ctx context.Context) (err error) {
 		tasks = tasks[:taskQueueSize]
 	}
 
-	if err := tm.submit(tasks...); err != nil {
+	if err := tm.submitUnsafe(false, tasks...); err != nil {
 		return err
 	}
 

@@ -89,7 +89,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		return w, err
 	}
 
-	if err := w.SubmitTasks(provisioning...); err != nil {
+	if err := w.SubmitTasks(false, provisioning...); err != nil {
 		w.Stop(ctx)
 		return nil, err
 	}
@@ -148,10 +148,14 @@ func (w *Worker) Stop(ctx context.Context) {
 }
 
 // SubmitTasks enqueues one or more task on our current worker list.
+//
+// If deferred is set to true, the task won't wake up the distro, instead wait until it
+// is awake. This does NOT necessarily mean it'll run after non-deferred tasks.
+//
 // It will return an error in these cases:
 // - The queue is full
 // - The distro has been cleaned up.
-func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
+func (w *Worker) SubmitTasks(deferred bool, tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", w.distro.Name(), tasks)
 
 	if len(tasks) == 0 {
@@ -159,10 +163,11 @@ func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
-	return w.manager.submit(tasks...)
+	return w.manager.submit(deferred, tasks...)
 }
 
 // ReloadTasks reloads all tasks from file.
+// This means adding all deferred tasks back into the queue.
 func (w *Worker) ReloadTasks(ctx context.Context) error {
 	return w.manager.load(ctx)
 }

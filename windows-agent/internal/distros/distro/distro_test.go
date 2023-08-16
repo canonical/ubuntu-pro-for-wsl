@@ -631,7 +631,7 @@ func TestWorkerWrappers(t *testing.T) {
 				if !tc.nilArg {
 					t = make([]task.Task, 5)
 				}
-				err = d.SubmitTasks(t...)
+				err = d.SubmitTasks(false, t...)
 				funcCalled = worker.submitTasksCalled
 
 			case "Stop":
@@ -755,7 +755,7 @@ func (w *mockWorker) SetConnection(conn *grpc.ClientConn) {
 	w.setConnectionCalled = true
 }
 
-func (w *mockWorker) SubmitTasks(...task.Task) error {
+func (w *mockWorker) SubmitTasks(bool, ...task.Task) error {
 	w.submitTasksCalled = true
 	return nil
 }
