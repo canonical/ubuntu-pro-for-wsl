@@ -8,6 +8,8 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
 import 'package:ubuntupro/core/environment.dart';
 
+import '../utils/build_agent.dart';
+
 void main() {
   test('ping fails', timeout: const Timeout(Duration(seconds: 5)), () async {
     final client = AgentApiClient(host: '127.0.0.1', port: 9);
@@ -23,6 +25,7 @@ void main() {
   // GOPATH environment variable.
   group('with a real agent', skip: skip, () {
     Directory? tmp;
+    var exeName = '';
 
     Process? agent;
     AgentApiClient? client;
@@ -32,7 +35,11 @@ void main() {
         overrides: {'LOCALAPPDATA': tmp!.path},
       );
 
-      agent = await startAgent();
+      // ubuntu-pro-agent-test-b56ff87j.exe
+      exeName = 'ubuntu-pro-agent-${p.basename(tmp!.path)}.exe';
+      await buildAgentExe(tmp!.path, exeName: exeName);
+
+      agent = await startAgent(p.join(tmp!.path, exeName));
       final port = await readAgentPortFromFile(
         agentAddrFilePath('Ubuntu Pro', 'addr')!,
       );
@@ -44,7 +51,7 @@ void main() {
       // kill all agent processes.
       agent?.kill();
       if (Platform.isWindows) {
-        await Process.run('taskkill.exe', ['/f', '/im', 'main.exe']);
+        await Process.run('taskkill.exe', ['/f', '/im', exeName]);
       } else {
         await Process.run(
           'killall',
@@ -90,15 +97,10 @@ void main() {
   });
 }
 
-// TODO: Move this to an integration test suite when we get one.
-Future<Process> startAgent() async {
-  final mainGo = p.join(
-    Directory.current.parent.parent.parent.path,
-    'windows-agent/cmd/ubuntu-pro-agent/main.go',
-  );
+Future<Process> startAgent(String fullpath) async {
   final agent = Process.start(
-    'go',
-    ['run', mainGo, '-vvv'],
+    fullpath,
+    [],
     mode: ProcessStartMode.inheritStdio,
     environment: Environment.instance.merged,
   );
