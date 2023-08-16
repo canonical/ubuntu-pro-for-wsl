@@ -162,40 +162,34 @@ func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 	return w.manager.submit(tasks...)
 }
 
+// ReloadTasks reloads all tasks from file.
+func (w *Worker) ReloadTasks(ctx context.Context) error {
+	return w.manager.load(ctx)
+}
+
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
 // locks to distro,.
 func (w *Worker) processTasks(ctx context.Context) {
 	defer close(w.processing)
 
 	for {
-		// This double-select gives priority to the context over the manager queue. Not very
-		// important in production code but it makes the code more predictable for testing.
-		//
-		// Without this, there is always a chance that the worker will select the task
-		// channel rather than the context.Done.
-		select {
-		case <-ctx.Done():
+		t, ok := w.manager.nextTask(ctx)
+		if !ok {
 			return
-		default:
 		}
 
-		select {
-		case <-ctx.Done():
-			return
-		case t := <-w.manager.queue:
-			resultErr := w.processSingleTask(ctx, *t)
+		resultErr := w.processSingleTask(ctx, *t)
 
-			var target unreachableDistroError
-			if errors.Is(resultErr, &target) {
-				log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
-				w.distro.Invalidate(ctx)
-				continue
-			}
+		var target unreachableDistroError
+		if errors.Is(resultErr, &target) {
+			log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
+			w.distro.Invalidate(ctx)
+			continue
+		}
 
-			err := w.manager.taskDone(ctx, t, resultErr)
-			if err != nil {
-				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
-			}
+		err := w.manager.taskDone(ctx, t, resultErr)
+		if err != nil {
+			log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 		}
 	}
 }

@@ -61,37 +61,68 @@ func (tm *taskManager) submit(tasks ...task.Task) error {
 			Task: tasks[i],
 		}
 
+		tm.tasks = append(tm.tasks, t)
 		select {
 		case tm.queue <- t:
 		default:
 			return errors.New("queue is full")
 		}
 
-		tm.tasks = append(tm.tasks, t)
 	}
 	return tm.save()
+}
+
+func (tm *taskManager) nextTask(ctx context.Context) (*managedTask, bool) {
+	// This double-select gives priority to the context over the manager queue. Not very
+	// important in production code but it makes the code more predictable for testing.
+	//
+	// Without this, there is always a chance that the worker will select the task
+	// channel rather than the context.Done.
+	select {
+	case <-ctx.Done():
+		return nil, false
+	default:
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, false
+	case t := <-tm.queue:
+		// Remove task from list
+		tm.mu.Lock()
+		defer tm.mu.Unlock()
+
+		idx := slices.Index(tm.tasks, t)
+		if idx != -1 {
+			tm.tasks = slices.Delete(tm.tasks, idx, idx+1)
+		}
+
+		if err := tm.save(); err != nil {
+			log.Errorf(ctx, "could not write task list to disk: %v", err)
+			return t, false
+		}
+
+		return t, true
+	}
 }
 
 func (tm *taskManager) taskDone(ctx context.Context, t *managedTask, taskResult error) (err error) {
 	decorate.OnError(&err, "task %s", t)
 
-	tm.mu.Lock()
-	defer tm.mu.Unlock()
-
-	if taskResult != nil {
-		log.Errorf(ctx, "%v", taskResult)
-	}
-
-	if errors.As(taskResult, &task.NeedsRetryError{}) {
-		// Task needs to be retried: we don't delete it from the list
-		// It'll be picked up on the next call to load()
+	if taskResult == nil {
+		// Succesful task: nothing to do
 		return nil
 	}
 
-	idx := slices.Index(tm.tasks, t)
-	tm.tasks = slices.Delete(tm.tasks, idx, idx+1)
+	log.Errorf(ctx, "%v", taskResult)
 
-	if err = tm.save(); err != nil {
+	if !errors.As(taskResult, &task.NeedsRetryError{}) {
+		// Task failed but does not need re-submission
+		return nil
+	}
+
+	// Task is resubmited
+	if err := tm.submit(t.Task); err != nil {
 		return err
 	}
 
@@ -125,6 +156,10 @@ func (tm *taskManager) save() (err error) {
 func (tm *taskManager) load(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not load previous work in progress")
 
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+
+	tm.tasks = make([]*managedTask, 0)
 	tm.queue = make(chan *managedTask, taskQueueSize)
 	tm.largestID = 0
 

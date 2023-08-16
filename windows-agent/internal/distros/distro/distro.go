@@ -44,6 +44,7 @@ type workerInterface interface {
 	Client() wslserviceapi.WSLClient
 	SetConnection(*grpc.ClientConn)
 	SubmitTasks(...task.Task) error
+	ReloadTasks(context.Context) error
 	Stop(context.Context)
 }
 
@@ -222,6 +223,11 @@ func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
 		return &NotValidError{}
 	}
 	return d.worker.SubmitTasks(tasks...)
+
+// ReloadTasks reloads all tasks from file.
+// This means adding all deferred tasks back into the queue.
+func (d *Distro) ReloadTasks(ctx context.Context) error {
+	return d.worker.ReloadTasks(ctx)
 }
 
 // Cleanup releases all resources associated with the distro.
