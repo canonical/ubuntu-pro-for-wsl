@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +189,49 @@ void main() {
       ]),
     );
     verify(mockClient.ping()).called(1);
+  });
+
+  test('await async onClient callback', () async {
+    final completeMe = Completer<void>();
+    final mockClient = MockAgentApiClient();
+    // Fakes a successful ping.
+    when(mockClient.ping()).thenAnswer((_) async => true);
+    final monitor = AgentStartupMonitor(
+      /// A launch request will always succeed.
+      agentLauncher: () async {
+        writeDummyAddrFile(appDir!);
+        return true;
+      },
+      clientFactory: (port) => mockClient,
+      appName: kAppName,
+      addrFileName: kAddrFileName,
+      onClient: (_) async {
+        // This function only completes when the completer is manually set complete.
+        await completeMe.future;
+      },
+    );
+
+    // As broadcast stream to allow more than one expectLater expressions.
+    final stream = monitor.start(interval: kInterval).asBroadcastStream();
+    await expectLater(
+      stream,
+      emitsInOrder([
+        AgentState.querying,
+        AgentState.starting,
+        // Adding more states to this list will block and cause the test to fail
+        // because the async onClient callback will never complete.
+      ]),
+    );
+
+    // Now the async onClient is allowed to return and the stream should output the final states.
+    completeMe.complete();
+    await expectLater(
+      stream,
+      emitsInOrder([
+        AgentState.ok,
+        emitsDone,
+      ]),
+    );
   });
 }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import '../../core/agent_api_client.dart';
@@ -44,7 +45,7 @@ typedef ApiClientFactory = AgentApiClient Function(int port);
 typedef AgentLauncher = Future<bool> Function();
 
 /// A Callback for when/if the Agent API client becomes available.
-typedef AgentApiCallback = void Function(AgentApiClient);
+typedef AgentApiCallback = FutureOr<void> Function(AgentApiClient);
 
 class AgentStartupMonitor {
   AgentStartupMonitor({
@@ -142,7 +143,7 @@ class AgentStartupMonitor {
   Future<AgentState> _onPort(int port) async {
     final client = clientFactory(port);
     if (await client.ping()) {
-      onClient(client);
+      await onClient(client);
       return AgentState.ok;
     }
 
