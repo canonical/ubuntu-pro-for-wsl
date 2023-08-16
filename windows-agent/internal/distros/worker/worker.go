@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker/internal/taskmanager"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/ubuntu/decorate"
@@ -29,7 +30,7 @@ type distro interface {
 // Worker contains all the logic around task queueing and execution for one particular distro.
 type Worker struct {
 	distro  distro
-	manager *taskManager
+	manager *taskmanager.TaskManager
 
 	cancel     context.CancelFunc
 	processing chan struct{}
@@ -67,7 +68,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		f(&opts)
 	}
 
-	tm, err := newTaskManager(ctx, storagePath)
+	tm, err := taskmanager.New(ctx, storagePath)
 	if err != nil {
 		return nil, err
 	}
@@ -163,13 +164,13 @@ func (w *Worker) SubmitTasks(deferred bool, tasks ...task.Task) (err error) {
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
-	return w.manager.submit(deferred, tasks...)
+	return w.manager.Submit(deferred, tasks...)
 }
 
 // ReloadTasks reloads all tasks from file.
 // This means adding all deferred tasks back into the queue.
 func (w *Worker) ReloadTasks(ctx context.Context) error {
-	return w.manager.load(ctx)
+	return w.manager.Load(ctx)
 }
 
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
@@ -178,7 +179,7 @@ func (w *Worker) processTasks(ctx context.Context) {
 	defer close(w.processing)
 
 	for {
-		t, ok := w.manager.nextTask(ctx)
+		t, ok := w.manager.NextTask(ctx)
 		if !ok {
 			return
 		}
@@ -192,7 +193,7 @@ func (w *Worker) processTasks(ctx context.Context) {
 			continue
 		}
 
-		err := w.manager.taskDone(ctx, t, resultErr)
+		err := w.manager.TaskDone(ctx, t, resultErr)
 		if err != nil {
 			log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 		}
@@ -216,7 +217,7 @@ func (err unreachableDistroError) Error() string {
 	return fmt.Sprintf("distro cannot be reached: %v", err.sourceErr)
 }
 
-func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
+func (w *Worker) processSingleTask(ctx context.Context, t taskmanager.ManagedTask) error {
 	log.Debugf(ctx, "Distro %q: task %q: dequeued", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {
