@@ -20,12 +20,17 @@ void main() {
       expect(model.runtimeType, OrgSubscriptionStatusModel);
     });
 
-    test('none throws', () async {
+    test('none subscribes now', () async {
       info.ensureNone();
       info.immutable = false;
+      final model = SubscriptionStatusModel(info, client);
+      expect(model.runtimeType, SubscribeNowModel);
+    });
+
+    test('unset throws', () async {
       expect(
         () {
-          SubscriptionStatusModel(info, client);
+          SubscriptionStatusModel(SubscriptionInfo(), client);
         },
         throwsUnimplementedError,
       );
