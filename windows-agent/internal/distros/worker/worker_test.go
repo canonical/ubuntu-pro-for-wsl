@@ -17,11 +17,13 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -430,6 +432,135 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should be called once")
 }
 
+func TestTaskDeferral(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		breakReload bool
+		breakSubmit bool
+
+		wantSubmitErr bool
+		wantReloadErr bool
+	}{
+		"Success reloading two tasks": {},
+
+		"Error if the task file cannot be read":    {breakReload: true, wantReloadErr: true},
+		"Error if the task file cannot be written": {breakSubmit: true, wantSubmitErr: true},
+	}
+
+	replaceFileWithDir := func(t *testing.T, path string) {
+		t.Helper()
+
+		err := os.RemoveAll(path)
+		require.NoError(t, err, "Setup: could not remove tasks file")
+
+		err = os.MkdirAll(path, 0700)
+		require.NoError(t, err, "Setup: could not create folder at tasks file's location")
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			d := &testDistro{
+				name: wsltestutils.RandomDistroName(t),
+			}
+
+			storage := t.TempDir()
+			taskFile := filepath.Join(storage, d.Name()+".tasks")
+
+			w, err := worker.New(ctx, d, storage)
+			require.NoError(t, err, "Setup: unexpected error creating the worker")
+			defer w.Stop(ctx)
+
+			queuedTask := emptyTask{ID: uuid.NewString()}
+			deferredTask := emptyTask{ID: uuid.NewString()}
+
+			// Testing task with with active connection
+			wslInstanceService := newTestService(t)
+			conn := wslInstanceService.newClientConnection(t)
+			w.SetConnection(conn)
+
+			// blocker is a task meant to block task processing
+			blocker := newBlockingTask(ctx)
+			defer blocker.complete()
+
+			err = w.SubmitTasks(false, blocker)
+			require.NoError(t, err, "SubmitTasks should have succeeded for a queued task")
+
+			err = w.SubmitTasks(false, queuedTask)
+			require.NoError(t, err, "SubmitTasks should have succeeded for a second queued task")
+
+			if tc.breakSubmit {
+				replaceFileWithDir(t, taskFile)
+			}
+
+			err = w.SubmitTasks(true, deferredTask)
+			if tc.wantSubmitErr {
+				require.Error(t, err, "SubmitTasks should have returned an error")
+				return
+			}
+			require.NoError(t, err, "SubmitTasks should have succeeded for a deferred task")
+
+			// Wait until blocking task is popped from the queue
+			require.Eventually(t, blocker.executing.Load, 10*time.Second, 100*time.Millisecond, "Number of queued tasks never became 1")
+
+			// One task is queued and the other one is deferred
+			require.NoError(t, w.CheckQueuedTasks(1), "Expected only one task queued behind the blocker")
+			require.NoError(t, w.CheckStoredTasks(2), "Expected two tasks stored after the blocker is popped")
+
+			if tc.breakReload {
+				replaceFileWithDir(t, taskFile)
+			}
+
+			err = w.ReloadTasks(ctx)
+			if tc.wantReloadErr {
+				require.Error(t, err, "ReloadTasks should have returned an error")
+				return
+			}
+			require.NoError(t, err, "ReloadTasks should have succeeded")
+
+			require.NoError(t, w.CheckQueuedTasks(2), "Tasks did not reload into the queue as expected")
+			require.NoError(t, w.CheckStoredTasks(2), "Tasks did not reload into the list as expected")
+
+			blocker.complete()
+
+			requireEventuallyTaskCompletes(t, queuedTask, "Queued task should have been completed")
+			requireEventuallyTaskCompletes(t, deferredTask, "Deferred task should have been completed")
+
+			require.NoError(t, w.CheckQueuedTasks(0), "Completed tasks should have been removed from the queue")
+			require.NoError(t, w.CheckStoredTasks(0), "Completed tasks should have been removed from storage")
+
+			// Submit a task without a blocker
+			// This tests the queue refreshment
+			newTask := emptyTask{ID: uuid.NewString()}
+			err = w.SubmitTasks(true, newTask)
+
+			require.NoError(t, err, "Submitting a deferred task should cause no errors")
+			require.NoError(t, w.CheckQueuedTasks(0), "Task was queued unexpectedly")
+			require.NoError(t, w.CheckStoredTasks(1), "Task was not stored as expected")
+
+			err = w.ReloadTasks(ctx)
+			require.NoError(t, err, "Reloading tasks with an empty queue should return no error")
+			// Cannot check queue or storage without a race
+
+			requireEventuallyTaskCompletes(t, newTask, "Deferred task should have been completed")
+		})
+	}
+}
+
+func requireEventuallyTaskCompletes(t *testing.T, task emptyTask, msg string, args ...any) {
+	t.Helper()
+
+	require.Eventually(t, func() bool {
+		return completedEmptyTasks.Has(task.ID)
+	}, 5*time.Second, 100*time.Millisecond, msg, args)
+}
+
 type testService struct {
 	wslserviceapi.UnimplementedWSLServer
 	pingCount int
@@ -488,9 +619,17 @@ func (s testService) newClientConnection(t *testing.T) *grpc.ClientConn {
 	return conn
 }
 
-type emptyTask struct{}
+// completedEmptyTasks tracks which empty tasks have completed. We need to use this global
+// variable because tasks may be written to file and read back, so no callbacks or pointers
+// can be used.
+var completedEmptyTasks = common.NewSet[string]()
+
+type emptyTask struct {
+	ID string
+}
 
 func (t emptyTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+	completedEmptyTasks.Set(t.ID)
 	return nil
 }
 
@@ -525,6 +664,37 @@ func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 
 func (t *testTask) String() string {
 	return "Test task"
+}
+
+// blockingTask is a task that blocks execution until complete() is called.
+type blockingTask struct {
+	ctx       context.Context
+	complete  func()
+	executing atomic.Bool
+}
+
+func newBlockingTask(ctx context.Context) *blockingTask {
+	ctx, cancel := context.WithCancel(ctx)
+	return &blockingTask{
+		ctx:      ctx,
+		complete: cancel,
+	}
+}
+
+func (t *blockingTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+	t.executing.Store(true)
+	defer t.executing.Store(false)
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.ctx.Done():
+		return nil
+	}
+}
+
+func (t *blockingTask) String() string {
+	return "Blocking task"
 }
 
 type testDistro struct {
