@@ -13,19 +13,19 @@
 		<AppIcon Include="$(AppIconPath)" />
 		<MsixAppIcon Include="$(MsixIconPath)" />
 	</ItemGroup>
-	<ItemGroup>
-		<AppContent Include="$(AppOutDir)**\*.*" Visible="False" />
-		<None Include="@(AppContent)" Visible="False">
-			<Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<DeploymentContent>true</DeploymentContent>
-		</None>
-	</ItemGroup>
 	<Target Name="Build" Outputs="@(AppContent)">
 		<Message Text="Building Flutter artifacts to $(AppOutDir)" Importance="high"/>
         <Copy SourceFiles="@(MsixAppIcon)" DestinationFiles="@(AppIcon)" />
 		<Exec Command="flutter pub get" WorkingDirectory="$(AppDir)" />
 		<Exec Command="flutter build windows --$(AppConfiguration) " WorkingDirectory="$(AppDir)" />
+		<ItemGroup>
+			<AppContent Include="$(AppOutDir)**\*.*" Visible="False" />
+			<None Include="@(AppContent)" Visible="False">
+				<Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+				<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+				<DeploymentContent>true</DeploymentContent>
+			</None>
+		</ItemGroup>
 	</Target>
     <Target Name="Clean" Condition="Exists($(AppOutDir))">
 		<Message Text="Cleaning $(AppOutDir)" Importance="high" />

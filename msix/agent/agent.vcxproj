@@ -127,7 +127,7 @@
   <!-- TODO: Add a reference to the store API DLL project -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!-- The targets file below overrides the standard Cpp targets so we can build the Go app instead. -->
-  <Import Project="My.targets" />
+  <Import Project="agent.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

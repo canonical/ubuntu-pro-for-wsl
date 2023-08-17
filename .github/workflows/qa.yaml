@@ -10,6 +10,9 @@ concurrency:
   group: QA-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  flutter-version: 3.10.x
+
 jobs:
   quality-go:
     name: "Go Quality checks"
@@ -98,7 +101,7 @@ jobs:
       - name: Flutter QA
         uses: ./.github/actions/flutter-qa/
         with:
-          flutter-version: '3.10.x'
+          flutter-version: ${{ env.flutter-version }}
           package-dir: '${{ matrix.package }}'
           run-build-runner: ${{ contains(matrix.package, 'ubuntupro') }}
       - uses: ./.github/actions/check-diff
@@ -194,18 +197,67 @@ jobs:
         with:
           files-to-validate: '${{ matrix.subproject }}/{.,**}/*.{dart,go}'
 
-  build-debian:
+  build-wsl-pro-service:
     name: Build wsl-pro-service debian package
     runs-on: ubuntu-latest
-    env:
-      source-dir: wsl-pro-service
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Build debian package
         uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
         with:
-          source-dir: ${{ env.source-dir }}
+          source-dir: wsl-pro-service
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
+
+  build-ubuntu-pro-for-windows:
+    name: Build Windows Agent Appx
+    runs-on: windows-latest
+    steps:
+      - name: Set up git
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: go.work
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.flutter-version }}
+      - name: Setup MSBuild (PATH)
+        uses: microsoft/setup-msbuild@v1.0.2
+      - name: Install certificate
+        shell: powershell
+        run: |
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
+          certutil -decode certificate\certificate.txt certificate\certificate.pfx
+
+          $pwd = ConvertTo-SecureString '${{ secrets.CERTIFICATE_PASSWORD }}' -AsPlainText -Force
+          Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
+          Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
+      - name: Build Bundle
+        run:  |
+          msbuild                                            `
+            .\msix\msix.sln                                  `
+            -target:Build                                    `
+            -maxCpuCount                                     `
+            -nodeReuse:false                                 `
+            -property:Configuration=Release                  `
+            -property:AppxBundle=Always                      `
+            -property:AppxBundlePlatforms=x64                `
+            -property:UapAppxPackageBuildMode=SideloadOnly   `
+            -property:Version=0.0.1+${{ github.sha }}        `
+            -nologo                                          `
+            -verbosity:normal
+      - name: Upload sideload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: UbuntuProForWindows+${{ github.sha }}
+          path: |
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_1.0.0.0_x64.cer
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_1.0.0.0_x64.msixbundle
