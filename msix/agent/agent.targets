@@ -7,17 +7,30 @@
 		<!-- Comment below to see the console window poping up -->
 		<GoFlags>-ldflags -H=windowsgui</GoFlags>
 	</PropertyGroup>
-	<ItemGroup>
-        <GoLibFiles Include="$(OutDir)\*.dll" />
-        <None Include="@(GoLibFiles)">
-            <DeploymentContent>true</DeploymentContent>
-        </None>
-    </ItemGroup>
     <ItemGroup>
       <None Include="$(GoAppRoot)\**\*.go" />
     </ItemGroup>
-	<Target Name="Build">
-		<Message Text="Building Go artifacts to $(OutDir)" Importance="high"/>
+    <!-- Writes into the "DepAssemblies" item the location where building the @(ProjectReference) projectwill output its assemblies (without actually building it) -->
+    <Target Name="GetDepsOutputPaths" BeforeTargets="Build">
+        <MSBuild Projects="@(ProjectReference)" Targets="GetTargetPath">
+            <Output TaskParameter="TargetOutputs" ItemName="DepAssemblies" />
+        </MSBuild>
+    </Target>
+    <!-- Forces building the @(ProjectReference) project before building this project -->
+    <Target Name="BuildDeps" BeforeTargets="Build">
+        <Message Text="Building @(ProjectReference)" Importance="high" />
+        <MSBuild Projects="@(ProjectReference)" Targets="Build">
+        </MSBuild>
+    </Target>
+	<Target Name="Build" DependsOnTargets="BuildDeps">
+        <!-- Here we can be confident that "DepAssemblies" have been computed and built -->
+        <ItemGroup>
+            <None Include="@(DepAssemblies)">
+                <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+                <DeploymentContent>true</DeploymentContent>
+            </None>
+        </ItemGroup>
+        <Message Text="Building Go artifacts to $(OutDir) and bundling @(DepAssemblies)" Importance="high"/>
         <MakeDir Directories="$(OutDir)" />
 		<Exec Command="go build $(GoFlags) $(GoAppDir) " WorkingDirectory="$(OutDir)" />
 	</Target>
