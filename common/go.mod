@@ -3,8 +3,10 @@ module github.com/canonical/ubuntu-pro-for-windows/common
 go 1.21
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
 	github.com/stretchr/testify v1.8.4
+	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -12,5 +14,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/ubuntu/decorate v0.0.0-20230125165522-2d5b0a9bb117 // indirect
+	golang.org/x/sys v0.10.0 // indirect
 )
