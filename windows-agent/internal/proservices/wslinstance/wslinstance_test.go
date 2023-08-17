@@ -11,9 +11,11 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	log "github.com/sirupsen/logrus"
@@ -26,6 +28,8 @@ import (
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.DebugLevel)
+
+	task.Register[testTask]()
 
 	exit := m.Run()
 	defer os.Exit(exit)
@@ -101,11 +105,12 @@ func TestConnected(t *testing.T) {
 	)
 
 	testCases := map[string]struct {
-		useEmptyDistroName  bool
-		stopLinuxSideClient step
-		sendSecondInfo      bool
-		skipLinuxServe      bool
-		landscape           landscapeState
+		useEmptyDistroName      bool
+		stopLinuxSideClient     step
+		sendSecondInfo          bool
+		skipLinuxServe          bool
+		landscape               landscapeState
+		distroAlreadyInDatabase bool
 
 		wantDone step
 		wantErr  bool
@@ -114,6 +119,8 @@ func TestConnected(t *testing.T) {
 		"Successful connection and property refresh":                      {sendSecondInfo: true},
 		"Successful connection and property refresh without Landscape":    {sendSecondInfo: true, landscape: disconnected},
 		"Successful connection and property refresh with Landscape error": {sendSecondInfo: true, landscape: connectedWithError},
+
+		"Successful connection with a pre-existing distro": {distroAlreadyInDatabase: true},
 
 		"Error on never serving on Linux":              {skipLinuxServe: true, wantDone: afterDistroShouldBeActive, wantErr: true},
 		"Error on disconnect before send info":         {stopLinuxSideClient: beforeLinuxServe, wantDone: beforeLinuxServe, wantErr: true},
@@ -148,6 +155,15 @@ func TestConnected(t *testing.T) {
 
 			srv, err := newWrappedService(ctx, db, landscape)
 			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
+
+			if tc.distroAlreadyInDatabase {
+				d, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
+				require.NoError(t, err, "Setup: could not get pre-existing distro into database")
+
+				// Submit a deferred task to check if it is reloaded
+				err = d.SubmitTasks(true, testTask{ID: d.GUID()})
+				require.NoError(t, err, "Setup: submitting a deferred task should succeed")
+			}
 
 			grpcServer, ctrlAddr := serveWSLInstance(t, ctx, srv)
 			defer grpcServer.Stop()
@@ -238,6 +254,12 @@ func TestConnected(t *testing.T) {
 					return v
 				}, maxDelay, 10*time.Millisecond,
 					"Distro should become active after sending its info for the first time")
+
+				if tc.distroAlreadyInDatabase {
+					require.Eventually(t, func() bool {
+						return completedTeskTasks.Has(d.GUID())
+					}, 10*time.Second, 100*time.Millisecond, "Deferred task should have been loaded after contact")
+				}
 			}
 
 			// The distro has had its stream attached.
@@ -501,4 +523,19 @@ func propsFromInfo(t *testing.T, info *agentapi.DistroInfo) distro.Properties {
 	props, err := wslinstance.PropsFromInfo(info)
 	require.NoErrorf(t, err, "PropsFromInfo should not return any error. Info: %#v", info)
 	return props
+}
+
+type testTask struct {
+	ID string
+}
+
+var completedTeskTasks = common.NewSet[string]()
+
+func (t testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+	completedTeskTasks.Set(t.ID)
+	return nil
+}
+
+func (t testTask) String() string {
+	return fmt.Sprintf("Test task with ID %s", t.ID)
 }
