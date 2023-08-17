@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '/core/agent_api_client.dart';
 import '/core/pro_token.dart';
 
-/// A base class for the view-models that may represent different types of active subscriptions and the optional actions they allow.
+/// A base class for the view-models that may represent different types of subscriptions and the optional actions they allow.
 sealed class SubscriptionStatusModel {
   /// Returns the appropriate view-model subclass based on the SubscriptionInfo that was passed.
   factory SubscriptionStatusModel(

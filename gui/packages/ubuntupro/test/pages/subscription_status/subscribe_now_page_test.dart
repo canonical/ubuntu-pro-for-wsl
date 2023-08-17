@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
-import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
+import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
+import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
 import 'package:yaru/yaru.dart';
 import 'subscribe_now_page_test.mocks.dart';
 import 'token_samples.dart' as tks;
@@ -76,7 +76,7 @@ void main() {
   });
 }
 
-Widget buildApp(SubscribeNowModel model) {
+Widget buildApp(SubscriptionStatusModel model) {
   return YaruTheme(
     builder: (context, yaru, child) => MaterialApp(
       theme: yaru.theme,
