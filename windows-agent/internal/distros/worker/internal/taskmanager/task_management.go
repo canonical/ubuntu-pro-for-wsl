@@ -19,6 +19,11 @@ import (
 // TaskQueueSize is the maximum amount of tasks a queue is allowed to hold.
 const TaskQueueSize = 100
 
+// reloadQueueSignal is a nill managed task that is used to signal that the queue needs be refreshed
+// This happens because Load() creates a new queue (dumping the old one), so NextTask needs to <-wait
+// on the newly created queue.
+var reloadQueueSignal *ManagedTask
+
 // ManagedTask is a type that carries a task with it, with added metadata and functionality to
 // serialize and deserialize.
 type ManagedTask struct {
@@ -123,25 +128,42 @@ func (tm *TaskManager) NextTask(ctx context.Context) (*ManagedTask, bool) {
 	default:
 	}
 
-	select {
-	case <-ctx.Done():
-		return nil, false
-	case t := <-tm.queue:
-		// Remove task from list
-		tm.mu.Lock()
-		defer tm.mu.Unlock()
+	// Avoid races with Load()
+	tm.mu.RLock()
+	queue := tm.queue
+	tm.mu.RUnlock()
 
-		idx := slices.Index(tm.tasks, t)
-		if idx != -1 {
-			tm.tasks = slices.Delete(tm.tasks, idx, idx+1)
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, false
+		case t := <-queue:
+
+			if t == reloadQueueSignal {
+				// There was a reload: need to refresh the queue after the Load is completed
+				tm.mu.RLock()
+				queue = tm.queue
+				tm.mu.RUnlock()
+
+				continue
+			}
+
+			tm.mu.Lock()
+			defer tm.mu.Unlock()
+
+			// Remove task from list
+			idx := slices.Index(tm.tasks, t)
+			if idx != -1 {
+				tm.tasks = slices.Delete(tm.tasks, idx, idx+1)
+			}
+
+			if err := tm.save(); err != nil {
+				log.Errorf(ctx, "NextTask: could not write task list to disk: %v", err)
+				return t, false
+			}
+
+			return t, true
 		}
-
-		if err := tm.save(); err != nil {
-			log.Errorf(ctx, "NextTask: could not write task list to disk: %v", err)
-			return t, false
-		}
-
-		return t, true
 	}
 }
 
@@ -201,9 +223,15 @@ func (tm *TaskManager) Load(ctx context.Context) (err error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
+	// Dump old queue and reload from file
+	oldQueue := tm.queue
+
 	tm.tasks = make([]*ManagedTask, 0)
 	tm.queue = make(chan *ManagedTask, TaskQueueSize)
 	tm.largestID = 0
+
+	oldQueue <- reloadQueueSignal
+	close(oldQueue)
 
 	out, err := os.ReadFile(tm.storagePath)
 	if err != nil {
