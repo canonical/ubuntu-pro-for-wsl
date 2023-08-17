@@ -43,7 +43,7 @@ class _Pro4WindowsAppState extends State<Pro4WindowsApp> {
               addrFileName: kAddrFileName,
               agentLauncher: launch,
               clientFactory: defaultClient,
-              onClient: registerServiceInstance<AgentApiClient>,
+              onClient: _onClient,
             ),
             child: const StartupPage(
               nextRoute: Routes.subscribeNow,
@@ -55,6 +55,11 @@ class _Pro4WindowsAppState extends State<Pro4WindowsApp> {
         ),
       ),
     );
+  }
+
+  Future<void> _onClient(AgentApiClient client) async {
+    registerServiceInstance<AgentApiClient>(client);
+    _subscriptionInfo.value = await client.subscriptionInfo();
   }
 }
 
