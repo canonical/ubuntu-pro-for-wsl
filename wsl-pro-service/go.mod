@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
 
-go 1.20
+go 1.21
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230808131413-604d28c09528

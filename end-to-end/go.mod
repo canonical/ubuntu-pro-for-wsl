@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/end-to-end
 
-go 1.20
+go 1.21
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537

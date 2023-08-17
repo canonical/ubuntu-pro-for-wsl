@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/common
 
-go 1.20
+go 1.21
 
 require (
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
