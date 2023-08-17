@@ -13,8 +13,8 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	github.com/ubuntu/decorate v0.0.0-20230530133104-b7bd3c599bab
-	github.com/ubuntu/gowsl v0.0.0-20230614132354-6933576ea1b6
+	github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6
+	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/sys v0.11.0
 	google.golang.org/grpc v1.57.0
@@ -32,6 +32,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
