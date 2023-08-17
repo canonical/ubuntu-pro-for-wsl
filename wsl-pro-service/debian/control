@@ -5,7 +5,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper-compat (= 13),
                dh-apport,
                dh-golang,
-               golang-go (>= 2:1.20~),
+               golang-go (>= 2:1.21~),
 Standards-Version: 4.6.2
 XS-Go-Import-Path: github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
 Homepage: https://github.com/canonical/ubuntu-pro-for-windows
