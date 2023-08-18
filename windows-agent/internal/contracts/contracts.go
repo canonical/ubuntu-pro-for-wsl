@@ -42,15 +42,14 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 	if opts.proURL == nil {
 		url, err := url.Parse(defaultProURL)
 		if err != nil {
-			return token, fmt.Errorf("could not parse default contract server URL %q: %v", defaultProURL, err)
+			return "", fmt.Errorf("could not parse default contract server URL %q: %v", defaultProURL, err)
 		}
 		opts.proURL = url
 	}
 
 	contractClient := client.New(opts.proURL, &http.Client{Timeout: 30 * time.Second})
-	msftStore := microsoftstore.New()
 
-	token, err = proToken(ctx, contractClient, msftStore)
+	token, err = proToken(ctx, contractClient)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +57,7 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 	return token, nil
 }
 
-func proToken(ctx context.Context, serverClient *client.Client, msftStore *microsoftstore.Store) (proToken string, err error) {
+func proToken(ctx context.Context, serverClient *client.Client) (proToken string, err error) {
 	defer decorate.OnError(&err, "could not obtain pro token")
 
 	adToken, err := serverClient.GetServerAccessToken(ctx)
@@ -66,7 +65,7 @@ func proToken(ctx context.Context, serverClient *client.Client, msftStore *micro
 		return "", err
 	}
 
-	storeToken, err := msftStore.SubscriptionToken(ctx, adToken)
+	storeToken, err := microsoftstore.GenerateUserJWT(adToken)
 	if err != nil {
 		return "", err
 	}
