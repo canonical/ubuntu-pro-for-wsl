@@ -1,12 +1,17 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
-/// Compiles the windows agent's main package into the [destination] directory.
+/// Compiles the windows agent's main package into the [destination] directory,
+/// optionally renaming it to [exeName].
 /// Since this is a test helper, assertions are just fine.
 /// A try-catch block (on AssertionError) can still prevent process exit.
-Future<void> buildAgentExe(String destination) async {
+Future<void> buildAgentExe(
+  String destination, {
+  String exeName = 'ubuntu-pro-agent.exe',
+}) async {
   const config = 'Debug';
-  const exeName = 'ubuntu-pro-agent.exe';
+  const platform = 'x64';
+
   final dest = Directory(destination);
   await dest.create(recursive: true);
 
@@ -17,11 +22,16 @@ Future<void> buildAgentExe(String destination) async {
   await _build(
     buildProgram: 'msbuild',
     targetPath: vcxproj!,
-    arguments: ['/p:Configuration=$config'],
+    arguments: ['/p:Configuration=$config', '/p:Platform=$platform'],
   );
 
-  // <...>/msix/agent/Debug/ubuntu-pro-agent.exe
-  final expectedOutput = p.join(p.dirname(vcxproj), config, exeName);
+  // <...>/msix/agent/x64/Debug/ubuntu-pro-agent.exe
+  final expectedOutput = p.join(
+    p.dirname(vcxproj),
+    platform,
+    config,
+    'ubuntu-pro-agent.exe',
+  );
 
   await File(expectedOutput).rename(p.join(dest.absolute.path, exeName));
 }
@@ -37,6 +47,9 @@ Future<void> _build({
     [...?arguments, targetPath],
     workingDirectory: workingDir,
   );
+
+  stdout.write(result.stdout);
+  stdout.write(result.stderr);
 
   assert(result.exitCode == 0, '$buildProgram failed');
 }
