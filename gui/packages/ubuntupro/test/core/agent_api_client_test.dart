@@ -100,7 +100,7 @@ void main() {
 Future<Process> startAgent(String fullpath) async {
   final agent = Process.start(
     fullpath,
-    [],
+    ['-vvv'],
     mode: ProcessStartMode.inheritStdio,
     environment: Environment.instance.merged,
   );
