@@ -10,6 +10,7 @@ Future<void> buildAgentExe(
   String exeName = 'ubuntu-pro-agent.exe',
 }) async {
   const config = 'Debug';
+  const platform = 'x64';
 
   final dest = Directory(destination);
   await dest.create(recursive: true);
@@ -21,12 +22,13 @@ Future<void> buildAgentExe(
   await _build(
     buildProgram: 'msbuild',
     targetPath: vcxproj!,
-    arguments: ['/p:Configuration=$config'],
+    arguments: ['/p:Configuration=$config', '/p:Platform=$platform'],
   );
 
-  // <...>/msix/agent/Debug/ubuntu-pro-agent.exe
+  // <...>/msix/agent/x64/Debug/ubuntu-pro-agent.exe
   final expectedOutput = p.join(
     p.dirname(vcxproj),
+    platform,
     config,
     'ubuntu-pro-agent.exe',
   );
