@@ -15,6 +15,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: microsoft/setup-msbuild@v1
+      if: runner.os == 'Windows'
     - uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
@@ -42,3 +44,15 @@ runs:
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
       run: flutter test 
+    - name: Integration Test
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: |
+        if [ -d integration_test ]; then
+          if [ $(uname) = 'Linux' ]; then
+            xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
+              flutter test integration_test/
+          else
+              flutter test integration_test/
+          fi
+        fi
