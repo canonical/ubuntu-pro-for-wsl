@@ -46,6 +46,9 @@ Future<void> _build({
     workingDirectory: workingDir,
   );
 
+  stdout.write(result.stdout);
+  stdout.write(result.stderr);
+
   assert(result.exitCode == 0, '$buildProgram failed');
 }
 
