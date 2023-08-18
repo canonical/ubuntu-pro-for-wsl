@@ -24,6 +24,10 @@ func TestMain(m *testing.M) {
 func TestGenerateUserJWT(t *testing.T) {
 	t.Parallel()
 
+	if runtime.GOOS != "windows" {
+		t.Skip("This test is only supported on Windows")
+	}
+
 	testCases := map[string]struct {
 		token string
 

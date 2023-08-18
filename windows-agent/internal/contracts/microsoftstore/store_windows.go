@@ -1,3 +1,4 @@
+// Package microsoftstore intrerfaces with the storeapi.dll library.
 package microsoftstore
 
 import (
