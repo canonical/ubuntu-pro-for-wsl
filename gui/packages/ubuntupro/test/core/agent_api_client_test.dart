@@ -17,13 +17,7 @@ void main() {
     expect(await client.ping(), isFalse);
   });
 
-  final skip = Platform.environment['GOPATH'] == null
-      ? 'These tests require Go to start the agent'
-      : false;
-
-  // The following group is conditionally skipped based on the absence of the
-  // GOPATH environment variable.
-  group('with a real agent', skip: skip, () {
+  group('with a real agent', () {
     Directory? tmp;
     var exeName = '';
 
