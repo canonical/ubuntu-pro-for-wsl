@@ -255,7 +255,7 @@ jobs:
             -nologo                                          `
             -verbosity:normal
       - name: Upload sideload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: UbuntuProForWindows+${{ github.sha }}
           path: |
