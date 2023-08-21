@@ -226,7 +226,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: go.work
       - uses: subosito/flutter-action@v2
