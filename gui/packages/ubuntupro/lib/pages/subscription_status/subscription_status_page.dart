@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 
 import '/core/agent_api_client.dart';
+import 'subscribe_now_page.dart';
 import 'subscription_status_model.dart';
 import 'subscription_status_widgets.dart';
 
@@ -43,6 +44,7 @@ class SubscriptionStatusPage extends StatelessWidget {
       OrgSubscriptionStatusModel() => SubscriptionStatus(
           caption: lang.orgManaged,
         ),
+      SubscribeNowModel() => const SubscribeNowPage(),
     };
   }
 

@@ -1,10 +1,12 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
+import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '/core/agent_api_client.dart';
+import '/core/pro_token.dart';
 
-/// A base class for the view-models that may represent different types of active subscriptions and the optional actions they allow.
+/// A base class for the view-models that may represent different types of subscriptions and the optional actions they allow.
 sealed class SubscriptionStatusModel {
   /// Returns the appropriate view-model subclass based on the SubscriptionInfo that was passed.
   factory SubscriptionStatusModel(
@@ -20,10 +22,9 @@ sealed class SubscriptionStatusModel {
         case SubscriptionType.microsoftStore:
           return StoreSubscriptionStatusModel(info.productId);
         case SubscriptionType.none:
+          return SubscribeNowModel(client);
         case SubscriptionType.notSet:
-          throw UnimplementedError(
-            'This model should not be invoked if there is no active subscription',
-          );
+          throw UnimplementedError('Unknown subscription type');
       }
     }
     return OrgSubscriptionStatusModel();
@@ -63,4 +64,25 @@ class UserSubscriptionStatusModel extends SubscriptionStatusModel {
 /// There is no action supported.
 class OrgSubscriptionStatusModel extends SubscriptionStatusModel {
   OrgSubscriptionStatusModel() : super._();
+}
+
+class SubscribeNowModel extends SubscriptionStatusModel {
+  final AgentApiClient client;
+  SubscribeNowModel(this.client) : super._();
+
+  Future<void> applyProToken(ProToken token) {
+    return client.applyProToken(token.value);
+  }
+
+  void launchProWebPage() {
+    launchUrl(Uri.parse('https://ubuntu.com/pro'));
+  }
+
+// TODO: Communicate this with the agent's UI Service to
+// - Get the product ID
+// - Notify it of the result of the purchase
+// - Display errors
+  Future<void> purchaseSubscription() async {
+    await P4wMsStore().purchaseSubscription('9P25B50XMKXT');
+  }
 }

@@ -10,25 +10,17 @@ import 'core/agent_api_client.dart';
 import 'launch_agent.dart';
 import 'pages/startup/agent_monitor.dart';
 import 'pages/startup/startup_page.dart';
-import 'pages/subscribe_now/subscribe_now_page.dart';
+import 'pages/subscription_status/subscription_status_page.dart';
 import 'routes.dart';
 
-class Pro4WindowsApp extends StatefulWidget {
+class Pro4WindowsApp extends StatelessWidget {
   const Pro4WindowsApp({super.key});
 
   @override
-  State<Pro4WindowsApp> createState() => _Pro4WindowsAppState();
-}
-
-class _Pro4WindowsAppState extends State<Pro4WindowsApp> {
-  // A notifier that will allow child widgets to rebuild once new information
-  // about the current subscription information arrives.
-  final _subscriptionInfo = ValueNotifier(SubscriptionInfo());
-  @override
   Widget build(BuildContext context) {
     return YaruTheme(
-      builder: (context, yaru, child) => ChangeNotifierProvider.value(
-        value: _subscriptionInfo,
+      builder: (context, yaru, child) => ChangeNotifierProvider(
+        create: (_) => ValueNotifier(SubscriptionInfo()),
         child: MaterialApp(
           title: kAppName,
           theme: yaru.theme,
@@ -43,14 +35,17 @@ class _Pro4WindowsAppState extends State<Pro4WindowsApp> {
               addrFileName: kAddrFileName,
               agentLauncher: launch,
               clientFactory: defaultClient,
-              onClient: registerServiceInstance<AgentApiClient>,
+              onClient: (client) async {
+                registerServiceInstance<AgentApiClient>(client);
+                final subscriptionInfo =
+                    context.read<ValueNotifier<SubscriptionInfo>>();
+                subscriptionInfo.value = await client.subscriptionInfo();
+              },
             ),
-            child: const StartupPage(
-              nextRoute: Routes.subscribeNow,
-            ),
+            child: const StartupPage(nextRoute: Routes.subscriptionStatus),
           ),
           routes: const {
-            Routes.subscribeNow: SubscribeNowPage.create,
+            Routes.subscriptionStatus: SubscriptionStatusPage.create,
           },
         ),
       ),

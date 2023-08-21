@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:yaru/yaru.dart';
-import '../../core/agent_api_client.dart';
 import '../widgets/page_widgets.dart';
-import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
+import 'subscription_status_model.dart';
 
 class SubscribeNowPage extends StatelessWidget {
   const SubscribeNowPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<SubscribeNowModel>();
+    final model = context.watch<SubscriptionStatusModel>() as SubscribeNowModel;
     final lang = AppLocalizations.of(context);
     return DarkStyledLandingPage(
       children: [
@@ -63,14 +61,6 @@ class SubscribeNowPage extends StatelessWidget {
           },
         )
       ],
-    );
-  }
-
-  static Widget create(BuildContext context) {
-    final client = getService<AgentApiClient>();
-    return Provider(
-      create: (_) => SubscribeNowModel(client),
-      child: const SubscribeNowPage(),
     );
   }
 }
