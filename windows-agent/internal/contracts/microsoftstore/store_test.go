@@ -1,9 +1,16 @@
 package microsoftstore_test
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/microsoftstore"
+	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,4 +63,28 @@ func TestGenerateUserJWT(t *testing.T) {
 			require.NotEmpty(t, jwt, "User JWToken should not be empty")
 		})
 	}
+}
+
+func buildStoreAPI(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "msbuild",
+		`..\..\..\..\msix\storeapi\storeapi.vcxproj`,
+		`-target:Build`,
+		`-property:Configuration=Debug`,
+		`-property:Platform=x64`,
+		`-nologo`,
+		`-verbosity:normal`,
+	)
+
+	log.Infof(ctx, "Building store api DLL")
+
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("could not build store api DLL: %v. Log:\n%s", err, out)
+	}
+
+	log.Infof(ctx, "Built store api DLL")
+
+	return nil
 }

@@ -152,6 +152,11 @@ jobs:
         uses: ./.github/actions/setup-git
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      # The Windows Store needs to be built. The tests do it automatically, but they need
+      # msbuild in the path
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v1
+        if: matrix.os == 'windows' && matrix.subproject == 'windows-agent'
       - name: Run tests
         shell: bash
         if: always() && !cancelled()
