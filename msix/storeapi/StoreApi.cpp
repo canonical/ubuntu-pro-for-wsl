@@ -1,9 +1,15 @@
-#include "StoreApi.hpp"
+#ifndef DNDEBUG
+#include <format>
+#include <iostream>
+#endif
 
+#include "StoreApi.hpp"
 #include "framework.hpp"
 
 // Syntactic sugar to convert the enum [value] into a Int.
-constexpr Int toInt(StoreApi::ErrorCode value) { return static_cast<Int>(value); }
+constexpr Int toInt(StoreApi::ErrorCode value) {
+  return static_cast<Int>(value);
+}
 
 // The maximum token length expected + 1 (the null terminator).
 static constexpr std::size_t MaxTokenLen = 4097;
@@ -17,9 +23,21 @@ static constexpr std::size_t MaxProductIdLen = 129;
 // length smaller than [maxLength].
 StoreApi::ErrorCode validateArg(const char* input, std::size_t maxLength);
 
+void logError(std::string_view functionName, std::string_view errMsg) {
+  #ifndef DNDEBUG
+    std::cerr << std::format("storeapi: {}: {}\n", functionName , errMsg);
+  #endif
+}
+
+#define LOG_ERROR(msg)           \
+  do {                           \
+    logError(__FUNCTION__, msg); \
+  } while (0)
+
 Int GetSubscriptionExpirationDate(const char* productID,
                                   std::int64_t* expirationUnix) {
-  if (auto err = validateArg(productID, MaxProductIdLen); err != StoreApi::ErrorCode::None) {
+  if (auto err = validateArg(productID, MaxProductIdLen);
+      err != StoreApi::ErrorCode::None) {
     return toInt(err);
   }
 
@@ -34,17 +52,21 @@ Int GetSubscriptionExpirationDate(const char* productID,
     return 0;
 
   } catch (const StoreApi::Exception& err) {
+    LOG_ERROR(err.what());
     return toInt(err.code());
-  } catch (const winrt::hresult_error&) {
+  } catch (const winrt::hresult_error& err) {
+    LOG_ERROR(winrt::to_string(err.message()));
     return toInt(StoreApi::ErrorCode::WinRT);
-  } catch (const std::exception&) {
+  } catch (const std::exception& err) {
+    LOG_ERROR(err.what());
     return toInt(StoreApi::ErrorCode::Unknown);
   }
 }
 
 Int GenerateUserJWT(const char* accessToken, char** userJWT,
                     std::uint64_t* userJWTLen) {
-  if (auto err = validateArg(accessToken, MaxTokenLen); err != StoreApi::ErrorCode::None) {
+  if (auto err = validateArg(accessToken, MaxTokenLen);
+      err != StoreApi::ErrorCode::None) {
     return toInt(err);
   }
 
@@ -73,10 +95,13 @@ Int GenerateUserJWT(const char* accessToken, char** userJWT,
     return 0;
 
   } catch (const StoreApi::Exception& err) {
+    LOG_ERROR(err.what());
     return toInt(err.code());
-  } catch (const winrt::hresult_error&) {
+  } catch (const winrt::hresult_error& err) {
+    LOG_ERROR(winrt::to_string(err.message()));
     return toInt(StoreApi::ErrorCode::WinRT);
-  } catch (const std::exception&) {
+  } catch (const std::exception& err) {
+    LOG_ERROR(err.what());
     return toInt(StoreApi::ErrorCode::Unknown);
   }
 }
