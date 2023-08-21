@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 )
 
 func locateStoreDll() (string, error) {
@@ -53,7 +55,7 @@ func locateStoreDllAppx() (path string, err error) {
 // locateStoreDll when running tests. Tests are run at the path of the testfile, so we know that
 // the repo root is above the CWD.
 func locateStoreDllRepo(path string) (string, error) {
-	repoRoot, err := findRepositoryRoot()
+	repoRoot, err := common.FindWorkspaceRoot()
 	if err != nil {
 		return "", fmt.Errorf("could not find repository root: %v", err)
 	}
@@ -68,23 +70,4 @@ func locateStoreDllRepo(path string) (string, error) {
 	}
 
 	return candidate, nil
-}
-
-func findRepositoryRoot() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return "", errors.New("could not get current working directory")
-	}
-
-	for {
-		parent := filepath.Dir(path)
-		if parent == path {
-			return "", errors.New("could not find repo root")
-		}
-		path = parent
-
-		if s, err := os.Stat(filepath.Join(path, "go.work")); err == nil && !s.IsDir() {
-			return parent, nil
-		}
-	}
 }

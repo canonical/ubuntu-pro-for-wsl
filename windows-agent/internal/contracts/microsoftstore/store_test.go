@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/microsoftstore"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/stretchr/testify/require"
@@ -69,8 +71,14 @@ func buildStoreAPI(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
+	root, err := common.FindWorkspaceRoot()
+	if err != nil {
+		return err
+	}
+
+	//nolint:gosec // Only used in tests.
 	cmd := exec.CommandContext(ctx, "msbuild",
-		`..\..\..\..\msix\storeapi\storeapi.vcxproj`,
+		filepath.Join(root, `/msix/storeapi/storeapi.vcxproj`),
 		`-target:Build`,
 		`-property:Configuration=Debug`,
 		`-property:Platform=x64`,
