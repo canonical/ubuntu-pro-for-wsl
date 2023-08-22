@@ -8,7 +8,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de
 	github.com/golang/protobuf v1.5.3
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
