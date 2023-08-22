@@ -2,15 +2,18 @@ package proservices_test
 
 import (
 	"context"
+	"crypto/sha512"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 func TestMain(m *testing.M) {
@@ -30,11 +33,17 @@ func TestNew(t *testing.T) {
 		breakMkDir       bool
 		breakNewDistroDB bool
 
+		subscriptionFileUpToDate bool
+		subscriptionFileOutdated bool
+
 		wantErr bool
 	}{
 		"Success":                           {},
 		"Success with a read-only registry": {configIsReadOnly: true},
 		"Success when the config cannot check if it is read-only": {breakConfig: true},
+
+		"Success when the subscription is not new": {subscriptionFileUpToDate: true},
+		"Success when the subscription is new":     {subscriptionFileOutdated: true},
 
 		"Error when Manager cannot create its cache dir":  {breakMkDir: true, wantErr: true},
 		"Error when database cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
@@ -47,9 +56,23 @@ func TestNew(t *testing.T) {
 			ctx := context.Background()
 			dir := t.TempDir()
 
+			const testToken = "TestToken123"
+			testTokenCS := sha512.Sum512([]byte(testToken))
+
 			reg := registry.NewMock()
+			reg.KeyExists = true
+			reg.UbuntuProData["ProTokenUser"] = testToken
 			if tc.breakConfig {
 				reg.Errors = registry.MockErrOnCreateKey
+			}
+
+			subscriptionChecksumFile := filepath.Join(dir, "subscription.csum")
+			if tc.subscriptionFileUpToDate {
+				err := os.WriteFile(subscriptionChecksumFile, testTokenCS[:], 0600)
+				require.NoError(t, err, "Setup: could not write subscription checksum file")
+			} else if tc.subscriptionFileOutdated {
+				err := os.WriteFile(subscriptionChecksumFile, []byte("OLD_CHECKSUM"), 0600)
+				require.NoError(t, err, "Setup: could not write subscription checksum file")
 			}
 
 			if tc.configIsReadOnly {
@@ -79,6 +102,19 @@ func TestNew(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "New should return no error")
+
+			// Subscriptions are updated asyncronously
+			require.Eventually(t, func() bool {
+				out, err := os.ReadFile(subscriptionChecksumFile)
+				if err != nil {
+					t.Logf("Could not read subscription checksum file: %v", err)
+					return false
+				}
+				if slices.Equal(out, testTokenCS[:]) {
+					return true
+				}
+				return false
+			}, time.Second, 100*time.Millisecond, "Subscription checksum file was never updated")
 		})
 	}
 }
