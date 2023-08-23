@@ -40,16 +40,24 @@ func locateStoreDll() (string, error) {
 // locateStoreDll for the packaged application. The working dir is the
 // root of the InstallLocation.
 func locateStoreDllAppx() (path string, err error) {
-	const appxPath = "./agent/storeapi.dll"
-
-	// Appx: working directory is the Appx root
-	if s, err := os.Stat(appxPath); err != nil {
-		return "", err
-	} else if s.IsDir() {
-		return "", fmt.Errorf("%q: is a directory", appxPath)
+	exec, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("could not find path of executable: %v", err)
 	}
 
-	return appxPath, nil
+	// DLL is located in the same directory as the agent executable.
+	dllPath := filepath.Join(
+		filepath.Dir(exec),
+		"storeapi.dll",
+	)
+
+	if s, err := os.Stat(dllPath); err != nil {
+		return "", err
+	} else if s.IsDir() {
+		return "", fmt.Errorf("%q: is a directory", dllPath)
+	}
+
+	return dllPath, nil
 }
 
 // locateStoreDll when running tests. Tests are run at the path of the testfile, so we know that
