@@ -111,18 +111,24 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 
 			logFile := strings.ReplaceAll(fmt.Sprintf("%s.log", name), " ", "")
 
-			out, err := job.CombinedOutput()
-			if err != nil {
-				cancel()
-				results <- fmt.Errorf("%q: %v. Check out %q for more details", name, err, logFile)
+			if f, err := os.Create(logFile); err != nil {
+				log.Printf("could not open log file for %s", name)
+				f = nil
 			} else {
-				log.Printf("Finished job: %s\n", name)
-				results <- nil
+				job.Stdout = f
+				job.Stderr = f
+				defer f.Close()
 			}
 
-			if logErr := os.WriteFile(logFile, out, 0600); logErr != nil {
-				log.Printf("could not write logs for %s", name)
+			if err := job.Run(); err != nil {
+				cancel()
+				results <- fmt.Errorf("%q: %v. Check out %q for more details", name, err, logFile)
+				return
 			}
+
+			log.Printf("Finished job: %s\n", name)
+			results <- nil
+
 		}()
 	}
 
