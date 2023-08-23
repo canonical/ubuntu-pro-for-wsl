@@ -1,9 +1,9 @@
 module github.com/canonical/ubuntu-pro-for-windows/end-to-end
 
-go 1.20
+go 1.21
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230817064205-3ab157a2dd98
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6
 	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4

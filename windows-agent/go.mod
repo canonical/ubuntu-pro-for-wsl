@@ -1,20 +1,20 @@
 module github.com/canonical/ubuntu-pro-for-windows/windows-agent
 
-go 1.20
+go 1.21
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230601072749-e7ce40e197de
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230713080210-be71374e9537
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230601072749-e7ce40e197de
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230817064205-3ab157a2dd98
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230817064205-3ab157a2dd98
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230817064205-3ab157a2dd98
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	github.com/ubuntu/decorate v0.0.0-20230530133104-b7bd3c599bab
-	github.com/ubuntu/gowsl v0.0.0-20230614132354-6933576ea1b6
+	github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6
+	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/sys v0.11.0
 	google.golang.org/grpc v1.57.0
@@ -32,6 +32,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
