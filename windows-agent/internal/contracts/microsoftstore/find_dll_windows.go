@@ -18,9 +18,9 @@ func locateStoreDll() (string, error) {
 		func() (string, error) { return locateStoreDllRepo(`msix\storeapi\x64\Debug\`) },
 		func() (string, error) { return locateStoreDllRepo(`msix\storeapi\x64\Release\`) },
 
-		// Project build path
-		func() (string, error) { return locateStoreDllRepo(`msix\x64\Debug\storeapi\`) },
-		func() (string, error) { return locateStoreDllRepo(`msix\x64\Release\storeapi\`) },
+		// Solution build path
+		func() (string, error) { return locateStoreDllRepo(`msix\x64\Debug\`) },
+		func() (string, error) { return locateStoreDllRepo(`msix\x64\Release\`) },
 	}
 
 	var accErr error
