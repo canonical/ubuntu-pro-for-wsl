@@ -111,8 +111,7 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 
 			logPath := strings.ReplaceAll(fmt.Sprintf("%s.log", jobName), " ", "")
 			if f, err := os.Create(logPath); err != nil {
-				log.Printf("could not open log file %q for writing", logPath)
-				f = nil
+				log.Printf("%s: could not open log file %q for writing", jobName, logPath)
 			} else {
 				cmd.Stdout = f
 				cmd.Stderr = f
@@ -127,7 +126,6 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 
 			log.Printf("Finished job: %s\n", jobName)
 			results <- nil
-
 		}()
 	}
 
