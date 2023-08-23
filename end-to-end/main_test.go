@@ -103,30 +103,29 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 	}
 
 	results := make(chan error)
-	for name, job := range jobs {
-		name := name
-		job := job
+	for jobName, cmd := range jobs {
+		jobName := jobName
+		cmd := cmd
 		go func() {
-			log.Printf("Started job: %s\n", name)
+			log.Printf("Started job: %s\n", jobName)
 
-			logFile := strings.ReplaceAll(fmt.Sprintf("%s.log", name), " ", "")
-
-			if f, err := os.Create(logFile); err != nil {
-				log.Printf("could not open log file for %s", name)
+			logPath := strings.ReplaceAll(fmt.Sprintf("%s.log", jobName), " ", "")
+			if f, err := os.Create(logPath); err != nil {
+				log.Printf("could not open log file %q for writing", logPath)
 				f = nil
 			} else {
-				job.Stdout = f
-				job.Stderr = f
+				cmd.Stdout = f
+				cmd.Stderr = f
 				defer f.Close()
 			}
 
-			if err := job.Run(); err != nil {
+			if err := cmd.Run(); err != nil {
 				cancel()
-				results <- fmt.Errorf("%q: %v. Check out %q for more details", name, err, logFile)
+				results <- fmt.Errorf("%q: %v. Check out %q for more details", jobName, err, logPath)
 				return
 			}
 
-			log.Printf("Finished job: %s\n", name)
+			log.Printf("Finished job: %s\n", jobName)
 			results <- nil
 
 		}()
