@@ -60,13 +60,11 @@ class Exception {
   std::source_location m_loc;
 
  public:
-  Exception(ErrorCode code, std::string detail = {},
-            std::source_location loc = std::source_location::current())
+  explicit Exception(ErrorCode code, std::string detail = {},
+                     std::source_location loc = std::source_location::current())
       : m_code{code}, m_detail{detail}, m_loc{loc} {}
 
-  ErrorCode code() const {
-    return m_code;
-  }
+  ErrorCode code() const noexcept { return m_code; }
 
   std::string what() const {
     if (m_detail.empty()) {
