@@ -60,9 +60,9 @@ class Exception {
   std::source_location m_loc;
 
  public:
-  explicit Exception(ErrorCode code, std::string detail = {},
+  explicit Exception(ErrorCode code, std::string&& detail = {},
                      std::source_location loc = std::source_location::current())
-      : m_code{code}, m_detail{detail}, m_loc{loc} {}
+      : m_code{code}, m_detail{std::move(detail)}, m_loc{loc} {}
 
   ErrorCode code() const noexcept { return m_code; }
 
