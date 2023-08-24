@@ -26,8 +26,10 @@ DateTime Context::Product::CurrentExpirationDate() {
   }
 
   // Should be unreachable if called from a product user is subscribed to.
-  throw Exception{std::format("Current user not subscribed to product ID {}",
-                              winrt::to_string(self.StoreId()))};
+  throw Exception{
+      ErrorCode::Unsubscribed,
+      std::format("product ID: {}", winrt::to_string(self.StoreId())),
+  };
 }
 
 IAsyncOperation<StorePurchaseStatus> Context::Product::PromptUserForPurchase() {

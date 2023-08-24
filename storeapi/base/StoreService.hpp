@@ -33,12 +33,14 @@ class StoreService {
     auto size = products.size();
     switch (size) {
       case 0:
-        throw Exception(std::format("No products found matching id: {}", id));
+        throw Exception(ErrorCode::NoProductsFound, std::format("id={}", id));
       case 1:
         co_return products[0];
       default:
-        throw Exception(std::format(
-            "Expected one but found {} products matching {}", size, id));
+        throw Exception(
+            ErrorCode::TooManyProductsFound,
+            std::format("Expected one but found {} products for id {}", size,
+                        id));
     }
   }
 };

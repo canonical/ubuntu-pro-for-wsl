@@ -87,7 +87,8 @@ struct NeverSubscribedContext {
     bool IsInUserCollection() { return false; }
 
     winrt::Windows::Foundation::DateTime CurrentExpirationDate() {
-      throw StoreApi::Exception{"Current user not subscribed to this product"};
+      throw StoreApi::Exception{StoreApi::ErrorCode::Unsubscribed,
+                                std::format("id: {}", winrt::to_string(id))};
     }
   };
 
@@ -114,7 +115,7 @@ struct UnixEpochContext {
       std::int64_t seconds = 0;
       if (GetTimeZoneInformation(&tz) != TIME_ZONE_ID_INVALID) {
         // UTC = local time + Bias (in minutes)
-        seconds = static_cast<std::int64_t>(tz.Bias)*60LL;
+        seconds = static_cast<std::int64_t>(tz.Bias) * 60LL;
       }
 
       return winrt::clock::from_time_t(seconds);  // should be the UNIX epoch.
