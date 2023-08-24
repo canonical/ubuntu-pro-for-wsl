@@ -30,21 +30,21 @@ enum class ErrorCode {
 inline std::string to_string(ErrorCode err) {
   switch (err) {
     case ErrorCode::Unsubscribed:
-      return "Current user not subscribed to this product";
+      return "Current user not subscribed to this product.";
     case ErrorCode::NoProductsFound:
-      return "Query found no products";
+      return "Query found no products.";
     case ErrorCode::TooManyProductsFound:
-      return "Query found too many products";
+      return "Query found too many products.";
     case ErrorCode::NoLocalUser:
-      return "No locally authenticated user could be found";
+      return "No locally authenticated user could be found.";
     case ErrorCode::InvalidUserInfo:
-      return "Invalid user info. Maybe not a real user session";
+      return "Invalid user info. Maybe not a real user session.";
     case ErrorCode::TooManyLocalUsers:
-      return "Too many locally authenticated users";
+      return "Too many locally authenticated users.";
     case ErrorCode::EmptyJwt:
-      return "Empty user JWT was generated";
+      return "Empty user JWT was generated.";
     case ErrorCode::Unknown:
-      return "Unkown";
+      return "Unkown.";
     case ErrorCode::None:
       return "";
   }
@@ -67,13 +67,8 @@ class Exception {
   ErrorCode code() const noexcept { return m_code; }
 
   std::string what() const {
-    if (m_detail.empty()) {
-      return std::format("[ERROR]: {}.\n{}(line {}){}", to_string(m_code),
-                         m_loc.file_name(), m_loc.line(), m_loc.function_name());
-    }
-    return std::format("[ERROR]: {}. With {}\n{}(line {}){}", to_string(m_code),
-                       m_detail, m_loc.file_name(), m_loc.line(),
-                       m_loc.function_name());
+    return std::format("[ERROR]: {} {}\n{}:{} {}", to_string(m_code), m_detail,
+                       m_loc.file_name(), m_loc.line(), m_loc.function_name());
   }
 };
 }  // namespace StoreApi
