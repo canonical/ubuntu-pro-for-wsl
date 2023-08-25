@@ -4,7 +4,7 @@ package microsoftstore
 // StoreAPIError are the error constants in the store api.
 type StoreAPIError int
 
-// Keep up-to-date with msix\storeapi\StoreApi.hpp.
+// Keep up-to-date with `storeapi\base\Exception.hpp`.
 const (
 	ErrNotSubscribed StoreAPIError = iota - 128
 	ErrNoProductsFound
