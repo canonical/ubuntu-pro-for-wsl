@@ -6,7 +6,14 @@ type StoreAPIError int
 
 // Keep up-to-date with msix\storeapi\StoreApi.hpp.
 const (
-	ErrNotSubscribed     StoreAPIError = -128
+	ErrNotSubscribed StoreAPIError = iota - 128
+	ErrNoProductsFound
+	ErrTooManyProductsFound
+	ErrInvalidUserInfo
+	ErrNoLocalUser
+	ErrTooManyLocalUsers
+	ErrEmptyJwt
+
 	ErrAllocationFailure StoreAPIError = -10
 	ErrNullInputPtr      StoreAPIError = -9
 	ErrTooBigLength      StoreAPIError = -8
@@ -29,7 +36,19 @@ func NewStoreAPIError(hresult uintptr) error {
 func (err StoreAPIError) Error() string {
 	switch err {
 	case ErrNotSubscribed:
-		return "not subscribed"
+		return "current user not subscribed to this product"
+	case ErrNoProductsFound:
+		return "query found no products"
+	case ErrTooManyProductsFound:
+		return "query found too many products"
+	case ErrInvalidUserInfo:
+		return "no locally authenticated user could be found"
+	case ErrNoLocalUser:
+		return "invalid user info. Maybe not a real user session"
+	case ErrTooManyLocalUsers:
+		return "too many locally authenticated users"
+	case ErrEmptyJwt:
+		return "empty user JWT was generated"
 	case ErrAllocationFailure:
 		return "allocation failure"
 	case ErrTooBigLength:

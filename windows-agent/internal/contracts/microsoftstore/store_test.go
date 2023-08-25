@@ -43,7 +43,7 @@ func TestGenerateUserJWT(t *testing.T) {
 		wantErr    bool
 		wantDllErr microsoftstore.StoreAPIError
 	}{
-		"Error because there is no subscription":       {token: "not a real token", wantErr: true, wantDllErr: microsoftstore.ErrStoreAPI},
+		"Error because there is no subscription":       {token: "not a real token", wantErr: true, wantDllErr: microsoftstore.ErrEmptyJwt},
 		"Error because the token has a null character": {token: "invalid \x00 token", wantErr: true},
 	}
 
@@ -72,7 +72,7 @@ func TestGetSubscriptionExpirationDate(t *testing.T) {
 		t.Skip("This test is only supported on Windows")
 	}
 
-	wantErr := microsoftstore.ErrStoreAPI
+	wantErr := microsoftstore.ErrNoProductsFound
 
 	_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
 	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned code %d", wantErr)
