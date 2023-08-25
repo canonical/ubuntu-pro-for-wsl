@@ -60,6 +60,15 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 func proToken(ctx context.Context, serverClient *client.Client) (proToken string, err error) {
 	defer decorate.OnError(&err, "could not obtain pro token")
 
+	expiration, err := microsoftstore.GetSubscriptionExpirationDate()
+	if err != nil {
+		return "", fmt.Errorf("could not get subscription expiration date: %v", err)
+	}
+
+	if expiration.Before(time.Now()) {
+		return "", fmt.Errorf("the subscription has been expired since %s", expiration)
+	}
+
 	adToken, err := serverClient.GetServerAccessToken(ctx)
 	if err != nil {
 		return "", err

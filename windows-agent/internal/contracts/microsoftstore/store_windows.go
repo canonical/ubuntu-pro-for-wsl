@@ -6,9 +6,15 @@ import (
 	"fmt"
 	"sync"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+)
+
+const (
+	// TODO: Replace with real product ID.
+	productID = "ABCDEFG"
 )
 
 var (
@@ -26,7 +32,7 @@ var (
 func GenerateUserJWT(azureADToken string) (string, error) {
 	accessToken, err := syscall.BytePtrFromString(azureADToken)
 	if err != nil {
-		return "", errors.New("could not convert the AzureAD token to a byte array")
+		return "", fmt.Errorf("could not convert the AzureAD token to a byte array: %v", err)
 	}
 
 	var userJWTbegin *byte
@@ -48,6 +54,27 @@ func GenerateUserJWT(azureADToken string) (string, error) {
 	return string(unsafe.Slice(userJWTbegin, userJWTlen)), nil
 }
 
+// GetSubscriptionExpirationDate returns the expiration date for the current subscription.
+func GetSubscriptionExpirationDate() (time.Time, error) {
+	prodID, err := syscall.BytePtrFromString(productID)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("could not convert the productID to a byte array: %v", err)
+	}
+
+	var expDate int64
+
+	//nolint:gosec // No other way of calling a Dll proc
+	if _, err = call(
+		getSubscriptionExpirationDate,
+		uintptr(unsafe.Pointer(prodID)),
+		uintptr(unsafe.Pointer(&expDate)),
+	); err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Unix(expDate, 0), nil
+}
+
 // call forces the proc and DLL to load before calling it, and cleans up the output.
 // Use this instead of proc.Call to avoid panics.
 //
@@ -64,14 +91,14 @@ func call(proc *syscall.LazyProc, args ...uintptr) (int, error) {
 
 	hresult, _, err := proc.Call(args...)
 	if err != nil && !errors.Is(err, syscall.Errno(0)) {
-		return hresult, fmt.Errorf("%s: %v", proc.Name, err)
+		return int(hresult), fmt.Errorf("%s: %v", proc.Name, err)
 	}
 
 	if err := NewStoreAPIError(hresult); err != nil {
-		return hresult, fmt.Errorf("%s returned error code %d: %w", generateUserJWT.Name, hresult, err)
+		return int(hresult), fmt.Errorf("%s returned error code %d: %w", proc.Name, int(hresult), err)
 	}
 
-	return hresult, nil
+	return int(hresult), nil
 }
 
 // loadDll finds the dll and ensures it loads.

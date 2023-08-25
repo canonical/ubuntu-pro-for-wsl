@@ -67,6 +67,17 @@ func TestGenerateUserJWT(t *testing.T) {
 	}
 }
 
+func TestGetSubscriptionExpirationDate(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("This test is only supported on Windows")
+	}
+
+	wantErr := microsoftstore.ErrStoreAPI
+
+	_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
+	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned code %d", wantErr)
+}
+
 func buildStoreAPI(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
