@@ -3,7 +3,7 @@
 #include "framework.hpp"
 
 // Syntactic sugar to convert the enum [value] into a Int.
-constexpr Int toInt(Errors value) { return static_cast<Int>(value); }
+constexpr Int toInt(StoreApi::ErrorCode value) { return static_cast<Int>(value); }
 
 // The maximum token length expected + 1 (the null terminator).
 static constexpr std::size_t MaxTokenLen = 4097;
@@ -15,16 +15,16 @@ static constexpr std::size_t MaxProductIdLen = 129;
 
 // Makes sure [input] is not a nullptr and it's a null-terminated string with
 // length smaller than [maxLength].
-Errors validateArg(const char* input, std::size_t maxLength);
+StoreApi::ErrorCode validateArg(const char* input, std::size_t maxLength);
 
 Int GetSubscriptionExpirationDate(const char* productID,
                                   std::int64_t* expirationUnix) {
-  if (auto err = validateArg(productID, MaxProductIdLen); err != Errors::None) {
+  if (auto err = validateArg(productID, MaxProductIdLen); err != StoreApi::ErrorCode::None) {
     return toInt(err);
   }
 
   if (expirationUnix == nullptr) {
-    return toInt(Errors::NullOutputPtr);
+    return toInt(StoreApi::ErrorCode::NullOutputPtr);
   }
 
   try {
@@ -33,23 +33,23 @@ Int GetSubscriptionExpirationDate(const char* productID,
     *expirationUnix = service.CurrentExpirationDate(productID).get();
     return 0;
 
-  } catch (const StoreApi::Exception&) {
-    return toInt(Errors::StoreAPI);
+  } catch (const StoreApi::Exception& err) {
+    return toInt(err.code());
   } catch (const winrt::hresult_error&) {
-    return toInt(Errors::WinRT);
+    return toInt(StoreApi::ErrorCode::WinRT);
   } catch (const std::exception&) {
-    return toInt(Errors::Unknown);
+    return toInt(StoreApi::ErrorCode::Unknown);
   }
 }
 
 Int GenerateUserJWT(const char* accessToken, char** userJWT,
                     std::uint64_t* userJWTLen) {
-  if (auto err = validateArg(accessToken, MaxTokenLen); err != Errors::None) {
+  if (auto err = validateArg(accessToken, MaxTokenLen); err != StoreApi::ErrorCode::None) {
     return toInt(err);
   }
 
   if (userJWT == nullptr || userJWTLen == nullptr) {
-    return toInt(Errors::NullOutputPtr);
+    return toInt(StoreApi::ErrorCode::NullOutputPtr);
   }
 
   try {
@@ -64,7 +64,7 @@ Int GenerateUserJWT(const char* accessToken, char** userJWT,
     const auto length = jwt.size();
     auto* buffer = static_cast<char*>(::CoTaskMemAlloc(length));
     if (buffer == nullptr) {
-      return toInt(Errors::AllocationFailure);
+      return toInt(StoreApi::ErrorCode::AllocationFailure);
     }
 
     std::memcpy(buffer, jwt.c_str(), length);
@@ -72,18 +72,18 @@ Int GenerateUserJWT(const char* accessToken, char** userJWT,
     *userJWTLen = length;
     return 0;
 
-  } catch (const StoreApi::Exception&) {
-    return toInt(Errors::StoreAPI);
+  } catch (const StoreApi::Exception& err) {
+    return toInt(err.code());
   } catch (const winrt::hresult_error&) {
-    return toInt(Errors::WinRT);
+    return toInt(StoreApi::ErrorCode::WinRT);
   } catch (const std::exception&) {
-    return toInt(Errors::Unknown);
+    return toInt(StoreApi::ErrorCode::Unknown);
   }
 }
 
-Errors validateArg(const char* input, std::size_t maxLength) {
+StoreApi::ErrorCode validateArg(const char* input, std::size_t maxLength) {
   if (input == nullptr) {
-    return Errors::NullInputPtr;
+    return StoreApi::ErrorCode::NullInputPtr;
   }
 
   // since the null terminator is not counted by strnlen, if maxLength is
@@ -91,12 +91,12 @@ Errors validateArg(const char* input, std::size_t maxLength) {
   const auto length = strnlen(input, maxLength);
 
   if (length == 0) {
-    return Errors::ZeroLength;
+    return StoreApi::ErrorCode::ZeroLength;
   }
 
   if (length == maxLength) {
-    return Errors::TooBigLength;
+    return StoreApi::ErrorCode::TooBigLength;
   }
 
-  return Errors::None;
+  return StoreApi::ErrorCode::None;
 }

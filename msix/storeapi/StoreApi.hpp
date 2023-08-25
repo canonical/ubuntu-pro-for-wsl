@@ -38,21 +38,4 @@ DLL_EXPORT Int GenerateUserJWT(const char* accessToken,
                                // output
                                char** userJWT, std::uint64_t* userJWTLen);
 
-// Document error constants so we can translate those as Go errors.
-enum class Errors : Int {
-  NotSubscribed = std::numeric_limits<Int>::lowest(),
-  AllocationFailure = -10,
-  // input string argument errors
-  NullInputPtr = -9,
-  TooBigLength = -8,
-  ZeroLength = -7,
-  // output parameter errors
-  NullOutputPtr = -6,
-  // runtime errors (aka exceptions)
-  StoreAPI = -3,
-  WinRT = -2,
-  Unknown = -1,
-  // Not an error.
-  None = 0,
-};
 }

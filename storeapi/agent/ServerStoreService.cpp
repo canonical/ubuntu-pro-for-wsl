@@ -36,13 +36,12 @@ task<UserInfo> UserInfo::Current() {
 
   auto howManyUsers = users.Size();
   if (howManyUsers < 1) {
-    throw Exception("No locally authenticated user could be found.");
+    throw Exception(ErrorCode::NoLocalUser);
   }
 
   if (howManyUsers > 1) {
-    throw Exception(std::format(
-        "Expected one but found {} locally authenticated users visible.",
-        howManyUsers));
+    throw Exception(ErrorCode::TooManyLocalUsers,
+                    std::format("Expected one but found {}", howManyUsers));
   }
 
   IInspectable accountName = co_await users.GetAt(0).GetPropertyAsync(

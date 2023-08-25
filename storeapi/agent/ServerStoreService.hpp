@@ -29,7 +29,8 @@ class ServerStoreService : public StoreService<ContextType> {
     auto hToken = winrt::to_hstring(token);
     auto jwt = co_await this->context.GenerateUserJwt(hToken, user.id);
     if (jwt.empty()) {
-      throw Exception("Empty JWT was generated.");
+      throw Exception(ErrorCode::EmptyJwt,
+                      std::format("access token: {}", token));
     }
 
     co_return winrt::to_string(jwt);
