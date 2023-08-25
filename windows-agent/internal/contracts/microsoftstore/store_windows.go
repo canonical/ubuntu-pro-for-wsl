@@ -9,6 +9,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/ubuntu/decorate"
 	"golang.org/x/sys/windows"
 )
 
@@ -29,7 +30,9 @@ var (
 )
 
 // GenerateUserJWT takes an azure AD server access token and returns a Windows store token.
-func GenerateUserJWT(azureADToken string) (string, error) {
+func GenerateUserJWT(azureADToken string) (jwt string, err error) {
+	defer decorate.OnError(&err, "GenerateUserJWT")
+
 	accessToken, err := syscall.BytePtrFromString(azureADToken)
 	if err != nil {
 		return "", fmt.Errorf("could not convert the AzureAD token to a byte array: %v", err)
@@ -45,7 +48,7 @@ func GenerateUserJWT(azureADToken string) (string, error) {
 		uintptr(unsafe.Pointer(&userJWTbegin)),
 		uintptr(unsafe.Pointer(&userJWTlen)),
 	); err != nil {
-		return "", err
+		return "", fmt.Errorf("GenerateUserJWT: %w", err)
 	}
 
 	//nolint:gosec // This is the way of freeing userJWTbegin per storeapi's API definition
@@ -55,7 +58,9 @@ func GenerateUserJWT(azureADToken string) (string, error) {
 }
 
 // GetSubscriptionExpirationDate returns the expiration date for the current subscription.
-func GetSubscriptionExpirationDate() (time.Time, error) {
+func GetSubscriptionExpirationDate() (tm time.Time, err error) {
+	defer decorate.OnError(&err, "GetSubscriptionExpirationDate")
+
 	prodID, err := syscall.BytePtrFromString(productID)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not convert the productID to a byte array: %v", err)
@@ -90,12 +95,26 @@ func call(proc *syscall.LazyProc, args ...uintptr) (int, error) {
 	}
 
 	hresult, _, err := proc.Call(args...)
-	if err != nil && !errors.Is(err, syscall.Errno(0)) {
-		return int(hresult), fmt.Errorf("%s: %v", proc.Name, err)
+
+	// From syscall/dll_windows.go (*Proc).Call doc:
+	// > Callers must inspect the primary return value to decide whether an
+	//   error occurred [...] before consulting the error.
+	if err := NewStoreAPIError(hresult); err != nil {
+		return int(hresult), fmt.Errorf("storeApi returned error code %d: %w", int(hresult), err)
 	}
 
-	if err := NewStoreAPIError(hresult); err != nil {
-		return int(hresult), fmt.Errorf("%s returned error code %d: %w", proc.Name, int(hresult), err)
+	if err == nil {
+		return int(hresult), nil
+	}
+
+	var target syscall.Errno
+	if b := errors.As(err, &target); !b {
+		// Supposedly unrechable: proc.Call must always return a syscall.Errno
+		return int(hresult), err
+	}
+
+	if target != syscall.Errno(0) {
+		return int(hresult), fmt.Errorf("failed syscall to storeApi: %v (syscall errno %d)", target, err)
 	}
 
 	return int(hresult), nil
@@ -118,7 +137,7 @@ func loadDll() error {
 	dll.Name = path
 	if err = dll.Load(); err != nil {
 		dll.Name = ""
-		return err
+		return fmt.Errorf("could not load the Windows Store API dll: %v", err)
 	}
 
 	return nil
