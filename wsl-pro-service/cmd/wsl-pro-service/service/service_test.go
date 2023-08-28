@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	commontestutils "github.com/canonical/ubuntu-pro-for-windows/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
@@ -169,10 +170,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			resolvConf := mock.Path("/etc/resolv.conf")
 			if tc.invalidResolvConfFile {
-				err := os.Remove(resolvConf)
-				require.NoError(t, err, "Setup: could not remove mock resolv.conf")
-				err = os.MkdirAll(resolvConf, 0600)
-				require.NoError(t, err, "Setup: could not create resolv.conf directory to interfere with service")
+				commontestutils.ReplaceFileWithDir(t, resolvConf, "Setup: could not create directory to interfere with service")
 			}
 
 			a := service.New(service.WithAgentPortFilePath(addrFile), service.WithSystem(system))

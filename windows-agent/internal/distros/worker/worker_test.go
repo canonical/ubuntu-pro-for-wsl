@@ -19,6 +19,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
+	"github.com/canonical/ubuntu-pro-for-windows/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
@@ -448,16 +449,6 @@ func TestTaskDeferral(t *testing.T) {
 		"Error if the task file cannot be written": {breakSubmit: true, wantSubmitErr: true},
 	}
 
-	replaceFileWithDir := func(t *testing.T, path string) {
-		t.Helper()
-
-		err := os.RemoveAll(path)
-		require.NoError(t, err, "Setup: could not remove tasks file")
-
-		err = os.MkdirAll(path, 0700)
-		require.NoError(t, err, "Setup: could not create folder at tasks file's location")
-	}
-
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
@@ -498,12 +489,12 @@ func TestTaskDeferral(t *testing.T) {
 			if tc.breakSubmit {
 				// We wait until the blocking task is popped to avoid a filesystem race:
 				// write: 			TaskManager.NextTask
-				// delete+write: 	replaceFileWithDir
+				// delete+write: 	testutils.ReplaceFileWithDir
 				require.Eventually(t, func() bool {
 					return w.CheckStoredTasks(1) == nil
 				}, time.Second, 100*time.Millisecond, "Setup: Blocking task was never popped from queue")
 
-				replaceFileWithDir(t, taskFile)
+				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with SubmitTasks")
 			}
 
 			err = w.SubmitTasks(true, deferredTask)
@@ -521,7 +512,7 @@ func TestTaskDeferral(t *testing.T) {
 			require.NoError(t, w.CheckStoredTasks(2), "Expected two tasks stored after the blocker is popped")
 
 			if tc.breakReload {
-				replaceFileWithDir(t, taskFile)
+				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with ReloadTasks")
 			}
 
 			err = w.ReloadTasks(ctx)
