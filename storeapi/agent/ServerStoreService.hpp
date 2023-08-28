@@ -26,6 +26,10 @@ class ServerStoreService : public StoreService<ContextType> {
   // and the [user] info whose ID the caller wants to have encoded in the JWT.
   concurrency::task<std::string> GenerateUserJwt(std::string token,
                                                  UserInfo user) {
+    if (user.id.empty()) {
+      throw Exception(StoreApi::ErrorCode::NoLocalUser);
+    }
+
     auto hToken = winrt::to_hstring(token);
     auto jwt = co_await this->context.GenerateUserJwt(hToken, user.id);
     if (jwt.empty()) {
