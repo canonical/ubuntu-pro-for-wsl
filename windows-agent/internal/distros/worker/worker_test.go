@@ -487,8 +487,8 @@ func TestTaskDeferral(t *testing.T) {
 
 			if tc.breakSubmit {
 				// We wait until the blocking task is popped to avoid a filesystem race:
-				// write: 			TaskManager.NextTask
-				// delete+write: 	testutils.ReplaceFileWithDir
+				// write:           TaskManager.NextTask
+				// delete+write:    testutils.ReplaceFileWithDir
 				require.Eventually(t, func() bool {
 					return w.CheckStoredTasks(1) == nil
 				}, time.Second, 100*time.Millisecond, "Setup: Blocking task was never popped from queue")
