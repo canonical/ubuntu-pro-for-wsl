@@ -161,7 +161,7 @@ func TestConnected(t *testing.T) {
 				require.NoError(t, err, "Setup: could not get pre-existing distro into database")
 
 				// Submit a deferred task to check if it is reloaded
-				err = d.SubmitTasks(true, testTask{ID: d.GUID()})
+				err = d.SubmitDeferredTasks(testTask{ID: d.GUID()})
 				require.NoError(t, err, "Setup: submitting a deferred task should succeed")
 			}
 

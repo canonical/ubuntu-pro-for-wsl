@@ -89,7 +89,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		return w, err
 	}
 
-	if err := w.SubmitTasks(false, provisioning...); err != nil {
+	if err := w.SubmitTasks(provisioning...); err != nil {
 		w.Stop(ctx)
 		return nil, err
 	}
@@ -147,15 +147,11 @@ func (w *Worker) Stop(ctx context.Context) {
 	w.SetConnection(nil)
 }
 
-// SubmitTasks enqueues one or more task on our current worker list.
+// SubmitTasks enqueues one or more task on our current worker list. The task will wake up
+// the distro and be performed as soon as it reaches the beginning of the queue.
 //
-// If deferred is set to true, the task won't wake up the distro, instead wait until it
-// is awake. This does NOT necessarily mean it'll run after non-deferred tasks.
-//
-// It will return an error in these cases:
-// - The queue is full
-// - The distro has been cleaned up.
-func (w *Worker) SubmitTasks(deferred bool, tasks ...task.Task) (err error) {
+// It will return an error if the distro has been cleaned up or the task queue is full.
+func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", w.distro.Name(), tasks)
 
 	if len(tasks) == 0 {
@@ -163,7 +159,24 @@ func (w *Worker) SubmitTasks(deferred bool, tasks ...task.Task) (err error) {
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
-	return w.manager.Submit(deferred, tasks...)
+	return w.manager.Submit(false, tasks...)
+}
+
+// SubmitDeferredTasks takes one or more tasks into our current worker list.
+//
+// The task(s) won't wake up the distro, instead wait until it is awake. This does
+// NOT necessarily mean it'll run after non-deferred tasks.
+//
+// It will return an error if the distro has been cleaned up.
+func (w *Worker) SubmitDeferredTasks(tasks ...task.Task) (err error) {
+	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", w.distro.Name(), tasks)
+
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
+	return w.manager.Submit(true, tasks...)
 }
 
 // ReloadTasks reloads all tasks from file.

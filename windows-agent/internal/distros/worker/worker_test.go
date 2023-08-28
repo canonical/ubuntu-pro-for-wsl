@@ -223,7 +223,7 @@ func TestTaskProcessing(t *testing.T) {
 				ttask.Returns = errors.New("testTask error: this error should never be triggered")
 			}
 
-			err = w.SubmitTasks(false, ttask)
+			err = w.SubmitTasks(ttask)
 			require.NoError(t, err, "SubmitTask() should work without returning any errors")
 
 			// Ensuring the distro is awakened (if registered) after task submission
@@ -308,7 +308,7 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 	err = os.MkdirAll(taskFile, 0600)
 	require.NoError(t, err, "Could not make dir at distro task file's location")
 
-	err = w.SubmitTasks(false, &emptyTask{})
+	err = w.SubmitTasks(&emptyTask{})
 	require.Error(t, err, "Submitting a task when the task file is not writable should cause an error")
 }
 
@@ -327,17 +327,17 @@ func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
 
 	// We submit a first task that will be dequeued and block task processing until
 	// there is a connection (i.e. forever) or until it times out after a minute.
-	err = w.SubmitTasks(false, &testTask{})
+	err = w.SubmitTasks(&testTask{})
 	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, worker.TaskQueueSize)
 
 	// We fill up the queue
 	for i := 0; i < worker.TaskQueueSize; i++ {
-		err := w.SubmitTasks(false, &testTask{})
+		err := w.SubmitTasks(&testTask{})
 		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, worker.TaskQueueSize)
 	}
 
 	// We ensure that adding one more task will return an error
-	err = w.SubmitTasks(false, &testTask{})
+	err = w.SubmitTasks(&testTask{})
 	require.Errorf(t, err, "SubmitTask() should fail when the queue is full")
 }
 
@@ -479,10 +479,10 @@ func TestTaskDeferral(t *testing.T) {
 			blocker := newBlockingTask(ctx)
 			defer blocker.complete()
 
-			err = w.SubmitTasks(false, blocker)
+			err = w.SubmitTasks(blocker)
 			require.NoError(t, err, "SubmitTasks should have succeeded for a queued task")
 
-			err = w.SubmitTasks(false, queuedTask)
+			err = w.SubmitTasks(queuedTask)
 			require.NoError(t, err, "SubmitTasks should have succeeded for a second queued task")
 
 			if tc.breakSubmit {
@@ -493,15 +493,15 @@ func TestTaskDeferral(t *testing.T) {
 					return w.CheckStoredTasks(1) == nil
 				}, time.Second, 100*time.Millisecond, "Setup: Blocking task was never popped from queue")
 
-				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with SubmitTasks")
+				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with SubmitDeferredTasks")
 			}
 
-			err = w.SubmitTasks(true, deferredTask)
+			err = w.SubmitDeferredTasks(deferredTask)
 			if tc.wantSubmitErr {
-				require.Error(t, err, "SubmitTasks should have returned an error")
+				require.Error(t, err, "SubmitDeferredTasks should have returned an error")
 				return
 			}
-			require.NoError(t, err, "SubmitTasks should have succeeded for a deferred task")
+			require.NoError(t, err, "SubmitDeferredTasks should have succeeded for a deferred task")
 
 			// Wait until blocking task is popped from the queue
 			require.Eventually(t, blocker.executing.Load, 10*time.Second, 100*time.Millisecond, "Number of queued tasks never became 1")
@@ -535,7 +535,7 @@ func TestTaskDeferral(t *testing.T) {
 			// Submit a task without a blocker
 			// This tests the queue refreshment
 			newTask := emptyTask{ID: uuid.NewString()}
-			err = w.SubmitTasks(true, newTask)
+			err = w.SubmitDeferredTasks(newTask)
 
 			require.NoError(t, err, "Submitting a deferred task should cause no errors")
 			require.NoError(t, w.CheckQueuedTasks(0), "Task was queued unexpectedly")

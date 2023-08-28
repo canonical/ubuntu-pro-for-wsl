@@ -169,7 +169,7 @@ func updateSubscriptions(ctx context.Context, cacheDir string, conf *config.Conf
 	task := tasks.ProAttachment{Token: proToken}
 
 	for _, d := range db.GetAll() {
-		err = errors.Join(err, d.SubmitTasks(true, task))
+		err = errors.Join(err, d.SubmitDeferredTasks(task))
 	}
 
 	if err != nil {
