@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -185,6 +186,16 @@ func subscriptionIsNew(ctx context.Context, cacheDir string, newSubscription str
 
 	// Update cache on exit
 	defer func() {
+		if newSubscription == "" {
+			// If there is no subscription, we remove the file.
+			// This preserves this function's idempotency.
+			err := os.Remove(cachePath)
+			if err != nil && !errors.Is(err, fs.ErrNotExist) {
+				log.Warningf(ctx, "Could not write new subscription to cache: %v", err)
+			}
+			return
+		}
+
 		if !new {
 			return
 		}
@@ -196,8 +207,12 @@ func subscriptionIsNew(ctx context.Context, cacheDir string, newSubscription str
 	}()
 
 	oldChecksum, err := os.ReadFile(cachePath)
-	if err != nil {
-		log.Warningf(ctx, "Could not retrieve old subscription, assuming subscription is new. Error: %v", err)
+	if errors.Is(err, fs.ErrNotExist) {
+		// File not found: there was no subscription before
+		// (Lack of) subscription is new only if the new subscription non-empty.
+		return newSubscription != ""
+	} else if err != nil {
+		log.Warningf(ctx, "Could not read old subscription, assuming subscription is new. Error: %v", err)
 		return true
 	}
 
