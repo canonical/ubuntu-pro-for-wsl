@@ -19,7 +19,7 @@ import (
 // TaskQueueSize is the maximum amount of tasks a queue is allowed to hold.
 const TaskQueueSize = 100
 
-// reloadQueueSignal is a nill managed task that is used to signal that the queue needs be refreshed
+// reloadQueueSignal is a nil managed task that is used to signal that the queue needs be refreshed
 // This happens because Load() creates a new queue (dumping the old one), so NextTask needs to <-wait
 // on the newly created queue.
 var reloadQueueSignal *ManagedTask
@@ -60,7 +60,7 @@ func New(ctx context.Context, storagePath string) (*TaskManager, error) {
 	return &tm, nil
 }
 
-// QueueLen returns the length of the task queue.
+// QueueLen returns the length of the task queue containing non-deferred tasks.
 func (tm *TaskManager) QueueLen() int {
 	tm.mu.RLock()
 	defer tm.mu.RUnlock()

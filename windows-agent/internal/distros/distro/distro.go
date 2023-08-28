@@ -226,7 +226,7 @@ func (d *Distro) SubmitTasks(deferred bool, tasks ...task.Task) (err error) {
 }
 
 // ReloadTasks reloads all tasks from file.
-// This means adding all deferred tasks back into the queue.
+// This means adding all deferred tasks back into the non-deferred task queue.
 func (d *Distro) ReloadTasks(ctx context.Context) error {
 	return d.worker.ReloadTasks(ctx)
 }
