@@ -17,11 +17,6 @@ import (
 // taskQueueSize is the maximum amount of tasks a queue is allowed to hold.
 const taskQueueSize = 100
 
-// reloadQueueSignal is a nil managed task that is used to signal that the queue needs be refreshed
-// This happens because Load() creates a new queue (dumping the old one), so NextTask needs to <-wait
-// on the newly created queue.
-var reloadQueueSignal *managedTask
-
 // managedTask is a type that carries a task with it, with added metadata and functionality to
 // serialize and deserialize.
 type managedTask struct {
@@ -145,8 +140,10 @@ func (tm *taskManager) NextTask(ctx context.Context) (*managedTask, bool) {
 			return nil, false
 		case t := <-queue:
 
-			if t == reloadQueueSignal {
+			if t == nil {
 				// There was a reload: need to refresh the queue after the Load is completed
+				// This happens because Load() creates a new queue (closing the old one), so
+				// we have to start reading from the new one.
 				tm.mu.RLock()
 				queue = tm.queue
 				tm.mu.RUnlock()
@@ -230,14 +227,11 @@ func (tm *taskManager) Load(ctx context.Context) (err error) {
 	defer tm.mu.Unlock()
 
 	// Dump old queue and reload from file
-	oldQueue := tm.queue
+	close(tm.queue)
 
 	tm.tasks = make([]*managedTask, 0)
 	tm.queue = make(chan *managedTask, taskQueueSize)
 	tm.largestID = 0
-
-	oldQueue <- reloadQueueSignal
-	close(oldQueue)
 
 	out, err := os.ReadFile(tm.storagePath)
 	if err != nil {
