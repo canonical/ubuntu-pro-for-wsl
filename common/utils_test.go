@@ -1,8 +1,8 @@
 package common_test
 
 import (
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/stretchr/testify/require"
@@ -50,34 +50,37 @@ func TestSet(t *testing.T) {
 	require.Zero(t, set.Len(), "Set should initialize empty")
 
 	// Concurrently add items to it
+	var wg sync.WaitGroup
 	for i := 0; i < testSize; i++ {
 		i := i
+		wg.Add(1)
 		go func() {
 			set.Set(i)
+			wg.Done()
 		}()
 	}
+	wg.Wait()
 
 	// Check all items are eventually added
 	for i := 0; i < testSize; i++ {
-		require.Eventuallyf(t, func() bool {
-			return set.Has(i)
-		}, time.Second, 10*time.Millisecond, "Value %d should have been added to the set", i)
+		require.True(t, set.Has(i), "Value %d should have been added to the set", i)
 	}
-
 	require.Equal(t, testSize, set.Len(), "Set should have all items in it")
 
 	// Concurrently remove items
+	wg = sync.WaitGroup{}
 	for i := 0; i < testSize; i++ {
 		i := i
+		wg.Add(1)
 		go func() {
 			set.Unset(i)
+			wg.Done()
 		}()
 	}
+	wg.Wait()
 
 	// Check all items are eventually removed
 	for i := 0; i < testSize; i++ {
-		require.Eventuallyf(t, func() bool {
-			return !set.Has(i)
-		}, time.Second, 10*time.Millisecond, "Value %d should have been removed from the set", i)
+		require.False(t, set.Has(i), "Value %d should have been removed from the set", i)
 	}
 }
