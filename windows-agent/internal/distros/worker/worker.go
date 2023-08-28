@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker/internal/taskmanager"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"github.com/ubuntu/decorate"
@@ -30,7 +29,7 @@ type distro interface {
 // Worker contains all the logic around task queueing and execution for one particular distro.
 type Worker struct {
 	distro  distro
-	manager *taskmanager.TaskManager
+	manager *taskManager
 
 	cancel     context.CancelFunc
 	processing chan struct{}
@@ -68,7 +67,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		f(&opts)
 	}
 
-	tm, err := taskmanager.New(ctx, storagePath)
+	tm, err := newTaskManager(ctx, storagePath)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +216,7 @@ func (err unreachableDistroError) Error() string {
 	return fmt.Sprintf("distro cannot be reached: %v", err.sourceErr)
 }
 
-func (w *Worker) processSingleTask(ctx context.Context, t taskmanager.ManagedTask) error {
+func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
 	log.Debugf(ctx, "Distro %q: task %q: dequeued", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {

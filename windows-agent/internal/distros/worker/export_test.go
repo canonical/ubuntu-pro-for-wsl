@@ -2,12 +2,10 @@ package worker
 
 import (
 	"fmt"
-
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker/internal/taskmanager"
 )
 
 // TaskQueueSize is the number of tasks that can be enqueued.
-const TaskQueueSize = taskmanager.TaskQueueSize
+const TaskQueueSize = taskQueueSize
 
 // CheckQueuedTasks checks that the number of tasks in the queue matches expectations.
 func (w *Worker) CheckQueuedTasks(want int) error {
