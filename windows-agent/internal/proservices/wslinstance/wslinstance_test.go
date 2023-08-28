@@ -11,7 +11,7 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-windows/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
@@ -529,7 +529,7 @@ type testTask struct {
 	ID string
 }
 
-var completedTeskTasks = common.NewSet[string]()
+var completedTeskTasks = testutils.NewSet[string]()
 
 func (t testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
 	completedTeskTasks.Set(t.ID)

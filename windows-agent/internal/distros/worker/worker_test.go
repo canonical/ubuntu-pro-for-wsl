@@ -17,7 +17,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
@@ -620,7 +619,7 @@ func (s testService) newClientConnection(t *testing.T) *grpc.ClientConn {
 // completedEmptyTasks tracks which empty tasks have completed. We need to use this global
 // variable because tasks may be written to file and read back, so no callbacks or pointers
 // can be used.
-var completedEmptyTasks = common.NewSet[string]()
+var completedEmptyTasks = testutils.NewSet[string]()
 
 type emptyTask struct {
 	ID string
