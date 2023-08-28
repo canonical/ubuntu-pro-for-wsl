@@ -179,9 +179,9 @@ func (w *Worker) SubmitDeferredTasks(tasks ...task.Task) (err error) {
 	return w.manager.Submit(true, tasks...)
 }
 
-// ReloadTasks reloads all tasks from file.
+// RequeueTasks reloads all tasks from file.
 // This means adding all deferred tasks back into the queue.
-func (w *Worker) ReloadTasks(ctx context.Context) error {
+func (w *Worker) RequeueTasks(ctx context.Context) error {
 	return w.manager.Load(ctx)
 }
 

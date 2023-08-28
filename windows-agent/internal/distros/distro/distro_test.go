@@ -764,7 +764,7 @@ func (w *mockWorker) SubmitDeferredTasks(...task.Task) error {
 	return nil
 }
 
-func (w *mockWorker) ReloadTasks(ctx context.Context) error {
+func (w *mockWorker) RequeueTasks(ctx context.Context) error {
 	panic("Not implemented")
 }
 

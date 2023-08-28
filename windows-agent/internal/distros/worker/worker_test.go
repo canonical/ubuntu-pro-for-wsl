@@ -511,15 +511,15 @@ func TestTaskDeferral(t *testing.T) {
 			require.NoError(t, w.CheckStoredTasks(2), "Expected two tasks stored after the blocker is popped")
 
 			if tc.breakReload {
-				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with ReloadTasks")
+				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with RequeueTasks")
 			}
 
-			err = w.ReloadTasks(ctx)
+			err = w.RequeueTasks(ctx)
 			if tc.wantReloadErr {
-				require.Error(t, err, "ReloadTasks should have returned an error")
+				require.Error(t, err, "RequeueTasks should have returned an error")
 				return
 			}
-			require.NoError(t, err, "ReloadTasks should have succeeded")
+			require.NoError(t, err, "RequeueTasks should have succeeded")
 
 			require.NoError(t, w.CheckQueuedTasks(2), "Tasks did not reload into the queue as expected")
 			require.NoError(t, w.CheckStoredTasks(2), "Tasks did not reload into the list as expected")
@@ -541,7 +541,7 @@ func TestTaskDeferral(t *testing.T) {
 			require.NoError(t, w.CheckQueuedTasks(0), "Task was queued unexpectedly")
 			require.NoError(t, w.CheckStoredTasks(1), "Task was not stored as expected")
 
-			err = w.ReloadTasks(ctx)
+			err = w.RequeueTasks(ctx)
 			require.NoError(t, err, "Reloading tasks with an empty queue should return no error")
 			// Cannot check queue or storage without a race
 

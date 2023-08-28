@@ -45,7 +45,7 @@ type workerInterface interface {
 	SetConnection(*grpc.ClientConn)
 	SubmitTasks(...task.Task) error
 	SubmitDeferredTasks(...task.Task) error
-	ReloadTasks(context.Context) error
+	RequeueTasks(context.Context) error
 	Stop(context.Context)
 }
 
@@ -235,10 +235,10 @@ func (d *Distro) SubmitDeferredTasks(tasks ...task.Task) (err error) {
 	return d.worker.SubmitDeferredTasks(tasks...)
 }
 
-// ReloadTasks reloads all tasks from file.
+// RequeueTasks reloads all tasks from file.
 // This means adding all deferred tasks back into the non-deferred task queue.
-func (d *Distro) ReloadTasks(ctx context.Context) error {
-	return d.worker.ReloadTasks(ctx)
+func (d *Distro) RequeueTasks(ctx context.Context) error {
+	return d.worker.RequeueTasks(ctx)
 }
 
 // Cleanup releases all resources associated with the distro.

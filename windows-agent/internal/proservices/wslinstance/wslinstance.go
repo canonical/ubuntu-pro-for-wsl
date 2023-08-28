@@ -67,7 +67,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	}
 
 	// Load deferred tasks
-	if err := d.ReloadTasks(ctx); err != nil {
+	if err := d.RequeueTasks(ctx); err != nil {
 		return err
 	}
 
