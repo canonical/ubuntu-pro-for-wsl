@@ -33,6 +33,10 @@ class UIClient extends $grpc.Client {
       '/agentapi.UI/GetSubscriptionInfo',
       ($0.Empty value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.SubscriptionInfo.fromBuffer(value));
+  static final _$notifyPurchase = $grpc.ClientMethod<$0.Empty, $0.SubscriptionInfo>(
+      '/agentapi.UI/NotifyPurchase',
+      ($0.Empty value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.SubscriptionInfo.fromBuffer(value));
 
   UIClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -50,6 +54,10 @@ class UIClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.SubscriptionInfo> getSubscriptionInfo($0.Empty request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getSubscriptionInfo, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.SubscriptionInfo> notifyPurchase($0.Empty request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$notifyPurchase, request, options: options);
   }
 }
 
@@ -79,6 +87,13 @@ abstract class UIServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.Empty.fromBuffer(value),
         ($0.SubscriptionInfo value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.Empty, $0.SubscriptionInfo>(
+        'NotifyPurchase',
+        notifyPurchase_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.Empty.fromBuffer(value),
+        ($0.SubscriptionInfo value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.Empty> applyProToken_Pre($grpc.ServiceCall call, $async.Future<$0.ProAttachInfo> request) async {
@@ -93,9 +108,14 @@ abstract class UIServiceBase extends $grpc.Service {
     return getSubscriptionInfo(call, await request);
   }
 
+  $async.Future<$0.SubscriptionInfo> notifyPurchase_Pre($grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
+    return notifyPurchase(call, await request);
+  }
+
   $async.Future<$0.Empty> applyProToken($grpc.ServiceCall call, $0.ProAttachInfo request);
   $async.Future<$0.Empty> ping($grpc.ServiceCall call, $0.Empty request);
   $async.Future<$0.SubscriptionInfo> getSubscriptionInfo($grpc.ServiceCall call, $0.Empty request);
+  $async.Future<$0.SubscriptionInfo> notifyPurchase($grpc.ServiceCall call, $0.Empty request);
 }
 @$pb.GrpcServiceName('agentapi.WSLInstance')
 class WSLInstanceClient extends $grpc.Client {
