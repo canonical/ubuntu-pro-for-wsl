@@ -43,7 +43,7 @@ class Environment {
       // ignore: omit_local_variable_types
       final Map<String, String?> map = {
         ...Platform.environment,
-        ...?_overrides
+        ...?_overrides,
       };
 
       // We then remove the entries where values are null.

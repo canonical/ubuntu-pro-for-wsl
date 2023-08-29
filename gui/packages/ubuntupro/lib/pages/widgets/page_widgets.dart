@@ -98,7 +98,7 @@ class DarkStyledLandingPage extends StatelessWidget {
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );

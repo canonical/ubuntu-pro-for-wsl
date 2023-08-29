@@ -16,7 +16,7 @@ void main() {
       '923EWFTMwpJNkmp',
       '5NXNrWAFJtV2CXu23AfaUGtDA9kzreQ4NYMQc',
       '6upsMkjncyvghsh1Dosg2n5hHj',
-      '7Udovn9QXcSM7rTnb6oG4MoFrsvWvcZPm6E4QLrAp'
+      '7Udovn9QXcSM7rTnb6oG4MoFrsvWvcZPm6E4QLrAp',
     ];
     for (final element in table) {
       expect(base58.checkDecode(element), isNull);
