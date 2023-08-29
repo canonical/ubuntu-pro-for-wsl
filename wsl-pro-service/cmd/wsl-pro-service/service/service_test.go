@@ -98,7 +98,7 @@ func TestCanQuitWhenExecute(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	system, mock := testutils.MockSystemInfo(t)
+	system, mock := testutils.MockSystem(t)
 	srv := testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
 
 	a, wait := startDaemon(t, mock.DefaultAddrFile(), system)
@@ -116,7 +116,7 @@ func TestCanQuitTwice(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	system, mock := testutils.MockSystemInfo(t)
+	system, mock := testutils.MockSystem(t)
 	testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
 
 	a, wait := startDaemon(t, mock.DefaultAddrFile(), system)
@@ -164,7 +164,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			addrFile := mock.DefaultAddrFile()
 
 			resolvConf := mock.Path("/etc/resolv.conf")
@@ -224,7 +224,7 @@ func TestDefaultAddrFile(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			testutils.MockWindowsAgent(t, context.Background(), mock.DefaultAddrFile())
 
 			switch tc.wslpath {

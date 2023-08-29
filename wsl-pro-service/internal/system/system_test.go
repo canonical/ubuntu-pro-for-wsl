@@ -59,7 +59,7 @@ func TestInfo(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			mock.SetControlArg(testutils.ProStatusAttached)
 
 			if tc.distroNameEnvDisabled {
@@ -148,7 +148,7 @@ func TestLocalAppData(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			if tc.cmdExeErr {
 				mock.SetControlArg(testutils.CmdExeErr)
 			}
@@ -185,7 +185,7 @@ func TestLocalAppData(t *testing.T) {
 	}
 }
 
-func overrideProcMount(t *testing.T, mock *testutils.SystemInfoMock) {
+func overrideProcMount(t *testing.T, mock *testutils.SystemMock) {
 	t.Helper()
 
 	procMount := filepath.Join(golden.TestFixturePath(t), "proc/mounts")
@@ -228,7 +228,7 @@ func TestProStatus(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			switch tc.proMock {
 			case mockOK:
 			case mockBadOutput:
@@ -272,7 +272,7 @@ func TestProAttach(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			if tc.proErr {
 				mock.SetControlArg(testutils.ProAttachErr)
 			}
@@ -317,7 +317,7 @@ func TestProDetach(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 			switch tc.detachResult {
 			case detachOK:
 			case detachErrNoReason:

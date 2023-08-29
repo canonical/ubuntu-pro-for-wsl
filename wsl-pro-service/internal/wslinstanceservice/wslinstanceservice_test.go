@@ -38,7 +38,7 @@ func TestApplyProToken(t *testing.T) {
 	testCases := map[string]struct {
 		token             string
 		proStatusErr      bool
-		getSystemInfoErr  bool
+		getSystemErr      bool
 		proDetachErr      detachResult
 		attachErr         bool
 		ctrlStreamSendErr bool
@@ -56,7 +56,7 @@ func TestApplyProToken(t *testing.T) {
 
 		// System info
 		"Error calling pro status":         {proStatusErr: true, wantErr: true},
-		"Error getting system info":        {getSystemInfoErr: true, wantErr: true},
+		"Error getting system info":        {getSystemErr: true, wantErr: true},
 		"Error cannot send info to stream": {ctrlStreamSendErr: true, wantErr: true},
 	}
 
@@ -80,9 +80,9 @@ func TestApplyProToken(t *testing.T) {
 			ctrlClient, controlService := newCtrlStream(t, ctx)
 			ctrlClient.sendErr = tc.ctrlStreamSendErr
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 
-			if tc.getSystemInfoErr {
+			if tc.getSystemErr {
 				os.Remove(mock.Path("etc/os-release"))
 			}
 

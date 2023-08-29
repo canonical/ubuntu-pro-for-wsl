@@ -81,7 +81,7 @@ func TestNew(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 
 			var agentArgs []testutils.AgentOption
 			if tc.agentDoesntRecv {
@@ -213,7 +213,7 @@ func TestServeAndQuit(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 
 			portFile := mock.DefaultAddrFile()
 			testutils.MockWindowsAgent(t, ctx, portFile)
