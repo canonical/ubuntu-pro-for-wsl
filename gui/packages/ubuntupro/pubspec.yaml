@@ -33,7 +33,7 @@ dependencies:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-windows
       path: agentapi/dart
-  base_x: ^2.0.0
+  base_x: ^2.0.1
   crypto: ^3.0.2
   dart_either: ^1.0.0
   flutter:
