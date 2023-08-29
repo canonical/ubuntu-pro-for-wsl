@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -273,12 +273,12 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and starts the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T, addrFile string, system systeminfo.System) (app *service.App, done func()) {
+func startDaemon(t *testing.T, addrFile string, s system.System) (app *service.App, done func()) {
 	t.Helper()
 
 	a := service.New(
 		service.WithAgentPortFilePath(addrFile),
-		service.WithSystem(system),
+		service.WithSystem(s),
 	)
 
 	a.SetArgs("-vvv")

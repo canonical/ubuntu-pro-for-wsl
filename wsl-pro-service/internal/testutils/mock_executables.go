@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -96,7 +96,7 @@ const (
 
 // MockSystemInfo sets up a few mocks:
 // - filesystem and mock executables for wslpath, pro.
-func MockSystemInfo(t *testing.T) (systeminfo.System, *SystemInfoMock) {
+func MockSystemInfo(t *testing.T) (system.System, *SystemInfoMock) {
 	t.Helper()
 
 	distroHostname := "TEST_DISTRO_HOSTNAME"
@@ -107,7 +107,7 @@ func MockSystemInfo(t *testing.T) (systeminfo.System, *SystemInfoMock) {
 		WslDistroNameEnvEnabled: true,
 	}
 
-	return systeminfo.New(systeminfo.WithTestBackend(mock)), mock
+	return system.New(system.WithTestBackend(mock)), mock
 }
 
 // DefaultAddrFile is the location where a mocked system will expect the addr file to be located,

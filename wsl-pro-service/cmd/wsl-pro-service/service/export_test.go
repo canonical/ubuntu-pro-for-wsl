@@ -1,6 +1,6 @@
 package service
 
-import "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+import "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 
 func WithAgentPortFilePath(path string) func(*options) {
 	return func(o *options) {
@@ -8,8 +8,8 @@ func WithAgentPortFilePath(path string) func(*options) {
 	}
 }
 
-func WithSystem(system systeminfo.System) func(*options) {
+func WithSystem(s system.System) func(*options) {
 	return func(o *options) {
-		o.system = system
+		o.system = s
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -39,7 +39,7 @@ type daemonConfig struct {
 
 type options struct {
 	agentPortFilePath string
-	system            systeminfo.System
+	system            system.System
 }
 
 type option func(*options)
@@ -92,7 +92,7 @@ func (a *App) serve(args ...option) error {
 	ctx := context.Background()
 
 	opt := options{
-		system: systeminfo.New(),
+		system: system.New(),
 	}
 	for _, f := range args {
 		f(&opt)
