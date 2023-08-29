@@ -1,4 +1,4 @@
-package systeminfo
+package system
 
 import (
 	"context"

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
@@ -38,7 +38,7 @@ func TestApplyProToken(t *testing.T) {
 	testCases := map[string]struct {
 		token             string
 		proStatusErr      bool
-		getSystemInfoErr  bool
+		getSystemErr      bool
 		proDetachErr      detachResult
 		attachErr         bool
 		ctrlStreamSendErr bool
@@ -56,7 +56,7 @@ func TestApplyProToken(t *testing.T) {
 
 		// System info
 		"Error calling pro status":         {proStatusErr: true, wantErr: true},
-		"Error getting system info":        {getSystemInfoErr: true, wantErr: true},
+		"Error getting system info":        {getSystemErr: true, wantErr: true},
 		"Error cannot send info to stream": {ctrlStreamSendErr: true, wantErr: true},
 	}
 
@@ -80,9 +80,9 @@ func TestApplyProToken(t *testing.T) {
 			ctrlClient, controlService := newCtrlStream(t, ctx)
 			ctrlClient.sendErr = tc.ctrlStreamSendErr
 
-			system, mock := testutils.MockSystemInfo(t)
+			system, mock := testutils.MockSystem(t)
 
-			if tc.getSystemInfoErr {
+			if tc.getSystemErr {
 				os.Remove(mock.Path("etc/os-release"))
 			}
 
@@ -128,13 +128,13 @@ func TestApplyProToken(t *testing.T) {
 }
 
 //nolint:revive // We've decided testing.T always preceedes the context.
-func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, system systeminfo.System) wslserviceapi.WSLClient {
+func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, s system.System) wslserviceapi.WSLClient {
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
 
-	sv := wslinstanceservice.New(system)
+	sv := wslinstanceservice.New(s)
 	server := sv.RegisterGRPCService(context.Background(), ctrlClient)
 
 	var conf net.ListenConfig

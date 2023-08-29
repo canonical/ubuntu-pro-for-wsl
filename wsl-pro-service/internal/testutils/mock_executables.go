@@ -13,14 +13,14 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
 
-// SystemInfoMock is used to override systeminfo's behaviour. Its control parameters are not thread safe.
+// SystemMock is used to override system's behaviour. Its control parameters are not thread safe.
 // You can modify them in test setup, but after that you risk a race.
-type SystemInfoMock struct {
+type SystemMock struct {
 	// FsRoot is the path to what will be used as root for the test filesystem
 	FsRoot string
 
@@ -94,41 +94,41 @@ const (
 	mockExecutable = "UP4W_MOCK_EXECUTABLE"
 )
 
-// MockSystemInfo sets up a few mocks:
+// MockSystem sets up a few mocks:
 // - filesystem and mock executables for wslpath, pro.
-func MockSystemInfo(t *testing.T) (systeminfo.System, *SystemInfoMock) {
+func MockSystem(t *testing.T) (system.System, *SystemMock) {
 	t.Helper()
 
 	distroHostname := "TEST_DISTRO_HOSTNAME"
-	mock := &SystemInfoMock{
+	mock := &SystemMock{
 		FsRoot:                  mockFilesystemRoot(t),
 		WslDistroName:           "TEST_DISTRO",
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
 	}
 
-	return systeminfo.New(systeminfo.WithTestBackend(mock)), mock
+	return system.New(system.WithTestBackend(mock)), mock
 }
 
 // DefaultAddrFile is the location where a mocked system will expect the addr file to be located,
 // and its containing directory will be created in New().
-func (m *SystemInfoMock) DefaultAddrFile() string {
+func (m *SystemMock) DefaultAddrFile() string {
 	return m.Path(defaultAddrFile)
 }
 
 // SetControlArg adds control arguments to the mock executables.
-func (m *SystemInfoMock) SetControlArg(arg controlArg) {
+func (m *SystemMock) SetControlArg(arg controlArg) {
 	m.extraEnv = append(m.extraEnv, fmt.Sprintf("%s=1", arg))
 }
 
 // Path prepends FsRoot to a path.
-func (m *SystemInfoMock) Path(path ...string) string {
+func (m *SystemMock) Path(path ...string) string {
 	path = append([]string{m.FsRoot}, path...)
 	return filepath.Join(path...)
 }
 
 // Hostname returns a mock hostname.
-func (m SystemInfoMock) Hostname() (string, error) {
+func (m SystemMock) Hostname() (string, error) {
 	if m.DistroHostname == nil {
 		return "", errors.New("Mock Hostname error")
 	}
@@ -136,7 +136,7 @@ func (m SystemInfoMock) Hostname() (string, error) {
 }
 
 // GetenvWslDistroName mocks os.GetEnv("WSL_DISTRO_NAME").
-func (m *SystemInfoMock) GetenvWslDistroName() string {
+func (m *SystemMock) GetenvWslDistroName() string {
 	if m.WslDistroNameEnvEnabled {
 		return m.WslDistroName
 	}
@@ -161,7 +161,7 @@ func (m *SystemInfoMock) GetenvWslDistroName() string {
 // The script has some more boilerplate to trim out text from the testing module.
 // In order to make the mock work, the faux test needs to be defined in the test module,
 // see the documentation on ProMock for an example.
-func (m *SystemInfoMock) mockExec(fauxTestName string, argv ...string) (string, []string) {
+func (m *SystemMock) mockExec(fauxTestName string, argv ...string) (string, []string) {
 	// Switches
 	env := make([]string, len(m.extraEnv))
 	copy(env, m.extraEnv)
@@ -190,17 +190,17 @@ func (m *SystemInfoMock) mockExec(fauxTestName string, argv ...string) (string, 
 }
 
 // ProExecutable mocks `pro $args...`.
-func (m *SystemInfoMock) ProExecutable(args ...string) (string, []string) {
+func (m *SystemMock) ProExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithProMock", args...)
 }
 
 // WslpathExecutable mocks `wslpath $args...`.
-func (m *SystemInfoMock) WslpathExecutable(args ...string) (string, []string) {
+func (m *SystemMock) WslpathExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithWslPathMock", args...)
 }
 
 // CmdExe mocks `cmd.exe $args...`.
-func (m *SystemInfoMock) CmdExe(path string, args ...string) (string, []string) {
+func (m *SystemMock) CmdExe(path string, args ...string) (string, []string) {
 	return m.mockExec("TestWithCmdExeMock", args...)
 }
 

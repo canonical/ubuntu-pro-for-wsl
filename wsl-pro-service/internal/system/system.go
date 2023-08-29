@@ -1,6 +1,6 @@
-// Package systeminfo contains utils to get system information relevant to
+// Package system contains utils to get system information relevant to
 // the Agent.
-package systeminfo
+package system
 
 import (
 	"bufio"

@@ -9,7 +9,7 @@ import (
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/systeminfo"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
 	"google.golang.org/grpc"
 )
@@ -24,13 +24,13 @@ type Service struct {
 	ctrlStream ControlStreamClient
 
 	wslserviceapi.UnimplementedWSLServer
-	system systeminfo.System
+	system system.System
 }
 
 // New creates a new Wsl instance Service with the provided system.
-func New(system systeminfo.System) *Service {
+func New(s system.System) *Service {
 	return &Service{
-		system: system,
+		system: s,
 	}
 }
 
