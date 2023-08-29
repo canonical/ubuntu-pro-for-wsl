@@ -138,10 +138,10 @@ func (tm *taskManager) NextTask(ctx context.Context) (*managedTask, bool) {
 		select {
 		case <-ctx.Done():
 			return nil, false
-		case t := <-queue:
+		case t, open := <-queue:
 
-			if t == nil {
-				// There was a reload: need to refresh the queue after the Load is completed
+			if !open {
+				// There was a reload: we need to refresh the queue after the Load is completed
 				// This happens because Load() creates a new queue (closing the old one), so
 				// we have to start reading from the new one.
 				tm.mu.RLock()
