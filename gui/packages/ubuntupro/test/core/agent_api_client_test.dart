@@ -104,6 +104,7 @@ Future<Process> startAgent(String fullpath) async {
   final runtimeDir = await File(file).parent.create(recursive: true);
   await runtimeDir
       .watch(events: FileSystemEvent.modify, recursive: true)
+      .where((event) => event.path.contains('addr'))
       .take(1)
       // ignore: avoid_print
       .forEach(print);

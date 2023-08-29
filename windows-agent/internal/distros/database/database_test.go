@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
+	"github.com/canonical/ubuntu-pro-for-windows/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
@@ -266,10 +267,7 @@ func TestDatabaseDump(t *testing.T) {
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
 			switch tc.dirState {
 			case badDbFile:
-				err := os.RemoveAll(dbFile)
-				require.NoError(t, err, "Setup: could not remove database dump")
-				err = os.MkdirAll(dbFile, 0600)
-				require.NoError(t, err, "Setup: could not create directory to interfere with database dump")
+				testutils.ReplaceFileWithDir(t, dbFile, "Setup: could not create directory to interfere with database dump")
 			case goodDbFile:
 				// generateDatabaseFile already generated it
 			case emptyDbDir:
@@ -420,10 +418,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)
 			if tc.breakDBbDump {
-				err := os.RemoveAll(dbFile)
-				require.NoError(t, err, "Setup: could not remove database dump")
-				err = os.MkdirAll(dbFile, 0600)
-				require.NoError(t, err, "Setup: could not create directory to interfere with database dump")
+				testutils.ReplaceFileWithDir(t, dbFile, "Setup: could not create directory to interfere with database dump")
 			}
 			initialDumpModTime := fileModTime(t, dbFile)
 			time.Sleep(100 * time.Millisecond) // Prevents modtime precision issues

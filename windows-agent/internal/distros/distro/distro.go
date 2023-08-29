@@ -44,6 +44,8 @@ type workerInterface interface {
 	Client() wslserviceapi.WSLClient
 	SetConnection(*grpc.ClientConn)
 	SubmitTasks(...task.Task) error
+	SubmitDeferredTasks(...task.Task) error
+	RequeueTasks(context.Context) error
 	Stop(context.Context)
 }
 
@@ -222,6 +224,21 @@ func (d *Distro) SubmitTasks(tasks ...task.Task) (err error) {
 		return &NotValidError{}
 	}
 	return d.worker.SubmitTasks(tasks...)
+}
+
+// SubmitDeferredTasks enqueues one or more task on our current worker list.
+// See Worker.SubmitDeferredTasks for details.
+func (d *Distro) SubmitDeferredTasks(tasks ...task.Task) (err error) {
+	if !d.IsValid() {
+		return &NotValidError{}
+	}
+	return d.worker.SubmitDeferredTasks(tasks...)
+}
+
+// RequeueTasks reloads all tasks from file.
+// This means adding all deferred tasks back into the non-deferred task queue.
+func (d *Distro) RequeueTasks(ctx context.Context) error {
+	return d.worker.RequeueTasks(ctx)
 }
 
 // Cleanup releases all resources associated with the distro.

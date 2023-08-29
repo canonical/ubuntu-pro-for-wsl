@@ -147,10 +147,10 @@ func (w *Worker) Stop(ctx context.Context) {
 	w.SetConnection(nil)
 }
 
-// SubmitTasks enqueues one or more task on our current worker list.
-// It will return an error in these cases:
-// - The queue is full
-// - The distro has been cleaned up.
+// SubmitTasks enqueues one or more task on our current worker list. The task will wake up
+// the distro and be performed as soon as it reaches the beginning of the queue.
+//
+// It will return an error if the distro has been cleaned up or the task queue is full.
 func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", w.distro.Name(), tasks)
 
@@ -159,7 +159,30 @@ func (w *Worker) SubmitTasks(tasks ...task.Task) (err error) {
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
-	return w.manager.submit(tasks...)
+	return w.manager.Submit(false, tasks...)
+}
+
+// SubmitDeferredTasks takes one or more tasks into our current worker list.
+//
+// The task(s) won't wake up the distro, instead wait until it is awake. This does
+// NOT necessarily mean it'll run after non-deferred tasks.
+//
+// It will return an error if the distro has been cleaned up.
+func (w *Worker) SubmitDeferredTasks(tasks ...task.Task) (err error) {
+	defer decorate.OnError(&err, "distro %q: tasks %q: could not submit", w.distro.Name(), tasks)
+
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
+	return w.manager.Submit(true, tasks...)
+}
+
+// RequeueTasks reloads all tasks from file.
+// This means adding all deferred tasks back into the queue.
+func (w *Worker) RequeueTasks(ctx context.Context) error {
+	return w.manager.Load(ctx)
 }
 
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
@@ -168,34 +191,23 @@ func (w *Worker) processTasks(ctx context.Context) {
 	defer close(w.processing)
 
 	for {
-		// This double-select gives priority to the context over the manager queue. Not very
-		// important in production code but it makes the code more predictable for testing.
-		//
-		// Without this, there is always a chance that the worker will select the task
-		// channel rather than the context.Done.
-		select {
-		case <-ctx.Done():
+		t, ok := w.manager.NextTask(ctx)
+		if !ok {
 			return
-		default:
 		}
 
-		select {
-		case <-ctx.Done():
-			return
-		case t := <-w.manager.queue:
-			resultErr := w.processSingleTask(ctx, *t)
+		resultErr := w.processSingleTask(ctx, *t)
 
-			var target unreachableDistroError
-			if errors.Is(resultErr, &target) {
-				log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
-				w.distro.Invalidate(ctx)
-				continue
-			}
+		var target unreachableDistroError
+		if errors.Is(resultErr, &target) {
+			log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
+			w.distro.Invalidate(ctx)
+			continue
+		}
 
-			err := w.manager.taskDone(ctx, t, resultErr)
-			if err != nil {
-				log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
-			}
+		err := w.manager.TaskDone(ctx, t, resultErr)
+		if err != nil {
+			log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
 		}
 	}
 }

@@ -760,6 +760,14 @@ func (w *mockWorker) SubmitTasks(...task.Task) error {
 	return nil
 }
 
+func (w *mockWorker) SubmitDeferredTasks(...task.Task) error {
+	return nil
+}
+
+func (w *mockWorker) RequeueTasks(ctx context.Context) error {
+	panic("Not implemented")
+}
+
 func (w *mockWorker) Stop(context.Context) {
 	w.stopCalled = true
 }

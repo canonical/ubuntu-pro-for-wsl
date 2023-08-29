@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230817064205-3ab157a2dd98
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230817064205-3ab157a2dd98
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230828150254-a8f006e71b4b
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230817064205-3ab157a2dd98
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
@@ -29,7 +29,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect

@@ -1,5 +1,5 @@
 // Package wsltestutils implements helper functions for frequently needed functionality
-// in Windows-Agent tests.
+// in Windows-Agent and End-to-End tests.
 package wsltestutils
 
 import (
