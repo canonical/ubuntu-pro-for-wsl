@@ -27,6 +27,10 @@ type Client struct {
 	db   *database.DistroDB
 	conf Config
 
+	// stoped indicates that the Client has been stopped and is no longer usable
+	stopped chan struct{}
+	once    sync.Once
+
 	// Cached hostname
 	hostname string
 
@@ -34,6 +38,7 @@ type Client struct {
 	uid       atomic.Value
 	cacheFile string
 
+	// Connection
 	conn   *connection
 	connMu sync.RWMutex
 }
@@ -85,6 +90,7 @@ func NewClient(conf Config, db *database.DistroDB, cacheDir string, args ...Opti
 		db:        db,
 		hostname:  opts.hostname,
 		cacheFile: filepath.Join(cacheDir, cacheFileBase),
+		stopped:   make(chan struct{}),
 	}
 
 	if err := c.load(); err != nil {
@@ -135,10 +141,18 @@ func (c *Client) keepConnected(ctx context.Context) {
 
 	wait := time.Second
 	for {
-		time.Sleep(wait)
-
-		// The loop body is inside this function so that mutex unlock can be cleanly deferred
+		// The loop body is inside this function so that defers can be used
 		exitLoop := func() (exit bool) {
+			tk := time.NewTimer(wait)
+			defer tk.Stop()
+
+			select {
+			case <-tk.C:
+			case <-c.stopped:
+				// Stop was called
+				return true
+			}
+
 			c.connMu.Lock()
 			defer c.connMu.Unlock()
 
@@ -267,19 +281,23 @@ func (c *Client) handshake(conn *connection) error {
 
 // Stop terminates the connection and deallocates resources.
 func (c *Client) Stop(ctx context.Context) {
-	c.connMu.Lock()
-	defer c.connMu.Unlock()
+	c.once.Do(func() {
+		close(c.stopped)
 
-	if c.conn == nil {
-		return
-	}
+		c.connMu.Lock()
+		defer c.connMu.Unlock()
 
-	c.conn.disconnect()
-	if err := c.dump(); err != nil {
-		log.Errorf(ctx, "Landscape client: %v", err)
-	}
+		if c.conn == nil {
+			return
+		}
 
-	c.conn = nil
+		c.conn.disconnect()
+		if err := c.dump(); err != nil {
+			log.Errorf(ctx, "Landscape client: %v", err)
+		}
+
+		c.conn = nil
+	})
 }
 
 func (conn *connection) disconnect() {
