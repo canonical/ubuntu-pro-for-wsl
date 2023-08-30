@@ -143,7 +143,7 @@ func (c *Client) keepConnected(ctx context.Context) {
 			defer c.connMu.Unlock()
 
 			if c.conn == nil {
-				// Disconnect was called
+				// Stop was called
 				return true
 			}
 
@@ -265,8 +265,8 @@ func (c *Client) handshake(conn *connection) error {
 	return nil
 }
 
-// Disconnect terminates the connection and deallocates resources.
-func (c *Client) Disconnect(ctx context.Context) {
+// Stop terminates the connection and deallocates resources.
+func (c *Client) Stop(ctx context.Context) {
 	c.connMu.Lock()
 	defer c.connMu.Unlock()
 

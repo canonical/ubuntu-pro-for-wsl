@@ -170,7 +170,7 @@ func TestConnect(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "Connect should return no errors")
-			defer client.Disconnect(ctx)
+			defer client.Stop(ctx)
 
 			require.True(t, client.Connected(), "Connected should have returned false after succeeding to connect")
 
@@ -178,8 +178,8 @@ func TestConnect(t *testing.T) {
 				return len(mockService.MessageLog()) > 0
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a message from the client")
 
-			client.Disconnect(ctx)
-			require.NotPanics(t, func() { client.Disconnect(ctx) }, "client.Disconnect should not panic, even when called twice")
+			client.Stop(ctx)
+			require.NotPanics(t, func() { client.Stop(ctx) }, "client.Stop should not panic, even when called twice")
 
 			require.False(t, client.Connected(), "Connected should have returned false after disconnecting")
 
@@ -290,7 +290,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			err = client.Connect(ctx)
 			require.NoError(t, err, "Setup: Connect should return no errors")
-			defer client.Disconnect(ctx)
+			defer client.Stop(ctx)
 
 			// Defining wants
 			wantUIDprefix := "ServerAssignedUID"
@@ -338,7 +338,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			conf.proToken = "NEW_TOKEN"
 
 			if tc.disconnectBeforeSend {
-				client.Disconnect(ctx)
+				client.Stop(ctx)
 			}
 
 			wantHostToken = conf.proToken
@@ -515,7 +515,7 @@ func TestReceiveCommands(t *testing.T) {
 
 			err = client.Connect(ctx)
 			require.NoError(t, err, "Setup: Connect should return no errors")
-			defer client.Disconnect(ctx)
+			defer client.Stop(ctx)
 
 			require.Eventually(t, func() bool {
 				return client.Connected() && client.UID() != "" && service.IsConnected(client.UID())
@@ -545,7 +545,7 @@ func TestReceiveCommands(t *testing.T) {
 			}
 
 			// Disconnect to ensure the command has completed
-			client.Disconnect(ctx)
+			client.Stop(ctx)
 
 			disableMockErrors()
 			requireCommandResult(t, ctx, tc.command, d, client, !tc.wantFailure)
