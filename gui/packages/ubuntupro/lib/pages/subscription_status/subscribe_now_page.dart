@@ -41,7 +41,7 @@ class SubscribeNowPage extends StatelessWidget {
                         ),
                       ),
               child: Text(lang.learnMore),
-            )
+            ),
           ],
         ),
         const Padding(
@@ -59,7 +59,7 @@ class SubscribeNowPage extends StatelessWidget {
               ),
             );
           },
-        )
+        ),
       ],
     );
   }
