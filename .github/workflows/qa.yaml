@@ -65,7 +65,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         if: always() && !cancelled()
         with:
-          version: v1.52.2
+          version: v1.54.2
           args: --config=${{ github.workspace }}/.golangci.yaml --build-tags=gowslmock
           working-directory: ${{ matrix.subproject }}
       - name: Gettext validation
