@@ -96,9 +96,8 @@ func TestConnect(t *testing.T) {
 		wantErr           bool
 		wantDistroSkipped bool
 	}{
-		"Success in first contcat":     {},
+		"Success in first contact":     {},
 		"Success in non-first contact": {uid: "123"},
-		"Success":                      {},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
 		"Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
