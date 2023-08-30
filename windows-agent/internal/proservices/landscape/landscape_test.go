@@ -114,14 +114,8 @@ func TestConnect(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			var cfg net.ListenConfig
-			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
-			require.NoError(t, err, "Setup: can't listen")
+			lis, server, mockService := setUpLandscapeMock(t, ctx)
 			defer lis.Close()
-
-			server := grpc.NewServer()
-			mockService := landscapemockservice.New()
-			landscapeapi.RegisterLandscapeHostAgentServer(server, mockService)
 
 			conf := &mockConfig{
 				proToken:     "TOKEN",
@@ -239,14 +233,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			var cfg net.ListenConfig
-			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
-			require.NoError(t, err, "Setup: can't listen")
-			defer lis.Close()
-
-			server := grpc.NewServer()
-			mockService := landscapemockservice.New()
-			landscapeapi.RegisterLandscapeHostAgentServer(server, mockService)
+			lis, server, mockService := setUpLandscapeMock(t, ctx)
 
 			conf := &mockConfig{
 				proToken:     "TOKEN",
@@ -475,14 +462,8 @@ func TestReceiveCommands(t *testing.T) {
 				t.Skip("This test can only run with the mock")
 			}
 
-			var cfg net.ListenConfig
-			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
-			require.NoError(t, err, "Setup: can't listen")
+			lis, server, service := setUpLandscapeMock(t, ctx)
 			defer lis.Close()
-
-			server := grpc.NewServer()
-			service := landscapemockservice.New()
-			landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
@@ -718,6 +699,21 @@ func isAppxInstalled(t *testing.T, appxPackage string) bool {
 	require.NoError(t, err, "Get-AppxPackage should return no error. Stdout: %s", string(out))
 
 	return strings.Contains(string(out), "Ok")
+}
+
+//nolint:revive // Context goes after testing.T
+func setUpLandscapeMock(t *testing.T, ctx context.Context) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
+	t.Helper()
+
+	var cfg net.ListenConfig
+	lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
+	require.NoError(t, err, "Setup: can't listen")
+
+	server = grpc.NewServer()
+	service = landscapemockservice.New()
+	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
+
+	return lis, server, service
 }
 
 type mockConfig struct {
