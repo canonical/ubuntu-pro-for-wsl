@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -391,6 +392,80 @@ func assertHasPrefix(t *testing.T, wantPrefix, got string, msgAndArgs ...interfa
 	return false
 }
 
+func TestAutoReconnection(t *testing.T) {
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		mock := wslmock.New()
+		ctx = wsl.WithMock(ctx, mock)
+	}
+
+	lis, server, mockService := setUpLandscapeMock(t, ctx)
+	defer lis.Close()
+	defer server.Stop()
+
+	conf := &mockConfig{
+		proToken:     "TOKEN",
+		landscapeURL: lis.Addr().String(),
+	}
+
+	db, err := database.New(ctx, t.TempDir(), conf)
+	require.NoError(t, err, "Setup: database New should not return an error")
+
+	const hostname = "HOSTNAME"
+
+	client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname(hostname))
+	require.NoError(t, err, "Landscape NewClient should not return an error")
+	defer client.Stop(ctx)
+
+	err = client.Connect(ctx)
+	require.Error(t, err, "Connect should have failed because the server is not running")
+
+	require.False(t, client.Connected(), "Client should not be connected because the server is not running")
+
+	//nolint:errcheck // We don't care about these errors
+	go server.Serve(lis)
+	defer server.Stop()
+
+	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after starting the server")
+
+	hosts := mockService.Hosts()
+	require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
+
+	for uid := range hosts {
+		err = mockService.Disconnect(uid)
+		require.NoError(t, err, "Server should not fail to disconnect the client")
+	}
+
+	// Fast tickrate to ensure we detect the disconnection. The client reconnects after 1s so we should always win.
+	const tick = 10 * time.Millisecond
+	require.Eventually(t, func() bool {
+		return !client.Connected()
+	}, 5*time.Second, tick, "Client should have disconnected after the stream is dropped")
+
+	// Detecting reconnection
+	require.Eventually(t, client.Connected, 5*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
+
+	server.Stop()
+	require.Eventually(t, func() bool {
+		return !client.Connected()
+	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
+
+	// Restart server
+	lis, server, _ = setUpLandscapeMock(t, ctx)
+	defer lis.Close()
+
+	//nolint:errcheck // We don't care
+	go server.Serve(lis)
+	defer server.Stop()
+
+	conf.mu.Lock()
+	conf.landscapeURL = lis.Addr().String()
+	conf.mu.Unlock()
+
+	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
+}
+
 type command int
 
 const (
@@ -722,20 +797,28 @@ type mockConfig struct {
 
 	proTokenErr     bool
 	landscapeURLErr bool
+
+	mu sync.Mutex
 }
 
-func (m mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (m *mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
 	return nil, nil
 }
 
-func (m mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
+func (m *mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.proTokenErr {
 		return "", config.SubscriptionNone, errors.New("Mock error")
 	}
 	return m.proToken, config.SubscriptionUser, nil
 }
 
-func (m mockConfig) LandscapeURL(ctx context.Context) (string, error) {
+func (m *mockConfig) LandscapeURL(ctx context.Context) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.landscapeURLErr {
 		return "", errors.New("Mock error")
 	}
