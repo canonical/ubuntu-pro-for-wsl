@@ -21,12 +21,20 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/landscapemockservice"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 )
+
+func TestMain(m *testing.M) {
+	log.SetLevel(log.DebugLevel)
+
+	exit := m.Run()
+	defer os.Exit(exit)
+}
 
 func TestNew(t *testing.T) {
 	if wsl.MockAvailable() {
