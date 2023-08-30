@@ -103,26 +103,82 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 		return errors.New("already connected")
 	}
 
+	// Dummy connection to indicate that a first attempt was attempted
+	c.conn = &connection{}
+	defer func() {
+		go c.keepConnected(ctx)
+	}()
+
 	address, err := c.conf.LandscapeURL(ctx)
 	if err != nil {
 		return err
 	}
 
+	// First connection
 	conn, err := c.connect(ctx, address)
 	if err != nil {
-		// Dummy connection to indicate that a first attempt has completed
-		conn = &connection{}
+		return err
 	}
 
 	c.connMu.Lock()
 	c.conn = conn
 	c.connMu.Unlock()
 
-	return err
+	return nil
+}
+
+// keepConnected supervises the connection. If it drops, reconnection is attempted.
+func (c *Client) keepConnected(ctx context.Context) {
+	const growthFactor = 2
+	const minWait = time.Second
+	const maxWait = 30 * time.Minute
+
+	wait := time.Second
+	for {
+		time.Sleep(wait)
+
+		// The loop body is inside this function so that mutex unlock can be cleanly deferred
+		exitLoop := func() (exit bool) {
+			c.connMu.Lock()
+			defer c.connMu.Unlock()
+
+			if c.conn == nil {
+				// Disconnect was called
+				return true
+			}
+
+			if c.conn.connected() {
+				// Connection still active
+				return false
+			}
+
+			c.conn.disconnect()
+
+			address, err := c.conf.LandscapeURL(ctx)
+			if err != nil {
+				log.Warningf(ctx, "Landscape reconnect: could not get Landscape URL: %v", err)
+			}
+
+			conn, err := c.connect(ctx, address)
+			if err != nil {
+				log.Warningf(ctx, "Landscape reconnect: %v", err)
+				wait = min(growthFactor*wait, maxWait)
+				return false
+			}
+
+			c.conn = conn
+			wait = minWait
+			return false
+		}()
+
+		if exitLoop {
+			return
+		}
+	}
 }
 
 func (c *Client) connect(ctx context.Context, address string) (conn *connection, err error) {
-	defer decorate.OnError(&err, "could not connect to Landscape at address %q", address)
+	defer decorate.OnError(&err, "could not connect to address %q", address)
 
 	conn = &connection{}
 
@@ -149,6 +205,7 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 	// Get ready to receive commands
 	conn.receivingCommands.Add(1)
 	go func() {
+		defer conn.disconnect()
 		defer conn.receivingCommands.Done()
 
 		if err := c.receiveCommands(conn); err != nil {
