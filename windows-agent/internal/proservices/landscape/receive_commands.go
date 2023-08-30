@@ -22,7 +22,10 @@ func (c *Client) receiveCommands(conn *connection) error {
 		default:
 		}
 
-		command, err := c.grpcClient.Recv()
+		command, err := conn.grpcClient.Recv()
+		if errors.Is(err, io.EOF) {
+			return errors.New("stream closed by server")
+		}
 		if err != nil {
 			return err
 		}
