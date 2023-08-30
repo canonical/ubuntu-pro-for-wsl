@@ -17,16 +17,27 @@ import (
 func (c *Client) SendUpdatedInfo(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not send updated info to landscape")
 
-	if !c.Connected() {
+	c.connMu.RLock()
+	defer c.connMu.RUnlock()
+
+	if c.conn == nil {
 		return errors.New("disconnected")
 	}
 
-	info, err := c.newHostAgentInfo(ctx)
+	if err := c.sendUpdatedInfo(c.conn); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) sendUpdatedInfo(conn *connection) error {
+	info, err := c.newHostAgentInfo(conn.ctx)
 	if err != nil {
 		return fmt.Errorf("could not assemble message: %v", err)
 	}
 
-	if err := c.grpcClient.Send(info); err != nil {
+	if err := conn.grpcClient.Send(info); err != nil {
 		return fmt.Errorf("could not send message: %v", err)
 	}
 

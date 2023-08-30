@@ -18,14 +18,14 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Client is a client to the landscape service, served remotely.
 type Client struct {
-	db         *database.DistroDB
-	conf       Config
-	grpcClient landscapeapi.LandscapeHostAgent_ConnectClient
+	db   *database.DistroDB
+	conf Config
 
 	// Cached hostname
 	hostname string
@@ -34,9 +34,19 @@ type Client struct {
 	uid       atomic.Value
 	cacheFile string
 
-	connected atomic.Bool
-	cancel    func()
-	once      sync.Once
+	conn   *connection
+	connMu sync.RWMutex
+}
+
+type connection struct {
+	ctx    context.Context
+	cancel func()
+
+	grpcConn   *grpc.ClientConn
+	grpcClient landscapeapi.LandscapeHostAgent_ConnectClient
+	once       sync.Once
+
+	receivingCommands sync.WaitGroup
 }
 
 const cacheFileBase = "landscape.conf"
@@ -98,40 +108,73 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 		return err
 	}
 
-	// Deallocating resources if first handshake fails
-	defer func() {
-		if err == nil {
-			return
-		}
-		c.Disconnect(ctx)
-	}()
+	conn, err := c.connect(ctx, address)
+	if err != nil {
+		// Dummy connection to indicate that a first attempt has completed
+		conn = &connection{}
+	}
+
+	c.connMu.Lock()
+	c.conn = conn
+	c.connMu.Unlock()
+
+	return err
+}
+
+func (c *Client) connect(ctx context.Context, address string) (conn *connection, err error) {
+	defer decorate.OnError(&err, "could not connect to Landscape at address %q", address)
+
+	conn = &connection{}
 
 	// A context to control the Landscape client with (needed for as long as the connection lasts)
-	clientCtx, cancel := context.WithCancel(ctx)
-	c.cancel = cancel
+	conn.ctx, conn.cancel = context.WithCancel(ctx)
 
 	// A context to control only the Dial (only needed for this function)
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(dialCtx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	grpcConn, err := grpc.DialContext(dialCtx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err
+		return nil, err
 	}
+	conn.grpcConn = grpcConn
 
-	cl := landscapeapi.NewLandscapeHostAgentClient(conn)
-	client, err := cl.Connect(clientCtx)
+	cl := landscapeapi.NewLandscapeHostAgentClient(grpcConn)
+	client, err := cl.Connect(conn.ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	c.grpcClient = client
+	conn.grpcClient = client
 
 	// Get ready to receive commands
-	c.connected.Store(true)
-	go c.receiveCommands(clientCtx)
+	conn.receivingCommands.Add(1)
+	go func() {
+		defer conn.receivingCommands.Done()
 
+		if err := c.receiveCommands(conn); err != nil {
+			log.Errorf(conn.ctx, "Landscape receive commands exited: %v", err)
+		}
+	}()
+
+	if err := c.handshake(conn); err != nil {
+		conn.disconnect()
+		return nil, err
+	}
+
+	log.Infof(ctx, "Connection to Landscape established")
+
+	return conn, nil
+}
+
+// handshake executes the first few messages of a connection.
+//
+// The client introduces itself to the server by sending info to Landscape.
+// If this is the first connection ever, the server will respond by assigning
+// the host a UID. This is Recv is handled by receiveCommands, but handshake
+// waits until the UID is received before returning.
+func (c *Client) handshake(conn *connection) error {
 	// Send first message
-	if err := c.SendUpdatedInfo(clientCtx); err != nil {
+	if err := c.sendUpdatedInfo(conn); err != nil {
 		return err
 	}
 
@@ -144,20 +187,20 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+	ctx, cancel := context.WithTimeout(conn.ctx, time.Minute)
 	defer cancel()
 
 	for {
 		select {
 		case <-ctx.Done():
-			c.Disconnect(ctx)
+			conn.disconnect()
 			c.setUID("") // Avoid races where the UID arrives just after cancelling the context
 			return fmt.Errorf("Landscape server did not respond with a client UID")
 		case <-ticker.C:
 		}
 
 		if c.getUID() != "" {
-			// Server sent a UID: success.
+			// UID received: success.
 			break
 		}
 	}
@@ -167,34 +210,59 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 
 // Disconnect terminates the connection and deallocates resources.
 func (c *Client) Disconnect(ctx context.Context) {
-	c.once.Do(func() {
-		c.cancel()
-		c.waitDisconnected(ctx)
-		if err := c.dump(); err != nil {
-			log.Errorf(ctx, "Landscape client: %v", err)
-		}
-	})
+	c.connMu.Lock()
+	defer c.connMu.Unlock()
+
+	if c.conn == nil {
+		return
+	}
+
+	c.conn.disconnect()
+	if err := c.dump(); err != nil {
+		log.Errorf(ctx, "Landscape client: %v", err)
+	}
+
+	c.conn = nil
 }
 
-func (c *Client) waitDisconnected(ctx context.Context) {
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			if connected := c.connected.Load(); !connected {
-				return
-			}
-		}
+func (conn *connection) disconnect() {
+	// Default constructed connection
+	if conn.cancel == nil {
+		return
 	}
+
+	conn.once.Do(func() {
+		conn.cancel()
+		conn.receivingCommands.Wait()
+		_ = conn.grpcConn.Close()
+	})
 }
 
 // Connected returns true if the Landscape client managed to connect to the server.
 func (c *Client) Connected() bool {
-	return c.connected.Load()
+	c.connMu.RLock()
+	defer c.connMu.RUnlock()
+
+	return c.conn.connected()
+}
+
+func (conn *connection) connected() bool {
+	if conn == nil {
+		return false
+	}
+
+	if conn.grpcConn == nil {
+		return false
+	}
+
+	switch conn.grpcConn.GetState() {
+	case connectivity.Idle:
+		return false
+	case connectivity.Shutdown:
+		return false
+	}
+
+	return true
 }
 
 // load reads persistent Landscape data from disk.
