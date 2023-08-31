@@ -78,10 +78,16 @@ const (
 	ProDetachErrGeneric         = "UP4W_PRO_DETACH_ERR_GENERIC"
 	ProDetachErrNoReason        = "UP4W_PRO_DETACH_ERR_UNKNOWN"
 
+	LandscapeEnableErr  = "UP4W_LANDSCAPE_ENABLE_ERR"
+	LandscapeDisableErr = "UP4W_LANDSCAPE_DISABLE_ERR"
+
 	WslpathErr       = "UP4W_WSLPATH_ERR"
 	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
 
 	CmdExeErr = "UP4W_CMDEXE_ERR"
+
+	// FileSystemRoot contains the path to the mocked filesystem root.
+	FileSystemRoot = "UP4W_FILE_SYSTEM_ROOT"
 )
 
 const (
@@ -170,6 +176,7 @@ func (m *SystemMock) mockExec(fauxTestName string, argv ...string) (string, []st
 	env = append(env,
 		fmt.Sprintf("%s=1", mockExecutable),                      // Ensures the faux test is not skipped
 		fmt.Sprintf("%s=%q", wslpathDistroName, m.WslDistroName), // Informs the faux tests what the mock distro name is
+		fmt.Sprintf("%s=%q", FileSystemRoot, m.FsRoot),           // Indicates where the mock filesystem is
 	)
 	switches := strings.Join(env, " ")
 
@@ -194,6 +201,11 @@ func (m *SystemMock) mockExec(fauxTestName string, argv ...string) (string, []st
 // ProExecutable mocks `pro $args...`.
 func (m *SystemMock) ProExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithProMock", args...)
+}
+
+// LandscapeConfigExecutable mocks `landscape-config $q`.
+func (m *SystemMock) LandscapeConfigExecutable(args ...string) (string, []string) {
+	return m.mockExec("TestWithLandscapeConfigMock", args...)
 }
 
 // WslpathExecutable mocks `wslpath $args...`.
@@ -279,6 +291,83 @@ func ProMock(t *testing.T) {
 			return exitOk
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown verb %q", argv[0])
+			return exitBadUsage
+		}
+	})
+}
+
+// LandscapeConfigMock mocks the executable for `landscape-config`.
+// Add it to your package_test with:
+//
+//	func TestWithLanscapeConfigExeMock(t *testing.T) { testutils.LanscapeConfigMock(t) }
+//
+//nolint:thelper // This is a faux test used to mock the executable `cmd.exe`
+func LandscapeConfigMock(t *testing.T) {
+	if t.Name() != "TestWithLandscapeConfigMock" {
+		panic("The LandscapeConfigMock faux test must be named TestWithLandscapeConfigMock")
+	}
+
+	mockMain(t, func(argv []string) exitCode {
+		switch len(argv) {
+		case 0:
+			fmt.Fprintln(os.Stderr, "Mock expected arguments")
+			return exitBadUsage
+		case 1:
+			// landscape-config --disable
+			if argv[0] != "--disable" {
+				fmt.Fprintf(os.Stderr, "Mock not implemented for arg %q\n", argv[0])
+				return exitBadUsage
+			}
+
+			if envExists(LandscapeDisableErr) {
+				fmt.Fprintln(os.Stderr, "Disable: Mock error")
+				return exitError
+			}
+
+			return exitOk
+		case 3:
+			// landscape-config [--config|-c] FILENAME --silent
+			if argv[0] != "-c" && argv[0] != "--config" {
+				fmt.Fprintf(os.Stderr, "Mock not implemented for arg %q\n", argv[0])
+				return exitBadUsage
+			}
+
+			if argv[2] != "--silent" {
+				fmt.Fprintf(os.Stderr, "Mock not implemented for arg %q\n", argv[2])
+				return exitBadUsage
+			}
+
+			if envExists(LandscapeEnableErr) {
+				fmt.Fprintln(os.Stderr, "Enable: Mock error")
+				return exitError
+			}
+
+			root := os.Getenv(FileSystemRoot)
+			if root == "" {
+				fmt.Fprintf(os.Stderr, "Missing environment variable %s\n", FileSystemRoot)
+				return exitBadUsage
+			}
+
+			path := filepath.Join(root, argv[1])
+			stat, err := os.Stat(path)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Could not read config file %q: %v\n", path, err)
+				return exitError
+			}
+
+			if stat.IsDir() {
+				fmt.Fprintf(os.Stderr, "Could not read config file %q (it's a directory)\n", path)
+				return exitError
+			}
+
+			if stat.Mode()|0004 == 0 {
+				fmt.Fprintf(os.Stderr, "Could not read config file %q (no read access for Landscape)\n", path)
+				return exitError
+			}
+
+			return exitOk
+		default:
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
 	})
