@@ -63,6 +63,7 @@ void main() {
         // kill all agent processes.
         if (Platform.isWindows) {
           await Process.run('taskkill.exe', ['/f', '/im', agentImageName]);
+          await Future.delayed(const Duration(seconds: 1));
         } else {
           await Process.run(
             'killall',
