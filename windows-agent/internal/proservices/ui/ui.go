@@ -93,3 +93,10 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 
 	return info, nil
 }
+
+// NotifyPurchase handles the client notification of a successful purchase through MS Store.
+func (s *Service) NotifyPurchase(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
+	fetchErr := s.config.FetchMicrosoftStoreSubscription(ctx)
+	info, err := s.GetSubscriptionInfo(ctx, empty)
+	return info, errors.Join(fetchErr, err)
+}
