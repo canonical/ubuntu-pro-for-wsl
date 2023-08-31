@@ -127,6 +127,67 @@ func TestApplyProToken(t *testing.T) {
 	}
 }
 
+func TestApplyLandscapeConfig(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		emptyConfig bool
+		enableErr   bool
+		disableErr  bool
+
+		wantErr bool
+	}{
+		// Enable
+		"Success enabling": {},
+
+		"Error enabling when the disabling landscape-config command fails": {disableErr: true, wantErr: true},
+		"Error enabling when the enabling landscape-config command fails":  {enableErr: true, wantErr: true},
+
+		// Disable
+		"Success disabling": {emptyConfig: true},
+		"Success disabling even when the enable command is broken": {emptyConfig: true, enableErr: true},
+
+		"Error disabling when the disabling landscape-config command fails": {emptyConfig: true, disableErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+
+			system, mock := testutils.MockSystem(t)
+
+			if tc.enableErr {
+				mock.SetControlArg(testutils.LandscapeEnableErr)
+			}
+
+			if tc.disableErr {
+				mock.SetControlArg(testutils.LandscapeDisableErr)
+			}
+
+			ctrlClient, _ := newCtrlStream(t, ctx)
+			wslClient := setupWSLInstanceService(t, ctx, ctrlClient, system)
+
+			var config string
+			if !tc.emptyConfig {
+				config = "[hello]\nworld: true"
+			}
+
+			empty, err := wslClient.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: config})
+			if tc.wantErr {
+				require.Error(t, err, "ApplyLandscapeConfig call should return an error")
+				return
+			}
+			require.NoError(t, err, "ApplyLandscapeConfig call should return no error")
+
+			require.NotNil(t, empty, "ApplyLandscapeConfig should not return a nil response")
+		})
+	}
+}
+
 //nolint:revive // We've decided testing.T always preceedes the context.
 func setupWSLInstanceService(t *testing.T, ctx context.Context, ctrlClient wslinstanceservice.ControlStreamClient, s system.System) wslserviceapi.WSLClient {
 	t.Helper()
@@ -209,6 +270,7 @@ func (s *controlService) recv() (*agentapi.DistroInfo, error) {
 	}
 }
 
-func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
-func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
-func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }
+func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
+func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
+func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
+func TestWithCmdExeMock(t *testing.T)          { testutils.CmdExeMock(t) }
