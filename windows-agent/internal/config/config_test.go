@@ -19,15 +19,17 @@ const (
 	untouched registryState = 0x00 // Nothing UbuntuPro-related exists, as though the program had never ran before
 	keyExists registryState = 0x01 // Key exists but is empty
 
-	orgTokenExists     = keyExists | 1<<2 // Key exists, organization token field exists
-	userTokenExists    = keyExists | 1<<3 // Key exists, user token field exists
-	storeTokenExists   = keyExists | 1<<4 // Key exists, microsoft store token field exists
-	landscapeURLExists = keyExists | 1<<5 // Key exists, landscape URL token field exists
+	orgTokenExists              = keyExists | 1<<iota // Key exists, organization token field exists
+	userTokenExists                                   // Key exists, user token field exists
+	storeTokenExists                                  // Key exists, microsoft store token field exists
+	landscapeAgentURLExists                           // Key exists, landscape agent URL field exists
+	landscapeClientConfigExists                       // Key exists, landscape client config field exists
 
-	orgTokenHasValue     = orgTokenExists | 1<<16     // Key exists, organization token field exists and is not empty
-	userTokenHasValue    = userTokenExists | 1<<17    // Key exists, user token field exists and is not empty
-	storeTokenHasValue   = storeTokenExists | 1<<18   // Key exists, microsoft store token field exists and is not empty
-	landscapeURLHasValue = landscapeURLExists | 1<<19 // Key exists, landscape URL token field exists and is not empty
+	orgTokenHasValue              = orgTokenExists | 1<<16              // Key exists, organization token field exists and is not empty
+	userTokenHasValue             = userTokenExists | 1<<17             // Key exists, user token field exists and is not empty
+	storeTokenHasValue            = storeTokenExists | 1<<18            // Key exists, microsoft store token field exists and is not empty
+	landscapeAgentURLHasValue     = landscapeAgentURLExists | 1<<19     // Key exists,  landscape agent URL field exists and is not empty
+	landscapeClientConfigHasValue = landscapeClientConfigExists | 1<<20 // Key exists, landscape client config field exists and is not empty
 )
 
 func TestSubscription(t *testing.T) {
@@ -81,7 +83,9 @@ func TestSubscription(t *testing.T) {
 		})
 	}
 }
-func TestLandscapeURL(t *testing.T) {
+
+//nolint:dupl // This and the following test are very similar, but there is no clean way to merge them
+func TestLandscapeAgentURL(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -90,12 +94,12 @@ func TestLandscapeURL(t *testing.T) {
 
 		wantError bool
 	}{
-		"Success":                               {registryState: landscapeURLHasValue},
+		"Success":                               {registryState: landscapeAgentURLHasValue},
 		"Success when the key does not exist":   {registryState: untouched},
 		"Success when the value does not exist": {registryState: keyExists},
 
-		"Error when the registry key cannot be opened":    {registryState: landscapeURLHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: landscapeURLHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
+		"Error when the registry key cannot be opened":    {registryState: landscapeAgentURLHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: landscapeAgentURLHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -107,21 +111,68 @@ func TestLandscapeURL(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			landscapeURL, err := conf.LandscapeURL(ctx)
+			landscapeURL, err := conf.LandscapeAgentURL(ctx)
 			if tc.wantError {
-				require.Error(t, err, "LandscapeURL should return an error")
+				require.Error(t, err, "LandscapeAgentURL should return an error")
 				return
 			}
-			require.NoError(t, err, "LandscapeURL should return no error")
+			require.NoError(t, err, "LandscapeAgentURL should return no error")
 
 			// Test default values
-			if !tc.registryState.is(landscapeURLHasValue) {
-				require.Equal(t, "www.example.com", landscapeURL, "Unexpected Landscape URL value")
+			if !tc.registryState.is(landscapeAgentURLHasValue) {
+				require.Equal(t, "", landscapeURL, "Unexpected Landscape config default value")
 				return
 			}
 
 			// Test non-default values
 			assert.Equal(t, "www.example.com/registry-example", landscapeURL, "Unexpected Landscape URL value")
+			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
+		})
+	}
+}
+
+//nolint:dupl // This and the previous test are very similar, but there is no clean way to merge them
+func TestLandscapeClientConfig(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		mockErrors    uint32
+		registryState registryState
+
+		wantError bool
+	}{
+		"Success":                               {registryState: landscapeClientConfigHasValue},
+		"Success when the key does not exist":   {registryState: untouched},
+		"Success when the value does not exist": {registryState: keyExists},
+
+		"Error when the registry key cannot be opened":    {registryState: landscapeClientConfigHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: landscapeClientConfigHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
+			conf := config.New(ctx, config.WithRegistry(r))
+
+			landscapeURL, err := conf.LandscapeClientConfig(ctx)
+			if tc.wantError {
+				require.Error(t, err, "LandscapeClientConfig should return an error")
+				return
+			}
+			require.NoError(t, err, "LandscapeClientConfig should return no error")
+
+			// Test default values
+			if !tc.registryState.is(landscapeClientConfigHasValue) {
+				require.Equal(t, "", landscapeURL, "Unexpected Landscape config default value")
+				return
+			}
+
+			// Test non-default values
+			assert.Equal(t, "[client]\nuser=JohnDoe", landscapeURL, "Unexpected Landscape URL value")
 			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
 		})
 	}
@@ -155,7 +206,7 @@ func TestProvisioningTasks(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			pt, err := conf.ProvisioningTasks(ctx)
+			pt, err := conf.ProvisioningTasks(ctx, "UBUNTU")
 			if tc.wantError {
 				require.Error(t, err, "ProvisioningTasks should return an error")
 				return
@@ -164,6 +215,7 @@ func TestProvisioningTasks(t *testing.T) {
 
 			require.ElementsMatch(t, pt, []task.Task{
 				tasks.ProAttachment{Token: tc.want},
+				tasks.LandscapeConfigure{Config: ""},
 			}, "Unexpected contents returned by ProvisioningTasks")
 		})
 	}
@@ -355,11 +407,18 @@ func setUpMockRegistry(mockErrors uint32, state registryState, readOnly bool) *r
 		r.UbuntuProData["ProTokenStore"] = "store_token"
 	}
 
-	if state.is(landscapeURLExists) {
-		r.UbuntuProData["LandscapeURL"] = ""
+	if state.is(landscapeAgentURLExists) {
+		r.UbuntuProData["LandscapeAgentURL"] = ""
 	}
-	if state.is(landscapeURLHasValue) {
-		r.UbuntuProData["LandscapeURL"] = "www.example.com/registry-example"
+	if state.is(landscapeAgentURLHasValue) {
+		r.UbuntuProData["LandscapeAgentURL"] = "www.example.com/registry-example"
+	}
+
+	if state.is(landscapeClientConfigExists) {
+		r.UbuntuProData["LandscapeClientConfig"] = ""
+	}
+	if state.is(landscapeClientConfigHasValue) {
+		r.UbuntuProData["LandscapeClientConfig"] = "[client]\nuser=JohnDoe"
 	}
 
 	return r
