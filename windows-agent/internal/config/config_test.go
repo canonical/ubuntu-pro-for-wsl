@@ -284,8 +284,7 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 		wantToken string
 		wantErr   bool
 	}{
-		"Success when registry is read only": {registryState: userTokenHasValue, registryIsReadOnly: true, wantToken: "user_token", wantErr: true},
-
+		"Error when registry is read only":          {registryState: userTokenHasValue, registryIsReadOnly: true, wantToken: "user_token", wantErr: true},
 		"Error when registry read-only check fails": {registryErr: registry.MockErrOnCreateKey, wantErr: true},
 
 		// Stub test-case: Must be replaced with Success/Error return values of contracts.ProToken
