@@ -18,20 +18,6 @@ import (
 	wslmock "github.com/ubuntu/gowsl/mock"
 )
 
-func TestNew(t *testing.T) {
-	ctx := context.Background()
-	t.Parallel()
-
-	dir := t.TempDir()
-	db, err := database.New(ctx, dir, nil)
-	require.NoError(t, err, "Setup: empty database New() should return no error")
-	defer db.Close(ctx)
-
-	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
-
-	_ = ui.New(context.Background(), conf, db)
-}
-
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 //
 //nolint:tparallel
@@ -116,26 +102,26 @@ func TestGetSubscriptionInfo(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		config configOptions
+		config mockConfig
 
 		wantType      string
 		wantImmutable bool
 		wantErr       bool
 	}{
-		"Success with a non-subscription":           {config: configOptions{source: config.SubscriptionNone}, wantType: none},
-		"Success with a read-only non-subscription": {config: configOptions{source: config.SubscriptionNone, registryReadOnly: true}, wantType: none, wantImmutable: true},
+		"Success with a non-subscription":           {config: mockConfig{source: config.SubscriptionNone}, wantType: none},
+		"Success with a read-only non-subscription": {config: mockConfig{source: config.SubscriptionNone, registryReadOnly: true}, wantType: none, wantImmutable: true},
 
-		"Success with an organization subscription":          {config: configOptions{source: config.SubscriptionOrganization}, wantType: organization},
-		"Success with a read-only organization subscription": {config: configOptions{source: config.SubscriptionOrganization, registryReadOnly: true}, wantType: organization, wantImmutable: true},
+		"Success with an organization subscription":          {config: mockConfig{source: config.SubscriptionOrganization}, wantType: organization},
+		"Success with a read-only organization subscription": {config: mockConfig{source: config.SubscriptionOrganization, registryReadOnly: true}, wantType: organization, wantImmutable: true},
 
-		"Success with a user subscription":           {config: configOptions{source: config.SubscriptionUser}, wantType: user},
-		"Success with a read-only user subscription": {config: configOptions{source: config.SubscriptionUser, registryReadOnly: true}, wantType: user, wantImmutable: true},
+		"Success with a user subscription":           {config: mockConfig{source: config.SubscriptionUser}, wantType: user},
+		"Success with a read-only user subscription": {config: mockConfig{source: config.SubscriptionUser, registryReadOnly: true}, wantType: user, wantImmutable: true},
 
-		"Success with a store subscription":           {config: configOptions{source: config.SubscriptionMicrosoftStore}, wantType: store},
-		"Success with a read-only store subscription": {config: configOptions{source: config.SubscriptionMicrosoftStore, registryReadOnly: true}, wantType: store, wantImmutable: true},
+		"Success with a store subscription":           {config: mockConfig{source: config.SubscriptionMicrosoftStore}, wantType: store},
+		"Success with a read-only store subscription": {config: mockConfig{source: config.SubscriptionMicrosoftStore, registryReadOnly: true}, wantType: store, wantImmutable: true},
 
-		"Error when the the read-only check fails":        {config: configOptions{isReadOnlyErr: true}, wantErr: true},
-		"Error when the subscription cannot be retreived": {config: configOptions{subscriptionErr: true}, wantErr: true},
+		"Error when the the read-only check fails":        {config: mockConfig{isReadOnlyErr: true}, wantErr: true},
+		"Error when the subscription cannot be retreived": {config: mockConfig{subscriptionErr: true}, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -145,8 +131,9 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			ctx := context.Background()
 
 			dir := t.TempDir()
-			service, err := setupService(ctx, dir, tc.config)
-			require.NoError(t, err, "Setup: ")
+			db, err := database.New(ctx, dir, nil)
+			require.NoError(t, err, "Setup: empty database New() should return no error")
+			service := ui.New(ctx, &tc.config, db)
 
 			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
 			if tc.wantErr {
@@ -165,19 +152,20 @@ func TestNotifyPurchase(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		config configOptions
+		config mockConfig
 
 		wantType      string
 		wantImmutable bool
 		wantErr       bool
 	}{
-		// TODO: Uncomment and augment the test cases below when the mocks are ready.
-		// "Success with a non-subscription":            {source: config.SubscriptionNone, wantType: store},
-		// "Success with an existing user subscription": {source: config.SubscriptionUser, wantType: store},
+		"Success with a non-subscription":            {config: mockConfig{source: config.SubscriptionNone}, wantType: store},
+		"Success with an existing user subscription": {config: mockConfig{source: config.SubscriptionUser}, wantType: store},
 
-		"Error to fetch MS Store": {config: configOptions{source: config.SubscriptionNone}, wantType: none, wantErr: true},
-		// "Error with an existing store subscription":        {source: config.SubscriptionMicrosoftStore, wantType: store, wantErr: true},
-		"Error with a read-only organization subscription": {config: configOptions{source: config.SubscriptionOrganization, registryReadOnly: true}, wantType: organization, wantImmutable: true, wantErr: true},
+		"Error to fetch MS Store":                          {config: mockConfig{source: config.SubscriptionNone, fetchErr: true}, wantType: none, wantErr: true},
+		"Error to set the subscription":                    {config: mockConfig{source: config.SubscriptionNone, setSubscriptionErr: true}, wantType: none, wantErr: true},
+		"Error to read the registry":                       {config: mockConfig{source: config.SubscriptionNone, isReadOnlyErr: true}, wantType: none, wantErr: true},
+		"Error with an existing store subscription":        {config: mockConfig{source: config.SubscriptionMicrosoftStore}, wantType: store, wantErr: true},
+		"Error with a read-only organization subscription": {config: mockConfig{source: config.SubscriptionOrganization, registryReadOnly: true}, wantType: organization, wantImmutable: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -187,8 +175,9 @@ func TestNotifyPurchase(t *testing.T) {
 			ctx := context.Background()
 
 			dir := t.TempDir()
-			service, err := setupService(ctx, dir, tc.config)
-			require.NoError(t, err, "Setup: ")
+			db, err := database.New(ctx, dir, nil)
+			require.NoError(t, err, "Setup: empty database New() should return no error")
+			service := ui.New(ctx, &tc.config, db)
 
 			info, err := service.NotifyPurchase(ctx, &agentapi.Empty{})
 			if tc.wantErr {
@@ -203,44 +192,51 @@ func TestNotifyPurchase(t *testing.T) {
 	}
 }
 
-type configOptions struct {
-	source           config.SubscriptionSource
-	registryReadOnly bool
+type mockConfig struct {
+	registryReadOnly   bool // reports registry as read only
+	setSubscriptionErr bool // Config erros out in SetSubscription function
+	isReadOnlyErr      bool // Config errors out in IsReadOnly function
+	subscriptionErr    bool // Config errors out in Subscription function
+	fetchErr           bool // Config errors out in FetchMicrosoftStoreSubscription function
 
-	isReadOnlyErr   bool // Config errors out in IsReadOnly function
-	subscriptionErr bool // Config errors out in Subscription function
+	token  string                    // stores the configured Pro token
+	source config.SubscriptionSource // stores the configured subscription source.
 }
 
-func setupService(ctx context.Context, dbDir string, o configOptions) (service ui.Service, err error) {
-	db, err := database.New(ctx, dbDir, nil)
+func (m *mockConfig) SetSubscription(ctx context.Context, token string, source config.SubscriptionSource) error {
+	if m.setSubscriptionErr {
+		return errors.New("SetSubscription error")
+	}
+	m.token = token
+	m.source = source
+	return nil
+}
+func (m mockConfig) IsReadOnly() (bool, error) {
+	if m.isReadOnlyErr {
+		return false, errors.New("IsReadOnly error")
+	}
+	return m.registryReadOnly, nil
+}
+func (m mockConfig) Subscription(context.Context) (string, config.SubscriptionSource, error) {
+	if m.subscriptionErr {
+		return "", config.SubscriptionNone, errors.New("Subscription error")
+	}
+	return m.token, m.source, nil
+}
+func (m *mockConfig) FetchMicrosoftStoreSubscription(ctx context.Context) error {
+	readOnly, err := m.IsReadOnly()
 	if err != nil {
-		return ui.Service{}, errors.Join(errors.New("empty database New() should return no error"), err)
+		return err
 	}
-	defer db.Close(ctx)
-
-	m := registry.NewMock()
-	m.KeyExists = true
-
-	conf := config.New(ctx, config.WithRegistry(m))
-	if o.source != config.SubscriptionNone {
-		err := conf.SetSubscription(ctx, "example_token", o.source)
-		if err != nil {
-			return ui.Service{}, errors.Join(errors.New("SetSubscription should return no error"), err)
-		}
+	if readOnly {
+		return errors.New("FetchMicrosoftStoreSubscription found read-only registry")
+	}
+	if m.fetchErr {
+		return errors.New("FetchMicrosoftStoreSubscription error")
+	}
+	if m.source == config.SubscriptionMicrosoftStore {
+		return errors.New("Already subscribed")
 	}
 
-	if o.registryReadOnly {
-		m.KeyIsReadOnly = true
-	}
-
-	if o.isReadOnlyErr {
-		m.Errors = registry.MockErrOnCreateKey
-	}
-
-	if o.subscriptionErr {
-		m.Errors |= registry.MockErrReadValue
-	}
-
-	service = ui.New(ctx, conf, db)
-	return service, nil
+	return m.SetSubscription(ctx, "MS", config.SubscriptionMicrosoftStore)
 }
