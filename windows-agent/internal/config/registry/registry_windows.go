@@ -2,6 +2,7 @@ package registry
 
 import (
 	"errors"
+	"strings"
 	"syscall"
 
 	"golang.org/x/sys/windows/registry"
@@ -38,15 +39,52 @@ func (Windows) CloseKey(k uintptr) {
 }
 
 // ReadValue returns the value of the specified field in the specified key.
-func (Windows) ReadValue(k uintptr, field string) (value string, err error) {
-	value, _, err = registry.Key(k).GetStringValue(field)
+func (Windows) ReadValue(k uintptr, field string) (string, error) {
+	var acc error
+
+	// Try to read single-line string
+	value, _, err := registry.Key(k).GetStringValue(field)
 	if errors.Is(err, registry.ErrNotExist) {
 		return value, ErrFieldNotExist
+	} else if err != nil {
+		acc = errors.Join(acc, err)
+	} else {
+		return value, nil
 	}
-	return value, err
+
+	// Try to read multi-line string
+	lines, _, err := registry.Key(k).GetStringsValue(field)
+	if errors.Is(err, registry.ErrNotExist) {
+		return value, ErrFieldNotExist
+	} else if err != nil {
+		acc = errors.Join(acc, err)
+	} else {
+		return strings.Join(lines, "\n"), nil
+	}
+
+	return "", acc
 }
 
 // WriteValue writes the provided value into the specified field of key k.
-func (Windows) WriteValue(k uintptr, field string, value string) (err error) {
-	return registry.Key(k).SetStringValue(field, value)
+func (Windows) WriteValue(k uintptr, field string, value string) error {
+	var acc error
+
+	if !strings.ContainsRune(value, '\n') {
+		// Single line string: we try storing a regular string
+		// This can fail if this field is already multi-line
+		if err := registry.Key(k).SetStringValue(field, value); err != nil {
+			acc = errors.Join(acc, err)
+		} else {
+			return nil
+		}
+	}
+
+	// Multi-line string
+	if err := registry.Key(k).SetStringsValue(field, strings.Split(value, "\n")); err != nil {
+		acc = errors.Join(acc, err)
+	} else {
+		return nil
+	}
+
+	return acc
 }
