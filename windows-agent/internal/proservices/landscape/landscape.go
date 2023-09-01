@@ -144,6 +144,8 @@ func (c *Client) keepConnected(ctx context.Context) {
 	keepLoooping := true
 	for keepLoooping {
 		keepLoooping = func() (keepLooping bool) {
+			// Using a timer rather than a time.After to avoid leaking
+			// the timer for up to $maxWait.
 			tk := time.NewTimer(wait)
 			defer tk.Stop()
 
