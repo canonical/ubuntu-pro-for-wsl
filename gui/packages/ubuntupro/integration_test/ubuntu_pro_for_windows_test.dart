@@ -13,8 +13,8 @@ import 'package:ubuntupro/pages/startup/startup_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
 import 'package:yaru_test/yaru_test.dart';
 
-import '../test/utils/build_agent.dart';
 import '../test/utils/l10n_tester.dart';
+import 'utils/build_agent.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
