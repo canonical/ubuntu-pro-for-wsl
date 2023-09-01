@@ -1,5 +1,6 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:grpc/grpc.dart';
+import 'package:meta/meta.dart';
 
 /// A type alias for the gRPC message enum which by default has a big name.
 typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
@@ -18,6 +19,9 @@ class AgentApiClient {
         );
 
   final UIClient _client;
+
+  @visibleForTesting
+  AgentApiClient.withClient(this._client);
 
   /// Dispatches a applyProToken request with the supplied Pro [token].
   Future<void> applyProToken(String token) async {
