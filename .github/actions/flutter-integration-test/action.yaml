@@ -1,0 +1,39 @@
+name: Flutter Integration Tests
+description: Setup Flutter and run the integration tests.
+
+inputs:
+  flutter-version:
+    required: true
+    description: "The Flutter SDK version to use."
+  go-version-file:
+    required: true
+    description: "The file from which we derive the required Go version."
+  package-dir:
+    required: true
+    description: "The root directory of the package to lint."
+
+runs:
+  using: "composite"
+  steps:
+    - uses: microsoft/setup-msbuild@v1
+      if: runner.os == 'Windows'
+    # Go is needed to build the agent for integration testing.
+    - uses: actions/setup-go@v4
+      with:
+        go-version-file: '${{ inputs.go-version-file }}'
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: '${{ inputs.flutter-version }}'
+    - name: Integration Test
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: |
+        if [ -d integration_test ]; then
+          if [ $(uname) = 'Linux' ]; then
+            xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
+              flutter test integration_test/
+          else
+              flutter test integration_test/
+          fi
+        fi
