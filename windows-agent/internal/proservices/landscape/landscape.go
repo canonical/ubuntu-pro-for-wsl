@@ -137,7 +137,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 func (c *Client) keepConnected(ctx context.Context) {
 	const growthFactor = 2
 	const minWait = time.Second
-	const maxWait = 30 * time.Minute
+	const maxWait = 10 * time.Minute
 	wait := time.Second
 
 	// The loop body is inside this function so that defers can be used
