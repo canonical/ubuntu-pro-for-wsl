@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -107,10 +106,10 @@ func TestAttachPro(t *testing.T) {
 }
 
 var (
-	none         = reflect.TypeOf(&agentapi.SubscriptionInfo_None{}).String()
-	user         = reflect.TypeOf(&agentapi.SubscriptionInfo_User{}).String()
-	organization = reflect.TypeOf(&agentapi.SubscriptionInfo_Organization{}).String()
-	store        = reflect.TypeOf(&agentapi.SubscriptionInfo_MicrosoftStore{}).String()
+	none         = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_None{})
+	user         = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_User{})
+	organization = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_Organization{})
+	store        = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_MicrosoftStore{})
 )
 
 func TestGetSubscriptionInfo(t *testing.T) {
