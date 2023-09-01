@@ -240,7 +240,7 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 //
 // The client introduces itself to the server by sending info to Landscape.
 // If this is the first connection ever, the server will respond by assigning
-// the host a UID. This is Recv is handled by receiveCommands, but handshake
+// the host a UID. This Recv is handled by receiveCommands, but handshake
 // waits until the UID is received before returning.
 func (c *Client) handshake(conn *connection) error {
 	// Send first message
