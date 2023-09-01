@@ -27,7 +27,7 @@ type Client struct {
 	db   *database.DistroDB
 	conf Config
 
-	// stoped indicates that the Client has been stopped and is no longer usable
+	// stopped indicates that the Client has been stopped and is no longer usable
 	stopped chan struct{}
 	once    sync.Once
 
