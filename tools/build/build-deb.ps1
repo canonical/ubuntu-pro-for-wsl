@@ -45,6 +45,16 @@ if ( "${LastExitCode}" -ne "0" ) {
 #!/bin/bash
 set -eu
 
+git config --global --add safe.directory "$(pwd)"
+
+# Update internal dependencies in the repo
+# (we need git to work, and .git is not rsync'd)
+cd wsl-pro-service
+./debian/update-internal-dependencies
+go mod tidy
+go mod vendor
+cd -
+
 # Set up directory
 build_dir="${HOME}/wsl-pro-service-build"
 
