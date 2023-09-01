@@ -141,50 +141,52 @@ func (c *Client) keepConnected(ctx context.Context) {
 	wait := time.Second
 
 	// The loop body is inside this function so that defers can be used
-	for func() (keepLooping bool) {
-		tk := time.NewTimer(wait)
-		defer tk.Stop()
+	keepLoooping := true
+	for keepLoooping {
+		keepLoooping = func() (keepLooping bool) {
+			tk := time.NewTimer(wait)
+			defer tk.Stop()
 
-		select {
-		case <-tk.C:
-		case <-c.stopped:
-			// Stop was called
-			return false
-		}
+			select {
+			case <-tk.C:
+			case <-c.stopped:
+				// Stop was called
+				return false
+			}
 
-		c.connMu.Lock()
-		defer c.connMu.Unlock()
+			c.connMu.Lock()
+			defer c.connMu.Unlock()
 
-		if c.conn == nil {
-			// Stop was called
-			return false
-		}
+			if c.conn == nil {
+				// Stop was called
+				return false
+			}
 
-		if c.conn.connected() {
-			// Connection still active
+			if c.conn.connected() {
+				// Connection still active
+				return true
+			}
+
+			c.conn.disconnect()
+
+			address, err := c.conf.LandscapeURL(ctx)
+			if err != nil {
+				log.Warningf(ctx, "Landscape reconnect: could not get Landscape URL: %v", err)
+				wait = min(growthFactor*wait, maxWait)
+				return true
+			}
+
+			conn, err := c.connect(ctx, address)
+			if err != nil {
+				log.Warningf(ctx, "Landscape reconnect: %v", err)
+				wait = min(growthFactor*wait, maxWait)
+				return true
+			}
+
+			c.conn = conn
+			wait = minWait
 			return true
-		}
-
-		c.conn.disconnect()
-
-		address, err := c.conf.LandscapeURL(ctx)
-		if err != nil {
-			log.Warningf(ctx, "Landscape reconnect: could not get Landscape URL: %v", err)
-			wait = min(growthFactor*wait, maxWait)
-			return true
-		}
-
-		conn, err := c.connect(ctx, address)
-		if err != nil {
-			log.Warningf(ctx, "Landscape reconnect: %v", err)
-			wait = min(growthFactor*wait, maxWait)
-			return true
-		}
-
-		c.conn = conn
-		wait = minWait
-		return true
-	}() {
+		}()
 	}
 }
 
