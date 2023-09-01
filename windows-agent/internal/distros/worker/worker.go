@@ -40,7 +40,7 @@ type Worker struct {
 
 // Provisioning is an interface which provides provisioning tasks.
 type Provisioning interface {
-	ProvisioningTasks(context.Context) ([]task.Task, error)
+	ProvisioningTasks(context.Context, string) ([]task.Task, error)
 }
 
 type options struct {
@@ -84,7 +84,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		return w, nil
 	}
 
-	provisioning, err := opts.provisioning.ProvisioningTasks(ctx)
+	provisioning, err := opts.provisioning.ProvisioningTasks(ctx, d.Name())
 	if err != nil {
 		return w, err
 	}

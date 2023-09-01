@@ -805,7 +805,7 @@ type mockConfig struct {
 	mu sync.Mutex
 }
 
-func (m *mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	return nil, nil
 }
 

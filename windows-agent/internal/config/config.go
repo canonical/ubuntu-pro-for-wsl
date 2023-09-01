@@ -160,13 +160,26 @@ func (c *Config) IsReadOnly() (b bool, err error) {
 }
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
-func (c *Config) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	token, _, err := c.Subscription(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return []task.Task{tasks.ProAttachment{Token: token}}, nil
+	taskList := []task.Task{
+		tasks.ProAttachment{Token: token},
+	}
+
+	if conf, err := c.LandscapeClientConfig(ctx); err != nil {
+		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
+	} else if landscape, err := tasks.NewLandscapeConfigure(ctx, conf, distroName); err != nil {
+		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
+	} else {
+		// Success
+		taskList = append(taskList, landscape)
+	}
+
+	return taskList, nil
 }
 
 // SetSubscription overwrites the value of the pro token and the method with which it has been acquired.
