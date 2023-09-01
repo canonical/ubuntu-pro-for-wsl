@@ -106,5 +106,10 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 func (s *Service) NotifyPurchase(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
 	fetchErr := s.config.FetchMicrosoftStoreSubscription(ctx)
 	info, err := s.GetSubscriptionInfo(ctx, empty)
-	return info, errors.Join(fetchErr, err)
+	e := errors.Join(fetchErr, err)
+	if e != nil {
+		log.Warningf(ctx, "Subscription purchase notification check failed: %v", e)
+	}
+
+	return info, e
 }
