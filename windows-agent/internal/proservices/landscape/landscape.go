@@ -284,16 +284,14 @@ func (c *Client) Stop(ctx context.Context) {
 		c.connMu.Lock()
 		defer c.connMu.Unlock()
 
-		if c.conn == nil {
-			return
+		if c.conn != nil {
+			c.conn.disconnect()
+			c.conn = nil
 		}
 
-		c.conn.disconnect()
 		if err := c.dump(); err != nil {
 			log.Errorf(ctx, "Landscape client: %v", err)
 		}
-
-		c.conn = nil
 	})
 }
 
