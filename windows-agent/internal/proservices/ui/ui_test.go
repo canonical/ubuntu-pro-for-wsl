@@ -237,6 +237,7 @@ func setupService(ctx context.Context, dbDir string, o configOptions) (service u
 	if o.isReadOnlyErr {
 		m.Errors = registry.MockErrOnCreateKey
 	}
+
 	if o.subscriptionErr {
 		m.Errors |= registry.MockErrReadValue
 	}
