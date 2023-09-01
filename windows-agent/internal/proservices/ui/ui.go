@@ -14,16 +14,24 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 )
 
+// Config is a provider for the subcription configuration.
+type Config interface {
+	SetSubscription(ctx context.Context, token string, source config.SubscriptionSource) error
+	IsReadOnly() (bool, error)
+	Subscription(context.Context) (string, config.SubscriptionSource, error)
+	FetchMicrosoftStoreSubscription(context.Context) error
+}
+
 // Service it the UI GRPC service implementation.
 type Service struct {
 	db     *database.DistroDB
-	config *config.Config
+	config Config
 
 	agentapi.UnimplementedUIServer
 }
 
 // New returns a new service handling the UI API.
-func New(ctx context.Context, config *config.Config, db *database.DistroDB) (s Service) {
+func New(ctx context.Context, config Config, db *database.DistroDB) (s Service) {
 	log.Debug(ctx, "Building new GRPC UI service")
 
 	return Service{
