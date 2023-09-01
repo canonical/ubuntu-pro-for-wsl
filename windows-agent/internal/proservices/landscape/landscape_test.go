@@ -746,11 +746,3 @@ func (m mockConfig) LandscapeURL(ctx context.Context) (string, error) {
 	}
 	return m.landscapeURL, nil
 }
-
-func (m mockConfig) Pseudonym() string {
-	return "PSEUDONYM"
-}
-
-func (m mockConfig) Hostname() string {
-	return "HOSTNAME"
-}
