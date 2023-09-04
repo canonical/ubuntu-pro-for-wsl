@@ -460,7 +460,7 @@ func TestAutoReconnection(t *testing.T) {
 	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
 
 	// Restart server at the same address
-	lis, server, mockService = setUpLandscapeMock(t, ctx, lis.Addr().String())
+	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String())
 	defer lis.Close()
 
 	//nolint:errcheck // We don't care
