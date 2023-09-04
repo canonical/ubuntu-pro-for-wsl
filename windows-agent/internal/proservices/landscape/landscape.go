@@ -111,14 +111,15 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 
 	// Dummy connection to indicate that a first attempt was attempted
 	c.conn = &connection{}
-	defer func() {
-		go c.keepConnected(ctx)
-	}()
 
 	address, err := c.conf.LandscapeURL(ctx)
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		go c.keepConnected(ctx, address)
+	}()
 
 	// First connection
 	conn, err := c.connect(ctx, address)
@@ -134,7 +135,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 }
 
 // keepConnected supervises the connection. If it drops, reconnection is attempted.
-func (c *Client) keepConnected(ctx context.Context) {
+func (c *Client) keepConnected(ctx context.Context, address string) {
 	const growthFactor = 2
 	const minWait = time.Second
 	const maxWait = 10 * time.Minute
@@ -170,13 +171,6 @@ func (c *Client) keepConnected(ctx context.Context) {
 			}
 
 			c.conn.disconnect()
-
-			address, err := c.conf.LandscapeURL(ctx)
-			if err != nil {
-				log.Warningf(ctx, "Landscape reconnect: could not get Landscape URL: %v", err)
-				wait = min(growthFactor*wait, maxWait)
-				return true
-			}
 
 			conn, err := c.connect(ctx, address)
 			if err != nil {
