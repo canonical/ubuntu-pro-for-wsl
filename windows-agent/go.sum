@@ -42,8 +42,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 h1:YfGTcFs5YaJlpR0lxVAPD3oFYcez9Pg1w0MUEbG2zB0=
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
-github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230904123735-9febc2d93c4d h1:5NXTsTNnQM2VevsJLVJGISN30YqcLuohaiiTMY+GNF4=
-github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230904123735-9febc2d93c4d/go.mod h1:qFE3nfycqhcaxyJdCv7uqMWmZdtu3DNV81ure93ia+M=
+github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230904124233-dd1d0e5164e2 h1:N5kF9buRrZ6h+F/Od5GXybHfOkkzPZw5B9lNKoIl05Q=
+github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230904124233-dd1d0e5164e2/go.mod h1:qFE3nfycqhcaxyJdCv7uqMWmZdtu3DNV81ure93ia+M=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230817064205-3ab157a2dd98 h1:OWA1rHfyV/iMbJy3cyOgM7AaLJcbl5Dv3em8TaAIFuw=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230817064205-3ab157a2dd98/go.mod h1:OdpvgnvlMNG3PrLDPzsuhjD79V+IVjD2TsBeEyI1hf4=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230828150254-a8f006e71b4b h1:dp4hswjC4bKHAh22oYNSGSBCYB0JUskHLsXp+sXqUpw=

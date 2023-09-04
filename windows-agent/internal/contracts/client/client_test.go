@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
+	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsmockserver"
 	"github.com/stretchr/testify/require"
 )
 

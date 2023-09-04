@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
+	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/ubuntu/decorate"
 )
 
