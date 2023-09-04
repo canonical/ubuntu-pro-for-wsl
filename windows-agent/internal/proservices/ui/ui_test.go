@@ -194,7 +194,7 @@ func TestNotifyPurchase(t *testing.T) {
 
 type mockConfig struct {
 	registryReadOnly   bool // reports registry as read only
-	setSubscriptionErr bool // Config erros out in SetSubscription function
+	setSubscriptionErr bool // Config errors out in SetSubscription function
 	isReadOnlyErr      bool // Config errors out in IsReadOnly function
 	subscriptionErr    bool // Config errors out in Subscription function
 	fetchErr           bool // Config errors out in FetchMicrosoftStoreSubscription function
