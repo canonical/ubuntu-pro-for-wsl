@@ -1,12 +1,13 @@
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230817064205-3ab157a2dd98 h1:zq2spDasCJki5CHSCD1wBRmhPj0HQX0nzGeR2CZBBQY=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230817064205-3ab157a2dd98/go.mod h1:D3cj9QISzFDK2zlj4A1v6i/J2kWg4WG52IuMflEEC5s=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd h1:0fpHhfxce5TibiGftTDc9OFrD/frkHBi1joYsvdnjHg=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
+github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=

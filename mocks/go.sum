@@ -1,9 +1,9 @@
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 h1:YfGTcFs5YaJlpR0lxVAPD3oFYcez9Pg1w0MUEbG2zB0=
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230904083445-4f2e099218bc h1:qKe3ndWJkMomAFCmtISUGPZ91SbLIQw3+ypoAnmZajk=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230904083445-4f2e099218bc/go.mod h1:3S2FHndH2j2e2DICvzm5S1i43QpaYAlrON30KC2IzO0=
-github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230904133558-305417386fde h1:0kzaNFsQd4UUcmqTyanUIiyThtGuQMGKBinC/FcMQKM=
-github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230904133558-305417386fde/go.mod h1:lqO8UB33LPVdfiMDMlc1swo3S9bwqhW8DtO75dgTLWo=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd h1:0fpHhfxce5TibiGftTDc9OFrD/frkHBi1joYsvdnjHg=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
+github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd h1:tWnFwMlpeGLLsnMZKTn2PhERMeu2TljSYjjWXpCIo9U=
+github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd/go.mod h1:lqO8UB33LPVdfiMDMlc1swo3S9bwqhW8DtO75dgTLWo=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=

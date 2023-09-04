@@ -3,8 +3,8 @@ module github.com/canonical/ubuntu-pro-for-windows/tools
 go 1.21.0
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230601072749-e7ce40e197de
-	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230601072749-e7ce40e197de
+	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230905085653-ef791c0e42dd
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
@@ -19,9 +19,11 @@ require (
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 // indirect
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230420065438-5e70ebcb4d27 // indirect
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230420065438-5e70ebcb4d27 // indirect
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230420065438-5e70ebcb4d27 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230905085653-ef791c0e42dd // indirect
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd // indirect
+	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd // indirect
+	github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230905085653-ef791c0e42dd // indirect
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230905085653-ef791c0e42dd // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -32,7 +34,6 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect

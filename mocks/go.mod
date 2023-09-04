@@ -4,8 +4,8 @@ go 1.21.0
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230904083445-4f2e099218bc
-	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230904133558-305417386fde
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd
 	google.golang.org/grpc v1.57.0
 )
 
