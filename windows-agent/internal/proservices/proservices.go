@@ -134,7 +134,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 
 // Stop deallocates resources in the services.
 func (m Manager) Stop(ctx context.Context) {
-	m.landscapeService.Disconnect(ctx)
+	m.landscapeService.Stop(ctx)
 	m.db.Close(ctx)
 }
 
