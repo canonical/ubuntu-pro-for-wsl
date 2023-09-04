@@ -785,7 +785,7 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string) (lis net
 	t.Helper()
 
 	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp", addr) // Autoselect port
+	lis, err := cfg.Listen(ctx, "tcp", addr)
 	require.NoError(t, err, "Setup: can't listen")
 
 	server = grpc.NewServer()
