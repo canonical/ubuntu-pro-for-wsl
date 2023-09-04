@@ -1,4 +1,4 @@
-package client_test
+package contractclient_test
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractclient"
 	"github.com/stretchr/testify/require"
 )
 
@@ -72,7 +72,7 @@ func TestGetServerAccessToken(t *testing.T) {
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.New(u, h)
+			client := contractclient.New(u, h)
 			ctx := context.Background()
 			if tc.nilContext {
 				ctx = nil
@@ -155,7 +155,7 @@ func TestGetProToken(t *testing.T) {
 			u, err := url.Parse("https://localhost:1234")
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.New(u, h)
+			client := contractclient.New(u, h)
 			ctx := context.Background()
 			if tc.nilContext {
 				ctx = nil
@@ -236,7 +236,7 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.New(u, &http.Client{Timeout: 3 * time.Second})
+			client := contractclient.New(u, &http.Client{Timeout: 3 * time.Second})
 
 			clientCtx, clientCancel := context.WithCancel(ctx)
 			if tc.preCancel {
@@ -318,7 +318,7 @@ func TestGetProTokenNet(t *testing.T) {
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
 			require.NoError(t, err, "Setup: URL parsing should not fail")
 
-			client := client.New(u, &http.Client{Timeout: 3 * time.Second})
+			client := contractclient.New(u, &http.Client{Timeout: 3 * time.Second})
 
 			clientCtx, clientCancel := context.WithCancel(ctx)
 			if tc.preCancel {
