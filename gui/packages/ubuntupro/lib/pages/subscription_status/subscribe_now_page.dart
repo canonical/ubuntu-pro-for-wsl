@@ -55,7 +55,7 @@ class SubscribeNowPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  AppLocalizations.of(context).applyingProToken(token.value),
+                  lang.applyingProToken(token.value),
                 ),
               ),
             );
