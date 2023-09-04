@@ -15,12 +15,12 @@ import (
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
+	"github.com/canonical/ubuntu-pro-for-windows/mocks/landscape/landscapemockservice"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/landscapemockservice"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
