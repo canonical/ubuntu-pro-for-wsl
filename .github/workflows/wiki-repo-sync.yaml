@@ -18,11 +18,11 @@ jobs:
     if: github.event_name == 'gollum'
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: repo
       - name: Checkout wiki
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: wiki
           repository: canonical/ubuntu-pro-for-windows.wiki
@@ -47,11 +47,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: repo
       - name: Checkout wiki
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: wiki
           repository: canonical/ubuntu-pro-for-windows.wiki
