@@ -123,7 +123,7 @@ func TestConnect(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx)
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
 			defer lis.Close()
 
 			conf := &mockConfig{
@@ -242,7 +242,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx)
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
 
 			conf := &mockConfig{
 				proToken:     "TOKEN",
@@ -408,7 +408,7 @@ func TestAutoReconnection(t *testing.T) {
 		ctx = wsl.WithMock(ctx, mock)
 	}
 
-	lis, server, mockService := setUpLandscapeMock(t, ctx)
+	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
 	defer lis.Close()
 	defer server.Stop()
 
@@ -459,17 +459,13 @@ func TestAutoReconnection(t *testing.T) {
 		return !client.Connected()
 	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
 
-	// Restart server
-	lis, server, _ = setUpLandscapeMock(t, ctx)
+	// Restart server at the same address
+	lis, server, mockService = setUpLandscapeMock(t, ctx, lis.Addr().String())
 	defer lis.Close()
 
 	//nolint:errcheck // We don't care
 	go server.Serve(lis)
 	defer server.Stop()
-
-	conf.mu.Lock()
-	conf.landscapeURL = lis.Addr().String()
-	conf.mu.Unlock()
 
 	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
 }
@@ -545,7 +541,7 @@ func TestReceiveCommands(t *testing.T) {
 				t.Skip("This test can only run with the mock")
 			}
 
-			lis, server, service := setUpLandscapeMock(t, ctx)
+			lis, server, service := setUpLandscapeMock(t, ctx, "localhost:")
 			defer lis.Close()
 
 			//nolint:errcheck // We don't care about these errors
@@ -785,11 +781,11 @@ func isAppxInstalled(t *testing.T, appxPackage string) bool {
 }
 
 //nolint:revive // Context goes after testing.T
-func setUpLandscapeMock(t *testing.T, ctx context.Context) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
+func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
 	t.Helper()
 
 	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
+	lis, err := cfg.Listen(ctx, "tcp", addr) // Autoselect port
 	require.NoError(t, err, "Setup: can't listen")
 
 	server = grpc.NewServer()
