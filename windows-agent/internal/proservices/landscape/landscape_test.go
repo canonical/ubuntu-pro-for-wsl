@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -20,12 +21,20 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/landscapemockservice"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 )
+
+func TestMain(m *testing.M) {
+	log.SetLevel(log.DebugLevel)
+
+	exit := m.Run()
+	defer os.Exit(exit)
+}
 
 func TestNew(t *testing.T) {
 	if wsl.MockAvailable() {
@@ -96,9 +105,8 @@ func TestConnect(t *testing.T) {
 		wantErr           bool
 		wantDistroSkipped bool
 	}{
-		"Success in first contcat":     {},
+		"Success in first contact":     {},
 		"Success in non-first contact": {uid: "123"},
-		"Success":                      {},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
 		"Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
@@ -115,14 +123,8 @@ func TestConnect(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			var cfg net.ListenConfig
-			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
-			require.NoError(t, err, "Setup: can't listen")
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
 			defer lis.Close()
-
-			server := grpc.NewServer()
-			mockService := landscapemockservice.New()
-			landscapeapi.RegisterLandscapeHostAgentServer(server, mockService)
 
 			conf := &mockConfig{
 				proToken:     "TOKEN",
@@ -171,7 +173,7 @@ func TestConnect(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "Connect should return no errors")
-			defer client.Disconnect(ctx)
+			defer client.Stop(ctx)
 
 			require.True(t, client.Connected(), "Connected should have returned false after succeeding to connect")
 
@@ -179,8 +181,8 @@ func TestConnect(t *testing.T) {
 				return len(mockService.MessageLog()) > 0
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a message from the client")
 
-			client.Disconnect(ctx)
-			require.NotPanics(t, func() { client.Disconnect(ctx) }, "client.Disconnect should not panic, even when called twice")
+			client.Stop(ctx)
+			require.NotPanics(t, func() { client.Stop(ctx) }, "client.Stop should not panic, even when called twice")
 
 			require.False(t, client.Connected(), "Connected should have returned false after disconnecting")
 
@@ -240,14 +242,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			var cfg net.ListenConfig
-			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
-			require.NoError(t, err, "Setup: can't listen")
-			defer lis.Close()
-
-			server := grpc.NewServer()
-			mockService := landscapemockservice.New()
-			landscapeapi.RegisterLandscapeHostAgentServer(server, mockService)
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
 
 			conf := &mockConfig{
 				proToken:     "TOKEN",
@@ -291,7 +286,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			err = client.Connect(ctx)
 			require.NoError(t, err, "Setup: Connect should return no errors")
-			defer client.Disconnect(ctx)
+			defer client.Stop(ctx)
 
 			// Defining wants
 			wantUIDprefix := "ServerAssignedUID"
@@ -339,7 +334,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			conf.proToken = "NEW_TOKEN"
 
 			if tc.disconnectBeforeSend {
-				client.Disconnect(ctx)
+				client.Stop(ctx)
 			}
 
 			wantHostToken = conf.proToken
@@ -403,6 +398,76 @@ func assertHasPrefix(t *testing.T, wantPrefix, got string, msgAndArgs ...interfa
 	errMsg := fmt.Sprintf("String does not have prefix.\n    Prefix: %s\n    String: %s\n", wantPrefix, got)
 	assert.Fail(t, errMsg, msgAndArgs)
 	return false
+}
+
+func TestAutoReconnection(t *testing.T) {
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		mock := wslmock.New()
+		ctx = wsl.WithMock(ctx, mock)
+	}
+
+	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
+	defer lis.Close()
+	defer server.Stop()
+
+	conf := &mockConfig{
+		proToken:     "TOKEN",
+		landscapeURL: lis.Addr().String(),
+	}
+
+	db, err := database.New(ctx, t.TempDir(), conf)
+	require.NoError(t, err, "Setup: database New should not return an error")
+
+	const hostname = "HOSTNAME"
+
+	client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname(hostname))
+	require.NoError(t, err, "Landscape NewClient should not return an error")
+	defer client.Stop(ctx)
+
+	err = client.Connect(ctx)
+	require.Error(t, err, "Connect should have failed because the server is not running")
+
+	require.False(t, client.Connected(), "Client should not be connected because the server is not running")
+
+	//nolint:errcheck // We don't care about these errors
+	go server.Serve(lis)
+	defer server.Stop()
+
+	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after starting the server")
+
+	hosts := mockService.Hosts()
+	require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
+
+	for uid := range hosts {
+		err = mockService.Disconnect(uid)
+		require.NoError(t, err, "Server should not fail to disconnect the client")
+	}
+
+	// Fast tickrate to ensure we detect the disconnection. The client reconnects after 1s so we should always win.
+	const tick = 10 * time.Millisecond
+	require.Eventually(t, func() bool {
+		return !client.Connected()
+	}, 5*time.Second, tick, "Client should have disconnected after the stream is dropped")
+
+	// Detecting reconnection
+	require.Eventually(t, client.Connected, 5*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
+
+	server.Stop()
+	require.Eventually(t, func() bool {
+		return !client.Connected()
+	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
+
+	// Restart server at the same address
+	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String())
+	defer lis.Close()
+
+	//nolint:errcheck // We don't care
+	go server.Serve(lis)
+	defer server.Stop()
+
+	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
 }
 
 type command int
@@ -476,14 +541,8 @@ func TestReceiveCommands(t *testing.T) {
 				t.Skip("This test can only run with the mock")
 			}
 
-			var cfg net.ListenConfig
-			lis, err := cfg.Listen(ctx, "tcp", "localhost:0") // Autoselect port
-			require.NoError(t, err, "Setup: can't listen")
+			lis, server, service := setUpLandscapeMock(t, ctx, "localhost:")
 			defer lis.Close()
-
-			server := grpc.NewServer()
-			service := landscapemockservice.New()
-			landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
@@ -516,7 +575,7 @@ func TestReceiveCommands(t *testing.T) {
 
 			err = client.Connect(ctx)
 			require.NoError(t, err, "Setup: Connect should return no errors")
-			defer client.Disconnect(ctx)
+			defer client.Stop(ctx)
 
 			require.Eventually(t, func() bool {
 				return client.Connected() && client.UID() != "" && service.IsConnected(client.UID())
@@ -546,7 +605,7 @@ func TestReceiveCommands(t *testing.T) {
 			}
 
 			// Disconnect to ensure the command has completed
-			client.Disconnect(ctx)
+			client.Stop(ctx)
 
 			disableMockErrors()
 			requireCommandResult(t, ctx, tc.command, d, client, !tc.wantFailure)
@@ -721,26 +780,49 @@ func isAppxInstalled(t *testing.T, appxPackage string) bool {
 	return strings.Contains(string(out), "Ok")
 }
 
+//nolint:revive // Context goes after testing.T
+func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
+	t.Helper()
+
+	var cfg net.ListenConfig
+	lis, err := cfg.Listen(ctx, "tcp", addr)
+	require.NoError(t, err, "Setup: can't listen")
+
+	server = grpc.NewServer()
+	service = landscapemockservice.New()
+	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
+
+	return lis, server, service
+}
+
 type mockConfig struct {
 	proToken     string
 	landscapeURL string
 
 	proTokenErr     bool
 	landscapeURLErr bool
+
+	mu sync.Mutex
 }
 
-func (m mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (m *mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
 	return nil, nil
 }
 
-func (m mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
+func (m *mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.proTokenErr {
 		return "", config.SubscriptionNone, errors.New("Mock error")
 	}
 	return m.proToken, config.SubscriptionUser, nil
 }
 
-func (m mockConfig) LandscapeURL(ctx context.Context) (string, error) {
+func (m *mockConfig) LandscapeURL(ctx context.Context) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.landscapeURLErr {
 		return "", errors.New("Mock error")
 	}

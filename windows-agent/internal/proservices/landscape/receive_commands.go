@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os/user"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
@@ -13,24 +14,24 @@ import (
 	"github.com/ubuntu/gowsl"
 )
 
-func (c *Client) receiveCommands(ctx context.Context) {
-	defer c.connected.Store(false)
-
+func (c *Client) receiveCommands(conn *connection) error {
 	for {
 		select {
-		case <-ctx.Done():
-			return
+		case <-conn.ctx.Done():
+			return nil
 		default:
 		}
 
-		command, err := c.grpcClient.Recv()
+		command, err := conn.grpcClient.Recv()
+		if errors.Is(err, io.EOF) {
+			return errors.New("stream closed by server")
+		}
 		if err != nil {
-			log.Error(ctx, err.Error())
-			return
+			return err
 		}
 
-		if err := c.exec(ctx, command); err != nil {
-			log.Errorf(ctx, "could not execute command: %v", err)
+		if err := c.exec(conn.ctx, command); err != nil {
+			log.Errorf(conn.ctx, "could not execute command: %v", err)
 		}
 	}
 }
