@@ -36,6 +36,14 @@
     "manageSubscription": "Manage your subscription",
     "orgManaged": "This subscription is owned and managed by your company",
     "manuallyManaged": "Lorem ipsum...",
-    "detachPro": "Detach Pro"
+    "detachPro": "Detach Pro",
+
+    "updatingSubscriptionInfo": "Updating the subscription information.",
+    "purchaseStatusSuccess":"Thank you for subscribing to Ubuntu Pro.",
+    "purchaseStatusAlreadyPurchased": "You are already subscribed to Pro.",
+    "purchaseStatusUserGaveUp":"Purchase attempt was canceled.",
+    "purchaseStatusNetwork":"A network issue prevented the purchase to proceed. Please try again once connected.",
+    "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
+    "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app."
 }
 
