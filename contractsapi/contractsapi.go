@@ -17,8 +17,10 @@ const (
 	//nolint:gosec // G101 false positive, this is not a credential
 	// ADTokenKey is the JSON key of the response payload of the /token endpoint.
 	ADTokenKey = "azure_ad_token"
+
 	// JWTKey is the JSON key of the request payload of the /susbcription endpoint.
 	JWTKey = "ms_store_id_key"
+
 	// ProTokenKey is the JSON key of a successful response payload of the /subscription endpoint.
 	ProTokenKey = "contract_token"
 )
