@@ -40,4 +40,8 @@ class AgentApiClient {
   /// Returns information about the current subscription, if any.
   Future<SubscriptionInfo> subscriptionInfo() =>
       _client.getSubscriptionInfo(Empty());
+
+  /// Notifies the background agent of a succesfull purchase transaction on MS Store.
+  /// It's expected that an updated SubscriptionInfo will be returned.
+  Future<SubscriptionInfo> notifyPurchase() => _client.notifyPurchase(Empty());
 }
