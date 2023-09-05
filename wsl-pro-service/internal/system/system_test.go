@@ -385,6 +385,13 @@ func TestLandscapeEnable(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "LandscapeEnable should have succeeded")
+
+			exeProof := s.Path("/.landscape-enabled")
+			require.FileExists(t, exeProof, "Landscape executable never ran")
+			out, err := os.ReadFile(exeProof)
+			require.NoErrorf(t, err, "could not read file %q", exeProof)
+
+			require.Equal(t, config, string(out), "Landscape executable did not receive the right config")
 		})
 	}
 }
@@ -420,6 +427,8 @@ func TestLandscapeDisable(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "LandscapeDisable should have succeeded")
+
+			require.FileExists(t, s.Path("/.landscape-disabled"), "Landscape executable never ran")
 		})
 	}
 }

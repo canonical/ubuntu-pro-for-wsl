@@ -179,6 +179,17 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			require.NoError(t, err, "ApplyLandscapeConfig call should return no error")
 
 			require.NotNil(t, empty, "ApplyLandscapeConfig should not return a nil response")
+
+			if tc.emptyConfig {
+				require.FileExists(t, mock.Path("/.landscape-disabled"), "Landscape executable was not called to disable")
+				return
+			}
+
+			p := mock.Path("/.landscape-enabled")
+			require.FileExists(t, p, "Landscape executable was not called to enable")
+			out, err := os.ReadFile(p)
+			require.NoError(t, err, "Could not read .landscape-enabled file")
+			require.Equal(t, config, string(out), "Landscape config does not match expectation")
 		})
 	}
 }

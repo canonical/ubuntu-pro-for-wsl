@@ -324,6 +324,18 @@ func LandscapeConfigMock(t *testing.T) {
 				return exitError
 			}
 
+			root := os.Getenv(FileSystemRoot)
+			if root == "" {
+				fmt.Fprintf(os.Stderr, "Missing environment variable %s\n", FileSystemRoot)
+				return exitBadUsage
+			}
+
+			// Proving that this executable has run
+			p := filepath.Join(root, ".landscape-disabled")
+			if err := os.WriteFile(p, []byte{}, 0600); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
+			}
+
 			return exitOk
 		case 3:
 			// landscape-config [--config|-c] FILENAME --silent
@@ -363,6 +375,17 @@ func LandscapeConfigMock(t *testing.T) {
 			if stat.Mode()|0004 == 0 {
 				fmt.Fprintf(os.Stderr, "Could not read config file %q (no read access for Landscape)\n", path)
 				return exitError
+			}
+
+			// Proving that this executable has run
+			config, err := os.ReadFile(path)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not read file: %v", err)
+			}
+
+			p := filepath.Join(root, ".landscape-enabled")
+			if err := os.WriteFile(p, config, 0600); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
 			}
 
 			return exitOk
