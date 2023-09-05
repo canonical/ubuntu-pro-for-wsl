@@ -3,7 +3,6 @@ package ui_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -106,10 +105,10 @@ func TestAttachPro(t *testing.T) {
 }
 
 var (
-	none         = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_None{})
-	user         = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_User{})
-	organization = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_Organization{})
-	store        = fmt.Sprintf("%T", &agentapi.SubscriptionInfo_MicrosoftStore{})
+	none         = &agentapi.SubscriptionInfo_None{}
+	user         = &agentapi.SubscriptionInfo_User{}
+	organization = &agentapi.SubscriptionInfo_Organization{}
+	store        = &agentapi.SubscriptionInfo_MicrosoftStore{}
 )
 
 func TestGetSubscriptionInfo(t *testing.T) {
@@ -118,7 +117,7 @@ func TestGetSubscriptionInfo(t *testing.T) {
 	testCases := map[string]struct {
 		config mockConfig
 
-		wantType      string
+		wantType      interface{}
 		wantImmutable bool
 		wantErr       bool
 	}{
@@ -156,7 +155,7 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			}
 			require.NoError(t, err, "GetSubscriptionInfo should return no errors")
 
-			require.Equal(t, tc.wantType, fmt.Sprintf("%T", info.SubscriptionType), "Mismatched subscription types")
+			require.IsType(t, tc.wantType, info.SubscriptionType, "Mismatched subscription types")
 			require.Equal(t, tc.wantImmutable, info.Immutable, "Mismatched value for ReadOnly")
 		})
 	}
@@ -168,7 +167,7 @@ func TestNotifyPurchase(t *testing.T) {
 	testCases := map[string]struct {
 		config mockConfig
 
-		wantType      string
+		wantType      interface{}
 		wantImmutable bool
 		wantErr       bool
 	}{
@@ -200,7 +199,7 @@ func TestNotifyPurchase(t *testing.T) {
 			}
 			require.NoError(t, err, "NotifyPurchase should return no errors")
 
-			require.Equal(t, tc.wantType, fmt.Sprintf("%T", info.SubscriptionType), "Mismatched subscription types")
+			require.IsType(t, tc.wantType, info.SubscriptionType, "Mismatched subscription types")
 			require.Equal(t, tc.wantImmutable, info.Immutable, "Mismatched value for ReadOnly")
 		})
 	}
