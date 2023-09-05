@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:p4w_ms_store/p4w_ms_store_method_channel.dart';
@@ -111,8 +112,36 @@ void main() {
           await tester.tap(button);
           await tester.pumpAndSettle();
 
-          // TODO: Update the expectation when the GUI becomes able to notify the agent of a successful purchase.
+          // TODO: Update the expectation when the agent becomes able to reply the notification without crashing.
+          // Most likely when the MS Store mock becomes available.
           expect(find.byType(SubscribeNowPage), findsOneWidget);
+        },
+      );
+      testWidgets(
+        'purchase failure',
+        (tester) async {
+          // For this test case the purchase operation must always fail.
+          binding.defaultBinaryMessenger.setMockMethodCallHandler(proChannel,
+              (call) async {
+            // The exact delay duration doesn't matter. Still good to have some delay
+            // to ensure the client code won't expect things will respond instantly.
+            await Future.delayed(const Duration(milliseconds: 20));
+            return PurchaseStatus.serverError.index;
+          });
+
+          await app.main();
+          await tester.pumpAndSettle();
+
+          // The "subscribe now page" is only shown if the GUI communicates with the background agent.
+          final l10n = tester.l10n<SubscribeNowPage>();
+          final button = find.text(l10n.subscribeNow);
+          expect(button, findsOneWidget);
+
+          await tester.tap(button);
+          await tester.pumpAndSettle();
+
+          expect(find.byType(SubscribeNowPage), findsOneWidget);
+          expect(find.byType(SnackBar), findsOneWidget);
         },
       );
     },
