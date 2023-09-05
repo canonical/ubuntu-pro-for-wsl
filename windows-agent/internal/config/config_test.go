@@ -19,11 +19,11 @@ const (
 	untouched registryState = 0x00 // Nothing UbuntuPro-related exists, as though the program had never ran before
 	keyExists registryState = 0x01 // Key exists but is empty
 
-	orgTokenExists              = keyExists | 1<<iota // Key exists, organization token field exists
-	userTokenExists                                   // Key exists, user token field exists
-	storeTokenExists                                  // Key exists, microsoft store token field exists
-	landscapeAgentURLExists                           // Key exists, landscape agent URL field exists
-	landscapeClientConfigExists                       // Key exists, landscape client config field exists
+	orgTokenExists              = keyExists | 1<<(iota+2) // Key exists, organization token field exists
+	userTokenExists                                       // Key exists, user token field exists
+	storeTokenExists                                      // Key exists, microsoft store token field exists
+	landscapeAgentURLExists                               // Key exists, landscape agent URL field exists
+	landscapeClientConfigExists                           // Key exists, landscape client config field exists
 
 	orgTokenHasValue              = orgTokenExists | 1<<16              // Key exists, organization token field exists and is not empty
 	userTokenHasValue             = userTokenExists | 1<<17             // Key exists, user token field exists and is not empty
