@@ -66,7 +66,8 @@ func NewLandscapeConfigure(ctx context.Context, Config string, distroName string
 	}, nil
 }
 
-// Execute is needed to fulfil Task.
+// Execute sends the config to the target WSL-Pr-oService so that the distro can be
+// registered in Landscape.
 func (t LandscapeConfigure) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
 	_, err := client.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: t.Config})
 	if err != nil {
@@ -75,7 +76,7 @@ func (t LandscapeConfigure) Execute(ctx context.Context, client wslserviceapi.WS
 	return nil
 }
 
-// String is needed to fulfil Task.
+// String returns the name of the task.
 func (t LandscapeConfigure) String() string {
 	return "LandscapeConfigure"
 }
