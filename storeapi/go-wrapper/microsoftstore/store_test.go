@@ -3,6 +3,7 @@ package microsoftstore_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,8 +12,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/microsoftstore"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/stretchr/testify/require"
 )
 
@@ -102,13 +102,13 @@ func buildStoreAPI(ctx context.Context) error {
 		`-verbosity:normal`,
 	)
 
-	log.Infof(ctx, "Building store api DLL")
+	log.Printf("Building store api DLL")
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("could not build store api DLL: %v. Log:\n%s", err, out)
 	}
 
-	log.Infof(ctx, "Built store api DLL")
+	log.Printf("Built store api DLL")
 
 	return nil
 }
