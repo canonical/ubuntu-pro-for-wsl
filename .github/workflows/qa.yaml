@@ -246,7 +246,8 @@ jobs:
 
   build-wsl-pro-service:
     name: Build wsl-pro-service debian package
-    runs-on: ubuntu-latest
+    # Using self-hosted runner because tests have a tendency to run out of memory
+    runs-on: [self-hosted, Linux, X64, small]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
