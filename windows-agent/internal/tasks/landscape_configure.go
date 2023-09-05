@@ -66,9 +66,10 @@ func NewLandscapeConfigure(ctx context.Context, Config string, distroName string
 	}, nil
 }
 
-// Execute sends the config to the target WSL-Pr-oService so that the distro can be
+// Execute sends the config to the target WSL-Pro-Service so that the distro can be
 // registered in Landscape.
 func (t LandscapeConfigure) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
+	// First value is a dummy message, we ignore it. We only care about success/failure.
 	_, err := client.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: t.Config})
 	if err != nil {
 		return task.NeedsRetryError{SourceErr: err}
