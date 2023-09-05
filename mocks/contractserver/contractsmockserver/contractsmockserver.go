@@ -31,6 +31,7 @@ const (
 type Server struct {
 	Token        Endpoint
 	Subscription Endpoint
+	Address      string
 
 	server *http.Server
 	mu     sync.Mutex
@@ -61,6 +62,7 @@ func NewServer() *Server {
 	return &Server{
 		Token:        Endpoint{OnSuccess: Response{Value: DefaultADToken, Status: http.StatusOK}},
 		Subscription: Endpoint{OnSuccess: Response{Value: DefaultProToken, Status: http.StatusOK}},
+		Address:      "localhost:0",
 	}
 }
 
@@ -92,7 +94,7 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 	}
 
 	var lc net.ListenConfig
-	lis, err := lc.Listen(ctx, "tcp", "localhost:")
+	lis, err := lc.Listen(ctx, "tcp", s.Address)
 	if err != nil {
 		return "", fmt.Errorf("failed to listen over tcp: %v", err)
 	}
@@ -108,7 +110,7 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 	}
 
 	s.server = &http.Server{
-		Addr:              addr,
+		Addr:              lis.Addr().String(),
 		Handler:           mux,
 		ReadHeaderTimeout: 3 * time.Second,
 	}

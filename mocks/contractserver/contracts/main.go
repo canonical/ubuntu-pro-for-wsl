@@ -23,6 +23,7 @@ func main() {
 	rootCmd.AddCommand(runCmd)
 
 	rootCmd.PersistentFlags().StringP("output", "o", "", "File where relevant non-log output will be written to")
+	runCmd.Flags().StringP("address", "a", "", "Overrides the address where the server will be hosted")
 
 	if err := rootCmd.Execute(); err != nil {
 		slog.Error("Error executing", "error", err)
@@ -90,6 +91,10 @@ The outfile, if provided, will contain the address.`,
 				slog.Error("Could not unmarshal settings", "error", err.Error())
 				os.Exit(1)
 			}
+		}
+
+		if addr := cmd.Flag("address").Value.String(); addr != "" {
+			sv.Address = addr
 		}
 
 		addr, err := sv.Serve(ctx)
