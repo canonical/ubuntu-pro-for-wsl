@@ -18,6 +18,20 @@ import (
 	wslmock "github.com/ubuntu/gowsl/mock"
 )
 
+func TestNew(t *testing.T) {
+	ctx := context.Background()
+	t.Parallel()
+
+	dir := t.TempDir()
+	db, err := database.New(ctx, dir, nil)
+	require.NoError(t, err, "Setup: empty database New() should return no error")
+	defer db.Close(ctx)
+
+	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+
+	_ = ui.New(context.Background(), conf, db)
+}
+
 // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 //
 //nolint:tparallel
