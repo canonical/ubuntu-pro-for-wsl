@@ -137,4 +137,19 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
           ),
         )),
       ) as _i5.Future<_i3.SubscriptionInfo>);
+  @override
+  _i5.Future<_i3.SubscriptionInfo> notifyPurchase() => (super.noSuchMethod(
+        Invocation.method(
+          #notifyPurchase,
+          [],
+        ),
+        returnValue:
+            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+          this,
+          Invocation.method(
+            #notifyPurchase,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i3.SubscriptionInfo>);
 }
