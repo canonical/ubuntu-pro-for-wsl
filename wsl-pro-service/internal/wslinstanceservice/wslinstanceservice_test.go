@@ -138,16 +138,11 @@ func TestApplyLandscapeConfig(t *testing.T) {
 		wantErr bool
 	}{
 		// Enable
-		"Success enabling": {},
-
-		"Error enabling when the disabling landscape-config command fails": {disableErr: true, wantErr: true},
-		"Error enabling when the enabling landscape-config command fails":  {enableErr: true, wantErr: true},
-
-		// Disable
+		"Success enabling":  {},
 		"Success disabling": {emptyConfig: true},
-		"Success disabling even when the enable command is broken": {emptyConfig: true, enableErr: true},
 
-		"Error disabling when the disabling landscape-config command fails": {emptyConfig: true, disableErr: true, wantErr: true},
+		"Error enabling when landscape-config fails":            {enableErr: true, wantErr: true},
+		"Error disabling when landscape-config --disable fails": {emptyConfig: true, disableErr: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {

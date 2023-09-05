@@ -101,18 +101,13 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.L
 	conf := msg.GetConfiguration()
 	if conf == "" {
 		log.Info(ctx, "ApplyLandscapeConfig: Received empty config: disabling")
-	} else {
-		log.Infof(ctx, "ApplyLandscapeConfig: Received config: registering")
-	}
-
-	if err := s.system.LandscapeDisable(ctx); err != nil {
-		return nil, err
-	}
-
-	if conf == "" {
+		if err := s.system.LandscapeDisable(ctx); err != nil {
+			return nil, err
+		}
 		return &wslserviceapi.Empty{}, nil
 	}
 
+	log.Infof(ctx, "ApplyLandscapeConfig: Received config: registering")
 	if err := s.system.LandscapeEnable(ctx, conf); err != nil {
 		return nil, err
 	}
