@@ -305,7 +305,7 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 
 	if readOnly {
 		// No need to contact the store because we cannot change the subscription
-		return nil
+		return fmt.Errorf("subscription cannot be user-managed")
 	}
 
 	proToken, err := contracts.ProToken(ctx)

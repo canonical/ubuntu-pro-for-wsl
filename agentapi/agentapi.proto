@@ -10,6 +10,7 @@ service UI {
     rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
     rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
+    rpc NotifyPurchase(Empty) returns (SubscriptionInfo) {}
 }
 
 message ProAttachInfo {
