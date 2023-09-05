@@ -175,7 +175,14 @@ func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 }
 
 // handle extracts common boilerplate from endpoints.
-func (s *Server) handle(w http.ResponseWriter, r *http.Request, wantMethod string, endpoint Endpoint) error {
+func (s *Server) handle(w http.ResponseWriter, r *http.Request, wantMethod string, endpoint Endpoint) (err error) {
+	slog.Info("Received request", "endpoint", r.URL.Path, "method", r.Method)
+	defer func() {
+		if err != nil {
+			slog.Error("bad request", "error", err, "endpoint", r.URL.Path, "method", r.Method)
+		}
+	}()
+
 	if r.Method != wantMethod {
 		w.WriteHeader(http.StatusBadRequest)
 		return fmt.Errorf("this endpoint only supports %s", wantMethod)
@@ -183,7 +190,7 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request, wantMethod strin
 
 	if endpoint.Blocked {
 		<-s.done
-		slog.Debug("Server context was cancelled. Exiting", "endpoint", r.URL)
+		slog.Debug("Server context was cancelled. Exiting", "endpoint", r.URL.Path)
 		return errors.New("server stopped")
 	}
 

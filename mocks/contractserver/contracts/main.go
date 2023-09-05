@@ -4,12 +4,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slog"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,11 +18,28 @@ func main() {
 	rootCmd := cobra.Command{
 		Use:   execName(),
 		Short: "A mock contract server for Ubuntu Pro For Windows testing",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Force a visit of the local flags so persistent flags for all parents are merged.
+			cmd.LocalFlags()
+
+			// command parsing has been successful. Returns to not print usage anymore.
+			cmd.SilenceUsage = true
+
+			v := cmd.Flag("verbosity").Value.String()
+			n, err := strconv.Atoi(v)
+			if err != nil {
+				return fmt.Errorf("could not parse verbosity: %v", err)
+			}
+
+			setVerboseMode(n)
+			return nil
+		},
 	}
 
 	rootCmd.AddCommand(defaultsCmd)
 	rootCmd.AddCommand(runCmd)
 
+	rootCmd.PersistentFlags().CountP("verbosity", "v", "WARNING (-v) INFO (-vv), DEBUG (-vvv)")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "File where relevant non-log output will be written to")
 	runCmd.Flags().StringP("address", "a", "", "Overrides the address where the server will be hosted")
 
@@ -31,6 +49,24 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+// setVerboseMode changes the verbosity of the logs.
+func setVerboseMode(n int) {
+	var level slog.Level
+	switch n {
+	case 0:
+		level = slog.LevelError
+	case 1:
+		level = slog.LevelWarn
+	case 2:
+		level = slog.LevelInfo
+	default:
+		level = slog.LevelDebug
+	}
+
+	h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})
+	slog.SetDefault(slog.New(h))
 }
 
 func execName() string {
