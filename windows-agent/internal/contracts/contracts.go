@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/client"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractclient"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/microsoftstore"
 	"github.com/ubuntu/decorate"
 )
@@ -47,7 +47,7 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 		opts.proURL = url
 	}
 
-	contractClient := client.New(opts.proURL, &http.Client{Timeout: 30 * time.Second})
+	contractClient := contractclient.New(opts.proURL, &http.Client{Timeout: 30 * time.Second})
 
 	token, err = proToken(ctx, contractClient)
 	if err != nil {
@@ -57,7 +57,7 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 	return token, nil
 }
 
-func proToken(ctx context.Context, serverClient *client.Client) (proToken string, err error) {
+func proToken(ctx context.Context, serverClient *contractclient.Client) (proToken string, err error) {
 	defer decorate.OnError(&err, "could not obtain pro token")
 
 	expiration, err := microsoftstore.GetSubscriptionExpirationDate()

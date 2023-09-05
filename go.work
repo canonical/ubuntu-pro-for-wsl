@@ -3,7 +3,9 @@ go 1.21.0
 use (
 	./agentapi
 	./common
+	./contractsapi
 	./end-to-end
+	./mocks
 	./tools
 	./windows-agent
 	./wsl-pro-service

@@ -4,9 +4,11 @@ go 1.21.0
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230817064205-3ab157a2dd98
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230828150254-a8f006e71b4b
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230817064205-3ab157a2dd98
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230905085653-ef791c0e42dd
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.1
 	github.com/sirupsen/logrus v1.9.3

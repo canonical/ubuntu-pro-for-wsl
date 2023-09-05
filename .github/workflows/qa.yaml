@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agentapi", "windows-agent", "wsl-pro-service", "end-to-end", "common"]
+        subproject: ["agentapi", "contractsapi", "mocks", "windows-agent", "wsl-pro-service", "end-to-end", "common"]
         exclude:
           - os: windows
             subproject: wsl-pro-service

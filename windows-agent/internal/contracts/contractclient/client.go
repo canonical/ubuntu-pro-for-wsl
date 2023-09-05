@@ -1,5 +1,5 @@
-// Package client interfaces with the Contracts Server backend.
-package client
+// Package contractclient interfaces with the Contracts Server backend.
+package contractclient
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractsapi"
+	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/ubuntu/decorate"
 )
 
