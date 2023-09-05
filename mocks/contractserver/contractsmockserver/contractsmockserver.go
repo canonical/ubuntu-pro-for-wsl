@@ -34,7 +34,7 @@ type Server struct {
 	Address      string
 
 	server *http.Server
-	mu     sync.Mutex
+	mu     sync.RWMutex
 
 	done chan struct{}
 }
@@ -76,9 +76,9 @@ func (s *Server) Stop() error {
 	}
 
 	err := s.server.Close()
-	s.server = nil
+	<-s.done
 
-	close(s.done)
+	s.server = nil
 
 	return err
 }
@@ -118,6 +118,7 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 	s.done = make(chan struct{})
 
 	go func() {
+		defer close(s.done)
 		if err := s.server.Serve(lis); err != nil && err != http.ErrServerClosed {
 			slog.Error("Failed to start the HTTP server", "error", err)
 		}
