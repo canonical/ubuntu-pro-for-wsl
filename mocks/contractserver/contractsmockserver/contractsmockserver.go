@@ -126,21 +126,8 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 
 // handleToken implements the /token endpoint according to the response options supplied.
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "this endpoint only supports GET")
-		return
-	}
-
-	if s.Token.Blocked {
-		<-s.done
-		slog.Debug("Token: server context was cancelled, exiting")
-		return
-	}
-
-	if s.Token.OnSuccess.Status != 200 {
-		w.WriteHeader(s.Token.OnSuccess.Status)
-		fmt.Fprintf(w, "mock error: %d", s.Token.OnSuccess.Status)
+	if err := s.handle(w, r, http.MethodGet, s.Token); err != nil {
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
@@ -153,21 +140,8 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 
 // handleSubscription implements the /susbcription endpoint according to the response options supplied.
 func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "this endpoint only supports POST")
-		return
-	}
-
-	if s.Subscription.Blocked {
-		<-s.done
-		slog.Debug("Subscription: server context was cancelled, exiting")
-		return
-	}
-
-	if s.Subscription.OnSuccess.Status != 200 {
-		w.WriteHeader(s.Subscription.OnSuccess.Status)
-		fmt.Fprintln(w, "mock error")
+	if err := s.handle(w, r, http.MethodPost, s.Subscription); err != nil {
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
@@ -196,4 +170,25 @@ func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "failed to write the response: %v", err)
 		return
 	}
+}
+
+// handle extracts common boilerplate from endpoints.
+func (s *Server) handle(w http.ResponseWriter, r *http.Request, wantMethod string, endpoint Endpoint) error {
+	if r.Method != wantMethod {
+		w.WriteHeader(http.StatusBadRequest)
+		return fmt.Errorf("this endpoint only supports %s", wantMethod)
+	}
+
+	if endpoint.Blocked {
+		<-s.done
+		slog.Debug("Server context was cancelled. Exiting", "endpoint", r.URL)
+		return errors.New("server stopped")
+	}
+
+	if endpoint.OnSuccess.Status != 200 {
+		w.WriteHeader(endpoint.OnSuccess.Status)
+		return fmt.Errorf("mock error: %d", endpoint.OnSuccess.Status)
+	}
+
+	return nil
 }
