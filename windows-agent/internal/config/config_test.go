@@ -120,7 +120,7 @@ func TestLandscapeAgentURL(t *testing.T) {
 
 			// Test default values
 			if !tc.registryState.is(landscapeAgentURLHasValue) {
-				require.Equal(t, "", landscapeURL, "Unexpected Landscape config default value")
+				require.Equal(t, "", landscapeURL, "Unexpected Landscape URL default value")
 				return
 			}
 
