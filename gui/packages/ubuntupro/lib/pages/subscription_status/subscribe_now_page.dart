@@ -1,3 +1,4 @@
+import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
@@ -8,7 +9,8 @@ import 'subscribe_now_widgets.dart';
 import 'subscription_status_model.dart';
 
 class SubscribeNowPage extends StatelessWidget {
-  const SubscribeNowPage({super.key});
+  const SubscribeNowPage({super.key, required this.onSubscribe});
+  final void Function(SubscriptionInfo) onSubscribe;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,32 @@ class SubscribeNowPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             ElevatedButton(
-              onPressed: model.purchaseSubscription,
+              onPressed: () async {
+                final subs = await model.purchaseSubscription();
+
+                // Using anything attached to the BuildContext after a suspension point might be tricky.
+                // Better check if it's still mounted in the widget tree.
+                if (!context.mounted) return;
+
+                final messenger = ScaffoldMessenger.of(context);
+                subs.fold(
+                  ifLeft: (status) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Center(child: Text(status.localize(lang))),
+                      ),
+                    );
+                  },
+                  ifRight: (info) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(lang.updatingSubscriptionInfo),
+                      ),
+                    );
+                    onSubscribe(info);
+                  },
+                );
+              },
               child: Text(lang.subscribeNow),
             ),
             const Padding(padding: EdgeInsets.only(right: 8.0)),

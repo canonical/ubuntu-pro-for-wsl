@@ -3,13 +3,16 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i5;
 
+import 'package:agentapi/agentapi.dart' as _i8;
+import 'package:dart_either/dart_either.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:p4w_ms_store/p4w_ms_store.dart' as _i7;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/core/pro_token.dart' as _i5;
+import 'package:ubuntupro/core/pro_token.dart' as _i6;
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart'
-    as _i3;
+    as _i4;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -33,10 +36,20 @@ class _FakeAgentApiClient_0 extends _i1.SmartFake
         );
 }
 
+class _FakeEither_1<L, R> extends _i1.SmartFake implements _i3.Either<L, R> {
+  _FakeEither_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [SubscribeNowModel].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSubscribeNowModel extends _i1.Mock implements _i3.SubscribeNowModel {
+class MockSubscribeNowModel extends _i1.Mock implements _i4.SubscribeNowModel {
   MockSubscribeNowModel() {
     _i1.throwOnMissingStub(this);
   }
@@ -50,14 +63,14 @@ class MockSubscribeNowModel extends _i1.Mock implements _i3.SubscribeNowModel {
         ),
       ) as _i2.AgentApiClient);
   @override
-  _i4.Future<void> applyProToken(_i5.ProToken? token) => (super.noSuchMethod(
+  _i5.Future<void> applyProToken(_i6.ProToken? token) => (super.noSuchMethod(
         Invocation.method(
           #applyProToken,
           [token],
         ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
   @override
   void launchProWebPage() => super.noSuchMethod(
         Invocation.method(
@@ -67,12 +80,21 @@ class MockSubscribeNowModel extends _i1.Mock implements _i3.SubscribeNowModel {
         returnValueForMissingStub: null,
       );
   @override
-  _i4.Future<void> purchaseSubscription() => (super.noSuchMethod(
-        Invocation.method(
-          #purchaseSubscription,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i5.Future<_i3.Either<_i7.PurchaseStatus, _i8.SubscriptionInfo>>
+      purchaseSubscription() => (super.noSuchMethod(
+            Invocation.method(
+              #purchaseSubscription,
+              [],
+            ),
+            returnValue: _i5.Future<
+                    _i3.Either<_i7.PurchaseStatus, _i8.SubscriptionInfo>>.value(
+                _FakeEither_1<_i7.PurchaseStatus, _i8.SubscriptionInfo>(
+              this,
+              Invocation.method(
+                #purchaseSubscription,
+                [],
+              ),
+            )),
+          ) as _i5
+              .Future<_i3.Either<_i7.PurchaseStatus, _i8.SubscriptionInfo>>);
 }
