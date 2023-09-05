@@ -207,30 +207,26 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 
 			addr := "localhost:9" // IANA Discard Protocol.
 			var err error
-			var closer func()
+
 			if !tc.dontServe {
-				var args []contractsmockserver.Option
+				s := contractsmockserver.NewServer()
 
 				if len(tc.withToken) > 0 {
-					args = append(args, contractsmockserver.WithTokenResponse(tc.withToken))
+					s.Token.OnSuccess.Value = tc.withToken
 				}
 
 				if tc.withStatus != 0 && tc.withStatus != 200 {
-					args = append(args, contractsmockserver.WithTokenStatusCode(tc.withStatus))
+					s.Token.OnSuccess.Status = tc.withStatus
 				}
 
-				if tc.disabledEndpoint {
-					args = append(args, contractsmockserver.WithTokenEndpointDisabled(tc.disabledEndpoint))
-				}
+				s.Token.Disabled = tc.disabledEndpoint
+				s.Token.Blocked = tc.blockedEndpoint
 
-				if tc.blockedEndpoint {
-					args = append(args, contractsmockserver.WithTokenEndpointBlocked(tc.blockedEndpoint))
-				}
-
-				addr, closer, err = contractsmockserver.Serve(ctx, args...)
+				addr, err = s.Serve(ctx)
 				require.NoError(t, err, "Setup: Server should return no error")
 
-				t.Cleanup(closer)
+				//nolint:errcheck // Nothing we can do about it
+				defer s.Stop()
 			}
 
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))
@@ -290,29 +286,26 @@ func TestGetProTokenNet(t *testing.T) {
 
 			addr := "localhost:9" // IANA Discard Protocol.
 			var err error
-			var closer func()
+
 			if !tc.dontServe {
-				var args []contractsmockserver.Option
+				s := contractsmockserver.NewServer()
 
 				if len(tc.withToken) > 0 {
-					args = append(args, contractsmockserver.WithSubscriptionResponse(tc.withToken))
+					s.Subscription.OnSuccess.Value = tc.withToken
 				}
 
 				if tc.withStatus != 0 && tc.withStatus != 200 {
-					args = append(args, contractsmockserver.WithSubscriptionStatusCode(tc.withStatus))
-				}
-				if tc.disabledEndpoint {
-					args = append(args, contractsmockserver.WithSubscriptionEndpointDisabled(tc.disabledEndpoint))
+					s.Subscription.OnSuccess.Status = tc.withStatus
 				}
 
-				if tc.blockedEndpoint {
-					args = append(args, contractsmockserver.WithSubscriptionEndpointBlocked(tc.blockedEndpoint))
-				}
+				s.Subscription.Disabled = tc.disabledEndpoint
+				s.Subscription.Blocked = tc.blockedEndpoint
 
-				addr, closer, err = contractsmockserver.Serve(ctx, args...)
+				addr, err = s.Serve(ctx)
 				require.NoError(t, err, "Setup: Server should return no error")
 
-				t.Cleanup(closer)
+				//nolint:errcheck // Nothing we can do about it
+				defer s.Stop()
 			}
 
 			u, err := url.Parse(fmt.Sprintf("http://%s", addr))

@@ -5,11 +5,13 @@ package contractsmockserver
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
@@ -24,200 +26,174 @@ const (
 	DefaultProToken = "CHx_ProToken"
 )
 
-type response struct {
-	value      string
-	statusCode int
+// Server is a mock of the contract server, where its behaviour can be modified.
+// Do not change the settings after calling Serve.
+type Server struct {
+	Token        Endpoint
+	Subscription Endpoint
+
+	server *http.Server
+	mu     sync.Mutex
+
+	done chan struct{}
 }
 
-type endpointOptions struct {
-	res      response
-	disabled bool
-	blocked  bool
+// Endpoint contains settings for an API endpoint behaviour. Can be modified for testing purposes.
+type Endpoint struct {
+	// OnSuccess is the response returned in the happy path.
+	OnSuccess Response
+
+	// Disabled disables the endpoint.
+	Disabled bool
+
+	// Blocked means that a response will not be sent back, instead it'll block until the server is stopped.
+	Blocked bool
 }
 
-type options struct {
-	token        endpointOptions
-	subscription endpointOptions
+// Response contains settings for an API endpoint response behaviour. Can be modified for testing purposes.
+type Response struct {
+	Value  string
+	Status int
 }
 
-// Option is an optional argument for Serve.
-type Option func(*options)
-
-// WithTokenResponse sets the value of the /token endpoint response.
-func WithTokenResponse(token string) Option {
-	return func(o *options) {
-		o.token.res.value = token
+// NewServer creates a new contract server with default settings.
+func NewServer() *Server {
+	return &Server{
+		Token:        Endpoint{OnSuccess: Response{Value: DefaultADToken, Status: http.StatusOK}},
+		Subscription: Endpoint{OnSuccess: Response{Value: DefaultProToken, Status: http.StatusOK}},
 	}
 }
 
-// WithTokenStatusCode sets the /token endpoint response status code.
-func WithTokenStatusCode(statusCode int) Option {
-	return func(o *options) {
-		o.token.res.statusCode = statusCode
+// Stop stops the server.
+func (s *Server) Stop() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.server == nil {
+		return errors.New("already stopped")
 	}
+
+	err := s.server.Close()
+	s.server = nil
+
+	close(s.done)
+
+	return err
 }
 
-// WithSubscriptionResponse sets the value of the /subscription endpoint response.
-func WithSubscriptionResponse(token string) Option {
-	return func(o *options) {
-		o.subscription.res.value = token
-	}
-}
+// Serve starts a new HTTP server mocking the Contracts Server backend REST API with
+// responses defined according to the Option args. Use Stop to Stop the server.
+func (s *Server) Serve(ctx context.Context) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-// WithSubscriptionStatusCode sets the /subscription endpoint response status code.
-func WithSubscriptionStatusCode(statusCode int) Option {
-	return func(o *options) {
-		o.subscription.res.statusCode = statusCode
-	}
-}
-
-// WithTokenEndpointDisabled sets the option to disable the /token endpoint.
-func WithTokenEndpointDisabled(disable bool) Option {
-	return func(o *options) {
-		o.token.disabled = disable
-	}
-}
-
-// WithTokenEndpointBlocked sets the option to make the server wait forever when receiving a request to the /token endpoint.
-func WithTokenEndpointBlocked(blocked bool) Option {
-	return func(o *options) {
-		o.token.blocked = blocked
-	}
-}
-
-// WithSubscriptionEndpointDisabled sets the option to disable the /subscription endpoint.
-func WithSubscriptionEndpointDisabled(disable bool) Option {
-	return func(o *options) {
-		o.subscription.disabled = disable
-	}
-}
-
-// WithSubscriptionEndpointBlocked sets the option to make the server wait forever when receiving a request to the /susbcription endpoint.
-func WithSubscriptionEndpointBlocked(blocked bool) Option {
-	return func(o *options) {
-		o.subscription.blocked = blocked
-	}
-}
-
-// Serve starts a new HTTP server on localhost (dynamic port) mocking the Contracts Server backend REST API with responses defined according to the Option args. Cancel the ctx context to stop the server.
-func Serve(ctx context.Context, args ...Option) (addr string, closer func(), err error) {
-	opts := options{
-		token:        endpointOptions{res: response{value: DefaultADToken, statusCode: http.StatusOK}, disabled: false, blocked: false},
-		subscription: endpointOptions{res: response{value: DefaultProToken, statusCode: http.StatusOK}, disabled: false, blocked: false},
-	}
-
-	for _, f := range args {
-		f(&opts)
+	if s.server != nil {
+		return "", errors.New("already serving")
 	}
 
 	var lc net.ListenConfig
 	lis, err := lc.Listen(ctx, "tcp", "localhost:")
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to listen over tcp: %v", err)
+		return "", fmt.Errorf("failed to listen over tcp: %v", err)
 	}
 
 	mux := http.NewServeMux()
-	if !opts.token.disabled {
-		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), handleTokenFunc(ctx, opts.token))
+
+	if !s.Token.Disabled {
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), s.handleToken)
 	}
-	if !opts.subscription.disabled {
-		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), handleSubscriptionFunc(ctx, opts.subscription))
+
+	if !s.Subscription.Disabled {
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), s.handleSubscription)
 	}
-	server := &http.Server{
+
+	s.server = &http.Server{
 		Addr:              addr,
 		Handler:           mux,
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
+	s.done = make(chan struct{})
+
 	go func() {
-		if err := server.Serve(lis); err != nil && err != http.ErrServerClosed {
+		if err := s.server.Serve(lis); err != nil && err != http.ErrServerClosed {
 			slog.Error("Failed to start the HTTP server", "error", err)
 		}
 	}()
 
-	closer = func() {
-		if server != nil {
-			server.Close()
-		}
-	}
-
-	return lis.Addr().String(), closer, nil
+	return lis.Addr().String(), nil
 }
 
-// handleTokenFunc returns a a handler function for the /token endpoint according to the response options supplied.
-func handleTokenFunc(ctx context.Context, o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "this endpoint only supports GET")
-			return
-		}
+// handleToken implements the /token endpoint according to the response options supplied.
+func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "this endpoint only supports GET")
+		return
+	}
 
-		if o.blocked {
-			<-ctx.Done()
-			slog.Debug("Token: server context was cancelled, exiting")
-			return
-		}
+	if s.Token.Blocked {
+		<-s.done
+		slog.Debug("Token: server context was cancelled, exiting")
+		return
+	}
 
-		if o.res.statusCode != 200 {
-			w.WriteHeader(o.res.statusCode)
-			fmt.Fprintf(w, "mock error: %d", o.res.statusCode)
-			return
-		}
+	if s.Token.OnSuccess.Status != 200 {
+		w.WriteHeader(s.Token.OnSuccess.Status)
+		fmt.Fprintf(w, "mock error: %d", s.Token.OnSuccess.Status)
+		return
+	}
 
-		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, o.res.value); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "failed to write the response: %v", err)
-			return
-		}
+	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, s.Token.OnSuccess.Value); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "failed to write the response: %v", err)
+		return
 	}
 }
 
-// handleSubscriptionFunc returns a handler function for the /susbcription endpoint according to the response options supplied.
-func handleSubscriptionFunc(ctx context.Context, o endpointOptions) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "this endpoint only supports POST")
-			return
-		}
+// handleSubscription implements the /susbcription endpoint according to the response options supplied.
+func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "this endpoint only supports POST")
+		return
+	}
 
-		if o.blocked {
-			<-ctx.Done()
-			slog.Debug("Subscription: server context was cancelled, exiting")
-			return
-		}
+	if s.Subscription.Blocked {
+		<-s.done
+		slog.Debug("Subscription: server context was cancelled, exiting")
+		return
+	}
 
-		if o.res.statusCode != 200 {
-			w.WriteHeader(o.res.statusCode)
-			fmt.Fprintln(w, "mock error")
-			return
-		}
+	if s.Subscription.OnSuccess.Status != 200 {
+		w.WriteHeader(s.Subscription.OnSuccess.Status)
+		fmt.Fprintln(w, "mock error")
+		return
+	}
 
-		var data map[string]string
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "Bad Request")
-			return
-		}
+	var data map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "Bad Request")
+		return
+	}
 
-		userJWT, ok := data[contractsapi.JWTKey]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "JSON payload does not contain the expected key")
-			return
-		}
+	userJWT, ok := data[contractsapi.JWTKey]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "JSON payload does not contain the expected key")
+		return
+	}
 
-		if len(userJWT) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "JWT cannot be empty")
-			return
-		}
+	if len(userJWT) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "JWT cannot be empty")
+		return
+	}
 
-		if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, o.res.value); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "failed to write the response: %v", err)
-			return
-		}
+	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, s.Subscription.OnSuccess.Value); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "failed to write the response: %v", err)
+		return
 	}
 }
