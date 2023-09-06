@@ -171,7 +171,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agentapi", "windows-agent", "wsl-pro-service", "common"]
+        subproject: ["windows-agent", "wsl-pro-service", "common"]
         exclude:
           - os: windows
             subproject: wsl-pro-service
