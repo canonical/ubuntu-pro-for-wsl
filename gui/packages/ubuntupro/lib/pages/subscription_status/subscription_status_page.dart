@@ -20,35 +20,38 @@ class SubscriptionStatusPage extends StatelessWidget {
     final model = context.watch<SubscriptionStatusModel>();
     final lang = AppLocalizations.of(context);
 
-    return switch (model) {
-      StoreSubscriptionStatusModel() => SubscriptionStatus(
-          caption: lang.storeManaged,
-          actionButton: TextButton(
-            onPressed: model.launchManagementWebPage,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF0094FF),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 700),
+      child: switch (model) {
+        StoreSubscriptionStatusModel() => SubscriptionStatus(
+            caption: lang.storeManaged,
+            actionButton: TextButton(
+              onPressed: model.launchManagementWebPage,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF0094FF),
+              ),
+              child: Text(lang.manageSubscription),
             ),
-            child: Text(lang.manageSubscription),
           ),
-        ),
-      UserSubscriptionStatusModel() => SubscriptionStatus(
-          caption: lang.manuallyManaged,
-          actionButton: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE86581),
+        UserSubscriptionStatusModel() => SubscriptionStatus(
+            caption: lang.manuallyManaged,
+            actionButton: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE86581),
+              ),
+              onPressed: model.detachPro,
+              child: Text(lang.detachPro),
             ),
-            onPressed: model.detachPro,
-            child: Text(lang.detachPro),
           ),
-        ),
-      OrgSubscriptionStatusModel() => SubscriptionStatus(
-          caption: lang.orgManaged,
-        ),
-      SubscribeNowModel() => SubscribeNowPage(
-          onSubscribe: (info) =>
-              context.read<ValueNotifier<SubscriptionInfo>>().value = info,
-        ),
-    };
+        OrgSubscriptionStatusModel() => SubscriptionStatus(
+            caption: lang.orgManaged,
+          ),
+        SubscribeNowModel() => SubscribeNowPage(
+            onSubscribe: (info) =>
+                context.read<ValueNotifier<SubscriptionInfo>>().value = info,
+          ),
+      },
+    );
   }
 
   /// Initializes the view-model and inject it in the widget tree so the child page can access it via the BuildContext.
