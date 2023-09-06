@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractclient"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/microsoftstore"
 	"github.com/ubuntu/decorate"
 )
 
