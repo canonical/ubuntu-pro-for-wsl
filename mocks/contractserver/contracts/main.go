@@ -82,7 +82,7 @@ func execName() string {
 var defaultsCmd = &cobra.Command{
 	Use:   "show-defaults",
 	Short: "See the default values for the contract server",
-	Long:  "See the default values for the contract server. These are te settings that 'serve' will use unless overridden.",
+	Long:  "See the default values for the contract server. These are the settings that 'serve' will use unless overridden.",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		out, err := yaml.Marshal(contractsmockserver.DefaultSettings())
