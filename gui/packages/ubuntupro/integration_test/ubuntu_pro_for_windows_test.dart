@@ -6,6 +6,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:p4w_ms_store/p4w_ms_store_method_channel.dart';
 import 'package:p4w_ms_store/p4w_ms_store_platform_interface.dart';
 import 'package:path/path.dart' as p;
+import 'package:stack_trace/stack_trace.dart' as stack_trace;
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/constants.dart';
 import 'package:ubuntupro/core/environment.dart';
@@ -20,6 +21,11 @@ import 'utils/build_agent.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  FlutterError.demangleStackTrace = (stack) {
+    if (stack is stack_trace.Trace) return stack.vmTrace;
+    if (stack is stack_trace.Chain) return stack.toTrace().vmTrace;
+    return stack;
+  };
 
   // A temporary directory mocking the $env:LocalAppData directory to sandbox our agent.
   Directory? tmp;

@@ -69,6 +69,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
+  stack_trace: ^1.11.0
   yaru_test:
   # TODO: Replace this when yaru_test ^0.2.0 gets released.
     git:
