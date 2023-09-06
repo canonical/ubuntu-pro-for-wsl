@@ -1,0 +1,20 @@
+name: Update Workspace dependencies
+description: Updates internal dependencies in a Go Workspace
+
+inputs:
+  token:
+    description: Github token
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt update
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y jq
+    - name: Update workspace dependencies
+      shell: bash
+      run: ${{ github.action_path }}/update-workspace-dependencies.sh
+

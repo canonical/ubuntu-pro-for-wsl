@@ -116,3 +116,37 @@ jobs:
         if: steps.check-readme.outputs.modified == 'true'
         run: |
           git push origin auto-updates/readme-cli-ref:main
+
+  update-internal-dependencies:
+    name: Update internal dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up git
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.work
+      - name: Update submodules
+        uses: ./.github/actions/update-workspace-dependencies
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: Auto update internal dependencies
+          title: Auto update internal dependencies
+          labels: automated pr
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
+          branch: auto-updates/update-internal-dependencies
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push branch
+        run: |
+          git push origin auto-updates/update-internal-dependencies:main
+        
+          
+        
