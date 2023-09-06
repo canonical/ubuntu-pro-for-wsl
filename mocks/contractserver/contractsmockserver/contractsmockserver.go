@@ -84,7 +84,10 @@ func (s *Server) Stop() error {
 }
 
 // Serve starts a new HTTP server mocking the Contracts Server backend REST API with
-// responses defined according to the Option args. Use Stop to Stop the server.
+// responses defined according to Server parameters. Use Stop to Stop the server and
+// release resources.
+//
+// Do not change server parameters while serving.
 func (s *Server) Serve(ctx context.Context) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -127,7 +130,7 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 	return lis.Addr().String(), nil
 }
 
-// handleToken implements the /token endpoint according to the response options supplied.
+// handleToken implements the /token endpoint.
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	if err := s.handle(w, r, http.MethodGet, s.Token); err != nil {
 		fmt.Fprintf(w, "%v", err)
@@ -141,7 +144,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleSubscription implements the /susbcription endpoint according to the response options supplied.
+// handleSubscription implements the /susbcription endpoint.
 func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 	if err := s.handle(w, r, http.MethodPost, s.Subscription); err != nil {
 		fmt.Fprintf(w, "%v", err)
