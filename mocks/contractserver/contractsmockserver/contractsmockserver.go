@@ -28,7 +28,7 @@ const (
 
 // Server is a mock of the contract server, where its behaviour can be modified.
 type Server struct {
-	sett Settings
+	settings Settings
 
 	server *http.Server
 	mu     sync.RWMutex
@@ -73,7 +73,7 @@ func DefaultSettings() Settings {
 // NewServer creates a new contract server with the provided settings.
 func NewServer(s Settings) *Server {
 	return &Server{
-		sett: s,
+		settings: s,
 	}
 }
 
@@ -106,18 +106,18 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 	}
 
 	var lc net.ListenConfig
-	lis, err := lc.Listen(ctx, "tcp", s.sett.Address)
+	lis, err := lc.Listen(ctx, "tcp", s.settings.Address)
 	if err != nil {
 		return "", fmt.Errorf("failed to listen over tcp: %v", err)
 	}
 
 	mux := http.NewServeMux()
 
-	if !s.sett.Token.Disabled {
+	if !s.settings.Token.Disabled {
 		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), s.handleToken)
 	}
 
-	if !s.sett.Subscription.Disabled {
+	if !s.settings.Subscription.Disabled {
 		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), s.handleSubscription)
 	}
 
@@ -141,12 +141,12 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 
 // handleToken implements the /token endpoint.
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
-	if err := s.handle(w, r, http.MethodGet, s.sett.Token); err != nil {
+	if err := s.handle(w, r, http.MethodGet, s.settings.Token); err != nil {
 		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
-	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, s.sett.Token.OnSuccess.Value); err != nil {
+	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, s.settings.Token.OnSuccess.Value); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "failed to write the response: %v", err)
 		return
@@ -155,7 +155,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 
 // handleSubscription implements the /susbcription endpoint.
 func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
-	if err := s.handle(w, r, http.MethodPost, s.sett.Subscription); err != nil {
+	if err := s.handle(w, r, http.MethodPost, s.settings.Subscription); err != nil {
 		fmt.Fprintf(w, "%v", err)
 		return
 	}
@@ -180,7 +180,7 @@ func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, s.sett.Subscription.OnSuccess.Value); err != nil {
+	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, s.settings.Subscription.OnSuccess.Value); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "failed to write the response: %v", err)
 		return
