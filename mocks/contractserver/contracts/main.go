@@ -15,33 +15,13 @@ import (
 )
 
 func main() {
-	rootCmd := cobra.Command{
-		Use:   execName(),
-		Short: "A mock contract server for Ubuntu Pro For Windows testing",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// Force a visit of the local flags so persistent flags for all parents are merged.
-			cmd.LocalFlags()
-
-			// command parsing has been successful. Returns to not print usage anymore.
-			cmd.SilenceUsage = true
-
-			v := cmd.Flag("verbosity").Value.String()
-			n, err := strconv.Atoi(v)
-			if err != nil {
-				return fmt.Errorf("could not parse verbosity: %v", err)
-			}
-
-			setVerboseMode(n)
-			return nil
-		},
-	}
+	rootCmd := rootCmd
 
 	rootCmd.AddCommand(defaultsCmd)
-	rootCmd.AddCommand(runCmd)
 
 	rootCmd.PersistentFlags().CountP("verbosity", "v", "WARNING (-v) INFO (-vv), DEBUG (-vvv)")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "File where relevant non-log output will be written to")
-	runCmd.Flags().StringP("address", "a", "", "Overrides the address where the server will be hosted")
+	rootCmd.Flags().StringP("address", "a", "", "Overrides the address where the server will be hosted")
 
 	if err := rootCmd.Execute(); err != nil {
 		slog.Error("Error executing", "error", err)
@@ -103,13 +83,30 @@ var defaultsCmd = &cobra.Command{
 	},
 }
 
-var runCmd = &cobra.Command{
-	Use:   "run [settings input file]",
-	Short: "Serve the mock contract server",
-	Long: `Serve the mock contract server with the optional settings file.
+var rootCmd = &cobra.Command{
+	Use:   fmt.Sprintf("%s [settings_file]", execName()),
+	Short: "A mock contract server for Ubuntu Pro For Windows testing",
+	Long: `A mock contract server for Ubuntu Pro For Windows testing.
+Serve the mock contract server with the optional settings file.
 Default settings will be used if none are provided.
 The outfile, if provided, will contain the address.`,
 	Args: cobra.RangeArgs(0, 1),
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Force a visit of the local flags so persistent flags for all parents are merged.
+		cmd.LocalFlags()
+
+		// command parsing has been successful. Returns to not print usage anymore.
+		cmd.SilenceUsage = true
+
+		v := cmd.Flag("verbosity").Value.String()
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			return fmt.Errorf("could not parse verbosity: %v", err)
+		}
+
+		setVerboseMode(n)
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		settings := contractsmockserver.DefaultSettings()
