@@ -11,6 +11,7 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 )
 
@@ -91,4 +92,25 @@ func (s *Service) sendInfo(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// ApplyLandscapeConfig serves LandscapeConfig messages sent by the agent.
+func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.LandscapeConfig) (empty *wslserviceapi.Empty, err error) {
+	defer decorate.OnError(&err, "ApplyLandscapeConfig error")
+
+	conf := msg.GetConfiguration()
+	if conf == "" {
+		log.Info(ctx, "ApplyLandscapeConfig: Received empty config: disabling")
+		if err := s.system.LandscapeDisable(ctx); err != nil {
+			return nil, err
+		}
+		return &wslserviceapi.Empty{}, nil
+	}
+
+	log.Infof(ctx, "ApplyLandscapeConfig: Received config: registering")
+	if err := s.system.LandscapeEnable(ctx, conf); err != nil {
+		return nil, err
+	}
+
+	return &wslserviceapi.Empty{}, nil
 }

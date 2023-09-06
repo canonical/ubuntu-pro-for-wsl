@@ -25,5 +25,6 @@ Built-Using: ${misc:Built-Using},
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          ubuntu-advantage-tools,
+Recommends: landscape-client,
 Description: ${source:Synopsis} - WSL service
  ${source:Extended-Description}

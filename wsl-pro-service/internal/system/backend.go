@@ -26,6 +26,10 @@ func (b realBackend) ProExecutable(args ...string) (string, []string) {
 	return "pro", args
 }
 
+func (b realBackend) LandscapeConfigExecutable(args ...string) (string, []string) {
+	return "landscape-config", args
+}
+
 // ProExecutable returns the full command to run the wslpath executable with the provided arguments.
 func (b realBackend) WslpathExecutable(args ...string) (string, []string) {
 	return "wslpath", args

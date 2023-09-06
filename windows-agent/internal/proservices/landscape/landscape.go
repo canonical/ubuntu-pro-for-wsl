@@ -58,7 +58,7 @@ const cacheFileBase = "landscape.conf"
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
-	LandscapeURL(context.Context) (string, error)
+	LandscapeAgentURL(context.Context) (string, error)
 	Subscription(context.Context) (string, config.SubscriptionSource, error)
 }
 
@@ -112,7 +112,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	// Dummy connection to indicate that a first attempt was attempted
 	c.conn = &connection{}
 
-	address, err := c.conf.LandscapeURL(ctx)
+	address, err := c.conf.LandscapeAgentURL(ctx)
 	if err != nil {
 		return err
 	}

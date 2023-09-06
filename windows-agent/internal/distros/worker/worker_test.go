@@ -790,7 +790,7 @@ type mockProvisioning struct {
 	privisioningTasksReturnsNil bool
 }
 
-func (c mockProvisioning) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (c mockProvisioning) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	if c.provisioningTasksErr {
 		return nil, errors.New("mock error")
 	}

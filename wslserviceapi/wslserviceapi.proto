@@ -7,10 +7,17 @@ package wslserviceapi;
 service WSL {
     rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
     rpc Ping(Empty) returns (Empty) {}
+    rpc ApplyLandscapeConfig (LandscapeConfig) returns(Empty) {}
 }
 
 message ProAttachInfo {
+    // Empty token is interpreted as "pro detach"
     string token = 1;
+}
+
+message LandscapeConfig {
+    // Empty configuration is interpreted as "landscape-config --disable"
+    string configuration = 1;
 }
 
 message Empty {}

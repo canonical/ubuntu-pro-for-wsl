@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
+	commontestutils "github.com/canonical/ubuntu-pro-for-windows/common/testutils"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -343,6 +345,95 @@ func TestProDetach(t *testing.T) {
 	}
 }
 
-func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
-func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
-func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }
+func TestLandscapeEnable(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		breakWriteConfig     bool
+		breakLandscapeConfig bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when the config file cannot be written":  {breakWriteConfig: true, wantErr: true},
+		"Error when the landscape-config command fails": {breakLandscapeConfig: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			s, mock := testutils.MockSystem(t)
+
+			if tc.breakWriteConfig {
+				path := mock.Path(system.LandscapeConfigPath)
+				commontestutils.ReplaceFileWithDir(t, path, "Setup: could not create directory to interfere with config file creation")
+			}
+
+			if tc.breakLandscapeConfig {
+				mock.SetControlArg(testutils.LandscapeEnableErr)
+			}
+
+			config := "[example]\nnumber = 5\ntext = Lorem ipsum dolot sit amet"
+
+			err := s.LandscapeEnable(ctx, config)
+			if tc.wantErr {
+				require.Error(t, err, "LandscapeEnable should have returned an error")
+				return
+			}
+			require.NoError(t, err, "LandscapeEnable should have succeeded")
+
+			exeProof := s.Path("/.landscape-enabled")
+			require.FileExists(t, exeProof, "Landscape executable never ran")
+			out, err := os.ReadFile(exeProof)
+			require.NoErrorf(t, err, "could not read file %q", exeProof)
+
+			require.Equal(t, config, string(out), "Landscape executable did not receive the right config")
+		})
+	}
+}
+
+func TestLandscapeDisable(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		breakLandscapeConfig bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when the landscape-config command fails": {breakLandscapeConfig: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			s, mock := testutils.MockSystem(t)
+
+			if tc.breakLandscapeConfig {
+				mock.SetControlArg(testutils.LandscapeDisableErr)
+			}
+
+			err := s.LandscapeDisable(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "LandscapeDisable should have returned an error")
+				return
+			}
+			require.NoError(t, err, "LandscapeDisable should have succeeded")
+
+			require.FileExists(t, s.Path("/.landscape-disabled"), "Landscape executable never ran")
+		})
+	}
+}
+
+func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
+func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
+func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
+func TestWithCmdExeMock(t *testing.T)          { testutils.CmdExeMock(t) }

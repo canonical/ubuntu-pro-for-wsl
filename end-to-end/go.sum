@@ -1,7 +1,7 @@
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd h1:0fpHhfxce5TibiGftTDc9OFrD/frkHBi1joYsvdnjHg=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906071358-408c92f64238 h1:e7LaHK1TVlWXn/I9uiN6kr7rcdHr5WzqcRvxylcAjb8=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906071358-408c92f64238/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

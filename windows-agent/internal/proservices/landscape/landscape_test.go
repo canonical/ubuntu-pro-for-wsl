@@ -127,13 +127,13 @@ func TestConnect(t *testing.T) {
 			defer lis.Close()
 
 			conf := &mockConfig{
-				proToken:     "TOKEN",
-				landscapeURL: lis.Addr().String(),
+				proToken:          "TOKEN",
+				landscapeAgentURL: lis.Addr().String(),
 
 				// We trigger an error on first-contact SendUpdatedInfo by erroring out in conf.ProToken()
 				proTokenErr: tc.tokenErr,
 
-				// We trigger an earlier error by erroring out on LandscapeURL
+				// We trigger an earlier error by erroring out on LandscapeAgentURL
 				landscapeURLErr: tc.landscapeURLErr,
 			}
 
@@ -245,8 +245,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
 
 			conf := &mockConfig{
-				proToken:     "TOKEN",
-				landscapeURL: lis.Addr().String(),
+				proToken:          "TOKEN",
+				landscapeAgentURL: lis.Addr().String(),
 			}
 
 			//nolint:errcheck // We don't care about these errors
@@ -413,8 +413,8 @@ func TestAutoReconnection(t *testing.T) {
 	defer server.Stop()
 
 	conf := &mockConfig{
-		proToken:     "TOKEN",
-		landscapeURL: lis.Addr().String(),
+		proToken:          "TOKEN",
+		landscapeAgentURL: lis.Addr().String(),
 	}
 
 	db, err := database.New(ctx, t.TempDir(), conf)
@@ -549,8 +549,8 @@ func TestReceiveCommands(t *testing.T) {
 			defer server.Stop()
 
 			conf := &mockConfig{
-				proToken:     "TOKEN",
-				landscapeURL: lis.Addr().String(),
+				proToken:          "TOKEN",
+				landscapeAgentURL: lis.Addr().String(),
 			}
 
 			db, err := database.New(ctx, t.TempDir(), conf)
@@ -796,8 +796,8 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string) (lis net
 }
 
 type mockConfig struct {
-	proToken     string
-	landscapeURL string
+	proToken          string
+	landscapeAgentURL string
 
 	proTokenErr     bool
 	landscapeURLErr bool
@@ -805,7 +805,7 @@ type mockConfig struct {
 	mu sync.Mutex
 }
 
-func (m *mockConfig) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	return nil, nil
 }
 
@@ -819,12 +819,12 @@ func (m *mockConfig) Subscription(ctx context.Context) (string, config.Subscript
 	return m.proToken, config.SubscriptionUser, nil
 }
 
-func (m *mockConfig) LandscapeURL(ctx context.Context) (string, error) {
+func (m *mockConfig) LandscapeAgentURL(ctx context.Context) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.landscapeURLErr {
 		return "", errors.New("Mock error")
 	}
-	return m.landscapeURL, nil
+	return m.landscapeAgentURL, nil
 }

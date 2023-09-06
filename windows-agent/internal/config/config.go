@@ -21,8 +21,11 @@ const (
 
 	defaultToken = ""
 
-	fieldLandscapeURL   = "LandscapeURL"
-	defaultLandscapeURL = "www.example.com"
+	fieldLandscapeClientConfig   = "LandscapeClientConfig"
+	defaultLandscapeClientConfig = ""
+
+	fieldLandscapeAgentURL   = "LandscapeAgentURL"
+	defaultLandscapeAgentURL = ""
 )
 
 // fieldsProToken contains the fields in the registry where each source will store its token.
@@ -54,7 +57,8 @@ type Config struct {
 
 // configData is a bag of data unrelated to the subscription status.
 type configData struct {
-	landscapeURL string
+	landscapeClientConfig string
+	landscapeAgentURL     string
 }
 
 // SubscriptionSource indicates the method the subscription was acquired.
@@ -156,13 +160,26 @@ func (c *Config) IsReadOnly() (b bool, err error) {
 }
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
-func (c *Config) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	token, _, err := c.Subscription(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return []task.Task{tasks.ProAttachment{Token: token}}, nil
+	taskList := []task.Task{
+		tasks.ProAttachment{Token: token},
+	}
+
+	if conf, err := c.LandscapeClientConfig(ctx); err != nil {
+		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
+	} else if landscape, err := tasks.NewLandscapeConfigure(ctx, conf, distroName); err != nil {
+		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
+	} else {
+		// Success
+		taskList = append(taskList, landscape)
+	}
+
+	return taskList, nil
 }
 
 // SetSubscription overwrites the value of the pro token and the method with which it has been acquired.
@@ -187,8 +204,8 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source Su
 	return nil
 }
 
-// LandscapeURL returns the value of the landscape server URL.
-func (c *Config) LandscapeURL(ctx context.Context) (string, error) {
+// LandscapeAgentURL returns the value of the landscape server URL.
+func (c *Config) LandscapeAgentURL(ctx context.Context) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -196,7 +213,19 @@ func (c *Config) LandscapeURL(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not load: %v", err)
 	}
 
-	return c.data.landscapeURL, nil
+	return c.data.landscapeAgentURL, nil
+}
+
+// LandscapeClientConfig returns the value of the landscape server URL.
+func (c *Config) LandscapeClientConfig(ctx context.Context) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if err := c.load(ctx); err != nil {
+		return "", fmt.Errorf("could not load: %v", err)
+	}
+
+	return c.data.landscapeClientConfig, nil
 }
 
 func (c *Config) load(ctx context.Context) (err error) {
@@ -223,7 +252,8 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		log.Debug(ctx, "Registry key does not exist, using default values")
-		data.landscapeURL = defaultLandscapeURL
+		data.landscapeAgentURL = defaultLandscapeAgentURL
+		data.landscapeClientConfig = defaultLandscapeClientConfig
 		return proTokens, data, nil
 	}
 	if err != nil {
@@ -249,7 +279,12 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 		return nil, data, err
 	}
 
-	data.landscapeURL, err = c.readValue(ctx, k, fieldLandscapeURL, defaultLandscapeURL)
+	data.landscapeAgentURL, err = c.readValue(ctx, k, fieldLandscapeAgentURL, defaultLandscapeAgentURL)
+	if err != nil {
+		return proTokens, data, err
+	}
+
+	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig, defaultLandscapeClientConfig)
 	if err != nil {
 		return proTokens, data, err
 	}
@@ -286,7 +321,11 @@ func (c *Config) dump() (err error) {
 		}
 	}
 
-	if err := c.registry.WriteValue(k, fieldLandscapeURL, c.data.landscapeURL); err != nil {
+	if err := c.registry.WriteValue(k, fieldLandscapeAgentURL, c.data.landscapeAgentURL); err != nil {
+		return fmt.Errorf("could not write into registry key: %v", err)
+	}
+
+	if err := c.registry.WriteValue(k, fieldLandscapeClientConfig, c.data.landscapeClientConfig); err != nil {
 		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 

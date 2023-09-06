@@ -774,6 +774,6 @@ func (w *mockWorker) Stop(context.Context) {
 
 type mockProvisioning struct{}
 
-func (c mockProvisioning) ProvisioningTasks(ctx context.Context) ([]task.Task, error) {
+func (c mockProvisioning) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	return nil, nil
 }
