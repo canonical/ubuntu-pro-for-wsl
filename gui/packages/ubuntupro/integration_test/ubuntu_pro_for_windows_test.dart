@@ -6,6 +6,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:p4w_ms_store/p4w_ms_store_method_channel.dart';
 import 'package:p4w_ms_store/p4w_ms_store_platform_interface.dart';
 import 'package:path/path.dart' as p;
+import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/constants.dart';
 import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/launch_agent.dart';
@@ -84,6 +85,7 @@ void main() {
         // any mocks previously installed by any test case.
         binding.defaultBinaryMessenger
             .setMockMethodCallHandler(proChannel, null);
+        resetAllServices();
       });
 
       // Tests the user journey that starts with the agent down.
@@ -123,8 +125,6 @@ void main() {
           // For this test case the purchase operation must always fail.
           binding.defaultBinaryMessenger.setMockMethodCallHandler(proChannel,
               (call) async {
-            // The exact delay duration doesn't matter. Still good to have some delay
-            // to ensure the client code won't expect things will respond instantly.
             await Future.delayed(const Duration(milliseconds: 20));
             return PurchaseStatus.serverError.index;
           });
