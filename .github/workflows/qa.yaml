@@ -20,7 +20,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["agentapi", "contractsapi", "mocks", "windows-agent", "wsl-pro-service", "end-to-end", "common"]
+        subproject: [
+            "agentapi",
+            "contractsapi",
+            "mocks",
+            "storeapi/go-wrapper/microsoftstore",
+            "windows-agent",
+            "wsl-pro-service",
+            "end-to-end",
+            "common",
+          ]
         exclude:
           - os: windows
             subproject: wsl-pro-service
@@ -171,12 +180,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        subproject: ["windows-agent", "wsl-pro-service", "common"]
+        subproject: ["storeapi/go-wrapper/microsoftstore", "windows-agent", "wsl-pro-service", "common"]
         exclude:
           - os: windows
             subproject: wsl-pro-service
+          # Excluded because common/i18n depends on gettext
           - os: ubuntu
-            subproject: common # Excluded because we need gettext installed
+            subproject: "common"
+          # Excluded because microsoftstore_test needs msbuild
+          - os: ubuntu
+            subproject: "storeapi/go-wrapper/microsoftstore"
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Check out repository
@@ -190,10 +203,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       # The Windows Store needs to be built. The tests do it automatically, but they need
-      # msbuild in the path
+      # msbuild in the path.
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v1
-        if: matrix.os == 'windows' && matrix.subproject == 'windows-agent'
+        if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore'
       - name: Run tests
         shell: bash
         if: always() && !cancelled()
