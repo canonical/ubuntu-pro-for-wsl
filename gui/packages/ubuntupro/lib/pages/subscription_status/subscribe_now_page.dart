@@ -35,23 +35,15 @@ class SubscribeNowPage extends StatelessWidget {
                 // Better check if it's still mounted in the widget tree.
                 if (!context.mounted) return;
 
-                final messenger = ScaffoldMessenger.of(context);
                 subs.fold(
                   ifLeft: (status) {
-                    messenger.showSnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Center(child: Text(status.localize(lang))),
                       ),
                     );
                   },
-                  ifRight: (info) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(lang.updatingSubscriptionInfo),
-                      ),
-                    );
-                    onSubscribe(info);
-                  },
+                  ifRight: onSubscribe,
                 );
               },
               child: Text(lang.subscribeNow),
