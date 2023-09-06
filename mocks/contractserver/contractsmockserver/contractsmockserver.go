@@ -27,16 +27,20 @@ const (
 )
 
 // Server is a mock of the contract server, where its behaviour can be modified.
-// Do not change the settings after calling Serve.
 type Server struct {
-	Token        Endpoint
-	Subscription Endpoint
-	Address      string
+	sett Settings
 
 	server *http.Server
 	mu     sync.RWMutex
 
 	done chan struct{}
+}
+
+// Settings contains the parameters for the Server.
+type Settings struct {
+	Token        Endpoint
+	Subscription Endpoint
+	Address      string
 }
 
 // Endpoint contains settings for an API endpoint behaviour. Can be modified for testing purposes.
@@ -57,12 +61,19 @@ type Response struct {
 	Status int
 }
 
-// NewServer creates a new contract server with default settings.
-func NewServer() *Server {
-	return &Server{
+// DefaultSettings returns the default set of settings for the server.
+func DefaultSettings() Settings {
+	return Settings{
 		Token:        Endpoint{OnSuccess: Response{Value: DefaultADToken, Status: http.StatusOK}},
 		Subscription: Endpoint{OnSuccess: Response{Value: DefaultProToken, Status: http.StatusOK}},
 		Address:      "localhost:0",
+	}
+}
+
+// NewServer creates a new contract server with the provided settings.
+func NewServer(s Settings) *Server {
+	return &Server{
+		sett: s,
 	}
 }
 
@@ -84,10 +95,8 @@ func (s *Server) Stop() error {
 }
 
 // Serve starts a new HTTP server mocking the Contracts Server backend REST API with
-// responses defined according to Server parameters. Use Stop to Stop the server and
+// responses defined according to Server Settings. Use Stop to Stop the server and
 // release resources.
-//
-// Do not change server parameters while serving.
 func (s *Server) Serve(ctx context.Context) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -97,18 +106,18 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 	}
 
 	var lc net.ListenConfig
-	lis, err := lc.Listen(ctx, "tcp", s.Address)
+	lis, err := lc.Listen(ctx, "tcp", s.sett.Address)
 	if err != nil {
 		return "", fmt.Errorf("failed to listen over tcp: %v", err)
 	}
 
 	mux := http.NewServeMux()
 
-	if !s.Token.Disabled {
+	if !s.sett.Token.Disabled {
 		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), s.handleToken)
 	}
 
-	if !s.Subscription.Disabled {
+	if !s.sett.Subscription.Disabled {
 		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), s.handleSubscription)
 	}
 
@@ -132,12 +141,12 @@ func (s *Server) Serve(ctx context.Context) (string, error) {
 
 // handleToken implements the /token endpoint.
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
-	if err := s.handle(w, r, http.MethodGet, s.Token); err != nil {
+	if err := s.handle(w, r, http.MethodGet, s.sett.Token); err != nil {
 		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
-	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, s.Token.OnSuccess.Value); err != nil {
+	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ADTokenKey, s.sett.Token.OnSuccess.Value); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "failed to write the response: %v", err)
 		return
@@ -146,7 +155,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 
 // handleSubscription implements the /susbcription endpoint.
 func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
-	if err := s.handle(w, r, http.MethodPost, s.Subscription); err != nil {
+	if err := s.handle(w, r, http.MethodPost, s.sett.Subscription); err != nil {
 		fmt.Fprintf(w, "%v", err)
 		return
 	}
@@ -171,7 +180,7 @@ func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, s.Subscription.OnSuccess.Value); err != nil {
+	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, s.sett.Subscription.OnSuccess.Value); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "failed to write the response: %v", err)
 		return

@@ -85,9 +85,7 @@ var defaultsCmd = &cobra.Command{
 	Long:  "See the default values for the contract server. These are te settings that 'serve' will use unless overridden.",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		sv := contractsmockserver.NewServer()
-
-		out, err := yaml.Marshal(sv)
+		out, err := yaml.Marshal(contractsmockserver.DefaultSettings())
 		if err != nil {
 			slog.Error("Could not marshal default settings", "error", err.Error())
 			os.Exit(1)
@@ -114,7 +112,7 @@ The outfile, if provided, will contain the address.`,
 	Args: cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		sv := contractsmockserver.NewServer()
+		settings := contractsmockserver.DefaultSettings()
 
 		if len(args) > 0 {
 			out, err := os.ReadFile(args[0])
@@ -123,16 +121,17 @@ The outfile, if provided, will contain the address.`,
 				os.Exit(1)
 			}
 
-			if err := yaml.Unmarshal(out, &sv); err != nil {
+			if err := yaml.Unmarshal(out, &settings); err != nil {
 				slog.Error("Could not unmarshal settings", "error", err.Error())
 				os.Exit(1)
 			}
 		}
 
 		if addr := cmd.Flag("address").Value.String(); addr != "" {
-			sv.Address = addr
+			settings.Address = addr
 		}
 
+		sv := contractsmockserver.NewServer(settings)
 		addr, err := sv.Serve(ctx)
 		if err != nil {
 			slog.Error("Could not serve", "error", err.Error())

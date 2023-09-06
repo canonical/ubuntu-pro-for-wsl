@@ -209,18 +209,20 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 			var err error
 
 			if !tc.dontServe {
-				s := contractsmockserver.NewServer()
+				sett := contractsmockserver.DefaultSettings()
 
 				if len(tc.withToken) > 0 {
-					s.Token.OnSuccess.Value = tc.withToken
+					sett.Token.OnSuccess.Value = tc.withToken
 				}
 
 				if tc.withStatus != 0 && tc.withStatus != 200 {
-					s.Token.OnSuccess.Status = tc.withStatus
+					sett.Token.OnSuccess.Status = tc.withStatus
 				}
 
-				s.Token.Disabled = tc.disabledEndpoint
-				s.Token.Blocked = tc.blockedEndpoint
+				sett.Token.Disabled = tc.disabledEndpoint
+				sett.Token.Blocked = tc.blockedEndpoint
+
+				s := contractsmockserver.NewServer(sett)
 
 				addr, err = s.Serve(ctx)
 				require.NoError(t, err, "Setup: Server should return no error")
@@ -288,18 +290,20 @@ func TestGetProTokenNet(t *testing.T) {
 			var err error
 
 			if !tc.dontServe {
-				s := contractsmockserver.NewServer()
+				sett := contractsmockserver.DefaultSettings()
 
 				if len(tc.withToken) > 0 {
-					s.Subscription.OnSuccess.Value = tc.withToken
+					sett.Subscription.OnSuccess.Value = tc.withToken
 				}
 
 				if tc.withStatus != 0 && tc.withStatus != 200 {
-					s.Subscription.OnSuccess.Status = tc.withStatus
+					sett.Subscription.OnSuccess.Status = tc.withStatus
 				}
 
-				s.Subscription.Disabled = tc.disabledEndpoint
-				s.Subscription.Blocked = tc.blockedEndpoint
+				sett.Subscription.Disabled = tc.disabledEndpoint
+				sett.Subscription.Blocked = tc.blockedEndpoint
+
+				s := contractsmockserver.NewServer(sett)
 
 				addr, err = s.Serve(ctx)
 				require.NoError(t, err, "Setup: Server should return no error")
