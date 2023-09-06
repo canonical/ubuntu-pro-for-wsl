@@ -324,6 +324,7 @@ github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6r
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230904124233-dd1d0e5164e2 h1:N5kF9buRrZ6h+F/Od5GXybHfOkkzPZw5B9lNKoIl05Q=
 github.com/canonical/ubuntu-pro-for-windows v0.0.0-20230904124233-dd1d0e5164e2/go.mod h1:qFE3nfycqhcaxyJdCv7uqMWmZdtu3DNV81ure93ia+M=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905125854-3f98ad6913ab/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230322100459-1ec4d0175382/go.mod h1:IJphMXBES/d3n/pXddrP08VNMYaQM3edlKeV3GSxrXU=
 github.com/census-instrumentation/opencensus-proto v0.3.0/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/census-instrumentation/opencensus-proto v0.4.1/go.mod h1:4T9NM4+4Vw91VeyqjLS6ao50K5bOcLKN6Q42XnYaRYw=
