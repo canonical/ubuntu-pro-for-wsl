@@ -24,7 +24,7 @@ func main() {
 	rootCmd.Flags().StringP("address", "a", "", "Overrides the address where the server will be hosted")
 
 	if err := rootCmd.Execute(); err != nil {
-		slog.Error("Error executing", "error", err)
+		slog.Error(fmt.Sprintf("Error executing: %v", err))
 		os.Exit(1)
 	}
 
@@ -52,7 +52,7 @@ func setVerboseMode(n int) {
 func execName() string {
 	exe, err := os.Executable()
 	if err != nil {
-		slog.Error("Could not get executable name", "error", err)
+		slog.Error(fmt.Sprintf("Could not get executable name: %v", err))
 		os.Exit(1)
 	}
 
@@ -67,13 +67,13 @@ var defaultsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		out, err := yaml.Marshal(contractsmockserver.DefaultSettings())
 		if err != nil {
-			slog.Error("Could not marshal default settings", "error", err.Error())
+			slog.Error(fmt.Sprintf("Could not marshal default settings: %v", err))
 			os.Exit(1)
 		}
 
 		if outfile := cmd.Flag("output").Value.String(); outfile != "" {
 			if err := os.WriteFile(outfile, out, 0600); err != nil {
-				slog.Error("Could not write to output file", "error", err.Error())
+				slog.Error(fmt.Sprintf("Could not write to output file: %v", err))
 				os.Exit(1)
 			}
 			return
@@ -114,12 +114,12 @@ The outfile, if provided, will contain the address.`,
 		if len(args) > 0 {
 			out, err := os.ReadFile(args[0])
 			if err != nil {
-				slog.Error("Could not read input file", "path", args[0], "error", err.Error())
+				slog.Error(fmt.Sprintf("Could not read input file %q: %v", args[0], err))
 				os.Exit(1)
 			}
 
 			if err := yaml.Unmarshal(out, &settings); err != nil {
-				slog.Error("Could not unmarshal settings", "error", err.Error())
+				slog.Error(fmt.Sprintf("Could not unmarshal settings: %v", err))
 				os.Exit(1)
 			}
 		}
@@ -131,25 +131,25 @@ The outfile, if provided, will contain the address.`,
 		sv := contractsmockserver.NewServer(settings)
 		addr, err := sv.Serve(ctx)
 		if err != nil {
-			slog.Error("Could not serve", "error", err.Error())
+			slog.Error(fmt.Sprintf("Could not serve: %v", err))
 			os.Exit(1)
 		}
 
 		defer func() {
 			if err := sv.Stop(); err != nil {
-				slog.Error("stopped serving", "error", err)
+				slog.Error(fmt.Sprintf("stopped serving: %v", err))
 			}
 			slog.Info("stopped serving")
 		}()
 
 		if outfile := cmd.Flag("output").Value.String(); outfile != "" {
 			if err := os.WriteFile(outfile, []byte(addr), 0600); err != nil {
-				slog.Error("Could not write output file", "error", err.Error())
+				slog.Error(fmt.Sprintf("Could not write output file: %v", err))
 				os.Exit(1)
 			}
 		}
 
-		slog.Info("Serving", "address", addr)
+		slog.Info(fmt.Sprintf("Serving on address %s", addr))
 
 		// Wait loop
 		for scanned := ""; scanned != "exit"; fmt.Scanf("%s\n", &scanned) {
