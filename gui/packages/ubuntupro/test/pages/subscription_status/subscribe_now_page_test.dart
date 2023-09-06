@@ -119,7 +119,7 @@ Widget buildApp(
         body: Provider.value(
           value: model,
           child: SubscribeNowPage(
-            onSubscribe: onSubs,
+            onSubscribed: onSubs,
           ),
         ),
       ),

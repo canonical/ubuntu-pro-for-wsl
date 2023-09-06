@@ -9,8 +9,8 @@ import 'subscribe_now_widgets.dart';
 import 'subscription_status_model.dart';
 
 class SubscribeNowPage extends StatelessWidget {
-  const SubscribeNowPage({super.key, required this.onSubscribe});
-  final void Function(SubscriptionInfo) onSubscribe;
+  const SubscribeNowPage({super.key, required this.onSubscribed});
+  final void Function(SubscriptionInfo) onSubscribed;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,7 @@ class SubscribeNowPage extends StatelessWidget {
                       ),
                     );
                   },
-                  ifRight: onSubscribe,
+                  ifRight: onSubscribed,
                 );
               },
               child: Text(lang.subscribeNow),

@@ -47,7 +47,7 @@ class SubscriptionStatusPage extends StatelessWidget {
             caption: lang.orgManaged,
           ),
         SubscribeNowModel() => SubscribeNowPage(
-            onSubscribe: (info) =>
+            onSubscribed: (info) =>
                 context.read<ValueNotifier<SubscriptionInfo>>().value = info,
           ),
       },
