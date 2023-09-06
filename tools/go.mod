@@ -3,8 +3,8 @@ module github.com/canonical/ubuntu-pro-for-windows/tools
 go 1.21.0
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230905085653-ef791c0e42dd
-	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230905085653-ef791c0e42dd
+	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230906071358-408c92f64238
+	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230906071358-408c92f64238
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
@@ -19,11 +19,11 @@ require (
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 // indirect
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230905085653-ef791c0e42dd // indirect
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd // indirect
-	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd // indirect
-	github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230905085653-ef791c0e42dd // indirect
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230905085653-ef791c0e42dd // indirect
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230906071358-408c92f64238 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906071358-408c92f64238 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906071358-408c92f64238 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230906071358-408c92f64238 // indirect
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230906071358-408c92f64238 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526203410-71b5a4ffd15e // indirect
 	google.golang.org/grpc v1.57.0 // indirect

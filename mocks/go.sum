@@ -1,9 +1,9 @@
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 h1:YfGTcFs5YaJlpR0lxVAPD3oFYcez9Pg1w0MUEbG2zB0=
 github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd h1:0fpHhfxce5TibiGftTDc9OFrD/frkHBi1joYsvdnjHg=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905085653-ef791c0e42dd/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
-github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd h1:tWnFwMlpeGLLsnMZKTn2PhERMeu2TljSYjjWXpCIo9U=
-github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230905085653-ef791c0e42dd/go.mod h1:lqO8UB33LPVdfiMDMlc1swo3S9bwqhW8DtO75dgTLWo=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906071358-408c92f64238 h1:e7LaHK1TVlWXn/I9uiN6kr7rcdHr5WzqcRvxylcAjb8=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906071358-408c92f64238/go.mod h1:c6h+GIDg8ZrFIfgQkvpIRpKbJ3mGNOTIjX4H4buEnD0=
+github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906071358-408c92f64238 h1:39DVbX39E/bfDTk3Yz/DVvzMOMCk89nQnGWr3GWAuVI=
+github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906071358-408c92f64238/go.mod h1:lqO8UB33LPVdfiMDMlc1swo3S9bwqhW8DtO75dgTLWo=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
@@ -18,8 +18,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 golang.org/x/net v0.10.0 h1:X2//UzNDwYmtCLn7To6G58Wr6f5ahEAQgKNzv9Y951M=
 golang.org/x/net v0.10.0/go.mod h1:0qNGK6F8kojg2nk9dLZ2mShWaEBan6FAoqfSigmmuDg=
-golang.org/x/sys v0.11.0 h1:eG7RXZHdqOJ1i+0lgLgCpSXAp6M3LYlAo6osgSi0xOM=
-golang.org/x/sys v0.11.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.12.0 h1:CM0HF96J0hcLAwsHPJZjfdNzs0gftsLfgKt57wWHJ0o=
+golang.org/x/sys v0.12.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/text v0.9.0 h1:2sjJmO8cDvYveuX97RDLsxlyUxLl+GHoLxBiRdHllBE=
 golang.org/x/text v0.9.0/go.mod h1:e1OnstbJyHTd6l/uOt8jFFHp6TRDWZR/bV3emEE/zU8=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
