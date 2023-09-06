@@ -1,6 +1,7 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:grpc/grpc.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:yaru/yaru.dart';
@@ -39,7 +40,13 @@ class Pro4WindowsApp extends StatelessWidget {
                 registerServiceInstance<AgentApiClient>(client);
                 final subscriptionInfo =
                     context.read<ValueNotifier<SubscriptionInfo>>();
-                subscriptionInfo.value = await client.subscriptionInfo();
+                // TODO: Remove this try-catch once the agent stop crashing due lack of MS Store access
+                try {
+                  subscriptionInfo.value = await client.subscriptionInfo();
+                } on GrpcError catch (err) {
+                  debugPrint('$err');
+                  debugPrintStack(maxFrames: 20);
+                }
               },
             ),
             child: const StartupPage(nextRoute: Routes.subscriptionStatus),
