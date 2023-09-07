@@ -3,6 +3,7 @@ package microsoftstore_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,17 +12,22 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/microsoftstore"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
+	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+
+	slog.SetDefault(slog.New(h))
+
 	if runtime.GOOS == "windows" {
 		if err := buildStoreAPI(ctx); err != nil {
-			fmt.Fprintf(os.Stderr, "Setup: %v", err)
+			slog.Error(fmt.Sprintf("Setup: %v", err))
 			os.Exit(1)
 		}
 	}
@@ -102,13 +108,13 @@ func buildStoreAPI(ctx context.Context) error {
 		`-verbosity:normal`,
 	)
 
-	log.Infof(ctx, "Building store api DLL")
+	slog.Info("Building store api DLL")
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("could not build store api DLL: %v. Log:\n%s", err, out)
 	}
 
-	log.Infof(ctx, "Built store api DLL")
+	slog.Info("Built store api DLL")
 
 	return nil
 }

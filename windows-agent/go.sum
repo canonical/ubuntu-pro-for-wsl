@@ -50,6 +50,8 @@ github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-6
 github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-60fb5d60ada4/go.mod h1:lqO8UB33LPVdfiMDMlc1swo3S9bwqhW8DtO75dgTLWo=
 github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230906090052-60fb5d60ada4 h1:V6mnKw1LBnVyWAa6/G6uumbpL8wrhI1LZu4nJbc9nCk=
 github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230906090052-60fb5d60ada4/go.mod h1:9Y+yTNgzog0o2y8UABpKjH9lCdlHUAVMPEV5jvdFhqU=
+github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore v0.0.0-20230906093332-11c8e171f61b h1:6jBgx3Zg4/hrl3N8OT0tazWRxTP7J0XS+EJfSiV6R/w=
+github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore v0.0.0-20230906093332-11c8e171f61b/go.mod h1:WXLeU3sdojsfq0A/aI98bY1Bx/9JdrV7y14pNyXCtqo=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230906090052-60fb5d60ada4 h1:vvFUurP/iXkNIRJG6kAHffAXLGQB3R3PzbEeEg2RY3Q=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230906090052-60fb5d60ada4/go.mod h1:GEtgc3YqISt1slWIVqdIz2Wh7mrWLIyFbsug3+m180Y=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -203,8 +205,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
-github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6 h1:J0625LLHcZxxnnKCdr2iBbTtYjUiv6KkM6NpGisuQ3Q=
-github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
+github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
+github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
 github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4 h1:fci3jnfZQxfb92PRQwJHXR7Mxj5OiIWXVxkkpiXrkQI=
 github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4/go.mod h1:PBcZk1oAKQn1fwC9d9G2Vu25Ypxab9+UZMaPiPNjDy8=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
