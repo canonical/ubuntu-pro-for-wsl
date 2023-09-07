@@ -16,6 +16,12 @@ import (
 func TestProToken(t *testing.T) {
 	t.Parallel()
 
+	//nolint:gosec // These are not real tokens
+	const (
+		azureADToken   = "AZURE_AD_TOKEN"
+		ubuntuProToken = "UBUNTU_PRO_TOKEN"
+	)
+
 	testCases := map[string]struct {
 		// Microsoft store
 		expired      bool
@@ -44,22 +50,22 @@ func TestProToken(t *testing.T) {
 
 			ctx := context.Background()
 			store := mockMSStore{
-				expirationDate:    time.Now().Add(8760 * time.Hour), // Next year
+				expirationDate:    time.Now().Add(24 * 365 * time.Hour), // Next year
 				expirationDateErr: tc.expDateError,
 
 				jwt:            "JWT_123",
-				jwtWantADToken: "AZURE_AD_TOKEN",
+				jwtWantADToken: azureADToken,
 				jwtErr:         tc.jwtError,
 			}
 
 			if tc.expired {
-				store.expirationDate = time.Now().Add(-8760 * time.Hour) // Last year
+				store.expirationDate = time.Now().Add(-24 * 365 * time.Hour) // Last year
 			}
 
 			settings := contractsmockserver.DefaultSettings()
 
-			settings.Token.OnSuccess.Value = "AZURE_AD_TOKEN"
-			settings.Subscription.OnSuccess.Value = "UBUNTU_PRO_TOKEN"
+			settings.Token.OnSuccess.Value = azureADToken
+			settings.Subscription.OnSuccess.Value = ubuntuProToken
 
 			settings.Token.Disabled = tc.getServerAccessTokenErr
 			settings.Subscription.Disabled = tc.getProTokenErr
@@ -80,7 +86,7 @@ func TestProToken(t *testing.T) {
 			}
 			require.NoError(t, err, "ProToken should return no error")
 
-			require.Equal(t, "UBUNTU_PRO_TOKEN", token, "Unexpected value for the pro token")
+			require.Equal(t, ubuntuProToken, token, "Unexpected value for the pro token")
 		})
 	}
 }
