@@ -17,7 +17,7 @@ func TestProToken(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// Msft store
+		// Microsoft store
 		expired      bool
 		jwtError     bool
 		expDateError bool
@@ -100,7 +100,7 @@ func (s mockMSStore) GenerateUserJWT(azureADToken string) (jwt string, err error
 	}
 
 	if azureADToken != s.jwtWantADToken {
-		return "", fmt.Errorf("azure AD token does not match. Want %q and got %q", s.jwtWantADToken, azureADToken)
+		return "", fmt.Errorf("Azure AD token does not match. Want %q and got %q", s.jwtWantADToken, azureADToken)
 	}
 
 	return s.jwt, nil

@@ -37,7 +37,7 @@ func WithMockMicrosoftStore(store MicrosoftStore) Option {
 	}
 }
 
-// MicrosoftStore is an interface to the Micrsoft store API.
+// MicrosoftStore is an interface to the Microsoft store API.
 type MicrosoftStore interface {
 	GenerateUserJWT(azureADToken string) (jwt string, err error)
 	GetSubscriptionExpirationDate() (tm time.Time, err error)
