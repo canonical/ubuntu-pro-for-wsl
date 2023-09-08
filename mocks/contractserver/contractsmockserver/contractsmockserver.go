@@ -56,7 +56,7 @@ func DefaultSettings() Settings {
 // NewServer creates a new contract server with the provided settings.
 func NewServer(s Settings) *Server {
 	sv := &Server{
-		ServerBase: restserver.ServerBase{GetAddress: s.Address},
+		ServerBase: restserver.ServerBase{Address: s.Address},
 		settings:   s,
 	}
 	mux := http.NewServeMux()

@@ -16,12 +16,12 @@ import (
 
 // ServerBase is the core building block of configurable mock REST servers.
 type ServerBase struct {
-	server *http.Server
-	mu     sync.RWMutex
+	Address func() string
+	server  *http.Server
+	mu      sync.RWMutex
 
-	done       chan struct{}
-	GetAddress func() string
-	Mux        *http.ServeMux
+	done chan struct{}
+	Mux  *http.ServeMux
 }
 
 // Endpoint contains settings for an API endpoint behaviour. Can be modified for testing purposes.
@@ -76,7 +76,7 @@ func (s *ServerBase) Serve(ctx context.Context) (string, error) {
 	}
 
 	var lc net.ListenConfig
-	lis, err := lc.Listen(ctx, "tcp", s.GetAddress())
+	lis, err := lc.Listen(ctx, "tcp", s.Address())
 	if err != nil {
 		return "", fmt.Errorf("failed to listen over tcp: %v", err)
 	}
