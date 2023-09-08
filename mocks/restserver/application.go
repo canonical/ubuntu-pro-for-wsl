@@ -18,14 +18,12 @@ import (
 // Server is the minimal interface mock REST servers must provide to the Application.
 type Server interface {
 	Stop() error
-	Serve(ctx context.Context) (string, error)
+	Serve(ctx context.Context, addr string) error
+	Address() string
 }
 
 // Settings is the minimal interface a settings backend must provide to the Application.
-type Settings interface {
-	SetAddress(address string)
-	Address() string
-}
+type Settings interface{}
 
 // App encapsulates creating and managing the CLI and lifecycle.
 type App struct {
@@ -151,16 +149,15 @@ The outfile, if provided, will contain the address.`, app.Description),
 				}
 			}
 
-			if addr := cmd.Flag("address").Value.String(); addr != "" {
-				settings.SetAddress(addr)
-			}
-
 			sv := app.ServerFactory(settings)
-			addr, err := sv.Serve(ctx)
+			addr := cmd.Flag("address").Value.String()
+			err := sv.Serve(ctx, addr)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Could not serve: %v", err))
 				os.Exit(1)
 			}
+
+			addr = sv.Address()
 
 			defer func() {
 				if err := sv.Stop(); err != nil {

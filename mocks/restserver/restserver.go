@@ -16,7 +16,7 @@ import (
 
 // ServerBase is the core building block of configurable mock REST servers.
 type ServerBase struct {
-	Address func() string
+	address string
 	server  *http.Server
 	mu      sync.RWMutex
 
@@ -64,21 +64,30 @@ func (s *ServerBase) Stop() error {
 	return err
 }
 
-// Serve starts a new HTTP server mocking the MS Store API with
+// Address returns the server network address configured during Serve. Empty string is returned when called before Serve.
+func (s *ServerBase) Address() string {
+	return s.address
+}
+
+// Serve starts a new HTTP server listening on address with
 // responses defined according to Server Settings. Use Stop to Stop the server and
 // release resources.
-func (s *ServerBase) Serve(ctx context.Context) (string, error) {
+func (s *ServerBase) Serve(ctx context.Context, address string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.server != nil {
-		return "", errors.New("already serving")
+		return errors.New("already serving")
+	}
+
+	if address == "" {
+		address = "localhost:0"
 	}
 
 	var lc net.ListenConfig
-	lis, err := lc.Listen(ctx, "tcp", s.Address())
+	lis, err := lc.Listen(ctx, "tcp", address)
 	if err != nil {
-		return "", fmt.Errorf("failed to listen over tcp: %v", err)
+		return fmt.Errorf("failed to listen over tcp: %v", err)
 	}
 
 	s.server = &http.Server{
@@ -96,7 +105,9 @@ func (s *ServerBase) Serve(ctx context.Context) (string, error) {
 		}
 	}()
 
-	return lis.Addr().String(), nil
+	// This is the only moment we set the server address.
+	s.address = lis.Addr().String()
+	return nil
 }
 
 // ValidateRequest extracts common boilerplate used to validate the request from endpoints.

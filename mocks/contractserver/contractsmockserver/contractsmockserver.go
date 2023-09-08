@@ -31,17 +31,6 @@ type Server struct {
 type Settings struct {
 	Token        restserver.Endpoint
 	Subscription restserver.Endpoint
-	address      string
-}
-
-// Address returns the previously set address.
-func (s *Settings) Address() string {
-	return s.address
-}
-
-// SetAddress updates a Settings object with the new address.
-func (s *Settings) SetAddress(addr string) {
-	s.address = addr
 }
 
 // DefaultSettings returns the default set of settings for the server.
@@ -49,16 +38,12 @@ func DefaultSettings() Settings {
 	return Settings{
 		Token:        restserver.Endpoint{OnSuccess: restserver.Response{Value: DefaultADToken, Status: http.StatusOK}},
 		Subscription: restserver.Endpoint{OnSuccess: restserver.Response{Value: DefaultProToken, Status: http.StatusOK}},
-		address:      "localhost:0",
 	}
 }
 
 // NewServer creates a new contract server with the provided settings.
 func NewServer(s Settings) *Server {
-	sv := &Server{
-		ServerBase: restserver.ServerBase{Address: s.Address},
-		settings:   s,
-	}
+	sv := &Server{settings: s}
 	mux := http.NewServeMux()
 
 	if !s.Token.Disabled {

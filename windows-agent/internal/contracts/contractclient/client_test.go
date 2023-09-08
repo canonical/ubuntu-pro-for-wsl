@@ -224,9 +224,10 @@ func TestGetServerAccessTokenNet(t *testing.T) {
 
 				s := contractsmockserver.NewServer(settings)
 
-				addr, err = s.Serve(ctx)
+				err := s.Serve(ctx, "localhost:0")
 				require.NoError(t, err, "Setup: Server should return no error")
 
+				addr = s.Address()
 				//nolint:errcheck // Nothing we can do about it
 				defer s.Stop()
 			}
@@ -305,9 +306,10 @@ func TestGetProTokenNet(t *testing.T) {
 
 				s := contractsmockserver.NewServer(settings)
 
-				addr, err = s.Serve(ctx)
+				err = s.Serve(ctx, "localhost:0")
 				require.NoError(t, err, "Setup: Server should return no error")
 
+				addr = s.Address()
 				//nolint:errcheck // Nothing we can do about it
 				defer s.Stop()
 			}
