@@ -73,7 +73,7 @@ func NewServer(s Settings) *Server {
 	return sv
 }
 
-// handleToken implements the /token restserver.Endpoint.
+// handleToken implements the /token endpoint.
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	if err := s.ValidateRequest(w, r, http.MethodGet, s.settings.Token); err != nil {
 		fmt.Fprintf(w, "%v", err)
@@ -87,7 +87,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleSubscription implements the /susbcription restserver.Endpoint.
+// handleSubscription implements the /susbcription endpoint.
 func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 	if err := s.ValidateRequest(w, r, http.MethodPost, s.settings.Subscription); err != nil {
 		fmt.Fprintf(w, "%v", err)
