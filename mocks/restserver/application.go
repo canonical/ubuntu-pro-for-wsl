@@ -16,23 +16,31 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Server is the minimal interface mock REST servers must provide to the Application.
 type Server interface {
 	Stop() error
 	Serve(ctx context.Context) (string, error)
 }
 
+// Settings is the minimal interface a settings backend must provide to the Application.
 type Settings interface {
 	SetAddress(address string)
 	GetAddress() string
 }
 
+// Application encapsulates creating and managing the CLI and lifecycle.
 type Application struct {
-	Name            string
-	Description     string
+	// Name of the application as shown in the help messages.
+	Name string
+	// Description fo the application as shown in the long help messages.
+	Description string
+	// The default settings that the application will pass to the server instance.
 	DefaultSettings Settings
-	ServerFactory   func(Settings) Server
+	// A function capable of translating from the Settings interface into the concrete implementation a particular server will need to run.
+	ServerFactory func(Settings) Server
 }
 
+// Execute runs the server CLI.
 func (a *Application) Execute() int {
 	rootCmd := a.rootCmd()
 	rootCmd.AddCommand(a.showDefaultsCmd())

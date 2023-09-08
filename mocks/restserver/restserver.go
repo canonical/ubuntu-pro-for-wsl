@@ -15,7 +15,7 @@ import (
 	"log/slog"
 )
 
-// ServerBase is a configurable mock of the MS Store runtime component that talks REST.
+// ServerBase is the core building block of configurable mock REST servers.
 type ServerBase struct {
 	server *http.Server
 	mu     sync.RWMutex
@@ -37,6 +37,7 @@ type Endpoint struct {
 	Blocked bool
 }
 
+// EndpointOk returns a minimal endpoint configured for success.
 func EndpointOk() Endpoint {
 	return Endpoint{OnSuccess: Response{Status: http.StatusOK}}
 }
@@ -99,7 +100,7 @@ func (s *ServerBase) Serve(ctx context.Context) (string, error) {
 	return lis.Addr().String(), nil
 }
 
-// validateRequest extracts common boilerplate used to validate the request from endpoints.
+// ValidateRequest extracts common boilerplate used to validate the request from endpoints.
 func (s *ServerBase) ValidateRequest(w http.ResponseWriter, r *http.Request, wantMethod string, endpoint Endpoint) (err error) {
 	slog.Info("Received request", "endpoint", r.URL.Path, "method", r.Method)
 	defer func() {
