@@ -3,11 +3,13 @@
 package storemockserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
+	"golang.org/x/exp/slices"
 	"golang.org/x/exp/slog"
 )
 
@@ -128,16 +130,23 @@ func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
-	resp := s.settings.GetProducts.OnSuccess
-	if resp.Status != http.StatusOK {
-		w.WriteHeader(resp.Status)
-		fmt.Fprintf(w, "mock error: %d", resp.Status)
-		return
+	q := r.URL.Query()
+	kinds := q["kinds"]
+	ids := q["ids"]
+	var productsFound []Product
+	for _, p := range s.settings.AllProducts {
+		if slices.Contains(kinds, p.ProductKind) && slices.Contains(ids, p.StoreID) {
+			productsFound = append(productsFound, p)
+		}
+	}
+
+	bs, err := json.Marshal(productsFound)
+	if err != nil {
+		fmt.Fprintf(w, "failed to marshall the matching products: %v", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprint(w, resp.Value)
-
+	fmt.Fprint(w, string(bs))
 }
 
 // https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storepurchasestatus?view=winrt-22621#fields
