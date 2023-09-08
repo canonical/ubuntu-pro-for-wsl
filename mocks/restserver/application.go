@@ -24,7 +24,7 @@ type Server interface {
 // Settings is the minimal interface a settings backend must provide to the Application.
 type Settings interface {
 	SetAddress(address string)
-	GetAddress() string
+	Address() string
 }
 
 // Application encapsulates creating and managing the CLI and lifecycle.
