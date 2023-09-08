@@ -9,11 +9,8 @@ import (
 )
 
 func serverFactory(settings restserver.Settings) restserver.Server {
-	innerSettings, ok := settings.(*contractsmockserver.Settings)
-	if !ok {
-		panic("Cannot receive my own settings")
-	}
-	return contractsmockserver.NewServer(*innerSettings)
+	//nolint:forcetypeassert // Let the type coersion panic on failure.
+	return contractsmockserver.NewServer(*settings.(*contractsmockserver.Settings))
 }
 
 func main() {
