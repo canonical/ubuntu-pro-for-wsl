@@ -6,11 +6,10 @@ package restserver
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
-
-	"log/slog"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"

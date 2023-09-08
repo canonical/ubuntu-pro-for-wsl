@@ -7,12 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"sync"
 	"time"
-
-	"log/slog"
 )
 
 // ServerBase is the core building block of configurable mock REST servers.
