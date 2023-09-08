@@ -59,24 +59,18 @@ func NewServer(s Settings) *Server {
 		ServerBase: restserver.ServerBase{GetAddress: s.Address},
 		settings:   s,
 	}
-	sv.Mux = sv.NewMux()
-
-	return sv
-}
-
-// NewMux sets up a ServeMux to handle the server endpoints enabled according to the server settings.
-func (s *Server) NewMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	if !s.settings.Token.Disabled {
-		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), s.handleToken)
+	if !s.Token.Disabled {
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.TokenPath), sv.handleToken)
 	}
 
-	if !s.settings.Subscription.Disabled {
-		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), s.handleSubscription)
+	if !s.Subscription.Disabled {
+		mux.HandleFunc(path.Join(contractsapi.Version, contractsapi.SubscriptionPath), sv.handleSubscription)
 	}
+	sv.Mux = mux
 
-	return mux
+	return sv
 }
 
 // handleToken implements the /token restserver.Endpoint.
