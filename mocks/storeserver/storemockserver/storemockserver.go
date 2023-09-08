@@ -118,15 +118,37 @@ func (s *Server) handleAllAuthenticatedUsers(w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
-	resp := s.settings.GenerateUserJWT.OnSuccess
-	if resp.Status != http.StatusOK {
-		w.WriteHeader(resp.Status)
-		fmt.Fprintf(w, "mock error: %d", resp.Status)
+	q := r.URL.Query()
+	// https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storecontext.getcustomerpurchaseidasync
+	serviceTicket := q.Get("serviceticket")
+	publisherUserID := q.Get("publisheruserid")
+	if len(serviceTicket) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "service ticket (Azure access token) is required.")
 		return
 	}
 
+	// Predefined errors
+	if serviceTicket == "expiredtoken" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "service ticket is expired.")
+		return
+	}
+
+	if serviceTicket == "servererror" {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "internal server error.")
+		return
+	}
+
+	responseValue := s.settings.GenerateUserJWT.OnSuccess.Value
+	// The user JWT may encode an anonymous ID that identifies the current user in the context of services that manage the current app.
+	if len(publisherUserID) > 0 {
+		responseValue += "_from_user_" + publisherUserID
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprintf(w, `{"jwt":%q}`, resp.Value)
+	fmt.Fprintf(w, `{"jwt":%q}`, responseValue)
 }
 
 func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
