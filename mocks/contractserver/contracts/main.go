@@ -19,12 +19,12 @@ func serverFactory(settings restserver.Settings) restserver.Server {
 func main() {
 	defaultSettings := contractsmockserver.DefaultSettings()
 
-	app := restserver.Application{
+	app := restserver.App{
 		Name:            "contract server",
 		Description:     "contract server",
 		DefaultSettings: &defaultSettings,
 		ServerFactory:   serverFactory,
 	}
 
-	os.Exit(app.Execute())
+	os.Exit(app.Run())
 }

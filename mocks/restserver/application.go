@@ -27,8 +27,8 @@ type Settings interface {
 	Address() string
 }
 
-// Application encapsulates creating and managing the CLI and lifecycle.
-type Application struct {
+// App encapsulates creating and managing the CLI and lifecycle.
+type App struct {
 	// Name of the application as shown in the help messages.
 	Name string
 	// Description fo the application as shown in the long help messages.
@@ -39,10 +39,10 @@ type Application struct {
 	ServerFactory func(Settings) Server
 }
 
-// Execute runs the server CLI.
-func (a *Application) Execute() int {
-	rootCmd := a.rootCmd()
-	rootCmd.AddCommand(a.showDefaultsCmd())
+// Run runs the server CLI.
+func (app *App) Run() int {
+	rootCmd := app.rootCmd()
+	rootCmd.AddCommand(app.showDefaultsCmd())
 
 	rootCmd.PersistentFlags().CountP("verbosity", "v", "WARNING (-v) INFO (-vv), DEBUG (-vvv)")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "File where relevant non-log output will be written to")
@@ -83,14 +83,14 @@ func execName() string {
 	return filepath.Base(exe)
 }
 
-func (a *Application) showDefaultsCmd() *cobra.Command {
+func (app *App) showDefaultsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show-defaults",
-		Short: fmt.Sprintf("See the default values for the %s server", a.Name),
-		Long:  fmt.Sprintf("See the default values for the %s server. These are the settings that 'serve' will use unless overridden.", a.Description),
+		Short: fmt.Sprintf("See the default values for the %s server", app.Name),
+		Long:  fmt.Sprintf("See the default values for the %s server. These are the settings that 'serve' will use unless overridden.", app.Description),
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			out, err := yaml.Marshal(a.DefaultSettings)
+			out, err := yaml.Marshal(app.DefaultSettings)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Could not marshal default settings: %v", err))
 				os.Exit(1)
@@ -109,14 +109,14 @@ func (a *Application) showDefaultsCmd() *cobra.Command {
 	}
 }
 
-func (a *Application) rootCmd() *cobra.Command {
+func (app *App) rootCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   fmt.Sprintf("%s [settings_file]", execName()),
-		Short: fmt.Sprintf("A mock %s server for Ubuntu Pro For Windows testing", a.Name),
+		Short: fmt.Sprintf("A mock %s server for Ubuntu Pro For Windows testing", app.Name),
 		Long: fmt.Sprintf(`A mock of the %s for Ubuntu Pro For Windows testing.
 Serve the store server with the optional settings file.
 Default settings will be used if none are provided.
-The outfile, if provided, will contain the address.`, a.Description),
+The outfile, if provided, will contain the address.`, app.Description),
 		Args: cobra.RangeArgs(0, 1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Force a visit of the local flags so persistent flags for all parents are merged.
@@ -136,7 +136,7 @@ The outfile, if provided, will contain the address.`, a.Description),
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			settings := a.DefaultSettings
+			settings := app.DefaultSettings
 
 			if len(args) > 0 {
 				out, err := os.ReadFile(args[0])
@@ -155,7 +155,7 @@ The outfile, if provided, will contain the address.`, a.Description),
 				settings.SetAddress(addr)
 			}
 
-			sv := a.ServerFactory(settings)
+			sv := app.ServerFactory(settings)
 			addr, err := sv.Serve(ctx)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Could not serve: %v", err))
