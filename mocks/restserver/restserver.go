@@ -36,8 +36,8 @@ type Endpoint struct {
 	Blocked bool
 }
 
-// EndpointOk returns a minimal endpoint configured for success.
-func EndpointOk() Endpoint {
+// NewEndpoint returns a minimal endpoint configured for success.
+func NewEndpoint() Endpoint {
 	return Endpoint{OnSuccess: Response{Status: http.StatusOK}}
 }
 
