@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
+	"golang.org/x/exp/slog"
 )
 
 // Settings contains the parameters for the Server.
@@ -139,15 +140,62 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storepurchasestatus?view=winrt-22621#fields
+const (
+	// "NetworkError" is technically not needed, since this is a client-originated error.
+	alreadyPurchased = "AlreadyPurchased"
+	notPurchased     = "NotPurchased"
+	serverError      = "ServerError"
+	succeeded        = "Succeeded"
+)
+
 func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
-	resp := s.settings.Purchase.OnSuccess
-	if resp.Status != http.StatusOK {
-		w.WriteHeader(resp.Status)
-		fmt.Fprintf(w, "mock error: %d", resp.Status)
+	id := r.URL.Query().Get("id")
+
+	if len(id) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "product ID is required.")
+		return
+	}
+
+	if id == "nonexistent" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "product %s does not exist", id)
+		return
+	}
+
+	if id == "servererror" {
+		slog.Info("server error triggered", id)
+		fmt.Fprintf(w, `{"status":%q}`, serverError)
+		return
+	}
+
+	if id == "cannotpurchase" {
+		slog.Info("purchase error triggered", id)
+		fmt.Fprintf(w, `{"status":%q}`, notPurchased)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprintf(w, `{"result":%q}`, resp.Value)
 
+	for i, p := range s.settings.AllProducts {
+		if p.StoreID != id {
+			continue
+		}
+
+		if p.IsInUserCollection {
+			slog.Info("product already in user collection", id)
+			fmt.Fprintf(w, `{"status":%q}`, alreadyPurchased)
+			return
+		}
+
+		year, month, day := time.Now().Date()
+		s.settings.AllProducts[i].ExpirationDate = time.Date(year+1, month, day, 1, 1, 1, 1, time.Local) // one year from now.
+		s.settings.AllProducts[i].IsInUserCollection = true
+		fmt.Fprintf(w, `{"status":%q}`, succeeded)
+		return
+	}
+
+	w.WriteHeader(http.StatusBadRequest)
+	fmt.Fprintf(w, "product %s does not exist", id)
 }
