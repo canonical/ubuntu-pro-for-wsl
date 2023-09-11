@@ -12,9 +12,11 @@ packages:
   agentapi:
     dependency: "direct main"
     description:
-      path: "../../../agentapi/dart"
-      relative: true
-    source: path
+      path: "agentapi/dart"
+      ref: HEAD
+      resolved-ref: f9ab362ca71ad6ca65df8a7d07540fd6cd461df1
+      url: "https://github.com/canonical/ubuntu-pro-for-windows"
+    source: git
     version: "0.0.1"
   analyzer:
     dependency: transitive
@@ -314,10 +316,10 @@ packages:
     dependency: "direct main"
     description:
       name: grpc
-      sha256: "220ffb2218288f4e7dea487242e08b9c6277596d9b6f3f10ba50be96771a032d"
+      sha256: e93ee3bce45c134bf44e9728119102358c7cd69de7832d9a874e2e74eb8cab40
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.3"
+    version: "3.2.4"
   gtk:
     dependency: transitive
     description:
@@ -462,9 +464,11 @@ packages:
   p4w_ms_store:
     dependency: "direct main"
     description:
-      path: "../p4w_ms_store"
-      relative: true
-    source: path
+      path: "gui/packages/p4w_ms_store"
+      ref: HEAD
+      resolved-ref: f9ab362ca71ad6ca65df8a7d07540fd6cd461df1
+      url: "https://github.com/canonical/ubuntu-pro-for-windows"
+    source: git
     version: "0.0.1"
   package_config:
     dependency: transitive
