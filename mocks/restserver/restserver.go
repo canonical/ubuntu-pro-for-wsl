@@ -66,6 +66,8 @@ func (s *ServerBase) Stop() error {
 
 // Address returns the server network address configured during Serve. Empty string is returned when called before Serve.
 func (s *ServerBase) Address() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.address
 }
 
