@@ -39,7 +39,15 @@ class SubscribeNowPage extends StatelessWidget {
                   ifLeft: (status) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Center(child: Text(status.localize(lang))),
+                        content: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 2.0,
+                              horizontal: 16.0,
+                            ),
+                            child: Text(status.localize(lang)),
+                          ),
+                        ),
                       ),
                     );
                   },
