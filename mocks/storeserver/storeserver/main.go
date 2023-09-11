@@ -9,22 +9,19 @@ import (
 )
 
 func serverFactory(settings restserver.Settings) restserver.Server {
-	innerSettings, ok := settings.(*storemockserver.Settings)
-	if !ok {
-		panic("Cannot receive my own settings")
-	}
-	return storemockserver.NewServer(*innerSettings)
+	//nolint:forcetypeassert // Let the type coersion panic on failure.
+	return storemockserver.NewServer(settings.(storemockserver.Settings))
 }
 
 func main() {
 	defaultSettings := storemockserver.DefaultSettings()
 
-	app := restserver.Application{
+	app := restserver.App{
 		Name:            "Store Server",
 		Description:     "MS Store API",
 		DefaultSettings: &defaultSettings,
 		ServerFactory:   serverFactory,
 	}
 
-	os.Exit(app.Execute())
+	os.Exit(app.Run())
 }

@@ -21,24 +21,12 @@ type Settings struct {
 	Purchase              restserver.Endpoint
 
 	AllProducts []Product
-
-	address string
 }
 
 // Server is a configurable mock of the MS Store runtime component that talks REST.
 type Server struct {
 	restserver.ServerBase
 	settings Settings
-}
-
-// SetAddress updates a Settings object with the new address.
-func (s *Settings) SetAddress(address string) {
-	s.address = address
-}
-
-// GetAddress returns the previously set address.
-func (s *Settings) GetAddress() string {
-	return s.address
 }
 
 // Product models the interesting properties from the MS StoreProduct type.
@@ -54,48 +42,42 @@ type Product struct {
 // DefaultSettings returns the default set of Settings for the server.
 func DefaultSettings() Settings {
 	return Settings{
-		address:               "localhost:0",
 		AllProducts:           []Product{{StoreID: "A_NICE_ID", Title: "A nice title", Description: "A nice description", IsInUserCollection: false, ProductKind: "Durable", ExpirationDate: time.Time{}}},
 		AllAuthenticatedUsers: restserver.Endpoint{OnSuccess: restserver.Response{Value: `"user@email.pizza"`, Status: http.StatusOK}},
 		GenerateUserJWT:       restserver.Endpoint{OnSuccess: restserver.Response{Value: "AMAZING_JWT", Status: http.StatusOK}},
 		// Predefined success configuration for those endpoints doesn't really make sense.
-		GetProducts: restserver.EndpointOk(),
-		Purchase:    restserver.EndpointOk(),
+		GetProducts: restserver.NewEndpoint(),
+		Purchase:    restserver.NewEndpoint(),
 	}
 }
 
 // NewServer creates a new store mock server with the provided Settings.
 func NewServer(s Settings) *Server {
 	sv := &Server{
-		ServerBase: restserver.ServerBase{GetAddress: s.GetAddress},
-		settings:   s,
+		settings: s,
 	}
-	sv.Mux = sv.NewMux()
 
-	return sv
-}
-
-// NewMux sets up a ServeMux to handle the server endpoints enabled according to the server settings.
-func (s *Server) NewMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	if !s.settings.AllAuthenticatedUsers.Disabled {
-		mux.HandleFunc("/allauthenticatedusers", s.generateHandler(s.settings.AllAuthenticatedUsers, s.handleAllAuthenticatedUsers))
+	if !s.AllAuthenticatedUsers.Disabled {
+		mux.HandleFunc("/allauthenticatedusers", sv.generateHandler(s.AllAuthenticatedUsers, sv.handleAllAuthenticatedUsers))
 	}
 
-	if !s.settings.GenerateUserJWT.Disabled {
-		mux.HandleFunc("/generateuserjwt", s.generateHandler(s.settings.GenerateUserJWT, s.handleGenerateUserJWT))
+	if !s.GenerateUserJWT.Disabled {
+		mux.HandleFunc("/generateuserjwt", sv.generateHandler(s.GenerateUserJWT, sv.handleGenerateUserJWT))
 	}
 
-	if !s.settings.GetProducts.Disabled {
-		mux.HandleFunc("/products", s.generateHandler(s.settings.GetProducts, s.handleGetProducts))
+	if !s.GetProducts.Disabled {
+		mux.HandleFunc("/products", sv.generateHandler(s.GetProducts, sv.handleGetProducts))
 	}
 
-	if !s.settings.Purchase.Disabled {
-		mux.HandleFunc("/purchase", s.generateHandler(s.settings.Purchase, s.handlePurchase))
+	if !s.Purchase.Disabled {
+		mux.HandleFunc("/purchase", sv.generateHandler(s.Purchase, sv.handlePurchase))
 	}
 
-	return mux
+	sv.Mux = mux
+
+	return sv
 }
 
 // Generates a request handler function by chaining calls to the server request validation routine and the actual handler.
