@@ -67,7 +67,7 @@ void main() {
         await buildAgentExe(agentDir);
       });
 
-      tearDownAll(() async {
+      tearDown(() async {
         // kill all agent processes.
         if (Platform.isWindows) {
           await Process.run('taskkill.exe', ['/f', '/im', agentImageName]);
@@ -79,6 +79,10 @@ void main() {
             [p.basenameWithoutExtension(agentImageName)],
           );
         }
+        File(p.join(tmp!.path, 'Ubuntu Pro', 'addr')).deleteSync();
+      });
+
+      tearDownAll(() async {
         // Finally deletes the directory.
         await Directory(agentDir).delete(recursive: true);
       });
