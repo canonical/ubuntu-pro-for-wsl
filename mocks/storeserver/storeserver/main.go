@@ -10,7 +10,7 @@ import (
 
 func serverFactory(settings restserver.Settings) restserver.Server {
 	//nolint:forcetypeassert // Let the type coersion panic on failure.
-	return storemockserver.NewServer(settings.(storemockserver.Settings))
+	return storemockserver.NewServer(*settings.(*storemockserver.Settings))
 }
 
 func main() {
