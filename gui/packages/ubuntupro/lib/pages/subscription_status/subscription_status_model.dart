@@ -1,4 +1,5 @@
 import 'package:agentapi/agentapi.dart';
+import 'package:dart_either/dart_either.dart';
 import 'package:flutter/material.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -78,11 +79,23 @@ class SubscribeNowModel extends SubscriptionStatusModel {
     launchUrl(Uri.parse('https://ubuntu.com/pro'));
   }
 
-// TODO: Communicate this with the agent's UI Service to
-// - Get the product ID
-// - Notify it of the result of the purchase
-// - Display errors
-  Future<void> purchaseSubscription() async {
-    await P4wMsStore().purchaseSubscription('9P25B50XMKXT');
+  /// Triggers a purchase transaction via MS Store.
+  /// If the purchase succeeds, this notifies the background agent and returns its [SubscriptionInfo] reply.
+  /// Otherwise the purchase status is returned so the UI can give the user some feedback.
+  Future<Either<PurchaseStatus, SubscriptionInfo>>
+      purchaseSubscription() async {
+    try {
+      final status = await P4wMsStore().purchaseSubscription(
+        '9P25B50XMKXT',
+      );
+      if (status == PurchaseStatus.succeeded) {
+        final newInfo = await client.notifyPurchase();
+        return newInfo.right();
+      }
+      return status.left();
+    } on Exception catch (err) {
+      debugPrint('$err');
+      return PurchaseStatus.unknown.left();
+    }
   }
 }

@@ -1,8 +1,11 @@
+import 'package:agentapi/agentapi.dart';
+import 'package:dart_either/dart_either.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
@@ -18,7 +21,7 @@ void main() {
     when(model.launchProWebPage()).thenAnswer((_) async {
       called = true;
     });
-    final app = buildApp(model);
+    final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
     final context = tester.element(find.byType(SubscribeNowPage));
     final lang = AppLocalizations.of(context);
@@ -29,29 +32,57 @@ void main() {
     await tester.pump();
     expect(called, isTrue);
   });
-  testWidgets('subscribe', (tester) async {
-    final model = MockSubscribeNowModel();
-    var called = false;
-    when(model.purchaseSubscription()).thenAnswer((_) async {
-      called = true;
-    });
-    final app = buildApp(model);
-    await tester.pumpWidget(app);
-    final context = tester.element(find.byType(SubscribeNowPage));
-    final lang = AppLocalizations.of(context);
+  group('subscribe', () {
+    testWidgets('calls back on success', (tester) async {
+      final model = MockSubscribeNowModel();
+      var called = false;
+      when(model.purchaseSubscription()).thenAnswer((_) async {
+        final info = SubscriptionInfo()..ensureMicrosoftStore();
+        return info.right();
+      });
+      final app = buildApp(model, (_) {
+        called = true;
+      });
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(SubscribeNowPage));
+      final lang = AppLocalizations.of(context);
 
-    expect(called, isFalse);
-    final button = find.text(lang.subscribeNow);
-    await tester.tap(button);
-    await tester.pump();
-    expect(called, isTrue);
+      expect(called, isFalse);
+      final button = find.text(lang.subscribeNow);
+      await tester.tap(button);
+      await tester.pump();
+      expect(called, isTrue);
+    });
+
+    testWidgets('feedback on error', (tester) async {
+      const purchaseError = PurchaseStatus.networkError;
+      final model = MockSubscribeNowModel();
+      var called = false;
+      when(model.purchaseSubscription()).thenAnswer((_) async {
+        return purchaseError.left();
+      });
+      final app = buildApp(model, (_) {
+        called = true;
+      });
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(SubscribeNowPage));
+      final lang = AppLocalizations.of(context);
+
+      expect(called, isFalse);
+      final button = find.text(lang.subscribeNow);
+      await tester.tap(button);
+      await tester.pump();
+      expect(find.byType(SnackBar), findsWidgets);
+      expect(find.text(purchaseError.localize(lang)), findsWidgets);
+      expect(called, isFalse);
+    });
   });
   testWidgets('feedback when applying token', (tester) async {
     final model = MockSubscribeNowModel();
     when(model.applyProToken(any)).thenAnswer((_) async {
       return;
     });
-    final app = buildApp(model);
+    final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
 
     // expands the collapsed input field group
@@ -76,15 +107,25 @@ void main() {
   });
 }
 
-Widget buildApp(SubscriptionStatusModel model) {
+Widget buildApp(
+  SubscriptionStatusModel model,
+  void Function(SubscriptionInfo) onSubs,
+) {
   return YaruTheme(
     builder: (context, yaru, child) => MaterialApp(
       theme: yaru.theme,
       darkTheme: yaru.darkTheme,
       home: Scaffold(
-        body: Provider.value(value: model, child: const SubscribeNowPage()),
+        body: Provider.value(
+          value: model,
+          child: SubscribeNowPage(
+            onSubscribed: onSubs,
+          ),
+        ),
       ),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
     ),
   );
 }
+
+void onSubscribeNoop(SubscriptionInfo _) {}

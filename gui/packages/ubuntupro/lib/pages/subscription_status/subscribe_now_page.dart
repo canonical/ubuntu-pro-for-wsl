@@ -1,5 +1,7 @@
+import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
 import 'package:yaru/yaru.dart';
 import '../widgets/page_widgets.dart';
@@ -7,7 +9,8 @@ import 'subscribe_now_widgets.dart';
 import 'subscription_status_model.dart';
 
 class SubscribeNowPage extends StatelessWidget {
-  const SubscribeNowPage({super.key});
+  const SubscribeNowPage({super.key, required this.onSubscribed});
+  final void Function(SubscriptionInfo) onSubscribed;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +28,32 @@ class SubscribeNowPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             ElevatedButton(
-              onPressed: model.purchaseSubscription,
+              onPressed: () async {
+                final subs = await model.purchaseSubscription();
+
+                // Using anything attached to the BuildContext after a suspension point might be tricky.
+                // Better check if it's still mounted in the widget tree.
+                if (!context.mounted) return;
+
+                subs.fold(
+                  ifLeft: (status) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 2.0,
+                              horizontal: 16.0,
+                            ),
+                            child: Text(status.localize(lang)),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  ifRight: onSubscribed,
+                );
+              },
               child: Text(lang.subscribeNow),
             ),
             const Padding(padding: EdgeInsets.only(right: 8.0)),
@@ -54,7 +82,7 @@ class SubscribeNowPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  AppLocalizations.of(context).applyingProToken(token.value),
+                  lang.applyingProToken(token.value),
                 ),
               ),
             );
@@ -62,5 +90,24 @@ class SubscribeNowPage extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+extension PurchaseStatusl10n on PurchaseStatus {
+  String localize(AppLocalizations lang) {
+    switch (this) {
+      case PurchaseStatus.succeeded:
+        return lang.purchaseStatusSuccess;
+      case PurchaseStatus.alreadyPurchased:
+        return lang.purchaseStatusAlreadyPurchased;
+      case PurchaseStatus.userGaveUp:
+        return lang.purchaseStatusUserGaveUp;
+      case PurchaseStatus.networkError:
+        return lang.purchaseStatusNetwork;
+      case PurchaseStatus.serverError:
+        return lang.purchaseStatusServer;
+      case PurchaseStatus.unknown:
+        return lang.purchaseStatusUnknown;
+    }
   }
 }
