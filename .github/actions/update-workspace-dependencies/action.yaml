@@ -16,7 +16,5 @@ runs:
           sudo DEBIAN_FRONTEND=noninteractive apt install -y jq
     - name: Update workspace dependencies
       shell: bash
-      run: ${{ github.action_path }}/update-workspace-dependencies.sh
-      env:
-        TARGET_MODULE: ${{ inputs.module }}
+      run: ${{ github.action_path }}/update-workspace-dependencies.sh "${{ github.repository }}" "wsl-pro-service"
 
