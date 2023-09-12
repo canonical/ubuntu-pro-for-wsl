@@ -134,19 +134,19 @@ func NewServer(s Settings) *Server {
 	mux := http.NewServeMux()
 
 	if !s.AllAuthenticatedUsers.Disabled {
-		mux.HandleFunc("/allauthenticatedusers", sv.generateHandler(s.AllAuthenticatedUsers, sv.handleAllAuthenticatedUsers))
+		mux.HandleFunc(AllAuthenticatedUsersPath, sv.generateHandler(s.AllAuthenticatedUsers, sv.handleAllAuthenticatedUsers))
 	}
 
 	if !s.GenerateUserJWT.Disabled {
-		mux.HandleFunc("/generateuserjwt", sv.generateHandler(s.GenerateUserJWT, sv.handleGenerateUserJWT))
+		mux.HandleFunc(GenerateUserJWTPath, sv.generateHandler(s.GenerateUserJWT, sv.handleGenerateUserJWT))
 	}
 
 	if !s.GetProducts.Disabled {
-		mux.HandleFunc("/products", sv.generateHandler(s.GetProducts, sv.handleGetProducts))
+		mux.HandleFunc(ProductPath, sv.generateHandler(s.GetProducts, sv.handleGetProducts))
 	}
 
 	if !s.Purchase.Disabled {
-		mux.HandleFunc("/purchase", sv.generateHandler(s.Purchase, sv.handlePurchase))
+		mux.HandleFunc(PurchasePath, sv.generateHandler(s.Purchase, sv.handlePurchase))
 	}
 
 	sv.Mux = mux
@@ -170,14 +170,14 @@ func (s *Server) generateHandler(endpoint restserver.Endpoint, handler func(http
 
 func (s *Server) handleAllAuthenticatedUsers(w http.ResponseWriter, r *http.Request) {
 	resp := s.settings.AllAuthenticatedUsers.OnSuccess
-	fmt.Fprintf(w, `{"users":[%s]}`, resp.Value)
+	fmt.Fprintf(w, `{%q:[%s]}`, UsersResponseKey, resp.Value)
 }
 
 func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	// https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storecontext.getcustomerpurchaseidasync
-	serviceTicket := q.Get("serviceticket")
-	publisherUserID := q.Get("publisheruserid")
+	serviceTicket := q.Get(ServiceTicketParam)
+	publisherUserID := q.Get(PublisherUserIDParam)
 	if len(serviceTicket) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "service ticket (Azure access token) is required.")
@@ -185,13 +185,13 @@ func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Predefined errors
-	if serviceTicket == "expiredtoken" {
+	if serviceTicket == ExpiredTokenValue {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "service ticket is expired.")
 		return
 	}
 
-	if serviceTicket == "servererror" {
+	if serviceTicket == ServerErrorValue {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "internal server error.")
 		return
@@ -204,13 +204,13 @@ func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprintf(w, `{"jwt":%q}`, responseValue)
+	fmt.Fprintf(w, `{%q:%q}`, JWTResponseKey, responseValue)
 }
 
 func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	kinds := q["kinds"]
-	ids := q["ids"]
+	kinds := q[ProductKindsParam]
+	ids := q[ProductIDsParam]
 	var productsFound []Product
 	for _, p := range s.settings.AllProducts {
 		if slices.Contains(kinds, p.ProductKind) && slices.Contains(ids, p.StoreID) {
@@ -227,39 +227,30 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(bs))
 }
 
-// https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storepurchasestatus?view=winrt-22621#fields
-const (
-	// "NetworkError" is technically not needed, since this is a client-originated error.
-	alreadyPurchased = "AlreadyPurchased"
-	notPurchased     = "NotPurchased"
-	serverError      = "ServerError"
-	succeeded        = "Succeeded"
-)
-
 func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := r.URL.Query().Get(ProductIDParam)
 
 	if len(id) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "product ID is required.")
+		fmt.Fprintf(w, "%s is required.", ProductIDParam)
 		return
 	}
 
-	if id == "nonexistent" {
+	if id == NonExistentValue {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "product %s does not exist", id)
 		return
 	}
 
-	if id == "servererror" {
+	if id == ServerErrorValue {
 		slog.Info("server error triggered", id)
-		fmt.Fprintf(w, `{"status":%q}`, serverError)
+		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, ServerErrorResult)
 		return
 	}
 
 	if id == "cannotpurchase" {
 		slog.Info("purchase error triggered", id)
-		fmt.Fprintf(w, `{"status":%q}`, notPurchased)
+		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, NotPurchasedResult)
 		return
 	}
 
@@ -272,14 +263,14 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 
 		if p.IsInUserCollection {
 			slog.Info("product already in user collection", id)
-			fmt.Fprintf(w, `{"status":%q}`, alreadyPurchased)
+			fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, AlreadyPurchasedResult)
 			return
 		}
 
 		year, month, day := time.Now().Date()
 		s.settings.AllProducts[i].ExpirationDate = time.Date(year+1, month, day, 1, 1, 1, 1, time.Local) // one year from now.
 		s.settings.AllProducts[i].IsInUserCollection = true
-		fmt.Fprintf(w, `{"status":%q}`, succeeded)
+		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, SucceededResult)
 		return
 	}
 
