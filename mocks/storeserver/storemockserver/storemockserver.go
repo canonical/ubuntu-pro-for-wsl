@@ -5,12 +5,12 @@ package storemockserver
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
 	"golang.org/x/exp/slices"
-	"golang.org/x/exp/slog"
 )
 
 const (
