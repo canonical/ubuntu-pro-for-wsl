@@ -13,6 +13,80 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+const (
+	// endpoint paths.
+
+	//AllAuthenticatedUsersPath is the path to GET the list of anonymous user ID's locally authenticated.
+	AllAuthenticatedUsersPath = "/allauthenticatedusers"
+
+	// GenerateUserJWTPath is the path to GET the user's store ID key (a.k.a. JWT).
+	GenerateUserJWTPath = "/generateuserjwt"
+
+	// ProductPath is the path to GET a collection of products related to the current application.
+	ProductPath = "/products"
+
+	// PurchasePath is the path to GET to purchase a subscription.
+	PurchasePath = "/purchase"
+
+	// endpoint URL parameter keys.
+
+	// ProductIDParam is the URL encoded key parameter to the product ID.
+	ProductIDParam = "id"
+
+	// ProductIDsParam is the plural version of the above for retrieving a collection of products associated with the current application.
+	ProductIDsParam = "ids"
+
+	// ProductKindsParam is the URL encoded key parameter to filter the collection of products associated with the current application.
+	ProductKindsParam = "kinds"
+
+	// ServiceTicketParam is the URL encoded key parameter to the service ticket input to generate the user JWT (a.k.a. the Azure AD token).
+	ServiceTicketParam = "serviceticket"
+
+	// PublisherUserIDParam is the URL encoded key parameter to the anonymous user ID to be encoded in the JWT (a.k.a. the user ID).
+	PublisherUserIDParam = "publisheruserid"
+
+	// predefined error triggering inputs.
+
+	// CannotPurchaseValue is the product ID that triggers a product purchase error.
+	CannotPurchaseValue = "cannotpurchase"
+
+	// ExpiredTokenValue is a token input that triggers the expired AAD token error.
+	ExpiredTokenValue = "expiredtoken"
+
+	// NonExistentValue is the product ID that triggers a product not found error.
+	NonExistentValue = "nonexistent"
+
+	// ServerErrorValue is the product ID and service ticket inputs that triggers an internal server error.
+	ServerErrorValue = "servererror"
+
+	// Purchase result values
+	// https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storepurchasestatus?view=winrt-22621#fields
+	// "NetworkError" is technically not needed, since this is a client-originated error.
+
+	// AlreadyPurchasedResult is the response value from the purchase endpoint when the user has previously purchased the supplied product ID.
+	AlreadyPurchasedResult = "AlreadyPurchased"
+
+	// NotPurchasedResult is the response value from the purchase endpoint when not even the store known why it failed :) .
+	NotPurchasedResult = "NotPurchased"
+
+	// ServerErrorResult is the response value from the purchase endpoint when an internal server error happens.
+	ServerErrorResult = "ServerError"
+
+	// SucceededResult is the response value of a succesfull purchase.
+	SucceededResult = "Succeeded"
+
+	// JSON response schema.
+
+	// UsersResponseKey is the JSON key of the response containing the list of locally authenticated users.
+	UsersResponseKey = "users"
+
+	// JWTResponseKey is the JSON key of the user JWT response.
+	JWTResponseKey = "jwt"
+
+	// PurchaseStatusKey is the JSON key of the purchase status response.
+	PurchaseStatusKey = "status"
+)
+
 // Settings contains the parameters for the Server.
 type Settings struct {
 	AllAuthenticatedUsers restserver.Endpoint
