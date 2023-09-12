@@ -71,11 +71,12 @@ func TestProToken(t *testing.T) {
 			settings.Subscription.Disabled = tc.getProTokenErr
 
 			server := contractsmockserver.NewServer(settings)
-			addr, err := server.Serve(ctx)
+			err := server.Serve(ctx, "localhost:0")
 			require.NoError(t, err, "Setup: Server should return no error")
 			//nolint:errcheck // Nothing we can do about it
 			defer server.Stop()
 
+			addr := server.Address()
 			url, err := url.Parse(fmt.Sprintf("http://%s", addr))
 			require.NoError(t, err, "Setup: Server URL should have been parsed with no issues")
 

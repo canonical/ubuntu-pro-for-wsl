@@ -2,158 +2,26 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
 	"os"
-	"path/filepath"
-	"strconv"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
+	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
 )
 
+func serverFactory(settings restserver.Settings) restserver.Server {
+	//nolint:forcetypeassert // Let the type coersion panic on failure.
+	return contractsmockserver.NewServer(settings.(contractsmockserver.Settings))
+}
+
 func main() {
-	rootCmd := rootCmd
+	defaultSettings := contractsmockserver.DefaultSettings()
 
-	rootCmd.AddCommand(defaultsCmd)
-
-	rootCmd.PersistentFlags().CountP("verbosity", "v", "WARNING (-v) INFO (-vv), DEBUG (-vvv)")
-	rootCmd.PersistentFlags().StringP("output", "o", "", "File where relevant non-log output will be written to")
-	rootCmd.Flags().StringP("address", "a", "", "Overrides the address where the server will be hosted")
-
-	if err := rootCmd.Execute(); err != nil {
-		slog.Error(fmt.Sprintf("Error executing: %v", err))
-		os.Exit(1)
+	app := restserver.App{
+		Name:            "contract server",
+		Description:     "contract server",
+		DefaultSettings: &defaultSettings,
+		ServerFactory:   serverFactory,
 	}
 
-	os.Exit(0)
-}
-
-// setVerboseMode changes the verbosity of the logs.
-func setVerboseMode(n int) {
-	var level slog.Level
-	switch n {
-	case 0:
-		level = slog.LevelError
-	case 1:
-		level = slog.LevelWarn
-	case 2:
-		level = slog.LevelInfo
-	default:
-		level = slog.LevelDebug
-	}
-
-	h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})
-	slog.SetDefault(slog.New(h))
-}
-
-func execName() string {
-	exe, err := os.Executable()
-	if err != nil {
-		slog.Error(fmt.Sprintf("Could not get executable name: %v", err))
-		os.Exit(1)
-	}
-
-	return filepath.Base(exe)
-}
-
-var defaultsCmd = &cobra.Command{
-	Use:   "show-defaults",
-	Short: "See the default values for the contract server",
-	Long:  "See the default values for the contract server. These are the settings that 'serve' will use unless overridden.",
-	Args:  cobra.ExactArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
-		out, err := yaml.Marshal(contractsmockserver.DefaultSettings())
-		if err != nil {
-			slog.Error(fmt.Sprintf("Could not marshal default settings: %v", err))
-			os.Exit(1)
-		}
-
-		if outfile := cmd.Flag("output").Value.String(); outfile != "" {
-			if err := os.WriteFile(outfile, out, 0600); err != nil {
-				slog.Error(fmt.Sprintf("Could not write to output file: %v", err))
-				os.Exit(1)
-			}
-			return
-		}
-
-		fmt.Println(string(out))
-	},
-}
-
-var rootCmd = &cobra.Command{
-	Use:   fmt.Sprintf("%s [settings_file]", execName()),
-	Short: "A mock contract server for Ubuntu Pro For Windows testing",
-	Long: `A mock contract server for Ubuntu Pro For Windows testing.
-Serve the mock contract server with the optional settings file.
-Default settings will be used if none are provided.
-The outfile, if provided, will contain the address.`,
-	Args: cobra.RangeArgs(0, 1),
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// Force a visit of the local flags so persistent flags for all parents are merged.
-		cmd.LocalFlags()
-
-		// command parsing has been successful. Returns to not print usage anymore.
-		cmd.SilenceUsage = true
-
-		v := cmd.Flag("verbosity").Value.String()
-		n, err := strconv.Atoi(v)
-		if err != nil {
-			return fmt.Errorf("could not parse verbosity: %v", err)
-		}
-
-		setVerboseMode(n)
-		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		ctx := context.Background()
-		settings := contractsmockserver.DefaultSettings()
-
-		if len(args) > 0 {
-			out, err := os.ReadFile(args[0])
-			if err != nil {
-				slog.Error(fmt.Sprintf("Could not read input file %q: %v", args[0], err))
-				os.Exit(1)
-			}
-
-			if err := yaml.Unmarshal(out, &settings); err != nil {
-				slog.Error(fmt.Sprintf("Could not unmarshal settings: %v", err))
-				os.Exit(1)
-			}
-		}
-
-		if addr := cmd.Flag("address").Value.String(); addr != "" {
-			settings.Address = addr
-		}
-
-		sv := contractsmockserver.NewServer(settings)
-		addr, err := sv.Serve(ctx)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Could not serve: %v", err))
-			os.Exit(1)
-		}
-
-		defer func() {
-			if err := sv.Stop(); err != nil {
-				slog.Error(fmt.Sprintf("stopped serving: %v", err))
-			}
-			slog.Info("stopped serving")
-		}()
-
-		if outfile := cmd.Flag("output").Value.String(); outfile != "" {
-			if err := os.WriteFile(outfile, []byte(addr), 0600); err != nil {
-				slog.Error(fmt.Sprintf("Could not write output file: %v", err))
-				os.Exit(1)
-			}
-		}
-
-		slog.Info(fmt.Sprintf("Serving on address %s", addr))
-
-		// Wait loop
-		for scanned := ""; scanned != "exit"; fmt.Scanf("%s\n", &scanned) {
-			fmt.Println("Write 'exit' to stop serving")
-		}
-	},
+	os.Exit(app.Run())
 }
