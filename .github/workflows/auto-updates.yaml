@@ -135,11 +135,13 @@ jobs:
           go-version-file: go.work
       - name: Update submodules
         uses: ./.github/actions/update-workspace-dependencies
+        with:
+          module: wsl-pro-service
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           commit-message: Auto update internal dependencies
-          title: Auto update internal dependencies
+          title: Auto update WSL-Pro-Service dependencies
           labels: automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/update-internal-dependencies
@@ -147,6 +149,3 @@ jobs:
       - name: Push branch
         run: |
           git push origin auto-updates/update-internal-dependencies:main
-        
-          
-        

@@ -2,8 +2,8 @@ name: Update Workspace dependencies
 description: Updates internal dependencies in a Go Workspace
 
 inputs:
-  token:
-    description: Github token
+  module:
+    description: The go module to update the dependencies of
     required: true
 
 runs:
@@ -17,4 +17,6 @@ runs:
     - name: Update workspace dependencies
       shell: bash
       run: ${{ github.action_path }}/update-workspace-dependencies.sh
+      env:
+        TARGET_MODULE: ${{ inputs.module }}
 

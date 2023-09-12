@@ -1,32 +1,37 @@
 #!/bin/bash
 set -eu
 
-repo="github.com/${GITHUB_REPOSITORY}"
-
-# Gather all go modules
-modules=$(go work edit -json                                \
-    | jq -r '.Use | keys[] as $k | "\(.[$k].DiskPath)"'     \
-    | sed $'s#\.\/##'                                       \
-)
+cd ${TARGET_MODULE}
+current_commit=$(git rev-parse HEAD~0)
 
 # Find internal dependencies
-for mod in ${modules} ; do
-    cd "${mod}"
-    echo "::group::Updating module ${mod}::"
-    
-    url="${repo}/${mod}"
-    regex="s#${url} \(${repo}/[^@]\+\)@v.*#\1#p"
-    dependencies=`go mod graph | sed -n "${regex}"`
-    
-    for dep in ${dependencies}; do
-        go get "${dep}@main"
-    done
+repo="github.com/${GITHUB_REPOSITORY}"
+url="${repo}/${TARGET_MODULE}"
+regex="s#${url} \(${repo}/[^@]\+@v.*\)#\1#p"
+dependencies=`go mod graph | sed -n "${regex}"`
 
-    go mod tidy
+for dependency in ${dependencies}; do  
+    pattern="^${repo}/\(.*\)@v\([^-]\+\)-\([^-]\+\)-\(.*\)$"
+    # Capture groups: (https://go.dev/ref/mod#versions)
+    # \1 Dependency path
+    # \2 Base version prefix
+    # \3 Timestamp
+    # \4 Revision identifier (12-character prefix of the commit hash)
+
+    dep_path=`echo $dependency | sed "s#${pattern}#\1#"`
+    dep_commit=`echo $dependency | sed "s#${pattern}#\4#"`
     
-    echo "Done"
+    diff_files="$(git diff --name-only ${dep_commit} -- "../${dep_path}")"
+    if [ -z "${diff_files}" ] ; then
+        continue
+    fi
+
+    echo "::group::Updating dependency ${dep_path}::"
+
+    echo "Files changed since commit ${dep_commit}:"
+    echo "${diff_files}"
+
+    go get "${repo}/${dep_path}@${current_commit}"
+
     echo "::endgroup::"
-    cd ~-
 done
-
-go work sync
