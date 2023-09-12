@@ -116,3 +116,48 @@ jobs:
         if: steps.check-readme.outputs.modified == 'true'
         run: |
           git push origin auto-updates/readme-cli-ref:main
+
+  update-internal-dependencies:
+    name: Update internal dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up git
+        uses: ./.github/actions/setup-git
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.work
+      - name: Update submodules
+        uses: ./.github/actions/update-workspace-dependencies
+        with:
+          module: wsl-pro-service
+      - name: Detect modifications
+        shell: bash
+        id: check-diff
+        run: |
+          hasModif="false"
+          MODIFIED=$(git status --porcelain --untracked-files=no)
+          if [ -n "$MODIFIED" ]; then
+            hasModif="true"
+          fi
+          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        if: steps.check-diff.outputs.modified == 'true'
+        with:
+          commit-message: Auto update internal dependencies
+          title: Auto update WSL-Pro-Service dependencies
+          labels: automated pr
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
+          branch: auto-updates/update-internal-dependencies
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push branch
+        if: steps.check-diff.outputs.modified == 'true'
+        run: |
+          git push origin auto-updates/update-internal-dependencies:main
