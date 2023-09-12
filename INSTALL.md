@@ -1,0 +1,108 @@
+# Installing Ubuntu Pro For Windows
+
+- [Installing Ubuntu Pro For Windows](#installing-ubuntu-pro-for-windows)
+    - [Requirements](#requirements)
+    - [Download](#download)
+    - [Install the Windows agent](#install-the-windows-agent)
+    - [Install the WSL Pro Service](#install-the-wsl-pro-service)
+- [Tests and utilities](#tests-and-utilities)
+  - [Enabling Pro](#enabling-pro)
+  - [Landscape registration](#landscape-registration)
+
+### Requirements
+- A Windows machine with access to the internet
+- Appx from the Microsoft Store:
+  - Windows Subsystem For Linux
+  - Either Ubuntu, Ubuntu 22.04, or Ubuntu (Preview)
+- The Windows Subsystem for Windows optional feature enabled
+
+### Download
+
+1. Go to the [repository actions page](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa.yaml?query=branch%3Amain+).
+
+2. Click the latest successful workflow run.
+3. Scroll down past any warnings or errors, until you reach the Artifacts section
+4. Download:
+    - Windows agent:    UbuntuProForWindows+...
+    - WSL-Pro-Service:  Wsl-pro-service_…
+
+
+### Install the Windows agent
+This is the Windows-side agent that manages the distros.
+1. Uninstall Ubuntu Pro For Windows if you had installed previously
+    ```powershell
+    Get-AppxPackage -Name Ubuntu-Pro-For-Windows | Remove-AppxPackage
+    Remove-Item -Recurse "${env:LOCALAPPDATA}/Ubuntu Pro"
+    ```
+2. Follow the download steps to download UbuntuProForWindows
+3. Unzip the artifact
+4. Find the certificate inside. Install it into `Local Machine/Trusted people`.
+5. Open Powershell in this directory and run 
+    ```powershell
+    Add-AppxPackage .\UbuntuProForWindows_1.0.0.0_x64.msixbundle
+    ```
+6. Open the start menu and search for Ubuntu Pro For Windows
+7. The Firewall may ask for an exception. Allow it.
+8. The GUI should show up. You’re done.
+
+
+### Install the WSL Pro Service
+This is the Linux-side component that talks to the agent. Choose one or more distros Jammy or greater, and follow the instructions.
+1. Uninstall the WSL-Pro-Service from your distro if you had it installed previously
+    ```bash
+    sudo apt remove wsl-pro-service
+    ```
+2. Follow the download steps to download the WSL-Pro-Service
+3. Unzip the artifact
+4. Navigate to the unzipped directory containing the .deb file. Here is a possible path:
+    ```bash
+    cd /mnt/c/Users/WINDOWS-USER/Downloads/wsl-pro-service_*
+    ```
+5. Install the deb package.
+    ```bash
+    sudo dpkg -i wsl-pro-service_*.deb
+    ```
+6. Ensure it works via systemd:
+    ```bash
+    systemctl status wsl-pro.service
+    ```
+
+# Tests and utilities
+## Enabling Pro
+If you’ve completed the installation, you may want to check that it worked. To do so, follow these steps:
+1. Go to https://ubuntu.com/pro/dashboard and get your Ubuntu Pro token
+2. Go to the Windows menu, and search and click Ubuntu Pro For Windows. If it does not show up, your installation of the agent went wrong.
+3. Click on I already have a token
+4. Introduce the token you got from your Pro dashboard, and click Apply
+5. Start the distro you installed WSL-Pro-Service in, and run
+    ```bash
+    pro status
+    ```
+6. If the distro is pro-attached, the installation was successful.
+
+## Landscape registration
+You can use a private Landscape instance (different from [landscape.canonical.com](landscape.canonical.com)). It must be over HTTP, as using certificates is not yet supported. To do so, follow these steps:
+1. Press Windows+R
+2. Write regedit.exe and enter
+3. Go to `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`
+4. There are two relevant fields:
+    - LandscapeAgentURL should contain the URL where the Landscape Hostagent server is hosted.
+    - LandscapeClientConfig should contain the contents of the yaml file with the settings, such as the one in the example.
+5. To edit any of the fields, right-click and Edit
+6. If you need more than one line, delete the field and create a new one with the same name, and type `Multi-String Value`.
+7. Stop the agent:
+    ```powershell
+    Get-Process -Name Ubuntu-Pro-Agent | Stop-Process
+    ```
+8. Start the agent again
+    1. Windows Menu
+    2. Search Ubuntu Pro For Windows
+    3. The GUI should start
+    4. Wait a minute
+    5. Click to restart it
+9. Stop the distro you installed WSL-Pro-Service in.
+    ```powershell
+    wsl --terminate DISTRO_NAME 
+    ```
+10. Start the distro you installed WSL-Pro-Service in.
+11. You should see a new "pending computer authorisation" in you Landscape dashboard.
