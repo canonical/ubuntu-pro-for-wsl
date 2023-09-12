@@ -220,7 +220,9 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 
 	bs, err := json.Marshal(productsFound)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "failed to marshall the matching products: %v", err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
