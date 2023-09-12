@@ -137,8 +137,19 @@ jobs:
         uses: ./.github/actions/update-workspace-dependencies
         with:
           module: wsl-pro-service
+      - name: Detect modifications
+        shell: bash
+        id: check-diff
+        run: |
+          hasModif="false"
+          MODIFIED=$(git status --porcelain --untracked-files=no)
+          if [ -n "$MODIFIED" ]; then
+            hasModif="true"
+          fi
+          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
+        if: steps.check-diff.outputs.modified == 'true'
         with:
           commit-message: Auto update internal dependencies
           title: Auto update WSL-Pro-Service dependencies
@@ -147,5 +158,6 @@ jobs:
           branch: auto-updates/update-internal-dependencies
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
+        if: steps.check-diff.outputs.modified == 'true'
         run: |
           git push origin auto-updates/update-internal-dependencies:main
