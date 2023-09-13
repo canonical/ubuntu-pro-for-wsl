@@ -1,14 +1,5 @@
 # Installing Ubuntu Pro For Windows
 
-- [Installing Ubuntu Pro For Windows](#installing-ubuntu-pro-for-windows)
-    - [Requirements](#requirements)
-    - [Download](#download)
-    - [Install the Windows agent](#install-the-windows-agent)
-    - [Install the WSL Pro Service](#install-the-wsl-pro-service)
-- [Tests and utilities](#tests-and-utilities)
-  - [Enabling Pro](#enabling-pro)
-  - [Landscape registration](#landscape-registration)
-
 ### Requirements
 - A Windows machine with access to the internet
 - Appx from the Microsoft Store:
