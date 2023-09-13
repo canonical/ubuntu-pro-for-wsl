@@ -30,7 +30,7 @@ This is the Windows-side agent that manages the distros.
     ```powershell
     Add-AppxPackage .\UbuntuProForWindows_*_x64.msixbundle
     ```
-6. Open the start menu and search for Ubuntu Pro For Windows.
+6. Open the start menu and search for "Ubuntu Pro For Windows".
 7. The Firewall may ask for an exception. Allow it.
 8. The GUI should show up. You’re done.
 
@@ -84,7 +84,7 @@ You can use a private Landscape instance (different from [landscape.canonical.co
     Get-Process -Name Ubuntu-Pro-Agent | Stop-Process
     ```
 8. Start the agent again:
-    1. Open the start Menu and search Ubuntu Pro For Windows.
+    1. Open the start Menu and search for "Ubuntu Pro For Windows".
     2. The GUI should start.
     3. Wait a minute.
     4. Click on "Click to restart it".
