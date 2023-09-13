@@ -49,7 +49,7 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
     ```
 5. Install the deb package.
     ```bash
-    sudo dpkg -i wsl-pro-service_*.deb
+    sudo apt install ./wsl-pro-service_*.deb
     ```
 6. Ensure it works via systemd:
     ```bash
