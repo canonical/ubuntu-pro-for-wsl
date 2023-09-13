@@ -10,16 +10,14 @@ import (
 
 func serverFactory(settings restserver.Settings) restserver.Server {
 	//nolint:forcetypeassert // Let the type coersion panic on failure.
-	return storemockserver.NewServer(*settings.(*storemockserver.Settings))
+	return storemockserver.NewServer(settings.(storemockserver.Settings))
 }
 
 func main() {
-	defaultSettings := storemockserver.DefaultSettings()
-
 	app := restserver.App{
 		Name:            "Store Server",
 		Description:     "MS Store API",
-		DefaultSettings: &defaultSettings,
+		DefaultSettings: storemockserver.DefaultSettings(),
 		ServerFactory:   serverFactory,
 	}
 
