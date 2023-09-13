@@ -28,7 +28,7 @@ This is the Windows-side agent that manages the distros.
 4. Find the certificate inside. Install it into `Local Machine/Trusted people`.
 5. Open Powershell in this directory and run 
     ```powershell
-    Add-AppxPackage .\UbuntuProForWindows_1.0.0.0_x64.msixbundle
+    Add-AppxPackage .\UbuntuProForWindows_*_x64.msixbundle
     ```
 6. Open the start menu and search for Ubuntu Pro For Windows.
 7. The Firewall may ask for an exception. Allow it.
