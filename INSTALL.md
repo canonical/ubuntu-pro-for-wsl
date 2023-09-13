@@ -61,7 +61,7 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
 If you’ve completed the installation, you may want to check that it worked. To do so, follow these steps:
 1. Go to your [Ubuntu Pro dashboard](https://ubuntu.com/pro/dashboardand) to get your Ubuntu Pro token.
 2. Go to the Windows menu, and search and click Ubuntu Pro For Windows. If it does not show up, your installation of the agent went wrong.
-3. Click on I already have a token.
+3. Click on "I already have a token".
 4. Introduce the token you got from your Pro dashboard, and click "Apply".
 5. Start the distro you installed WSL-Pro-Service in, and run
     ```bash
