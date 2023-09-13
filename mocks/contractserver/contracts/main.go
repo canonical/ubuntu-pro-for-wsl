@@ -10,16 +10,14 @@ import (
 
 func serverFactory(settings restserver.Settings) restserver.Server {
 	//nolint:forcetypeassert // Let the type coersion panic on failure.
-	return contractsmockserver.NewServer(*settings.(*contractsmockserver.Settings))
+	return contractsmockserver.NewServer(settings.(contractsmockserver.Settings))
 }
 
 func main() {
-	defaultSettings := contractsmockserver.DefaultSettings()
-
 	app := restserver.App{
 		Name:            "contract server",
 		Description:     "contract server",
-		DefaultSettings: &defaultSettings,
+		DefaultSettings: contractsmockserver.DefaultSettings(),
 		ServerFactory:   serverFactory,
 	}
 
