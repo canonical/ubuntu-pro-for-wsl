@@ -59,7 +59,7 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
 # Tests and utilities
 ## Enabling Pro
 If you’ve completed the installation, you may want to check that it worked. To do so, follow these steps:
-1. Go to https://ubuntu.com/pro/dashboard and get your Ubuntu Pro token
+1. Go to your [Ubuntu Pro dashboard](https://ubuntu.com/pro/dashboardand) to get your Ubuntu Pro token.
 2. Go to the Windows menu, and search and click Ubuntu Pro For Windows. If it does not show up, your installation of the agent went wrong.
 3. Click on I already have a token.
 4. Introduce the token you got from your Pro dashboard, and click "Apply".
@@ -76,7 +76,7 @@ You can use a private Landscape instance (different from [landscape.canonical.co
 3. Go to `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
 4. There are two relevant fields:
     - LandscapeAgentURL should contain the URL where the Landscape Hostagent server is hosted.
-    - LandscapeClientConfig should contain the contents of the yaml file with the settings, such as the one in the example.
+    - LandscapeClientConfig should contain the contents of the yaml file with the settings, such as the [example from the Landscape repository](https://github.com/canonical/landscape-client/blob/master/example.conf).
 5. To edit any of the fields, right-click and Edit
 6. If you need more than one line, delete the field and create a new one with the same name, and type `Multi-String Value`.
 7. Stop the agent:
