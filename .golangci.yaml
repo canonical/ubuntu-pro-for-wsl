@@ -25,6 +25,7 @@ linters:
     - tparallel
     - unconvert
     - unparam
+    - usestdlibvars
     - whitespace
 
 run:
