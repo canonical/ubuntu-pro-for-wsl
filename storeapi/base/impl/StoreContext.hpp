@@ -15,10 +15,10 @@
 // For HWND and GUI-related Windows types.
 #include <ShObjIdl.h>
 
-namespace StoreApi {
+namespace StoreApi::impl {
 
 // Wraps MS StoreContext type for testability purposes.
-class Context {
+class StoreContext {
   winrt::Windows::Services::Store::StoreContext self =
       winrt::Windows::Services::Store::StoreContext::GetDefault();
 
@@ -71,4 +71,4 @@ class Context {
   void InitDialogs(HWND parentWindow);
 };
 
-}  // namespace StoreApi
+}  // namespace StoreApi::impl

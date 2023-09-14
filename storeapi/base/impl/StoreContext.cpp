@@ -1,12 +1,12 @@
-#include "Context.hpp"
+#include "StoreContext.hpp"
 
 #include <winrt/Windows.Foundation.Collections.h>
 
 #include <format>
 
-#include "Exception.hpp"
+#include "../Exception.hpp"
 
-namespace StoreApi {
+namespace StoreApi::impl {
 
 using concurrency::task;
 using winrt::Windows::Foundation::DateTime;
@@ -16,7 +16,7 @@ using winrt::Windows::Services::Store::StoreProductQueryResult;
 using winrt::Windows::Services::Store::StorePurchaseStatus;
 using winrt::Windows::Services::Store::StoreSku;
 
-DateTime Context::Product::CurrentExpirationDate() {
+DateTime StoreContext::Product::CurrentExpirationDate() {
   // A single product might have more than one SKU.
   for (auto sku : self.Skus()) {
     if (sku.IsInUserCollection() && sku.IsSubscription()) {
@@ -32,14 +32,14 @@ DateTime Context::Product::CurrentExpirationDate() {
   };
 }
 
-IAsyncOperation<StorePurchaseStatus> Context::Product::PromptUserForPurchase() {
+IAsyncOperation<StorePurchaseStatus> StoreContext::Product::PromptUserForPurchase() {
   const auto& res = co_await self.RequestPurchaseAsync();
   // throws winrt::hresult_error if query contains an error HRESULT.
   winrt::check_hresult(res.ExtendedError());
   co_return res.Status();
 }
 
-task<std::vector<Context::Product>> Context::GetProducts(
+task<std::vector<StoreContext::Product>> StoreContext::GetProducts(
     std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
   // Gets Microsoft Store listing info for the specified products that are
   // associated with the current app. Requires "arrays" of product kinds and
@@ -56,7 +56,7 @@ task<std::vector<Context::Product>> Context::GetProducts(
   co_return products;
 }
 
-void Context::InitDialogs(HWND parentWindow) {
+void StoreContext::InitDialogs(HWND parentWindow) {
   // Apps that do not feature a [CoreWindow] must inform the runtime the parent
   // window handle in order to render runtime provided UI elements, such as
   // authorization and purchase dialogs.
@@ -64,4 +64,4 @@ void Context::InitDialogs(HWND parentWindow) {
   iiw->Initialize(parentWindow);
 }
 
-}  // namespace StoreApi
+}  // namespace StoreApi::impl
