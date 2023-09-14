@@ -60,14 +60,26 @@ include_directories(BEFORE SYSTEM ${CMAKE_BINARY_DIR}/include)
 
 # Relative to the top level cmake project which will be either this plugin or the app
 # consuming it. Either way, same relative distance to the directory we are looking for.
+set(STORE_API_DEFINES "")
 set(STORE_API_DIR "${CMAKE_SOURCE_DIR}/../../../../storeapi/")
 set(STORE_API_SRC
     "${STORE_API_DIR}/gui/ClientStoreService.hpp"
     "${STORE_API_DIR}/base/StoreService.hpp"
+    "${STORE_API_DIR}/base/Purchase.hpp"
     "${STORE_API_DIR}/base/Exception.hpp"
-    "${STORE_API_DIR}/base/Context.cpp"
-    "${STORE_API_DIR}/base/Context.hpp"
+    "${STORE_API_DIR}/base/DefaultContext.hpp"
 )
+if(DEFINED ENV{TEST_WITH_MS_STORE_MOCK})
+    # TODO: Change to warning to be informative and include the appropriate files.
+    message(FATAL_ERROR "Unsupported build with the MS Store Mock client API due environment variable 'TEST_WITH_MS_STORE_MOCK' set to '$ENV{TEST_WITH_MS_STORE_MOCK}'.")
+    list(APPEND STORE_API_DEFINES "TEST_WITH_MS_STORE_MOCK")
+else()
+    message(STATUS "Building with the production version of MS Store client API. Set the environment variable 'TEST_WITH_MS_STORE_MOCK' if you want to build with the mock store API.")
+    list(APPEND STORE_API_SRC 
+        "${STORE_API_DIR}/base/impl/StoreContext.cpp"
+        "${STORE_API_DIR}/base/impl/StoreContext.hpp"
+    )
+endif()
 
 # Any new source files that you add to the plugin should be added here.
 list(APPEND PLUGIN_SOURCES
@@ -97,6 +109,8 @@ apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
+# Further #defines we may want to pass.
+target_compile_definitions(${PLUGIN_NAME} PRIVATE ${STORE_API_DEFINES})
 
 # Source include directories and library dependencies. Add any plugin-specific
 # dependencies here.
