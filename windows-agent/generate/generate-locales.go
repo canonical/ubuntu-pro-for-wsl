@@ -1,4 +1,4 @@
-//go:build: tools
+//go:build tools
 
 // Package generate generates the i18n files
 package generate
