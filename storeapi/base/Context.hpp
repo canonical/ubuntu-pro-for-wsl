@@ -27,8 +27,8 @@ class Context {
   // direct usage in high level code. The API is loose, the caller services must
   // tighten it up.
   struct Product {
-    winrt::Windows::Services::Store::StoreProduct self{nullptr};
-
+   public:
+    Product(winrt::Windows::Services::Store::StoreProduct self) : self{self} {}
     // Whether the current user owns this product.
     bool IsInUserCollection() { return self.IsInUserCollection(); }
 
@@ -36,6 +36,7 @@ class Context {
     // returns the expiration date of the current billing period.
     winrt::Windows::Foundation::DateTime CurrentExpirationDate();
 
+   protected:
     // Assuming this is a Subcription add-on product the current user __does not
     // own__, requests the runtime to display a purchase flow so users can
     // subscribe to this product. This must be called from a UI thread with the
@@ -45,6 +46,9 @@ class Context {
     winrt::Windows::Foundation::IAsyncOperation<
         winrt::Windows::Services::Store::StorePurchaseStatus>
     PromptUserForPurchase();
+
+   private:
+    winrt::Windows::Services::Store::StoreProduct self{nullptr};
   };
 
   // Returns a collection of products matching the supplied [kinds] and [ids].

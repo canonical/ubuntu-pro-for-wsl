@@ -12,6 +12,7 @@ enum class ErrorCode {
   NoLocalUser,
   TooManyLocalUsers,
   EmptyJwt,
+  InvalidProductId,
   // ABI Boundary errors:
   AllocationFailure = -10,
   //   - input string argument errors
