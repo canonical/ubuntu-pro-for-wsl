@@ -16,6 +16,12 @@ using winrt::Windows::Services::Store::StoreProductQueryResult;
 using winrt::Windows::Services::Store::StorePurchaseStatus;
 using winrt::Windows::Services::Store::StoreSku;
 
+namespace {
+// Converts a span of strings into a vector of hstrings, needed when passing
+// a collection of string as a parameter to an async operation.
+std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input);
+}  // namespace
+
 DateTime StoreContext::Product::CurrentExpirationDate() {
   // A single product might have more than one SKU.
   for (auto sku : self.Skus()) {
@@ -39,13 +45,13 @@ IAsyncOperation<StorePurchaseStatus> StoreContext::Product::PromptUserForPurchas
   co_return res.Status();
 }
 
-task<std::vector<StoreContext::Product>> StoreContext::GetProducts(
-    std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
+std::vector<StoreContext::Product> StoreContext::GetProducts(
+    std::span<const std::string> kinds, std::span<const std::string> ids) {
   // Gets Microsoft Store listing info for the specified products that are
   // associated with the current app. Requires "arrays" of product kinds and
   // ids.
   StoreProductQueryResult query =
-      co_await self.GetStoreProductsAsync(std::move(kinds), std::move(ids));
+      self.GetStoreProductsAsync(to_hstrings(kinds), to_hstrings(ids)).get();
   winrt::check_hresult(query.ExtendedError());
 
   std::vector<Product> products;
@@ -53,7 +59,7 @@ task<std::vector<StoreContext::Product>> StoreContext::GetProducts(
   for (auto p : query.Products()) {
     products.emplace_back(p.Value());
   }
-  co_return products;
+  return products;
 }
 
 void StoreContext::InitDialogs(HWND parentWindow) {
@@ -63,5 +69,15 @@ void StoreContext::InitDialogs(HWND parentWindow) {
   auto iiw = self.as<::IInitializeWithWindow>();
   iiw->Initialize(parentWindow);
 }
+
+namespace {
+std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input) {
+  std::vector<winrt::hstring> hStrs;
+  hStrs.reserve(input.size());
+  std::ranges::transform(input, std::back_inserter(hStrs),
+                         &winrt::to_hstring<std::string>);
+  return hStrs;
+}
+}  // namespace
 
 }  // namespace StoreApi::impl

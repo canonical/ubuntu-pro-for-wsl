@@ -15,6 +15,9 @@
 // For HWND and GUI-related Windows types.
 #include <ShObjIdl.h>
 
+#include <span>
+#include <vector>
+
 namespace StoreApi::impl {
 
 // Wraps MS StoreContext type for testability purposes.
@@ -55,8 +58,8 @@ class StoreContext {
   // Ids must match the Product IDs in Partner Center. Kinds can be:
   // Application; Game; Consumable; UnmanagedConsumable; Durable. See
   // https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storeproduct.productkind#remarks
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids);
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids);
 
   // Generates the user ID key (a.k.a the JWT) provided the server AAD [hToken]
   // and the [hUserId] the caller wants to have encoded in the JWT.
