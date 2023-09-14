@@ -61,7 +61,8 @@ void StoreContext::Product::PromptUserForPurchase(
 }
 
 std::vector<StoreContext::Product> StoreContext::GetProducts(
-    std::span<const std::string> kinds, std::span<const std::string> ids) {
+    std::span<const std::string> kinds,
+    std::span<const std::string> ids) const {
   debug_assert(!kinds.empty(), "kinds vector cannot be empty");
   debug_assert(!ids.empty(), "ids vector cannot be empty");
   // Gets Microsoft Store listing info for the specified products that are
@@ -71,7 +72,7 @@ std::vector<StoreContext::Product> StoreContext::GetProducts(
       self.GetStoreProductsAsync(to_hstrings(kinds), to_hstrings(ids)).get();
   winrt::check_hresult(query.ExtendedError());
 
-  std::vector<Product> products;
+  std::vector<StoreContext::Product> products;
   // Could be empty.
   for (auto p : query.Products()) {
     products.emplace_back(p.Value());

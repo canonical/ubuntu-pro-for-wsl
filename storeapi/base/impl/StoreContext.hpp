@@ -36,7 +36,7 @@ class StoreContext {
    public:
     Product(winrt::Windows::Services::Store::StoreProduct self) : self{self} {}
     // Whether the current user owns this product.
-    bool IsInUserCollection() { return self.IsInUserCollection(); }
+    bool IsInUserCollection() const { return self.IsInUserCollection(); }
 
     // Assuming this is a Subscription add-on product the current user __owns__,
     // returns the expiration date of the current billing period.
@@ -64,7 +64,7 @@ class StoreContext {
   // Application; Game; Consumable; UnmanagedConsumable; Durable. See
   // https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storeproduct.productkind#remarks
   std::vector<Product> GetProducts(std::span<const std::string> kinds,
-                                   std::span<const std::string> ids);
+                                   std::span<const std::string> ids) const;
 
   // Generates the user ID key (a.k.a the JWT) provided the server AAD [hToken]
   // and the [hUserId] the caller wants to have encoded in the JWT.
