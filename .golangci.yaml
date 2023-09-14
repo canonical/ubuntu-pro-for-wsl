@@ -13,6 +13,7 @@ linters:
     - forbidigo
     - forcetypeassert
     - gci
+    - gocheckcompilerdirectives
     - godot
     - gofmt
     - gosec
