@@ -371,7 +371,7 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 	}
 }
 
-// is is a convenience function to check if a registryState matches a certain state.
+// is defines equality between flags. It is convenience function to check if a registryState matches a certain state.
 func (state registryState) is(flag registryState) bool {
 	return state&flag == flag
 }

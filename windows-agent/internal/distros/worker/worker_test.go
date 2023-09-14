@@ -246,7 +246,7 @@ func TestTaskProcessing(t *testing.T) {
 				time.Sleep(clientTickPeriod)
 			}
 
-			// Testing task with with active connection
+			// Testing task with active connection
 			w.SetConnection(conn)
 
 			if !tc.wantExecuteCalled {
@@ -470,7 +470,7 @@ func TestTaskDeferral(t *testing.T) {
 			queuedTask := emptyTask{ID: uuid.NewString()}
 			deferredTask := emptyTask{ID: uuid.NewString()}
 
-			// Testing task with with active connection
+			// Testing task with active connection
 			wslInstanceService := newTestService(t)
 			conn := wslInstanceService.newClientConnection(t)
 			w.SetConnection(conn)
