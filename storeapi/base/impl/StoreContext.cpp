@@ -47,6 +47,8 @@ IAsyncOperation<StorePurchaseStatus> StoreContext::Product::PromptUserForPurchas
 
 std::vector<StoreContext::Product> StoreContext::GetProducts(
     std::span<const std::string> kinds, std::span<const std::string> ids) {
+  debug_assert(!kinds.empty(), "kinds vector cannot be empty");
+  debug_assert(!ids.empty(), "ids vector cannot be empty");
   // Gets Microsoft Store listing info for the specified products that are
   // associated with the current app. Requires "arrays" of product kinds and
   // ids.
