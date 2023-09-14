@@ -18,6 +18,8 @@
 #include <span>
 #include <vector>
 
+#include "../Purchase.hpp"
+
 namespace StoreApi::impl {
 
 // Wraps MS StoreContext type for testability purposes.
@@ -41,15 +43,17 @@ class StoreContext {
     std::chrono::system_clock::time_point CurrentExpirationDate() const;
 
    protected:
-    // Assuming this is a Subcription add-on product the current user __does not
-    // own__, requests the runtime to display a purchase flow so users can
-    // subscribe to this product. This must be called from a UI thread with the
-    // underlying store context initialized with the parent GUI window because
-    // we need to render native dialogs. See
+    // Assuming this is a Subscription add-on product the current user __does
+    // not own__, requests the runtime to display a purchase flow so users can
+    // subscribe to this product. THis function returns early, the result will
+    // eventually arrive through the supplied callback. This must be called from
+    // a UI thread with the underlying store context initialized with the parent
+    // GUI window because we need to render native dialogs. Thus, access to this
+    // method must be protected so we can ensure it can only happen with GUI
+    // clients, making API misuse harder to happen.
+    // See
     // https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storeproduct.requestpurchaseasync
-    winrt::Windows::Foundation::IAsyncOperation<
-        winrt::Windows::Services::Store::StorePurchaseStatus>
-    PromptUserForPurchase();
+    void PromptUserForPurchase(PurchaseCallback callback) const;
 
    private:
     winrt::Windows::Services::Store::StoreProduct self{nullptr};
