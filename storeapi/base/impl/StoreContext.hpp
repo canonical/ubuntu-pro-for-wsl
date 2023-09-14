@@ -35,9 +35,9 @@ class StoreContext {
     // Whether the current user owns this product.
     bool IsInUserCollection() { return self.IsInUserCollection(); }
 
-    // Assuming this is a Subcription add-on product the current user __owns__,
+    // Assuming this is a Subscription add-on product the current user __owns__,
     // returns the expiration date of the current billing period.
-    winrt::Windows::Foundation::DateTime CurrentExpirationDate();
+    std::chrono::system_clock::time_point CurrentExpirationDate() const;
 
    protected:
     // Assuming this is a Subcription add-on product the current user __does not

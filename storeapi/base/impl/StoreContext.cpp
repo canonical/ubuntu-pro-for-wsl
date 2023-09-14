@@ -9,7 +9,6 @@
 namespace StoreApi::impl {
 
 using concurrency::task;
-using winrt::Windows::Foundation::DateTime;
 using winrt::Windows::Foundation::IAsyncOperation;
 using winrt::Windows::Services::Store::StoreProduct;
 using winrt::Windows::Services::Store::StoreProductQueryResult;
@@ -22,12 +21,13 @@ namespace {
 std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input);
 }  // namespace
 
-DateTime StoreContext::Product::CurrentExpirationDate() {
+std::chrono::system_clock::time_point
+StoreContext::Product::CurrentExpirationDate() const {
   // A single product might have more than one SKU.
   for (auto sku : self.Skus()) {
     if (sku.IsInUserCollection() && sku.IsSubscription()) {
       auto collected = sku.CollectionData();
-      return collected.EndDate();
+      return winrt::clock::to_sys(collected.EndDate());
     }
   }
 
