@@ -64,7 +64,7 @@ std::vector<StoreContext::Product> StoreContext::GetProducts(
   return products;
 }
 
-void StoreContext::InitDialogs(HWND parentWindow) {
+void StoreContext::InitDialogs(Window parentWindow) {
   // Apps that do not feature a [CoreWindow] must inform the runtime the parent
   // window handle in order to render runtime provided UI elements, such as
   // authorization and purchase dialogs.

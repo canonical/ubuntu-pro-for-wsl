@@ -26,6 +26,7 @@ class StoreContext {
       winrt::Windows::Services::Store::StoreContext::GetDefault();
 
  public:
+  using Window = HWND;
   // Wraps MS StoreProduct type for testability purposes. This is not meant for
   // direct usage in high level code. The API is loose, the caller services must
   // tighten it up.
@@ -71,7 +72,7 @@ class StoreContext {
   // Initializes the GUI "subsystem" with the [parentWindow] handle so we can
   // render native dialogs, such as when purchase or other kinds of
   // authorization are required.
-  void InitDialogs(HWND parentWindow);
+  void InitDialogs(Window parentWindow);
 };
 
 }  // namespace StoreApi::impl
