@@ -1,5 +1,10 @@
 #pragma once
+#include <exception>
+#include <format>
+#include <iostream>
 #include <source_location>
+#include <string>
+#include <type_traits>
 
 namespace StoreApi {
 
@@ -72,4 +77,21 @@ class Exception {
                        m_loc.file_name(), m_loc.line(), m_loc.function_name());
   }
 };
+
+#ifdef NDEBUG
+#define debug_assert(expr, msg) ((void)0)
+#else  // NDEBUG
+inline void AssertFail(
+    std::string_view condition, std::string_view msg,
+    std::source_location loc = std::source_location::current()) {
+  std::cerr << std::format(
+      "[ASSERTION FAILURE]: {}:{} {}\n\tunmet condition: {} ({})\n",
+      loc.file_name(), loc.line(), loc.function_name(), condition, msg);
+
+  std::terminate();
+}
+#define debug_assert(expr, msg) \
+  (static_cast<bool>(expr) ? ((void)0) : AssertFail("'" #expr "'", msg))
+#endif  // NDEBUG
+
 }  // namespace StoreApi
