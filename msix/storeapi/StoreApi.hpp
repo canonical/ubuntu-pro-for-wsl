@@ -5,7 +5,6 @@
 // the ABI. Zero or positive values have no special meaning other than success.
 #pragma once
 
-#include <agent/ServerStoreService.hpp>
 #include <cstdint>
 
 extern "C" {
@@ -37,5 +36,4 @@ DLL_EXPORT Int GetSubscriptionExpirationDate(const char* productID,
 DLL_EXPORT Int GenerateUserJWT(const char* accessToken,
                                // output
                                char** userJWT, std::uint64_t* userJWTLen);
-
 }
