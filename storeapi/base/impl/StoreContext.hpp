@@ -11,9 +11,6 @@
 // For the underlying Store API
 #include <winrt/windows.services.store.h>
 
-// To provide the WinRT coroutine types.
-#include <winrt/windows.foundation.h>
-
 // For HWND and GUI-related Windows types.
 #include <ShObjIdl.h>
 
@@ -70,12 +67,9 @@ class StoreContext {
   std::vector<Product> GetProducts(std::span<const std::string> kinds,
                                    std::span<const std::string> ids) const;
 
-  // Generates the user ID key (a.k.a the JWT) provided the server AAD [hToken]
-  // and the [hUserId] the caller wants to have encoded in the JWT.
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    return self.GetCustomerPurchaseIdAsync(hToken, hUserId);
-  }
+  // Generates the user ID key (a.k.a the JWT) provided the server AAD [token]
+  // and the [userId] the caller wants to have encoded in the JWT.
+  std::string GenerateUserJwt(std::string token, std::string userId) const;
 
   // Initializes the GUI "subsystem" with the [parentWindow] handle so we can
   // render native dialogs, such as when purchase or other kinds of

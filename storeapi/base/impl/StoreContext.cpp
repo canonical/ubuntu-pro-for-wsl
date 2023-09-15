@@ -94,6 +94,15 @@ std::vector<StoreContext::Product> StoreContext::GetProducts(
   return products;
 }
 
+std::string StoreContext::GenerateUserJwt(std::string token,
+                                          std::string userId) const {
+  assert(token.empty() && "Azure AD token is required");
+  auto hJwt = self.GetCustomerPurchaseIdAsync(winrt::to_hstring(token),
+                                              winrt::to_hstring(userId))
+                  .get();
+  return winrt::to_string(hJwt);
+}
+
 void StoreContext::InitDialogs(Window parentWindow) {
   // Apps that do not feature a [CoreWindow] must inform the runtime the parent
   // window handle in order to render runtime provided UI elements, such as
@@ -172,4 +181,4 @@ winrt::hstring sha256(winrt::hstring input) {
 
 }  // namespace StoreApi::impl
 
-#endif // UP4W_TEST_WITH_MS_STORE_MOCK
+#endif  // UP4W_TEST_WITH_MS_STORE_MOCK

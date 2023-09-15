@@ -25,20 +25,18 @@ class ServerStoreService : public StoreService<ContextType> {
  public:
   // Generates the user ID key (a.k.a the JWT) provided the server AAD [token]
   // and the [user] info whose ID the caller wants to have encoded in the JWT.
-  concurrency::task<std::string> GenerateUserJwt(std::string token,
-                                                 UserInfo user) {
+  std::string GenerateUserJwt(std::string token, UserInfo user) const {
     if (user.id.empty()) {
       throw Exception(StoreApi::ErrorCode::NoLocalUser);
     }
 
-    auto hToken = winrt::to_hstring(token);
-    auto jwt = co_await this->context.GenerateUserJwt(hToken, user.id);
+    auto jwt = this->context.GenerateUserJwt(token, user.id);
     if (jwt.empty()) {
       throw Exception(ErrorCode::EmptyJwt,
                       std::format("access token: {}", token));
     }
 
-    co_return winrt::to_string(jwt);
+    return jwt;
   }
 
   // Returns the expiration time as the number of seconds since Unix epoch of
