@@ -15,10 +15,7 @@ namespace StoreApi {
 // when talking to external business servers about the subscription.
 struct UserInfo {
   // The user ID that should be tracked in the Contract Server.
-  winrt::hstring id;
-
-  // An asynchronous factory returning [UserInfo] of the current user.
-  static concurrency::task<UserInfo> Current();
+  std::string id;
 };
 
 // Adds functionality on top of the [StoreService] interesting to background
@@ -59,6 +56,23 @@ class ServerStoreService : public StoreService<ContextType> {
 
     // just need to convert the duration to seconds.
     return duration_cast<std::chrono::seconds>(dur).count();
+  }
+
+  // A factory returning the current user's [UserInfo].
+  UserInfo CurrentUserInfo() const {
+    auto hashes = this->context.AllLocallyAuthenticatedUserHashes();
+
+    auto howManyUsers = hashes.size();
+    if (howManyUsers < 1) {
+      throw Exception(ErrorCode::NoLocalUser);
+    }
+
+    if (howManyUsers > 1) {
+      throw Exception(ErrorCode::TooManyLocalUsers,
+                      std::format("Expected one but found {}", howManyUsers));
+    }
+
+    return UserInfo{.id = hashes[0]};
   }
 };
 
