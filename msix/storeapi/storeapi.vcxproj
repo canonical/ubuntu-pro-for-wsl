@@ -43,7 +43,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Label="Mock API"  Condition="'$(UP4W_TEST_WITH_MS_STORE_MOCK)' == ''">
+  <PropertyGroup Label="Mock API" Condition="'$(UP4W_TEST_WITH_MS_STORE_MOCK)' == ''">
     <DefineConstants>UP4W_TEST_WITH_MS_STORE_MOCK</DefineConstants>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -97,7 +97,6 @@
     <ClInclude Include="StoreApi.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\storeapi\agent\ServerStoreService.cpp" />
     <ClCompile Include="..\..\storeapi\base\impl\StoreContext.hpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="StoreApi.cpp" />
