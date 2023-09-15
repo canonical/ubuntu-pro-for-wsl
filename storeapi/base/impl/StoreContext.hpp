@@ -32,7 +32,7 @@ class StoreContext {
   // Wraps MS StoreProduct type for testability purposes. This is not meant for
   // direct usage in high level code. The API is loose, the caller services must
   // tighten it up.
-  struct Product {
+  class Product {
    public:
     Product(winrt::Windows::Services::Store::StoreProduct self) : self{self} {}
     // Whether the current user owns this product.
