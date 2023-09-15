@@ -245,13 +245,13 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if id == ServerErrorValue {
-		slog.Info("server error triggered", "endpoint", PurchasePath, ProductIDParam, id)
+		slog.Info(fmt.Sprintf("%s: server error triggered. Product ID was: %s", PurchasePath, id))
 		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, ServerErrorResult)
 		return
 	}
 
 	if id == CannotPurchaseValue {
-		slog.Info("purchase error triggered", "endpoint", PurchasePath, ProductIDParam, id)
+		slog.Info(fmt.Sprintf("%s: purchase error triggered. Product ID was: %s", PurchasePath, id))
 		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, NotPurchasedResult)
 		return
 	}
@@ -264,7 +264,7 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if p.IsInUserCollection {
-			slog.Info("product already in user collection", "endpoint", PurchasePath, ProductIDParam, id)
+			slog.Info(fmt.Sprintf("%s: product %q already in user collection", PurchasePath, id))
 			fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, AlreadyPurchasedResult)
 			return
 		}
