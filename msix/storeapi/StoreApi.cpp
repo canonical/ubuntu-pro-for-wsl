@@ -48,7 +48,7 @@ Int GetSubscriptionExpirationDate(const char* productID,
   try {
     StoreApi::ServerStoreService service{};
 
-    *expirationUnix = service.CurrentExpirationDate(productID).get();
+    *expirationUnix = service.CurrentExpirationDate(productID);
     return 0;
 
   } catch (const StoreApi::Exception& err) {

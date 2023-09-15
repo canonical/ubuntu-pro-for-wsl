@@ -87,7 +87,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\storeapi\agent\ServerStoreService.hpp" />
-    <ClInclude Include="..\..\storeapi\base\Context.hpp" />
     <ClInclude Include="..\..\storeapi\base\Exception.hpp" />
     <ClInclude Include="..\..\storeapi\base\StoreService.hpp" />
     <ClInclude Include="framework.hpp" />
@@ -95,9 +94,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\storeapi\agent\ServerStoreService.cpp" />
-    <ClCompile Include="..\..\storeapi\base\Context.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="StoreApi.cpp" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TEST_WITH_MS_STORE_MOCK)' == ''">
+    <ClCompile Include="..\..\storeapi\base\impl\StoreContext.cpp" />
+    <ClCompile Include="..\..\storeapi\base\impl\StoreContext.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
