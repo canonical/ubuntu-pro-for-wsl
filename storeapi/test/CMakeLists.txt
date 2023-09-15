@@ -5,22 +5,21 @@ set(CMAKE_SYSTEM_VERSION 10.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(StoreApiTests LANGUAGES CXX)
+project(StoreApiServicesTests LANGUAGES CXX)
 
 if(MSVC)
     add_definitions(-D_UNICODE)
 endif()
 
 set(StoreApi_SRCS
-    "../base/Context.cpp"
-    "../base/Context.hpp"
     "../base/Exception.hpp"
+    "../base/Purchase.hpp"
     "../base/StoreService.hpp"
     "../agent/ServerStoreService.cpp"
     "../gui/ClientStoreService.hpp"
 )
 
-set(StoreApiTests_SRCS
+set(StoreApiServicesTests_SRCS
     "ClientStoreServiceTest.cpp"
     "ServerStoreServiceTest.cpp"
     "StoreServiceTest.cpp"
@@ -38,11 +37,11 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Disable installation of googletest" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
-add_executable(StoreApiTests ${StoreApi_SRCS} ${StoreApiTests_SRCS} )
-target_include_directories(StoreApiTests PUBLIC ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_compile_features(StoreApiTests PRIVATE cxx_std_20)
-set_target_properties(StoreApiTests PROPERTIES VS_WINDOWS_TARGET_PLATFORM_MIN_VERSION 10.0.14393.0 COMPILE_WARNING_AS_ERROR ON)
-target_link_libraries(StoreApiTests PRIVATE WindowsApp  GTest::gtest_main)
+add_executable(StoreApiServicesTests ${StoreApi_SRCS} ${StoreApiServicesTests_SRCS} )
+target_include_directories(StoreApiServicesTests PUBLIC ${CMAKE_CURRENT_LIST_DIR}/.. )
+target_compile_features(StoreApiServicesTests PRIVATE cxx_std_20)
+set_target_properties(StoreApiServicesTests PROPERTIES VS_WINDOWS_TARGET_PLATFORM_MIN_VERSION 10.0.14393.0 COMPILE_WARNING_AS_ERROR ON)
+target_link_libraries(StoreApiServicesTests PRIVATE WindowsApp  GTest::gtest_main)
 if(MSVC)
     set(MSVC_OPTIONS
         /W4 # Baseline reasonable warnings
@@ -73,8 +72,8 @@ if(MSVC)
         /INCREMENTAL:NO
         /await
     )
-    target_compile_options(StoreApiTests INTERFACE ${MSVC_OPTIONS})
+    target_compile_options(StoreApiServicesTests INTERFACE ${MSVC_OPTIONS})
  endif()
 
 include(GoogleTest)
-gtest_discover_tests(StoreApiTests)
+gtest_discover_tests(StoreApiServicesTests)
