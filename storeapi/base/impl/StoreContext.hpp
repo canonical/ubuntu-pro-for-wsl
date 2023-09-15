@@ -9,13 +9,12 @@
 // To provide the WinRT coroutine types.
 #include <winrt/windows.foundation.h>
 
-// To provide coroutines capable of returning more complex non-WinRT types.
-#include <pplawait.h>
-
 // For HWND and GUI-related Windows types.
 #include <ShObjIdl.h>
 
+#include <chrono>
 #include <span>
+#include <string>
 #include <vector>
 
 #include "../Purchase.hpp"

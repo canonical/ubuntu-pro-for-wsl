@@ -2,13 +2,16 @@
 
 #include <winrt/Windows.Foundation.Collections.h>
 
+#include <algorithm>
 #include <format>
+#include <functional>
+#include <iterator>
+#include <type_traits>
 
 #include "../Exception.hpp"
 
 namespace StoreApi::impl {
 
-using concurrency::task;
 using winrt::Windows::Foundation::AsyncStatus;
 using winrt::Windows::Foundation::IAsyncOperation;
 using winrt::Windows::Services::Store::StoreProduct;
