@@ -212,14 +212,14 @@ jobs:
         if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
         run: |
-          go test -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
+          go test -shuffle=on -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
         if: matrix.os != 'windows'
         working-directory: ${{ matrix.subproject }}
         run: |
-          go test ./... -race -tags=gowslmock
+          go test -shuffle=on ./... -race -tags=gowslmock
       #- name: Upload coverage to Codecov
       #  uses: codecov/codecov-action@v3
       #  with:
