@@ -41,7 +41,7 @@ func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullNa
 	}
 
 	if valid := UsernameIsValid(userName); !valid {
-		return 0, errors.New("username is is not valid")
+		return 0, errors.New("username is not valid")
 	}
 
 	// strip any punctuation or any math symbols, currency signs, dingbats, box-drawing characters, etc

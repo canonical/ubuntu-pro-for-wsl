@@ -57,7 +57,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 	}
 
 	defer res.Body.Close()
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			return "", fmt.Errorf("server replied with an error: Code %d, %v", res.StatusCode, err)
@@ -109,9 +109,9 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 
 	defer res.Body.Close()
 	switch res.StatusCode { // add other error codes as CS team documents them.
-	case 401:
+	case http.StatusUnauthorized:
 		return "", fmt.Errorf("bad user ID key: %v", userJWT)
-	case 500:
+	case http.StatusInternalServerError:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
 	default:
 		body, err := io.ReadAll(res.Body)
@@ -119,7 +119,7 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 			return "", fmt.Errorf("unknown error from the contracts server: Code %d, %v", res.StatusCode, err)
 		}
 		return "", fmt.Errorf("unknown error from the contracts server: Code %d, %s", res.StatusCode, body)
-	case 200:
+	case http.StatusOK:
 	}
 
 	var data map[string]string

@@ -5,6 +5,7 @@ linters:
   # linters to run in addition to default ones
   enable:
     - dupl
+    - dupword
     - durationcheck
     - errname
     - errorlint
@@ -12,6 +13,7 @@ linters:
     - forbidigo
     - forcetypeassert
     - gci
+    - gocheckcompilerdirectives
     - godot
     - gofmt
     - gosec
@@ -23,6 +25,7 @@ linters:
     - tparallel
     - unconvert
     - unparam
+    - usestdlibvars
     - whitespace
 
 run:

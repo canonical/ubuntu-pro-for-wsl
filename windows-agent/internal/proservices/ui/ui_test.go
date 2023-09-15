@@ -133,7 +133,7 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		"Success with a store subscription":           {config: mockConfig{source: config.SubscriptionMicrosoftStore}, wantType: store},
 		"Success with a read-only store subscription": {config: mockConfig{source: config.SubscriptionMicrosoftStore, registryReadOnly: true}, wantType: store, wantImmutable: true},
 
-		"Error when the the read-only check fails":        {config: mockConfig{isReadOnlyErr: true}, wantErr: true},
+		"Error when the read-only check fails":            {config: mockConfig{isReadOnlyErr: true}, wantErr: true},
 		"Error when the subscription cannot be retreived": {config: mockConfig{subscriptionErr: true}, wantErr: true},
 	}
 
