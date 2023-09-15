@@ -43,6 +43,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="Mock API"  Condition="'$(UP4W_TEST_WITH_MS_STORE_MOCK)' == ''">
+    <DefineConstants>UP4W_TEST_WITH_MS_STORE_MOCK</DefineConstants>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -89,17 +92,15 @@
     <ClInclude Include="..\..\storeapi\agent\ServerStoreService.hpp" />
     <ClInclude Include="..\..\storeapi\base\Exception.hpp" />
     <ClInclude Include="..\..\storeapi\base\StoreService.hpp" />
+    <ClCompile Include="..\..\storeapi\base\impl\StoreContext.cpp" />
     <ClInclude Include="framework.hpp" />
     <ClInclude Include="StoreApi.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\storeapi\agent\ServerStoreService.cpp" />
+    <ClCompile Include="..\..\storeapi\base\impl\StoreContext.hpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="StoreApi.cpp" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TEST_WITH_MS_STORE_MOCK)' == ''">
-    <ClCompile Include="..\..\storeapi\base\impl\StoreContext.cpp" />
-    <ClCompile Include="..\..\storeapi\base\impl\StoreContext.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

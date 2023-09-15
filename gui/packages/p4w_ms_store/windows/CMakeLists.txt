@@ -68,17 +68,17 @@ set(STORE_API_SRC
     "${STORE_API_DIR}/base/Purchase.hpp"
     "${STORE_API_DIR}/base/Exception.hpp"
     "${STORE_API_DIR}/base/DefaultContext.hpp"
+
+    # API wrapper implementations
+    "${STORE_API_DIR}/base/impl/StoreContext.cpp"
+    "${STORE_API_DIR}/base/impl/StoreContext.hpp"
 )
-if(DEFINED ENV{TEST_WITH_MS_STORE_MOCK})
-    # TODO: Change to warning to be informative and include the appropriate files.
-    message(FATAL_ERROR "Unsupported build with the MS Store Mock client API due environment variable 'TEST_WITH_MS_STORE_MOCK' set to '$ENV{TEST_WITH_MS_STORE_MOCK}'.")
-    list(APPEND STORE_API_DEFINES "TEST_WITH_MS_STORE_MOCK")
+if(DEFINED ENV{UP4W_TEST_WITH_MS_STORE_MOCK})
+    # TODO: Change to informative warning and update the text once mock client API wrappers are avaiable.
+    message(FATAL_ERROR "Unsupported build with the MS Store Mock client API due environment variable 'UP4W_TEST_WITH_MS_STORE_MOCK' set to '$ENV{UP4W_TEST_WITH_MS_STORE_MOCK}'.")
+    list(APPEND STORE_API_DEFINES "UP4W_TEST_WITH_MS_STORE_MOCK")
 else()
-    message(STATUS "Building with the production version of MS Store client API. Set the environment variable 'TEST_WITH_MS_STORE_MOCK' if you want to build with the mock store API.")
-    list(APPEND STORE_API_SRC 
-        "${STORE_API_DIR}/base/impl/StoreContext.cpp"
-        "${STORE_API_DIR}/base/impl/StoreContext.hpp"
-    )
+    message(STATUS "Building with the production version of MS Store client API. Set the environment variable 'UP4W_TEST_WITH_MS_STORE_MOCK' if you want to build with the mock store API.")
 endif()
 
 # Any new source files that you add to the plugin should be added here.

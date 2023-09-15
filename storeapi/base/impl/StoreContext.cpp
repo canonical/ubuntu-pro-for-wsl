@@ -1,3 +1,5 @@
+#ifndef UP4W_TEST_WITH_MS_STORE_MOCK
+
 #include "StoreContext.hpp"
 
 #include <winrt/Windows.Foundation.Collections.h>
@@ -119,3 +121,5 @@ PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept {
 }  // namespace
 
 }  // namespace StoreApi::impl
+
+#endif // UP4W_TEST_WITH_MS_STORE_MOCK

@@ -2,6 +2,11 @@
 
 /// Here lies the classes wrapping the MS API for testability.
 /// Thus this code is inherently non-testable.
+#ifndef UP4W_TEST_WITH_MS_STORE_MOCK
+
+#ifndef _MSC_VER
+#error This is Windows specific Store API Context implementation and cannot compile on other platforms.
+#endif  // _MSC_VER
 
 // For the underlying Store API
 #include <winrt/windows.services.store.h>
@@ -79,3 +84,9 @@ class StoreContext {
 };
 
 }  // namespace StoreApi::impl
+
+namespace StoreApi {
+using DefaultContext = impl::StoreContext;
+}
+
+#endif  // UP4W_TEST_WITH_MS_STORE_MOCK
