@@ -81,6 +81,10 @@ class StoreContext {
   // render native dialogs, such as when purchase or other kinds of
   // authorization are required.
   void InitDialogs(Window parentWindow);
+
+  // Returns a collection of hashes of all locally authenticated users running
+  // in this session. Most likely the collection will contain a single element.
+  static std::vector<std::string> AllLocallyAuthenticatedUserHashes();
 };
 
 }  // namespace StoreApi::impl

@@ -3,6 +3,12 @@
 #include "StoreContext.hpp"
 
 #include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Security.Cryptography.core.h>
+#include <winrt/Windows.Security.Cryptography.h>
+#include <winrt/Windows.Services.Store.h>
+#include <winrt/Windows.System.h>
+#include <winrt/base.h>
 
 #include <algorithm>
 #include <format>
@@ -29,6 +35,9 @@ std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input);
 
 // Translates a [StorePurchaseStatus] into the [PurchaseStatus] enum.
 PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept;
+
+// Returns a hstring representation of a SHA256 sum of the input hstring.
+winrt::hstring sha256(winrt::hstring input);
 }  // namespace
 
 std::chrono::system_clock::time_point
@@ -93,6 +102,32 @@ void StoreContext::InitDialogs(Window parentWindow) {
   iiw->Initialize(parentWindow);
 }
 
+std::vector<std::string> StoreContext::AllLocallyAuthenticatedUserHashes() {
+  using winrt::Windows::Foundation::IInspectable;
+  using winrt::Windows::System::KnownUserProperties;
+  using winrt::Windows::System::User;
+  using winrt::Windows::System::UserAuthenticationStatus;
+  using winrt::Windows::System::UserType;
+
+  // This should really return a single user, but the API is specified in terms
+  // of a collection, so let's not assume too much.
+  auto users =
+      User::FindAllAsync(UserType::LocalUser,
+                         UserAuthenticationStatus::LocallyAuthenticated)
+          .get();
+
+  std::vector<std::string> allHashes;
+  allHashes.reserve(users.Size());
+  for (auto user : users) {
+    IInspectable accountName =
+        user.GetPropertyAsync(KnownUserProperties::AccountName()).get();
+    auto name = winrt::unbox_value<winrt::hstring>(accountName);
+    allHashes.push_back(winrt::to_string(sha256(name)));
+  }
+
+  return allHashes;
+}
+
 namespace {
 std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input) {
   std::vector<winrt::hstring> hStrs;
@@ -119,6 +154,20 @@ PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept {
   assert(false && "Missing enum elements to translate StorePurchaseStatus.");
   return StoreApi::PurchaseStatus::Unknown;  // To be future proof.
 }
+
+winrt::hstring sha256(winrt::hstring input) {
+  using winrt::Windows::Security::Cryptography::BinaryStringEncoding;
+  using winrt::Windows::Security::Cryptography::CryptographicBuffer;
+  using winrt::Windows::Security::Cryptography::Core::HashAlgorithmNames;
+  using winrt::Windows::Security::Cryptography::Core::HashAlgorithmProvider;
+
+  auto inputUtf8 = CryptographicBuffer::ConvertStringToBinary(
+      winrt::to_hstring(input), BinaryStringEncoding::Utf8);
+  auto hasher =
+      HashAlgorithmProvider::OpenAlgorithm(HashAlgorithmNames::Sha256());
+  return CryptographicBuffer::EncodeToHexString(hasher.HashData(inputUtf8));
+}
+
 }  // namespace
 
 }  // namespace StoreApi::impl
