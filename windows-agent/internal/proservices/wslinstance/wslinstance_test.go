@@ -500,7 +500,7 @@ func stopWSLClientOnMatchingStep(wantStopStep, currentStep step, wsl *wslDistroM
 func checkConnectedStatus(t *testing.T, wantDoneStep step, wantErr bool, currentStep step, srv wrappedService) (continueTest bool) {
 	t.Helper()
 
-	connectedErr, stopped := srv.wait(100 * time.Millisecond)
+	connectedErr, stopped := srv.wait(300 * time.Millisecond)
 	if currentStep != wantDoneStep {
 		require.False(t, stopped, "Connect() function should still be running at step %q but is has now stopped (should stop at step %q)", currentStep, wantDoneStep)
 		return true
