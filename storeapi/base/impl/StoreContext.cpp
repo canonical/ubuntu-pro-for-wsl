@@ -50,7 +50,7 @@ StoreContext::Product::CurrentExpirationDate() const {
 
 void StoreContext::Product::PromptUserForPurchase(
     PurchaseCallback callback) const {
-  debug_assert(callback, "callback must have a target function");
+  assert(callback && "callback must have a target function");
   self.RequestPurchaseAsync().Completed(
       // The lambda will be called once the RequestPurchaseAsync completes.
       [cb = std::move(callback)](
@@ -68,8 +68,8 @@ void StoreContext::Product::PromptUserForPurchase(
 std::vector<StoreContext::Product> StoreContext::GetProducts(
     std::span<const std::string> kinds,
     std::span<const std::string> ids) const {
-  debug_assert(!kinds.empty(), "kinds vector cannot be empty");
-  debug_assert(!ids.empty(), "ids vector cannot be empty");
+  assert(!kinds.empty() && "kinds vector cannot be empty");
+  assert(!ids.empty() && "ids vector cannot be empty");
   // Gets Microsoft Store listing info for the specified products that are
   // associated with the current app. Requires "arrays" of product kinds and
   // ids.
@@ -116,7 +116,7 @@ PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept {
     case StorePurchaseStatus::ServerError:
       return PurchaseStatus::ServerError;
   }
-  debug_assert(false, "Missing enum elements to translate StorePurchaseStatus.");
+  assert(false && "Missing enum elements to translate StorePurchaseStatus.");
   return StoreApi::PurchaseStatus::Unknown;  // To be future proof.
 }
 }  // namespace
