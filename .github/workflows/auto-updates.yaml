@@ -125,6 +125,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0
+          # ^ 0 means infinity in this context. This is necessary to later be able to compute diffs.
       - name: Set up git
         uses: ./.github/actions/setup-git
         with:
