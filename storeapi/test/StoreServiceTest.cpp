@@ -24,8 +24,9 @@ class EmptyService : public StoreService<EmptyContext> {
  public:
   using StoreService<EmptyContext>::GetSubscriptionProduct;
 };
+
 TEST(StoreService, EmptyProductsThrow) {
-  DoubledService service{};
+  EmptyService service{};
   EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); },
                Exception);
 }
