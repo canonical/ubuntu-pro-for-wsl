@@ -38,6 +38,7 @@ for dependency in ${dependencies}; do
     dep_path=`echo $dependency | sed "s#${pattern}#\1#"`
     dep_commit=`echo $dependency | sed "s#${pattern}#\4#"`
 
+    export GIT_TERMINAL_PROMPT="0"
     diff_files="$(git diff --name-only ${dep_commit} -- "../${dep_path}")"
     if [ -z "${diff_files}" ] ; then
         continue
