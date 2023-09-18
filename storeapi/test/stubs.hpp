@@ -1,5 +1,9 @@
 #pragma once
+
+/// Test stubs and doubles.
+
 #include <base/Exception.hpp>
+#include <base/Purchase.hpp>
 // For WinRT basic types and coroutines.
 #include <winrt/windows.foundation.h>
 // For non-WinRT coroutines
@@ -7,51 +11,82 @@
 
 // Win32 APIs, such as the Timezone
 #include <windows.h>
-// Test stubs and doubles.
+
+#include <chrono>
+#include <functional>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#if defined _MSC_VER
+#include <time.h>
+#include <windows.h>
+#define timegm _mkgmtime
+#endif
 
 // A Store Context that always finds more than  one product
 struct DoubledContext {
   struct Product {};
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{}, Product{}, Product{}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{}, Product{}, Product{}};
   }
 };
 
 // A Store Context that never finds a product.
 struct EmptyContext {
-  struct Product {};
+  using Window = char;
+  struct Product {
+    std::string kind;
+    std::string id;
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {};
+    std::chrono::system_clock::time_point CurrentExpirationDate() const {
+      throw std::logic_error{"This should not be called"};
+    }
+
+    bool IsInUserCollection() const {
+      throw std::logic_error{"This should not be called"};
+    }
+
+    void PromptUserForPurchase(StoreApi::PurchaseCallback) {
+      throw std::logic_error{"This should not be called"};
+    }
+  };
+
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {};
   }
+
+  // noop
+  void InitDialogs(Window window) {}
 };
 
 // A Store Context that always finds exactly one product.
 struct FirstContext {
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 };
 
 // A Store Context that always finds exactly one product.
 struct EmptyJwtContext {
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
   winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
@@ -63,13 +98,13 @@ struct EmptyJwtContext {
 // A Store Context that always finds exactly one product.
 struct IdentityJwtContext {
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
   winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
@@ -81,20 +116,20 @@ struct IdentityJwtContext {
 // A Store Context that only finds exactly a product user doesn't own.
 struct NeverSubscribedContext {
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
 
     bool IsInUserCollection() { return false; }
 
-    winrt::Windows::Foundation::DateTime CurrentExpirationDate() {
+    std::chrono::system_clock::time_point CurrentExpirationDate() {
       throw StoreApi::Exception{StoreApi::ErrorCode::Unsubscribed,
-                                std::format("id: {}", winrt::to_string(id))};
+                                std::format("id: {}", id)};
     }
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
   winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
@@ -107,26 +142,20 @@ struct NeverSubscribedContext {
 // epoch (in the local time zone).
 struct UnixEpochContext {
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
 
-    winrt::Windows::Foundation::DateTime CurrentExpirationDate() {
-      TIME_ZONE_INFORMATION tz{};
-      std::int64_t seconds = 0;
-      if (GetTimeZoneInformation(&tz) != TIME_ZONE_ID_INVALID) {
-        // UTC = local time + Bias (in minutes)
-        seconds = static_cast<std::int64_t>(tz.Bias) * 60LL;
-      }
-
-      return winrt::clock::from_time_t(seconds);  // should be the UNIX epoch.
+    std::chrono::system_clock::time_point CurrentExpirationDate() {
+      using namespace std::chrono;
+      return sys_days{January / 1 / 1970};
     }
 
     bool IsInUserCollection() { return true; }
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
   winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
@@ -137,26 +166,25 @@ struct UnixEpochContext {
 
 // A Store Context that always finds a valid subscription.
 struct AlreadyPurchasedContext {
+  using Window = char;
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
 
-    winrt::Windows::Foundation::DateTime CurrentExpirationDate() {
-      return winrt::clock::now() + std::chrono::days{9};
+    std::chrono::system_clock::time_point CurrentExpirationDate() const {
+      return std::chrono::system_clock::now() + std::chrono::days{9};
     }
 
-    bool IsInUserCollection() { return true; }
+    bool IsInUserCollection() const { return true; }
 
-    winrt::Windows::Foundation::IAsyncOperation<
-        winrt::Windows::Services::Store::StorePurchaseStatus>
-    PromptUserForPurchase() {
+    void PromptUserForPurchase(StoreApi::PurchaseCallback) {
       throw std::logic_error{"This should not be called"};
     }
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
   winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
@@ -164,32 +192,31 @@ struct AlreadyPurchasedContext {
     co_return hToken;
   }
 
-  void InitDialogs(HWND window) { /*nopp*/
-  }
+  // noop
+  void InitDialogs(Window window) {}
 };
 
 // A Store Context that always finds a valid subscription.
 struct PurchaseSuccessContext {
+  using Window = char;
   struct Product {
-    winrt::hstring kind;
-    winrt::hstring id;
+    std::string kind;
+    std::string id;
 
-    winrt::Windows::Foundation::DateTime CurrentExpirationDate() {
+    std::chrono::system_clock::time_point CurrentExpirationDate() {
       throw std::logic_error{"This should not be called"};
     }
 
-    bool IsInUserCollection() { return false; }
+    bool IsInUserCollection() const { return false; }
 
-    winrt::Windows::Foundation::IAsyncOperation<
-        winrt::Windows::Services::Store::StorePurchaseStatus>
-    PromptUserForPurchase() {
-      co_return winrt::Windows::Services::Store::StorePurchaseStatus::Succeeded;
+    void PromptUserForPurchase(StoreApi::PurchaseCallback cb) const {
+      cb(StoreApi::PurchaseStatus::Succeeded, 0);
     }
   };
 
-  concurrency::task<std::vector<Product>> GetProducts(
-      std::vector<winrt::hstring> kinds, std::vector<winrt::hstring> ids) {
-    co_return {Product{.kind = kinds[0], .id = ids[0]}};
+  std::vector<Product> GetProducts(std::span<const std::string> kinds,
+                                   std::span<const std::string> ids) const {
+    return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
   winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
@@ -197,6 +224,6 @@ struct PurchaseSuccessContext {
     co_return hToken;
   }
 
-  void InitDialogs(HWND window) { /*nopp*/
-  }
+  // noop
+  void InitDialogs(Window window) {}
 };

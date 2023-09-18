@@ -1,47 +1,15 @@
 #pragma once
-#include <base/Context.hpp>
+#include <base/DefaultContext.hpp>
+#include <base/Exception.hpp>
 #include <base/StoreService.hpp>
+#include <chrono>
+#include <format>
+#include <string>
 
 namespace StoreApi {
-
-// We'll certainly want to show in the UI the result of the purchase operation
-// in a localizable way. Thus we must agree on the values returned across the
-// different languages involved. Since we don't control the Windows Runtime
-// APIs, it wouldn't be future-proof to return the raw value of
-// StorePurchaseStatus enum right away.
-// This must strictly in sync the Dart PurchaseStatus enum in
-// https://github.com/canonical/ubuntu-pro-for-windows/blob/main/gui/packages/p4w_ms_store/lib/p4w_ms_store_platform_interface.dart#L8-L16
-// so we don't misinterpret the native call return values.
-enum class PurchaseStatus : std::int8_t {
-  Succeeded = 0,
-  AlreadyPurchased = 1,
-  UserGaveUp = 2,
-  NetworkError = 3,
-  ServerError = 4,
-  Unknown = 5,
-};
-
-PurchaseStatus translate(
-    winrt::Windows::Services::Store::StorePurchaseStatus purchaseStatus) {
-  using winrt::Windows::Services::Store::StorePurchaseStatus;
-  switch (purchaseStatus) {
-    case StorePurchaseStatus::Succeeded:
-      return PurchaseStatus::Succeeded;
-    case StorePurchaseStatus::AlreadyPurchased:
-      return PurchaseStatus::AlreadyPurchased;
-    case StorePurchaseStatus::NotPurchased:
-      return PurchaseStatus::UserGaveUp;
-    case StorePurchaseStatus::NetworkError:
-      return PurchaseStatus::NetworkError;
-    case StorePurchaseStatus::ServerError:
-      return PurchaseStatus::ServerError;
-  }
-  return PurchaseStatus::Unknown; // To be future proof.
-}
-
 // Adds functionality on top of the [StoreService] interesting to Client UI
 // applications.
-template <typename ContextType = Context>
+template <typename ContextType = DefaultContext>
 class ClientStoreService : public StoreService<ContextType> {
  public:
   // Initializes a client store service with the top level window handle so the
@@ -49,24 +17,31 @@ class ClientStoreService : public StoreService<ContextType> {
   // desirable to have the supplied window handle referring to a stable window,
   // so we don't incur in handle reuse problems. The top level window that
   // doesn't change throughout the app lifetime is the best candidate.
-  ClientStoreService(HWND topLevelWindow) {
+  explicit ClientStoreService(ContextType::Window topLevelWindow) {
     this->context.InitDialogs(topLevelWindow);
   }
 
-  // Requests the runtime to display the purchase flow dialog for the
-  // [productId].
-  concurrency::task<PurchaseStatus> PromptUserToSubscribe(
-      std::string productId) {
-    auto product = co_await this->GetSubscriptionProduct(productId);
-    if (product.IsInUserCollection() &&
-        product.CurrentExpirationDate() > winrt::clock::now()) {
-      // No need to purchase this, right? It would end up with
-      // the following status:
-      co_return PurchaseStatus::AlreadyPurchased;
-    }
+  /// Leverages the type system to promote access to the PromptUserForPurchase()
+  /// method on Product, which should not be available on non-GUI clients.
+  class AvailableProduct : public ContextType::Product {
+    using base = ContextType::Product;
 
-    auto res = co_await product.PromptUserForPurchase();
-    co_return translate(res);
+   public:
+    using base::PromptUserForPurchase;
+    AvailableProduct(base B) : base::Product{B} {}
+  };
+
+  /// Fetches a subscription product matching the provided product ID available
+  /// for purchase. An Exception is thrown if the product is already purchased
+  /// or not found.
+  AvailableProduct FetchAvailableProduct(std::string productId) {
+    auto product = this->GetSubscriptionProduct(productId);
+    if (product.IsInUserCollection() &&
+        product.CurrentExpirationDate() > std::chrono::system_clock::now()) {
+      throw Exception(ErrorCode::InvalidProductId,
+                      std::format("product {} already purchased", productId));
+    }
+    return {product};
   }
 };
 

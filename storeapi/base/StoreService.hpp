@@ -1,11 +1,8 @@
 #pragma once
-// For the underlying Store API
-#include <winrt/windows.services.store.h>
 
-// To provide coroutines capable of returning non-WinRT types.
-#include <pplawait.h>
-
+#include <array>
 #include <format>
+#include <string>
 
 #include "Exception.hpp"
 
@@ -20,27 +17,26 @@ class StoreService {
   // The underlying store context.
   ContextType context{};
   // We only care about subscription add-ons.
-  static constexpr wchar_t _productKind[] = L"Durable";
+  static constexpr char _productKind[] = "Durable";
 
-  // An asynchronous operation that eventually returns an instance of
-  // [ContextType::Product] subscription add-on matching the provided product
-  // [id]. Callers must ensure the underlying string pointed by the [id]
-  // remains valid until this function completes.
-  concurrency::task<typename ContextType::Product> GetSubscriptionProduct(
-      std::string_view id) {
-    auto products =
-        co_await context.GetProducts({{_productKind}}, {winrt::to_hstring(id)});
+  // A blocking operation that returns an instance of [ContextType::Product]
+  // subscription add-on matching the provided product [id].
+  typename ContextType::Product GetSubscriptionProduct(std::string id) {
+    std::array<const std::string, 1> ids{std::move(id)};
+    std::array<const std::string, 1> kinds{_productKind};
+    auto products = context.GetProducts(kinds, ids);
     auto size = products.size();
     switch (size) {
       case 0:
-        throw Exception(ErrorCode::NoProductsFound, std::format("id={}", id));
+        throw Exception(ErrorCode::NoProductsFound,
+                        std::format("id={}", ids[0]));
       case 1:
-        co_return products[0];
+        return products[0];
       default:
         throw Exception(
             ErrorCode::TooManyProductsFound,
             std::format("Expected one but found {} products for id {}", size,
-                        id));
+                        ids[0]));
     }
   }
 };

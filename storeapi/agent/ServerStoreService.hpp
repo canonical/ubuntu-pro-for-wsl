@@ -1,9 +1,13 @@
 #pragma once
-#include <ctime>
+#include <pplawait.h>
 
-#include "base/Context.hpp"
+#include "base/DefaultContext.hpp"
 #include "base/Exception.hpp"
 #include "base/StoreService.hpp"
+
+#include <chrono>
+#include <cstdint>
+#include <limits>
 
 namespace StoreApi {
 
@@ -19,7 +23,7 @@ struct UserInfo {
 
 // Adds functionality on top of the [StoreService] interesting to background
 // server applications.
-template <typename ContextType = Context>
+template <typename ContextType = DefaultContext>
 class ServerStoreService : public StoreService<ContextType> {
  public:
   // Generates the user ID key (a.k.a the JWT) provided the server AAD [token]
@@ -45,17 +49,16 @@ class ServerStoreService : public StoreService<ContextType> {
   // product or the lowest int64_t otherwise (a date too far in the past). This
   // raw return value suits well for crossing ABI boundaries, such as returning
   // to a caller in Go.
-  concurrency::task<std::int64_t> CurrentExpirationDate(std::string productId) {
-    auto product = co_await this->GetSubscriptionProduct(productId);
+  std::int64_t CurrentExpirationDate(std::string productId) {
+    auto product = this->GetSubscriptionProduct(productId);
     if (!product.IsInUserCollection()) {
-      co_return std::numeric_limits<std::int64_t>::lowest();
+      return std::numeric_limits<std::int64_t>::lowest();
     }
     // C++20 guarantees that std::chrono::system_clock measures UNIX time.
-    const auto t = winrt::clock::to_sys(product.CurrentExpirationDate());
-    const auto dur = t.time_since_epoch();
+    const auto dur = product.CurrentExpirationDate().time_since_epoch();
 
     // just need to convert the duration to seconds.
-    co_return duration_cast<std::chrono::seconds>(dur).count();
+    return duration_cast<std::chrono::seconds>(dur).count();
   }
 };
 

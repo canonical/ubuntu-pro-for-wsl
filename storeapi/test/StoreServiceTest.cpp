@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <base/Exception.hpp>
 #include <base/StoreService.hpp>
 
 #include "stubs.hpp"
@@ -15,7 +16,7 @@ class DoubledService : public StoreService<DoubledContext> {
 
 TEST(StoreService, DoubledProductsThrow) {
   DoubledService service{};
-  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind").get(); },
+  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); },
                Exception);
 }
 
@@ -23,9 +24,10 @@ class EmptyService : public StoreService<EmptyContext> {
  public:
   using StoreService<EmptyContext>::GetSubscriptionProduct;
 };
+
 TEST(StoreService, EmptyProductsThrow) {
-  DoubledService service{};
-  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind").get(); },
+  EmptyService service{};
+  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); },
                Exception);
 }
 
@@ -35,9 +37,9 @@ class IdentityService : public StoreService<FirstContext> {
 };
 TEST(IdentityService, OneProductNoThrow) {
   IdentityService service{};
-  auto product = service.GetSubscriptionProduct("never-mind").get();
-  EXPECT_EQ(product.kind, L"Durable");
-  EXPECT_EQ(product.id, L"never-mind");
+  auto product = service.GetSubscriptionProduct("never-mind");
+  EXPECT_EQ(product.kind, "Durable");
+  EXPECT_EQ(product.id, "never-mind");
 }
 
 }  // namespace StoreApi

@@ -1,5 +1,9 @@
 #pragma once
+#include <exception>
+#include <format>
 #include <source_location>
+#include <string>
+#include <type_traits>
 
 namespace StoreApi {
 
@@ -12,6 +16,7 @@ enum class ErrorCode {
   NoLocalUser,
   TooManyLocalUsers,
   EmptyJwt,
+  InvalidProductId,
   // ABI Boundary errors:
   AllocationFailure = -10,
   //   - input string argument errors
@@ -71,4 +76,5 @@ class Exception {
                        m_loc.file_name(), m_loc.line(), m_loc.function_name());
   }
 };
+
 }  // namespace StoreApi
