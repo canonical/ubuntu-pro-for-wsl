@@ -116,6 +116,7 @@ PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept {
     case StorePurchaseStatus::ServerError:
       return PurchaseStatus::ServerError;
   }
+  debug_assert(false, "Missing enum elements to translate StorePurchaseStatus.");
   return StoreApi::PurchaseStatus::Unknown;  // To be future proof.
 }
 }  // namespace
