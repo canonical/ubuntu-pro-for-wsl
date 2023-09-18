@@ -15,9 +15,6 @@ runs:
         #  Set up Git
         set -eu
 
-        # Ensure that our current directory is seen as safe (necessary in containers).
-        git config --global --add safe.directory ${PWD}
-
         # Allow access to private repos
         GITHUB_TOKEN="${{ inputs.token }}"
         git config --global url."https://api:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
