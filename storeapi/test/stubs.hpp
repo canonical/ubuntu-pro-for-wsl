@@ -222,14 +222,14 @@ struct TooManyUsersContext {
   }
 };
 
-struct NoUsers {
+struct NoUsersContext {
   struct Product {};
   std::vector<std::string> AllLocallyAuthenticatedUserHashes() const {
     return {};
   }
 };
 
-struct FindOneUser {
+struct FindOneUserContext {
   struct Product {};
   static inline std::string goodHash{};
   std::vector<std::string> AllLocallyAuthenticatedUserHashes() const {

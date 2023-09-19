@@ -9,7 +9,7 @@ namespace StoreApi {
 using namespace ::testing;
 
 TEST(ServerStoreService, NoUsersLikeInCI) {
-  auto service = ServerStoreService<NoUsers>{};
+  auto service = ServerStoreService<NoUsersContext>{};
   EXPECT_THROW({auto user = service.CurrentUserInfo();}, Exception);
 }
 
@@ -20,8 +20,8 @@ TEST(ServerStoreService, TooManyUsers) {
 
 TEST(ServerStoreService, FindOneUser) {
   static constexpr char goodHash[] = "goodHash";
-  auto service = ServerStoreService<FindOneUser>{};
-  FindOneUser::goodHash = goodHash;
+  auto service = ServerStoreService<FindOneUserContext>{};
+  FindOneUserContext::goodHash = goodHash;
   auto user = service.CurrentUserInfo();
   EXPECT_EQ(user.id, goodHash);
 }
