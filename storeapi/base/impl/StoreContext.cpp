@@ -96,7 +96,7 @@ std::vector<StoreContext::Product> StoreContext::GetProducts(
 
 std::string StoreContext::GenerateUserJwt(std::string token,
                                           std::string userId) const {
-  assert(token.empty() && "Azure AD token is required");
+  assert(!token.empty() && "Azure AD token is required");
   auto hJwt = self.GetCustomerPurchaseIdAsync(winrt::to_hstring(token),
                                               winrt::to_hstring(userId))
                   .get();
