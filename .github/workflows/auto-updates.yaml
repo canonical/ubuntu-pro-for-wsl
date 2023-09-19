@@ -7,6 +7,7 @@ on:
       - '**/README.md'
       - '**/debian/control'
       - '**/po/*'
+  workflow_dispatch:
 
 jobs:
   update-po:
@@ -135,6 +136,9 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: go.work
+      - name: Set up private repo
+        shell: bash
+        run : go env -w "GOPRIVATE=github.com/${{ github.repository }}"
       - name: Update submodules
         uses: ./.github/actions/update-workspace-dependencies
         with:
