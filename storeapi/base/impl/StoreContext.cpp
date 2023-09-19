@@ -131,7 +131,9 @@ std::vector<std::string> StoreContext::AllLocallyAuthenticatedUserHashes() {
     IInspectable accountName =
         user.GetPropertyAsync(KnownUserProperties::AccountName()).get();
     auto name = winrt::unbox_value<winrt::hstring>(accountName);
-    allHashes.push_back(winrt::to_string(sha256(name)));
+    if (!name.empty()) {
+      allHashes.push_back(winrt::to_string(sha256(name)));
+    }
   }
 
   return allHashes;
