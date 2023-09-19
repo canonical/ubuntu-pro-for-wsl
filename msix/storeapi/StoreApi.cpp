@@ -1,13 +1,13 @@
 #include "StoreApi.hpp"
 
 #include <combaseapi.h>
-#include <string.h>
 #include <winrt/base.h>
 
 #include <agent/ServerStoreService.hpp>
 #include <base/Exception.hpp>
-#include <string>
+#include <cstring>  // For strnlen
 #include <exception>
+#include <string>
 
 #include "framework.hpp"
 
