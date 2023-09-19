@@ -15,7 +15,7 @@ set(StoreApi_SRCS
     "../base/Exception.hpp"
     "../base/Purchase.hpp"
     "../base/StoreService.hpp"
-    "../agent/ServerStoreService.cpp"
+    "../agent/ServerStoreService.hpp"
     "../gui/ClientStoreService.hpp"
 )
 

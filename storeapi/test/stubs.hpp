@@ -4,23 +4,16 @@
 
 #include <base/Exception.hpp>
 #include <base/Purchase.hpp>
-// For WinRT basic types and coroutines.
-#include <winrt/windows.foundation.h>
-// For non-WinRT coroutines
-#include <pplawait.h>
-
-// Win32 APIs, such as the Timezone
-#include <windows.h>
-
 #include <chrono>
 #include <functional>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
+// For timegm
+#include <time.h>
 
 #if defined _MSC_VER
-#include <time.h>
 #include <windows.h>
 #define timegm _mkgmtime
 #endif
@@ -89,9 +82,8 @@ struct EmptyJwtContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    co_return {};
+  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+    return {};
   }
 };
 
@@ -107,9 +99,8 @@ struct IdentityJwtContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    co_return hToken;
+  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+    return hToken;
   }
 };
 
@@ -132,9 +123,8 @@ struct NeverSubscribedContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    co_return hToken;
+  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+    return hToken;
   }
 };
 
@@ -158,9 +148,8 @@ struct UnixEpochContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    co_return hToken;
+  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+    return hToken;
   }
 };
 
@@ -187,9 +176,8 @@ struct AlreadyPurchasedContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    co_return hToken;
+  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+    return hToken;
   }
 
   // noop
@@ -219,11 +207,32 @@ struct PurchaseSuccessContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  winrt::Windows::Foundation::IAsyncOperation<winrt::hstring> GenerateUserJwt(
-      winrt::hstring hToken, winrt::hstring hUserId) {
-    co_return hToken;
+  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+    return hToken;
   }
 
   // noop
   void InitDialogs(Window window) {}
+};
+
+struct TooManyUsersContext {
+  struct Product {};
+  std::vector<std::string> AllLocallyAuthenticatedUserHashes() const {
+    return {"first-user", "second-user"};
+  }
+};
+
+struct NoUsers {
+  struct Product {};
+  std::vector<std::string> AllLocallyAuthenticatedUserHashes() const {
+    return {};
+  }
+};
+
+struct FindOneUser {
+  struct Product {};
+  static inline std::string goodHash{};
+  std::vector<std::string> AllLocallyAuthenticatedUserHashes() const {
+    return {goodHash};
+  }
 };

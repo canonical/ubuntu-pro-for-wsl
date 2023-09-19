@@ -8,39 +8,40 @@ namespace StoreApi {
 
 using namespace ::testing;
 
-TEST(UserInfo, PredictableSizes) {
-  auto user = UserInfo::Current().get();
-  auto size = user.id.size();
-  EXPECT_TRUE(size == 0 || size == 64)
-      << "User ID of unexpected size: " << size << " <"
-      << winrt::to_string(user.id) << '\n';
+TEST(ServerStoreService, NoUsersLikeInCI) {
+  auto service = ServerStoreService<NoUsers>{};
+  EXPECT_THROW({auto user = service.CurrentUserInfo();}, Exception);
+}
+
+TEST(ServerStoreService, TooManyUsers) {
+  auto service = ServerStoreService<TooManyUsersContext>{};
+  EXPECT_THROW({auto user = service.CurrentUserInfo();}, Exception);
+}
+
+TEST(ServerStoreService, FindOneUser) {
+  static constexpr char goodHash[] = "goodHash";
+  auto service = ServerStoreService<FindOneUser>{};
+  FindOneUser::goodHash = goodHash;
+  auto user = service.CurrentUserInfo();
+  EXPECT_EQ(user.id, goodHash);
 }
 
 TEST(ServerStoreService, EmptyJwtThrows) {
   auto service = ServerStoreService<EmptyJwtContext>{};
-  UserInfo user{.id = L"my@name.com"};
+  UserInfo user{.id = "my@name.com"};
   EXPECT_THROW(
       {
-        auto jwt = service.GenerateUserJwt("this-is-a-web-token", user).get();
+        auto jwt = service.GenerateUserJwt("this-is-a-web-token", user);
       },
       Exception);
 }
 
 TEST(ServerStoreService, NonEmptyJwtNeverThrows) {
   auto service = ServerStoreService<IdentityJwtContext>{};
-  UserInfo user{.id = L"my@name.com"};
+  UserInfo user{.id = "my@name.com"};
   std::string token{"this-is-a-web-token"};
-  auto jwt = service.GenerateUserJwt(token, user).get();
+  auto jwt = service.GenerateUserJwt(token, user);
   EXPECT_EQ(token, jwt);
-}
-
-TEST(ServerStoreService, RealServerFailsUnderTest) {
-  auto service = ServerStoreService{};
-  UserInfo user{.id = L"my@name.com"};
-  std::string token{"this-is-a-web-token"};
-  // This fails because the test is not an app deployed through the store.
-  EXPECT_THROW({ auto jwt = service.GenerateUserJwt(token, user).get(); },
-               Exception);
 }
 
 TEST(ServerStoreService, ExpirationDateUnsubscribed) {
