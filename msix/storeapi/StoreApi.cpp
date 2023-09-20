@@ -1,10 +1,20 @@
+#include "StoreApi.hpp"
+
+#include <combaseapi.h>
+#include <winrt/base.h>
+
+#include <agent/ServerStoreService.hpp>
+#include <base/Exception.hpp>
+#include <cstring>  // For strnlen
+#include <exception>
+#include <string>
+
+#include "framework.hpp"
+
 #ifndef DNDEBUG
 #include <format>
 #include <iostream>
 #endif
-
-#include "StoreApi.hpp"
-#include "framework.hpp"
 
 // Syntactic sugar to convert the enum [value] into a Int.
 constexpr Int toInt(StoreApi::ErrorCode value) {
@@ -24,9 +34,9 @@ static constexpr std::size_t MaxProductIdLen = 129;
 StoreApi::ErrorCode validateArg(const char* input, std::size_t maxLength);
 
 void logError(std::string_view functionName, std::string_view errMsg) {
-  #ifndef DNDEBUG
-    std::cerr << std::format("storeapi: {}: {}\n", functionName , errMsg);
-  #endif
+#ifndef DNDEBUG
+  std::cerr << std::format("storeapi: {}: {}\n", functionName, errMsg);
+#endif
 }
 
 #define LOG_ERROR(msg)           \
@@ -75,10 +85,9 @@ Int GenerateUserJWT(const char* accessToken, char** userJWT,
   }
 
   try {
-    auto user = StoreApi::UserInfo::Current().get();
-
     StoreApi::ServerStoreService service{};
-    const std::string jwt = service.GenerateUserJwt(accessToken, user).get();
+    auto user = service.CurrentUserInfo();
+    const std::string jwt = service.GenerateUserJwt(accessToken, user);
 
     // Allocates memory using some OS API so we can free this buffer on the
     // other side of the ABI without assumptions on specifics of the programming

@@ -1,13 +1,12 @@
 #pragma once
-#include <pplawait.h>
-
-#include "base/DefaultContext.hpp"
-#include "base/Exception.hpp"
-#include "base/StoreService.hpp"
-
+#include <base/DefaultContext.hpp>
+#include <base/Exception.hpp>
+#include <base/StoreService.hpp>
 #include <chrono>
 #include <cstdint>
+#include <format>
 #include <limits>
+#include <string>
 
 namespace StoreApi {
 
@@ -15,10 +14,7 @@ namespace StoreApi {
 // when talking to external business servers about the subscription.
 struct UserInfo {
   // The user ID that should be tracked in the Contract Server.
-  winrt::hstring id;
-
-  // An asynchronous factory returning [UserInfo] of the current user.
-  static concurrency::task<UserInfo> Current();
+  std::string id;
 };
 
 // Adds functionality on top of the [StoreService] interesting to background
@@ -28,20 +24,18 @@ class ServerStoreService : public StoreService<ContextType> {
  public:
   // Generates the user ID key (a.k.a the JWT) provided the server AAD [token]
   // and the [user] info whose ID the caller wants to have encoded in the JWT.
-  concurrency::task<std::string> GenerateUserJwt(std::string token,
-                                                 UserInfo user) {
+  std::string GenerateUserJwt(std::string token, UserInfo user) const {
     if (user.id.empty()) {
       throw Exception(StoreApi::ErrorCode::NoLocalUser);
     }
 
-    auto hToken = winrt::to_hstring(token);
-    auto jwt = co_await this->context.GenerateUserJwt(hToken, user.id);
+    auto jwt = this->context.GenerateUserJwt(token, user.id);
     if (jwt.empty()) {
       throw Exception(ErrorCode::EmptyJwt,
                       std::format("access token: {}", token));
     }
 
-    co_return winrt::to_string(jwt);
+    return jwt;
   }
 
   // Returns the expiration time as the number of seconds since Unix epoch of
@@ -59,6 +53,23 @@ class ServerStoreService : public StoreService<ContextType> {
 
     // just need to convert the duration to seconds.
     return duration_cast<std::chrono::seconds>(dur).count();
+  }
+
+  // A factory returning the current user's [UserInfo].
+  UserInfo CurrentUserInfo() const {
+    auto hashes = this->context.AllLocallyAuthenticatedUserHashes();
+
+    auto howManyUsers = hashes.size();
+    if (howManyUsers < 1) {
+      throw Exception(ErrorCode::NoLocalUser);
+    }
+
+    if (howManyUsers > 1) {
+      throw Exception(ErrorCode::TooManyLocalUsers,
+                      std::format("Expected one but found {}", howManyUsers));
+    }
+
+    return UserInfo{.id = hashes[0]};
   }
 };
 
