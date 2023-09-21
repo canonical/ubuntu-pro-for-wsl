@@ -11,11 +11,17 @@
 #include <winrt/base.h>
 
 #include <algorithm>
+#include <cassert>
+#include <iterator>
 #include <sstream>
 #include <unordered_map>
 
+#include "WinRTHelpers.hpp"
+
 namespace StoreApi::impl {
 
+using winrt::Windows::Data::Json::IJsonValue;
+using winrt::Windows::Data::Json::JsonArray;
 using winrt::Windows::Data::Json::JsonObject;
 using UrlParams = std::unordered_multimap<winrt::hstring, winrt::hstring>;
 using winrt::Windows::Foundation::Uri;
@@ -32,6 +38,38 @@ IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
 WinMockContext::Product fromJson(JsonObject const& obj);
 
 }  // namespace
+
+std::vector<WinMockContext::Product> WinMockContext::GetProducts(
+    std::span<const std::string> kinds,
+    std::span<const std::string> ids) const {
+  assert(!kinds.empty() && "kinds vector cannot be empty");
+  assert(!ids.empty() && "ids vector cannot be empty");
+
+  auto hKinds = to_hstrings(kinds);
+  auto hIds = to_hstrings(ids);
+
+  UrlParams parameters;
+
+  std::ranges::transform(
+      hKinds, std::inserter(parameters, parameters.end()),
+      [](winrt::hstring k) { return std::make_pair(L"kinds", k); });
+  std::ranges::transform(
+      hIds, std::inserter(parameters, parameters.end()),
+      [](winrt::hstring id) { return std::make_pair(L"ids", id); });
+
+  auto productsJson = call(L"/products", parameters).get();
+
+  JsonArray products = productsJson.GetNamedArray(L"products");
+
+  std::vector<WinMockContext::Product> result;
+  result.reserve(products.Size());
+  for (const IJsonValue& product : products) {
+    JsonObject p = product.GetObject();
+    result.emplace_back(fromJson(p));
+  }
+
+  return result;
+}
 
 namespace {
 // Returns the mock server endpoint address and port by reading the environment
