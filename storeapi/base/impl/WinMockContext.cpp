@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <iterator>
 #include <sstream>
 #include <unordered_map>
@@ -37,6 +38,9 @@ IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
 /// Creates a product from a JsonObject containing the relevant information.
 WinMockContext::Product fromJson(JsonObject const& obj);
 
+/// Translates a textual representation of a purchase transaction result into an
+/// instance of the PurchaseStatus enum.
+StoreApi::PurchaseStatus translate(winrt::hstring const& purchaseStatus);
 }  // namespace
 
 std::vector<WinMockContext::Product> WinMockContext::GetProducts(
@@ -104,6 +108,29 @@ std::string WinMockContext::GenerateUserJwt(std::string token,
 // NOOP, for now at least.
 void WinMockContext::InitDialogs(Window parentWindow) {}
 
+void WinMockContext::Product::PromptUserForPurchase(
+    PurchaseCallback callback) const {
+  using winrt::Windows::Foundation::AsyncStatus;
+
+  UrlParams params{{L"id", winrt::to_hstring(storeID)}};
+  call(L"purchase", params)
+      .Completed(
+          [cb = std::move(callback)](IAsyncOperation<JsonObject> const& async,
+                                     AsyncStatus const& asyncStatus) {
+            PurchaseStatus translated;
+            std::int32_t error = async.ErrorCode().value;
+            if (error != 0 || asyncStatus == AsyncStatus::Error) {
+              translated = PurchaseStatus::NetworkError;
+            } else {
+              auto json = async.GetResults();
+              auto status = json.GetNamedString(L"status");
+              translated = translate(status);
+            }
+
+            cb(translated, error);
+          });
+}
+
 namespace {
 // Returns the mock server endpoint address and port by reading the environment
 // variable UP4W_MS_STORE_MOCK_ENDPOINT or localhost:9 if the variable is unset.
@@ -162,6 +189,27 @@ WinMockContext::Product fromJson(JsonObject const& obj) {
       winrt::to_string(obj.GetNamedString(L"ProductKind")),
       tp,
       obj.GetNamedBoolean(L"IsInUserCollection")};
+}
+
+StoreApi::PurchaseStatus translate(winrt::hstring const& purchaseStatus) {
+  if (purchaseStatus == L"Succeeded") {
+    return PurchaseStatus::Succeeded;
+  }
+
+  if (purchaseStatus == L"AlreadyPurchased") {
+    return StoreApi::PurchaseStatus::AlreadyPurchased;
+  }
+
+  if (purchaseStatus == L"NotPurchased") {
+    return StoreApi::PurchaseStatus::UserGaveUp;
+  }
+
+  if (purchaseStatus == L"ServerError") {
+    return StoreApi::PurchaseStatus::ServerError;
+  }
+
+  assert(false && "Missing enum elements to translate StorePurchaseStatus.");
+  return StoreApi::PurchaseStatus::Unknown;  // To be future proof.
 }
 
 }  // namespace
