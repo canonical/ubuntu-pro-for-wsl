@@ -84,6 +84,23 @@ std::vector<std::string> WinMockContext::AllLocallyAuthenticatedUserHashes() {
   return result;
 }
 
+std::string WinMockContext::GenerateUserJwt(std::string token,
+                                            std::string userId) const {
+  assert(!token.empty() && "Azure AD token is required");
+  JsonObject res{nullptr};
+
+  UrlParams parameters{
+      {L"serviceticket", winrt::to_hstring(token)},
+  };
+  if (!userId.empty()) {
+    parameters.insert({L"publisheruserid", winrt::to_hstring(userId)});
+  }
+
+  res = call(L"generateuserjwt", parameters).get();
+
+  return winrt::to_string(res.GetNamedString(L"jwt"));
+}
+
 namespace {
 // Returns the mock server endpoint address and port by reading the environment
 // variable UP4W_MS_STORE_MOCK_ENDPOINT or localhost:9 if the variable is unset.
