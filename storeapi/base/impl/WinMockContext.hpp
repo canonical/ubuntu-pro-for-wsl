@@ -8,6 +8,7 @@
 #include <chrono>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "../Purchase.hpp"
@@ -47,6 +48,19 @@ class WinMockContext {
     // See
     // https://learn.microsoft.com/en-us/uwp/api/windows.services.store.storeproduct.requestpurchaseasync
     void PromptUserForPurchase(PurchaseCallback callback) const;
+
+   public:
+    Product() = default;
+    Product(std::string&& storeID, std::string&& title,
+            std::string&& description, std::string&& productKind,
+            std::chrono::system_clock::time_point expirationDate,
+            bool isInUserCollection)
+        : storeID(std::move(storeID)),
+          title(std::move(title)),
+          description(std::move(description)),
+          productKind(std::move(productKind)),
+          expirationDate(std::move(expirationDate)),
+          isInUserCollection(isInUserCollection) {}
   };
 
   // Returns a collection of products matching the supplied [kinds] and [ids].

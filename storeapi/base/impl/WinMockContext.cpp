@@ -10,6 +10,8 @@
 #include <winrt/Windows.Web.Http.h>
 #include <winrt/base.h>
 
+#include <algorithm>
+#include <sstream>
 #include <unordered_map>
 
 namespace StoreApi::impl {
@@ -25,6 +27,9 @@ namespace {
 // response. Notice that the supplied path is relative.
 IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
                                  UrlParams const& params = {});
+
+/// Creates a product from a JsonObject containing the relevant information.
+WinMockContext::Product fromJson(JsonObject const& obj);
 
 }  // namespace
 
@@ -72,6 +77,20 @@ IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
   // certainly under 1 KB.
   winrt::hstring contents = co_await httpClient.GetStringAsync(uri);
   co_return JsonObject::Parse(contents);
+}
+
+WinMockContext::Product fromJson(JsonObject const& obj) {
+  std::chrono::system_clock::time_point tp{};
+  std::stringstream ss{winrt::to_string(obj.GetNamedString(L"ExpirationDate"))};
+  ss >> std::chrono::parse("%FT%T%Tz", tp);
+
+  return WinMockContext::Product{
+      winrt::to_string(obj.GetNamedString(L"StoreID")),
+      winrt::to_string(obj.GetNamedString(L"Title")),
+      winrt::to_string(obj.GetNamedString(L"Description")),
+      winrt::to_string(obj.GetNamedString(L"ProductKind")),
+      tp,
+      obj.GetNamedBoolean(L"IsInUserCollection")};
 }
 
 }  // namespace
