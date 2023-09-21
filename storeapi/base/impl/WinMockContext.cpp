@@ -101,6 +101,9 @@ std::string WinMockContext::GenerateUserJwt(std::string token,
   return winrt::to_string(res.GetNamedString(L"jwt"));
 }
 
+// NOOP, for now at least.
+void WinMockContext::InitDialogs(Window parentWindow) {}
+
 namespace {
 // Returns the mock server endpoint address and port by reading the environment
 // variable UP4W_MS_STORE_MOCK_ENDPOINT or localhost:9 if the variable is unset.
