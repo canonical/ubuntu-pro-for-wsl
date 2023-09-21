@@ -226,7 +226,7 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprint(w, string(bs))
+	fmt.Fprintf(w, `{%q:%s}`, "products", string(bs))
 }
 
 func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
