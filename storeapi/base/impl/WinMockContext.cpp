@@ -71,6 +71,19 @@ std::vector<WinMockContext::Product> WinMockContext::GetProducts(
   return result;
 }
 
+std::vector<std::string> WinMockContext::AllLocallyAuthenticatedUserHashes() {
+  JsonObject usersList = call(L"/allauthenticatedusers").get();
+  JsonArray users = usersList.GetNamedArray(L"users");
+
+  std::vector<std::string> result;
+  result.reserve(users.Size());
+  for (const IJsonValue& user : users) {
+    result.emplace_back(winrt::to_string(user.GetString()));
+  }
+
+  return result;
+}
+
 namespace {
 // Returns the mock server endpoint address and port by reading the environment
 // variable UP4W_MS_STORE_MOCK_ENDPOINT or localhost:9 if the variable is unset.
