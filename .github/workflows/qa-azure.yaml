@@ -15,6 +15,72 @@ env:
   flutter-version: 3.13.x
 
 jobs:
+  build-wsl-pro-service:
+    name: Build wsl-pro-service debian package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Build debian package
+        uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
+        with:
+          source-dir: wsl-pro-service
+          token: ${{ secrets.GITHUB_TOKEN }}
+          docker-image: ubuntu:devel
+        env:
+          UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
+
+  build-ubuntu-pro-for-windows:
+    name: Build Windows Agent Appx
+    runs-on: windows-latest
+    steps:
+      - name: Set up git
+        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: go.work
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.flutter-version }}
+      - name: Setup MSBuild (PATH)
+        uses: microsoft/setup-msbuild@v1.3.1
+      - name: Install certificate
+        shell: powershell
+        run: |
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
+          certutil -decode certificate\certificate.txt certificate\certificate.pfx
+
+          $pwd = ConvertTo-SecureString '${{ secrets.CERTIFICATE_PASSWORD }}' -AsPlainText -Force
+          Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
+          Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
+      - name: Build Bundle
+        run:  |
+          msbuild                                            `
+            .\msix\msix.sln                                  `
+            -target:Build                                    `
+            -maxCpuCount                                     `
+            -nodeReuse:false                                 `
+            -property:Configuration=Release                  `
+            -property:AppxBundle=Always                      `
+            -property:AppxBundlePlatforms=x64                `
+            -property:UapAppxPackageBuildMode=SideloadOnly   `
+            -property:Version=0.0.1+${{ github.sha }}        `
+            -nologo                                          `
+            -verbosity:normal
+      - name: Upload sideload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: UbuntuProForWindows+${{ github.sha }}
+          path: |
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_1.0.0.0_x64.cer
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_1.0.0.0_x64.msixbundle
+
   vm-setup:
     name: Set up Azure VM
     runs-on: ubuntu-latest
@@ -31,7 +97,7 @@ jobs:
   qa:
     name: Run end-to-end tests on the Azure VM
     runs-on: [self-hosted, Windows]
-    needs: vm-setup
+    needs: [vm-setup, build-wsl-pro-service, build-ubuntu-pro-for-windows]
     steps:
       - name: Set up git
         uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
