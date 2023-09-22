@@ -97,6 +97,12 @@ type Settings struct {
 	AllProducts []Product
 }
 
+// Unmarshal tricks the type system so marshalling YAML will just work when called from the restserver.Settings interface.
+func (s Settings) Unmarshal(in []byte, unmarshaller func(in []byte, out interface{}) (err error)) (restserver.Settings, error) {
+	err := unmarshaller(in, &s)
+	return s, err
+}
+
 // Server is a configurable mock of the MS Store runtime component that talks REST.
 type Server struct {
 	restserver.ServerBase
@@ -226,7 +232,7 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprint(w, string(bs))
+	fmt.Fprintf(w, `{%q:%s}`, "products", string(bs))
 }
 
 func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {

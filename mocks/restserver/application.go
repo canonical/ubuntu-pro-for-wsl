@@ -23,7 +23,9 @@ type Server interface {
 }
 
 // Settings is the minimal interface a settings backend must provide to the Application.
-type Settings interface{}
+type Settings interface {
+	Unmarshal(in []byte, unmarshaller func(in []byte, out interface{}) (err error)) (Settings, error)
+}
 
 // App encapsulates creating and managing the CLI and lifecycle.
 type App struct {
@@ -143,7 +145,7 @@ The outfile, if provided, will contain the address.`, app.Description),
 					os.Exit(1)
 				}
 
-				if err := yaml.Unmarshal(out, &settings); err != nil {
+				if settings, err = settings.Unmarshal(out, yaml.Unmarshal); err != nil {
 					slog.Error(fmt.Sprintf("Could not unmarshal settings: %v", err))
 					os.Exit(1)
 				}

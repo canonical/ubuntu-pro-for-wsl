@@ -33,6 +33,12 @@ type Settings struct {
 	Subscription restserver.Endpoint
 }
 
+// Unmarshal tricks the type system so marshalling YAML will just work when called from the restserver.Settings interface.
+func (s Settings) Unmarshal(in []byte, unmarshaller func(in []byte, out interface{}) (err error)) (restserver.Settings, error) {
+	err := unmarshaller(in, &s)
+	return s, err
+}
+
 // DefaultSettings returns the default set of settings for the server.
 func DefaultSettings() Settings {
 	return Settings{
