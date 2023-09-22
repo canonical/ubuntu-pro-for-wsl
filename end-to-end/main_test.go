@@ -357,7 +357,7 @@ func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath s
 		return "", nil, err
 	}
 
-	out, err = d.Command(ctx, fmt.Sprintf("apt install $(wslpath -ua '%s')", debPath)).CombinedOutput()
+	out, err = d.Command(ctx, fmt.Sprintf("DEBIAN_FRONTEND=noninteractive apt install -y $(wslpath -ua '%s')", debPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
