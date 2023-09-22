@@ -34,8 +34,8 @@ type Settings struct {
 }
 
 // Unmarshal tricks the type system so marshalling YAML will just work when called from the restserver.Settings interface.
-func (s Settings) Unmarshal(in []byte, unmarsheller func(in []byte, out interface{}) (err error)) (restserver.Settings, error) {
-	err := unmarsheller(in, &s)
+func (s Settings) Unmarshal(in []byte, unmarshaller func(in []byte, out interface{}) (err error)) (restserver.Settings, error) {
+	err := unmarshaller(in, &s)
 	return s, err
 }
 

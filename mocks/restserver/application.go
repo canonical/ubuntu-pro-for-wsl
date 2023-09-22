@@ -24,7 +24,7 @@ type Server interface {
 
 // Settings is the minimal interface a settings backend must provide to the Application.
 type Settings interface {
-	Unmarshal(in []byte, unmarsheller func(in []byte, out interface{}) (err error)) (Settings, error)
+	Unmarshal(in []byte, unmarshaller func(in []byte, out interface{}) (err error)) (Settings, error)
 }
 
 // App encapsulates creating and managing the CLI and lifecycle.
