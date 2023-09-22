@@ -16,6 +16,7 @@
 #include <iterator>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 
 #include "WinRTHelpers.hpp"
 
@@ -34,9 +35,6 @@ namespace {
 // response. Notice that the supplied path is relative.
 IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
                                  UrlParams const& params = {});
-
-/// Creates a product from a JsonObject containing the relevant information.
-WinMockContext::Product fromJson(JsonObject const& obj);
 
 /// Translates a textual representation of a purchase transaction result into an
 /// instance of the PurchaseStatus enum.
@@ -69,7 +67,7 @@ std::vector<WinMockContext::Product> WinMockContext::GetProducts(
   result.reserve(products.Size());
   for (const IJsonValue& product : products) {
     JsonObject p = product.GetObject();
-    result.emplace_back(fromJson(p));
+    result.emplace_back(WinMockContext::Product{p});
   }
 
   return result;
@@ -131,6 +129,22 @@ void WinMockContext::Product::PromptUserForPurchase(
           });
 }
 
+WinMockContext::Product::Product(JsonObject const& json)
+    : storeID{winrt::to_string(json.GetNamedString(L"StoreID"))},
+      title{winrt::to_string(json.GetNamedString(L"Title"))},
+      description{winrt::to_string(json.GetNamedString(L"Description"))},
+      productKind{winrt::to_string(json.GetNamedString(L"ProductKind"))},
+      expirationDate{},
+      isInUserCollection{json.GetNamedBoolean(L"IsInUserCollection")}
+
+{
+  std::chrono::system_clock::time_point tp{};
+  std::stringstream ss{
+      winrt::to_string(json.GetNamedString(L"ExpirationDate"))};
+  ss >> std::chrono::parse("%FT%T%Tz", tp);
+  expirationDate = tp;
+}
+
 namespace {
 // Returns the mock server endpoint address and port by reading the environment
 // variable UP4W_MS_STORE_MOCK_ENDPOINT or localhost:9 if the variable is unset.
@@ -175,20 +189,6 @@ IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
   // certainly under 1 KB.
   winrt::hstring contents = co_await httpClient.GetStringAsync(uri);
   co_return JsonObject::Parse(contents);
-}
-
-WinMockContext::Product fromJson(JsonObject const& obj) {
-  std::chrono::system_clock::time_point tp{};
-  std::stringstream ss{winrt::to_string(obj.GetNamedString(L"ExpirationDate"))};
-  ss >> std::chrono::parse("%FT%T%Tz", tp);
-
-  return WinMockContext::Product{
-      winrt::to_string(obj.GetNamedString(L"StoreID")),
-      winrt::to_string(obj.GetNamedString(L"Title")),
-      winrt::to_string(obj.GetNamedString(L"Description")),
-      winrt::to_string(obj.GetNamedString(L"ProductKind")),
-      tp,
-      obj.GetNamedBoolean(L"IsInUserCollection")};
 }
 
 StoreApi::PurchaseStatus translate(winrt::hstring const& purchaseStatus) {

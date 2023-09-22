@@ -13,6 +13,10 @@
 
 #include "../Purchase.hpp"
 
+namespace winrt::Windows::Data::Json {
+class JsonObject;
+}
+
 namespace StoreApi::impl {
 
 class WinMockContext {
@@ -50,17 +54,10 @@ class WinMockContext {
     void PromptUserForPurchase(PurchaseCallback callback) const;
 
    public:
+    /// Creates a product from a JsonObject obtained from a call to the mock
+    /// server containing the relevant information.
+    explicit Product(winrt::Windows::Data::Json::JsonObject const& json);
     Product() = default;
-    Product(std::string&& storeID, std::string&& title,
-            std::string&& description, std::string&& productKind,
-            std::chrono::system_clock::time_point expirationDate,
-            bool isInUserCollection)
-        : storeID(std::move(storeID)),
-          title(std::move(title)),
-          description(std::move(description)),
-          productKind(std::move(productKind)),
-          expirationDate(std::move(expirationDate)),
-          isInUserCollection(isInUserCollection) {}
   };
 
   // Returns a collection of products matching the supplied [kinds] and [ids].
