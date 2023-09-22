@@ -40,10 +40,14 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230919090833-cb5378636b4d h1:3YQnVTzZFOxkLHR7S820oXS+bvtSqpznSWDhsNV4H9Y=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230919090833-cb5378636b4d/go.mod h1:hdQ6trCKKHPsYlyArA1peKmd4zQim+BLWTJg0llKYSM=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230922121135-527fdb21f6ee h1:ICI2GgFND/AdvOtFx1F1qy1onubIt3RI12l1LGZDZHI=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230922121135-527fdb21f6ee/go.mod h1:9Trm7taCfU3XFdAR/rJCW8kwJgU+fDmFNuUtPG7hbyE=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230919090833-cb5378636b4d h1:JqR2TpfXJpuocgixEApDHo1V/aOB2bsQO6iS6lIV9gg=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230919090833-cb5378636b4d/go.mod h1:MwfF0qFUhfc+N3BdF7biBsRrQlZKYC/SNwntOodSAZA=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230919090833-cb5378636b4d h1:Z5IcEg+nuhUMIIcjhtGAVqv8e2rbTETohQb70mlny4I=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230919090833-cb5378636b4d/go.mod h1:T4xxNZl7KdeTfimSwnwe561mV7vpc/7uHRw+ybrSptA=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230922121135-527fdb21f6ee h1:piAEseqtO1bKEtlhHnwMjRfZhkRLK0hHaaHwXqqBwMc=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230922121135-527fdb21f6ee/go.mod h1:5E79XQGZEdsvMKqz12xBK1gyq8ujBdLGyCA9XXvc4hI=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
