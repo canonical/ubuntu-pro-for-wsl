@@ -23,7 +23,15 @@ set(StoreApiServicesTests_SRCS
     "ClientStoreServiceTest.cpp"
     "ServerStoreServiceTest.cpp"
     "StoreServiceTest.cpp"
+    "MockTest.cpp"
+    "../base/impl/WinMockContext.cpp"
 )
+set(StoreApiServicesTests_DEFINES "")
+if(DEFINED ENV{UP4W_TEST_WITH_MS_STORE_MOCK})
+    list(APPEND StoreApiServicesTests_DEFINES "UP4W_TEST_WITH_MS_STORE_MOCK")
+else()
+    message(STATUS "Building with the production version of MS Store client API. Set the environment variable 'UP4W_TEST_WITH_MS_STORE_MOCK' if you want to build with the mock store API.")
+endif()
 
 include(FetchContent)
 
@@ -40,6 +48,7 @@ enable_testing()
 add_executable(StoreApiServicesTests ${StoreApi_SRCS} ${StoreApiServicesTests_SRCS} )
 target_include_directories(StoreApiServicesTests PUBLIC ${CMAKE_CURRENT_LIST_DIR}/.. )
 target_compile_features(StoreApiServicesTests PRIVATE cxx_std_20)
+target_compile_definitions(StoreApiServicesTests PRIVATE ${StoreApiServicesTests_DEFINES})
 set_target_properties(StoreApiServicesTests PROPERTIES VS_WINDOWS_TARGET_PLATFORM_MIN_VERSION 10.0.14393.0 COMPILE_WARNING_AS_ERROR ON)
 target_link_libraries(StoreApiServicesTests PRIVATE WindowsApp  GTest::gtest_main)
 if(MSVC)

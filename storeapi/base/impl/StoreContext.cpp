@@ -10,13 +10,13 @@
 #include <winrt/Windows.System.h>
 #include <winrt/base.h>
 
-#include <algorithm>
 #include <format>
 #include <functional>
 #include <iterator>
 #include <type_traits>
 
 #include "../Exception.hpp"
+#include "WinRTHelpers.hpp"
 
 namespace StoreApi::impl {
 
@@ -29,10 +29,6 @@ using winrt::Windows::Services::Store::StorePurchaseStatus;
 using winrt::Windows::Services::Store::StoreSku;
 
 namespace {
-// Converts a span of strings into a vector of hstrings, needed when passing
-// a collection of string as a parameter to an async operation.
-std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input);
-
 // Translates a [StorePurchaseStatus] into the [PurchaseStatus] enum.
 PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept;
 
@@ -140,14 +136,6 @@ std::vector<std::string> StoreContext::AllLocallyAuthenticatedUserHashes() {
 }
 
 namespace {
-std::vector<winrt::hstring> to_hstrings(std::span<const std::string> input) {
-  std::vector<winrt::hstring> hStrs;
-  hStrs.reserve(input.size());
-  std::ranges::transform(input, std::back_inserter(hStrs),
-                         &winrt::to_hstring<std::string>);
-  return hStrs;
-}
-
 PurchaseStatus translate(StorePurchaseStatus purchaseStatus) noexcept {
   using winrt::Windows::Services::Store::StorePurchaseStatus;
   switch (purchaseStatus) {
