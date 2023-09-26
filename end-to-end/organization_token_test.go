@@ -3,6 +3,7 @@ package endtoend_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -65,27 +66,46 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			// Give the agent some time to pro-attach
-			time.Sleep(5 * time.Second)
-
-			// Validate that the distro was attached
-			out, err = d.Command(ctx, "pro status --format=json").Output()
-			require.NoErrorf(t, err, "Setup: could not call pro status: %v. %s", err, out)
-
-			var response struct {
-				Attached bool
-			}
-			err = json.Unmarshal(out, &response)
-			require.NoError(t, err, "could not parse pro status response: %s", out)
+			const maxTimeout = 5*time.Second
 
 			if !tc.wantAttached {
-				require.False(t, response.Attached, "distro should not have been Pro attached")
+				time.Sleep(maxTimeout)
+				attached, err := distroIsProAttached(t, d)
+				require.NoError(t, err, "could not determine if distro is attached")
+				require.False(t, attached, "distro should not have been Pro attached")
 				return
 			}
 
-			require.True(t, response.Attached, "distro should have been Pro attached")
+			require.Eventually(t, func() bool {
+				attached, err := distroIsProAttached(t, d)
+				if err != nil {
+					t.Logf("could not determine if distro is attached: %v", err)
+				}
+				return attached
+			}, maxTimeout, time.Second, "distro should have been Pro attached")
 		})
 	}
+}
+
+func distroIsProAttached(t *testing.T, d wsl.Distro) (bool, error) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	out, err := d.Command(ctx, "pro status --format=json").Output()
+	if err != nil {
+		return false, fmt.Errorf("could not call pro status: %v. %s", err, out)
+	}
+
+	var response struct {
+		Attached bool
+	}
+	if err := json.Unmarshal(out, &response); err != nil {
+		return false, fmt.Errorf("could not parse pro status response: %v: %s", err, out)
+	}
+
+	return response.Attached, nil
 }
 
 func activateOrgSubscription(t *testing.T) {
