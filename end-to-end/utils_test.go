@@ -1,6 +1,7 @@
 package endtoend_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -75,6 +76,10 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 	//nolint:gosec // The executable is located at the Appx directory
 	cmd := exec.CommandContext(ctx, ubuntupro)
 
+	var buff bytes.Buffer
+	cmd.Stdout = &buff
+	cmd.Stderr = &buff
+
 	err = cmd.Start()
 	require.NoError(t, err, "Setup: could not start agent")
 
@@ -91,6 +96,7 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 
 		//nolint:errcheck // We know that the previous "Kill" stopped it
 		cmd.Wait()
+		t.Logf("Agent stopped. Stdout+stderr: %s", buff.String())
 	}
 
 	defer func() {
