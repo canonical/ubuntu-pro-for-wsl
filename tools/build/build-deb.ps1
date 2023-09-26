@@ -69,6 +69,7 @@ rsync                                       \
     --quiet                                 \
     --exclude=".git"                        \
     --exclude="msix/UbuntuProForWindows"    \
+    --exclude="gui"                         \
     --exclude="*vcxproj*"                   \
     --exclude="*/x64/*"                     \
     .                                       \
