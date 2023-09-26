@@ -74,11 +74,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
-	defer func() {
-		if err := os.RemoveAll(wslProServiceDebPath); err != nil {
-			log.Printf("could not remove debian artifacts at %q: %v", wslProServiceDebPath, err)
-		}
-	}()
 
 	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
@@ -95,6 +90,11 @@ func TestMain(m *testing.M) {
 
 	if err := cleanupRegistry(); err != nil {
 		log.Printf("Cleanup: registry: %v\n", err)
+	}
+
+	cmd := powershellf(ctx, "Get-AppxPackage -Name CanonicalGroupLimited.UbuntuProForWindows | Remove-AppxPackage")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
 	}
 }
 
