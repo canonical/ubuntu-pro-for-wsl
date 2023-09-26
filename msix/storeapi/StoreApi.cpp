@@ -46,16 +46,16 @@ void logError(std::string_view functionName, std::string_view errMsg) {
 
 Int GetSubscriptionExpirationDate(const char* productID,
                                   std::int64_t* expirationUnix) {
-  if (auto err = validateArg(productID, MaxProductIdLen);
-      err != StoreApi::ErrorCode::None) {
-    return toInt(err);
-  }
-
-  if (expirationUnix == nullptr) {
-    return toInt(StoreApi::ErrorCode::NullOutputPtr);
-  }
-
   try {
+    if (auto err = validateArg(productID, MaxProductIdLen);
+        err != StoreApi::ErrorCode::None) {
+      return toInt(err);
+    }
+
+    if (expirationUnix == nullptr) {
+      return toInt(StoreApi::ErrorCode::NullOutputPtr);
+    }
+
     StoreApi::ServerStoreService service{};
 
     *expirationUnix = service.CurrentExpirationDate(productID);
@@ -75,16 +75,16 @@ Int GetSubscriptionExpirationDate(const char* productID,
 
 Int GenerateUserJWT(const char* accessToken, char** userJWT,
                     std::uint64_t* userJWTLen) {
-  if (auto err = validateArg(accessToken, MaxTokenLen);
-      err != StoreApi::ErrorCode::None) {
-    return toInt(err);
-  }
-
-  if (userJWT == nullptr || userJWTLen == nullptr) {
-    return toInt(StoreApi::ErrorCode::NullOutputPtr);
-  }
-
   try {
+    if (auto err = validateArg(accessToken, MaxTokenLen);
+        err != StoreApi::ErrorCode::None) {
+      return toInt(err);
+    }
+
+    if (userJWT == nullptr || userJWTLen == nullptr) {
+      return toInt(StoreApi::ErrorCode::NullOutputPtr);
+    }
+
     StoreApi::ServerStoreService service{};
     auto user = service.CurrentUserInfo();
     const std::string jwt = service.GenerateUserJwt(accessToken, user);
