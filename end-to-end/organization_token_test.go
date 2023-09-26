@@ -40,7 +40,8 @@ func TestOrganizationProvidedToken(t *testing.T) {
 
 			if tc.whenToken == beforeDistroRegistration {
 				activateOrgSubscription(t)
-				startAgent(t, ctx)
+				cleanup := startAgent(t, ctx)
+				defer cleanup()
 			}
 
 			// Distro setup
@@ -57,7 +58,8 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				require.NoError(t, err, "could not restart distro")
 
 				activateOrgSubscription(t)
-				startAgent(t, ctx)
+				cleanup := startAgent(t, ctx)
+				defer cleanup()
 
 				out, err := d.Command(ctx, "exit 0").CombinedOutput()
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
