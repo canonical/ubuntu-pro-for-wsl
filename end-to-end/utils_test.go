@@ -106,15 +106,20 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 
 	require.Eventually(t, func() bool {
 		localAppData := os.Getenv("LocalAppData")
-		require.NotEmpty(t, localAppData, "$env:LocalAppData should not be empty")
+		if localAppData == "" {
+			t.Logf("Agent setup: $env:LocalAppData should not be empty")
+			return false
+		}
 
 		_, err := os.Stat(filepath.Join(localAppData, "Ubuntu Pro", "addr"))
-		if err == nil {
-			return true
+		if errors.Is(err, fs.ErrNotExist) {
+			return false
 		}
-		require.ErrorIsf(t, err, fs.ErrNotExist, "could not read addr file")
-
-		return false
+		if err != nil {
+			t.Logf("Agent setup: could not read addr file: %v", err)
+			return false
+		}
+		return true
 	}, 5*time.Second, 100*time.Millisecond, "Agent never started serving")
 
 	t.Log("Started agent")
