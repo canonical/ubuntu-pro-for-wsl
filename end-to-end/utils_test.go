@@ -67,7 +67,6 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 	t.Helper()
 
 	t.Log("Starting agent")
-	defer t.Log("Started agent")
 
 	out, err := powershellf(ctx, "(Get-AppxPackage CanonicalGroupLimited.UbuntuProForWindows).InstallLocation").CombinedOutput()
 	require.NoError(t, err, "could not locate ubuntupro.exe: %v. %s", err, out)
@@ -118,6 +117,7 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 		return false
 	}, 5*time.Second, 100*time.Millisecond, "Agent never started serving")
 
+	t.Log("Started agent")
 	return cleanup
 }
 
