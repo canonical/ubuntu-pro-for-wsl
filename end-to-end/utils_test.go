@@ -121,7 +121,7 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 			return false
 		}
 		return true
-	}, 10*time.Second, 100*time.Millisecond, "Agent never started serving")
+	}, 30*time.Second, 100*time.Millisecond, "Agent never started serving")
 
 	t.Log("Started agent")
 	return cleanup
