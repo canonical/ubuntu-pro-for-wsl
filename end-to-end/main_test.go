@@ -70,7 +70,12 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	wslProServiceDebPath, err := ensureProjectIsBuilt(ctx)
+	f := buildProject
+	if buildPath := os.Getenv(prebuiltPath); buildPath != "" {
+		f = usePrebuiltProject
+	}
+
+	wslProServiceDebPath, err := f(ctx)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -98,11 +103,8 @@ func TestMain(m *testing.M) {
 	}
 }
 
-func ensureProjectIsBuilt(ctx context.Context) (debPath string, err error) {
+func usePrebuiltProject(ctx context.Context) (debPath string, err error) {
 	buildPath := os.Getenv(prebuiltPath)
-	if buildPath == "" {
-		return buildProject(ctx)
-	}
 
 	// Remove Appx before installing
 	cmd := powershellf(ctx, "Get-AppxPackage CanonicalGroupLimited.UbuntuProForWindows | Remove-AppxPackage")
