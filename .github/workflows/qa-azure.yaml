@@ -169,6 +169,10 @@ jobs:
 
           # Uninstall Appx
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
+          
+          # Uninstall certificate
+          $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWindows_*.cer").Thumbprint
+          Remove-Item -Path "Cert:LocalMachine\TrustedPeople\${thumbprint}"
 
   stop-vm:
     name: Clean up the Azure VM
