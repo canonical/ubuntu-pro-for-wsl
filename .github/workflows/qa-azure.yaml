@@ -1,5 +1,5 @@
-name: QA on Azure
-# QA checks on Azure, allowing the use of a real WSL back-en
+name: Build and run end-to-end tests
+# Builds the project, and runs end-to-end tests using the generated artifacts.
 
 concurrency: azure-vm
 
