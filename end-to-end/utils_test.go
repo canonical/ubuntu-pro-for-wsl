@@ -61,6 +61,7 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 }
 
 // startAgent starts the GUI (without interacting with it) and waits for the Agent to start.
+// It stops the agent upon cleanup. If the cleanup fails, the testing will be stopped.
 //
 //nolint:revive // testing.T must precede the contex
 func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
