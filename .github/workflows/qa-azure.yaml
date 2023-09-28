@@ -114,7 +114,12 @@ jobs:
         shell: powershell
         run: |
           winget install GoLang.Go
-          Exit(0)
+          # Cannot check for error: there is no way to distinguish the two:
+          # - Legitimate error
+          # - Error because no updates found (Golang.Go is already up to date)
+          #
+          # We can check that Go works, though.
+          go version
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
