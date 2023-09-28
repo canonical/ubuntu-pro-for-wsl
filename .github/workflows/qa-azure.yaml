@@ -123,6 +123,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
+          # name: is left blank so that all artifacts are downloaded
           path: ci-artifacts
       - name: Set up artifacts
         shell: powershell
