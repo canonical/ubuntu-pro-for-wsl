@@ -34,6 +34,16 @@ const (
 	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
 	overrideSafety = "UP4W_TEST_OVERRIDE_DESTRUCTIVE_CHECKS"
 
+	// prebuiltPath is an env variable that, if set, uses a build at a certain path instead of building the project anew.
+	// The structure is expected to be:
+	// └──${prebuiltPath}
+	//    ├───wsl-pro-service
+	//    │   └──wsl-pro-service_*.deb
+	//    └───windows-agent
+	//        └──UbuntuProForWindows_*.msixbundle
+	//
+	prebuiltPath = "UP4W_TEST_BUILD_PATH"
+
 	// referenceDistro is the WSL distro that will be used to generate the test image.
 	referenceDistro = "Ubuntu"
 
@@ -60,15 +70,15 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	wslProServiceDebPath, err := buildProject(ctx)
+	f := buildProject
+	if buildPath := os.Getenv(prebuiltPath); buildPath != "" {
+		f = usePrebuiltProject
+	}
+
+	wslProServiceDebPath, err := f(ctx)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
-	defer func() {
-		if err := os.RemoveAll(wslProServiceDebPath); err != nil {
-			log.Printf("could not remove debian artifacts at %q: %v", wslProServiceDebPath, err)
-		}
-	}()
 
 	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
@@ -86,6 +96,37 @@ func TestMain(m *testing.M) {
 	if err := cleanupRegistry(); err != nil {
 		log.Printf("Cleanup: registry: %v\n", err)
 	}
+
+	cmd := powershellf(ctx, "Get-AppxPackage -Name CanonicalGroupLimited.UbuntuProForWindows | Remove-AppxPackage")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
+	}
+}
+
+func usePrebuiltProject(ctx context.Context) (debPath string, err error) {
+	buildPath := os.Getenv(prebuiltPath)
+
+	// Remove Appx before installing
+	cmd := powershellf(ctx, "Get-AppxPackage CanonicalGroupLimited.UbuntuProForWindows | Remove-AppxPackage")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		// (Probably because it was not installed)
+		log.Printf("Could not remove old AppxPackage: %v. %s", err, out)
+	}
+
+	// Install Appx anew
+	cmd = powershellf(ctx, "Add-AppxPackage %q", filepath.Join(buildPath, "windows-agent", "UbuntuProForWindows_*.msixbundle"))
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("could not install pre-built AppxPackage: %v. %s", err, out)
+	}
+
+	// Locate WSL-Pro-Service (it'll be installed later into the distros)
+	debPath = filepath.Join(buildPath, "wsl-pro-service")
+	_, err = locateWslProServiceDeb(ctx, debPath)
+	if err != nil {
+		return "", fmt.Errorf("could not localte pre-built WSL-Pro-Service: %v", err)
+	}
+
+	return debPath, err
 }
 
 func buildProject(ctx context.Context) (debPath string, err error) {
@@ -318,7 +359,7 @@ func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath s
 		return "", nil, err
 	}
 
-	out, err = d.Command(ctx, fmt.Sprintf("apt install $(wslpath -ua '%s')", debPath)).CombinedOutput()
+	out, err = d.Command(ctx, fmt.Sprintf("DEBIAN_FRONTEND=noninteractive apt install -y $(wslpath -ua '%s')", debPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)

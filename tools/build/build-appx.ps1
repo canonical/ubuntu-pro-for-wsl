@@ -44,10 +44,12 @@ function Update-Certificate {
     # Finding local certificate
     $certificate_path = "${PSScriptRoot}\.certificate_thumbprint"
     if (! (Test-Path "${certificate_path}") ) {
-        Write-Error "You need a certificate to build and install the Appx. `
+        Write-Warning "You need a certificate to build and install the Appx. `
         Create and install a certificate, and write its thumbprint in ${certificate_path}.`
         See https://learn.microsoft.com/en-us/windows/win32/appxpkg/how-to-create-a-package-signing-certificate for more details"
-        exit 1
+        
+        Write-Output "Continuing with default certificate"        
+        return
     }
 
     $certificate_thumbprint = Get-Content ${certificate_path}
@@ -62,6 +64,8 @@ function Update-Certificate {
 }
 
 function Install-Appx {
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage
+
     $artifacts = (
         Get-ChildItem ".\msix\UbuntuProForWindows\AppPackages\UbuntuProForWindows_*"    `
         | Sort-Object LastWriteTime                                                     `
@@ -84,7 +88,11 @@ Push-Location "${PSScriptRoot}\..\.."
 
 Update-Certificate
 
-Start-VsDevShell
+try {
+    msbuild.exe --version
+} catch {
+    Start-VsDevShell
+}
 
 msbuild.exe                                          `
     .\msix\msix.sln                                  `

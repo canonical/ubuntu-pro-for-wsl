@@ -17,8 +17,9 @@ Future<bool> launchAgent(String agentRelativePath) async {
   try {
     await Process.start(
       agentPath,
-      [],
+      ['-vv'],
       environment: Environment.instance.merged,
+      mode: ProcessStartMode.inheritStdio,
     );
     return true;
   } on ProcessException catch (err) {

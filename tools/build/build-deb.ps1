@@ -4,7 +4,7 @@
 #>
 
 param(
-    [Parameter(Mandatory=$False,HelpMessage="The directory where the debian build artifacts will be stored in")]
+    [Parameter(Mandatory = $False, HelpMessage = "The directory where the debian build artifacts will be stored in")]
     [string]$OutputDir
 )
 
@@ -21,7 +21,7 @@ if ( $appx -eq "" ) {
     Write-Error "Ubuntu Preview is not installed"
 }
 
-$env:WSL_UTF8=1
+$env:WSL_UTF8 = 1
 
 if ( "$(wsl --list --verbose | Select-String Ubuntu-Preview)" -eq "" ) {
     ubuntupreview.exe install --root --ui=none
@@ -29,12 +29,14 @@ if ( "$(wsl --list --verbose | Select-String Ubuntu-Preview)" -eq "" ) {
         Write-Error "could not install Ubuntu-Preview"
         exit 1
     }
+
+    Copy-Item -Path "${HOME}/.gitconfig" -Destination "\\wsl$\Ubuntu-Preview\etc\gitconfig"
 }
 
 # Write script to run
-$scriptWindows=New-TemporaryFile
+$scriptWindows = New-TemporaryFile
 
-$scriptLinux=( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${scriptWindows}`' )
+$scriptLinux = ( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${scriptWindows}`' )
 if ( "${LastExitCode}" -ne "0" ) {
     Write-Error "could not get build script's linux path"
     exit 1
@@ -47,9 +49,13 @@ set -eu
 
 git config --global --add safe.directory "$(pwd)"
 
-# Update internal dependencies in the repo
-# (we need git to work, and .git is not rsync'd)
+# Update internal dependencies in the repo because
+# we need git to work, and .git is not rsync'd.
 cd wsl-pro-service
+go version || (
+    sudo DEBIAN_FRONTEND=noninteractive apt update
+    sudo DEBIAN_FRONTEND=noninteractive apt install -y golang-go
+)
 ./debian/update-internal-dependencies
 go mod tidy
 go mod vendor
@@ -63,6 +69,7 @@ rsync                                       \
     --quiet                                 \
     --exclude=".git"                        \
     --exclude="msix/UbuntuProForWindows"    \
+    --exclude="gui"                         \
     --exclude="*vcxproj*"                   \
     --exclude="*/x64/*"                     \
     .                                       \
@@ -79,7 +86,7 @@ cp -f ${build_dir}/wsl-pro-service_* "${OutputDir}"
 # Set up output directory
 New-Item -Force -ItemType "Directory" -Path "${OutputDir}" | Out-Null
 
-$outputLinux=( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${OutputDir}`' )
+$outputLinux = ( wsl.exe -d Ubuntu-Preview -- wslpath -ua `'${OutputDir}`' )
 if ( "${LastExitCode}" -ne "0" ) {
     Write-Error "could not get output dir's linux path"
     exit 1

@@ -1,6 +1,7 @@
 package endtoend_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -60,44 +61,70 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 }
 
 // startAgent starts the GUI (without interacting with it) and waits for the Agent to start.
+// It stops the agent upon cleanup. If the cleanup fails, the testing will be stopped.
 //
 //nolint:revive // testing.T must precede the contex
-func startAgent(t *testing.T, ctx context.Context) {
+func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 	t.Helper()
 
 	t.Log("Starting agent")
-	defer t.Log("Started agent")
 
 	out, err := powershellf(ctx, "(Get-AppxPackage CanonicalGroupLimited.UbuntuProForWindows).InstallLocation").CombinedOutput()
 	require.NoError(t, err, "could not locate ubuntupro.exe: %v. %s", err, out)
-
-	ctx, cancel := context.WithCancel(ctx)
 
 	ubuntupro := filepath.Join(strings.TrimSpace(string(out)), "gui", "ubuntupro.exe")
 	//nolint:gosec // The executable is located at the Appx directory
 	cmd := exec.CommandContext(ctx, ubuntupro)
 
-	t.Cleanup(func() {
-		cancel()
-		//nolint:errcheck // This returns a "context cancelled" error.
-		cmd.Wait()
-	})
+	var buff bytes.Buffer
+	cmd.Stdout = &buff
+	cmd.Stderr = &buff
 
 	err = cmd.Start()
 	require.NoError(t, err, "Setup: could not start agent")
 
+	cleanup = func() {
+		t.Log("Cleanup: stopping agent process")
+
+		if err := stopAgent(ctx); err != nil {
+			// We have to abort because the tests become coupled via the agent
+			log.Fatalf("Could not kill ubuntu-pro-agent process: %v: %s", err, out)
+		}
+
+		//nolint:errcheck // Nothing we can do about it
+		cmd.Process.Kill()
+
+		//nolint:errcheck // We know that the previous "Kill" stopped it
+		cmd.Wait()
+		t.Logf("Agent stopped. Stdout+stderr: %s", buff.String())
+	}
+
+	defer func() {
+		if t.Failed() {
+			cleanup()
+		}
+	}()
+
 	require.Eventually(t, func() bool {
 		localAppData := os.Getenv("LocalAppData")
-		require.NotEmpty(t, localAppData, "$env:LocalAppData should not be empty")
+		if localAppData == "" {
+			t.Logf("Agent setup: $env:LocalAppData should not be empty")
+			return false
+		}
 
 		_, err := os.Stat(filepath.Join(localAppData, "Ubuntu Pro", "addr"))
-		if err == nil {
-			return true
+		if errors.Is(err, fs.ErrNotExist) {
+			return false
 		}
-		require.ErrorIsf(t, err, fs.ErrNotExist, "could not read addr file")
+		if err != nil {
+			t.Logf("Agent setup: could not read addr file: %v", err)
+			return false
+		}
+		return true
+	}, 30*time.Second, 100*time.Millisecond, "Agent never started serving")
 
-		return false
-	}, 5*time.Second, 100*time.Millisecond, "Agent never started serving")
+	t.Log("Started agent")
+	return cleanup
 }
 
 // stopAgent kills the process for the Windows Agent.
