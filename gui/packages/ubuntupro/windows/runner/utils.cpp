@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include <array>
 #include <iostream>
 
 void CreateAndAttachConsole() {
@@ -18,6 +19,35 @@ void CreateAndAttachConsole() {
     }
     std::ios::sync_with_stdio();
     FlutterDesktopResyncOutputStreams();
+  }
+}
+
+void SetupConsole() {
+  // Only succeeds if the parent process is a console app.
+  if (::AttachConsole(ATTACH_PARENT_PROCESS)) {
+    // In which case we want to know whether the parent is the flutter tool or a
+    // CLI shell.
+    std::array<wchar_t, 4> flutterSwitchesEnvVar{};
+    // What matters is the fact that the env var exists, it's value is
+    // irrelevant for this case.
+    // https://github.com/flutter/flutter/blob/cfdaf1e593cf0b012bc8ff5a9c1e780ad5fbc153/packages/flutter_tools/lib/src/desktop_device.dart#L217
+    if (0 == GetEnvironmentVariableW(
+                 L"FLUTTER_ENGINE_SWITCHES", &flutterSwitchesEnvVar[0],
+                 // I'm sure the value 4 fits in a DWORD.
+                 static_cast<DWORD>(flutterSwitchesEnvVar.size())) &&
+        GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
+      // Not running by the flutter tool. OK to resync stdio.
+      FlutterDesktopResyncOutputStreams();
+      // More about the desktop device log reader inside the Flutter tool:
+      // https://github.com/flutter/flutter/blob/cfdaf1e593cf0b012bc8ff5a9c1e780ad5fbc153/packages/flutter_tools/lib/src/desktop_device.dart#L310
+    }
+    // If the parent is not a console app, it could be an IDE, thus check for
+    // the presence of a debugger. Otherwise forget about the console.
+    // This is a GUI application after all.
+  } else {
+    if (::IsDebuggerPresent()) {
+      CreateAndAttachConsole();
+    }
   }
 }
 
