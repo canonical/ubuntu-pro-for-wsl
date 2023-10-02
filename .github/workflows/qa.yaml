@@ -72,6 +72,7 @@ jobs:
           golangci-lint-configfile: ${{ github.workspace }}/.golangci.yaml
       - name: Gettext validation
         shell: bash
+        working-directory: ${{ matrix.subproject }}
         run: |
           set -eu
 
