@@ -36,7 +36,7 @@ jobs:
           - subproject: agentapi
             needs-flutter: true
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os == 'ubuntu' && fromJson('["self-hosted", "Linux", "jammy", "X64", "small"]') || 'windows-latest' }}
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
@@ -92,7 +92,7 @@ jobs:
       matrix:
         os: [ubuntu, windows]
         package: ["p4w_ms_store", "ubuntupro"]
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os == 'ubuntu' && fromJson('["self-hosted", "Linux", "jammy", "X64", "small"]') || 'windows-latest' }}
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
@@ -139,7 +139,7 @@ jobs:
       # such as the dependency on xvfb since ubuntu runners on GH don't have graphical capabilities.
       matrix:
         os: [windows]
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os == 'ubuntu' && fromJson('["self-hosted", "Linux", "jammy", "X64", "small"]') || 'windows-latest' }}
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
@@ -197,7 +197,7 @@ jobs:
           # Excluded because microsoftstore_test needs msbuild
           - os: ubuntu
             subproject: "storeapi/go-wrapper/microsoftstore"
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os == 'ubuntu' && fromJson('["self-hosted", "Linux", "jammy", "X64", "small"]') || 'windows-latest' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
