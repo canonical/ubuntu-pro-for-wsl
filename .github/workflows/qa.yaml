@@ -197,7 +197,7 @@ jobs:
           # Excluded because microsoftstore_test needs msbuild
           - os: ubuntu
             subproject: "storeapi/go-wrapper/microsoftstore"
-    runs-on: ${{ matrix.os == 'ubuntu' && fromJson('["self-hosted", "Linux", "jammy", "X64"]') || 'windows-latest' }}
+    runs-on: ${{ matrix.os == 'ubuntu' && fromJson('["self-hosted", "Linux", "jammy", "X64", "large"]') || 'windows-latest' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

@@ -16,7 +16,7 @@ env:
 jobs:
   build-wsl-pro-service:
     name: Build wsl-pro-service debian package
-    runs-on: ["self-hosted", "Linux", "jammy", "X64", "small"]
+    runs-on: ["self-hosted", "Linux", "jammy", "X64", "large"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
