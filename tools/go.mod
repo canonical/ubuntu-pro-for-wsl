@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/tools
 
-go 1.21.0
+go 1.21.1
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230906090052-60fb5d60ada4
