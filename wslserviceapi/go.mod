@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/wslserviceapi
 
-go 1.21.0
+go 1.21.1
 
 require (
 	google.golang.org/grpc v1.58.2
