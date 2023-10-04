@@ -146,7 +146,7 @@ jobs:
           Import-Certificate  -FilePath "${cert}" -CertStoreLocation Cert:LocalMachine\TrustedPeople
 
           # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
-          Add-AppxPackage "$env:ExtensionSdkDir\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"
+          Add-AppxPackage "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"
 
           Write-Output "::endgroup::"
 
