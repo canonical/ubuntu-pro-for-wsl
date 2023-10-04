@@ -1,6 +1,9 @@
 #include "flutter_window.h"
 
+#include <flutter/standard_method_codec.h>
+
 #include <optional>
+#include <type_traits>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -30,7 +33,30 @@ bool FlutterWindow::OnCreate() {
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() { this->Show(); });
 
+  integrationTestChannel = std::make_unique<
+      flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(),
+      // https://github.com/flutter/flutter/blob/master/packages/integration_test/lib/src/channel.dart#L9
+      "plugins.flutter.io/integration_test",
+      &flutter::StandardMethodCodec::GetInstance());
+
+  integrationTestChannel->SetMethodCallHandler(
+      [this](auto const& call, auto result) {
+        HandleMethodCall(call, std::move(result));
+      });
+
   return true;
+}
+
+void FlutterWindow::HandleMethodCall(
+    flutter::MethodCall<flutter::EncodableValue> const& call,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  // https://github.com/flutter/flutter/blob/master/packages/integration_test/lib/integration_test.dart#L55-L63
+  if (call.method_name().compare("allTestsFinished") == 0) {
+    result->Success();
+    ::PostMessage(GetHandle(), WM_CLOSE, 0, 0);
+    return;
+  }
 }
 
 void FlutterWindow::OnDestroy() {
