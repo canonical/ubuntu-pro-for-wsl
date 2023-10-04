@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -175,4 +176,14 @@ func logWslProServiceJournal(t *testing.T, ctx context.Context, d wsl.Distro) {
 		t.Logf("could not access logs: %v\n%s\n", err, out)
 	}
 	t.Logf("wsl-pro-service logs:\n%s\n", out)
+}
+
+// getCurrentFuncName will return the caller function's name.
+func getCurrentFuncName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	// fullname could be for example "github.com/canonical/ubuntu-pro-for-windows/end-to-end_test.TestManualTokenInput"
+	fullname := runtime.FuncForPC(pc).Name()
+	lastDotIndex := strings.LastIndex(fullname, ".")
+	// if not found, return the whole fullname (lastDotIndex==-1)
+	return fullname[lastDotIndex+1:]
 }
