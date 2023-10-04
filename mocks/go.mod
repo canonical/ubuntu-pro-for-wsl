@@ -7,7 +7,8 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906090052-60fb5d60ada4
 	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-60fb5d60ada4
 	github.com/spf13/cobra v1.7.0
-	google.golang.org/grpc v1.58.0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	google.golang.org/grpc v1.58.2
 	gopkg.in/yaml.v2 v2.2.3
 )
 
