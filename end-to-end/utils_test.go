@@ -64,10 +64,12 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 }
 
 // startAgent starts the GUI (without interacting with it) and waits for the Agent to start.
+// A single command line argument is expected. Additionally, environment variable overrides
+// in a form of "key=value" strings can be appended to the current environment.
 // It stops the agent upon cleanup. If the cleanup fails, the testing will be stopped.
 //
 //nolint:revive // testing.T must precede the contex
-func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
+func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string) (cleanup func()) {
 	t.Helper()
 
 	t.Log("Starting agent")
@@ -77,11 +79,15 @@ func startAgent(t *testing.T, ctx context.Context) (cleanup func()) {
 
 	ubuntupro := filepath.Join(strings.TrimSpace(string(out)), "gui", "ubuntupro.exe")
 	//nolint:gosec // The executable is located at the Appx directory
-	cmd := exec.CommandContext(ctx, ubuntupro)
+	cmd := exec.CommandContext(ctx, ubuntupro, arg)
 
 	var buff bytes.Buffer
 	cmd.Stdout = &buff
 	cmd.Stderr = &buff
+
+	if environ != nil {
+		cmd.Env = append(cmd.Environ(), environ...)
+	}
 
 	err = cmd.Start()
 	require.NoError(t, err, "Setup: could not start agent")
