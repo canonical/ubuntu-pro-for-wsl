@@ -2,8 +2,6 @@ package endtoend_test
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -87,27 +85,6 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	}
 }
 
-func distroIsProAttached(t *testing.T, d wsl.Distro) (bool, error) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	out, err := d.Command(ctx, "pro status --format=json").Output()
-	if err != nil {
-		return false, fmt.Errorf("could not call pro status: %v. %s", err, out)
-	}
-
-	var response struct {
-		Attached bool
-	}
-	if err := json.Unmarshal(out, &response); err != nil {
-		return false, fmt.Errorf("could not parse pro status response: %v: %s", err, out)
-	}
-
-	return response.Attached, nil
-}
-
 func activateOrgSubscription(t *testing.T) {
 	t.Helper()
 
@@ -120,15 +97,4 @@ func activateOrgSubscription(t *testing.T) {
 
 	err = key.SetStringValue("ProTokenOrg", token)
 	require.NoError(t, err, "could not write token in registry")
-}
-
-//nolint:revive // testing.T must precede the context
-func logWslProServiceJournal(t *testing.T, ctx context.Context, d wsl.Distro) {
-	t.Helper()
-
-	out, err := d.Command(ctx, "journalctl --no-pager -u wsl-pro.service").CombinedOutput()
-	if err != nil {
-		t.Logf("could not access logs: %v\n%s\n", err, out)
-	}
-	t.Logf("wsl-pro-service logs:\n%s\n", out)
 }

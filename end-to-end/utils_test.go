@@ -3,6 +3,7 @@ package endtoend_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -17,6 +18,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
+	wsl "github.com/ubuntu/gowsl"
 )
 
 func testSetup(t *testing.T) {
@@ -141,4 +143,36 @@ func stopAgent(ctx context.Context) error {
 	}
 
 	return fmt.Errorf("could not stop process %q: %v. %s", process, err, out)
+}
+
+func distroIsProAttached(t *testing.T, d wsl.Distro) (bool, error) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	out, err := d.Command(ctx, "pro status --format=json").Output()
+	if err != nil {
+		return false, fmt.Errorf("could not call pro status: %v. %s", err, out)
+	}
+
+	var response struct {
+		Attached bool
+	}
+	if err := json.Unmarshal(out, &response); err != nil {
+		return false, fmt.Errorf("could not parse pro status response: %v: %s", err, out)
+	}
+
+	return response.Attached, nil
+}
+
+//nolint:revive // testing.T must precede the context
+func logWslProServiceJournal(t *testing.T, ctx context.Context, d wsl.Distro) {
+	t.Helper()
+
+	out, err := d.Command(ctx, "journalctl --no-pager -u wsl-pro.service").CombinedOutput()
+	if err != nil {
+		t.Logf("could not access logs: %v\n%s\n", err, out)
+	}
+	t.Logf("wsl-pro-service logs:\n%s\n", out)
 }
