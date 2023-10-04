@@ -80,7 +80,7 @@ void main() {
   testWidgets('feedback when applying token', (tester) async {
     final model = MockSubscribeNowModel();
     when(model.applyProToken(any)).thenAnswer((_) async {
-      return;
+      return SubscriptionInfo()..ensureUser();
     });
     final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
@@ -119,7 +119,7 @@ Widget buildApp(
         body: Provider.value(
           value: model,
           child: SubscribeNowPage(
-            onSubscribed: onSubs,
+            onSubscriptionUpdate: onSubs,
           ),
         ),
       ),

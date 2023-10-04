@@ -71,8 +71,9 @@ class SubscribeNowModel extends SubscriptionStatusModel {
   final AgentApiClient client;
   SubscribeNowModel(this.client) : super._();
 
-  Future<void> applyProToken(ProToken token) {
-    return client.applyProToken(token.value);
+  Future<SubscriptionInfo> applyProToken(ProToken token) async {
+    await client.applyProToken(token.value);
+    return client.subscriptionInfo();
   }
 
   void launchProWebPage() {

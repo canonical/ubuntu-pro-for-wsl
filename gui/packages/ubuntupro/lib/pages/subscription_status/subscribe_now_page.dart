@@ -9,8 +9,8 @@ import 'subscribe_now_widgets.dart';
 import 'subscription_status_model.dart';
 
 class SubscribeNowPage extends StatelessWidget {
-  const SubscribeNowPage({super.key, required this.onSubscribed});
-  final void Function(SubscriptionInfo) onSubscribed;
+  const SubscribeNowPage({super.key, required this.onSubscriptionUpdate});
+  final void Function(SubscriptionInfo) onSubscriptionUpdate;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,7 @@ class SubscribeNowPage extends StatelessWidget {
                       ),
                     );
                   },
-                  ifRight: onSubscribed,
+                  ifRight: onSubscriptionUpdate,
                 );
               },
               child: Text(lang.subscribeNow),
@@ -78,7 +78,7 @@ class SubscribeNowPage extends StatelessWidget {
         ),
         ProTokenInputField(
           onApply: (token) {
-            model.applyProToken(token);
+            model.applyProToken(token).then(onSubscriptionUpdate);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
