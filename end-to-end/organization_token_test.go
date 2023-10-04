@@ -19,6 +19,9 @@ func TestOrganizationProvidedToken(t *testing.T) {
 		afterDistroRegistration
 	)
 
+	// Let's be lazy and don't fall into the risk of changing the function name without updating the places where its name is used.
+	currentFuncName := getCurrentFuncName()
+
 	testCases := map[string]struct {
 		whenToken whenToken
 
@@ -39,7 +42,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 
 			if tc.whenToken == beforeDistroRegistration {
 				activateOrgSubscription(t)
-				cleanup := startAgent(t, ctx)
+				cleanup := startAgent(t, ctx, currentFuncName)
 				defer cleanup()
 			}
 
@@ -57,7 +60,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				require.NoError(t, err, "could not restart distro")
 
 				activateOrgSubscription(t)
-				cleanup := startAgent(t, ctx)
+				cleanup := startAgent(t, ctx, currentFuncName)
 				defer cleanup()
 
 				out, err := d.Command(ctx, "exit 0").CombinedOutput()
