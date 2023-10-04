@@ -3,16 +3,16 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i6;
 
-import 'package:agentapi/agentapi.dart' as _i8;
-import 'package:dart_either/dart_either.dart' as _i3;
+import 'package:agentapi/agentapi.dart' as _i3;
+import 'package:dart_either/dart_either.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:p4w_ms_store/p4w_ms_store.dart' as _i7;
+import 'package:p4w_ms_store/p4w_ms_store.dart' as _i8;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/core/pro_token.dart' as _i6;
+import 'package:ubuntupro/core/pro_token.dart' as _i7;
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart'
-    as _i4;
+    as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -36,8 +36,19 @@ class _FakeAgentApiClient_0 extends _i1.SmartFake
         );
 }
 
-class _FakeEither_1<L, R> extends _i1.SmartFake implements _i3.Either<L, R> {
-  _FakeEither_1(
+class _FakeSubscriptionInfo_1 extends _i1.SmartFake
+    implements _i3.SubscriptionInfo {
+  _FakeSubscriptionInfo_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeEither_2<L, R> extends _i1.SmartFake implements _i4.Either<L, R> {
+  _FakeEither_2(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -49,7 +60,7 @@ class _FakeEither_1<L, R> extends _i1.SmartFake implements _i3.Either<L, R> {
 /// A class which mocks [SubscribeNowModel].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSubscribeNowModel extends _i1.Mock implements _i4.SubscribeNowModel {
+class MockSubscribeNowModel extends _i1.Mock implements _i5.SubscribeNowModel {
   MockSubscribeNowModel() {
     _i1.throwOnMissingStub(this);
   }
@@ -63,14 +74,21 @@ class MockSubscribeNowModel extends _i1.Mock implements _i4.SubscribeNowModel {
         ),
       ) as _i2.AgentApiClient);
   @override
-  _i5.Future<void> applyProToken(_i6.ProToken? token) => (super.noSuchMethod(
+  _i6.Future<_i3.SubscriptionInfo> applyProToken(_i7.ProToken? token) =>
+      (super.noSuchMethod(
         Invocation.method(
           #applyProToken,
           [token],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue:
+            _i6.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+          this,
+          Invocation.method(
+            #applyProToken,
+            [token],
+          ),
+        )),
+      ) as _i6.Future<_i3.SubscriptionInfo>);
   @override
   void launchProWebPage() => super.noSuchMethod(
         Invocation.method(
@@ -80,21 +98,21 @@ class MockSubscribeNowModel extends _i1.Mock implements _i4.SubscribeNowModel {
         returnValueForMissingStub: null,
       );
   @override
-  _i5.Future<_i3.Either<_i7.PurchaseStatus, _i8.SubscriptionInfo>>
+  _i6.Future<_i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>
       purchaseSubscription() => (super.noSuchMethod(
             Invocation.method(
               #purchaseSubscription,
               [],
             ),
-            returnValue: _i5.Future<
-                    _i3.Either<_i7.PurchaseStatus, _i8.SubscriptionInfo>>.value(
-                _FakeEither_1<_i7.PurchaseStatus, _i8.SubscriptionInfo>(
+            returnValue: _i6.Future<
+                    _i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>.value(
+                _FakeEither_2<_i8.PurchaseStatus, _i3.SubscriptionInfo>(
               this,
               Invocation.method(
                 #purchaseSubscription,
                 [],
               ),
             )),
-          ) as _i5
-              .Future<_i3.Either<_i7.PurchaseStatus, _i8.SubscriptionInfo>>);
+          ) as _i6
+              .Future<_i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>);
 }
