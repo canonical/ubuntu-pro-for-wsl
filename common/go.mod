@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
 	github.com/stretchr/testify v1.8.4
-	github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4
+	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
 	gopkg.in/yaml.v3 v3.0.1
 )
 
