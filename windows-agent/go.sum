@@ -207,8 +207,8 @@ github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
-github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4 h1:fci3jnfZQxfb92PRQwJHXR7Mxj5OiIWXVxkkpiXrkQI=
-github.com/ubuntu/gowsl v0.0.0-20230710120903-fcfd527a92e4/go.mod h1:PBcZk1oAKQn1fwC9d9G2Vu25Ypxab9+UZMaPiPNjDy8=
+github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394 h1:DS9wb53gTUxFCPYnhAqOhfdRLsHTL9NpzT+F/D8NwIg=
+github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394/go.mod h1:gu6CgOaqMFFz1h96UocQwXvRvF6CePIqQnI58DzIg2Q=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
