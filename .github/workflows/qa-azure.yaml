@@ -64,7 +64,7 @@ jobs:
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
       - name: Build Bundle
-        run:  |
+        run: |
           msbuild                                            `
             .\msix\msix.sln                                  `
             -target:Build                                    `
@@ -75,6 +75,7 @@ jobs:
             -property:AppxBundlePlatforms=x64                `
             -property:UapAppxPackageBuildMode=SideloadOnly   `
             -property:Version=0.0.1+${{ github.sha }}        `
+            -property:UP4W_END_TO_END=true                   `
             -nologo                                          `
             -verbosity:normal
       - name: Upload sideload artifact

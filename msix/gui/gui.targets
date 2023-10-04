@@ -8,6 +8,7 @@
         <!-- TODO: replace this location by a common icon path for the whole app -->
 		<MsixIconPath>$(MSBuildThisFileDirectory)\icon.ico</MsixIconPath>
 		<AppConfiguration>$(Configuration.ToLower())</AppConfiguration>
+		<OverrideEntryPoint Condition="$(UP4W_END_TO_END) != '' ">-t end_to_end/end_to_end_test.dart</OverrideEntryPoint>
 	</PropertyGroup>
 	<ItemGroup>
 		<AppIcon Include="$(AppIconPath)" />
@@ -17,7 +18,7 @@
 		<Message Text="Building Flutter artifacts to $(AppOutDir)" Importance="high"/>
         <Copy SourceFiles="@(MsixAppIcon)" DestinationFiles="@(AppIcon)" />
 		<Exec Command="flutter pub get" WorkingDirectory="$(AppDir)" />
-		<Exec Command="flutter build windows --$(AppConfiguration) " WorkingDirectory="$(AppDir)" />
+		<Exec Command="flutter build windows --$(AppConfiguration) $(OverrideEntryPoint)" WorkingDirectory="$(AppDir)" />
 		<ItemGroup>
 			<AppContent Include="$(AppOutDir)**\*.*" Visible="False" />
 			<None Include="@(AppContent)" Visible="False">
