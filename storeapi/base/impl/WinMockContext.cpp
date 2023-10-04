@@ -141,7 +141,7 @@ WinMockContext::Product::Product(JsonObject const& json)
   std::chrono::system_clock::time_point tp{};
   std::stringstream ss{
       winrt::to_string(json.GetNamedString(L"ExpirationDate"))};
-  ss >> std::chrono::parse("%FT%T%Tz", tp);
+  ss >> std::chrono::parse("%FT%T%z", tp);
   expirationDate = tp;
 }
 
