@@ -83,8 +83,8 @@ jobs:
         with:
           name: UbuntuProForWindows+${{ github.sha }}
           path: |
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64.cer
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64.msixbundle
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64_Debug.cer
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64_Debug.msixbundle
 
   vm-setup:
     name: Set up Azure VM
