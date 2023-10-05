@@ -13,8 +13,6 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-const defaultProURL = "https://contracts.canonical.com"
-
 type options struct {
 	proURL         *url.URL
 	microsoftStore MicrosoftStore
@@ -67,9 +65,9 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 	}
 
 	if opts.proURL == nil {
-		url, err := url.Parse(defaultProURL)
+		url, err := defaultProBackendURL()
 		if err != nil {
-			return "", fmt.Errorf("could not parse default contract server URL %q: %v", defaultProURL, err)
+			return "", fmt.Errorf("could not parse default contract server URL: %v", err)
 		}
 		opts.proURL = url
 	}
