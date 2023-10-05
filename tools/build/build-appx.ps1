@@ -4,7 +4,7 @@
 #>
 
 param (
-    [Parameter(Mandatory = $true, HelpMessage = "prodution, end_to_end_tests.")]
+    [Parameter(Mandatory = $true, HelpMessage = "production, end_to_end_tests.")]
 
     [string]$mode
 )

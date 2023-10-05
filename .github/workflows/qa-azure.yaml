@@ -78,6 +78,8 @@ jobs:
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
       - name: Build Bundle
         run: |
+          $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ matrix.mode == 'end_to_end_tests' && '1' || '$null'}}
+
           msbuild                                                                             `
             .\msix\msix.sln                                                                   `
             -target:Build                                                                     `

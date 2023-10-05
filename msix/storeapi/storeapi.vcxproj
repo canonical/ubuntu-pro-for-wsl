@@ -95,11 +95,13 @@
     <ClInclude Include="..\..\storeapi\base\Exception.hpp" />
     <ClInclude Include="..\..\storeapi\base\StoreService.hpp" />
     <ClCompile Include="..\..\storeapi\base\impl\StoreContext.cpp" />
+    <ClCompile Include="..\..\storeapi\base\impl\WinMockContext.cpp" />
     <ClInclude Include="framework.hpp" />
     <ClInclude Include="StoreApi.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\storeapi\base\impl\StoreContext.hpp" />
+    <ClCompile Include="..\..\storeapi\base\impl\WinMockContext.hpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="StoreApi.cpp" />
   </ItemGroup>
