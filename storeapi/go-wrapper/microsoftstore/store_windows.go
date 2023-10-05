@@ -15,7 +15,7 @@ import (
 
 const (
 	// TODO: Replace with real product ID.
-	productID = "ABCDEFG"
+	productID = "9P25B50XMKXT"
 )
 
 var (
