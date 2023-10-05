@@ -10,9 +10,6 @@ concurrency:
   group: QA-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-env:
-  flutter-version: 3.13.x
-
 jobs:
   quality-go:
     name: "Go Quality checks"
@@ -118,10 +115,15 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: windows-agent/go.mod
+      - name: Load flutter version
+        id: load
+        uses: ./.github/actions/load-json
+        with:
+          path: tools/versions.json
       - name: Flutter QA
         uses: ./.github/actions/flutter-qa/
         with:
-          flutter-version: ${{ env.flutter-version }}
+          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
           package-dir: '${{ matrix.package }}'
           run-build-runner: ${{ contains(matrix.package, 'ubuntupro') }}
       - uses: ./.github/actions/check-diff
@@ -151,10 +153,15 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev unzip xvfb
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Load flutter version
+        id: load
+        uses: ./.github/actions/load-json
+        with:
+          path: tools/versions.json
       - name: Flutter QA
         uses: ./.github/actions/flutter-integration-test/
         with:
-          flutter-version: ${{ env.flutter-version }}
+          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
           go-version-file: windows-agent/go.mod
           # Only the app entry point is expected to have integration tests
           package-dir: 'gui/packages/ubuntupro'
