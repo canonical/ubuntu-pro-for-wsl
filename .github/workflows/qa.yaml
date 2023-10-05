@@ -51,16 +51,17 @@ jobs:
         if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
         run: |
-          # Ensuring there is no diff between current and generated go.mod and go.sum files
+          # Updating go.mod and go.sum files
           set -eu
 
           echo "::group::Download dependencies"
           go mod tidy
           echo "::endgroup::"
       - name: Ensure module files are up to date
-        uses: ./.github/actions/check-diff
+        uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
-          files-to-validate: ${{ matrix.subproject }}/**/go.mod ${{ matrix.subproject }}/**/go.sum
+          working-directory: ${{ matrix.subproject }}
+          fail-on-diff: true
       - name: Build
         shell: bash
         if: always() && !cancelled()
@@ -126,9 +127,12 @@ jobs:
           flutter-version: ${{ steps.load.outputs.data.flutter-version }}
           package-dir: '${{ matrix.package }}'
           run-build-runner: ${{ contains(matrix.package, 'ubuntupro') }}
-      - uses: ./.github/actions/check-diff
+      - name: Ensure module files are up to date
+        uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
-          files-to-validate: '${{ matrix.package }}/**/*.dart'
+          working-directory: ${{ matrix.package }}
+          paths-to-ignore: ${{ matrix.package == 'gui/packages/ubuntupro' && 'pubspec.lock' || '' }}
+          fail-on-diff: true
 
   flutter-integration:
     name: "Flutter integration tests"
