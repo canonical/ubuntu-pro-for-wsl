@@ -14,7 +14,7 @@
 #include "../Purchase.hpp"
 
 namespace winrt::Windows::Data::Json {
-class JsonObject;
+struct JsonObject;
 }
 
 namespace StoreApi::impl {
