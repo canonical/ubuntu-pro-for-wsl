@@ -12,7 +12,6 @@ on:
 env:
   az_name: wsl-ci-3
   az_resource_group: wsl
-  flutter-version: 3.13.x
 
 jobs:
   build-wsl-pro-service:
@@ -43,10 +42,15 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: go.work
+      - name: Load flutter version
+        id: load
+        uses: ./.github/actions/load-json
+        with:
+          path: tools/versions.json
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: ${{ env.flutter-version }}
+          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
       - name: Setup MSBuild (PATH)
         uses: microsoft/setup-msbuild@v1.3.1
       - name: Install certificate
@@ -170,7 +174,7 @@ jobs:
 
           # Uninstall Appx
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
-          
+
           # Uninstall certificate
           $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWindows_*.cer").Thumbprint
           Remove-Item -Path "Cert:LocalMachine\TrustedPeople\${thumbprint}"
