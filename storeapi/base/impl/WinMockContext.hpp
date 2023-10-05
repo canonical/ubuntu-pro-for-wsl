@@ -21,7 +21,7 @@ namespace StoreApi::impl {
 
 class WinMockContext {
  public:
-  using Window = std::int32_t;
+  using Window = void*;
   class Product {
     std::string storeID;
     std::string title;
