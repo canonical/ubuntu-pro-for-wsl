@@ -57,18 +57,13 @@ func TestManualTokenInput(t *testing.T) {
 
 			// ... or after registration, but never both.
 			if tc.whenToken == afterDistroRegistration {
-				// the exact time between registering the distro and running the app cannot be determined, so there is a chance
-				// of this starting the app before registration completes.
-				time.Sleep(5 * time.Second)
 				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
 				defer cleanup()
+				out, err = d.Command(ctx, "exit 0").CombinedOutput()
+				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			time.Sleep(5 * time.Second)
-			out, err = d.Command(ctx, "exit 0").CombinedOutput()
-			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
-
-			maxTimeout := 30 * time.Second
+			maxTimeout := 15 * time.Second
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
 				attached, err := distroIsProAttached(t, d)
