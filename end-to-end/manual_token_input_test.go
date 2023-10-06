@@ -50,7 +50,11 @@ func TestManualTokenInput(t *testing.T) {
 			name := registerFromTestImage(t, ctx)
 			d := wsl.NewDistro(ctx, name)
 
-			defer logWslProServiceJournal(t, ctx, d)
+			defer func() {
+				if t.Failed() {
+					logWslProServiceJournal(t, ctx, d)
+				}
+			}()
 
 			out, err := d.Command(ctx, "exit 0").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
