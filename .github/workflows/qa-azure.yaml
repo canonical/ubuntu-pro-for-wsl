@@ -30,6 +30,9 @@ jobs:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
   build-ubuntu-pro-for-windows:
+    strategy:
+      matrix:
+        mode: ["production", "end_to_end_tests"]
     name: Build Windows Agent Appx
     runs-on: windows-latest
     steps:
@@ -65,26 +68,27 @@ jobs:
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
       - name: Build Bundle
         run: |
-          msbuild                                            `
-            .\msix\msix.sln                                  `
-            -target:Build                                    `
-            -maxCpuCount                                     `
-            -nodeReuse:false                                 `
-            -property:Configuration=Debug                  `
-            -property:AppxBundle=Always                      `
-            -property:AppxBundlePlatforms=x64                `
-            -property:UapAppxPackageBuildMode=SideloadOnly   `
-            -property:Version=0.0.1+${{ github.sha }}        `
-            -property:UP4W_END_TO_END=true                   `
-            -nologo                                          `
+          msbuild                                                                             `
+            .\msix\msix.sln                                                                   `
+            -target:Build                                                                     `
+            -maxCpuCount                                                                      `
+            -nodeReuse:false                                                                  `
+            -property:Configuration=${{ matrix.mode == 'production' && 'Debug' || 'Release'}} `
+            -property:AppxBundle=Always                                                       `
+            -property:AppxBundlePlatforms=x64                                                 `
+            -property:UapAppxPackageBuildMode=SideloadOnly                                    `
+            -property:Version=0.0.1+${{ github.sha }}                                         `
+            -property:UP4W_END_TO_END=${{ matrix.mode == 'end_to_end_tests' }}                `
+            -nologo                                                                           `
             -verbosity:normal
+
       - name: Upload sideload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: UbuntuProForWindows+${{ github.sha }}
+          name: UbuntuProForWindows+${{ github.sha }}-${{ matrix.mode }}
           path: |
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64_Debug.cer
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64_Debug.msixbundle
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.cer
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.msixbundle
 
   vm-setup:
     name: Set up Azure VM
@@ -128,7 +132,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          # name: is left blank so that all artifacts are downloaded
+          # We are not interesting in downloading the production build.
+          name: UbuntuProForWindows+${{ github.sha }}-end_to_end_tests
           path: ci-artifacts
       - name: Set up artifacts
         shell: powershell
