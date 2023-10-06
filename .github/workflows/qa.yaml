@@ -32,6 +32,9 @@ jobs:
             subproject: wsl-pro-service
           - os: ubuntu
             subproject: end-to-end
+        include:
+          - subproject: agentapi
+            needs-flutter: true
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -42,6 +45,24 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Load flutter version
+        if: matrix.needs-flutter != ''
+        id: load
+        uses: ./.github/actions/load-json
+        with:
+          path: tools/versions.json
+      - name: Set up flutter
+        uses: subosito/flutter-action@v2
+        if: matrix.needs-flutter != ''
+        with:
+          channel: 'stable'
+          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
+      - name: Install Dart protoc plugin
+        if: matrix.needs-flutter != ''
+        shell: bash
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          dart pub global activate protoc_plugin
       - name: Quality check
         uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
         with:
@@ -209,50 +230,3 @@ jobs:
       #  uses: codecov/codecov-action@v3
       #  with:
       #    file: /tmp/coverage.out
-
-  generated-grpc:
-    name: gRPC files are up to date
-    runs-on: ubuntu-latest
-    container: ubuntu:rolling
-    strategy:
-      fail-fast: false
-      matrix:
-        subproject: [agentapi, wslserviceapi]
-        include:
-          - subproject: agentapi
-            needs-flutter: true
-          - subproject: wslserviceapi
-            needs-flutter: false
-    steps:
-      - name: Install git into the container
-        run: |
-          set -eu
-          DEBIAN_FRONTEND=noninteractive apt update
-          DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates git protobuf-compiler jq curl unzip xz-utils
-      - name: Set up git
-        # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: "${{ matrix.subproject }}/go.mod"
-      - uses: subosito/flutter-action@v2
-        if: matrix.needs-flutter
-        with:
-          channel: 'stable'
-          flutter-version: ${{ env.flutter-version }}
-      - name: Install Dart protoc plugin
-        if: matrix.needs-flutter
-        shell: bash
-        working-directory: ${{ matrix.subproject }}
-        run: |
-          dart pub global activate protoc_plugin
-      - name: Check gRPC is up to date
-        uses: canonical/desktop-engineering/gh-actions/go/generate@main
-        with:
-          working-directory: ${{ matrix.subproject }}
-          tools-directory: "../tools"
