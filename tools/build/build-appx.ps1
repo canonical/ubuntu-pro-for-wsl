@@ -3,6 +3,12 @@
     Build the Ubuntu Pro For Windows Appx package for local use.
 #>
 
+param (
+    [Parameter(Mandatory = $true, HelpMessage = "prodution, end_to_end_tests.")]
+
+    [string]$mode
+)
+
 function Start-VsDevShell {
     # Looking for a path like
     # ${env:ProgramFiles}\Microsoft Visual Studio\$VERSION\$RELEASE\Common7\Tools\Launch-VsDevShell.ps1
@@ -25,7 +31,7 @@ function Start-VsDevShell {
             continue
         }
 
-        foreach ( $release in "Enterprise","Professional","Community") {
+        foreach ( $release in "Enterprise", "Professional", "Community") {
             $devShell = "${vsRoot}\${version}\${release}\Common7\Tools\Launch-VsDevShell.ps1"
             if (! (Test-Path "${devShell}") ) {
                 continue
@@ -33,7 +39,7 @@ function Start-VsDevShell {
 
             & "${devShell}" -SkipAutomaticLocation
             return
-          }
+        }
     }
 
     Write-Error "Visual Studio developer powershell could not be found"
@@ -57,10 +63,10 @@ function Update-Certificate {
     # Replacing with local certificate
     $wapproj = ".\msix\UbuntuProForWindows\UbuntuProForWindows.wapproj"
     (Get-Content -Path "${wapproj}")                                                                   `
-        -replace                                                                                       `
-            "<PackageCertificateThumbprint>.*</PackageCertificateThumbprint>",                         `
-            "<PackageCertificateThumbprint>${certificate_thumbprint}</PackageCertificateThumbprint>"   `
-        | Set-Content -Path "${wapproj}"
+        -replace `
+        "<PackageCertificateThumbprint>.*</PackageCertificateThumbprint>", `
+        "<PackageCertificateThumbprint>${certificate_thumbprint}</PackageCertificateThumbprint>"   `
+    | Set-Content -Path "${wapproj}"
 }
 
 function Install-Appx {
@@ -90,20 +96,26 @@ Update-Certificate
 
 try {
     msbuild.exe --version
-} catch {
+}
+catch {
     Start-VsDevShell
 }
 
-msbuild.exe                                          `
-    .\msix\msix.sln                                  `
-    -target:Build                                    `
-    -maxCpuCount                                     `
-    -property:Configuration=Release                  `
-    -property:AppxBundle=Always                      `
-    -property:AppxBundlePlatforms=x64                `
-    -property:ProcessorArchitecture=x64              `
-    -property:UapAppxPackageBuildMode=SideloadOnly   `
-    -nologo                                          `
+If ($mode -eq 'production' -and $null -ne $env:UP4W_TEST_WITH_MS_STORE_MOCK) {
+    Write-Warning "Building the app in Release mode with UP4W_TEST_WITH_MS_STORE_MOCK env var set may lead to build failure or surprising results. Value is $env:UP4W_TEST_WITH_MS_STORE_MOCK."
+}
+
+msbuild.exe                                                                              `
+    .\msix\msix.sln                                                                      `
+    -target:Build                                                                        `
+    -maxCpuCount                                                                         `
+    -property:Configuration=$(If($mode -eq 'production'){"Release"} Else {"Debug"})      `
+    -property:AppxBundle=Always                                                          `
+    -property:AppxBundlePlatforms=x64                                                    `
+    -property:ProcessorArchitecture=x64                                                  `
+    -property:UapAppxPackageBuildMode=SideloadOnly                                       `
+    -nologo                                                                              `
+    -property:UP4W_END_TO_END=$(If($mode -eq 'end_to_end_tests'){"true"} Else {"false"}) `
     -verbosity:normal
 
 if (! $?) { exit 1 }
