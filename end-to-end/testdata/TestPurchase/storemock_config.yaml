@@ -1,0 +1,49 @@
+generateuserjwt:
+  onsuccess:
+    value: CPP_MOCK_JWT
+    status: 200
+  disabled: false
+  blocked: false
+getproducts:
+  onsuccess:
+    value: ""
+    status: 200
+  disabled: false
+  blocked: false
+purchase:
+  onsuccess:
+    value: ""
+    status: 200
+  disabled: false
+  blocked: false
+allproducts:
+  - storeid: 9P25B50XMKXT
+    title: Annual Subscription (production)
+    description: To this lovely mock of the production product ID
+    isinusercollection: false
+    productkind: Durable
+    expirationdate: 0001-01-01T00:00:00Z
+  - storeid: 9N9Q5G4QSMLS
+    title: Monthly Subscription (created for testing, free)
+    description: To this lovely mock of the production product ID
+    isinusercollection: false
+    productkind: Durable
+    expirationdate: 0001-01-01T00:00:00Z
+  - storeid: CPP_MOCK_CONSUMABLE
+    title: Consume
+    description: This mock is nice
+    isinusercollection: false
+    productkind: Consumable
+    expirationdate: 0001-01-01T00:00:00Z
+  - storeid: cannotpurchase
+    title: Forbidden
+    description: This product cannot be owned
+    isinusercollection: false
+    productkind: Durable
+    expirationdate: 0001-01-01T00:00:00Z
+  - storeid: servererror
+    title: Also forbidden
+    description: This product always break the server
+    isinusercollection: false
+    productkind: Durable
+    expirationdate: 0001-01-01T00:00:00Z
