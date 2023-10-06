@@ -150,9 +150,6 @@ jobs:
           $cert = "$(Get-ChildItem windows-agent/UbuntuProForWindows_*.cer)"
           Import-Certificate  -FilePath "${cert}" -CertStoreLocation Cert:LocalMachine\TrustedPeople
 
-          # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
-          Add-AppxPackage "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"
-
           Write-Output "::endgroup::"
 
           Write-Output "::group::Set up WSL Pro Service"
@@ -160,6 +157,11 @@ jobs:
           Move-Item -Path "wsl-pro-service_*/wsl-pro-service_*.deb" -Destination "wsl-pro-service/"
           Remove-Item -Recurse "wsl-pro-service_*/"
           Write-Output "::endgroup::"
+
+      # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
+      - name: Install Debug version of VCLibs
+        shell: powershell
+        run: Add-AppxPackage "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"
       - name: Test
         shell: powershell
         env:
