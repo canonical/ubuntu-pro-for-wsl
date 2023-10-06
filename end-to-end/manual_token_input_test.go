@@ -68,7 +68,9 @@ func TestManualTokenInput(t *testing.T) {
 			out, err = d.Command(ctx, "exit 0").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
+			maxTimeout := 30 * time.Second
 			if !tc.wantAttached {
+				time.Sleep(maxTimeout)
 				attached, err := distroIsProAttached(t, d)
 				require.NoError(t, err, "could not determine if distro is attached")
 				require.False(t, attached, "distro should not have been Pro attached")
@@ -81,7 +83,7 @@ func TestManualTokenInput(t *testing.T) {
 					t.Logf("could not determine if distro is attached: %v", err)
 				}
 				return attached
-			}, 30*time.Second, time.Second, "distro should have been Pro attached")
+			}, maxTimeout, time.Second, "distro should have been Pro attached")
 		})
 	}
 }
