@@ -132,8 +132,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          # We are not interested in downloading the production build.
-          name: UbuntuProForWindows+${{ github.sha }}-end_to_end_tests
+          # name: is left blank so that all artifacts are downloaded
           path: ci-artifacts
       - name: Set up artifacts
         shell: powershell
@@ -143,8 +142,8 @@ jobs:
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
-          Move-Item -Path "UbuntuProForWindows+*/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
-          Move-Item -Path "UbuntuProForWindows+*/UbuntuProForWindows_*/*.cer"       -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.cer"       -Destination "windows-agent/"
           Remove-Item -Recurse "UbuntuProForWindows+*/"
 
           $cert = "$(Get-ChildItem windows-agent/UbuntuProForWindows_*.cer)"
