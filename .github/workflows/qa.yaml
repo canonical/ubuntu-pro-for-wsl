@@ -32,6 +32,9 @@ jobs:
             subproject: wsl-pro-service
           - os: ubuntu
             subproject: end-to-end
+        include:
+          - subproject: agentapi
+            needs-flutter: true
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -42,40 +45,34 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - name: Load flutter version
+        if: matrix.needs-flutter != ''
+        id: load
+        uses: ./.github/actions/load-json
         with:
-          go-version-file: ${{ matrix.subproject }}/go.mod
-      - name: Update module files
+          path: tools/versions.json
+      - name: Set up flutter
+        uses: subosito/flutter-action@v2
+        if: matrix.needs-flutter != ''
+        with:
+          channel: 'stable'
+          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
+      - name: Install Dart protoc plugin
+        if: matrix.needs-flutter != ''
         shell: bash
-        if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
         run: |
-          # Ensuring there is no diff between current and generated go.mod and go.sum files
-          set -eu
-
-          echo "::group::Download dependencies"
-          go mod tidy
-          echo "::endgroup::"
-      - name: Ensure module files are up to date
-        uses: ./.github/actions/check-diff
+          dart pub global activate protoc_plugin
+      - name: Quality check
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
         with:
-          files-to-validate: ${{ matrix.subproject }}/**/go.mod ${{ matrix.subproject }}/**/go.sum
-      - name: Build
-        shell: bash
-        if: always() && !cancelled()
-        working-directory: ${{ matrix.subproject }}
-        run: |
-          go build -tags=gowslmock ./...
-      - name: Linter
-        uses: golangci/golangci-lint-action@v3
-        if: always() && !cancelled()
-        with:
-          version: v1.54.2
-          args: --config=${{ github.workspace }}/.golangci.yaml --build-tags=gowslmock
           working-directory: ${{ matrix.subproject }}
+          go-tags: gowslmock
+          tools-directory: ${{ github.workspace }}/tools
+          golangci-lint-configfile: ${{ github.workspace }}/.golangci.yaml
       - name: Gettext validation
         shell: bash
+        working-directory: ${{ matrix.subproject }}
         run: |
           set -eu
 
@@ -94,7 +91,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        package: ["gui/packages/p4w_ms_store", "gui/packages/ubuntupro"]
+        package: ["p4w_ms_store", "ubuntupro"]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Set up git
@@ -111,7 +108,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up Go
         # We need to set up Go so that the agent can be built for the end-to-end tests
-        if: matrix.package == 'gui/packages/ubuntupro'
+        if: matrix.package == 'ubuntupro'
         uses: actions/setup-go@v4
         with:
           go-version-file: windows-agent/go.mod
@@ -124,11 +121,14 @@ jobs:
         uses: ./.github/actions/flutter-qa/
         with:
           flutter-version: ${{ steps.load.outputs.data.flutter-version }}
-          package-dir: '${{ matrix.package }}'
-          run-build-runner: ${{ contains(matrix.package, 'ubuntupro') }}
-      - uses: ./.github/actions/check-diff
+          package-dir: gui/packages/${{ matrix.package }}
+          run-build-runner: ${{ matrix.package ==  'ubuntupro' }}
+      - name: Ensure module files are up to date
+        uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
-          files-to-validate: '${{ matrix.package }}/**/*.dart'
+          working-directory: gui/packages/${{ matrix.package }}
+          paths-to-ignore: ${{ matrix.package == 'ubuntupro' && 'pubspec.lock' || '' }}
+          fail-on-diff: true
 
   flutter-integration:
     name: "Flutter integration tests"
@@ -231,35 +231,3 @@ jobs:
       #  uses: codecov/codecov-action@v3
       #  with:
       #    file: /tmp/coverage.out
-
-  generated-grpc:
-    name: gRPC files are up to date
-    runs-on: ubuntu-latest
-    container: ubuntu:rolling
-    strategy:
-      fail-fast: false
-      matrix:
-        subproject: ["agentapi", "wslserviceapi"]
-    steps:
-      - name: Install git into the container
-        run: |
-          set -eu
-          DEBIAN_FRONTEND=noninteractive apt update
-          DEBIAN_FRONTEND=noninteractive apt install -y git
-      - name: Set up git
-        # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/go-generate-grpc
-        with:
-          go-version-file: ${{ matrix.subproject }}/**/go.mod
-          tools-directory: tools
-          protos-directory: ${{ matrix.subproject }}
-          enable-dart: ${{ matrix.subproject == 'agentapi' }}
-      - name: Ensure generated gRPC files are up to date
-        uses: ./.github/actions/check-diff
-        with:
-          files-to-validate: '${{ matrix.subproject }}/{.,**}/*.{dart,go}'

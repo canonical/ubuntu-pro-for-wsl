@@ -14,9 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//go:generate go run ../generate_completion_documentation.go completion ../../generated
-//go:generate go run ../generate_completion_documentation.go update-readme
-//go:generate go run ../generate_completion_documentation.go update-doc-cli-ref
+//go:generate go generate ../../generate/...
 
 func main() {
 	i18n.InitI18nDomain(common.TEXTDOMAIN)
