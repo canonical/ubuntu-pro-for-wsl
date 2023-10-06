@@ -8,7 +8,7 @@
         <!-- TODO: replace this location by a common icon path for the whole app -->
 		<MsixIconPath>$(MSBuildThisFileDirectory)\icon.ico</MsixIconPath>
 		<AppConfiguration>$(Configuration.ToLower())</AppConfiguration>
-		<OverrideEntryPoint Condition="$(UP4W_END_TO_END) != '' ">-t end_to_end/end_to_end_test.dart</OverrideEntryPoint>
+		<OverrideEntryPoint Condition="$(UP4W_END_TO_END) != '' And $(UP4W_END_TO_END) != 'false'">-t end_to_end/end_to_end_test.dart</OverrideEntryPoint>
 	</PropertyGroup>
 	<ItemGroup>
 		<AppIcon Include="$(AppIconPath)" />
