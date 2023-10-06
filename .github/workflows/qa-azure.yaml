@@ -132,7 +132,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          # We are not interesting in downloading the production build.
+          # We are not interested in downloading the production build.
           name: UbuntuProForWindows+${{ github.sha }}-end_to_end_tests
           path: ci-artifacts
       - name: Set up artifacts
