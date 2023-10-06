@@ -73,7 +73,7 @@ jobs:
             -target:Build                                                                     `
             -maxCpuCount                                                                      `
             -nodeReuse:false                                                                  `
-            -property:Configuration=${{ matrix.mode == 'production' && 'Debug' || 'Release'}} `
+            -property:Configuration=${{ matrix.mode == 'production' && 'Release' || 'Debug'}} `
             -property:AppxBundle=Always                                                       `
             -property:AppxBundlePlatforms=x64                                                 `
             -property:UapAppxPackageBuildMode=SideloadOnly                                    `
