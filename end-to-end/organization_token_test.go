@@ -20,7 +20,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	)
 
 	// Let's be lazy and don't fall into the risk of changing the function name without updating the places where its name is used.
-	currentFuncName := getCurrentFuncName()
+	currentFuncName := t.Name()
 
 	testCases := map[string]struct {
 		whenToken whenToken
