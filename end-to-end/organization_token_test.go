@@ -71,14 +71,16 @@ func TestOrganizationProvidedToken(t *testing.T) {
 
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
-				attached, err := distroIsProAttached(t, d)
+				proCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				defer cancel()
+				attached, err := distroIsProAttached(t, proCtx, d)
 				require.NoError(t, err, "could not determine if distro is attached")
 				require.False(t, attached, "distro should not have been Pro attached")
 				return
 			}
 
 			require.Eventually(t, func() bool {
-				attached, err := distroIsProAttached(t, d)
+				attached, err := distroIsProAttached(t, ctx, d)
 				if err != nil {
 					t.Logf("could not determine if distro is attached: %v", err)
 				}

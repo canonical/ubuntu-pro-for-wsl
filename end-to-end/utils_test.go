@@ -151,11 +151,9 @@ func stopAgent(ctx context.Context) error {
 	return fmt.Errorf("could not stop process %q: %v. %s", process, err, out)
 }
 
-func distroIsProAttached(t *testing.T, d wsl.Distro) (bool, error) {
+//nolint:revive // testing.T must precede the context
+func distroIsProAttached(t *testing.T, ctx context.Context, d wsl.Distro) (bool, error) {
 	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
 
 	out, err := d.Command(ctx, "pro status --format=json").Output()
 	if err != nil {
