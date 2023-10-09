@@ -67,10 +67,11 @@ func TestManualTokenInput(t *testing.T) {
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			maxTimeout := 15 * time.Second
+			const maxTimeout = 15 * time.Second
+
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
-				proCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				proCtx, cancel := context.WithTimeout(ctx, maxTimeout)
 				defer cancel()
 				attached, err := distroIsProAttached(t, proCtx, d)
 				require.NoError(t, err, "could not determine if distro is attached")
