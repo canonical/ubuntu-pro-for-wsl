@@ -7,6 +7,7 @@
 #include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Web.Http.Filters.h>
 #include <winrt/Windows.Web.Http.h>
 #include <winrt/base.h>
 
@@ -181,7 +182,13 @@ IAsyncOperation<Uri> buildUri(winrt::hstring& relativePath,
 IAsyncOperation<JsonObject> call(winrt::hstring relativePath,
                                  UrlParams const& params) {
   // Initialize only once.
-  static winrt::Windows::Web::Http::HttpClient httpClient{};
+  namespace http = winrt::Windows::Web::Http;
+  static http::Filters::HttpBaseProtocolFilter filter{};
+  filter.CacheControl().ReadBehavior(
+      http::Filters::HttpCacheReadBehavior::NoCache);
+  filter.CacheControl().WriteBehavior(
+      http::Filters::HttpCacheWriteBehavior::NoCache);
+  static http::HttpClient httpClient{filter};
 
   Uri uri = co_await buildUri(relativePath, params);
 
