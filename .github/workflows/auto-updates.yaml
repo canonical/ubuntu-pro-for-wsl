@@ -55,7 +55,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           commit-message: Auto update po files
-          title: Auto update po files
+          title: 'docs(i18n): Auto update po files'
           labels: po, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/locales
@@ -108,7 +108,7 @@ jobs:
         if: steps.check-readme.outputs.modified == 'true'
         with:
           commit-message: Auto update readme files
-          title: Auto update readme files
+          title: 'docs: Auto update readme files'
           labels: readme, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/readme-cli-ref
@@ -158,7 +158,7 @@ jobs:
         if: steps.check-diff.outputs.modified == 'true'
         with:
           commit-message: Auto update internal dependencies
-          title: Auto update WSL-Pro-Service dependencies
+          title: 'deps(wsl-pro-service): Auto update WSL-Pro-Service dependencies'
           labels: automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/update-internal-dependencies

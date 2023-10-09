@@ -7,7 +7,7 @@ on:
     paths:
       - "doc/**"
   gollum:
-  
+
 env:
   doc_dir: "doc"
 
@@ -38,7 +38,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Auto-update documentation triggered by Wiki changes"
+          git commit -m "docs: Auto-update documentation triggered by Wiki changes"
           git push
 
   repo-doc-to-wiki:
