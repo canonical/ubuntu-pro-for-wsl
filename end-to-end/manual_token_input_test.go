@@ -69,6 +69,7 @@ func TestManualTokenInput(t *testing.T) {
 
 			maxTimeout := 15 * time.Second
 			if !tc.wantAttached {
+				time.Sleep(maxTimeout)
 				proCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
 				attached, err := distroIsProAttached(t, proCtx, d)
