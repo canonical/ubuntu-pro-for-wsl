@@ -1,0 +1,13 @@
+name: Validate pull request title
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  validate:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        uses: canonical/desktop-engineering/gh-actions/common/validate-pr-title@main
