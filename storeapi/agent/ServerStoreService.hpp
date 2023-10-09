@@ -52,7 +52,7 @@ class ServerStoreService : public StoreService<ContextType> {
     const auto dur = product.CurrentExpirationDate().time_since_epoch();
 
     // just need to convert the duration to seconds.
-    return duration_cast<std::chrono::seconds>(dur).count();
+    return std::chrono::duration_cast<std::chrono::seconds>(dur).count();
   }
 
   // A factory returning the current user's [UserInfo].

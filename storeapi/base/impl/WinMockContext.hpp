@@ -14,14 +14,14 @@
 #include "../Purchase.hpp"
 
 namespace winrt::Windows::Data::Json {
-class JsonObject;
+struct JsonObject;
 }
 
 namespace StoreApi::impl {
 
 class WinMockContext {
  public:
-  using Window = std::int32_t;
+  using Window = void*;
   class Product {
     std::string storeID;
     std::string title;
