@@ -2,6 +2,7 @@ package landscape_test
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/landscape/landscapemockservice"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
@@ -27,6 +29,7 @@ import (
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func TestMain(m *testing.M) {
@@ -94,10 +97,12 @@ func TestConnect(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		precancelContext   bool
-		serverNotAvailable bool
-		landscapeURLErr    bool
-		tokenErr           bool
+		precancelContext           bool
+		serverNotAvailable         bool
+		landscapeURLErr            bool
+		tokenErr                   bool
+		requireCertificate         bool
+		breakLandscapeClientConfig bool
 
 		breakUIDFile bool
 		uid          string
@@ -105,13 +110,19 @@ func TestConnect(t *testing.T) {
 		wantErr           bool
 		wantDistroSkipped bool
 	}{
-		"Success in first contact":     {},
-		"Success in non-first contact": {uid: "123"},
+		"Success in first contact":        {},
+		"Success in non-first contact":    {uid: "123"},
+		"Success with non-empty config":   {},
+		"Success with an SSL certificate": {requireCertificate: true},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
 		"Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
-		"Error when the first-contact SendUpdatedInfo fails ":  {tokenErr: true, wantErr: true},
+		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
+		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
+		"Error when the config cannot be parsed":               {wantErr: true},
+		"Error when the SSL certificate cannot be read":        {wantErr: true},
+		"Error when the SSL certificate is not valid":          {wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -123,7 +134,7 @@ func TestConnect(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", tc.requireCertificate)
 			defer lis.Close()
 
 			conf := &mockConfig{
@@ -135,7 +146,19 @@ func TestConnect(t *testing.T) {
 
 				// We trigger an earlier error by erroring out on LandscapeAgentURL
 				landscapeURLErr: tc.landscapeURLErr,
+
+				// We trigger an error when deciding to use a certificate or not
+				landscapeConfigErr: tc.breakLandscapeClientConfig,
 			}
+
+			out, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
+			if errors.Is(err, os.ErrNotExist) {
+				// This fixture is not compulsory
+				out = []byte{}
+				err = nil
+			}
+			require.NoError(t, err, "Setup: could not load landscape config")
+			conf.landscapeClientConfig = string(out)
 
 			if !tc.serverNotAvailable {
 				//nolint:errcheck // We don't care about these errors
@@ -188,7 +211,7 @@ func TestConnect(t *testing.T) {
 
 			confFile := filepath.Join(dir, landscape.CacheFileBase)
 			require.FileExists(t, confFile, "Landscape config file should be created after disconnecting")
-			out, err := os.ReadFile(confFile)
+			out, err = os.ReadFile(confFile)
 			require.NoError(t, err, "Could not read landscape config file")
 
 			wantUID := tc.uid
@@ -242,7 +265,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", false)
 
 			conf := &mockConfig{
 				proToken:          "TOKEN",
@@ -408,7 +431,7 @@ func TestAutoReconnection(t *testing.T) {
 		ctx = wsl.WithMock(ctx, mock)
 	}
 
-	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:")
+	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", false)
 	defer lis.Close()
 	defer server.Stop()
 
@@ -460,7 +483,7 @@ func TestAutoReconnection(t *testing.T) {
 	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
 
 	// Restart server at the same address
-	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String())
+	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), false)
 	defer lis.Close()
 
 	//nolint:errcheck // We don't care
@@ -541,7 +564,7 @@ func TestReceiveCommands(t *testing.T) {
 				t.Skip("This test can only run with the mock")
 			}
 
-			lis, server, service := setUpLandscapeMock(t, ctx, "localhost:")
+			lis, server, service := setUpLandscapeMock(t, ctx, "localhost:", false)
 			defer lis.Close()
 
 			//nolint:errcheck // We don't care about these errors
@@ -781,14 +804,31 @@ func isAppxInstalled(t *testing.T, appxPackage string) bool {
 }
 
 //nolint:revive // Context goes after testing.T
-func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
+func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, requireCertificate bool) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
 	t.Helper()
 
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp", addr)
 	require.NoError(t, err, "Setup: can't listen")
 
-	server = grpc.NewServer()
+	var opts []grpc.ServerOption
+	if requireCertificate {
+		certPath := filepath.Join(golden.TestFamilyPath(t), "certificates/cert.pem")
+		keyPath := filepath.Join(golden.TestFamilyPath(t), "certificates/key.pem")
+
+		serverCert, err := tls.LoadX509KeyPair(certPath, keyPath)
+		require.NoError(t, err, "Setup: could not load Landscape mock server credentials")
+
+		config := &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+			ClientAuth:   tls.NoClientCert,
+			MinVersion:   tls.VersionTLS12,
+		}
+
+		opts = append(opts, grpc.Creds(credentials.NewTLS(config)))
+	}
+
+	server = grpc.NewServer(opts...)
 	service = landscapemockservice.New()
 	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
@@ -796,13 +836,25 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string) (lis net
 }
 
 type mockConfig struct {
-	proToken          string
-	landscapeAgentURL string
+	proToken              string
+	landscapeAgentURL     string
+	landscapeClientConfig string
 
-	proTokenErr     bool
-	landscapeURLErr bool
+	proTokenErr        bool
+	landscapeURLErr    bool
+	landscapeConfigErr bool
 
 	mu sync.Mutex
+}
+
+func (m *mockConfig) LandscapeClientConfig(ctx context.Context) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.landscapeConfigErr {
+		return "", errors.New("Mock error")
+	}
+	return m.landscapeClientConfig, nil
 }
 
 func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {

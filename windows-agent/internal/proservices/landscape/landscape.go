@@ -3,11 +3,14 @@ package landscape
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,7 +22,9 @@ import (
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"gopkg.in/ini.v1"
 )
 
 // Client is a client to the landscape service, served remotely.
@@ -58,6 +63,7 @@ const cacheFileBase = "landscape.conf"
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
+	LandscapeClientConfig(context.Context) (string, error)
 	LandscapeAgentURL(context.Context) (string, error)
 	Subscription(context.Context) (string, config.SubscriptionSource, error)
 }
@@ -198,7 +204,12 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	grpcConn, err := grpc.DialContext(dialCtx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds, err := c.transportCredentials(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	grpcConn, err := grpc.DialContext(dialCtx, address, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -376,4 +387,57 @@ func (c *Client) getUID() string {
 // setUID is syntax sugar to set the UID.
 func (c *Client) setUID(s string) {
 	c.uid.Store(s)
+}
+
+// transportCredentials reads the Landscape client config to check if a SSL public key is specified.
+//
+// If this credential is not specified, an insecure credential is returned.
+// If the credential is specified but erroneous, an error is returned.
+func (c *Client) transportCredentials(ctx context.Context) (cred credentials.TransportCredentials, err error) {
+	defer decorate.OnError(&err, "Landscape credentials")
+
+	conf, err := c.conf.LandscapeClientConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not obtain Landscape config: %v", err)
+	}
+
+	if conf == "" {
+		// No Landscape config: default to insecure
+		return insecure.NewCredentials(), nil
+	}
+
+	ini, err := ini.Load(strings.NewReader(conf))
+	if err != nil {
+		return insecure.NewCredentials(), fmt.Errorf("could not parse Landscape config file: %v", err)
+	}
+
+	const section = "client"
+	const key = "ssl_public_key"
+
+	sec, err := ini.GetSection(section)
+	if err != nil {
+		// No SSL public key provided: default to insecure
+		return insecure.NewCredentials(), nil
+	}
+
+	k, err := sec.GetKey(key)
+	if err != nil {
+		// No SSL public key provided: default to insecure
+		return insecure.NewCredentials(), nil
+	}
+
+	cert, err := os.ReadFile(k.String())
+	if err != nil {
+		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
+	}
+
+	certPool := x509.NewCertPool()
+	if ok := certPool.AppendCertsFromPEM(cert); !ok {
+		return nil, fmt.Errorf("failed to add server CA's certificate: %v", err)
+	}
+
+	return credentials.NewTLS(&tls.Config{
+		RootCAs:    certPool,
+		MinVersion: tls.VersionTLS12,
+	}), nil
 }
