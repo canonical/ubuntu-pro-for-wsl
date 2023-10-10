@@ -9,3 +9,5 @@ openssl req                                                 \
     -nodes                                                  \
     -addext 'subjectAltName = IP:127.0.0.1'                 \
     -subj "/C=US/O=Canonical/CN=CanonicalGroupLimited"
+
+echo This is not a valid certificate > bad-certificate.pem
