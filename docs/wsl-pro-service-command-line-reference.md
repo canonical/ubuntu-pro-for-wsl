@@ -1,4 +1,4 @@
-The WSL Pro Service is the component that runs on each guest Ubuntu distro.
+The Windows Agent is the component that runs on the host Windows machine.
 
 ## Usage
 
