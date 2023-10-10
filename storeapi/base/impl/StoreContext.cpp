@@ -38,9 +38,11 @@ winrt::hstring sha256(winrt::hstring input);
 
 std::chrono::system_clock::time_point
 StoreContext::Product::CurrentExpirationDate() const {
-  // A single product might have more than one SKU.
+  // A single product might have more than one SKU and not all of them
+  // (maybe none) show both `IsSubscription` and `IsInUserCollection` properties
+  // simultaneously true.
   for (auto sku : self.Skus()) {
-    if (sku.IsInUserCollection() && sku.IsSubscription()) {
+    if (sku.IsInUserCollection()) {
       auto collected = sku.CollectionData();
       return winrt::clock::to_sys(collected.EndDate());
     }
