@@ -181,7 +181,7 @@ func TestLocalAppData(t *testing.T) {
 			require.Equal(t, cmdExePath, *system.CmdExeCache(), "Unexpected path for cmd.exe")
 
 			// Validating LocalAppData
-			wantSuffix := `/mnt/c/Users/TestUser/AppData/Local`
+			wantSuffix := `/mnt/d/Users/TestUser/AppData/Local`
 			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by LocalAppData.\nWant suffix: %s\nGot: %s", wantSuffix, got)
 		})
 	}
