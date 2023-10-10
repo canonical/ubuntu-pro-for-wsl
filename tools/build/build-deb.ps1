@@ -47,7 +47,9 @@ if ( "${LastExitCode}" -ne "0" ) {
 #!/bin/bash
 set -eu
 
-git config --global --add safe.directory "$(pwd)"
+git config --get-all safe.directory                        \
+    | grep "$(pwd)"                                        \
+    || git config --global --add safe.directory "$(pwd)"
 
 # Update internal dependencies in the repo because
 # we need git to work, and .git is not rsync'd.
