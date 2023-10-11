@@ -35,21 +35,19 @@ jobs:
       - name: Check po files
         id: checkpo
         run: |
+          # Generate locales
           set -eu
-
-          hasModif="false"
-
           for subproject in ${{ env.subprojects }} ; do
             go generate "${subproject}/generate/generate-locales.go"
           done
-
-          # Exclude line diffs only
-          MODIFIED=$(git difftool -y -x "diff -Nup -I '^#: '" "*/po/*")
-          if [ -n "$MODIFIED" ]; then
-            hasModif="true"
-          fi
-
-          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
+      - name: Find localization changes
+        id: check-diff
+        uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
+        with:
+          working-directory: .
+          # Go workspace checksum files tend to update when no one is asking
+          paths-to-ignore: 'go.work.sum'
+          fail-on-diff: false
       - name: Create Pull Request
         if: steps.checkpo.outputs.modified == 'true'
         uses: peter-evans/create-pull-request@v5
@@ -88,24 +86,24 @@ jobs:
         name: Set up Go
         with:
           go-version-file: go.work
-      - name: Check README file
-        id: check-readme
+      - name: Generate documentation
         run: |
+          # Generate documentation
           set -eu
-
           for subproject in ${{ env.subprojects }} ; do
             go generate "${subproject}/generate/generate-docs.go"
           done
-
-          hasModif="false"
-          MODIFIED=$(git status --porcelain --untracked-files=no)
-          if [ -n "$MODIFIED" ]; then
-            hasModif="true"
-          fi
-          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
+      - name: Find documentation changes
+        id: check-diff
+        uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
+        with:
+          working-directory: .
+          # Go workspace checksum files tend to update when no one is asking
+          paths-to-ignore: 'go.work.sum'
+          fail-on-diff: false
       - uses: peter-evans/create-pull-request@v5
         name: Create Pull Request
-        if: steps.check-readme.outputs.modified == 'true'
+        if: steps.check-diff.outputs.diff == 'true'
         with:
           commit-message: Auto update readme files
           title: 'docs: Auto update readme files'
@@ -114,7 +112,7 @@ jobs:
           branch: auto-updates/readme-cli-ref
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
-        if: steps.check-readme.outputs.modified == 'true'
+        if: steps.check-diff.outputs.diff == 'true'
         run: |
           git push origin auto-updates/readme-cli-ref:main
 
