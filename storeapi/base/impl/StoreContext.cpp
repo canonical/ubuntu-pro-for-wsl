@@ -10,9 +10,11 @@
 #include <winrt/Windows.System.h>
 #include <winrt/base.h>
 
+#include <algorithm>
 #include <format>
 #include <functional>
 #include <iterator>
+#include <ranges>
 #include <type_traits>
 
 #include "../Exception.hpp"
@@ -38,19 +40,25 @@ winrt::hstring sha256(winrt::hstring input);
 
 std::chrono::system_clock::time_point
 StoreContext::Product::CurrentExpirationDate() const {
-  // A single product might have more than one SKU.
-  for (auto sku : self.Skus()) {
-    if (sku.IsInUserCollection() && sku.IsSubscription()) {
-      auto collected = sku.CollectionData();
-      return winrt::clock::to_sys(collected.EndDate());
-    }
+  // A single product might have more than one SKU and not all of them
+  // (maybe none) show both `IsSubscription` and `IsInUserCollection` properties
+  // simultaneously true.
+  auto expDates = self.Skus() |
+                  std::views::filter(&StoreSku::IsInUserCollection) |
+                  std::views::transform([](StoreSku const& s) {
+                    return s.CollectionData().EndDate();
+                  });
+  auto endWinDate = std::ranges::max_element(expDates);
+
+  // Should never be true if called from a product the user is subscribed to.
+  if (expDates.empty()) {
+    throw Exception{
+        ErrorCode::Unsubscribed,
+        std::format("product ID: {}", winrt::to_string(self.StoreId())),
+    };
   }
 
-  // Should be unreachable if called from a product user is subscribed to.
-  throw Exception{
-      ErrorCode::Unsubscribed,
-      std::format("product ID: {}", winrt::to_string(self.StoreId())),
-  };
+  return winrt::clock::to_sys(*endWinDate);
 }
 
 void StoreContext::Product::PromptUserForPurchase(
