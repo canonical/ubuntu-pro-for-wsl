@@ -351,15 +351,18 @@ func TestLandscapeEnable(t *testing.T) {
 	testCases := map[string]struct {
 		breakWriteConfig     bool
 		breakLandscapeConfig bool
+		breakWSLPath         bool
 
 		wantErr bool
 	}{
-		"Success":                           {},
-		"Success overriding computer_title": {},
+		"Success":                                    {},
+		"Success overriding computer_title":          {},
+		"Success overriding the SSL certficate path": {},
 
-		"Error when the file cannot be parsed":          {wantErr: true},
-		"Error when the config file cannot be written":  {breakWriteConfig: true, wantErr: true},
-		"Error when the landscape-config command fails": {breakLandscapeConfig: true, wantErr: true},
+		"Error when the file cannot be parsed":                   {wantErr: true},
+		"Error when the config file cannot be written":           {breakWriteConfig: true, wantErr: true},
+		"Error when the landscape-config command fails":          {breakLandscapeConfig: true, wantErr: true},
+		"Error when failing to override the SSL certficate path": {breakWSLPath: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -379,8 +382,12 @@ func TestLandscapeEnable(t *testing.T) {
 				mock.SetControlArg(testutils.LandscapeEnableErr)
 			}
 
+			if tc.breakWSLPath {
+				mock.SetControlArg(testutils.WslpathErr)
+			}
+
 			config, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
-			require.NoError(t, err, "Setup: could not load golden file")
+			require.NoError(t, err, "Setup: could not load fixture")
 
 			err = s.LandscapeEnable(ctx, string(config))
 			if tc.wantErr {
@@ -391,11 +398,15 @@ func TestLandscapeEnable(t *testing.T) {
 
 			exeProof := s.Path("/.landscape-enabled")
 			require.FileExists(t, exeProof, "Landscape executable never ran")
-			got, err := os.ReadFile(exeProof)
+			out, err := os.ReadFile(exeProof)
 			require.NoErrorf(t, err, "could not read file %q", exeProof)
 
-			want := golden.LoadWithUpdateFromGolden(t, string(config))
-			require.Equal(t, want, string(got), "Landscape executable did not receive the right config")
+			// We mock the filesystem, and the mocked filesystem root is not the same between
+			// runs, so the golden file would never match. This is the solution:
+			got := strings.ReplaceAll(string(out), mock.FsRoot, "${FILESYSTEM_ROOT}")
+
+			want := golden.LoadWithUpdateFromGolden(t, got)
+			require.Equal(t, want, got, "Landscape executable did not receive the right config")
 		})
 	}
 }

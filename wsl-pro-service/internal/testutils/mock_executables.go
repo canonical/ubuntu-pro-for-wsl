@@ -447,7 +447,12 @@ func WslPathMock(t *testing.T) {
 				return exitError
 			}
 
-			if argv[1] != windowsLocalAppDataDir {
+			stdout, ok := map[string]string{
+				windowsLocalAppDataDir:          linuxLocalAppDataDir,
+				`D:\Users\TestUser\certificate`: filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+			}[argv[1]]
+
+			if !ok {
 				fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 				return exitBadUsage
 			}
@@ -457,7 +462,7 @@ func WslPathMock(t *testing.T) {
 				return exitOk
 			}
 
-			fmt.Fprintf(os.Stdout, "%s\r\n", linuxLocalAppDataDir)
+			fmt.Fprintf(os.Stdout, "%s\r\n", stdout)
 			return exitOk
 
 		default:
