@@ -103,7 +103,10 @@ redirects = {}
 # Links to ignore when checking links
 
 linkcheck_ignore = [
-    'http://127.0.0.1:8000'
+    'http://127.0.0.1:8000',
+
+    # Linkcheck does not have access to the repo
+    'https://github.com/canonical/ubuntu-pro-for-windows/*'
     ]
 
 # Pages on which to ignore anchors
