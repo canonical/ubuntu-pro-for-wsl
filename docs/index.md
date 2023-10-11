@@ -11,21 +11,17 @@ Ubuntu Pro for Windows is of value to corporate security teams, system administr
 
 ## Project and community
 
-Example Project is a member of the Ubuntu family. It’s an open source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback.
+Ubuntu Pro for Windows is a member of the Ubuntu family. It’s an open source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-windows/blob/main/CONTRIBUTING.md) on Github in order to bring ideas, report bugs, participate in discussions, and much more!
 
-* Code of conduct
-* Get support
-* Join our online chat
-* Contribute
-* Roadmap
-
-Thinking about using Example Product for your next project? Get in touch!
+Thinking about using Ubuntu Pro for Windows for your next project? Get in touch!
 
 
 ```{toctree}
 :hidden:
  
-Install <install>
-Windows Agent command line interface <windows-agent-command-line-reference>
-WSL Pro Service command line interface <wsl-pro-service-command-line-reference>
+Install <02-install>
+Auto-enable Ubuntu Pro <03-enable-pro>
+Auto-attach distros to Landscape <04-attach-landscape>
+Windows Agent command line interface <05-windows-agent-command-line-reference>
+WSL Pro Service command line interface <06-wsl-pro-service-command-line-reference>
 ```
