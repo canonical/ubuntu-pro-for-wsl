@@ -354,8 +354,10 @@ func TestLandscapeEnable(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success": {},
+		"Success":                           {},
+		"Success overriding computer_title": {},
 
+		"Error when the file cannot be parsed":          {wantErr: true},
 		"Error when the config file cannot be written":  {breakWriteConfig: true, wantErr: true},
 		"Error when the landscape-config command fails": {breakLandscapeConfig: true, wantErr: true},
 	}
@@ -377,9 +379,10 @@ func TestLandscapeEnable(t *testing.T) {
 				mock.SetControlArg(testutils.LandscapeEnableErr)
 			}
 
-			config := "[example]\nnumber = 5\ntext = Lorem ipsum dolot sit amet"
+			config, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
+			require.NoError(t, err, "Setup: could not load golden file")
 
-			err := s.LandscapeEnable(ctx, config)
+			err = s.LandscapeEnable(ctx, string(config))
 			if tc.wantErr {
 				require.Error(t, err, "LandscapeEnable should have returned an error")
 				return
@@ -388,10 +391,11 @@ func TestLandscapeEnable(t *testing.T) {
 
 			exeProof := s.Path("/.landscape-enabled")
 			require.FileExists(t, exeProof, "Landscape executable never ran")
-			out, err := os.ReadFile(exeProof)
+			got, err := os.ReadFile(exeProof)
 			require.NoErrorf(t, err, "could not read file %q", exeProof)
 
-			require.Equal(t, config, string(out), "Landscape executable did not receive the right config")
+			want := golden.LoadWithUpdateFromGolden(t, string(config))
+			require.Equal(t, want, string(got), "Landscape executable did not receive the right config")
 		})
 	}
 }

@@ -172,10 +172,8 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 
 	if conf, err := c.LandscapeClientConfig(ctx); err != nil {
 		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
-	} else if landscape, err := tasks.NewLandscapeConfigure(ctx, conf, distroName); err != nil {
-		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
 	} else {
-		// Success
+		landscape := tasks.LandscapeConfigure{Config: conf}
 		taskList = append(taskList, landscape)
 	}
 
