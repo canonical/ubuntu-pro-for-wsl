@@ -1,7 +1,7 @@
 project-root: ".."
 docs:
   readme: README.md
-  docs: ../doc/04.-WSL-Pro-Service-command-line-reference.md
+  docs: ../docs/06-wsl-pro-service-command-line-reference.md
   man: generated/usr/share,
   completions: generated/usr/share
 i18n:
