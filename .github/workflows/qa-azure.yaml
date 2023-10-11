@@ -30,6 +30,9 @@ jobs:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
   build-ubuntu-pro-for-windows:
+    strategy:
+      matrix:
+        mode: ["production", "end_to_end_tests"]
     name: Build Windows Agent Appx
     runs-on: windows-latest
     steps:
@@ -64,26 +67,28 @@ jobs:
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
       - name: Build Bundle
-        run:  |
-          msbuild                                            `
-            .\msix\msix.sln                                  `
-            -target:Build                                    `
-            -maxCpuCount                                     `
-            -nodeReuse:false                                 `
-            -property:Configuration=Release                  `
-            -property:AppxBundle=Always                      `
-            -property:AppxBundlePlatforms=x64                `
-            -property:UapAppxPackageBuildMode=SideloadOnly   `
-            -property:Version=0.0.1+${{ github.sha }}        `
-            -nologo                                          `
+        run: |
+          msbuild                                                                             `
+            .\msix\msix.sln                                                                   `
+            -target:Build                                                                     `
+            -maxCpuCount                                                                      `
+            -nodeReuse:false                                                                  `
+            -property:Configuration=${{ matrix.mode == 'production' && 'Release' || 'Debug'}} `
+            -property:AppxBundle=Always                                                       `
+            -property:AppxBundlePlatforms=x64                                                 `
+            -property:UapAppxPackageBuildMode=SideloadOnly                                    `
+            -property:Version=0.0.1+${{ github.sha }}                                         `
+            -property:UP4W_END_TO_END=${{ matrix.mode == 'end_to_end_tests' }}                `
+            -nologo                                                                           `
             -verbosity:normal
+
       - name: Upload sideload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: UbuntuProForWindows+${{ github.sha }}
+          name: UbuntuProForWindows+${{ github.sha }}-${{ matrix.mode }}
           path: |
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64.cer
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*_x64.msixbundle
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.cer
+            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.msixbundle
 
   vm-setup:
     name: Set up Azure VM
@@ -137,8 +142,8 @@ jobs:
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
-          Move-Item -Path "UbuntuProForWindows+*/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
-          Move-Item -Path "UbuntuProForWindows+*/UbuntuProForWindows_*/*.cer"       -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.cer"       -Destination "windows-agent/"
           Remove-Item -Recurse "UbuntuProForWindows+*/"
 
           $cert = "$(Get-ChildItem windows-agent/UbuntuProForWindows_*.cer)"
@@ -151,6 +156,11 @@ jobs:
           Move-Item -Path "wsl-pro-service_*/wsl-pro-service_*.deb" -Destination "wsl-pro-service/"
           Remove-Item -Recurse "wsl-pro-service_*/"
           Write-Output "::endgroup::"
+
+      # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
+      - name: Install Debug version of VCLibs
+        shell: powershell
+        run: Add-AppxPackage "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"
       - name: Test
         shell: powershell
         env:

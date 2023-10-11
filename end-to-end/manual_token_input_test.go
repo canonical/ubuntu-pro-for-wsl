@@ -2,16 +2,15 @@ package endtoend_test
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
-	"golang.org/x/sys/windows/registry"
 )
 
-func TestOrganizationProvidedToken(t *testing.T) {
+func TestManualTokenInput(t *testing.T) {
 	type whenToken int
 	const (
 		never whenToken = iota
@@ -23,14 +22,15 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	currentFuncName := t.Name()
 
 	testCases := map[string]struct {
-		whenToken whenToken
+		whenToken        whenToken
+		overrideTokenEnv string
 
 		wantAttached bool
 	}{
-		"Success when the subscription is active before registration":   {whenToken: beforeDistroRegistration, wantAttached: true},
-		"Success when the subscription is activated after registration": {whenToken: afterDistroRegistration, wantAttached: true},
+		"Success when applying pro token before registration": {whenToken: beforeDistroRegistration, wantAttached: true},
+		"Success when applying pro token after registration":  {whenToken: afterDistroRegistration, wantAttached: true},
 
-		"Error when there is no active subscription": {whenToken: never, wantAttached: false},
+		"Error with invalid token": {whenToken: afterDistroRegistration, overrideTokenEnv: fmt.Sprintf("%s=%s", proTokenEnv, "CJd8MMN8wXSWsv7wJT8c8dDK")},
 	}
 
 	for name, tc := range testCases {
@@ -40,9 +40,9 @@ func TestOrganizationProvidedToken(t *testing.T) {
 
 			testSetup(t)
 
+			// Either runs the ubuntupro app before...
 			if tc.whenToken == beforeDistroRegistration {
-				activateOrgSubscription(t)
-				cleanup := startAgent(t, ctx, currentFuncName)
+				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
 				defer cleanup()
 			}
 
@@ -50,24 +50,24 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			name := registerFromTestImage(t, ctx)
 			d := wsl.NewDistro(ctx, name)
 
-			defer logWslProServiceJournal(t, ctx, d)
+			defer func() {
+				if t.Failed() {
+					logWslProServiceJournal(t, ctx, d)
+				}
+			}()
 
 			out, err := d.Command(ctx, "exit 0").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
+			// ... or after registration, but never both.
 			if tc.whenToken == afterDistroRegistration {
-				err := d.Terminate()
-				require.NoError(t, err, "could not restart distro")
-
-				activateOrgSubscription(t)
-				cleanup := startAgent(t, ctx, currentFuncName)
+				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
 				defer cleanup()
-
-				out, err := d.Command(ctx, "exit 0").CombinedOutput()
+				out, err = d.Command(ctx, "exit 0").CombinedOutput()
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			const maxTimeout = 15 * time.Second
+			const maxTimeout = 30 * time.Second
 
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
@@ -88,18 +88,4 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 		})
 	}
-}
-
-func activateOrgSubscription(t *testing.T) {
-	t.Helper()
-
-	token := os.Getenv(proTokenEnv)
-	require.NotEmptyf(t, token, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenEnv)
-
-	key, _, err := registry.CreateKey(registry.CURRENT_USER, registryPath, registry.WRITE)
-	require.NoErrorf(t, err, "Setup: could not open UbuntuPro registry key")
-	defer key.Close()
-
-	err = key.SetStringValue("ProTokenOrg", token)
-	require.NoError(t, err, "could not write token in registry")
 }
