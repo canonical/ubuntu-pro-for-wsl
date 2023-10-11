@@ -2,49 +2,49 @@ version: 2
 updates:
   - package-ecosystem: "gomod"
     directory: "/agentapi"
-    commit_message:
+    commit-message:
       prefix: "deps(agentapi): "
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/windows-agent"
-    commit_message:
+    commit-message:
       prefix: "deps(windows-agent): "
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/common"
-    commit_message:
+    commit-message:
       prefix: "deps(common): "
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/end-to-end"
-    commit_message:
+    commit-message:
       prefix: "deps(end-to-end): "
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/tools"
-    commit_message:
+    commit-message:
       prefix: "deps(tools): "
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/wsl-pro-service"
-    commit_message:
+    commit-message:
       prefix: "deps(wsl-pro-service): "
     schedule:
       interval: "daily"
 
   - package-ecosystem: "gomod"
     directory: "/wslserviceapi"
-    commit_message:
+    commit-message:
       prefix: "deps(wslserviceapi): "
     schedule:
       interval: "daily"
@@ -53,7 +53,7 @@ updates:
     # Workflow files stored in the
     # default location of `.github/workflows`
     directory: "/"
-    commit_message:
+    commit-message:
       prefix: "deps(gh-actions): "
     schedule:
       interval: "daily"
@@ -61,19 +61,19 @@ updates:
   - package-ecosystem: "pub"
     # So we update grpc and protobuf packages
     directory: "/agentapi/dart"
-    commit_message:
+    commit-message:
       prefix: "deps(agentapi): "
     schedule:
       interval: "daily"
   - package-ecosystem: "pub"
     directory: "/gui/packages/p4w_ms_store"
-    commit_message:
+    commit-message:
       prefix: "deps(gui-p4w_ms_store): "
     schedule:
       interval: "daily"
   - package-ecosystem: "pub"
     directory: "/gui/packages/ubuntupro"
-    commit_message:
+    commit-message:
       prefix: "deps(gui-ubuntupro): "
     schedule:
       interval: "daily"
