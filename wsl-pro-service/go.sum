@@ -38,16 +38,10 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230922121135-527fdb21f6ee h1:ICI2GgFND/AdvOtFx1F1qy1onubIt3RI12l1LGZDZHI=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230922121135-527fdb21f6ee/go.mod h1:9Trm7taCfU3XFdAR/rJCW8kwJgU+fDmFNuUtPG7hbyE=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231009121516-2b7d721b5cc8 h1:QiPO3z+xdMjGSwo+vYLNgB2ZVfO4T9p96cywkXNpUp8=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231009121516-2b7d721b5cc8/go.mod h1:W7ts+j++GN7KXO9G2Di4x/iHK32YWuaZXb95dgFGiv8=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230919090833-cb5378636b4d h1:JqR2TpfXJpuocgixEApDHo1V/aOB2bsQO6iS6lIV9gg=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230919090833-cb5378636b4d/go.mod h1:MwfF0qFUhfc+N3BdF7biBsRrQlZKYC/SNwntOodSAZA=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231009121516-2b7d721b5cc8 h1:gTfrpao8RsnreKrKo6iMcVW80vihhOOWIlfT2pGA2i4=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231009121516-2b7d721b5cc8/go.mod h1:plRRlfLBZOroAXh9Wq2YqwZkrBXDJmPCs2ysAv+lP10=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230922121135-527fdb21f6ee h1:piAEseqtO1bKEtlhHnwMjRfZhkRLK0hHaaHwXqqBwMc=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230922121135-527fdb21f6ee/go.mod h1:5E79XQGZEdsvMKqz12xBK1gyq8ujBdLGyCA9XXvc4hI=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231009121516-2b7d721b5cc8 h1:6t3dF0OS7/dobpYnG0E/9h6L4fzUcm0tOSDPMzFEKFY=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231009121516-2b7d721b5cc8/go.mod h1:8gvJk6oEowhi0HLMK1Y0yKx8kKI/NVfkGtF8tAi4zvw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -172,7 +166,6 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
 github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
@@ -357,8 +350,8 @@ golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220908164124-27713097b956/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.12.0 h1:CM0HF96J0hcLAwsHPJZjfdNzs0gftsLfgKt57wWHJ0o=
-golang.org/x/sys v0.12.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.13.0 h1:Af8nKPmuFypiUBjVoU9V20FiaFXOcuZI21p0ycVYYGE=
+golang.org/x/sys v0.13.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
