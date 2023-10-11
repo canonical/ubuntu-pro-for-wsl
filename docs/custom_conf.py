@@ -15,7 +15,7 @@ import datetime
 ############################################################
 
 # Product name
-project = 'Documentation starter pack'
+project = 'Ubuntu Pro For Windows'
 author = 'Canonical Group Ltd'
 
 # Uncomment if your product uses release numbers
@@ -46,7 +46,7 @@ ogp_site_name = project
 ogp_image = 'https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg'
 
 # Update with the favicon for your product (default is the circle of friends)
-html_favicon = '.sphinx/_static/favicon.png'
+html_favicon = '../msix/UbuntuProForWindows/Images/icon.ico'
 
 # (Some settings must be part of the html_context dictionary, while others
 #  are on root level. Don't move the settings.)
@@ -62,17 +62,17 @@ html_context = {
     # Change to the discourse instance you want to be able to link to
     # using the :discourse: metadata at the top of a file
     # (use an empty value if you don't want to link)
-    'discourse': 'https://discourse.ubuntu.com',
+    'discourse': '',
 
     # Change to the GitHub info for your project
-    'github_url': 'https://github.com/canonical/starter-pack',
+    'github_url': 'https://github.com/canonical/ubuntu-pro-for-windows',
 
     # Change to the branch for this version of the documentation
     'github_version': 'main',
 
     # Change to the folder that contains the documentation
     # (usually "/" or "/docs/")
-    'github_folder': '/',
+    'github_folder': '/docs',
 
     # Change to an empty value if your GitHub repo doesn't have issues enabled.
     # This will disable the feedback button and the issue link in the footer.
