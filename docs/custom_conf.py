@@ -123,9 +123,7 @@ custom_linkcheck_anchors_ignore_for_url = [
 custom_extensions = []
 
 # Add files or directories that should be excluded from processing.
-custom_excludes = [
-    'doc-cheat-sheet*',
-]
+custom_excludes = []
 
 # Add CSS files (located in .sphinx/_static/)
 custom_html_css_files = []
