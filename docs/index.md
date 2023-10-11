@@ -1,5 +1,4 @@
-Ubuntu Pro For Windows
-======================
+# Ubuntu Pro For Windows
 
 Ubuntu Pro for Windows is a desktop application that provides compliance services for WSL instances.
 
