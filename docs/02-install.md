@@ -10,7 +10,7 @@ This guide will show you how to install Ubuntu Pro For Windows for local develop
 - The Windows Subsystem for Windows optional feature enabled
 
 ## Download
-<!-- TODO: Update when we cange were artifcats are hosted -->
+<!-- TODO: Update when we change were artifacts are hosted -->
 1. Go to the [repository actions page](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa-azure.yaml?query=branch%3Amain+).
 2. Click the latest successful workflow run.
 3. Scroll down past any warnings or errors, until you reach the Artifacts section.
@@ -28,7 +28,7 @@ This is the Windows-side agent that manages the distros.
     Remove-Item -Recurse "${env:LOCALAPPDATA}/Ubuntu Pro"
     ```
 2. Follow the download steps to download UbuntuProForWindows
-3. Unzip the artifact
+3. Unzip the artefact
 4. Find the certificate inside. Install it into `Local Machine/Trusted people`.
 5. Open Powershell in this directory and run
     ```powershell

@@ -11,7 +11,7 @@ Ubuntu Pro for Windows is of value to corporate security teams, system administr
 
 ## Project and community
 
-Ubuntu Pro for Windows is a member of the Ubuntu family. It’s an open source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-windows/blob/main/CONTRIBUTING.md) on Github in order to bring ideas, report bugs, participate in discussions, and much more!
+Ubuntu Pro for Windows is a member of the Ubuntu family. It’s an open source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-windows/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions, and much more!
 
 Thinking about using Ubuntu Pro for Windows for your next project? Get in touch!
 
