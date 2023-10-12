@@ -2,6 +2,7 @@
 
 #include "StoreContext.hpp"
 
+#include <winrt/Windows.ApplicationModel.Store.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Security.Cryptography.core.h>
@@ -101,9 +102,14 @@ std::vector<StoreContext::Product> StoreContext::GetProducts(
 std::string StoreContext::GenerateUserJwt(std::string token,
                                           std::string userId) const {
   assert(!token.empty() && "Azure AD token is required");
-  auto hJwt = self.GetCustomerPurchaseIdAsync(winrt::to_hstring(token),
-                                              winrt::to_hstring(userId))
-                  .get();
+  auto hToken = winrt::to_hstring(token);
+  auto hUserId = winrt::to_hstring(userId);
+  auto hJwt = self.GetCustomerPurchaseIdAsync(hToken, hUserId).get();
+  if (hJwt.empty()) {
+    hJwt = winrt::Windows::ApplicationModel::Store::CurrentApp::
+               GetCustomerPurchaseIdAsync(hToken, hUserId)
+                   .get();
+  }
   return winrt::to_string(hJwt);
 }
 
