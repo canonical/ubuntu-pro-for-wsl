@@ -5,6 +5,8 @@
 
 [license-image]: https://img.shields.io/badge/License-GPL3.0-blue.svg
 
+[![Documentation Status](https://readthedocs.com/projects/canonical-ubuntu-pro-for-windows/badge/?version=latest&token=6ab00afc8f04ec33510f3150a8abbae383dfdfc57c1396c899c8f59d46bb0d76)](https://canonical-ubuntu-pro-for-windows.readthedocs-hosted.com/en/latest/?badge=latest)
+
 [codecov-image]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows
 
@@ -28,6 +30,10 @@ It contains the set of applications to manage Ubuntu WSL instances that allows y
 * Grant ‘pro-enabled’ status to any Ubuntu instance on the device
 * Orchestrate instances for Landscape
 * Manages instance states (spin up/down to apply policies/patches).
+
+### Documentation
+
+You can read all about Ubuntu Pro for Windows on [Read the docs](https://canonical-ubuntu-pro-for-windows.readthedocs-hosted.com).
 
 ### System Components
 

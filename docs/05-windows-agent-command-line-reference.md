@@ -1,35 +1,36 @@
-The WSL Pro Service is the component that runs on each guest Ubuntu distro.
+# Windows Agent command-line reference
+The Windows Agent is the component that runs on the host Windows machine.
 
 ## Usage
 
 ### User commands
 
-#### wsl-pro-service
+#### ubuntu-pro-agent
 
-WSL Pro Service
+Ubuntu Pro for Windows agent
 
 ##### Synopsis
 
-WSL Pro Service connects Ubuntu Pro for Windows agent to your distro.
+Ubuntu Pro for Windows agent for managing your pro-enabled distro.
 
 ```
-wsl-pro-service COMMAND [flags]
+ubuntu-pro-agent COMMAND [flags]
 ```
 
 ##### Options
 
 ```
-  -h, --help              help for wsl-pro-service
+  -h, --help              help for ubuntu-pro-agent
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### wsl-pro-service completion
+#### ubuntu-pro-agent completion
 
 Generate the autocompletion script for the specified shell
 
 ##### Synopsis
 
-Generate the autocompletion script for wsl-pro-service for the specified shell.
+Generate the autocompletion script for ubuntu-pro-agent for the specified shell.
 See each sub-command's help for details on how to use the generated script.
 
 
@@ -45,7 +46,7 @@ See each sub-command's help for details on how to use the generated script.
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### wsl-pro-service completion bash
+#### ubuntu-pro-agent completion bash
 
 Generate the autocompletion script for bash
 
@@ -58,23 +59,23 @@ If it is not installed already, you can install it via your OS's package manager
 
 To load completions in your current shell session:
 
-	source <(wsl-pro-service completion bash)
+	source <(ubuntu-pro-agent completion bash)
 
 To load completions for every new session, execute once:
 
 ###### Linux:
 
-	wsl-pro-service completion bash > /etc/bash_completion.d/wsl-pro-service
+	ubuntu-pro-agent completion bash > /etc/bash_completion.d/ubuntu-pro-agent
 
 ###### macOS:
 
-	wsl-pro-service completion bash > $(brew --prefix)/etc/bash_completion.d/wsl-pro-service
+	ubuntu-pro-agent completion bash > $(brew --prefix)/etc/bash_completion.d/ubuntu-pro-agent
 
 You will need to start a new shell for this setup to take effect.
 
 
 ```
-wsl-pro-service completion bash
+ubuntu-pro-agent completion bash
 ```
 
 ##### Options
@@ -90,7 +91,7 @@ wsl-pro-service completion bash
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### wsl-pro-service completion fish
+#### ubuntu-pro-agent completion fish
 
 Generate the autocompletion script for fish
 
@@ -100,17 +101,17 @@ Generate the autocompletion script for the fish shell.
 
 To load completions in your current shell session:
 
-	wsl-pro-service completion fish | source
+	ubuntu-pro-agent completion fish | source
 
 To load completions for every new session, execute once:
 
-	wsl-pro-service completion fish > ~/.config/fish/completions/wsl-pro-service.fish
+	ubuntu-pro-agent completion fish > ~/.config/fish/completions/ubuntu-pro-agent.fish
 
 You will need to start a new shell for this setup to take effect.
 
 
 ```
-wsl-pro-service completion fish [flags]
+ubuntu-pro-agent completion fish [flags]
 ```
 
 ##### Options
@@ -126,7 +127,7 @@ wsl-pro-service completion fish [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### wsl-pro-service completion powershell
+#### ubuntu-pro-agent completion powershell
 
 Generate the autocompletion script for powershell
 
@@ -136,14 +137,14 @@ Generate the autocompletion script for powershell.
 
 To load completions in your current shell session:
 
-	wsl-pro-service completion powershell | Out-String | Invoke-Expression
+	ubuntu-pro-agent completion powershell | Out-String | Invoke-Expression
 
 To load completions for every new session, add the output of the above command
 to your powershell profile.
 
 
 ```
-wsl-pro-service completion powershell [flags]
+ubuntu-pro-agent completion powershell [flags]
 ```
 
 ##### Options
@@ -159,7 +160,7 @@ wsl-pro-service completion powershell [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### wsl-pro-service completion zsh
+#### ubuntu-pro-agent completion zsh
 
 Generate the autocompletion script for zsh
 
@@ -174,23 +175,23 @@ to enable it.  You can execute the following once:
 
 To load completions in your current shell session:
 
-	source <(wsl-pro-service completion zsh)
+	source <(ubuntu-pro-agent completion zsh)
 
 To load completions for every new session, execute once:
 
 ###### Linux:
 
-	wsl-pro-service completion zsh > "${fpath[1]}/_wsl-pro-service"
+	ubuntu-pro-agent completion zsh > "${fpath[1]}/_ubuntu-pro-agent"
 
 ###### macOS:
 
-	wsl-pro-service completion zsh > $(brew --prefix)/share/zsh/site-functions/_wsl-pro-service
+	ubuntu-pro-agent completion zsh > $(brew --prefix)/share/zsh/site-functions/_ubuntu-pro-agent
 
 You will need to start a new shell for this setup to take effect.
 
 
 ```
-wsl-pro-service completion zsh [flags]
+ubuntu-pro-agent completion zsh [flags]
 ```
 
 ##### Options
@@ -206,12 +207,12 @@ wsl-pro-service completion zsh [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### wsl-pro-service version
+#### ubuntu-pro-agent version
 
 Returns version of agent and exits
 
 ```
-wsl-pro-service version [flags]
+ubuntu-pro-agent version [flags]
 ```
 
 ##### Options
