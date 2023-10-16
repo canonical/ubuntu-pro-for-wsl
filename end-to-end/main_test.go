@@ -139,7 +139,7 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 	}
 
 	jobs := map[string]*exec.Cmd{
-		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1`),
+		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1 -Mode end_to_end_tests`),
 		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1 -OutputDir %q`, debPath),
 	}
 
