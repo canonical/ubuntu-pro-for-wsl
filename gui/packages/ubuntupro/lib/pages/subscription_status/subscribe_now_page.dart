@@ -27,34 +27,41 @@ class SubscribeNowPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            ElevatedButton(
-              onPressed: () async {
-                final subs = await model.purchaseSubscription();
+            Tooltip(
+              message: model.isPurchaseAllowed()
+                  ? ''
+                  : lang.subscribeNowTooltipDisabled,
+              child: ElevatedButton(
+                onPressed: model.isPurchaseAllowed()
+                    ? () async {
+                        final subs = await model.purchaseSubscription();
 
-                // Using anything attached to the BuildContext after a suspension point might be tricky.
-                // Better check if it's still mounted in the widget tree.
-                if (!context.mounted) return;
+                        // Using anything attached to the BuildContext after a suspension point might be tricky.
+                        // Better check if it's still mounted in the widget tree.
+                        if (!context.mounted) return;
 
-                subs.fold(
-                  ifLeft: (status) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 2.0,
-                              horizontal: 16.0,
-                            ),
-                            child: Text(status.localize(lang)),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  ifRight: onSubscriptionUpdate,
-                );
-              },
-              child: Text(lang.subscribeNow),
+                        subs.fold(
+                          ifLeft: (status) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2.0,
+                                      horizontal: 16.0,
+                                    ),
+                                    child: Text(status.localize(lang)),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          ifRight: onSubscriptionUpdate,
+                        );
+                      }
+                    : null,
+                child: Text(lang.subscribeNow),
+              ),
             ),
             const Padding(padding: EdgeInsets.only(right: 8.0)),
             FilledButton.tonal(
