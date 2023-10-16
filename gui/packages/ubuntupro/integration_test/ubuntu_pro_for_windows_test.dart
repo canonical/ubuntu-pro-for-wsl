@@ -35,7 +35,10 @@ void main() {
     // Use a random place inside the build tree as the `LOCALAPPDATA` env variable for all test cases below.
     tmp = await msixRootDir().createTemp('test-');
     Environment(
-      overrides: {'LOCALAPPDATA': tmp!.path},
+      overrides: {
+        'LOCALAPPDATA': tmp!.path,
+        'UP4W_ALLOW_STORE_PURCHASE': '1',
+      },
     );
   });
 
