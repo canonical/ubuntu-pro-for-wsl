@@ -97,6 +97,11 @@ void main() {
 
     final client = MockAgentApiClient();
 
+    test('disabled by default', () {
+      final model = SubscribeNowModel(client);
+      expect(model.isPurchaseAllowed(), isFalse);
+    });
+
     test('expected failure', () async {
       const expectedError = Left(PurchaseStatus.userGaveUp);
       pluginMessenger.setMockMethodCallHandler(pluginChannel, (_) async {
