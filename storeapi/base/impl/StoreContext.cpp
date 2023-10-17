@@ -106,6 +106,12 @@ std::string StoreContext::GenerateUserJwt(std::string token,
   auto hUserId = winrt::to_hstring(userId);
   auto hJwt = self.GetCustomerPurchaseIdAsync(hToken, hUserId).get();
   if (hJwt.empty()) {
+    // Although the preferred API for the MS Store is the one exported in the
+    // `Windows::Services::Store` namespace, it has consistently and silently
+    // failed to generate the user JWT, producing just an empty string. The old
+    // (deprecated) `Windows::ApplicationModel::Store` namespace, on the other
+    // hand, succeeded consistently in my tests, as long as the app is deployed
+    // (throwing exceptions otherwise).
     hJwt = winrt::Windows::ApplicationModel::Store::CurrentApp::
                GetCustomerPurchaseIdAsync(hToken, hUserId)
                    .get();
