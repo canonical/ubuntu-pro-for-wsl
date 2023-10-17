@@ -99,7 +99,7 @@ void main() {
 
     test('disabled by default', () {
       final model = SubscribeNowModel(client);
-      expect(model.isPurchaseAllowed(), isFalse);
+      expect(model.purchaseAllowed(), isFalse);
     });
 
     test('expected failure', () async {

@@ -28,11 +28,11 @@ class SubscribeNowPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Tooltip(
-              message: model.isPurchaseAllowed()
+              message: model.purchaseAllowed()
                   ? ''
                   : lang.subscribeNowTooltipDisabled,
               child: ElevatedButton(
-                onPressed: model.isPurchaseAllowed()
+                onPressed: model.purchaseAllowed()
                     ? () async {
                         final subs = await model.purchaseSubscription();
 
