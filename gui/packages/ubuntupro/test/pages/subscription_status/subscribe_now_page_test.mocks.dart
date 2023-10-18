@@ -115,4 +115,12 @@ class MockSubscribeNowModel extends _i1.Mock implements _i5.SubscribeNowModel {
             )),
           ) as _i6
               .Future<_i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>);
+  @override
+  bool purchaseAllowed() => (super.noSuchMethod(
+        Invocation.method(
+          #purchaseAllowed,
+          [],
+        ),
+        returnValue: false,
+      ) as bool);
 }
