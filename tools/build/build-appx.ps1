@@ -77,7 +77,10 @@ function Install-Appx {
         | Sort-Object LastWriteTime                                                     `
         | Select-Object -last 1                                                         `
     )
-    
+
+    If ($mode -ne 'production') {
+        Add-AppxPackage "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"
+    }
     & "${artifacts}\Install.ps1" -Force
 
     if ( "${LastExitCode}" -ne "0" ) {
