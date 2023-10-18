@@ -9,6 +9,7 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
@@ -188,8 +189,11 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			p := mock.Path("/.landscape-enabled")
 			require.FileExists(t, p, "Landscape executable was not called to enable")
 			out, err := os.ReadFile(p)
+
+			want := golden.LoadWithUpdateFromGolden(t, string(out))
+
 			require.NoError(t, err, "Could not read .landscape-enabled file")
-			require.Equal(t, config, string(out), "Landscape config does not match expectation")
+			require.Equal(t, want, string(out), "Landscape config does not match expectation")
 		})
 	}
 }

@@ -1,16 +1,10 @@
 package tasks
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
-	"github.com/ubuntu/decorate"
-	"gopkg.in/ini.v1"
 )
 
 func init() {
@@ -22,48 +16,6 @@ func init() {
 // - to disable: send an empty config.
 type LandscapeConfigure struct {
 	Config string
-}
-
-// NewLandscapeConfigure creates a LandscapeConfigure. It overrides the name of the Landscape
-// client so it matches the name of the distro.
-func NewLandscapeConfigure(ctx context.Context, Config string, distroName string) (conf LandscapeConfigure, err error) {
-	defer decorate.OnError(&err, "NewLandscapeConfigure error")
-
-	if Config == "" {
-		// Landscape disablement
-		return LandscapeConfigure{}, nil
-	}
-
-	r := strings.NewReader(Config)
-	data, err := ini.Load(r)
-	if err != nil {
-		return LandscapeConfigure{}, fmt.Errorf("could not parse config: %v", err)
-	}
-
-	const section = "client"
-	s, err := data.GetSection(section)
-	if err != nil {
-		return LandscapeConfigure{}, fmt.Errorf("could not find [%s] section: %v", section, err)
-	}
-
-	const key = "computer_title"
-	if s.HasKey(key) {
-		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden with %s", key, distroName)
-		s.DeleteKey(key)
-	}
-
-	if _, err := s.NewKey(key, distroName); err != nil {
-		return LandscapeConfigure{}, fmt.Errorf("could not create %q key", key)
-	}
-
-	w := &bytes.Buffer{}
-	if _, err := data.WriteTo(w); err != nil {
-		return LandscapeConfigure{}, fmt.Errorf("could not write modified config: %v", err)
-	}
-
-	return LandscapeConfigure{
-		Config: w.String(),
-	}, nil
 }
 
 // Execute sends the config to the target WSL-Pro-Service so that the distro can be

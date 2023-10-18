@@ -1,0 +1,3 @@
+[client]
+hello          = world
+computer_title = TEST_DISTRO

@@ -1,13 +1,17 @@
 package system
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
+	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
+	"gopkg.in/ini.v1"
 )
 
 const (
@@ -18,6 +22,10 @@ const (
 func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string) (err error) {
 	// Decorating here to avoid stuttering the URL (url package prints it as well)
 	defer decorate.OnError(&err, "could not register to landscape")
+
+	if landscapeConfig, err = modifyConfig(ctx, s, landscapeConfig); err != nil {
+		return err
+	}
 
 	if err := s.writeConfig(landscapeConfig); err != nil {
 		return err
@@ -63,6 +71,96 @@ func (s *System) writeConfig(landscapeConfig string) (err error) {
 		_ = os.RemoveAll(tmp)
 		return err
 	}
+
+	return nil
+}
+
+// modifyConfig overrides parameters in the configuration to adapt them to the current distro.
+func modifyConfig(ctx context.Context, s *System, landscapeConfig string) (string, error) {
+	if landscapeConfig == "" {
+		return "", nil
+	}
+
+	r := strings.NewReader(landscapeConfig)
+	data, err := ini.Load(r)
+	if err != nil {
+		return "", fmt.Errorf("could not parse config: %v", err)
+	}
+
+	if err := overrideComputerTitle(ctx, s, data); err != nil {
+		return "", err
+	}
+
+	if err := overrideSSLCertificate(ctx, s, data); err != nil {
+		return "", fmt.Errorf("could not override SSL certificate path: %v", err)
+	}
+
+	w := &bytes.Buffer{}
+	if _, err := data.WriteTo(w); err != nil {
+		return "", fmt.Errorf("could not write modified config: %v", err)
+	}
+
+	return w.String(), nil
+}
+
+// overrideComputerTitle overrides the computer_title field in the Landscape config.
+func overrideComputerTitle(ctx context.Context, s *System, data *ini.File) error {
+	const section = "client"
+	const key = "computer_title"
+
+	distroName, err := s.wslDistroName(ctx)
+	if err != nil {
+		return err
+	}
+
+	sec, err := data.GetSection(section)
+	if err != nil {
+		if sec, err = data.NewSection(section); err != nil {
+			return fmt.Errorf("could not find nor create section %q: %v", section, err)
+		}
+	}
+
+	if sec.HasKey(key) {
+		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden with %s", key, distroName)
+		sec.DeleteKey(key)
+	}
+
+	if _, err := sec.NewKey(key, distroName); err != nil {
+		return fmt.Errorf("could not create %q key", key)
+	}
+
+	return nil
+}
+
+// overrideComputerTitle converts the ssl_public_key field in the Landscape config
+// from a Windows path to a Linux path.
+func overrideSSLCertificate(ctx context.Context, s *System, data *ini.File) error {
+	const section = "client"
+	const key = "ssl_public_key"
+
+	sec, err := data.GetSection(section)
+	if err != nil {
+		// No certificate
+		return nil
+	}
+
+	k, err := sec.GetKey(key)
+	if err != nil {
+		// No certificate
+		return nil
+	}
+
+	pathWindows := k.String()
+
+	cmd, args := s.backend.WslpathExecutable("-ua", pathWindows)
+	//nolint:gosec // In production code, the executable (wslpath) is hardcoded.
+	out, err := exec.CommandContext(ctx, cmd, args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("could not translate SSL certificate path %q to a WSL path: %v: %s", pathWindows, err, out)
+	}
+
+	pathLinux := s.Path(strings.TrimSpace(string(out)))
+	k.SetValue(pathLinux)
 
 	return nil
 }

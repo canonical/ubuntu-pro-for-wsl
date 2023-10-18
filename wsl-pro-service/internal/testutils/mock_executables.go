@@ -42,11 +42,12 @@ var (
 	// defaultWindowsMount is the default path used in tests to set the windows filesystem mount.
 	defaultWindowsMount = "/mnt/d/"
 
-	// defaultLocalAppDataDir is the default path used in tests to store Windows agent data.
-	defaultLocalAppDataDir = filepath.Join(defaultWindowsMount, "/mnt/c/Users/TestUser/AppData/Local/")
+	// windowsLocalAppDataDir is the default path used in tests to store Windows agent data.
+	windowsLocalAppDataDir = `D:\Users\TestUser\AppData\Local\`
+	linuxLocalAppDataDir   = "/mnt/d/Users/TestUser/AppData/Local/"
 
-	// defaultLocalAppDataDir is the default path used in tests to store the address of the Windows Agent service.
-	defaultAddrFile = filepath.Join(defaultLocalAppDataDir, common.LocalAppDataDir, common.ListeningPortFileName)
+	// defaultAddrFile is the default path used in tests to store the address of the Windows Agent service.
+	defaultAddrFile = filepath.Join(linuxLocalAppDataDir, common.LocalAppDataDir, common.ListeningPortFileName)
 
 	//go:embed filesystem_defaults/os-release
 	defaultOsReleaseContents []byte
@@ -446,7 +447,12 @@ func WslPathMock(t *testing.T) {
 				return exitError
 			}
 
-			if argv[1] != defaultLocalAppDataDir {
+			stdout, ok := map[string]string{
+				windowsLocalAppDataDir:          linuxLocalAppDataDir,
+				`D:\Users\TestUser\certificate`: filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+			}[argv[1]]
+
+			if !ok {
 				fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 				return exitBadUsage
 			}
@@ -456,7 +462,7 @@ func WslPathMock(t *testing.T) {
 				return exitOk
 			}
 
-			fmt.Fprintf(os.Stdout, "%s\r\n", defaultLocalAppDataDir)
+			fmt.Fprintf(os.Stdout, "%s\r\n", stdout)
 			return exitOk
 
 		default:
@@ -497,7 +503,7 @@ func CmdExeMock(t *testing.T) {
 			return exitError
 		}
 
-		fmt.Fprintln(os.Stdout, defaultLocalAppDataDir)
+		fmt.Fprintln(os.Stdout, windowsLocalAppDataDir)
 		return exitOk
 	})
 }

@@ -1,0 +1,4 @@
+[client]
+hello          = world
+ssl_public_key = ${FILESYSTEM_ROOT}/mnt/d/Users/TestUser/certificate
+computer_title = TEST_DISTRO
