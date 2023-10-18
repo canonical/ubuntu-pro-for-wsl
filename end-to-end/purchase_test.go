@@ -87,7 +87,8 @@ func TestPurchase(t *testing.T) {
 				os.Exit(1)
 			}
 
-			yaml.Unmarshal(testData, &storeSettings)
+			err = yaml.Unmarshal(testData, &storeSettings)
+			require.NoError(t, err, "Setup: Unmarshalling test data should return no error")
 
 			store := storemockserver.NewServer(storeSettings)
 			if !tc.storeDown {
