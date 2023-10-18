@@ -28,20 +28,20 @@ func testSetup(t *testing.T) {
 	err := gowsl.Shutdown(ctx)
 	require.NoError(t, err, "Setup: could not shut WSL down")
 
+	err = stopAgent(ctx)
+	require.NoError(t, err, "Setup: could not stop the agent")
+
 	err = assertCleanRegistry()
 	require.NoError(t, err, "Setup: registry is polluted, potentially by a previous test")
 
 	err = assertCleanLocalAppData()
 	require.NoError(t, err, "Setup: local app data is polluted, potentially by a previous test")
 
-	err = stopAgent(ctx)
-	require.NoError(t, err, "Setup: could not stop the agent")
-
 	t.Cleanup(func() {
 		err := errors.Join(
+			stopAgent(ctx),
 			cleanupRegistry(),
 			cleanupLocalAppData(),
-			stopAgent(ctx),
 		)
 		// Cannot assert: the test is finished already
 		if err != nil {
