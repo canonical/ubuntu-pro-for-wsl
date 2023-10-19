@@ -273,6 +273,9 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
+	s.settingsMu.Lock()
+	defer s.settingsMu.Unlock()
+
 	for i, p := range s.settings.AllProducts {
 		if p.StoreID != id {
 			continue
@@ -286,8 +289,6 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 
 		year, month, day := time.Now().Date()
 
-		s.settingsMu.Lock()
-		defer s.settingsMu.Unlock()
 		s.settings.AllProducts[i].ExpirationDate = time.Date(year+1, month, day, 1, 1, 1, 1, time.Local) // one year from now.
 		s.settings.AllProducts[i].IsInUserCollection = true
 		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, SucceededResult)
