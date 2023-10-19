@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/storeserver/storemockserver"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
-	"golang.org/x/exp/slog"
 	"gopkg.in/yaml.v3"
 )
 
@@ -78,11 +79,8 @@ func TestPurchase(t *testing.T) {
 
 			storeSettings := storemockserver.DefaultSettings()
 
-			testData, err := os.ReadFile("testdata/TestPurchase/storemock_config.yaml")
-			if err != nil {
-				slog.Error(fmt.Sprintf("Could not read input file: %v", err))
-				os.Exit(1)
-			}
+			testData, err := os.ReadFile(filepath.Join(golden.TestFamilyPath(t), "storemock_config.yaml"))
+			require.NoError(t, err, "Setup: Could not read test fixture input file")
 
 			err = yaml.Unmarshal(testData, &storeSettings)
 			require.NoError(t, err, "Setup: Unmarshalling test data should return no error")
