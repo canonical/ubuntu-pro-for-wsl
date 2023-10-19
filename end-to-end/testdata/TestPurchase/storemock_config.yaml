@@ -2,20 +2,6 @@ generateuserjwt:
   onsuccess:
     value: CPP_MOCK_JWT
     status: 200
-  disabled: false
-  blocked: false
-getproducts:
-  onsuccess:
-    value: ""
-    status: 200
-  disabled: false
-  blocked: false
-purchase:
-  onsuccess:
-    value: ""
-    status: 200
-  disabled: false
-  blocked: false
 allproducts:
   - storeid: 9P25B50XMKXT
     title: Annual Subscription (production)
