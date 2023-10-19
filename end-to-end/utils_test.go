@@ -71,7 +71,7 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 // in a form of "key=value" strings can be appended to the current environment.
 // It stops the agent upon cleanup. If the cleanup fails, the testing will be stopped.
 //
-//nolint:revive // testing.T must precede the contex
+//nolint:revive // testing.T must precede the context
 func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string) (cleanup func()) {
 	t.Helper()
 
