@@ -58,16 +58,13 @@ func TestPurchase(t *testing.T) {
 
 			settings := contractsmockserver.DefaultSettings()
 
-			if len(tc.withToken) > 0 {
-				settings.Subscription.OnSuccess.Value = tc.withToken
-			} else {
-				token := os.Getenv(proTokenEnv)
-				if len(token) == 0 {
-					slog.Error("UP4W_TEST_PRO_TOKEN environment variable must be set to a valid Pro Token")
-					os.Exit(1)
-				}
-				settings.Subscription.OnSuccess.Value = token
+			token := os.Getenv(proTokenEnv)
+			if tc.withToken != "" {
+				token = tc.withToken
 			}
+			require.NotEmpty(t, token, "Provide a pro token either via UP4W_TEST_PRO_TOKEN environment variable or the test case struct withToken field")
+			settings.Subscription.OnSuccess.Value = token
+
 			cs := contractsmockserver.NewServer(settings)
 			if !tc.csServerDown {
 				err := cs.Serve(contractsCtx, "localhost:0")
