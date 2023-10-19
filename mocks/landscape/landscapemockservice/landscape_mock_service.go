@@ -81,37 +81,64 @@ func New() *Service {
 // Connect implements the Connect API call.
 // Upon first contact ever, a UID is randombly assigned to the host and sent to it.
 // In subsequent contacts, this UID will be its unique identifier.
-func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) error {
+func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) (err error) {
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
 
 	firstContact := true
-	ch := make(chan HostInfo)
+
+	type msg struct {
+		info HostInfo
+		err  error
+	}
+
+	ch := make(chan msg)
 	defer close(ch)
 
+	var hostInfo HostInfo
 	for {
 		go func() {
 			recv, err := stream.Recv()
-			if err != nil {
-				return
+
+			var m msg
+			m.err = err
+			if err == nil {
+				m.info = newHostInfo(recv)
+			}
+
+			// Avoid sending if ctx is done
+			select {
+			case <-ctx.Done():
+			default:
 			}
 
 			select {
 			case <-ctx.Done():
-				return
-			default:
+			case ch <- m:
 			}
-
-			ch <- newHostInfo(recv)
 		}()
 
-		var hostInfo HostInfo
+		var m msg
 		select {
-		case hostInfo = <-ch:
+		case m = <-ch:
 		case <-ctx.Done():
 			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, ctx.Err()))
 			return nil
 		}
+
+		// Avoid races when ctx.Done and ch were both ready
+		select {
+		case <-ctx.Done():
+			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, ctx.Err()))
+			return nil
+		default:
+		}
+
+		if m.err != nil {
+			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, err))
+			return err
+		}
+		hostInfo = m.info
 
 		s.mu.Lock()
 
