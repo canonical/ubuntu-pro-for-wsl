@@ -5,6 +5,7 @@ package landscapemockservice
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"sync"
 
@@ -108,6 +109,7 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 		select {
 		case hostInfo = <-ch:
 		case <-ctx.Done():
+			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, ctx.Err()))
 			return nil
 		}
 
@@ -116,14 +118,19 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 		s.recvLog = append(s.recvLog, hostInfo)
 
 		if firstContact {
+			slog.Info(fmt.Sprintf("Landscape: %s: New connection", hostInfo.Hostname))
+
 			firstContact = false
 			uid, onDisconnect, err := s.firstContact(ctx, cancel, hostInfo, stream)
 			if err != nil {
 				s.mu.Unlock()
+				slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, err))
 				return err
 			}
 			defer onDisconnect()
 			hostInfo.UID = uid
+		} else {
+			slog.Info(fmt.Sprintf("Landscape: %s: Received update: %+v", hostInfo.Hostname, hostInfo))
 		}
 
 		h := s.hosts[hostInfo.UID]
@@ -204,6 +211,8 @@ func (s *Service) SendCommand(ctx context.Context, uid string, command *landscap
 		return fmt.Errorf("UID %q not connected", uid)
 	}
 
+	slog.Info(fmt.Sprintf("Landscape: %s: sending command %T: %v", conn.info.Hostname, command.GetCmd(), command.GetCmd()))
+
 	return conn.send(command)
 }
 
@@ -239,6 +248,7 @@ func (s *Service) Disconnect(uid string) error {
 		return fmt.Errorf("UID %q not registered", uid)
 	}
 
+	slog.Info(fmt.Sprintf("Landscape: %s: requested disconnection", host.info.Hostname))
 	host.stop()
 	return nil
 }
