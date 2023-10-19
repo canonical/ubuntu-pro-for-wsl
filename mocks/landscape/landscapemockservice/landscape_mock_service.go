@@ -135,7 +135,7 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 }
 
 func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
-	if other, ok := s.hosts[hostInfo.UID]; ok && other.connected != nil && *other.connected {
+	if s.isConnected(hostInfo.UID) {
 		return "", nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
 	}
 
@@ -186,6 +186,10 @@ func (s *Service) IsConnected(uid string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	return s.isConnected(uid)
+}
+
+func (s *Service) isConnected(uid string) bool {
 	host, ok := s.hosts[uid]
 	return ok && host.connected != nil && *host.connected
 }
