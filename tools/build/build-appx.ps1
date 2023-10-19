@@ -101,8 +101,8 @@ catch {
     Start-VsDevShell
 }
 
-If ($mode -eq 'production' -and $null -ne $env:UP4W_TEST_WITH_MS_STORE_MOCK) {
-    Write-Warning "Building the app in Release mode with UP4W_TEST_WITH_MS_STORE_MOCK env var set may lead to build failure or surprising results. Value is $env:UP4W_TEST_WITH_MS_STORE_MOCK."
+If ($mode -eq 'end_to_end_tests') {
+    $env:UP4W_TEST_WITH_MS_STORE_MOCK = 1
 }
 
 msbuild.exe                                                                              `
