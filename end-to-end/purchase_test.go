@@ -53,10 +53,6 @@ func TestPurchase(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			testSetup(t)
 
-			ctx := context.Background()
-			contractsCtx, contractsCancel := context.WithCancel(ctx)
-			defer contractsCancel()
-
 			settings := contractsmockserver.DefaultSettings()
 
 			token := os.Getenv(proTokenEnv)
@@ -67,32 +63,40 @@ func TestPurchase(t *testing.T) {
 			settings.Subscription.OnSuccess.Value = token
 
 			cs := contractsmockserver.NewServer(settings)
+			//nolint:errcheck // Nothing we can do about it
+			defer cs.Stop()
+
+			ctx := context.Background()
+			contractsCtx, contractsCancel := context.WithCancel(ctx)
+			defer contractsCancel()
+
 			if !tc.csServerDown {
 				err := cs.Serve(contractsCtx, "localhost:0")
 				require.NoError(t, err, "Setup: Server should return no error")
 			}
-			contractsEndpointEnvOverride := fmt.Sprintf("%s=%s", contractsEndpointEnv, cs.Address())
-			//nolint:errcheck // Nothing we can do about it
-			defer cs.Stop()
-			storeCtx, storeCancel := context.WithCancel(ctx)
-			defer storeCancel()
 
-			storeSettings := storemockserver.DefaultSettings()
+			contractsEndpointEnvOverride := fmt.Sprintf("%s=%s", contractsEndpointEnv, cs.Address())
 
 			testData, err := os.ReadFile(filepath.Join(golden.TestFamilyPath(t), "storemock_config.yaml"))
 			require.NoError(t, err, "Setup: Could not read test fixture input file")
 
+			storeSettings := storemockserver.DefaultSettings()
 			err = yaml.Unmarshal(testData, &storeSettings)
 			require.NoError(t, err, "Setup: Unmarshalling test data should return no error")
 
 			store := storemockserver.NewServer(storeSettings)
+			//nolint:errcheck // Nothing we can do about it
+			defer store.Stop()
+
+			storeCtx, storeCancel := context.WithCancel(ctx)
+			defer storeCancel()
+
 			if !tc.storeDown {
 				err = store.Serve(storeCtx, "localhost:0")
 				require.NoError(t, err, "Setup: Server should return no error")
 			}
+
 			storeEndpointEnvOverride := fmt.Sprintf("%s=%s", storeEndpointEnv, store.Address())
-			//nolint:errcheck // Nothing we can do about it
-			defer store.Stop()
 
 			// Either runs the ubuntupro app before...
 			if tc.whenToStartAgent == beforeDistroRegistration {
