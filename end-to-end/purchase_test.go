@@ -59,7 +59,7 @@ func TestPurchase(t *testing.T) {
 			if tc.withToken != "" {
 				token = tc.withToken
 			}
-			require.NotEmpty(t, token, "Provide a pro token either via UP4W_TEST_PRO_TOKEN environment variable or the test case struct withToken field")
+			require.NotEmpty(t, token, "Setup: provide a Pro token either via UP4W_TEST_PRO_TOKEN environment variable or the test case struct withToken field")
 			settings.Subscription.OnSuccess.Value = token
 
 			cs := contractsmockserver.NewServer(settings)
