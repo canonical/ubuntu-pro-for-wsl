@@ -114,8 +114,7 @@ func (r Mock) ReadValue(k uintptr, field string) (value string, err error) {
 	return v, nil
 }
 
-// WriteValue writes the provided value into the specified field of key k.
-func (r *Mock) WriteValue(k uintptr, field string, value string) (err error) {
+func (r *Mock) write(k uintptr, field string, value string) (err error) {
 	if k == 0 {
 		return errors.New("Null key")
 	}
@@ -130,6 +129,16 @@ func (r *Mock) WriteValue(k uintptr, field string, value string) (err error) {
 
 	r.UbuntuProData[field] = value
 	return nil
+}
+
+// WriteValue writes the provided value into the specified field of key k.
+func (r *Mock) WriteValue(k uintptr, field string, value string) (err error) {
+	return r.write(k, field, value)
+}
+
+// WriteMultilineValue writes the provided multi-line string into the specified field of key k.
+func (r *Mock) WriteMultilineValue(k uintptr, field string, value string) (err error) {
+	return r.write(k, field, value)
 }
 
 func isRead(access uint32) bool {
