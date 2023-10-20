@@ -85,60 +85,26 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
 
-	firstContact := true
+	recv := asyncRecv(ctx, stream)
 
-	type msg struct {
-		info HostInfo
-		err  error
-	}
-
-	ch := make(chan msg)
-	defer close(ch)
-
+	// We keep the hostInfo outside the loop so we can log messages with the hostname.
 	var hostInfo HostInfo
+
+	firstContact := true
 	for {
-		go func() {
-			recv, err := stream.Recv()
-
-			var m msg
-			m.err = err
-			if err == nil {
-				m.info = newHostInfo(recv)
-			}
-
-			// Avoid sending if ctx is done
-			select {
-			case <-ctx.Done():
-			default:
-			}
-
-			select {
-			case <-ctx.Done():
-			case ch <- m:
-			}
-		}()
-
-		var m msg
+		var msg recvMsg
 		select {
-		case m = <-ch:
+		case msg = <-recv:
 		case <-ctx.Done():
 			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, ctx.Err()))
 			return nil
 		}
 
-		// Avoid races when ctx.Done and ch were both ready
-		select {
-		case <-ctx.Done():
-			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, ctx.Err()))
-			return nil
-		default:
-		}
-
-		if m.err != nil {
-			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, err))
+		if msg.err != nil {
+			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, msg.err))
 			return err
 		}
-		hostInfo = m.info
+		hostInfo = msg.info
 
 		s.mu.Lock()
 
@@ -166,6 +132,40 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 
 		s.mu.Unlock()
 	}
+}
+
+// recvMsg is the sanitixed reuturn type of a GRPC Recv, used to pass by channel.
+type recvMsg struct {
+	info HostInfo
+	err  error
+}
+
+// This goroutine is an asynchronous GRPC Recv.
+// Usually, you cannot select between a context and a GRPC receive. This function allows you to.
+// It'll keep receiving until an error is returned, or the context is cancelled.
+func asyncRecv(ctx context.Context, stream landscapeapi.LandscapeHostAgent_ConnectServer) <-chan recvMsg {
+	ch := make(chan recvMsg)
+
+	go func() {
+		defer close(ch)
+
+		for {
+			var msg recvMsg
+			recv, err := stream.Recv()
+			msg.err = err
+			if recv != nil {
+				msg.info = newHostInfo(recv)
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- msg:
+			}
+		}
+	}()
+
+	return ch
 }
 
 func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
