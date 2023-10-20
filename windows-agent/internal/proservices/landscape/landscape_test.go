@@ -770,7 +770,7 @@ func requireCommandResult(t *testing.T, ctx context.Context, command command, di
 	case cmdInstall:
 		inst := isAppxInstalled(t, testAppx)
 
-		d := wsl.NewDistro(ctx, distro.Name())
+		d := wsl.NewDistro(ctx, testDistroAppx)
 		reg, err := d.IsRegistered()
 		require.NoError(t, err, "IsRegistered should return no error")
 
