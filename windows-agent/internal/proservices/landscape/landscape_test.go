@@ -290,6 +290,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 				mock := wslmock.New()
 				mock.StateError = tc.stateErr
 				ctx = wsl.WithMock(ctx, mock)
+			} else if tc.stateErr {
+				t.Skip("This test is skipped because it necessitates the GoWSL mock")
 			}
 
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
