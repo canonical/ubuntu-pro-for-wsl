@@ -20,6 +20,7 @@
 /// consistent app/title bar with minimal code repetition. Should we adopt
 /// something else other than the [YaruWindowTitleBar] in the future,
 /// there will be less places to change.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
