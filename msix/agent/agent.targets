@@ -6,6 +6,7 @@
 		<GoFlags></GoFlags>
 		<!-- Comment below to see the console window poping up -->
 		<GoFlags>-ldflags -H=windowsgui</GoFlags>
+        <GoBuildTags Condition="'$(UP4W_TEST_WITH_MS_STORE_MOCK)' != ''">-tags=server_mocks</GoBuildTags>
 	</PropertyGroup>
     <ItemGroup>
       <None Include="$(GoAppRoot)\**\*.go" />
@@ -32,7 +33,7 @@
         </ItemGroup>
         <Message Text="Building Go artifacts to $(OutDir) and bundling @(DepAssemblies)" Importance="high"/>
         <MakeDir Directories="$(OutDir)" />
-		<Exec Command="go build $(GoFlags) $(GoAppDir) " WorkingDirectory="$(OutDir)" />
+		<Exec Command="go build $(GoBuildTags) $(GoFlags) $(GoAppDir)" WorkingDirectory="$(OutDir)" />
 	</Target>
     <Target Name="Clean" Condition="Exists($(TargetPath))">
 		<Message Text="Cleaning $(TargetPath)" Importance="high" />

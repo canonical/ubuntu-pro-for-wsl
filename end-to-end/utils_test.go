@@ -18,7 +18,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
-	wsl "github.com/ubuntu/gowsl"
 )
 
 func testSetup(t *testing.T) {
@@ -152,7 +151,7 @@ func stopAgent(ctx context.Context) error {
 }
 
 //nolint:revive // testing.T must precede the context
-func distroIsProAttached(t *testing.T, ctx context.Context, d wsl.Distro) (bool, error) {
+func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (bool, error) {
 	t.Helper()
 
 	out, err := d.Command(ctx, "pro status --format=json").Output()
@@ -171,7 +170,7 @@ func distroIsProAttached(t *testing.T, ctx context.Context, d wsl.Distro) (bool,
 }
 
 //nolint:revive // testing.T must precede the context
-func logWslProServiceJournal(t *testing.T, ctx context.Context, d wsl.Distro) {
+func logWslProServiceJournal(t *testing.T, ctx context.Context, d gowsl.Distro) {
 	t.Helper()
 
 	out, err := d.Command(ctx, "journalctl -b --no-pager -u wsl-pro.service").CombinedOutput()

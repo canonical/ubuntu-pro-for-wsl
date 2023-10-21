@@ -26,6 +26,7 @@ void main(List<String> args) {
   const testCases = {
     'TestOrganizationProvidedToken': testOrganizationProvidedToken,
     'TestManualTokenInput': testManualTokenInput,
+    'TestPurchase': testPurchase,
   };
 
   final scenario = args[0];
@@ -86,4 +87,21 @@ Future<void> testManualTokenInput(WidgetTester tester) async {
   // asserts that we transitioned to the user-managed status page.
   l10n = tester.l10n<SubscriptionStatusPage>();
   expect(find.text(l10n.manuallyManaged), findsOneWidget);
+}
+
+Future<void> testPurchase(WidgetTester tester) async {
+  await app.main();
+  await tester.pumpAndSettle();
+
+  // The "subscribe now page" is only shown if the GUI communicates with the background agent.
+  var l10n = tester.l10n<SubscribeNowPage>();
+  final button = find.text(l10n.subscribeNow);
+  expect(button, findsOneWidget);
+
+  await tester.tap(button);
+  await tester.pumpAndSettle();
+
+  // asserts that we transitioned to the store-managed status page.
+  l10n = tester.l10n<SubscriptionStatusPage>();
+  expect(find.text(l10n.storeManaged), findsOneWidget);
 }

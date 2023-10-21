@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
@@ -107,6 +108,8 @@ func (s Settings) Unmarshal(in []byte, unmarshaller func(in []byte, out interfac
 type Server struct {
 	restserver.ServerBase
 	settings Settings
+
+	settingsMu sync.RWMutex
 }
 
 // Product models the interesting properties from the MS StoreProduct type.
@@ -218,12 +221,18 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	kinds := q[ProductKindsParam]
 	ids := q[ProductIDsParam]
 	var productsFound []Product
+
+	// To avoid race with handlePurchase
+	s.settingsMu.RLock()
+	defer s.settingsMu.RUnlock()
+
 	for _, p := range s.settings.AllProducts {
 		if slices.Contains(kinds, p.ProductKind) && slices.Contains(ids, p.StoreID) {
 			productsFound = append(productsFound, p)
 		}
 	}
 
+	slog.Info(fmt.Sprintf("products found: %v", productsFound))
 	bs, err := json.Marshal(productsFound)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -264,6 +273,9 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
+	s.settingsMu.Lock()
+	defer s.settingsMu.Unlock()
+
 	for i, p := range s.settings.AllProducts {
 		if p.StoreID != id {
 			continue
@@ -276,6 +288,7 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 		}
 
 		year, month, day := time.Now().Date()
+
 		s.settings.AllProducts[i].ExpirationDate = time.Date(year+1, month, day, 1, 1, 1, 1, time.Local) // one year from now.
 		s.settings.AllProducts[i].IsInUserCollection = true
 		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, SucceededResult)
