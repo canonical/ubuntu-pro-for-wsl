@@ -127,10 +127,16 @@ class AgentStartupMonitor {
         // Terminal state, cannot recover nor retry.
         return AgentState.unknownEnv;
       case AgentAddrFileError.nonexistent:
+        // The directory must exist so we can watch for changes. This won't fail if the directory already exists.
+        final agentDir = await File(_addrFilePath!).parent.create();
+        final watch = agentDir
+            .watch(events: FileSystemEvent.create)
+            .firstWhere((event) => event.path.contains(_addrFilePath!));
         if (!await agentLauncher()) {
           // Terminal state, cannot recover nor retry.
           return AgentState.cannotStart;
         }
+        await watch;
         return AgentState.starting;
       // maybe a race condition allowed us to read the file before write completed? Retry.
       // ignore: switch_case_completes_normally
