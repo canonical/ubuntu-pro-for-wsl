@@ -79,7 +79,7 @@ class AgentStartupMonitor {
   /// The loop stops if a terminal condition is found or [timeout] expires.
   Stream<AgentState> start({
     Duration interval = const Duration(seconds: 1),
-    Duration timeout = const Duration(seconds: 30),
+    Duration timeout = const Duration(seconds: 5),
   }) async* {
     if (_addrFilePath == null) {
       // Terminal state, cannot recover nor retry.
