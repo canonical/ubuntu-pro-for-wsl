@@ -3,7 +3,7 @@ Description=Bridge to Ubuntu Pro agent on Windows
 
 [Service]
 Type=notify
-ExecStart=/usr/libexec/wsl-pro-service
+ExecStart=/usr/libexec/wsl-pro-service -vv
 Restart=always
 RestartSec=2s
 
