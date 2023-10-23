@@ -43,6 +43,8 @@ class StartupModel extends ChangeNotifier {
   ViewState get view => _view;
 
   StreamSubscription<AgentState>? _subs;
+  static const _retryLimit = 5;
+  int _retries = 0;
 
   /// Starts the monitor and subscribes to its events. Returns a future that
   /// completes when the agent monitor startup routine completes.
@@ -67,6 +69,11 @@ class StartupModel extends ChangeNotifier {
       _view == ViewState.retry,
       "resetAgent only if it's possible to retry",
     );
+    if (_retries >= _retryLimit) {
+      _view = ViewState.crash;
+      return;
+    }
+    ++_retries;
     await monitor.reset();
     await _subs?.cancel();
     return init();
