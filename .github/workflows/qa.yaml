@@ -37,6 +37,7 @@ jobs:
             needs-flutter: true
 
     runs-on: ${{ matrix.os }}-latest
+    permissions: {}
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
