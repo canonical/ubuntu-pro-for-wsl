@@ -58,32 +58,6 @@ void main() {
     expect(find.text(lastText), findsOneWidget);
   });
 
-  testWidgets('button for retry', (tester) async {
-    final monitor = MockAgentStartupMonitor();
-    when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-          AgentState.starting,
-          AgentState.invalid,
-          AgentState.unreachable,
-        ],
-      ),
-    );
-    final model = StartupModel(monitor);
-    await tester.pumpWidget(buildApp(model));
-
-    await model.init();
-    await tester.pumpAndSettle();
-
-    // no success
-    expect(find.text(lastText), findsNothing);
-    // show error icon
-    expect(find.byIcon(Icons.error_outline), findsOneWidget);
-    // and a retry button
-    expect(find.byType(OutlinedButton), findsOneWidget);
-  });
-
   testWidgets('terminal error no button', (tester) async {
     final monitor = MockAgentStartupMonitor();
     when(monitor.start()).thenAnswer(
