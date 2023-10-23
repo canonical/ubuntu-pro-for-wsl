@@ -57,7 +57,6 @@ class StartupInProgressWidget extends StatelessWidget {
         message: message,
         bottom: const LinearProgressIndicator(),
       ),
-      showTitleBar: false,
     );
   }
 }
