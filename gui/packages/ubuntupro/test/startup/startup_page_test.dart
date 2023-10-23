@@ -108,7 +108,6 @@ void main() {
     );
 
     await tester.pumpWidget(app);
-    await tester.pumpAndSettle();
 
     final context = tester.element(find.byType(StartupAnimatedChild));
     final model = Provider.of<StartupModel>(context, listen: false);
