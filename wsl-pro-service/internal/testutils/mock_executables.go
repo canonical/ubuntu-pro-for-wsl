@@ -64,8 +64,6 @@ type controlArg string
 
 // Arguments that control how the mocked executable will behave.
 // If none are provided, the mock will copy the behaviour of the real thing.
-//
-//nolint:gosec // None of these are credentials
 const (
 	ProStatusErr      = "UP4W_PRO_STATUS_ERR"
 	ProStatusBadJSON  = "UP4W_PRO_STATUS_BAD_JSON"

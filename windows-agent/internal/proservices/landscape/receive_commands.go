@@ -39,7 +39,7 @@ func (c *Client) receiveCommands(conn *connection) error {
 func (c *Client) exec(ctx context.Context, command *landscapeapi.Command) (err error) {
 	defer decorate.OnError(&err, "could not execute command %s", commandString(command))
 
-	switch cmd := command.Cmd.(type) {
+	switch cmd := command.GetCmd().(type) {
 	case *landscapeapi.Command_AssignHost_:
 		return c.cmdAssignHost(ctx, cmd.AssignHost)
 	case *landscapeapi.Command_Start_:
@@ -55,24 +55,24 @@ func (c *Client) exec(ctx context.Context, command *landscapeapi.Command) (err e
 	case *landscapeapi.Command_ShutdownHost_:
 		return c.cmdShutdownHost(ctx, cmd.ShutdownHost)
 	default:
-		return fmt.Errorf("unknown command type %T: %v", command.Cmd, command.Cmd)
+		return fmt.Errorf("unknown command type %T: %v", command.GetCmd(), command.GetCmd())
 	}
 }
 
 func commandString(command *landscapeapi.Command) string {
-	switch cmd := command.Cmd.(type) {
+	switch cmd := command.GetCmd().(type) {
 	case *landscapeapi.Command_AssignHost_:
-		return fmt.Sprintf("Assign host (uid: %q)", cmd.AssignHost.Uid)
+		return fmt.Sprintf("Assign host (uid: %q)", cmd.AssignHost.GetUid())
 	case *landscapeapi.Command_Start_:
-		return fmt.Sprintf("Start (id: %q)", cmd.Start.Id)
+		return fmt.Sprintf("Start (id: %q)", cmd.Start.GetId())
 	case *landscapeapi.Command_Stop_:
-		return fmt.Sprintf("Stop (id: %q)", cmd.Stop.Id)
+		return fmt.Sprintf("Stop (id: %q)", cmd.Stop.GetId())
 	case *landscapeapi.Command_Install_:
-		return fmt.Sprintf("Install (id: %q)", cmd.Install.Id)
+		return fmt.Sprintf("Install (id: %q)", cmd.Install.GetId())
 	case *landscapeapi.Command_Uninstall_:
-		return fmt.Sprintf("Uninstall (id: %q)", cmd.Uninstall.Id)
+		return fmt.Sprintf("Uninstall (id: %q)", cmd.Uninstall.GetId())
 	case *landscapeapi.Command_SetDefault_:
-		return fmt.Sprintf("SetDefault (id: %q)", cmd.SetDefault.Id)
+		return fmt.Sprintf("SetDefault (id: %q)", cmd.SetDefault.GetId())
 	case *landscapeapi.Command_ShutdownHost_:
 		return "ShutdownHost"
 	default:
@@ -85,7 +85,7 @@ func (c *Client) cmdAssignHost(ctx context.Context, cmd *landscapeapi.Command_As
 		log.Warning(ctx, "Overriding current landscape client UID")
 	}
 
-	c.setUID(cmd.Uid)
+	c.setUID(cmd.GetUid())
 
 	if err := c.dump(); err != nil {
 		return err
@@ -96,9 +96,9 @@ func (c *Client) cmdAssignHost(ctx context.Context, cmd *landscapeapi.Command_As
 
 //nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
-	d, ok := c.db.Get(cmd.Id)
+	d, ok := c.db.Get(cmd.GetId())
 	if !ok {
-		return fmt.Errorf("distro %q not in database", cmd.Id)
+		return fmt.Errorf("distro %q not in database", cmd.GetId())
 	}
 
 	return d.LockAwake()
@@ -106,16 +106,16 @@ func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) 
 
 //nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err error) {
-	d, ok := c.db.Get(cmd.Id)
+	d, ok := c.db.Get(cmd.GetId())
 	if !ok {
-		return fmt.Errorf("distro %q not in database", cmd.Id)
+		return fmt.Errorf("distro %q not in database", cmd.GetId())
 	}
 
 	return d.ReleaseAwake()
 }
 
 func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install) (err error) {
-	if cmd.Cloudinit != nil && *cmd.Cloudinit != "" {
+	if cmd.GetCloudinit() != "" {
 		return fmt.Errorf("Cloud Init support is not yet available")
 	}
 
@@ -169,9 +169,9 @@ func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install
 }
 
 func (c *Client) cmdUninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
-	d, ok := c.db.Get(cmd.Id)
+	d, ok := c.db.Get(cmd.GetId())
 	if !ok {
-		return fmt.Errorf("distro %q not in database", cmd.Id)
+		return fmt.Errorf("distro %q not in database", cmd.GetId())
 	}
 
 	return d.Uninstall(ctx)

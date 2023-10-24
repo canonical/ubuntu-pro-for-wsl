@@ -161,7 +161,7 @@ func TestRecvLogMsg(t *testing.T) {
 			}
 
 			if tc.wantErr {
-				// assert and not require as we want to check logs still
+				//nolint:testifylint // assert and not require as we want to check logs still
 				assert.Error(t, err, "RecvMsg should have errored out but did not")
 				if tc.errRecv != nil {
 					assert.Equal(t, err, tc.errRecv, "error from errRecv is directly sent back to client")

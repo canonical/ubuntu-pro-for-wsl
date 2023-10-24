@@ -155,8 +155,8 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			}
 			require.NoError(t, err, "GetSubscriptionInfo should return no errors")
 
-			require.IsType(t, tc.wantType, info.SubscriptionType, "Mismatched subscription types")
-			require.Equal(t, tc.wantImmutable, info.Immutable, "Mismatched value for ReadOnly")
+			require.IsType(t, tc.wantType, info.GetSubscriptionType(), "Mismatched subscription types")
+			require.Equal(t, tc.wantImmutable, info.GetImmutable(), "Mismatched value for ReadOnly")
 		})
 	}
 }
@@ -199,8 +199,8 @@ func TestNotifyPurchase(t *testing.T) {
 			}
 			require.NoError(t, err, "NotifyPurchase should return no errors")
 
-			require.IsType(t, tc.wantType, info.SubscriptionType, "Mismatched subscription types")
-			require.Equal(t, tc.wantImmutable, info.Immutable, "Mismatched value for ReadOnly")
+			require.IsType(t, tc.wantType, info.GetSubscriptionType(), "Mismatched subscription types")
+			require.Equal(t, tc.wantImmutable, info.GetImmutable(), "Mismatched value for ReadOnly")
 		})
 	}
 }

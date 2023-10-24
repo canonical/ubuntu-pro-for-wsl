@@ -20,7 +20,10 @@ linters:
     - misspell
     - nakedret
     - nolintlint
+    - protogetter
     - revive
+    - sloglint
+    - testifylint
     - thelper
     - tparallel
     - unconvert

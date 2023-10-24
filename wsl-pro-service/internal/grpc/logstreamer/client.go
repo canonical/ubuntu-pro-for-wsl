@@ -63,10 +63,10 @@ func (ss *logClientStream) RecvMsg(m interface{}) error {
 		if err = proto.Unmarshal(bytes, &logMsg); err != nil {
 			Warning(context.Background(), err)
 		}
-		if logMsg.LogHeader == logIdentifier {
-			level, err := logrus.ParseLevel(logMsg.Level)
+		if logMsg.GetLogHeader() == logIdentifier {
+			level, err := logrus.ParseLevel(logMsg.GetLevel())
 			if err != nil {
-				return fmt.Errorf("client received an invalid debug log level: %s", logMsg.Level)
+				return fmt.Errorf("client received an invalid debug log level: %s", logMsg.GetLevel())
 			}
 
 			localLoggerMu.Lock()

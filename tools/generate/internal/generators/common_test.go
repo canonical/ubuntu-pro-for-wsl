@@ -22,7 +22,7 @@ func TestCleanDirectory(t *testing.T) {
 	content, err := os.ReadDir(d)
 	require.NoError(t, err, "New cleaned directory should exists")
 
-	require.Equal(t, 0, len(content), "Directory should be empty")
+	require.Empty(t, content, "Directory should be empty")
 }
 
 func TestCleanDirectoryNoDirectoryExists(t *testing.T) {
@@ -38,7 +38,7 @@ func TestCleanDirectoryNoDirectoryExists(t *testing.T) {
 	content, err := os.ReadDir(d)
 	require.NoError(t, err, "New cleaned directory should exists")
 
-	require.Equal(t, 0, len(content), "Directory should be empty")
+	require.Empty(t, content, "Directory should be empty")
 }
 
 func TestCleanDirectoryCantRemoveDirectory(t *testing.T) {

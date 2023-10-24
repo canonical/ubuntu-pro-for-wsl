@@ -215,9 +215,9 @@ func getAddressToListenTo(ctrlStream agentapi.WSLInstance_ConnectedClient) (addr
 		return "", err
 	}
 
-	if msg.Port == 0 {
+	if msg.GetPort() == 0 {
 		return "", errors.New("could not get address to serve on: received invalid port :0 from server")
 	}
 
-	return fmt.Sprintf("localhost:%d", msg.Port), nil
+	return fmt.Sprintf("localhost:%d", msg.GetPort()), nil
 }

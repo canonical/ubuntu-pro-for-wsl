@@ -54,6 +54,7 @@ func GenerateUserJWT(azureADToken string) (jwt string, err error) {
 	//nolint:gosec // This is the way of freeing userJWTbegin per storeapi's API definition
 	defer windows.CoTaskMemFree(unsafe.Pointer(userJWTbegin))
 
+	//nolint:gosec // This is the way of converting a Win32 string to a Go string
 	return string(unsafe.Slice(userJWTbegin, userJWTlen)), nil
 }
 

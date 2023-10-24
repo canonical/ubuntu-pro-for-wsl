@@ -292,9 +292,9 @@ func TestDatabaseDump(t *testing.T) {
 			sd := newStructuredDump(t, dump)
 
 			if tc.emptyDB {
-				require.Empty(t, len(sd.data), "Database dump should contain no distros")
+				require.Empty(t, sd.data, "Database dump should contain no distros")
 			} else {
-				require.Equal(t, 2, len(sd.data), "Database dump should contain exactly two distros")
+				require.Len(t, sd.data, 2, "Database dump should contain exactly two distros")
 
 				idx1 := slices.IndexFunc(sd.data, func(s database.SerializableDistro) bool { return s.Name == distro1 })
 				idx2 := slices.IndexFunc(sd.data, func(s database.SerializableDistro) bool { return s.Name == distro2 })

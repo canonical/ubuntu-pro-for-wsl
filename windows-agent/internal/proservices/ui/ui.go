@@ -42,7 +42,7 @@ func New(ctx context.Context, config Config, db *database.DistroDB) (s Service) 
 
 // ApplyProToken handles the gRPC call to pro attach all distros using a token provided by the GUI.
 func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*agentapi.Empty, error) {
-	token := info.Token
+	token := info.GetToken()
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
 	err := s.config.SetSubscription(ctx, token, config.SubscriptionUser)

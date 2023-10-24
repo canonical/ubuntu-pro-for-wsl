@@ -61,7 +61,7 @@ func TestStreamServerInterceptor(t *testing.T) {
 
 	assert.Equal(t, 1, handlerCalled, "handler was expected to be called once")
 
-	assert.Equal(t, 1, len(stream.msgs), "Send id as log to client")
+	assert.Len(t, stream.msgs, 1, "Send id as log to client")
 	msgContains(t, "Connecting as [[123456:", stream.msgs[0], "Send id string to client")
 }
 
@@ -88,7 +88,7 @@ func TestStreamServerInterceptorSendLogsFails(t *testing.T) {
 
 	assert.Equal(t, 1, handlerCalled, "handler was expected to be called once")
 
-	assert.Equal(t, 0, len(stream.msgs), "Send to client did not succeed")
+	assert.Empty(t, stream.msgs, "Send to client did not succeed")
 }
 
 func TestStreamServerInterceptorLoggerInvalidMetadata(t *testing.T) {
@@ -144,8 +144,8 @@ func TestStreamServerInterceptorLoggerInvalidMetadata(t *testing.T) {
 			s := struct{}{}
 			logger := logrus.New()
 			err := log.StreamServerInterceptor(logger)(s, &stream, nil, handler)
-			assert.Error(t, err, "StreamServerInterceptor should return an error when no expected metadata are there")
 			assert.Equal(t, 0, handlerCalled, "handler should not be called when in error")
+			require.Error(t, err, "StreamServerInterceptor should return an error when no expected metadata are there")
 		})
 	}
 }
@@ -163,7 +163,7 @@ func msgContains(t *testing.T, expected string, msg interface{}, description str
 	if !ok {
 		t.Fatalf("Expected a log, but send: %+v", msg)
 	}
-	assert.Contains(t, l.Msg, expected, description)
+	assert.Contains(t, l.GetMsg(), expected, description)
 }
 
 func createLogStream(t *testing.T, level logrus.Level, callerForLocal, callerForRemote bool, sendError error) (stream grpc.ServerStream, localLogs func() string, remoteLogs func() string) {
@@ -193,9 +193,9 @@ func createLogStream(t *testing.T, level logrus.Level, callerForLocal, callerFor
 			if !ok {
 				t.Fatalf("Expected a log, but send: %+v", m)
 			}
-			msg := fmt.Sprintf("level=%s msg=%s", l.Level, l.Msg)
-			if l.Caller != "" {
-				msg = fmt.Sprintf("%s HASCALLER: %s", msg, l.Caller)
+			msg := fmt.Sprintf("level=%s msg=%s", l.GetLevel(), l.GetMsg())
+			if l.GetCaller() != "" {
+				msg = fmt.Sprintf("%s HASCALLER: %s", msg, l.GetCaller())
 			}
 			out = append(out, msg)
 		}
