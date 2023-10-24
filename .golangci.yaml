@@ -22,6 +22,7 @@ linters:
     - nolintlint
     - protogetter
     - revive
+    - sloglint
     - testifylint
     - thelper
     - tparallel
