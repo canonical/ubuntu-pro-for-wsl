@@ -19,16 +19,9 @@ import (
 const (
 	registryPath = `Software\Canonical\UbuntuPro`
 
-	defaultToken = ""
-
-	fieldLandscapeClientConfig   = "LandscapeClientConfig"
-	defaultLandscapeClientConfig = ""
-
-	fieldLandscapeAgentURL   = "LandscapeAgentURL"
-	defaultLandscapeAgentURL = ""
-
-	fieldLandscapeAgentUID   = "LandscapeAgentUID"
-	defaultLandscapeAgentUID = ""
+	fieldLandscapeClientConfig = "LandscapeClientConfig"
+	fieldLandscapeAgentURL     = "LandscapeAgentURL"
+	fieldLandscapeAgentUID     = "LandscapeAgentUID"
 )
 
 // fieldsProToken contains the fields in the registry where each source will store its token.
@@ -305,9 +298,6 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		log.Debug(ctx, "Registry key does not exist, using default values")
-		data.landscapeAgentURL = defaultLandscapeAgentURL
-		data.landscapeClientConfig = defaultLandscapeClientConfig
-		data.landscapeAgentUID = defaultLandscapeAgentUID
 		return proTokens, data, nil
 	}
 	if err != nil {
@@ -316,7 +306,7 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	defer c.registry.CloseKey(k)
 
 	for source, field := range fieldsProToken {
-		proToken, e := c.readValue(ctx, k, field, defaultToken)
+		proToken, e := c.readValue(ctx, k, field)
 		if e != nil {
 			err = errors.Join(err, fmt.Errorf("could not read %q: %v", field, e))
 			continue
@@ -333,17 +323,17 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 		return nil, data, err
 	}
 
-	data.landscapeAgentURL, err = c.readValue(ctx, k, fieldLandscapeAgentURL, defaultLandscapeAgentURL)
+	data.landscapeAgentURL, err = c.readValue(ctx, k, fieldLandscapeAgentURL)
 	if err != nil {
 		return proTokens, data, err
 	}
 
-	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig, defaultLandscapeClientConfig)
+	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig)
 	if err != nil {
 		return proTokens, data, err
 	}
 
-	data.landscapeAgentUID, err = c.readValue(ctx, k, fieldLandscapeAgentUID, defaultLandscapeAgentUID)
+	data.landscapeAgentUID, err = c.readValue(ctx, k, fieldLandscapeAgentUID)
 	if err != nil {
 		return proTokens, data, err
 	}
@@ -351,11 +341,11 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	return proTokens, data, nil
 }
 
-func (c *Config) readValue(ctx context.Context, key uintptr, field string, defaultValue string) (string, error) {
+func (c *Config) readValue(ctx context.Context, key uintptr, field string) (string, error) {
 	value, err := c.registry.ReadValue(key, field)
 	if errors.Is(err, registry.ErrFieldNotExist) {
-		log.Debugf(ctx, "Registry value %q does not exist, defaulting to %q", field, defaultValue)
-		return defaultValue, nil
+		log.Debugf(ctx, "Registry value %q does not exist, defaulting to empty", field)
+		return "", nil
 	}
 	if err != nil {
 		return "", err
