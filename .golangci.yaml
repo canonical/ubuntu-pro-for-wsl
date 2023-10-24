@@ -27,6 +27,7 @@ linters:
     - unparam
     - usestdlibvars
     - whitespace
+    - testifylint 
 
 run:
   timeout: 5m
