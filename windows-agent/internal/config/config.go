@@ -428,12 +428,12 @@ func (c *Config) UpdateRegistrySettings(ctx context.Context, cacheDir string, db
 	type getTask = func(*Config, context.Context, string, *database.DistroDB) (task.Task, error)
 
 	// Collect tasks for updated settings
-	var acc error
+	var errs error
 	var taskList []task.Task
 	for _, f := range []getTask{(*Config).getTaskOnNewSubscription, (*Config).getTaskOnNewLandscape} {
 		task, err := f(c, ctx, cacheDir, db)
 		if err != nil {
-			errors.Join(acc, err)
+			errs = errors.Join(errs, err)
 			continue
 		}
 		if task != nil {
@@ -441,18 +441,18 @@ func (c *Config) UpdateRegistrySettings(ctx context.Context, cacheDir string, db
 		}
 	}
 
-	if acc != nil {
-		log.Warningf(ctx, "Could not obtain some updated registry settings: %v", acc)
+	if errs != nil {
+		log.Warningf(ctx, "Could not obtain some updated registry settings: %v", errs)
 	}
 
 	// Apply tasks for updated settings
-	acc = nil
+	errs = nil
 	for _, d := range db.GetAll() {
-		acc = errors.Join(acc, d.SubmitDeferredTasks(taskList...))
+		errs = errors.Join(errs, d.SubmitDeferredTasks(taskList...))
 	}
 
-	if acc != nil {
-		return fmt.Errorf("could not submit new token to certain distros: %v", acc)
+	if errs != nil {
+		return fmt.Errorf("could not submit new task to certain distros: %v", errs)
 	}
 
 	return nil
@@ -466,11 +466,12 @@ func (c *Config) getTaskOnNewSubscription(ctx context.Context, cacheDir string, 
 		return nil, fmt.Errorf("could not retrieve current subscription: %v", err)
 	}
 
-	isNew, err := valueIsNew(filepath.Join(cacheDir, "subscription.csum"), []byte(proToken))
+	isNew, err := hasChanged(filepath.Join(cacheDir, "subscription.csum"), []byte(proToken))
 	if err != nil {
 		log.Warningf(ctx, "could not update checksum for Ubuntu Pro subscription: %v", err)
 	}
-	if isNew {
+
+	if !isNew {
 		return nil, nil
 	}
 
@@ -492,14 +493,14 @@ func (c *Config) getTaskOnNewLandscape(ctx context.Context, cacheDir string, db 
 	}
 
 	// We append them just so we can compute a combined checksum
-	serialized := fmt.Sprintf("%s\n%s", landscapeUID, landscapeConf)
+	serialized := fmt.Sprintf("%s%s", landscapeUID, landscapeConf)
 
-	isNew, err := valueIsNew(filepath.Join(cacheDir, "landscape.csum"), []byte(serialized))
+	isNew, err := hasChanged(filepath.Join(cacheDir, "landscape.csum"), []byte(serialized))
 	if err != nil {
 		log.Warningf(ctx, "could not update checksum for Landscape configuration: %v", err)
 	}
 
-	if isNew {
+	if !isNew {
 		return nil, nil
 	}
 
@@ -514,9 +515,9 @@ func (c *Config) getTaskOnNewLandscape(ctx context.Context, cacheDir string, db 
 	return tasks.LandscapeConfigure{Config: landscapeConf, HostagentUID: landscapeUID}, nil
 }
 
-// valueIsNew detects if the current value is different from the last time it was used.
+// hasChanged detects if the current value is different from the last time it was used.
 // The return value is usable even if error is returned.
-func valueIsNew(cachePath string, newValue []byte) (new bool, err error) {
+func hasChanged(cachePath string, newValue []byte) (new bool, err error) {
 	var newCheckSum []byte
 	if len(newValue) != 0 {
 		tmp := sha512.Sum512(newValue)
