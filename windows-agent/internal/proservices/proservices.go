@@ -110,7 +110,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 
 	uiService := ui.New(ctx, conf, db)
 
-	landscape, err := landscape.NewClient(conf, db, opts.cacheDir)
+	landscape, err := landscape.NewClient(conf, db)
 	if err != nil {
 		return s, err
 	}
