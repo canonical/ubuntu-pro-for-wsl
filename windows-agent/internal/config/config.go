@@ -377,6 +377,10 @@ func (c *Config) dump() (err error) {
 		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 
+	if err := c.registry.WriteValue(k, fieldLandscapeAgentUID, c.data.landscapeAgentUID); err != nil {
+		return fmt.Errorf("could not write into registry key: %v", err)
+	}
+
 	return nil
 }
 
