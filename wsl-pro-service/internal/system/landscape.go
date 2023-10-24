@@ -19,11 +19,11 @@ const (
 )
 
 // LandscapeEnable registers the current distro to Landscape with the specified config.
-func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string) (err error) {
+func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, hostagentUID string) (err error) {
 	// Decorating here to avoid stuttering the URL (url package prints it as well)
 	defer decorate.OnError(&err, "could not register to landscape")
 
-	if landscapeConfig, err = modifyConfig(ctx, s, landscapeConfig); err != nil {
+	if landscapeConfig, err = modifyConfig(ctx, s, landscapeConfig, hostagentUID); err != nil {
 		return err
 	}
 
@@ -76,7 +76,7 @@ func (s *System) writeConfig(landscapeConfig string) (err error) {
 }
 
 // modifyConfig overrides parameters in the configuration to adapt them to the current distro.
-func modifyConfig(ctx context.Context, s *System, landscapeConfig string) (string, error) {
+func modifyConfig(ctx context.Context, s *System, landscapeConfig string, hostagentUID string) (string, error) {
 	if landscapeConfig == "" {
 		return "", nil
 	}
@@ -87,7 +87,15 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string) (strin
 		return "", fmt.Errorf("could not parse config: %v", err)
 	}
 
-	if err := overrideComputerTitle(ctx, s, data); err != nil {
+	distroName, err := s.wslDistroName(ctx)
+	if err != nil {
+		return "", err
+	}
+	if err := overrideKey(ctx, data, "client", "computer_title", distroName); err != nil {
+		return "", err
+	}
+
+	if err := overrideKey(ctx, data, "client", "hostagent_uid", hostagentUID); err != nil {
 		return "", err
 	}
 
@@ -103,16 +111,8 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string) (strin
 	return w.String(), nil
 }
 
-// overrideComputerTitle overrides the computer_title field in the Landscape config.
-func overrideComputerTitle(ctx context.Context, s *System, data *ini.File) error {
-	const section = "client"
-	const key = "computer_title"
-
-	distroName, err := s.wslDistroName(ctx)
-	if err != nil {
-		return err
-	}
-
+// overrideKey sets a key to a particular value.
+func overrideKey(ctx context.Context, data *ini.File, section, key, value string) error {
 	sec, err := data.GetSection(section)
 	if err != nil {
 		if sec, err = data.NewSection(section); err != nil {
@@ -121,12 +121,12 @@ func overrideComputerTitle(ctx context.Context, s *System, data *ini.File) error
 	}
 
 	if sec.HasKey(key) {
-		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden with %s", key, distroName)
+		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden with %s", key, value)
 		sec.DeleteKey(key)
 	}
 
-	if _, err := sec.NewKey(key, distroName); err != nil {
-		return fmt.Errorf("could not create %q key", key)
+	if _, err := sec.NewKey(key, value); err != nil {
+		return fmt.Errorf("could not create key %q: %v", key, err)
 	}
 
 	return nil

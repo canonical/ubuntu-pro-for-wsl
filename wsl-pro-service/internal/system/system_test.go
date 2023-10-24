@@ -389,7 +389,7 @@ func TestLandscapeEnable(t *testing.T) {
 			config, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
 			require.NoError(t, err, "Setup: could not load fixture")
 
-			err = s.LandscapeEnable(ctx, string(config))
+			err = s.LandscapeEnable(ctx, string(config), "landscapeUID1234")
 			if tc.wantErr {
 				require.Error(t, err, "LandscapeEnable should have returned an error")
 				return
