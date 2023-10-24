@@ -84,9 +84,15 @@ func TestSubscription(t *testing.T) {
 	}
 }
 
-//nolint:dupl // This and the following test are very similar, but there is no clean way to merge them
-func TestLandscapeAgentURL(t *testing.T) {
-	t.Parallel()
+type testConfigGetterSettings struct {
+	getter           func(*config.Config, context.Context) (string, error)
+	getterName       string
+	registryHasValue registryState
+	want             string
+}
+
+func testConfigGetter(t *testing.T, s testConfigGetterSettings) {
+	t.Helper()
 
 	testCases := map[string]struct {
 		mockErrors    uint32
@@ -94,12 +100,12 @@ func TestLandscapeAgentURL(t *testing.T) {
 
 		wantError bool
 	}{
-		"Success":                               {registryState: landscapeAgentURLHasValue},
+		"Success":                               {registryState: s.registryHasValue},
 		"Success when the key does not exist":   {registryState: untouched},
 		"Success when the value does not exist": {registryState: keyExists},
 
-		"Error when the registry key cannot be opened":    {registryState: landscapeAgentURLHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: landscapeAgentURLHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
+		"Error when the registry key cannot be opened":    {registryState: s.registryHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: s.registryHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -111,71 +117,45 @@ func TestLandscapeAgentURL(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			landscapeURL, err := conf.LandscapeAgentURL(ctx)
+			v, err := s.getter(conf, ctx)
 			if tc.wantError {
-				require.Error(t, err, "LandscapeAgentURL should return an error")
+				require.Error(t, err, "%s should return an error", s.getterName)
 				return
 			}
-			require.NoError(t, err, "LandscapeAgentURL should return no error")
+			require.NoError(t, err, "%s should return no error", s.getterName)
 
 			// Test default values
-			if !tc.registryState.is(landscapeAgentURLHasValue) {
-				require.Equal(t, "", landscapeURL, "Unexpected Landscape URL default value")
+			if !tc.registryState.is(s.registryHasValue) {
+				require.Emptyf(t, v, "Unexpected value when %s is not set in registry", s.getterName)
 				return
 			}
 
 			// Test non-default values
-			assert.Equal(t, "www.example.com/registry-example", landscapeURL, "Unexpected Landscape URL value")
-			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
+			assert.Equalf(t, s.want, v, "%s returned an unexpected value", s.getterName)
+			assert.Zerof(t, r.OpenKeyCount.Load(), "Call to %s leaks registry keys", s.getterName)
 		})
 	}
 }
 
-//nolint:dupl // This and the previous test are very similar, but there is no clean way to merge them
+func TestLandscapeAgentURL(t *testing.T) {
+	t.Parallel()
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeAgentURL,
+		getterName:       "LandscapeAgentURL",
+		registryHasValue: landscapeAgentURLHasValue,
+		want:             "www.example.com/registry-example",
+	})
+}
+
 func TestLandscapeClientConfig(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		mockErrors    uint32
-		registryState registryState
-
-		wantError bool
-	}{
-		"Success":                               {registryState: landscapeClientConfigHasValue},
-		"Success when the key does not exist":   {registryState: untouched},
-		"Success when the value does not exist": {registryState: keyExists},
-
-		"Error when the registry key cannot be opened":    {registryState: landscapeClientConfigHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: landscapeClientConfigHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			ctx := context.Background()
-
-			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
-			conf := config.New(ctx, config.WithRegistry(r))
-
-			landscapeURL, err := conf.LandscapeClientConfig(ctx)
-			if tc.wantError {
-				require.Error(t, err, "LandscapeClientConfig should return an error")
-				return
-			}
-			require.NoError(t, err, "LandscapeClientConfig should return no error")
-
-			// Test default values
-			if !tc.registryState.is(landscapeClientConfigHasValue) {
-				require.Equal(t, "", landscapeURL, "Unexpected Landscape config default value")
-				return
-			}
-
-			// Test non-default values
-			assert.Equal(t, "[client]\nuser=JohnDoe", landscapeURL, "Unexpected Landscape URL value")
-			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
-		})
-	}
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeClientConfig,
+		getterName:       "LandscapeClientConfig",
+		registryHasValue: landscapeClientConfigHasValue,
+		want:             "[client]\nuser=JohnDoe",
+	})
 }
 
 func TestProvisioningTasks(t *testing.T) {
