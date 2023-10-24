@@ -18,6 +18,7 @@ message ProAttachInfo {
 message LandscapeConfig {
     // Empty configuration is interpreted as "landscape-config --disable"
     string configuration = 1;
+    string hostagentUID = 2;
 }
 
 message Empty {}
