@@ -61,7 +61,7 @@ func TestStreamServerInterceptor(t *testing.T) {
 
 	assert.Equal(t, 1, handlerCalled, "handler was expected to be called once")
 
-	assert.Equal(t, 1, len(stream.msgs), "Send id as log to client")
+	assert.Len(t, stream.msgs, 1, "Send id as log to client")
 	msgContains(t, "Connecting as [[123456:", stream.msgs[0], "Send id string to client")
 }
 
@@ -88,7 +88,7 @@ func TestStreamServerInterceptorSendLogsFails(t *testing.T) {
 
 	assert.Equal(t, 1, handlerCalled, "handler was expected to be called once")
 
-	assert.Equal(t, 0, len(stream.msgs), "Send to client did not succeed")
+	assert.Empty(t, stream.msgs, "Send to client did not succeed")
 }
 
 func TestStreamServerInterceptorLoggerInvalidMetadata(t *testing.T) {
@@ -144,8 +144,8 @@ func TestStreamServerInterceptorLoggerInvalidMetadata(t *testing.T) {
 			s := struct{}{}
 			logger := logrus.New()
 			err := log.StreamServerInterceptor(logger)(s, &stream, nil, handler)
-			assert.Error(t, err, "StreamServerInterceptor should return an error when no expected metadata are there")
 			assert.Equal(t, 0, handlerCalled, "handler should not be called when in error")
+			require.Error(t, err, "StreamServerInterceptor should return an error when no expected metadata are there")
 		})
 	}
 }

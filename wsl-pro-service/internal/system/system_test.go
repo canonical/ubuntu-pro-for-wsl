@@ -115,7 +115,7 @@ func TestInfo(t *testing.T) {
 			assert.Equal(t, "22.04", info.VersionId, "VersionId does not match expected value")
 			assert.Equal(t, "Ubuntu 22.04.1 LTS", info.PrettyName, "PrettyName does not match expected value")
 			assert.Equal(t, "TEST_DISTRO_HOSTNAME", info.Hostname, "Hostname does not match expected value")
-			assert.Equal(t, true, info.ProAttached, "ProAttached does not match expected value")
+			assert.True(t, info.ProAttached, "ProAttached does not match expected value")
 		})
 	}
 }

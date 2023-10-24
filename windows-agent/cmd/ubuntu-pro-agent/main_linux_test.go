@@ -52,7 +52,7 @@ func TestRunSignal(t *testing.T) {
 				case <-wait:
 					exited = true
 				}
-				require.Equal(t, true, exited, "Expect to exit on SIGINT and SIGTERM")
+				require.True(t, exited, "Expect to exit on SIGINT and SIGTERM")
 			}
 
 			if !exited {
