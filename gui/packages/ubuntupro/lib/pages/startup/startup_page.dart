@@ -50,12 +50,12 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
     super.initState();
     final model = context.read<StartupModel>();
     model.init();
-    model.addListener(() {
+    model.addListener(() async {
       if (model.view == ViewState.ok) {
-        Navigator.of(context).pushReplacementNamed(widget.nextRoute);
+        await Navigator.of(context).pushReplacementNamed(widget.nextRoute);
       }
       if (model.view == ViewState.retry) {
-        model.resetAgent();
+        await model.resetAgent();
       }
     });
   }
