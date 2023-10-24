@@ -163,7 +163,7 @@ func updateRegistrySettings(ctx context.Context, cacheDir string, conf *config.C
 	// Collect tasks for updated settings
 	var acc error
 	var taskList []task.Task
-	for _, f := range []getTask{getNewSubscription} {
+	for _, f := range []getTask{getNewSubscription, getNewLandscape} {
 		task, err := f(ctx, cacheDir, conf, db)
 		if err != nil {
 			errors.Join(acc, err)
@@ -209,6 +209,42 @@ func getNewSubscription(ctx context.Context, cacheDir string, conf *config.Confi
 
 	log.Debug(ctx, "New Ubuntu Pro subscription settings detected in registry")
 	return tasks.ProAttachment{Token: proToken}, nil
+}
+
+// getNewLandscape checks if the Landscape settings has changed since the last time it was called. If so, the
+// new Landscape settings are returned in the form of a task.
+func getNewLandscape(ctx context.Context, cacheDir string, conf *config.Config, db *database.DistroDB) (task.Task, error) {
+	landscapeConf, err := conf.LandscapeClientConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve current landscape config: %v", err)
+	}
+
+	landscapeUID, err := conf.LandscapeAgentUID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve current landscape UID: %v", err)
+	}
+
+	// We append them just so we can compute a combined checksum
+	serialized := fmt.Sprintf("%s\n%s", landscapeUID, landscapeConf)
+
+	isNew, err := valueIsNew(filepath.Join(cacheDir, "landscape.csum"), []byte(serialized))
+	if err != nil {
+		log.Warningf(ctx, "could not update checksum for Landscape configuration: %v", err)
+	}
+
+	if isNew {
+		return nil, nil
+	}
+
+	log.Debug(ctx, "New Landscape settings detected in registry")
+
+	// We must not register to landscape if we have no Landscape UID
+	if landscapeConf != "" && landscapeUID == "" {
+		log.Debug(ctx, "Ignoring new landscape settings: no Landscape agent UID")
+		return nil, nil
+	}
+
+	return tasks.LandscapeConfigure{Config: landscapeConf, HostagentUID: landscapeUID}, nil
 }
 
 // valueIsNew detects if the current value is different from the last time it was used.
