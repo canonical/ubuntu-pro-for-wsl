@@ -40,10 +40,16 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231009121516-2b7d721b5cc8 h1:QiPO3z+xdMjGSwo+vYLNgB2ZVfO4T9p96cywkXNpUp8=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231009121516-2b7d721b5cc8/go.mod h1:W7ts+j++GN7KXO9G2Di4x/iHK32YWuaZXb95dgFGiv8=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231023183501-458a10db4c16 h1:p894ThMw329hDKpS2tfsgZhUuWC1HfZAsq/vcRhDpGs=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231023183501-458a10db4c16/go.mod h1:yZFCC1gVaFNjIJ7Glk3FBiaCokcV/Jk5B6tFIlHBgd8=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231009121516-2b7d721b5cc8 h1:gTfrpao8RsnreKrKo6iMcVW80vihhOOWIlfT2pGA2i4=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231009121516-2b7d721b5cc8/go.mod h1:plRRlfLBZOroAXh9Wq2YqwZkrBXDJmPCs2ysAv+lP10=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231023183501-458a10db4c16 h1:u7afWNLgssNSEHKxldRbgCobFnGlILpECBeAPiWyb0c=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231023183501-458a10db4c16/go.mod h1:a/RSoEHIs9RmXxL/+68oDpXi8+d+TGptM/9N5ULw2Kw=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231009121516-2b7d721b5cc8 h1:6t3dF0OS7/dobpYnG0E/9h6L4fzUcm0tOSDPMzFEKFY=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231009121516-2b7d721b5cc8/go.mod h1:8gvJk6oEowhi0HLMK1Y0yKx8kKI/NVfkGtF8tAi4zvw=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231023183501-458a10db4c16 h1:B/iSer/eNknIEp9TnNYC56zdc6SLY6K7fXxkeFl15s8=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231023183501-458a10db4c16/go.mod h1:gjEBJv2vc1VUqqrv1ZTDcNmd3TBBCPIlmBaR63YSX9Y=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
