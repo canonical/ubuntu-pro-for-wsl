@@ -134,6 +134,12 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Subscri
 		return "", SubscriptionNone, fmt.Errorf("could not load: %v", err)
 	}
 
+	token, source = c.subscription()
+	return token, source, nil
+}
+
+// subscription is the unsafe version of Subscription. It returns the ProToken and the method it was acquired with (if any).
+func (c *Config) subscription() (token string, source SubscriptionSource) {
 	for src := subscriptionMaxPriority - 1; src > SubscriptionNone; src-- {
 		token, ok := c.proTokens[src]
 		if !ok {
@@ -143,10 +149,10 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Subscri
 			continue
 		}
 
-		return token, src, nil
+		return token, src
 	}
 
-	return "", SubscriptionNone, nil
+	return "", SubscriptionNone
 }
 
 // IsReadOnly returns whether the registry can be written to.
@@ -166,21 +172,24 @@ func (c *Config) IsReadOnly() (b bool, err error) {
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
 func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
-	token, _, err := c.Subscription(ctx)
-	if err != nil {
-		return nil, err
+	var taskList []task.Task
+
+	// Refresh data from registry
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if err := c.load(ctx); err != nil {
+		return nil, fmt.Errorf("could not load: %v", err)
 	}
 
-	taskList := []task.Task{
-		tasks.ProAttachment{Token: token},
-	}
+	// Ubuntu Pro attachment
+	proToken, _ := c.subscription()
+	taskList = append(taskList, tasks.ProAttachment{Token: proToken})
 
-	if conf, err := c.LandscapeClientConfig(ctx); err != nil {
-		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
-	} else {
-		landscape := tasks.LandscapeConfigure{Config: conf}
-		taskList = append(taskList, landscape)
-	}
+	// Landcape registration
+	taskList = append(taskList, tasks.LandscapeConfigure{
+		Config:       c.data.landscapeClientConfig,
+	})
 
 	return taskList, nil
 }
