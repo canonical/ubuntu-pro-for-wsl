@@ -24,12 +24,14 @@ const (
 	storeTokenExists                                      // Key exists, microsoft store token field exists
 	landscapeAgentURLExists                               // Key exists, landscape agent URL field exists
 	landscapeClientConfigExists                           // Key exists, landscape client config field exists
+	landscapeAgentUIDExists                               // Key exists, landscape agent UID field exists
 
 	orgTokenHasValue              = orgTokenExists | 1<<16              // Key exists, organization token field exists and is not empty
 	userTokenHasValue             = userTokenExists | 1<<17             // Key exists, user token field exists and is not empty
 	storeTokenHasValue            = storeTokenExists | 1<<18            // Key exists, microsoft store token field exists and is not empty
 	landscapeAgentURLHasValue     = landscapeAgentURLExists | 1<<19     // Key exists,  landscape agent URL field exists and is not empty
 	landscapeClientConfigHasValue = landscapeClientConfigExists | 1<<20 // Key exists, landscape client config field exists and is not empty
+	landscapeAgentUIDHasValue     = landscapeAgentUIDExists | 1<<21     // Key exists, landscape agent UID field exists and is not empty
 )
 
 func TestSubscription(t *testing.T) {
@@ -158,6 +160,17 @@ func TestLandscapeClientConfig(t *testing.T) {
 	})
 }
 
+func TestLandscapeAgentUID(t *testing.T) {
+	t.Parallel()
+
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeAgentUID,
+		getterName:       "LandscapeAgentUID",
+		registryHasValue: landscapeAgentUIDHasValue,
+		want:             "landscapeUID1234",
+	})
+}
+
 func TestProvisioningTasks(t *testing.T) {
 	t.Parallel()
 
@@ -165,13 +178,16 @@ func TestProvisioningTasks(t *testing.T) {
 		mockErrors    uint32
 		registryState registryState
 
-		want      string
-		wantError bool
+		want            string
+		wantNoLandscape bool
+		wantError       bool
 	}{
-		"Success when the key does not exist":             {registryState: untouched},
-		"Success when the pro token field does not exist": {registryState: keyExists},
-		"Success when the pro token exists but is empty":  {registryState: userTokenExists},
-		"Success with a user token":                       {registryState: userTokenHasValue, want: "user_token"},
+		"Success when the key does not exist":                {registryState: untouched},
+		"Success when the pro token field does not exist":    {registryState: keyExists},
+		"Success when the pro token exists but is empty":     {registryState: userTokenExists},
+		"Success with a user token":                          {registryState: userTokenHasValue, want: "user_token"},
+		"Success when there is Landscape config, but no UID": {registryState: landscapeClientConfigHasValue, wantNoLandscape: true},
+		"Success when there is Landscape config and UID":     {registryState: landscapeClientConfigHasValue | landscapeAgentUIDHasValue},
 
 		"Error when the registry key cannot be opened":    {registryState: userTokenExists, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {registryState: userTokenExists, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -186,17 +202,25 @@ func TestProvisioningTasks(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			pt, err := conf.ProvisioningTasks(ctx, "UBUNTU")
+			gotTasks, err := conf.ProvisioningTasks(ctx, "UBUNTU")
 			if tc.wantError {
 				require.Error(t, err, "ProvisioningTasks should return an error")
 				return
 			}
 			require.NoError(t, err, "ProvisioningTasks should return no error")
 
-			require.ElementsMatch(t, pt, []task.Task{
+			wantTasks := []task.Task{
 				tasks.ProAttachment{Token: tc.want},
-				tasks.LandscapeConfigure{Config: ""},
-			}, "Unexpected contents returned by ProvisioningTasks")
+			}
+
+			if !tc.wantNoLandscape {
+				wantTasks = append(wantTasks, tasks.LandscapeConfigure{
+					Config:       r.UbuntuProData["LandscapeClientConfig"],
+					HostagentUID: r.UbuntuProData["LandscapeAgentUID"],
+				})
+			}
+
+			require.ElementsMatch(t, wantTasks, gotTasks, "Unexpected contents returned by ProvisioningTasks")
 		})
 	}
 }
@@ -256,6 +280,64 @@ func TestSetSubscription(t *testing.T) {
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, token, "ProToken returned an unexpected value for the token")
+		})
+	}
+}
+
+func TestSetLandscapeAgentUID(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		mockErrors       uint32
+		registryState    registryState
+		accessIsReadOnly bool
+		setEmptyUID      bool
+
+		want          string
+		wantError     bool
+		wantErrorType error
+	}{
+		"Success":                                         {registryState: landscapeAgentUIDHasValue, want: "new_uid"},
+		"Success unsetting the UID":                       {registryState: landscapeAgentUIDHasValue, setEmptyUID: true, want: ""},
+		"Success when the key does not exist":             {registryState: untouched, want: "new_uid"},
+		"Success when the pro token field does not exist": {registryState: keyExists, want: "new_uid"},
+
+		"Error when the registry key cannot be written on due to lack of permission": {registryState: landscapeAgentUIDHasValue, accessIsReadOnly: true, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrAccessDenied},
+		"Error when the registry key cannot be opened":                               {registryState: landscapeAgentUIDHasValue, mockErrors: registry.MockErrOnCreateKey, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrMock},
+		"Error when the registry key cannot be written on":                           {registryState: landscapeAgentUIDHasValue, mockErrors: registry.MockErrOnWriteValue, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrMock},
+		"Error when the registry key cannot be read":                                 {registryState: landscapeAgentUIDHasValue, mockErrors: registry.MockErrOnOpenKey, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrMock},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			r := setUpMockRegistry(tc.mockErrors, tc.registryState, tc.accessIsReadOnly)
+			conf := config.New(ctx, config.WithRegistry(r))
+
+			uid := "new_uid"
+			if tc.setEmptyUID {
+				uid = ""
+			}
+
+			err := conf.SetLandscapeAgentUID(ctx, uid)
+			if tc.wantError {
+				require.Error(t, err, "SetLandscapeAgentUID should return an error")
+				if tc.wantErrorType != nil {
+					require.ErrorIs(t, err, tc.wantErrorType, "SetLandscapeAgentUID returned an error of unexpected type")
+				}
+			} else {
+				require.NoError(t, err, "SetLandscapeAgentUID should return no error")
+			}
+
+			// Disable errors so we can retrieve the UID
+			r.Errors = 0
+			uid, err = conf.LandscapeAgentUID(ctx)
+			require.NoError(t, err, "LandscapeAgentUID should return no error")
+
+			require.Equal(t, tc.want, uid, "LandscapeAgentUID returned an unexpected value for the token")
 		})
 	}
 }
@@ -399,6 +481,13 @@ func setUpMockRegistry(mockErrors uint32, state registryState, readOnly bool) *r
 	}
 	if state.is(landscapeClientConfigHasValue) {
 		r.UbuntuProData["LandscapeClientConfig"] = "[client]\nuser=JohnDoe"
+	}
+
+	if state.is(landscapeAgentUIDExists) {
+		r.UbuntuProData["LandscapeAgentUID"] = ""
+	}
+	if state.is(landscapeAgentUIDHasValue) {
+		r.UbuntuProData["LandscapeAgentUID"] = "landscapeUID1234"
 	}
 
 	return r
