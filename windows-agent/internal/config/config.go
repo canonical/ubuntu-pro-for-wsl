@@ -189,6 +189,7 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	// Landcape registration
 	taskList = append(taskList, tasks.LandscapeConfigure{
 		Config:       c.data.landscapeClientConfig,
+		HostagentUID: c.data.landscapeAgentUID,
 	})
 
 	return taskList, nil
