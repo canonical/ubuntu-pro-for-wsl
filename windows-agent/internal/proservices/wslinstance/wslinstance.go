@@ -56,14 +56,14 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 
 	props, err := propsFromInfo(info)
 	if err != nil {
-		return fmt.Errorf("connection from %q: invalid DistroInfo: %v", info.WslName, err)
+		return fmt.Errorf("connection from %q: invalid DistroInfo: %v", info.GetWslName(), err)
 	}
 
-	log.Debugf(ctx, "Connection from %q: received properties: %v", info.WslName, props)
+	log.Debugf(ctx, "Connection from %q: received properties: %v", info.GetWslName(), props)
 
-	d, err := s.db.GetDistroAndUpdateProperties(ctx, info.WslName, props)
+	d, err := s.db.GetDistroAndUpdateProperties(ctx, info.GetWslName(), props)
 	if err != nil {
-		return fmt.Errorf("connection from %q: %v", info.WslName, err)
+		return fmt.Errorf("connection from %q: %v", info.GetWslName(), err)
 	}
 
 	// Load deferred tasks
@@ -81,7 +81,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	}
 
 	if err := d.SetConnection(conn); err != nil {
-		return fmt.Errorf("connection from %q: %v", info.WslName, err)
+		return fmt.Errorf("connection from %q: %v", info.GetWslName(), err)
 	}
 
 	//nolint:errcheck // We don't care about this error because we're cleaning up
@@ -180,16 +180,16 @@ func getPort(lis net.Listener) (uint32, error) {
 func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err error) {
 	defer decorate.OnError(&err, "received invalid distribution info")
 
-	if info.WslName == "" {
+	if info.GetWslName() == "" {
 		return props, errors.New("no id provided")
 	}
 
 	return distro.Properties{
-		DistroID:    info.Id,
-		VersionID:   info.VersionId,
-		PrettyName:  info.PrettyName,
-		ProAttached: info.ProAttached,
-		Hostname:    info.Hostname,
+		DistroID:    info.GetId(),
+		VersionID:   info.GetVersionId(),
+		PrettyName:  info.GetPrettyName(),
+		ProAttached: info.GetProAttached(),
+		Hostname:    info.GetHostname(),
 	}, nil
 }
 

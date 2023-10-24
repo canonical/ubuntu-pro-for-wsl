@@ -163,7 +163,7 @@ func msgContains(t *testing.T, expected string, msg interface{}, description str
 	if !ok {
 		t.Fatalf("Expected a log, but send: %+v", msg)
 	}
-	assert.Contains(t, l.Msg, expected, description)
+	assert.Contains(t, l.GetMsg(), expected, description)
 }
 
 func createLogStream(t *testing.T, level logrus.Level, callerForLocal, callerForRemote bool, sendError error) (stream grpc.ServerStream, localLogs func() string, remoteLogs func() string) {
@@ -193,9 +193,9 @@ func createLogStream(t *testing.T, level logrus.Level, callerForLocal, callerFor
 			if !ok {
 				t.Fatalf("Expected a log, but send: %+v", m)
 			}
-			msg := fmt.Sprintf("level=%s msg=%s", l.Level, l.Msg)
-			if l.Caller != "" {
-				msg = fmt.Sprintf("%s HASCALLER: %s", msg, l.Caller)
+			msg := fmt.Sprintf("level=%s msg=%s", l.GetLevel(), l.GetMsg())
+			if l.GetCaller() != "" {
+				msg = fmt.Sprintf("%s HASCALLER: %s", msg, l.GetCaller())
 			}
 			out = append(out, msg)
 		}

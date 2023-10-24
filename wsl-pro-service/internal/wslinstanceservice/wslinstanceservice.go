@@ -58,10 +58,10 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 		}
 	}()
 
-	if info.Token == "" {
+	if info.GetToken() == "" {
 		log.Info(ctx, "ApplyProToken: Received empty token: detaching")
 	} else {
-		log.Infof(ctx, "ApplyProToken: Received token %q: attaching", common.Obfuscate(info.Token))
+		log.Infof(ctx, "ApplyProToken: Received token %q: attaching", common.Obfuscate(info.GetToken()))
 	}
 
 	if err := s.system.ProDetach(ctx); err != nil {
@@ -69,11 +69,11 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 		return nil, err
 	}
 
-	if info.Token == "" {
+	if info.GetToken() == "" {
 		return &wslserviceapi.Empty{}, nil
 	}
 
-	if err := s.system.ProAttach(ctx, info.Token); err != nil {
+	if err := s.system.ProAttach(ctx, info.GetToken()); err != nil {
 		log.Errorf(ctx, "Error in ApplyProToken: attachPro:: %v", err)
 		return nil, err
 	}

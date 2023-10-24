@@ -32,18 +32,18 @@ type HostInfo struct {
 // newHostInfo recursively copies the info in a landscapeapi.HostAgentInfo to a HostInfo.
 func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
 	h := HostInfo{
-		UID:       src.Uid,
-		Hostname:  src.Hostname,
-		Token:     src.Token,
-		Instances: make([]InstanceInfo, 0, len(src.Instances)),
+		UID:       src.GetUid(),
+		Hostname:  src.GetHostname(),
+		Token:     src.GetToken(),
+		Instances: make([]InstanceInfo, 0, len(src.GetInstances())),
 	}
 
-	for _, inst := range src.Instances {
+	for _, inst := range src.GetInstances() {
 		h.Instances = append(h.Instances, InstanceInfo{
-			ID:            inst.Id,
-			Name:          inst.Name,
-			VersionID:     inst.VersionId,
-			InstanceState: inst.InstanceState,
+			ID:            inst.GetId(),
+			Name:          inst.GetName(),
+			VersionID:     inst.GetVersionId(),
+			InstanceState: inst.GetInstanceState(),
 		})
 	}
 
