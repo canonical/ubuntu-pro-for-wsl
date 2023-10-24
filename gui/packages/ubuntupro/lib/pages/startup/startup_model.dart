@@ -71,6 +71,7 @@ class StartupModel extends ChangeNotifier {
     );
     if (_retries >= _retryLimit) {
       _view = ViewState.crash;
+      notifyListeners();
       return;
     }
     ++_retries;
