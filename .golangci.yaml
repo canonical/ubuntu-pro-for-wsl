@@ -20,14 +20,15 @@ linters:
     - misspell
     - nakedret
     - nolintlint
+    - protogetter
     - revive
+    - testifylint
     - thelper
     - tparallel
     - unconvert
     - unparam
     - usestdlibvars
     - whitespace
-    - testifylint 
 
 run:
   timeout: 5m
