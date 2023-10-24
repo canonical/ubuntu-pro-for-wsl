@@ -90,18 +90,11 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	if err != nil {
 		return s, err
 	}
-	defer func() {
-		if err != nil {
-			db.Close(ctx)
-		}
-	}()
+	defer db.Close(ctx)
 
-	go func() {
-		err := conf.UpdateRegistrySettings(ctx, opts.cacheDir, db)
-		if err != nil {
-			log.Warningf(ctx, "Could not update subscriptions: %v", err)
-		}
-	}()
+	if err := conf.UpdateRegistrySettings(ctx, opts.cacheDir, db); err != nil {
+		log.Warningf(ctx, "Could not update registry settings: %v", err)
+	}
 
 	uiService := ui.New(ctx, conf, db)
 
