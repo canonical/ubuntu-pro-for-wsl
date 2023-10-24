@@ -42,6 +42,7 @@ type Registry interface {
 	CloseKey(k uintptr)
 	ReadValue(k uintptr, field string) (value string, err error)
 	WriteValue(k uintptr, field string, value string) (err error)
+	WriteMultilineValue(k uintptr, field string, value string) (err error)
 }
 
 // Config manages configuration parameters. It is a wrapper around a dictionary
@@ -323,7 +324,7 @@ func (c *Config) dump() (err error) {
 		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 
-	if err := c.registry.WriteValue(k, fieldLandscapeClientConfig, c.data.landscapeClientConfig); err != nil {
+	if err := c.registry.WriteMultilineValue(k, fieldLandscapeClientConfig, c.data.landscapeClientConfig); err != nil {
 		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 

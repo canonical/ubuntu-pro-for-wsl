@@ -65,26 +65,12 @@ func (Windows) ReadValue(k uintptr, field string) (string, error) {
 	return "", acc
 }
 
-// WriteValue writes the provided value into the specified field of key k.
+// WriteValue writes the provided single-line string value into the specified field of key k.
 func (Windows) WriteValue(k uintptr, field string, value string) error {
-	var acc error
+	return registry.Key(k).SetStringValue(field, value)
+}
 
-	if !strings.ContainsRune(value, '\n') {
-		// Single line string: we try storing a regular string
-		// This can fail if this field is already multi-line
-		if err := registry.Key(k).SetStringValue(field, value); err != nil {
-			acc = errors.Join(acc, err)
-		} else {
-			return nil
-		}
-	}
-
-	// Multi-line string
-	if err := registry.Key(k).SetStringsValue(field, strings.Split(value, "\n")); err != nil {
-		acc = errors.Join(acc, err)
-	} else {
-		return nil
-	}
-
-	return acc
+// WriteMultilineValue writes the provided multi-line string value into the specified field of key k.
+func (Windows) WriteMultilineValue(k uintptr, field string, value string) error {
+	return registry.Key(k).SetStringsValue(field, strings.Split(value, "\n"))
 }

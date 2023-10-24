@@ -23,7 +23,12 @@ func (Windows) ReadValue(k uintptr, field string) (value string, err error) {
 	panic("the Windows registry is not available on Linux")
 }
 
-// WriteValue writes the provided value into the specified field of key k.
+// WriteValue writes the provided single-line string value into the specified field of key k.
 func (Windows) WriteValue(k uintptr, field string, value string) (err error) {
+	panic("the Windows registry is not available on Linux")
+}
+
+// WriteMultilineValue writes the provided multi-line string value into the specified field of key k.
+func (Windows) WriteMultilineValue(k uintptr, field string, value string) (err error) {
 	panic("the Windows registry is not available on Linux")
 }
