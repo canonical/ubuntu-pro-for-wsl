@@ -3,3 +3,4 @@ world = true
 
 [client]
 computer_title = TEST_DISTRO
+hostagent_uid  = landscapeHostagent1234

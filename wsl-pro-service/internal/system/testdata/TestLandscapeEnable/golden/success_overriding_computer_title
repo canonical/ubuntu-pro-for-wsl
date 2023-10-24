@@ -1,3 +1,4 @@
 [client]
 hello          = world
 computer_title = TEST_DISTRO
+hostagent_uid  = landscapeUID1234
