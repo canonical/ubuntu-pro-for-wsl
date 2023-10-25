@@ -31,16 +31,14 @@ const (
 	orgTokenExists              = keyExists | 1<<(iota+2) // Key exists, organization token field exists
 	userTokenExists                                       // Key exists, user token field exists
 	storeTokenExists                                      // Key exists, microsoft store token field exists
-	landscapeAgentURLExists                               // Key exists, landscape agent URL field exists
 	landscapeClientConfigExists                           // Key exists, landscape client config field exists
 	landscapeAgentUIDExists                               // Key exists, landscape agent UID field exists
 
 	orgTokenHasValue              = orgTokenExists | 1<<16              // Key exists, organization token field exists and is not empty
 	userTokenHasValue             = userTokenExists | 1<<17             // Key exists, user token field exists and is not empty
 	storeTokenHasValue            = storeTokenExists | 1<<18            // Key exists, microsoft store token field exists and is not empty
-	landscapeAgentURLHasValue     = landscapeAgentURLExists | 1<<19     // Key exists,  landscape agent URL field exists and is not empty
-	landscapeClientConfigHasValue = landscapeClientConfigExists | 1<<20 // Key exists, landscape client config field exists and is not empty
-	landscapeAgentUIDHasValue     = landscapeAgentUIDExists | 1<<21     // Key exists, landscape agent UID field exists and is not empty
+	landscapeClientConfigHasValue = landscapeClientConfigExists | 1<<19 // Key exists, landscape client config field exists and is not empty
+	landscapeAgentUIDHasValue     = landscapeAgentUIDExists | 1<<20     // Key exists, landscape agent UID field exists and is not empty
 )
 
 func TestSubscription(t *testing.T) {
@@ -548,13 +546,6 @@ func setUpMockRegistry(mockErrors uint32, state registryState, readOnly bool) *r
 	}
 	if state.is(storeTokenHasValue) {
 		r.UbuntuProData["ProTokenStore"] = "store_token"
-	}
-
-	if state.is(landscapeAgentURLExists) {
-		r.UbuntuProData["LandscapeAgentURL"] = ""
-	}
-	if state.is(landscapeAgentURLHasValue) {
-		r.UbuntuProData["LandscapeAgentURL"] = "www.example.com/registry-example"
 	}
 
 	if state.is(landscapeClientConfigExists) {
