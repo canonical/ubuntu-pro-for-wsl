@@ -275,10 +275,10 @@ func TestSetSubscription(t *testing.T) {
 
 			// Disable errors so we can retrieve the token
 			r.Errors = 0
-			token, _, err = conf.Subscription(ctx)
+			got, _, err := conf.Subscription(ctx)
 			require.NoError(t, err, "ProToken should return no error")
 
-			require.Equal(t, tc.want, token, "ProToken returned an unexpected value for the token")
+			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
 		})
 	}
 }
@@ -333,10 +333,10 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 
 			// Disable errors so we can retrieve the UID
 			r.Errors = 0
-			uid, err = conf.LandscapeAgentUID(ctx)
+			got, err := conf.LandscapeAgentUID(ctx)
 			require.NoError(t, err, "LandscapeAgentUID should return no error")
 
-			require.Equal(t, tc.want, uid, "LandscapeAgentUID returned an unexpected value for the token")
+			require.Equal(t, tc.want, got, "LandscapeAgentUID returned an unexpected value for the token")
 		})
 	}
 }
