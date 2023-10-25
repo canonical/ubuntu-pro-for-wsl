@@ -125,9 +125,8 @@ type testConfigGetterSettings struct {
 	want             string
 }
 
+//nolint:thelper // This is the test itself, not a helper. Besides, a t.Helper() here would not affect the subtests.
 func testConfigGetter(t *testing.T, s testConfigGetterSettings) {
-	t.Helper()
-
 	testCases := map[string]struct {
 		mockErrors    uint32
 		registryState registryState
