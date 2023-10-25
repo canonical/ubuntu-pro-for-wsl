@@ -137,6 +137,9 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
+	if address == "" {
+		return errors.New("no hostagent URL provided in the Landscape configuration")
+	}
 
 	defer func() {
 		go c.keepConnected(ctx, address)
