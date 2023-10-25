@@ -52,7 +52,7 @@ dependencies:
   path: ^1.8.0
   provider: ^6.0.5
   ubuntu_service: ^0.2.4
-  url_launcher: ^6.1.14
+  url_launcher: ^6.2.0
   yaru: ^1.1.0
   yaru_icons: ^2.2.1
   yaru_widgets: ^3.2.1
