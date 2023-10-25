@@ -86,6 +86,38 @@ func TestSubscription(t *testing.T) {
 	}
 }
 
+func TestLandscapeAgentURL(t *testing.T) {
+	t.Parallel()
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeAgentURL,
+		getterName:       "LandscapeAgentURL",
+		registryHasValue: landscapeAgentURLHasValue,
+		want:             "www.example.com/registry-example",
+	})
+}
+
+func TestLandscapeClientConfig(t *testing.T) {
+	t.Parallel()
+
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeClientConfig,
+		getterName:       "LandscapeClientConfig",
+		registryHasValue: landscapeClientConfigHasValue,
+		want:             "[client]\nuser=JohnDoe",
+	})
+}
+
+func TestLandscapeAgentUID(t *testing.T) {
+	t.Parallel()
+
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeAgentUID,
+		getterName:       "LandscapeAgentUID",
+		registryHasValue: landscapeAgentUIDHasValue,
+		want:             "landscapeUID1234",
+	})
+}
+
 type testConfigGetterSettings struct {
 	getter           func(*config.Config, context.Context) (string, error)
 	getterName       string
@@ -137,38 +169,6 @@ func testConfigGetter(t *testing.T, s testConfigGetterSettings) {
 			assert.Zerof(t, r.OpenKeyCount.Load(), "Call to %s leaks registry keys", s.getterName)
 		})
 	}
-}
-
-func TestLandscapeAgentURL(t *testing.T) {
-	t.Parallel()
-	testConfigGetter(t, testConfigGetterSettings{
-		getter:           (*config.Config).LandscapeAgentURL,
-		getterName:       "LandscapeAgentURL",
-		registryHasValue: landscapeAgentURLHasValue,
-		want:             "www.example.com/registry-example",
-	})
-}
-
-func TestLandscapeClientConfig(t *testing.T) {
-	t.Parallel()
-
-	testConfigGetter(t, testConfigGetterSettings{
-		getter:           (*config.Config).LandscapeClientConfig,
-		getterName:       "LandscapeClientConfig",
-		registryHasValue: landscapeClientConfigHasValue,
-		want:             "[client]\nuser=JohnDoe",
-	})
-}
-
-func TestLandscapeAgentUID(t *testing.T) {
-	t.Parallel()
-
-	testConfigGetter(t, testConfigGetterSettings{
-		getter:           (*config.Config).LandscapeAgentUID,
-		getterName:       "LandscapeAgentUID",
-		registryHasValue: landscapeAgentUIDHasValue,
-		want:             "landscapeUID1234",
-	})
 }
 
 func TestProvisioningTasks(t *testing.T) {
