@@ -95,16 +95,6 @@ func TestSubscription(t *testing.T) {
 	}
 }
 
-func TestLandscapeAgentURL(t *testing.T) {
-	t.Parallel()
-	testConfigGetter(t, testConfigGetterSettings{
-		getter:           (*config.Config).LandscapeAgentURL,
-		getterName:       "LandscapeAgentURL",
-		registryHasValue: landscapeAgentURLHasValue,
-		want:             "www.example.com/registry-example",
-	})
-}
-
 func TestLandscapeClientConfig(t *testing.T) {
 	t.Parallel()
 
