@@ -231,14 +231,14 @@ func TestSetSubscription(t *testing.T) {
 		mockErrors       uint32
 		registryState    registryState
 		accessIsReadOnly bool
-		setEmptyToken    bool
+		emptyToken       bool
 
 		want          string
 		wantError     bool
 		wantErrorType error
 	}{
 		"Success":                                         {registryState: userTokenHasValue, want: "new_token"},
-		"Success disabling a subscription":                {registryState: userTokenHasValue, setEmptyToken: true, want: ""},
+		"Success disabling a subscription":                {registryState: userTokenHasValue, emptyToken: true, want: ""},
 		"Success when the key does not exist":             {registryState: untouched, want: "new_token"},
 		"Success when the pro token field does not exist": {registryState: keyExists, want: "new_token"},
 		"Success when there is a store token active":      {registryState: storeTokenHasValue, want: "store_token"},
@@ -259,7 +259,7 @@ func TestSetSubscription(t *testing.T) {
 			conf := config.New(ctx, config.WithRegistry(r))
 
 			token := "new_token"
-			if tc.setEmptyToken {
+			if tc.emptyToken {
 				token = ""
 			}
 
@@ -290,14 +290,14 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 		mockErrors       uint32
 		registryState    registryState
 		accessIsReadOnly bool
-		setEmptyUID      bool
+		emptyUID         bool
 
 		want          string
 		wantError     bool
 		wantErrorType error
 	}{
 		"Success":                                         {registryState: landscapeAgentUIDHasValue, want: "new_uid"},
-		"Success unsetting the UID":                       {registryState: landscapeAgentUIDHasValue, setEmptyUID: true, want: ""},
+		"Success unsetting the UID":                       {registryState: landscapeAgentUIDHasValue, emptyUID: true, want: ""},
 		"Success when the key does not exist":             {registryState: untouched, want: "new_uid"},
 		"Success when the pro token field does not exist": {registryState: keyExists, want: "new_uid"},
 
@@ -317,7 +317,7 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			conf := config.New(ctx, config.WithRegistry(r))
 
 			uid := "new_uid"
-			if tc.setEmptyUID {
+			if tc.emptyUID {
 				uid = ""
 			}
 
