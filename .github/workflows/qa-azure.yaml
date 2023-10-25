@@ -20,16 +20,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      # The following two steps are a workaround because vulnerability checker requires Go 1.21.3 which is not yet available on the archive.
-      # That requirement only affects test code using mocks, so we don't yet depend on such contracts.
-      # We should be safe with Go 1.21.1 for a while, until dependencies start to rely on the latest version.
       - uses: actions/setup-go@v4
         with:
           go-version-file: go.work
-      - name: Constrain go version
-        shell: bash
-        working-directory: wsl-pro-service
-        run: go mod edit -go 1.21.1
       - name: Build debian package
         uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
         with:
