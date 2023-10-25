@@ -39,68 +39,21 @@ func TestMain(m *testing.M) {
 	defer os.Exit(exit)
 }
 
-func TestNew(t *testing.T) {
-	if wsl.MockAvailable() {
-		t.Parallel()
-	}
-
-	testCases := map[string]struct {
-		uid     string
-		loadErr bool
-
-		wantErr bool
-	}{
-		"Success loading a new UID":     {},
-		"Success without loading a UID": {uid: "123"},
-
-		"Error reading UID": {loadErr: true, wantErr: true},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
-
-			if wsl.MockAvailable() {
-				t.Parallel()
-			}
-
-			dir := t.TempDir()
-			if tc.loadErr {
-				err := os.MkdirAll(filepath.Join(dir, landscape.CacheFileBase), 0700)
-				require.NoError(t, err, "Setup: could not create directory to interfere with the Landscape client")
-			} else if tc.uid != "" {
-				err := os.WriteFile(filepath.Join(dir, landscape.CacheFileBase), []byte(tc.uid), 0600)
-				require.NoError(t, err, "Setup: could not write Landscape client config file")
-			}
-
-			conf := &mockConfig{}
-
-			db, err := database.New(ctx, t.TempDir(), conf)
-			require.NoError(t, err, "Setup: database New should not return an error")
-
-			c, err := landscape.NewClient(conf, db, dir)
-			if tc.wantErr {
-				require.Error(t, err, "Unexpected success in NewClient")
-				return
-			}
-			require.NoError(t, err, "NewClient should return no error")
-
-			require.Equal(t, tc.uid, c.UID(), "Unexpected value for Landscape Client UID")
-		})
-	}
-}
-
 func TestConnect(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
 	}
 
 	testCases := map[string]struct {
-		precancelContext           bool
-		serverNotAvailable         bool
-		landscapeURLErr            bool
-		tokenErr                   bool
+		precancelContext   bool
+		serverNotAvailable bool
+
+		landscapeUIDReadErr  bool
+		landscapeUIDWriteErr bool
+
+		landscapeURLErr bool
+		tokenErr        bool
+
 		requireCertificate         bool
 		breakLandscapeClientConfig bool
 
@@ -117,6 +70,8 @@ func TestConnect(t *testing.T) {
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
 		"Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
+		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
+		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
@@ -147,8 +102,14 @@ func TestConnect(t *testing.T) {
 				// We trigger an earlier error by erroring out on LandscapeAgentURL
 				landscapeURLErr: tc.landscapeURLErr,
 
+				// We trigger errors trying to read or write to/from the registry
+				landscapeUIDErr:    tc.landscapeUIDReadErr,
+				setLandscapeUIDErr: tc.landscapeUIDWriteErr,
+
 				// We trigger an error when deciding to use a certificate or not
 				landscapeConfigErr: tc.breakLandscapeClientConfig,
+
+				landscapeAgentUID: tc.uid,
 			}
 
 			out, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
@@ -166,12 +127,6 @@ func TestConnect(t *testing.T) {
 				defer server.Stop()
 			}
 
-			dir := t.TempDir()
-			if tc.uid != "" {
-				err := os.WriteFile(filepath.Join(dir, landscape.CacheFileBase), []byte(tc.uid), 0600)
-				require.NoError(t, err, "Setup: could not write Landscape client config file")
-			}
-
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
@@ -179,7 +134,7 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			client, err := landscape.NewClient(conf, db, dir)
+			client, err := landscape.NewClient(conf, db)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
 
 			ctx, cancel := context.WithCancel(ctx)
@@ -209,16 +164,11 @@ func TestConnect(t *testing.T) {
 
 			require.False(t, client.Connected(), "Connected should have returned false after disconnecting")
 
-			confFile := filepath.Join(dir, landscape.CacheFileBase)
-			require.FileExists(t, confFile, "Landscape config file should be created after disconnecting")
-			out, err = os.ReadFile(confFile)
-			require.NoError(t, err, "Could not read landscape config file")
-
 			wantUID := tc.uid
 			if tc.uid == "" {
 				wantUID = "ServerAssignedUID"
 			}
-			requireHasPrefix(t, wantUID, string(out), "Landscape config should contain the Landscape Client UID")
+			requireHasPrefix(t, wantUID, conf.landscapeAgentUID, "Landscape client UID was not set properly")
 
 			server.Stop()
 			lis.Close()
@@ -293,7 +243,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname(hostname))
+			client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			if tc.distroIsRunning {
@@ -445,7 +395,7 @@ func TestAutoReconnection(t *testing.T) {
 
 	const hostname = "HOSTNAME"
 
-	client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname(hostname))
+	client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 	defer client.Stop(ctx)
 
@@ -593,7 +543,7 @@ func TestReceiveCommands(t *testing.T) {
 				require.NoError(t, d.LockAwake(), "Setup: could not lock distro awake")
 			}
 
-			client, err := landscape.NewClient(conf, db, t.TempDir(), landscape.WithHostname("HOSTNAME"))
+			client, err := landscape.NewClient(conf, db, landscape.WithHostname("HOSTNAME"))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			err = client.Connect(ctx)
@@ -601,12 +551,12 @@ func TestReceiveCommands(t *testing.T) {
 			defer client.Stop(ctx)
 
 			require.Eventually(t, func() bool {
-				return client.Connected() && client.UID() != "" && service.IsConnected(client.UID())
+				return client.Connected() && conf.landscapeAgentUID != "" && service.IsConnected(conf.landscapeAgentUID)
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server and client never made a connection")
 
 			enableMockErrors()
 
-			err = service.SendCommand(ctx, client.UID(), command)
+			err = service.SendCommand(ctx, conf.landscapeAgentUID, command)
 			require.NoError(t, err, "SendCommand should return no error")
 
 			// Allow some time for the message to be sent, received, and executed.
@@ -631,7 +581,7 @@ func TestReceiveCommands(t *testing.T) {
 			client.Stop(ctx)
 
 			disableMockErrors()
-			requireCommandResult(t, ctx, tc.command, d, client, !tc.wantFailure)
+			requireCommandResult(t, ctx, tc.command, d, conf, !tc.wantFailure)
 		})
 	}
 }
@@ -691,16 +641,16 @@ func commandSetup(t *testing.T, ctx context.Context, command command, distro *di
 // did not complete.
 //
 //nolint:revive // testing.T goes before context
-func requireCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro, client *landscape.Client, wantSuccess bool) {
+func requireCommandResult(t *testing.T, ctx context.Context, command command, distro *distro.Distro, conf *mockConfig, wantSuccess bool) {
 	t.Helper()
 
 	// Ensuring a connection was made
-	require.NotEmpty(t, client.UID(), "Landscape client should have had a UID assigned by the server")
+	require.NotEmpty(t, conf.landscapeAgentUID, "Landscape client should have had a UID assigned by the server")
 
 	switch command {
 	case cmdAssignHost:
 		if wantSuccess {
-			require.Equal(t, "HostUID123", client.UID(), "Landscape client should have overridden the initial UID sent by the server")
+			require.Equal(t, "HostUID123", conf.landscapeAgentUID, "Landscape client should have overridden the initial UID sent by the server")
 		} else {
 			require.Fail(t, "Test not implemented")
 		}
@@ -839,10 +789,13 @@ type mockConfig struct {
 	proToken              string
 	landscapeAgentURL     string
 	landscapeClientConfig string
+	landscapeAgentUID     string
 
 	proTokenErr        bool
 	landscapeURLErr    bool
 	landscapeConfigErr bool
+	landscapeUIDErr    bool
+	setLandscapeUIDErr bool
 
 	mu sync.Mutex
 }
@@ -879,4 +832,26 @@ func (m *mockConfig) LandscapeAgentURL(ctx context.Context) (string, error) {
 		return "", errors.New("Mock error")
 	}
 	return m.landscapeAgentURL, nil
+}
+
+func (m *mockConfig) LandscapeAgentUID(ctx context.Context) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.landscapeUIDErr {
+		return "", errors.New("Mock error")
+	}
+	return m.landscapeAgentUID, nil
+}
+
+func (m *mockConfig) SetLandscapeAgentUID(ctx context.Context, uid string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.setLandscapeUIDErr {
+		return errors.New("Mock error")
+	}
+
+	m.landscapeAgentUID = uid
+	return nil
 }

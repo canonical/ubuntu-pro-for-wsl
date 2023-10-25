@@ -107,8 +107,10 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.L
 		return &wslserviceapi.Empty{}, nil
 	}
 
+	uid := msg.GetHostagentUID()
+
 	log.Infof(ctx, "ApplyLandscapeConfig: Received config: registering")
-	if err := s.system.LandscapeEnable(ctx, conf); err != nil {
+	if err := s.system.LandscapeEnable(ctx, conf, uid); err != nil {
 		return nil, err
 	}
 

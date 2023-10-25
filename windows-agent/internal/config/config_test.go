@@ -24,12 +24,14 @@ const (
 	storeTokenExists                                      // Key exists, microsoft store token field exists
 	landscapeAgentURLExists                               // Key exists, landscape agent URL field exists
 	landscapeClientConfigExists                           // Key exists, landscape client config field exists
+	landscapeAgentUIDExists                               // Key exists, landscape agent UID field exists
 
 	orgTokenHasValue              = orgTokenExists | 1<<16              // Key exists, organization token field exists and is not empty
 	userTokenHasValue             = userTokenExists | 1<<17             // Key exists, user token field exists and is not empty
 	storeTokenHasValue            = storeTokenExists | 1<<18            // Key exists, microsoft store token field exists and is not empty
 	landscapeAgentURLHasValue     = landscapeAgentURLExists | 1<<19     // Key exists,  landscape agent URL field exists and is not empty
 	landscapeClientConfigHasValue = landscapeClientConfigExists | 1<<20 // Key exists, landscape client config field exists and is not empty
+	landscapeAgentUIDHasValue     = landscapeAgentUIDExists | 1<<21     // Key exists, landscape agent UID field exists and is not empty
 )
 
 func TestSubscription(t *testing.T) {
@@ -84,69 +86,59 @@ func TestSubscription(t *testing.T) {
 	}
 }
 
-//nolint:dupl // This and the following test are very similar, but there is no clean way to merge them
 func TestLandscapeAgentURL(t *testing.T) {
 	t.Parallel()
-
-	testCases := map[string]struct {
-		mockErrors    uint32
-		registryState registryState
-
-		wantError bool
-	}{
-		"Success":                               {registryState: landscapeAgentURLHasValue},
-		"Success when the key does not exist":   {registryState: untouched},
-		"Success when the value does not exist": {registryState: keyExists},
-
-		"Error when the registry key cannot be opened":    {registryState: landscapeAgentURLHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: landscapeAgentURLHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			ctx := context.Background()
-
-			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
-			conf := config.New(ctx, config.WithRegistry(r))
-
-			landscapeURL, err := conf.LandscapeAgentURL(ctx)
-			if tc.wantError {
-				require.Error(t, err, "LandscapeAgentURL should return an error")
-				return
-			}
-			require.NoError(t, err, "LandscapeAgentURL should return no error")
-
-			// Test default values
-			if !tc.registryState.is(landscapeAgentURLHasValue) {
-				require.Equal(t, "", landscapeURL, "Unexpected Landscape URL default value")
-				return
-			}
-
-			// Test non-default values
-			assert.Equal(t, "www.example.com/registry-example", landscapeURL, "Unexpected Landscape URL value")
-			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
-		})
-	}
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeAgentURL,
+		getterName:       "LandscapeAgentURL",
+		registryHasValue: landscapeAgentURLHasValue,
+		want:             "www.example.com/registry-example",
+	})
 }
 
-//nolint:dupl // This and the previous test are very similar, but there is no clean way to merge them
 func TestLandscapeClientConfig(t *testing.T) {
 	t.Parallel()
 
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeClientConfig,
+		getterName:       "LandscapeClientConfig",
+		registryHasValue: landscapeClientConfigHasValue,
+		want:             "[client]\nuser=JohnDoe",
+	})
+}
+
+func TestLandscapeAgentUID(t *testing.T) {
+	t.Parallel()
+
+	testConfigGetter(t, testConfigGetterSettings{
+		getter:           (*config.Config).LandscapeAgentUID,
+		getterName:       "LandscapeAgentUID",
+		registryHasValue: landscapeAgentUIDHasValue,
+		want:             "landscapeUID1234",
+	})
+}
+
+type testConfigGetterSettings struct {
+	getter           func(*config.Config, context.Context) (string, error)
+	getterName       string
+	registryHasValue registryState
+	want             string
+}
+
+//nolint:thelper // This is the test itself, not a helper. Besides, a t.Helper() here would not affect the subtests.
+func testConfigGetter(t *testing.T, s testConfigGetterSettings) {
 	testCases := map[string]struct {
 		mockErrors    uint32
 		registryState registryState
 
 		wantError bool
 	}{
-		"Success":                               {registryState: landscapeClientConfigHasValue},
+		"Success":                               {registryState: s.registryHasValue},
 		"Success when the key does not exist":   {registryState: untouched},
 		"Success when the value does not exist": {registryState: keyExists},
 
-		"Error when the registry key cannot be opened":    {registryState: landscapeClientConfigHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
-		"Error when the registry key cannot be read from": {registryState: landscapeClientConfigHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
+		"Error when the registry key cannot be opened":    {registryState: s.registryHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
+		"Error when the registry key cannot be read from": {registryState: s.registryHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -158,22 +150,22 @@ func TestLandscapeClientConfig(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			landscapeURL, err := conf.LandscapeClientConfig(ctx)
+			v, err := s.getter(conf, ctx)
 			if tc.wantError {
-				require.Error(t, err, "LandscapeClientConfig should return an error")
+				require.Error(t, err, "%s should return an error", s.getterName)
 				return
 			}
-			require.NoError(t, err, "LandscapeClientConfig should return no error")
+			require.NoError(t, err, "%s should return no error", s.getterName)
 
 			// Test default values
-			if !tc.registryState.is(landscapeClientConfigHasValue) {
-				require.Equal(t, "", landscapeURL, "Unexpected Landscape config default value")
+			if !tc.registryState.is(s.registryHasValue) {
+				require.Emptyf(t, v, "Unexpected value when %s is not set in registry", s.getterName)
 				return
 			}
 
 			// Test non-default values
-			assert.Equal(t, "[client]\nuser=JohnDoe", landscapeURL, "Unexpected Landscape URL value")
-			assert.Zero(t, r.OpenKeyCount.Load(), "Leaking keys after ProToken")
+			assert.Equalf(t, s.want, v, "%s returned an unexpected value", s.getterName)
+			assert.Zerof(t, r.OpenKeyCount.Load(), "Call to %s leaks registry keys", s.getterName)
 		})
 	}
 }
@@ -185,13 +177,16 @@ func TestProvisioningTasks(t *testing.T) {
 		mockErrors    uint32
 		registryState registryState
 
-		want      string
-		wantError bool
+		want            string
+		wantNoLandscape bool
+		wantError       bool
 	}{
-		"Success when the key does not exist":             {registryState: untouched},
-		"Success when the pro token field does not exist": {registryState: keyExists},
-		"Success when the pro token exists but is empty":  {registryState: userTokenExists},
-		"Success with a user token":                       {registryState: userTokenHasValue, want: "user_token"},
+		"Success when the key does not exist":                {registryState: untouched},
+		"Success when the pro token field does not exist":    {registryState: keyExists},
+		"Success when the pro token exists but is empty":     {registryState: userTokenExists},
+		"Success with a user token":                          {registryState: userTokenHasValue, want: "user_token"},
+		"Success when there is Landscape config, but no UID": {registryState: landscapeClientConfigHasValue, wantNoLandscape: true},
+		"Success when there is Landscape config and UID":     {registryState: landscapeClientConfigHasValue | landscapeAgentUIDHasValue},
 
 		"Error when the registry key cannot be opened":    {registryState: userTokenExists, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {registryState: userTokenExists, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -206,17 +201,25 @@ func TestProvisioningTasks(t *testing.T) {
 			r := setUpMockRegistry(tc.mockErrors, tc.registryState, false)
 			conf := config.New(ctx, config.WithRegistry(r))
 
-			pt, err := conf.ProvisioningTasks(ctx, "UBUNTU")
+			gotTasks, err := conf.ProvisioningTasks(ctx, "UBUNTU")
 			if tc.wantError {
 				require.Error(t, err, "ProvisioningTasks should return an error")
 				return
 			}
 			require.NoError(t, err, "ProvisioningTasks should return no error")
 
-			require.ElementsMatch(t, pt, []task.Task{
+			wantTasks := []task.Task{
 				tasks.ProAttachment{Token: tc.want},
-				tasks.LandscapeConfigure{Config: ""},
-			}, "Unexpected contents returned by ProvisioningTasks")
+			}
+
+			if !tc.wantNoLandscape {
+				wantTasks = append(wantTasks, tasks.LandscapeConfigure{
+					Config:       r.UbuntuProData["LandscapeClientConfig"],
+					HostagentUID: r.UbuntuProData["LandscapeAgentUID"],
+				})
+			}
+
+			require.ElementsMatch(t, wantTasks, gotTasks, "Unexpected contents returned by ProvisioningTasks")
 		})
 	}
 }
@@ -228,14 +231,14 @@ func TestSetSubscription(t *testing.T) {
 		mockErrors       uint32
 		registryState    registryState
 		accessIsReadOnly bool
-		setEmptyToken    bool
+		emptyToken       bool
 
 		want          string
 		wantError     bool
 		wantErrorType error
 	}{
 		"Success":                                         {registryState: userTokenHasValue, want: "new_token"},
-		"Success disabling a subscription":                {registryState: userTokenHasValue, setEmptyToken: true, want: ""},
+		"Success disabling a subscription":                {registryState: userTokenHasValue, emptyToken: true, want: ""},
 		"Success when the key does not exist":             {registryState: untouched, want: "new_token"},
 		"Success when the pro token field does not exist": {registryState: keyExists, want: "new_token"},
 		"Success when there is a store token active":      {registryState: storeTokenHasValue, want: "store_token"},
@@ -256,7 +259,7 @@ func TestSetSubscription(t *testing.T) {
 			conf := config.New(ctx, config.WithRegistry(r))
 
 			token := "new_token"
-			if tc.setEmptyToken {
+			if tc.emptyToken {
 				token = ""
 			}
 
@@ -272,10 +275,68 @@ func TestSetSubscription(t *testing.T) {
 
 			// Disable errors so we can retrieve the token
 			r.Errors = 0
-			token, _, err = conf.Subscription(ctx)
+			got, _, err := conf.Subscription(ctx)
 			require.NoError(t, err, "ProToken should return no error")
 
-			require.Equal(t, tc.want, token, "ProToken returned an unexpected value for the token")
+			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
+		})
+	}
+}
+
+func TestSetLandscapeAgentUID(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		mockErrors       uint32
+		registryState    registryState
+		accessIsReadOnly bool
+		emptyUID         bool
+
+		want          string
+		wantError     bool
+		wantErrorType error
+	}{
+		"Success":                                         {registryState: landscapeAgentUIDHasValue, want: "new_uid"},
+		"Success unsetting the UID":                       {registryState: landscapeAgentUIDHasValue, emptyUID: true, want: ""},
+		"Success when the key does not exist":             {registryState: untouched, want: "new_uid"},
+		"Success when the pro token field does not exist": {registryState: keyExists, want: "new_uid"},
+
+		"Error when the registry key cannot be written on due to lack of permission": {registryState: landscapeAgentUIDHasValue, accessIsReadOnly: true, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrAccessDenied},
+		"Error when the registry key cannot be opened":                               {registryState: landscapeAgentUIDHasValue, mockErrors: registry.MockErrOnCreateKey, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrMock},
+		"Error when the registry key cannot be written on":                           {registryState: landscapeAgentUIDHasValue, mockErrors: registry.MockErrOnWriteValue, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrMock},
+		"Error when the registry key cannot be read":                                 {registryState: landscapeAgentUIDHasValue, mockErrors: registry.MockErrOnOpenKey, want: "landscapeUID1234", wantError: true, wantErrorType: registry.ErrMock},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			r := setUpMockRegistry(tc.mockErrors, tc.registryState, tc.accessIsReadOnly)
+			conf := config.New(ctx, config.WithRegistry(r))
+
+			uid := "new_uid"
+			if tc.emptyUID {
+				uid = ""
+			}
+
+			err := conf.SetLandscapeAgentUID(ctx, uid)
+			if tc.wantError {
+				require.Error(t, err, "SetLandscapeAgentUID should return an error")
+				if tc.wantErrorType != nil {
+					require.ErrorIs(t, err, tc.wantErrorType, "SetLandscapeAgentUID returned an error of unexpected type")
+				}
+			} else {
+				require.NoError(t, err, "SetLandscapeAgentUID should return no error")
+			}
+
+			// Disable errors so we can retrieve the UID
+			r.Errors = 0
+			got, err := conf.LandscapeAgentUID(ctx)
+			require.NoError(t, err, "LandscapeAgentUID should return no error")
+
+			require.Equal(t, tc.want, got, "LandscapeAgentUID returned an unexpected value for the token")
 		})
 	}
 }
@@ -419,6 +480,13 @@ func setUpMockRegistry(mockErrors uint32, state registryState, readOnly bool) *r
 	}
 	if state.is(landscapeClientConfigHasValue) {
 		r.UbuntuProData["LandscapeClientConfig"] = "[client]\nuser=JohnDoe"
+	}
+
+	if state.is(landscapeAgentUIDExists) {
+		r.UbuntuProData["LandscapeAgentUID"] = ""
+	}
+	if state.is(landscapeAgentUIDHasValue) {
+		r.UbuntuProData["LandscapeAgentUID"] = "landscapeUID1234"
 	}
 
 	return r

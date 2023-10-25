@@ -69,9 +69,14 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 		instances = append(instances, instanceInfo)
 	}
 
+	uid, err := c.conf.LandscapeAgentUID(ctx)
+	if err != nil {
+		return info, err
+	}
+
 	info = &landscapeapi.HostAgentInfo{
 		Token:     token,
-		Uid:       c.getUID(),
+		Uid:       uid,
 		Hostname:  c.hostname,
 		Instances: instances,
 	}

@@ -19,13 +19,9 @@ import (
 const (
 	registryPath = `Software\Canonical\UbuntuPro`
 
-	defaultToken = ""
-
-	fieldLandscapeClientConfig   = "LandscapeClientConfig"
-	defaultLandscapeClientConfig = ""
-
-	fieldLandscapeAgentURL   = "LandscapeAgentURL"
-	defaultLandscapeAgentURL = ""
+	fieldLandscapeClientConfig = "LandscapeClientConfig"
+	fieldLandscapeAgentURL     = "LandscapeAgentURL"
+	fieldLandscapeAgentUID     = "LandscapeAgentUID"
 )
 
 // fieldsProToken contains the fields in the registry where each source will store its token.
@@ -60,6 +56,7 @@ type Config struct {
 type configData struct {
 	landscapeClientConfig string
 	landscapeAgentURL     string
+	landscapeAgentUID     string
 }
 
 // SubscriptionSource indicates the method the subscription was acquired.
@@ -130,6 +127,12 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Subscri
 		return "", SubscriptionNone, fmt.Errorf("could not load: %v", err)
 	}
 
+	token, source = c.subscription()
+	return token, source, nil
+}
+
+// subscription is the unsafe version of Subscription. It returns the ProToken and the method it was acquired with (if any).
+func (c *Config) subscription() (token string, source SubscriptionSource) {
 	for src := subscriptionMaxPriority - 1; src > SubscriptionNone; src-- {
 		token, ok := c.proTokens[src]
 		if !ok {
@@ -139,10 +142,10 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Subscri
 			continue
 		}
 
-		return token, src, nil
+		return token, src
 	}
 
-	return "", SubscriptionNone, nil
+	return "", SubscriptionNone
 }
 
 // IsReadOnly returns whether the registry can be written to.
@@ -162,20 +165,29 @@ func (c *Config) IsReadOnly() (b bool, err error) {
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
 func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
-	token, _, err := c.Subscription(ctx)
-	if err != nil {
-		return nil, err
+	var taskList []task.Task
+
+	// Refresh data from registry
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if err := c.load(ctx); err != nil {
+		return nil, fmt.Errorf("could not load: %v", err)
 	}
 
-	taskList := []task.Task{
-		tasks.ProAttachment{Token: token},
-	}
+	// Ubuntu Pro attachment
+	proToken, _ := c.subscription()
+	taskList = append(taskList, tasks.ProAttachment{Token: proToken})
 
-	if conf, err := c.LandscapeClientConfig(ctx); err != nil {
-		log.Errorf(ctx, "Could not generate provisioning task LandscapeConfigure: %v", err)
-	} else {
-		landscape := tasks.LandscapeConfigure{Config: conf}
-		taskList = append(taskList, landscape)
+	if c.data.landscapeClientConfig == "" {
+		// Landscape unregistration: always
+		taskList = append(taskList, tasks.LandscapeConfigure{})
+	} else if c.data.landscapeAgentUID != "" {
+		// Landcape registration: only when we have a UID assigned
+		taskList = append(taskList, tasks.LandscapeConfigure{
+			Config:       c.data.landscapeClientConfig,
+			HostagentUID: c.data.landscapeAgentUID,
+		})
 	}
 
 	return taskList, nil
@@ -227,6 +239,41 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, error) {
 	return c.data.landscapeClientConfig, nil
 }
 
+// LandscapeAgentUID returns the UID assigned to this agent by the Landscape server.
+// An empty string is returned if no UID has been assigned.
+func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if err := c.load(ctx); err != nil {
+		return "", fmt.Errorf("could not load: %v", err)
+	}
+
+	return c.data.landscapeAgentUID, nil
+}
+
+// SetLandscapeAgentUID overrides the Landscape agent UID.
+func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Load before dumping to avoid overriding recent changes to registry
+	if err := c.load(ctx); err != nil {
+		return err
+	}
+
+	old := c.data.landscapeAgentUID
+	c.data.landscapeAgentUID = uid
+
+	if err := c.dump(); err != nil {
+		log.Errorf(ctx, "Could not update landscape agent UID in registry, UID will be ignored: %v", err)
+		c.data.landscapeAgentUID = old
+		return err
+	}
+
+	return nil
+}
+
 func (c *Config) load(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not load data for Config")
 
@@ -251,8 +298,6 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		log.Debug(ctx, "Registry key does not exist, using default values")
-		data.landscapeAgentURL = defaultLandscapeAgentURL
-		data.landscapeClientConfig = defaultLandscapeClientConfig
 		return proTokens, data, nil
 	}
 	if err != nil {
@@ -261,7 +306,7 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	defer c.registry.CloseKey(k)
 
 	for source, field := range fieldsProToken {
-		proToken, e := c.readValue(ctx, k, field, defaultToken)
+		proToken, e := c.readValue(ctx, k, field)
 		if e != nil {
 			err = errors.Join(err, fmt.Errorf("could not read %q: %v", field, e))
 			continue
@@ -278,12 +323,17 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 		return nil, data, err
 	}
 
-	data.landscapeAgentURL, err = c.readValue(ctx, k, fieldLandscapeAgentURL, defaultLandscapeAgentURL)
+	data.landscapeAgentURL, err = c.readValue(ctx, k, fieldLandscapeAgentURL)
 	if err != nil {
 		return proTokens, data, err
 	}
 
-	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig, defaultLandscapeClientConfig)
+	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig)
+	if err != nil {
+		return proTokens, data, err
+	}
+
+	data.landscapeAgentUID, err = c.readValue(ctx, k, fieldLandscapeAgentUID)
 	if err != nil {
 		return proTokens, data, err
 	}
@@ -291,11 +341,11 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 	return proTokens, data, nil
 }
 
-func (c *Config) readValue(ctx context.Context, key uintptr, field string, defaultValue string) (string, error) {
+func (c *Config) readValue(ctx context.Context, key uintptr, field string) (string, error) {
 	value, err := c.registry.ReadValue(key, field)
 	if errors.Is(err, registry.ErrFieldNotExist) {
-		log.Debugf(ctx, "Registry value %q does not exist, defaulting to %q", field, defaultValue)
-		return defaultValue, nil
+		log.Debugf(ctx, "Registry value %q does not exist, defaulting to empty", field)
+		return "", nil
 	}
 	if err != nil {
 		return "", err
@@ -325,6 +375,14 @@ func (c *Config) dump() (err error) {
 	}
 
 	if err := c.registry.WriteMultilineValue(k, fieldLandscapeClientConfig, c.data.landscapeClientConfig); err != nil {
+		return fmt.Errorf("could not write into registry key: %v", err)
+	}
+
+	if err := c.registry.WriteValue(k, fieldLandscapeAgentUID, c.data.landscapeAgentUID); err != nil {
+		return fmt.Errorf("could not write into registry key: %v", err)
+	}
+
+	if err := c.registry.WriteValue(k, fieldLandscapeAgentUID, c.data.landscapeAgentUID); err != nil {
 		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 

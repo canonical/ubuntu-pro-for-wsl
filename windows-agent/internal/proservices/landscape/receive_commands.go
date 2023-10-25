@@ -81,13 +81,13 @@ func commandString(command *landscapeapi.Command) string {
 }
 
 func (c *Client) cmdAssignHost(ctx context.Context, cmd *landscapeapi.Command_AssignHost) error {
-	if c.getUID() != "" {
+	if uid, err := c.conf.LandscapeAgentUID(ctx); err != nil {
+		log.Warningf(ctx, "Possibly overriding current landscape client UID: could not read current Landscape UID: %v", err)
+	} else if uid != "" {
 		log.Warning(ctx, "Overriding current landscape client UID")
 	}
 
-	c.setUID(cmd.GetUid())
-
-	if err := c.dump(); err != nil {
+	if err := c.conf.SetLandscapeAgentUID(ctx, cmd.GetUid()); err != nil {
 		return err
 	}
 

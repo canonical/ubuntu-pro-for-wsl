@@ -2,3 +2,4 @@
 hello          = world
 ssl_public_key = D:\Users\TestUser\certificate
 computer_title = TEST_DISTRO
+hostagent_uid  = landscapeUID1234

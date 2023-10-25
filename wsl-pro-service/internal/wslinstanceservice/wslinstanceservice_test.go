@@ -172,7 +172,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 				config = "[hello]\nworld: true"
 			}
 
-			empty, err := wslClient.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: config})
+			empty, err := wslClient.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: config, HostagentUID: "landscapeHostagent1234"})
 			if tc.wantErr {
 				require.Error(t, err, "ApplyLandscapeConfig call should return an error")
 				return

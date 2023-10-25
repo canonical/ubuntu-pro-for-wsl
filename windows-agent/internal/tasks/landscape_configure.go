@@ -15,14 +15,15 @@ func init() {
 // - to register: send the config to register with.
 // - to disable: send an empty config.
 type LandscapeConfigure struct {
-	Config string
+	Config       string
+	HostagentUID string
 }
 
 // Execute sends the config to the target WSL-Pro-Service so that the distro can be
 // registered in Landscape.
 func (t LandscapeConfigure) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
 	// First value is a dummy message, we ignore it. We only care about success/failure.
-	_, err := client.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: t.Config})
+	_, err := client.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: t.Config, HostagentUID: t.HostagentUID})
 	if err != nil {
 		return task.NeedsRetryError{SourceErr: err}
 	}

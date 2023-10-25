@@ -7,12 +7,9 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
@@ -39,10 +36,6 @@ type Client struct {
 	// Cached hostname
 	hostname string
 
-	// Client UID and where it is stored
-	uid       atomic.Value
-	cacheFile string
-
 	// Connection
 	conn   *connection
 	connMu sync.RWMutex
@@ -59,13 +52,15 @@ type connection struct {
 	receivingCommands sync.WaitGroup
 }
 
-const cacheFileBase = "landscape.conf"
-
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
 	LandscapeClientConfig(context.Context) (string, error)
 	LandscapeAgentURL(context.Context) (string, error)
+
 	Subscription(context.Context) (string, config.SubscriptionSource, error)
+
+	LandscapeAgentUID(context.Context) (string, error)
+	SetLandscapeAgentUID(context.Context, string) error
 }
 
 type options struct {
@@ -76,7 +71,7 @@ type options struct {
 type Option = func(*options)
 
 // NewClient creates a new Client for the Landscape service.
-func NewClient(conf Config, db *database.DistroDB, cacheDir string, args ...Option) (*Client, error) {
+func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, error) {
 	var opts options
 
 	for _, f := range args {
@@ -92,15 +87,10 @@ func NewClient(conf Config, db *database.DistroDB, cacheDir string, args ...Opti
 	}
 
 	c := &Client{
-		conf:      conf,
-		db:        db,
-		hostname:  opts.hostname,
-		cacheFile: filepath.Join(cacheDir, cacheFileBase),
-		stopped:   make(chan struct{}),
-	}
-
-	if err := c.load(); err != nil {
-		return nil, err
+		conf:     conf,
+		db:       db,
+		hostname: opts.hostname,
+		stopped:  make(chan struct{}),
 	}
 
 	return c, nil
@@ -233,7 +223,7 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 		}
 	}()
 
-	if err := c.handshake(conn); err != nil {
+	if err := c.handshake(ctx, conn); err != nil {
 		conn.disconnect()
 		return nil, err
 	}
@@ -249,14 +239,16 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 // If this is the first connection ever, the server will respond by assigning
 // the host a UID. This Recv is handled by receiveCommands, but handshake
 // waits until the UID is received before returning.
-func (c *Client) handshake(conn *connection) error {
+func (c *Client) handshake(ctx context.Context, conn *connection) error {
 	// Send first message
 	if err := c.sendUpdatedInfo(conn); err != nil {
 		return err
 	}
 
 	// Not the first contact between client and server: done!
-	if c.getUID() != "" {
+	if uid, err := c.conf.LandscapeAgentUID(ctx); err != nil {
+		return err
+	} else if uid != "" {
 		return nil
 	}
 
@@ -271,12 +263,15 @@ func (c *Client) handshake(conn *connection) error {
 		select {
 		case <-ctx.Done():
 			conn.disconnect()
-			c.setUID("") // Avoid races where the UID arrives just after cancelling the context
-			return fmt.Errorf("Landscape server did not respond with a client UID")
+			// Avoid races where the UID arrives just after cancelling the context
+			err := c.conf.SetLandscapeAgentUID(ctx, "")
+			return errors.Join(err, fmt.Errorf("Landscape server did not respond with a client UID"))
 		case <-ticker.C:
 		}
 
-		if c.getUID() != "" {
+		if uid, err := c.conf.LandscapeAgentUID(ctx); err != nil {
+			return err
+		} else if uid != "" {
 			// UID received: success.
 			break
 		}
@@ -296,10 +291,6 @@ func (c *Client) Stop(ctx context.Context) {
 		if c.conn != nil {
 			c.conn.disconnect()
 			c.conn = nil
-		}
-
-		if err := c.dump(); err != nil {
-			log.Errorf(ctx, "Landscape client: %v", err)
 		}
 	})
 }
@@ -342,51 +333,6 @@ func (conn *connection) connected() bool {
 	}
 
 	return true
-}
-
-// load reads persistent Landscape data from disk.
-func (c *Client) load() error {
-	out, err := os.ReadFile(c.cacheFile)
-	if errors.Is(err, fs.ErrNotExist) {
-		// No file: New client
-		c.setUID("")
-		return nil
-	}
-
-	if err != nil {
-		// Something is wrong with the file
-		return fmt.Errorf("could not read landscape config file: %v", err)
-	}
-
-	// First contact done in previous session
-	c.setUID(string(out))
-	return nil
-}
-
-// dump stores persistent Landscape data to disk.
-func (c *Client) dump() error {
-	tmpFile := fmt.Sprintf("%s.tmp", c.cacheFile)
-
-	if err := os.WriteFile(tmpFile, []byte(c.getUID()), 0600); err != nil {
-		return fmt.Errorf("could not store Landscape data to temporary file: %v", err)
-	}
-
-	if err := os.Rename(tmpFile, c.cacheFile); err != nil {
-		return fmt.Errorf("could not move Landscape data from tmp to file: %v", err)
-	}
-
-	return nil
-}
-
-// getUID is syntax sugar to read the UID.
-func (c *Client) getUID() string {
-	//nolint:forcetypeassert // We know it is going to be a string
-	return c.uid.Load().(string)
-}
-
-// setUID is syntax sugar to set the UID.
-func (c *Client) setUID(s string) {
-	c.uid.Store(s)
 }
 
 // transportCredentials reads the Landscape client config to check if a SSL public key is specified.
