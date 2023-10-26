@@ -54,7 +54,7 @@ type connection struct {
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
-	LandscapeClientConfig(context.Context) (string, error)
+	LandscapeClientConfig(context.Context) (string, config.Source, error)
 
 	Subscription(context.Context) (string, config.Source, error)
 
@@ -97,7 +97,7 @@ func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, err
 
 // hostagentURL parses the landscape config file to find the hostagent URL.
 func (c *Client) hostagentURL(ctx context.Context) (string, error) {
-	config, err := c.conf.LandscapeClientConfig(ctx)
+	config, _, err := c.conf.LandscapeClientConfig(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -370,7 +370,7 @@ func (conn *connection) connected() bool {
 func (c *Client) transportCredentials(ctx context.Context) (cred credentials.TransportCredentials, err error) {
 	defer decorate.OnError(&err, "Landscape credentials")
 
-	conf, err := c.conf.LandscapeClientConfig(ctx)
+	conf, _, err := c.conf.LandscapeClientConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not obtain Landscape config: %v", err)
 	}

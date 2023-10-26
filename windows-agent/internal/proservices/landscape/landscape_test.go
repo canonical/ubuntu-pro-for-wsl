@@ -798,14 +798,14 @@ type mockConfig struct {
 	mu sync.Mutex
 }
 
-func (m *mockConfig) LandscapeClientConfig(ctx context.Context) (string, error) {
+func (m *mockConfig) LandscapeClientConfig(ctx context.Context) (string, config.Source, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.landscapeConfigErr {
-		return "", errors.New("Mock error")
+		return "", config.SourceNone, errors.New("Mock error")
 	}
-	return m.landscapeClientConfig, nil
+	return m.landscapeClientConfig, config.SourceGUI, nil
 }
 
 func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
