@@ -10,3 +10,7 @@
     pro status
     ```
 
+## Organisational pro enablement
+1. Find registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`, field `ProTokenOrg`.
+2. Write your Ubuntu Pro Token into the registry key
+3. The changes will take effect next time you start Ubuntu Pro For Windows.  All new distros will automatically become pro-enabled. If you want them to be applied now, follow the steps on how to restart Ubuntu Pro For Windows. Otherwise, you're done.

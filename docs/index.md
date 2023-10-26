@@ -19,8 +19,9 @@ Thinking about using Ubuntu Pro for Windows for your next project? Get in touch!
 :hidden:
  
 Install <02-install>
-Auto-enable Ubuntu Pro <03-enable-pro>
-Auto-attach distros to Landscape <04-attach-landscape>
-Windows Agent command line interface <05-windows-agent-command-line-reference>
-WSL Pro Service command line interface <06-wsl-pro-service-command-line-reference>
+Restart Ubuntu Pro For Windows <03-restart>
+Auto-enable Ubuntu Pro <04-enable-pro>
+Auto-attach distros to Landscape <05-attach-landscape>
+Windows Agent command line interface <06-windows-agent-command-line-reference>
+WSL Pro Service command line interface <07-wsl-pro-service-command-line-reference>
 ```
