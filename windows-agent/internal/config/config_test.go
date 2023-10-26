@@ -2,14 +2,23 @@ package config_test
 
 import (
 	"context"
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	config "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 )
 
 // registryState represents how much data is in the registry.
@@ -430,6 +439,89 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
 		})
 	}
+}
+
+func TestUpdateRegistrySettings(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testCases := map[string]struct {
+		valueToChange string
+		registryState registryState
+		breakTaskfile bool
+
+		wantTasks     []string
+		unwantedTasks []string
+		wantErr       bool
+	}{
+		"Success changing Pro token":               {valueToChange: "ProTokenOrg", registryState: keyExists, wantTasks: []string{"tasks.ProAttachment"}, unwantedTasks: []string{"tasks.LandscapeConfigure"}},
+		"Success changing Landscape without a UID": {valueToChange: "LandscapeClientConfig", registryState: keyExists, unwantedTasks: []string{"tasks.ProAttachment", "tasks.LandscapeConfigure"}},
+		"Success changing Landscape with a UID":    {valueToChange: "LandscapeClientConfig", registryState: landscapeAgentUIDHasValue, wantTasks: []string{"tasks.LandscapeConfigure"}, unwantedTasks: []string{"tasks.ProAttachment"}},
+		"Success changing the Landscape UID":       {valueToChange: "LandscapeAgentUID", registryState: keyExists, wantTasks: []string{"tasks.LandscapeConfigure"}, unwantedTasks: []string{"tasks.ProAttachment"}},
+
+		// Very implementation-detailed, but it's the only thing that actually triggers an error
+		"Error when the tasks cannot be submitted": {valueToChange: "ProTokenOrg", registryState: keyExists, breakTaskfile: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			dir := t.TempDir()
+
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
+			taskFilePath := filepath.Join(dir, distroName+".tasks")
+
+			db, err := database.New(ctx, dir, nil)
+			require.NoError(t, err, "Setup: could create empty database")
+
+			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
+			require.NoError(t, err, "Setup: could not add dummy distro to database")
+
+			r := setUpMockRegistry(0, tc.registryState, false)
+			require.NoError(t, err, "Setup: could not create empty database")
+
+			c := config.New(ctx, config.WithRegistry(r))
+
+			// Update value in registry
+			r.UbuntuProData[tc.valueToChange] = "NEW_VALUE!"
+
+			if tc.breakTaskfile {
+				err := os.MkdirAll(taskFilePath, 0600)
+				require.NoError(t, err, "could not create directory to interfere with task file")
+			}
+
+			err = c.UpdateRegistrySettings(ctx, dir, db)
+			if tc.wantErr {
+				require.Error(t, err, "UpdateRegistrySettings should return an error")
+				return
+			}
+			require.NoError(t, err, "UpdateRegistrySettings should return no error")
+
+			out, err := readFileOrEmpty(taskFilePath)
+			require.NoError(t, err, "Could not read distro taskfile")
+			for _, task := range tc.wantTasks {
+				assert.Containsf(t, out, task, "Distro should have received a %s task", task)
+			}
+			for _, task := range tc.unwantedTasks {
+				assert.NotContainsf(t, out, task, "Distro should have received a %s task", task)
+			}
+		})
+	}
+}
+
+func readFileOrEmpty(path string) (string, error) {
+	out, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return "", nil
+	}
+	return string(out), err
 }
 
 // is defines equality between flags. It is convenience function to check if a registryState matches a certain state.
