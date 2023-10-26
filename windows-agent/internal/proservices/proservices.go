@@ -3,10 +3,7 @@ package proservices
 
 import (
 	"context"
-	"crypto/sha512"
 	"errors"
-	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -19,8 +16,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
-	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
 )
 
@@ -95,18 +90,11 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	if err != nil {
 		return s, err
 	}
-	defer func() {
-		if err != nil {
-			db.Close(ctx)
-		}
-	}()
+	defer db.Close(ctx)
 
-	go func() {
-		err := updateSubscriptions(ctx, opts.cacheDir, conf, db)
-		if err != nil {
-			log.Warningf(ctx, "Could not update subscriptions: %v", err)
-		}
-	}()
+	if err := conf.UpdateRegistrySettings(ctx, opts.cacheDir, db); err != nil {
+		log.Warningf(ctx, "Could not update registry settings: %v", err)
+	}
 
 	uiService := ui.New(ctx, conf, db)
 
@@ -152,73 +140,4 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)
 
 	return grpcServer
-}
-
-// updateSubscriptions checks if the subscription has changed since the last time it was called. If so, the new subscription
-// is pushed to all distros as a deferred task.
-func updateSubscriptions(ctx context.Context, cacheDir string, conf *config.Config, db *database.DistroDB) error {
-	proToken, _, err := conf.Subscription(ctx)
-	if err != nil {
-		return fmt.Errorf("could not retrieve current subscription: %v", err)
-	}
-
-	if !subscriptionIsNew(ctx, cacheDir, proToken) {
-		return nil
-	}
-
-	task := tasks.ProAttachment{Token: proToken}
-
-	for _, d := range db.GetAll() {
-		err = errors.Join(err, d.SubmitDeferredTasks(task))
-	}
-
-	if err != nil {
-		return fmt.Errorf("could not submit new token to certain distros: %v", err)
-	}
-
-	return nil
-}
-
-// subscriptionIsNew detects if the current subscription is different from the last time it was called.
-func subscriptionIsNew(ctx context.Context, cacheDir string, newSubscription string) (new bool) {
-	cachePath := filepath.Join(cacheDir, "subscription.csum")
-	newCheckSum := sha512.Sum512([]byte(newSubscription))
-
-	// Update cache on exit
-	defer func() {
-		if newSubscription == "" {
-			// If there is no subscription, we remove the file.
-			// This preserves this function's idempotency.
-			err := os.Remove(cachePath)
-			if err != nil && !errors.Is(err, fs.ErrNotExist) {
-				log.Warningf(ctx, "Could not write new subscription to cache: %v", err)
-			}
-			return
-		}
-
-		if !new {
-			return
-		}
-
-		err := os.WriteFile(cachePath, newCheckSum[:], 0600)
-		if err != nil {
-			log.Warningf(ctx, "Could not write new subscription to cache: %v", err)
-		}
-	}()
-
-	oldChecksum, err := os.ReadFile(cachePath)
-	if errors.Is(err, fs.ErrNotExist) {
-		// File not found: there was no subscription before
-		// (Lack of) subscription is new only if the new subscription non-empty.
-		return newSubscription != ""
-	} else if err != nil {
-		log.Warningf(ctx, "Could not read old subscription, assuming subscription is new. Error: %v", err)
-		return true
-	}
-
-	if slices.Equal(oldChecksum, newCheckSum[:]) {
-		return false
-	}
-
-	return true
 }

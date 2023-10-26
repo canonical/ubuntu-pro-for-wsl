@@ -4,16 +4,22 @@ package config
 
 import (
 	"context"
+	"crypto/sha512"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/ubuntu/decorate"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -414,4 +420,156 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 	}
 
 	return nil
+}
+
+// UpdateRegistrySettings checks if any of the registry settings have changed since this function was last called.
+// If so, new settings are pushed to the distros.
+func (c *Config) UpdateRegistrySettings(ctx context.Context, cacheDir string, db *database.DistroDB) error {
+	type getTask = func(*Config, context.Context, string, *database.DistroDB) (task.Task, error)
+
+	// Collect tasks for updated settings
+	var errs error
+	var taskList []task.Task
+	for _, f := range []getTask{(*Config).getTaskOnNewSubscription, (*Config).getTaskOnNewLandscape} {
+		task, err := f(c, ctx, cacheDir, db)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+		if task != nil {
+			taskList = append(taskList, task)
+		}
+	}
+
+	if errs != nil {
+		log.Warningf(ctx, "Could not obtain some updated registry settings: %v", errs)
+	}
+
+	// Apply tasks for updated settings
+	errs = nil
+	for _, d := range db.GetAll() {
+		errs = errors.Join(errs, d.SubmitDeferredTasks(taskList...))
+	}
+
+	if errs != nil {
+		return fmt.Errorf("could not submit new task to certain distros: %v", errs)
+	}
+
+	return nil
+}
+
+// getTaskOnNewSubscription checks if the subscription has changed since the last time it was called. If so, the new subscription
+// is returned in the form of a task.
+func (c *Config) getTaskOnNewSubscription(ctx context.Context, cacheDir string, db *database.DistroDB) (task.Task, error) {
+	proToken, _, err := c.Subscription(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve current subscription: %v", err)
+	}
+
+	isNew, err := hasChanged(filepath.Join(cacheDir, "subscription.csum"), []byte(proToken))
+	if err != nil {
+		log.Warningf(ctx, "could not update checksum for Ubuntu Pro subscription: %v", err)
+	}
+
+	if !isNew {
+		return nil, nil
+	}
+
+	log.Debug(ctx, "New Ubuntu Pro subscription settings detected in registry")
+	return tasks.ProAttachment{Token: proToken}, nil
+}
+
+// getTaskOnNewLandscape checks if the Landscape settings has changed since the last time it was called. If so, the
+// new Landscape settings are returned in the form of a task.
+func (c *Config) getTaskOnNewLandscape(ctx context.Context, cacheDir string, db *database.DistroDB) (task.Task, error) {
+	landscapeConf, err := c.LandscapeClientConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve current landscape config: %v", err)
+	}
+
+	landscapeUID, err := c.LandscapeAgentUID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve current landscape UID: %v", err)
+	}
+
+	// We append them just so we can compute a combined checksum
+	serialized := fmt.Sprintf("%s%s", landscapeUID, landscapeConf)
+
+	isNew, err := hasChanged(filepath.Join(cacheDir, "landscape.csum"), []byte(serialized))
+	if err != nil {
+		log.Warningf(ctx, "could not update checksum for Landscape configuration: %v", err)
+	}
+
+	if !isNew {
+		return nil, nil
+	}
+
+	log.Debug(ctx, "New Landscape settings detected in registry")
+
+	// We must not register to landscape if we have no Landscape UID
+	if landscapeConf != "" && landscapeUID == "" {
+		log.Debug(ctx, "Ignoring new landscape settings: no Landscape agent UID")
+		return nil, nil
+	}
+
+	return tasks.LandscapeConfigure{Config: landscapeConf, HostagentUID: landscapeUID}, nil
+}
+
+// hasChanged detects if the current value is different from the last time it was used.
+// The return value is usable even if error is returned.
+func hasChanged(cachePath string, newValue []byte) (new bool, err error) {
+	var newCheckSum []byte
+	if len(newValue) != 0 {
+		tmp := sha512.Sum512(newValue)
+		newCheckSum = tmp[:]
+	}
+
+	defer decorateUpdateCache(&new, &err, cachePath, newCheckSum)
+
+	oldChecksum, err := os.ReadFile(cachePath)
+	if errors.Is(err, fs.ErrNotExist) {
+		// File not found: there was no value before
+		oldChecksum = nil
+	} else if err != nil {
+		return true, fmt.Errorf("could not read old value: %v", err)
+	}
+
+	if slices.Equal(oldChecksum, newCheckSum) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// decorateUpdateCache acts depending on caller's return values (hence decorate).
+// It stores the new checksum to the cachefile. Any errors are joined to *err.
+func decorateUpdateCache(new *bool, err *error, cachePath string, newCheckSum []byte) {
+	writeCacheErr := func() error {
+		// If the value is empty, we remove the file.
+		// This preserves this function's idempotency.
+		if len(newCheckSum) == 0 {
+			err := os.Remove(cachePath)
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("could not remove old checksum: %v", err)
+			}
+			return nil
+		}
+
+		// Value is unchanged: don't write to file
+		if !*new {
+			return nil
+		}
+
+		// Update to file
+		if err := os.WriteFile(cachePath, newCheckSum[:], 0600); err != nil {
+			return fmt.Errorf("could not write checksum to cache: %v", err)
+		}
+
+		return nil
+	}()
+
+	*err = errors.Join(*err, writeCacheErr)
 }

@@ -42,8 +42,6 @@ github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231023183501-458a1
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231023183501-458a10db4c16/go.mod h1:yZFCC1gVaFNjIJ7Glk3FBiaCokcV/Jk5B6tFIlHBgd8=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231023183501-458a10db4c16 h1:u7afWNLgssNSEHKxldRbgCobFnGlILpECBeAPiWyb0c=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231023183501-458a10db4c16/go.mod h1:a/RSoEHIs9RmXxL/+68oDpXi8+d+TGptM/9N5ULw2Kw=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231023183501-458a10db4c16 h1:B/iSer/eNknIEp9TnNYC56zdc6SLY6K7fXxkeFl15s8=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231023183501-458a10db4c16/go.mod h1:gjEBJv2vc1VUqqrv1ZTDcNmd3TBBCPIlmBaR63YSX9Y=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231025153609-b3e7db95a9ce h1:zuJOIrd+T+J5UVEiCHT9lK7sYS4VDJ5ZxI81Yvdr6jY=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231025153609-b3e7db95a9ce/go.mod h1:gjEBJv2vc1VUqqrv1ZTDcNmd3TBBCPIlmBaR63YSX9Y=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
