@@ -3,6 +3,9 @@ package ui_test
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
@@ -26,7 +29,7 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	conf := config.New(ctx, config.WithRegistry(registry.NewMock()))
+	conf := config.New(ctx, dir, config.WithRegistry(registry.NewMock()))
 
 	_ = ui.New(context.Background(), conf, db)
 }
@@ -80,9 +83,12 @@ func TestAttachPro(t *testing.T) {
 			m := registry.NewMock()
 			m.KeyIsReadOnly = tc.registryReadOnly
 			m.KeyExists = true
-			m.UbuntuProData["ProTokenUser"] = originalToken
 
-			conf := config.New(ctx, config.WithRegistry(m))
+			contents := fmt.Sprintf("subscription:\n  gui: %s", originalToken)
+			err = os.WriteFile(filepath.Join(dir, "config"), []byte(contents), 0600)
+			require.NoError(t, err, "Setup: could not write config file")
+
+			conf := config.New(ctx, dir, config.WithRegistry(m))
 			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}
