@@ -34,4 +34,4 @@ If you want to restart UP4W with factory settings, do:
     ```
 1. Remove folder `$env:LocalAppData\UbuntuPro`.
 2. Remove registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
-3. You're done. Next time you start the GUI it'll be like a fresh install
+3. You're done. Next time you start the GUI it'll be like a fresh install.
