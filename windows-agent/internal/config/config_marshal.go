@@ -19,18 +19,11 @@ type marshalHelper struct {
 func (c *Config) load() (err error) {
 	defer decorate.OnError(&err, "could not load data for Config")
 
-	// Backup the config in case the registry fails.
-	// This avoids partial loads.
-	l := c.landscape
-	s := c.subscription
-
 	if err := c.loadFile(); err != nil {
 		return fmt.Errorf("could not load config from the chache file: %v", err)
 	}
 
 	if err := c.loadRegistry(); err != nil {
-		c.landscape = l
-		c.subscription = s
 		return fmt.Errorf("could not load config from the registry: %v", err)
 	}
 
@@ -61,12 +54,11 @@ func (c *Config) loadFile() (err error) {
 }
 
 func (c *Config) loadRegistry() (err error) {
-	// Default values
-	c.subscription.Organization = ""
-	c.landscape.OrgConfig = ""
-
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
+		// Default values
+		c.subscription.Organization = ""
+		c.landscape.OrgConfig = ""
 		return nil
 	}
 	if err != nil {
