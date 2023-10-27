@@ -16,7 +16,7 @@ import (
 
 // Config is a provider for the subcription configuration.
 type Config interface {
-	SetSubscription(ctx context.Context, token string, source config.Source) error
+	SetUserSubscription(ctx context.Context, token string) error
 	IsReadOnly() (bool, error)
 	Subscription(context.Context) (string, config.Source, error)
 	FetchMicrosoftStoreSubscription(context.Context) error
@@ -45,7 +45,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.GetToken()
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
-	err := s.config.SetSubscription(ctx, token, config.SourceUser)
+	err := s.config.SetUserSubscription(ctx, token)
 	if err != nil {
 		return nil, err
 	}

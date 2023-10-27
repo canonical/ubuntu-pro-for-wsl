@@ -140,28 +140,6 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	return taskList, nil
 }
 
-// SetSubscription overwrites the value of the pro token and the method with which it has been acquired.
-func (c *Config) SetSubscription(ctx context.Context, proToken string, source Source) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Load before dumping to avoid overriding recent changes to registry
-	if err := c.load(); err != nil {
-		return err
-	}
-
-	old := c.subscription.Get(source)
-	c.subscription.Set(source, proToken)
-
-	if err := c.dump(); err != nil {
-		log.Errorf(ctx, "Could not update subscription, token will be ignored: %v", err)
-		c.subscription.Set(source, old)
-		return err
-	}
-
-	return nil
-}
-
 // LandscapeClientConfig returns the value of the landscape server URL and
 // the method it was acquired with (if any).
 func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, error) {
@@ -176,6 +154,43 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, err
 	return conf, src, nil
 }
 
+// SetUserSubscription overwrites the value of the user-provided Ubuntu Pro token.
+func (c *Config) SetUserSubscription(ctx context.Context, proToken string) error {
+	return c.set(ctx, &c.subscription.User, proToken)
+}
+
+// setStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
+func (c *Config) setStoreSubscription(ctx context.Context, proToken string) error {
+	return c.set(ctx, &c.subscription.Store, proToken)
+}
+
+// SetLandscapeAgentUID overrides the Landscape agent UID.
+func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
+	return c.set(ctx, &c.landscape.UID, uid)
+}
+
+// set is a generic method to safely modify the config.
+func (c *Config) set(ctx context.Context, field *string, value string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Load before dumping to avoid overriding recent changes to registry
+	if err := c.load(); err != nil {
+		return err
+	}
+
+	old := *field
+	*field = value
+
+	if err := c.dump(); err != nil {
+		log.Errorf(ctx, "Could not update settings: %v", err)
+		*field = old
+		return err
+	}
+
+	return nil
+}
+
 // LandscapeAgentUID returns the UID assigned to this agent by the Landscape server.
 // An empty string is returned if no UID has been assigned.
 func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
@@ -187,28 +202,6 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 	}
 
 	return c.landscape.UID, nil
-}
-
-// SetLandscapeAgentUID overrides the Landscape agent UID.
-func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Load before dumping to avoid overriding recent changes to registry
-	if err := c.load(); err != nil {
-		return err
-	}
-
-	old := c.landscape.UID
-	c.landscape.UID = uid
-
-	if err := c.dump(); err != nil {
-		log.Errorf(ctx, "Could not update landscape settings, UID will be ignored: %v", err)
-		c.landscape.UID = old
-		return err
-	}
-
-	return nil
 }
 
 // FetchMicrosoftStoreSubscription contacts Ubuntu Pro's contract server and the Microsoft Store
@@ -231,7 +224,7 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 		return fmt.Errorf("could not get ProToken from Microsoft Store: %v", err)
 	}
 
-	if err := c.SetSubscription(ctx, proToken, SourceMicrosoftStore); err != nil {
+	if err := c.setStoreSubscription(ctx, proToken); err != nil {
 		return err
 	}
 

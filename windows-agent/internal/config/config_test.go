@@ -263,7 +263,7 @@ func TestProvisioningTasks(t *testing.T) {
 	}
 }
 
-func TestSetSubscription(t *testing.T) {
+func TestSetUserSubscription(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -297,7 +297,7 @@ func TestSetSubscription(t *testing.T) {
 				token = ""
 			}
 
-			err := conf.SetSubscription(ctx, token, config.SourceUser)
+			err := conf.SetUserSubscription(ctx, token)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
 				return

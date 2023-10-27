@@ -224,12 +224,12 @@ type mockConfig struct {
 	source config.Source // stores the configured subscription source.
 }
 
-func (m *mockConfig) SetSubscription(ctx context.Context, token string, source config.Source) error {
+func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) error {
 	if m.setSubscriptionErr {
 		return errors.New("SetSubscription error")
 	}
 	m.token = token
-	m.source = source
+	m.source = config.SourceUser
 	return nil
 }
 func (m mockConfig) IsReadOnly() (bool, error) {
@@ -259,5 +259,12 @@ func (m *mockConfig) FetchMicrosoftStoreSubscription(ctx context.Context) error 
 		return errors.New("Already subscribed")
 	}
 
-	return m.SetSubscription(ctx, "MS", config.SourceMicrosoftStore)
+	if m.setSubscriptionErr {
+		return errors.New("SetSubscription error")
+	}
+
+	m.token = "MS"
+	m.source = config.SourceMicrosoftStore
+
+	return nil
 }

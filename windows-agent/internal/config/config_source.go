@@ -1,7 +1,5 @@
 package config
 
-import "fmt"
-
 // Source indicates the method a configuration parameter was acquired.
 type Source int
 
@@ -41,32 +39,6 @@ func (s subscription) resolve() (string, Source) {
 	}
 
 	return "", SourceNone
-}
-
-func (s *subscription) Set(src Source, proToken string) {
-	ptr := s.src(src)
-	*ptr = proToken
-}
-
-func (s subscription) Get(src Source) string {
-	return *s.src(src)
-}
-
-// src is a helper to avoid duplicating the mapping in Get and Set.
-func (s *subscription) src(src Source) *string {
-	switch src {
-	case SourceNone:
-		// TODO: Panic? Warning?
-		return new(string)
-	case SourceUser:
-		return &s.User
-	case SourceRegistry:
-		return &s.Organization
-	case SourceMicrosoftStore:
-		return &s.Store
-	}
-
-	panic(fmt.Sprintf("Unknown enum value for SubscriptionSource: %d", src))
 }
 
 type landscapeConf struct {
