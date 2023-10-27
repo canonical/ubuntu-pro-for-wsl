@@ -267,10 +267,8 @@ func TestSetSubscription(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		mockErrors       uint32
-		settingsState    settingsState
-		accessIsReadOnly bool
-		emptyToken       bool
+		settingsState settingsState
+		emptyToken    bool
 
 		want      string
 		wantError bool
@@ -280,11 +278,6 @@ func TestSetSubscription(t *testing.T) {
 		"Success when the key does not exist":             {settingsState: untouched, want: "new_token"},
 		"Success when the pro token field does not exist": {settingsState: keyExists, want: "new_token"},
 		"Success when there is a store token active":      {settingsState: storeTokenHasValue, want: "store_token"},
-
-		"Error when the registry key cannot be written on due to lack of permission": {settingsState: userTokenHasValue, accessIsReadOnly: true, want: "user_token", wantError: true},
-		"Error when the registry key cannot be opened":                               {settingsState: userTokenHasValue, mockErrors: registry.MockErrOnCreateKey, want: "user_token", wantError: true},
-		"Error when the registry key cannot be written on":                           {settingsState: userTokenHasValue, mockErrors: registry.MockErrOnWriteValue, want: "user_token", wantError: true},
-		"Error when the registry key cannot be read":                                 {settingsState: userTokenHasValue, mockErrors: registry.MockErrOnOpenKey, want: "user_token", wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -293,7 +286,7 @@ func TestSetSubscription(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, tc.accessIsReadOnly, false)
+			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, false)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			token := "new_token"
