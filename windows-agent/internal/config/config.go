@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
@@ -19,7 +20,6 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/ubuntu/decorate"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -28,13 +28,6 @@ const (
 	fieldLandscapeClientConfig = "LandscapeClientConfig"
 	fieldLandscapeAgentUID     = "LandscapeAgentUID"
 )
-
-// fieldsProToken contains the fields in the registry where each source will store its token.
-var fieldsProToken = map[Source]string{
-	SubscriptionOrganization:   "ProTokenOrg",
-	SubscriptionUser:           "ProTokenUser",
-	SubscriptionMicrosoftStore: "ProTokenStore",
-}
 
 // Registry abstracts away access to the windows registry.
 type Registry interface {
@@ -49,18 +42,16 @@ type Registry interface {
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
 type Config struct {
-	proTokens map[Source]string
-	data      configData
+	// data
+	subscription subscription
+	landscape    landscapeConf
 
-	registry Registry
+	// disk backing
+	registry  Registry
+	cachePath string
 
+	// Sync
 	mu *sync.Mutex
-}
-
-// configData is a bag of data unrelated to the subscription status.
-type configData struct {
-	landscapeClientConfig string
-	landscapeAgentUID     string
 }
 
 type options struct {
@@ -78,7 +69,7 @@ func WithRegistry(r Registry) Option {
 }
 
 // New creates and initializes a new Config object.
-func New(ctx context.Context, args ...Option) (m *Config) {
+func New(ctx context.Context, cachePath string, args ...Option) (m *Config) {
 	var opts options
 
 	for _, f := range args {
@@ -91,8 +82,8 @@ func New(ctx context.Context, args ...Option) (m *Config) {
 
 	m = &Config{
 		registry:  opts.registry,
+		cachePath: filepath.Join(cachePath, "config"),
 		mu:        &sync.Mutex{},
-		proTokens: make(map[Source]string),
 	}
 
 	return m
@@ -107,25 +98,8 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Source,
 		return "", SourceNone, fmt.Errorf("could not load: %v", err)
 	}
 
-	token, source = c.subscription()
+	token, source = c.subscription.resolve()
 	return token, source, nil
-}
-
-// subscription is the unsafe version of Subscription. It returns the ProToken and the method it was acquired with (if any).
-func (c *Config) subscription() (token string, source Source) {
-	for src := subscriptionMaxPriority - 1; src > SubscriptionNone; src-- {
-		token, ok := c.proTokens[src]
-		if !ok {
-			continue
-		}
-		if token == "" {
-			continue
-		}
-
-		return token, src
-	}
-
-	return "", SubscriptionNone
 }
 
 // IsReadOnly returns whether the registry can be written to.
@@ -156,17 +130,17 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	}
 
 	// Ubuntu Pro attachment
-	proToken, _ := c.subscription()
+	proToken, _ := c.subscription.resolve()
 	taskList = append(taskList, tasks.ProAttachment{Token: proToken})
 
-	if c.data.landscapeClientConfig == "" {
+	if lp, _ := c.landscape.resolve(); lp == "" {
 		// Landscape unregistration: always
 		taskList = append(taskList, tasks.LandscapeConfigure{})
-	} else if c.data.landscapeAgentUID != "" {
+	} else if c.landscape.UID != "" {
 		// Landcape registration: only when we have a UID assigned
 		taskList = append(taskList, tasks.LandscapeConfigure{
-			Config:       c.data.landscapeClientConfig,
-			HostagentUID: c.data.landscapeAgentUID,
+			Config:       lp,
+			HostagentUID: c.landscape.UID,
 		})
 	}
 
@@ -196,15 +170,16 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source So
 }
 
 // LandscapeClientConfig returns the value of the landscape server URL.
-func (c *Config) LandscapeClientConfig(ctx context.Context) (string, error) {
+func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if err := c.load(ctx); err != nil {
-		return "", fmt.Errorf("could not load: %v", err)
+		return "", SourceNone, fmt.Errorf("could not load: %v", err)
 	}
 
-	return c.data.landscapeClientConfig, nil
+	conf, src := c.landscape.resolve()
+	return conf, src, nil
 }
 
 // LandscapeAgentUID returns the UID assigned to this agent by the Landscape server.
@@ -217,7 +192,7 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not load: %v", err)
 	}
 
-	return c.data.landscapeAgentUID, nil
+	return c.landscape.UID, nil
 }
 
 // SetLandscapeAgentUID overrides the Landscape agent UID.
@@ -230,12 +205,12 @@ func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 		return err
 	}
 
-	old := c.data.landscapeAgentUID
-	c.data.landscapeAgentUID = uid
+	old := c.landscape.UID
+	c.landscape.UID = uid
 
 	if err := c.dump(); err != nil {
 		log.Errorf(ctx, "Could not update landscape agent UID in registry, UID will be ignored: %v", err)
-		c.data.landscapeAgentUID = old
+		c.landscape.UID = old
 		return err
 	}
 
