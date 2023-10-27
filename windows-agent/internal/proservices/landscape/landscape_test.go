@@ -51,8 +51,8 @@ func TestConnect(t *testing.T) {
 		landscapeUIDReadErr  bool
 		landscapeUIDWriteErr bool
 
-		landscapeURLErr bool
-		tokenErr        bool
+		noLandscapeURL bool
+		tokenErr       bool
 
 		requireCertificate         bool
 		breakLandscapeClientConfig bool
@@ -69,7 +69,7 @@ func TestConnect(t *testing.T) {
 		"Success with an SSL certificate": {requireCertificate: true},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
-		"Error when the landscape URL cannot be retrieved":     {landscapeURLErr: true, wantErr: true},
+		"Error when the landscape URL cannot be retrieved":     {noLandscapeURL: true, wantErr: true},
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
@@ -93,14 +93,10 @@ func TestConnect(t *testing.T) {
 			defer lis.Close()
 
 			conf := &mockConfig{
-				proToken:          "TOKEN",
-				landscapeAgentURL: lis.Addr().String(),
+				proToken: "TOKEN",
 
 				// We trigger an error on first-contact SendUpdatedInfo by erroring out in conf.ProToken()
 				proTokenErr: tc.tokenErr,
-
-				// We trigger an earlier error by erroring out on LandscapeAgentURL
-				landscapeURLErr: tc.landscapeURLErr,
 
 				// We trigger errors trying to read or write to/from the registry
 				landscapeUIDErr:    tc.landscapeUIDReadErr,
@@ -119,7 +115,11 @@ func TestConnect(t *testing.T) {
 				err = nil
 			}
 			require.NoError(t, err, "Setup: could not load landscape config")
+
 			conf.landscapeClientConfig = string(out)
+			if !tc.noLandscapeURL {
+				conf.landscapeClientConfig = fmt.Sprintf("[host]\nurl=%q\n\n%s", lis.Addr(), conf.landscapeClientConfig)
+			}
 
 			if !tc.serverNotAvailable {
 				//nolint:errcheck // We don't care about these errors
@@ -218,8 +218,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", false)
 
 			conf := &mockConfig{
-				proToken:          "TOKEN",
-				landscapeAgentURL: lis.Addr().String(),
+				proToken:              "TOKEN",
+				landscapeClientConfig: fmt.Sprintf("[host]\nurl=%q\n", lis.Addr()),
 			}
 
 			//nolint:errcheck // We don't care about these errors
@@ -386,8 +386,8 @@ func TestAutoReconnection(t *testing.T) {
 	defer server.Stop()
 
 	conf := &mockConfig{
-		proToken:          "TOKEN",
-		landscapeAgentURL: lis.Addr().String(),
+		proToken:              "TOKEN",
+		landscapeClientConfig: fmt.Sprintf("[host]\nurl=%q\n", lis.Addr()),
 	}
 
 	db, err := database.New(ctx, t.TempDir(), conf)
@@ -522,8 +522,8 @@ func TestReceiveCommands(t *testing.T) {
 			defer server.Stop()
 
 			conf := &mockConfig{
-				proToken:          "TOKEN",
-				landscapeAgentURL: lis.Addr().String(),
+				proToken:              "TOKEN",
+				landscapeClientConfig: fmt.Sprintf("[host]\nurl=%q\n", lis.Addr()),
 			}
 
 			db, err := database.New(ctx, t.TempDir(), conf)
@@ -787,12 +787,10 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, requireC
 
 type mockConfig struct {
 	proToken              string
-	landscapeAgentURL     string
 	landscapeClientConfig string
 	landscapeAgentUID     string
 
 	proTokenErr        bool
-	landscapeURLErr    bool
 	landscapeConfigErr bool
 	landscapeUIDErr    bool
 	setLandscapeUIDErr bool
@@ -822,16 +820,6 @@ func (m *mockConfig) Subscription(ctx context.Context) (string, config.Subscript
 		return "", config.SubscriptionNone, errors.New("Mock error")
 	}
 	return m.proToken, config.SubscriptionUser, nil
-}
-
-func (m *mockConfig) LandscapeAgentURL(ctx context.Context) (string, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if m.landscapeURLErr {
-		return "", errors.New("Mock error")
-	}
-	return m.landscapeAgentURL, nil
 }
 
 func (m *mockConfig) LandscapeAgentUID(ctx context.Context) (string, error) {

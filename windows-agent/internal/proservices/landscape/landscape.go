@@ -55,7 +55,6 @@ type connection struct {
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
 	LandscapeClientConfig(context.Context) (string, error)
-	LandscapeAgentURL(context.Context) (string, error)
 
 	Subscription(context.Context) (string, config.SubscriptionSource, error)
 
@@ -96,6 +95,32 @@ func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, err
 	return c, nil
 }
 
+// hostagentURL parses the landscape config file to find the hostagent URL.
+func (c *Client) hostagentURL(ctx context.Context) (string, error) {
+	config, err := c.conf.LandscapeClientConfig(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	r := strings.NewReader(config)
+	data, err := ini.Load(r)
+	if err != nil {
+		return "", fmt.Errorf("could not parse config: %v", err)
+	}
+
+	s, err := data.GetSection("host")
+	if err != nil { // Section does not exist
+		return "", nil
+	}
+
+	k, err := s.GetKey("url")
+	if err != nil { // Key does not exist
+		return "", nil
+	}
+
+	return k.String(), nil
+}
+
 // Connect starts the connection and starts talking to the server.
 // Call disconnect to deallocate resources.
 func (c *Client) Connect(ctx context.Context) (err error) {
@@ -108,9 +133,12 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	// Dummy connection to indicate that a first attempt was attempted
 	c.conn = &connection{}
 
-	address, err := c.conf.LandscapeAgentURL(ctx)
+	address, err := c.hostagentURL(ctx)
 	if err != nil {
 		return err
+	}
+	if address == "" {
+		return errors.New("no hostagent URL provided in the Landscape configuration")
 	}
 
 	defer func() {

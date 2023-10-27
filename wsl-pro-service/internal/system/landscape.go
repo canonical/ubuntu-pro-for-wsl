@@ -87,6 +87,8 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string, hostag
 		return "", fmt.Errorf("could not parse config: %v", err)
 	}
 
+	data.DeleteSection("host")
+
 	distroName, err := s.wslDistroName(ctx)
 	if err != nil {
 		return "", err

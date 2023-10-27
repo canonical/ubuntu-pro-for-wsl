@@ -26,7 +26,6 @@ const (
 	registryPath = `Software\Canonical\UbuntuPro`
 
 	fieldLandscapeClientConfig = "LandscapeClientConfig"
-	fieldLandscapeAgentURL     = "LandscapeAgentURL"
 	fieldLandscapeAgentUID     = "LandscapeAgentUID"
 )
 
@@ -61,7 +60,6 @@ type Config struct {
 // configData is a bag of data unrelated to the subscription status.
 type configData struct {
 	landscapeClientConfig string
-	landscapeAgentURL     string
 	landscapeAgentUID     string
 }
 
@@ -221,18 +219,6 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source Su
 	return nil
 }
 
-// LandscapeAgentURL returns the value of the landscape server URL.
-func (c *Config) LandscapeAgentURL(ctx context.Context) (string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err := c.load(ctx); err != nil {
-		return "", fmt.Errorf("could not load: %v", err)
-	}
-
-	return c.data.landscapeAgentURL, nil
-}
-
 // LandscapeClientConfig returns the value of the landscape server URL.
 func (c *Config) LandscapeClientConfig(ctx context.Context) (string, error) {
 	c.mu.Lock()
@@ -329,11 +315,6 @@ func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSo
 		return nil, data, err
 	}
 
-	data.landscapeAgentURL, err = c.readValue(ctx, k, fieldLandscapeAgentURL)
-	if err != nil {
-		return proTokens, data, err
-	}
-
 	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig)
 	if err != nil {
 		return proTokens, data, err
@@ -374,10 +355,6 @@ func (c *Config) dump() (err error) {
 		if err != nil {
 			return fmt.Errorf("could not write into registry key: %w", err)
 		}
-	}
-
-	if err := c.registry.WriteValue(k, fieldLandscapeAgentURL, c.data.landscapeAgentURL); err != nil {
-		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 
 	if err := c.registry.WriteMultilineValue(k, fieldLandscapeClientConfig, c.data.landscapeClientConfig); err != nil {
