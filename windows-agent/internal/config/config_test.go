@@ -599,10 +599,10 @@ func setUpMockSettings(t *testing.T, mockErrors uint32, state settingsState, rea
 	}
 
 	if state.is(userTokenExists) {
-		fileData.Subscription["gui"] = ""
+		fileData.Subscription["user"] = ""
 	}
 	if state.is(userTokenHasValue) {
-		fileData.Subscription["gui"] = "user_token"
+		fileData.Subscription["user"] = "user_token"
 	}
 
 	if state.is(storeTokenExists) {
