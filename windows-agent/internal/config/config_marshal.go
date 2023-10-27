@@ -19,32 +19,14 @@ type marshalHelper struct {
 func (c *Config) load() (err error) {
 	defer decorate.OnError(&err, "could not load data for Config")
 
-	if err := c.loadFile(); err != nil {
-		return fmt.Errorf("could not load config from the chache file: %v", err)
+	var h marshalHelper
+
+	if err := h.loadFile(c.cachePath); err != nil {
+		return fmt.Errorf("could not load config from the cache file: %v", err)
 	}
 
-	if err := c.loadRegistry(); err != nil {
+	if err := h.loadRegistry(c.registry); err != nil {
 		return fmt.Errorf("could not load config from the registry: %v", err)
-	}
-
-	return nil
-}
-
-func (c *Config) loadFile() (err error) {
-	out, err := os.ReadFile(c.cachePath)
-	if errors.Is(err, fs.ErrNotExist) {
-		out = []byte{}
-	} else if err != nil {
-		return fmt.Errorf("could not read cache file: %v", err)
-	}
-
-	h := marshalHelper{
-		Landscape:    c.landscape,
-		Subscription: c.subscription,
-	}
-
-	if err := yaml.Unmarshal(out, &h); err != nil {
-		return fmt.Errorf("could not umarshal cache file: %v", err)
 	}
 
 	c.landscape = h.Landscape
@@ -53,31 +35,46 @@ func (c *Config) loadFile() (err error) {
 	return nil
 }
 
-func (c *Config) loadRegistry() (err error) {
-	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
+func (h *marshalHelper) loadFile(cachePath string) (err error) {
+	out, err := os.ReadFile(cachePath)
+	if errors.Is(err, fs.ErrNotExist) {
+		out = []byte{}
+	} else if err != nil {
+		return fmt.Errorf("could not read cache file: %v", err)
+	}
+
+	if err := yaml.Unmarshal(out, h); err != nil {
+		return fmt.Errorf("could not umarshal cache file: %v", err)
+	}
+
+	return nil
+}
+
+func (h *marshalHelper) loadRegistry(reg Registry) (err error) {
+	k, err := reg.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		// Default values
-		c.subscription.Organization = ""
-		c.landscape.OrgConfig = ""
+		h.Subscription.Organization = ""
+		h.Landscape.OrgConfig = ""
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	defer c.registry.CloseKey(k)
+	defer reg.CloseKey(k)
 
-	proToken, err := readFromRegistry(c.registry, k, "UbuntuProToken")
+	proToken, err := readFromRegistry(reg, k, "UbuntuProToken")
 	if err != nil {
 		return err
 	}
 
-	config, err := readFromRegistry(c.registry, k, "LandscapeConfig")
+	config, err := readFromRegistry(reg, k, "LandscapeConfig")
 	if err != nil {
 		return err
 	}
 
-	c.subscription.Organization = proToken
-	c.landscape.OrgConfig = config
+	h.Subscription.Organization = proToken
+	h.Landscape.OrgConfig = config
 
 	return nil
 }
@@ -94,7 +91,7 @@ func readFromRegistry(r Registry, key uintptr, field string) (string, error) {
 	return value, nil
 }
 
-func (c *Config) dump() (err error) {
+func (c Config) dump() (err error) {
 	defer decorate.OnError(&err, "could not store Config data")
 
 	// Backup the file in case the registry write fails.
@@ -104,11 +101,16 @@ func (c *Config) dump() (err error) {
 		return err
 	}
 
-	if err := c.dumpFile(); err != nil {
+	h := marshalHelper{
+		Landscape:    c.landscape,
+		Subscription: c.subscription,
+	}
+
+	if err := h.dumpFile(c.cachePath); err != nil {
 		return err
 	}
 
-	if err := c.dumpRegistry(); err != nil {
+	if err := h.dumpRegistry(c.registry); err != nil {
 		return errors.Join(err, restore())
 	}
 
@@ -137,37 +139,32 @@ func makeBackup(originalPath string) (func() error, error) {
 	}, nil
 }
 
-func (c *Config) dumpRegistry() error {
+func (h marshalHelper) dumpRegistry(reg Registry) error {
 	// CreateKey is equivalent to OpenKey if the key already existed
-	k, err := c.registry.HKCUCreateKey(registryPath, registry.WRITE)
+	k, err := reg.HKCUCreateKey(registryPath, registry.WRITE)
 	if err != nil {
 		return fmt.Errorf("could not open or create registry key: %w", err)
 	}
-	defer c.registry.CloseKey(k)
+	defer reg.CloseKey(k)
 
-	if err := c.registry.WriteValue(k, "UbuntuProToken", c.subscription.Organization); err != nil {
+	if err := reg.WriteValue(k, "UbuntuProToken", h.Subscription.Organization); err != nil {
 		return fmt.Errorf("could not write UbuntuProToken into registry key: %v", err)
 	}
 
-	if err := c.registry.WriteMultilineValue(k, "LandscapeConfig", c.landscape.OrgConfig); err != nil {
+	if err := reg.WriteMultilineValue(k, "LandscapeConfig", h.Landscape.OrgConfig); err != nil {
 		return fmt.Errorf("could not write LandscapeConfig into registry key: %v", err)
 	}
 
 	return nil
 }
 
-func (c *Config) dumpFile() error {
-	h := marshalHelper{
-		Landscape:    c.landscape,
-		Subscription: c.subscription,
-	}
-
+func (h marshalHelper) dumpFile(cachePath string) error {
 	out, err := yaml.Marshal(h)
 	if err != nil {
 		return fmt.Errorf("could not marshal config: %v", err)
 	}
 
-	if err := os.WriteFile(c.cachePath, out, 0600); err != nil {
+	if err := os.WriteFile(cachePath, out, 0600); err != nil {
 		return fmt.Errorf("could not write config cache file: %v", err)
 	}
 
