@@ -121,17 +121,17 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		wantImmutable bool
 		wantErr       bool
 	}{
-		"Success with a non-subscription":           {config: mockConfig{source: config.SubscriptionNone}, wantType: none},
-		"Success with a read-only non-subscription": {config: mockConfig{source: config.SubscriptionNone, registryReadOnly: true}, wantType: none, wantImmutable: true},
+		"Success with a non-subscription":           {config: mockConfig{source: config.SourceNone}, wantType: none},
+		"Success with a read-only non-subscription": {config: mockConfig{source: config.SourceNone, registryReadOnly: true}, wantType: none, wantImmutable: true},
 
-		"Success with an organization subscription":          {config: mockConfig{source: config.SubscriptionOrganization}, wantType: organization},
-		"Success with a read-only organization subscription": {config: mockConfig{source: config.SubscriptionOrganization, registryReadOnly: true}, wantType: organization, wantImmutable: true},
+		"Success with an organization subscription":          {config: mockConfig{source: config.SourceRegistry}, wantType: organization},
+		"Success with a read-only organization subscription": {config: mockConfig{source: config.SourceRegistry, registryReadOnly: true}, wantType: organization, wantImmutable: true},
 
-		"Success with a user subscription":           {config: mockConfig{source: config.SubscriptionUser}, wantType: user},
-		"Success with a read-only user subscription": {config: mockConfig{source: config.SubscriptionUser, registryReadOnly: true}, wantType: user, wantImmutable: true},
+		"Success with a user subscription":           {config: mockConfig{source: config.SourceGUI}, wantType: user},
+		"Success with a read-only user subscription": {config: mockConfig{source: config.SourceGUI, registryReadOnly: true}, wantType: user, wantImmutable: true},
 
-		"Success with a store subscription":           {config: mockConfig{source: config.SubscriptionMicrosoftStore}, wantType: store},
-		"Success with a read-only store subscription": {config: mockConfig{source: config.SubscriptionMicrosoftStore, registryReadOnly: true}, wantType: store, wantImmutable: true},
+		"Success with a store subscription":           {config: mockConfig{source: config.SourceMicrosoftStore}, wantType: store},
+		"Success with a read-only store subscription": {config: mockConfig{source: config.SourceMicrosoftStore, registryReadOnly: true}, wantType: store, wantImmutable: true},
 
 		"Error when the read-only check fails":            {config: mockConfig{isReadOnlyErr: true}, wantErr: true},
 		"Error when the subscription cannot be retreived": {config: mockConfig{subscriptionErr: true}, wantErr: true},
@@ -171,14 +171,14 @@ func TestNotifyPurchase(t *testing.T) {
 		wantImmutable bool
 		wantErr       bool
 	}{
-		"Success with a non-subscription":            {config: mockConfig{source: config.SubscriptionNone}, wantType: store},
-		"Success with an existing user subscription": {config: mockConfig{source: config.SubscriptionUser}, wantType: store},
+		"Success with a non-subscription":            {config: mockConfig{source: config.SourceNone}, wantType: store},
+		"Success with an existing user subscription": {config: mockConfig{source: config.SourceGUI}, wantType: store},
 
-		"Error to fetch MS Store":                          {config: mockConfig{source: config.SubscriptionNone, fetchErr: true}, wantType: none, wantErr: true},
-		"Error to set the subscription":                    {config: mockConfig{source: config.SubscriptionNone, setSubscriptionErr: true}, wantType: none, wantErr: true},
-		"Error to read the registry":                       {config: mockConfig{source: config.SubscriptionNone, isReadOnlyErr: true}, wantType: none, wantErr: true},
-		"Error with an existing store subscription":        {config: mockConfig{source: config.SubscriptionMicrosoftStore}, wantType: store, wantErr: true},
-		"Error with a read-only organization subscription": {config: mockConfig{source: config.SubscriptionOrganization, registryReadOnly: true}, wantType: organization, wantImmutable: true, wantErr: true},
+		"Error to fetch MS Store":                          {config: mockConfig{source: config.SourceNone, fetchErr: true}, wantType: none, wantErr: true},
+		"Error to set the subscription":                    {config: mockConfig{source: config.SourceNone, setSubscriptionErr: true}, wantType: none, wantErr: true},
+		"Error to read the registry":                       {config: mockConfig{source: config.SourceNone, isReadOnlyErr: true}, wantType: none, wantErr: true},
+		"Error with an existing store subscription":        {config: mockConfig{source: config.SourceMicrosoftStore}, wantType: store, wantErr: true},
+		"Error with a read-only organization subscription": {config: mockConfig{source: config.SourceRegistry, registryReadOnly: true}, wantType: organization, wantImmutable: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -212,11 +212,11 @@ type mockConfig struct {
 	subscriptionErr    bool // Config errors out in Subscription function
 	fetchErr           bool // Config errors out in FetchMicrosoftStoreSubscription function
 
-	token  string                    // stores the configured Pro token
-	source config.SubscriptionSource // stores the configured subscription source.
+	token  string        // stores the configured Pro token
+	source config.Source // stores the configured subscription source.
 }
 
-func (m *mockConfig) SetSubscription(ctx context.Context, token string, source config.SubscriptionSource) error {
+func (m *mockConfig) SetSubscription(ctx context.Context, token string, source config.Source) error {
 	if m.setSubscriptionErr {
 		return errors.New("SetSubscription error")
 	}
@@ -230,9 +230,9 @@ func (m mockConfig) IsReadOnly() (bool, error) {
 	}
 	return m.registryReadOnly, nil
 }
-func (m mockConfig) Subscription(context.Context) (string, config.SubscriptionSource, error) {
+func (m mockConfig) Subscription(context.Context) (string, config.Source, error) {
 	if m.subscriptionErr {
-		return "", config.SubscriptionNone, errors.New("Subscription error")
+		return "", config.SourceNone, errors.New("Subscription error")
 	}
 	return m.token, m.source, nil
 }
@@ -247,9 +247,9 @@ func (m *mockConfig) FetchMicrosoftStoreSubscription(ctx context.Context) error 
 	if m.fetchErr {
 		return errors.New("FetchMicrosoftStoreSubscription error")
 	}
-	if m.source == config.SubscriptionMicrosoftStore {
+	if m.source == config.SourceMicrosoftStore {
 		return errors.New("Already subscribed")
 	}
 
-	return m.SetSubscription(ctx, "MS", config.SubscriptionMicrosoftStore)
+	return m.SetSubscription(ctx, "MS", config.SourceMicrosoftStore)
 }

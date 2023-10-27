@@ -812,14 +812,14 @@ func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) (
 	return nil, nil
 }
 
-func (m *mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
+func (m *mockConfig) Subscription(ctx context.Context) (string, config.Source, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.proTokenErr {
-		return "", config.SubscriptionNone, errors.New("Mock error")
+		return "", config.SourceNone, errors.New("Mock error")
 	}
-	return m.proToken, config.SubscriptionUser, nil
+	return m.proToken, config.SourceGUI, nil
 }
 
 func (m *mockConfig) LandscapeAgentUID(ctx context.Context) (string, error) {

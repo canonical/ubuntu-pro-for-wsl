@@ -30,7 +30,7 @@ const (
 )
 
 // fieldsProToken contains the fields in the registry where each source will store its token.
-var fieldsProToken = map[SubscriptionSource]string{
+var fieldsProToken = map[Source]string{
 	SubscriptionOrganization:   "ProTokenOrg",
 	SubscriptionUser:           "ProTokenUser",
 	SubscriptionMicrosoftStore: "ProTokenStore",
@@ -49,7 +49,7 @@ type Registry interface {
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
 type Config struct {
-	proTokens map[SubscriptionSource]string
+	proTokens map[Source]string
 	data      configData
 
 	registry Registry
@@ -62,30 +62,6 @@ type configData struct {
 	landscapeClientConfig string
 	landscapeAgentUID     string
 }
-
-// SubscriptionSource indicates the method the subscription was acquired.
-type SubscriptionSource int
-
-// Subscription types. Sorted in ascending order of precedence.
-const (
-	// SubscriptionNone -> no subscription.
-	SubscriptionNone SubscriptionSource = iota
-
-	// SubscriptionOrganization -> the subscription was obtained by introducing a pro token
-	// via the registry by the sys admin.
-	SubscriptionOrganization
-
-	// SubscriptionUser -> the subscription was obtained by introducing a pro token
-	// via the registry or the GUI.
-	SubscriptionUser
-
-	// SubscriptionMicrosoftStore -> the subscription was acquired via the Microsoft Store.
-	SubscriptionMicrosoftStore
-
-	// subscriptionMaxPriority is a sentinel value to make looping simpler.
-	// It must always be the last value in the enum.
-	subscriptionMaxPriority
-)
 
 type options struct {
 	registry Registry
@@ -116,19 +92,19 @@ func New(ctx context.Context, args ...Option) (m *Config) {
 	m = &Config{
 		registry:  opts.registry,
 		mu:        &sync.Mutex{},
-		proTokens: make(map[SubscriptionSource]string),
+		proTokens: make(map[Source]string),
 	}
 
 	return m
 }
 
 // Subscription returns the ProToken and the method it was acquired with (if any).
-func (c *Config) Subscription(ctx context.Context) (token string, source SubscriptionSource, err error) {
+func (c *Config) Subscription(ctx context.Context) (token string, source Source, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if err := c.load(ctx); err != nil {
-		return "", SubscriptionNone, fmt.Errorf("could not load: %v", err)
+		return "", SourceNone, fmt.Errorf("could not load: %v", err)
 	}
 
 	token, source = c.subscription()
@@ -136,7 +112,7 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Subscri
 }
 
 // subscription is the unsafe version of Subscription. It returns the ProToken and the method it was acquired with (if any).
-func (c *Config) subscription() (token string, source SubscriptionSource) {
+func (c *Config) subscription() (token string, source Source) {
 	for src := subscriptionMaxPriority - 1; src > SubscriptionNone; src-- {
 		token, ok := c.proTokens[src]
 		if !ok {
@@ -198,7 +174,7 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 }
 
 // SetSubscription overwrites the value of the pro token and the method with which it has been acquired.
-func (c *Config) SetSubscription(ctx context.Context, proToken string, source SubscriptionSource) error {
+func (c *Config) SetSubscription(ctx context.Context, proToken string, source Source) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -282,10 +258,10 @@ func (c *Config) load(ctx context.Context) (err error) {
 	return nil
 }
 
-func (c *Config) loadRegistry(ctx context.Context) (proTokens map[SubscriptionSource]string, data configData, err error) {
+func (c *Config) loadRegistry(ctx context.Context) (proTokens map[Source]string, data configData, err error) {
 	defer decorate.OnError(&err, "could not load from registry")
 
-	proTokens = make(map[SubscriptionSource]string)
+	proTokens = make(map[Source]string)
 
 	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
 	if errors.Is(err, registry.ErrKeyNotExist) {
@@ -392,7 +368,7 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 		return fmt.Errorf("could not get ProToken from Microsoft Store: %v", err)
 	}
 
-	if err := c.SetSubscription(ctx, proToken, SubscriptionMicrosoftStore); err != nil {
+	if err := c.SetSubscription(ctx, proToken, SourceMicrosoftStore); err != nil {
 		return err
 	}
 

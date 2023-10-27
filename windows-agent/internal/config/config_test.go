@@ -49,21 +49,21 @@ func TestSubscription(t *testing.T) {
 		registryState registryState
 
 		wantToken  string
-		wantSource config.SubscriptionSource
+		wantSource config.Source
 		wantError  bool
 	}{
-		"Success":                                               {registryState: userTokenHasValue, wantToken: "user_token", wantSource: config.SubscriptionUser},
+		"Success":                                               {registryState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceGUI},
 		"Success when the key does not exist":                   {registryState: untouched},
 		"Success when the key exists but is empty":              {registryState: keyExists},
 		"Success when the key exists but contains empty fields": {registryState: orgTokenExists | userTokenExists | storeTokenExists},
 
-		"Success when there is an organization token": {registryState: orgTokenHasValue, wantToken: "org_token", wantSource: config.SubscriptionOrganization},
-		"Success when there is a user token":          {registryState: userTokenHasValue, wantToken: "user_token", wantSource: config.SubscriptionUser},
-		"Success when there is a store token":         {registryState: storeTokenHasValue, wantToken: "store_token", wantSource: config.SubscriptionMicrosoftStore},
+		"Success when there is an organization token": {registryState: orgTokenHasValue, wantToken: "org_token", wantSource: config.SourceRegistry},
+		"Success when there is a user token":          {registryState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceGUI},
+		"Success when there is a store token":         {registryState: storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
 
-		"Success when there are organization and user tokens":                           {registryState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SubscriptionUser},
-		"Success when there are organization and store tokens":                          {registryState: orgTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SubscriptionMicrosoftStore},
-		"Success when there are organization and user tokens, and an empty store token": {registryState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SubscriptionUser},
+		"Success when there are organization and user tokens":                           {registryState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SourceGUI},
+		"Success when there are organization and store tokens":                          {registryState: orgTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
+		"Success when there are organization and user tokens, and an empty store token": {registryState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SourceGUI},
 
 		"Error when the registry key cannot be opened":    {registryState: userTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {registryState: userTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -260,7 +260,7 @@ func TestSetSubscription(t *testing.T) {
 				token = ""
 			}
 
-			err := conf.SetSubscription(ctx, token, config.SubscriptionUser)
+			err := conf.SetSubscription(ctx, token, config.SourceGUI)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
 				if tc.wantErrorType != nil {

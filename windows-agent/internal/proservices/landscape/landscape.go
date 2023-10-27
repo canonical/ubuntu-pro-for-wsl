@@ -56,7 +56,7 @@ type connection struct {
 type Config interface {
 	LandscapeClientConfig(context.Context) (string, error)
 
-	Subscription(context.Context) (string, config.SubscriptionSource, error)
+	Subscription(context.Context) (string, config.Source, error)
 
 	LandscapeAgentUID(context.Context) (string, error)
 	SetLandscapeAgentUID(context.Context, string) error
