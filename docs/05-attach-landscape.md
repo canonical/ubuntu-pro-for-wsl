@@ -4,7 +4,13 @@ You can use a private Landscape instance (different from [landscape.canonical.co
 2.  Copy the contents of the Landscape configuration file into the registry key:
     ```ini
     [host]
-    url= The URL of the Landscape hostagent API
+    # The main URL for the landscape server to connect this client to. If you
+    # purchased a Landscape Dedicated Server (LDS), change this to point to your
+    # server instead. This needs to point to the message-system URL.
+    #
+    # Please pay special attention to the protocol used here, since it is a common
+    # source of error.
+    url = https://landscape.canonical.com/TODO-HOSTAGENT-ENDPOINT
 
     [client]
     # The configuration for the WSL client. See an example here
