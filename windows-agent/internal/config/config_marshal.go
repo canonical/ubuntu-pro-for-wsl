@@ -98,6 +98,7 @@ func readFromRegistry(r Registry, key uintptr, field string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not read %q from registry", field)
 	}
+
 	return value, nil
 }
 
