@@ -22,12 +22,7 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-const (
-	registryPath = `Software\Canonical\UbuntuPro`
-
-	fieldLandscapeClientConfig = "LandscapeClientConfig"
-	fieldLandscapeAgentUID     = "LandscapeAgentUID"
-)
+const registryPath = `Software\Canonical\UbuntuPro`
 
 // Registry abstracts away access to the windows registry.
 type Registry interface {
@@ -94,7 +89,7 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Source,
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if err := c.load(ctx); err != nil {
+	if err := c.load(); err != nil {
 		return "", SourceNone, fmt.Errorf("could not load: %v", err)
 	}
 
@@ -125,7 +120,7 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if err := c.load(ctx); err != nil {
+	if err := c.load(); err != nil {
 		return nil, fmt.Errorf("could not load: %v", err)
 	}
 
@@ -153,7 +148,7 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source So
 	defer c.mu.Unlock()
 
 	// Load before dumping to avoid overriding recent changes to registry
-	if err := c.load(ctx); err != nil {
+	if err := c.load(); err != nil {
 		return err
 	}
 
@@ -174,7 +169,7 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, err
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if err := c.load(ctx); err != nil {
+	if err := c.load(); err != nil {
 		return "", SourceNone, fmt.Errorf("could not load: %v", err)
 	}
 
@@ -188,7 +183,7 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if err := c.load(ctx); err != nil {
+	if err := c.load(); err != nil {
 		return "", fmt.Errorf("could not load: %v", err)
 	}
 
@@ -201,7 +196,7 @@ func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 	defer c.mu.Unlock()
 
 	// Load before dumping to avoid overriding recent changes to registry
-	if err := c.load(ctx); err != nil {
+	if err := c.load(); err != nil {
 		return err
 	}
 
@@ -212,112 +207,6 @@ func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 		log.Errorf(ctx, "Could not update landscape agent UID in registry, UID will be ignored: %v", err)
 		c.landscape.UID = old
 		return err
-	}
-
-	return nil
-}
-
-func (c *Config) load(ctx context.Context) (err error) {
-	defer decorate.OnError(&err, "could not load data for Config")
-
-	// Read registry
-	proTokens, data, err := c.loadRegistry(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Commit to loaded data
-	c.proTokens = proTokens
-	c.data = data
-
-	return nil
-}
-
-func (c *Config) loadRegistry(ctx context.Context) (proTokens map[Source]string, data configData, err error) {
-	defer decorate.OnError(&err, "could not load from registry")
-
-	proTokens = make(map[Source]string)
-
-	k, err := c.registry.HKCUOpenKey(registryPath, registry.READ)
-	if errors.Is(err, registry.ErrKeyNotExist) {
-		log.Debug(ctx, "Registry key does not exist, using default values")
-		return proTokens, data, nil
-	}
-	if err != nil {
-		return proTokens, data, err
-	}
-	defer c.registry.CloseKey(k)
-
-	for source, field := range fieldsProToken {
-		proToken, e := c.readValue(ctx, k, field)
-		if e != nil {
-			err = errors.Join(err, fmt.Errorf("could not read %q: %v", field, e))
-			continue
-		}
-
-		if proToken == "" {
-			continue
-		}
-
-		proTokens[source] = proToken
-	}
-
-	if err != nil {
-		return nil, data, err
-	}
-
-	data.landscapeClientConfig, err = c.readValue(ctx, k, fieldLandscapeClientConfig)
-	if err != nil {
-		return proTokens, data, err
-	}
-
-	data.landscapeAgentUID, err = c.readValue(ctx, k, fieldLandscapeAgentUID)
-	if err != nil {
-		return proTokens, data, err
-	}
-
-	return proTokens, data, nil
-}
-
-func (c *Config) readValue(ctx context.Context, key uintptr, field string) (string, error) {
-	value, err := c.registry.ReadValue(key, field)
-	if errors.Is(err, registry.ErrFieldNotExist) {
-		log.Debugf(ctx, "Registry value %q does not exist, defaulting to empty", field)
-		return "", nil
-	}
-	if err != nil {
-		return "", err
-	}
-	return value, nil
-}
-
-func (c *Config) dump() (err error) {
-	defer decorate.OnError(&err, "could not store Config data")
-
-	// CreateKey is equivalent to OpenKey if the key already existed
-	k, err := c.registry.HKCUCreateKey(registryPath, registry.WRITE)
-	if err != nil {
-		return fmt.Errorf("could not open or create registry key: %w", err)
-	}
-	defer c.registry.CloseKey(k)
-
-	for source, field := range fieldsProToken {
-		err := c.registry.WriteValue(k, field, c.proTokens[source])
-		if err != nil {
-			return fmt.Errorf("could not write into registry key: %w", err)
-		}
-	}
-
-	if err := c.registry.WriteMultilineValue(k, fieldLandscapeClientConfig, c.data.landscapeClientConfig); err != nil {
-		return fmt.Errorf("could not write into registry key: %v", err)
-	}
-
-	if err := c.registry.WriteValue(k, fieldLandscapeAgentUID, c.data.landscapeAgentUID); err != nil {
-		return fmt.Errorf("could not write into registry key: %v", err)
-	}
-
-	if err := c.registry.WriteValue(k, fieldLandscapeAgentUID, c.data.landscapeAgentUID); err != nil {
-		return fmt.Errorf("could not write into registry key: %v", err)
 	}
 
 	return nil
