@@ -330,17 +330,18 @@ func (c *Config) getTaskOnNewLandscape(ctx context.Context, db *database.DistroD
 }
 
 // hasChanged detects if the current value is different from the last time it was used.
-func hasChanged(newValue string, oldChecksum *string) bool {
+// If the value has changed, the checksum will be updated.
+func hasChanged(newValue string, checksum *string) bool {
 	var newCheckSum string
 	if len(newValue) != 0 {
 		raw := sha512.Sum512([]byte(newValue))
 		newCheckSum = base64.StdEncoding.EncodeToString(raw[:])
 	}
 
-	if *oldChecksum == newCheckSum {
+	if *checksum == newCheckSum {
 		return false
 	}
 
-	*oldChecksum = newCheckSum
+	*checksum = newCheckSum
 	return true
 }
