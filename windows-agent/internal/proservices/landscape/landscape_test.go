@@ -805,7 +805,7 @@ func (m *mockConfig) LandscapeClientConfig(ctx context.Context) (string, config.
 	if m.landscapeConfigErr {
 		return "", config.SourceNone, errors.New("Mock error")
 	}
-	return m.landscapeClientConfig, config.SourceGUI, nil
+	return m.landscapeClientConfig, config.SourceUser, nil
 }
 
 func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
@@ -819,7 +819,7 @@ func (m *mockConfig) Subscription(ctx context.Context) (string, config.Source, e
 	if m.proTokenErr {
 		return "", config.SourceNone, errors.New("Mock error")
 	}
-	return m.proToken, config.SourceGUI, nil
+	return m.proToken, config.SourceUser, nil
 }
 
 func (m *mockConfig) LandscapeAgentUID(ctx context.Context) (string, error) {

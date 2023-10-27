@@ -61,18 +61,18 @@ func TestSubscription(t *testing.T) {
 		wantSource config.Source
 		wantError  bool
 	}{
-		"Success": {settingsState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceGUI},
+		"Success": {settingsState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
 		"Success when neither registry key nor conf file exist": {settingsState: untouched},
 		"Success when the key exists but is empty":              {settingsState: keyExists},
 		"Success when the key exists but contains empty fields": {settingsState: orgTokenExists},
 
 		"Success when there is an organization token": {settingsState: orgTokenHasValue, wantToken: "org_token", wantSource: config.SourceRegistry},
-		"Success when there is a user token":          {settingsState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceGUI},
+		"Success when there is a user token":          {settingsState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
 		"Success when there is a store token":         {settingsState: storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
 
-		"Success when there are organization and user tokens":                           {settingsState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SourceGUI},
+		"Success when there are organization and user tokens":                           {settingsState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
 		"Success when there are organization and store tokens":                          {settingsState: orgTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
-		"Success when there are organization and user tokens, and an empty store token": {settingsState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SourceGUI},
+		"Success when there are organization and user tokens, and an empty store token": {settingsState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SourceUser},
 
 		"Error when the registry key cannot be opened":    {settingsState: orgTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {settingsState: orgTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -115,16 +115,16 @@ func TestLandscapeConfig(t *testing.T) {
 		wantSource          config.Source
 		wantError           bool
 	}{
-		"Success": {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceGUI},
+		"Success": {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
 
 		"Success when neither registry key nor conf file exist":          {settingsState: untouched},
 		"Success when the registry key exists but is empty":              {settingsState: keyExists},
 		"Success when the registry key exists but contains empty fields": {settingsState: orgLandscapeConfigExists},
 
 		"Success when there is an organization conf": {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
-		"Success when there is a user conf":          {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceGUI},
+		"Success when there is a user conf":          {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
 
-		"Success when there are organization and user confs": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceGUI},
+		"Success when there are organization and user confs": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
 
 		"Error when the registry key cannot be opened":    {settingsState: orgTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {settingsState: orgTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -301,7 +301,7 @@ func TestSetSubscription(t *testing.T) {
 				token = ""
 			}
 
-			err := conf.SetSubscription(ctx, token, config.SourceGUI)
+			err := conf.SetSubscription(ctx, token, config.SourceUser)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
 				return

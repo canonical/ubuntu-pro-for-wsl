@@ -45,7 +45,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.GetToken()
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
-	err := s.config.SetSubscription(ctx, token, config.SourceGUI)
+	err := s.config.SetSubscription(ctx, token, config.SourceUser)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 	switch source {
 	case config.SourceNone:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_None{}
-	case config.SourceGUI:
+	case config.SourceUser:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_User{}
 	case config.SourceRegistry:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_Organization{}

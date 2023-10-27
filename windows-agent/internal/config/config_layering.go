@@ -13,15 +13,15 @@ const (
 	// SourceRegistry -> the data was obtained from the registry.
 	SourceRegistry
 
-	// SourceGUI -> the data was obtained by the GUI.
-	SourceGUI
+	// SourceUser -> the data was introduced by the user.
+	SourceUser
 
 	// SourceMicrosoftStore -> the data was acquired via the Microsoft Store.
 	SourceMicrosoftStore
 )
 
 type subscription struct {
-	GUI          string
+	User         string
 	Store        string
 	Organization string `yaml:"-"`
 	Checksum     string
@@ -32,8 +32,8 @@ func (s subscription) resolve() (string, Source) {
 		return s.Store, SourceMicrosoftStore
 	}
 
-	if s.GUI != "" {
-		return s.GUI, SourceGUI
+	if s.User != "" {
+		return s.User, SourceUser
 	}
 
 	if s.Organization != "" {
@@ -58,8 +58,8 @@ func (s *subscription) src(src Source) *string {
 	case SourceNone:
 		// TODO: Panic? Warning?
 		return new(string)
-	case SourceGUI:
-		return &s.GUI
+	case SourceUser:
+		return &s.User
 	case SourceRegistry:
 		return &s.Organization
 	case SourceMicrosoftStore:
@@ -70,16 +70,16 @@ func (s *subscription) src(src Source) *string {
 }
 
 type landscapeConf struct {
-	GUIConfig string `yaml:"config"`
-	OrgConfig string `yaml:"-"`
+	UserConfig string `yaml:"config"`
+	OrgConfig  string `yaml:"-"`
 
 	UID      string
 	Checksum string
 }
 
 func (p landscapeConf) resolve() (string, Source) {
-	if p.GUIConfig != "" {
-		return p.GUIConfig, SourceGUI
+	if p.UserConfig != "" {
+		return p.UserConfig, SourceUser
 	}
 
 	if p.OrgConfig != "" {

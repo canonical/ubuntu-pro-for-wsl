@@ -133,8 +133,8 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		"Success with an organization subscription":          {config: mockConfig{source: config.SourceRegistry}, wantType: organization},
 		"Success with a read-only organization subscription": {config: mockConfig{source: config.SourceRegistry, registryReadOnly: true}, wantType: organization, wantImmutable: true},
 
-		"Success with a user subscription":           {config: mockConfig{source: config.SourceGUI}, wantType: user},
-		"Success with a read-only user subscription": {config: mockConfig{source: config.SourceGUI, registryReadOnly: true}, wantType: user, wantImmutable: true},
+		"Success with a user subscription":           {config: mockConfig{source: config.SourceUser}, wantType: user},
+		"Success with a read-only user subscription": {config: mockConfig{source: config.SourceUser, registryReadOnly: true}, wantType: user, wantImmutable: true},
 
 		"Success with a store subscription":           {config: mockConfig{source: config.SourceMicrosoftStore}, wantType: store},
 		"Success with a read-only store subscription": {config: mockConfig{source: config.SourceMicrosoftStore, registryReadOnly: true}, wantType: store, wantImmutable: true},
@@ -178,7 +178,7 @@ func TestNotifyPurchase(t *testing.T) {
 		wantErr       bool
 	}{
 		"Success with a non-subscription":            {config: mockConfig{source: config.SourceNone}, wantType: store},
-		"Success with an existing user subscription": {config: mockConfig{source: config.SourceGUI}, wantType: store},
+		"Success with an existing user subscription": {config: mockConfig{source: config.SourceUser}, wantType: store},
 
 		"Error to fetch MS Store":                          {config: mockConfig{source: config.SourceNone, fetchErr: true}, wantType: none, wantErr: true},
 		"Error to set the subscription":                    {config: mockConfig{source: config.SourceNone, setSubscriptionErr: true}, wantType: none, wantErr: true},
