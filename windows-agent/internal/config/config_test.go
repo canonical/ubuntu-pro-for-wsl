@@ -268,6 +268,7 @@ func TestSetSubscription(t *testing.T) {
 
 	testCases := map[string]struct {
 		settingsState settingsState
+		breakFile     bool
 		emptyToken    bool
 
 		want      string
@@ -278,6 +279,8 @@ func TestSetSubscription(t *testing.T) {
 		"Success when the key does not exist":             {settingsState: untouched, want: "new_token"},
 		"Success when the pro token field does not exist": {settingsState: keyExists, want: "new_token"},
 		"Success when there is a store token active":      {settingsState: storeTokenHasValue, want: "store_token"},
+
+		"Error when the file cannot be opened": {settingsState: fileExists, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -286,7 +289,7 @@ func TestSetSubscription(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, false)
+			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, tc.breakFile)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			token := "new_token"
