@@ -90,7 +90,13 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	if err != nil {
 		return s, err
 	}
-	defer db.Close(ctx)
+	defer func() {
+		// Close DB if we return error
+		// Otherwise, it'll be closed in the call to Manager.Stop
+		if err != nil {
+			db.Close(ctx)
+		}
+	}()
 
 	if err := conf.UpdateRegistrySettings(ctx, opts.cacheDir, db); err != nil {
 		log.Warningf(ctx, "Could not update registry settings: %v", err)
