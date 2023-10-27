@@ -48,9 +48,9 @@ func TestAttachPro(t *testing.T) {
 	distro2, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
-		distros          []string
-		token            string
-		registryReadOnly bool
+		distros     []string
+		token       string
+		breakConfig bool
 
 		wantErr bool
 	}{
@@ -58,7 +58,7 @@ func TestAttachPro(t *testing.T) {
 		"Success with an empty database":    {token: "funny_token"},
 		"Success with a non-empty database": {token: "whatever_token", distros: []string{distro1, distro2}},
 
-		"Error due to no write permission on token": {registryReadOnly: true, wantErr: true},
+		"Error when the config cannot write": {breakConfig: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -81,12 +81,15 @@ func TestAttachPro(t *testing.T) {
 			const originalToken = "old_token"
 
 			m := registry.NewMock()
-			m.KeyIsReadOnly = tc.registryReadOnly
-			m.KeyExists = true
 
-			contents := fmt.Sprintf("subscription:\n  gui: %s", originalToken)
-			err = os.WriteFile(filepath.Join(dir, "config"), []byte(contents), 0600)
-			require.NoError(t, err, "Setup: could not write config file")
+			if tc.breakConfig {
+				err := os.MkdirAll(filepath.Join(dir, "config"), 0600)
+				require.NoError(t, err, "Setup: could not create directory to interfere with config")
+			} else {
+				contents := fmt.Sprintf("subscription:\n  gui: %s", originalToken)
+				err = os.WriteFile(filepath.Join(dir, "config"), []byte(contents), 0600)
+				require.NoError(t, err, "Setup: could not write config file")
+			}
 
 			conf := config.New(ctx, dir, config.WithRegistry(m))
 			serv := ui.New(context.Background(), conf, db)
@@ -97,11 +100,10 @@ func TestAttachPro(t *testing.T) {
 			var wantToken string
 			if tc.wantErr {
 				require.Error(t, err, "Unexpected success in ApplyProToken")
-				wantToken = originalToken
-			} else {
-				require.NoError(t, err, "Adding the task to existing distros should succeed.")
-				wantToken = tc.token
+				return
 			}
+			require.NoError(t, err, "Adding the task to existing distros should succeed.")
+			wantToken = tc.token
 
 			token, _, err := conf.Subscription(ctx)
 			require.NoError(t, err, "conf.ProToken should return no error")
