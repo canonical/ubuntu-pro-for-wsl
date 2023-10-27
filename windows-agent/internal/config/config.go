@@ -154,7 +154,7 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source So
 	c.subscription.Set(source, proToken)
 
 	if err := c.dump(); err != nil {
-		log.Errorf(ctx, "Could not update subscription in registry, token will be ignored: %v", err)
+		log.Errorf(ctx, "Could not update subscription, token will be ignored: %v", err)
 		c.subscription.Set(source, old)
 		return err
 	}
@@ -202,7 +202,7 @@ func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 	c.landscape.UID = uid
 
 	if err := c.dump(); err != nil {
-		log.Errorf(ctx, "Could not update landscape agent UID in registry, UID will be ignored: %v", err)
+		log.Errorf(ctx, "Could not update landscape settings, UID will be ignored: %v", err)
 		c.landscape.UID = old
 		return err
 	}
