@@ -3,7 +3,7 @@ module github.com/canonical/ubuntu-pro-for-windows/common
 go 1.21.3
 
 require (
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
