@@ -157,12 +157,12 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source So
 		return err
 	}
 
-	old := c.proTokens[source]
-	c.proTokens[source] = proToken
+	old := c.subscription.Get(source)
+	c.subscription.Set(source, proToken)
 
 	if err := c.dump(); err != nil {
 		log.Errorf(ctx, "Could not update subscription in registry, token will be ignored: %v", err)
-		c.proTokens[source] = old
+		c.subscription.Set(source, old)
 		return err
 	}
 
