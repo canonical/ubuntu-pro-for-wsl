@@ -94,13 +94,6 @@ func readFromRegistry(r Registry, key uintptr, field string) (string, error) {
 func (c Config) dump() (err error) {
 	defer decorate.OnError(&err, "could not store Config data")
 
-	// Backup the file in case the registry write fails.
-	// This avoids partial writes
-	restore, err := makeBackup(c.cachePath)
-	if err != nil {
-		return err
-	}
-
 	h := marshalHelper{
 		Landscape:    c.landscape,
 		Subscription: c.subscription,
@@ -108,51 +101,6 @@ func (c Config) dump() (err error) {
 
 	if err := h.dumpFile(c.cachePath); err != nil {
 		return err
-	}
-
-	if err := h.dumpRegistry(c.registry); err != nil {
-		return errors.Join(err, restore())
-	}
-
-	return nil
-}
-
-// makeBackup makes a backup of the selected file. It returns
-// a restoring function.
-func makeBackup(originalPath string) (func() error, error) {
-	backupPath := originalPath + ".backup"
-
-	err := os.Rename(originalPath, backupPath)
-	if errors.Is(err, fs.ErrNotExist) {
-		// File does not exist. Restoring means deleting it.
-		return func() error {
-			return os.RemoveAll(originalPath)
-		}, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("could not create backup: %v", err)
-	}
-
-	// File does exist. Restoring means moving it back.
-	return func() error {
-		return os.Rename(backupPath, originalPath)
-	}, nil
-}
-
-func (h marshalHelper) dumpRegistry(reg Registry) error {
-	// CreateKey is equivalent to OpenKey if the key already existed
-	k, err := reg.HKCUCreateKey(registryPath, registry.WRITE)
-	if err != nil {
-		return fmt.Errorf("could not open or create registry key: %w", err)
-	}
-	defer reg.CloseKey(k)
-
-	if err := reg.WriteValue(k, "UbuntuProToken", h.Subscription.Organization); err != nil {
-		return fmt.Errorf("could not write UbuntuProToken into registry key: %v", err)
-	}
-
-	if err := reg.WriteMultilineValue(k, "LandscapeConfig", h.Landscape.OrgConfig); err != nil {
-		return fmt.Errorf("could not write LandscapeConfig into registry key: %v", err)
 	}
 
 	return nil
