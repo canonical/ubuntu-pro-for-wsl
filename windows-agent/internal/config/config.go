@@ -162,7 +162,8 @@ func (c *Config) SetSubscription(ctx context.Context, proToken string, source So
 	return nil
 }
 
-// LandscapeClientConfig returns the value of the landscape server URL.
+// LandscapeClientConfig returns the value of the landscape server URL and
+// the method it was acquired with (if any).
 func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
