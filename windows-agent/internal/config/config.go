@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
@@ -219,9 +220,34 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 		return fmt.Errorf("subscription cannot be user-managed")
 	}
 
-	proToken, err := contracts.ProToken(ctx)
+	_, src, err := c.Subscription(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get current subscription status: %v", err)
+	}
+
+	// Shortcut to avoid spamming the contract server
+	// We don't need to request a new token if we have a non-expired one
+	if src == SourceMicrosoftStore {
+		valid, err := contracts.ValidSubscription()
+		if err != nil {
+			return fmt.Errorf("could not obtain current subscription status: %v", err)
+		}
+
+		if valid {
+			log.Debug(ctx, "Microsoft Store subscription is active")
+			return nil
+		}
+
+		log.Debug(ctx, "No valid Microsoft Store subscription")
+	}
+
+	proToken, err := contracts.NewProToken(ctx)
 	if err != nil {
 		return fmt.Errorf("could not get ProToken from Microsoft Store: %v", err)
+	}
+
+	if proToken != "" {
+		log.Debugf(ctx, "Obtained Ubuntu Pro token from the Microsoft Store: %q", common.Obfuscate(proToken))
 	}
 
 	if err := c.setStoreSubscription(ctx, proToken); err != nil {

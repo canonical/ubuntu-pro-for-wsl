@@ -80,7 +80,7 @@ func TestProToken(t *testing.T) {
 			url, err := url.Parse(fmt.Sprintf("http://%s", addr))
 			require.NoError(t, err, "Setup: Server URL should have been parsed with no issues")
 
-			token, err := contracts.ProToken(ctx, contracts.WithProURL(url), contracts.WithMockMicrosoftStore(store))
+			token, err := contracts.NewProToken(ctx, contracts.WithProURL(url), contracts.WithMockMicrosoftStore(store))
 			if tc.wantErr {
 				require.Error(t, err, "ProToken should return an error")
 				return

@@ -3,6 +3,7 @@ package contracts
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractclient"
-	"github.com/ubuntu/decorate"
 )
 
 type options struct {
@@ -52,10 +52,35 @@ func (msftStoreDLL) GetSubscriptionExpirationDate() (tm time.Time, err error) {
 	return microsoftstore.GetSubscriptionExpirationDate()
 }
 
-// ProToken directs the dance between the Microsoft Store and the Ubuntu Pro contract server to
+// ValidSubscription returns true if there is a subscription via the Microsoft Store and it is not expired.
+func ValidSubscription(args ...Option) (bool, error) {
+	opts := options{
+		microsoftStore: msftStoreDLL{},
+	}
+
+	for _, f := range args {
+		f(&opts)
+	}
+
+	expiration, err := opts.microsoftStore.GetSubscriptionExpirationDate()
+	if isErrNotSubscribed(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("could not get subscription expiration date: %v", err)
+	}
+
+	if expiration.Before(time.Now()) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// NewProToken directs the dance between the Microsoft Store and the Ubuntu Pro contract server to
 // validate a store entitlement and obtain its associated pro token. If there is no entitlement,
 // the token is returned as an empty string.
-func ProToken(ctx context.Context, args ...Option) (token string, err error) {
+func NewProToken(ctx context.Context, args ...Option) (token string, err error) {
 	opts := options{
 		microsoftStore: msftStoreDLL{},
 	}
@@ -73,28 +98,9 @@ func ProToken(ctx context.Context, args ...Option) (token string, err error) {
 	}
 
 	contractClient := contractclient.New(opts.proURL, &http.Client{Timeout: 30 * time.Second})
+	msftStore := opts.microsoftStore
 
-	token, err = proToken(ctx, contractClient, opts.microsoftStore)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
-func proToken(ctx context.Context, serverClient *contractclient.Client, msftStore MicrosoftStore) (proToken string, err error) {
-	defer decorate.OnError(&err, "could not obtain pro token")
-
-	expiration, err := msftStore.GetSubscriptionExpirationDate()
-	if err != nil {
-		return "", fmt.Errorf("could not get subscription expiration date: %v", err)
-	}
-
-	if expiration.Before(time.Now()) {
-		return "", fmt.Errorf("the subscription has been expired since %s", expiration)
-	}
-
-	adToken, err := serverClient.GetServerAccessToken(ctx)
+	adToken, err := contractClient.GetServerAccessToken(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -104,10 +110,27 @@ func proToken(ctx context.Context, serverClient *contractclient.Client, msftStor
 		return "", err
 	}
 
-	proToken, err = serverClient.GetProToken(ctx, storeToken)
+	proToken, err := contractClient.GetProToken(ctx, storeToken)
 	if err != nil {
 		return "", err
 	}
 
 	return proToken, nil
+}
+
+func isErrNotSubscribed(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var target microsoftstore.StoreAPIError
+	if !errors.As(err, &target) {
+		return false
+	}
+
+	if target != microsoftstore.ErrNotSubscribed {
+		return false
+	}
+
+	return true
 }
