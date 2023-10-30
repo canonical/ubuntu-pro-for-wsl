@@ -161,7 +161,15 @@ class AgentStartupMonitor {
   /// Thus, we delete the existing `addr` file and retry launching the agent.
   Future<void> reset() async {
     if (_addrFilePath != null) {
-      await File(_addrFilePath!).delete();
+      try {
+        await File(_addrFilePath!).delete();
+      } on PathNotFoundException {
+        // TODO: Log
+        // ignore: avoid_print
+        print(
+          'Port file expected but not found. Likely a race with the agent at this point, not an issue.',
+        );
+      }
     }
   }
 }
