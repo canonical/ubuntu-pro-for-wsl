@@ -4,13 +4,6 @@ package registry
 
 import "errors"
 
-// Key access rights.
-// https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
-const (
-	READ  = 0x20019
-	WRITE = 0x20006
-)
-
 // Although the stdlibs' registry and syscall packages return typed errors, these are
 // only defined in their _windows files. We convert the relevant ones here to
 // cross-platform errors.

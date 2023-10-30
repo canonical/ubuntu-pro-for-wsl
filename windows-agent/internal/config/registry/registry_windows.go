@@ -11,18 +11,9 @@ import (
 // Windows is the Windows registry.
 type Windows struct{}
 
-// HKCUCreateKey creates a key in the specified path under the HK_CURRENT_USER registry.
-func (Windows) HKCUCreateKey(path string, access uint32) (newk uintptr, err error) {
-	key, _, err := registry.CreateKey(registry.CURRENT_USER, path, access)
-	if errors.Is(err, syscall.Errno(5)) { // Access is denied
-		return 0, ErrAccessDenied
-	}
-	return uintptr(key), err
-}
-
 // HKCUOpenKey opens a key in the specified path under the HK_CURRENT_USER registry.
-func (Windows) HKCUOpenKey(path string, access uint32) (uintptr, error) {
-	key, err := registry.OpenKey(registry.CURRENT_USER, path, access)
+func (Windows) HKCUOpenKey(path string) (uintptr, error) {
+	key, err := registry.OpenKey(registry.CURRENT_USER, path, registry.READ)
 	if errors.Is(err, registry.ErrNotExist) {
 		return 0, ErrKeyNotExist
 	}
@@ -63,14 +54,4 @@ func (Windows) ReadValue(k uintptr, field string) (string, error) {
 	}
 
 	return "", acc
-}
-
-// WriteValue writes the provided single-line string value into the specified field of key k.
-func (Windows) WriteValue(k uintptr, field string, value string) error {
-	return registry.Key(k).SetStringValue(field, value)
-}
-
-// WriteMultilineValue writes the provided multi-line string value into the specified field of key k.
-func (Windows) WriteMultilineValue(k uintptr, field string, value string) error {
-	return registry.Key(k).SetStringsValue(field, strings.Split(value, "\n"))
 }
