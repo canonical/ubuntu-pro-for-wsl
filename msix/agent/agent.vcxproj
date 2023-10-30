@@ -123,6 +123,9 @@
     <ProjectReference Include="..\storeapi\storeapi.vcxproj">
       <Project>{4ee3b168-c58d-4ae5-a259-1b5a04c018de}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\ubuntu-pro-agent-launcher\ubuntu-pro-agent-launcher.vcxproj">
+      <Project>{eb330327-e1d2-4ab7-9980-fa2e56bf308b}</Project>
+    </ProjectReference>
   </ItemGroup>
   <!-- TODO: Add a reference to the store API DLL project -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
