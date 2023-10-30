@@ -7,9 +7,11 @@ Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "UbuntuProForWindows", "Ubun
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ubuntupro", "gui\gui.vcxproj", "{89935278-02C9-414F-8DB5-47A465BC1F2B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agent", "agent\agent.vcxproj", "{6427BB31-C4BE-4585-A090-10EFDFB06B04}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ubuntu-pro-agent", "agent\agent.vcxproj", "{6427BB31-C4BE-4585-A090-10EFDFB06B04}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "storeapi", "storeapi\storeapi.vcxproj", "{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ubuntu-pro-agent-launcher", "ubuntu-pro-agent-launcher\ubuntu-pro-agent-launcher.vcxproj", "{EB330327-E1D2-4AB7-9980-FA2E56BF308B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Debug|x64.Build.0 = Debug|x64
 		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Release|x64.ActiveCfg = Release|x64
 		{4EE3B168-C58D-4AE5-A259-1B5A04C018DE}.Release|x64.Build.0 = Release|x64
+		{EB330327-E1D2-4AB7-9980-FA2E56BF308B}.Debug|x64.ActiveCfg = Debug|x64
+		{EB330327-E1D2-4AB7-9980-FA2E56BF308B}.Debug|x64.Build.0 = Debug|x64
+		{EB330327-E1D2-4AB7-9980-FA2E56BF308B}.Release|x64.ActiveCfg = Release|x64
+		{EB330327-E1D2-4AB7-9980-FA2E56BF308B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
