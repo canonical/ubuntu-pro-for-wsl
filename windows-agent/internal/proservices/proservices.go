@@ -81,7 +81,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		return s, err
 	}
 
-	conf := config.New(ctx, config.WithRegistry(opts.registry))
+	conf := config.New(ctx, opts.cacheDir, config.WithRegistry(opts.registry))
 	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
 		log.Warningf(ctx, "%v", err)
 	}
@@ -98,7 +98,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		}
 	}()
 
-	if err := conf.UpdateRegistrySettings(ctx, opts.cacheDir, db); err != nil {
+	if err := conf.UpdateRegistrySettings(ctx, db); err != nil {
 		log.Warningf(ctx, "Could not update registry settings: %v", err)
 	}
 

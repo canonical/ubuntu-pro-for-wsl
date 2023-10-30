@@ -16,9 +16,9 @@ import (
 
 // Config is a provider for the subcription configuration.
 type Config interface {
-	SetSubscription(ctx context.Context, token string, source config.SubscriptionSource) error
+	SetUserSubscription(ctx context.Context, token string) error
 	IsReadOnly() (bool, error)
-	Subscription(context.Context) (string, config.SubscriptionSource, error)
+	Subscription(context.Context) (string, config.Source, error)
 	FetchMicrosoftStoreSubscription(context.Context) error
 }
 
@@ -45,7 +45,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.GetToken()
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
-	err := s.config.SetSubscription(ctx, token, config.SubscriptionUser)
+	err := s.config.SetUserSubscription(ctx, token)
 	if err != nil {
 		return nil, err
 	}
@@ -87,13 +87,13 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 	}
 
 	switch source {
-	case config.SubscriptionNone:
+	case config.SourceNone:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_None{}
-	case config.SubscriptionUser:
+	case config.SourceUser:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_User{}
-	case config.SubscriptionOrganization:
+	case config.SourceRegistry:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_Organization{}
-	case config.SubscriptionMicrosoftStore:
+	case config.SourceMicrosoftStore:
 		info.SubscriptionType = &agentapi.SubscriptionInfo_MicrosoftStore{}
 	default:
 		return nil, fmt.Errorf("unrecognized subscription source: %d", source)

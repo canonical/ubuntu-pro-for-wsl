@@ -1,6 +1,6 @@
 # How to auto-register WSL distros to Landscape with UP4W
 You can use a private Landscape instance (different from [landscape.canonical.com](https://landscape.canonical.com)). It must be over HTTP, as using certificates is not yet supported. To do so, follow these steps:
-1.  Find registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`, field `LandscapeClientConfig`.
+1.  Find registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`, field `LandscapeConfig`.
 2.  Copy the contents of the Landscape configuration file into the registry key:
     ```ini
     [host]

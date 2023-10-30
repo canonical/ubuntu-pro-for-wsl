@@ -798,28 +798,28 @@ type mockConfig struct {
 	mu sync.Mutex
 }
 
-func (m *mockConfig) LandscapeClientConfig(ctx context.Context) (string, error) {
+func (m *mockConfig) LandscapeClientConfig(ctx context.Context) (string, config.Source, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.landscapeConfigErr {
-		return "", errors.New("Mock error")
+		return "", config.SourceNone, errors.New("Mock error")
 	}
-	return m.landscapeClientConfig, nil
+	return m.landscapeClientConfig, config.SourceUser, nil
 }
 
 func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	return nil, nil
 }
 
-func (m *mockConfig) Subscription(ctx context.Context) (string, config.SubscriptionSource, error) {
+func (m *mockConfig) Subscription(ctx context.Context) (string, config.Source, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.proTokenErr {
-		return "", config.SubscriptionNone, errors.New("Mock error")
+		return "", config.SourceNone, errors.New("Mock error")
 	}
-	return m.proToken, config.SubscriptionUser, nil
+	return m.proToken, config.SourceUser, nil
 }
 
 func (m *mockConfig) LandscapeAgentUID(ctx context.Context) (string, error) {
