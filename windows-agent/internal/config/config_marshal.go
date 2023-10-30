@@ -51,7 +51,7 @@ func (h *marshalHelper) loadFile(cachePath string) (err error) {
 }
 
 func (h *marshalHelper) loadRegistry(reg Registry) (err error) {
-	k, err := reg.HKCUOpenKey(registryPath, registry.READ)
+	k, err := reg.HKCUOpenKey(registryPath)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		// Default values
 		h.Subscription.Organization = ""

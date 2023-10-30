@@ -25,12 +25,9 @@ const registryPath = `Software\Canonical\UbuntuPro`
 
 // Registry abstracts away access to the windows registry.
 type Registry interface {
-	HKCUCreateKey(path string, access uint32) (newk uintptr, err error)
-	HKCUOpenKey(path string, access uint32) (uintptr, error)
+	HKCUOpenKey(path string) (uintptr, error)
 	CloseKey(k uintptr)
 	ReadValue(k uintptr, field string) (value string, err error)
-	WriteValue(k uintptr, field string, value string) (err error)
-	WriteMultilineValue(k uintptr, field string, value string) (err error)
 }
 
 // Config manages configuration parameters. It is a wrapper around a dictionary
@@ -160,7 +157,7 @@ func (c *Config) set(ctx context.Context, field *string, value string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Load before dumping to avoid overriding recent changes to registry
+	// Load before dumping to avoid overriding recent changes to file
 	if err := c.load(); err != nil {
 		return err
 	}
