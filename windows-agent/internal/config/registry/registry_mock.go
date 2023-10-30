@@ -42,7 +42,7 @@ func NewMock() *Mock {
 // HKCUOpenKey mocks opening a key in the specified path under the HK_CURRENT_USER registry.
 func (r *Mock) HKCUOpenKey(path string) (uintptr, error) {
 	if path != `Software\Canonical\UbuntuPro` {
-		panic(`Attempted to access registry outside of HKCU\Software\Canonical\UbuntuPro`)
+		panic(`Attempted to access mock registry outside of HKCU\Software\Canonical\UbuntuPro`)
 	}
 
 	if r.Errors&MockErrOnOpenKey != 0 {
@@ -67,7 +67,7 @@ func (r *Mock) CloseKey(k uintptr) {
 // ReadValue returns the value of the specified field in the specified key.
 func (r Mock) ReadValue(k uintptr, field string) (value string, err error) {
 	if k == 0 {
-		return value, errors.New("Null key")
+		return value, errors.New("null key")
 	}
 
 	if r.Errors&MockErrReadValue != 0 {
