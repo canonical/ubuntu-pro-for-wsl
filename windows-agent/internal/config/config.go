@@ -96,21 +96,6 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Source,
 	return token, source, nil
 }
 
-// IsReadOnly returns whether the registry can be written to.
-func (c *Config) IsReadOnly() (b bool, err error) {
-	// CreateKey is equivalent to OpenKey if the key already existed
-	k, err := c.registry.HKCUCreateKey(registryPath, registry.WRITE)
-	if errors.Is(err, registry.ErrAccessDenied) {
-		return true, nil
-	}
-	if err != nil {
-		return false, fmt.Errorf("could not open registry key: %w", err)
-	}
-
-	c.registry.CloseKey(k)
-	return false, nil
-}
-
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
 func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	var taskList []task.Task
@@ -209,16 +194,6 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 // to check if the user has an active subscription that provides a pro token. If so, that token is used.
 func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) (err error) {
 	defer decorate.OnError(&err, "could not validate subscription against Microsoft Store")
-
-	readOnly, err := c.IsReadOnly()
-	if err != nil {
-		return fmt.Errorf("could not detect if subscription is user-managed: %v", err)
-	}
-
-	if readOnly {
-		// No need to contact the store because we cannot change the subscription
-		return fmt.Errorf("subscription cannot be user-managed")
-	}
 
 	_, src, err := c.Subscription(ctx)
 	if err != nil {
