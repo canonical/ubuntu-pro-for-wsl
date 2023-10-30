@@ -31,14 +31,14 @@ func (Windows) CloseKey(k uintptr) {
 
 // ReadValue returns the value of the specified field in the specified key.
 func (Windows) ReadValue(k uintptr, field string) (string, error) {
-	var acc error
+	var errs error
 
 	// Try to read single-line string
 	value, _, err := registry.Key(k).GetStringValue(field)
 	if errors.Is(err, registry.ErrNotExist) {
 		return value, ErrFieldNotExist
 	} else if err != nil {
-		acc = errors.Join(acc, err)
+		errs = errors.Join(errs, err)
 	} else {
 		return value, nil
 	}
@@ -48,10 +48,10 @@ func (Windows) ReadValue(k uintptr, field string) (string, error) {
 	if errors.Is(err, registry.ErrNotExist) {
 		return value, ErrFieldNotExist
 	} else if err != nil {
-		acc = errors.Join(acc, err)
+		errs = errors.Join(errs, err)
 	} else {
 		return strings.Join(lines, "\n"), nil
 	}
 
-	return "", acc
+	return "", errs
 }
