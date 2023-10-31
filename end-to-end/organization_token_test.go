@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
-	"golang.org/x/sys/windows/registry"
 )
 
 func TestOrganizationProvidedToken(t *testing.T) {
@@ -41,8 +40,11 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
 
+			proToken := os.Getenv(proTokenEnv)
+			require.NotEmptyf(t, proToken, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenEnv)
+			writeUbuntuProRegistry(t, "UbuntuProToken", proToken)
+
 			if tc.whenToken == beforeDistroRegistration {
-				activateOrgSubscription(t)
 				cleanup := startAgent(t, ctx, currentFuncName)
 				defer cleanup()
 			}
@@ -60,7 +62,6 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				err := d.Terminate()
 				require.NoError(t, err, "could not restart distro")
 
-				activateOrgSubscription(t)
 				cleanup := startAgent(t, ctx, currentFuncName)
 				defer cleanup()
 
@@ -89,18 +90,4 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 		})
 	}
-}
-
-func activateOrgSubscription(t *testing.T) {
-	t.Helper()
-
-	token := os.Getenv(proTokenEnv)
-	require.NotEmptyf(t, token, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenEnv)
-
-	key, _, err := registry.CreateKey(registry.CURRENT_USER, registryPath, registry.WRITE)
-	require.NoErrorf(t, err, "Setup: could not open UbuntuPro registry key")
-	defer key.Close()
-
-	err = key.SetStringValue("UbuntuProToken", token)
-	require.NoError(t, err, "could not write token in registry")
 }

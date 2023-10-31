@@ -19,6 +19,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
+	"golang.org/x/sys/windows/registry"
 )
 
 func testSetup(t *testing.T) {
@@ -264,4 +265,15 @@ func globSingleResult(pattern string) (string, error) {
 	}
 
 	return candidates[0], nil
+}
+
+func writeUbuntuProRegistry(t *testing.T, field string, value string) {
+	t.Helper()
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, registryPath, registry.WRITE)
+	require.NoErrorf(t, err, "Setup: could not open UbuntuPro registry key")
+	defer key.Close()
+
+	err = key.SetStringsValue(field, strings.Split(value, "\n"))
+	require.NoError(t, err, "could not write token in registry")
 }
