@@ -3,10 +3,14 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
@@ -40,6 +44,13 @@ func run(a app) int {
 		ForceColors: true,
 	})
 
+	cleanup, err := setLoggerOutput()
+	if err != nil {
+		log.Warningf("could not set logger output: %v", err)
+	} else {
+		defer cleanup()
+	}
+
 	if err := a.Run(); err != nil {
 		log.Error(context.Background(), err)
 
@@ -50,6 +61,25 @@ func run(a app) int {
 	}
 
 	return 0
+}
+
+func setLoggerOutput() (func(), error) {
+	lad := os.Getenv("LocalAppData")
+	if lad == "" {
+		return nil, errors.New("could not find LocalAppData")
+	}
+
+	p := filepath.Join(lad, common.LocalAppDataDir, "log")
+
+	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE, 0600)
+	if err != nil {
+		return nil, fmt.Errorf("could not open log file: %v", err)
+	}
+
+	fmt.Fprintf(f, "\n======== Startup %s ========\n", time.Now().Format(time.RFC3339))
+	log.SetOutput(f)
+
+	return func() { _ = f.Close() }, nil
 }
 
 func installSignalHandler(a app) func() {
