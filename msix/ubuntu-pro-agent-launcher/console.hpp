@@ -1,7 +1,11 @@
 #pragma once
 #include <Windows.h>
 
+#include <functional>
+#include <initializer_list>
+#include <optional>
 #include <string>
+#include <utility>
 
 namespace up4w {
 // An RAII wrapper around the PROCESS_INFORMATION structure to ease preventing
@@ -38,6 +42,25 @@ class PseudoConsole {
   Process StartProcess(std::wstring commandLine);
 
   ~PseudoConsole();
+};
+
+/// A combination of traditional window message loop with event listening.
+/// Listener functions return any integer value other than nullopt to report
+/// that the event loop should exit.
+class EventLoop {
+  std::vector<HANDLE> handles_;
+  std::vector<std::function<std::optional<int>(HANDLE)>> listeners_;
+  void reserve(std::size_t size);
+
+ public:
+  explicit EventLoop(
+      std::initializer_list<
+          std::pair<HANDLE, std::function<std::optional<int>(HANDLE)>>>
+          listeners);
+
+  // Runs the event loop until one of the listeners return a value or a closing
+  // message is received in the message queue.
+  int Run();
 };
 
 }  // namespace up4w

@@ -100,4 +100,45 @@ Process PseudoConsole::StartProcess(std::wstring commandLine) {
   return p;
 }
 
+void EventLoop::reserve(std::size_t size) {
+  handles_.reserve(size);
+  listeners_.reserve(size);
+}
+
+EventLoop::EventLoop(
+    std::initializer_list<
+        std::pair<HANDLE, std::function<std::optional<int>(HANDLE)>>>
+        listeners) {
+  reserve(listeners.size());
+  for (auto& [k, f] : listeners) {
+    handles_.push_back(k);
+    listeners_.push_back(f);
+  }
+}
+
+int EventLoop::Run() {
+  do {
+    DWORD signaledIndex = MsgWaitForMultipleObjectsEx(
+        static_cast<DWORD>(handles_.size()), handles_.data(), INFINITE,
+        QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+    // none of the handles, thus the window message queue was signaled.
+    if (signaledIndex >= handles_.size()) {
+      MSG msg;
+      if (!GetMessage(&msg, NULL, 0, 0)) {
+        // WM_QUIT
+        return 0;
+      }
+
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    } else {
+      // invoke the listener subscribed to the handle that was signaled.
+      if (auto done = listeners_[signaledIndex](handles_[signaledIndex]);
+          done.has_value()) {
+        return done.value();
+      }
+    }
+  } while (true);
+}
+
 }  // namespace up4w
