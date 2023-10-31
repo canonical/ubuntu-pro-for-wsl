@@ -62,14 +62,14 @@
       <Extensions>
 			<uap5:Extension
 			  Category="windows.startupTask"
-			  Executable="agent\ubuntu-pro-agent.exe"
+			  Executable="agent\ubuntu-pro-agent-launcher.exe"
 			  EntryPoint="Windows.FullTrustApplication">
 				<uap5:StartupTask
 				  TaskId="UbuntuPro"
 				  Enabled="true"
 				  DisplayName="Ubuntu Pro For Windows background agent" />
 			</uap5:Extension>
-			<desktop:Extension Category="windows.fullTrustProcess" Executable="agent\ubuntu-pro-agent.exe">
+			<desktop:Extension Category="windows.fullTrustProcess" Executable="agent\ubuntu-pro-agent-launcher.exe">
 				<desktop:FullTrustProcess>
 					<desktop:ParameterGroup GroupId="agent" Parameters=""/>
 				</desktop:FullTrustProcess>
