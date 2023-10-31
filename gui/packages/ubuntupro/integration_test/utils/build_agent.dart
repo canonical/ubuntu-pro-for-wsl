@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 /// A try-catch block (on AssertionError) can still prevent process exit.
 Future<void> buildAgentExe(
   String destination, {
-  String exeName = 'ubuntu-pro-agent.exe',
+  String exeName = 'ubuntu-pro-agent-launcher.exe',
 }) async {
   const config = 'Debug';
   const platform = 'x64';
