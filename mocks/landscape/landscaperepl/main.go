@@ -7,63 +7,119 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/landscape/landscapemockservice"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	ctx := context.Background()
+	rootCmd := rootCmd()
 
-	if len(os.Args) != 2 || os.Args[1] == "--help" {
-		log.Fatalf("Usage: %s ADDRESS", os.Args[0])
+	rootCmd.PersistentFlags().CountP("verbosity", "v", "WARNING (-v) INFO (-vv), DEBUG (-vvv)")
+	rootCmd.Flags().StringP("address", "a", "localhost:8000", "Overrides the address where the server will be hosted")
+
+	if err := rootCmd.Execute(); err != nil {
+		slog.Error(fmt.Sprintf("Error executing: %v", err))
+		os.Exit(1)
 	}
-	addr := os.Args[1]
+}
 
-	populateCommands()
+func rootCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   executableName(),
+		Short: "A mock server for Landscape hostagent testing",
+		Long: `Landscape mock REPL mocks a Landscape hostagent server
+on your command line. Hosted at the specified address.`,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Force a visit of the local flags so persistent flags for all parents are merged.
+			cmd.LocalFlags()
 
-	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp", addr)
+			// command parsing has been successful. Returns to not print usage anymore.
+			cmd.SilenceUsage = true
+
+			v := cmd.Flag("verbosity").Value.String()
+			n, err := strconv.Atoi(v)
+			if err != nil {
+				return fmt.Errorf("could not parse verbosity: %v", err)
+			}
+
+			setVerboseMode(n)
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+
+			addr := cmd.Flag("address").Value.String()
+			fmt.Printf("Hosting on %s\n", addr)
+
+			populateCommands()
+			fmt.Println("Write `help` to see a list of available commands")
+
+			var cfg net.ListenConfig
+			lis, err := cfg.Listen(ctx, "tcp", addr)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Can't listen: %v", err))
+				return
+			}
+			defer lis.Close()
+
+			server := grpc.NewServer()
+			service := landscapemockservice.New()
+			landscapeapi.RegisterLandscapeHostAgentServer(server, service)
+
+			go func() {
+				err := server.Serve(lis)
+				if err != nil {
+					slog.Error(fmt.Sprintf("Server exited with an error: %v", err))
+				}
+			}()
+			defer server.Stop()
+
+			if err := run(ctx, service); err != nil {
+				slog.Error(err.Error())
+				return
+			}
+		},
+	}
+}
+
+func executableName() string {
+	exe, err := os.Executable()
 	if err != nil {
-		log.Fatalf("Can't listen: %v", err)
+		return "landscaperepl"
 	}
-	defer lis.Close()
+	return filepath.Base(exe)
+}
 
-	server := grpc.NewServer()
-	service := landscapemockservice.New()
-	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
-
-	go func() {
-		err := server.Serve(lis)
-		if err != nil {
-			log.Fatalf("Server exited with an error: %v", err)
-		}
-	}()
-	defer server.Stop()
-
-	if err := run(ctx, service); err != nil {
-		log.Fatalf("%v", err)
+// setVerboseMode changes the verbosity of the logs.
+func setVerboseMode(n int) {
+	var level slog.Level
+	switch n {
+	case 0:
+		level = slog.LevelError
+	case 1:
+		level = slog.LevelWarn
+	case 2:
+		level = slog.LevelInfo
+	default:
+		level = slog.LevelDebug
 	}
+
+	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})
+	slog.SetDefault(slog.New(h))
 }
 
 // run contains the main execution loop.
 func run(ctx context.Context, s *landscapemockservice.Service) error {
 	sc := bufio.NewScanner(os.Stdin)
-
-	prefix := "$ "
-
-	fi, _ := os.Stdin.Stat()
-	if (fi.Mode() & os.ModeCharDevice) == 0 {
-		// data is from pipe
-		prefix = ""
-	}
-
-	fmt.Print(prefix)
 
 	// READ
 	for sc.Scan() {
@@ -85,7 +141,6 @@ func run(ctx context.Context, s *landscapemockservice.Service) error {
 
 		// LOOP
 		fmt.Println()
-		fmt.Print(prefix)
 	}
 
 	if err := sc.Err(); err != nil {
