@@ -15,6 +15,8 @@ import 'core/environment.dart';
 Future<bool> launchAgent(String agentRelativePath) async {
   final agentPath = p.join(msixRootDir().path, agentRelativePath);
   try {
+    // Attempts to kill a possibly stuck agent. Failure is desirable in this case.
+    await Process.run('taskkill.exe', ['/f', '/im', p.basename(agentPath)]);
     await Process.start(
       agentPath,
       ['-vv'],

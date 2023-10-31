@@ -57,7 +57,6 @@ class StartupInProgressWidget extends StatelessWidget {
         message: message,
         bottom: const LinearProgressIndicator(),
       ),
-      showTitleBar: false,
     );
   }
 }
@@ -74,29 +73,6 @@ class StartupErrorWidget extends StatelessWidget {
       body: StatusColumn(
         top: const Icon(Icons.error_outline, size: 64),
         message: message,
-      ),
-    );
-  }
-}
-
-/// Displays an error icon followed by the [errorMessage] and a button allowing
-/// users to manually request a reset/retry operation.
-class StartupRetryWidget extends StatelessWidget {
-  const StartupRetryWidget({
-    super.key,
-    required this.message,
-    required this.retry,
-  });
-  final String message;
-  final Widget retry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Pro4WindowsPage(
-      body: StatusColumn(
-        top: const Icon(Icons.error_outline, size: 64),
-        message: message,
-        bottom: retry,
       ),
     );
   }

@@ -24,8 +24,7 @@
     "agentStateCannotStart": "Ubuntu Pro background agent cannot be started.",
     "agentStateUnknownEnv": "Ubuntu Pro background agent state cannot be verified. Check your environment settings.",
     "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
-    "agentStateUnreachable": "Ubuntu Pro background agent is unreachable.",
-    "agentRetryButton": "Click to restart it",
+    "agentStateUnreachable": "Attempting to recover Ubuntu Pro background agent.",
 
     "proHeading": "The most comprehensive subscription\nfor open-source software security\nnow available on WSL",
     "subscribeNow": "Subscribe Now",

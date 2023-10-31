@@ -50,9 +50,12 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
     super.initState();
     final model = context.read<StartupModel>();
     model.init();
-    model.addListener(() {
+    model.addListener(() async {
       if (model.view == ViewState.ok) {
-        Navigator.of(context).pushReplacementNamed(widget.nextRoute);
+        await Navigator.of(context).pushReplacementNamed(widget.nextRoute);
+      }
+      if (model.view == ViewState.retry) {
+        await model.resetAgent();
       }
     });
   }
@@ -60,19 +63,11 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
   Widget buildChild(ViewState view, String message) {
     switch (view) {
       case ViewState.inProgress:
+      case ViewState.retry:
         return StartupInProgressWidget(message);
 
       case ViewState.ok:
         return const SizedBox.shrink();
-
-      case ViewState.retry:
-        return StartupRetryWidget(
-          message: message,
-          retry: OutlinedButton(
-            onPressed: context.read<StartupModel>().resetAgent,
-            child: Text(AppLocalizations.of(context).agentRetryButton),
-          ),
-        );
 
       case ViewState.crash:
         return StartupErrorWidget(message);
