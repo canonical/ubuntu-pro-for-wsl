@@ -191,6 +191,32 @@ void main() {
     verify(mockClient.ping()).called(1);
   });
 
+  test('timeout if never addr', () async {
+    final mockClient = MockAgentApiClient();
+    // Fakes a successful ping.
+    when(mockClient.ping()).thenAnswer((_) async => true);
+    final monitor = AgentStartupMonitor(
+      /// A launch request will always succeed, but never writes the addr file.
+      agentLauncher: () async {
+        return true;
+      },
+      clientFactory: (port) => mockClient,
+      appName: kAppName,
+      addrFileName: kAddrFileName,
+      onClient: (_) {},
+    );
+
+    await expectLater(
+      monitor.start(interval: kInterval),
+      emitsInOrder([
+        AgentState.querying,
+        // instead of waiting the addr file to show up forever, we are caught by our internal timeout.
+        AgentState.unreachable,
+      ]),
+    );
+    verifyNever(mockClient.ping());
+  });
+
   test('await async onClient callback', () async {
     final completeMe = Completer<void>();
     final mockClient = MockAgentApiClient();

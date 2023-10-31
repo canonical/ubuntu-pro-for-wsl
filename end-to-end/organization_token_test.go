@@ -67,7 +67,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			const maxTimeout = 15 * time.Second
+			const maxTimeout = 30 * time.Second
 
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)

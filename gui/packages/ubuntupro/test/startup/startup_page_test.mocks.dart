@@ -73,7 +73,7 @@ class MockAgentStartupMonitor extends _i1.Mock
   @override
   _i5.Stream<_i4.AgentState> start({
     Duration? interval = const Duration(seconds: 1),
-    Duration? timeout = const Duration(seconds: 30),
+    Duration? timeout = const Duration(seconds: 5),
   }) =>
       (super.noSuchMethod(
         Invocation.method(
