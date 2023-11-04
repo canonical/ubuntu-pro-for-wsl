@@ -54,10 +54,9 @@ class hresult_exception {
 };
 
 /// Computes the absolute path resulting of joining the [destination] into the
-/// value of the environment variable [envDir]. Returns empty string if the
+/// value of the environment variable [LOCALAPPDATA]. Returns empty string if the
 /// environment variable is undefined.
-std::wstring MakePathRelativeToEnvDir(std::wstring_view destination,
-                                      std::wstring_view envDir);
+std::wstring UnderLocalAppDataPath(std::wstring_view destination);
 
 // Opens the log file, writes the message with a timestamp and closes it.
 void LogSingleShot(std::filesystem::path const& logFilePath,

@@ -5,13 +5,32 @@
 #include <initializer_list>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace up4w {
 // An RAII wrapper around the PROCESS_INFORMATION structure to ease preventing
 // HANDLE leaks.
 struct Process : PROCESS_INFORMATION {
-  ~Process() {
+  Process(Process const& other) = delete;
+  Process& operator=(Process const& other) = delete;
+  Process(Process&& other) noexcept { *this = std::move(other); }
+  Process& operator=(Process&& other) noexcept {
+    hProcess = std::exchange(other.hProcess, nullptr);
+    hThread = std::exchange(other.hThread, nullptr);
+    dwProcessId = std::exchange(other.dwProcessId, 0);
+    dwThreadId = std::exchange(other.dwThreadId, 0);
+    return *this;
+  }
+  Process() noexcept {
+    hProcess = nullptr;
+    hThread = nullptr;
+    dwProcessId = 0;
+    dwThreadId = 0;
+  }
+
+  ~Process() noexcept {
     if (hThread != nullptr && hThread != INVALID_HANDLE_VALUE) {
       CloseHandle(hThread);
     }

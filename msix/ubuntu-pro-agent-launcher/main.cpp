@@ -12,9 +12,8 @@
 #include "error.hpp"
 
 std::filesystem::path const& logPath() {
-  static std::filesystem::path localAppDataPath =
-      up4w::MakePathRelativeToEnvDir(
-          L"\\Ubuntu Pro\\ubuntu-pro-agent-launcher.log", L"LOCALAPPDATA");
+  static std::filesystem::path localAppDataPath = up4w::UnderLocalAppDataPath(
+      L"\\Ubuntu Pro\\ubuntu-pro-agent-launcher.log");
   return localAppDataPath;
 }
 
@@ -80,4 +79,12 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR pCmdLine, int) try {
 
   up4w::LogSingleShot(localAppDataPath, err.what());
   return 3;
+} catch (...) {
+  std::filesystem::path const& localAppDataPath = logPath();
+  if (localAppDataPath.empty()) {
+    return 1;
+  }
+
+  up4w::LogSingleShot(localAppDataPath, "An unknown exception was thrown.\n");
+  return 4;
 }

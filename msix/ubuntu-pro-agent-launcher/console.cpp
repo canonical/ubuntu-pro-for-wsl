@@ -90,7 +90,7 @@ Process PseudoConsole::StartProcess(std::wstring commandLine) {
   si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
   si.lpAttributeList = attributes.get();
 
-  Process p{0};
+  Process p{};
   if (!CreateProcessW(NULL, commandLine.data(), NULL, NULL, FALSE,
                       EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo,
                       &p)) {
@@ -133,7 +133,7 @@ int EventLoop::Run() {
       DispatchMessage(&msg);
     } else {
       // invoke the listener subscribed to the handle that was signaled.
-      if (auto done = listeners_[signaledIndex](handles_[signaledIndex]);
+      if (auto done = listeners_.at(signaledIndex)(handles_.at(signaledIndex));
           done.has_value()) {
         return done.value();
       }
