@@ -13,7 +13,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.4.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c
