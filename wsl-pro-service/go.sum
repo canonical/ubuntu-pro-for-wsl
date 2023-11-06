@@ -40,8 +40,6 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231023183501-458a10db4c16 h1:p894ThMw329hDKpS2tfsgZhUuWC1HfZAsq/vcRhDpGs=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231023183501-458a10db4c16/go.mod h1:yZFCC1gVaFNjIJ7Glk3FBiaCokcV/Jk5B6tFIlHBgd8=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231023183501-458a10db4c16 h1:u7afWNLgssNSEHKxldRbgCobFnGlILpECBeAPiWyb0c=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231023183501-458a10db4c16/go.mod h1:a/RSoEHIs9RmXxL/+68oDpXi8+d+TGptM/9N5ULw2Kw=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231031122227-ff0fccdda501 h1:BUJqqqeV0onaJkBMDkKMUIl+hyh+QrsoAni2oE3AHz8=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231031122227-ff0fccdda501/go.mod h1:r2YGGGSeu2lnyVGB49O3fGgaLfppNwr9TlLimYH2muY=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231025153609-b3e7db95a9ce h1:zuJOIrd+T+J5UVEiCHT9lK7sYS4VDJ5ZxI81Yvdr6jY=
