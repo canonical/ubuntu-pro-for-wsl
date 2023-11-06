@@ -6,7 +6,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230906090052-60fb5d60ada4
 	github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service v0.0.0-20230906090052-60fb5d60ada4
 	github.com/golangci/golangci-lint v1.55.1
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/vuln v1.0.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
@@ -58,7 +58,7 @@ require (
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.11.2 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
