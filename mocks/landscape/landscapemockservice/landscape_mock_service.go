@@ -134,7 +134,7 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 	}
 }
 
-// recvMsg is the sanitixed reuturn type of a GRPC Recv, used to pass by channel.
+// recvMsg is the sanitized reuturn type of a GRPC Recv, used to pass by channel.
 type recvMsg struct {
 	info HostInfo
 	err  error
