@@ -75,9 +75,10 @@ func TestSubscription(t *testing.T) {
 		"Success when there is a user token":          {settingsState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
 		"Success when there is a store token":         {settingsState: storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
 
-		"Success when there are organization and user tokens":                           {settingsState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
-		"Success when there are organization and store tokens":                          {settingsState: orgTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
-		"Success when there are organization and user tokens, and an empty store token": {settingsState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SourceUser},
+		"Success when there are organization and user tokens":                           {settingsState: orgTokenHasValue | userTokenHasValue, wantToken: "org_token", wantSource: config.SourceRegistry},
+		"Success when there are organization and store tokens":                          {settingsState: orgTokenHasValue | storeTokenHasValue, wantToken: "org_token", wantSource: config.SourceRegistry},
+		"Success when there are store and user tokens":                                  {settingsState: userTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
+		"Success when there are organization and user tokens, and an empty store token": {settingsState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "org_token", wantSource: config.SourceRegistry},
 
 		"Error when the registry key cannot be opened":    {settingsState: orgTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {settingsState: orgTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -129,7 +130,7 @@ func TestLandscapeConfig(t *testing.T) {
 		"Success when there is an organization conf": {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 		"Success when there is a user conf":          {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
 
-		"Success when there are organization and user confs": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Success when there are organization and user confs": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 
 		"Error when the registry key cannot be opened":    {settingsState: orgTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {settingsState: orgTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
