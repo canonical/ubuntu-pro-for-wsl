@@ -42,7 +42,7 @@ type daemonConfig struct {
 }
 
 type options struct {
-	daemonCacheDir      string
+	daemonAddrDir       string
 	proservicesCacheDir string
 	registry            config.Registry
 }
@@ -111,7 +111,7 @@ func (a *App) serve(args ...option) error {
 	}
 	defer proservice.Stop(ctx)
 
-	daemon, err := daemon.New(ctx, proservice.RegisterGRPCServices, daemon.WithCacheDir(opt.daemonCacheDir))
+	daemon, err := daemon.New(ctx, proservice.RegisterGRPCServices, daemon.WithAddrDir(opt.daemonAddrDir))
 	if err != nil {
 		close(a.ready)
 		return err

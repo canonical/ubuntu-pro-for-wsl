@@ -28,17 +28,17 @@ type Daemon struct {
 
 // options are the configurable functional options for the daemon.
 type options struct {
-	cacheDir string
+	addrDir string
 }
 
 // Option is the function signature we are passing to tweak the daemon creation.
 type Option func(*options)
 
-// WithCacheDir overrides the cache directory used in the daemon.
-func WithCacheDir(cachedir string) Option {
+// WithAddrDir overrides the directory where the address file will be stored.
+func WithAddrDir(addrDir string) Option {
 	return func(o *options) {
-		if cachedir != "" {
-			o.cacheDir = cachedir
+		if addrDir != "" {
+			o.addrDir = addrDir
 		}
 	}
 }
@@ -56,21 +56,17 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args .
 		f(&opts)
 	}
 
-	if opts.cacheDir == "" {
-		// Set default cache dir.
-		localAppData := os.Getenv("LocalAppData")
-		if localAppData == "" {
-			return d, errors.New("Could not read env variable LocalAppData")
+	if opts.addrDir == "" {
+		// Set default addr dir.
+		home := os.Getenv("UserProfile")
+		if home == "" {
+			return d, errors.New("Could not read env variable UserProfile")
 		}
 
-		opts.cacheDir = filepath.Join(localAppData, common.LocalAppDataDir)
+		opts.addrDir = home
 	}
 
-	// Create our cache directory if needed
-	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
-		return d, err
-	}
-	listeningPortFilePath := filepath.Join(opts.cacheDir, common.ListeningPortFileName)
+	listeningPortFilePath := filepath.Join(opts.addrDir, common.ListeningPortFileName)
 	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
 	return Daemon{
