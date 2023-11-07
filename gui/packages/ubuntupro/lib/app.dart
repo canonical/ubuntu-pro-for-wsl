@@ -23,7 +23,7 @@ class Pro4WindowsApp extends StatelessWidget {
       builder: (context, yaru, child) => ChangeNotifierProvider(
         create: (_) => ValueNotifier(SubscriptionInfo()),
         child: MaterialApp(
-          title: kAppName,
+          title: 'Ubuntu Pro',
           theme: yaru.theme,
           darkTheme: yaru.darkTheme,
           debugShowCheckedModeBanner: false,
@@ -59,7 +59,6 @@ class Pro4WindowsApp extends StatelessWidget {
 Widget buildStartup(BuildContext context) {
   return Provider<AgentStartupMonitor>(
     create: (context) => AgentStartupMonitor(
-      appName: kAppName,
       addrFileName: kAddrFileName,
       agentLauncher: launch,
       clientFactory: defaultClient,

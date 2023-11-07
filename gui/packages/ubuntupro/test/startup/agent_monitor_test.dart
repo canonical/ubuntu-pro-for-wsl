@@ -18,20 +18,24 @@ void main() {
   const kTimeout = Duration(seconds: 3);
   const kInterval = Duration(milliseconds: 100);
 
-  Directory? appDir;
+  Directory? homeDir;
+
   setUpAll(() async {
-    // Overrides the LOCALAPPDATA value to point to a temporary directory and
+    // Overrides the USERPROFILE value to point to a temporary directory and
     // creates the agent directory inside it, where we should find the addr file.
-    // Returns the mocked LOCALAPPDATA value for later deletion.
-    final tmp = await Directory.current.createTemp();
+    // Returns the mocked USERPROFILE value for later deletion.
+    final tmpHome = await Directory.current.createTemp();
+
     final _ = Environment(
-      overrides: {'LOCALAPPDATA': tmp.path},
+      overrides: {
+        'USERPROFILE': tmpHome.path,
+      },
     );
 
-    appDir = await Directory(p.join(tmp.path, kAppName)).create();
+    homeDir = tmpHome;
   });
   tearDownAll(() async {
-    await appDir?.parent.delete(recursive: true);
+    await homeDir?.delete(recursive: true);
   });
 
   test('agent cannot start', () async {
@@ -41,7 +45,6 @@ void main() {
       /// A launch request will always fail.
       agentLauncher: () async => false,
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -59,7 +62,7 @@ void main() {
   });
 
   test('ping non responsive', () async {
-    writeDummyAddrFile(appDir!);
+    writeDummyAddrFile(homeDir!);
 
     // Fakes a ping failure.
     final mockClient = MockAgentApiClient();
@@ -69,7 +72,6 @@ void main() {
       /// A launch request will always succeed.
       agentLauncher: () async => true,
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -86,14 +88,13 @@ void main() {
   });
 
   test('format error', () async {
-    writeDummyAddrFile(appDir!, line: 'Hello, 45567');
+    writeDummyAddrFile(homeDir!, line: 'Hello, 45567');
 
     final mockClient = MockAgentApiClient();
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -116,7 +117,6 @@ void main() {
       /// A launch request will always succeed.
       agentLauncher: () async => true,
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -138,7 +138,7 @@ void main() {
   });
 
   test('already running with mocks', () async {
-    writeDummyAddrFile(appDir!);
+    writeDummyAddrFile(homeDir!);
 
     final mockClient = MockAgentApiClient();
     // Fakes a successful ping.
@@ -147,7 +147,6 @@ void main() {
       /// A launch request will always succeed.
       agentLauncher: () async => true,
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -170,11 +169,10 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async {
-        writeDummyAddrFile(appDir!);
+        writeDummyAddrFile(homeDir!);
         return true;
       },
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -201,7 +199,6 @@ void main() {
         return true;
       },
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -225,11 +222,10 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async {
-        writeDummyAddrFile(appDir!);
+        writeDummyAddrFile(homeDir!);
         return true;
       },
       clientFactory: (port) => mockClient,
-      appName: kAppName,
       addrFileName: kAddrFileName,
       onClient: (_) async {
         // This function only completes when the completer is manually set complete.
@@ -261,10 +257,10 @@ void main() {
   });
 }
 
-/// Writes a sample `addr` file to the destination containing either a proper
+/// Writes a sample `.ubuntupro` file to the destination containing either a proper
 /// contents as if the agent would have written it or [line], if supplied.
 void writeDummyAddrFile(Directory appDir, {String? line}) {
-  final filePath = p.join(appDir.path, 'addr');
+  final filePath = p.join(appDir.path, '.ubuntupro');
   const port = 56789;
   const goodLine = '[::]:$port';
   final addr = File(filePath);
