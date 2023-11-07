@@ -147,16 +147,16 @@ func (s System) wslDistroName(ctx context.Context) (string, error) {
 	return fields[3], nil
 }
 
-// LocalAppData provides the path to Windows' local app data directory from WSL,
-// usually `/mnt/c/Users/JohnDoe/AppData/Local`.
-func (s *System) LocalAppData(ctx context.Context) (wslPath string, err error) {
+// UserProfileDir provides the path to Windows' user profile directory from WSL,
+// usually `/mnt/c/Users/JohnDoe/`.
+func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error) {
 	// Find folder where windows is mounted on
 	cmdExe, err := s.findCmdExe()
 	if err != nil {
 		return wslPath, err
 	}
 
-	exe, args := s.backend.CmdExe(cmdExe, "/C", "echo %LocalAppData%")
+	exe, args := s.backend.CmdExe(cmdExe, "/C", "echo %UserProfile%")
 	//nolint:gosec //this function simply prepends the WSL path to "cmd.exe" to the args.
 	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
@@ -165,16 +165,17 @@ func (s *System) LocalAppData(ctx context.Context) (wslPath string, err error) {
 
 	// Path from Windows' perspective ( C:\Users\... )
 	// It must be converted to linux ( /mnt/c/Users/... )
-	localAppDataWindows := strings.TrimSpace(string(out))
+	winHome := strings.TrimSpace(string(out))
 
-	exe, args = s.backend.WslpathExecutable("-ua", localAppDataWindows)
+	exe, args = s.backend.WslpathExecutable("-ua", winHome)
 	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
 	out, err = exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
 		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
 	}
-	localAppDataLinux := strings.TrimSpace(string(out))
-	return s.Path(localAppDataLinux), nil
+
+	winHomeLinux := strings.TrimSpace(string(out))
+	return s.Path(winHomeLinux), nil
 }
 
 // Path converts an absolute path into one inside the mocked filesystem.

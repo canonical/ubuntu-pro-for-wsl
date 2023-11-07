@@ -120,7 +120,7 @@ func TestInfo(t *testing.T) {
 	}
 }
 
-func TestLocalAppData(t *testing.T) {
+func TestUserProfileDir(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -170,19 +170,19 @@ func TestLocalAppData(t *testing.T) {
 				os.RemoveAll(cmdExePath)
 			}
 
-			got, err := system.LocalAppData(context.Background())
+			got, err := system.UserProfileDir(context.Background())
 			if tc.wantErr {
-				require.Error(t, err, "Expected LocalAppData to return an error")
+				require.Error(t, err, "Expected UserProfile to return an error")
 				return
 			}
-			require.NoError(t, err, "Expected LocalAppData to return no errors")
+			require.NoError(t, err, "Expected UserProfile to return no errors")
 
 			// Validating CMD path
 			require.Equal(t, cmdExePath, *system.CmdExeCache(), "Unexpected path for cmd.exe")
 
-			// Validating LocalAppData
-			wantSuffix := `/mnt/d/Users/TestUser/AppData/Local`
-			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by LocalAppData.\nWant suffix: %s\nGot: %s", wantSuffix, got)
+			// Validating UserProfile
+			wantSuffix := `/mnt/d/Users/TestUser`
+			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by UserProfileDir.\nWant suffix: %s\nGot: %s", wantSuffix, got)
 		})
 	}
 }
