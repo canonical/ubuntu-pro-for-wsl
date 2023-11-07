@@ -14,7 +14,6 @@ void main() {
     final info = SubscriptionInfo();
     testWidgets('user', (tester) async {
       info.ensureUser();
-      info.immutable = false;
       final app = buildApp(info, client);
 
       await tester.pumpWidget(app);
@@ -27,7 +26,6 @@ void main() {
 
     testWidgets('store', (tester) async {
       info.ensureMicrosoftStore();
-      info.immutable = false;
       final app = buildApp(info, client);
 
       await tester.pumpWidget(app);
@@ -40,7 +38,6 @@ void main() {
 
     testWidgets('organization', (tester) async {
       info.ensureOrganization();
-      info.immutable = false;
       final app = buildApp(info, client);
 
       await tester.pumpWidget(app);
@@ -55,7 +52,6 @@ void main() {
     final mockClient = FakeAgentApiClient();
     final info = ValueNotifier(SubscriptionInfo());
     info.value.ensureUser();
-    info.value.immutable = false;
     registerServiceInstance<AgentApiClient>(mockClient);
     final app = ChangeNotifierProvider.value(
       value: info,
