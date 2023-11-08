@@ -154,14 +154,26 @@ func stopAgent(ctx context.Context) error {
 func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (bool, error) {
 	t.Helper()
 
-	out, err := d.Command(ctx, "pro status --format=json").Output()
-	if err != nil {
-		return false, fmt.Errorf("could not call pro status: %v. %s", err, out)
+	var stdout, stderr bytes.Buffer
+
+	cmd := d.Command(ctx, "pro status --format=json")
+
+	// We need separate Stdout and Stderr. We cannot combine them because the
+	// pro client prints warnings to Stderr, which makes the combined output
+	// invalid JSON. We also cannot ignore either:
+	// - We need StdOut to parse the JSON output.
+	// - We need Stderr to read the error message in case the command fails.
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return false, fmt.Errorf("could not call pro status: %v.\nSTDOUT: %s\nSTDERR: %s", err, &stdout, &stderr)
 	}
 
 	var response struct {
 		Attached bool
 	}
+	out := stdout.Bytes()
 	if err := json.Unmarshal(out, &response); err != nil {
 		return false, fmt.Errorf("could not parse pro status response: %v: %s", err, out)
 	}
