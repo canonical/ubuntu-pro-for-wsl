@@ -39,7 +39,10 @@ class SubscriptionStatusPage extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFE86581),
               ),
-              onPressed: model.detachPro,
+              onPressed: () async {
+                context.read<ValueNotifier<SubscriptionInfo>>().value =
+                    await model.detachPro();
+              },
               child: Text(lang.detachPro),
             ),
           ),
