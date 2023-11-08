@@ -24,10 +24,10 @@ class AgentApiClient {
   AgentApiClient.withClient(this._client);
 
   /// Dispatches a applyProToken request with the supplied Pro [token].
-  Future<void> applyProToken(String token) async {
+  Future<SubscriptionInfo> applyProToken(String token) {
     final info = ProAttachInfo();
     info.token = token;
-    await _client.applyProToken(info);
+    return _client.applyProToken(info);
   }
 
   /// Attempts to ping the Agent Service at the supplied endpoint
