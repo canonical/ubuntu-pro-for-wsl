@@ -1,3 +1,3 @@
 module github.com/canonical/ubuntu-pro-for-windows/contractsapi
 
-go 1.21.3
+go 1.21.4
