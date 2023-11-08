@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/common
 
-go 1.21.3
+go 1.21.4
 
 require (
 	github.com/google/uuid v1.4.0

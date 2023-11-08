@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/agentapi
 
-go 1.21.3
+go 1.21.4
 
 require (
 	google.golang.org/grpc v1.59.0
