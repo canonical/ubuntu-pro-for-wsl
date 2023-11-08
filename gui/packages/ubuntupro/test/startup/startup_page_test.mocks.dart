@@ -106,14 +106,21 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
   }
 
   @override
-  _i5.Future<void> applyProToken(String? token) => (super.noSuchMethod(
+  _i5.Future<_i3.SubscriptionInfo> applyProToken(String? token) =>
+      (super.noSuchMethod(
         Invocation.method(
           #applyProToken,
           [token],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue:
+            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+          this,
+          Invocation.method(
+            #applyProToken,
+            [token],
+          ),
+        )),
+      ) as _i5.Future<_i3.SubscriptionInfo>);
   @override
   _i5.Future<bool> ping() => (super.noSuchMethod(
         Invocation.method(
