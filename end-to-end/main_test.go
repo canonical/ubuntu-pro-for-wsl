@@ -66,7 +66,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertCleanLocalAppData(); err != nil {
+	if err := assertCleanFilesystem(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -228,45 +228,75 @@ func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 		"-Command", fmt.Sprintf(`$env:PsModulePath="" ; `+command, args...))
 }
 
-// assertCleanLocalAppData returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
+// assertCleanFilesystem returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
 // If safety checks are overridden, then the directory is removed and no error is returned.
-func assertCleanLocalAppData() error {
-	path := os.Getenv("LocalAppData")
-	if path == "" {
-		return errors.New("variable $env:LocalAppData should not be empty")
-	}
-
-	path = filepath.Join(path, "Ubuntu Pro")
-
-	_, err := os.Stat(path)
-	if errors.Is(err, fs.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("could not stat %q: %v", path, err)
-	}
-
+func assertCleanFilesystem() error {
 	if os.Getenv(overrideSafety) != "" {
-		return cleanupLocalAppData()
+		return cleanupFilesystem()
 	}
 
-	return fmt.Errorf("Directory %q should not exist. Remove it from your machine "+
-		"to agree to run this potentially destructive test.", path)
-}
-
-// cleanupLocalAppData removes directory '%LocalAppData%/Ubuntu Pro' and all its contents.
-func cleanupLocalAppData() error {
-	path := os.Getenv("LocalAppData")
-	if path == "" {
-		return errors.New("variable $env:LocalAppData should not be empty")
+	fileList, err := filesToCleanUp()
+	if err != nil {
+		return err
 	}
 
-	path = filepath.Join(path, "Ubuntu Pro")
-	if err := os.RemoveAll(path); err != nil {
-		return fmt.Errorf("could not clean up LocalAppData: %v", err)
+	var errs error
+	for _, path := range fileList {
+		_, err := os.Stat(path)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("could not stat %q: %v", path, err))
+			continue
+		}
+
+		errs = errors.Join(errs, fmt.Errorf("path %q should not exist. Remove it from your machine "+
+			"to agree to run this potentially destructive test.", path))
 	}
 
 	return nil
+}
+
+func cleanupFilesystem() error {
+	fileList, err := filesToCleanUp()
+	if err != nil {
+		return err
+	}
+
+	var errs error
+	for _, path := range fileList {
+		if err := os.RemoveAll(path); err != nil {
+			errs = errors.Join(errs, fmt.Errorf("could not clean up %s: %v", path, err))
+		}
+	}
+
+	return errs
+}
+
+func filesToCleanUp() ([]string, error) {
+	fileList := []struct {
+		prefixEnv string
+		path      string
+	}{
+		{prefixEnv: "LocalAppData", path: "Ubuntu Pro"},
+		{prefixEnv: "UserProfile", path: ".ubuntupro"},
+		{prefixEnv: "UserProfile", path: ".ubuntupro.logs"},
+	}
+
+	var out []string
+	var errs error
+
+	for _, s := range fileList {
+		prefix := os.Getenv(s.prefixEnv)
+		if prefix == "" {
+			errs = errors.Join(errs, fmt.Errorf("variable $env:%s should not be empty", s.prefixEnv))
+		}
+
+		out = append(out, filepath.Join(prefix, s.path))
+	}
+
+	return out, errs
 }
 
 // assertCleanRegistry returns error if registry key 'UbuntuPro' exists.

@@ -39,7 +39,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			ctx := context.Background()
 
 			testSetup(t)
-			defer logWindowsAgentOnError(t)
+			defer logWindowsAgentOnError(t, ctx)
 
 			if tc.whenToken == beforeDistroRegistration {
 				activateOrgSubscription(t)

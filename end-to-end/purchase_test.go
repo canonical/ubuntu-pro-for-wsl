@@ -51,8 +51,10 @@ func TestPurchase(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+
 			testSetup(t)
-			defer logWindowsAgentOnError(t)
+			defer logWindowsAgentOnError(t, ctx)
 
 			settings := contractsmockserver.DefaultSettings()
 
@@ -67,7 +69,6 @@ func TestPurchase(t *testing.T) {
 			//nolint:errcheck // Nothing we can do about it
 			defer cs.Stop()
 
-			ctx := context.Background()
 			contractsCtx, contractsCancel := context.WithCancel(ctx)
 			defer contractsCancel()
 

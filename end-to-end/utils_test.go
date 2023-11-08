@@ -34,14 +34,14 @@ func testSetup(t *testing.T) {
 	err = assertCleanRegistry()
 	require.NoError(t, err, "Setup: registry is polluted, potentially by a previous test")
 
-	err = assertCleanLocalAppData()
+	err = assertCleanFilesystem()
 	require.NoError(t, err, "Setup: local app data is polluted, potentially by a previous test")
 
 	t.Cleanup(func() {
 		err := errors.Join(
 			stopAgent(ctx),
 			cleanupRegistry(),
-			cleanupLocalAppData(),
+			cleanupFilesystem(),
 		)
 		// Cannot assert: the test is finished already
 		if err != nil {
@@ -113,19 +113,16 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 		}
 	}()
 
-	require.Eventually(t, func() bool {
-		localAppData := os.Getenv("LocalAppData")
-		if localAppData == "" {
-			t.Logf("Agent setup: $env:LocalAppData should not be empty")
-			return false
-		}
+	home := os.Getenv("UserProfile")
+	require.NotEmptyf(t, home, "Agent setup: $env:UserProfile should not be empty")
 
-		_, err := os.Stat(filepath.Join(localAppData, "Ubuntu Pro", "addr"))
+	require.Eventually(t, func() bool {
+		_, err := os.Stat(filepath.Join(home, ".ubuntupro"))
 		if errors.Is(err, fs.ErrNotExist) {
 			return false
 		}
 		if err != nil {
-			t.Logf("Agent setup: could not read addr file: %v", err)
+			t.Logf("Agent setup: could not read address file: %v", err)
 			return false
 		}
 		return true
@@ -198,7 +195,8 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 	t.Logf("WSL Pro Service logs:\n%s\n", out)
 }
 
-func logWindowsAgentOnError(t *testing.T) {
+//nolint:revive // testing.T must precede the context
+func logWindowsAgentOnError(t *testing.T, ctx context.Context) {
 	t.Helper()
 
 	if !t.Failed() {
@@ -207,13 +205,31 @@ func logWindowsAgentOnError(t *testing.T) {
 
 	localAppData := os.Getenv("LocalAppData")
 	if localAppData == "" {
-		t.Log("could not access Windows Agent's logs: $env:LocalAppData is not assigned")
+		t.Log("could not find Windows Agent's logs: $env:LocalAppData is not assigned")
 		return
 	}
 
-	out, err := os.ReadFile(filepath.Join(localAppData, common.LocalAppDataDir, "log"))
+	// The virtualized LocalAppData is located under a path similar to this one:
+	//
+	//    %LocalAppData%/Packages/CanonicalGroupLimited.UbuntuProForWindows_hhj52ngek5ykr/LocalCache/Local
+	//                                                                      ^~~~~~~~~~~~~
+	//                                                                      This part changes from version to version
+	//
+	packageDir := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuProForWindows_*")
+
+	out, err := powershellf(ctx, "(Get-Item %q).FullName", packageDir).CombinedOutput()
 	if err != nil {
-		t.Logf("could not read Windows Agent's logs: %v", err)
+		t.Logf("could not find Windows Agent's logs: could not find virtualized LocalAppData: %v", err)
+		return
+	}
+
+	// Remove trailing endline
+	packageDir = strings.TrimSpace(string(out))
+
+	logsPath := filepath.Join(packageDir, "LocalCache", "Local", common.LocalAppDataDir, ".ubuntupro.log")
+	out, err = os.ReadFile(logsPath)
+	if err != nil {
+		t.Logf("could not read Windows Agent's logs at %q: %v", logsPath, err)
 		return
 	}
 
