@@ -56,7 +56,7 @@ class UserSubscriptionStatusModel extends SubscriptionStatusModel {
   final AgentApiClient _client;
 
   /// Pro-detach all Ubuntu WSL instances.
-  Future<void> detachPro() => _client.applyProToken('');
+  Future<SubscriptionInfo> detachPro() => _client.applyProToken('');
 }
 
 /// Represents a subscription provided by the user's Organization.
