@@ -29,11 +29,11 @@ jobs:
         os: [ubuntu, windows]
         exclude:
           # Skipping because it only builds on Linux (uses syscall.Kill())
-          - os: windows
-            subproject: wsl-pro-service
+          - subproject: wsl-pro-service
+            os: windows
           # Skipping because it only builds on Windows (registry access)
-          - os: ubuntu
-            subproject: end-to-end
+          - subproject: end-to-end
+            os: ubuntu
         include:
           # Enabling Flutter to generate gRPC bindings
           - subproject: agentapi
@@ -46,8 +46,8 @@ jobs:
           - subproject: end-to-end
             skip-tests: true
           # Skipping tests because we need MsBuild
-          - os: ubuntu
-            subproject: storeapi/go-wrapper/microsoftstore
+          - subproject: storeapi/go-wrapper/microsoftstore
+            os: ubuntu
             skip-tests: true
 
     runs-on: ${{ matrix.os }}-latest
