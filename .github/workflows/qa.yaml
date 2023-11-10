@@ -129,6 +129,14 @@ jobs:
       matrix:
         os: [ubuntu, windows]
         package: ["p4w_ms_store", "ubuntupro"]
+        include:
+          # We'll be able to run this on Linux eventually and there are gotchas already solved here
+          # such as the dependency on xvfb since ubuntu runners on GH don't have graphical capabilities.
+          - os: ubuntu
+            skip-tests: true
+          # There are no integration tests in this package
+          - package: p4w_ms_store
+            skip-tests: true
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Set up git
@@ -145,7 +153,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up Go
         # We need to set up Go so that the agent can be built for the end-to-end tests
-        if: matrix.package == 'ubuntupro'
+        if: matrix.skip-tests == ''
         uses: actions/setup-go@v4
         with:
           go-version-file: windows-agent/go.mod
@@ -159,44 +167,16 @@ jobs:
         with:
           flutter-version: ${{ steps.load.outputs.data.flutter-version }}
           package-dir: gui/packages/${{ matrix.package }}
-          run-build-runner: ${{ matrix.package ==  'ubuntupro' }}
+          run-build-runner: ${{ matrix.skip-tests ==  '' }}
       - name: Ensure module files are up to date
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
           working-directory: gui/packages/${{ matrix.package }}
           paths-to-ignore: ${{ matrix.package == 'ubuntupro' && 'pubspec.lock' || '' }}
           fail-on-diff: true
-
-  flutter-integration:
-    name: "Flutter integration tests"
-    strategy:
-      fail-fast: false
-      # For now we don't have a way to run integration test on ubuntu.
-      # It looks silly to keep this matrix, but we'll be able to run this on Linux eventually and there are gotchas already solved here
-      # such as the dependency on xvfb since ubuntu runners on GH don't have graphical capabilities.
-      matrix:
-        os: [windows]
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-      - name: Set up git
-        # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Ensure dependencies on Ubuntu
-        if: ${{ matrix.os == 'ubuntu' }}
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt update
-          sudo DEBIAN_FRONTEND=noninteractive apt install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev unzip xvfb
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Load flutter version
-        id: load
-        uses: ./.github/actions/load-json
-        with:
-          path: tools/versions.json
       - name: Flutter QA
         uses: ./.github/actions/flutter-integration-test/
+        if: matrix.skip-tests == ''
         with:
           flutter-version: ${{ steps.load.outputs.data.flutter-version }}
           go-version-file: windows-agent/go.mod
