@@ -19,13 +19,13 @@ jobs:
         os: [ubuntu, windows]
         subproject: [
             "agentapi",
+            "common",
             "contractsapi",
+            "end-to-end",
             "mocks",
             "storeapi/go-wrapper/microsoftstore",
             "windows-agent",
             "wsl-pro-service",
-            "end-to-end",
-            "common",
           ]
         exclude:
           # Skipping because it only builds on Linux (uses syscall.Kill())
@@ -38,16 +38,16 @@ jobs:
           # Enabling Flutter to generate gRPC bindings
           - subproject: agentapi
             needs-flutter: true
+          # Skipping tests because common/i18n subprocesses gettext
+          - os: ubuntu
+            subproject: common
+            skip-tests: true
           # Skipping tests because we run them in the qa-azure workflow
           - subproject: end-to-end
             skip-tests: true
           # Skipping tests because we need MsBuild
           - os: ubuntu
             subproject: storeapi/go-wrapper/microsoftstore
-            skip-tests: true
-          # Skipping tests because common/i18n subprocesses gettext
-          - os: ubuntu
-            subproject: common
             skip-tests: true
 
     runs-on: ${{ matrix.os }}-latest
