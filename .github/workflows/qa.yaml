@@ -16,7 +16,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, windows]
         subproject: [
             "agentapi",
             "common",
@@ -27,6 +26,7 @@ jobs:
             "windows-agent",
             "wsl-pro-service",
           ]
+        os: [ubuntu, windows]
         exclude:
           # Skipping because it only builds on Linux (uses syscall.Kill())
           - os: windows
@@ -127,8 +127,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, windows]
         package: ["p4w_ms_store", "ubuntupro"]
+        os: [ubuntu, windows]
         include:
           # We'll be able to run this on Linux eventually and there are gotchas already solved here
           # such as the dependency on xvfb since ubuntu runners on GH don't have graphical capabilities.
