@@ -2,6 +2,10 @@ name: QA
 
 on:
   pull_request:
+    paths-ignore:
+      - docs/**
+      - msix/**
+      - '*.md'
   push:
     branches: [main]
   workflow_dispatch:
