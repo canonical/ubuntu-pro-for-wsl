@@ -28,13 +28,27 @@ jobs:
             "common",
           ]
         exclude:
+          # Skipping because it only builds on Linux (uses syscall.Kill())
           - os: windows
             subproject: wsl-pro-service
+          # Skipping because it only builds on Windows (registry access)
           - os: ubuntu
             subproject: end-to-end
         include:
+          # Enabling Flutter to generate gRPC bindings
           - subproject: agentapi
             needs-flutter: true
+          # Skipping tests because we run them in the qa-azure workflow
+          - subproject: end-to-end
+            skip-tests: true
+          # Skipping tests because we need MsBuild
+          - os: ubuntu
+            subproject: storeapi/go-wrapper/microsoftstore
+            skip-tests: true
+          # Skipping tests because common/i18n subprocesses gettext
+          - os: ubuntu
+            subproject: common
+            skip-tests: true
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -84,6 +98,29 @@ jobs:
           echo 'Bad i18n.G calls. Gettext will only detect calls of type G("text"), with double quotes.'
           cat "${tmp}/log"
           exit 1
+      # The Windows Store needs to be built. The tests do it automatically, but they need
+      # msbuild in the path.
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v1
+        if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore' && matrix.skip-tests == ''
+      - name: Run tests
+        shell: bash
+        if: matrix.skip-tests == ''
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go test -shuffle=on -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
+      - name: Run tests (with race detector)
+        shell: bash
+        # -race not supported on Windows
+        if: matrix.os != 'windows' && matrix.skip-tests == ''
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          go test -shuffle=on ./... -race -tags=gowslmock
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v3
+      #  if: matrix.skip-tests == ''
+      #  with:
+      #    file: /tmp/coverage.out
 
   quality-flutter:
     name: "Flutter Quality checks"
@@ -180,54 +217,3 @@ jobs:
         uses: ./.github/actions/cpp-qa/
         with:
           subproject-dir: 'storeapi/test'
-
-  tests-go-with-mocks:
-    name: "Run Go tests with mocks"
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu, windows]
-        subproject: ["storeapi/go-wrapper/microsoftstore", "windows-agent", "wsl-pro-service", "common"]
-        exclude:
-          - os: windows
-            subproject: wsl-pro-service
-          # Excluded because common/i18n depends on gettext
-          - os: ubuntu
-            subproject: "common"
-          # Excluded because microsoftstore_test needs msbuild
-          - os: ubuntu
-            subproject: "storeapi/go-wrapper/microsoftstore"
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: ${{ matrix.subproject }}/go.mod
-      - name: Set up git
-        uses: ./.github/actions/setup-git
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      # The Windows Store needs to be built. The tests do it automatically, but they need
-      # msbuild in the path.
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v1
-        if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore'
-      - name: Run tests
-        shell: bash
-        if: always() && !cancelled()
-        working-directory: ${{ matrix.subproject }}
-        run: |
-          go test -shuffle=on -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
-      - name: Run tests (with race detector)
-        shell: bash
-        # -race not supported on Windows
-        if: matrix.os != 'windows'
-        working-directory: ${{ matrix.subproject }}
-        run: |
-          go test -shuffle=on ./... -race -tags=gowslmock
-      #- name: Upload coverage to Codecov
-      #  uses: codecov/codecov-action@v3
-      #  with:
-      #    file: /tmp/coverage.out
