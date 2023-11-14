@@ -4,7 +4,9 @@ package landscapemockservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"sync"
 
@@ -29,8 +31,17 @@ type HostInfo struct {
 	Instances []InstanceInfo
 }
 
-// newHostInfo recursively copies the info in a landscapeapi.HostAgentInfo to a HostInfo.
-func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
+// receiveHostInfo receives a landscapeapi.HostAgentInfo and converts it to a HostInfo.
+func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (HostInfo, error) {
+	src, err := stream.Recv()
+	if err != nil {
+		return HostInfo{}, err
+	}
+
+	if src == nil {
+		return HostInfo{}, errors.New("nil HostAgentInfo")
+	}
+
 	h := HostInfo{
 		UID:       src.GetUid(),
 		Hostname:  src.GetHostname(),
@@ -47,7 +58,7 @@ func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
 		})
 	}
 
-	return h
+	return h, nil
 }
 
 type host struct {
@@ -80,50 +91,49 @@ func New() *Service {
 // Connect implements the Connect API call.
 // Upon first contact ever, a UID is randombly assigned to the host and sent to it.
 // In subsequent contacts, this UID will be its unique identifier.
-func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) error {
+func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) (err error) {
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
 
+	recv := asyncRecv(ctx, stream)
+
+	// We keep the hostInfo outside the loop so we can log messages with the hostname.
+	var hostInfo HostInfo
+
 	firstContact := true
-	ch := make(chan HostInfo)
-	defer close(ch)
-
 	for {
-		go func() {
-			recv, err := stream.Recv()
-			if err != nil {
-				return
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
-
-			ch <- newHostInfo(recv)
-		}()
-
-		var hostInfo HostInfo
+		var msg recvMsg
 		select {
-		case hostInfo = <-ch:
+		case msg = <-recv:
 		case <-ctx.Done():
+			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, ctx.Err()))
 			return nil
 		}
+
+		if msg.err != nil {
+			slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, msg.err))
+			return err
+		}
+		hostInfo = msg.info
 
 		s.mu.Lock()
 
 		s.recvLog = append(s.recvLog, hostInfo)
 
 		if firstContact {
+			slog.Info(fmt.Sprintf("Landscape: %s: New connection", hostInfo.Hostname))
+
 			firstContact = false
 			uid, onDisconnect, err := s.firstContact(ctx, cancel, hostInfo, stream)
 			if err != nil {
 				s.mu.Unlock()
+				slog.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, err))
 				return err
 			}
 			defer onDisconnect()
 			hostInfo.UID = uid
+		} else {
+			slog.Info(fmt.Sprintf("Landscape: %s: Received update: %+v", hostInfo.Hostname, hostInfo))
 		}
 
 		h := s.hosts[hostInfo.UID]
@@ -134,8 +144,37 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 	}
 }
 
+// recvMsg is the sanitized return type of a GRPC Recv, used to pass by channel.
+type recvMsg struct {
+	info HostInfo
+	err  error
+}
+
+// asyncRecv is an asynchronous GRPC Recv.
+// Usually, you cannot select between a context and a GRPC receive. This function allows you to.
+// It will keep receiving until the context is cancelled.
+func asyncRecv(ctx context.Context, stream landscapeapi.LandscapeHostAgent_ConnectServer) <-chan recvMsg {
+	ch := make(chan recvMsg)
+
+	go func() {
+		defer close(ch)
+
+		for {
+			info, err := receiveHostInfo(stream)
+
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- recvMsg{info, err}:
+			}
+		}
+	}()
+
+	return ch
+}
+
 func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
-	if other, ok := s.hosts[hostInfo.UID]; ok && other.connected != nil && *other.connected {
+	if s.isConnected(hostInfo.UID) {
 		return "", nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
 	}
 
@@ -186,6 +225,12 @@ func (s *Service) IsConnected(uid string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	return s.isConnected(uid)
+}
+
+// isConnected is the unsafe version of IsConnected. It checks if a client with the
+// specified hostname has an active connection.
+func (s *Service) isConnected(uid string) bool {
 	host, ok := s.hosts[uid]
 	return ok && host.connected != nil && *host.connected
 }
@@ -199,6 +244,8 @@ func (s *Service) SendCommand(ctx context.Context, uid string, command *landscap
 	if !ok {
 		return fmt.Errorf("UID %q not connected", uid)
 	}
+
+	slog.Info(fmt.Sprintf("Landscape: %s: sending command %T: %v", conn.info.Hostname, command.GetCmd(), command.GetCmd()))
 
 	return conn.send(command)
 }
@@ -235,6 +282,7 @@ func (s *Service) Disconnect(uid string) error {
 		return fmt.Errorf("UID %q not registered", uid)
 	}
 
+	slog.Info(fmt.Sprintf("Landscape: %s: requested disconnection", host.info.Hostname))
 	host.stop()
 	return nil
 }
