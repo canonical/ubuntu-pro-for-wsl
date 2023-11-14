@@ -290,6 +290,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 				mock := wslmock.New()
 				mock.StateError = tc.stateErr
 				ctx = wsl.WithMock(ctx, mock)
+			} else if tc.stateErr {
+				t.Skip("This test is skipped because it necessitates the GoWSL mock")
 			}
 
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
@@ -770,7 +772,7 @@ func requireCommandResult(t *testing.T, ctx context.Context, command command, di
 	case cmdInstall:
 		inst := isAppxInstalled(t, testAppx)
 
-		d := wsl.NewDistro(ctx, distro.Name())
+		d := wsl.NewDistro(ctx, testDistroAppx)
 		reg, err := d.IsRegistered()
 		require.NoError(t, err, "IsRegistered should return no error")
 

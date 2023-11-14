@@ -247,7 +247,9 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 		defer conn.receivingCommands.Done()
 
 		if err := c.receiveCommands(conn); err != nil {
-			log.Errorf(conn.ctx, "Landscape receive commands exited: %v", err)
+			log.Warningf(conn.ctx, "Stopped listening for Landscape commands: %v", err)
+		} else {
+			log.Info(conn.ctx, "Finished listening for Landscape commands.")
 		}
 	}()
 

@@ -94,8 +94,8 @@ func (c *Client) cmdAssignHost(ctx context.Context, cmd *landscapeapi.Command_As
 	return nil
 }
 
-//nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
+	log.Debugf(ctx, "Landscape: received command Start. Target: %s", cmd.GetId())
 	d, ok := c.db.Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
@@ -104,8 +104,8 @@ func (c *Client) cmdStart(ctx context.Context, cmd *landscapeapi.Command_Start) 
 	return d.LockAwake()
 }
 
-//nolint:unparam // ctx is not necessary but is here to be consistent with the other commands.
 func (c *Client) cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err error) {
+	log.Debugf(ctx, "Landscape: received command Stop. Target: %s", cmd.GetId())
 	d, ok := c.db.Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
@@ -115,6 +115,7 @@ func (c *Client) cmdStop(ctx context.Context, cmd *landscapeapi.Command_Stop) (e
 }
 
 func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install) (err error) {
+	log.Debugf(ctx, "Landscape: received command Install. Target: %s", cmd.GetId())
 	if cmd.GetCloudinit() != "" {
 		return fmt.Errorf("Cloud Init support is not yet available")
 	}
@@ -169,6 +170,7 @@ func (*Client) cmdInstall(ctx context.Context, cmd *landscapeapi.Command_Install
 }
 
 func (c *Client) cmdUninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
+	log.Debugf(ctx, "Landscape: received command Uninstall. Target: %s", cmd.GetId())
 	d, ok := c.db.Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
@@ -178,11 +180,13 @@ func (c *Client) cmdUninstall(ctx context.Context, cmd *landscapeapi.Command_Uni
 }
 
 func (*Client) cmdSetDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault) error {
+	log.Debugf(ctx, "Landscape: received command SetDefault. Target: %s", cmd.GetId())
 	d := gowsl.NewDistro(ctx, cmd.GetId())
 	return d.SetAsDefault()
 }
 
 //nolint:unparam // // cmd is not necessary but is here to be consistent with the other commands.
 func (*Client) cmdShutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
+	log.Debug(ctx, "Landscape: received command ShutdownHost")
 	return gowsl.Shutdown(ctx)
 }
