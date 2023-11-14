@@ -4,6 +4,7 @@ package landscapemockservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -30,8 +31,17 @@ type HostInfo struct {
 	Instances []InstanceInfo
 }
 
-// newHostInfo recursively copies the info in a landscapeapi.HostAgentInfo to a HostInfo.
-func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
+// receiveHostInfo receives a landscapeapi.HostAgentInfo and converts it to a HostInfo.
+func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (HostInfo, error) {
+	src, err := stream.Recv()
+	if err != nil {
+		return HostInfo{}, err
+	}
+
+	if src == nil {
+		return HostInfo{}, errors.New("nil HostAgentInfo")
+	}
+
 	h := HostInfo{
 		UID:       src.GetUid(),
 		Hostname:  src.GetHostname(),
@@ -48,7 +58,7 @@ func newHostInfo(src *landscapeapi.HostAgentInfo) HostInfo {
 		})
 	}
 
-	return h
+	return h, nil
 }
 
 type host struct {
@@ -150,17 +160,12 @@ func asyncRecv(ctx context.Context, stream landscapeapi.LandscapeHostAgent_Conne
 		defer close(ch)
 
 		for {
-			var msg recvMsg
-			recv, err := stream.Recv()
-			msg.err = err
-			if recv != nil {
-				msg.info = newHostInfo(recv)
-			}
+			info, err := receiveHostInfo(stream)
 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- msg:
+			case ch <- recvMsg{info, err}:
 			}
 		}
 	}()
