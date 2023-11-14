@@ -1,10 +1,18 @@
 package landscape_test
 
 import (
+	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"math/big"
 	"net"
 	"os"
 	"os/exec"
@@ -43,6 +51,22 @@ func TestConnect(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
 	}
+
+	certPath := filepath.Join(golden.TestFamilyPath(t), "certificates")
+	t.Cleanup(func() {
+		if err := os.RemoveAll(certPath); err != nil {
+			log.Printf("Failed to remove certificates directory: %v", err)
+		}
+	})
+
+	err := os.MkdirAll(certPath, 0600)
+	require.NoError(t, err, "Setup: could not create certificates directory")
+
+	err = generateTempCertificate(certPath)
+	require.NoError(t, err, "Setup: could not generate certificates")
+
+	err = os.WriteFile(filepath.Join(certPath, "bad-certificate.pem"), []byte("This is not a valid certificate."), 0600)
+	require.NoError(t, err, "Setup: could not create bad certificate")
 
 	testCases := map[string]struct {
 		precancelContext   bool
@@ -177,6 +201,59 @@ func TestConnect(t *testing.T) {
 			require.Len(t, messages, 1, "Exactly one message should've been sent to Landscape")
 		})
 	}
+}
+
+// generateTempCertificate generates a self-signed certificate valid for one hour. Both the
+// certificate and the private key are stored in the specified path.
+func generateTempCertificate(path string) error {
+	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return fmt.Errorf("could not generate keys: %v", err)
+	}
+
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			CommonName:   "CanonicalGroupLimited",
+			Country:      []string{"US"},
+			Organization: []string{"Canonical"},
+		},
+		IPAddresses: []net.IP{net.ParseIP("127.0.0.1")},
+		NotBefore:   time.Now(),
+		NotAfter:    time.Now().Add(time.Hour),
+	}
+
+	cert, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		return fmt.Errorf("could not create certificate: %s", err)
+	}
+
+	// Marshal and write certificate
+	out := &bytes.Buffer{}
+	if err := pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: cert}); err != nil {
+		return fmt.Errorf("could not encode certificate: %v", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(path, "cert.pem"), out.Bytes(), 0600); err != nil {
+		return fmt.Errorf("could not write certificate to file: %v", err)
+	}
+
+	// Marshal and write private key
+	key, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		return fmt.Errorf("could not marshal private key: %v", err)
+	}
+
+	out = &bytes.Buffer{}
+	if err := pem.Encode(out, &pem.Block{Type: "EC PRIVATE KEY", Bytes: key}); err != nil {
+		return fmt.Errorf("could not encode private key: %v", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(path, "key.pem"), out.Bytes(), 0600); err != nil {
+		return fmt.Errorf("could not write private key to file: %v", err)
+	}
+
+	return nil
 }
 
 func TestSendUpdatedInfo(t *testing.T) {
