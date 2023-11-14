@@ -61,7 +61,7 @@ on your command line. Hosted at the specified address.`,
 			fmt.Printf("Hosting on %s\n", addr)
 
 			populateCommands()
-			fmt.Println("Write `help` to see a list of available commands")
+			fmt.Println(`Write "help" to see a list of available commands`)
 
 			var cfg net.ListenConfig
 			lis, err := cfg.Listen(ctx, "tcp", addr)
