@@ -134,7 +134,7 @@ func TestGetSubscriptionInfo(t *testing.T) {
 		"Success with an organization subscription":       {config: mockConfig{source: config.SourceRegistry}, wantType: organization},
 		"Success with a user subscription":                {config: mockConfig{source: config.SourceUser}, wantType: user},
 		"Success with a store subscription":               {config: mockConfig{source: config.SourceMicrosoftStore}, wantType: store},
-		"Error when the subscription cannot be retreived": {config: mockConfig{subscriptionErr: true}, wantErr: true},
+		"Error when the subscription cannot be retrieved": {config: mockConfig{subscriptionErr: true}, wantErr: true},
 	}
 
 	for name, tc := range testCases {
