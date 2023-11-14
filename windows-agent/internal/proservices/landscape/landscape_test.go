@@ -52,17 +52,9 @@ func TestConnect(t *testing.T) {
 		t.Parallel()
 	}
 
-	certPath := filepath.Join(golden.TestFamilyPath(t), "certificates")
-	t.Cleanup(func() {
-		if err := os.RemoveAll(certPath); err != nil {
-			log.Printf("Failed to remove certificates directory: %v", err)
-		}
-	})
+	certPath := t.TempDir()
 
-	err := os.MkdirAll(certPath, 0600)
-	require.NoError(t, err, "Setup: could not create certificates directory")
-
-	err = generateTempCertificate(certPath)
+	err := generateTempCertificate(certPath)
 	require.NoError(t, err, "Setup: could not generate certificates")
 
 	err = os.WriteFile(filepath.Join(certPath, "bad-certificate.pem"), []byte("This is not a valid certificate."), 0600)
@@ -113,7 +105,12 @@ func TestConnect(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", tc.requireCertificate)
+			p := ""
+			if tc.requireCertificate {
+				p = certPath
+			}
+
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p)
 			defer lis.Close()
 
 			conf := &mockConfig{
@@ -144,6 +141,8 @@ func TestConnect(t *testing.T) {
 			if !tc.noLandscapeURL {
 				conf.landscapeClientConfig = fmt.Sprintf("[host]\nurl=%q\n\n%s", lis.Addr(), conf.landscapeClientConfig)
 			}
+
+			conf.landscapeClientConfig = strings.ReplaceAll(conf.landscapeClientConfig, "%CERTPATH%", certPath)
 
 			if !tc.serverNotAvailable {
 				//nolint:errcheck // We don't care about these errors
@@ -292,7 +291,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", false)
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
@@ -458,7 +457,7 @@ func TestAutoReconnection(t *testing.T) {
 		ctx = wsl.WithMock(ctx, mock)
 	}
 
-	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", false)
+	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
 	defer lis.Close()
 	defer server.Stop()
 
@@ -510,7 +509,7 @@ func TestAutoReconnection(t *testing.T) {
 	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
 
 	// Restart server at the same address
-	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), false)
+	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), "")
 	defer lis.Close()
 
 	//nolint:errcheck // We don't care
@@ -591,7 +590,7 @@ func TestReceiveCommands(t *testing.T) {
 				t.Skip("This test can only run with the mock")
 			}
 
-			lis, server, service := setUpLandscapeMock(t, ctx, "localhost:", false)
+			lis, server, service := setUpLandscapeMock(t, ctx, "localhost:", "")
 			defer lis.Close()
 
 			//nolint:errcheck // We don't care about these errors
@@ -831,7 +830,7 @@ func isAppxInstalled(t *testing.T, appxPackage string) bool {
 }
 
 //nolint:revive // Context goes after testing.T
-func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, requireCertificate bool) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
+func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath string) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
 	t.Helper()
 
 	var cfg net.ListenConfig
@@ -839,11 +838,11 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, requireC
 	require.NoError(t, err, "Setup: can't listen")
 
 	var opts []grpc.ServerOption
-	if requireCertificate {
-		certPath := filepath.Join(golden.TestFamilyPath(t), "certificates/cert.pem")
-		keyPath := filepath.Join(golden.TestFamilyPath(t), "certificates/key.pem")
+	if certPath != "" {
+		cert := filepath.Join(certPath, "cert.pem")
+		key := filepath.Join(certPath, "key.pem")
 
-		serverCert, err := tls.LoadX509KeyPair(certPath, keyPath)
+		serverCert, err := tls.LoadX509KeyPair(cert, key)
 		require.NoError(t, err, "Setup: could not load Landscape mock server credentials")
 
 		config := &tls.Config{
