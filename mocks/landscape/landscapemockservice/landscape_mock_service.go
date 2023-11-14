@@ -134,15 +134,15 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 	}
 }
 
-// recvMsg is the sanitized reuturn type of a GRPC Recv, used to pass by channel.
+// recvMsg is the sanitized return type of a GRPC Recv, used to pass by channel.
 type recvMsg struct {
 	info HostInfo
 	err  error
 }
 
-// This goroutine is an asynchronous GRPC Recv.
+// asyncRecv is an asynchronous GRPC Recv.
 // Usually, you cannot select between a context and a GRPC receive. This function allows you to.
-// It'll keep receiving until an error is returned, or the context is cancelled.
+// It will keep receiving until the context is cancelled.
 func asyncRecv(ctx context.Context, stream landscapeapi.LandscapeHostAgent_ConnectServer) <-chan recvMsg {
 	ch := make(chan recvMsg)
 
@@ -223,6 +223,8 @@ func (s *Service) IsConnected(uid string) bool {
 	return s.isConnected(uid)
 }
 
+// isConnected is the unsafe version of IsConnected. It checks if a client with the
+// specified hostname has an active connection.
 func (s *Service) isConnected(uid string) bool {
 	host, ok := s.hosts[uid]
 	return ok && host.connected != nil && *host.connected
