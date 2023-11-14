@@ -100,6 +100,6 @@ func activateOrgSubscription(t *testing.T) {
 	require.NoErrorf(t, err, "Setup: could not open UbuntuPro registry key")
 	defer key.Close()
 
-	err = key.SetStringValue("ProTokenOrg", token)
+	err = key.SetStringValue("UbuntuProToken", token)
 	require.NoError(t, err, "could not write token in registry")
 }
