@@ -39,11 +39,13 @@ func ReplaceFileWithDir(t *testing.T, path string, msg string, args ...any) {
 
 // GenerateTempCertificate generates a self-signed certificate valid for one hour. Both the
 // certificate and the private key are stored in the specified path.
-func GenerateTempCertificate(path string) error {
+func GenerateTempCertificate(t *testing.T, path string) {
+	t.Helper()
+
+	const errPrefix = "Setup: could not generate temporary certificate: "
+
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return fmt.Errorf("could not generate keys: %v", err)
-	}
+	require.NoError(t, err, errPrefix+"could not generate keys")
 
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
@@ -58,34 +60,24 @@ func GenerateTempCertificate(path string) error {
 	}
 
 	cert, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
-	if err != nil {
-		return fmt.Errorf("could not create certificate: %s", err)
-	}
+	require.NoError(t, err, errPrefix+"could not create certificate")
 
 	// Marshal and write certificate
 	out := &bytes.Buffer{}
-	if err := pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: cert}); err != nil {
-		return fmt.Errorf("could not encode certificate: %v", err)
-	}
+	err = pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
+	require.NoError(t, err, errPrefix+"could not encode certificate")
 
-	if err := os.WriteFile(filepath.Join(path, "cert.pem"), out.Bytes(), 0600); err != nil {
-		return fmt.Errorf("could not write certificate to file: %v", err)
-	}
+	err = os.WriteFile(filepath.Join(path, "cert.pem"), out.Bytes(), 0600)
+	require.NoError(t, err, errPrefix+"could not write certificate to file")
 
 	// Marshal and write private key
 	key, err := x509.MarshalECPrivateKey(priv)
-	if err != nil {
-		return fmt.Errorf("could not marshal private key: %v", err)
-	}
+	require.NoError(t, err, errPrefix+"could not marshal private key")
 
 	out = &bytes.Buffer{}
-	if err := pem.Encode(out, &pem.Block{Type: "EC PRIVATE KEY", Bytes: key}); err != nil {
-		return fmt.Errorf("could not encode private key: %v", err)
-	}
+	err = pem.Encode(out, &pem.Block{Type: "EC PRIVATE KEY", Bytes: key})
+	require.NoError(t, err, errPrefix+"could not encode private key")
 
-	if err := os.WriteFile(filepath.Join(path, "key.pem"), out.Bytes(), 0600); err != nil {
-		return fmt.Errorf("could not write private key to file: %v", err)
-	}
-
-	return nil
+	err = os.WriteFile(filepath.Join(path, "key.pem"), out.Bytes(), 0600)
+	require.NoError(t, err, errPrefix+"could not write private key to file")
 }

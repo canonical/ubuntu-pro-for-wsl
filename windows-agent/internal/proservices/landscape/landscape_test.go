@@ -58,10 +58,9 @@ func TestConnect(t *testing.T) {
 
 	certPath := t.TempDir()
 
-	err := testutils.GenerateTempCertificate(certPath)
-	require.NoError(t, err, "Setup: could not generate certificates")
+	testutils.GenerateTempCertificate(t, certPath)
 
-	err = os.WriteFile(filepath.Join(certPath, "bad-certificate.pem"), []byte("This is not a valid certificate."), 0600)
+	err := os.WriteFile(filepath.Join(certPath, "bad-certificate.pem"), []byte("This is not a valid certificate."), 0600)
 	require.NoError(t, err, "Setup: could not create bad certificate")
 
 	testCases := map[string]struct {
