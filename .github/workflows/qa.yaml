@@ -174,14 +174,22 @@ jobs:
           working-directory: gui/packages/${{ matrix.package }}
           paths-to-ignore: ${{ matrix.package == 'ubuntupro' && 'pubspec.lock' || '' }}
           fail-on-diff: true
-      - name: Flutter QA
-        uses: ./.github/actions/flutter-integration-test/
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v1
         if: matrix.skip-tests == ''
-        with:
-          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
-          go-version-file: windows-agent/go.mod
-          # Only the app entry point is expected to have integration tests
-          package-dir: 'gui/packages/ubuntupro'
+      - name: Integration Test
+        if: matrix.skip-tests == ''
+        shell: bash
+        working-directory: 'gui/packages/${{ matrix.package }}'
+        run: |
+          if [ -d integration_test ]; then
+            if [ $(uname) = 'Linux' ]; then
+              xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
+                flutter test integration_test/
+            else
+                flutter test integration_test/
+            fi
+          fi
 
   quality-cpp:
     name: "C++ Quality Checks"
