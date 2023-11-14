@@ -1,7 +1,7 @@
 project-root: ".."
 docs:
   readme: README.md
-  docs: ../docs/05-windows-agent-command-line-reference.md
+  docs: ../docs/06-windows-agent-command-line-reference.md
   man: generated/usr/share,
   completions: generated/usr/share
 i18n:
