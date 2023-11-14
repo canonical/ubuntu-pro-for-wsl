@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"text/template"
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
@@ -47,6 +48,11 @@ func TestMain(m *testing.M) {
 	defer os.Exit(exit)
 }
 
+const defaultLandscapeConfig = `
+[host]
+url = "{{ .HostURL }}"
+`
+
 func TestConnect(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
@@ -67,8 +73,7 @@ func TestConnect(t *testing.T) {
 		landscapeUIDReadErr  bool
 		landscapeUIDWriteErr bool
 
-		noLandscapeURL bool
-		tokenErr       bool
+		tokenErr bool
 
 		requireCertificate         bool
 		breakLandscapeClientConfig bool
@@ -85,7 +90,7 @@ func TestConnect(t *testing.T) {
 		"Success with an SSL certificate": {requireCertificate: true},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
-		"Error when the landscape URL cannot be retrieved":     {noLandscapeURL: true, wantErr: true},
+		"Error when the landscape URL cannot be retrieved":     {wantErr: true},
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
@@ -129,20 +134,16 @@ func TestConnect(t *testing.T) {
 				landscapeAgentUID: tc.uid,
 			}
 
-			out, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
-			if errors.Is(err, os.ErrNotExist) {
-				// This fixture is not compulsory
-				out = []byte{}
-				err = nil
-			}
-			require.NoError(t, err, "Setup: could not load landscape config")
-
-			conf.landscapeClientConfig = string(out)
-			if !tc.noLandscapeURL {
-				conf.landscapeClientConfig = fmt.Sprintf("[host]\nurl=%q\n\n%s", lis.Addr(), conf.landscapeClientConfig)
+			lconf := defaultLandscapeConfig
+			if fixture, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf")); err != nil {
+				require.ErrorIs(t, err, os.ErrNotExist, "Setup: could not load landscape config")
+				// Fixture does not exist: use base Landcape confing
+			} else {
+				// Fixture exists: override the Landscape config
+				lconf = string(fixture)
 			}
 
-			conf.landscapeClientConfig = strings.ReplaceAll(conf.landscapeClientConfig, "%CERTPATH%", certPath)
+			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, lconf, certPath, lis.Addr())
 
 			if !tc.serverNotAvailable {
 				//nolint:errcheck // We don't care about these errors
@@ -295,7 +296,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
-				landscapeClientConfig: fmt.Sprintf("[host]\nurl=%q\n", lis.Addr()),
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
 			}
 
 			//nolint:errcheck // We don't care about these errors
@@ -463,7 +464,7 @@ func TestAutoReconnection(t *testing.T) {
 
 	conf := &mockConfig{
 		proToken:              "TOKEN",
-		landscapeClientConfig: fmt.Sprintf("[host]\nurl=%q\n", lis.Addr()),
+		landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
 	}
 
 	db, err := database.New(ctx, t.TempDir(), conf)
@@ -599,7 +600,7 @@ func TestReceiveCommands(t *testing.T) {
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
-				landscapeClientConfig: fmt.Sprintf("[host]\nurl=%q\n", lis.Addr()),
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
 			}
 
 			db, err := database.New(ctx, t.TempDir(), conf)
@@ -660,6 +661,25 @@ func TestReceiveCommands(t *testing.T) {
 			requireCommandResult(t, ctx, tc.command, d, conf, !tc.wantFailure)
 		})
 	}
+}
+
+func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, url net.Addr) string {
+	t.Helper()
+
+	tmpl := template.Must(template.New(t.Name()).Parse(in))
+
+	data := struct {
+		CertPath, HostURL string
+	}{
+		CertPath: certPath,
+		HostURL:  url.String(),
+	}
+
+	out := bytes.Buffer{}
+	err := tmpl.Execute(&out, data)
+	require.NoError(t, err, "Setup: could not generate Landscape config from template")
+
+	return out.String()
 }
 
 const (
