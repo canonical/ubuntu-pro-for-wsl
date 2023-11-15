@@ -207,7 +207,7 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 
 // FetchMicrosoftStoreSubscription contacts Ubuntu Pro's contract server and the Microsoft Store
 // to check if the user has an active subscription that provides a pro token. If so, that token is used.
-func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error) {
+func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) (err error) {
 	defer decorate.OnError(&err, "could not validate subscription against Microsoft Store")
 
 	readOnly, err := c.IsReadOnly()
@@ -228,7 +228,7 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 	// Shortcut to avoid spamming the contract server
 	// We don't need to request a new token if we have a non-expired one
 	if src == SourceMicrosoftStore {
-		valid, err := contracts.ValidSubscription()
+		valid, err := contracts.ValidSubscription(args...)
 		if err != nil {
 			return fmt.Errorf("could not obtain current subscription status: %v", err)
 		}
@@ -241,7 +241,7 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context) (err error
 		log.Debug(ctx, "No valid Microsoft Store subscription")
 	}
 
-	proToken, err := contracts.NewProToken(ctx)
+	proToken, err := contracts.NewProToken(ctx, args...)
 	if err != nil {
 		return fmt.Errorf("could not get ProToken from Microsoft Store: %v", err)
 	}
