@@ -183,14 +183,19 @@ func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (boo
 }
 
 //nolint:revive // testing.T must precede the context
-func logWslProServiceJournal(t *testing.T, ctx context.Context, d gowsl.Distro) {
+func logWslProServiceJournal(t *testing.T, ctx context.Context, skipOnSuccess bool, d gowsl.Distro) {
 	t.Helper()
+
+	if skipOnSuccess && !t.Failed() {
+		return
+	}
 
 	out, err := d.Command(ctx, "journalctl -b --no-pager -u wsl-pro.service").CombinedOutput()
 	if err != nil {
-		t.Logf("could not access logs: %v\n%s\n", err, out)
+		t.Logf("could not access WSL Pro Service logs: %v\n%s\n", err, out)
+		return
 	}
-	t.Logf("wsl-pro-service logs:\n%s\n", out)
+	t.Logf("WSL Pro Service logs:\n%s\n", out)
 }
 
 func logWindowsAgentJournal(t *testing.T, skipOnSuccess bool) {
