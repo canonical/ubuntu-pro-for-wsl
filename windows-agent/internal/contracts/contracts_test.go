@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
+	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/stretchr/testify/require"
 )
@@ -24,9 +25,7 @@ func TestProToken(t *testing.T) {
 
 	testCases := map[string]struct {
 		// Microsoft store
-		expired      bool
-		jwtError     bool
-		expDateError bool
+		jwtError bool
 
 		// Contract server
 		getServerAccessTokenErr bool
@@ -36,9 +35,7 @@ func TestProToken(t *testing.T) {
 	}{
 		"Success": {},
 
-		"Error when the subscription has expired":                     {expired: true, wantErr: true},
 		"Error when the store's GenerateUserJWT fails":                {jwtError: true, wantErr: true},
-		"Error when the store's GetSubscriptionExpirationDate fails":  {expDateError: true, wantErr: true},
 		"Error when the contract server's GetServerAccessToken fails": {getServerAccessTokenErr: true, wantErr: true},
 		"Error when the contract server's GetProToken fails":          {getProTokenErr: true, wantErr: true},
 	}
@@ -50,16 +47,11 @@ func TestProToken(t *testing.T) {
 
 			ctx := context.Background()
 			store := mockMSStore{
-				expirationDate:    time.Now().Add(24 * 365 * time.Hour), // Next year
-				expirationDateErr: tc.expDateError,
+				expirationDate: time.Now().Add(24 * 365 * time.Hour), // Next year
 
 				jwt:            "JWT_123",
 				jwtWantADToken: azureADToken,
 				jwtErr:         tc.jwtError,
-			}
-
-			if tc.expired {
-				store.expirationDate = time.Now().Add(-24 * 365 * time.Hour) // Last year
 			}
 
 			settings := contractsmockserver.DefaultSettings()
@@ -92,11 +84,67 @@ func TestProToken(t *testing.T) {
 	}
 }
 
+func TestValidSubscription(t *testing.T) {
+	type subscriptionStatus int
+	const (
+		subscribed subscriptionStatus = iota
+		expired
+		unsubscribed
+	)
+
+	testCases := map[string]struct {
+		status        subscriptionStatus
+		expirationErr bool
+
+		wantErr bool
+	}{
+		"Succcess when the current subscription is active":  {status: subscribed},
+		"Succcess when the current subscription is expired": {status: expired},
+		"Success when there is no subscription":             {status: unsubscribed},
+
+		"Error when subscription validity cannot be ascertained": {status: subscribed, expirationErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			var store mockMSStore
+			var want bool
+
+			switch tc.status {
+			case subscribed:
+				want = true
+				store.expirationDate = time.Now().Add(time.Hour * 24 * 365) // Next year
+			case expired:
+				want = false
+				store.expirationDate = time.Now().Add(-time.Hour * 24 * 365) // Last year
+			case unsubscribed:
+				want = false
+				store.notSubscribed = true
+			}
+
+			if tc.expirationErr {
+				store.expirationDateErr = true
+			}
+
+			got, err := contracts.ValidSubscription(contracts.WithMockMicrosoftStore(store))
+			if tc.wantErr {
+				require.Error(t, err, "contracts.ValidSubscription should have returned an error")
+				return
+			}
+
+			require.NoError(t, err, "contracts.ValidSubscription should have returned no error")
+			require.Equal(t, want, got, "Unexpected return from ValidSubscription")
+		})
+	}
+}
+
 type mockMSStore struct {
 	jwt            string
 	jwtWantADToken string
 	jwtErr         bool
 
+	notSubscribed     bool
 	expirationDate    time.Time
 	expirationDateErr bool
 }
@@ -115,7 +163,11 @@ func (s mockMSStore) GenerateUserJWT(azureADToken string) (jwt string, err error
 
 func (s mockMSStore) GetSubscriptionExpirationDate() (tm time.Time, err error) {
 	if s.expirationDateErr {
-		return time.Time{}, errors.New("mock error")
+		return time.Time{}, fmt.Errorf("mock error: %w", microsoftstore.ErrStoreAPI)
+	}
+
+	if s.notSubscribed {
+		return time.Time{}, fmt.Errorf("mock error: %w", microsoftstore.ErrNotSubscribed)
 	}
 
 	return s.expirationDate, nil
