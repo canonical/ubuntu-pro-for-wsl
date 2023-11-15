@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
@@ -190,4 +191,26 @@ func logWslProServiceJournal(t *testing.T, ctx context.Context, d gowsl.Distro) 
 		t.Logf("could not access logs: %v\n%s\n", err, out)
 	}
 	t.Logf("wsl-pro-service logs:\n%s\n", out)
+}
+
+func logWindowsAgentJournal(t *testing.T, skipOnSuccess bool) {
+	t.Helper()
+
+	if skipOnSuccess && !t.Failed() {
+		return
+	}
+
+	localAppData := os.Getenv("LocalAppData")
+	if localAppData == "" {
+		t.Log("could not access Windows Agent's logs: $env:LocalAppData is not assigned")
+		return
+	}
+
+	out, err := os.ReadFile(filepath.Join(localAppData, common.LocalAppDataDir, "log"))
+	if err != nil {
+		t.Logf("could not read Windows Agent's logs: %v", err)
+		return
+	}
+
+	t.Logf("Windows Agent's logs:\n%s\n", out)
 }

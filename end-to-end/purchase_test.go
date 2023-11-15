@@ -52,6 +52,7 @@ func TestPurchase(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			testSetup(t)
+			defer logWindowsAgentJournal(t, true)
 
 			settings := contractsmockserver.DefaultSettings()
 
