@@ -9,6 +9,7 @@ import (
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
@@ -19,7 +20,7 @@ type Config interface {
 	SetUserSubscription(ctx context.Context, token string) error
 	IsReadOnly() (bool, error)
 	Subscription(context.Context) (string, config.Source, error)
-	FetchMicrosoftStoreSubscription(context.Context) error
+	FetchMicrosoftStoreSubscription(context.Context, ...contracts.Option) error
 }
 
 // Service it the UI GRPC service implementation.
