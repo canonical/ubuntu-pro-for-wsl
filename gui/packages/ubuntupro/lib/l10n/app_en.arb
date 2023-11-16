@@ -35,7 +35,14 @@
     "storeManaged": "This subscription is managed through Microsoft Store",
     "manageSubscription": "Manage your subscription",
     "orgManaged": "This subscription is owned and managed by your company",
-    "manuallyManaged": "Lorem ipsum...",
+    "manuallyManaged": "Visit {proDashboardLink} to manage your subscription.",
+    "@manuallyManaged": {
+        "placeholders": {
+            "proDashboardLink": {
+                "type": "String"
+            }
+        }
+    },
     "detachPro": "Detach Pro",
 
     "updatingSubscriptionInfo": "Updating the subscription information.",

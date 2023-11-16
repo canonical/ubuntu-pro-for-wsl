@@ -34,7 +34,7 @@ class SubscriptionStatusPage extends StatelessWidget {
             ),
           ),
         UserSubscriptionStatusModel() => SubscriptionStatus(
-            caption: lang.manuallyManaged,
+            caption: lang.manuallyManaged('ubuntu.com/pro/dashboard'),
             actionButton: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFE86581),
