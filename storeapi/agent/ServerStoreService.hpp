@@ -40,14 +40,17 @@ class ServerStoreService : public StoreService<ContextType> {
 
   // Returns the expiration time as the number of seconds since Unix epoch of
   // the current billing period if the current user is subscribed to this
-  // product or the lowest int64_t otherwise (a date too far in the past). This
-  // raw return value suits well for crossing ABI boundaries, such as returning
-  // to a caller in Go.
+  // product. This raw return value suits well for crossing ABI boundaries, such
+  // as returning to a caller in Go.
+  //
+  // If the user is not subscribed, an exception is thrown.
   std::int64_t CurrentExpirationDate(std::string productId) {
     auto product = this->GetSubscriptionProduct(productId);
     if (!product.IsInUserCollection()) {
-      return std::numeric_limits<std::int64_t>::lowest();
+      throw StoreApi::Exception(StoreApi::ErrorCode::Unsubscribed,
+                                "Product is not in user collection");
     }
+
     // C++20 guarantees that std::chrono::system_clock measures UNIX time.
     const auto dur = product.CurrentExpirationDate().time_since_epoch();
 
