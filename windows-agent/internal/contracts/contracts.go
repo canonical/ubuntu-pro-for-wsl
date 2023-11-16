@@ -63,17 +63,22 @@ func ValidSubscription(args ...Option) (bool, error) {
 	}
 
 	expiration, err := opts.microsoftStore.GetSubscriptionExpirationDate()
-	if isErrNotSubscribed(err) {
-		return false, nil
-	}
 	if err != nil {
+		var target microsoftstore.StoreAPIError
+		if errors.As(err, &target) && target == microsoftstore.ErrNotSubscribed {
+			// ValidSubscription -> false: we are not subscribed
+			return false, nil
+		}
+
 		return false, fmt.Errorf("could not get subscription expiration date: %v", err)
 	}
 
 	if expiration.Before(time.Now()) {
+		// ValidSubscription -> false: the subscription is expired
 		return false, nil
 	}
 
+	// ValidSubscription -> true: the subscription is not yet expired
 	return true, nil
 }
 
@@ -116,21 +121,4 @@ func NewProToken(ctx context.Context, args ...Option) (token string, err error) 
 	}
 
 	return proToken, nil
-}
-
-func isErrNotSubscribed(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	var target microsoftstore.StoreAPIError
-	if !errors.As(err, &target) {
-		return false
-	}
-
-	if target != microsoftstore.ErrNotSubscribed {
-		return false
-	}
-
-	return true
 }
