@@ -85,6 +85,8 @@ func TestProToken(t *testing.T) {
 }
 
 func TestValidSubscription(t *testing.T) {
+	t.Parallel()
+
 	type subscriptionStatus int
 	const (
 		subscribed subscriptionStatus = iota
@@ -96,11 +98,12 @@ func TestValidSubscription(t *testing.T) {
 		status        subscriptionStatus
 		expirationErr bool
 
+		want    bool
 		wantErr bool
 	}{
-		"Succcess when the current subscription is active":  {status: subscribed},
-		"Succcess when the current subscription is expired": {status: expired},
-		"Success when there is no subscription":             {status: unsubscribed},
+		"Succcess when the current subscription is active":  {status: subscribed, want: true},
+		"Succcess when the current subscription is expired": {status: expired, want: false},
+		"Success when there is no subscription":             {status: unsubscribed, want: false},
 
 		"Error when subscription validity cannot be ascertained": {status: subscribed, expirationErr: true, wantErr: true},
 	}
@@ -108,18 +111,16 @@ func TestValidSubscription(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			var store mockMSStore
-			var want bool
 
 			switch tc.status {
 			case subscribed:
-				want = true
 				store.expirationDate = time.Now().Add(time.Hour * 24 * 365) // Next year
 			case expired:
-				want = false
 				store.expirationDate = time.Now().Add(-time.Hour * 24 * 365) // Last year
 			case unsubscribed:
-				want = false
 				store.notSubscribed = true
 			}
 
@@ -134,7 +135,7 @@ func TestValidSubscription(t *testing.T) {
 			}
 
 			require.NoError(t, err, "contracts.ValidSubscription should have returned no error")
-			require.Equal(t, want, got, "Unexpected return from ValidSubscription")
+			require.Equal(t, tc.want, got, "Unexpected return from ValidSubscription")
 		})
 	}
 }
