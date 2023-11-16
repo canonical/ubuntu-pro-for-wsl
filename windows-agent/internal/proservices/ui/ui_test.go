@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
@@ -244,7 +245,11 @@ func (m mockConfig) Subscription(context.Context) (string, config.Source, error)
 	}
 	return m.token, m.source, nil
 }
-func (m *mockConfig) FetchMicrosoftStoreSubscription(ctx context.Context) error {
+func (m *mockConfig) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) error {
+	if len(args) != 0 {
+		panic("The variadic argument exists solely to match the interface. Do not use.")
+	}
+
 	readOnly, err := m.IsReadOnly()
 	if err != nil {
 		return err

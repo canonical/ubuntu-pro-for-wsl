@@ -3,14 +3,19 @@ package config_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
+	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
 	config "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
@@ -412,21 +417,37 @@ func TestIsReadOnly(t *testing.T) {
 func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 	t.Parallel()
 
+	//nolint:gosec // These are not real credentials
+	const (
+		proToken     = "UBUNTU_PRO_TOKEN_456"
+		azureADToken = "AZURE_AD_TOKEN_789"
+	)
+
 	testCases := map[string]struct {
-		settingsState      settingsState
+		settingsState       settingsState
+		subscriptionExpired bool
+
 		registryErr        uint32
 		registryIsReadOnly bool
+
+		msStoreJWTErr        bool
+		msStoreExpirationErr bool
 
 		wantToken string
 		wantErr   bool
 	}{
-		// TODO: Implement more test cases when the MS Store mock is available. There is no single successful test in here so far.
-		"Error when registry is read only":          {settingsState: userTokenHasValue, registryIsReadOnly: true, wantToken: "user_token", wantErr: true},
-		"Error when registry read-only check fails": {registryErr: registry.MockErrOnCreateKey, wantErr: true},
+		// Tests where there is no pre-existing subscription
+		"Success": {wantToken: proToken},
 
-		// Stub test-case: Must be replaced with Success/Error return values of contracts.ProToken
-		// when the Microsoft store dance is implemented.
-		"Error when the microsoft store is not yet implemented": {wantErr: true},
+		"Error when registry is read only":                      {settingsState: userTokenHasValue, registryIsReadOnly: true, wantToken: "user_token", wantErr: true},
+		"Error when registry read-only check fails":             {registryErr: registry.MockErrOnCreateKey, wantErr: true},
+		"Error when the Microsoft Store cannot provide the JWT": {msStoreJWTErr: true, wantErr: true},
+
+		// Tests where there is a pre-existing subscription
+		"Success when there is a store token already":  {settingsState: storeTokenHasValue, wantToken: "store_token"},
+		"Success when there is an expired store token": {settingsState: storeTokenHasValue, subscriptionExpired: true, wantToken: proToken},
+
+		"Error when the Microsoft Store cannot provide the expiration date": {settingsState: storeTokenHasValue, msStoreExpirationErr: true, wantToken: "store_token", wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -439,7 +460,33 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 			r, dir := setUpMockSettings(t, tc.registryErr, tc.settingsState, tc.registryIsReadOnly, false)
 			c := config.New(ctx, dir, config.WithRegistry(r))
 
-			err := c.FetchMicrosoftStoreSubscription(ctx)
+			// Set up the mock Microsoft store
+			store := mockMSStore{
+				expirationDate:    time.Now().Add(24 * 365 * time.Hour), // Next year
+				expirationDateErr: tc.msStoreExpirationErr,
+
+				jwt:    "JWT_123",
+				jwtErr: tc.msStoreJWTErr,
+			}
+
+			if tc.subscriptionExpired {
+				store.expirationDate = time.Now().Add(-24 * 365 * time.Hour) // Last year
+			}
+
+			// Set up the mock contract server
+			csSettings := contractsmockserver.DefaultSettings()
+			csSettings.Token.OnSuccess.Value = azureADToken
+			csSettings.Subscription.OnSuccess.Value = proToken
+			server := contractsmockserver.NewServer(csSettings)
+			err := server.Serve(ctx, "localhost:0")
+			require.NoError(t, err, "Setup: Server should return no error")
+			//nolint:errcheck // Nothing we can do about it
+			defer server.Stop()
+
+			csAddr, err := url.Parse(fmt.Sprintf("http://%s", server.Address()))
+			require.NoError(t, err, "Setup: Server URL should have been parsed with no issues")
+
+			err = c.FetchMicrosoftStoreSubscription(ctx, contracts.WithProURL(csAddr), contracts.WithMockMicrosoftStore(store))
 			if tc.wantErr {
 				require.Error(t, err, "FetchMicrosoftStoreSubscription should return an error")
 			} else {
@@ -453,6 +500,30 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
 		})
 	}
+}
+
+type mockMSStore struct {
+	jwt    string
+	jwtErr bool
+
+	expirationDate    time.Time
+	expirationDateErr bool
+}
+
+func (s mockMSStore) GenerateUserJWT(azureADToken string) (jwt string, err error) {
+	if s.jwtErr {
+		return "", errors.New("mock error")
+	}
+
+	return s.jwt, nil
+}
+
+func (s mockMSStore) GetSubscriptionExpirationDate() (tm time.Time, err error) {
+	if s.expirationDateErr {
+		return time.Time{}, errors.New("mock error")
+	}
+
+	return s.expirationDate, nil
 }
 
 func TestUpdateRegistrySettings(t *testing.T) {
