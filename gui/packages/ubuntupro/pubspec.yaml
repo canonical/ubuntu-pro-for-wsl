@@ -44,7 +44,7 @@ dependencies:
   grpc: ^3.2.4
   intl: ^0.18.1
   meta: ^1.9.1
-  mockito: ^5.4.2
+  mockito: ^5.4.3
   p4w_ms_store:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-windows
