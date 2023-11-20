@@ -4,7 +4,7 @@ description: Loads the contents of a file.
 inputs:
   path:
     required: false
-    description: "Path to the tools directory"
+    description: "Path to the file to be read"
 
 outputs:
   contents:
