@@ -47,16 +47,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Load flutter version
         if: matrix.needs-flutter != ''
-        id: load
-        uses: ./.github/actions/load-json
+        id: flutter-version
+        uses: ./.github/actions/load-file
         with:
-          path: tools/versions.json
+          path: tools/flutter-version
       - name: Set up flutter
         uses: subosito/flutter-action@v2
         if: matrix.needs-flutter != ''
         with:
           channel: 'stable'
-          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
+          flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Install Dart protoc plugin
         if: matrix.needs-flutter != ''
         shell: bash
@@ -113,14 +113,14 @@ jobs:
         with:
           go-version-file: windows-agent/go.mod
       - name: Load flutter version
-        id: load
-        uses: ./.github/actions/load-json
+        id: flutter-version
+        uses: ./.github/actions/load-file
         with:
-          path: tools/versions.json
+          path: tools/flutter-version
       - name: Flutter QA
         uses: ./.github/actions/flutter-qa/
         with:
-          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
+          flutter-version: ${{ steps.flutter-version.outputs.contents }}
           package-dir: gui/packages/${{ matrix.package }}
           run-build-runner: ${{ matrix.package ==  'ubuntupro' }}
       - name: Ensure module files are up to date
@@ -154,14 +154,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Load flutter version
-        id: load
-        uses: ./.github/actions/load-json
+        id: flutter-version
+        uses: ./.github/actions/load-file
         with:
-          path: tools/versions.json
+          path: tools/flutter-version
       - name: Flutter QA
         uses: ./.github/actions/flutter-integration-test/
         with:
-          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
+          flutter-version: ${{ steps.flutter-version.outputs.contents }}
           go-version-file: windows-agent/go.mod
           # Only the app entry point is expected to have integration tests
           package-dir: 'gui/packages/ubuntupro'
