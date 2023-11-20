@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<AppRoot>..\..\gui\</AppRoot>
 		<AppDir>$(AppRoot)packages\ubuntupro\</AppDir>
-		<AppOutDir>$(AppDir)build\windows\runner\$(Configuration)\</AppOutDir>
+		<AppOutDir>$(AppDir)build\windows\$(Platform)\runner\$(Configuration)\</AppOutDir>
 		<AppIconPath>$(AppDir)windows\runner\resources\app_icon.ico</AppIconPath>
         <!-- TODO: replace this location by a common icon path for the whole app -->
 		<MsixIconPath>$(MSBuildThisFileDirectory)\icon.ico</MsixIconPath>
