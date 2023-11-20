@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -77,7 +78,10 @@ func setLoggerOutput() (func(), error) {
 	}
 
 	fmt.Fprintf(f, "\n======== Startup %s ========\n", time.Now().Format(time.RFC3339))
-	log.SetOutput(f)
+
+	// Write both to file and to Stdout. The latter is useful for local development.
+	w := io.MultiWriter(f, os.Stdout)
+	log.SetOutput(w)
 
 	return func() { _ = f.Close() }, nil
 }
