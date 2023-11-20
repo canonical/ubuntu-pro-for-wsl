@@ -1,7 +1,9 @@
 name: Build and run end-to-end tests
 # Builds the project, and runs end-to-end tests using the generated artifacts.
 
-concurrency: azure-vm
+concurrency:
+  group: Build+E2E-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 on:
   pull_request:
@@ -98,23 +100,10 @@ jobs:
             msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.cer
             msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.msixbundle
 
-  vm-setup:
-    name: Set up Azure VM
-    runs-on: ubuntu-latest
-    steps:
-      - name: Azure login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_VM_CREDS }}
-      - name: Start the Runner
-        shell: bash
-        run: |
-          az vm start --name ${{ env.az_name }} --resource-group ${{ env.az_resource_group }}
-
   qa:
     name: Run end-to-end tests on the Azure VM
-    runs-on: [self-hosted, Windows]
-    needs: [vm-setup, build-wsl-pro-service, build-ubuntu-pro-for-windows]
+    runs-on: [self-hosted, Windows, racked]
+    needs: [build-wsl-pro-service, build-ubuntu-pro-for-windows]
     steps:
       - name: Set up git
         uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
@@ -130,7 +119,7 @@ jobs:
         # actions/setup-go is broken
         shell: powershell
         run: |
-          winget install GoLang.Go --accept-source-agreements --accept-package-agreements --silent --verbose
+          winget install GoLang.Go --accept-source-agreements --accept-package-agreements --silent --verbose --source winget
           # Cannot check for error: there is no way to distinguish the two:
           # - Legitimate error
           # - Error because no updates found (Golang.Go is already up to date)
@@ -196,18 +185,3 @@ jobs:
           # Uninstall certificate
           $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWindows_*.cer").Thumbprint
           Remove-Item -Path "Cert:LocalMachine\TrustedPeople\${thumbprint}"
-
-  stop-vm:
-    name: Clean up the Azure VM
-    runs-on: ubuntu-latest
-    needs: [vm-setup, qa]
-    if: always()
-    steps:
-      - name: Azure login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_VM_CREDS }}
-      - name: Deallocate the Runner
-        shell: bash
-        run: |
-          az vm deallocate --name ${{ env.az_name }} --resource-group ${{ env.az_resource_group }}
