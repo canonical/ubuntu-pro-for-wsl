@@ -62,10 +62,11 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 
 	subs, err := s.GetSubscriptionInfo(ctx, &agentapi.Empty{})
 	if err != nil {
-		log.Warningf(ctx, "check for updated subscription info after applying token failed: %v", err)
+		log.Warningf(ctx, "could not get subscription info after applying a pro token: %v", err)
+		return subs, err
 	}
 
-	return subs, err
+	return subs, nil
 }
 
 // Ping replies a keep-alive request.
