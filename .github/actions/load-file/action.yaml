@@ -1,5 +1,5 @@
-name: Load the Flutter version
-description: Loads the Flutter version from a file.
+name: Load the contents of a file
+description: Loads the contents of a file.
 
 inputs:
   path:
@@ -8,7 +8,7 @@ inputs:
 
 outputs:
   contents:
-    description: "Flutter version."
+    description: "The contents of the loaded file."
     value: ${{ steps.load.outputs.data }}
 
 runs:
