@@ -45,11 +45,24 @@ TEST(ServerStoreService, NonEmptyJwtNeverThrows) {
 }
 
 TEST(ServerStoreService, ExpirationDateUnsubscribed) {
+  // We want to test that:
+  // - We throw
+  // - The exception is of type StoreApi::Exception
+  // - Make some an assertion on the Exception itself
+  //
+  // GTest can do the first two but not the last, so we do a bit of a mix
+
   auto service = ServerStoreService<NeverSubscribedContext>{};
 
-  auto expiration = service.CurrentExpirationDate("my-awesome-addon");
-
-  EXPECT_EQ(std::numeric_limits<std::int64_t>::lowest(), expiration);
+  EXPECT_THROW(
+      try {
+        service.CurrentExpirationDate("my-awesome-addon");
+      } catch (StoreApi::Exception& e) {
+        // Intercept, check, rethrow
+        EXPECT_EQ(e.code(), StoreApi::ErrorCode::Unsubscribed);
+        throw e;
+      },
+      StoreApi::Exception);
 }
 
 TEST(ServerStoreService, ExpirationDateEpoch) {
