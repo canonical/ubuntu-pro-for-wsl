@@ -38,8 +38,6 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120095032-972ad3e1f0c4 h1:dm4fQMsklc51D+7N9qYoB6QbbMmubexTj//En/IQIO8=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120095032-972ad3e1f0c4/go.mod h1:btQ/eVeGFXdXdifpHRo4V05VmmnhyhWWkecmVnvUbfQ=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120144258-eaedf425f737 h1:ng27r1HEpGqGmoaemcMiaOm2LyKiG9FnANVBdfL3DwU=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120144258-eaedf425f737/go.mod h1:btQ/eVeGFXdXdifpHRo4V05VmmnhyhWWkecmVnvUbfQ=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231113084350-57c6acdb2d5b h1:e/2jgQO5wxcvIJBqQwD+hw40H0ytJAFRdOhnV+lQkUU=
