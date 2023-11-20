@@ -86,7 +86,7 @@ Future<void> testManualTokenInput(WidgetTester tester) async {
 
   // asserts that we transitioned to the user-managed status page.
   l10n = tester.l10n<SubscriptionStatusPage>();
-  expect(find.text(l10n.manuallyManaged), findsOneWidget);
+  expect(find.text(l10n.detachPro), findsOneWidget);
 }
 
 Future<void> testPurchase(WidgetTester tester) async {
