@@ -19,15 +19,8 @@ void main() {
     final info = SubscriptionInfo();
     info.productId = 'my prod ID';
 
-    test('immutable is org', () async {
-      info.immutable = true;
-      final model = SubscriptionStatusModel(info, client);
-      expect(model.runtimeType, OrgSubscriptionStatusModel);
-    });
-
     test('none subscribes now', () async {
       info.ensureNone();
-      info.immutable = false;
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, SubscribeNowModel);
     });
@@ -42,7 +35,6 @@ void main() {
     });
     test('store', () async {
       info.ensureMicrosoftStore();
-      info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, StoreSubscriptionStatusModel);
@@ -50,7 +42,6 @@ void main() {
 
     test('user', () async {
       info.ensureUser();
-      info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, UserSubscriptionStatusModel);
@@ -58,7 +49,6 @@ void main() {
 
     test('organization', () async {
       info.ensureOrganization();
-      info.immutable = false;
 
       final model = SubscriptionStatusModel(info, client);
       expect(model.runtimeType, OrgSubscriptionStatusModel);

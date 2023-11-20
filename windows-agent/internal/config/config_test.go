@@ -75,9 +75,10 @@ func TestSubscription(t *testing.T) {
 		"Success when there is a user token":          {settingsState: userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
 		"Success when there is a store token":         {settingsState: storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
 
-		"Success when there are organization and user tokens":                           {settingsState: orgTokenHasValue | userTokenHasValue, wantToken: "user_token", wantSource: config.SourceUser},
-		"Success when there are organization and store tokens":                          {settingsState: orgTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
-		"Success when there are organization and user tokens, and an empty store token": {settingsState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "user_token", wantSource: config.SourceUser},
+		"Success when an organization token shadows a user token":                           {settingsState: orgTokenHasValue | userTokenHasValue, wantToken: "org_token", wantSource: config.SourceRegistry},
+		"Success when an organization token shadows a store token":                          {settingsState: orgTokenHasValue | storeTokenHasValue, wantToken: "org_token", wantSource: config.SourceRegistry},
+		"Success when a store token shadows a user token":                                   {settingsState: userTokenHasValue | storeTokenHasValue, wantToken: "store_token", wantSource: config.SourceMicrosoftStore},
+		"Success when an organization token shadows a user token, and an empty store token": {settingsState: orgTokenHasValue | userTokenHasValue | storeTokenExists, wantToken: "org_token", wantSource: config.SourceRegistry},
 
 		"Error when the registry key cannot be opened":    {settingsState: orgTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {settingsState: orgTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -90,7 +91,7 @@ func TestSubscription(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, false, tc.breakFile)
+			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			token, source, err := conf.Subscription(ctx)
@@ -129,7 +130,7 @@ func TestLandscapeConfig(t *testing.T) {
 		"Success when there is an organization conf": {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 		"Success when there is a user conf":          {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
 
-		"Success when there are organization and user confs": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Success when an organization config shadows a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 
 		"Error when the registry key cannot be opened":    {settingsState: orgTokenHasValue, mockErrors: registry.MockErrOnOpenKey, wantError: true},
 		"Error when the registry key cannot be read from": {settingsState: orgTokenHasValue, mockErrors: registry.MockErrReadValue, wantError: true},
@@ -142,7 +143,7 @@ func TestLandscapeConfig(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, false, tc.breakFile)
+			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			token, source, err := conf.LandscapeClientConfig(ctx)
@@ -184,7 +185,7 @@ func TestLandscapeAgentUID(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, tc.breakFile)
+			r, dir := setUpMockSettings(t, 0, tc.settingsState, tc.breakFile)
 			if tc.breakFileContents {
 				err := os.WriteFile(filepath.Join(dir, "config"), []byte("\tmessage:\n\t\tthis is not YAML!["), 0600)
 				require.NoError(t, err, "Setup: could not re-write config file")
@@ -242,7 +243,7 @@ func TestProvisioningTasks(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, false, false)
+			r, dir := setUpMockSettings(t, tc.mockErrors, tc.settingsState, false)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			gotTasks, err := conf.ProvisioningTasks(ctx, "UBUNTU")
@@ -294,7 +295,7 @@ func TestSetUserSubscription(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, tc.breakFile)
+			r, dir := setUpMockSettings(t, 0, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			token := "new_token"
@@ -344,7 +345,7 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, tc.breakFile)
+			r, dir := setUpMockSettings(t, 0, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir, config.WithRegistry(r))
 
 			uid := "new_uid"
@@ -369,51 +370,6 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 	}
 }
 
-func TestIsReadOnly(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		settingsState settingsState
-		readOnly      bool
-		registryErr   bool
-
-		want    bool
-		wantErr bool
-	}{
-		"Success when the registry can be written on":    {settingsState: keyExists, want: false},
-		"Success when the registry cannot be written on": {settingsState: keyExists, readOnly: true, want: true},
-
-		"Success when the non-existent registry can be written on":    {want: false},
-		"Success when the non-existent registry cannot be written on": {readOnly: true, want: true},
-
-		"Error when the registry cannot be queried": {registryErr: true, wantErr: true},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			ctx := context.Background()
-
-			r, dir := setUpMockSettings(t, 0, tc.settingsState, tc.readOnly, false)
-			if tc.registryErr {
-				r.Errors = registry.MockErrOnCreateKey
-			}
-
-			conf := config.New(ctx, dir, config.WithRegistry(r))
-
-			got, err := conf.IsReadOnly()
-			if tc.wantErr {
-				require.Error(t, err, "IsReadOnly should return an error")
-				return
-			}
-			require.NoError(t, err, "IsReadOnly should return no error")
-
-			require.Equal(t, tc.want, got, "IsReadOnly returned an unexpected value")
-		})
-	}
-}
-
 func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 	t.Parallel()
 
@@ -427,9 +383,8 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 		settingsState       settingsState
 		subscriptionExpired bool
 
-		registryErr        uint32
-		registryIsReadOnly bool
-
+		registryErr          uint32
+		breakConfigFile      bool
 		msStoreJWTErr        bool
 		msStoreExpirationErr bool
 
@@ -439,8 +394,6 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 		// Tests where there is no pre-existing subscription
 		"Success": {wantToken: proToken},
 
-		"Error when registry is read only":                      {settingsState: userTokenHasValue, registryIsReadOnly: true, wantToken: "user_token", wantErr: true},
-		"Error when registry read-only check fails":             {registryErr: registry.MockErrOnCreateKey, wantErr: true},
 		"Error when the Microsoft Store cannot provide the JWT": {msStoreJWTErr: true, wantErr: true},
 
 		// Tests where there is a pre-existing subscription
@@ -448,6 +401,10 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 		"Success when there is an expired store token": {settingsState: storeTokenHasValue, subscriptionExpired: true, wantToken: proToken},
 
 		"Error when the Microsoft Store cannot provide the expiration date": {settingsState: storeTokenHasValue, msStoreExpirationErr: true, wantToken: "store_token", wantErr: true},
+
+		// Tests where pre-existing subscription is irrelevant
+		"Error when the registry cannot be read from":            {registryErr: registry.MockErrOnOpenKey, wantErr: true},
+		"Error when the current subscription cannot be obtained": {breakConfigFile: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -457,7 +414,7 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 
 			ctx := context.Background()
 
-			r, dir := setUpMockSettings(t, tc.registryErr, tc.settingsState, tc.registryIsReadOnly, false)
+			r, dir := setUpMockSettings(t, tc.registryErr, tc.settingsState, tc.breakConfigFile)
 			c := config.New(ctx, dir, config.WithRegistry(r))
 
 			// Set up the mock Microsoft store
@@ -489,9 +446,9 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 			err = c.FetchMicrosoftStoreSubscription(ctx, contracts.WithProURL(csAddr), contracts.WithMockMicrosoftStore(store))
 			if tc.wantErr {
 				require.Error(t, err, "FetchMicrosoftStoreSubscription should return an error")
-			} else {
-				require.NoError(t, err, "FetchMicrosoftStoreSubscription should return no errors")
+				return
 			}
+			require.NoError(t, err, "FetchMicrosoftStoreSubscription should return no errors")
 
 			// Disable errors so we can retrieve the token
 			r.Errors = 0
@@ -569,7 +526,7 @@ func TestUpdateRegistrySettings(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: could not add dummy distro to database")
 
-			r, dir := setUpMockSettings(t, 0, tc.settingsState, false, false)
+			r, dir := setUpMockSettings(t, 0, tc.settingsState, false)
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			c := config.New(ctx, dir, config.WithRegistry(r))
@@ -619,13 +576,12 @@ func (state settingsState) is(flag settingsState) bool {
 	return state&flag == flag
 }
 
-func setUpMockSettings(t *testing.T, mockErrors uint32, state settingsState, readOnly bool, fileBroken bool) (*registry.Mock, string) {
+func setUpMockSettings(t *testing.T, mockErrors uint32, state settingsState, fileBroken bool) (*registry.Mock, string) {
 	t.Helper()
 
 	// Mock registry
 	reg := registry.NewMock()
 	reg.Errors = mockErrors
-	reg.KeyIsReadOnly = readOnly
 
 	if state.is(keyExists) {
 		reg.KeyExists = true

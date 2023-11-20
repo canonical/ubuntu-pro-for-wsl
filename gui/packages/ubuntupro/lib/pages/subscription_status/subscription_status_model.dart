@@ -15,21 +15,18 @@ sealed class SubscriptionStatusModel {
     SubscriptionInfo info,
     AgentApiClient client,
   ) {
-    if (!info.immutable) {
-      switch (info.whichSubscriptionType()) {
-        case SubscriptionType.organization:
-          return OrgSubscriptionStatusModel();
-        case SubscriptionType.user:
-          return UserSubscriptionStatusModel(client);
-        case SubscriptionType.microsoftStore:
-          return StoreSubscriptionStatusModel(info.productId);
-        case SubscriptionType.none:
-          return SubscribeNowModel(client);
-        case SubscriptionType.notSet:
-          throw UnimplementedError('Unknown subscription type');
-      }
+    switch (info.whichSubscriptionType()) {
+      case SubscriptionType.organization:
+        return OrgSubscriptionStatusModel();
+      case SubscriptionType.user:
+        return UserSubscriptionStatusModel(client);
+      case SubscriptionType.microsoftStore:
+        return StoreSubscriptionStatusModel(info.productId);
+      case SubscriptionType.none:
+        return SubscribeNowModel(client);
+      case SubscriptionType.notSet:
+        throw UnimplementedError('Unknown subscription type');
     }
-    return OrgSubscriptionStatusModel();
   }
   SubscriptionStatusModel._();
 }

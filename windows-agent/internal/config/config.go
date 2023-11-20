@@ -25,12 +25,9 @@ const registryPath = `Software\Canonical\UbuntuPro`
 
 // Registry abstracts away access to the windows registry.
 type Registry interface {
-	HKCUCreateKey(path string, access uint32) (newk uintptr, err error)
-	HKCUOpenKey(path string, access uint32) (uintptr, error)
+	HKCUOpenKey(path string) (uintptr, error)
 	CloseKey(k uintptr)
 	ReadValue(k uintptr, field string) (value string, err error)
-	WriteValue(k uintptr, field string, value string) (err error)
-	WriteMultilineValue(k uintptr, field string, value string) (err error)
 }
 
 // Config manages configuration parameters. It is a wrapper around a dictionary
@@ -94,21 +91,6 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Source,
 
 	token, source = c.subscription.resolve()
 	return token, source, nil
-}
-
-// IsReadOnly returns whether the registry can be written to.
-func (c *Config) IsReadOnly() (b bool, err error) {
-	// CreateKey is equivalent to OpenKey if the key already existed
-	k, err := c.registry.HKCUCreateKey(registryPath, registry.WRITE)
-	if errors.Is(err, registry.ErrAccessDenied) {
-		return true, nil
-	}
-	if err != nil {
-		return false, fmt.Errorf("could not open registry key: %w", err)
-	}
-
-	c.registry.CloseKey(k)
-	return false, nil
 }
 
 // ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
@@ -175,7 +157,7 @@ func (c *Config) set(ctx context.Context, field *string, value string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Load before dumping to avoid overriding recent changes to registry
+	// Load before dumping to avoid overriding recent changes to file
 	if err := c.load(); err != nil {
 		return err
 	}
@@ -209,16 +191,6 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 // to check if the user has an active subscription that provides a pro token. If so, that token is used.
 func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) (err error) {
 	defer decorate.OnError(&err, "could not validate subscription against Microsoft Store")
-
-	readOnly, err := c.IsReadOnly()
-	if err != nil {
-		return fmt.Errorf("could not detect if subscription is user-managed: %v", err)
-	}
-
-	if readOnly {
-		// No need to contact the store because we cannot change the subscription
-		return fmt.Errorf("subscription cannot be user-managed")
-	}
 
 	_, src, err := c.Subscription(ctx)
 	if err != nil {

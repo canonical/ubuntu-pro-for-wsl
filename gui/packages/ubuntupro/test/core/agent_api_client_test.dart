@@ -21,7 +21,6 @@ void main() {
     test('no subscription info', () async {
       final info = await client.subscriptionInfo();
       expect(info.productId, isEmpty);
-      expect(info.immutable, isFalse);
       expect(info.whichSubscriptionType(), SubscriptionType.none);
     });
     test('pro attach user subscription', () async {
@@ -29,7 +28,6 @@ void main() {
       final info = await client.subscriptionInfo();
 
       expect(info.productId, isEmpty);
-      expect(info.immutable, isFalse);
       expect(info.whichSubscriptionType(), SubscriptionType.user);
     });
 
@@ -38,7 +36,6 @@ void main() {
       final info = await client.subscriptionInfo();
 
       expect(info.productId, isEmpty);
-      expect(info.immutable, isFalse);
       expect(info.whichSubscriptionType(), SubscriptionType.none);
     });
   });

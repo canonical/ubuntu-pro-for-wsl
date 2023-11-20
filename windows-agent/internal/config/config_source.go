@@ -26,16 +26,16 @@ type subscription struct {
 }
 
 func (s subscription) resolve() (string, Source) {
+	if s.Organization != "" {
+		return s.Organization, SourceRegistry
+	}
+
 	if s.Store != "" {
 		return s.Store, SourceMicrosoftStore
 	}
 
 	if s.User != "" {
 		return s.User, SourceUser
-	}
-
-	if s.Organization != "" {
-		return s.Organization, SourceRegistry
 	}
 
 	return "", SourceNone
@@ -50,12 +50,12 @@ type landscapeConf struct {
 }
 
 func (p landscapeConf) resolve() (string, Source) {
-	if p.UserConfig != "" {
-		return p.UserConfig, SourceUser
-	}
-
 	if p.OrgConfig != "" {
 		return p.OrgConfig, SourceRegistry
+	}
+
+	if p.UserConfig != "" {
+		return p.UserConfig, SourceUser
 	}
 
 	return "", SourceNone

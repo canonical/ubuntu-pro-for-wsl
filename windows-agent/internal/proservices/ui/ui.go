@@ -18,7 +18,6 @@ import (
 // Config is a provider for the subcription configuration.
 type Config interface {
 	SetUserSubscription(ctx context.Context, token string) error
-	IsReadOnly() (bool, error)
 	Subscription(context.Context) (string, config.Source, error)
 	FetchMicrosoftStoreSubscription(context.Context, ...contracts.Option) error
 }
@@ -72,15 +71,6 @@ func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.
 // GetSubscriptionInfo handles the gRPC call to return the type of subscription.
 func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
 	info := &agentapi.SubscriptionInfo{}
-
-	immutable, err := s.config.IsReadOnly()
-	if err != nil {
-		return nil, err
-	}
-
-	if immutable {
-		info.Immutable = true
-	}
 
 	_, source, err := s.config.Subscription(ctx)
 	if err != nil {

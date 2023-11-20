@@ -24,8 +24,6 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		configIsReadOnly bool
-
 		breakConfig      bool
 		breakMkDir       bool
 		breakNewDistroDB bool
@@ -33,7 +31,6 @@ func TestNew(t *testing.T) {
 		wantErr bool
 	}{
 		"Success when the subscription stays empty":               {},
-		"Success with a read-only registry":                       {configIsReadOnly: true},
 		"Success when the config cannot check if it is read-only": {breakConfig: true},
 
 		"Error when Manager cannot create its cache dir":  {breakMkDir: true, wantErr: true},
@@ -49,11 +46,6 @@ func TestNew(t *testing.T) {
 
 			reg := registry.NewMock()
 			reg.KeyExists = true
-
-			if tc.configIsReadOnly {
-				reg.KeyExists = true
-				reg.KeyIsReadOnly = true
-			}
 
 			if tc.breakMkDir {
 				dir = filepath.Join(dir, "proservices")
