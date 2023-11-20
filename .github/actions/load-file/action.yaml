@@ -32,3 +32,4 @@ runs:
       run: |
         cat << EOF
         ${{ steps.load.outputs.data }}
+        EOF
