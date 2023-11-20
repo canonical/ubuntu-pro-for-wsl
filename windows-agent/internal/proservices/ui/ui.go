@@ -41,7 +41,7 @@ func New(ctx context.Context, config Config, db *database.DistroDB) (s Service) 
 }
 
 // ApplyProToken handles the gRPC call to pro attach all distros using a token provided by the GUI.
-func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*agentapi.Empty, error) {
+func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*agentapi.SubscriptionInfo, error) {
 	token := info.GetToken()
 	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
 
@@ -60,7 +60,13 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 		return nil, err
 	}
 
-	return &agentapi.Empty{}, nil
+	subs, err := s.GetSubscriptionInfo(ctx, &agentapi.Empty{})
+	if err != nil {
+		log.Warningf(ctx, "could not get subscription info after applying a pro token: %v", err)
+		return subs, err
+	}
+
+	return subs, nil
 }
 
 // Ping replies a keep-alive request.

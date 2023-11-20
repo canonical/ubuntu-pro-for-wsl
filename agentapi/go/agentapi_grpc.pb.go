@@ -29,7 +29,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UIClient interface {
-	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error)
+	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*SubscriptionInfo, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 	GetSubscriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
 	NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
@@ -43,8 +43,8 @@ func NewUIClient(cc grpc.ClientConnInterface) UIClient {
 	return &uIClient{cc}
 }
 
-func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*SubscriptionInfo, error) {
+	out := new(SubscriptionInfo)
 	err := c.cc.Invoke(ctx, UI_ApplyProToken_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (c *uIClient) NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.C
 // All implementations must embed UnimplementedUIServer
 // for forward compatibility
 type UIServer interface {
-	ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error)
+	ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error)
 	Ping(context.Context, *Empty) (*Empty, error)
 	GetSubscriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error)
 	NotifyPurchase(context.Context, *Empty) (*SubscriptionInfo, error)
@@ -94,7 +94,7 @@ type UIServer interface {
 type UnimplementedUIServer struct {
 }
 
-func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error) {
+func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyProToken not implemented")
 }
 func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {

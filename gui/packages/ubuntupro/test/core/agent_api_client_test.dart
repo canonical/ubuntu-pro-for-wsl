@@ -32,8 +32,7 @@ void main() {
     });
 
     test('pro detach no subscription again', () async {
-      await client.applyProToken('');
-      final info = await client.subscriptionInfo();
+      final info = await client.applyProToken('');
 
       expect(info.productId, isEmpty);
       expect(info.whichSubscriptionType(), SubscriptionType.none);

@@ -7,7 +7,7 @@ package agentapi;
 message Empty {}
 
 service UI {
-    rpc ApplyProToken (ProAttachInfo) returns (Empty) {}
+    rpc ApplyProToken (ProAttachInfo) returns (SubscriptionInfo) {}
     rpc Ping (Empty) returns (Empty) {}
     rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
     rpc NotifyPurchase(Empty) returns (SubscriptionInfo) {}

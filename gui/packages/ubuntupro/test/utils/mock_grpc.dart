@@ -39,7 +39,7 @@ class MockUIClient extends UIClient {
   }
 
   @override
-  ResponseFuture<Empty> applyProToken(
+  ResponseFuture<SubscriptionInfo> applyProToken(
     ProAttachInfo request, {
     CallOptions? options,
   }) {
@@ -48,7 +48,7 @@ class MockUIClient extends UIClient {
     } else {
       subscriptionInfo.ensureUser();
     }
-    return MockedResponse(Empty());
+    return MockedResponse(subscriptionInfo);
   }
 
   @override

@@ -67,6 +67,10 @@ void main() {
     final client = MockAgentApiClient();
     when(client.applyProToken(any)).thenAnswer((realInvocation) async {
       token = realInvocation.positionalArguments[0] as String;
+      if (token != null && token!.isNotEmpty) {
+        return SubscriptionInfo()..ensureUser();
+      }
+      return SubscriptionInfo()..ensureNone();
     });
     final model = UserSubscriptionStatusModel(client);
 
