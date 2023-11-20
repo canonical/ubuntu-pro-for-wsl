@@ -143,19 +143,17 @@ jobs:
         uses: ./.github/actions/update-workspace-dependencies
         with:
           module: wsl-pro-service
-      - name: Detect modifications
-        shell: bash
+      - name: Detect changes
         id: check-diff
-        run: |
-          hasModif="false"
-          MODIFIED=$(git status --porcelain --untracked-files=no)
-          if [ -n "$MODIFIED" ]; then
-            hasModif="true"
-          fi
-          echo "modified=${hasModif}" >> $GITHUB_OUTPUT
+        uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
+        with:
+          working-directory: wsl-pro-service
+          # Go workflow files tend to update when no one is asking
+          paths-to-ignore: 'go.work.sum'
+          fail-on-diff: false
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
-        if: steps.check-diff.outputs.modified == 'true'
+        if: steps.check-diff.outputs.diff == 'true'
         with:
           commit-message: Auto update internal dependencies
           title: 'deps(wsl-pro-service): Auto update WSL-Pro-Service dependencies'
@@ -164,6 +162,6 @@ jobs:
           branch: auto-updates/update-internal-dependencies
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
-        if: steps.check-diff.outputs.modified == 'true'
+        if: steps.check-diff.outputs.diff == 'true'
         run: |
           git push origin auto-updates/update-internal-dependencies:main
