@@ -148,7 +148,7 @@ jobs:
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
           working-directory: wsl-pro-service
-          # Go workflow files tend to update when no one is asking
+          # Go workspace checksum files tend to update when no one is asking
           paths-to-ignore: 'go.work.sum'
           fail-on-diff: false
       - name: Create Pull Request
