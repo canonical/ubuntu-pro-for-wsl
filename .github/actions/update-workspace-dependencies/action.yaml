@@ -19,4 +19,7 @@ runs:
       run: |
         chmod +x ${{ github.action_path }}/update-workspace-dependencies.sh
         ${{ github.action_path }}/update-workspace-dependencies.sh "${{ github.repository }}" "wsl-pro-service"
-
+    - name: Update module
+      shell: bash
+      working-directory: ${{ inputs.module }}
+      run: go mod tidy
