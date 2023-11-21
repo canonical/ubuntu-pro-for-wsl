@@ -840,10 +840,10 @@ packages:
     dependency: "direct main"
     description:
       name: yaru_widgets
-      sha256: "145efb47a98795d6a54d82e4b4774ca7fa4f16d0a8855a109407fe366853ff76"
+      sha256: "730c1e46b8ccfe1a11602a2b5c1a09ceb84d85e5a45fa6a813f50fe8930629f2"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.2"
+    version: "3.3.1"
   yaru_window:
     dependency: transitive
     description:
