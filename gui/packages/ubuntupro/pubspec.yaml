@@ -53,6 +53,7 @@ dependencies:
   provider: ^6.1.1
   ubuntu_service: ^0.3.0
   url_launcher: ^6.2.1
+  wizard_router: ^1.0.4
   yaru: ^1.2.0
   yaru_icons: ^2.2.2
   yaru_widgets: ^3.2.2
