@@ -1,5 +1,5 @@
-name: Load the contents of a file
-description: Loads the contents of a file.
+name: Read the contents of a file
+description: Reads the contents of a file.
 
 inputs:
   path:
@@ -8,17 +8,17 @@ inputs:
 
 outputs:
   contents:
-    description: "The contents of the loaded file."
-    value: ${{ steps.load.outputs.data }}
+    description: "The contents of the readed file."
+    value: ${{ steps.read.outputs.data }}
 
 runs:
   using: "composite"
   steps:
-    - name: Load
-      id: load
+    - name: Read
+      id: read
       shell: bash
       run : |
-        # Load from ${{ inputs.path }}
+        # Read from ${{ inputs.path }}
         set -eu
         data=$(cat '${{ inputs.path }}')
 
@@ -31,5 +31,5 @@ runs:
       shell: bash
       run: |
         cat << EOF
-        ${{ steps.load.outputs.data }}
+        ${{ steps.read.outputs.data }}
         EOF
