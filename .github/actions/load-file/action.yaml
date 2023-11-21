@@ -3,7 +3,7 @@ description: Loads the contents of a file.
 
 inputs:
   path:
-    required: false
+    required: true
     description: "Path to the file to be read"
 
 outputs:
