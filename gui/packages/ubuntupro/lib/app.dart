@@ -4,6 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:grpc/grpc.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
 import 'constants.dart';
@@ -30,34 +31,46 @@ class Pro4WindowsApp extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-          home: Provider<AgentStartupMonitor>(
-            create: (context) => AgentStartupMonitor(
-              appName: kAppName,
-              addrFileName: kAddrFileName,
-              agentLauncher: launch,
-              clientFactory: defaultClient,
-              onClient: (client) async {
-                registerServiceInstance<AgentApiClient>(client);
-                final subscriptionInfo =
-                    context.read<ValueNotifier<SubscriptionInfo>>();
-                // TODO: Remove this try-catch once the agent stop crashing due lack of MS Store access
-                try {
-                  subscriptionInfo.value = await client.subscriptionInfo();
-                } on GrpcError catch (err) {
-                  debugPrint('$err');
-                  debugPrintStack(maxFrames: 20);
-                }
-              },
-            ),
-            child: const StartupPage(nextRoute: Routes.subscriptionStatus),
+          home: Builder(
+            builder: (context) {
+              return const Wizard(
+                routes: {
+                  Routes.startup: WizardRoute(builder: buildStartup),
+                  Routes.subscriptionStatus: WizardRoute(
+                    builder: SubscriptionStatusPage.create,
+                  ),
+                },
+              );
+            },
           ),
-          routes: const {
-            Routes.subscriptionStatus: SubscriptionStatusPage.create,
-          },
         ),
       ),
     );
   }
+}
+
+Widget buildStartup(BuildContext context) {
+  return Provider<AgentStartupMonitor>(
+    create: (context) => AgentStartupMonitor(
+      appName: kAppName,
+      addrFileName: kAddrFileName,
+      agentLauncher: launch,
+      clientFactory: defaultClient,
+      onClient: (client) async {
+        registerServiceInstance<AgentApiClient>(client);
+        final subscriptionInfo =
+            context.read<ValueNotifier<SubscriptionInfo>>();
+        // TODO: Remove this try-catch once the agent stop crashing due lack of MS Store access
+        try {
+          subscriptionInfo.value = await client.subscriptionInfo();
+        } on GrpcError catch (err) {
+          debugPrint('$err');
+          debugPrintStack(maxFrames: 20);
+        }
+      },
+    ),
+    child: const StartupPage(nextRoute: Routes.subscriptionStatus),
+  );
 }
 
 AgentApiClient defaultClient(int port) =>
