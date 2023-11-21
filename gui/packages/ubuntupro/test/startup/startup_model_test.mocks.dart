@@ -47,6 +47,7 @@ class MockAgentStartupMonitor extends _i1.Mock
         Invocation.getter(#agentLauncher),
         returnValue: () => _i4.Future<bool>.value(false),
       ) as _i3.AgentLauncher);
+
   @override
   _i3.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
@@ -55,11 +56,13 @@ class MockAgentStartupMonitor extends _i1.Mock
           Invocation.getter(#clientFactory),
         ),
       ) as _i3.ApiClientFactory);
+
   @override
   _i3.AgentApiCallback get onClient => (super.noSuchMethod(
         Invocation.getter(#onClient),
         returnValue: (_i2.AgentApiClient __p0) => null,
       ) as _i3.AgentApiCallback);
+
   @override
   _i4.Stream<_i3.AgentState> start({
     Duration? interval = const Duration(seconds: 1),
@@ -76,6 +79,7 @@ class MockAgentStartupMonitor extends _i1.Mock
         ),
         returnValue: _i4.Stream<_i3.AgentState>.empty(),
       ) as _i4.Stream<_i3.AgentState>);
+
   @override
   _i4.Future<void> reset() => (super.noSuchMethod(
         Invocation.method(
