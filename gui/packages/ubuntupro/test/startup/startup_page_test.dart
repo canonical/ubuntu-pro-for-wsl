@@ -106,9 +106,7 @@ void main() {
               AgentApiClient(host: 'localhost', port: port),
           onClient: (_) {},
         ),
-        child: const StartupPage(
-          nextRoute: '/next',
-        ),
+        child: const StartupPage(),
       ),
       routes: {'/next': (_) => const Text(lastText)},
       localizationsDelegates: AppLocalizations.localizationsDelegates,
