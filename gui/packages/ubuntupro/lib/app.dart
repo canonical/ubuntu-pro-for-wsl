@@ -69,7 +69,7 @@ Widget buildStartup(BuildContext context) {
         }
       },
     ),
-    child: const StartupPage(nextRoute: Routes.subscriptionStatus),
+    child: const StartupPage(),
   );
 }
 
