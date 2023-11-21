@@ -58,7 +58,6 @@ void main() {
     final model = StartupModel(monitor);
     await tester.pumpWidget(buildApp(model));
 
-    await model.init();
     await tester.pumpAndSettle();
 
     expect(find.byType(LinearProgressIndicator), findsNothing);
