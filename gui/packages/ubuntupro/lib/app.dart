@@ -33,11 +33,26 @@ class Pro4WindowsApp extends StatelessWidget {
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           home: Builder(
             builder: (context) {
-              return const Wizard(
+              return Wizard(
                 routes: {
-                  Routes.startup: WizardRoute(builder: buildStartup),
+                  Routes.startup: const WizardRoute(builder: buildStartup),
                   Routes.subscriptionStatus: WizardRoute(
                     builder: SubscriptionStatusPage.create,
+                    onLoad: (_) async {
+                      final client = getService<AgentApiClient>();
+                      final subscriptionInfo =
+                          context.read<ValueNotifier<SubscriptionInfo>>();
+                      // TODO: Remove this try-catch once the agent stop crashing due lack of MS Store access
+                      try {
+                        subscriptionInfo.value =
+                            await client.subscriptionInfo();
+                      } on GrpcError catch (err) {
+                        debugPrint('$err');
+                        debugPrintStack(maxFrames: 20);
+                      }
+                      // never skip this page.
+                      return true;
+                    },
                   ),
                 },
               );
@@ -56,18 +71,7 @@ Widget buildStartup(BuildContext context) {
       addrFileName: kAddrFileName,
       agentLauncher: launch,
       clientFactory: defaultClient,
-      onClient: (client) async {
-        registerServiceInstance<AgentApiClient>(client);
-        final subscriptionInfo =
-            context.read<ValueNotifier<SubscriptionInfo>>();
-        // TODO: Remove this try-catch once the agent stop crashing due lack of MS Store access
-        try {
-          subscriptionInfo.value = await client.subscriptionInfo();
-        } on GrpcError catch (err) {
-          debugPrint('$err');
-          debugPrintStack(maxFrames: 20);
-        }
-      },
+      onClient: registerServiceInstance<AgentApiClient>,
     ),
     child: const StartupPage(),
   );
