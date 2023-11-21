@@ -70,12 +70,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   stack_trace: ^1.11.0
-  yaru_test:
-  # TODO: Replace this when yaru_test ^0.2.0 gets released.
-    git:
-      url: https://github.com/ubuntu/yaru_test.dart
-      ref: e541172d1cd128293230d08280b45c527606af66
-
+  yaru_test: ^0.1.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
