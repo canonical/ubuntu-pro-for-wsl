@@ -1,0 +1,35 @@
+name: Read the contents of a file
+description: Reads the contents of a file.
+
+inputs:
+  path:
+    required: true
+    description: "Path to the file to be read"
+
+outputs:
+  contents:
+    description: "The contents of the readed file."
+    value: ${{ steps.read.outputs.data }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Read
+      id: read
+      shell: bash
+      run : |
+        # Read from ${{ inputs.path }}
+        set -eu
+        data=$(cat '${{ inputs.path }}')
+
+        # Remove endlines
+        data="${data//[$'\r\n']}"
+
+        # Store result
+        echo "data=$data" >> $GITHUB_OUTPUT
+    - name: Show contents
+      shell: bash
+      run: |
+        cat << EOF
+        ${{ steps.read.outputs.data }}
+        EOF

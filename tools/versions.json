@@ -1,4 +1,0 @@
-{
-    "_doc": "This document is used by the CI to track versions that cannot be tracked by Go.",
-    "flutter-version": "3.16.x"
-}

@@ -51,15 +51,15 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: go.work
-      - name: Load flutter version
-        id: load
-        uses: ./.github/actions/load-json
+      - name: Read flutter version
+        id: flutter-version
+        uses: ./.github/actions/read-file
         with:
-          path: tools/versions.json
+          path: tools/flutter-version
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: ${{ steps.load.outputs.data.flutter-version }}
+          flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Setup MSBuild (PATH)
         uses: microsoft/setup-msbuild@v1.3.1
       - name: Install certificate
