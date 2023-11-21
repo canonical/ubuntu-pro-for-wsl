@@ -8,16 +8,23 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/startup/agent_monitor.dart';
 import 'package:ubuntupro/pages/startup/startup_model.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
+import 'package:wizard_router/wizard_router.dart';
 
 import 'startup_page_test.mocks.dart';
 
 const lastText = 'LAST TEXT';
 MaterialApp buildApp(StartupModel model) => MaterialApp(
-      home: ChangeNotifierProvider.value(
-        value: model,
-        child: const StartupAnimatedChild(nextRoute: '/next'),
+      home: Wizard(
+        routes: {
+          '/': WizardRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: model,
+              child: const StartupAnimatedChild(),
+            ),
+          ),
+          '/next': WizardRoute(builder: (_) => const Text(lastText)),
+        },
       ),
-      routes: {'/next': (_) => const Text(lastText)},
       localizationsDelegates: AppLocalizations.localizationsDelegates,
     );
 
