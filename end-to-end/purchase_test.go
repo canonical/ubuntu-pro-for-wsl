@@ -56,6 +56,12 @@ func TestPurchase(t *testing.T) {
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
 
+			landscape := NewLandscape(t, ctx)
+			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
+
+			go landscape.Serve()
+			defer landscape.Stop()
+
 			settings := contractsmockserver.DefaultSettings()
 
 			token := os.Getenv(proTokenEnv)
@@ -124,7 +130,7 @@ func TestPurchase(t *testing.T) {
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			const maxTimeout = 30 * time.Second
+			const maxTimeout = time.Minute
 
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
@@ -143,6 +149,9 @@ func TestPurchase(t *testing.T) {
 				}
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
+
+			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d)
+			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
 }

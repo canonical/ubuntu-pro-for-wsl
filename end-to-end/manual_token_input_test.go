@@ -3,6 +3,7 @@ package endtoend_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -40,6 +41,12 @@ func TestManualTokenInput(t *testing.T) {
 
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
+
+			landscape := NewLandscape(t, ctx)
+			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
+
+			go landscape.Serve()
+			defer landscape.Stop()
 
 			// Either runs the ubuntupro app before...
 			if tc.whenToken == beforeDistroRegistration {
@@ -83,6 +90,9 @@ func TestManualTokenInput(t *testing.T) {
 				}
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
+
+			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d)
+			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
 }

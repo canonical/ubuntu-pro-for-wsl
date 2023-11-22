@@ -35,10 +35,17 @@ func TestOrganizationProvidedToken(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
+
+			landscape := NewLandscape(t, ctx)
+			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
+
+			go landscape.Serve()
+			defer landscape.Stop()
 
 			proToken := os.Getenv(proTokenEnv)
 			require.NotEmptyf(t, proToken, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenEnv)
@@ -88,6 +95,9 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				}
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
+
+			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d)
+			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
 }
