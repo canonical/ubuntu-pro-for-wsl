@@ -59,6 +59,7 @@ class MockAgentStartupMonitor extends _i1.Mock
         Invocation.getter(#agentLauncher),
         returnValue: () => _i5.Future<bool>.value(false),
       ) as _i4.AgentLauncher);
+
   @override
   _i4.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
@@ -67,11 +68,13 @@ class MockAgentStartupMonitor extends _i1.Mock
           Invocation.getter(#clientFactory),
         ),
       ) as _i4.ApiClientFactory);
+
   @override
   _i4.AgentApiCallback get onClient => (super.noSuchMethod(
         Invocation.getter(#onClient),
         returnValue: (_i2.AgentApiClient __p0) => null,
       ) as _i4.AgentApiCallback);
+
   @override
   _i5.Stream<_i4.AgentState> start({
     Duration? interval = const Duration(seconds: 1),
@@ -88,6 +91,7 @@ class MockAgentStartupMonitor extends _i1.Mock
         ),
         returnValue: _i5.Stream<_i4.AgentState>.empty(),
       ) as _i5.Stream<_i4.AgentState>);
+
   @override
   _i5.Future<void> reset() => (super.noSuchMethod(
         Invocation.method(
@@ -123,6 +127,7 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
           ),
         )),
       ) as _i5.Future<_i3.SubscriptionInfo>);
+
   @override
   _i5.Future<bool> ping() => (super.noSuchMethod(
         Invocation.method(
@@ -131,6 +136,7 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
         ),
         returnValue: _i5.Future<bool>.value(false),
       ) as _i5.Future<bool>);
+
   @override
   _i5.Future<_i3.SubscriptionInfo> subscriptionInfo() => (super.noSuchMethod(
         Invocation.method(
@@ -146,6 +152,7 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
           ),
         )),
       ) as _i5.Future<_i3.SubscriptionInfo>);
+
   @override
   _i5.Future<_i3.SubscriptionInfo> notifyPurchase() => (super.noSuchMethod(
         Invocation.method(

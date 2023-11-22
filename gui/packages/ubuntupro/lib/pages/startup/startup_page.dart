@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:wizard_router/wizard_router.dart';
 
 import '../../core/agent_api_client.dart';
 import 'agent_monitor.dart';
@@ -13,10 +14,7 @@ import 'startup_widgets.dart';
 class StartupPage extends StatelessWidget {
   const StartupPage({
     super.key,
-    required this.nextRoute,
   });
-
-  final String nextRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +24,16 @@ class StartupPage extends StatelessWidget {
         final model = StartupModel(monitor);
         return model;
       },
-      child: StartupAnimatedChild(nextRoute: nextRoute),
+      child: const StartupAnimatedChild(),
     );
   }
 }
 
 /// A page that reports the background agent startup statuses by listening to a
 /// [StartupModel] provided by the parent widget tree and transitions smoothly
-/// to the predefined [nextRoute] once the agent is found responsive.
+/// to the Wizard's next route once the agent is found responsive.
 class StartupAnimatedChild extends StatefulWidget {
-  /// The route where to transition to on success.
-  final String nextRoute;
-
-  const StartupAnimatedChild({super.key, required this.nextRoute});
+  const StartupAnimatedChild({super.key});
 
   @override
   State<StartupAnimatedChild> createState() => _StartupAnimatedChildState();
@@ -52,7 +47,7 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
     model.init();
     model.addListener(() async {
       if (model.view == ViewState.ok) {
-        await Navigator.of(context).pushReplacementNamed(widget.nextRoute);
+        await Wizard.of(context).next();
       }
       if (model.view == ViewState.retry) {
         await model.resetAgent();
