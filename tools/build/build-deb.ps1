@@ -66,16 +66,11 @@ cd -
 # Set up directory
 build_dir="${HOME}/wsl-pro-service-build"
 
-rsync                                       \
-    --recursive                             \
-    --quiet                                 \
-    --exclude=".git"                        \
-    --exclude="msix/UbuntuProForWindows"    \
-    --exclude="gui"                         \
-    --exclude="*vcxproj*"                   \
-    --exclude="*/x64/*"                     \
-    .                                       \
-    "${build_dir}"
+modules=("agentapi" "common" "contractsapi" "storeapi" "tools" "wsl-pro-service" "wslserviceapi")
+
+for mod in ${modules[@]}; do
+    rsync --recursive --quiet "${mod}" "${build_dir}"
+done
 
 # Build
 bash -e "${build_dir}/tools/build/build-deb.sh"
