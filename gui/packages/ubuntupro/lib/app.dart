@@ -30,28 +30,26 @@ class Pro4WindowsApp extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-          home: Builder(
-            builder: (context) {
-              return Wizard(
-                routes: {
-                  Routes.startup: const WizardRoute(builder: buildStartup),
-                  Routes.subscriptionStatus: WizardRoute(
-                    builder: SubscriptionStatusPage.create,
-                    onLoad: (_) async {
-                      final client = getService<AgentApiClient>();
-                      final subscriptionInfo =
-                          context.read<ValueNotifier<SubscriptionInfo>>();
+          builder: (context, child) {
+            return Wizard(
+              routes: {
+                Routes.startup: const WizardRoute(builder: buildStartup),
+                Routes.subscriptionStatus: WizardRoute(
+                  builder: SubscriptionStatusPage.create,
+                  onLoad: (_) async {
+                    final client = getService<AgentApiClient>();
+                    final subscriptionInfo =
+                        context.read<ValueNotifier<SubscriptionInfo>>();
 
-                      subscriptionInfo.value = await client.subscriptionInfo();
+                    subscriptionInfo.value = await client.subscriptionInfo();
 
-                      // never skip this page.
-                      return true;
-                    },
-                  ),
-                },
-              );
-            },
-          ),
+                    // never skip this page.
+                    return true;
+                  },
+                ),
+              },
+            );
+          },
         ),
       ),
     );
