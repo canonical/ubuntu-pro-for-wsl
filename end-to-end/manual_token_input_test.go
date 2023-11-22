@@ -39,7 +39,7 @@ func TestManualTokenInput(t *testing.T) {
 			ctx := context.Background()
 
 			testSetup(t)
-			defer logWindowsAgentJournal(t, true)
+			defer logWindowsAgentOnError(t)
 
 			// Either runs the ubuntupro app before...
 			if tc.whenToken == beforeDistroRegistration {

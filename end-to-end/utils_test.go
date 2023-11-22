@@ -198,10 +198,10 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 	t.Logf("WSL Pro Service logs:\n%s\n", out)
 }
 
-func logWindowsAgentJournal(t *testing.T, skipOnSuccess bool) {
+func logWindowsAgentOnError(t *testing.T) {
 	t.Helper()
 
-	if skipOnSuccess && !t.Failed() {
+	if !t.Failed() {
 		return
 	}
 
