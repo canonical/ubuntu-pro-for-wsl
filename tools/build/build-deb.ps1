@@ -70,7 +70,6 @@ modules=("agentapi" "common" "contractsapi" "storeapi" "tools" "wsl-pro-service"
 
 for mod in ${modules[@]}; do
     rsync --recursive --quiet "${mod}" "${build_dir}"
-    echo "Synced $mod"
 done
 
 # Build
