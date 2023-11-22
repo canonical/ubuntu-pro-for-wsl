@@ -46,6 +46,7 @@ func TestManualTokenInput(t *testing.T) {
 			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
 
 			go landscape.Serve()
+			defer landscape.LogOnError(t)
 			defer landscape.Stop()
 
 			// Either runs the ubuntupro app before...

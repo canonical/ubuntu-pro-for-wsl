@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
@@ -31,6 +32,7 @@ type landscape struct {
 	// ClientConfig is the configuration file needed to connect to this mock Landscape server.
 	ClientConfig string
 
+	logs bytes.Buffer
 	stop func()
 }
 
@@ -64,7 +66,9 @@ func NewLandscape(t *testing.T, ctx context.Context) (l landscape) {
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	l.service = landscapemockservice.New()
+	h := slog.NewTextHandler(&l.logs, &slog.HandlerOptions{Level: slog.LevelDebug})
+	l.service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)))
+
 	l.server = grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))
 	landscapeapi.RegisterLandscapeHostAgentServer(l.server, l.service)
 
@@ -84,6 +88,17 @@ func (l *landscape) Serve() {
 	if err := l.server.Serve(l.lis); err != nil {
 		log.Printf("Landscape server exited with an error: %v", err)
 	}
+}
+
+// LogOnError prints the Landscape mock server's logs if the test has failed.
+func (l landscape) LogOnError(t *testing.T) {
+	t.Helper()
+
+	if !t.Failed() {
+		return
+	}
+
+	t.Logf("Landscape logs:\n%s", l.logs.String())
 }
 
 // Stop the Landscape server.

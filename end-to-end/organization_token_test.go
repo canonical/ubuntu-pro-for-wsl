@@ -45,6 +45,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
 
 			go landscape.Serve()
+			defer landscape.LogOnError(t)
 			defer landscape.Stop()
 
 			proToken := os.Getenv(proTokenEnv)

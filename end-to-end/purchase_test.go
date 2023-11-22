@@ -60,6 +60,7 @@ func TestPurchase(t *testing.T) {
 			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
 
 			go landscape.Serve()
+			defer landscape.LogOnError(t)
 			defer landscape.Stop()
 
 			settings := contractsmockserver.DefaultSettings()
