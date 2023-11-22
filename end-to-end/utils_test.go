@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
@@ -182,12 +183,39 @@ func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (boo
 }
 
 //nolint:revive // testing.T must precede the context
-func logWslProServiceJournal(t *testing.T, ctx context.Context, d gowsl.Distro) {
+func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) {
 	t.Helper()
+
+	if !t.Failed() {
+		return
+	}
 
 	out, err := d.Command(ctx, "journalctl -b --no-pager -u wsl-pro.service").CombinedOutput()
 	if err != nil {
-		t.Logf("could not access logs: %v\n%s\n", err, out)
+		t.Logf("could not access WSL Pro Service logs: %v\n%s\n", err, out)
+		return
 	}
-	t.Logf("wsl-pro-service logs:\n%s\n", out)
+	t.Logf("WSL Pro Service logs:\n%s\n", out)
+}
+
+func logWindowsAgentOnError(t *testing.T) {
+	t.Helper()
+
+	if !t.Failed() {
+		return
+	}
+
+	localAppData := os.Getenv("LocalAppData")
+	if localAppData == "" {
+		t.Log("could not access Windows Agent's logs: $env:LocalAppData is not assigned")
+		return
+	}
+
+	out, err := os.ReadFile(filepath.Join(localAppData, common.LocalAppDataDir, "log"))
+	if err != nil {
+		t.Logf("could not read Windows Agent's logs: %v", err)
+		return
+	}
+
+	t.Logf("Windows Agent's logs:\n%s\n", out)
 }
