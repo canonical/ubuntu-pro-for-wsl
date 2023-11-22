@@ -183,10 +183,10 @@ func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (boo
 }
 
 //nolint:revive // testing.T must precede the context
-func logWslProServiceJournal(t *testing.T, ctx context.Context, skipOnSuccess bool, d gowsl.Distro) {
+func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) {
 	t.Helper()
 
-	if skipOnSuccess && !t.Failed() {
+	if !t.Failed() {
 		return
 	}
 
