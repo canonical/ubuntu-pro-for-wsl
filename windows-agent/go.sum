@@ -40,8 +40,8 @@ github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 h1:YfGTcFs5YaJlpR0lxVAPD3oFYcez9Pg1w0MUEbG2zB0=
-github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d h1:PTSPzsRV4/nnpZv4PhqxBHUezvSm49IHNM0qkWQGn/s=
+github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230906090052-60fb5d60ada4 h1:4OTCHKf99VSKfrTf6IPyEDZhUiNygLNhZJoEn42lh2g=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230906090052-60fb5d60ada4/go.mod h1:NtQF6rRjaPTVi2TDspYsq6z4+HQXEpL878oSsN+7iEQ=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231123134240-fb722497277a h1:M+Y+2guVEvikJ2qzv31Bj3t+INzD7MuCAqHoUb8hD9c=
