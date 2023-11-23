@@ -15,6 +15,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
+	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractclient"
 	"github.com/stretchr/testify/require"
 )
@@ -95,6 +96,20 @@ func TestGetProToken(t *testing.T) {
 
 	goodToken := strings.Repeat("Token", 256)
 
+	responseWithToken := func(t *testing.T, token string) []byte {
+		t.Helper()
+
+		r, err := json.Marshal(contractsapi.SyncUserSubscriptionsResponse{
+			SubscriptionEntitlements: map[string]contractsapi.SyncUserSubscriptionsResponseItem{
+				microsoftstore.ProductID + ":0001": {Token: token},
+				"SOME_OTHER_PRODUCT:0002":          {Token: "token-to-ignore"},
+			},
+		})
+
+		require.NoError(t, err, "Setup: unexpected error when marshalling the good token")
+		return r
+	}
+
 	testCases := map[string]struct {
 		jwt string
 
@@ -116,6 +131,7 @@ func TestGetProToken(t *testing.T) {
 		"Error with expected key not in response": {responseContent: []byte(`{"unexpected_key": "unexpected_value"}`), wantErr: true},
 		"Error on http.Do":                        {errorOnDo: true, wantErr: true},
 		"Error with invalid JSON":                 {responseContent: []byte("invalid JSON"), wantErr: true},
+		"Error with empty token":                  {responseContent: responseWithToken(t, ""), wantErr: true},
 		"Error with unexpected status code":       {statusCode: 422, wantErr: true},
 		"Error with empty response body":          {responseContent: []byte(""), wantErr: true},
 		"Error with unknown response length":      {unknownContentLength: true, wantErr: true},
@@ -139,9 +155,7 @@ func TestGetProToken(t *testing.T) {
 			}
 
 			if tc.responseContent == nil {
-				var err error
-				tc.responseContent, err = json.Marshal(map[string]string{contractsapi.ProTokenKey: goodToken})
-				require.NoError(t, err, "Setup: unexpected error when marshalling the good token")
+				tc.responseContent = responseWithToken(t, goodToken)
 			}
 
 			l := int64(len(tc.responseContent))

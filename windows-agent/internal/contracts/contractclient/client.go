@@ -10,8 +10,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
+	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/ubuntu/decorate"
 )
 
@@ -88,9 +90,12 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 
 	// baseurl/v1/subscription.
 	u := c.baseURL.JoinPath(contractsapi.Version, contractsapi.SubscriptionPath)
-	jsonData, err := json.Marshal(map[string]string{contractsapi.JWTKey: userJWT})
+
+	jsonData, err := json.Marshal(contractsapi.SubscriptionRequest{
+		MSStoreIDKey: userJWT,
+	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not encode the request: %v", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(jsonData))
@@ -122,17 +127,25 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	case http.StatusOK:
 	}
 
-	var data map[string]string
-	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return "", err
+	var resp contractsapi.SyncUserSubscriptionsResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return "", fmt.Errorf("could not decode the response: %v", err)
 	}
 
-	val, ok := data[contractsapi.ProTokenKey]
-	if !ok {
-		return "", fmt.Errorf("expected key %q not found in the response", contractsapi.ProTokenKey)
+	for product, subscription := range resp.SubscriptionEntitlements {
+		if !strings.HasPrefix(product, microsoftstore.ProductID) {
+			continue
+		}
+
+		if subscription.Token == "" {
+			// Some other entry may contain the token?
+			continue
+		}
+
+		return subscription.Token, nil
 	}
 
-	return val, nil
+	return "", fmt.Errorf("response did not contain any valid subscriptions: %s", res.Body)
 }
 
 // checkLength sanity checks that 0 < length < apiTokenMaxSize.
