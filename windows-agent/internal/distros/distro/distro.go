@@ -4,6 +4,7 @@ package distro
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -91,7 +92,7 @@ func WithProvisioning(c worker.Provisioning) Option {
 //
 //   - To avoid the latter check, you can pass a default-constructed identity.GUID. In that
 //     case, the distro will be created with its currently registered GUID.
-func New(ctx context.Context, name string, props Properties, storageDir string, args ...Option) (distro *Distro, err error) {
+func New(ctx context.Context, name string, props Properties, storageDir string, startupMu *sync.Mutex, args ...Option) (distro *Distro, err error) {
 	decorate.OnError(&err, "could not initialize distro %q", name)
 
 	var nilGUID uuid.UUID
@@ -129,11 +130,16 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 		}
 	}
 
+	if startupMu == nil {
+		return nil, errors.New("startup mutex must not be nil")
+	}
+
 	distro = &Distro{
 		identity:   id,
 		properties: props,
 		stateManager: &stateManager{
 			distroIdentity: id,
+			startupMu:      startupMu,
 		},
 	}
 
