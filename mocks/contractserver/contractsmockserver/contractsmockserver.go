@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
-	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 )
 
 const (
@@ -102,7 +102,7 @@ func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 
 	// In the server, the ID for the product is "ProductID:SKU".
 	// Here we choose some arbitrary number for the SKU.
-	id := microsoftstore.ProductID + ":0001"
+	id := common.MsStoreProductID + ":0001"
 
 	resp := contractsapi.SyncUserSubscriptionsResponse{
 		SubscriptionEntitlements: map[string]contractsapi.SyncUserSubscriptionsResponseItem{

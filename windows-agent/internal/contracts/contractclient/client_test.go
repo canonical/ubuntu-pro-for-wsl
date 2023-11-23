@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
-	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts/contractclient"
 	"github.com/stretchr/testify/require"
 )
@@ -101,8 +101,8 @@ func TestGetProToken(t *testing.T) {
 
 		r, err := json.Marshal(contractsapi.SyncUserSubscriptionsResponse{
 			SubscriptionEntitlements: map[string]contractsapi.SyncUserSubscriptionsResponseItem{
-				microsoftstore.ProductID + ":0001": {Token: token},
-				"SOME_OTHER_PRODUCT:0002":          {Token: "token-to-ignore"},
+				common.MsStoreProductID + ":0001": {Token: token},
+				"SOME_OTHER_PRODUCT:0002":         {Token: "token-to-ignore"},
 			},
 		})
 

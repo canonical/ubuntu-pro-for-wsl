@@ -12,8 +12,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
-	"github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore"
 	"github.com/ubuntu/decorate"
 )
 
@@ -133,7 +133,7 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 	}
 
 	for product, subscription := range resp.SubscriptionEntitlements {
-		if !strings.HasPrefix(product, microsoftstore.ProductID) {
+		if !strings.HasPrefix(product, common.MsStoreProductID) {
 			continue
 		}
 

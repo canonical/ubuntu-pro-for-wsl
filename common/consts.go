@@ -11,4 +11,9 @@ const (
 
 	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
 	ListeningPortFileName = "addr"
+
+	// MsStoreProductID is the ID of the product in the Microsoft Store
+	//
+	// TODO: Replace with real product ID.
+	MsStoreProductID = "9P25B50XMKXT"
 )
