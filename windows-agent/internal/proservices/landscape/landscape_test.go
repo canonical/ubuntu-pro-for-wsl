@@ -88,9 +88,8 @@ func TestConnect(t *testing.T) {
 		wantErr           bool
 		wantDistroSkipped bool
 	}{
-		"Success in first contact":        {},
+		"Success":                         {},
 		"Success in non-first contact":    {uid: "123"},
-		"Success with non-empty config":   {},
 		"Success with an SSL certificate": {requireCertificate: true},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
