@@ -51,6 +51,10 @@ func TestMain(m *testing.M) {
 const defaultLandscapeConfig = `
 [host]
 url = "{{ .HostURL }}"
+
+[client]
+account_name = testuser
+registration_key = password1
 `
 
 func TestConnect(t *testing.T) {
@@ -344,6 +348,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			wantUIDprefix := "ServerAssignedUID"
 			wantHostname := hostname
 			wantHostToken := conf.proToken
+			wantAccountName := "testuser"
+			wantRegistrationKey := "password1"
 			wantDistroID := distroName
 			wantDistroName := props.Hostname
 			wantDistroVersionID := props.VersionID
@@ -362,6 +368,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			msg := &messages[0] // Pointer to avoid copying mutex
 
 			assert.Empty(t, msg.UID, "First UID received by the server should be empty")
+			assert.Equal(t, wantAccountName, msg.AccountName, "Mismatch between local account name and that received by the server")
+			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
 
@@ -414,6 +422,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			msg = &messages[1] // Pointer to avoid copying mutex
 
 			assertHasPrefix(t, wantUIDprefix, msg.UID, "Mismatch between local host ID and that received by the server")
+			assert.Equal(t, wantAccountName, msg.AccountName, "Mismatch between local account name and that received by the server")
+			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host hostname and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
 			if tc.wantDistroSkipped {
