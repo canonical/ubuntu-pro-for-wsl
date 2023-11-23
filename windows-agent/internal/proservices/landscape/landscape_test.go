@@ -93,6 +93,7 @@ func TestConnect(t *testing.T) {
 		"Success with an SSL certificate": {requireCertificate: true},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
+		"Error when the config is empty":                       {wantErr: true},
 		"Error when the landscape URL cannot be retrieved":     {wantErr: true},
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
