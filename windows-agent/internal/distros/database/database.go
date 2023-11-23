@@ -40,6 +40,10 @@ type DistroDB struct {
 	ctx       context.Context
 	cancelCtx func()
 	once      sync.Once
+
+	// Multiple distros starting at the same time can cause WSL (and the whole machine) to freeze up.
+	// This mutex is used to block multiple distros from starting at the same time.
+	distroStartMu sync.Mutex
 }
 
 // New creates a database and populates it with data in the file located
@@ -147,7 +151,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 	if !found {
 		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
 
-		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithProvisioning(db.provisioning))
+		d, err := distro.New(db.ctx, name, props, db.storageDir, &db.distroStartMu, distro.WithProvisioning(db.provisioning))
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +169,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		go d.Cleanup(ctx)
 		delete(db.distros, normalizedName)
 
-		d, err := distro.New(db.ctx, name, props, db.storageDir, distro.WithProvisioning(db.provisioning))
+		d, err := distro.New(db.ctx, name, props, db.storageDir, &db.distroStartMu, distro.WithProvisioning(db.provisioning))
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +256,7 @@ func (db *DistroDB) load(ctx context.Context) error {
 	// Initializing distros into database
 	db.distros = make(map[string]*distro.Distro, len(distros))
 	for _, inert := range distros {
-		d, err := inert.newDistro(ctx, db.storageDir)
+		d, err := inert.newDistro(ctx, db.storageDir, &db.distroStartMu)
 		if err != nil {
 			log.Warningf(ctx, "Read invalid distro from database: %#+v", inert)
 			continue

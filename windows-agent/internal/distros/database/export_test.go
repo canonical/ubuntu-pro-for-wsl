@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 )
@@ -9,8 +10,8 @@ import (
 type SerializableDistro = serializableDistro
 
 // NewDistro is a wrapper around newDistro so as to make it accessible to tests.
-func (in SerializableDistro) NewDistro(ctx context.Context, storageDir string) (*distro.Distro, error) {
-	return in.newDistro(ctx, storageDir)
+func (in SerializableDistro) NewDistro(ctx context.Context, storageDir string, startupMu *sync.Mutex) (*distro.Distro, error) {
+	return in.newDistro(ctx, storageDir, startupMu)
 }
 
 // NewSerializableDistro is a wrapper around newSerializableDistro so as to make it accessible to tests.
