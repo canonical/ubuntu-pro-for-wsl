@@ -1,5 +1,5 @@
-github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 h1:YfGTcFs5YaJlpR0lxVAPD3oFYcez9Pg1w0MUEbG2zB0=
-github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d h1:PTSPzsRV4/nnpZv4PhqxBHUezvSm49IHNM0qkWQGn/s=
+github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231123134240-fb722497277a h1:M+Y+2guVEvikJ2qzv31Bj3t+INzD7MuCAqHoUb8hD9c=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231123134240-fb722497277a/go.mod h1:HWMzmvIFQ3dWWPE4paEDWOMpOkcjFb2akrccYrck+eM=
 github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-60fb5d60ada4 h1:0jVDQ6uSC6scEXX6e83sD6Rw6KhD8/7Vr4Ha1ob2CHw=

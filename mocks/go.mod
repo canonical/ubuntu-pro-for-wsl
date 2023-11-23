@@ -3,7 +3,7 @@ module github.com/canonical/ubuntu-pro-for-windows/mocks
 go 1.21.4
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303
+	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231123134240-fb722497277a
 	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-60fb5d60ada4
 	github.com/spf13/cobra v1.7.0
