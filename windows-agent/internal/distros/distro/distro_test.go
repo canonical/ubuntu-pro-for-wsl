@@ -419,6 +419,55 @@ func TestLockReleaseAwake(t *testing.T) {
 	}
 }
 
+func TestNoSimultaneousStartups(t *testing.T) {
+	t.Parallel()
+
+	if !wsl.MockAvailable() {
+		t.Skip("Skipped without mocks to avoid messing with the global mutex")
+	}
+
+	ctx := wsl.WithMock(context.Background(), wslmock.New())
+	var startupMu sync.Mutex
+
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
+	d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), &startupMu)
+	defer d.Cleanup(context.Background())
+	require.NoError(t, err, "Setup: distro New should return no error")
+
+	wsltestutils.TerminateDistro(t, ctx, distroName)
+
+	// Lock the startup mutex to pretend some other distro is starting up
+	startupMu.Lock()
+
+	ch := make(chan error)
+	go func() {
+		// We send the error to be asserted in the main goroutine because
+		// failed assertions outside the test goroutine cause panics.
+		ch <- d.LockAwake()
+		close(ch)
+	}()
+
+	const lockAwakeMaxTime = 20 * time.Second
+
+	time.Sleep(lockAwakeMaxTime)
+	state := wsltestutils.DistroState(t, ctx, distroName)
+	require.Equal(t, "Stopped", state, "Distro should not start while the mutex is locked")
+
+	// Release the startup mutex to pretend some other distro finished starting up
+	startupMu.Unlock()
+
+	select {
+	case <-time.After(lockAwakeMaxTime):
+		require.Fail(t, "LockAwake should have returned after releasing the startup mutex")
+	case err := <-ch:
+		require.NoError(t, err, "LockAwake should return no error")
+		break
+	}
+
+	state = wsltestutils.DistroState(t, ctx, distroName)
+	require.Equal(t, "Running", state, "Distro should start after the mutex is released")
+}
+
 func TestState(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
