@@ -14,8 +14,10 @@ import (
 )
 
 const (
+	// ProductID is the ID of the product in the Microsoft Store
+	//
 	// TODO: Replace with real product ID.
-	productID = "9P25B50XMKXT"
+	ProductID = "9P25B50XMKXT"
 )
 
 var (
@@ -62,7 +64,7 @@ func GenerateUserJWT(azureADToken string) (jwt string, err error) {
 func GetSubscriptionExpirationDate() (tm time.Time, err error) {
 	defer decorate.OnError(&err, "GetSubscriptionExpirationDate")
 
-	prodID, err := syscall.BytePtrFromString(productID)
+	prodID, err := syscall.BytePtrFromString(ProductID)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not convert the productID to a byte array: %v", err)
 	}
