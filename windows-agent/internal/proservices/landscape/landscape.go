@@ -95,32 +95,6 @@ func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, err
 	return c, nil
 }
 
-// hostagentURL parses the landscape config file to find the hostagent URL.
-func (c *Client) hostagentURL(ctx context.Context) (string, error) {
-	config, _, err := c.conf.LandscapeClientConfig(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	r := strings.NewReader(config)
-	data, err := ini.Load(r)
-	if err != nil {
-		return "", fmt.Errorf("could not parse config: %v", err)
-	}
-
-	s, err := data.GetSection("host")
-	if err != nil { // Section does not exist
-		return "", nil
-	}
-
-	k, err := s.GetKey("url")
-	if err != nil { // Key does not exist
-		return "", nil
-	}
-
-	return k.String(), nil
-}
-
 // Connect starts the connection and starts talking to the server.
 // Call disconnect to deallocate resources.
 func (c *Client) Connect(ctx context.Context) (err error) {
@@ -133,20 +107,12 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 	// Dummy connection to indicate that a first attempt was attempted
 	c.conn = &connection{}
 
-	address, err := c.hostagentURL(ctx)
-	if err != nil {
-		return err
-	}
-	if address == "" {
-		return errors.New("no hostagent URL provided in the Landscape configuration")
-	}
-
 	defer func() {
-		go c.keepConnected(ctx, address)
+		go c.keepConnected(ctx)
 	}()
 
 	// First connection
-	conn, err := c.connect(ctx, address)
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return err
 	}
@@ -159,7 +125,7 @@ func (c *Client) Connect(ctx context.Context) (err error) {
 }
 
 // keepConnected supervises the connection. If it drops, reconnection is attempted.
-func (c *Client) keepConnected(ctx context.Context, address string) {
+func (c *Client) keepConnected(ctx context.Context) {
 	const growthFactor = 2
 	const minWait = time.Second
 	const maxWait = 10 * time.Minute
@@ -196,7 +162,7 @@ func (c *Client) keepConnected(ctx context.Context, address string) {
 
 			c.conn.disconnect()
 
-			conn, err := c.connect(ctx, address)
+			conn, err := c.connect(ctx)
 			if err != nil {
 				log.Warningf(ctx, "Landscape reconnect: %v", err)
 				wait = min(growthFactor*wait, maxWait)
@@ -210,8 +176,16 @@ func (c *Client) keepConnected(ctx context.Context, address string) {
 	}
 }
 
-func (c *Client) connect(ctx context.Context, address string) (conn *connection, err error) {
-	defer decorate.OnError(&err, "could not connect to address %q", address)
+func (c *Client) connect(ctx context.Context) (conn *connection, err error) {
+	defer decorate.OnError(&err, "could not connect to Landscape")
+
+	conf, err := c.readLandscapeHostConf(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not read config: %v", err)
+	}
+	if conf.hostagentURL == "" {
+		return nil, errors.New("no hostagent URL provided in the Landscape configuration")
+	}
 
 	conn = &connection{}
 
@@ -222,12 +196,12 @@ func (c *Client) connect(ctx context.Context, address string) (conn *connection,
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	creds, err := c.transportCredentials(ctx)
+	creds, err := transportCredentials(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	grpcConn, err := grpc.DialContext(dialCtx, address, grpc.WithTransportCredentials(creds))
+	grpcConn, err := grpc.DialContext(dialCtx, conf.hostagentURL, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -365,44 +339,78 @@ func (conn *connection) connected() bool {
 	return true
 }
 
+// landscapeHostConf is a bag of data containing all the data from the landscape
+// configuration that is relevant to the agent.
+type landscapeHostConf struct {
+	sslPublicKey    string
+	accountName     string
+	registrationKey string
+	hostagentURL    string
+}
+
+func (c *Client) readLandscapeHostConf(ctx context.Context) (landscapeHostConf, error) {
+	conf := landscapeHostConf{
+		// TODO: default-initialize the hostagentURL to Canonical's SaaS.
+	}
+
+	out, _, err := c.conf.LandscapeClientConfig(ctx)
+	if err != nil {
+		return conf, fmt.Errorf("could not obtain Landscape config: %v", err)
+	}
+
+	if out == "" {
+		// No Landscape config: return defaults
+		return conf, nil
+	}
+
+	ini, err := ini.Load(strings.NewReader(out))
+	if err != nil {
+		return conf, fmt.Errorf("could not parse Landscape config file: %v", err)
+	}
+
+	// Note: all these functions only return errors when the section/key does not exist.
+
+	sec, err := ini.GetSection("client")
+	if err == nil {
+		k, err := sec.GetKey("ssl_public_key")
+		if err == nil {
+			conf.sslPublicKey = k.String()
+		}
+
+		k, err = sec.GetKey("account_name")
+		if err == nil {
+			conf.accountName = k.String()
+		}
+
+		k, err = sec.GetKey("registration_key")
+		if err == nil {
+			conf.registrationKey = k.String()
+		}
+	}
+
+	sec, err = ini.GetSection("host")
+	if err == nil {
+		k, err := sec.GetKey("url")
+		if err == nil {
+			conf.hostagentURL = k.String()
+		}
+	}
+
+	return conf, nil
+}
+
 // transportCredentials reads the Landscape client config to check if a SSL public key is specified.
 //
 // If this credential is not specified, an insecure credential is returned.
 // If the credential is specified but erroneous, an error is returned.
-func (c *Client) transportCredentials(ctx context.Context) (cred credentials.TransportCredentials, err error) {
+func transportCredentials(conf landscapeHostConf) (cred credentials.TransportCredentials, err error) {
 	defer decorate.OnError(&err, "Landscape credentials")
 
-	conf, _, err := c.conf.LandscapeClientConfig(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not obtain Landscape config: %v", err)
-	}
-
-	if conf == "" {
-		// No Landscape config: default to insecure
+	if conf.sslPublicKey == "" {
 		return insecure.NewCredentials(), nil
 	}
 
-	ini, err := ini.Load(strings.NewReader(conf))
-	if err != nil {
-		return insecure.NewCredentials(), fmt.Errorf("could not parse Landscape config file: %v", err)
-	}
-
-	const section = "client"
-	const key = "ssl_public_key"
-
-	sec, err := ini.GetSection(section)
-	if err != nil {
-		// No SSL public key provided: default to insecure
-		return insecure.NewCredentials(), nil
-	}
-
-	k, err := sec.GetKey(key)
-	if err != nil {
-		// No SSL public key provided: default to insecure
-		return insecure.NewCredentials(), nil
-	}
-
-	cert, err := os.ReadFile(k.String())
+	cert, err := os.ReadFile(conf.sslPublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
 	}
