@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
@@ -109,7 +110,10 @@ func TestSerializableDistroNewDistro(t *testing.T) {
 				GUID: tc.guid,
 			}
 
-			d, err := s.NewDistro(ctx, t.TempDir())
+			// This distro is never started, so no need for any global mutex
+			var mu sync.Mutex
+
+			d, err := s.NewDistro(ctx, t.TempDir(), &mu)
 			if err == nil {
 				defer d.Cleanup(context.Background())
 			}
@@ -140,7 +144,10 @@ func TestNewSerializableDistro(t *testing.T) {
 		Hostname:    "NegativeMachine",
 	}
 
-	d, err := distro.New(ctx, registeredDistro, props, t.TempDir())
+	// This distro is never started, so no need for any global mutex
+	var mu sync.Mutex
+
+	d, err := distro.New(ctx, registeredDistro, props, t.TempDir(), &mu)
 	require.NoError(t, err, "Setup: distro New() should return no error")
 
 	s := database.NewSerializableDistro(d)
