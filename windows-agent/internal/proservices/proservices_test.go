@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher/registry"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )

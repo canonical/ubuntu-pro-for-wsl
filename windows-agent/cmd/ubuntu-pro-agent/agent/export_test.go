@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher/registry"
 )
 
 func withDaemonAddrDir(dir string) func(*options) {
