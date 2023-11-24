@@ -62,6 +62,13 @@ func WithRegistry(registry registrywatcher.Registry) func(o *options) {
 func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
+	defer func() {
+		if err != nil {
+			// Clean up half-allocated services
+			s.Stop(ctx)
+		}
+	}()
+
 	// Apply given options.
 	var opts options
 	for _, f := range args {
@@ -96,13 +103,6 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	if err != nil {
 		return s, err
 	}
-	defer func() {
-		// Close DB if we return error
-		// Otherwise, it'll be closed in the call to Manager.Stop
-		if err != nil {
-			db.Close(ctx)
-		}
-	}()
 
 	registryWatcher := registrywatcher.New(ctx, conf, db, registrywatcher.WithRegistry(opts.registry))
 	registryWatcher.Start()
@@ -138,9 +138,17 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 
 // Stop deallocates resources in the services.
 func (m Manager) Stop(ctx context.Context) {
-	m.landscapeService.Stop(ctx)
-	m.db.Close(ctx)
-	m.registryWatcher.Stop()
+	if m.landscapeService != nil {
+		m.landscapeService.Stop(ctx)
+	}
+
+	if m.registryWatcher != nil {
+		m.registryWatcher.Stop()
+	}
+
+	if m.db != nil {
+		m.db.Close(ctx)
+	}
 }
 
 // RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.
