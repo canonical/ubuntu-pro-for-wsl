@@ -31,6 +31,9 @@ func testSetup(t *testing.T) {
 	err = stopAgent(ctx)
 	require.NoError(t, err, "Setup: could not stop the agent")
 
+	err = reinstallMSIX(ctx, msixPath)
+	require.NoError(t, err, "Setup: could not reinstall the agent")
+
 	err = assertCleanRegistry()
 	require.NoError(t, err, "Setup: registry is polluted, potentially by a previous test")
 
@@ -234,4 +237,18 @@ func logWindowsAgentOnError(t *testing.T, ctx context.Context) {
 	}
 
 	t.Logf("Windows Agent's logs:\n%s\n", out)
+}
+
+func reinstallMSIX(ctx context.Context, path string) error {
+	cmd := powershellf(ctx, "Get-AppxPackage %q | Remove-AppxPackage", up4wAppxPackage)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		// (Probably because it was not installed)
+		log.Printf("Could not remove old AppxPackage: %v. %s", err, out)
+	}
+
+	if out, err := powershellf(ctx, "Add-AppxPackage %q", path).CombinedOutput(); err != nil {
+		return fmt.Errorf("could not install AppxPackage: %v. %s", err, out)
+	}
+
+	return nil
 }
