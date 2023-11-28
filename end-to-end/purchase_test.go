@@ -54,7 +54,7 @@ func TestPurchase(t *testing.T) {
 			ctx := context.Background()
 
 			testSetup(t)
-			defer logWindowsAgentOnError(t, ctx)
+			defer logWindowsAgentOnError(t)
 
 			settings := contractsmockserver.DefaultSettings()
 

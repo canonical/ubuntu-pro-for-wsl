@@ -198,8 +198,7 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 	t.Logf("WSL Pro Service logs:\n%s\n", out)
 }
 
-//nolint:revive // testing.T must precede the context
-func logWindowsAgentOnError(t *testing.T, ctx context.Context) {
+func logWindowsAgentOnError(t *testing.T) {
 	t.Helper()
 
 	if !t.Failed() {
@@ -218,19 +217,15 @@ func logWindowsAgentOnError(t *testing.T, ctx context.Context) {
 	//                                                                      ^~~~~~~~~~~~~
 	//                                                                      This part changes from version to version
 	//
-	packageDir := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuProForWindows_*")
-
-	out, err := powershellf(ctx, "(Get-Item %q).FullName", packageDir).CombinedOutput()
+	pattern := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuProForWindows_*")
+	packageDir, err := globSingleResult(pattern)
 	if err != nil {
-		t.Logf("could not find Windows Agent's logs: could not find virtualized LocalAppData: %v", err)
+		t.Logf("could not find Windows Agent's logs: could not locate MSIX virtualized directory: %v", err)
 		return
 	}
 
-	// Remove trailing endline
-	packageDir = strings.TrimSpace(string(out))
-
 	logsPath := filepath.Join(packageDir, "LocalCache", "Local", common.LocalAppDataDir, ".ubuntupro.log")
-	out, err = os.ReadFile(logsPath)
+	out, err := os.ReadFile(logsPath)
 	if err != nil {
 		t.Logf("could not read Windows Agent's logs at %q: %v", logsPath, err)
 		return
