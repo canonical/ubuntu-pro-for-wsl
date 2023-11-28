@@ -22,6 +22,7 @@ Install <02-install>
 Restart Ubuntu Pro For Windows <03-restart>
 Auto-enable Ubuntu Pro <04-enable-pro>
 Auto-attach distros to Landscape <05-attach-landscape>
-Windows Agent command line interface <06-windows-agent-command-line-reference>
-WSL Pro Service command line interface <07-wsl-pro-service-command-line-reference>
+How to access the logs <06-access-the-logs.md>
+Windows Agent command line interface <07-windows-agent-command-line-reference>
+WSL Pro Service command line interface <08-wsl-pro-service-command-line-reference>
 ```
