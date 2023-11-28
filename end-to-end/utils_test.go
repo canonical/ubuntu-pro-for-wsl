@@ -31,17 +31,20 @@ func testSetup(t *testing.T) {
 	err = stopAgent(ctx)
 	require.NoError(t, err, "Setup: could not stop the agent")
 
+	err = reinstallMSIX(ctx, msixPath)
+	require.NoError(t, err, "Setup: could not reinstall the agent")
+
 	err = assertCleanRegistry()
 	require.NoError(t, err, "Setup: registry is polluted, potentially by a previous test")
 
-	err = assertCleanLocalAppData()
+	err = assertCleanFilesystem()
 	require.NoError(t, err, "Setup: local app data is polluted, potentially by a previous test")
 
 	t.Cleanup(func() {
 		err := errors.Join(
 			stopAgent(ctx),
 			cleanupRegistry(),
-			cleanupLocalAppData(),
+			cleanupFilesystem(),
 		)
 		// Cannot assert: the test is finished already
 		if err != nil {
@@ -113,19 +116,16 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 		}
 	}()
 
-	require.Eventually(t, func() bool {
-		localAppData := os.Getenv("LocalAppData")
-		if localAppData == "" {
-			t.Logf("Agent setup: $env:LocalAppData should not be empty")
-			return false
-		}
+	home := os.Getenv("UserProfile")
+	require.NotEmptyf(t, home, "Agent setup: $env:UserProfile should not be empty")
 
-		_, err := os.Stat(filepath.Join(localAppData, "Ubuntu Pro", "addr"))
+	require.Eventually(t, func() bool {
+		_, err := os.Stat(filepath.Join(home, ".ubuntupro"))
 		if errors.Is(err, fs.ErrNotExist) {
 			return false
 		}
 		if err != nil {
-			t.Logf("Agent setup: could not read addr file: %v", err)
+			t.Logf("Agent setup: could not read address file: %v", err)
 			return false
 		}
 		return true
@@ -207,15 +207,61 @@ func logWindowsAgentOnError(t *testing.T) {
 
 	localAppData := os.Getenv("LocalAppData")
 	if localAppData == "" {
-		t.Log("could not access Windows Agent's logs: $env:LocalAppData is not assigned")
+		t.Log("could not find Windows Agent's logs: $env:LocalAppData is not assigned")
 		return
 	}
 
-	out, err := os.ReadFile(filepath.Join(localAppData, common.LocalAppDataDir, "log"))
+	// The virtualized LocalAppData is located under a path similar to this one:
+	//
+	//    %LocalAppData%/Packages/CanonicalGroupLimited.UbuntuProForWindows_hhj52ngek5ykr/LocalCache/Local
+	//                                                                      ^~~~~~~~~~~~~
+	//                                                                      This part changes from version to version
+	//
+	pattern := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuProForWindows_*")
+	packageDir, err := globSingleResult(pattern)
 	if err != nil {
-		t.Logf("could not read Windows Agent's logs: %v", err)
+		t.Logf("could not find Windows Agent's logs: could not locate MSIX virtualized directory: %v", err)
+		return
+	}
+
+	logsPath := filepath.Join(packageDir, "LocalCache", "Local", common.LocalAppDataDir, ".ubuntupro.log")
+	out, err := os.ReadFile(logsPath)
+	if err != nil {
+		t.Logf("could not read Windows Agent's logs at %q: %v", logsPath, err)
 		return
 	}
 
 	t.Logf("Windows Agent's logs:\n%s\n", out)
+}
+
+func reinstallMSIX(ctx context.Context, path string) error {
+	cmd := powershellf(ctx, "Get-AppxPackage %q | Remove-AppxPackage", up4wAppxPackage)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		// (Probably because it was not installed)
+		log.Printf("Could not remove old AppxPackage: %v. %s", err, out)
+	}
+
+	if out, err := powershellf(ctx, "Add-AppxPackage %q", path).CombinedOutput(); err != nil {
+		return fmt.Errorf("could not install AppxPackage: %v. %s", err, out)
+	}
+
+	return nil
+}
+
+// globSingleResult searches for the specified glob pattern and returns success
+// if, and only if, there is only one file matching it.
+func globSingleResult(pattern string) (string, error) {
+	candidates, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("could not search pattern %s: %v", pattern, err)
+	}
+
+	if len(candidates) == 0 {
+		return "", fmt.Errorf("no file matches pattern %s", pattern)
+	}
+	if len(candidates) > 1 {
+		return "", fmt.Errorf("multiple file match pattern %s:\n - %s", pattern, strings.Join(candidates, "\n - "))
+	}
+
+	return candidates[0], nil
 }

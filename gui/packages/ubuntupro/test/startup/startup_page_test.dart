@@ -98,7 +98,6 @@ void main() {
     final app = MaterialApp(
       home: Provider<AgentStartupMonitor>(
         create: (context) => AgentStartupMonitor(
-          appName: 'app name',
           addrFileName: 'anywhere',
           agentLauncher: () async => true,
           clientFactory: (port) =>

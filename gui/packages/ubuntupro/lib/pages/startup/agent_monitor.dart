@@ -49,12 +49,11 @@ typedef AgentApiCallback = FutureOr<void> Function(AgentApiClient);
 
 class AgentStartupMonitor {
   AgentStartupMonitor({
-    required String appName,
     required String addrFileName,
     required this.agentLauncher,
     required this.clientFactory,
     required this.onClient,
-  }) : _addrFilePath = agentAddrFilePath(appName, addrFileName);
+  }) : _addrFilePath = agentAddrFilePath(addrFileName);
 
   final String? _addrFilePath;
 
@@ -68,9 +67,9 @@ class AgentStartupMonitor {
   final AgentApiCallback onClient;
 
   /// Models the background agent as seen by the GUI as a state machine, i.e.:
-  /// 1. Agent running state is checked (by looking for the `addr` file).
+  /// 1. Agent running state is checked (by looking for the `.ubuntpro` file).
   /// 2. Agent start is requested by calling [agentLaucher] if not running.
-  /// 3. Contents of the `addr` file are scanned periodically (between [interval]).
+  /// 3. Contents of the `.ubuntpro` file are scanned periodically (between [interval]).
   /// 4. When a port is available, [clientFactory] is called to create a new
   ///    [AgentApiClient].
   /// 5. When a PING request succeeds, the [onClient] function is called with
@@ -156,9 +155,9 @@ class AgentStartupMonitor {
     return AgentState.pingNonResponsive;
   }
 
-  /// Assumes the agent crashed, i.e. the `addr` file exists but the agent
+  /// Assumes the agent crashed, i.e. the `.ubuntupro` file exists but the agent
   /// cannot respond to PING requets.
-  /// Thus, we delete the existing `addr` file and retry launching the agent.
+  /// Thus, we delete the existing `.ubuntupro` file and retry launching the agent.
   Future<void> reset() async {
     if (_addrFilePath != null) {
       try {

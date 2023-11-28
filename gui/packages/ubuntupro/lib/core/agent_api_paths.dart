@@ -5,21 +5,13 @@ import 'package:path/path.dart' as p;
 
 import 'environment.dart';
 
-/// Provides the full path of the "[appDir]/[filename]" file
+/// Provides the full path of the "[filename]" file
 /// under the well known directory where the Windows Agent stores its local data.
 /// Returns null if that directory location cannot be determined from the environment.
-String? agentAddrFilePath(String appDir, String filename) {
-  // The well-known package path_provider doesn't return the LOCALAPPDATA directory
-  // but the APPDATA, which is usually under %USERPROFILE%/AppData/Roaming instead of
-  // %USERPROFILE%/AppData/Local, which is where the agent is storing the support data.
-  final localAppDir = Environment.instance['LOCALAPPDATA'];
-  if (localAppDir != null) {
-    return p.join(localAppDir, appDir, filename);
-  }
-
-  final userProfile = Environment.instance['USERPROFILE'];
-  if (userProfile != null) {
-    return p.join(userProfile, 'AppData', 'Local', appDir, filename);
+String? agentAddrFilePath(String filename) {
+  final homeDir = Environment.instance['USERPROFILE'];
+  if (homeDir != null) {
+    return p.join(homeDir, filename);
   }
 
   return null;

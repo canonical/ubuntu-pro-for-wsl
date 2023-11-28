@@ -40,8 +40,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120144258-eaedf425f737 h1:ng27r1HEpGqGmoaemcMiaOm2LyKiG9FnANVBdfL3DwU=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120144258-eaedf425f737/go.mod h1:btQ/eVeGFXdXdifpHRo4V05VmmnhyhWWkecmVnvUbfQ=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075046-d228c858ed8a h1:YBlQocZaMCZ5HugvmmRkwedN+Qn79dryZ1DUmpq5SJM=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075046-d228c858ed8a/go.mod h1:HWMzmvIFQ3dWWPE4paEDWOMpOkcjFb2akrccYrck+eM=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075531-d5f73211926f h1:pKSzODrpJ9e2aQGqqWEwSUnBRQpKFPKefkl5MdK3gus=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075531-d5f73211926f/go.mod h1:HWMzmvIFQ3dWWPE4paEDWOMpOkcjFb2akrccYrck+eM=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231113084350-57c6acdb2d5b h1:hohD71N1nVvCQID1D+0ci6dZANSl9pDjnEV0Gpu8M+A=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231113084350-57c6acdb2d5b/go.mod h1:b0s/D9Q81b42hO9zjFXs7xpMs4jltc+7GwIUGEv2/5U=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

@@ -28,22 +28,28 @@ void main() {
     return stack;
   };
 
-  // A temporary directory mocking the $env:LocalAppData directory to sandbox our agent.
-  Directory? tmp;
+  // A temporary directory mocking the $env:UserProfile directory to sandbox our agent.
+  Directory? tmpHome;
+  Directory? tmpLocalAppData;
 
   setUpAll(() async {
     await YaruTestWindow.ensureInitialized();
-    // Use a random place inside the build tree as the `LOCALAPPDATA` env variable for all test cases below.
-    tmp = await msixRootDir().createTemp('test-');
+    // Use a random place inside the build tree as the `USERPROFILE` env variable for all test cases below.
+    tmpHome = await msixRootDir().createTemp('test-');
+
+    tmpLocalAppData = Directory(p.join(tmpHome!.path, 'AppData/Local'));
+    await tmpLocalAppData!.create(recursive: true);
+
     Environment(
       overrides: {
-        'LOCALAPPDATA': tmp!.path,
+        'USERPROFILE': tmpHome!.path,
+        'LOCALAPPDATA': tmpLocalAppData!.path,
         'UP4W_ALLOW_STORE_PURCHASE': '1',
       },
     );
   });
 
-  tearDownAll(() => tmp?.delete(recursive: true));
+  tearDownAll(() => tmpHome?.delete(recursive: true));
   group('no agent build', () {
     // Verifies that a proper message is displayed when the agent cannot be run.
     testWidgets(
@@ -83,7 +89,7 @@ void main() {
             [p.basenameWithoutExtension(agentImageName)],
           );
         }
-        File(p.join(tmp!.path, 'Ubuntu Pro', 'addr')).deleteSync();
+        File(p.join(tmpHome!.path, '.ubuntupro')).deleteSync();
       });
 
       tearDownAll(() async {

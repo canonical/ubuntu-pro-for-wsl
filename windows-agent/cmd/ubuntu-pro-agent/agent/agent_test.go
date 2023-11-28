@@ -124,10 +124,10 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 	testCases := map[string]struct {
 		invalidProServicesCache bool
-		invalidDaemonCache      bool
+		invalidDaemonAddr       bool
 	}{
-		"Invalid service cache": {invalidProServicesCache: true},
-		"Invalid daemon cache":  {invalidDaemonCache: true},
+		"Invalid service cache":            {invalidProServicesCache: true},
+		"Invalid daemon address directory": {invalidDaemonAddr: true},
 	}
 
 	for name, tc := range testCases {
@@ -137,18 +137,18 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			badCache := filepath.Join(t.TempDir(), "file")
 
-			daemonCache := ""
+			daemonAddr := ""
 			serviceCache := ""
 
 			if tc.invalidProServicesCache {
 				serviceCache = badCache
 			}
 
-			if tc.invalidDaemonCache {
-				daemonCache = badCache
+			if tc.invalidDaemonAddr {
+				daemonAddr = badCache
 			}
 
-			a := agent.NewForTesting(t, daemonCache, serviceCache)
+			a := agent.NewForTesting(t, daemonAddr, serviceCache)
 			a.SetArgs()
 
 			err := os.WriteFile(badCache, []byte("I'm here to break the service"), 0600)

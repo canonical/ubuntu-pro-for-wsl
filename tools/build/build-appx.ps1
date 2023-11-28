@@ -5,8 +5,10 @@
 
 param (
     [Parameter(Mandatory = $true, HelpMessage = "production, end_to_end_tests.")]
+    [string]$mode,
 
-    [string]$mode
+    [Parameter(Mandatory = $false, HelpMessage = "A directory were the MSIX and the certificate will be copied to")]
+    [string]$OutputDir
 )
 
 function Start-VsDevShell {
@@ -77,6 +79,11 @@ function Install-Appx {
         | Sort-Object LastWriteTime                                                     `
         | Select-Object -last 1                                                         `
     )
+
+    if ( "${OutputDir}" -ne "" ) {
+        Copy-Item -Path "${artifacts}/*.cer" -Destination "${OutputDir}"
+        Copy-Item -Path "${artifacts}/*.msixbundle" -Destination "${OutputDir}"
+    }
 
     If ($mode -ne 'production') {
         Add-AppxPackage "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\Appx\Debug\x64\Microsoft.VCLibs.x64.Debug.14.00.Desktop.appx"

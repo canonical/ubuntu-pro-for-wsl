@@ -5,16 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
 
 void main() {
-  tearDownAll(() => File('./addr').deleteSync());
-  test('dir should not contain "Roaming"', () {
-    const appName = 'AwesomeApp';
-
-    final dir = agentAddrFilePath(appName, 'addr')!;
-
-    expect(dir.contains('Roaming'), isFalse);
-    expect(dir.contains('Local'), isTrue);
-    expect(dir.contains(appName), isTrue);
-  });
+  tearDownAll(() => File('./.ubuntupro').deleteSync());
 
   test('read port from line', () {
     const port = 56768;
@@ -37,7 +28,7 @@ void main() {
   });
 
   test('read port from addr file', () async {
-    const filePath = './addr';
+    const filePath = './.ubuntupro';
     const port = 56768;
     const line = '[::]:$port';
     final addr = File(filePath);
@@ -59,7 +50,7 @@ void main() {
   });
 
   test('empty file', () async {
-    const filePath = './addr';
+    const filePath = './.ubuntupro';
     final addr = File(filePath);
     addr.writeAsStringSync('');
 
@@ -70,7 +61,7 @@ void main() {
   });
 
   test('access denied', () async {
-    const filePath = './addr';
+    const filePath = './.ubuntupro';
     final addr = File(filePath);
     addr.writeAsStringSync('');
 
@@ -86,7 +77,7 @@ void main() {
   });
 
   test('bad format', () async {
-    const filePath = './addr';
+    const filePath = './.ubuntupro';
     const port = 56768;
     const line = 'Hello World $port';
     final addr = File(filePath);

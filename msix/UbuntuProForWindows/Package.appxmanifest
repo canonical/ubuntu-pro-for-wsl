@@ -4,12 +4,10 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:desktop2="http://schemas.microsoft.com/appx/manifest/desktop/windows10/2"
-  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
-  xmlns:virtualization="http://schemas.microsoft.com/appx/manifest/virtualization/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="desktop desktop2 desktop6 virtualization uap uap5 rescap">
+  IgnorableNamespaces="desktop desktop2 uap uap5 rescap">
 
   <Identity
     Name="CanonicalGroupLimited.UbuntuProForWindows"
@@ -20,14 +18,6 @@
     <DisplayName>Ubuntu Pro For Windows</DisplayName>
     <PublisherDisplayName>Canonical Group Limited</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
-	<!-- Prior to Windows 10 21H1 Build 19043 -->
-  <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
-	<!-- Windows 10 21H1 Build 19043 or later -->
-  <virtualization:FileSystemWriteVirtualization>
-      <virtualization:ExcludedDirectories>
-        <virtualization:ExcludedDirectory>$(KnownFolder:LocalAppData)\Ubuntu Pro</virtualization:ExcludedDirectory>
-      </virtualization:ExcludedDirectories>
-    </virtualization:FileSystemWriteVirtualization>
   </Properties>
 
   <Dependencies>
@@ -84,6 +74,5 @@
   <Capabilities>
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
-	<rescap:Capability Name="unvirtualizedResources"/>
   </Capabilities>
 </Package>

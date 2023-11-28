@@ -99,12 +99,12 @@ func (a *App) serve(args ...option) error {
 	}
 
 	if len(opt.agentPortFilePath) == 0 {
-		localAppData, err := opt.system.LocalAppData(ctx)
+		home, err := opt.system.UserProfileDir(ctx)
 		if err != nil {
 			close(a.ready)
-			return fmt.Errorf("Could not find $env:LocalAppData: %v", err)
+			return fmt.Errorf("Could not find $env:UserProfile: %v", err)
 		}
-		opt.agentPortFilePath = filepath.Join(localAppData, common.LocalAppDataDir, common.ListeningPortFileName)
+		opt.agentPortFilePath = filepath.Join(home, common.ListeningPortFileName)
 	}
 
 	srv := wslinstanceservice.New(opt.system)

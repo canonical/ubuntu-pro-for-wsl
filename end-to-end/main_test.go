@@ -22,6 +22,9 @@ import (
 var (
 	// testImagePath is the path to the test image.
 	testImagePath string
+
+	// msixPath is the path to the Ubuntu Pro For Windows MSIX.
+	msixPath string
 )
 
 const (
@@ -49,6 +52,9 @@ const (
 
 	// referenceDistro is the WSL distro that will be used to generate the test image.
 	referenceDistroAppx = "CanonicalGroupLimited.Ubuntu"
+
+	// up4wAppxPackage is the Ubuntu Pro For Windows package.
+	up4wAppxPackage = "CanonicalGroupLimited.UbuntuProForWindows"
 )
 
 func TestMain(m *testing.M) {
@@ -66,7 +72,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertCleanLocalAppData(); err != nil {
+	if err := assertCleanFilesystem(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -80,9 +86,8 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	if err := assertAppxInstalled(ctx, "CanonicalGroupLimited.UbuntuProForWindows"); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
+	log.Printf("MSIX package located at %s", msixPath)
+	log.Printf("Deb package located at %s", wslProServiceDebPath)
 
 	path, cleanup, err := generateTestImage(ctx, referenceDistro, wslProServiceDebPath)
 	if err != nil {
@@ -97,7 +102,7 @@ func TestMain(m *testing.M) {
 		log.Printf("Cleanup: registry: %v\n", err)
 	}
 
-	cmd := powershellf(ctx, "Get-AppxPackage -Name CanonicalGroupLimited.UbuntuProForWindows | Remove-AppxPackage")
+	cmd := powershellf(ctx, "Get-AppxPackage -Name %q | Remove-AppxPackage", up4wAppxPackage)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
 	}
@@ -106,24 +111,19 @@ func TestMain(m *testing.M) {
 func usePrebuiltProject(ctx context.Context) (debPath string, err error) {
 	buildPath := os.Getenv(prebuiltPath)
 
-	// Remove Appx before installing
-	cmd := powershellf(ctx, "Get-AppxPackage CanonicalGroupLimited.UbuntuProForWindows | Remove-AppxPackage")
-	if out, err := cmd.CombinedOutput(); err != nil {
-		// (Probably because it was not installed)
-		log.Printf("Could not remove old AppxPackage: %v. %s", err, out)
+	// Locate the Appx package and store the path in global variable so that we can
+	// reinstall it before every test
+	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWindows_*.msixbundle"))
+	if err != nil {
+		return "", fmt.Errorf("could not locate MSIX: %v", err)
 	}
-
-	// Install Appx anew
-	cmd = powershellf(ctx, "Add-AppxPackage %q", filepath.Join(buildPath, "windows-agent", "UbuntuProForWindows_*.msixbundle"))
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("could not install pre-built AppxPackage: %v. %s", err, out)
-	}
+	msixPath = result
 
 	// Locate WSL-Pro-Service (it'll be installed later into the distros)
 	debPath = filepath.Join(buildPath, "wsl-pro-service")
-	_, err = locateWslProServiceDeb(ctx, debPath)
+	_, err = locateWslProServiceDeb(debPath)
 	if err != nil {
-		return "", fmt.Errorf("could not localte pre-built WSL-Pro-Service: %v", err)
+		return "", fmt.Errorf("could not locate pre-built WSL-Pro-Service: %v", err)
 	}
 
 	return debPath, err
@@ -133,13 +133,24 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	debPath, err = os.MkdirTemp(os.TempDir(), "WslProService")
+	buildPath, err := os.MkdirTemp(os.TempDir(), "UP4W-E2E-build")
 	if err != nil {
-		return "", fmt.Errorf("could not create temporary directory for debian artifacts")
+		return "", fmt.Errorf("could not create temporary directory for build artifacts")
+	}
+
+	debPath = filepath.Join(buildPath, "wsl-pro-service")
+	winPath := filepath.Join(buildPath, "windows-agent")
+
+	if err := os.MkdirAll(debPath, 0600); err != nil {
+		return "", fmt.Errorf("could not create directory for WSL-Pro-Service Debian package artifacts")
+	}
+
+	if err := os.MkdirAll(winPath, 0600); err != nil {
+		return "", fmt.Errorf("could not create directory for Ubuntu Pro For Windows MSIX artifacts")
 	}
 
 	jobs := map[string]*exec.Cmd{
-		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1 -Mode end_to_end_tests`),
+		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1 -Mode end_to_end_tests -OutputDir %q`, winPath),
 		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1 -OutputDir %q`, debPath),
 	}
 
@@ -178,8 +189,15 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 		return "", fmt.Errorf("could not build project: %v", err)
 	}
 
+	// Locate the Appx package and store the path in global variable so that we can
+	// reinstall it before every test
+	path, err := globSingleResult(filepath.Join(winPath, "UbuntuProForWindows_*.msixbundle"))
+	if err != nil {
+		return "", fmt.Errorf("could not locate Appx: %v", err)
+	}
+
 	log.Println("Project built")
-	return debPath, nil
+	return path, nil
 }
 
 // assertAppxInstalled returns an error if the provided Appx is not installed.
@@ -197,17 +215,12 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 }
 
 // locateWslProServiceDeb locates the WSL pro service at the repository root and returns its absolute path.
-func locateWslProServiceDeb(ctx context.Context, path string) (debPath string, err error) {
+func locateWslProServiceDeb(path string) (debPath string, err error) {
 	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
 
-	out, err := powershellf(ctx, `(Get-ChildItem -Path "%s/wsl-pro-service_*.deb").FullName`, path).CombinedOutput()
+	path, err = globSingleResult(filepath.Join(path, "wsl-pro-service_*.deb"))
 	if err != nil {
-		return "", fmt.Errorf("could not read expected location: %v. %s", err, out)
-	}
-
-	debPath = strings.TrimSpace(string(out))
-	if debPath == "" {
-		return "", errors.New("Wsl Pro Service is not built")
+		return "", err
 	}
 
 	debPath, err = filepath.Abs(debPath)
@@ -228,50 +241,84 @@ func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
 		"-Command", fmt.Sprintf(`$env:PsModulePath="" ; `+command, args...))
 }
 
-// assertCleanLocalAppData returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
+// assertCleanFilesystem returns error if directory '%LocalAppData%/Ubuntu Pro' exists.
 // If safety checks are overridden, then the directory is removed and no error is returned.
-func assertCleanLocalAppData() error {
-	path := os.Getenv("LocalAppData")
-	if path == "" {
-		return errors.New("variable $env:LocalAppData should not be empty")
-	}
-
-	path = filepath.Join(path, "Ubuntu Pro")
-
-	_, err := os.Stat(path)
-	if errors.Is(err, fs.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("could not stat %q: %v", path, err)
-	}
-
+func assertCleanFilesystem() error {
 	if os.Getenv(overrideSafety) != "" {
-		return cleanupLocalAppData()
+		return cleanupFilesystem()
 	}
 
-	return fmt.Errorf("Directory %q should not exist. Remove it from your machine "+
-		"to agree to run this potentially destructive test.", path)
-}
-
-// cleanupLocalAppData removes directory '%LocalAppData%/Ubuntu Pro' and all its contents.
-func cleanupLocalAppData() error {
-	path := os.Getenv("LocalAppData")
-	if path == "" {
-		return errors.New("variable $env:LocalAppData should not be empty")
+	fileList, err := filesToCleanUp()
+	if err != nil {
+		return err
 	}
 
-	path = filepath.Join(path, "Ubuntu Pro")
-	if err := os.RemoveAll(path); err != nil {
-		return fmt.Errorf("could not clean up LocalAppData: %v", err)
+	var errs error
+	for _, path := range fileList {
+		_, err := os.Stat(path)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("could not stat %q: %v", path, err))
+			continue
+		}
+
+		errs = errors.Join(errs, fmt.Errorf("path %q should not exist. Remove it from your machine "+
+			"to agree to run this potentially destructive test.", path))
 	}
 
 	return nil
 }
 
+func cleanupFilesystem() error {
+	fileList, err := filesToCleanUp()
+	if err != nil {
+		return err
+	}
+
+	var errs error
+	for _, path := range fileList {
+		if err := os.RemoveAll(path); err != nil {
+			errs = errors.Join(errs, fmt.Errorf("could not clean up %s: %v", path, err))
+		}
+	}
+
+	return errs
+}
+
+func filesToCleanUp() ([]string, error) {
+	fileList := []struct {
+		prefixEnv string
+		path      string
+	}{
+		{prefixEnv: "LocalAppData", path: "Ubuntu Pro"},
+		{prefixEnv: "UserProfile", path: ".ubuntupro"},
+		{prefixEnv: "UserProfile", path: ".ubuntupro.logs"},
+	}
+
+	var out []string
+	var errs error
+
+	for _, s := range fileList {
+		prefix := os.Getenv(s.prefixEnv)
+		if prefix == "" {
+			errs = errors.Join(errs, fmt.Errorf("variable $env:%s should not be empty", s.prefixEnv))
+		}
+
+		out = append(out, filepath.Join(prefix, s.path))
+	}
+
+	return out, errs
+}
+
 // assertCleanRegistry returns error if registry key 'UbuntuPro' exists.
 // If safety checks are overridden, then the key is removed and no error is returned.
 func assertCleanRegistry() error {
+	if os.Getenv(overrideSafety) != "" {
+		return cleanupRegistry()
+	}
+
 	k, err := registry.OpenKey(registry.CURRENT_USER, registryPath, registry.READ)
 	if errors.Is(err, registry.ErrNotExist) {
 		// Key does not exist, as expected
@@ -283,11 +330,6 @@ func assertCleanRegistry() error {
 	}
 
 	k.Close()
-
-	// Key exists: this is probably running outside of a clean runner
-	if os.Getenv(overrideSafety) != "" {
-		return cleanupRegistry()
-	}
 
 	// Protect unsuspecting users
 	return fmt.Errorf(`UbuntuPro registry key should not exist. Remove it from your machine `+
@@ -354,7 +396,7 @@ func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath s
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	debPath, err := locateWslProServiceDeb(ctx, wslProServiceDebPath)
+	debPath, err := locateWslProServiceDeb(wslProServiceDebPath)
 	if err != nil {
 		return "", nil, err
 	}
