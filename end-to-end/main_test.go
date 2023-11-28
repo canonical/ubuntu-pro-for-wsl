@@ -142,11 +142,11 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 	winPath := filepath.Join(buildPath, "windows-agent")
 
 	if err := os.MkdirAll(debPath, 0600); err != nil {
-		return "", fmt.Errorf("could not create directory for debian artifacts")
+		return "", fmt.Errorf("could not create directory for WSL-Pro-Service Debian package artifacts")
 	}
 
 	if err := os.MkdirAll(winPath, 0600); err != nil {
-		return "", fmt.Errorf("could not create directory for MSIX artifacts")
+		return "", fmt.Errorf("could not create directory for Ubuntu Pro For Windows MSIX artifacts")
 	}
 
 	jobs := map[string]*exec.Cmd{
