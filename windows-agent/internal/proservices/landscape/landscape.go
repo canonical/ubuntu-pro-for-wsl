@@ -339,8 +339,7 @@ func (conn *connection) connected() bool {
 	return true
 }
 
-// landscapeHostConf is a bag of data containing all the data from the landscape
-// configuration that is relevant to the agent.
+// landscapeHostConf is the subset of the landscape configuration relevant to the agent.
 type landscapeHostConf struct {
 	sslPublicKey    string
 	accountName     string
