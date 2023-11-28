@@ -4,7 +4,7 @@ go 1.21.4
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120144258-eaedf425f737
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075046-d228c858ed8a
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075531-d5f73211926f
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231113084350-57c6acdb2d5b
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
