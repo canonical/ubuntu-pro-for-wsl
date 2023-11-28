@@ -28,8 +28,8 @@ func TestNew(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success":                                {},
-		"Error because of empty %USERDIRECTORY%": {badEnv: true, wantErr: true},
+		"Success":                              {},
+		"Error because of empty %USERPROFILE%": {badEnv: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
