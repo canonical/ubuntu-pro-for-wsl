@@ -247,3 +247,21 @@ func reinstallMSIX(ctx context.Context, path string) error {
 
 	return nil
 }
+
+// globSingleResult searches for the specified glob pattern and returns success
+// if, and only if, there is only one file matching it.
+func globSingleResult(pattern string) (string, error) {
+	candidates, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("could not search pattern %s: %v", pattern, err)
+	}
+
+	if len(candidates) == 0 {
+		return "", fmt.Errorf("no file matches pattern %s", pattern)
+	}
+	if len(candidates) > 1 {
+		return "", fmt.Errorf("multiple file match pattern %s:\n - %s", pattern, strings.Join(candidates, "\n - "))
+	}
+
+	return candidates[0], nil
+}
