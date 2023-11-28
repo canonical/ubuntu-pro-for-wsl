@@ -51,6 +51,11 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 		return info, err
 	}
 
+	conf, err := c.readLandscapeHostConf(ctx)
+	if err != nil {
+		return info, fmt.Errorf("could not read config: %v", err)
+	}
+
 	distros := c.db.GetAll()
 	var instances []*landscapeapi.HostAgentInfo_InstanceInfo
 	for _, d := range distros {
@@ -75,10 +80,15 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 	}
 
 	info = &landscapeapi.HostAgentInfo{
-		Token:     token,
-		Uid:       uid,
-		Hostname:  c.hostname,
-		Instances: instances,
+		Token:       token,
+		Uid:         uid,
+		Hostname:    c.hostname,
+		Instances:   instances,
+		AccountName: conf.accountName,
+	}
+
+	if conf.registrationKey != "" {
+		info.RegistrationKey = &conf.registrationKey
 	}
 
 	return info, nil

@@ -25,9 +25,13 @@ type InstanceInfo struct {
 // HostInfo is the same as landscapeapi.HostAgentInfo, but without the mutexes and
 // all grpc implementation details (so it can be safely copied).
 type HostInfo struct {
-	UID       string
-	Hostname  string
-	Token     string
+	UID      string
+	Hostname string
+	Token    string
+
+	AccountName     string
+	RegistrationKey string
+
 	Instances []InstanceInfo
 }
 
@@ -43,10 +47,12 @@ func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (Host
 	}
 
 	h := HostInfo{
-		UID:       src.GetUid(),
-		Hostname:  src.GetHostname(),
-		Token:     src.GetToken(),
-		Instances: make([]InstanceInfo, 0, len(src.GetInstances())),
+		UID:             src.GetUid(),
+		Hostname:        src.GetHostname(),
+		Token:           src.GetToken(),
+		Instances:       make([]InstanceInfo, 0, len(src.GetInstances())),
+		AccountName:     src.GetAccountName(),
+		RegistrationKey: src.GetRegistrationKey(),
 	}
 
 	for _, inst := range src.GetInstances() {

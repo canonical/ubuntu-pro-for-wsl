@@ -75,7 +75,8 @@ func populateCommands() {
 						instances = append(instances, inst.ID)
 					}
 
-					fmt.Printf("UID: %s, Hostname: %q, Token: %q, Instances: %q\n", line.UID, line.Hostname, common.Obfuscate(line.Token), strings.Join(instances, ", "))
+					fmt.Printf("UID: %s, Account: %q, Key: %q, Token: %q, Hostname: %q, Instances: %q\n",
+						line.UID, line.AccountName, line.RegistrationKey, common.Obfuscate(line.Token), line.Hostname, strings.Join(instances, ", "))
 				}
 				return nil
 			},
