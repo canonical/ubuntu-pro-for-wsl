@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
 	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
 )
@@ -85,27 +86,32 @@ func (s *Server) handleSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data map[string]string
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	var req contractsapi.SubscriptionRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "Bad Request")
 		return
 	}
 
-	userJWT, ok := data[contractsapi.JWTKey]
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "JSON payload does not contain the expected key")
-		return
-	}
-
-	if len(userJWT) == 0 {
+	if req.MSStoreIDKey == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "JWT cannot be empty")
 		return
 	}
 
-	if _, err := fmt.Fprintf(w, `{%q: %q}`, contractsapi.ProTokenKey, s.settings.Subscription.OnSuccess.Value); err != nil {
+	// In the server, the ID for the product is "ProductID:SKU".
+	// Here we choose some arbitrary number for the SKU.
+	id := common.MsStoreProductID + ":0001"
+
+	resp := contractsapi.SyncUserSubscriptionsResponse{
+		SubscriptionEntitlements: map[string]contractsapi.SyncUserSubscriptionsResponseItem{
+			id:             {Token: s.settings.Subscription.OnSuccess.Value},
+			"ABCDEFGHIJKL": {Token: "a-token-for-some-other-subscription"},
+		},
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "failed to write the response: %v", err)
 		return
