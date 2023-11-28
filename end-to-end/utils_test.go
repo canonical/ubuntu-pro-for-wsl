@@ -224,7 +224,7 @@ func logWindowsAgentOnError(t *testing.T) {
 		return
 	}
 
-	logsPath := filepath.Join(packageDir, "LocalCache", "Local", common.LocalAppDataDir, ".ubuntupro.log")
+	logsPath := filepath.Join(packageDir, "LocalCache", "Local", common.LocalAppDataDir, "log")
 	out, err := os.ReadFile(logsPath)
 	if err != nil {
 		t.Logf("could not read Windows Agent's logs at %q: %v", logsPath, err)
