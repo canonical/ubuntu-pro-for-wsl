@@ -1,0 +1,18 @@
+# These are false positives
+artifact
+artifacts
+autocompletion
+enablement
+
+# Tools and brands
+appx
+MSIX
+distro
+distros
+macOS
+powershell
+systemd
+ubuntu
+UbuntuProForWindows
+wsl
+zsh

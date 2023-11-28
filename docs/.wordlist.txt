@@ -9,6 +9,7 @@ Diátaxis
 EBS
 EKS
 favicon
+Furo
 Grafana
 IAM
 installable
@@ -24,6 +25,7 @@ NodePort
 observability
 OLM
 Permalink
+pre
 ReadMe
 reST
 reStructuredText
@@ -32,25 +34,5 @@ subdirectories
 subtree
 subfolders
 UI
-Jira
 VM
 YAML
-
-# These are false positives
-artifact
-artifacts
-autocompletion
-enablement
-
-# Tools and brands
-appx
-MSIX
-distro
-distros
-macOS
-powershell
-systemd
-ubuntu
-UbuntuProForWindows
-wsl
-zsh

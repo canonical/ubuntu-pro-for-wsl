@@ -23,6 +23,7 @@ matrix:
       - link
       - title
       - div.relatedlinks
+      - strong.command
       - div.visually-hidden
       - img
       - a.p-navigation__link
