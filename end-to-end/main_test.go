@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows/registry"
@@ -25,6 +24,9 @@ var (
 
 	// msixPath is the path to the Ubuntu Pro For Windows MSIX.
 	msixPath string
+
+	// debPkgPath is the path to the Wsl Pro Service Debian package.
+	debPkgPath string
 )
 
 const (
@@ -76,20 +78,23 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
-	f := buildProject
-	if buildPath := os.Getenv(prebuiltPath); buildPath != "" {
-		f = usePrebuiltProject
+	buildPath := os.Getenv(prebuiltPath)
+	if buildPath == "" {
+		path, err := buildProject(ctx)
+		if err != nil {
+			log.Fatalf("Setup: %v\n", err)
+		}
+		buildPath = path
 	}
 
-	wslProServiceDebPath, err := f(ctx)
-	if err != nil {
+	if err := usePrebuiltProject(buildPath); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
 	log.Printf("MSIX package located at %s", msixPath)
-	log.Printf("Deb package located at %s", wslProServiceDebPath)
+	log.Printf("Deb package located at %s", debPkgPath)
 
-	path, cleanup, err := generateTestImage(ctx, referenceDistro, wslProServiceDebPath)
+	path, cleanup, err := generateTestImage(ctx, referenceDistro)
 	if err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -108,28 +113,27 @@ func TestMain(m *testing.M) {
 	}
 }
 
-func usePrebuiltProject(ctx context.Context) (debPath string, err error) {
-	buildPath := os.Getenv(prebuiltPath)
-
+func usePrebuiltProject(buildPath string) (err error) {
 	// Locate the Appx package and store the path in global variable so that we can
 	// reinstall it before every test
 	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWindows_*.msixbundle"))
 	if err != nil {
-		return "", fmt.Errorf("could not locate MSIX: %v", err)
+		return fmt.Errorf("could not locate MSIX: %v", err)
 	}
 	msixPath = result
 
 	// Locate WSL-Pro-Service (it'll be installed later into the distros)
-	debPath = filepath.Join(buildPath, "wsl-pro-service")
-	_, err = locateWslProServiceDeb(debPath)
+	path, err := globSingleResult(filepath.Join(buildPath, "wsl-pro-service", "wsl-pro-service_*.deb"))
 	if err != nil {
-		return "", fmt.Errorf("could not locate pre-built WSL-Pro-Service: %v", err)
+		return fmt.Errorf("could not locate WSL-Pro-Service: %v", err)
 	}
 
-	return debPath, err
+	debPkgPath = path
+
+	return nil
 }
 
-func buildProject(ctx context.Context) (debPath string, err error) {
+func buildProject(ctx context.Context) (string, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -138,7 +142,7 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 		return "", fmt.Errorf("could not create temporary directory for build artifacts")
 	}
 
-	debPath = filepath.Join(buildPath, "wsl-pro-service")
+	debPath := filepath.Join(buildPath, "wsl-pro-service")
 	winPath := filepath.Join(buildPath, "windows-agent")
 
 	if err := os.MkdirAll(debPath, 0600); err != nil {
@@ -189,15 +193,9 @@ func buildProject(ctx context.Context) (debPath string, err error) {
 		return "", fmt.Errorf("could not build project: %v", err)
 	}
 
-	// Locate the Appx package and store the path in global variable so that we can
-	// reinstall it before every test
-	path, err := globSingleResult(filepath.Join(winPath, "UbuntuProForWindows_*.msixbundle"))
-	if err != nil {
-		return "", fmt.Errorf("could not locate Appx: %v", err)
-	}
-
 	log.Println("Project built")
-	return path, nil
+
+	return buildPath, nil
 }
 
 // assertAppxInstalled returns an error if the provided Appx is not installed.
@@ -212,23 +210,6 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 	}
 
 	return nil
-}
-
-// locateWslProServiceDeb locates the WSL pro service at the repository root and returns its absolute path.
-func locateWslProServiceDeb(path string) (debPath string, err error) {
-	defer decorate.OnError(&err, "could not locate wsl-pro-service deb package")
-
-	path, err = globSingleResult(filepath.Join(path, "wsl-pro-service_*.deb"))
-	if err != nil {
-		return "", err
-	}
-
-	debPath, err = filepath.Abs(debPath)
-	if err != nil {
-		return "", fmt.Errorf("could not make path %q absolute: %v", path, err)
-	}
-
-	return debPath, nil
 }
 
 // powershellf is syntax sugar to run powrshell commands.
@@ -353,7 +334,7 @@ func cleanupRegistry() error {
 // generateTestImage fails if the sourceDistro is registered, unless the safety checks are overridden,
 // in which case the sourceDistro is removed.
 // The source distro is then registered, exported after first boot, and unregistered.
-func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath string) (path string, cleanup func(), err error) {
+func generateTestImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
 	log.Printf("Setup: Generating test image from %q\n", sourceDistro)
 	defer log.Printf("Setup: Generated test image from %q\n", sourceDistro)
 
@@ -396,12 +377,7 @@ func generateTestImage(ctx context.Context, sourceDistro, wslProServiceDebPath s
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	debPath, err := locateWslProServiceDeb(wslProServiceDebPath)
-	if err != nil {
-		return "", nil, err
-	}
-
-	out, err = d.Command(ctx, fmt.Sprintf("DEBIAN_FRONTEND=noninteractive apt install -y $(wslpath -ua '%s')", debPath)).CombinedOutput()
+	out, err = d.Command(ctx, fmt.Sprintf("DEBIAN_FRONTEND=noninteractive apt install -y $(wslpath -ua '%s')", debPkgPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
