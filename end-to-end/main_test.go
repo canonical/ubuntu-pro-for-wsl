@@ -120,7 +120,11 @@ func usePrebuiltProject(buildPath string) (err error) {
 	if err != nil {
 		return fmt.Errorf("could not locate MSIX: %v", err)
 	}
-	msixPath = result
+
+	msixPath, err = filepath.Abs(result)
+	if err != nil {
+		return fmt.Errorf("could not make MSIX path absolute: %v", err)
+	}
 
 	// Locate WSL-Pro-Service (it'll be installed later into the distros)
 	path, err := globSingleResult(filepath.Join(buildPath, "wsl-pro-service", "wsl-pro-service_*.deb"))
@@ -128,7 +132,10 @@ func usePrebuiltProject(buildPath string) (err error) {
 		return fmt.Errorf("could not locate WSL-Pro-Service: %v", err)
 	}
 
-	debPkgPath = path
+	debPkgPath, err = filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("could not make debian package path absolute: %v", err)
+	}
 
 	return nil
 }
