@@ -26,12 +26,11 @@ This is the simple one. If you're not in a hurry to see the configuration update
 8.  Start the distro, or distros you installed WSL-Pro-Service in.
 
 # How to reset Ubuntu Pro for Windows back to factory settings
-If you want to restart UP4W with factory settings, do:
-1. Stop the agent and WSL: 
+You can reset UP4W to factory settings following these steps:
+1. Uninstall the package and shut down WSL:
     ```powershell
-    Get-Process -Name "Ubuntu-Pro-Agent" | Stop-Process`
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage`
     wsl --shutdown
     ```
-1. Remove folder `$env:LocalAppData\UbuntuPro`.
 2. Remove registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
 3. You're done. Next time you start the GUI it'll be like a fresh install.
