@@ -25,7 +25,6 @@ This is the Windows-side agent that manages the distros.
 1. Uninstall Ubuntu Pro For Windows if you had installed previously:
     ```powershell
     Get-AppxPackage -Name Ubuntu-Pro-For-Windows | Remove-AppxPackage
-    Remove-Item -Recurse "${env:LOCALAPPDATA}/Ubuntu Pro"
     ```
 2. Follow the download steps to download UbuntuProForWindows
 3. Unzip the artefact
