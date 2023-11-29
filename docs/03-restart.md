@@ -33,4 +33,5 @@ You can reset Ubuntu Pro For Windows to factory settings following these steps:
     wsl --shutdown
     ```
 2. Remove registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
-3. You're done. Next time you start the GUI it'll be like a fresh install.
+3. Install the package again (see the section on [how to install](./02-install.md)).
+4. You're done. Next time you start the GUI it'll be like a fresh install.
