@@ -1,4 +1,4 @@
-# How to enable Ubuntu Pro with UP4W
+# How to auto-attach distros to Ubuntu Pro
 
 ## Manual pro enablement
 1. Go to your [Ubuntu Pro dashboard](https://ubuntu.com/pro) to get your Ubuntu Pro token.
