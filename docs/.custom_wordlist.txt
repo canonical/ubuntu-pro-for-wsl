@@ -8,6 +8,7 @@ enablement
 appx
 MSIX
 distro
+distro's
 distros
 macOS
 powershell
