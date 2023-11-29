@@ -1,6 +1,6 @@
 # How to access the logs
 
-At some point you may want to read the logs of Ubuntu Pro for Windows, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you were to find each of the logs.
+At some point you may want to read the logs of Ubuntu Pro for Windows, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
 
 ## WSL Pro service
 In order to access the logs for a particular distro's WSL-Pro-Service, you need to start that distro and query the journal:
