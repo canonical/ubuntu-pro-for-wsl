@@ -25,19 +25,13 @@ This is the Windows-side agent that manages the distros.
 1. Uninstall Ubuntu Pro For Windows if you had installed previously:
     ```powershell
     Get-AppxPackage -Name Ubuntu-Pro-For-Windows | Remove-AppxPackage
-    Remove-Item -Recurse "${env:LOCALAPPDATA}/Ubuntu Pro"
     ```
 2. Follow the download steps to download UbuntuProForWindows
 3. Unzip the artefact
 4. Find the certificate inside. Install it into `Local Machine/Trusted people`.
-5. Open Powershell in this directory and run
-    ```powershell
-    Add-AppxPackage .\UbuntuProForWindows_*_x64.msixbundle
-    ```
-6. Open the start menu and search for "Ubuntu Pro For Windows".
-7. The Firewall may ask for an exception. Allow it.
-8. The GUI should show up. You’re done.
-
+5. Double click on the MSIX bundle and complete the installation.
+6. The Firewall may ask for an exception. Allow it.
+7. The GUI should show up. You’re done.
 
 ## Install the WSL Pro Service
 This is the Linux-side component that talks to the agent. Choose one or more distros Jammy or greater, and follow the instructions.
