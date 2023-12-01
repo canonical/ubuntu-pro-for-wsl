@@ -49,9 +49,10 @@ func TestAttachPro(t *testing.T) {
 	distro2, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
 	testCases := map[string]struct {
-		distros     []string
-		token       string
-		breakConfig bool
+		distros             []string
+		token               string
+		breakConfig         bool
+		higherPriorityToken bool
 
 		wantErr bool
 	}{
@@ -59,7 +60,8 @@ func TestAttachPro(t *testing.T) {
 		"Success with an empty database":    {token: "funny_token"},
 		"Success with a non-empty database": {token: "whatever_token", distros: []string{distro1, distro2}},
 
-		"Error when the config cannot write": {breakConfig: true, wantErr: true},
+		"Error when the config cannot write":                  {breakConfig: true, wantErr: true},
+		"Error when there already is a higher priority token": {higherPriorityToken: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -83,6 +85,11 @@ func TestAttachPro(t *testing.T) {
 
 			m := registry.NewMock()
 
+			if tc.higherPriorityToken {
+				m.KeyExists = true
+				m.UbuntuProData["UbuntuProToken"] = "organization_token"
+			}
+
 			if tc.breakConfig {
 				err := os.MkdirAll(filepath.Join(dir, "config"), 0600)
 				require.NoError(t, err, "Setup: could not create directory to interfere with config")
@@ -93,6 +100,11 @@ func TestAttachPro(t *testing.T) {
 			}
 
 			conf := config.New(ctx, dir, config.WithRegistry(m))
+			if tc.higherPriorityToken {
+				err = conf.UpdateRegistrySettings(ctx, db)
+				require.NoError(t, err, "Setup: could not make registry read registry settings")
+			}
+
 			serv := ui.New(context.Background(), conf, db)
 
 			info := agentapi.ProAttachInfo{Token: tc.token}
