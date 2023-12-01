@@ -8,14 +8,14 @@ const (
 	// SourceNone -> no data.
 	SourceNone Source = iota
 
-	// SourceRegistry -> the data was obtained from the registry.
-	SourceRegistry
-
 	// SourceUser -> the data was introduced by the user.
 	SourceUser
 
 	// SourceMicrosoftStore -> the data was acquired via the Microsoft Store.
 	SourceMicrosoftStore
+
+	// SourceRegistry -> the data was obtained from the registry.
+	SourceRegistry
 )
 
 type subscription struct {
