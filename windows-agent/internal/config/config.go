@@ -139,11 +139,19 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, err
 
 // SetUserSubscription overwrites the value of the user-provided Ubuntu Pro token.
 func (c *Config) SetUserSubscription(ctx context.Context, proToken string) error {
+	if _, src := c.subscription.resolve(); src > SourceUser {
+		return errors.New("attempted to set a user subscription when there already is a higher priority one")
+	}
+
 	return c.set(ctx, &c.subscription.User, proToken)
 }
 
 // setStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
 func (c *Config) setStoreSubscription(ctx context.Context, proToken string) error {
+	if _, src := c.subscription.resolve(); src > SourceMicrosoftStore {
+		return errors.New("attempted to set a store subscription when there already is a higher priority one")
+	}
+
 	return c.set(ctx, &c.subscription.Store, proToken)
 }
 
