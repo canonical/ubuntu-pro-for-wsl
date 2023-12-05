@@ -32,6 +32,12 @@ func TestMain(m *testing.M) {
 // globalStartupMu protects against multiple distros starting at the same time.
 var globalStartupMu sync.Mutex
 
+// startupMutex exists so that all distro tests share the same startup mutex.
+// This mutex prevents multiple distros from starting at the same time, which
+// could freeze the machine.
+//
+// When a mock WSL is used, this concern does not exist so we provide a new
+// mutex for every test so they can run in parallel without interference.
 func startupMutex() *sync.Mutex {
 	if wsl.MockAvailable() {
 		// No real distros: use a different mutex every test
