@@ -72,6 +72,7 @@ func TestNew(t *testing.T) {
 		withGUID               string
 		preventWorkDirCreation bool
 		withProvisioning       bool
+		nilMutex               bool
 
 		wantErr     bool
 		wantErrType error
@@ -87,6 +88,7 @@ func TestNew(t *testing.T) {
 		"Error when the distro is not registered":                       {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when the distro is not registered, but the GUID is":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when neither the distro nor the GUID are registered":     {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when the startup mutex is nil":                           {distro: registeredDistro, nilMutex: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -113,7 +115,12 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write file to interfere with distro's MkDir")
 			}
 
-			d, err = distro.New(ctx, tc.distro, props, workDir, startupMutex(), args...)
+			mu := startupMutex()
+			if tc.nilMutex {
+				mu = nil
+			}
+
+			d, err = distro.New(ctx, tc.distro, props, workDir, mu, args...)
 			defer d.Cleanup(context.Background())
 
 			if tc.wantErr {
