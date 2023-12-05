@@ -2,61 +2,53 @@ package landscape
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"gopkg.in/ini.v1"
 )
 
-// SendUpdatedInfo sends a message to the Landscape server with updated
-// info about the machine and the distros.
-func (c *Client) SendUpdatedInfo(ctx context.Context) (err error) {
-	defer decorate.OnError(&err, "could not send updated info to landscape")
+// connected indicates whether there is an active gRPC connection to the Landscape
+// server.
+func connected(c serviceConn) bool {
+	conn, release := c.connection()
+	defer release()
 
-	c.connMu.RLock()
-	defer c.connMu.RUnlock()
-
-	if c.conn == nil {
-		return errors.New("disconnected")
-	}
-
-	if err := c.sendUpdatedInfo(c.conn); err != nil {
-		return err
-	}
-
-	return nil
+	return conn.connected()
 }
 
-func (c *Client) sendUpdatedInfo(conn *connection) error {
-	info, err := c.newHostAgentInfo(conn.ctx)
-	if err != nil {
-		return fmt.Errorf("could not assemble message: %v", err)
-	}
-
-	if err := conn.grpcClient.Send(info); err != nil {
-		return fmt.Errorf("could not send message: %v", err)
-	}
-
-	return nil
+// landscapeHostConf is the subset of the landscape configuration relevant to the agent.
+type landscapeHostConf struct {
+	sslPublicKey    string
+	accountName     string
+	registrationKey string
+	hostagentURL    string
 }
 
 // newHostAgentInfo assembles a HostAgentInfo message.
-func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostAgentInfo, err error) {
-	token, _, err := c.conf.Subscription(ctx)
+func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.HostAgentInfo, err error) {
+	token, _, err := c.config().Subscription(ctx)
 	if err != nil {
 		return info, err
 	}
 
-	conf, err := c.readLandscapeHostConf(ctx)
+	conf, err := readLandscapeHostConf(ctx, c.config())
 	if err != nil {
 		return info, fmt.Errorf("could not read config: %v", err)
 	}
 
-	distros := c.db.GetAll()
+	distros := c.database().GetAll()
 	var instances []*landscapeapi.HostAgentInfo_InstanceInfo
 	for _, d := range distros {
 		instanceInfo, err := newInstanceInfo(d)
@@ -74,7 +66,7 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 		instances = append(instances, instanceInfo)
 	}
 
-	uid, err := c.conf.LandscapeAgentUID(ctx)
+	uid, err := c.config().LandscapeAgentUID(ctx)
 	if err != nil {
 		return info, err
 	}
@@ -82,7 +74,7 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 	info = &landscapeapi.HostAgentInfo{
 		Token:       token,
 		Uid:         uid,
-		Hostname:    c.hostname,
+		Hostname:    c.hostname(),
 		Instances:   instances,
 		AccountName: conf.accountName,
 	}
@@ -92,6 +84,84 @@ func (c *Client) newHostAgentInfo(ctx context.Context) (info *landscapeapi.HostA
 	}
 
 	return info, nil
+}
+
+// transportCredentials reads the Landscape client config to check if a SSL public key is specified.
+//
+// If this credential is not specified, an insecure credential is returned.
+// If the credential is specified but erroneous, an error is returned.
+func (conf landscapeHostConf) transportCredentials() (cred credentials.TransportCredentials, err error) {
+	defer decorate.OnError(&err, "Landscape credentials")
+
+	if conf.sslPublicKey == "" {
+		return insecure.NewCredentials(), nil
+	}
+
+	cert, err := os.ReadFile(conf.sslPublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
+	}
+
+	certPool := x509.NewCertPool()
+	if ok := certPool.AppendCertsFromPEM(cert); !ok {
+		return nil, fmt.Errorf("failed to add server CA's certificate: %v", err)
+	}
+
+	return credentials.NewTLS(&tls.Config{
+		RootCAs:    certPool,
+		MinVersion: tls.VersionTLS12,
+	}), nil
+}
+
+func readLandscapeHostConf(ctx context.Context, config Config) (landscapeHostConf, error) {
+	conf := landscapeHostConf{
+		// TODO: default-initialize the hostagentURL to Canonical's SaaS.
+	}
+
+	out, _, err := config.LandscapeClientConfig(ctx)
+	if err != nil {
+		return conf, fmt.Errorf("could not obtain Landscape config: %v", err)
+	}
+
+	if out == "" {
+		// No Landscape config: return defaults
+		return conf, nil
+	}
+
+	ini, err := ini.Load(strings.NewReader(out))
+	if err != nil {
+		return conf, fmt.Errorf("could not parse Landscape config file: %v", err)
+	}
+
+	// Note: all these functions only return errors when the section/key does not exist.
+
+	sec, err := ini.GetSection("client")
+	if err == nil {
+		k, err := sec.GetKey("ssl_public_key")
+		if err == nil {
+			conf.sslPublicKey = k.String()
+		}
+
+		k, err = sec.GetKey("account_name")
+		if err == nil {
+			conf.accountName = k.String()
+		}
+
+		k, err = sec.GetKey("registration_key")
+		if err == nil {
+			conf.registrationKey = k.String()
+		}
+	}
+
+	sec, err = ini.GetSection("host")
+	if err == nil {
+		k, err := sec.GetKey("url")
+		if err == nil {
+			conf.hostagentURL = k.String()
+		}
+	}
+
+	return conf, nil
 }
 
 type newInstanceInfoMinorError struct {

@@ -3,12 +3,9 @@ package landscape
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -18,14 +15,11 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
-	"gopkg.in/ini.v1"
 )
 
-// Client is a client to the landscape service, served remotely.
-type Client struct {
+// Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
+// It creates the executor and ensures there is always an active connection, creating a new one otherwise.
+type Service struct {
 	db   *database.DistroDB
 	conf Config
 
@@ -33,23 +27,17 @@ type Client struct {
 	stopped chan struct{}
 	once    sync.Once
 
-	// Cached hostname
-	hostname string
+	// Cached hostName
+	hostName string
 
 	// Connection
 	conn   *connection
 	connMu sync.RWMutex
-}
 
-type connection struct {
-	ctx    context.Context
-	cancel func()
-
-	grpcConn   *grpc.ClientConn
-	grpcClient landscapeapi.LandscapeHostAgent_ConnectClient
-	once       sync.Once
-
-	receivingCommands sync.WaitGroup
+	// retryConnection is used in order to ask the keepConnected
+	// function to try again now (instead of waiting for the retrial
+	// time). Do not use directly. Instead use signalRetryConnection().
+	retryConnection chan struct{}
 }
 
 // Config is a configuration provider for ProToken and the Landscape URL.
@@ -69,8 +57,8 @@ type options struct {
 // Option is an optional argument for NewClient.
 type Option = func(*options)
 
-// NewClient creates a new Client for the Landscape service.
-func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, error) {
+// New creates a new Landscape service object.
+func New(conf Config, db *database.DistroDB, args ...Option) (*Service, error) {
 	var opts options
 
 	for _, f := range args {
@@ -85,47 +73,48 @@ func NewClient(conf Config, db *database.DistroDB, args ...Option) (*Client, err
 		opts.hostname = hostname
 	}
 
-	c := &Client{
-		conf:     conf,
-		db:       db,
-		hostname: opts.hostname,
-		stopped:  make(chan struct{}),
+	c := &Service{
+		conf:            conf,
+		db:              db,
+		hostName:        opts.hostname,
+		stopped:         make(chan struct{}),
+		retryConnection: make(chan struct{}),
 	}
 
 	return c, nil
 }
 
 // Connect starts the connection and starts talking to the server.
-// Call disconnect to deallocate resources.
-func (c *Client) Connect(ctx context.Context) (err error) {
+// Call Stop to deallocate resources.
+func (s *Service) Connect(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not connect to Landscape")
 
-	if c.Connected() {
+	if connected(s) {
 		return errors.New("already connected")
 	}
 
 	// Dummy connection to indicate that a first attempt was attempted
-	c.conn = &connection{}
+	s.conn = &connection{}
 
 	defer func() {
-		go c.keepConnected(ctx)
+		go s.keepConnected(ctx)
 	}()
 
 	// First connection
-	conn, err := c.connect(ctx)
+	conn, err := newConnection(ctx, s)
 	if err != nil {
 		return err
 	}
 
-	c.connMu.Lock()
-	c.conn = conn
-	c.connMu.Unlock()
+	s.connMu.Lock()
+	s.conn = conn
+	s.connMu.Unlock()
 
 	return nil
 }
 
 // keepConnected supervises the connection. If it drops, reconnection is attempted.
-func (c *Client) keepConnected(ctx context.Context) {
+func (s *Service) keepConnected(ctx context.Context) {
 	const growthFactor = 2
 	const minWait = time.Second
 	const maxWait = 10 * time.Minute
@@ -142,44 +131,57 @@ func (c *Client) keepConnected(ctx context.Context) {
 
 			select {
 			case <-tk.C:
-			case <-c.stopped:
+				wait = min(growthFactor*wait, maxWait)
+			case <-s.retryConnection:
+				wait = minWait
+			case <-s.stopped:
 				// Stop was called
 				return false
 			}
 
-			c.connMu.Lock()
-			defer c.connMu.Unlock()
+			s.connMu.Lock()
+			defer s.connMu.Unlock()
 
-			if c.conn == nil {
+			// We don't want a queue of petitions to form. It does not matter why
+			// we are retrying: just by virtue of retrying we are fulfilling all
+			// requests at once. Hence, we close and reopen to unblock all senders.
+			//
+			// This is why senders need to use this channel under the connMu mutex
+			// See the signalRetryConnection method.
+			close(s.retryConnection)
+			s.retryConnection = make(chan struct{})
+
+			if s.conn == nil {
 				// Stop was called
 				return false
 			}
 
-			if c.conn.connected() {
+			if s.conn.connected() {
 				// Connection still active
 				return true
 			}
 
-			c.conn.disconnect()
+			s.conn.disconnect()
 
-			conn, err := c.connect(ctx)
+			conn, err := newConnection(ctx, s)
 			if err != nil {
 				log.Warningf(ctx, "Landscape reconnect: %v", err)
-				wait = min(growthFactor*wait, maxWait)
 				return true
 			}
 
-			c.conn = conn
+			s.conn = conn
 			wait = minWait
 			return true
 		}()
 	}
 }
 
-func (c *Client) connect(ctx context.Context) (conn *connection, err error) {
+// newConnection attempts to connect to the Landscape server, and blocks until the first
+// handshake is complete.
+func newConnection(ctx context.Context, d serviceData) (conn *connection, err error) {
 	defer decorate.OnError(&err, "could not connect to Landscape")
 
-	conf, err := c.readLandscapeHostConf(ctx)
+	conf, err := readLandscapeHostConf(ctx, d.config())
 	if err != nil {
 		return nil, fmt.Errorf("could not read config: %v", err)
 	}
@@ -196,7 +198,7 @@ func (c *Client) connect(ctx context.Context) (conn *connection, err error) {
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	creds, err := transportCredentials(conf)
+	creds, err := conf.transportCredentials()
 	if err != nil {
 		return nil, err
 	}
@@ -220,14 +222,14 @@ func (c *Client) connect(ctx context.Context) (conn *connection, err error) {
 		defer conn.disconnect()
 		defer conn.receivingCommands.Done()
 
-		if err := c.receiveCommands(conn); err != nil {
+		if err := conn.receiveCommands(executor{d}); err != nil {
 			log.Warningf(conn.ctx, "Stopped listening for Landscape commands: %v", err)
 		} else {
 			log.Info(conn.ctx, "Finished listening for Landscape commands.")
 		}
 	}()
 
-	if err := c.handshake(ctx, conn); err != nil {
+	if err := handshake(ctx, d, conn); err != nil {
 		conn.disconnect()
 		return nil, err
 	}
@@ -243,14 +245,21 @@ func (c *Client) connect(ctx context.Context) (conn *connection, err error) {
 // If this is the first connection ever, the server will respond by assigning
 // the host a UID. This Recv is handled by receiveCommands, but handshake
 // waits until the UID is received before returning.
-func (c *Client) handshake(ctx context.Context, conn *connection) error {
+func handshake(ctx context.Context, d serviceData, conn *connection) error {
 	// Send first message
-	if err := c.sendUpdatedInfo(conn); err != nil {
+	info, err := newHostAgentInfo(conn.ctx, d)
+	if err != nil {
+		return fmt.Errorf("could not assemble message: %v", err)
+	}
+
+	if err := conn.sendUpdatedInfo(info); err != nil {
 		return err
 	}
 
+	conf := d.config()
+
 	// Not the first contact between client and server: done!
-	if uid, err := c.conf.LandscapeAgentUID(ctx); err != nil {
+	if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
 		return err
 	} else if uid != "" {
 		return nil
@@ -268,12 +277,12 @@ func (c *Client) handshake(ctx context.Context, conn *connection) error {
 		case <-ctx.Done():
 			conn.disconnect()
 			// Avoid races where the UID arrives just after cancelling the context
-			err := c.conf.SetLandscapeAgentUID(ctx, "")
+			err := conf.SetLandscapeAgentUID(ctx, "")
 			return errors.Join(err, fmt.Errorf("Landscape server did not respond with a client UID"))
 		case <-ticker.C:
 		}
 
-		if uid, err := c.conf.LandscapeAgentUID(ctx); err != nil {
+		if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
 			return err
 		} else if uid != "" {
 			// UID received: success.
@@ -285,142 +294,57 @@ func (c *Client) handshake(ctx context.Context, conn *connection) error {
 }
 
 // Stop terminates the connection and deallocates resources.
-func (c *Client) Stop(ctx context.Context) {
-	c.once.Do(func() {
-		close(c.stopped)
+func (s *Service) Stop(ctx context.Context) {
+	s.once.Do(func() {
+		close(s.stopped)
 
-		c.connMu.Lock()
-		defer c.connMu.Unlock()
+		s.connMu.Lock()
+		defer s.connMu.Unlock()
 
-		if c.conn != nil {
-			c.conn.disconnect()
-			c.conn = nil
+		if s.conn != nil {
+			s.conn.disconnect()
+			s.conn = nil
 		}
 	})
 }
 
-func (conn *connection) disconnect() {
-	// Default constructed connection
-	if conn.cancel == nil {
-		return
+// Controller creates a controler for this service.
+func (s *Service) Controller() Controller {
+	return Controller{
+		serviceConn: s,
+		serviceData: s,
 	}
-
-	conn.once.Do(func() {
-		conn.cancel()
-		conn.receivingCommands.Wait()
-		_ = conn.grpcConn.Close()
-	})
 }
 
-// Connected returns true if the Landscape client managed to connect to the server.
-func (c *Client) Connected() bool {
-	c.connMu.RLock()
-	defer c.connMu.RUnlock()
+// The following methods expose some internals for the other components to use.
 
-	return c.conn.connected()
+// signalRetryConnection signals the Landscape client to attempt to connect to Landscape.
+// It will not block if there is an ative connection. until the reconnect petition
+// has been received.
+func (s *Service) signalRetryConnection() <-chan struct{} {
+	s.connMu.Lock()
+	defer s.connMu.Unlock()
+
+	return s.retryConnection
 }
 
-func (conn *connection) connected() bool {
-	if conn == nil {
-		return false
-	}
-
-	if conn.grpcConn == nil {
-		return false
-	}
-
-	switch conn.grpcConn.GetState() {
-	case connectivity.Idle:
-		return false
-	case connectivity.Shutdown:
-		return false
-	}
-
-	return true
+func (s *Service) hasStopped() <-chan struct{} {
+	return s.stopped
 }
 
-// landscapeHostConf is the subset of the landscape configuration relevant to the agent.
-type landscapeHostConf struct {
-	sslPublicKey    string
-	accountName     string
-	registrationKey string
-	hostagentURL    string
+func (s *Service) config() Config {
+	return s.conf
 }
 
-func (c *Client) readLandscapeHostConf(ctx context.Context) (landscapeHostConf, error) {
-	conf := landscapeHostConf{
-		// TODO: default-initialize the hostagentURL to Canonical's SaaS.
-	}
-
-	out, _, err := c.conf.LandscapeClientConfig(ctx)
-	if err != nil {
-		return conf, fmt.Errorf("could not obtain Landscape config: %v", err)
-	}
-
-	if out == "" {
-		// No Landscape config: return defaults
-		return conf, nil
-	}
-
-	ini, err := ini.Load(strings.NewReader(out))
-	if err != nil {
-		return conf, fmt.Errorf("could not parse Landscape config file: %v", err)
-	}
-
-	// Note: all these functions only return errors when the section/key does not exist.
-
-	sec, err := ini.GetSection("client")
-	if err == nil {
-		k, err := sec.GetKey("ssl_public_key")
-		if err == nil {
-			conf.sslPublicKey = k.String()
-		}
-
-		k, err = sec.GetKey("account_name")
-		if err == nil {
-			conf.accountName = k.String()
-		}
-
-		k, err = sec.GetKey("registration_key")
-		if err == nil {
-			conf.registrationKey = k.String()
-		}
-	}
-
-	sec, err = ini.GetSection("host")
-	if err == nil {
-		k, err := sec.GetKey("url")
-		if err == nil {
-			conf.hostagentURL = k.String()
-		}
-	}
-
-	return conf, nil
+func (s *Service) database() *database.DistroDB {
+	return s.db
 }
 
-// transportCredentials reads the Landscape client config to check if a SSL public key is specified.
-//
-// If this credential is not specified, an insecure credential is returned.
-// If the credential is specified but erroneous, an error is returned.
-func transportCredentials(conf landscapeHostConf) (cred credentials.TransportCredentials, err error) {
-	defer decorate.OnError(&err, "Landscape credentials")
+func (s *Service) hostname() string {
+	return s.hostName
+}
 
-	if conf.sslPublicKey == "" {
-		return insecure.NewCredentials(), nil
-	}
-
-	cert, err := os.ReadFile(conf.sslPublicKey)
-	if err != nil {
-		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
-	}
-
-	certPool := x509.NewCertPool()
-	if ok := certPool.AppendCertsFromPEM(cert); !ok {
-		return nil, fmt.Errorf("failed to add server CA's certificate: %v", err)
-	}
-
-	return credentials.NewTLS(&tls.Config{
-		RootCAs:    certPool,
-		MinVersion: tls.VersionTLS12,
-	}), nil
+func (s *Service) connection() (conn *connection, release func()) {
+	s.connMu.RLock()
+	return s.conn, s.connMu.RUnlock
 }
