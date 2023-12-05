@@ -25,7 +25,7 @@ import (
 type Manager struct {
 	uiService          ui.Service
 	wslInstanceService wslinstance.Service
-	landscapeService   *landscape.Client
+	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
 }
@@ -113,7 +113,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 
 	uiService := ui.New(ctx, conf, db)
 
-	landscape, err := landscape.NewClient(conf, db)
+	landscape, err := landscape.New(conf, db)
 	if err != nil {
 		return s, err
 	}
@@ -122,7 +122,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		log.Warningf(ctx, err.Error())
 	}
 
-	wslInstanceService, err := wslinstance.New(ctx, db, landscape)
+	wslInstanceService, err := wslinstance.New(ctx, db, landscape.Controller())
 	if err != nil {
 		return s, err
 	}

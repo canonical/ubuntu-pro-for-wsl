@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	c := &landscapeClientMock{}
+	c := &landscapeCtlMock{}
 
 	_, err = wslinstance.New(context.Background(), db, c)
 	require.NoError(t, err, "New should never return an error")
@@ -138,7 +138,7 @@ func TestConnected(t *testing.T) {
 				distroName = ""
 			}
 
-			landscape := &landscapeClientMock{}
+			landscape := &landscapeCtlMock{}
 			switch tc.landscape {
 			case disconnected:
 				landscape.disconnected = true
@@ -221,10 +221,14 @@ func TestConnected(t *testing.T) {
 			require.Equal(t, props, d.Properties(), "Distro properties should match those sent via the SendInfo.")
 
 			// Ensure landscape sent an update
+			const landscapeTimeout = 15 * time.Second
 			if tc.landscape == disconnected {
+				time.Sleep(landscapeTimeout)
 				require.Equal(t, int32(0), landscape.updateCount.Load(), "No updates should have been sent to a disconnected Landscape.")
 			} else {
-				require.Equal(t, int32(1), landscape.updateCount.Load(), "Landscape should have had an update sent")
+				var c int32
+				require.Eventuallyf(t, func() bool { return landscape.updateCount.Load() == 1 },
+					landscapeTimeout, time.Second, "Landscape should have had an update sent (had %d)", c)
 			}
 
 			// Connected has added the distro to the database.
@@ -296,9 +300,11 @@ func TestConnected(t *testing.T) {
 
 			// Ensure landscape sent an update
 			if tc.landscape == disconnected {
+				time.Sleep(landscapeTimeout)
 				require.Equal(t, int32(0), landscape.updateCount.Load(), "No updates should have been sent to a disconnected Landscape.")
 			} else {
-				require.Equal(t, int32(2), landscape.updateCount.Load(), "Landscape should have had a second update sent")
+				require.Eventually(t, func() bool { return landscape.updateCount.Load() == 2 },
+					landscapeTimeout, time.Second, "Landscape should have had a second update sent (had %d)", landscape.updateCount.Load())
 			}
 
 			checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv)
@@ -329,7 +335,7 @@ type wrappedService struct {
 
 // newWrappedService is a wrapper around wslinstance.New. It initializes the monitoring
 // around the service.
-func newWrappedService(ctx context.Context, db *database.DistroDB, landscape *landscapeClientMock) (s wrappedService, err error) {
+func newWrappedService(ctx context.Context, db *database.DistroDB, landscape *landscapeCtlMock) (s wrappedService, err error) {
 	inst, err := wslinstance.New(ctx, db, landscape)
 	return wrappedService{
 		Service: inst,
@@ -378,18 +384,18 @@ func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (se
 	return server, lis.Addr().String()
 }
 
-// landscapeClientMock mocks the landscape client.
+// landscapeCtlMock mocks the landscape client.
 //
 // disconnected and err are inputs to manipulate mock behaviour.
 // updateCount is used to assert that the SendUpdatedInfo function has been called.
-type landscapeClientMock struct {
+type landscapeCtlMock struct {
 	disconnected bool
 	err          bool
 
 	updateCount atomic.Int32
 }
 
-func (c *landscapeClientMock) SendUpdatedInfo(ctx context.Context) error {
+func (c *landscapeCtlMock) SendUpdatedInfo(ctx context.Context) error {
 	if c.disconnected {
 		return errors.New("Sending updated info to disconnected landscape")
 	}
@@ -400,10 +406,6 @@ func (c *landscapeClientMock) SendUpdatedInfo(ctx context.Context) error {
 		return errors.New("mock error")
 	}
 	return nil
-}
-
-func (c *landscapeClientMock) Connected() bool {
-	return !c.disconnected
 }
 
 // wslDistroMock mocks the actions performed by the Linux-side client and services.
