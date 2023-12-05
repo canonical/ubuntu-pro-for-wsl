@@ -437,24 +437,26 @@ func TestNoSimultaneousStartups(t *testing.T) {
 	wsltestutils.TerminateDistro(t, ctx, distroName)
 
 	// Lock the startup mutex to pretend some other distro is starting up
-	startupMu.Lock()
-
+	const lockAwakeMaxTime = 20 * time.Second
 	ch := make(chan error)
-	go func() {
-		// We send the error to be asserted in the main goroutine because
-		// failed assertions outside the test goroutine cause panics.
-		ch <- d.LockAwake()
-		close(ch)
+
+	func() {
+		startupMu.Lock()
+		defer startupMu.Unlock()
+
+		go func() {
+			// We send the error to be asserted in the main goroutine because
+			// failed assertions outside the test goroutine cause panics.
+			ch <- d.LockAwake()
+			close(ch)
+		}()
+
+		time.Sleep(lockAwakeMaxTime)
+		state := wsltestutils.DistroState(t, ctx, distroName)
+		require.Equal(t, "Stopped", state, "Distro should not start while the mutex is locked")
 	}()
 
-	const lockAwakeMaxTime = 20 * time.Second
-
-	time.Sleep(lockAwakeMaxTime)
-	state := wsltestutils.DistroState(t, ctx, distroName)
-	require.Equal(t, "Stopped", state, "Distro should not start while the mutex is locked")
-
-	// Release the startup mutex to pretend some other distro finished starting up
-	startupMu.Unlock()
+	// The startup mutex has been released to pretend some other distro finished starting up
 
 	select {
 	case <-time.After(lockAwakeMaxTime):
@@ -464,7 +466,7 @@ func TestNoSimultaneousStartups(t *testing.T) {
 		break
 	}
 
-	state = wsltestutils.DistroState(t, ctx, distroName)
+	state := wsltestutils.DistroState(t, ctx, distroName)
 	require.Equal(t, "Running", state, "Distro should start after the mutex is released")
 }
 
