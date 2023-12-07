@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/tools
 
-go 1.21.4
+go 1.21.5
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/windows-agent v0.0.0-20230906090052-60fb5d60ada4
@@ -46,7 +46,7 @@ require (
 	github.com/breml/errchkjson v0.3.6 // indirect
 	github.com/butuzov/ireturn v0.2.2 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
-	github.com/canonical/landscape-hostagent-api v0.0.0-20230606055347-dd0b7f618303 // indirect
+	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d // indirect
 	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230906090052-60fb5d60ada4 // indirect
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230906090052-60fb5d60ada4 // indirect
 	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-60fb5d60ada4 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/golangci/revgrep v0.5.2 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/uuid v1.3.1 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20230610083614-0e73809eb601 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
@@ -195,16 +195,16 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
-	google.golang.org/grpc v1.58.2 // indirect
+	google.golang.org/grpc v1.59.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
