@@ -1,5 +1,6 @@
 [Unit]
 Description=Bridge to Ubuntu Pro agent on Windows
+ConditionVirtualization=wsl
 
 [Service]
 Type=notify
