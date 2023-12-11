@@ -151,7 +151,7 @@ func TestPurchase(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d)
+			landscape.RequireReceivedInfo(t, token, d)
 			// Skipping because we know it to be broken
 			// See https://warthogs.atlassian.net/browse/UDENG-1810
 			//

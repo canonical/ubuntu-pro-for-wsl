@@ -97,7 +97,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d)
+			info := landscape.RequireReceivedInfo(t, proToken, d)
 			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
