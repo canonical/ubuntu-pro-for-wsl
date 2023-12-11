@@ -63,6 +63,9 @@ func TestPurchase(t *testing.T) {
 			defer landscape.LogOnError(t)
 			defer landscape.Stop()
 
+			hostname, err := os.Hostname()
+			require.NoError(t, err, "Setup: could not test machine's hostname")
+
 			settings := contractsmockserver.DefaultSettings()
 
 			token := os.Getenv(proTokenEnv)
@@ -151,7 +154,7 @@ func TestPurchase(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			landscape.RequireReceivedInfo(t, token, d)
+			landscape.RequireReceivedInfo(t, token, d, hostname)
 			// Skipping because we know it to be broken
 			// See https://warthogs.atlassian.net/browse/UDENG-1810
 			//

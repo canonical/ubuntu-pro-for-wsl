@@ -49,6 +49,9 @@ func TestManualTokenInput(t *testing.T) {
 			defer landscape.LogOnError(t)
 			defer landscape.Stop()
 
+			hostname, err := os.Hostname()
+			require.NoError(t, err, "Setup: could not test machine's hostname")
+
 			// Either runs the ubuntupro app before...
 			if tc.whenToken == beforeDistroRegistration {
 				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
@@ -92,7 +95,7 @@ func TestManualTokenInput(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d)
+			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), d, hostname)
 			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}

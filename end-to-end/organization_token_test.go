@@ -48,6 +48,9 @@ func TestOrganizationProvidedToken(t *testing.T) {
 			defer landscape.LogOnError(t)
 			defer landscape.Stop()
 
+			hostname, err := os.Hostname()
+			require.NoError(t, err, "Setup: could not test machine's hostname")
+
 			proToken := os.Getenv(proTokenEnv)
 			require.NotEmptyf(t, proToken, "Setup: environment variable %q should contain a valid pro token, but is empty", proTokenEnv)
 			writeUbuntuProRegistry(t, "UbuntuProToken", proToken)
@@ -97,7 +100,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			info := landscape.RequireReceivedInfo(t, proToken, d)
+			info := landscape.RequireReceivedInfo(t, proToken, d, hostname)
 			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}

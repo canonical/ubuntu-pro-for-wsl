@@ -8,7 +8,6 @@ import (
 	"log"
 	"log/slog"
 	"net"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -109,7 +108,7 @@ func (l landscape) Stop() {
 }
 
 // RequireReceivedInfo checks that a connection to Landscape was made and the proper information was sent.
-func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistro gowsl.Distro) landscapemockservice.HostInfo {
+func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistro gowsl.Distro, wantHostname string) landscapemockservice.HostInfo {
 	t.Helper()
 
 	require.Eventually(t, func() bool {
@@ -127,9 +126,7 @@ func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistr
 	require.Equal(t, wantDistro.Name(), info.Instances[0].ID, "Landscape did not receive the right distro name from the agent")
 
 	// Validate hostname
-	hostname, err := os.Hostname()
-	require.NoError(t, err, "could not test machine's hostname")
-	require.Equal(t, hostname, info.Hostname, "Landscape did not receive the right hostname from the agent")
+	require.Equal(t, wantHostname, info.Hostname, "Landscape did not receive the right hostname from the agent")
 
 	return info
 }
