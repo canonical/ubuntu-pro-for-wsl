@@ -11,7 +11,6 @@ import (
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
@@ -30,7 +29,7 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
-	conf := config.New(ctx, dir, config.WithRegistry(registry.NewMock()))
+	conf := config.New(ctx, dir)
 
 	_ = ui.New(context.Background(), conf, db)
 }
@@ -83,13 +82,6 @@ func TestAttachPro(t *testing.T) {
 
 			const originalToken = "old_token"
 
-			m := registry.NewMock()
-
-			if tc.higherPriorityToken {
-				m.KeyExists = true
-				m.UbuntuProData["UbuntuProToken"] = "organization_token"
-			}
-
 			if tc.breakConfig {
 				err := os.MkdirAll(filepath.Join(dir, "config"), 0600)
 				require.NoError(t, err, "Setup: could not create directory to interfere with config")
@@ -99,9 +91,11 @@ func TestAttachPro(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write config file")
 			}
 
-			conf := config.New(ctx, dir, config.WithRegistry(m))
+			conf := config.New(ctx, dir)
 			if tc.higherPriorityToken {
-				err = conf.UpdateRegistrySettings(ctx, db)
+				err = conf.UpdateRegistryData(ctx, config.RegistryData{
+					UbuntuProToken: "organization_token",
+				}, db)
 				require.NoError(t, err, "Setup: could not make registry read registry settings")
 			}
 

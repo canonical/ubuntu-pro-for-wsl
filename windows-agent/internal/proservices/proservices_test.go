@@ -45,7 +45,9 @@ func TestNew(t *testing.T) {
 			dir := t.TempDir()
 
 			reg := registry.NewMock()
-			reg.KeyExists = true
+			k, err := reg.HKCUOpenKeyWrite("Software/Canonical/UbuntuPro")
+			require.NoError(t, err, "Setup: could not create Ubuntu Pro registry key")
+			reg.CloseKey(k)
 
 			if tc.breakMkDir {
 				dir = filepath.Join(dir, "proservices")
