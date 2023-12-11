@@ -16,6 +16,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
+	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
 )
 
@@ -80,6 +81,12 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
 		return s, err
 	}
+
+	// Ugly trick to prevent WSL error 0x80070005 due bad interaction with the Store API.
+	// See more in:
+	//[Jira](https://warthogs.atlassian.net/browse/UDENG-1810)
+	//[GitHub](https://github.com/canonical/ubuntu-pro-for-windows/pull/438)
+	InitWSLAPI()
 
 	conf := config.New(ctx, opts.cacheDir, config.WithRegistry(opts.registry))
 	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
@@ -146,4 +153,11 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)
 
 	return grpcServer
+}
+
+// InitWSLAPI initializes the GoWSL underlying component to prevent access errors due bad interaction
+// with the MS Store API, thus it must be called as early as possible.
+func InitWSLAPI() {
+	d := wsl.NewDistro(context.Background(), "Whatever")
+	_, _ = d.GetConfiguration()
 }
