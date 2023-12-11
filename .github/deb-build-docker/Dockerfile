@@ -1,4 +1,4 @@
-FROM ubuntu:devel
+FROM ubuntu:mantic
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -11,5 +11,5 @@ RUN \
    add-apt-repository -y --ppa ppa:ubuntu-wsl-dev/ppa && \
    sed -i "s#https#http#g" /etc/apt/sources.list.d/*
 
-FROM ubuntu:devel
+FROM ubuntu:mantic
 COPY --from=0 /etc/apt/sources.list.d/* /etc/apt/sources.list.d/
