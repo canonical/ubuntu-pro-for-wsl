@@ -16,11 +16,18 @@ import (
 // The distro is guaranteed to be running so long as the counter is above 0. This counter can
 // be increased or decreased on demand, and is thread-safe.
 type stateManager struct {
+	distroIdentity identity
+
 	refcount uint32
 	cancel   func()
-	mu       sync.Mutex
 
-	distroIdentity identity
+	// mu is a mutex for the refcount and the cancel func. We cannot use an atomic because increasing
+	// or decreasing the count entails more operations than simply adding one to this number.
+	mu sync.Mutex
+
+	// startupMu protects against multiple distros starting at the same time. This could cause WSL
+	// (and the whole machine) to freeze up.
+	startupMu *sync.Mutex
 }
 
 // state returns the state of the WSL distro, as implemeted by GoWSL.
@@ -111,6 +118,9 @@ func (m *stateManager) reset() {
 //
 // The distro will be running by the time keepAwake returns.
 func (m *stateManager) keepAwake(ctx context.Context) (err error) {
+	m.startupMu.Lock()
+	defer m.startupMu.Unlock()
+
 	// Wake up distro
 	if err := touchdistro.Touch(ctx, m.distroIdentity.Name); err != nil {
 		return fmt.Errorf("could not wake distro up: %v", err)

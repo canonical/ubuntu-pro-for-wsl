@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,6 +27,25 @@ func TestMain(m *testing.M) {
 
 	exit := m.Run()
 	defer os.Exit(exit)
+}
+
+// globalStartupMu protects against multiple distros starting at the same time.
+var globalStartupMu sync.Mutex
+
+// startupMutex exists so that all distro tests share the same startup mutex.
+// This mutex prevents multiple distros from starting at the same time, which
+// could freeze the machine.
+//
+// When a mock WSL is used, this concern does not exist so we provide a new
+// mutex for every test so they can run in parallel without interference.
+func startupMutex() *sync.Mutex {
+	if wsl.MockAvailable() {
+		// No real distros: use a different mutex every test
+		return &sync.Mutex{}
+	}
+
+	// Real distros: use a the same mutex for all tests
+	return &globalStartupMu
 }
 
 func TestNew(t *testing.T) {
@@ -52,6 +72,7 @@ func TestNew(t *testing.T) {
 		withGUID               string
 		preventWorkDirCreation bool
 		withProvisioning       bool
+		nilMutex               bool
 
 		wantErr     bool
 		wantErrType error
@@ -67,6 +88,7 @@ func TestNew(t *testing.T) {
 		"Error when the distro is not registered":                       {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when the distro is not registered, but the GUID is":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when neither the distro nor the GUID are registered":     {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
+		"Error when the startup mutex is nil":                           {distro: registeredDistro, nilMutex: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -93,7 +115,12 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write file to interfere with distro's MkDir")
 			}
 
-			d, err = distro.New(ctx, tc.distro, props, workDir, args...)
+			mu := startupMutex()
+			if tc.nilMutex {
+				mu = nil
+			}
+
+			d, err = distro.New(ctx, tc.distro, props, workDir, mu, args...)
 			defer d.Cleanup(context.Background())
 
 			if tc.wantErr {
@@ -123,7 +150,8 @@ func TestString(t *testing.T) {
 
 	GUID, err := uuid.Parse(guid)
 	require.NoError(t, err, "Setup: could not parse guid %s: %v", GUID, err)
-	d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir(), distro.WithGUID(GUID))
+
+	d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir(), startupMutex(), distro.WithGUID(GUID))
 	defer d.Cleanup(context.Background())
 
 	require.NoError(t, err, "Setup: unexpected error in distro.New")
@@ -163,7 +191,7 @@ func TestIsValid(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// Create an always valid distro
-			d, err := distro.New(ctx, distro1, distro.Properties{}, t.TempDir())
+			d, err := distro.New(ctx, distro1, distro.Properties{}, t.TempDir(), startupMutex())
 			defer d.Cleanup(context.Background())
 
 			require.NoError(t, err, "Setup: distro New() should return no errors")
@@ -219,7 +247,7 @@ func TestSetProperties(t *testing.T) {
 			}
 
 			dname, _ := wsltestutils.RegisterDistro(t, ctx, false)
-			d, err := distro.New(ctx, dname, props1, t.TempDir())
+			d, err := distro.New(ctx, dname, props1, t.TempDir(), startupMutex())
 			require.NoError(t, err, "Setup: distro New should return no errors")
 
 			p := props2
@@ -295,7 +323,7 @@ func TestLockReleaseAwake(t *testing.T) {
 
 			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 
-			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
+			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), startupMutex())
 			defer d.Cleanup(context.Background())
 
 			require.NoError(t, err, "Setup: distro New should return no error")
@@ -404,6 +432,57 @@ func TestLockReleaseAwake(t *testing.T) {
 	}
 }
 
+func TestNoSimultaneousStartups(t *testing.T) {
+	t.Parallel()
+
+	if !wsl.MockAvailable() {
+		t.Skip("Skipped without mocks to avoid messing with the global mutex")
+	}
+
+	ctx := wsl.WithMock(context.Background(), wslmock.New())
+	var startupMu sync.Mutex
+
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
+	d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), &startupMu)
+	defer d.Cleanup(context.Background())
+	require.NoError(t, err, "Setup: distro New should return no error")
+
+	wsltestutils.TerminateDistro(t, ctx, distroName)
+
+	// Lock the startup mutex to pretend some other distro is starting up
+	const lockAwakeMaxTime = 20 * time.Second
+	ch := make(chan error)
+
+	func() {
+		startupMu.Lock()
+		defer startupMu.Unlock()
+
+		go func() {
+			// We send the error to be asserted in the main goroutine because
+			// failed assertions outside the test goroutine cause panics.
+			ch <- d.LockAwake()
+			close(ch)
+		}()
+
+		time.Sleep(lockAwakeMaxTime)
+		state := wsltestutils.DistroState(t, ctx, distroName)
+		require.Equal(t, "Stopped", state, "Distro should not start while the mutex is locked")
+	}()
+
+	// The startup mutex has been released to pretend some other distro finished starting up
+
+	select {
+	case <-time.After(lockAwakeMaxTime):
+		require.Fail(t, "LockAwake should have returned after releasing the startup mutex")
+	case err := <-ch:
+		require.NoError(t, err, "LockAwake should return no error")
+		break
+	}
+
+	state := wsltestutils.DistroState(t, ctx, distroName)
+	require.Equal(t, "Running", state, "Distro should start after the mutex is released")
+}
+
 func TestState(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
@@ -437,7 +516,7 @@ func TestState(t *testing.T) {
 			}
 
 			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
-			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir())
+			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), startupMutex())
 			require.NoError(t, err, "Setup: distro New should return no errors")
 
 			gowslDistro := wsl.NewDistro(ctx, distroName)
@@ -502,6 +581,7 @@ func TestWorkerConstruction(t *testing.T) {
 				distroName,
 				distro.Properties{},
 				workDir,
+				startupMutex(),
 				distro.WithTaskProcessingContext(ctx),
 				distro.WithProvisioning(provisioning),
 				withMockWorker)
@@ -533,7 +613,7 @@ func TestInvalidateIdempotent(t *testing.T) {
 
 	inj, w := mockWorkerInjector(false)
 
-	d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), inj)
+	d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), &globalStartupMu, inj)
 	defer d.Cleanup(context.Background())
 	require.NoError(t, err, "Setup: distro New should return no error")
 
@@ -598,7 +678,7 @@ func TestWorkerWrappers(t *testing.T) {
 
 			inj, w := mockWorkerInjector(false)
 
-			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), inj)
+			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), startupMutex(), inj)
 			defer d.Cleanup(context.Background())
 			require.NoError(t, err, "Setup: distro New should return no error")
 
@@ -690,7 +770,7 @@ func TestUninstall(t *testing.T) {
 
 			name, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
-			d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir())
+			d, err := distro.New(ctx, name, distro.Properties{}, t.TempDir(), startupMutex())
 			require.NoError(t, err, "Setup: distro New should return no errors")
 
 			if tc.unregisterDistro {
