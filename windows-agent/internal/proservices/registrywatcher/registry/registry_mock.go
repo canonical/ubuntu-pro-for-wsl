@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,6 +26,12 @@ type Mock struct {
 	// mimic this behaviour so we can fit the interface. The user of this  library will have
 	// a "pointer", which is just a key into this map.
 	eventHandles mockedHeap[Event, *eventHandle]
+
+	// Settings to break the registry
+	CannotOpen  atomic.Bool
+	CannotRead  atomic.Bool
+	CannotWatch atomic.Bool
+	CannotWait  atomic.Bool
 }
 
 // key mocks a registry key.
@@ -135,6 +142,10 @@ func (r *Mock) HKCUOpenKey(path string) (Key, error) {
 func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
 	path = filepath.Clean("/" + path)
 
+	if r.CannotOpen.Load() {
+		return 0, ErrMock
+	}
+
 	k, ok := r.registry[path]
 	if !ok {
 		if readOnly {
@@ -179,6 +190,10 @@ func (r *Mock) ReadValue(ptr Key, field string) (value string, err error) {
 		return value, errors.New("null key")
 	}
 
+	if r.CannotRead.Load() {
+		return "", ErrMock
+	}
+
 	r.keyHandles.mu.Lock()
 	defer r.keyHandles.mu.Unlock()
 
@@ -195,6 +210,10 @@ func (r *Mock) ReadValue(ptr Key, field string) (value string, err error) {
 // Modifying that key or its children will trigger the event.
 // This trigger can be detected by WaitSingleObject.
 func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
+	if r.CannotWatch.Load() {
+		return 0, ErrMock
+	}
+
 	r.keyHandles.mu.Lock()
 	defer r.keyHandles.mu.Unlock()
 
@@ -223,6 +242,10 @@ func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 
 // WaitForSingleObject waits until the event is triggered. This is a blocking function.
 func (r *Mock) WaitForSingleObject(handle Event) error {
+	if r.CannotWait.Load() {
+		return ErrMock
+	}
+
 	r.eventHandles.mu.Lock()
 	event, ok := r.eventHandles.data[handle]
 	r.eventHandles.mu.Unlock()
