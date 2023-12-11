@@ -28,7 +28,8 @@ type landscape struct {
 	server  *grpc.Server
 	service *landscapemockservice.Service
 
-	// ClientConfig is the configuration file needed to connect to this mock Landscape server.
+	// ClientConfig is the contents of the Landscape client configuration file needed
+	// to connect to this mock Landscape server.
 	ClientConfig string
 
 	logs bytes.Buffer
