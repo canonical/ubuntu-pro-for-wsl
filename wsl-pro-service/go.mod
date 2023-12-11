@@ -3,9 +3,9 @@ module github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
 go 1.21.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231120144258-eaedf425f737
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231128075531-d5f73211926f
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231113084350-57c6acdb2d5b
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231211081419-d5da4bbc986d
+	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231211081419-d5da4bbc986d
+	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231211081419-d5da4bbc986d
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -23,7 +23,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
