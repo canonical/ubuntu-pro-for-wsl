@@ -24,3 +24,9 @@ var (
 	// setup requested an error to be thrown.
 	ErrMock = errors.New("error triggered by mock setup")
 )
+
+// Event is a void pointer to a Windows event.
+type Event uintptr
+
+// Key is a void pointer to a Windows registry key.
+type Key uintptr

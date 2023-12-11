@@ -14,6 +14,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
 	wsl "github.com/ubuntu/gowsl"
@@ -25,13 +26,14 @@ type Manager struct {
 	uiService          ui.Service
 	wslInstanceService wslinstance.Service
 	landscapeService   *landscape.Client
+	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
 }
 
 // options are the configurable functional options for the daemon.
 type options struct {
 	cacheDir string
-	registry config.Registry
+	registry registrywatcher.Registry
 }
 
 // Option is the function signature we are passing to tweak the daemon creation.
@@ -47,7 +49,7 @@ func WithCacheDir(cachedir string) func(o *options) {
 }
 
 // WithRegistry allows overriding the Windows registry with a different back-end.
-func WithRegistry(registry config.Registry) func(o *options) {
+func WithRegistry(registry registrywatcher.Registry) func(o *options) {
 	return func(o *options) {
 		o.registry = registry
 	}
@@ -88,10 +90,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	//[GitHub](https://github.com/canonical/ubuntu-pro-for-windows/pull/438)
 	InitWSLAPI()
 
-	conf := config.New(ctx, opts.cacheDir, config.WithRegistry(opts.registry))
-	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
-		log.Warningf(ctx, "%v", err)
-	}
+	conf := config.New(ctx, opts.cacheDir)
 
 	db, err := database.New(ctx, opts.cacheDir, conf)
 	if err != nil {
@@ -105,8 +104,11 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		}
 	}()
 
-	if err := conf.UpdateRegistrySettings(ctx, db); err != nil {
-		log.Warningf(ctx, "Could not update registry settings: %v", err)
+	registryWatcher := registrywatcher.New(ctx, conf, db, registrywatcher.WithRegistry(opts.registry))
+	registryWatcher.Start()
+
+	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
+		log.Warningf(ctx, "%v", err)
 	}
 
 	uiService := ui.New(ctx, conf, db)
@@ -128,6 +130,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	return Manager{
 		uiService:          uiService,
 		wslInstanceService: wslInstanceService,
+		registryWatcher:    &registryWatcher,
 		db:                 db,
 		landscapeService:   landscape,
 	}, nil
@@ -137,6 +140,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 func (m Manager) Stop(ctx context.Context) {
 	m.landscapeService.Stop(ctx)
 	m.db.Close(ctx)
+	m.registryWatcher.Stop()
 }
 
 // RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.
