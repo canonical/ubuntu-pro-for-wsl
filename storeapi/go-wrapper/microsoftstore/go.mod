@@ -1,12 +1,12 @@
 module github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore
 
-go 1.21.4
+go 1.21.5
 
 require (
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20230905125854-3f98ad6913ab
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c
-	golang.org/x/sys v0.13.0
+	golang.org/x/sys v0.15.0
 )
 
 require (

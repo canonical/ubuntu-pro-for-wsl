@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-windows/common
 
-go 1.21.4
+go 1.21.5
 
 require (
 	github.com/google/uuid v1.4.0
@@ -17,6 +17,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
