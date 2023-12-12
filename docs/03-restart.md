@@ -24,14 +24,3 @@ This is the simple one. If you're not in a hurry to see the configuration update
     3. Wait a minute.
     4. Click on "Click to restart it".
 8.  Start the distro, or distros you installed WSL-Pro-Service in.
-
-# How to reset Ubuntu Pro for Windows back to factory settings
-You can reset Ubuntu Pro For Windows to factory settings following these steps:
-1. Uninstall the package and shut down WSL:
-    ```powershell
-    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage`
-    wsl --shutdown
-    ```
-2. Remove registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
-3. Install the package again (see the section on [how to install](./02-install.md)).
-4. You're done. Next time you start the GUI it'll be like a fresh install.

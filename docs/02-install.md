@@ -2,14 +2,16 @@
 
 This guide will show you how to install Ubuntu Pro For Windows for local development and testing.
 
-## Requirements
+## Install Ubuntu Pro For Windows from scratch
+
+### Requirements
 - A Windows machine with access to the internet
 - Appx from the Microsoft Store:
   - Windows Subsystem For Linux
   - Either Ubuntu, Ubuntu 22.04, or Ubuntu (Preview)
 - The Windows Subsystem for Windows optional feature enabled
 
-## Download
+### Download
 <!-- TODO: Update when we change were artifacts are hosted -->
 1. Go to the [repository actions page](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa-azure.yaml?query=branch%3Amain+).
 2. Click the latest successful workflow run.
@@ -20,7 +22,7 @@ This guide will show you how to install Ubuntu Pro For Windows for local develop
 
 Notice that, for the step above, there is also an alternative version of the MSIX bundle enabled for end-to-end testing. Most likely, that's not what you want to download.
 
-## Install the Windows agent
+### Install the Windows agent
 This is the Windows-side agent that manages the distros.
 1. Uninstall Ubuntu Pro For Windows if you had installed previously:
     ```powershell
@@ -33,7 +35,7 @@ This is the Windows-side agent that manages the distros.
 6. The Firewall may ask for an exception. Allow it.
 7. The GUI should show up. You’re done.
 
-## Install the WSL Pro Service
+### Install the WSL Pro Service
 This is the Linux-side component that talks to the agent. Choose one or more distros Jammy or greater, and follow the instructions.
 1. Uninstall the WSL-Pro-Service from your distro if you had it installed previously:
     ```bash
@@ -53,3 +55,14 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
     ```bash
     systemctl status wsl-pro.service
     ```
+
+## Reset Ubuntu Pro for Windows back to factory settings
+You can reset Ubuntu Pro For Windows to factory settings following these steps:
+1. Uninstall the package and shut down WSL:
+    ```powershell
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage`
+    wsl --shutdown
+    ```
+2. Remove registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
+3. Install the package again (see the section on [how to install](./02-install.md)).
+4. You're done. Next time you start the GUI it'll be like a fresh install.

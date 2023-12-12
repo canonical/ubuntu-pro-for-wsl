@@ -18,11 +18,11 @@ Thinking about using Ubuntu Pro for Windows for your next project? Get in touch!
 ```{toctree}
 :hidden:
  
-How to install Ubuntu Pro for Windows <02-install>
-How to restart Ubuntu Pro For Windows <03-restart>
-How to auto-attach distros to Ubuntu Pro <04-enable-pro>
-How to auto-register distros to Landscape <05-attach-landscape>
-How to access the logs <06-access-the-logs.md>
+Install Ubuntu Pro for Windows <02-install>
+Restart Ubuntu Pro For Windows <03-restart>
+Auto-attach distros to Ubuntu Pro <04-enable-pro>
+Auto-register distros to Landscape <05-attach-landscape>
+Access the logs <06-access-the-logs.md>
 Windows Agent command line interface <07-windows-agent-command-line-reference>
 WSL Pro Service command line interface <08-wsl-pro-service-command-line-reference>
 ```
