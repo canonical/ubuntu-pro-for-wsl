@@ -10,7 +10,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sys v0.15.0
-	google.golang.org/grpc v1.58.2
+	google.golang.org/grpc v1.60.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -27,7 +27,7 @@ require (
 	github.com/ubuntu/decorate v0.0.0-20230606064312-bc4ac83958d6 // indirect
 	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
