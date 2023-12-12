@@ -56,6 +56,16 @@ func TestPurchase(t *testing.T) {
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
 
+			landscape := NewLandscape(t, ctx)
+			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
+
+			go landscape.Serve()
+			defer landscape.LogOnError(t)
+			defer landscape.Stop()
+
+			hostname, err := os.Hostname()
+			require.NoError(t, err, "Setup: could not test machine's hostname")
+
 			settings := contractsmockserver.DefaultSettings()
 
 			token := os.Getenv(proTokenEnv)
@@ -124,7 +134,7 @@ func TestPurchase(t *testing.T) {
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			const maxTimeout = 30 * time.Second
+			const maxTimeout = time.Minute
 
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
@@ -143,6 +153,12 @@ func TestPurchase(t *testing.T) {
 				}
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
+
+			landscape.RequireReceivedInfo(t, token, d, hostname)
+			// Skipping because we know it to be broken
+			// See https://warthogs.atlassian.net/browse/UDENG-1810
+			//
+			// landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
 }

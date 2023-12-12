@@ -19,6 +19,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
+	"golang.org/x/sys/windows/registry"
 )
 
 func testSetup(t *testing.T) {
@@ -70,7 +71,7 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 // in a form of "key=value" strings can be appended to the current environment.
 // It stops the agent upon cleanup. If the cleanup fails, the testing will be stopped.
 //
-//nolint:revive // testing.T must precede the contex
+//nolint:revive // testing.T must precede the context
 func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string) (cleanup func()) {
 	t.Helper()
 
@@ -264,4 +265,15 @@ func globSingleResult(pattern string) (string, error) {
 	}
 
 	return candidates[0], nil
+}
+
+func writeUbuntuProRegistry(t *testing.T, field string, value string) {
+	t.Helper()
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, registryPath, registry.WRITE)
+	require.NoErrorf(t, err, "Setup: could not open UbuntuPro registry key")
+	defer key.Close()
+
+	err = key.SetStringsValue(field, strings.Split(value, "\n"))
+	require.NoError(t, err, "could not write token in registry")
 }
