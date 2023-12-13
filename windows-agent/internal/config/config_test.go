@@ -489,12 +489,6 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 	}
 }
 
-func TestUpdateRegistryData(t *testing.T) {
-	t.Helper()
-
-	require.Fail(t, "Not implemented")
-}
-
 type mockMSStore struct {
 	jwt    string
 	jwtErr bool
@@ -519,6 +513,135 @@ func (s mockMSStore) GetSubscriptionExpirationDate() (tm time.Time, err error) {
 	return s.expirationDate, nil
 }
 
+func TestUpdateRegistryData(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	//nolint:gosec // These are not real credentials
+	const (
+		proToken1      = "UBUNTU_PRO_TOKEN_FIRST"
+		landscapeConf1 = "[client]greeting=hello"
+
+		proToken2      = "UBUNTU_PRO_TOKEN_SECOND"
+		landscapeConf2 = "[client]greeting=cheers"
+	)
+
+	testCases := map[string]struct {
+		settingsState   settingsState
+		breakConfigFile bool
+
+		wantErr bool
+	}{
+		"Success":                        {},
+		"Success overriding user config": {settingsState: userTokenHasValue | userLandscapeConfigHasValue},
+
+		"Error when we cannot load from file": {breakConfigFile: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			db, err := database.New(ctx, t.TempDir(), nil)
+			require.NoError(t, err, "Setup: could not create empty database")
+
+			_, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile)
+			c := config.New(ctx, dir)
+
+			// Enter a first set of data to override the defaults
+			err = c.UpdateRegistryData(ctx, config.RegistryData{
+				UbuntuProToken:  proToken1,
+				LandscapeConfig: landscapeConf1,
+			}, db)
+			if tc.wantErr {
+				require.Error(t, err, "UpdateRegistryData should have failed")
+				return
+			}
+			require.NoError(t, err, "UpdateRegistryData should not have failed")
+
+			tokenCsum1, lcapeCsum1 := loadChecksums(t, dir)
+			require.NotEmpty(t, tokenCsum1, "Subscription checksum should not be empty")
+			require.NotEmpty(t, lcapeCsum1, "Landscape checksum should not be empty")
+
+			token, src, err := c.Subscription(ctx)
+			require.NoError(t, err, "Subscription should not return any errors")
+			require.Equal(t, proToken1, token, "Subscription did not return the token we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+
+			lcape, src, err := c.LandscapeClientConfig(ctx)
+			require.NoError(t, err, "Subscription should not return any errors")
+			require.Equal(t, landscapeConf1, lcape, "Subscription did not return the landscape config we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+
+			// Enter a second set of data to override the first one
+			err = c.UpdateRegistryData(ctx, config.RegistryData{
+				UbuntuProToken:  proToken2,
+				LandscapeConfig: landscapeConf2,
+			}, db)
+			require.NoError(t, err, "UpdateRegistryData should not have failed")
+
+			tokenCsum2, lcapeCsum2 := loadChecksums(t, dir)
+			require.NotEmpty(t, tokenCsum2, "Subscription checksum should not be empty")
+			require.NotEmpty(t, lcapeCsum2, "Landscape checksum should not be empty")
+			require.NotEqual(t, tokenCsum1, tokenCsum2, "Subscription checksum should have changed")
+			require.NotEqual(t, lcapeCsum1, lcapeCsum2, "Landscape checksum should have changed")
+
+			token, src, err = c.Subscription(ctx)
+			require.NoError(t, err, "Subscription should not return any errors")
+			require.Equal(t, proToken2, token, "Subscription did not return the token we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+
+			lcape, src, err = c.LandscapeClientConfig(ctx)
+			require.NoError(t, err, "Subscription should not return any errors")
+			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+
+			// Enter the second set of data again
+			err = c.UpdateRegistryData(ctx, config.RegistryData{
+				UbuntuProToken:  proToken2,
+				LandscapeConfig: landscapeConf2,
+			}, db)
+			require.NoError(t, err, "UpdateRegistryData should not have failed")
+
+			tokenCsum3, lcapeCsum3 := loadChecksums(t, dir)
+			require.Equal(t, tokenCsum2, tokenCsum3, "Subscription checksum should not have changed")
+			require.Equal(t, lcapeCsum2, lcapeCsum3, "Landscape checksum should not have changed")
+
+			token, src, err = c.Subscription(ctx)
+			require.NoError(t, err, "Subscription should not return any errors")
+			require.Equal(t, proToken2, token, "Subscription did not return the token we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+
+			lcape, src, err = c.LandscapeClientConfig(ctx)
+			require.NoError(t, err, "Subscription should not return any errors")
+			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+		})
+	}
+}
+
+// loadChecksums is a test helper that loads the checksums from the config file.
+func loadChecksums(t *testing.T, confDir string) (string, string) {
+	t.Helper()
+
+	var fileData struct {
+		Landscape    struct{ Checksum string }
+		Subscription struct{ Checksum string }
+	}
+
+	out, err := os.ReadFile(filepath.Join(confDir, "config"))
+	require.NoError(t, err, "Could not read config file")
+
+	err = yaml.Unmarshal(out, &fileData)
+	require.NoError(t, err, "Could not marshal config file")
+
+	return fileData.Subscription.Checksum, fileData.Landscape.Checksum
+}
 
 // is defines equality between flags. It is convenience function to check if a settingsState matches a certain state.
 func (state settingsState) is(flag settingsState) bool {
