@@ -5,6 +5,8 @@
 Welcome
 
 ```{toctree}
+:titlesonly:
+
 howto/index
 reference/index
 ```
