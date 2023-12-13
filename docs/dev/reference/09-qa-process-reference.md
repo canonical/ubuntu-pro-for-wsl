@@ -10,16 +10,16 @@ At any point in time, only the latest two versions of the Go toolchain receive s
 
 ## Process
 
-WSL Pro Service follows a robust continuous integration and testing process. It is covered by [a comprehensive automated tests suite](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa.yaml).
+WSL Pro Service follows a robust continuous integration and testing process. It is covered by [a comprehensive automated test suite](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa.yaml).
 
 The team applies the following quality criteria:
 
 - All changes are thoroughly reviewed and approved by core team members before integration.
-- Each change is thoroughly tested at the unit, integration and syste levels. All the tests pass in all supported architectures.
+- Each change is thoroughly tested at the unit, integration and system levels. All the tests pass in all supported architectures.
 - Releases are reviewed as part of the [SRU exception](https://wiki.ubuntu.com/UbuntuProForWSLUpdates).
 
 
-The test plan is **completely automated** and runs **every time a change is merged**, as well as **during packaging**. This covers integration and end to end tests. Integration tests run on each LTS affected by the SRU to ensure compatibility. 
+The test plan is **completely automated** and runs **every time a change is merged**, as well as **during packaging**. This covers integration and end-to-end tests. Integration tests run on each LTS affected by the SRU to ensure compatibility. 
 
 Testing also covers the upgrade from the current version to the proposed version.
 
@@ -27,9 +27,9 @@ Tests are not executed on different versions of Windows due to testing environme
 
 ## Packaging QA
 
-To prepare the release to LTS, the following procedure is be completed to ensure quality:
+To prepare the release to LTS, the following procedure is being completed to ensure quality:
 
--   All autopkgtests pass. Unit tests are executed as autopkgtests. Running higher level tests would require a Windows VM. It is not available in autopkgtest at the moment. Even if wsl-pro service tests could run in a VM, they wouldn't test anything real.
+-   All autopkgtests pass. Unit tests are executed as autopkgtests. Running higher-level tests would require a Windows VM. It is not available in autopkgtest at the moment. Even if wsl-pro-service tests could run in a VM, they wouldn't test anything real.
 -   The package does not break when upgrading.
 -   The binary is identical to the CI build, with only Debian packaging changes.
 -   The copyrights and changelog are up to date.
@@ -43,8 +43,8 @@ Code sanity checks are performed automatically on each build. They verify:
 -   Go module files are up to date.
 -   Generated files are up to date.
 -   Any binary in the project builds.
--   The debian package builds.
--   Vulnerabilities. It is actually a run of `govulncheck`.
+-   The Debian package builds.
+-   Vulnerabilities. It is a run of `govulncheck`.
 
 All the layers are tested from APIs to mocks to the service itself
 
@@ -59,13 +59,13 @@ All the layers are tested from APIs to mocks to the service itself
 ## Code coverage
 
 There is no Codecov report due to the limitations of private projects.
-However code coverage is calculated and displayed at testing time.
+However, code coverage is calculated and displayed at testing time.
 Coverage is manually reviewed by the engineers.
 
 ## Bug reporting
 
-The main bug tracker remains GitHub. [[GitHub Templates](https://github.com/canonical/ubuntu-pro-for-windows/issues/new/choose)
-are available to help the user with the bug reporting process and provide the right information.
+The main bug tracker remains on GitHub. [GitHub Templates](https://github.com/canonical/ubuntu-pro-for-windows/issues/new/choose)
+are available to help the user with the bug-reporting process and provide the right information.
 
 Wsl-pro supports ubuntu-bug reporting to Launchpad with an apport hook but we are not collecting any data at the moment.
 
