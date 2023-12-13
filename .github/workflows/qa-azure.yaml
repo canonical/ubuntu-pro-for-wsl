@@ -5,6 +5,9 @@ concurrency: azure-vm
 
 on:
   pull_request:
+    paths-ignore:
+      - docs/**
+      - '*.md'
   workflow_dispatch:
   push:
     branches: [main]
