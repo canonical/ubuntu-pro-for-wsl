@@ -51,9 +51,10 @@ All the layers are tested from APIs to mocks to the service itself
 ### Example reports
 
 
-- Code sanity and unit testing: [https://github.com/canonical/ubuntu-pro-for-windows/actions/runs/7060660221](https://github.com/canonical/ubuntu-pro-for-windows/actions/runs/7060660221)
-- Integration tests: [https://github.com/canonical/ubuntu-pro-for-windows/actions/runs/7060660220](https://github.com/canonical/ubuntu-pro-for-windows/actions/runs/7060660220)
+- Code sanity and unit testing: [QA workflow](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa.yaml?query=branch%3Amain)
+- Integration tests: [end-to-to-end tests workflow](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa-azure.yaml?query=branch%3Amain)
 
+<!-- This link is broken because the repo is private -->
 ![image](https://github.com/canonical/ubuntu-pro-for-windows/assets/1928546/649084df-1889-471a-a211-df3ae890a8fd)
 
 ## Code coverage
