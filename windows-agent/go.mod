@@ -11,7 +11,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore v0.0.0-20230906093332-11c8e171f61b
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230906090052-60fb5d60ada4
 	github.com/golang/protobuf v1.5.3
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.1
