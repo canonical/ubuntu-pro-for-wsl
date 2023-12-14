@@ -5,15 +5,26 @@ autocompletion
 enablement
 
 # Tools and brands
+apport
 appx
-MSIX
-dev
+Codecov
 distro
 distros
 macOS
+MSIX
 powershell
 systemd
 ubuntu
 UbuntuProForWindows
 wsl
 zsh
+
+# Other jargon
+autopkgtest
+autopkgtests
+backporting
+changelog
+dev
+LTS
+SRU
+toolchain
