@@ -70,6 +70,11 @@ func setLoggerOutput() (func(), error) {
 		return nil, errors.New("could not find LocalAppData")
 	}
 
+	err := os.MkdirAll(filepath.Join(lad, common.LocalAppDataDir), 0600)
+	if err != nil {
+		return nil, errors.New("could not create logs dir")
+	}
+
 	p := filepath.Join(lad, common.LocalAppDataDir, "log")
 
 	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE, 0600)
