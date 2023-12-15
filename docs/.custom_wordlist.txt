@@ -28,3 +28,5 @@ dev
 LTS
 SRU
 toolchain
+FIPS
+HIPAA
