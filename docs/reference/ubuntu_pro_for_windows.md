@@ -4,8 +4,7 @@
 
 Ubuntu Pro for Windows is an automation tool running on Windows hosts to manage
 Ubuntu WSL instances, providing them with compliance by attaching them to
-Ubuntu Pro and enrolling them into Landscape, made available through the
-Microsoft Store.
+Ubuntu Pro and enrolling them into Landscape.
 
 Ubuntu Pro for Windows is made of:
  - a [background agent](windows_agent) providing the automation services and
@@ -13,3 +12,6 @@ Ubuntu Pro for Windows is made of:
 
 Additionally, only instances having the wsl-pro-service component installed are
 capable of interacting with this application.
+
+Ubuntu Pro For Windows is available through the Microsoft Store.
+
