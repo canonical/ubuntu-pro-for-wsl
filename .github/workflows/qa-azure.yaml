@@ -94,7 +94,7 @@ jobs:
             -verbosity:normal
 
       - name: Upload sideload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: UbuntuProForWindows+${{ github.sha }}-${{ matrix.mode }}
           path: |
