@@ -3,7 +3,7 @@ module github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
 go 1.21.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103032-b88199dbf315
+	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103128-7665a706d4cb
 	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153
 	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240102103032-b88199dbf315
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf

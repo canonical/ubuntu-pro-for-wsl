@@ -1,5 +1,5 @@
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103032-b88199dbf315 h1:ORlQcZEF1vYkAVvMUzztmrpDev4nEki49uqOE0hetWM=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103032-b88199dbf315/go.mod h1:5vpaMlC8GPuPR1T654IrnzbjmrqgUeSSwWxTnVgX0S0=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103128-7665a706d4cb h1:j+durd6vA0tTpisqOs8UUo3jBk041sOIRtqvm38g2Hs=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103128-7665a706d4cb/go.mod h1:0LyNDS96w9Pbm0W3GGLboVqSX9ehQoQlO/MH2XCwpaw=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153 h1:+tFbSQ8DlDx2EEZz5MCM6UHZOXKd44jr2QsTpPyy3y8=
 github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153/go.mod h1:GlzIygZxSGJy32ZKMc4lpaZXeZLX9qdOmWlAIqEMsfM=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240102103032-b88199dbf315 h1:dtdzpsPgpPGzu8xuFAOrTui+uSyj2ScNgVnn6d7ln/w=
