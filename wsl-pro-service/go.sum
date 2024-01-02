@@ -1,7 +1,7 @@
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231213143945-ea68aa2dae1d h1:D5kvdbd+MegdlO8OdaoEZOy0tXZEDU4a91EHq/3T2dg=
 github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20231213143945-ea68aa2dae1d/go.mod h1:nKKF6m5+QRAGJ86M6TAmeRUhYOGl1oy9+y8XSJ2kYbU=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231213143945-ea68aa2dae1d h1:mcOJ/sxcEA15EsCqRcDxmzNO+wYz4XQO/HhY4RgpRaw=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231213143945-ea68aa2dae1d/go.mod h1:Z3UbifY93PeJFg2raMKrgcWNaWvfzF+5uLDMAX+K9V4=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153 h1:+tFbSQ8DlDx2EEZz5MCM6UHZOXKd44jr2QsTpPyy3y8=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153/go.mod h1:GlzIygZxSGJy32ZKMc4lpaZXeZLX9qdOmWlAIqEMsfM=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231213143945-ea68aa2dae1d h1:4B/teNZXYysGBHw7TE9NXjOEh1HLwcmYcLyfsyvNZPc=
 github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20231213143945-ea68aa2dae1d/go.mod h1:ZVh0q/sWaU5m694l4C6VjVyXhPqe5cMJV3M9YpU0pl8=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
