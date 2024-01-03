@@ -94,7 +94,7 @@ func (Windows) RegNotifyChangeKeyValue(k Key) (ev Event, err error) {
 // WaitForSingleObject waits until the event is triggered. This is a blocking function.
 func (Windows) WaitForSingleObject(ev Event) (err error) {
 	if _, err := windows.WaitForSingleObject(windows.Handle(ev), windows.INFINITE); err != nil {
-		return fmt.Errorf("in call to SetEvent: %v", err)
+		return fmt.Errorf("in call to WaitForSingleObject: %v", err)
 	}
 
 	return nil

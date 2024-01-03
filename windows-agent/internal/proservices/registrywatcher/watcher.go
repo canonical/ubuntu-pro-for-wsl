@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
@@ -108,7 +109,7 @@ func (s *Service) run() {
 	defer close(s.running)
 	/*
 		When we detect a change we don't immediately read the registry and push
-		the new data. Insead, we wait until we're watching again. This way we
+		the new data. Instead, we wait until we're watching again. This way we
 		avoid silent changes in between ending and starting successive watches.
 
 		In the case we fail to watch, we still push changes just in case. False
@@ -186,13 +187,19 @@ func (s *Service) run() {
 			ctx, cancel := context.WithCancel(s.ctx)
 			defer cancel()
 
+			var waitCancelled atomic.Bool
 			go func() {
 				<-ctx.Done()
+				waitCancelled.Store(true)
 				s.registry.CloseKey(k)
 			}()
 
 			if err := s.registry.WaitForSingleObject(event); err != nil {
 				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, path, err)
+			}
+
+			if waitCancelled.Load() {
+				return fmt.Errorf("stopped watching the registry: %v", ctx.Err())
 			}
 
 			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, path)
