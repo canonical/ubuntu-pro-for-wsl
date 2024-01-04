@@ -37,11 +37,11 @@ func TestRegistryWatcher(t *testing.T) {
 		breakWaitForSingleObject  bool
 	}{
 		"Success": {},
-		"Success with an empty starting registry":           {startEmptyRegistry: true},
-		"Success after a not being able to open keys":       {breakOpenKey: true},
-		"Success after a not being able to read from keys":  {breakReadValue: true},
-		"Success after a not being able to watch keys":      {breakNotifyChangeKeyValue: true},
-		"Success after a not being able to wait for events": {breakWaitForSingleObject: true},
+		"Success with an empty starting registry":         {startEmptyRegistry: true},
+		"Success after not being able to open keys":       {breakOpenKey: true},
+		"Success after not being able to read from keys":  {breakReadValue: true},
+		"Success after not being able to watch keys":      {breakNotifyChangeKeyValue: true},
+		"Success after not being able to wait for events": {breakWaitForSingleObject: true},
 	}
 
 	for name, tc := range testCases {
@@ -108,7 +108,7 @@ func TestRegistryWatcher(t *testing.T) {
 				reg.CannotOpen.Store(false)
 				reg.CannotRead.Store(false)
 			} else {
-				// Nothing broken: registry data is pushed during call to start Start
+				// Nothing broken: registry data is pushed during call to Start
 				wantMsgLen++
 				require.Equal(t, wantMsgLen, conf.ReceivedLen(), "Registry watcher should have updated the config")
 				require.Equal(t, startingProToken, conf.LatestReceived().UbuntuProToken, "Ubuntu Pro token config should have contained the registry value")

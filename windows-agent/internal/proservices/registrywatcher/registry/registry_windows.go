@@ -61,7 +61,7 @@ func (Windows) ReadValue(k Key, field string) (string, error) {
 
 // RegNotifyChangeKeyValue creates an event and attaches it to a registry key.
 // Modifying that key or its children will trigger the event.
-// This trigger can be detected by WaitSingleObject.
+// This trigger can be detected by WaitForSingleObject.
 func (Windows) RegNotifyChangeKeyValue(k Key) (ev Event, err error) {
 	defer decorate.OnError(&err, "could not start watching registry")
 

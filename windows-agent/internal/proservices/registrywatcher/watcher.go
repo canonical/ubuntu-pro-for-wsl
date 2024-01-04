@@ -87,7 +87,7 @@ func New(ctx context.Context, conf Config, database *database.DistroDB, args ...
 	}
 }
 
-// Start starts watching the serive. It does a first read of the registry
+// Start starts watching the serice. It does a first read of the registry
 // before returning.
 func (s *Service) Start() {
 	s.ctx, s.stop = context.WithCancel(s.ctx)

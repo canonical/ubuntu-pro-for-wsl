@@ -31,7 +31,7 @@ func (c *Config) load() (err error) {
 		return fmt.Errorf("could not umarshal cache file: %v", err)
 	}
 
-	//	Registry data must not be overridden
+	// Registry data must not be overridden
 	tokenOrg := c.subscription.Organization
 	landscapeOrg := c.landscape.OrgConfig
 

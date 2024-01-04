@@ -208,7 +208,7 @@ func (r *Mock) ReadValue(ptr Key, field string) (value string, err error) {
 
 // RegNotifyChangeKeyValue creates an event and attaches it to a registry key.
 // Modifying that key or its children will trigger the event.
-// This trigger can be detected by WaitSingleObject.
+// This trigger can be detected by WaitForSingleObject.
 func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 	if r.CannotWatch.Load() {
 		return 0, ErrMock
