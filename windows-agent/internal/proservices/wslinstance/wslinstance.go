@@ -19,8 +19,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// LandscapeCtl is the  controller for the Landscape client proservice.
-type LandscapeCtl interface {
+// LandscapeController is the  controller for the Landscape client proservice.
+type LandscapeController interface {
 	SendUpdatedInfo(context.Context) error
 }
 
@@ -29,11 +29,11 @@ type Service struct {
 	agentapi.UnimplementedWSLInstanceServer
 
 	db        *database.DistroDB
-	landscape LandscapeCtl
+	landscape LandscapeController
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *database.DistroDB, landscape LandscapeCtl) (s Service, err error) {
+func New(ctx context.Context, db *database.DistroDB, landscape LandscapeController) (s Service, err error) {
 	log.Debug(ctx, "Building new GRPC WSL Instance service")
 
 	return Service{db: db, landscape: landscape}, nil
