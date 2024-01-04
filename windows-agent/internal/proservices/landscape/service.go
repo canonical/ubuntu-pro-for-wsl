@@ -9,12 +9,10 @@ import (
 	"sync"
 	"time"
 
-	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
-	"google.golang.org/grpc"
 )
 
 // Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
@@ -174,123 +172,6 @@ func (s *Service) keepConnected(ctx context.Context) {
 			return true
 		}()
 	}
-}
-
-// newConnection attempts to connect to the Landscape server, and blocks until the first
-// handshake is complete.
-func newConnection(ctx context.Context, d serviceData) (conn *connection, err error) {
-	defer decorate.OnError(&err, "could not connect to Landscape")
-
-	conf, err := readLandscapeHostConf(ctx, d.config())
-	if err != nil {
-		return nil, fmt.Errorf("could not read config: %v", err)
-	}
-	if conf.hostagentURL == "" {
-		return nil, errors.New("no hostagent URL provided in the Landscape configuration")
-	}
-
-	conn = &connection{}
-
-	// A context to control the Landscape client with (needed for as long as the connection lasts)
-	conn.ctx, conn.cancel = context.WithCancel(ctx)
-
-	// A context to control only the Dial (only needed for this function)
-	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	creds, err := conf.transportCredentials()
-	if err != nil {
-		return nil, err
-	}
-
-	grpcConn, err := grpc.DialContext(dialCtx, conf.hostagentURL, grpc.WithTransportCredentials(creds))
-	if err != nil {
-		return nil, err
-	}
-	conn.grpcConn = grpcConn
-
-	cl := landscapeapi.NewLandscapeHostAgentClient(grpcConn)
-	client, err := cl.Connect(conn.ctx)
-	if err != nil {
-		return nil, err
-	}
-	conn.grpcClient = client
-
-	// Get ready to receive commands
-	conn.receivingCommands.Add(1)
-	go func() {
-		defer conn.disconnect()
-		defer conn.receivingCommands.Done()
-
-		if err := conn.receiveCommands(executor{d}); err != nil {
-			log.Warningf(conn.ctx, "Stopped listening for Landscape commands: %v", err)
-		} else {
-			log.Info(conn.ctx, "Finished listening for Landscape commands.")
-		}
-	}()
-
-	if err := handshake(ctx, d, conn); err != nil {
-		conn.disconnect()
-		return nil, err
-	}
-
-	log.Infof(ctx, "Connection to Landscape established")
-
-	return conn, nil
-}
-
-// handshake executes the first few messages of a connection.
-//
-// The client introduces itself to the server by sending info to Landscape.
-// If this is the first connection ever, the server will respond by assigning
-// the host a UID. This Recv is handled by receiveCommands, but handshake
-// waits until the UID is received before returning.
-func handshake(ctx context.Context, d serviceData, conn *connection) error {
-	// Send first message
-	info, err := newHostAgentInfo(conn.ctx, d)
-	if err != nil {
-		return fmt.Errorf("could not assemble message: %v", err)
-	}
-
-	if err := conn.sendUpdatedInfo(info); err != nil {
-		return err
-	}
-
-	conf := d.config()
-
-	// Not the first contact between client and server: done!
-	if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
-		return err
-	} else if uid != "" {
-		return nil
-	}
-
-	// First contact. Wait to receive a client UID.
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-
-	ctx, cancel := context.WithTimeout(conn.ctx, time.Minute)
-	defer cancel()
-
-	for {
-		select {
-		case <-ctx.Done():
-			conn.disconnect()
-			// Avoid races where the UID arrives just after cancelling the context
-			err := conf.SetLandscapeAgentUID(ctx, "")
-			return errors.Join(err, fmt.Errorf("Landscape server did not respond with a client UID"))
-		case <-ticker.C:
-		}
-
-		if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
-			return err
-		} else if uid != "" {
-			// UID received: success.
-			break
-		}
-	}
-
-	return nil
 }
 
 // Stop terminates the connection and deallocates resources.
