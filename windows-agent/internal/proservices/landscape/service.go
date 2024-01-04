@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
@@ -87,7 +88,7 @@ func New(conf Config, db *database.DistroDB, args ...Option) (*Service, error) {
 func (s *Service) Connect(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not connect to Landscape")
 
-	if connected(s) {
+	if s.connected() {
 		return errors.New("already connected")
 	}
 
@@ -225,7 +226,16 @@ func (s *Service) hostname() string {
 	return s.hostName
 }
 
-func (s *Service) connection() (conn *connection, release func()) {
+func (s *Service) connected() bool {
 	s.connMu.RLock()
-	return s.conn, s.connMu.RUnlock
+	defer s.connMu.RUnlock()
+
+	return s.conn.connected()
+}
+
+func (s *Service) sendInfo(info *landscapeapi.HostAgentInfo) error {
+	s.connMu.RLock()
+	defer s.connMu.RUnlock()
+
+	return s.conn.sendInfo(info)
 }

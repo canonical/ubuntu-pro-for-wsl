@@ -105,7 +105,7 @@ func handshake(ctx context.Context, d serviceData, conn *connection) error {
 		return fmt.Errorf("could not assemble message: %v", err)
 	}
 
-	if err := conn.sendUpdatedInfo(info); err != nil {
+	if err := conn.sendInfo(info); err != nil {
 		return err
 	}
 
@@ -206,8 +206,8 @@ func (conn *connection) receiveCommands(e executor) error {
 	}
 }
 
-// sendUpdatedInfo takes a HostagentInfo message and forwards it to the Landscape server.
-func (conn *connection) sendUpdatedInfo(info *landscapeapi.HostAgentInfo) (err error) {
+// sendInfo takes a HostagentInfo message and forwards it to the Landscape server.
+func (conn *connection) sendInfo(info *landscapeapi.HostAgentInfo) (err error) {
 	defer decorate.OnError(&err, "could not send updated info to Landscape")
 
 	if !conn.connected() {

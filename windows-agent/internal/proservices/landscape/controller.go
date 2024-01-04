@@ -21,22 +21,19 @@ func (c Controller) SendUpdatedInfo(ctx context.Context) error {
 		return errors.New("could not connect to Landscape")
 	}
 
-	conn, release := c.connection()
-	defer release()
-
-	info, err := newHostAgentInfo(conn.ctx, c)
+	info, err := newHostAgentInfo(ctx, c)
 	if err != nil {
 		return fmt.Errorf("could not assemble message: %v", err)
 	}
 
-	return conn.sendUpdatedInfo(info)
+	return c.sendInfo(info)
 }
 
 // tryReconnect sends a "please, connect" signal to the Landscape client and blocks until
 // this connection is established, or until the context is canceled. Returns true if the
 // connection was successfully established.
 func (c Controller) tryReconnect(ctx context.Context) bool {
-	if connected(c) {
+	if c.connected() {
 		// Fast path: connection already exists
 		return true
 	}
@@ -54,7 +51,7 @@ func (c Controller) tryReconnect(ctx context.Context) bool {
 	defer ticker.Stop()
 
 	for {
-		if connected(c) {
+		if c.connected() {
 			return true
 		}
 

@@ -19,15 +19,6 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-// connected indicates whether there is an active gRPC connection to the Landscape
-// server.
-func connected(c serviceConn) bool {
-	conn, release := c.connection()
-	defer release()
-
-	return conn.connected()
-}
-
 // landscapeHostConf is the subset of the landscape configuration relevant to the agent.
 type landscapeHostConf struct {
 	sslPublicKey    string

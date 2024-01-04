@@ -8,6 +8,6 @@ func WithHostname(hostname string) Option {
 }
 
 // Connected returns true if the gRPC connection is active.
-func (m *Service) Connected() bool {
-	return connected(m)
+func (s *Service) Connected() bool {
+	return s.connected()
 }

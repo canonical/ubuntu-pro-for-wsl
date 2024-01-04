@@ -1,6 +1,7 @@
 package landscape
 
 import (
+	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 )
 
@@ -17,6 +18,7 @@ type serviceData interface {
 
 // serviceConn is an internal interface to manage the connection to the Landscape service.
 type serviceConn interface {
-	connection() (conn *connection, release func())
+	connected() bool
 	signalRetryConnection() <-chan struct{}
+	sendInfo(*landscapeapi.HostAgentInfo) error
 }
