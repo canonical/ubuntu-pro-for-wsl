@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"sync/atomic"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
@@ -136,36 +135,12 @@ func (s *Service) run() {
 
 		// Returns error if we need to sleep in order to avoid a hot loop.
 		err := func() error {
-			var path string
-			var k registry.Key
+			ctx, cancel := context.WithCancel(s.ctx)
+			defer cancel()
 
-			// We climb up until we find a key that exists.
-			//
-			// This intends to solve the problem of 'what if the key does not exist?'.
-			// AKA: any default install. The solution is to watch its parent directory,
-			// and wait until our key is created. We only move around depths 1 and 3:
-			//   depth   Path
-			//     0     HKCU\
-			//     1     HKCU\Software
-			//     2     HKCU\Software\Canonical\
-			//     3     HKCU\Software\Canonical\UbuntuPro
-			const (
-				minPathDepth = 1
-				maxPathDepth = 3
-			)
-
-			for depth := maxPathDepth; depth >= minPathDepth; depth-- {
-				path = filepath.Join(registryPath[:depth]...)
-
-				var err error
-				k, err = s.registry.HKCUOpenKey(path)
-				if err != nil {
-					if errors.Is(err, registry.ErrKeyNotExist) && depth > minPathDepth {
-						continue
-					}
-					return fmt.Errorf(`could not open registry key HKCU\%s: %v`, path, err)
-				}
-				break
+			k, path, err := s.openDeepestExistingKey(registryPath)
+			if err != nil {
+				return err
 			}
 			defer s.registry.CloseKey(k)
 
@@ -176,32 +151,15 @@ func (s *Service) run() {
 			}
 			defer s.registry.CloseEvent(event)
 
-			log.Debugf(s.ctx, `Registry watcher: watching key HKCU\%s`, path)
+			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, path)
 
 			// Push update right after having started to watch
-			s.readThenPushRegistryData(s.ctx)
+			s.readThenPushRegistryData(ctx)
 
-			// When the parent context is cancelled, we want to stop waiting for registry changes.
-			// Hence, on context cancellation, we close the key to trigger the event to unlock
-			// WaitForSingleObject.
-			ctx, cancel := context.WithCancel(s.ctx)
-			defer cancel()
-
-			var waitCancelled atomic.Bool
-			go func() {
-				<-ctx.Done()
-				waitCancelled.Store(true)
-				s.registry.CloseKey(k)
-			}()
-
-			if err := s.registry.WaitForSingleObject(event); err != nil {
+			// Wait until the key is modified or the context is cancelled, whichever one happens first
+			if err := s.waitForSingleObject(ctx, event); err != nil {
 				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, path, err)
 			}
-
-			if waitCancelled.Load() {
-				return fmt.Errorf("stopped watching the registry: %v", ctx.Err())
-			}
-
 			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, path)
 
 			return nil
@@ -222,6 +180,53 @@ func (s *Service) run() {
 		}
 
 		retryRate = minRate
+	}
+}
+
+// openDeepestExistingKey opens the key that is deepest existing key in the tree
+// defined by the path.
+//
+// This intends to solve the problem of 'what if the key does not exist?'.
+// AKA: any default install. The solution is to watch its parent directory,
+// and wait until our key is created.
+func (s *Service) openDeepestExistingKey(registryPath []string) (k registry.Key, path string, err error) {
+	for depth := len(registryPath); depth >= 1; depth-- {
+		//                          ^~~~~~~~~~
+		// We go up to depth 1. Going to depth 0 would watch the entire
+		// registry hive and that is overkill.
+		path = filepath.Join(registryPath[:depth]...)
+
+		k, err = s.registry.HKCUOpenKey(path)
+		if err != nil {
+			if errors.Is(err, registry.ErrKeyNotExist) {
+				continue
+			}
+			break
+		}
+		return k, path, nil
+	}
+
+	// We failed to open a key, or we could not find any key along the path
+	return 0, "", fmt.Errorf(`could not open registry key HKCU\%s: %v`, path, err)
+}
+
+// waitForSingleObject is a utility wrapper around Win32's WaitForSingleObject. It allows
+// cancelling the wait with the use of a context.
+//
+// Cancelling the context will leak a goroutine until the event is set.
+func (s *Service) waitForSingleObject(ctx context.Context, event registry.Event) error {
+	ch := make(chan error, 1)
+
+	go func() {
+		ch <- s.registry.WaitForSingleObject(event)
+		close(ch)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-ch:
+		return err
 	}
 }
 
