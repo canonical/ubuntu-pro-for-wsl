@@ -34,7 +34,7 @@ type connection struct {
 func newConnection(ctx context.Context, d serviceData) (conn *connection, err error) {
 	defer decorate.OnError(&err, "could not connect to Landscape")
 
-	conf, err := readLandscapeHostConf(ctx, d.config())
+	conf, err := newLandscapeHostConf(ctx, d.config())
 	if err != nil {
 		return nil, fmt.Errorf("could not read config: %v", err)
 	}
