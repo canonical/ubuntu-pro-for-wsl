@@ -16,4 +16,4 @@ You can use a private Landscape instance (different from [landscape.canonical.co
     # The configuration for the WSL client. See an example here
     # https://github.com/canonical/landscape-client/blob/master/example.conf
     ```
-3. All new distros will automatically register with Landscape. Restart WSL to apply the Landscape config to existing distros.
+3. All new distros will automatically register with Landscape. Restart WSL to apply the Landscape configuration to existing distros.
