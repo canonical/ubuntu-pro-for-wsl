@@ -727,6 +727,19 @@ type testTask struct {
 	ID string
 }
 
+// MarshalYAML is necessary to avoid races between Execute and Save.
+func (t *testTask) MarshalYAML() (interface{}, error) {
+	return struct {
+		ID      string
+		Delay   time.Duration
+		Returns error
+	}{
+		ID:      t.ID,
+		Delay:   t.Delay,
+		Returns: t.Returns,
+	}, nil
+}
+
 func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
 	t.ExecuteCalls.Add(1)
 	select {
@@ -754,7 +767,7 @@ func (t *testTask) Is(other task.Task) bool {
 type blockingTask struct {
 	ctx       context.Context
 	complete  func()
-	executing atomic.Bool
+	executing atomic.Bool `yaml:"-"`
 }
 
 func newBlockingTask(ctx context.Context) *blockingTask {
@@ -763,6 +776,11 @@ func newBlockingTask(ctx context.Context) *blockingTask {
 		ctx:      ctx,
 		complete: cancel,
 	}
+}
+
+// MarshalYAML is necessary to avoid races between Execute and Save.
+func (t *blockingTask) MarshalYAML() (interface{}, error) {
+	return struct{}{}, nil
 }
 
 func (t *blockingTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
