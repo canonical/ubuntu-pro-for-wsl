@@ -67,9 +67,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
 	}
 
 	// Load deferred tasks
-	if err := d.RequeueTasks(ctx); err != nil {
-		return err
-	}
+	d.EnqueueDeferredTasks()
 
 	// Update landscape when connecting and disconnecting
 	s.landscapeSendUpdatedInfo(ctx)
