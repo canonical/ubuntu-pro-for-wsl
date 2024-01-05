@@ -590,6 +590,43 @@ func TestTaskDeduplication(t *testing.T) {
 		})
 	}
 }
+
+func TestFailedTaskIsDeferred(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	d := &testDistro{
+		name: wsltestutils.RandomDistroName(t),
+	}
+
+	storage := t.TempDir()
+
+	w, err := worker.New(ctx, d, storage)
+	require.NoError(t, err, "Setup: unexpected error creating the worker")
+	defer w.Stop(ctx)
+
+	wslInstanceService := newTestService(t)
+	conn := wslInstanceService.newClientConnection(t)
+	w.SetConnection(conn)
+
+	// Submit the failing task
+	failingTask := testTask{Returns: task.NeedsRetryError{SourceErr: errors.New("mock error")}}
+	err = w.SubmitTasks(&failingTask)
+	require.NoError(t, err, "SubmitTasks should return no error")
+
+	require.Eventually(t, func() bool {
+		return failingTask.ExecuteCalls.Load() == 1
+	}, 5*time.Second, 100*time.Millisecond, "Task should have started executing")
+	require.NoError(t, w.CheckQueuedTaskCount(0), "Task should have been popped from the queue")
+
+	require.Eventually(t, func() bool {
+		return w.CheckTotalTaskCount(1) == nil
+	}, 5*time.Second, 100*time.Millisecond, "Failing task should have been re-submitted after failure")
+	require.NoError(t, w.CheckQueuedTaskCount(0), "Task should not have been submitted into the queue, but rather deferred")
+}
+
 func requireEventuallyTaskCompletes(t *testing.T, task emptyTask, msg string, args ...any) {
 	t.Helper()
 
