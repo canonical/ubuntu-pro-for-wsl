@@ -509,6 +509,87 @@ func TestTaskDeferral(t *testing.T) {
 	}
 }
 
+func TestTaskDeduplication(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		taskWithIs bool
+	}{
+		"Success with plain task":              {},
+		"Success with task with overloaded Is": {taskWithIs: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			d := &testDistro{
+				name: wsltestutils.RandomDistroName(t),
+			}
+
+			storage := t.TempDir()
+
+			w, err := worker.New(ctx, d, storage)
+			require.NoError(t, err, "Setup: unexpected error creating the worker")
+			defer w.Stop(ctx)
+
+			wslInstanceService := newTestService(t)
+			conn := wslInstanceService.newClientConnection(t)
+			w.SetConnection(conn)
+
+			// These are equivalent, they should be de-duplicated
+			blocker := newBlockingTask(ctx)
+
+			var task1 task.Task = emptyTask{ID: "123"}
+			var taskEq task.Task = emptyTask{ID: "123"}
+
+			if tc.taskWithIs {
+				// Different delays to ensure it is the "Is" that is making the comparison
+				task1 = &testTask{ID: "ABC", Delay: time.Second}
+				taskEq = &testTask{ID: "ABC", Delay: 5 * time.Second}
+			}
+
+			err = w.SubmitTasks(blocker)
+			require.NoError(t, err, "SubmitTasks should return no error")
+			require.Eventually(t, blocker.executing.Load, 5*time.Second, 100*time.Millisecond, "Blocker task was never dequeued")
+
+			// Unique task: normal submission
+			err = w.SubmitTasks(task1)
+			require.NoError(t, err, "SubmitTasks should return no error")
+			require.NoError(t, w.CheckQueuedTaskCount(1), "Submitting a task should add it to the queue")
+			require.NoError(t, w.CheckTotalTaskCount(1), "Submitting a task should increase the total task count by one")
+
+			// Unique task: normal submission
+			err = w.SubmitTasks(emptyTask{ID: "hello!"})
+			require.NoError(t, err, "SubmitTasks should return no error")
+			require.NoError(t, w.CheckQueuedTaskCount(2), "Submitting a second task should add it to the queue")
+			require.NoError(t, w.CheckTotalTaskCount(2), "Submitting a second task should increase the total task count by one")
+
+			// Check that re-submitting a task removes the old one
+			err = w.SubmitTasks(taskEq)
+			require.NoError(t, err, "SubmitTasks should return no error")
+			require.NoError(t, w.CheckQueuedTaskCount(2), "Submitting a repeated task should not change the queue size")
+			require.NoError(t, w.CheckTotalTaskCount(2), "Submitting a repeated task should not change the task count")
+
+			// Check that re-submitting a task as deferred removes the old one
+			err = w.SubmitDeferredTasks(taskEq)
+			require.NoError(t, err, "SubmitDeferredTasks should return no error")
+			require.NoError(t, w.CheckQueuedTaskCount(1), "Submitting a repeated deferred task should decrease the queue size by one")
+			require.NoError(t, w.CheckTotalTaskCount(2), "Submitting a repeated deferred task should not change the total task count")
+
+			// Check that re-submitting a deferred task removes the old one
+			// This caused https://warthogs.atlassian.net/browse/UDENG-1848
+			err = w.SubmitTasks(taskEq)
+			require.NoError(t, err, "SubmitTasks should return no error")
+			require.NoError(t, w.CheckQueuedTaskCount(2), "Submitting a task that was already deferred should increase the queue size by one")
+			require.NoError(t, w.CheckTotalTaskCount(2), "Submitting a task that was already deferred should not change the total task count")
+		})
+	}
+}
 func requireEventuallyTaskCompletes(t *testing.T, task emptyTask, msg string, args ...any) {
 	t.Helper()
 
@@ -605,6 +686,8 @@ type testTask struct {
 
 	// WasCancelled is true if the task Execute context is Done
 	WasCancelled atomic.Bool
+
+	ID string
 }
 
 func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
@@ -620,6 +703,14 @@ func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error
 
 func (t *testTask) String() string {
 	return "Test task"
+}
+
+func (t *testTask) Is(other task.Task) bool {
+	o, ok := other.(*testTask)
+	if !ok {
+		return false
+	}
+	return t.ID == o.ID
 }
 
 // blockingTask is a task that blocks execution until complete() is called.
