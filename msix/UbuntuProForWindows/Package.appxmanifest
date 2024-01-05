@@ -20,6 +20,7 @@
     <DisplayName>Ubuntu Pro For Windows</DisplayName>
     <PublisherDisplayName>Canonical Group Limited</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
+    <!-- Registry virtualization disabled because RegNotifyChangeKeyValue does not work without it-->
     <!-- Prior to Windows 10 21H1 Build 19043 -->
     <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
     <!-- Windows 10 21H1 Build 19043 or later -->

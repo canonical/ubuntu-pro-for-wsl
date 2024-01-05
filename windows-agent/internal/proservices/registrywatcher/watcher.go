@@ -87,7 +87,7 @@ func New(ctx context.Context, conf Config, database *database.DistroDB, args ...
 	}
 }
 
-// Start starts watching the serice. It does a first read of the registry
+// Start starts watching the service. It does a first read of the registry
 // before returning.
 func (s *Service) Start() {
 	s.ctx, s.stop = context.WithCancel(s.ctx)
@@ -213,7 +213,8 @@ func (s *Service) openDeepestExistingKey(registryPath []string) (k registry.Key,
 // waitForSingleObject is a utility wrapper around Win32's WaitForSingleObject. It allows
 // cancelling the wait with the use of a context.
 //
-// Cancelling the context will leak a goroutine until the event is set.
+// Cancelling the context skips the wait, but does not release resources. These are released
+// once the event is set.
 func (s *Service) waitForSingleObject(ctx context.Context, event registry.Event) error {
 	ch := make(chan error, 1)
 
