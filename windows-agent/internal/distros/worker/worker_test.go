@@ -49,7 +49,7 @@ func TestNew(t *testing.T) {
 		fileNotExist taskFileState = iota
 		fileIsEmpty
 		fileHasOneTask
-		fileHasTooManyTasks
+		fileHasTwoTasks
 
 		fileHasBadSyntax
 		fileHasNonRegisteredTask
@@ -70,7 +70,7 @@ func TestNew(t *testing.T) {
 		"Success with no task file":                        {},
 		"Success with empty task file":                     {taskFile: fileIsEmpty},
 		"Success with task file containing a single task":  {taskFile: fileHasOneTask, wantNTasks: 1},
-		"Success with task file containing too many tasks": {taskFile: fileHasTooManyTasks, wantNTasks: worker.TaskQueueSize},
+		"Success with task file containing multiple tasks": {taskFile: fileHasTwoTasks, wantNTasks: 2},
 
 		"Success with empty provisioning":       {withProvisioning: true, emptyProvisioning: true},
 		"Success with single-task provisioning": {withProvisioning: true, wantNTasks: 1},
@@ -103,9 +103,9 @@ func TestNew(t *testing.T) {
 				out := taskfileFromTemplate[emptyTask](t)
 				err := os.WriteFile(taskFile, out, 0600)
 				require.NoError(t, err, "Setup: could not write task file")
-			case fileHasTooManyTasks:
+			case fileHasTwoTasks:
 				out := taskfileFromTemplate[emptyTask](t)
-				out = bytes.Repeat(out, worker.TaskQueueSize+5)
+				out = bytes.Repeat(out, 2)
 				err := os.WriteFile(taskFile, out, 0600)
 				require.NoError(t, err, "Setup: could not write task file")
 			case fileHasNonRegisteredTask:
@@ -143,7 +143,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "worker.New should not return an error")
-			require.NoError(t, w.CheckQueuedTasks(tc.wantNTasks), "Wrong number of queued tasks.")
+			require.NoError(t, w.CheckQueuedTaskCount(tc.wantNTasks), "Wrong number of queued tasks.")
 		})
 	}
 }
@@ -279,11 +279,11 @@ func TestTaskProcessing(t *testing.T) {
 
 			switch tc.taskReturns {
 			case taskReturnsNil, taskReturnsErr:
-				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
-				require.NoError(t, w.CheckStoredTasks(0), "No tasks should remain in storage")
+				require.NoError(t, w.CheckQueuedTaskCount(0), "No tasks should remain in the queue")
+				require.NoError(t, w.CheckTotalTaskCount(0), "No tasks should remain in storage")
 			case taskReturnsNeedsRetryErr:
-				require.NoError(t, w.CheckQueuedTasks(0), "No tasks should remain in the queue")
-				require.NoError(t, w.CheckStoredTasks(1), "The task that failed with NeedsRetryError should be in storage")
+				require.NoError(t, w.CheckQueuedTaskCount(0), "No tasks should remain in the queue")
+				require.NoError(t, w.CheckTotalTaskCount(1), "The task that failed with NeedsRetryError should be in storage")
 			}
 		})
 	}
@@ -310,35 +310,6 @@ func TestSubmitTaskFailsCannotWrite(t *testing.T) {
 
 	err = w.SubmitTasks(&emptyTask{})
 	require.Error(t, err, "Submitting a task when the task file is not writable should cause an error")
-}
-
-func TestSubmitTaskFailsWithFullQueue(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	d := &testDistro{
-		name: wsltestutils.RandomDistroName(t),
-	}
-
-	w, err := worker.New(ctx, d, t.TempDir())
-	require.NoError(t, err, "Setup: unexpected error creating the worker")
-	defer w.Stop(ctx)
-
-	// We submit a first task that will be dequeued and block task processing until
-	// there is a connection (i.e. forever) or until it times out after a minute.
-	err = w.SubmitTasks(&testTask{})
-	require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is empty.\nSubmitted: %d.\nMax: %d", 1, worker.TaskQueueSize)
-
-	// We fill up the queue
-	for i := 0; i < worker.TaskQueueSize; i++ {
-		err := w.SubmitTasks(&testTask{})
-		require.NoErrorf(t, err, "SubmitTask() should not fail when the distro is active and the queue is not full.\nSubmitted: %d.\nMax: %d", i+1, worker.TaskQueueSize)
-	}
-
-	// We ensure that adding one more task will return an error
-	err = w.SubmitTasks(&testTask{})
-	require.Errorf(t, err, "SubmitTask() should fail when the queue is full")
 }
 
 func TestSetConnection(t *testing.T) {
@@ -490,7 +461,7 @@ func TestTaskDeferral(t *testing.T) {
 				// write:           TaskManager.NextTask
 				// delete+write:    testutils.ReplaceFileWithDir
 				require.Eventually(t, func() bool {
-					return w.CheckStoredTasks(1) == nil
+					return w.CheckTotalTaskCount(1) == nil
 				}, time.Second, 100*time.Millisecond, "Setup: Blocking task was never popped from queue")
 
 				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with SubmitDeferredTasks")
@@ -507,30 +478,21 @@ func TestTaskDeferral(t *testing.T) {
 			require.Eventually(t, blocker.executing.Load, 10*time.Second, 100*time.Millisecond, "Number of queued tasks never became 1")
 
 			// One task is queued and the other one is deferred
-			require.NoError(t, w.CheckQueuedTasks(1), "Expected only one task queued behind the blocker")
-			require.NoError(t, w.CheckStoredTasks(2), "Expected two tasks stored after the blocker is popped")
+			require.NoError(t, w.CheckQueuedTaskCount(1), "Expected only one task queued behind the blocker")
+			require.NoError(t, w.CheckTotalTaskCount(2), "Expected two tasks stored after the blocker is popped")
 
-			if tc.breakReload {
-				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with RequeueTasks")
-			}
+			w.EnqueueDeferredTasks()
 
-			err = w.RequeueTasks(ctx)
-			if tc.wantReloadErr {
-				require.Error(t, err, "RequeueTasks should have returned an error")
-				return
-			}
-			require.NoError(t, err, "RequeueTasks should have succeeded")
-
-			require.NoError(t, w.CheckQueuedTasks(2), "Tasks did not reload into the queue as expected")
-			require.NoError(t, w.CheckStoredTasks(2), "Tasks did not reload into the list as expected")
+			require.NoError(t, w.CheckQueuedTaskCount(2), "Tasks did not reload into the queue as expected")
+			require.NoError(t, w.CheckTotalTaskCount(2), "Tasks did not reload into the list as expected")
 
 			blocker.complete()
 
 			requireEventuallyTaskCompletes(t, queuedTask, "Queued task should have been completed")
 			requireEventuallyTaskCompletes(t, deferredTask, "Deferred task should have been completed")
 
-			require.NoError(t, w.CheckQueuedTasks(0), "Completed tasks should have been removed from the queue")
-			require.NoError(t, w.CheckStoredTasks(0), "Completed tasks should have been removed from storage")
+			require.NoError(t, w.CheckQueuedTaskCount(0), "Completed tasks should have been removed from the queue")
+			require.NoError(t, w.CheckTotalTaskCount(0), "Completed tasks should have been removed from storage")
 
 			// Submit a task without a blocker
 			// This tests the queue refreshment
@@ -538,13 +500,10 @@ func TestTaskDeferral(t *testing.T) {
 			err = w.SubmitDeferredTasks(newTask)
 
 			require.NoError(t, err, "Submitting a deferred task should cause no errors")
-			require.NoError(t, w.CheckQueuedTasks(0), "Task was queued unexpectedly")
-			require.NoError(t, w.CheckStoredTasks(1), "Task was not stored as expected")
+			require.NoError(t, w.CheckQueuedTaskCount(0), "Task was queued unexpectedly")
+			require.NoError(t, w.CheckTotalTaskCount(1), "Task was not stored as expected")
 
-			err = w.RequeueTasks(ctx)
-			require.NoError(t, err, "Reloading tasks with an empty queue should return no error")
-			// Cannot check queue or storage without a race
-
+			w.EnqueueDeferredTasks()
 			requireEventuallyTaskCompletes(t, newTask, "Deferred task should have been completed")
 		})
 	}
