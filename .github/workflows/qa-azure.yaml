@@ -133,7 +133,7 @@ jobs:
         # actions/setup-go is broken
         shell: powershell
         run: |
-          winget install GoLang.Go --accept-source-agreements --accept-package-agreements --silent --verbose
+          winget install GoLang.Go --accept-source-agreements --accept-package-agreements --silent --verbose --source winget
           # Cannot check for error: there is no way to distinguish the two:
           # - Legitimate error
           # - Error because no updates found (Golang.Go is already up to date)
