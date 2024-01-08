@@ -8,24 +8,37 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/controlstream"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/coreos/go-systemd/daemon"
-	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Daemon is a grpc daemon with systemd support.
 type Daemon struct {
-	grpcServer *grpc.Server
-	addr       string
+	ctrlStream      *controlstream.ControlStream
+	registerService GRPCServiceRegisterer
 
+	// ctx and cancel used to stop the currently active service.
+	ctx    context.Context
+	cancel func()
+
+	// Channels for internal messaging.
+	started      atomic.Bool
+	running      chan struct{}
+	gracefulStop func()
+	forceStop    func()
+
+	// Sytemd status management.
 	systemdSdNotifier systemdSdNotifier
+	systemdReadyOnce  sync.Once
 }
 
 type options struct {
@@ -42,9 +55,7 @@ type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStrea
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, s system.System, args ...Option) (d Daemon, err error) {
-	defer decorate.OnError(&err, i18n.G("can't create daemon"))
-
+func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, s system.System, args ...Option) (d *Daemon) {
 	log.Debug(ctx, "Building new daemon")
 
 	// Set default options.
@@ -57,98 +68,174 @@ func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPC
 		f(&opts)
 	}
 
-	ctrlStream, err := connectToControlStream(ctx, agentPortFilePath, s)
-	if err != nil {
-		return d, err
-	}
+	ctrlStream := controlstream.New(agentPortFilePath, s)
+	ctx, cancel := context.WithCancel(ctx)
 
-	log.Debugf(ctx, "Connected to control stream")
-
-	addr, err := getAddressToListenTo(ctrlStream)
-	if err != nil {
-		return d, err
-	}
-
-	return Daemon{
-		grpcServer:        registerGRPCService(ctx, ctrlStream),
-		addr:              addr,
+	return &Daemon{
+		registerService:   registerGRPCService,
 		systemdSdNotifier: opts.systemdSdNotifier,
-	}, nil
+		ctrlStream:        &ctrlStream,
+		ctx:               ctx,
+		cancel:            cancel,
+	}
 }
 
-// Serve listens on a tcp socket and starts serving GRPC requests on it.
-func (d Daemon) Serve(ctx context.Context) (err error) {
-	defer decorate.OnError(&err, i18n.G("error while serving"))
+// Serve sets up the GRPC server to listen to the address reserved by the
+// control stream. If either the server or the connection to the stream
+// fail, both server and stream are restarted.
+func (d *Daemon) Serve() (err error) {
+	select {
+	case <-d.ctx.Done():
+		return d.ctx.Err()
+	default:
+	}
 
+	gracefulStop := make(chan struct{})
+	var gracefulStopOnce sync.Once
+	d.gracefulStop = func() {
+		gracefulStopOnce.Do(func() { close(gracefulStop) })
+	}
+	defer d.gracefulStop()
+
+	forceStop := make(chan struct{})
+	var forceStopOnce sync.Once
+	d.forceStop = func() {
+		forceStopOnce.Do(func() { close(forceStop) })
+	}
+	defer d.forceStop()
+
+	d.running = make(chan struct{})
+	defer close(d.running)
+
+	d.started.Store(true)
+
+	const (
+		minDelay   = 1 * time.Second
+		maxDelay   = 5 * time.Minute
+		growthRate = 2
+	)
+
+	delay := minDelay
+
+	for {
+		err := func() error {
+			ctx, cancel := context.WithCancel(d.ctx)
+			defer cancel()
+
+			// Initial setup
+			if err := d.ctrlStream.Connect(ctx); err != nil {
+				return err
+			}
+			defer d.ctrlStream.Disconnect()
+			log.Infof(ctx, "Connected to control stream")
+
+			server := d.registerService(ctx, d.ctrlStream)
+			go d.serverStopHandling(ctx, server, gracefulStop, forceStop)
+
+			// Start serving
+			serveDone := make(chan error)
+			go func() {
+				defer close(serveDone)
+				serveDone <- d.serve(ctx, server)
+			}()
+
+			// Block until either the service or the control stream stops
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case err := <-serveDone:
+				if err != nil {
+					return fmt.Errorf("WSL Pro Service stopped serving: %v", err)
+				}
+				return nil
+			case <-d.ctrlStream.Done(ctx):
+				return errors.New("lost connection to Windows Agent")
+			}
+		}()
+
+		if err == nil {
+			return nil
+		}
+
+		var target controlstream.SystemError
+		if errors.As(err, &target) {
+			// Irrecoverable errors: broken /etc/resolv.conf, broken pro status, etc
+			return target
+		}
+
+		log.Errorf(d.ctx, "serve error: %v", err)
+		delay = min(delay*growthRate, maxDelay)
+
+		select {
+		case <-d.ctx.Done():
+			return d.ctx.Err()
+		case <-time.After(delay):
+		case <-forceStop:
+			return nil
+		case <-gracefulStop:
+			return nil
+		}
+
+		log.Infof(d.ctx, "Retrying connection")
+	}
+}
+
+func (d *Daemon) serverStopHandling(ctx context.Context, server *grpc.Server, gracefulStop chan struct{}, forceStop chan struct{}) {
+	defer server.Stop()
+
+	select {
+	case <-ctx.Done():
+		server.Stop()
+		return
+	case <-forceStop:
+		server.Stop()
+	case <-gracefulStop:
+		server.GracefulStop()
+	}
+
+	// Graceful stop can be overridden by a later forced Stop
+	select {
+	case <-ctx.Done():
+	case <-forceStop:
+	}
+}
+
+// serve listens on a tcp socket and starts serving GRPC requests on it.
+func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
 	log.Debug(ctx, "Starting to serve requests")
 
+	address := fmt.Sprintf("localhost:%d", d.ctrlStream.ReservedPort())
+
 	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp4", d.addr)
+	lis, err := cfg.Listen(ctx, "tcp4", address)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not listen: %v", err)
 	}
 
-	log.Infof(ctx, "Serving GRPC requests on %v", d.addr)
+	log.Infof(ctx, "Serving GRPC requests on %v", address)
 
-	// Signal to systemd that we are ready.
-	if sent, err := d.systemdSdNotifier(false, "READY=1"); err != nil {
+	var failedSignal bool
+	d.systemdReadyOnce.Do(func() {
+		sent, err := d.systemdSdNotifier(false, "READY=1")
+		if err != nil {
+			failedSignal = true
+			return
+		}
+		if sent {
+			log.Debug(ctx, i18n.G("Ready state sent to systemd"))
+		}
+	})
+
+	if failedSignal {
+		d.systemdReadyOnce = sync.Once{}
 		return fmt.Errorf(i18n.G("couldn't send ready notification to systemd: %v"), err)
-	} else if sent {
-		log.Debug(context.Background(), i18n.G("Ready state sent to systemd"))
 	}
 
-	if err := d.grpcServer.Serve(lis); err != nil {
+	if err := server.Serve(lis); err != nil {
 		return fmt.Errorf("grpc error: %v", err)
 	}
+
 	return nil
-}
-
-// Quit gracefully quits listening loop and stops the grpc server.
-// It can drops any existing connexion is force is true.
-func (d Daemon) Quit(ctx context.Context, force bool) {
-	log.Info(ctx, "Stopping daemon requested.")
-	if force {
-		d.grpcServer.Stop()
-		return
-	}
-
-	log.Info(ctx, i18n.G("Wait for active requests to close."))
-	d.grpcServer.GracefulStop()
-	log.Debug(ctx, i18n.G("All connections have now ended."))
-}
-
-// connectToControlStream connects to the control stream and initiates communication
-// by sending the distro's info.
-func connectToControlStream(ctx context.Context, agentPortFilePath string, s system.System) (ctrlStream agentapi.WSLInstance_ConnectedClient, err error) {
-	defer decorate.OnError(&err, "could not connect to windows agent via the control stream")
-
-	ctrlAddr, err := getControlStreamAddress(ctx, agentPortFilePath, s)
-	if err != nil {
-		return nil, fmt.Errorf("could not get address: %v", err)
-	}
-
-	log.Infof(ctx, "Connecting to control stream at %q", ctrlAddr)
-	ctrlConn, err := grpc.DialContext(ctx, ctrlAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, fmt.Errorf("could not dial: %v", err)
-	}
-
-	client := agentapi.NewWSLInstanceClient(ctrlConn)
-	ctrlStream, err = client.Connected(ctx)
-	if err != nil {
-		return ctrlStream, fmt.Errorf("could not connect to GRPC service: %v", err)
-	}
-
-	sysinfo, err := s.Info(ctx)
-	if err != nil {
-		return ctrlStream, fmt.Errorf("could not obtain system info: %v", err)
-	}
-
-	if err := ctrlStream.Send(sysinfo); err != nil {
-		return ctrlStream, fmt.Errorf("could not send system info: %v", err)
-	}
-
-	return ctrlStream, nil
 }
 
 func getControlStreamAddress(ctx context.Context, agentPortFilePath string, s system.System) (string, error) {
@@ -176,16 +263,26 @@ func getControlStreamAddress(ctx context.Context, agentPortFilePath string, s sy
 	return fmt.Sprintf("%s:%s", windowsHostAddr, port), nil
 }
 
-// getAddressToListenTo returns the address where the daemon must listen to.
-func getAddressToListenTo(ctrlStream agentapi.WSLInstance_ConnectedClient) (addr string, err error) {
-	msg, err := ctrlStream.Recv()
-	if err != nil {
-		return "", err
+// Quit gracefully quits listening loop and stops the grpc server.
+// It can drop any existing connexion is force is set to true.
+func (d *Daemon) Quit(ctx context.Context, force bool) {
+	defer d.cancel()
+
+	if !d.started.Load() {
+		return
 	}
 
-	if msg.GetPort() == 0 {
-		return "", errors.New("could not get address to serve on: received invalid port :0 from server")
+	// Signal
+	log.Info(ctx, "Stopping daemon requested.")
+	if force {
+		d.forceStop()
+		<-d.running
+		return
 	}
 
-	return fmt.Sprintf("localhost:%d", msg.GetPort()), nil
+	d.gracefulStop()
+
+	log.Info(ctx, i18n.G("Waiting for active requests to close."))
+	<-d.running
+	log.Debug(ctx, i18n.G("All connections have now ended."))
 }

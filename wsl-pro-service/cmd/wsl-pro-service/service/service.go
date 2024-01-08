@@ -110,17 +110,10 @@ func (a *App) serve(args ...option) error {
 	srv := wslinstanceservice.New(opt.system)
 
 	// Connect with the agent.
-	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, srv.RegisterGRPCService, opt.system)
-	if err != nil {
-		close(a.ready)
-		return err
-	}
-
-	a.daemon = &daemon
-
+	a.daemon = daemon.New(context.Background(), opt.agentPortFilePath, srv.RegisterGRPCService, opt.system)
 	close(a.ready)
 
-	return daemon.Serve(context.Background())
+	return a.daemon.Serve()
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.
