@@ -23,13 +23,34 @@ PseudoConsole ::~PseudoConsole() {
     ClosePseudoConsole(hDevice);
   }
 }
+
 PseudoConsole::PseudoConsole(COORD coordinates) {
   SECURITY_ATTRIBUTES sa{sizeof(SECURITY_ATTRIBUTES), nullptr, true};
   if (!CreatePipe(&hInRead, &hInWrite, &sa, 0)) {
     throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
   }
+  const wchar_t pipeName[] = L"\\\\.\\pipe\\UP4WPCon";
+  // This handle reads from the child process' stdout.
+  hOutRead = CreateNamedPipe(
+      pipeName,
+      // data flows into this process, reads will be asynchronous.
+      PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+      // PIPE_WAIT doesn't block with OVERLAPPED IO: see
+      // https://devblogs.microsoft.com/oldnewthing/20110114-00/?p=11753
+      PIPE_WAIT | PIPE_TYPE_BYTE | PIPE_READMODE_BYTE |
+          PIPE_REJECT_REMOTE_CLIENTS,
+      1, 0, 0, 0, &sa);
+  if (hOutRead == INVALID_HANDLE_VALUE) {
+    throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
+  }
+  // This handle is inherited by the child process' as its stdout.
+  // Since we create the handle here, by the time the console creation
+  // completes, the pipe is already connected, thus available for an async read
+  // operation.
+  hOutWrite =
+      CreateFile(pipeName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-  if (!CreatePipe(&hOutRead, &hOutWrite, &sa, 0)) {
+  if (hOutRead == INVALID_HANDLE_VALUE) {
     throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
   }
 
