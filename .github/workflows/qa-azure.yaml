@@ -168,6 +168,8 @@ jobs:
           Remove-Item -Recurse "wsl-pro-service_*/"
           Write-Output "::endgroup::"
 
+          tree
+
       # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
       - name: Install Debug version of VCLibs
         shell: powershell
