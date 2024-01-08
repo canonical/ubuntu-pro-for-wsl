@@ -37,6 +37,9 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR pCmdLine, int) try {
   auto agent = thisBinaryDir() / L"ubuntu-pro-agent.exe";
   auto p = console.StartProcess(std::format(L"{} {}", agent.c_str(), pCmdLine));
 
+  up4w::AsyncReader reader{console.GetReadHandle()};
+  reader.StartRead();
+
   // setup the event loop with listeners.
   up4w::EventLoop ev{{
                          p.hProcess,
@@ -47,14 +50,10 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR pCmdLine, int) try {
                          },
                      },
                      {
-                         console.GetReadHandle(),
-                         [](HANDLE read) {
-                           std::array<std::byte, 256> buffer{};
-                           DWORD bytesRead = 0;
-                           ReadFile(read, &buffer[0],
-                                    static_cast<DWORD>(buffer.size() - 1),
-                                    &bytesRead, nullptr);
-                           return std::nullopt;
+                         reader.Notifier(),
+                         [&reader](HANDLE /*event*/) {
+                           auto _ = reader.BytesRead();
+                           return reader.StartRead();
                          },
                      }};
 
