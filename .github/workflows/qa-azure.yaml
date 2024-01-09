@@ -152,6 +152,8 @@ jobs:
           Write-Output "::group::Set up AppxPackage"
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
 
+          tree .
+
           New-Item -Name "windows-agent" -ItemType Directory
           Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
           Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.cer"       -Destination "windows-agent/"
@@ -167,8 +169,6 @@ jobs:
           Move-Item -Path "wsl-pro-service_*/wsl-pro-service_*.deb" -Destination "wsl-pro-service/"
           Remove-Item -Recurse "wsl-pro-service_*/"
           Write-Output "::endgroup::"
-
-          tree
 
       # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
       - name: Install Debug version of VCLibs
