@@ -152,7 +152,12 @@ jobs:
           Write-Output "::group::Set up AppxPackage"
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
 
-          tree .
+          pwd
+
+          Exit(1)
+          
+
+          
 
           New-Item -Name "windows-agent" -ItemType Directory
           Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
