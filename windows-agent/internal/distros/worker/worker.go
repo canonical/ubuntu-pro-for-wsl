@@ -67,7 +67,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		f(&opts)
 	}
 
-	tm, err := newTaskManager(ctx, storagePath)
+	tm, err := newTaskManager(storagePath)
 	if err != nil {
 		return nil, err
 	}
@@ -176,13 +176,14 @@ func (w *Worker) SubmitDeferredTasks(tasks ...task.Task) (err error) {
 	}
 
 	log.Infof(context.TODO(), "Distro %q: Submitting tasks %q to queue", w.distro.Name(), tasks)
+
 	return w.manager.Submit(true, tasks...)
 }
 
-// RequeueTasks reloads all tasks from file.
-// This means adding all deferred tasks back into the queue.
-func (w *Worker) RequeueTasks(ctx context.Context) error {
-	return w.manager.Load(ctx)
+// EnqueueDeferredTasks takes all deferred tasks and promotes them
+// to regular tasks.
+func (w *Worker) EnqueueDeferredTasks() {
+	w.manager.EnqueueDeferredTasks()
 }
 
 // processTasks is the main loop for the distro, processing any existing tasks while starting and releasing
@@ -196,11 +197,11 @@ func (w *Worker) processTasks(ctx context.Context) {
 			return
 		}
 
-		resultErr := w.processSingleTask(ctx, *t)
+		resultErr := w.processSingleTask(ctx, t)
 
 		var target unreachableDistroError
 		if errors.Is(resultErr, &target) {
-			log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), target.sourceErr, *t)
+			log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), t, target.sourceErr)
 			w.distro.Invalidate(ctx)
 			continue
 		}
@@ -229,7 +230,7 @@ func (err unreachableDistroError) Error() string {
 	return fmt.Sprintf("distro cannot be reached: %v", err.sourceErr)
 }
 
-func (w *Worker) processSingleTask(ctx context.Context, t managedTask) error {
+func (w *Worker) processSingleTask(ctx context.Context, t task.Task) error {
 	log.Debugf(ctx, "Distro %q: task %q: dequeued", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {

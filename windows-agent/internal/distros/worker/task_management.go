@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"sync"
@@ -11,22 +10,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
 	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
-	"golang.org/x/exp/slices"
 )
-
-// taskQueueSize is the maximum amount of tasks a queue is allowed to hold.
-const taskQueueSize = 100
-
-// managedTask is a type that carries a task with it, with added metadata and functionality to
-// serialize and deserialize.
-type managedTask struct {
-	ID uint64
-	task.Task
-}
-
-func (m managedTask) String() string {
-	return fmt.Sprintf("Task #%d (%T)", m.ID, m.Task)
-}
 
 // taskmanager is a helper struct for the worker that manages task submission
 // and completion management, as well as its disk storage.
@@ -40,22 +24,21 @@ func (m managedTask) String() string {
 type taskManager struct {
 	storagePath string
 
-	tasks []*managedTask
-	queue chan *managedTask
-
-	largestID uint64
+	tasks         *taskQueue
+	deferredTasks *taskQueue
 
 	mu sync.RWMutex
 }
 
 // newTaskManager constructs and initializes a TaskManager.
-func newTaskManager(ctx context.Context, storagePath string) (*taskManager, error) {
+func newTaskManager(storagePath string) (*taskManager, error) {
 	tm := taskManager{
-		storagePath: storagePath,
-		queue:       make(chan *managedTask, taskQueueSize),
+		storagePath:   storagePath,
+		tasks:         newTaskQueue(),
+		deferredTasks: newTaskQueue(),
 	}
 
-	if err := tm.Load(ctx); err != nil {
+	if err := tm.load(); err != nil {
 		return &tm, err
 	}
 	return &tm, nil
@@ -66,7 +49,7 @@ func (tm *taskManager) QueueLen() int {
 	tm.mu.RLock()
 	defer tm.mu.RUnlock()
 
-	return len(tm.queue)
+	return tm.tasks.Len()
 }
 
 // TaskLen returns the length of the task queue plus the deferred task queue.
@@ -74,10 +57,12 @@ func (tm *taskManager) TaskLen() int {
 	tm.mu.RLock()
 	defer tm.mu.RUnlock()
 
-	return len(tm.tasks)
+	return tm.tasks.Len() + tm.deferredTasks.Len()
 }
 
-// Submit adds a task
+// Submit adds a task with high priority, meaning that any equivalent task will
+// be removed from the queue.
+//
 // If deferred is set to true, task execution is deferred until the next load()
 // Otherwise, it is added to the queue immediately.
 func (tm *taskManager) Submit(deferred bool, tasks ...task.Task) error {
@@ -91,25 +76,31 @@ func (tm *taskManager) Submit(deferred bool, tasks ...task.Task) error {
 func (tm *taskManager) submitUnsafe(deferred bool, tasks ...task.Task) (err error) {
 	defer decorate.OnError(&err, "could not submit task")
 
-	for i := range tasks {
-		tm.largestID++
-		t := &managedTask{
-			ID:   tm.largestID,
-			Task: tasks[i],
-		}
-
-		tm.tasks = append(tm.tasks, t)
-		if deferred {
-			// deferred tasks will be queued next time load() is called.
-			continue
-		}
-
-		select {
-		case tm.queue <- t:
-		default:
-			return errors.New("queue is full")
-		}
+	thisQueue := &tm.tasks
+	otherQueue := &tm.deferredTasks
+	if deferred {
+		thisQueue, otherQueue = otherQueue, thisQueue
 	}
+
+	for i := range tasks {
+		(*otherQueue).Remove(tasks[i])
+		(*thisQueue).Push(tasks[i])
+	}
+
+	return tm.save()
+}
+
+// resubmit submits a task with lowest priority, meaning that it will be overridden
+// by any equivalent already in the queue.
+func (tm *taskManager) resubmit(t task.Task) error {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+
+	if tm.tasks.Contains(t) {
+		// No need to resubmit
+		return nil
+	}
+	tm.deferredTasks.PushIfNew(t)
 
 	return tm.save()
 }
@@ -117,61 +108,13 @@ func (tm *taskManager) submitUnsafe(deferred bool, tasks ...task.Task) (err erro
 // NextTask pulls the next task from the queue. If no task is queued, this function blocks until either a task is
 // submitted or the context is cancelled, whichever happens first.
 // The second argument indicates whether a task was pulled or not.
-func (tm *taskManager) NextTask(ctx context.Context) (*managedTask, bool) {
-	// This double-select gives priority to the context over the manager queue. Not very
-	// important in production code but it makes the code more predictable for testing.
-	//
-	// Without this, there is always a chance that the worker will select the task
-	// channel rather than the context.Done.
-	select {
-	case <-ctx.Done():
-		return nil, false
-	default:
-	}
-
-	// Avoid races with Load()
-	tm.mu.RLock()
-	queue := tm.queue
-	tm.mu.RUnlock()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, false
-		case t, open := <-queue:
-
-			if !open {
-				// There was a reload: we need to refresh the queue after the Load is completed
-				// This happens because Load() creates a new queue (closing the old one), so
-				// we have to start reading from the new one.
-				tm.mu.RLock()
-				queue = tm.queue
-				tm.mu.RUnlock()
-
-				continue
-			}
-
-			tm.mu.Lock()
-			defer tm.mu.Unlock()
-
-			// Remove task from list
-			idx := slices.Index(tm.tasks, t)
-			if idx != -1 {
-				tm.tasks = slices.Delete(tm.tasks, idx, idx+1)
-			}
-
-			if err := tm.save(); err != nil {
-				log.Errorf(ctx, "NextTask: could not write task list to disk: %v", err)
-				return t, false
-			}
-
-			return t, true
-		}
-	}
+func (tm *taskManager) NextTask(ctx context.Context) (task.Task, bool) {
+	t := tm.tasks.Pull(ctx)
+	return t, t != nil
 }
 
 // TaskDone cleans up after a task is completed, and conditionally re-submits failed ones.
-func (tm *taskManager) TaskDone(ctx context.Context, t *managedTask, taskResult error) (err error) {
+func (tm *taskManager) TaskDone(ctx context.Context, t task.Task, taskResult error) (err error) {
 	decorate.OnError(&err, "task %s", t)
 
 	if taskResult == nil {
@@ -186,22 +129,20 @@ func (tm *taskManager) TaskDone(ctx context.Context, t *managedTask, taskResult 
 		return nil
 	}
 
-	// Task is resubmited as deferred
-	if err := tm.Submit(true, t.Task); err != nil {
-		return err
-	}
+	return tm.resubmit(t)
+}
 
-	return nil
+// EnqueueDeferredTasks takes all deferred tasks and promotes them
+// to regular tasks.
+func (tm *taskManager) EnqueueDeferredTasks() {
+	tm.tasks.Absorb(tm.deferredTasks)
 }
 
 // save writes the current task queue (plus deferred tasks) to file.
 func (tm *taskManager) save() (err error) {
 	defer decorate.OnError(&err, "could not save current work in progress")
 
-	var tasks []task.Task
-	for i := range tm.tasks {
-		tasks = append(tasks, tm.tasks[i].Task)
-	}
+	tasks := append(tm.tasks.Data(), tm.deferredTasks.Data()...)
 
 	out, err := task.MarshalYAML(tasks)
 	if err != nil {
@@ -220,18 +161,11 @@ func (tm *taskManager) save() (err error) {
 }
 
 // Load loads tasks from file.
-func (tm *taskManager) Load(ctx context.Context) (err error) {
+func (tm *taskManager) load() (err error) {
 	defer decorate.OnError(&err, "could not load previous work in progress")
 
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
-
-	// Dump old queue and reload from file
-	close(tm.queue)
-
-	tm.tasks = make([]*managedTask, 0)
-	tm.queue = make(chan *managedTask, taskQueueSize)
-	tm.largestID = 0
 
 	out, err := os.ReadFile(tm.storagePath)
 	if err != nil {
@@ -246,15 +180,7 @@ func (tm *taskManager) Load(ctx context.Context) (err error) {
 		return err
 	}
 
-	if len(tasks) >= taskQueueSize {
-		excess := taskQueueSize - len(tasks)
-		log.Warningf(ctx, "dropped %d tasks because at most %d can be queued up", excess, taskQueueSize)
-		tasks = tasks[:taskQueueSize]
-	}
-
-	if err := tm.submitUnsafe(false, tasks...); err != nil {
-		return err
-	}
+	tm.tasks.Load(tasks)
 
 	return nil
 }
