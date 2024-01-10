@@ -23,13 +23,34 @@ PseudoConsole ::~PseudoConsole() {
     ClosePseudoConsole(hDevice);
   }
 }
+
 PseudoConsole::PseudoConsole(COORD coordinates) {
   SECURITY_ATTRIBUTES sa{sizeof(SECURITY_ATTRIBUTES), nullptr, true};
   if (!CreatePipe(&hInRead, &hInWrite, &sa, 0)) {
     throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
   }
+  const wchar_t pipeName[] = L"\\\\.\\pipe\\UP4WPCon";
+  // This handle reads from the child process' stdout.
+  hOutRead = CreateNamedPipe(
+      pipeName,
+      // data flows into this process, reads will be asynchronous.
+      PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+      // PIPE_WAIT doesn't block with OVERLAPPED IO: see
+      // https://devblogs.microsoft.com/oldnewthing/20110114-00/?p=11753
+      PIPE_WAIT | PIPE_TYPE_BYTE | PIPE_READMODE_BYTE |
+          PIPE_REJECT_REMOTE_CLIENTS,
+      1, 0, 0, 0, &sa);
+  if (hOutRead == INVALID_HANDLE_VALUE) {
+    throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
+  }
+  // This handle is inherited by the child process' as its stdout.
+  // Since we create the handle here, by the time the console creation
+  // completes, the pipe is already connected, thus available for an async read
+  // operation.
+  hOutWrite =
+      CreateFile(pipeName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-  if (!CreatePipe(&hOutRead, &hOutWrite, &sa, 0)) {
+  if (hOutRead == INVALID_HANDLE_VALUE) {
     throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
   }
 
@@ -139,6 +160,55 @@ int EventLoop::Run() {
       }
     }
   } while (true);
+}
+
+AsyncReader::AsyncReader(HANDLE input) {
+  if (input == nullptr || input == INVALID_HANDLE_VALUE) {
+    throw std::runtime_error{
+        "AsyncReader requires a valid handle but null was passed\n"};
+  }
+  input_ = input;
+  auto event = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+  if (event == INVALID_HANDLE_VALUE || event == nullptr) {
+    throw hresult_exception(HRESULT_FROM_WIN32(GetLastError()));
+  }
+  operationState_.hEvent = event;
+}
+
+std::string_view up4w::AsyncReader::BytesRead() {
+  DWORD read = 0;
+  if (FALSE == GetOverlappedResult(input_, &operationState_, &read, FALSE)) {
+    throw hresult_exception(HRESULT_FROM_WIN32(GetLastError()));
+  }
+
+  // Reset the state.
+  bytesRead_ = 0;
+  if (FALSE == ResetEvent(operationState_.hEvent)) {
+    throw hresult_exception(HRESULT_FROM_WIN32(GetLastError()));
+  }
+
+  return std::string_view{buffer_, read};
+}
+
+std::optional<int> up4w::AsyncReader::StartRead() {
+  // Start an asynchronous read
+  auto res =
+      ReadFile(input_, buffer_, sizeof(buffer_), &bytesRead_, &operationState_);
+  auto lastError = GetLastError();
+
+  // The normal outcome: either the operation fails with ERROR_IO_PENDING or
+  // it completes synchronously
+  if (res == TRUE || lastError == ERROR_IO_PENDING) {
+    return std::nullopt;
+  }
+
+  // The writer stopped, not necessarily an error.
+  if (lastError == ERROR_BROKEN_PIPE || lastError == ERROR_NO_DATA) {
+    return 0;
+  }
+
+  // Otherwise, it is an error. Maybe this could even throw.
+  return lastError;
 }
 
 }  // namespace up4w

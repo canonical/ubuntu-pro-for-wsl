@@ -82,4 +82,34 @@ class EventLoop {
   int Run();
 };
 
+/// A helper class for consistent asynchronously reading an [input] HANDLE.
+class AsyncReader {
+  // The input this will read from.
+  HANDLE input_ = nullptr;
+  // The asynchronous operation state.
+  OVERLAPPED operationState_ = {0};
+  // A buffer to hold the contents of the last successful read.
+  char buffer_[2048] = {0};
+  DWORD bytesRead_ = 0;
+
+ public:
+  // Creates a new AsyncReader storing the [input] handle to read from.
+  explicit AsyncReader(HANDLE input);
+  // The handle one must watch for to be notified when the in-flight async read
+  // operation completes.
+  HANDLE Notifier() const { return operationState_.hEvent; }
+
+  // Starts an asynchronous read operation from [input_]. Upon completion, a
+  // view of the result can be acquired by calling [BytesRead()]. An optional
+  // error code is returned in case the operation fails to start.
+  std::optional<int> StartRead();
+  std::string_view BytesRead();
+
+  ~AsyncReader() {
+    if (operationState_.hEvent) {
+      CloseHandle(operationState_.hEvent);
+    }
+  }
+};
+
 }  // namespace up4w
