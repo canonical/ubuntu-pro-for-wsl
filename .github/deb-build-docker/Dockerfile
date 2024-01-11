@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN \
    apt-get update && \
    apt-get install -y software-properties-common && \
+   apt-get install -y python3-six && \
    add-apt-repository -y --ppa ppa:ubuntu-wsl-dev/ppa && \
    sed -i "s#https#http#g" /etc/apt/sources.list.d/*
 
