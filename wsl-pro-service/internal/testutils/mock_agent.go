@@ -7,7 +7,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
@@ -182,9 +184,18 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	}
 
 	// Connect back
-	_, err = net.Dial("tcp4", fmt.Sprintf("localhost:%d", port))
+	for i := 0; i < 5; i++ {
+		time.Sleep(5 * time.Second)
+		_, err = net.Dial("tcp4", fmt.Sprintf("127.0.0.1:%d", port))
+		if err != nil {
+			err = fmt.Errorf("wslInstanceMockService: could not dial %q: %v", distro, err)
+			continue
+		}
+		break
+	}
+
 	if err != nil {
-		return fmt.Errorf("could not dial %q: %v", distro, err)
+		return err
 	}
 
 	s.data.BackConnectionCount.Add(1)
