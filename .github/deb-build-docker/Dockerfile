@@ -5,6 +5,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # add our own overlay ppa for dependencies not yet in ubuntu:devel.
 # ensure we don’t use https to avoid having to install ca-certificates on the build system, which will
 # skew the "no Internet access" test. The repo is still signed.
+#
+# Installing python3-six is a temporary workaround for 
+# https://bugs.launchpad.net/ubuntu/+source/software-properties/+bug/2049014
 RUN \
    apt-get update && \
    apt-get install -y software-properties-common && \
