@@ -57,6 +57,9 @@ var (
 
 	//go:embed filesystem_defaults/proc.mounts
 	defaultProcMountsContents []byte
+
+	//go:embed filesystem_defaults/proc.net.route
+	defaultProcNetRouteContents []byte
 )
 
 // controlArg Mock-controlling constants.
@@ -84,6 +87,9 @@ const (
 	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
 
 	CmdExeErr = "UP4W_CMDEXE_ERR"
+
+	WslInfoErr   = "UP4W_WSLINFO_ERR"
+	WslInfoIsNAT = "UP4W_WSLINFO_IS_NAT"
 
 	// FileSystemRoot contains the path to the mocked filesystem root.
 	FileSystemRoot = "UP4W_FILE_SYSTEM_ROOT"
@@ -210,6 +216,11 @@ func (m *SystemMock) LandscapeConfigExecutable(args ...string) (string, []string
 // WslpathExecutable mocks `wslpath $args...`.
 func (m *SystemMock) WslpathExecutable(args ...string) (string, []string) {
 	return m.mockExec("TestWithWslPathMock", args...)
+}
+
+// WslinfoExecutable mocks `wslinfo $args...`.
+func (m *SystemMock) WslinfoExecutable(args ...string) (string, []string) {
+	return m.mockExec("TestWithWslInfoMock", args...)
 }
 
 // CmdExe mocks `cmd.exe $args...`.
@@ -470,6 +481,47 @@ func WslPathMock(t *testing.T) {
 	})
 }
 
+// WslInfoMock mocks the executable for `cmd.exe`.
+// Add it to your package_test with:
+//
+//	func TestWithWslInfoMock(t *testing.T) { testutils.WslInfoMock(t) }
+//
+//nolint:thelper // This is a faux test used to mock the executable `wslinfo`
+func WslInfoMock(t *testing.T) {
+	if t.Name() != "TestWithWslInfoMock" {
+		panic("The WslInfoMock faux test must be named TestWithWslInfoMock")
+	}
+
+	mockMain(t, func(argv []string) exitCode {
+		if len(argv) != 2 {
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			return exitBadUsage
+		}
+
+		if argv[0] != "--networking-mode" {
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			return exitBadUsage
+		}
+
+		if argv[1] != "-n" {
+			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			return exitBadUsage
+		}
+
+		if envExists(WslInfoErr) {
+			return exitError
+		}
+
+		if envExists(WslInfoIsNAT) {
+			fmt.Fprintln(os.Stdout, "nat")
+			return exitOk
+		}
+
+		fmt.Fprintln(os.Stdout, "other")
+		return exitOk
+	})
+}
+
 // CmdExeMock mocks the executable for `cmd.exe`.
 // Add it to your package_test with:
 //
@@ -561,6 +613,12 @@ func mockFilesystemRoot(t *testing.T) (rootDir string) {
 	require.NoError(t, err, "Setup: could not create mock /proc/")
 
 	err = os.WriteFile(filepath.Join(rootDir, "/proc/mounts"), defaultProcMountsContents, 0600)
+	require.NoError(t, err, "Setup: could not write mock /proc/mounts")
+
+	err = os.Mkdir(filepath.Join(rootDir, "/proc/net"), 0750)
+	require.NoError(t, err, "Setup: could not create mock /proc/net/")
+
+	err = os.WriteFile(filepath.Join(rootDir, "/proc/net/route"), defaultProcNetRouteContents, 0600)
 	require.NoError(t, err, "Setup: could not write mock /proc/mounts")
 
 	// Mock Windows FS
