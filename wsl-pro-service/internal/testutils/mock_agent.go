@@ -121,13 +121,20 @@ type MockAgentData struct {
 func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
 	ctx := context.Background()
 
+	defer func(err *error) {
+		if *err != nil {
+			log.Warningf(ctx, "wslInstanceMockService: dropped connection: %v", *err)
+			return
+		}
+		log.Info(ctx, "wslInstanceMockService: dropped connection")
+	}(&err)
 
 	s.data.ConnectionCount.Add(1)
 
 	log.Infof(ctx, "wslInstanceMockService: Received incoming connection")
 
 	if s.opts.dropStreamBeforeFirstRecv {
-		log.Infof(ctx, "wslInstanceMockService: dropping stream before first Recv as instructed")
+		log.Infof(ctx, "wslInstanceMockService: mock error: dropping stream before first Recv")
 		return nil
 	}
 
@@ -141,7 +148,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
 
 	if s.opts.dropStreamBeforeSendingPort {
-		log.Infof(ctx, "wslInstanceMockService: Connection with %q: dropping stream before sending port as instructed", distro)
+		log.Infof(ctx, "connection with %q: mock error: dropping stream before sending port", distro)
 		return nil
 	}
 
