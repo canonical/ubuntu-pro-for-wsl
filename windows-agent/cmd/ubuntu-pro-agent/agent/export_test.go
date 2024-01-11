@@ -3,8 +3,8 @@ package agent
 import (
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher"
+	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher/registry"
 )
 
 func withDaemonAddrDir(dir string) func(*options) {
@@ -19,7 +19,7 @@ func withProServicesCacheDir(dir string) func(*options) {
 	}
 }
 
-func withRegistry(r config.Registry) func(*options) {
+func withRegistry(r registrywatcher.Registry) func(*options) {
 	return func(o *options) {
 		o.registry = r
 	}

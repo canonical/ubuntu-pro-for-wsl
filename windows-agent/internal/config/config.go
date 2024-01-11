@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config/registry"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
@@ -20,15 +19,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
 	"github.com/ubuntu/decorate"
 )
-
-const registryPath = `Software\Canonical\UbuntuPro`
-
-// Registry abstracts away access to the windows registry.
-type Registry interface {
-	HKCUOpenKey(path string) (uintptr, error)
-	CloseKey(k uintptr)
-	ReadValue(k uintptr, field string) (value string, err error)
-}
 
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
@@ -38,41 +28,15 @@ type Config struct {
 	landscape    landscapeConf
 
 	// disk backing
-	registry  Registry
 	cachePath string
 
 	// Sync
 	mu *sync.Mutex
 }
 
-type options struct {
-	registry Registry
-}
-
-// Option is an optional argument for New.
-type Option func(*options)
-
-// WithRegistry allows for overriding the windows registry with a mock.
-func WithRegistry(r Registry) Option {
-	return func(o *options) {
-		o.registry = r
-	}
-}
-
 // New creates and initializes a new Config object.
-func New(ctx context.Context, cachePath string, args ...Option) (m *Config) {
-	var opts options
-
-	for _, f := range args {
-		f(&opts)
-	}
-
-	if opts.registry == nil {
-		opts.registry = registry.Windows{}
-	}
-
+func New(ctx context.Context, cachePath string) (m *Config) {
 	m = &Config{
-		registry:  opts.registry,
 		cachePath: filepath.Join(cachePath, "config"),
 		mu:        &sync.Mutex{},
 	}
@@ -237,10 +201,14 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...co
 	return nil
 }
 
-// UpdateRegistrySettings checks if any of the registry settings have changed since this function was last called.
-// If so, new settings are pushed to the distros.
-func (c *Config) UpdateRegistrySettings(ctx context.Context, db *database.DistroDB) error {
-	taskList, err := c.collectRegistrySettingsTasks(ctx, db)
+// RegistryData contains the data that the Ubuntu Pro registry key can provide.
+type RegistryData struct {
+	UbuntuProToken, LandscapeConfig string
+}
+
+// UpdateRegistryData takes in data from the registry and applies it as necessary.
+func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *database.DistroDB) error {
+	taskList, err := c.collectRegistrySettingsTasks(ctx, data, db)
 	if err != nil {
 		return err
 	}
@@ -251,16 +219,17 @@ func (c *Config) UpdateRegistrySettings(ctx context.Context, db *database.Distro
 	}
 
 	if err != nil {
-		return fmt.Errorf("could not submit new token to certain distros: %v", err)
+		return fmt.Errorf("could not submit new task to certain distros: %v", err)
 	}
 
 	return nil
 }
 
-// collectRegistrySettingsTasks looks at the registry settings to see if any of them have changed since this
-// function was last called. It returns a list of tasks to run triggered by these changes.
-func (c *Config) collectRegistrySettingsTasks(ctx context.Context, db *database.DistroDB) ([]task.Task, error) {
-	type getTask = func(*Config, context.Context, *database.DistroDB) (task.Task, error)
+// collectRegistrySettingsTasks looks at the registry data to see if any of them have changed since this
+// function was last called. It returns a list of tasks to run triggered by these changes, and updates
+// the config.
+func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data RegistryData, db *database.DistroDB) ([]task.Task, error) {
+	type getTask = func(*Config, context.Context, RegistryData, *database.DistroDB) (task.Task, error)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -274,7 +243,7 @@ func (c *Config) collectRegistrySettingsTasks(ctx context.Context, db *database.
 	var errs error
 	var taskList []task.Task
 	for _, f := range []getTask{(*Config).getTaskOnNewSubscription, (*Config).getTaskOnNewLandscape} {
-		task, err := f(c, ctx, db)
+		task, err := f(c, ctx, data, db)
 		if err != nil {
 			errs = errors.Join(errs, err)
 			continue
@@ -298,8 +267,10 @@ func (c *Config) collectRegistrySettingsTasks(ctx context.Context, db *database.
 
 // getTaskOnNewSubscription checks if the subscription has changed since the last time it was called. If so, the new subscription
 // is returned in the form of a task.
-func (c *Config) getTaskOnNewSubscription(ctx context.Context, db *database.DistroDB) (task.Task, error) {
-	if !hasChanged(c.subscription.Organization, &c.subscription.Checksum) {
+func (c *Config) getTaskOnNewSubscription(ctx context.Context, data RegistryData, db *database.DistroDB) (task.Task, error) {
+	c.subscription.Organization = data.UbuntuProToken
+
+	if !hasChanged(data.UbuntuProToken, &c.subscription.Checksum) {
 		return nil, nil
 	}
 	log.Debug(ctx, "New organization-provided Ubuntu Pro subscription settings detected in registry")
@@ -310,22 +281,18 @@ func (c *Config) getTaskOnNewSubscription(ctx context.Context, db *database.Dist
 
 // getTaskOnNewLandscape checks if the Landscape settings has changed since the last time it was called. If so, the
 // new Landscape settings are returned in the form of a task.
-func (c *Config) getTaskOnNewLandscape(ctx context.Context, db *database.DistroDB) (task.Task, error) {
+func (c *Config) getTaskOnNewLandscape(ctx context.Context, data RegistryData, db *database.DistroDB) (task.Task, error) {
+	c.landscape.OrgConfig = data.LandscapeConfig
+
 	// We append them just so we can compute a combined checksum
-	serialized := fmt.Sprintf("%s%s", c.landscape.OrgConfig, c.landscape.UID)
+	serialized := fmt.Sprintf("%s%s", data.LandscapeConfig, c.landscape.UID)
 	if !hasChanged(serialized, &c.landscape.Checksum) {
 		return nil, nil
 	}
 
 	log.Debug(ctx, "New Landscape settings detected in registry")
+
 	lconf, _ := c.landscape.resolve()
-
-	// We must not register to landscape if we have no Landscape UID
-	if lconf != "" && c.landscape.UID == "" {
-		log.Debug(ctx, "Ignoring new landscape settings: no Landscape agent UID")
-		return nil, nil
-	}
-
 	return tasks.LandscapeConfigure{Config: lconf, HostagentUID: c.landscape.UID}, nil
 }
 

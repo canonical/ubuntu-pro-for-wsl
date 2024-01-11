@@ -16,4 +16,4 @@ You can use a private Landscape instance (different from [landscape.canonical.co
     # The configuration for the WSL client. See an example here
     # https://github.com/canonical/landscape-client/blob/master/example.conf
     ```
-3. The changes will take effect next time you start Ubuntu Pro For Windows. All new distros will automatically become landscape-enabled. If you want them to be applied now, follow the steps on how to restart Ubuntu Pro For Windows. Otherwise, you're done.
+3. All new distros will automatically register with Landscape. Restart WSL to apply the Landscape configuration to existing distros.
