@@ -162,6 +162,94 @@ func TestConnect(t *testing.T) {
 	}
 }
 
+func TestSend(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	system, mock := testutils.MockSystem(t)
+
+	portFile := mock.DefaultAddrFile()
+	_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile)
+
+	cs := controlstream.New(portFile, system)
+
+	err := cs.Connect(ctx)
+	require.NoError(t, err, "Connect should have returned no error")
+	defer cs.Disconnect()
+
+	require.Equal(t, int32(1), agentMetaData.ConnectionCount.Load(), "The agent should have received one connection via the control stream")
+	require.Equal(t, int32(1), agentMetaData.RecvCount.Load(), "The agent should have received one message via the control stream")
+
+	var c net.ListenConfig
+	l, err := c.Listen(ctx, "tcp4", fmt.Sprintf("localhost:%d", cs.ReservedPort()))
+	require.NoError(t, err, "could not serve assigned port")
+	defer l.Close()
+
+	err = cs.Send(&agentapi.DistroInfo{WslName: "HELLO"})
+	require.NoError(t, err, "Send should return no error")
+
+	require.Eventually(t, func() bool {
+		return agentMetaData.RecvCount.Load() > 1
+	}, 20*time.Second, time.Second, "The agent should have received another message via the control stream")
+
+	require.Equal(t, int32(2), agentMetaData.RecvCount.Load(), "The agent should have received exactly two messages via the control stream")
+}
+
+func TestReconnection(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		firstConnectionSuccesful bool
+	}{
+		"Success connecting after failing to connect":          {},
+		"Success connecting after previous connection dropped": {firstConnectionSuccesful: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			system, mock := testutils.MockSystem(t)
+			portFile := mock.DefaultAddrFile()
+
+			cs := controlstream.New(portFile, system)
+			defer cs.Disconnect()
+
+			var server *grpc.Server
+			if tc.firstConnectionSuccesful {
+				server, _ = testutils.MockWindowsAgent(t, ctx, portFile)
+			}
+
+			err := cs.Connect(ctx)
+			if tc.firstConnectionSuccesful {
+				require.NoError(t, err, "First connection should return no error")
+				server.Stop()
+
+				// Avoid a race where the portfile is not removed until after the next server starts
+				require.Eventually(t, func() bool {
+					_, err := os.Stat(portFile)
+					return errors.Is(err, fs.ErrNotExist)
+				}, 5*time.Second, 100*time.Millisecond, "Stopping the server should remove the port file")
+			} else {
+				require.Error(t, err, "First connection should return an error")
+			}
+
+			cs.Disconnect()
+			server, _ = testutils.MockWindowsAgent(t, ctx, portFile)
+			defer server.Stop()
+
+			err = cs.Connect(ctx)
+			require.NoError(t, err, "Second connection should return no error")
+		})
+	}
+}
+
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
 func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
 func TestWithWslInfoMock(t *testing.T) { testutils.WslInfoMock(t) }
