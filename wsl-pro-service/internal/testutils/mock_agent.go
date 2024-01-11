@@ -57,7 +57,7 @@ func WithDropStreamBeforeSendingPort() AgentOption {
 // You can stop the server manually, otherwise it'll stop during cleanup.
 //
 //nolint:revive // testing.T should go before context, regardless of what these linters say.
-func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args ...AgentOption) *grpc.Server {
+func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args ...AgentOption) (*grpc.Server, *MockAgentData) {
 	t.Helper()
 
 	var opts options
@@ -66,9 +66,11 @@ func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args .
 	}
 
 	server := grpc.NewServer()
-	agentapi.RegisterWSLInstanceServer(server, &wslInstanceMockService{
+	service := &wslInstanceMockService{
 		opts: opts,
-	})
+	}
+
+	agentapi.RegisterWSLInstanceServer(server, service)
 
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
@@ -91,17 +93,36 @@ func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args .
 	err = os.WriteFile(addrFile, []byte(lis.Addr().String()), 0600)
 	require.NoError(t, err, "Setup: could not write listening port file")
 
-	return server
+	return server, &service.data
 }
 
 type wslInstanceMockService struct {
 	agentapi.UnimplementedWSLInstanceServer
 
 	opts options
+	data MockAgentData
 }
 
-func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
+// MockAgentData contains some stats about the agent and the connections it made.
+type MockAgentData struct {
+	// ConnectionCount is the number of times the WSL Pro Service has connected to the stream
+	ConnectionCount atomic.Int32
+
+	// ConnectionCount is the number of times the Agent has connected to the WSLInstance service
+	BackConnectionCount atomic.Int32
+
+	// RecvCount is the number of completed Recv performed by the Agent
+	RecvCount atomic.Int32
+
+	// ReservedPort is the latest port reserved for the WSLProService
+	ReservedPort atomic.Uint32
+}
+
+func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
 	ctx := context.Background()
+
+
+	s.data.ConnectionCount.Add(1)
 
 	log.Infof(ctx, "wslInstanceMockService: Received incoming connection")
 
@@ -114,6 +135,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	if err != nil {
 		return fmt.Errorf("new connection: did not receive info from WSL distro: %v", err)
 	}
+	s.data.RecvCount.Add(1)
 
 	distro := info.GetWslName()
 	log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
@@ -147,6 +169,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 		log.Infof(ctx, "wslInstanceMockService: Connection with %q: Reserved port %d", distro, port)
 	}
 
+	s.data.ReservedPort.Store(port)
 	if err := stream.Send(&agentapi.Port{Port: port}); err != nil {
 		return fmt.Errorf("could not send port: %v", err)
 	}
@@ -156,6 +179,8 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	if err != nil {
 		return fmt.Errorf("could not dial %q: %v", distro, err)
 	}
+
+	s.data.BackConnectionCount.Add(1)
 
 	log.Infof(ctx, "wslInstanceMockService: Connection with %q: connected back via reserved port", distro)
 
@@ -167,6 +192,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 			break
 		}
 		log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
+		s.data.RecvCount.Add(1)
 	}
 
 	return nil
