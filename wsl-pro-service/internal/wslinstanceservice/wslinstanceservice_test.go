@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"testing"
-	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
@@ -66,7 +65,7 @@ func TestApplyProToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			wantSysInfo := &agentapi.DistroInfo{
@@ -151,7 +150,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			system, mock := testutils.MockSystem(t)
