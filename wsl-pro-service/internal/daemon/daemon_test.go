@@ -312,4 +312,5 @@ func copyFile(t *testing.T, src, dst string) {
 
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
 func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
+func TestWithWslInfoMock(t *testing.T) { testutils.WslInfoMock(t) }
 func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }
