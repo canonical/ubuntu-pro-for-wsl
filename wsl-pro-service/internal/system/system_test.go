@@ -411,6 +411,103 @@ func TestLandscapeEnable(t *testing.T) {
 	}
 }
 
+func TestWindowsForwardedLocalhost(t *testing.T) {
+	t.Parallel()
+
+	type fileState = int
+	const (
+		fileOK fileState = iota
+		fileNotExist
+		fileBroken
+		fileIPbroken
+	)
+
+	// copyFile is a helper that copies the appropriate version of a fixture to the desired destination.
+	copyFile := func(t *testing.T, state fileState, from, to string) {
+		t.Helper()
+
+		var suffix string
+		switch state {
+		case fileNotExist:
+			err := os.RemoveAll(to)
+			require.NoError(t, err, "Setup: could not remove file %s", to)
+			return
+		case fileOK:
+			suffix = ".good"
+		case fileBroken:
+			suffix = ".bad"
+		case fileIPbroken:
+			suffix = ".bad-ip"
+		}
+
+		from = from + suffix
+		out, err := os.ReadFile(from)
+		require.NoErrorf(t, err, "Setup: could not read file %s", from)
+		err = os.WriteFile(to, out, 0400)
+		require.NoErrorf(t, err, "Setup: could not write file %s", to)
+	}
+
+	testCases := map[string]struct {
+		networkModeIsNAT bool
+		etcResolv        fileState
+		procNetRoute     fileState
+		breakWslInfo     bool
+
+		wantErr bool
+	}{
+		"Success without NAT": {},
+		"Success with NAT":    {networkModeIsNAT: true},
+
+		// WSL info errors
+		"Error when wslinfo returns an error": {breakWslInfo: true, wantErr: true},
+
+		// NAT errors
+		"Error with NAT when /proc/net/route does not exist":       {networkModeIsNAT: true, procNetRoute: fileNotExist, wantErr: true},
+		"Error with NAT when /proc/net/route is ill-formed":        {networkModeIsNAT: true, procNetRoute: fileBroken, wantErr: true},
+		"Error with NAT when /proc/net/route has an ill-formed IP": {networkModeIsNAT: true, procNetRoute: fileIPbroken, wantErr: true},
+
+		// Other errors
+		"Error without NAT when /etc/resolv.conf does not exist":       {etcResolv: fileNotExist, wantErr: true},
+		"Error without NAT when /etc/resolv.conf is ill-formed":        {etcResolv: fileBroken, wantErr: true},
+		"Error without NAT when /etc/resolv.conf has an ill-formed IP": {etcResolv: fileIPbroken, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			sys, mock := testutils.MockSystem(t)
+
+			if tc.breakWslInfo {
+				mock.SetControlArg(testutils.WslInfoErr)
+			}
+			if tc.networkModeIsNAT {
+				mock.SetControlArg(testutils.WslInfoIsNAT)
+			}
+
+			copyFile(t, tc.etcResolv, filepath.Join(golden.TestFamilyPath(t), "etc-resolv.conf"), mock.Path("/etc/resolv.conf"))
+			copyFile(t, tc.procNetRoute, filepath.Join(golden.TestFamilyPath(t), "proc-net-route"), mock.Path("/proc/net/route"))
+
+			got, err := sys.WindowsForwardedLocalhost(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "WindowsForwardedLocalhost should return an error")
+				return
+			}
+			require.NoError(t, err, "WindowsForwardedLocalhost should return no error")
+
+			// These are hard-coded in the fixtures
+			want := "127.0.0.42"
+			if tc.networkModeIsNAT {
+				want = "172.25.32.1"
+			}
+
+			require.Equal(t, want, got.String(), "Wrong IP returned by WindowsForwardedLocalhost")
+		})
+	}
+}
+
 func TestLandscapeDisable(t *testing.T) {
 	t.Parallel()
 
@@ -451,4 +548,5 @@ func TestLandscapeDisable(t *testing.T) {
 func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
 func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
 func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
+func TestWithWslInfoMock(t *testing.T)         { testutils.WslInfoMock(t) }
 func TestWithCmdExeMock(t *testing.T)          { testutils.CmdExeMock(t) }
