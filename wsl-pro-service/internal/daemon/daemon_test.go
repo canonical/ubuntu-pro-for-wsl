@@ -221,6 +221,84 @@ func TestServeAndQuit(t *testing.T) {
 	}
 }
 
+func TestReconnection(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		firstConnectionSuccesful bool
+	}{
+		"Success connecting after failing to connect":          {},
+		"Success connecting after previous connection dropped": {firstConnectionSuccesful: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			system, mock := testutils.MockSystem(t)
+
+			portFile := mock.DefaultAddrFile()
+
+			registerer := func(ctx context.Context, ctrl wslinstanceservice.ControlStreamClient) *grpc.Server {
+				// No need for a real GRPC service
+				return grpc.NewServer()
+			}
+
+			systemd := SystemdSdNotifierMock{returns: true}
+
+			d := daemon.New(ctx,
+				portFile,
+				registerer,
+				system,
+				daemon.WithSystemdNotifier(systemd.notify),
+			)
+			defer d.Quit(ctx, true)
+
+			var server *grpc.Server
+			var agentData *testutils.MockAgentData
+			if tc.firstConnectionSuccesful {
+				server, agentData = testutils.MockWindowsAgent(t, ctx, portFile)
+				defer server.Stop()
+			}
+
+			//nolint:errcheck // We don't really care
+			go d.Serve()
+
+			const maxTimeout = 20 * time.Second
+
+			if tc.firstConnectionSuccesful {
+				require.Eventually(t, func() bool { return systemd.nNotifications.Load() == 1 },
+					maxTimeout, time.Second, "Service should have notified systemd after connecting to the control stream")
+				require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
+				server.Stop()
+
+				// Avoid a race where the portfile is not removed until after the next server starts
+				require.Eventually(t, func() bool {
+					_, err := os.Stat(portFile)
+					return errors.Is(err, fs.ErrNotExist)
+				}, 5*time.Second, 100*time.Millisecond, "Stopping the server should remove the port file")
+			} else {
+				time.Sleep(maxTimeout)
+				require.Zero(t, systemd.nNotifications.Load(), "A service with no cotrol stream should not have notified systemd")
+			}
+
+			server, agentData = testutils.MockWindowsAgent(t, ctx, portFile)
+			defer server.Stop()
+
+			require.Eventually(t, func() bool {
+				return agentData.BackConnectionCount.Load() != 0
+			}, 30*time.Second, time.Second, "Service should eventually connect to the agent")
+
+			require.Equal(t, int32(1), systemd.nNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
+			require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
+		})
+	}
+}
+
 type SystemdSdNotifierMock struct {
 	returns   bool
 	returnErr bool
