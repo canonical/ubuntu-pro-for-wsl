@@ -24,10 +24,20 @@ func (s *System) WindowsForwardedLocalhost(ctx context.Context) (ip net.IP, err 
 		return nil, fmt.Errorf("could not ascertain the network mode: %v", err)
 	}
 
-	if mode == "nat" {
-		return s.defaultGateway()
+	if mode != "nat" {
+		return net.IPv4(127, 0, 0, 1), nil
 	}
-	return s.nameServer()
+
+	nameserver, err := s.nameServer()
+	if err != nil {
+		return nil, fmt.Errorf("could not find nameserver: %v", err)
+	}
+
+	if !nameserver.IsLoopback() {
+		return nameserver, nil
+	}
+
+	return s.defaultGateway()
 }
 
 func (s *System) networkingMode(ctx context.Context) (string, error) {
