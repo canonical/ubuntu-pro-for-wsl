@@ -1,6 +1,6 @@
 # Ubuntu Pro for Windows
 
-> See also [Ubuntu Pro](https://discourse.ubuntu.com/t/ubuntu-pro-faq/34042) and [Landscape](https://ubuntu.com/landscape/docs)
+> See also [Ubuntu Pro](./ubuntu_pro.md) and [Landscape](./landscape.md)
 
 Ubuntu Pro for Windows is an automation tool running on Windows hosts to manage
 Ubuntu WSL instances, providing them with compliance by attaching them to
