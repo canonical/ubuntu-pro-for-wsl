@@ -20,6 +20,7 @@ Thinking about using Ubuntu Pro for Windows for your next project? Get in touch!
 :titlesonly:
 
 self
-/reference/index
-Ubuntu Pro for Windows - dev </dev/index>
+How-to guides </howto/index>
+Reference </reference/index>
+Developer documentation </dev/index>
 ```
