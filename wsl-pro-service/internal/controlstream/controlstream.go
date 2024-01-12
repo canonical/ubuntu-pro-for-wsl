@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-windows/common"
 	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
 	"github.com/ubuntu/decorate"
@@ -38,11 +40,16 @@ func (err SystemError) Error() string {
 }
 
 // New creates an iddle control stream object.
-func New(agentPortFilePath string, s system.System) ControlStream {
-	return ControlStream{
-		addrPath: agentPortFilePath,
-		system:   s,
+func New(ctx context.Context, s system.System) (ControlStream, error) {
+	home, err := s.UserProfileDir(ctx)
+	if err != nil {
+		return ControlStream{}, fmt.Errorf("could not find address file: could not find $env:UserProfile: %v", err)
 	}
+
+	return ControlStream{
+		addrPath: filepath.Join(home, common.ListeningPortFileName),
+		system:   s,
+	}, nil
 }
 
 // Connect connects to the control stream. Call Disconnect to release resources.

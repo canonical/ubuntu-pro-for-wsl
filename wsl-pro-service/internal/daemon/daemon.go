@@ -55,7 +55,7 @@ type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStrea
 
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPCServiceRegisterer, s system.System, args ...Option) (d *Daemon) {
+func New(ctx context.Context, registerGRPCService GRPCServiceRegisterer, s system.System, args ...Option) (*Daemon, error) {
 	log.Debug(ctx, "Building new daemon")
 
 	// Set default options.
@@ -68,7 +68,11 @@ func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPC
 		f(&opts)
 	}
 
-	ctrlStream := controlstream.New(agentPortFilePath, s)
+	ctrlStream, err := controlstream.New(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 
 	return &Daemon{
@@ -77,7 +81,7 @@ func New(ctx context.Context, agentPortFilePath string, registerGRPCService GRPC
 		ctrlStream:        &ctrlStream,
 		ctx:               ctx,
 		cancel:            cancel,
-	}
+	}, nil
 }
 
 // Serve sets up the GRPC server to listen to the address reserved by the
