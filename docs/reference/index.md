@@ -6,6 +6,7 @@ pieces that make up the Ubuntu Pro for Windows tool and the value it provides.
 ```{toctree}
 :titlesonly:
 
+landscape
 ubuntu_pro
 ubuntu_pro_for_windows
 ubuntu_pro_for_windows_gui
