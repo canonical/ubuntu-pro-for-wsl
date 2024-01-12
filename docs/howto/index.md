@@ -7,5 +7,6 @@ These how-to guides cover key operations and processes in Ubuntu Pro for Windows
 ```{toctree}
 :titlesonly:
 
+pro-attach
 attach-landscape
 ```
