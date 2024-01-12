@@ -50,10 +50,10 @@ const (
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
 	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistro = "Ubuntu"
+	referenceDistro = "Ubuntu-Preview"
 
 	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistroAppx = "CanonicalGroupLimited.Ubuntu"
+	referenceDistroAppx = "CanonicalGroupLimited.UbuntuPreview"
 
 	// up4wAppxPackage is the Ubuntu Pro For Windows package.
 	up4wAppxPackage = "CanonicalGroupLimited.UbuntuProForWindows"

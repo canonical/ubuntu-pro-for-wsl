@@ -128,7 +128,7 @@ jobs:
       - name: Set up Ubuntu
         uses: Ubuntu/WSL/.github/actions/wsl-install@main
         with:
-          distro: "Ubuntu"
+          distro: "Ubuntu-Preview"
       - name: Set up Go
         # actions/setup-go is broken
         shell: powershell
