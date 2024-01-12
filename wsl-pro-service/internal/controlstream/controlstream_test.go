@@ -24,6 +24,49 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+func TestNew(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		breakWslPath     bool
+		precancelContext bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when the context is cancelled": {precancelContext: true, wantErr: true},
+		"Error when WslPath returns error":    {breakWslPath: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			sys, mock := testutils.MockSystem(t)
+
+			if tc.breakWslPath {
+				mock.SetControlArg(testutils.WslpathErr)
+			}
+			if tc.precancelContext {
+				cancel()
+			}
+
+			_, err := controlstream.New(ctx, sys)
+			if tc.wantErr {
+				require.Error(t, err, "New should return an error")
+				return
+			}
+
+			require.NoError(t, err, "New should return no error")
+		})
+	}
+}
+
 func TestConnect(t *testing.T) {
 	t.Parallel()
 
@@ -123,7 +166,8 @@ func TestConnect(t *testing.T) {
 				require.Fail(t, "Test setup error", "Unexpected enum value %d for portFile state", tc.portFile)
 			}
 
-			cs := controlstream.New(portFile, system)
+			cs, err := controlstream.New(ctx, system)
+			require.NoError(t, err, "New should return no error")
 
 			select {
 			case <-cs.Done(ctx):
@@ -131,7 +175,7 @@ func TestConnect(t *testing.T) {
 				require.Fail(t, "Done should not block before the control stream is connected")
 			}
 
-			err := cs.Connect(ctx)
+			err = cs.Connect(ctx)
 			if tc.wantErr {
 				require.Error(t, err, "Connect should have returned an error")
 				return
@@ -173,9 +217,10 @@ func TestSend(t *testing.T) {
 	portFile := mock.DefaultAddrFile()
 	_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile)
 
-	cs := controlstream.New(portFile, system)
+	cs, err := controlstream.New(ctx, system)
+	require.NoError(t, err, "New should return no error")
 
-	err := cs.Connect(ctx)
+	err = cs.Connect(ctx)
 	require.NoError(t, err, "Connect should have returned no error")
 	defer cs.Disconnect()
 
@@ -218,7 +263,8 @@ func TestReconnection(t *testing.T) {
 			system, mock := testutils.MockSystem(t)
 			portFile := mock.DefaultAddrFile()
 
-			cs := controlstream.New(portFile, system)
+			cs, err := controlstream.New(ctx, system)
+			require.NoError(t, err, "New should return no error")
 			defer cs.Disconnect()
 
 			var server *grpc.Server
@@ -226,7 +272,7 @@ func TestReconnection(t *testing.T) {
 				server, _ = testutils.MockWindowsAgent(t, ctx, portFile)
 			}
 
-			err := cs.Connect(ctx)
+			err = cs.Connect(ctx)
 			if tc.firstConnectionSuccesful {
 				require.NoError(t, err, "First connection should return no error")
 				server.Stop()

@@ -23,6 +23,43 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+func TestNew(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		breakWslPath bool
+
+		wantErr bool
+	}{
+		"Success":                          {},
+		"Error when WslPath returns error": {breakWslPath: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			sys, mock := testutils.MockSystem(t)
+
+			if tc.breakWslPath {
+				mock.SetControlArg(testutils.WslpathErr)
+			}
+
+			_, err := daemon.New(ctx, nil, sys)
+			if tc.wantErr {
+				require.Error(t, err, "New should return an error")
+				return
+			}
+
+			require.NoError(t, err, "New should return no error")
+		})
+	}
+}
+
 func TestServe(t *testing.T) {
 	t.Parallel()
 
@@ -97,26 +134,26 @@ func TestServe(t *testing.T) {
 				return grpc.NewServer()
 			}
 
-			if tc.precancelContext {
-				cancel()
-			}
-
 			systemd := SystemdSdNotifierMock{
 				returns:   tc.notifierReturn,
 				returnErr: tc.notifierErr,
 			}
 
-			d := daemon.New(
+			d, err := daemon.New(
 				ctx,
-				portFile,
 				registerService,
 				system,
 				daemon.WithSystemdNotifier(systemd.notify),
 			)
+			require.NoError(t, err, "New should return no error")
+
+			if tc.precancelContext {
+				cancel()
+			}
 
 			time.AfterFunc(10*time.Second, func() { d.Quit(ctx, true) })
 
-			err := d.Serve()
+			err = d.Serve()
 			if tc.wantErr {
 				require.Error(t, err, "Serve() should have returned an error")
 			} else {
@@ -179,12 +216,12 @@ func TestServeAndQuit(t *testing.T) {
 				returns: true,
 			}
 
-			d := daemon.New(ctx,
-				portFile,
+			d, err := daemon.New(ctx,
 				registerer,
 				system,
 				daemon.WithSystemdNotifier(systemd.notify),
 			)
+			require.NoError(t, err, "New should return no error")
 
 			serveExit := make(chan error)
 			go func() {
@@ -250,12 +287,13 @@ func TestReconnection(t *testing.T) {
 
 			systemd := SystemdSdNotifierMock{returns: true}
 
-			d := daemon.New(ctx,
-				portFile,
+			d, err := daemon.New(ctx,
 				registerer,
 				system,
 				daemon.WithSystemdNotifier(systemd.notify),
 			)
+			require.NoError(t, err, "New should return no error")
+
 			defer d.Quit(ctx, true)
 
 			var server *grpc.Server
