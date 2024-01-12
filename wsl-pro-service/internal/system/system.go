@@ -176,7 +176,16 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	}
 
 	winHomeLinux := strings.TrimSpace(string(out))
-	return s.Path(winHomeLinux), nil
+	wslPath = s.Path(winHomeLinux)
+
+	// wslpath can return invalid paths, so we make sure that it exists
+	if s, err := os.Stat(wslPath); err != nil {
+		return wslPath, fmt.Errorf("could not stat windows home directory %q: %v", wslPath, err)
+	} else if !s.IsDir() {
+		return wslPath, fmt.Errorf("windows home %q is not a directory", wslPath)
+	}
+
+	return wslPath, nil
 }
 
 // Path converts an absolute path into one inside the mocked filesystem.
