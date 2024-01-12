@@ -25,10 +25,11 @@ autopkgtests
 backporting
 changelog
 dev
-LTS
-SRU
-toolchain
 FIPS
 HIPAA
+Hostagent
+LTS
 SLA
+SRU
+toolchain
 
