@@ -8,5 +8,26 @@ ExecStart=/usr/libexec/wsl-pro-service -vv
 Restart=always
 RestartSec=2s
 
+# Some daemon restrictions
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=true
+PrivateDevices=yes
+PrivateMounts=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+
+# Only permit system calls used by common system services, excluding any special purpose calls
+SystemCallFilter=@system-service
+
 [Install]
 WantedBy=multi-user.target
