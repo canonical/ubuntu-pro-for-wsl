@@ -1,4 +1,4 @@
-(howtos)=
+(dev-howtos)=
 
 # How-to guides
 
