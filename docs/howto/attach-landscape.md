@@ -4,7 +4,7 @@
 
 This how-to guide will teach you how to connect your WSL instances to a Landscape server. See [the reference](../reference/landscape) to learn more about Landscape and Ubuntu Pro For Windows.
 
-Note that for this to work, you need an Ubuntu Pro subscription. Read more about [how to enable Ubuntu Pro for Windows](../dev/howto/04-enable-pro.md).
+Note that for this to work, you need an Ubuntu Pro subscription. Read more about [how to enable Ubuntu Pro for Windows](./pro-attach).
 
 1. Open the Registry Editor on your Windows machine
    - To open the Registry Editor, press the Windows key + R and type `regedit`.
@@ -31,7 +31,7 @@ Note that for this to work, you need an Ubuntu Pro subscription. Read more about
 10. Your agent and WSL distros will register to Landscape within the next few minutes. You should see a notification pop up in your Landscape dashboard.
 
 ## Read more
-- [How to enable Ubuntu Pro for Windows](../dev/howto/04-enable-pro)
+- [How to enable Ubuntu Pro for Windows](./pro-attach.md)
 - [Ubuntu Pro for Windows Landscape reference](../reference/landscape)
 
 ## External links
