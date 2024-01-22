@@ -17,7 +17,7 @@ import (
 
 // WindowsForwardedLocalhost returns the IP that maps to Windows' localhost.
 func (s *System) WindowsForwardedLocalhost(ctx context.Context) (ip net.IP, err error) {
-	defer decorate.OnError(&err, "coud not find address mapping to Windows localhost")
+	defer decorate.OnError(&err, "coud not find address mapping to the Windows host")
 
 	mode, err := s.networkingMode(ctx)
 	if err != nil {
