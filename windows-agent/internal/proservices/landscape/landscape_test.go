@@ -70,7 +70,8 @@ func TestConnect(t *testing.T) {
 		landscapeUIDReadErr  bool
 		landscapeUIDWriteErr bool
 
-		tokenErr bool
+		emptyToken bool
+		tokenErr   bool
 
 		requireCertificate         bool
 		breakLandscapeClientConfig bool
@@ -96,6 +97,7 @@ func TestConnect(t *testing.T) {
 		"Error when the config cannot be parsed":               {wantErr: true},
 		"Error when the SSL certificate cannot be read":        {wantErr: true},
 		"Error when the SSL certificate is not valid":          {wantErr: true},
+		"Error when there is no Ubuntu Pro token":              {emptyToken: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -129,6 +131,10 @@ func TestConnect(t *testing.T) {
 				landscapeConfigErr: tc.breakLandscapeClientConfig,
 
 				landscapeAgentUID: tc.uid,
+			}
+
+			if tc.emptyToken {
+				conf.proToken = ""
 			}
 
 			lconf := defaultLandscapeConfig
@@ -929,6 +935,9 @@ func (m *mockConfig) Subscription(ctx context.Context) (string, config.Source, e
 
 	if m.proTokenErr {
 		return "", config.SourceNone, errors.New("Mock error")
+	}
+	if m.proToken == "" {
+		return "", config.SourceNone, nil
 	}
 	return m.proToken, config.SourceUser, nil
 }
