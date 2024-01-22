@@ -94,18 +94,12 @@ func (d *Daemon) Serve() (err error) {
 	default:
 	}
 
-	gracefulStop := make(chan struct{})
-	var gracefulStopOnce sync.Once
-	d.gracefulStop = func() {
-		gracefulStopOnce.Do(func() { close(gracefulStop) })
-	}
+	var gracefulStopCtx context.Context
+	gracefulStopCtx, d.gracefulStop = context.WithCancel(d.ctx)
 	defer d.gracefulStop()
 
-	forceStop := make(chan struct{})
-	var forceStopOnce sync.Once
-	d.forceStop = func() {
-		forceStopOnce.Do(func() { close(forceStop) })
-	}
+	var forceStopCtx context.Context
+	forceStopCtx, d.forceStop = context.WithCancel(d.ctx)
 	defer d.forceStop()
 
 	d.running = make(chan struct{})
@@ -122,7 +116,7 @@ func (d *Daemon) Serve() (err error) {
 	delay := minDelay
 
 	for {
-		err := d.serveOnce(gracefulStop, forceStop)
+		err := d.serveOnce(gracefulStopCtx, forceStopCtx)
 		if err == nil {
 			return nil
 		}
@@ -139,9 +133,9 @@ func (d *Daemon) Serve() (err error) {
 		case <-d.ctx.Done():
 			return d.ctx.Err()
 		case <-time.After(delay):
-		case <-forceStop:
+		case <-forceStopCtx.Done():
 			return nil
-		case <-gracefulStop:
+		case <-gracefulStopCtx.Done():
 			return nil
 		}
 
@@ -149,7 +143,7 @@ func (d *Daemon) Serve() (err error) {
 	}
 }
 
-func (d *Daemon) serveOnce(gracefulStop, forceStop <-chan struct{}) error {
+func (d *Daemon) serveOnce(gracefulStopCtx, forceStopCtx context.Context) error {
 	ctx, cancel := context.WithCancel(d.ctx)
 	defer cancel()
 
@@ -161,7 +155,7 @@ func (d *Daemon) serveOnce(gracefulStop, forceStop <-chan struct{}) error {
 	log.Infof(ctx, "Connected to control stream")
 
 	server := d.registerService(ctx, d.ctrlStream)
-	go handleServerStop(ctx, server, gracefulStop, forceStop)
+	go handleServerStop(ctx, gracefulStopCtx, forceStopCtx, server)
 
 	// Start serving
 	serveDone := make(chan error)
@@ -184,22 +178,22 @@ func (d *Daemon) serveOnce(gracefulStop, forceStop <-chan struct{}) error {
 	}
 }
 
-func handleServerStop(ctx context.Context, server *grpc.Server, gracefulStop <-chan struct{}, forceStop <-chan struct{}) {
+func handleServerStop(ctx, gracefulStopCtx, forceStopCtx context.Context, server *grpc.Server) {
 	defer server.Stop()
 
 	select {
 	case <-ctx.Done():
 		return
-	case <-forceStop:
+	case <-forceStopCtx.Done():
 		return
-	case <-gracefulStop:
+	case <-gracefulStopCtx.Done():
 		server.GracefulStop()
 	}
 
 	// Graceful stop can be overridden by a later forced Stop
 	select {
 	case <-ctx.Done():
-	case <-forceStop:
+	case <-forceStopCtx.Done():
 	}
 }
 
