@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -233,31 +231,6 @@ func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
 	}
 
 	return nil
-}
-
-func getControlStreamAddress(ctx context.Context, agentPortFilePath string, s system.System) (string, error) {
-	windowsHostAddr, err := s.WindowsHostAddress(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	/*
-		We parse the port from the file written by the windows agent.
-	*/
-	addr, err := os.ReadFile(agentPortFilePath)
-	if err != nil {
-		return "", fmt.Errorf("could not read agent port file %q: %v", agentPortFilePath, err)
-	}
-
-	fields := strings.Split(string(addr), ":")
-	if len(fields) == 0 {
-		// Avoid a panic. As far as I know, there is no way of triggering this,
-		// but we may as well protect against it.
-		return "", fmt.Errorf("could not extract port out of address %q", addr)
-	}
-	port := fields[len(fields)-1]
-
-	return fmt.Sprintf("%s:%s", windowsHostAddr, port), nil
 }
 
 // Quit gracefully quits listening loop and stops the grpc server.
