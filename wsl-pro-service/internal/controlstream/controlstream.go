@@ -39,7 +39,7 @@ func (err SystemError) Error() string {
 	return err.error.Error()
 }
 
-// New creates an iddle control stream object.
+// New creates an idle control stream object.
 func New(ctx context.Context, s system.System) (ControlStream, error) {
 	home, err := s.UserProfileDir(ctx)
 	if err != nil {
