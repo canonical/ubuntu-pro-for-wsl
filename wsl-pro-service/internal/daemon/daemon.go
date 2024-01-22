@@ -122,52 +122,17 @@ func (d *Daemon) Serve() (err error) {
 	delay := minDelay
 
 	for {
-		err := func() error {
-			ctx, cancel := context.WithCancel(d.ctx)
-			defer cancel()
-
-			// Initial setup
-			if err := d.ctrlStream.Connect(ctx); err != nil {
-				return err
-			}
-			defer d.ctrlStream.Disconnect()
-			log.Infof(ctx, "Connected to control stream")
-
-			server := d.registerService(ctx, d.ctrlStream)
-			go d.handleServerStop(ctx, server, gracefulStop, forceStop)
-
-			// Start serving
-			serveDone := make(chan error)
-			go func() {
-				defer close(serveDone)
-				serveDone <- d.serve(ctx, server)
-			}()
-
-			// Block until either the service or the control stream stops
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-serveDone:
-				if err != nil {
-					return fmt.Errorf("WSL Pro Service stopped serving: %v", err)
-				}
-				return nil
-			case <-d.ctrlStream.Done(ctx):
-				return errors.New("lost connection to Windows Agent")
-			}
-		}()
-
+		err := d.serveOnce(gracefulStop, forceStop)
 		if err == nil {
 			return nil
 		}
-
 		var target controlstream.SystemError
 		if errors.As(err, &target) {
 			// Irrecoverable errors: broken /etc/resolv.conf, broken pro status, etc
-			return target
+			return err
 		}
-
 		log.Errorf(d.ctx, "serve error: %v", err)
+
 		delay = min(delay*growthRate, maxDelay)
 
 		select {
@@ -181,6 +146,41 @@ func (d *Daemon) Serve() (err error) {
 		}
 
 		log.Infof(d.ctx, "Retrying connection")
+	}
+}
+
+func (d *Daemon) serveOnce(gracefulStop, forceStop <-chan struct{}) error {
+	ctx, cancel := context.WithCancel(d.ctx)
+	defer cancel()
+
+	// Initial setup
+	if err := d.ctrlStream.Connect(ctx); err != nil {
+		return err
+	}
+	defer d.ctrlStream.Disconnect()
+	log.Infof(ctx, "Connected to control stream")
+
+	server := d.registerService(ctx, d.ctrlStream)
+	go handleServerStop(ctx, server, gracefulStop, forceStop)
+
+	// Start serving
+	serveDone := make(chan error)
+	go func() {
+		defer close(serveDone)
+		serveDone <- d.serve(ctx, server)
+	}()
+
+	// Block until either the service or the control stream stops
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-serveDone:
+		if err != nil {
+			return fmt.Errorf("WSL Pro Service stopped serving: %v", err)
+		}
+		return nil
+	case <-d.ctrlStream.Done(ctx):
+		return errors.New("lost connection to Windows Agent")
 	}
 }
 
