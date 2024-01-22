@@ -134,7 +134,7 @@ func (d *Daemon) Serve() (err error) {
 			log.Infof(ctx, "Connected to control stream")
 
 			server := d.registerService(ctx, d.ctrlStream)
-			go d.serverStopHandling(ctx, server, gracefulStop, forceStop)
+			go d.handleServerStop(ctx, server, gracefulStop, forceStop)
 
 			// Start serving
 			serveDone := make(chan error)
@@ -184,15 +184,14 @@ func (d *Daemon) Serve() (err error) {
 	}
 }
 
-func (d *Daemon) serverStopHandling(ctx context.Context, server *grpc.Server, gracefulStop chan struct{}, forceStop chan struct{}) {
+func handleServerStop(ctx context.Context, server *grpc.Server, gracefulStop <-chan struct{}, forceStop <-chan struct{}) {
 	defer server.Stop()
 
 	select {
 	case <-ctx.Done():
-		server.Stop()
 		return
 	case <-forceStop:
-		server.Stop()
+		return
 	case <-gracefulStop:
 		server.GracefulStop()
 	}
