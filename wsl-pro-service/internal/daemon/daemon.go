@@ -152,7 +152,7 @@ func connectToControlStream(ctx context.Context, agentPortFilePath string, s sys
 }
 
 func getControlStreamAddress(ctx context.Context, agentPortFilePath string, s system.System) (string, error) {
-	windowsLocalhost, err := s.WindowsForwardedLocalhost(ctx)
+	windowsHostAddr, err := s.WindowsHostAddress(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -173,7 +173,7 @@ func getControlStreamAddress(ctx context.Context, agentPortFilePath string, s sy
 	}
 	port := fields[len(fields)-1]
 
-	return fmt.Sprintf("%s:%s", windowsLocalhost, port), nil
+	return fmt.Sprintf("%s:%s", windowsHostAddr, port), nil
 }
 
 // getAddressToListenTo returns the address where the daemon must listen to.

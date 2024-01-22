@@ -15,8 +15,8 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-// WindowsForwardedLocalhost returns the IP that maps to Windows' localhost.
-func (s *System) WindowsForwardedLocalhost(ctx context.Context) (ip net.IP, err error) {
+// WindowsHostAddress returns the IP that maps to Windows' localhost.
+func (s *System) WindowsHostAddress(ctx context.Context) (ip net.IP, err error) {
 	defer decorate.OnError(&err, "coud not find address mapping to the Windows host")
 
 	mode, err := s.networkingMode(ctx)

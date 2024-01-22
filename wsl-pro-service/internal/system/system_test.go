@@ -411,7 +411,7 @@ func TestLandscapeEnable(t *testing.T) {
 	}
 }
 
-func TestWindowsForwardedLocalhost(t *testing.T) {
+func TestWindowsHostAddress(t *testing.T) {
 	t.Parallel()
 
 	type fileState = int
@@ -503,13 +503,13 @@ func TestWindowsForwardedLocalhost(t *testing.T) {
 			copyFile(t, tc.etcResolv, filepath.Join(golden.TestFamilyPath(t), "etc-resolv.conf"), mock.Path("/etc/resolv.conf"))
 			copyFile(t, tc.procNetRoute, filepath.Join(golden.TestFamilyPath(t), "proc-net-route"), mock.Path("/proc/net/route"))
 
-			got, err := sys.WindowsForwardedLocalhost(ctx)
+			got, err := sys.WindowsHostAddress(ctx)
 			if tc.wantErr {
-				require.Error(t, err, "WindowsForwardedLocalhost should return an error")
+				require.Error(t, err, "WindowsHostAddress should return an error")
 				return
 			}
-			require.NoError(t, err, "WindowsForwardedLocalhost should return no error")
-			require.Equal(t, tc.want, got.String(), "Wrong IP returned by WindowsForwardedLocalhost")
+			require.NoError(t, err, "WindowsHostAddress should return no error")
+			require.Equal(t, tc.want, got.String(), "Wrong IP returned by WindowsHostAddress")
 		})
 	}
 }

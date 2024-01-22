@@ -61,7 +61,7 @@ func TestNew(t *testing.T) {
 		"Error because of port file contains the wrong port": {portFile: dataFileBadData, wantErr: true},
 
 		// Resolv.conf errors
-		"Error because WindowsForwardedLocalhost returns error": {breakWindowsLocalhost: true, wantErr: true},
+		"Error because WindowsHostAddress returns error": {breakWindowsLocalhost: true, wantErr: true},
 
 		// Agent errors
 		"Error because of Agent never receives":     {agentDoesntRecv: true, wantErr: true},
