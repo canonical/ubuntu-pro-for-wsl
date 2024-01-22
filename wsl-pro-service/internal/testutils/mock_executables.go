@@ -481,7 +481,7 @@ func WslPathMock(t *testing.T) {
 	})
 }
 
-// WslInfoMock mocks the executable for `cmd.exe`.
+// WslInfoMock mocks the executable for `wslinfo`.
 // Add it to your package_test with:
 //
 //	func TestWithWslInfoMock(t *testing.T) { testutils.WslInfoMock(t) }
