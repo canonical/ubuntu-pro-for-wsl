@@ -100,7 +100,7 @@ func (s *Service) Connect(ctx context.Context) (err error) {
 	}()
 
 	// First connection
-	conn, err := newConnection(ctx, s)
+	conn, err := s.newConnection(ctx)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (s *Service) keepConnected(ctx context.Context) {
 
 			s.conn.disconnect()
 
-			conn, err := newConnection(ctx, s)
+			conn, err := s.newConnection(ctx)
 			if err != nil {
 				log.Warningf(ctx, "Landscape reconnect: %v", err)
 				return true
@@ -196,6 +196,23 @@ func (s *Service) Controller() Controller {
 		serviceConn: s,
 		serviceData: s,
 	}
+}
+
+// newConnection validates we meet necessary client-side requirements before
+// starting a new connection to Landscape.
+//
+// Doing this avoids overloading the server with connections that will be
+// immediately rejected.
+func (s *Service) newConnection(ctx context.Context) (*connection, error) {
+	_, src, err := s.conf.Subscription(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not obtain Ubuntu Pro token: %v", err)
+	}
+	if src == config.SourceNone {
+		return nil, errors.New("no Ubuntu Pro token provided")
+	}
+
+	return newConnection(ctx, s)
 }
 
 // The following methods expose some internals for the other components to use.
