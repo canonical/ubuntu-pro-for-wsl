@@ -35,7 +35,7 @@ func (b realBackend) WslpathExecutable(args ...string) (string, []string) {
 	return "wslpath", args
 }
 
-// ProExecutable returns the full command to run the wslinfo executable with the provided arguments.
+// WslinfoExecutable returns the full command to run the wslinfo executable with the provided arguments.
 func (b realBackend) WslinfoExecutable(args ...string) (string, []string) {
 	return "wslinfo", args
 }
