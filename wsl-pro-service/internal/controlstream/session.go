@@ -45,6 +45,9 @@ func (s *session) close() {
 
 // send sends a DistroInfo message.
 func (s session) send(sysinfo *agentapi.DistroInfo) error {
+	if s.stream == nil {
+		return errors.New("disconnected")
+	}
 	if err := s.stream.Send(sysinfo); err != nil {
 		return fmt.Errorf("could not send system info: %v", err)
 	}
