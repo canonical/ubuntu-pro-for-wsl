@@ -37,8 +37,8 @@ func TestNew(t *testing.T) {
 	)
 
 	testCases := map[string]struct {
-		portFile   dataFileState
-		resolvFile dataFileState
+		portFile              dataFileState
+		breakWindowsLocalhost bool
 
 		agentDoesntRecv   bool
 		agentSendsNoPort  bool
@@ -61,11 +61,7 @@ func TestNew(t *testing.T) {
 		"Error because of port file contains the wrong port": {portFile: dataFileBadData, wantErr: true},
 
 		// Resolv.conf errors
-		"Error because resolv.conf does not exist":                    {resolvFile: dataFileNotExist, wantErr: true},
-		"Error because of unreadable resolv.conf":                     {resolvFile: dataFileUnreadable, wantErr: true},
-		"Error because of empty resolv.conf":                          {resolvFile: dataFileEmpty, wantErr: true},
-		"Error because of resolv.conf with invalid contents":          {resolvFile: dataFileBadSyntax, wantErr: true},
-		"Error because of resolv.conf contains an invalid nameserver": {resolvFile: dataFileBadData, wantErr: true},
+		"Error because WindowsHostAddress returns error": {breakWindowsLocalhost: true, wantErr: true},
 
 		// Agent errors
 		"Error because of Agent never receives":     {agentDoesntRecv: true, wantErr: true},
@@ -126,29 +122,8 @@ func TestNew(t *testing.T) {
 				require.Fail(t, "Test setup error", "Unexpected enum value %d for portFile state", tc.portFile)
 			}
 
-			resolvConf := mock.Path("etc/resolv.conf")
-			switch tc.resolvFile {
-			case dataFileGood:
-				copyFile(t, "testdata/resolv.conf", resolvConf)
-			case dataFileNotExist:
-				err := os.Remove(resolvConf)
-				require.NoError(t, err, "Setup: could not remove resolv.conf file")
-			case dataFileUnreadable:
-				err := os.Remove(resolvConf)
-				require.NoError(t, err, "Setup: could not remove resolv.conf file")
-				err = os.Mkdir(resolvConf, 0600)
-				require.NoError(t, err, "Setup: could not write /etc/resolv.conf/ directory")
-			case dataFileEmpty:
-				f, err := os.Create(resolvConf)
-				require.NoError(t, err, "Setup: could not create empty resolv.conf file")
-				f.Close()
-			case dataFileBadSyntax:
-				err := os.WriteFile(resolvConf, []byte("This text is not\nvalid for a resolv.conf file"), 0600)
-				require.NoError(t, err, "Setup: could not create resolv.conf file with invalid contents")
-			case dataFileBadData:
-				copyFile(t, "testdata/bad_resolv.conf", resolvConf)
-			default:
-				require.Fail(t, "Test setup error", "Unexpected enum value %d for resolv.conf file state", tc.portFile)
+			if tc.breakWindowsLocalhost {
+				mock.SetControlArg(testutils.WslInfoErr)
 			}
 
 			var regCount int
@@ -228,8 +203,6 @@ func TestServeAndQuit(t *testing.T) {
 				returnErr: tc.notifierErr,
 			}
 
-			copyFile(t, "testdata/resolv.conf", mock.Path("etc/resolv.conf"))
-
 			d, err := daemon.New(ctx,
 				portFile,
 				registerer,
@@ -299,17 +272,7 @@ func (s *SystemdSdNotifierMock) notify(unsetEnvironment bool, state string) (boo
 	return s.returns, nil
 }
 
-// copyFile copies file src into dst.
-func copyFile(t *testing.T, src, dst string) {
-	t.Helper()
-
-	out, err := os.ReadFile(src)
-	require.NoErrorf(t, err, "Setup: could not read resolv.conf file at %q", src)
-
-	err = os.WriteFile(dst, out, 0600)
-	require.NoErrorf(t, err, "Setup: could not write resolv.conf file at %q", dst)
-}
-
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }
 func TestWithWslPathMock(t *testing.T) { testutils.WslPathMock(t) }
+func TestWithWslInfoMock(t *testing.T) { testutils.WslInfoMock(t) }
 func TestWithCmdExeMock(t *testing.T)  { testutils.CmdExeMock(t) }

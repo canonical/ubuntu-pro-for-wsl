@@ -34,6 +34,7 @@ type Backend interface {
 	ProExecutable(args ...string) (string, []string)
 	LandscapeConfigExecutable(args ...string) (string, []string)
 	WslpathExecutable(args ...string) (string, []string)
+	WslinfoExecutable(args ...string) (string, []string)
 	CmdExe(path string, args ...string) (string, []string)
 }
 

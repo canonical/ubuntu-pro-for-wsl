@@ -411,6 +411,109 @@ func TestLandscapeEnable(t *testing.T) {
 	}
 }
 
+func TestWindowsHostAddress(t *testing.T) {
+	t.Parallel()
+
+	type fileState = int
+	const (
+		fileOK fileState = iota
+		fileNotExist
+		fileBroken
+		fileIPbroken
+		fileIPisLoopback
+	)
+
+	// copyFile is a helper that copies the appropriate version of a fixture to the desired destination.
+	copyFile := func(t *testing.T, state fileState, from, to string) {
+		t.Helper()
+
+		var suffix string
+		switch state {
+		case fileNotExist:
+			err := os.RemoveAll(to)
+			require.NoError(t, err, "Setup: could not remove file %s", to)
+			return
+		case fileOK:
+			suffix = ".good"
+		case fileBroken:
+			suffix = ".bad"
+		case fileIPbroken:
+			suffix = ".bad-ip"
+		case fileIPisLoopback:
+			suffix = ".loopback"
+		}
+
+		from = from + suffix
+		out, err := os.ReadFile(from)
+		require.NoErrorf(t, err, "Setup: could not read file %s", from)
+		err = os.WriteFile(to, out, 0400)
+		require.NoErrorf(t, err, "Setup: could not write file %s", to)
+	}
+
+	// These are the addresses hard-coded on the fixtures labelled as "good"
+	const (
+		localhost   = "127.0.0.1"
+		nameserver  = "172.22.16.1"
+		degaultGway = "172.25.32.1"
+	)
+
+	testCases := map[string]struct {
+		networkNotNAT bool
+		breakWslInfo  bool
+
+		etcResolv    fileState
+		procNetRoute fileState
+
+		want    string
+		wantErr bool
+	}{
+		"Success without NAT":                          {networkNotNAT: true, want: localhost},
+		"Success with NAT, nameserver is not loopback": {want: nameserver},
+		"Success with NAT, nameserver is loopback":     {etcResolv: fileIPisLoopback, want: degaultGway},
+
+		// WSL info errors
+		"Error when wslinfo returns an error": {breakWslInfo: true, wantErr: true},
+
+		// NAT errors with broken /etc/resolv.conf
+		"Error with NAT when /etc/resolv.conf does not exist":       {etcResolv: fileNotExist, wantErr: true},
+		"Error with NAT when /etc/resolv.conf is ill-formed":        {etcResolv: fileBroken, wantErr: true},
+		"Error with NAT when /etc/resolv.conf has an ill-formed IP": {etcResolv: fileIPbroken, wantErr: true},
+
+		// NAT errors with loopback nameserver and broken /proc/net/route
+		"Error with NAT when /proc/net/route does not exist":       {etcResolv: fileIPisLoopback, procNetRoute: fileNotExist, wantErr: true},
+		"Error with NAT when /proc/net/route is ill-formed":        {etcResolv: fileIPisLoopback, procNetRoute: fileBroken, wantErr: true},
+		"Error with NAT when /proc/net/route has an ill-formed IP": {etcResolv: fileIPisLoopback, procNetRoute: fileIPbroken, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			sys, mock := testutils.MockSystem(t)
+
+			if tc.breakWslInfo {
+				mock.SetControlArg(testutils.WslInfoErr)
+			}
+			if !tc.networkNotNAT {
+				mock.SetControlArg(testutils.WslInfoIsNAT)
+			}
+
+			copyFile(t, tc.etcResolv, filepath.Join(golden.TestFamilyPath(t), "etc-resolv.conf"), mock.Path("/etc/resolv.conf"))
+			copyFile(t, tc.procNetRoute, filepath.Join(golden.TestFamilyPath(t), "proc-net-route"), mock.Path("/proc/net/route"))
+
+			got, err := sys.WindowsHostAddress(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "WindowsHostAddress should return an error")
+				return
+			}
+			require.NoError(t, err, "WindowsHostAddress should return no error")
+			require.Equal(t, tc.want, got.String(), "Wrong IP returned by WindowsHostAddress")
+		})
+	}
+}
+
 func TestLandscapeDisable(t *testing.T) {
 	t.Parallel()
 
@@ -451,4 +554,5 @@ func TestLandscapeDisable(t *testing.T) {
 func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
 func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
 func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
+func TestWithWslInfoMock(t *testing.T)         { testutils.WslInfoMock(t) }
 func TestWithCmdExeMock(t *testing.T)          { testutils.CmdExeMock(t) }
