@@ -152,7 +152,7 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 }
 
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
-	// Trigger the error with a broken Wslpath binary
+	// Trigger the error with a broken wslinfo binary
 	t.Parallel()
 
 	sys, mock := testutils.MockSystem(t)
