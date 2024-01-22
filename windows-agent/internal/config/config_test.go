@@ -233,15 +233,13 @@ func TestProvisioningTasks(t *testing.T) {
 		wantLandscapeConf string
 		wantLandscapeUID  string
 
-		wantNoLandscape bool
-		wantError       bool
+		wantError bool
 	}{
 		"Success when there is no data":                               {settingsState: untouched},
 		"Success when there is an empty config file":                  {settingsState: fileExists},
 		"Success when the file's pro token field exists but is empty": {settingsState: userTokenExists},
 		"Success with a user token":                                   {settingsState: userTokenHasValue, wantToken: "user_token"},
-		"Success when there is Landscape config, but no UID":          {settingsState: userLandscapeConfigHasValue, wantNoLandscape: true},
-		"Success when there is Landscape config and UID":              {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConf: "[client]\nuser=JohnDoe", wantLandscapeUID: "landscapeUID1234"},
+		"Success when there is Landscape config":                      {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConf: "[client]\nuser=JohnDoe", wantLandscapeUID: "landscapeUID1234"},
 	}
 
 	for name, tc := range testCases {
@@ -269,13 +267,10 @@ func TestProvisioningTasks(t *testing.T) {
 
 			wantTasks := []task.Task{
 				tasks.ProAttachment{Token: tc.wantToken},
-			}
-
-			if !tc.wantNoLandscape {
-				wantTasks = append(wantTasks, tasks.LandscapeConfigure{
+				tasks.LandscapeConfigure{
 					Config:       tc.wantLandscapeConf,
 					HostagentUID: tc.wantLandscapeUID,
-				})
+				},
 			}
 
 			require.ElementsMatch(t, wantTasks, gotTasks, "Unexpected contents returned by ProvisioningTasks")

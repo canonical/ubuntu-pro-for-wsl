@@ -22,8 +22,16 @@ type LandscapeConfigure struct {
 // Execute sends the config to the target WSL-Pro-Service so that the distro can be
 // registered in Landscape.
 func (t LandscapeConfigure) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
+	var msg wslserviceapi.LandscapeConfig
+
+	// We only attach if there is a UID. Otherwise we detach.
+	if t.HostagentUID != "" {
+		msg.HostagentUID = t.HostagentUID
+		msg.Configuration = t.Config
+	}
+
 	// First value is a dummy message, we ignore it. We only care about success/failure.
-	_, err := client.ApplyLandscapeConfig(ctx, &wslserviceapi.LandscapeConfig{Configuration: t.Config, HostagentUID: t.HostagentUID})
+	_, err := client.ApplyLandscapeConfig(ctx, &msg)
 	if err != nil {
 		return task.NeedsRetryError{SourceErr: err}
 	}

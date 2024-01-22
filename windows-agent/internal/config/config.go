@@ -73,16 +73,9 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	proToken, _ := c.subscription.resolve()
 	taskList = append(taskList, tasks.ProAttachment{Token: proToken})
 
-	if lp, _ := c.landscape.resolve(); lp == "" {
-		// Landscape unregistration: always
-		taskList = append(taskList, tasks.LandscapeConfigure{})
-	} else if c.landscape.UID != "" {
-		// Landcape registration: only when we have a UID assigned
-		taskList = append(taskList, tasks.LandscapeConfigure{
-			Config:       lp,
-			HostagentUID: c.landscape.UID,
-		})
-	}
+	// Landscape config
+	lconf, _ := c.landscape.resolve()
+	taskList = append(taskList, tasks.LandscapeConfigure{Config: lconf, HostagentUID: c.landscape.UID})
 
 	return taskList, nil
 }
