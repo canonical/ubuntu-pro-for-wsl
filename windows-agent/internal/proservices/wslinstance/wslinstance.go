@@ -19,9 +19,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// LandscapeClient is the client connected to the Landscape server.
-type LandscapeClient interface {
-	Connected() bool
+// LandscapeController is the  controller for the Landscape client proservice.
+type LandscapeController interface {
 	SendUpdatedInfo(context.Context) error
 }
 
@@ -30,11 +29,11 @@ type Service struct {
 	agentapi.UnimplementedWSLInstanceServer
 
 	db        *database.DistroDB
-	landscape LandscapeClient
+	landscape LandscapeController
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *database.DistroDB, landscape LandscapeClient) (s Service, err error) {
+func New(ctx context.Context, db *database.DistroDB, landscape LandscapeController) (s Service, err error) {
 	log.Debug(ctx, "Building new GRPC WSL Instance service")
 
 	return Service{db: db, landscape: landscape}, nil
@@ -191,14 +190,15 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 	}, nil
 }
 
-// landscapeSendUpdatedInfo is syntactic sugar to update landscape when available and
+// landscapeSendUpdatedInfo is syntactic sugar to update landscape and
 // log in the case error.
 func (s *Service) landscapeSendUpdatedInfo(ctx context.Context) {
-	if !s.landscape.Connected() {
-		return
-	}
+	go func() {
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
 
-	if err := s.landscape.SendUpdatedInfo(ctx); err != nil {
-		log.Warningf(ctx, err.Error())
-	}
+		if err := s.landscape.SendUpdatedInfo(ctx); err != nil {
+			log.Warningf(ctx, err.Error())
+		}
+	}()
 }

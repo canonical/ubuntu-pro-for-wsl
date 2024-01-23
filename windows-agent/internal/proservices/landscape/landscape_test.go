@@ -155,7 +155,7 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			client, err := landscape.NewClient(conf, db)
+			service, err := landscape.New(conf, db)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
 
 			ctx, cancel := context.WithCancel(ctx)
@@ -165,25 +165,25 @@ func TestConnect(t *testing.T) {
 				cancel()
 			}
 
-			err = client.Connect(ctx)
+			err = service.Connect(ctx)
 			if tc.wantErr {
 				require.Error(t, err, "Connect should return an error")
-				require.False(t, client.Connected(), "Connected should have returned false after failing to connect")
+				require.False(t, service.Connected(), "Connected should have returned false after failing to connect")
 				return
 			}
 			require.NoError(t, err, "Connect should return no errors")
-			defer client.Stop(ctx)
+			defer service.Stop(ctx)
 
-			require.True(t, client.Connected(), "Connected should have returned false after succeeding to connect")
+			require.True(t, service.Connected(), "Connected should have returned false after succeeding to connect")
 
 			require.Eventually(t, func() bool {
 				return len(mockService.MessageLog()) > 0
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a message from the client")
 
-			client.Stop(ctx)
-			require.NotPanics(t, func() { client.Stop(ctx) }, "client.Stop should not panic, even when called twice")
+			service.Stop(ctx)
+			require.NotPanics(t, func() { service.Stop(ctx) }, "Stop should not panic, even when called twice")
 
-			require.False(t, client.Connected(), "Connected should have returned false after disconnecting")
+			require.False(t, service.Connected(), "Connected should have returned false after disconnecting")
 
 			wantUID := tc.uid
 			if tc.uid == "" {
@@ -266,8 +266,10 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(conf, db, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
+
+			ctl := service.Controller()
 
 			if tc.distroIsRunning {
 				err := distro.LockAwake()
@@ -280,9 +282,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 				require.NoError(t, err, "Setup: could not terminate the distro")
 			}
 
-			err = client.Connect(ctx)
+			err = service.Connect(ctx)
 			require.NoError(t, err, "Setup: Connect should return no errors")
-			defer client.Stop(ctx)
+			defer service.Stop(ctx)
 
 			// Defining wants
 			wantUIDprefix := "ServerAssignedUID"
@@ -334,7 +336,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			conf.proToken = "NEW_TOKEN"
 
 			if tc.disconnectBeforeSend {
-				client.Stop(ctx)
+				service.Stop(ctx)
 			}
 
 			wantHostToken = conf.proToken
@@ -345,7 +347,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				require.NoError(t, err, "Setup: could not terminate distro")
 			}
 
-			err = client.SendUpdatedInfo(ctx)
+			err = ctl.SendUpdatedInfo(ctx)
 			if tc.wantErr {
 				require.Error(t, err, "SendUpdatedInfo should have returned an error")
 				return
@@ -403,73 +405,134 @@ func assertHasPrefix(t *testing.T, wantPrefix, got string, msgAndArgs ...interfa
 }
 
 func TestAutoReconnection(t *testing.T) {
-	ctx := context.Background()
 	if wsl.MockAvailable() {
 		t.Parallel()
-		mock := wslmock.New()
-		ctx = wsl.WithMock(ctx, mock)
 	}
 
-	lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
-	defer lis.Close()
-	defer server.Stop()
+	testCases := map[string]struct {
+		stopEarly bool
 
-	conf := &mockConfig{
-		proToken:              "TOKEN",
-		landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when the reconnect petition is cancelled via stopping the client": {stopEarly: true, wantErr: true},
 	}
 
-	db, err := database.New(ctx, t.TempDir(), conf)
-	require.NoError(t, err, "Setup: database New should not return an error")
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				mock := wslmock.New()
+				ctx = wsl.WithMock(ctx, mock)
+			}
 
-	const hostname = "HOSTNAME"
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
+			defer lis.Close()
+			defer server.Stop()
 
-	client, err := landscape.NewClient(conf, db, landscape.WithHostname(hostname))
-	require.NoError(t, err, "Landscape NewClient should not return an error")
-	defer client.Stop(ctx)
+			conf := &mockConfig{
+				proToken:              "TOKEN",
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+			}
 
-	err = client.Connect(ctx)
-	require.Error(t, err, "Connect should have failed because the server is not running")
+			db, err := database.New(ctx, t.TempDir(), conf)
+			require.NoError(t, err, "Setup: database New should not return an error")
 
-	require.False(t, client.Connected(), "Client should not be connected because the server is not running")
+			const hostname = "HOSTNAME"
 
-	//nolint:errcheck // We don't care about these errors
-	go server.Serve(lis)
-	defer server.Stop()
+			service, err := landscape.New(conf, db, landscape.WithHostname(hostname))
+			require.NoError(t, err, "Landscape NewClient should not return an error")
+			defer service.Stop(ctx)
 
-	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after starting the server")
+			err = service.Connect(ctx)
+			require.Error(t, err, "Connect should have failed because the server is not running")
+			require.False(t, service.Connected(), "Client should not be connected because the server is not running")
 
-	hosts := mockService.Hosts()
-	require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
+			ctx, cancel := context.WithCancel(ctx)
+			defer cancel()
 
-	for uid := range hosts {
-		err = mockService.Disconnect(uid)
-		require.NoError(t, err, "Server should not fail to disconnect the client")
+			ch := make(chan error)
+			go func() {
+				// This should block until either:
+				// - Success: The message has been sent
+				// - Error: The context is cancelled or Landscape is stopped
+				//
+				// We cannot assert on the error here: failed asserts outside the main goroutine cause panics
+				ch <- service.Controller().SendUpdatedInfo(ctx)
+				close(ch)
+			}()
+
+			select {
+			case <-ch:
+				require.Fail(t, "SendUpdatedInfo should not have returned because there is no connection")
+			case <-time.After(20 * time.Second):
+			}
+
+			if tc.stopEarly {
+				service.Stop(ctx)
+				time.Sleep(time.Second) // Allow it to propagate
+			}
+
+			//nolint:errcheck // We don't care about these errors
+			go server.Serve(lis)
+			defer server.Stop()
+
+			select {
+			case <-time.After(20 * time.Second):
+				require.Fail(t, "SendUpdatedInfo should have returned")
+			case err = <-ch:
+			}
+
+			if tc.wantErr {
+				require.Error(t, err, "SendUpdatedInfo should have returned an error")
+				return
+			}
+			require.NoError(t, err, "SendUpdatedInfo should have returned no error")
+
+			require.Eventually(t, func() bool {
+				return service.Connected()
+			}, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after starting the server")
+
+			hosts := mockService.Hosts()
+			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
+
+			for uid := range hosts {
+				err = mockService.Disconnect(uid)
+				require.NoError(t, err, "Server should not fail to disconnect the client")
+			}
+
+			// Fast tickrate to ensure we detect the disconnection. The client reconnects after 1s so we should always win.
+			const tick = 10 * time.Millisecond
+			require.Eventually(t, func() bool {
+				return !service.Connected()
+			}, 5*time.Second, tick, "Client should have disconnected after the stream is dropped")
+
+			// Detecting reconnection
+			require.Eventually(t, func() bool {
+				return service.Connected()
+			}, 5*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
+
+			server.Stop()
+			require.Eventually(t, func() bool {
+				return !service.Connected()
+			}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
+
+			// Restart server at the same address
+			lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), "")
+			defer lis.Close()
+
+			//nolint:errcheck // We don't care
+			go server.Serve(lis)
+			defer server.Stop()
+
+			require.Eventually(t, func() bool {
+				return service.Connected()
+			}, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
+		})
 	}
-
-	// Fast tickrate to ensure we detect the disconnection. The client reconnects after 1s so we should always win.
-	const tick = 10 * time.Millisecond
-	require.Eventually(t, func() bool {
-		return !client.Connected()
-	}, 5*time.Second, tick, "Client should have disconnected after the stream is dropped")
-
-	// Detecting reconnection
-	require.Eventually(t, client.Connected, 5*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
-
-	server.Stop()
-	require.Eventually(t, func() bool {
-		return !client.Connected()
-	}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
-
-	// Restart server at the same address
-	lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), "")
-	defer lis.Close()
-
-	//nolint:errcheck // We don't care
-	go server.Serve(lis)
-	defer server.Stop()
-
-	require.Eventually(t, client.Connected, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
 }
 
 type command int
@@ -572,15 +635,15 @@ func TestReceiveCommands(t *testing.T) {
 				require.NoError(t, d.LockAwake(), "Setup: could not lock distro awake")
 			}
 
-			client, err := landscape.NewClient(conf, db, landscape.WithHostname("HOSTNAME"))
+			clientService, err := landscape.New(conf, db, landscape.WithHostname("HOSTNAME"))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
-			err = client.Connect(ctx)
+			err = clientService.Connect(ctx)
 			require.NoError(t, err, "Setup: Connect should return no errors")
-			defer client.Stop(ctx)
+			defer clientService.Stop(ctx)
 
 			require.Eventually(t, func() bool {
-				return client.Connected() && conf.landscapeAgentUID != "" && service.IsConnected(conf.landscapeAgentUID)
+				return clientService.Connected() && conf.landscapeAgentUID != "" && service.IsConnected(conf.landscapeAgentUID)
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server and client never made a connection")
 
 			enableMockErrors()
@@ -607,7 +670,7 @@ func TestReceiveCommands(t *testing.T) {
 			}
 
 			// Disconnect to ensure the command has completed
-			client.Stop(ctx)
+			clientService.Stop(ctx)
 
 			disableMockErrors()
 			requireCommandResult(t, ctx, tc.command, d, conf, !tc.wantFailure)
