@@ -33,7 +33,7 @@ type Daemon struct {
 	gracefulStop func()
 	forceStop    func()
 
-	// Sytemd status management.
+	// Systemd status management.
 	systemdSdNotifier systemdSdNotifier
 }
 
