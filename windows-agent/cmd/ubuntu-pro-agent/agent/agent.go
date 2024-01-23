@@ -4,8 +4,11 @@ package agent
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
@@ -42,9 +45,13 @@ type daemonConfig struct {
 }
 
 type options struct {
-	daemonAddrDir       string
-	proservicesCacheDir string
-	registry            registrywatcher.Registry
+	// publicDir is the directory where public data goes. Other components need access to it.
+	publicDir string
+
+	// privateDir is the directory where private data goes. Only the agent needs to see it.
+	privateDir string
+
+	registry registrywatcher.Registry
 }
 
 type option func(*options)
@@ -101,8 +108,15 @@ func (a *App) serve(args ...option) error {
 		f(&opt)
 	}
 
+	publicDir, privateDir, err := setupDirectories(ctx, &opt)
+	if err != nil {
+		close(a.ready)
+		return err
+	}
+
 	proservice, err := proservices.New(ctx,
-		proservices.WithCacheDir(opt.proservicesCacheDir),
+		publicDir,
+		privateDir,
 		proservices.WithRegistry(opt.registry),
 	)
 	if err != nil {
@@ -111,16 +125,50 @@ func (a *App) serve(args ...option) error {
 	}
 	defer proservice.Stop(ctx)
 
-	daemon, err := daemon.New(ctx, proservice.RegisterGRPCServices, daemon.WithAddrDir(opt.daemonAddrDir))
-	if err != nil {
-		close(a.ready)
-		return err
-	}
+	a.daemon = daemon.New(ctx, proservice.RegisterGRPCServices, publicDir)
 
-	a.daemon = &daemon
 	close(a.ready)
 
-	return daemon.Serve(ctx)
+	return a.daemon.Serve(ctx)
+}
+
+func setupDirectories(ctx context.Context, opt *options) (public, private string, err error) {
+	public, err = vauleOrAfterEnv(opt.publicDir, "UserProfile", common.LocalAppDataDir)
+	if err != nil {
+		return "", "", err
+	}
+	log.Debugf(ctx, "Agent public directory: %s", public)
+
+	private, err = vauleOrAfterEnv(opt.privateDir, "LocalAppData", common.UserProfileDir)
+	if err != nil {
+		return "", "", err
+	}
+	log.Debugf(ctx, "Agent private directory: %s", private)
+
+	if err := os.MkdirAll(public, 0600); err != nil {
+		return "", "", fmt.Errorf("could not create public directory: %v", err)
+	}
+
+	if err := os.MkdirAll(private, 0600); err != nil {
+		return "", "", fmt.Errorf("could not create private directory: %v", err)
+	}
+
+	return public, private, nil
+}
+
+// vauleOrAfterEnv is a helper for parsing optional inputs.
+// Returns "intput" if it is non-empty. Otherwise it returns "${env}/relative".
+func vauleOrAfterEnv(input string, env string, relative string) (string, error) {
+	if input != "" {
+		return input, nil
+	}
+
+	dir := os.Getenv(env)
+	if dir == "" {
+		return dir, fmt.Errorf("Could not read env variable %q", env)
+	}
+
+	return filepath.Join(dir, relative), nil
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.

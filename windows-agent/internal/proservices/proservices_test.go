@@ -61,7 +61,7 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
 			}
 
-			s, err := proservices.New(ctx, proservices.WithCacheDir(dir), proservices.WithRegistry(reg))
+			s, err := proservices.New(ctx, proservices.WithPrivateDir(dir), proservices.WithRegistry(reg))
 			if err == nil {
 				defer s.Stop(ctx)
 			}
@@ -81,7 +81,7 @@ func TestRegisterGRPCServices(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	ps, err := proservices.New(ctx, proservices.WithCacheDir(t.TempDir()), proservices.WithRegistry(registry.NewMock()))
+	ps, err := proservices.New(ctx, proservices.WithPrivateDir(t.TempDir()), proservices.WithRegistry(registry.NewMock()))
 	require.NoError(t, err, "Setup: New should return no error")
 	defer ps.Stop(ctx)
 

@@ -5,9 +5,13 @@ const (
 	// TEXTDOMAIN is the gettext domain for l10n.
 	TEXTDOMAIN = `ubuntu-pro`
 
-	// LocalAppDataDir is the relative path name used in user's cache dir to store process transient data.
+	// LocalAppDataDir is the relative path name used to store data private to the Appx.
 	//  ${env:LocalAppData}/{LocalAppDataDir}
 	LocalAppDataDir = "Ubuntu Pro"
+
+	// UserProfileDir is the relative path name used to store data that needs to be shared between components.
+	//  ${env:UserProfile}/{UserProfileDir}
+	UserProfileDir = ".ubuntupro"
 
 	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
 	ListeningPortFileName = ".ubuntupro"

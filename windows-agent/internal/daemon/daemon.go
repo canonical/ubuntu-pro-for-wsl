@@ -3,7 +3,6 @@ package daemon
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -26,53 +25,18 @@ type Daemon struct {
 	grpcServer *grpc.Server
 }
 
-// options are the configurable functional options for the daemon.
-type options struct {
-	addrDir string
-}
-
-// Option is the function signature we are passing to tweak the daemon creation.
-type Option func(*options)
-
-// WithAddrDir overrides the directory where the address file will be stored.
-func WithAddrDir(addrDir string) Option {
-	return func(o *options) {
-		if addrDir != "" {
-			o.addrDir = addrDir
-		}
-	}
-}
-
 // New returns an new, initialized daemon server that is ready to register GRPC services.
 // It hooks up to windows service management handler.
-func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, args ...Option) (d Daemon, err error) {
-	defer decorate.OnError(&err, i18n.G("can't create daemon"))
-
+func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDir string) *Daemon {
 	log.Debug(ctx, "Building new daemon")
 
-	// Apply given args.
-	var opts options
-	for _, f := range args {
-		f(&opts)
-	}
-
-	if opts.addrDir == "" {
-		// Set default addr dir.
-		home := os.Getenv("UserProfile")
-		if home == "" {
-			return d, errors.New("Could not read env variable UserProfile")
-		}
-
-		opts.addrDir = home
-	}
-
-	listeningPortFilePath := filepath.Join(opts.addrDir, common.ListeningPortFileName)
+	listeningPortFilePath := filepath.Join(addrDir, common.ListeningPortFileName)
 	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
-	return Daemon{
+	return &Daemon{
 		listeningPortFilePath: listeningPortFilePath,
 		grpcServer:            registerGRPCServices(ctx),
-	}, nil
+	}
 }
 
 // Serve listens on a tcp socket and starts serving GRPC requests on it.
