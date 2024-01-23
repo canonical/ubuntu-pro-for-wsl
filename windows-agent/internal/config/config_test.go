@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -636,6 +637,83 @@ func loadChecksums(t *testing.T, confDir string) (string, string) {
 	require.NoError(t, err, "Could not marshal config file")
 
 	return fileData.Subscription.Checksum, fileData.Landscape.Checksum
+}
+
+func TestNotify(t *testing.T) {
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	db, err := database.New(ctx, t.TempDir(), nil)
+	require.NoError(t, err, "Setup: could not create empty database")
+
+	_, dir := setUpMockSettings(t, ctx, db, untouched, false)
+	c := config.New(ctx, dir)
+
+	var notifyCount atomic.Int32
+	var wantNotifyCount int32
+
+	c.Notify(func() { notifyCount.Add(1) })
+
+	err = c.SetUserSubscription(ctx, "TOKEN_1")
+	require.NoError(t, err, "SetUserSubscription should return no error")
+	wantNotifyCount++
+
+	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
+		time.Second, 100*time.Millisecond, "Attached function should have been called after changing the pro token")
+
+	err = c.SetLandscapeAgentUID(ctx, "UID_1")
+	require.NoError(t, err, "SetLandscapeAgentUID should return no error")
+	wantNotifyCount++
+
+	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
+		time.Second, 100*time.Millisecond, "Attached function should have been called after changing the landscape UID")
+
+	err = c.UpdateRegistryData(ctx, config.RegistryData{UbuntuProToken: "TOKEN_2"}, db)
+	require.NoError(t, err, "UpdateRegistryData should return no error")
+	wantNotifyCount++
+
+	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
+		time.Second, 100*time.Millisecond, "Attached function should have been called after changing registry data")
+}
+
+// eventually solves the main issue with 'require.Eventually': you don't know what failed.
+// See what happens if you try to build the 'want vs. got' error message:
+//
+//	  require.Eventuallyf(t, func()bool{ return 5==got() },
+//			t, trate, "Mismatch: wanted %d but got %d", 5, got())
+//	                                                       ^^^
+//														   OUTDATED!
+//
+// Got is passed by value so we have the value obtained at t=0, not at t=timeout.
+//
+//nolint:thelper // This is not a helper but an assertion itself.
+func eventually[T any](t *testing.T, getter func() T, predicate func(T) bool, timeout, tickRate time.Duration, message string, args ...any) {
+	tk := time.NewTicker(tickRate)
+	defer tk.Stop()
+
+	tm := time.NewTimer(timeout)
+	defer tk.Stop()
+
+	got := getter()
+	if predicate(got) {
+		return
+	}
+
+	for {
+		select {
+		case <-tm.C:
+			require.Failf(t, "Condition not satisfied", "Last value: %v\n%s", got, fmt.Sprintf(message, args...))
+		case <-tk.C:
+		}
+
+		got = getter()
+		if predicate(got) {
+			return
+		}
+	}
 }
 
 // is defines equality between flags. It is convenience function to check if a settingsState matches a certain state.
