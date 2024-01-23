@@ -4,9 +4,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
 	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
@@ -38,8 +36,7 @@ type daemonConfig struct {
 }
 
 type options struct {
-	agentPortFilePath string
-	system            system.System
+	system system.System
 }
 
 type option func(*options)
@@ -88,7 +85,7 @@ func New(o ...option) *App {
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve(args ...option) error {
+func (a *App) serve(args ...option) (err error) {
 	ctx := context.Background()
 
 	opt := options{
@@ -98,29 +95,18 @@ func (a *App) serve(args ...option) error {
 		f(&opt)
 	}
 
-	if len(opt.agentPortFilePath) == 0 {
-		home, err := opt.system.UserProfileDir(ctx)
-		if err != nil {
-			close(a.ready)
-			return fmt.Errorf("Could not find $env:UserProfile: %v", err)
-		}
-		opt.agentPortFilePath = filepath.Join(home, common.ListeningPortFileName)
-	}
-
 	srv := wslinstanceservice.New(opt.system)
 
 	// Connect with the agent.
-	daemon, err := daemon.New(context.Background(), opt.agentPortFilePath, srv.RegisterGRPCService, opt.system)
+	a.daemon, err = daemon.New(ctx, srv.RegisterGRPCService, opt.system)
 	if err != nil {
 		close(a.ready)
-		return err
+		return fmt.Errorf("could not create daemon: %v", err)
 	}
-
-	a.daemon = &daemon
 
 	close(a.ready)
 
-	return daemon.Serve(context.Background())
+	return a.daemon.Serve()
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.

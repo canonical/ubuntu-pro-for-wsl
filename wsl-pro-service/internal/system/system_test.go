@@ -128,6 +128,7 @@ func TestUserProfileDir(t *testing.T) {
 		cmdExeNotExist    bool
 		cmdExeErr         bool
 		wslpathErr        bool
+		wslpathBadOutput  bool
 		overrideProcMount bool
 
 		wantErr bool
@@ -143,6 +144,7 @@ func TestUserProfileDir(t *testing.T) {
 		"Error when cmd.exe does not exist":                                    {cmdExeNotExist: true, overrideProcMount: true, wantErr: true},
 		"Error on cmd.exe error":                                               {cmdExeErr: true, wantErr: true},
 		"Error on wslpath error":                                               {wslpathErr: true, wantErr: true},
+		"Error when wslpath returns a bad path":                                {wslpathBadOutput: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -156,6 +158,9 @@ func TestUserProfileDir(t *testing.T) {
 			}
 			if tc.wslpathErr {
 				mock.SetControlArg(testutils.WslpathErr)
+			}
+			if tc.wslpathBadOutput {
+				mock.SetControlArg(testutils.WslpathBadOutput)
 			}
 			if tc.overrideProcMount {
 				overrideProcMount(t, mock)
