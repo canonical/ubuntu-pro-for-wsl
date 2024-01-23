@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -77,25 +78,25 @@ func TestServe(t *testing.T) {
 		notifierReturn bool
 		notifierErr    bool
 
-		wantSystemdNotified      bool
+		wantSystemdNotReady      bool
 		wantConnectControlStream bool
 		wantErr                  bool
 	}{
-		"Success": {wantConnectControlStream: true, wantSystemdNotified: true},
-		"Success with systemd notifier returning true": {notifierReturn: true, wantConnectControlStream: true, wantSystemdNotified: true},
+		"Success": {wantConnectControlStream: true},
+		"Success with systemd notifier returning true": {notifierReturn: true, wantConnectControlStream: true},
 
 		// No connection:
 		// These problems do not cause the agent to return error because it
 		// keeps retrying the connection
 		//
 		// We instead chech that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because port file does not exist":    {breakPortFile: true},
-		"No connection because of faulty agent":             {agentDoesntRecv: true, wantConnectControlStream: true},
-		"No connection because of notifier returning error": {notifierErr: true, wantConnectControlStream: true, wantSystemdNotified: true},
+		"No connection because port file does not exist": {breakPortFile: true},
+		"No connection because of faulty agent":          {agentDoesntRecv: true, wantConnectControlStream: true},
 
 		// Errors
+		"Error because of notifier returning error":      {notifierErr: true, wantErr: true},
 		"Error because WindowsHostAddress returns error": {breakWindowsHostAddress: true, wantErr: true},
-		"Error because of context cancelled":             {precancelContext: true, wantErr: true},
+		"Error because of context cancelled":             {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -160,11 +161,10 @@ func TestServe(t *testing.T) {
 				require.NoError(t, err, "Serve() should have returned no error")
 			}
 
-			if tc.wantSystemdNotified {
-				// NotZero rather than 1 because if the notification fails, it'll be retried every time
-				require.NotZero(t, systemd.nNotifications.Load(), "daemon should have notified systemd")
+			if tc.wantSystemdNotReady {
+				require.Zero(t, systemd.readyNotifications.Load(), "daemon should not have notified systemd")
 			} else {
-				require.Zero(t, systemd.nNotifications.Load(), "daemon should not have notified systemd")
+				require.Equal(t, int32(1), systemd.readyNotifications.Load(), "daemon should have notified systemd once")
 			}
 
 			if tc.wantConnectControlStream {
@@ -233,21 +233,32 @@ func TestServeAndQuit(t *testing.T) {
 				close(serveExit)
 			}()
 
-			// Wait for the server to start
-			time.Sleep(100 * time.Millisecond)
+			if !tc.quitBeforeServe {
+				// Wait for the server to start
+				require.Eventually(t, func() bool {
+					return systemd.readyNotifications.Load() > 0
+				}, time.Second, 100*time.Millisecond, "Systemd should have been notified")
+
+				const wantState = "STATUS=Serving"
+				require.Eventually(t, func() bool {
+					return systemd.gotState.Load() == wantState
+				}, 5*time.Second, 100*time.Millisecond, "Systemd state should have been set to %q ", wantState)
+
+				require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
+			}
 
 			d.Quit(ctx, tc.quitForcefully)
 
 			if tc.wantErr {
 				require.Error(t, <-serveExit, "Serve should have returned an error")
-				require.LessOrEqual(t, systemd.nNotifications.Load(), int32(1), "Systemd notifier should have been notified at most once")
+				require.LessOrEqual(t, systemd.readyNotifications.Load(), int32(1), "Systemd notifier should have been notified at most once")
 				return
 			}
 			require.NoError(t, <-serveExit, "Serve should have returned no errors")
 
-			require.Equal(t, int32(1), systemd.nNotifications.Load(), "Systemd notifier should have been notified only once")
+			require.Equal(t, int32(1), systemd.readyNotifications.Load(), "Systemd notifier should have been notified exactly once")
 			require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
-			require.Equal(t, "READY=1", systemd.gotState.Load(), "Unexpected value sent by Daemon to systemd notifier's state")
+			require.Equal(t, "STATUS=Stopped", systemd.gotState.Load(), "Unexpected value sent by Daemon to systemd notifier's state")
 
 			if !tc.quitTwice {
 				return
@@ -309,8 +320,10 @@ func TestReconnection(t *testing.T) {
 			const maxTimeout = 20 * time.Second
 
 			if tc.firstConnectionSuccesful {
-				require.Eventually(t, func() bool { return systemd.nNotifications.Load() == 1 },
-					maxTimeout, time.Second, "Service should have notified systemd after connecting to the control stream")
+				require.Eventually(t, func() bool {
+					return systemd.gotState.Load() == "STATUS=Serving"
+				}, maxTimeout, time.Second, "Service should have set systemd state to Serving")
+
 				require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
 				server.Stop()
 
@@ -318,10 +331,11 @@ func TestReconnection(t *testing.T) {
 				require.Eventually(t, func() bool {
 					_, err := os.Stat(portFile)
 					return errors.Is(err, fs.ErrNotExist)
-				}, 5*time.Second, 100*time.Millisecond, "Stopping the server should remove the port file")
+				}, 5*time.Second, 100*time.Millisecond, "Stopping the Windows-Agent mock server should remove the port file")
 			} else {
-				time.Sleep(maxTimeout)
-				require.Zero(t, systemd.nNotifications.Load(), "A service with no cotrol stream should not have notified systemd")
+				require.Eventually(t, func() bool {
+					return systemd.gotState.Load() == "STATUS=Not serving: waiting to retry"
+				}, maxTimeout, 100*time.Millisecond, "State should have been set to 'Not serving'")
 			}
 
 			server, agentData = testutils.MockWindowsAgent(t, ctx, portFile)
@@ -331,7 +345,7 @@ func TestReconnection(t *testing.T) {
 				return agentData.BackConnectionCount.Load() != 0
 			}, 30*time.Second, time.Second, "Service should eventually connect to the agent")
 
-			require.Equal(t, int32(1), systemd.nNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
+			require.Equal(t, int32(1), systemd.readyNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
 			require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
 		})
 	}
@@ -343,13 +357,16 @@ type SystemdSdNotifierMock struct {
 
 	gotUnsetEnvironment atomic.Bool
 	gotState            atomicString
-	nNotifications      atomic.Int32
+	readyNotifications  atomic.Int32
 }
 
 func (s *SystemdSdNotifierMock) notify(unsetEnvironment bool, state string) (bool, error) {
-	s.nNotifications.Add(1)
 	s.gotUnsetEnvironment.Store(unsetEnvironment)
 	s.gotState.Store(state)
+
+	if strings.Contains(state, "READY=1") {
+		s.readyNotifications.Add(1)
+	}
 
 	if s.returnErr {
 		return s.returns, errors.New("mock error")
@@ -359,6 +376,10 @@ func (s *SystemdSdNotifierMock) notify(unsetEnvironment bool, state string) (boo
 
 type atomicString struct {
 	atomic.Value
+}
+
+func (s *atomicString) Store(str string) {
+	s.Value.Store(str)
 }
 
 func (s *atomicString) Load() string {

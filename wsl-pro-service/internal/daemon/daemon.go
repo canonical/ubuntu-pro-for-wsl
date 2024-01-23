@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -36,7 +35,6 @@ type Daemon struct {
 
 	// Sytemd status management.
 	systemdSdNotifier systemdSdNotifier
-	systemdReadyOnce  sync.Once
 }
 
 // Status sent to systemd.
