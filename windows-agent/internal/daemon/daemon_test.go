@@ -21,45 +21,16 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	// Not parallel because we use t.Setenv
+	t.Parallel()
 
-	testCases := map[string]struct {
-		badEnv bool
-
-		wantErr bool
-	}{
-		"Success":                              {},
-		"Error because of empty %USERPROFILE%": {badEnv: true, wantErr: true},
+	var regCount int
+	countRegistrations := func(context.Context) *grpc.Server {
+		regCount++
+		return nil
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			var args []daemon.Option
-
-			if tc.badEnv {
-				t.Setenv("UserProfile", "")
-			} else {
-				addrDir := filepath.Join(t.TempDir(), "cache")
-				args = append(args, daemon.WithAddrDir(addrDir))
-			}
-
-			var regCount int
-			countRegistrations := func(context.Context) *grpc.Server {
-				regCount++
-				return nil
-			}
-
-			_, err := daemon.New(context.Background(), countRegistrations, args...)
-			if tc.wantErr {
-				require.Error(t, err, "New should have errored out but hasn't")
-				return
-			}
-
-			require.NoError(t, err, "New() should have return no error")
-			require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
-		})
-	}
+	_ = daemon.New(context.Background(), countRegistrations, t.TempDir())
+	require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
 }
 
 func TestStartQuit(t *testing.T) {
@@ -98,8 +69,7 @@ func TestStartQuit(t *testing.T) {
 				return server
 			}
 
-			d, err := daemon.New(ctx, registerer, daemon.WithAddrDir(addrDir))
-			require.NoError(t, err, "New() should return the daemon handler")
+			d := daemon.New(ctx, registerer, addrDir)
 
 			serveErr := make(chan error)
 			go func() {
@@ -107,7 +77,9 @@ func TestStartQuit(t *testing.T) {
 			}()
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+
 			var addrContents []byte
+			var err error
 
 			if tc.preexistingPortFile {
 				require.Eventually(t, func() bool {
@@ -180,14 +152,13 @@ func TestServeError(t *testing.T) {
 		return grpc.NewServer()
 	}
 
-	d, err := daemon.New(ctx, registerer, daemon.WithAddrDir(addrDir))
-	require.NoError(t, err, "New should return the daemon handler")
+	d := daemon.New(ctx, registerer, addrDir)
 	defer d.Quit(ctx, false)
 
 	// Remove parent directory to prevent listening port file to be written
 	require.NoError(t, os.RemoveAll(addrDir), "Setup: could not remove cache directory")
 
-	err = d.Serve(ctx)
+	err := d.Serve(ctx)
 	require.Error(t, err, "Serve should fail when the cache dir does not exist")
 }
 
@@ -201,12 +172,10 @@ func TestQuitBeforeServe(t *testing.T) {
 		return grpc.NewServer()
 	}
 
-	d, err := daemon.New(ctx, registerer, daemon.WithAddrDir(addrDir))
-	require.NoError(t, err, "New should return the daemon handler")
-
+	d := daemon.New(ctx, registerer, addrDir)
 	d.Quit(ctx, false)
 
-	err = d.Serve(ctx)
+	err := d.Serve(ctx)
 	require.Error(t, err, "Calling Serve() after Quit() should result in an error")
 
 	requireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
