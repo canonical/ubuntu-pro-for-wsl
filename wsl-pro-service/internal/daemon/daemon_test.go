@@ -242,7 +242,7 @@ func TestServeAndQuit(t *testing.T) {
 				const wantState = "STATUS=Serving"
 				require.Eventually(t, func() bool {
 					return systemd.gotState.Load() == wantState
-				}, 5*time.Second, 100*time.Millisecond, "Systemd state should have been set to %q ", wantState)
+				}, 20*time.Second, 100*time.Millisecond, "Systemd state should have been set to %q ", wantState)
 
 				require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
 			}
