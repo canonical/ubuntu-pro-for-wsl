@@ -244,7 +244,7 @@ func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
 }
 
 // Quit gracefully quits listening loop and stops the grpc server.
-// It can drop any existing connexion is force is set to true.
+// It can drop any existing connection if force is set to true.
 func (d *Daemon) Quit(ctx context.Context, force bool) {
 	defer d.cancel()
 
