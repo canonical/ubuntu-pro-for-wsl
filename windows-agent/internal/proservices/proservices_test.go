@@ -25,7 +25,6 @@ func TestNew(t *testing.T) {
 
 	testCases := map[string]struct {
 		breakConfig      bool
-		breakMkDir       bool
 		breakNewDistroDB bool
 
 		wantErr bool
@@ -33,7 +32,6 @@ func TestNew(t *testing.T) {
 		"Success when the subscription stays empty":               {},
 		"Success when the config cannot check if it is read-only": {breakConfig: true},
 
-		"Error when Manager cannot create its cache dir":  {breakMkDir: true, wantErr: true},
 		"Error when database cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
 	}
 
@@ -42,26 +40,22 @@ func TestNew(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			dir := t.TempDir()
+
+			publicDir := t.TempDir()
+			privateDir := t.TempDir()
 
 			reg := registry.NewMock()
 			k, err := reg.HKCUOpenKeyWrite("Software/Canonical/UbuntuPro")
 			require.NoError(t, err, "Setup: could not create Ubuntu Pro registry key")
 			reg.CloseKey(k)
 
-			if tc.breakMkDir {
-				dir = filepath.Join(dir, "proservices")
-				err := os.WriteFile(dir, []byte("♫♪ Never gonna give you up ♫♪"), 0600)
-				require.NoError(t, err, "Setup: could not write file where proservices wants to put a dir")
-			}
-
 			if tc.breakNewDistroDB {
-				dbFile := filepath.Join(dir, consts.DatabaseFileName)
+				dbFile := filepath.Join(privateDir, consts.DatabaseFileName)
 				err := os.MkdirAll(dbFile, 0600)
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
 			}
 
-			s, err := proservices.New(ctx, proservices.WithPrivateDir(dir), proservices.WithRegistry(reg))
+			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
 			if err == nil {
 				defer s.Stop(ctx)
 			}
@@ -81,7 +75,7 @@ func TestRegisterGRPCServices(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	ps, err := proservices.New(ctx, proservices.WithPrivateDir(t.TempDir()), proservices.WithRegistry(registry.NewMock()))
+	ps, err := proservices.New(ctx, t.TempDir(), t.TempDir(), proservices.WithRegistry(registry.NewMock()))
 	require.NoError(t, err, "Setup: New should return no error")
 	defer ps.Stop(ctx)
 
