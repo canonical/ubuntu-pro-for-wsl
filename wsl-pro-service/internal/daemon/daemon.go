@@ -39,6 +39,14 @@ type Daemon struct {
 	systemdReadyOnce  sync.Once
 }
 
+// Status sent to systemd.
+const (
+	serviceStatusWaiting  = "Not serving: waiting to retry"
+	serviceStatusRetrying = "Not serving: retrying"
+	serviceStatusServing  = "Serving"
+	serviceStatusStopped  = "Stopped"
+)
+
 type options struct {
 	systemdSdNotifier systemdSdNotifier
 }
@@ -86,6 +94,12 @@ func New(ctx context.Context, registerGRPCService GRPCServiceRegisterer, s syste
 // control stream. If either the server or the connection to the stream
 // fail, both server and stream are restarted.
 func (d *Daemon) Serve() (err error) {
+	defer func() {
+		if err := d.systemdNotifyStatus(d.ctx, serviceStatusStopped); err != nil {
+			log.Warningf(d.ctx, "Could not change systemd status: %v", err)
+		}
+	}()
+
 	select {
 	case <-d.ctx.Done():
 		return d.ctx.Err()
@@ -113,6 +127,10 @@ func (d *Daemon) Serve() (err error) {
 
 	delay := minDelay
 
+	if err := d.systemdNotifyReady(d.ctx); err != nil {
+		return err
+	}
+
 	for {
 		err := d.serveOnce(gracefulStopCtx, forceStopCtx)
 		if err == nil {
@@ -127,6 +145,10 @@ func (d *Daemon) Serve() (err error) {
 
 		delay = min(delay*growthRate, maxDelay)
 
+		if err := d.systemdNotifyStatus(d.ctx, serviceStatusWaiting); err != nil {
+			return err
+		}
+
 		select {
 		case <-d.ctx.Done():
 			return d.ctx.Err()
@@ -138,6 +160,9 @@ func (d *Daemon) Serve() (err error) {
 		}
 
 		log.Infof(d.ctx, "Retrying connection")
+		if err := d.systemdNotifyStatus(d.ctx, serviceStatusRetrying); err != nil {
+			return err
+		}
 	}
 }
 
@@ -209,21 +234,8 @@ func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
 
 	log.Infof(ctx, "Serving GRPC requests on %v", address)
 
-	var failedSignal bool
-	d.systemdReadyOnce.Do(func() {
-		sent, err := d.systemdSdNotifier(false, "READY=1")
-		if err != nil {
-			failedSignal = true
-			return
-		}
-		if sent {
-			log.Debug(ctx, i18n.G("Ready state sent to systemd"))
-		}
-	})
-
-	if failedSignal {
-		d.systemdReadyOnce = sync.Once{}
-		return fmt.Errorf(i18n.G("couldn't send ready notification to systemd: %v"), err)
+	if err := d.systemdNotifyStatus(d.ctx, serviceStatusServing); err != nil {
+		return err
 	}
 
 	if err := server.Serve(lis); err != nil {
@@ -255,4 +267,34 @@ func (d *Daemon) Quit(ctx context.Context, force bool) {
 	log.Info(ctx, i18n.G("Waiting for active requests to close."))
 	<-d.running
 	log.Debug(ctx, i18n.G("All connections have now ended."))
+}
+
+func (d *Daemon) systemdNotifyReady(ctx context.Context) error {
+	sent, err := d.systemdSdNotifier(false, "READY=1")
+	if err != nil {
+		return fmt.Errorf(i18n.G("couldn't send ready notification to systemd: %v"), err)
+	}
+	if sent {
+		log.Debug(ctx, i18n.G("Ready state sent to systemd"))
+	}
+	return nil
+}
+
+func (d *Daemon) systemdNotifyStatus(ctx context.Context, status string) error {
+	message := fmt.Sprintf("STATUS=%s", status)
+	//                             ^^
+	// You may think that this should be %q, but you'd be wrong!
+	// Using %q causes systemctl to print
+	//     Status: ""Hello world""
+	// Somehow systemd knows to escape spaces so using %s is the right thing to do:
+	//     Status: "Hello world"
+
+	sent, err := d.systemdSdNotifier(false, message)
+	if err != nil {
+		return fmt.Errorf("couldn't update status to systemd: %v", err)
+	}
+	if sent {
+		log.Debugf(ctx, "Updated systemd status to %q", status)
+	}
+	return nil
 }
