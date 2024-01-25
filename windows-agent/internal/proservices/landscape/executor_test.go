@@ -61,6 +61,9 @@ func TestAssignHost(t *testing.T) {
 					}
 
 					require.Eventually(t, func() bool {
+						testBed.conf.mu.Lock()
+						defer testBed.conf.mu.Unlock()
+
 						return testBed.conf.landscapeAgentUID == "HostUID123"
 					}, maxTimeout, 100*time.Millisecond, "Landscape client should have overridden the initial UID sent by the server")
 				})
@@ -437,7 +440,6 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 
 	tb.wslMock = wslmock.New()
 	ctx = wsl.WithMock(ctx, tb.wslMock)
-	context.AfterFunc(ctx, func() { tb.wslMock.ResetErrors() })
 
 	tb.ctx = ctx
 
