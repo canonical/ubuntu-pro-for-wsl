@@ -538,6 +538,122 @@ func TestAutoReconnection(t *testing.T) {
 	}
 }
 
+func TestReconnect(t *testing.T) {
+	t.Parallel()
+
+	requestReconnect := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		s.Controller().Reconnect(ctx)
+	}
+
+	testCases := map[string]struct {
+		useCertificate bool
+		trigger        func(context.Context, *landscape.Service, *mockConfig)
+
+		wantNoReconnect       bool
+		wantImmediateRconnect bool
+	}{
+		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateRconnect: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			if wsl.MockAvailable() {
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			var certPath string
+			lcapeConfig := defaultLandscapeConfig
+			if tc.useCertificate {
+				certPath = t.TempDir()
+				testutils.GenerateTempCertificate(t, certPath)
+				lcapeConfig = fmt.Sprintf("%s\nssl_public_key = {{ .CertPath }}/cert.pem", defaultLandscapeConfig)
+			}
+
+			lis, server, _ := setUpLandscapeMock(t, ctx, "localhost:", certPath)
+
+			conf := &mockConfig{
+				proToken:              "TOKEN",
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr()),
+			}
+
+			//nolint:errcheck // We don't care about these errors
+			go server.Serve(lis)
+			defer server.Stop()
+
+			db, err := database.New(ctx, t.TempDir(), conf)
+			require.NoError(t, err, "Setup: database New should not return an error")
+
+			service, err := landscape.New(ctx, conf, db)
+			require.NoError(t, err, "Setup: New should not return an error")
+
+			err = service.Connect()
+			require.NoError(t, err, "Setup: Connect should not return an error")
+
+			require.Eventually(t, func() bool {
+				return service.Connected()
+			}, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
+
+			ch := make(chan struct{})
+			go func() {
+				tc.trigger(ctx, service, conf)
+				close(ch)
+			}()
+
+			fmt.Println("AAAAAAAAA")
+
+			const timeout = 10 * time.Second
+			const tickRate = 100 * time.Millisecond
+			if tc.wantNoReconnect {
+				requireAlways(t, service.Connected, timeout, tickRate, "Client should not have disconnected")
+				return
+			}
+
+			require.Eventually(t, func() bool { return !service.Connected() },
+				timeout, tickRate, "Client should have disconnected during reconnection")
+
+			select {
+			case <-ch:
+			case <-time.After(20 * time.Second):
+				require.Fail(t, "Reconnect should have returned")
+			}
+
+			if tc.wantImmediateRconnect {
+				require.True(t, service.Connected(), "Client should have connected before returning")
+				return
+			}
+
+			require.Eventually(t, service.Connected,
+				20*time.Second, time.Second, "Client should have connected after reconnection")
+		})
+	}
+}
+
+func requireAlways(t *testing.T, predicate func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	tk := time.NewTicker(tick)
+	defer tk.Stop()
+
+	tm := time.NewTimer(waitFor)
+	defer tm.Stop()
+
+	for {
+		select {
+		case <-tm.C:
+			return
+		case <-tk.C:
+		}
+
+		require.True(t, predicate(), msgAndArgs...)
+	}
+}
+
 func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, url net.Addr) string {
 	t.Helper()
 
