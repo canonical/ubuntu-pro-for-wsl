@@ -247,6 +247,10 @@ func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo Host
 
 	return hostInfo.UID, func() {
 		cancel()
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
 		*h.connected = false
 	}, nil
 }
