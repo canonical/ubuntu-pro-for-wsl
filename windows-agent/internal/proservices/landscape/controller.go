@@ -29,6 +29,12 @@ func (c Controller) SendUpdatedInfo(ctx context.Context) error {
 	return c.sendInfo(info)
 }
 
+// Reconnect makes Landscape drop its current connection and start a new one.
+// Blocks until the new connection is available (or failed).
+func (c Controller) Reconnect(ctx context.Context) (succcess bool) {
+	return c.forceReconnect(ctx)
+}
+
 // tryReconnect sends a "please, connect" signal to the Landscape client and blocks until
 // this connection is established, or until the context is canceled. Returns true if the
 // connection was successfully established.
