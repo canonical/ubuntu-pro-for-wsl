@@ -1,9 +1,9 @@
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103128-7665a706d4cb h1:j+durd6vA0tTpisqOs8UUo3jBk041sOIRtqvm38g2Hs=
-github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240102103128-7665a706d4cb/go.mod h1:0LyNDS96w9Pbm0W3GGLboVqSX9ehQoQlO/MH2XCwpaw=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153 h1:+tFbSQ8DlDx2EEZz5MCM6UHZOXKd44jr2QsTpPyy3y8=
-github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240102102526-7685d228c153/go.mod h1:GlzIygZxSGJy32ZKMc4lpaZXeZLX9qdOmWlAIqEMsfM=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240102103032-b88199dbf315 h1:dtdzpsPgpPGzu8xuFAOrTui+uSyj2ScNgVnn6d7ln/w=
-github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240102103032-b88199dbf315/go.mod h1:dzG/Yu3SdZOFcKHQg58So4VETNkqJ/jWBx1xTMFIVpE=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240129154553-ac5fd0e688d8 h1:amZLlbvIsaOaRcbePT39hWpTpoq3gsxQsfQpODbl/l4=
+github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240129154553-ac5fd0e688d8/go.mod h1:QH41gqJuHNRBrm5q3H6uKuKfbkaBxtT5isBPR+Byh1Q=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240129154553-ac5fd0e688d8 h1:MhYODpZ+LxT+Y4YgoYywOek7hc0G8bWiaK4w2R/HZkg=
+github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240129154553-ac5fd0e688d8/go.mod h1:1RLWMFR25GnvXyA75/C+dQmI2eeUvJ/mL5xU6UE4CIA=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240129154553-ac5fd0e688d8 h1:eylWhX4/BmTVYnNdGbgT12qElM37+bxW6y+4hb4fSKY=
+github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240129154553-ac5fd0e688d8/go.mod h1:Keg37mdAz1lVKHuwABr2rHeRmWo3bRsTdtc3XFN1MQo=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
