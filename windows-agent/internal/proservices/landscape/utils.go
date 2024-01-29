@@ -82,14 +82,14 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 //
 // If this credential is not specified, an insecure credential is returned.
 // If the credential is specified but erroneous, an error is returned.
-func (conf landscapeHostConf) transportCredentials() (cred credentials.TransportCredentials, err error) {
+func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCredentials, err error) {
 	defer decorate.OnError(&err, "Landscape credentials")
 
-	if conf.sslPublicKey == "" {
+	if sslPublicKeyPath == "" {
 		return insecure.NewCredentials(), nil
 	}
 
-	cert, err := os.ReadFile(conf.sslPublicKey)
+	cert, err := os.ReadFile(sslPublicKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
 	}

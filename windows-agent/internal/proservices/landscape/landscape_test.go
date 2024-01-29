@@ -545,6 +545,38 @@ func TestReconnect(t *testing.T) {
 		s.Controller().Reconnect(ctx)
 	}
 
+	changeAddress := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		// We change the address to an equivalent one, so that the reconnect is triggered abd the connection succeeds
+		c.mu.Lock()
+		fmt.Println(c.landscapeClientConfig)
+		c.landscapeClientConfig = strings.ReplaceAll(c.landscapeClientConfig, "127.0.0.1", "localhost")
+		fmt.Println(c.landscapeClientConfig)
+		c.mu.Unlock()
+
+		c.triggerNotifications()
+	}
+
+	changeCertificate := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		// We change the path to an equivalent one, so that the reconnect is triggered and the connection still succeeds
+		const sep = filepath.Separator
+		from := fmt.Sprintf("%c", sep)       // from: /
+		to := fmt.Sprintf("%c.%c", sep, sep) // to:   /./
+
+		c.mu.Lock()
+		c.landscapeClientConfig = strings.Replace(c.landscapeClientConfig, from, to, 1)
+		c.mu.Unlock()
+
+		c.triggerNotifications()
+	}
+
+	changeIrrelevant := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		c.mu.Lock()
+		c.landscapeClientConfig = c.landscapeClientConfig + "\n[exta]\ninfo=this section does not matter"
+		c.mu.Unlock()
+
+		c.triggerNotifications()
+	}
+
 	testCases := map[string]struct {
 		useCertificate bool
 		trigger        func(context.Context, *landscape.Service, *mockConfig)
@@ -553,6 +585,9 @@ func TestReconnect(t *testing.T) {
 		wantImmediateRconnect bool
 	}{
 		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateRconnect: true},
+		"Reconnect when changing the URL":                     {trigger: changeAddress},
+		"Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
+		"Don't reconnect when changing irrelevant config":     {trigger: changeIrrelevant, wantNoReconnect: true},
 	}
 
 	for name, tc := range testCases {
@@ -715,6 +750,8 @@ type mockConfig struct {
 	landscapeUIDErr    bool
 	setLandscapeUIDErr bool
 
+	callbacks []func()
+
 	mu sync.Mutex
 }
 
@@ -763,6 +800,21 @@ func (m *mockConfig) SetLandscapeAgentUID(ctx context.Context, uid string) error
 		return errors.New("Mock error")
 	}
 
+	defer m.triggerNotifications()
+
 	m.landscapeAgentUID = uid
 	return nil
+}
+
+func (m *mockConfig) Notify(f func()) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.callbacks = append(m.callbacks, f)
+}
+
+func (m *mockConfig) triggerNotifications() {
+	for _, f := range m.callbacks {
+		go f()
+	}
 }

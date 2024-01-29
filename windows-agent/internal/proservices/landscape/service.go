@@ -48,6 +48,8 @@ type Config interface {
 
 	LandscapeAgentUID(context.Context) (string, error)
 	SetLandscapeAgentUID(context.Context, string) error
+
+	Notify(func())
 }
 
 type options struct {
@@ -83,6 +85,8 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 		hostName:    opts.hostname,
 		connRetrier: newRetryConnection(),
 	}
+
+	s.watchConfigChanges(ctx)
 
 	return s, nil
 }
@@ -218,6 +222,39 @@ func (s *Service) Controller() Controller {
 		serviceConn: s,
 		serviceData: s,
 	}
+}
+
+// watchConfigChanges watches for config changes to detect if a reconnection is in order.
+func (s *Service) watchConfigChanges(ctx context.Context) {
+	s.conf.Notify(func() {
+		oldSettings, ok := func() (connectionSettings, bool) {
+			s.connMu.RLock()
+			defer s.connMu.RUnlock()
+
+			if s.conn != nil {
+				return s.conn.settings, true
+			}
+			return connectionSettings{}, false
+		}()
+
+		if !ok {
+			// Not connected yet
+			return
+		}
+
+		landscapeConf, err := newLandscapeHostConf(ctx, s.conf)
+		if err != nil {
+			log.Warningf(ctx, "Landscape: could not assemble landscape host configuration: %v", err)
+			return
+		}
+
+		newSett := newConnectionSettings(landscapeConf)
+		if newSett == oldSettings {
+			return
+		}
+
+		s.reconnect()
+	})
 }
 
 func (s *Service) disconnect() {
