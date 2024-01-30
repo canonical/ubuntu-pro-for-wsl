@@ -1,6 +1,6 @@
 # Catalan translations for ubuntu-pro package.
 # Copyright (C) 2023 THE ubuntu-pro'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the ubuntu-pro-for-windows package.
+# This file is distributed under the same license as the ubuntu-pro-for-wsl package.
 # Canonical, 2023.
 #
 msgid ""
@@ -66,11 +66,11 @@ msgid "Service took too long to respond. Disconnecting client."
 msgstr "El servei ha trigat massa en respondre. Desconnectant client."
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:57
-msgid "Ubuntu Pro for Windows agent"
-msgstr "Agent d'Ubuntu Pro per a Windows"
+msgid "Ubuntu Pro for WSL agent"
+msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:58
-msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
+msgid "Ubuntu Pro for WSL agent for managing your pro-enabled distro."
 msgstr ""
 
 #: internal/daemon/daemon.go:127

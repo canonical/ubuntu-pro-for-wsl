@@ -65,11 +65,11 @@ msgid "Service took too long to respond. Disconnecting client."
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:57
-msgid "Ubuntu Pro for Windows agent"
+msgid "Ubuntu Pro for WSL agent"
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:58
-msgid "Ubuntu Pro for Windows agent for managing your pro-enabled distro."
+msgid "Ubuntu Pro for WSL agent for managing your pro-enabled distro."
 msgstr ""
 
 #: internal/daemon/daemon.go:127
