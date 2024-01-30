@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: ubuntu-pro-for-windows
-Source: https://github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
+Upstream-Name: ubuntu-pro-for-wsl
+Source: https://github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 
 Files: *
 Copyright: 2023 Canonical Ltd.

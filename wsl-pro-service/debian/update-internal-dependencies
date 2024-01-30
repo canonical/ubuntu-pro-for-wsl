@@ -2,7 +2,7 @@
 set -eu
 
 # Add repo as private
-go env -w "GOPRIVATE=github.com/canonical/ubuntu-pro-for-windows"
+go env -w "GOPRIVATE=github.com/canonical/ubuntu-pro-for-wsl"
 
 UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE=${UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE:-""}
 
@@ -12,7 +12,7 @@ if [ -n "${UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE}" ]; then
 fi
 
 # Find internal dependencies
-url='github\.com\/canonical\/ubuntu-pro-for-windows'
+url='github\.com\/canonical\/ubuntu-pro-for-wsl'
 pattern="s/${url}\/wsl-pro-service \(${url}\/[^@]\+\)@.*/\1/p"
 modules=`go mod graph | sed -n "${pattern}"`
 
