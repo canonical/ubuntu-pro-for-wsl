@@ -16,7 +16,7 @@
 ///
 /// Besides code repetition it's possible for different pages to show completely
 /// different app bars, other than a [YaruWindowTitleBar], thus dstroying the
-/// app consistency. Sticking to the [Pro4WindowsPage] widget allows for a
+/// app consistency. Sticking to the [Pro4WSLPage] widget allows for a
 /// consistent app/title bar with minimal code repetition. Should we adopt
 /// something else other than the [YaruWindowTitleBar] in the future,
 /// there will be less places to change.
@@ -29,12 +29,12 @@ import 'package:yaru_widgets/yaru_widgets.dart';
 
 /// The simplest material page that covers most of the use cases in this app,
 /// which may have a consistent title bar or no title bar at all.
-class Pro4WindowsPage extends StatelessWidget {
+class Pro4WSLPage extends StatelessWidget {
   // This should be updated to reflect the common use cases in this app.
   // Should we start using other Scaffold elements everywhere in the app,
   // such as the list of actions or the floating action button, we should
   // update this class to reflect that pattern.
-  const Pro4WindowsPage({
+  const Pro4WSLPage({
     super.key,
     required this.body,
     this.showTitleBar = true,
@@ -72,7 +72,7 @@ class DarkStyledLandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Pro4WindowsPage(
+    return Pro4WSLPage(
       body: Stack(
         children: [
           Positioned.fill(

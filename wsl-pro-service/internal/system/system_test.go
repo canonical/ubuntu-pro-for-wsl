@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
-	commontestutils "github.com/canonical/ubuntu-pro-for-windows/common/testutils"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
+	commontestutils "github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

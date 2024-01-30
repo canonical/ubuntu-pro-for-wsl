@@ -55,7 +55,7 @@ jobs:
           commit-message: Auto update po files
           title: 'docs(i18n): Auto update po files'
           labels: po, automated pr
-          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/locales
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
@@ -108,7 +108,7 @@ jobs:
           commit-message: Auto update readme files
           title: 'docs: Auto update readme files'
           labels: readme, automated pr
-          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/readme-cli-ref
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
@@ -156,7 +156,7 @@ jobs:
           commit-message: Auto update internal dependencies
           title: 'deps(wsl-pro-service): Auto update WSL-Pro-Service dependencies'
           labels: automated pr
-          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/auto-updates.yaml) by GitHub Action"
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/auto-updates.yaml) by GitHub Action"
           branch: auto-updates/update-internal-dependencies
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch

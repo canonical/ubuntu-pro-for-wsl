@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/stretchr/testify/require"
 )
 

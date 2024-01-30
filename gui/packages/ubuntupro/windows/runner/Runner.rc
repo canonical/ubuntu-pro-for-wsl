@@ -95,7 +95,7 @@ BEGIN
             VALUE "InternalName", "ubuntupro" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 Canonical, Ltd. All rights reserved." "\0"
             VALUE "OriginalFilename", "ubuntupro.exe" "\0"
-            VALUE "ProductName", "Ubuntu Pro For Windows" "\0"
+            VALUE "ProductName", "Ubuntu Pro for WSL" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

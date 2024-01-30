@@ -12,8 +12,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/contractsapi"
 	"github.com/ubuntu/decorate"
 )
 

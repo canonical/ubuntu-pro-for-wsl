@@ -1,4 +1,4 @@
-// Package restserver provides building blocks to implement a mocked version of out-of-process components Ubuntu Pro For Windows depend on that talk REST,
+// Package restserver provides building blocks to implement a mocked version of out-of-process components Ubuntu Pro for WSL depend on that talk REST,
 // such as MS Store API and the Contracts Server backend
 // DO NOT USE IN PRODUCTION
 package restserver
@@ -112,8 +112,8 @@ func (app *App) showDefaultsCmd() *cobra.Command {
 func (app *App) rootCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   fmt.Sprintf("%s [settings_file]", execName()),
-		Short: fmt.Sprintf("A mock %s server for Ubuntu Pro For Windows testing", app.Name),
-		Long: fmt.Sprintf(`A mock of the %s for Ubuntu Pro For Windows testing.
+		Short: fmt.Sprintf("A mock %s server for Ubuntu Pro for WSL testing", app.Name),
+		Long: fmt.Sprintf(`A mock of the %s for Ubuntu Pro for WSL testing.
 Serve the store server with the optional settings file.
 Default settings will be used if none are provided.
 The outfile, if provided, will contain the address.`, app.Description),

@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )

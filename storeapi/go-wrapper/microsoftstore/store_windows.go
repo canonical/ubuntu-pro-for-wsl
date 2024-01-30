@@ -9,7 +9,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/sys/windows"
 )

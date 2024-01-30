@@ -2,7 +2,7 @@ package landscape
 
 import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 )
 
 // These interfaces exist to limit the coupling between components,

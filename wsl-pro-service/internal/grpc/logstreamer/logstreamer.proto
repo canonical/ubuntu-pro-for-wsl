@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/canonical/ubuntu-pro-for-windows/internal/grpc/log";
+option go_package = "github.com/canonical/ubuntu-pro-for-wsl/internal/grpc/log";
 
 message LogMsg {
   // use logHeader instead of header as the result will be polymorphic and we want

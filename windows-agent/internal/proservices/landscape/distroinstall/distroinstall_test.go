@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/distroinstall"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"

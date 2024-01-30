@@ -1,6 +1,6 @@
 <#
 .Synopsis
-    Build the Ubuntu Pro For Windows Appx package for local use.
+    Build the Ubuntu Pro for WSL Appx package for local use.
 #>
 
 param (
@@ -63,7 +63,7 @@ function Update-Certificate {
     $certificate_thumbprint = Get-Content ${certificate_path}
 
     # Replacing with local certificate
-    $wapproj = ".\msix\UbuntuProForWindows\UbuntuProForWindows.wapproj"
+    $wapproj = ".\msix\UbuntuProForWSL\UbuntuProForWSL.wapproj"
     (Get-Content -Path "${wapproj}")                                                                   `
         -replace `
         "<PackageCertificateThumbprint>.*</PackageCertificateThumbprint>", `
@@ -72,10 +72,10 @@ function Update-Certificate {
 }
 
 function Install-Appx {
-    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage
 
     $artifacts = (
-        Get-ChildItem ".\msix\UbuntuProForWindows\AppPackages\UbuntuProForWindows_*"    `
+        Get-ChildItem ".\msix\UbuntuProForWSL\AppPackages\UbuntuProForWSL_*"    `
         | Sort-Object LastWriteTime                                                     `
         | Select-Object -last 1                                                         `
     )
@@ -97,7 +97,7 @@ function Install-Appx {
 }
 
 # Uninstall currently installed version
-Get-AppxPackage "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage
+Get-AppxPackage "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage
 
 # Going to project root
 Push-Location "${PSScriptRoot}\..\.."

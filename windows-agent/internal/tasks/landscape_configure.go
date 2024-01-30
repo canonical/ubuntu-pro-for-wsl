@@ -3,8 +3,8 @@ package tasks
 import (
 	"context"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 )
 
 func init() {

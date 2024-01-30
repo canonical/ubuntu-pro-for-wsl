@@ -7,10 +7,10 @@ Build-Depends: debhelper-compat (= 13),
                dh-golang,
                golang-go (>= 2:1.21~),
 Standards-Version: 4.6.2
-XS-Go-Import-Path: github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
-Homepage: https://github.com/canonical/ubuntu-pro-for-windows
-Description: Ubuntu Pro for Windows
- Ubuntu Pro for Windows is a set of applications to manage Ubuntu WSL instances
+XS-Go-Import-Path: github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
+Homepage: https://github.com/canonical/ubuntu-pro-for-wsl
+Description: Ubuntu Pro for WSL
+ Ubuntu Pro for WSL is a set of applications to manage Ubuntu WSL instances
  to allow to:
  .
   * grants pro-attached status to any Ubuntu instance on the device,

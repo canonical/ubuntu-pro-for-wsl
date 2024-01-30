@@ -13,8 +13,8 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-windows/common/testutils"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/landscape/landscapemockservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
 	"golang.org/x/exp/maps"

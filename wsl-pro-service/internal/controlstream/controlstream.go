@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc/connectivity"
 )
@@ -26,7 +26,7 @@ type ControlStream struct {
 }
 
 // SystemError is an error caused by a misconfiguration of the system, rather than
-// originated from Ubuntu Pro for Windows.
+// originated from Ubuntu Pro for WSL.
 type SystemError struct {
 	error
 }

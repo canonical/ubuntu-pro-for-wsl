@@ -8,11 +8,11 @@ The Windows Agent is the component that runs on the host Windows machine.
 
 #### ubuntu-pro-agent
 
-Ubuntu Pro for Windows agent
+Ubuntu Pro for WSL agent
 
 ##### Synopsis
 
-Ubuntu Pro for Windows agent for managing your pro-enabled distro.
+Ubuntu Pro for WSL agent for managing your pro-enabled distro.
 
 ```
 ubuntu-pro-agent COMMAND [flags]
@@ -33,7 +33,6 @@ Generate the autocompletion script for the specified shell
 
 Generate the autocompletion script for ubuntu-pro-agent for the specified shell.
 See each sub-command's help for details on how to use the generated script.
-
 
 ##### Options
 
@@ -60,20 +59,19 @@ If it is not installed already, you can install it via your OS's package manager
 
 To load completions in your current shell session:
 
-	source <(ubuntu-pro-agent completion bash)
+ source <(ubuntu-pro-agent completion bash)
 
 To load completions for every new session, execute once:
 
-###### Linux:
+###### Linux
 
-	ubuntu-pro-agent completion bash > /etc/bash_completion.d/ubuntu-pro-agent
+ ubuntu-pro-agent completion bash > /etc/bash_completion.d/ubuntu-pro-agent
 
-###### macOS:
+###### macOS
 
-	ubuntu-pro-agent completion bash > $(brew --prefix)/etc/bash_completion.d/ubuntu-pro-agent
+ ubuntu-pro-agent completion bash > $(brew --prefix)/etc/bash_completion.d/ubuntu-pro-agent
 
 You will need to start a new shell for this setup to take effect.
-
 
 ```
 ubuntu-pro-agent completion bash
@@ -102,14 +100,13 @@ Generate the autocompletion script for the fish shell.
 
 To load completions in your current shell session:
 
-	ubuntu-pro-agent completion fish | source
+ ubuntu-pro-agent completion fish | source
 
 To load completions for every new session, execute once:
 
-	ubuntu-pro-agent completion fish > ~/.config/fish/completions/ubuntu-pro-agent.fish
+ ubuntu-pro-agent completion fish > ~/.config/fish/completions/ubuntu-pro-agent.fish
 
 You will need to start a new shell for this setup to take effect.
-
 
 ```
 ubuntu-pro-agent completion fish [flags]
@@ -138,11 +135,10 @@ Generate the autocompletion script for powershell.
 
 To load completions in your current shell session:
 
-	ubuntu-pro-agent completion powershell | Out-String | Invoke-Expression
+ ubuntu-pro-agent completion powershell | Out-String | Invoke-Expression
 
 To load completions for every new session, add the output of the above command
 to your powershell profile.
-
 
 ```
 ubuntu-pro-agent completion powershell [flags]
@@ -172,24 +168,23 @@ Generate the autocompletion script for the zsh shell.
 If shell completion is not already enabled in your environment you will need
 to enable it.  You can execute the following once:
 
-	echo "autoload -U compinit; compinit" >> ~/.zshrc
+ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
 To load completions in your current shell session:
 
-	source <(ubuntu-pro-agent completion zsh)
+ source <(ubuntu-pro-agent completion zsh)
 
 To load completions for every new session, execute once:
 
-###### Linux:
+###### Linux
 
-	ubuntu-pro-agent completion zsh > "${fpath[1]}/_ubuntu-pro-agent"
+ ubuntu-pro-agent completion zsh > "${fpath[1]}/_ubuntu-pro-agent"
 
-###### macOS:
+###### macOS
 
-	ubuntu-pro-agent completion zsh > $(brew --prefix)/share/zsh/site-functions/_ubuntu-pro-agent
+ ubuntu-pro-agent completion zsh > $(brew --prefix)/share/zsh/site-functions/_ubuntu-pro-agent
 
 You will need to start a new shell for this setup to take effect.
-
 
 ```
 ubuntu-pro-agent completion zsh [flags]
@@ -231,4 +226,3 @@ ubuntu-pro-agent version [flags]
 ### Hidden commands
 
 Those commands are hidden from help and should primarily be used by the system or for debugging.
-

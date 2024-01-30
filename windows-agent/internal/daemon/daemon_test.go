@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon/testdata/grpctestservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

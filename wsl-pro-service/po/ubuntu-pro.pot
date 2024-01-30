@@ -73,7 +73,7 @@ msgid "WSL Pro Service"
 msgstr ""
 
 #: cmd/wsl-pro-service/service/service.go:53
-msgid "WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."
+msgid "WSL Pro Service connects Ubuntu Pro for WSL agent to your distro."
 msgstr ""
 
 #: internal/daemon/daemon.go:116

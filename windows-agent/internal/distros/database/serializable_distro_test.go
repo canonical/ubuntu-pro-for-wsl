@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/wsltestutils"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"

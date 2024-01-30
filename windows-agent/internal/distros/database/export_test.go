@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 )
 
 type SerializableDistro = serializableDistro

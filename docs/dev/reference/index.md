@@ -2,7 +2,7 @@
 
 # Reference
 
-The reference material in this section provides technical descriptions of Ubuntu Pro for Windows.
+The reference material in this section provides technical descriptions of Ubuntu Pro for WSL.
 
 ```{toctree}
 :titlesonly:

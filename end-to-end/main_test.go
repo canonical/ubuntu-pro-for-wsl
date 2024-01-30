@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows/registry"
@@ -22,7 +22,7 @@ var (
 	// testImagePath is the path to the test image.
 	testImagePath string
 
-	// msixPath is the path to the Ubuntu Pro For Windows MSIX.
+	// msixPath is the path to the Ubuntu Pro for WSL MSIX.
 	msixPath string
 
 	// debPkgPath is the path to the Wsl Pro Service Debian package.
@@ -45,7 +45,7 @@ const (
 	//    ├───wsl-pro-service
 	//    │   └──wsl-pro-service_*.deb
 	//    └───windows-agent
-	//        └──UbuntuProForWindows_*.msixbundle
+	//        └──UbuntuProForWSL_*.msixbundle
 	//
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
@@ -55,8 +55,8 @@ const (
 	// referenceDistro is the WSL distro that will be used to generate the test image.
 	referenceDistroAppx = "CanonicalGroupLimited.UbuntuPreview"
 
-	// up4wAppxPackage is the Ubuntu Pro For Windows package.
-	up4wAppxPackage = "CanonicalGroupLimited.UbuntuProForWindows"
+	// up4wAppxPackage is the Ubuntu Pro for WSL package.
+	up4wAppxPackage = "CanonicalGroupLimited.UbuntuProForWSL"
 )
 
 func TestMain(m *testing.M) {
@@ -116,7 +116,7 @@ func TestMain(m *testing.M) {
 func usePrebuiltProject(buildPath string) (err error) {
 	// Locate the Appx package and store the path in global variable so that we can
 	// reinstall it before every test
-	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWindows_*.msixbundle"))
+	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWSL_*.msixbundle"))
 	if err != nil {
 		return fmt.Errorf("could not locate MSIX: %v", err)
 	}
@@ -157,7 +157,7 @@ func buildProject(ctx context.Context) (string, error) {
 	}
 
 	if err := os.MkdirAll(winPath, 0600); err != nil {
-		return "", fmt.Errorf("could not create directory for Ubuntu Pro For Windows MSIX artifacts")
+		return "", fmt.Errorf("could not create directory for Ubuntu Pro for WSL MSIX artifacts")
 	}
 
 	jobs := map[string]*exec.Cmd{

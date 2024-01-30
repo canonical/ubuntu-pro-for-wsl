@@ -19,7 +19,7 @@ import datetime
 ############################################################
 
 # Product name
-project = 'Ubuntu Pro For Windows'
+project = 'Ubuntu Pro for WSL'
 author = 'Canonical Group Ltd'
 
 # The title you want to display for the documentation in the sidebar.
@@ -54,7 +54,7 @@ ogp_site_name = project
 ogp_image = 'https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg'
 
 # Update with the favicon for your product (default is the circle of friends)
-html_favicon = '../msix/UbuntuProForWindows/Images/icon.ico'
+html_favicon = '../msix/UbuntuProForWSL/Images/icon.ico'
 
 # (Some settings must be part of the html_context dictionary, while others
 #  are on root level. Don't move the settings.)
@@ -77,7 +77,7 @@ html_context = {
     'discourse': 'https://discourse.ubuntu.com/c/wsl/27',
 
     # Change to the GitHub info for your project
-    'github_url': 'https://github.com/canonical/ubuntu-pro-for-windows',
+    'github_url': 'https://github.com/canonical/ubuntu-pro-for-wsl',
 
     # Change to the branch for this version of the documentation
     'github_version': 'main',
@@ -118,7 +118,7 @@ linkcheck_ignore = [
     'http://127.0.0.1:8000',
 
     # Linkcheck does not have access to the repo
-    'https://github.com/canonical/ubuntu-pro-for-windows/*'
+    'https://github.com/canonical/ubuntu-pro-for-wsl/*'
     ]
 
 # Pages on which to ignore anchors

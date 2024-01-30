@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/contractsapi"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/contractsapi"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/restserver"
 )
 
 const (

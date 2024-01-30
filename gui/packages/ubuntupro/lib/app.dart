@@ -14,8 +14,8 @@ import 'pages/startup/startup_page.dart';
 import 'pages/subscription_status/subscription_status_page.dart';
 import 'routes.dart';
 
-class Pro4WindowsApp extends StatelessWidget {
-  const Pro4WindowsApp({super.key});
+class Pro4WSLApp extends StatelessWidget {
+  const Pro4WSLApp({super.key});
 
   @override
   Widget build(BuildContext context) {

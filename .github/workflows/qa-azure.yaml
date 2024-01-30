@@ -38,7 +38,7 @@ jobs:
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
-  build-ubuntu-pro-for-windows:
+  build-ubuntu-pro-for-wsl:
     strategy:
       matrix:
         mode: ["production", "end_to_end_tests"]
@@ -46,7 +46,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Set up git
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
@@ -96,10 +96,10 @@ jobs:
       - name: Upload sideload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UbuntuProForWindows+${{ github.sha }}-${{ matrix.mode }}
+          name: UbuntuProForWSL+${{ github.sha }}-${{ matrix.mode }}
           path: |
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.cer
-            msix/UbuntuProForWindows/AppPackages/UbuntuProForWindows_*/UbuntuProForWindows_*.msixbundle
+            msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.cer
+            msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.msixbundle
 
   vm-setup:
     name: Set up Azure VM
@@ -117,10 +117,10 @@ jobs:
   qa:
     name: Run end-to-end tests on the Azure VM
     runs-on: [self-hosted, Windows]
-    needs: [vm-setup, build-wsl-pro-service, build-ubuntu-pro-for-windows]
+    needs: [vm-setup, build-wsl-pro-service, build-ubuntu-pro-for-wsl]
     steps:
       - name: Set up git
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout repository
@@ -150,14 +150,14 @@ jobs:
         working-directory: ci-artifacts
         run: |
           Write-Output "::group::Set up AppxPackage"
-          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
+          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
-          Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.msixbundle" -Destination "windows-agent/"
-          Move-Item -Path "UbuntuProForWindows+*-end_to_end_tests/UbuntuProForWindows_*/*.cer"       -Destination "windows-agent/"
-          Remove-Item -Recurse "UbuntuProForWindows+*/"
+          Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.msixbundle" -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.cer"       -Destination "windows-agent/"
+          Remove-Item -Recurse "UbuntuProForWSL+*/"
 
-          $cert = "$(Get-ChildItem windows-agent/UbuntuProForWindows_*.cer)"
+          $cert = "$(Get-ChildItem windows-agent/UbuntuProForWSL_*.cer)"
           Import-Certificate  -FilePath "${cert}" -CertStoreLocation Cert:LocalMachine\TrustedPeople
 
           Write-Output "::endgroup::"
@@ -194,10 +194,10 @@ jobs:
           Remove-Item -Recurse -Path "${HOME}\.gitconfig" -ErrorAction Ignore
 
           # Uninstall Appx
-          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWindows" | Remove-AppxPackage -ErrorAction Ignore
+          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage -ErrorAction Ignore
 
           # Uninstall certificate
-          $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWindows_*.cer").Thumbprint
+          $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWSL_*.cer").Thumbprint
           Remove-Item -Path "Cert:LocalMachine\TrustedPeople\${thumbprint}"
 
   stop-vm:

@@ -6,7 +6,7 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logconnections"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logconnections"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

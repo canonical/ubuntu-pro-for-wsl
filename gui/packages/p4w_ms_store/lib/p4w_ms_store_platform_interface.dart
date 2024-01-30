@@ -3,7 +3,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'p4w_ms_store_method_channel.dart';
 
 // This must strictly in sync the C++ StoreApi::PurchaseStatus enum
-// https://github.com/canonical/ubuntu-pro-for-windows/blob/main/storeapi/gui/ClientStoreService.hpp#L12-L19
+// https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/storeapi/gui/ClientStoreService.hpp#L12-L19
 // so we don't misinterpret the native call return values.
 enum PurchaseStatus {
   succeeded,

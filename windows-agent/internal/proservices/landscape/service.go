@@ -10,9 +10,9 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
+	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 )
 
 func locateStoreDll() (string, error) {

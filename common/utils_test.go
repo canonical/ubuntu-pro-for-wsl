@@ -3,7 +3,7 @@ package common_test
 import (
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/stretchr/testify/require"
 )
 

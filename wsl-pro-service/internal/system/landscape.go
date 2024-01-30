@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"gopkg.in/ini.v1"
 )

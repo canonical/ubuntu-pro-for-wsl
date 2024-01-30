@@ -15,7 +15,7 @@ MSIX
 powershell
 systemd
 ubuntu
-UbuntuProForWindows
+UbuntuProForWSL
 wsl
 zsh
 
@@ -32,4 +32,8 @@ LTS
 SLA
 SRU
 toolchain
-
+autoload
+compinit
+config
+fpath
+zshrc

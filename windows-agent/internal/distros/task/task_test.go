@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/stretchr/testify/require"
 )
 

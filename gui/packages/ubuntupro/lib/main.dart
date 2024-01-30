@@ -4,5 +4,5 @@ import 'app.dart';
 
 Future<void> main() async {
   await YaruWindowTitleBar.ensureInitialized();
-  runApp(const Pro4WindowsApp());
+  runApp(const Pro4WSLApp());
 }

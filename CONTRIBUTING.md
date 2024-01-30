@@ -1,6 +1,6 @@
-# Contributing to Ubuntu Pro for Windows
+# Contributing to Ubuntu Pro for WSL
 
-A big welcome and thank you for considering contributing to Ubuntu Pro for Windows and Ubuntu! It’s people like you that make it a reality for users in our community.
+A big welcome and thank you for considering contributing to Ubuntu Pro for WSL and Ubuntu! It’s people like you that make it a reality for users in our community.
 
 Reading and following these guidelines will help us make the contribution process easy and effective for everyone involved. It also communicates that you agree to respect the time of the developers managing and developing this project. In return, we will reciprocate that respect by addressing your issue, assessing changes, and helping you finalize your pull requests.
 
@@ -43,7 +43,7 @@ PRs to our project are always welcome and can be a quick way to get your fix or 
 * Only fix/add the functionality in question **OR** address wide-spread whitespace/style issues, not both.
 * Add unit or integration tests for fixed or changed functionality.
 * Address a single concern in the least number of changed lines as possible.
-* Include documentation in the repo or on our [docs site](https://github.com/canonical/ubuntu-pro-for-windows/wiki).
+* Include documentation in the repo or on our [docs site](https://github.com/canonical/ubuntu-pro-for-wsl/wiki).
 * Be accompanied by a complete Pull Request template (loaded automatically when a PR is created).
 
 For changes that address core functionality or would require breaking changes (e.g. a major release), it's best to open an Issue to discuss your proposal first. This is not required but can save time creating and reviewing changes.
@@ -67,17 +67,19 @@ Once merged to the main branch, `po` files, `README.md` with the command line re
 ### Required dependencies
 
 You'll need a Windows Machine with the following applications installed:
-- Windows Subsystem for Linux
-- Ubuntu-Preview
-- Visual Studio Community 2019 or above
-- Go
-- Flutter
+
+* Windows Subsystem for Linux
+* Ubuntu-Preview
+* Visual Studio Community 2019 or above
+* Go
+* Flutter
 
 ### Building and running the binaries
 
 To build the project, you can use the following two scripts:
-- [Build the Windows Agent](tools/build/build-deb.ps1)
-- [Build the Wsl Pro Service](tools/build/build-appx.ps1)
+
+* [Build the Windows Agent](tools/build/build-deb.ps1)
+* [Build the Wsl Pro Service](tools/build/build-appx.ps1)
 
 Note that you'll need to [create a self-signing certificate](https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing) to build the Windows Agent.
 
@@ -86,8 +88,9 @@ Note that you'll need to [create a self-signing certificate](https://learn.micro
 The project includes a comprehensive testsuite made of unit and integration tests. All the tests must pass with and without the race detector.
 
 Each module has its own package tests, and you can also find the integration tests at the [end-to-end directory](./end-to-end/). Note that you'll need all the install dependencies, plus:
-- An Ubuntu Pro token ([get it for free for personal use](https://ubuntu.com/pro))
-- The Ubuntu app from the Microsoft Store
+
+* An Ubuntu Pro token ([get it for free for personal use](https://ubuntu.com/pro))
+* The Ubuntu app from the Microsoft Store
 
 The test suite must pass before merging the PR to our main branch. Any new feature, change or fix must be covered by corresponding tests.
 

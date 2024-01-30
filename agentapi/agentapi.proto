@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/canonical/ubuntu-pro-for-windows/agentapi";
+option go_package = "github.com/canonical/ubuntu-pro-for-wsl/agentapi";
 
 package agentapi;
 
@@ -18,7 +18,7 @@ message ProAttachInfo {
 }
 
 message SubscriptionInfo {
-    string productId = 1;           // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
+    string productId = 1;           // The ID of the Ubuntu Pro for WSL product on the Microsoft Store.
     
     oneof subscriptionType {
         Empty none = 2;             // There is no active subscription.
