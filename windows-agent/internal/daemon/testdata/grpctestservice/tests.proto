@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon/testdata/grpctestservice";
+option go_package = "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice";
 
 package grpctestservice;
 
