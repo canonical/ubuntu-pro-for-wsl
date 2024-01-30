@@ -231,7 +231,7 @@ jobs:
         working-directory: ${{ matrix.subproject }}
         run: |
           go test -shuffle=on ./... -race -tags=gowslmock
-      #- name: Upload coverage to Codecov
-      #  uses: codecov/codecov-action@v3
-      #  with:
-      #    file: /tmp/coverage.out
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: /tmp/coverage.out
