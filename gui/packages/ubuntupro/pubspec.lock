@@ -15,7 +15,7 @@ packages:
       path: "agentapi/dart"
       ref: HEAD
       resolved-ref: f9ab362ca71ad6ca65df8a7d07540fd6cd461df1
-      url: "https://github.com/canonical/ubuntu-pro-for-windows"
+      url: "https://github.com/canonical/ubuntu-pro-for-wsl"
     source: git
     version: "0.0.1"
   analyzer:
@@ -475,7 +475,7 @@ packages:
       path: "gui/packages/p4w_ms_store"
       ref: HEAD
       resolved-ref: f9ab362ca71ad6ca65df8a7d07540fd6cd461df1
-      url: "https://github.com/canonical/ubuntu-pro-for-windows"
+      url: "https://github.com/canonical/ubuntu-pro-for-wsl"
     source: git
     version: "0.0.1"
   package_config:

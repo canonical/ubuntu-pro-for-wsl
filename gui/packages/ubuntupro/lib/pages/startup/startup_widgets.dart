@@ -52,7 +52,7 @@ class StartupInProgressWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Pro4WindowsPage(
+    return Pro4WSLPage(
       body: StatusColumn(
         message: message,
         bottom: const LinearProgressIndicator(),
@@ -69,7 +69,7 @@ class StartupErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Pro4WindowsPage(
+    return Pro4WSLPage(
       body: StatusColumn(
         top: const Icon(Icons.error_outline, size: 64),
         message: message,
