@@ -2,9 +2,9 @@
 
 > **ⓘ Note:** This can also be performed by automated tools, so long as they can write into the Windows Registry.
 
-This how-to guide will teach you how to connect your WSL instances to a Landscape server. See [the reference](../reference/landscape) to learn more about Landscape and Ubuntu Pro For Windows.
+This how-to guide will teach you how to connect your WSL instances to a Landscape server. See [the reference](../reference/landscape) to learn more about Landscape and Ubuntu Pro for WSL.
 
-Note that for this to work, you need an Ubuntu Pro subscription. Read more about [how to enable Ubuntu Pro for Windows](./pro-attach).
+Note that for this to work, you need an Ubuntu Pro subscription. Read more about [how to enable Ubuntu Pro for WSL](./pro-attach).
 
 1. Open the Registry Editor on your Windows machine
    - To open the Registry Editor, press the Windows key + R and type `regedit`.
@@ -16,6 +16,7 @@ Note that for this to work, you need an Ubuntu Pro subscription. Read more about
    - You can do this with Right Click > New > Multi-string value
 8. Name this value `LandscapeConfig`.
 9. Open the `LandscapeConfig` value and write the contents (not the path!) of your configuration file. A basic configuration file would look like:
+
    ```ini
    [host]
    url = {HOST_URL}
@@ -26,14 +27,17 @@ Note that for this to work, you need an Ubuntu Pro subscription. Read more about
    url = {CLIENT_URL}
    ping_url = {PING_URL}
    ```
+
    Replace the text in between {braces} with your configuration.
    Read more about the contents of this configuration file in [the reference](landscape-config).
 10. Your agent and WSL distros will register to Landscape within the next few minutes. You should see a notification pop up in your Landscape dashboard.
 
 ## Read more
-- [How to enable Ubuntu Pro for Windows](./pro-attach.md)
-- [Ubuntu Pro for Windows Landscape reference](../reference/landscape)
+
+- [How to enable Ubuntu Pro for WSL](./pro-attach.md)
+- [Ubuntu Pro for WSL Landscape reference](../reference/landscape)
 
 ## External links
+
 - [Landscape documentation](https://ubuntu.com/landscape/docs)
 - [Get Ubuntu Pro](https://ubuntu.com/pro)

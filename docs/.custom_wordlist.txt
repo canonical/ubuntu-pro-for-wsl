@@ -15,7 +15,7 @@ MSIX
 powershell
 systemd
 ubuntu
-UbuntuProForWindows
+UbuntuProForWSL
 wsl
 zsh
 

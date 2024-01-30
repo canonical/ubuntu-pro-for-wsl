@@ -1,6 +1,6 @@
 (dev)=
 
-# Ubuntu Pro for Windows - developer documentation
+# Ubuntu Pro for WSL - developer documentation
 
 Welcome
 
