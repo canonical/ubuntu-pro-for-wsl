@@ -1,15 +1,9 @@
-module github.com/canonical/ubuntu-pro-for-windows/windows-agent
+module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 
 go 1.21.5
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20230906090052-60fb5d60ada4
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20231123134240-fb722497277a
-	github.com/canonical/ubuntu-pro-for-windows/contractsapi v0.0.0-20230906090052-60fb5d60ada4
-	github.com/canonical/ubuntu-pro-for-windows/mocks v0.0.0-20230906090052-60fb5d60ada4
-	github.com/canonical/ubuntu-pro-for-windows/storeapi/go-wrapper/microsoftstore v0.0.0-20230906093332-11c8e171f61b
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20230906090052-60fb5d60ada4
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
@@ -39,7 +33,6 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
@@ -47,7 +40,8 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

@@ -1,11 +1,8 @@
-module github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service
+module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 
 go 1.21.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-windows/agentapi v0.0.0-20240129154553-ac5fd0e688d8
-	github.com/canonical/ubuntu-pro-for-windows/common v0.0.0-20240129154553-ac5fd0e688d8
-	github.com/canonical/ubuntu-pro-for-windows/wslserviceapi v0.0.0-20240129154553-ac5fd0e688d8
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -32,7 +29,6 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
@@ -40,9 +36,10 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
