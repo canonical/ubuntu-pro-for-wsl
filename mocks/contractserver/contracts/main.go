@@ -4,8 +4,8 @@ package main
 import (
 	"os"
 
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/restserver"
 )
 
 func serverFactory(settings restserver.Settings) restserver.Server {

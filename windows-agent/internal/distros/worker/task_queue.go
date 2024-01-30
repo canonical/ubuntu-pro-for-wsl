@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 )
 
 // taskQueue is a queue that allows pushing and pulling tasks from a FIFO queue,

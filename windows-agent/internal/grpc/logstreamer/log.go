@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/sirupsen/logrus"
 )
 

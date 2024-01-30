@@ -5,12 +5,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/consts"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
-	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
+	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,7 +47,7 @@ func New(o ...option) *App {
 	a.rootCmd = cobra.Command{
 		Use:   fmt.Sprintf("%s COMMAND", cmdName),
 		Short: i18n.G("WSL Pro Service"),
-		Long:  i18n.G("WSL Pro Service connects Ubuntu Pro for Windows agent to your distro."),
+		Long:  i18n.G("WSL Pro Service connects Ubuntu Pro for WSL agent to your distro."),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Force a visit of the local flags so persistent flags for all parents are merged.
 			cmd.LocalFlags()

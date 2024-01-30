@@ -7,8 +7,8 @@ import (
 	"os/user"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape/distroinstall"
+	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )

@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/controlstream"
-	log "github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/controlstream"
+	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/coreos/go-systemd/daemon"
 	"google.golang.org/grpc"
 )

@@ -1,4 +1,4 @@
-// Package restserver provides building blocks to implement a mocked version of out-of-process components Ubuntu Pro For Windows depend on that talk REST,
+// Package restserver provides building blocks to implement a mocked version of out-of-process components Ubuntu Pro for WSL depend on that talk REST,
 // such as MS Store API and the Contracts Server backend
 // DO NOT USE IN PRODUCTION
 package restserver

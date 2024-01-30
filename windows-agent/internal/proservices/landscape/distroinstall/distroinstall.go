@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )

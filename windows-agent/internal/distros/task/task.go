@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/canonical/ubuntu-pro-for-windows/wslserviceapi"
+	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 )
 
 // Task represents a given task that is ging to be executed by a distro.

@@ -3,8 +3,8 @@ package service
 import (
 	"fmt"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/spf13/cobra"
 )
 

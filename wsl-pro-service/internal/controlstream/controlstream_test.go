@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/controlstream"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/controlstream"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

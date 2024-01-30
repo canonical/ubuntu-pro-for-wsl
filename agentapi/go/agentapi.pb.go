@@ -110,7 +110,7 @@ type SubscriptionInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProductId string `protobuf:"bytes,1,opt,name=productId,proto3" json:"productId,omitempty"` // The ID of the Ubuntu Pro For Windows product on the Microsoft Store.
+	ProductId string `protobuf:"bytes,1,opt,name=productId,proto3" json:"productId,omitempty"` // The ID of the Ubuntu Pro for WSL product on the Microsoft Store.
 	// Types that are assignable to SubscriptionType:
 	//
 	//	*SubscriptionInfo_None

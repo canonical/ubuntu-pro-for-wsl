@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-windows/tools/generate/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-wsl/tools/generate/internal/generators"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"gopkg.in/yaml.v3"
@@ -236,7 +236,7 @@ func genManPages(cmds []cobra.Command, dir string) {
 		_, _ = cmd.ExecuteC()
 		opts := doc.GenManTreeOptions{
 			Header: &doc.GenManHeader{
-				Title: fmt.Sprintf("Ubuntu Pro for Windows: %s", cmd.Name()),
+				Title: fmt.Sprintf("Ubuntu Pro for WSL: %s", cmd.Name()),
 			},
 			Path: out,
 		}

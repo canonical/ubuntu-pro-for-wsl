@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"gopkg.in/ini.v1"
 )
 

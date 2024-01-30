@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/landscape/landscapemockservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )

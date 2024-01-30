@@ -7,16 +7,16 @@ import (
 	"os"
 	"path/filepath"
 
-	agent_api "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/interceptorschain"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/landscape"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/ui"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/wslinstance"
+	agent_api "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/interceptorschain"
+	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/ui"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/wslinstance"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
 )
@@ -94,7 +94,7 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 	// Ugly trick to prevent WSL error 0x80070005 due bad interaction with the Store API.
 	// See more in:
 	//[Jira](https://warthogs.atlassian.net/browse/UDENG-1810)
-	//[GitHub](https://github.com/canonical/ubuntu-pro-for-windows/pull/438)
+	//[GitHub](https://github.com/canonical/ubuntu-pro-for-wsl/pull/438)
 	InitWSLAPI()
 
 	conf := config.New(ctx, opts.cacheDir)

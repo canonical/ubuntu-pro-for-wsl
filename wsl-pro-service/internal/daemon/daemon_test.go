@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/daemon"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/wslinstanceservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

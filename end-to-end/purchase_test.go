@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/golden"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/contractserver/contractsmockserver"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/storeserver/storemockserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/storeserver/storemockserver"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	"gopkg.in/yaml.v3"

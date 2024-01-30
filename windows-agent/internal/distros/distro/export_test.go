@@ -3,7 +3,7 @@ package distro
 import (
 	"context"
 
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/worker"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/worker"
 )
 
 func WithTaskProcessingContext(ctx context.Context) Option {

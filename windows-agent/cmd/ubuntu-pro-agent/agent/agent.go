@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common/i18n"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/consts"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/daemon"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/proservices/registrywatcher"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
+	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,8 +54,8 @@ func New(o ...option) *App {
 	a := App{ready: make(chan struct{})}
 	a.rootCmd = cobra.Command{
 		Use:   fmt.Sprintf("%s COMMAND", cmdName()),
-		Short: i18n.G("Ubuntu Pro for Windows agent"),
-		Long:  i18n.G("Ubuntu Pro for Windows agent for managing your pro-enabled distro."),
+		Short: i18n.G("Ubuntu Pro for WSL agent"),
+		Long:  i18n.G("Ubuntu Pro for WSL agent for managing your pro-enabled distro."),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Force a visit of the local flags so persistent flags for all parents are merged.
 			cmd.LocalFlags()

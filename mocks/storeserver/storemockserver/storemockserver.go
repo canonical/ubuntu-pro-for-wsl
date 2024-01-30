@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/restserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/restserver"
 	"golang.org/x/exp/slices"
 )
 

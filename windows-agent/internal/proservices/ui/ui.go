@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 
-	agentapi "github.com/canonical/ubuntu-pro-for-windows/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
+	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 )
 
 // Config is a provider for the subcription configuration.

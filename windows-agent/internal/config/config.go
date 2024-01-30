@@ -11,12 +11,12 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/contracts"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/distros/task"
-	log "github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/internal/tasks"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
+	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	"github.com/ubuntu/decorate"
 )
 

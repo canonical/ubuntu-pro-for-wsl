@@ -3,7 +3,7 @@
 package doc
 
 import (
-	"github.com/canonical/ubuntu-pro-for-windows/windows-agent/cmd/ubuntu-pro-agent/agent"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
 	"github.com/spf13/cobra"
 )
 

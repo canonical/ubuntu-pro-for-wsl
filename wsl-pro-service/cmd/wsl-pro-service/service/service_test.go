@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/cmd/wsl-pro-service/service"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/system"
-	"github.com/canonical/ubuntu-pro-for-windows/wsl-pro-service/internal/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/cmd/wsl-pro-service/service"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )

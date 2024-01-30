@@ -12,8 +12,8 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-windows/common"
-	"github.com/canonical/ubuntu-pro-for-windows/mocks/landscape/landscapemockservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
 )
 
 type command struct {
