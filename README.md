@@ -1,17 +1,11 @@
-# Welcome to Ubuntu Pro For Windows
+# Welcome to Ubuntu Pro for WSL
 
-[actions-image]: https://github.com/canonical/ubuntu-pro-for-windows/actions/workflows/qa.yaml/badge.svg?branch=main
-[actions-url]: https://github.com/canonical/ubuntu-pro-for-windows/actions?query=branch%3Amain+event%3Apush
+[actions-image]: https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa.yaml/badge.svg?branch=main
+[actions-url]: https://github.com/canonical/ubuntu-pro-for-wsl/actions?query=branch%3Amain+event%3Apush
 
 [license-image]: https://img.shields.io/badge/License-GPL3.0-blue.svg
 
-[![Documentation Status](https://readthedocs.com/projects/canonical-ubuntu-pro-for-windows/badge/?version=latest&token=6ab00afc8f04ec33510f3150a8abbae383dfdfc57c1396c899c8f59d46bb0d76)](https://canonical-ubuntu-pro-for-windows.readthedocs-hosted.com/en/latest/?badge=latest)
-
-[codecov-image]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/canonical/ubuntu-pro-for-windows
-
-[goreport-image]: https://goreportcard.com/badge/github.com/canonical/ubuntu-pro-for-windows
-[goreport-url]: https://goreportcard.com/report/github.com/canonical/ubuntu-pro-for-windows
+[![Documentation Status](https://readthedocs.com/projects/canonical-ubuntu-pro-for-wsl/badge/?version=latest&token=6ab00afc8f04ec33510f3150a8abbae383dfdfc57c1396c899c8f59d46bb0d76)](https://canonical-ubuntu-pro-for-wsl.readthedocs-hosted.com/en/latest/?badge=latest)
 
 [![Code quality][actions-image]][actions-url]
 [![License][license-image]](LICENSE)
@@ -23,7 +17,7 @@ Disabled while the repo is private
 [![Go Report Card][goreport-image]][goreport-url]
  -->
 
-This is the code repository for Ubuntu Pro for Windows, the bridge from Ubuntu WSL instances to Ubuntu Pro.
+This is the code repository for Ubuntu Pro for WSL, the bridge from Ubuntu WSL instances to Ubuntu Pro.
 
 It contains the set of applications to manage Ubuntu WSL instances that allows you to:
 
@@ -33,7 +27,7 @@ It contains the set of applications to manage Ubuntu WSL instances that allows y
 
 ### Documentation
 
-You can read all about Ubuntu Pro for Windows on [Read the docs](https://canonical-ubuntu-pro-for-windows.readthedocs-hosted.com).
+You can read all about Ubuntu Pro for WSL on [Read the docs](https://canonical-ubuntu-pro-for-wsl.readthedocs-hosted.com).
 
 ### System Components
 
@@ -50,8 +44,8 @@ The system consists of the following components:
 
 This is an [open source](LICENSE) project and we warmly welcome community contributions, suggestions, and constructive feedback. If you're interested in contributing, please take a look at our [Contribution guidelines](CONTRIBUTING.md) first.
 
-- to report an issue, please file a bug report against our repository, using a bug template.
-- for suggestions and constructive feedback, report a feature request bug report, using the proposed template.
+* to report an issue, please file a bug report against our repository, using a bug template.
+* for suggestions and constructive feedback, report a feature request bug report, using the proposed template.
 
 ## Get in touch
 

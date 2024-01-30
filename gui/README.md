@@ -1,6 +1,6 @@
-# Ubuntu Pro For Windows - User Interface
+# Ubuntu Pro for WSL - User Interface
 
-This is the territory of the GUI part of "Pro for Windows".
+This is the territory of the GUI part of "Pro for WSL".
 
 It is a Flutter monorepo split into separate packages:
 
