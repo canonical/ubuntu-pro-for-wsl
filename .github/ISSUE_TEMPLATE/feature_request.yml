@@ -1,7 +1,7 @@
 name: Request a feature
 description: Suggest new functionality or improvements for this project
-title: 'Feature: '
-labels: 'feature'
+title: "Feature: "
+labels: "feature"
 body:
   - type: markdown
     attributes:
@@ -17,7 +17,7 @@ body:
         On Ubuntu machines, you can use `ubuntu-bug ubuntu-wsl-service` to collect relevant information.
 
 
-        Thanks for taking the time to report an issue and helping to improve Ubuntu Pro for Windows! Please fill out the form below as
+        Thanks for taking the time to report an issue and helping to improve Ubuntu Pro for WSL! Please fill out the form below as
         best as you can so that we can help you.
 
         Your additional work here is greatly appreciated and will help us respond as quickly as possible. For general

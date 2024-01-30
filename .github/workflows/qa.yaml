@@ -44,7 +44,7 @@ jobs:
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
@@ -100,7 +100,7 @@ jobs:
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Ensure dependencies on Ubuntu
@@ -147,7 +147,7 @@ jobs:
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Ensure dependencies on Ubuntu
@@ -175,7 +175,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Set up git
-        uses: canonical/ubuntu-pro-for-windows/.github/actions/setup-git@main
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
