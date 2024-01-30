@@ -32,4 +32,8 @@ LTS
 SLA
 SRU
 toolchain
-
+autoload
+compinit
+config
+fpath
+zshrc
