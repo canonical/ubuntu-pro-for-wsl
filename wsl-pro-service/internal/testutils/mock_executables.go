@@ -47,7 +47,7 @@ var (
 	linuxUserProfileDir   = "/mnt/d/Users/TestUser/"
 
 	// defaultAddrFile is the default path used in tests to store the address of the Windows Agent service.
-	defaultAddrFile = filepath.Join(linuxUserProfileDir, common.ListeningPortFileName)
+	defaultAddrFile = filepath.Join(linuxUserProfileDir, common.UserProfileDir, common.ListeningPortFileName)
 
 	//go:embed filesystem_defaults/os-release
 	defaultOsReleaseContents []byte
