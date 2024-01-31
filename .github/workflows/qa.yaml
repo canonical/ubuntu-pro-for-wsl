@@ -224,6 +224,7 @@ jobs:
         working-directory: ${{ matrix.subproject }}
         run: |
           go test -shuffle=on -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
+          grep -hv -e "testutils" -e "pb.go:" /tmp/coverage.out > /tmp/coverage.out.codecov
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
@@ -234,4 +235,4 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: /tmp/coverage.out
+          files: /tmp/coverage.out.codecov
