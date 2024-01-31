@@ -8,7 +8,7 @@ It allows you to add your Ubuntu Pro subscription to your Windows host. Once add
 
 When you have a large Ubuntu WSL fleet, Pro-attaching each Ubuntu WSL instance manually can be a pain, but with Ubuntu Pro for WSL it’s a breeze – regardless of the size of your fleet.
 
-Ubuntu Pro for Windows is of value to system administrators, corporate security teams and desktop users.
+Ubuntu Pro for WSL is of value to system administrators, corporate security teams and desktop users.
 
 ## Project and community
 
