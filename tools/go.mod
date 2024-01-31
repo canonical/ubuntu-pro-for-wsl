@@ -5,8 +5,8 @@ go 1.21.0
 toolchain go1.21.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240131151255-f872a5c016b8
-	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240131151255-f872a5c016b8
+	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240131155254-d69397537350
+	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240131155254-d69397537350
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
@@ -49,6 +49,11 @@ require (
 	github.com/butuzov/ireturn v0.2.2 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240131151255-f872a5c016b8 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131151255-f872a5c016b8 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240131151255-f872a5c016b8 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240131151255-f872a5c016b8 // indirect
 	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -158,6 +163,7 @@ require (
 	github.com/sivchari/containedctx v1.0.3 // indirect
 	github.com/sivchari/nosnakecase v1.7.0 // indirect
 	github.com/sivchari/tenv v1.7.1 // indirect
+	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 // indirect
 	github.com/sonatard/noctx v0.0.2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/sourcegraph/go-diff v0.7.0 // indirect

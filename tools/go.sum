@@ -36,6 +36,7 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
+github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
 github.com/4meepo/tagalign v1.3.3 h1:ZsOxcwGD/jP4U/aw7qeWu58i7dwYemfy5Y+IF1ACoNw=
 github.com/4meepo/tagalign v1.3.3/go.mod h1:Q9c1rYMZJc9dPRkbQPpcBNCLEmY2njbAsXhQOZFE2dE=
 github.com/Abirdcfly/dupword v0.0.13 h1:SMS17YXypwP000fA7Lr+kfyBQyW14tTT+nRv9ASwUUo=
@@ -100,10 +101,23 @@ github.com/butuzov/ireturn v0.2.2/go.mod h1:RfGHUvvAuFFxoHKf4Z8Yxuh6OjlCw1KvR2zM
 github.com/butuzov/mirror v1.1.0 h1:ZqX54gBVMXu78QLoiqdwpl2mgmoOJTk7s4p4o+0avZI=
 github.com/butuzov/mirror v1.1.0/go.mod h1:8Q0BdQU6rC6WILDiBM60DBfvV78OLJmMmixe7GF45AE=
 github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d h1:PTSPzsRV4/nnpZv4PhqxBHUezvSm49IHNM0qkWQGn/s=
-github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240130133411-7b71be652179 h1:VypeoNQ+EJJ1KJFjMIYUN6r2TrNKpndiU/QHwf6uf+8=
-github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240130133411-7b71be652179/go.mod h1:j0+ppvebAGhu52nvl61d4hGTOPsuH9YEphLFj+SIFKY=
-github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240130133411-7b71be652179 h1:gVvZYWKfFjfqxFB+9R9OLdZzj578sQ01z5pbp2PuBBA=
-github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240130133411-7b71be652179/go.mod h1:F5maaEYRpA8RcFuhwd1TxVQH3GpJ+7OXC+kSrKypyzY=
+github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240131151255-f872a5c016b8 h1:1Ir4ukrItEe//kc4wZjvNg/I821y4Ar/0OYpAntr2f0=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240131151255-f872a5c016b8/go.mod h1:ClPG5bBGtW4rfh4AAvqGILeCdwYLHPcbxmh44KLKo9c=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8 h1:qmUbKmeCi3wyzLsu8d+74EsrXnmW1hJflO/JcApqRHI=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8/go.mod h1:IaCk16F1RcAoIsgFv0+4h9/1uXZ/PjDrKTk8UKBQiTY=
+github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131151255-f872a5c016b8 h1:1c2ULUP1TpnfOJcBPCP5m+hQqouok78S0Z5gjP1DjU8=
+github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131151255-f872a5c016b8/go.mod h1:3efujuUQL3QIz8JA5gDsGBQBwADlUuK8yoirn6nosgQ=
+github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240131151255-f872a5c016b8 h1:wQKMTRU4fHOUbHfpalsIAwYqnclGe3/mcdHb1yHvkIA=
+github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240131151255-f872a5c016b8/go.mod h1:s3ef7sUOkeRJ8gXFYKSByjsbwQZGLGmQBOVsIskFeMs=
+github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240131151255-f872a5c016b8 h1:4F3cXCucT3Mns+N3dT7MNDQ5tRRYcabmv6VviWELoZI=
+github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240131151255-f872a5c016b8/go.mod h1:DtWmTUvgF3HBP2DVNhRshNNDvjaNFabCVpU5j9VwiJI=
+github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240131155254-d69397537350 h1:+hkn5Hua3s7HJUCUnMFik6ypilOgOIPMe5KQbl5ZegI=
+github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240131155254-d69397537350/go.mod h1:7XdUDgCvxpxqWZ/DhglyKkntbOb9kL7usIlbfI/4Uek=
+github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240131155254-d69397537350 h1:lDbks+zHHlxt6c4XuMCvPmJPQPZQqD9yaXcLKdwm+Rc=
+github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240131155254-d69397537350/go.mod h1:g9dojHh9W4ye/45Wtx4wvWOAN5yGSzS60FURH6W+V00=
+github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240131151255-f872a5c016b8 h1:QrRVJRF3sNwPOjE8u7xxgrKqyu0Wos7nNPe6Lvc80bA=
+github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240131151255-f872a5c016b8/go.mod h1:wWEX43zvkkyjeR+7pkxwI+27+wWtN5vuvW4AqYvHTn4=
 github.com/catenacyber/perfsprint v0.2.0 h1:azOocHLscPjqXVJ7Mf14Zjlkn4uNua0+Hcg1wTR6vUo=
 github.com/catenacyber/perfsprint v0.2.0/go.mod h1:/wclWYompEyjUD2FuIIDVKNkqz7IgBIWXIH3V0Zol50=
 github.com/ccojocar/zxcvbn-go v1.0.1 h1:+sxrANSCj6CdadkcMnvde/GWU1vZiiXRbqYSCalV4/4=
@@ -123,6 +137,7 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMn
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
+github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/cpuguy83/go-md2man/v2 v2.0.3 h1:qMCsGGgs+MAzDFyp9LpAe1Lqy/fY/qCovCm0qnXZOBM=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/curioswitch/go-reassign v0.2.0 h1:G9UZyOcpk/d7Gd6mqYgd8XYWFMw/znxwGDUstnC9DIo=
@@ -150,6 +165,7 @@ github.com/fatih/structtag v1.2.0/go.mod h1:mBJUNpUnHmRKrKlQQlmCrh5PuhftFbNv8Ys4
 github.com/firefart/nonamedreturns v1.0.4 h1:abzI1p7mAEPYuR4A+VLKn4eNDOycjYo2phmY9sfv40Y=
 github.com/firefart/nonamedreturns v1.0.4/go.mod h1:TDhe/tjI1BXo48CmYbUduTV7BdIga8MAO/xbKdcVsGI=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
+github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
 github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
 github.com/fzipp/gocyclo v0.6.0 h1:lsblElZG7d3ALtGMx9fmxeTKZaLLpU8mET09yN4BBLo=
@@ -279,6 +295,7 @@ github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38/go.mod h1:kpwsk12EmLe
 github.com/google/renameio v0.1.0 h1:GOZbcHa3HfsPKPlmyPyN2KEohoMXOhdMbHrvbpl2QaA=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/gordonklaus/ineffassign v0.0.0-20230610083614-0e73809eb601 h1:mrEEilTAUmaAORhssPPkxj84TsHrPMLBGW2Z4SoTxm8=
@@ -496,6 +513,8 @@ github.com/sivchari/nosnakecase v1.7.0 h1:7QkpWIRMe8x25gckkFd2A5Pi6Ymo0qgr4JrhGt
 github.com/sivchari/nosnakecase v1.7.0/go.mod h1:CwDzrzPea40/GB6uynrNLiorAlgFRvRbFSgJx2Gs+QY=
 github.com/sivchari/tenv v1.7.1 h1:PSpuD4bu6fSmtWMxSGWcvqUUgIn7k3yOJhOIzVWn8Ak=
 github.com/sivchari/tenv v1.7.1/go.mod h1:64yStXKSOxDfX47NlhVwND4dHwfZDdbp2Lyl018Icvg=
+github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2 h1:nETXPg0CiJrMAwC2gqkcam9BiBWYGvTsSYRfrjOz2Kg=
+github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2/go.mod h1:D3SsWAXK7wCCBZu+Vk5hc1EuKj/L3XN1puEMXTU4LrQ=
 github.com/sonatard/noctx v0.0.2 h1:L7Dz4De2zDQhW8S0t+KUjY0MAQJd6SgVwhzNIc4ok00=
 github.com/sonatard/noctx v0.0.2/go.mod h1:kzFz+CzWSjQ2OzIm46uJZoXuBpa2+0y3T36U18dWqIo=
 github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9ySo=
@@ -551,7 +570,9 @@ github.com/tomarrell/wrapcheck/v2 v2.8.1/go.mod h1:/n2Q3NZ4XFT50ho6Hbxg+RV1uyo2U
 github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+yU8u1Zw=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
+github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
 github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394 h1:DS9wb53gTUxFCPYnhAqOhfdRLsHTL9NpzT+F/D8NwIg=
+github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394/go.mod h1:gu6CgOaqMFFz1h96UocQwXvRvF6CePIqQnI58DzIg2Q=
 github.com/ultraware/funlen v0.1.0 h1:BuqclbkY6pO+cvxoq7OsktIXZpgBSkYTQtmwhAK81vI=
 github.com/ultraware/funlen v0.1.0/go.mod h1:XJqmOQja6DpxarLj6Jj1U7JuoS8PvL4nEqDaQhy22p4=
 github.com/ultraware/whitespace v0.0.5 h1:hh+/cpIcopyMYbZNVov9iSxvJU3OYQg78Sfaqzi/CzI=
@@ -906,6 +927,7 @@ google.golang.org/genproto v0.0.0-20200729003335-053ba62fc06f/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20200804131852-c06518451d9c/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20200825200019-8632dd797987/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f h1:ultW7fxlIvee4HYrtnaRPon9HpEgFk5zYpmfMgtKB5I=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f/go.mod h1:L9KNLi232K1/xB6f7AlSX692koaRnKaWSR0stBki0Yc=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=
@@ -919,6 +941,7 @@ google.golang.org/grpc v1.29.1/go.mod h1:itym6AZVZYACWQqET3MqgPpjcuV5QH3BxFS3Iji
 google.golang.org/grpc v1.30.0/go.mod h1:N36X2cJ7JwdamYAgDz+s+rVMFjt3numwzf/HckM8pak=
 google.golang.org/grpc v1.31.0/go.mod h1:N36X2cJ7JwdamYAgDz+s+rVMFjt3numwzf/HckM8pak=
 google.golang.org/grpc v1.61.0 h1:TOvOcuXn30kRao+gfcvsebNEa5iZIiLkisYEkf7R7o0=
+google.golang.org/grpc v1.61.0/go.mod h1:VUbo7IFqmF1QtCAstipjG0GIoq49KvMe9+h1jFLBNJs=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0 h1:rNBFJjBCOgVr9pWD7rs/knKL4FRTKgpZmsRfV214zcA=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0/go.mod h1:Dk1tviKTvMCz5tvh7t+fh94dhmQVHuCt2OzJB3CTW9Y=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
