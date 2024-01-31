@@ -171,7 +171,7 @@ void main() {
   });
 
   testWidgets('token error enum l10n', (tester) async {
-    final theApp = buildApp(isExpanded: true, onApply: (_){});
+    final theApp = buildApp(isExpanded: true, onApply: (_) {});
     await tester.pumpWidget(theApp);
     final context = tester.element(find.byType(ProTokenInputField));
     final lang = AppLocalizations.of(context);

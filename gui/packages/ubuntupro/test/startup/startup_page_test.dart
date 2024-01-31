@@ -62,7 +62,6 @@ void main() {
       // localize will throw if new values were added to the enum but not to the method.
       expect(() => value.localize(lang), returnsNormally);
     }
-
   });
 
   testWidgets('navigates when model is ok', (tester) async {
