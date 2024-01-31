@@ -9,7 +9,7 @@ Ubuntu Pro and enrolling them into Landscape.
 Ubuntu Pro for WSL is made of:
 
 - a [background agent](windows_agent) providing the automation services and
-- a [graphical user interface](ubuntu_pro_for_windows_gui) for end users to configure Landscape and acquire or set their Ubuntu Pro Token
+- a [graphical user interface](ubuntu_pro_for_wsl_gui) for end users to configure Landscape and acquire or set their Ubuntu Pro Token
 
 Additionally, only instances having the wsl-pro-service component installed are
 capable of interacting with this application.

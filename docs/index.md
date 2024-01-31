@@ -1,12 +1,14 @@
 # Ubuntu Pro for WSL
 
-Ubuntu Pro for WSL is a desktop application that provides compliance services for WSL instances.
+![System Landscape](./assets/up4w-systemlandscape.png)
 
-It manages Ubuntu WSL instances, by pro-attaching them and establishing a connection with Landscape.
+Ubuntu Pro for WSL (UP4W) is a desktop application that facilitates access to Ubuntu Pro for Ubuntu WSL instances.
 
-In a large organisation many repetitive steps are required to ensure compliance; Ubuntu Pro for WSL automates this work across an enterprise landscape.
+It allows you to add your Ubuntu Pro subscription to your Windows host. Once added, all Ubuntu WSL instances on that host are automatically attached and covered under your subscription too.
 
-Ubuntu Pro for WSL is of value to corporate security teams, system administrators and desktop users, all of whom would otherwise need to manage instances individually and manually.
+When you have a large Ubuntu WSL fleet, Pro-attaching each Ubuntu WSL instance manually can be a pain, but with Ubuntu Pro for WSL it’s a breeze – regardless of the size of your fleet.
+
+Ubuntu Pro for WSL is of value to system administrators, corporate security teams and desktop users.
 
 ## Project and community
 
