@@ -1,5 +1,5 @@
 name: Flutter Quality Checks
-description: Setup Flutter and run the quality checks.
+description: Setup Flutter and run the quality checks. Ouputs test coverage information.
 
 inputs:
   flutter-version:
@@ -11,6 +11,11 @@ inputs:
   run-build-runner:
     default: 'false'
     description: "Whether we must run build-runner for this package."    
+
+outputs:
+  coverage-info:
+    description: Test coverage information.
+    value: ${{ steps.flutter-test-cov.outputs.flutter-test-cov }}
 
 runs:
   using: "composite"
@@ -37,9 +42,20 @@ runs:
     - name: Analyze
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
-      run: flutter analyze 
+      run: flutter analyze
     - name: Test
+      id: flutter-test-cov
       shell: bash
-      working-directory: '${{ inputs.package-dir }}'
-      run: flutter test 
-
+      working-directory: "${{ inputs.package-dir }}"
+      run: |
+        flutter test --coverage
+        # Remove entries for generated code, if any.
+        if [ -n "$(which lcov 2>/dev/null)" ]; then
+          lcov --remove coverage/lcov.info "**/*.g.dart" "**/*.freezed.dart" "**/*.pb*.dart" "**/*.mocks.dart" "**/l10n/*.dart" -o coverage/lcov.info --ignore-errors unused,unused
+        fi
+        {
+          echo "flutter-test-cov<<EOF"
+          cat coverage/lcov.info
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+        rm -rf coverage/
