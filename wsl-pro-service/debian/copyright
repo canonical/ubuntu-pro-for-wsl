@@ -5,6 +5,172 @@ Source: https://github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 Files: *
 Copyright: 2024 Canonical Ltd.
 License: GPL-3
+
+Files: vendor/github.com/core-os/go-systemd/*
+Copyright: 2015 CoreOS, Inc
+License: Apache-2.0
+
+Files: vendor/github.com/davecgh/go-spew/*
+Copyright: 2012-2016 Dave Collins
+License: ISC
+
+Files: vendor/github.com/davecgh/go-spew/*
+Copyright: 2012 The Go Authors
+           fsnotify Authors
+License: BSD-3
+
+Files: vendor/github.com/golang/*
+Copyright: 2010 The Go Authors
+License: BSD-3
+
+Files: vendor/github.com/hashicorp/*
+Copyright: HashiCorp
+License: MPL-2.0
+
+Files: vendor/github.com/inconshreveable/*
+Copyright: 2022 Alan Shreve (@inconshreveable)
+License: Apache-2.0
+
+Files: vendor/github.com/magiconair/*
+Copyright: 2013-2020, Frank Schroeder
+License: BSD-2
+
+Files: vendor/github.com/mitchellh/*
+Copyright: 2013 Mitchell Hashimoto
+License: MIT
+
+Files: vendor/github.com/pelletier/*
+Copyright: 2021 - 2023 Thomas Pelletier
+License: MIT
+
+Files: vendor/github.com/pmezard/*
+Copyright: 2013, Patrick Mezard
+License: BSD-3
+
+Files: vendor/github.com/sagikazarmark/locafero/*
+Copyright: 2023 Márk Sági-Kazár
+License: MIT 
+
+Files: vendor/github.com/sagikazarmark/slog-shim/*
+Copyright: 2009 The Go Authors
+License: BSD-3
+
+Files: vendor/github.com/sirupsen/*
+Copyright: 2014 Simon Eskildsen
+License: MIT
+
+Files: vendor/github.com/snapcore/*
+Copyright: 2016, Jonas Obrist
+License: BSD-3
+
+Files: vendor/github.com/sourcegraph/*
+Copyright: 2023 Sourcegraph
+License: MIT
+
+Files: vendor/github.com/spf13/afero/*
+Copyright: 2016 Steve Francia <spf@spf13.com>
+License: Apache-2.0
+
+Files: vendor/github.com/spf13/cast/*
+       vendor/github.com/spf13/viper/*
+Copyright: 2014 Steve Francia
+License: MIT
+
+Files: vendor/github.com/spf13/cobra/*
+Copyright: 2013-2023 The Cobra Authors
+License: Apache-2.0
+
+Files: vendor/github.com/spf13/pflag/*
+Copyright: 2012 Alex Ogier
+           2012 The Go Authors
+License: BSD-3
+
+Files: vendor/github.com/stretchr/*
+Copyright: 2012-2020 Mat Ryer, Tyler Bunnell and contributors
+License: MIT
+
+Files: vendor/github.com/subosito/*
+Copyright: 2013 Alif Rachmawadi
+License: MIT
+
+Files: vendor/github.com/ubuntu/decorate/*
+Copyright: 2022-2023 Canonical Ltd.
+License: MIT
+
+Files: vendor/go.uber.org/atomic/*
+Copyright: 2016 Uber Technologies, Inc
+License: MIT
+
+Files: vendor/go.uber.org/multierr/*
+Copyright: 2017-2021 Uber Technologies, Inc
+License: MIT
+
+Files: vendor/golang.org/x/*
+Copyright: 2009 The Go Authors
+License: BSD-3
+
+Files: vendor/google.golang.org/genproto/*
+       vendor/google.golang.org/grpc/*
+Copyright: 2022 Google LLC
+License: Apache-2.0
+
+Files: vendor/google.golang.org/protobuf/*
+Copyright: 2016 gRPC authors
+License: BSD-3
+
+Files: vendor/gopkg.in/ini.v1/*
+Copyright: 2016 Unknwon
+License: Apache-2.0
+
+Files: vendor/gopkg.in/yaml.v2/*
+Copyright: 2011-2019 Canonical Ltd
+License: Apache-2.0
+
+Files: vendor/gopkg.in/yaml.v2/apic.go
+       vendor/gopkg.in/yaml.v2/emitterc.go
+       vendor/gopkg.in/yaml.v2/parserc.go
+       vendor/gopkg.in/yaml.v2/readerc.go
+       vendor/gopkg.in/yaml.v2/scannerc.go
+       vendor/gopkg.in/yaml.v2/writerc.go
+       vendor/gopkg.in/yaml.v2/yamlh.go
+       vendor/gopkg.in/yaml.v2/yamlprivateh.go
+Copyright: 2006-2010 Kirill Simonov
+           2006-2011 Kirill Simonov
+License: MIT
+
+License: Apache-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+License: BSD-2
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+License: BSD-3
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+     copyright notice, this list of conditions and the following disclaimer
+     in the documentation and/or other materials provided with the
+     distribution.
+   * Neither the name of Google Inc., Jonas Obrist nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+License: GPL-3
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 3 of the License.
@@ -19,3 +185,43 @@ License: GPL-3
  .
  On Debian systems, the complete text of the GNU General
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
+
+License: ISC
+ Permission to use, copy, modify, and/or distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+
+License: MPL-2.0
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ Comment:
+  On Debian systems, the complete text of the Mozilla Public License can
+  be found in "/usr/share/common-licenses/MPL-2.0".
