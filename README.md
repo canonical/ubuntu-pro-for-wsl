@@ -8,15 +8,12 @@
 [![Documentation Status](https://readthedocs.com/projects/canonical-ubuntu-pro-for-wsl/badge/?version=latest&token=6ab00afc8f04ec33510f3150a8abbae383dfdfc57c1396c899c8f59d46bb0d76)](https://canonical-ubuntu-pro-for-wsl.readthedocs-hosted.com/en/latest/?badge=latest)
 
 [![Code quality][actions-image]][actions-url]
+[![Code coverage](https://codecov.io/gh/canonical/ubuntu-pro-for-wsl/branch/main/graph/badge.svg)](https://codecov.io/gh/canonical/ubuntu-pro-for-wsl)
 [![License][license-image]](LICENSE)
 
 <!--
-Disabled while the repo is private
-
-[![Code coverage][codecov-image]][codecov-url]
-[![Go Report Card][goreport-image]][goreport-url]
- -->
-
+[![Go Report Card](https://goreportcard.com/badge/canonical/ubuntu-pro-for-wsl/wsl-pro-service)](https://goreportcard.com/report/canonical/ubuntu-pro-for-wsl/wsl-pro-service)
+-->
 This is the code repository for Ubuntu Pro for WSL, the bridge from Ubuntu WSL instances to Ubuntu Pro.
 
 It contains the set of applications to manage Ubuntu WSL instances that allows you to:
