@@ -6,8 +6,8 @@ toolchain go1.21.5
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240130133411-7b71be652179
-	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240130133411-7b71be652179
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131154921-6a764837eef6
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131154921-6a764837eef6
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	google.golang.org/grpc v1.61.0
