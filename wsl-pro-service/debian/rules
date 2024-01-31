@@ -6,6 +6,10 @@ export GOCACHE=$(shell mktemp -d /tmp/gocache-XXXX)
 # We want to copy special files from our monorepo like "common/version".
 export DH_GOLANG_INSTALL_ALL=1
 
+# We want to take whatever ubuntu propose to us (as it won’t download a newer version),
+# as long as it matches the go.mod go stenza which is the language requirement.
+export GOTOOLCHAIN := local
+
 %:
 	dh $@ --builddirectory=_build --with=apport
 
