@@ -234,4 +234,4 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          file: /tmp/coverage.out
+          files: /tmp/coverage.out
