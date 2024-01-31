@@ -1,5 +1,5 @@
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240130133411-7b71be652179 h1:nFFvVZOjVVf0oAJop8iOXBL1UCM71vogSINOb/5ksjw=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240130133411-7b71be652179/go.mod h1:hxDcbFX2v23S16q/FclwhIT3tugHldCD6sgGBxSVv1E=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8 h1:qmUbKmeCi3wyzLsu8d+74EsrXnmW1hJflO/JcApqRHI=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8/go.mod h1:IaCk16F1RcAoIsgFv0+4h9/1uXZ/PjDrKTk8UKBQiTY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

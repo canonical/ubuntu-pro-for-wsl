@@ -5,7 +5,7 @@ go 1.21.0
 toolchain go1.21.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240130133411-7b71be652179
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c
 	golang.org/x/sys v0.16.0
