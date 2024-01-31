@@ -257,13 +257,14 @@ void main() {
   });
 }
 
-/// Writes a sample `.ubuntupro` file to the destination containing either a proper
+/// Writes a sample address file to the destination containing either a proper
 /// contents as if the agent would have written it or [line], if supplied.
-void writeDummyAddrFile(Directory appDir, {String? line}) {
-  final filePath = p.join(appDir.path, '.ubuntupro');
+void writeDummyAddrFile(Directory homeDir, {String? line}) {
+  final filePath = p.join(homeDir.path, kAddrFileName);
   const port = 56789;
   const goodLine = '[::]:$port';
   final addr = File(filePath);
+  addr.parent.createSync(recursive: true);
   addr.writeAsStringSync(line ?? goodLine);
   addTearDown(addr.deleteSync);
 }

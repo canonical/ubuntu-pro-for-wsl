@@ -11,7 +11,7 @@ void main() {
   final _ = Environment(overrides: {'LOCALAPPDATA': null, 'USERPROFILE': null});
 
   test('complete failure due environment', () {
-    final dir = agentAddrFilePath('.ubuntupro');
+    final dir = agentAddrFilePath('.ubuntupro/.address');
 
     expect(dir, isNull);
   });

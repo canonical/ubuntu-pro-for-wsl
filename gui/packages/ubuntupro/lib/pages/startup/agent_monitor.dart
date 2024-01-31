@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import '../../core/agent_api_client.dart';
 import '../../core/agent_api_paths.dart';
@@ -127,10 +128,11 @@ class AgentStartupMonitor {
         return AgentState.unknownEnv;
       case AgentAddrFileError.nonexistent:
         // The directory must exist so we can watch for changes. This won't fail if the directory already exists.
-        final agentDir = await File(_addrFilePath!).parent.create();
-        final watch = agentDir
-            .watch(events: FileSystemEvent.create)
-            .firstWhere((event) => event.path.contains(_addrFilePath!));
+        final agentDir =
+            await File(_addrFilePath!).parent.create(recursive: true);
+        final watch = agentDir.watch(events: FileSystemEvent.create).firstWhere(
+              (event) => p.normalize(event.path) == p.normalize(_addrFilePath!),
+            );
         if (!await agentLauncher()) {
           // Terminal state, cannot recover nor retry.
           return AgentState.cannotStart;
@@ -155,9 +157,9 @@ class AgentStartupMonitor {
     return AgentState.pingNonResponsive;
   }
 
-  /// Assumes the agent crashed, i.e. the `.ubuntupro` file exists but the agent
+  /// Assumes the agent crashed, i.e. the address file exists but the agent
   /// cannot respond to PING requets.
-  /// Thus, we delete the existing `.ubuntupro` file and retry launching the agent.
+  /// Thus, we delete the existing address file and retry launching the agent.
   Future<void> reset() async {
     if (_addrFilePath != null) {
       try {

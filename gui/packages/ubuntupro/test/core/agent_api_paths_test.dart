@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
 
 void main() {
-  tearDownAll(() => File('./.ubuntupro').deleteSync());
+  tearDownAll(() => File('./.address').deleteSync());
 
   test('read port from line', () {
     const port = 56768;
@@ -28,7 +28,7 @@ void main() {
   });
 
   test('read port from addr file', () async {
-    const filePath = './.ubuntupro';
+    const filePath = './.address';
     const port = 56768;
     const line = '[::]:$port';
     final addr = File(filePath);
@@ -50,7 +50,7 @@ void main() {
   });
 
   test('empty file', () async {
-    const filePath = './.ubuntupro';
+    const filePath = './.address';
     final addr = File(filePath);
     addr.writeAsStringSync('');
 
@@ -61,7 +61,7 @@ void main() {
   });
 
   test('access denied', () async {
-    const filePath = './.ubuntupro';
+    const filePath = './.address';
     final addr = File(filePath);
     addr.writeAsStringSync('');
 
@@ -77,7 +77,7 @@ void main() {
   });
 
   test('bad format', () async {
-    const filePath = './.ubuntupro';
+    const filePath = './.address';
     const port = 56768;
     const line = 'Hello World $port';
     final addr = File(filePath);
