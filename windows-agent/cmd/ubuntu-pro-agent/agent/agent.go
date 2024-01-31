@@ -133,13 +133,13 @@ func (a *App) serve(args ...option) error {
 }
 
 func setupDirectories(ctx context.Context, opt *options) (public, private string, err error) {
-	public, err = vauleOrAfterEnv(opt.publicDir, "UserProfile", common.LocalAppDataDir)
+	public, err = valueOrAfterEnv(opt.publicDir, "UserProfile", common.LocalAppDataDir)
 	if err != nil {
 		return "", "", err
 	}
 	log.Debugf(ctx, "Agent public directory: %s", public)
 
-	private, err = vauleOrAfterEnv(opt.privateDir, "LocalAppData", common.UserProfileDir)
+	private, err = valueOrAfterEnv(opt.privateDir, "LocalAppData", common.UserProfileDir)
 	if err != nil {
 		return "", "", err
 	}
@@ -156,9 +156,9 @@ func setupDirectories(ctx context.Context, opt *options) (public, private string
 	return public, private, nil
 }
 
-// vauleOrAfterEnv is a helper for parsing optional inputs.
-// Returns "intput" if it is non-empty. Otherwise it returns "${env}/relative".
-func vauleOrAfterEnv(input string, env string, relative string) (string, error) {
+// valueOrAfterEnv is a helper for parsing optional inputs.
+// Returns "input" if it is non-empty. Otherwise it returns "${env}/relative".
+func valueOrAfterEnv(input string, env string, relative string) (string, error) {
 	if input != "" {
 		return input, nil
 	}
