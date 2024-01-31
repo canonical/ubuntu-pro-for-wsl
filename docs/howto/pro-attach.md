@@ -1,6 +1,6 @@
 # How to attach Ubuntu Pro for WSL to your subscription
 
-Ubuntu Pro for WSL requires a subscription to [Ubuntu Pro](../reference/ubuntu_pro). Get your subscription visiting the [Ubuntu Pro website](https://www.ubuntu.com/pro). Once you have a subscription, you have to attach Ubuntu Pro for WSL to it.
+Ubuntu Pro for WSL requires a subscription to [Ubuntu Pro](../reference/ubuntu_pro). Get your subscription visiting the [Ubuntu Pro website](https://ubuntu.com/pro). Once you have a subscription, you have to attach Ubuntu Pro for WSL to it.
 
 There are two different methods:
 
@@ -47,4 +47,4 @@ If you try to do both at once, the subscription used in the registry will overru
 
 ## External links
 
-- [Ubuntu Pro](https://www.ubuntu.com/pro)
+- [Ubuntu Pro](https://ubuntu.com/pro)
