@@ -9,6 +9,7 @@ void main() {
     for (var len = 0; len < 5; len++) {
       testString += 'x';
       expect(base58.checkDecode(testString), equals(B58Error.invalidFormat));
+      expect(base58.checkDecode(' '), equals(B58Error.invalidFormat));
     }
   });
   test('base 58 no errors', () {
