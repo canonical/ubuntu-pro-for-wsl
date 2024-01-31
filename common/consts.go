@@ -14,7 +14,7 @@ const (
 	UserProfileDir = ".ubuntupro"
 
 	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
-	ListeningPortFileName = ".ubuntupro"
+	ListeningPortFileName = ".address"
 
 	// MsStoreProductID is the ID of the product in the Microsoft Store
 	//
