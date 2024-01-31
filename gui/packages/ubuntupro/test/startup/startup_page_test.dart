@@ -45,6 +45,26 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
 
+  testWidgets('agent state enum l10n', (tester) async {
+    final monitor = MockAgentStartupMonitor();
+    when(monitor.start()).thenAnswer(
+      (_) => Stream.fromIterable(
+        [
+          AgentState.querying,
+        ],
+      ),
+    );
+    final model = StartupModel(monitor);
+    await tester.pumpWidget(buildApp(model));
+    final context = tester.element(find.byType(StartupAnimatedChild));
+    final lang = AppLocalizations.of(context);
+    for (final value in AgentState.values) {
+      // localize will throw if new values were added to the enum but not to the method.
+      expect(() => value.localize(lang), returnsNormally);
+    }
+
+  });
+
   testWidgets('navigates when model is ok', (tester) async {
     final monitor = MockAgentStartupMonitor();
     when(monitor.start()).thenAnswer(
