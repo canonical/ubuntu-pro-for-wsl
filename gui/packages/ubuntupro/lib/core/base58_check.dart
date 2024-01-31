@@ -17,18 +17,6 @@ class Base58 {
     return Uint8List.fromList(h2.bytes.sublist(0, 4));
   }
 
-  // Prepends a version byte and appends a four byte checksum like the btcd API does.
-  // This is only for testing.
-  @visibleForTesting
-  String checkEncode(Uint8List input) {
-    final out = List<int>.empty(growable: true);
-    out.add(0x20);
-    out.addAll(input);
-    final chksum = _checksum(Uint8List.fromList(out));
-    out.addAll(chksum);
-    return _codec.encode(Uint8List.fromList(out));
-  }
-
   /// Checks whether the [input] contains a base58 encoded value.
   /// Returns null on success or the [B58Error] error detected.
   B58Error? checkDecode(String input) {
