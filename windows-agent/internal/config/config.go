@@ -47,7 +47,7 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 	return m
 }
 
-// Notify appends a callback. It'll be called very time any configuration changes.
+// Notify appends a callback. It'll be called every time any configuration changes.
 func (c *Config) Notify(f func()) {
 	c.notifiers = append(c.notifiers, f)
 }
