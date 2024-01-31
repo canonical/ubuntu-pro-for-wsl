@@ -169,6 +169,17 @@ void main() {
       expect(called, isTrue);
     });
   });
+
+  testWidgets('token error enum l10n', (tester) async {
+    final theApp = buildApp(isExpanded: true, onApply: (_){});
+    await tester.pumpWidget(theApp);
+    final context = tester.element(find.byType(ProTokenInputField));
+    final lang = AppLocalizations.of(context);
+    for (final value in TokenError.values) {
+      // localize will throw if new values were added to the enum but not to the method.
+      expect(() => value.localize(lang), returnsNormally);
+    }
+  });
 }
 
 MaterialApp buildApp({
