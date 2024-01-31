@@ -8,6 +8,7 @@ void main() {
     const osvalue = 'Windows_NT_X';
     final env = Environment(overrides: {'OS': osvalue});
     expect(env['OS'], osvalue);
+    expect(env.merged['OS'], osvalue);
   });
   test('without overrides', () {
     final windir = Platform.isWindows ? 'C:\\WINDOWS' : null;
