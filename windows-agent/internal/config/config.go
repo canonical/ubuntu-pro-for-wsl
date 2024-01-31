@@ -33,8 +33,8 @@ type Config struct {
 	// Sync
 	mu *sync.Mutex
 
-	// notifiers are called after any configuration changes.
-	notifiers []func()
+	// observers are called after any configuration changes.
+	observers []func()
 }
 
 // New creates and initializes a new Config object.
@@ -49,7 +49,16 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 
 // Notify appends a callback. It'll be called every time any configuration changes.
 func (c *Config) Notify(f func()) {
-	c.notifiers = append(c.notifiers, f)
+	c.observers = append(c.observers, f)
+}
+
+func (c *Config) notifyObservers() {
+	for _, f := range c.observers {
+		// This needs to be in a goroutine because notifyObservers is sometimes
+		// called under the config mutex. The callback trying to grab the mutex
+		// (to read the config) would cause a deadlock otherwise.
+		go f()
+	}
 }
 
 // Subscription returns the ProToken and the method it was acquired with (if any).
@@ -138,9 +147,7 @@ func (c *Config) set(ctx context.Context, field *string, value string) error {
 	old := *field
 	*field = value
 
-	for _, f := range c.notifiers {
-		go f()
-	}
+	c.notifyObservers()
 
 	if err := c.dump(); err != nil {
 		log.Errorf(ctx, "Could not update settings: %v", err)
@@ -262,9 +269,7 @@ func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data Registry
 		log.Warningf(ctx, "Could not obtain some updated registry settings: %v", errs)
 	}
 
-	for _, f := range c.notifiers {
-		go f()
-	}
+	c.notifyObservers()
 
 	// Dump updated checksums
 	if err := c.dump(); err != nil {
