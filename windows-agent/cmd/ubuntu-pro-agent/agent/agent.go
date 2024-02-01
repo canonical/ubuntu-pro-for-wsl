@@ -133,13 +133,13 @@ func (a *App) serve(args ...option) error {
 }
 
 func setupDirectories(ctx context.Context, opt *options) (public, private string, err error) {
-	public, err = valueOrAfterEnv(opt.publicDir, "UserProfile", common.LocalAppDataDir)
+	public, err = valueOrAfterEnv(opt.publicDir, "UserProfile", common.UserProfileDir)
 	if err != nil {
 		return "", "", err
 	}
 	log.Debugf(ctx, "Agent public directory: %s", public)
 
-	private, err = valueOrAfterEnv(opt.privateDir, "LocalAppData", common.UserProfileDir)
+	private, err = valueOrAfterEnv(opt.privateDir, "LocalAppData", common.LocalAppDataDir)
 	if err != nil {
 		return "", "", err
 	}
