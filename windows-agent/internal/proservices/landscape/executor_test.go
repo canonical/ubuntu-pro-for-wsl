@@ -487,10 +487,10 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 	}
 
 	// Set up Landscape client
-	clientService, err := landscape.New(tb.conf, tb.db, landscape.WithHostname("HOSTNAME"))
+	clientService, err := landscape.New(ctx, tb.conf, tb.db, landscape.WithHostname("HOSTNAME"))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 
-	err = clientService.Connect(ctx)
+	err = clientService.Connect()
 	require.NoError(t, err, "Setup: Connect should return no errors")
 
 	tb.clientService = clientService

@@ -102,7 +102,9 @@ func TestConnect(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			if wsl.MockAvailable() {
 				t.Parallel()
 				ctx = wsl.WithMock(ctx, wslmock.New())
@@ -160,17 +162,14 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			service, err := landscape.New(conf, db)
+			service, err := landscape.New(ctx, conf, db)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
-
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
 
 			if tc.precancelContext {
 				cancel()
 			}
 
-			err = service.Connect(ctx)
+			err = service.Connect()
 			if tc.wantErr {
 				require.Error(t, err, "Connect should return an error")
 				require.False(t, service.Connected(), "Connected should have returned false after failing to connect")
@@ -271,7 +270,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -287,7 +286,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				require.NoError(t, err, "Setup: could not terminate the distro")
 			}
 
-			err = service.Connect(ctx)
+			err = service.Connect()
 			require.NoError(t, err, "Setup: Connect should return no errors")
 			defer service.Stop(ctx)
 
@@ -427,7 +426,9 @@ func TestAutoReconnection(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			if wsl.MockAvailable() {
 				t.Parallel()
 				mock := wslmock.New()
@@ -448,16 +449,13 @@ func TestAutoReconnection(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
-			err = service.Connect(ctx)
+			err = service.Connect()
 			require.Error(t, err, "Connect should have failed because the server is not running")
 			require.False(t, service.Connected(), "Client should not be connected because the server is not running")
-
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
 
 			ch := make(chan error)
 			go func() {

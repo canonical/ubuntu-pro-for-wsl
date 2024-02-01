@@ -83,12 +83,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	uiService := ui.New(ctx, conf, db)
 
-	landscape, err := landscape.New(conf, db)
+	landscape, err := landscape.New(ctx, conf, db)
 	if err != nil {
 		return s, err
 	}
 
-	if err := landscape.Connect(ctx); err != nil {
+	if err := landscape.Connect(); err != nil {
 		log.Warningf(ctx, err.Error())
 	}
 
