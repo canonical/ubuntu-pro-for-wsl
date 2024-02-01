@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
@@ -193,4 +194,47 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	}
 
 	return info, nil
+}
+
+type retryConnection struct {
+	once sync.Once
+	ch   chan struct{}
+	mu   sync.RWMutex
+}
+
+func newRetryConnection() *retryConnection {
+	var r retryConnection
+	r.init()
+	return &r
+}
+
+func (r *retryConnection) init() {
+	r.ch = make(chan struct{})
+	r.once = sync.Once{}
+}
+
+func (r *retryConnection) Stop() {
+	r.Request()
+}
+
+func (r *retryConnection) Request() {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	r.once.Do(func() { close(r.ch) })
+}
+
+func (r *retryConnection) Await() <-chan struct{} {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.ch
+}
+
+func (r *retryConnection) Reset() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.once.Do(func() { close(r.ch) })
+	r.init()
 }

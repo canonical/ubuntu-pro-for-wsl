@@ -156,14 +156,7 @@ func (conn *connection) connected() bool {
 		return false
 	}
 
-	switch conn.grpcConn.GetState() {
-	case connectivity.Idle:
-		return false
-	case connectivity.Shutdown:
-		return false
-	}
-
-	return true
+	return conn.grpcConn.GetState() == connectivity.Ready
 }
 
 // disconnect stops the connection and releases resources.
