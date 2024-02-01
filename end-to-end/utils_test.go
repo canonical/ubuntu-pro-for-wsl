@@ -121,7 +121,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 	require.NotEmptyf(t, home, "Agent setup: $env:UserProfile should not be empty")
 
 	require.Eventually(t, func() bool {
-		_, err := os.Stat(filepath.Join(home, ".ubuntupro"))
+		_, err := os.Stat(filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName))
 		if errors.Is(err, fs.ErrNotExist) {
 			return false
 		}

@@ -62,8 +62,8 @@ class StartupModel extends ChangeNotifier {
     return completer.future;
   }
 
-  /// Assumes the agent crashed, i.e. the `.ubuntupro` file exists but the agent cannot respond to PING requets.
-  /// Thus, we delete the existing `.ubuntupro` file and try launching the agent.
+  /// Assumes the agent crashed, i.e. the address file exists but the agent cannot respond to PING requets.
+  /// Thus, we delete the existing address file and try launching the agent.
   Future<void> resetAgent() async {
     assert(
       _view == ViewState.retry,

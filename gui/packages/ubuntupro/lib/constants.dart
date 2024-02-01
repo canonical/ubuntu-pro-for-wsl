@@ -2,7 +2,7 @@
 const kDefaultHost = '127.0.0.1';
 
 /// The name of the file where the Agent's drop its service connection information.
-const kAddrFileName = '.ubuntupro';
+const kAddrFileName = '.ubuntupro/.address';
 
 /// The default border margin.
 const kDefaultMargin = 32.0;

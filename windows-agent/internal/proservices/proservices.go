@@ -3,12 +3,8 @@ package proservices
 
 import (
 	"context"
-	"errors"
-	"os"
-	"path/filepath"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/interceptorschain"
@@ -32,21 +28,11 @@ type Manager struct {
 
 // options are the configurable functional options for the daemon.
 type options struct {
-	cacheDir string
 	registry registrywatcher.Registry
 }
 
 // Option is the function signature we are passing to tweak the daemon creation.
 type Option func(*options)
-
-// WithCacheDir overrides the cache directory used in the daemon.
-func WithCacheDir(cachedir string) func(o *options) {
-	return func(o *options) {
-		if cachedir != "" {
-			o.cacheDir = cachedir
-		}
-	}
-}
 
 // WithRegistry allows overriding the Windows registry with a different back-end.
 func WithRegistry(registry registrywatcher.Registry) func(o *options) {
@@ -59,7 +45,7 @@ func WithRegistry(registry registrywatcher.Registry) func(o *options) {
 // It instantiates both ui and wsl instance services.
 //
 // Once done, Stop must be called to deallocate resources.
-func New(ctx context.Context, args ...Option) (s Manager, err error) {
+func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	defer func() {
@@ -75,31 +61,15 @@ func New(ctx context.Context, args ...Option) (s Manager, err error) {
 		f(&opts)
 	}
 
-	if opts.cacheDir == "" {
-		// Set default cache dir.
-		appData := os.Getenv("LocalAppData")
-		if appData == "" {
-			return s, errors.New("Could not read env variable LocalAppData")
-		}
-
-		opts.cacheDir = filepath.Join(appData, common.LocalAppDataDir)
-	}
-
-	log.Debugf(ctx, "Manager service cache directory: %s", opts.cacheDir)
-
-	if err := os.MkdirAll(opts.cacheDir, 0750); err != nil {
-		return s, err
-	}
-
 	// Ugly trick to prevent WSL error 0x80070005 due bad interaction with the Store API.
 	// See more in:
 	//[Jira](https://warthogs.atlassian.net/browse/UDENG-1810)
 	//[GitHub](https://github.com/canonical/ubuntu-pro-for-wsl/pull/438)
 	InitWSLAPI()
 
-	conf := config.New(ctx, opts.cacheDir)
+	conf := config.New(ctx, privateDir)
 
-	db, err := database.New(ctx, opts.cacheDir, conf)
+	db, err := database.New(ctx, privateDir, conf)
 	if err != nil {
 		return s, err
 	}

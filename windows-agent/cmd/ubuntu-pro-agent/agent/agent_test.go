@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
 	"github.com/stretchr/testify/require"
 )
 
@@ -118,40 +119,53 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 }
 
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
-	t.Parallel()
 	// Trigger the error with a cache directory that cannot be created over an
-	// existing file
+	// existing file, or because the required env is empty.
+	//
+	// Test cannot be parallel because we override the environment
 
 	testCases := map[string]struct {
-		invalidProServicesCache bool
-		invalidDaemonAddr       bool
+		invalidPublicDir  bool
+		invalidPrivateDir bool
+
+		invalidLocalAppData bool
+		invalidUserProfile  bool
 	}{
-		"Invalid service cache":            {invalidProServicesCache: true},
-		"Invalid daemon address directory": {invalidDaemonAddr: true},
+		"Invalid private directory": {invalidPublicDir: true},
+		"Invalid public directory":  {invalidPrivateDir: true},
+		"Invalid LocalAppData":      {invalidLocalAppData: true},
+		"Invalid UserProfile":       {invalidUserProfile: true},
 	}
 
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			var publicDir, privateDir string
 
-			badCache := filepath.Join(t.TempDir(), "file")
-
-			daemonAddr := ""
-			serviceCache := ""
-
-			if tc.invalidProServicesCache {
-				serviceCache = badCache
+			if tc.invalidLocalAppData {
+				t.Setenv("LocalAppData", "")
+			} else {
+				privateDir = t.TempDir()
 			}
 
-			if tc.invalidDaemonAddr {
-				daemonAddr = badCache
+			if tc.invalidUserProfile {
+				t.Setenv("UserProfile", "")
+			} else {
+				publicDir = t.TempDir()
 			}
 
-			a := agent.NewForTesting(t, daemonAddr, serviceCache)
+			badDir := filepath.Join(t.TempDir(), "file")
+			if tc.invalidPublicDir {
+				publicDir = badDir
+			}
+			if tc.invalidPrivateDir {
+				privateDir = badDir
+			}
+
+			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
 			a.SetArgs()
 
-			err := os.WriteFile(badCache, []byte("I'm here to break the service"), 0600)
+			err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
 			require.NoError(t, err, "Failed to write file")
 
 			err = a.Run()

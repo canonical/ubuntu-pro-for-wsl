@@ -280,8 +280,8 @@ func filesToCleanUp() ([]string, error) {
 		prefixEnv string
 		path      string
 	}{
-		{prefixEnv: "LocalAppData", path: "Ubuntu Pro"},
-		{prefixEnv: "UserProfile", path: ".ubuntupro"},
+		{prefixEnv: "LocalAppData", path: common.LocalAppDataDir},
+		{prefixEnv: "UserProfile", path: common.UserProfileDir},
 	}
 
 	var out []string

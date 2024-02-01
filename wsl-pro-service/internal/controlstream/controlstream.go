@@ -47,7 +47,7 @@ func New(ctx context.Context, s system.System) (ControlStream, error) {
 	}
 
 	return ControlStream{
-		addrPath: filepath.Join(home, common.ListeningPortFileName),
+		addrPath: filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName),
 		system:   s,
 	}, nil
 }
