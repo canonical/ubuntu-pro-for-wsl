@@ -131,7 +131,8 @@ class AgentStartupMonitor {
         final agentDir =
             await File(_addrFilePath!).parent.create(recursive: true);
         final watch = agentDir.watch(events: FileSystemEvent.create).firstWhere(
-              (event) => p.normalize(event.path) == p.normalize(_addrFilePath!),
+              (event) =>
+                  p.canonicalize(event.path) == p.canonicalize(_addrFilePath!),
             );
         if (!await agentLauncher()) {
           // Terminal state, cannot recover nor retry.
