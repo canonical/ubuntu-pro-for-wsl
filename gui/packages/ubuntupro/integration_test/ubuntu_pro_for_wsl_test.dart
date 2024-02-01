@@ -89,7 +89,7 @@ void main() {
             [p.basenameWithoutExtension(agentImageName)],
           );
         }
-        File(p.join(tmpHome!.path, '.ubuntupro')).deleteSync();
+        File(p.join(tmpHome!.path, '.ubuntupro/.address')).deleteSync();
       });
 
       tearDownAll(() async {
