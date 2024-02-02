@@ -6,7 +6,7 @@ Files: *
 Copyright: 2024 Canonical Ltd.
 License: GPL-3
 
-Files: vendor/github.com/core-os/go-systemd/*
+Files: vendor/github.com/coreos/go-systemd/*
 Copyright: 2015 CoreOS, Inc
 License: Apache-2.0
 
