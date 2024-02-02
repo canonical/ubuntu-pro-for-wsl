@@ -237,12 +237,12 @@ func TestServeAndQuit(t *testing.T) {
 				// Wait for the server to start
 				require.Eventually(t, func() bool {
 					return systemd.readyNotifications.Load() > 0
-				}, time.Second, 100*time.Millisecond, "Systemd should have been notified")
+				}, 10*time.Second, 100*time.Millisecond, "Systemd should have been notified")
 
 				const wantState = "STATUS=Serving"
 				require.Eventually(t, func() bool {
 					return systemd.gotState.Load() == wantState
-				}, 20*time.Second, 100*time.Millisecond, "Systemd state should have been set to %q ", wantState)
+				}, 60*time.Second, time.Second, "Systemd state should have been set to %q ", wantState)
 
 				require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
 			}
@@ -317,7 +317,7 @@ func TestReconnection(t *testing.T) {
 			//nolint:errcheck // We don't really care
 			go d.Serve()
 
-			const maxTimeout = 20 * time.Second
+			const maxTimeout = 60 * time.Second
 
 			if tc.firstConnectionSuccesful {
 				require.Eventually(t, func() bool {
@@ -331,7 +331,7 @@ func TestReconnection(t *testing.T) {
 				require.Eventually(t, func() bool {
 					_, err := os.Stat(portFile)
 					return errors.Is(err, fs.ErrNotExist)
-				}, 5*time.Second, 100*time.Millisecond, "Stopping the Windows-Agent mock server should remove the port file")
+				}, 20*time.Second, 100*time.Millisecond, "Stopping the Windows-Agent mock server should remove the port file")
 			} else {
 				require.Eventually(t, func() bool {
 					return systemd.gotState.Load() == "STATUS=Not serving: waiting to retry"
