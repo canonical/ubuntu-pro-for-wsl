@@ -238,10 +238,10 @@ packages:
     dependency: transitive
     description:
       name: flow_builder
-      sha256: "212a5c6575e87bec2003fa3f31dd7d80f0d89f6152db54f43fb0b6f45943e955"
+      sha256: e5f7c0fbff5ac9c4c65728939e00d96c288e2a482ec740d2d57562d7e918e5f2
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.9"
+    version: "0.0.10"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -570,10 +570,10 @@ packages:
     dependency: transitive
     description:
       name: safe_change_notifier
-      sha256: "0c23a11c00b8b749bcd65937ea58430662ea681d69be8fd6239251111960dc21"
+      sha256: "8d0645ec2706f580912c38de488439ddb491be48247826927b7bc2e54ea8f7af"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.1"
+    version: "0.3.2"
   screen_retriever:
     dependency: transitive
     description:
@@ -631,10 +631,10 @@ packages:
     dependency: transitive
     description:
       name: state_notifier
-      sha256: "8fe42610f179b843b12371e40db58c9444f8757f8b69d181c97e50787caed289"
+      sha256: b8677376aa54f2d7c58280d5a007f9e8774f1968d1fb1c096adcb4792fba29bb
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.2+1"
+    version: "1.0.0"
   stream_channel:
     dependency: transitive
     description:
@@ -831,10 +831,10 @@ packages:
     dependency: "direct main"
     description:
       name: wizard_router
-      sha256: "6e156563e395bd5438bafe484cd8c4b2a0b836b02ad3bd998a781bc613f571e8"
+      sha256: fd3be80c6e53e7eba49ebd6c7f830f501efc38f76f3a7d6119925f5838e7cedc
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.4"
+    version: "1.1.0"
   yaml:
     dependency: transitive
     description:
