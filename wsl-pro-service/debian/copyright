@@ -122,18 +122,18 @@ Files: vendor/gopkg.in/ini.v1/*
 Copyright: 2016 Unknwon
 License: Apache-2.0
 
-Files: vendor/gopkg.in/yaml.v2/*
+Files: vendor/gopkg.in/yaml.v3/*
 Copyright: 2011-2019 Canonical Ltd
 License: Apache-2.0
 
-Files: vendor/gopkg.in/yaml.v2/apic.go
-       vendor/gopkg.in/yaml.v2/emitterc.go
-       vendor/gopkg.in/yaml.v2/parserc.go
-       vendor/gopkg.in/yaml.v2/readerc.go
-       vendor/gopkg.in/yaml.v2/scannerc.go
-       vendor/gopkg.in/yaml.v2/writerc.go
-       vendor/gopkg.in/yaml.v2/yamlh.go
-       vendor/gopkg.in/yaml.v2/yamlprivateh.go
+Files: vendor/gopkg.in/yaml.v3/apic.go
+       vendor/gopkg.in/yaml.v3/emitterc.go
+       vendor/gopkg.in/yaml.v3/parserc.go
+       vendor/gopkg.in/yaml.v3/readerc.go
+       vendor/gopkg.in/yaml.v3/scannerc.go
+       vendor/gopkg.in/yaml.v3/writerc.go
+       vendor/gopkg.in/yaml.v3/yamlh.go
+       vendor/gopkg.in/yaml.v3/yamlprivateh.go
 Copyright: 2006-2010 Kirill Simonov
            2006-2011 Kirill Simonov
 License: MIT
