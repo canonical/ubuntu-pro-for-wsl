@@ -1,3 +1,12 @@
+wsl-pro-service (0.1.1) noble; urgency=medium
+
+  [ Edu Gómez Escandell ]
+  * Fix debian lintian issues and warnings
+  * Remove duplicate test-run
+  * Increase a couple of timeouts in the tests
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 05 Feb 2024 10:48:42 +0100
+
 wsl-pro-service (0.1) noble; urgency=medium
 
   [ Carlos Nihelton ]
