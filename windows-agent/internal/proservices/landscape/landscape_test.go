@@ -102,7 +102,9 @@ func TestConnect(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			if wsl.MockAvailable() {
 				t.Parallel()
 				ctx = wsl.WithMock(ctx, wslmock.New())
@@ -160,17 +162,14 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			service, err := landscape.New(conf, db)
+			service, err := landscape.New(ctx, conf, db)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
-
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
 
 			if tc.precancelContext {
 				cancel()
 			}
 
-			err = service.Connect(ctx)
+			err = service.Connect()
 			if tc.wantErr {
 				require.Error(t, err, "Connect should return an error")
 				require.False(t, service.Connected(), "Connected should have returned false after failing to connect")
@@ -271,7 +270,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -287,7 +286,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				require.NoError(t, err, "Setup: could not terminate the distro")
 			}
 
-			err = service.Connect(ctx)
+			err = service.Connect()
 			require.NoError(t, err, "Setup: Connect should return no errors")
 			defer service.Stop(ctx)
 
@@ -427,7 +426,9 @@ func TestAutoReconnection(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			if wsl.MockAvailable() {
 				t.Parallel()
 				mock := wslmock.New()
@@ -448,16 +449,13 @@ func TestAutoReconnection(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
-			err = service.Connect(ctx)
+			err = service.Connect()
 			require.Error(t, err, "Connect should have failed because the server is not running")
 			require.False(t, service.Connected(), "Client should not be connected because the server is not running")
-
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
 
 			ch := make(chan error)
 			go func() {
@@ -540,6 +538,153 @@ func TestAutoReconnection(t *testing.T) {
 	}
 }
 
+func TestReconnect(t *testing.T) {
+	t.Parallel()
+
+	requestReconnect := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		s.Controller().Reconnect(ctx)
+	}
+
+	changeAddress := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		// We change the address to an equivalent one, so that the reconnect is triggered and the connection succeeds
+		c.mu.Lock()
+		c.landscapeClientConfig = strings.ReplaceAll(c.landscapeClientConfig, "127.0.0.1", "localhost")
+		c.mu.Unlock()
+
+		c.triggerNotifications()
+	}
+
+	changeCertificate := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		// We change the path to an equivalent one, so that the reconnect is triggered and the connection still succeeds
+		const sep = filepath.Separator
+		from := fmt.Sprintf("%c", sep)       // from: /
+		to := fmt.Sprintf("%c.%c", sep, sep) // to:   /./
+
+		c.mu.Lock()
+		c.landscapeClientConfig = strings.Replace(c.landscapeClientConfig, from, to, 1)
+		c.mu.Unlock()
+
+		c.triggerNotifications()
+	}
+
+	changeIrrelevant := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		c.mu.Lock()
+		c.landscapeClientConfig = c.landscapeClientConfig + "\n[exta]\ninfo=this section does not matter"
+		c.mu.Unlock()
+
+		c.triggerNotifications()
+	}
+
+	testCases := map[string]struct {
+		useCertificate bool
+		trigger        func(context.Context, *landscape.Service, *mockConfig)
+
+		wantNoReconnect       bool
+		wantImmediateRconnect bool
+	}{
+		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateRconnect: true},
+		"Reconnect when changing the URL":                     {trigger: changeAddress},
+		"Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
+		"Don't reconnect when changing irrelevant config":     {trigger: changeIrrelevant, wantNoReconnect: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			if wsl.MockAvailable() {
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			var certPath string
+			lcapeConfig := defaultLandscapeConfig
+			if tc.useCertificate {
+				certPath = t.TempDir()
+				testutils.GenerateTempCertificate(t, certPath)
+				lcapeConfig = fmt.Sprintf("%s\nssl_public_key = {{ .CertPath }}/cert.pem", defaultLandscapeConfig)
+			}
+
+			lis, server, _ := setUpLandscapeMock(t, ctx, "localhost:", certPath)
+
+			conf := &mockConfig{
+				proToken:              "TOKEN",
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr()),
+			}
+
+			//nolint:errcheck // We don't care about these errors
+			go server.Serve(lis)
+			defer server.Stop()
+
+			db, err := database.New(ctx, t.TempDir(), conf)
+			require.NoError(t, err, "Setup: database New should not return an error")
+
+			service, err := landscape.New(ctx, conf, db)
+			require.NoError(t, err, "Setup: New should not return an error")
+
+			err = service.Connect()
+			require.NoError(t, err, "Setup: Connect should not return an error")
+
+			require.Eventually(t, func() bool {
+				return service.Connected()
+			}, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
+
+			ch := make(chan struct{})
+			go func() {
+				tc.trigger(ctx, service, conf)
+				close(ch)
+			}()
+
+			const timeout = 10 * time.Second
+			const tickRate = 100 * time.Millisecond
+			if tc.wantNoReconnect {
+				requireAlways(t, service.Connected, timeout, tickRate, "Client should not have disconnected")
+				return
+			}
+
+			require.Eventually(t, func() bool { return !service.Connected() },
+				timeout, tickRate, "Client should have disconnected during reconnection")
+
+			select {
+			case <-ch:
+			case <-time.After(20 * time.Second):
+				require.Fail(t, "Reconnect should have returned")
+			}
+
+			if tc.wantImmediateRconnect {
+				require.True(t, service.Connected(), "Client should have connected before returning")
+				return
+			}
+
+			require.Eventually(t, service.Connected,
+				20*time.Second, time.Second, "Client should have connected after reconnection")
+		})
+	}
+}
+
+func requireAlways(t *testing.T, predicate func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	tk := time.NewTicker(tick)
+	defer tk.Stop()
+
+	tm := time.NewTimer(waitFor)
+	defer tm.Stop()
+
+	for {
+		select {
+		case <-tm.C:
+			return
+		case <-tk.C:
+		}
+
+		require.True(t, predicate(), msgAndArgs...)
+	}
+}
+
 func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, url net.Addr) string {
 	t.Helper()
 
@@ -601,6 +746,8 @@ type mockConfig struct {
 	landscapeUIDErr    bool
 	setLandscapeUIDErr bool
 
+	callbacks []func()
+
 	mu sync.Mutex
 }
 
@@ -649,6 +796,21 @@ func (m *mockConfig) SetLandscapeAgentUID(ctx context.Context, uid string) error
 		return errors.New("Mock error")
 	}
 
+	defer m.triggerNotifications()
+
 	m.landscapeAgentUID = uid
 	return nil
+}
+
+func (m *mockConfig) Notify(f func()) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.callbacks = append(m.callbacks, f)
+}
+
+func (m *mockConfig) triggerNotifications() {
+	for _, f := range m.callbacks {
+		go f()
+	}
 }

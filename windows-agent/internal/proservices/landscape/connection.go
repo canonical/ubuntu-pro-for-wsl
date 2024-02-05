@@ -19,6 +19,8 @@ import (
 // a new connection needs to be constructed. Holds no data, but has the methods to send info to
 // Landscape, and redirects the received commands to the executor.
 type connection struct {
+	settings connectionSettings
+
 	ctx    context.Context
 	cancel func()
 
@@ -27,6 +29,20 @@ type connection struct {
 	once       sync.Once
 
 	receivingCommands sync.WaitGroup
+}
+
+// connectionSettings contains data that is immutable for a connection.
+// A change of these settings requires a reconnect.
+type connectionSettings struct {
+	url             string
+	certificatePath string
+}
+
+func newConnectionSettings(c landscapeHostConf) connectionSettings {
+	return connectionSettings{
+		url:             c.hostagentURL,
+		certificatePath: c.sslPublicKey,
+	}
 }
 
 // newConnection attempts to connect to the Landscape server, and blocks until the first
@@ -42,28 +58,32 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		return nil, errors.New("no hostagent URL provided in the Landscape configuration")
 	}
 
-	conn = &connection{}
-
 	// A context to control the Landscape client with (needed for as long as the connection lasts)
-	conn.ctx, conn.cancel = context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+
+	conn = &connection{
+		settings: newConnectionSettings(conf),
+		ctx:      ctx,
+		cancel:   cancel,
+	}
+
+	creds, err := transportCredentials(conn.settings.certificatePath)
+	if err != nil {
+		return nil, err
+	}
 
 	// A context to control only the Dial (only needed for this function)
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	creds, err := conf.transportCredentials()
-	if err != nil {
-		return nil, err
-	}
-
-	grpcConn, err := grpc.DialContext(dialCtx, conf.hostagentURL, grpc.WithTransportCredentials(creds))
+	grpcConn, err := grpc.DialContext(dialCtx, conn.settings.url, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
 	conn.grpcConn = grpcConn
 
 	cl := landscapeapi.NewLandscapeHostAgentClient(grpcConn)
-	client, err := cl.Connect(conn.ctx)
+	client, err := cl.Connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +96,9 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		defer conn.receivingCommands.Done()
 
 		if err := conn.receiveCommands(executor{d}); err != nil {
-			log.Warningf(conn.ctx, "Stopped listening for Landscape commands: %v", err)
+			log.Warningf(ctx, "Stopped listening for Landscape commands: %v", err)
 		} else {
-			log.Info(conn.ctx, "Finished listening for Landscape commands.")
+			log.Info(ctx, "Finished listening for Landscape commands.")
 		}
 	}()
 
@@ -156,14 +176,7 @@ func (conn *connection) connected() bool {
 		return false
 	}
 
-	switch conn.grpcConn.GetState() {
-	case connectivity.Idle:
-		return false
-	case connectivity.Shutdown:
-		return false
-	}
-
-	return true
+	return conn.grpcConn.GetState() == connectivity.Ready
 }
 
 // disconnect stops the connection and releases resources.

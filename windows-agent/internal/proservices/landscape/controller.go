@@ -29,38 +29,59 @@ func (c Controller) SendUpdatedInfo(ctx context.Context) error {
 	return c.sendInfo(info)
 }
 
+// Reconnect makes Landscape drop its current connection and start a new one.
+// Blocks until the new connection is available (or failed).
+func (c Controller) Reconnect(ctx context.Context) (succcess bool) {
+	return c.forceReconnect(ctx)
+}
+
 // tryReconnect sends a "please, connect" signal to the Landscape client and blocks until
 // this connection is established, or until the context is canceled. Returns true if the
 // connection was successfully established.
 func (c Controller) tryReconnect(ctx context.Context) bool {
 	if c.connected() {
-		// Fast path: connection already exists
 		return true
 	}
 
-	select {
-	case <-ctx.Done():
-		return false
-	case <-c.hasStopped():
-		return false
-	case <-c.signalRetryConnection():
-	}
+	return c.forceReconnect(ctx)
+}
 
-	// Petition to reconnect went through, we now wait until it completes
-	ticker := time.NewTicker(time.Second)
+func (c Controller) forceReconnect(ctx context.Context) bool {
+	c.reconnect()
+
+	// Wait until disconnection
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	for {
-		if c.connected() {
-			return true
-		}
-
 		select {
 		case <-ctx.Done():
 			return false
 		case <-c.hasStopped():
 			return false
 		case <-ticker.C:
+		}
+
+		if !c.connected() {
+			break
+		}
+	}
+
+	// Waiting until re-connection
+	ticker = time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return false
+		case <-c.hasStopped():
+			return false
+		case <-ticker.C:
+		}
+
+		if c.connected() {
+			return true
 		}
 	}
 }

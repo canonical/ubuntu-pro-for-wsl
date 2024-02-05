@@ -14,17 +14,18 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
+	"google.golang.org/grpc/connectivity"
 )
 
 // Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
 // It creates the executor and ensures there is always an active connection, creating a new one otherwise.
 type Service struct {
+	ctx     context.Context
+	cancel  context.CancelFunc
+	running chan struct{}
+
 	db   *database.DistroDB
 	conf Config
-
-	// stopped indicates that the Client has been stopped and is no longer usable
-	stopped chan struct{}
-	once    sync.Once
 
 	// Cached hostName
 	hostName string
@@ -33,10 +34,10 @@ type Service struct {
 	conn   *connection
 	connMu sync.RWMutex
 
-	// retryConnection is used in order to ask the keepConnected
+	// connRetrier is used in order to ask the keepConnected
 	// function to try again now (instead of waiting for the retrial
 	// time). Do not use directly. Instead use signalRetryConnection().
-	retryConnection chan struct{}
+	connRetrier *retryConnection
 }
 
 // Config is a configuration provider for ProToken and the Landscape URL.
@@ -47,6 +48,8 @@ type Config interface {
 
 	LandscapeAgentUID(context.Context) (string, error)
 	SetLandscapeAgentUID(context.Context, string) error
+
+	Notify(func())
 }
 
 type options struct {
@@ -57,7 +60,7 @@ type options struct {
 type Option = func(*options)
 
 // New creates a new Landscape service object.
-func New(conf Config, db *database.DistroDB, args ...Option) (*Service, error) {
+func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option) (*Service, error) {
 	var opts options
 
 	for _, f := range args {
@@ -72,122 +75,145 @@ func New(conf Config, db *database.DistroDB, args ...Option) (*Service, error) {
 		opts.hostname = hostname
 	}
 
-	c := &Service{
-		conf:            conf,
-		db:              db,
-		hostName:        opts.hostname,
-		stopped:         make(chan struct{}),
-		retryConnection: make(chan struct{}),
+	ctx, cancel := context.WithCancel(ctx)
+
+	s := &Service{
+		ctx:         ctx,
+		cancel:      cancel,
+		conf:        conf,
+		db:          db,
+		hostName:    opts.hostname,
+		connRetrier: newRetryConnection(),
 	}
 
-	return c, nil
+	s.watchConfigChanges(ctx)
+
+	return s, nil
 }
 
 // Connect starts the connection and starts talking to the server.
 // Call Stop to deallocate resources.
-func (s *Service) Connect(ctx context.Context) (err error) {
+func (s *Service) Connect() (err error) {
 	defer decorate.OnError(&err, "could not connect to Landscape")
 
 	if s.connected() {
 		return errors.New("already connected")
 	}
 
-	// Dummy connection to indicate that a first attempt was attempted
-	s.conn = &connection{}
-
-	defer func() {
-		go s.keepConnected(ctx)
-	}()
-
-	// First connection
-	conn, err := s.newConnection(ctx)
-	if err != nil {
-		return err
-	}
-
-	s.connMu.Lock()
-	s.conn = conn
-	s.connMu.Unlock()
-
-	return nil
+	return s.keepConnected()
 }
 
-// keepConnected supervises the connection. If it drops, reconnection is attempted.
-func (s *Service) keepConnected(ctx context.Context) {
+// keepConnected supervises the connection. It attempts connecting before returning.
+// The connection will be re-created if:
+// - the active one drops.
+// - a reconnection is requested via connRetrier.
+func (s *Service) keepConnected() error {
 	const growthFactor = 2
 	const minWait = time.Second
 	const maxWait = 10 * time.Minute
-	wait := time.Second
+	wait := 0 * time.Second // No wait in the first iteration
 
-	// The loop body is inside this function so that defers can be used
-	keepLoooping := true
-	for keepLoooping {
-		keepLoooping = func() (keepLooping bool) {
-			// Using a timer rather than a time.After to avoid leaking
-			// the timer for up to $maxWait.
-			tk := time.NewTimer(wait)
-			defer tk.Stop()
+	s.running = make(chan struct{})
+	started := make(chan error)
+
+	go func() {
+		defer close(s.running)
+
+		defer s.disconnect()
+		first := true
+
+		for {
+			// Waiting before reconnecting
+			select {
+			case <-s.ctx.Done():
+				return
+			case <-s.connRetrier.Await():
+			case <-time.After(wait):
+			}
+
+			log.Info(s.ctx, "Landscape: connecting")
+			connectionDone, err := s.connectOnce(s.ctx)
+
+			if first {
+				started <- err
+				close(started)
+				wait = minWait
+				first = false
+			}
+
+			if err != nil {
+				log.Warningf(s.ctx, "Landscape: %v", err)
+				continue
+			}
+
+			log.Info(s.ctx, "Landscape: connected")
 
 			select {
-			case <-tk.C:
-				wait = min(growthFactor*wait, maxWait)
-			case <-s.retryConnection:
+			case <-s.ctx.Done():
+				log.Info(s.ctx, "Landscape: connection stopped by context")
+				return
+			case <-s.connRetrier.Await():
+				log.Infof(s.ctx, "Landscape: reconnection requested: reconnecting in %d seconds", wait/time.Second)
+				s.connRetrier.Reset()
+				s.disconnect()
 				wait = minWait
-			case <-s.stopped:
-				// Stop was called
-				return false
+			case <-connectionDone:
+				log.Infof(s.ctx, "Landscape: connection dropped: reconnecting in %d seconds", wait/time.Second)
+				wait = min(growthFactor*wait, maxWait)
 			}
+		}
+	}()
 
-			s.connMu.Lock()
-			defer s.connMu.Unlock()
-
-			// We don't want a queue of petitions to form. It does not matter why
-			// we are retrying: just by virtue of retrying we are fulfilling all
-			// requests at once. Hence, we close and reopen to unblock all senders.
-			//
-			// This is why senders need to use this channel under the connMu mutex
-			// See the signalRetryConnection method.
-			close(s.retryConnection)
-			s.retryConnection = make(chan struct{})
-
-			if s.conn == nil {
-				// Stop was called
-				return false
-			}
-
-			if s.conn.connected() {
-				// Connection still active
-				return true
-			}
-
-			s.conn.disconnect()
-
-			conn, err := s.newConnection(ctx)
-			if err != nil {
-				log.Warningf(ctx, "Landscape reconnect: %v", err)
-				return true
-			}
-
-			s.conn = conn
-			wait = minWait
-			return true
-		}()
+	select {
+	case <-s.ctx.Done():
+		return s.ctx.Err()
+	case err := <-started:
+		return err
 	}
+}
+
+func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
+	s.connMu.Lock()
+	defer s.connMu.Unlock()
+
+	if s.conn != nil {
+		s.conn.disconnect()
+		s.conn = nil
+	}
+
+	_, src, err := s.conf.Subscription(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("skipping connection: could not obtain Ubuntu Pro token: %v", err)
+	}
+	if src == config.SourceNone {
+		return nil, errors.New("skipping connection: no Ubuntu Pro token provided")
+	}
+
+	conn, err := newConnection(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+
+	connectionDone := make(chan struct{})
+	go func() {
+		defer close(connectionDone)
+		conn.grpcConn.WaitForStateChange(ctx, connectivity.Ready)
+	}()
+
+	s.connRetrier.Reset()
+	s.conn = conn
+	return connectionDone, nil
 }
 
 // Stop terminates the connection and deallocates resources.
 func (s *Service) Stop(ctx context.Context) {
-	s.once.Do(func() {
-		close(s.stopped)
+	s.cancel()
+	s.connRetrier.Stop()
 
-		s.connMu.Lock()
-		defer s.connMu.Unlock()
-
-		if s.conn != nil {
-			s.conn.disconnect()
-			s.conn = nil
-		}
-	})
+	select {
+	case <-s.running:
+	case <-ctx.Done():
+	}
 }
 
 // Controller creates a controler for this service.
@@ -198,21 +224,45 @@ func (s *Service) Controller() Controller {
 	}
 }
 
-// newConnection validates we meet necessary client-side requirements before
-// starting a new connection to Landscape.
-//
-// Doing this avoids overloading the server with connections that will be
-// immediately rejected.
-func (s *Service) newConnection(ctx context.Context) (*connection, error) {
-	_, src, err := s.conf.Subscription(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not obtain Ubuntu Pro token: %v", err)
-	}
-	if src == config.SourceNone {
-		return nil, errors.New("no Ubuntu Pro token provided")
-	}
+// watchConfigChanges watches for config changes to detect if a reconnection is in order.
+func (s *Service) watchConfigChanges(ctx context.Context) {
+	s.conf.Notify(func() {
+		oldSettings, ok := func() (connectionSettings, bool) {
+			s.connMu.RLock()
+			defer s.connMu.RUnlock()
 
-	return newConnection(ctx, s)
+			if s.conn != nil {
+				return s.conn.settings, true
+			}
+			return connectionSettings{}, false
+		}()
+
+		if !ok {
+			// Not connected yet
+			return
+		}
+
+		landscapeConf, err := newLandscapeHostConf(ctx, s.conf)
+		if err != nil {
+			log.Warningf(ctx, "Landscape: could not assemble landscape host configuration: %v", err)
+			return
+		}
+
+		newSett := newConnectionSettings(landscapeConf)
+		if newSett == oldSettings {
+			return
+		}
+
+		s.reconnect()
+	})
+}
+
+func (s *Service) disconnect() {
+	s.connMu.Lock()
+	if s.conn != nil {
+		s.conn.disconnect()
+	}
+	s.connMu.Unlock()
 }
 
 // The following methods expose some internals for the other components to use.
@@ -220,15 +270,12 @@ func (s *Service) newConnection(ctx context.Context) (*connection, error) {
 // signalRetryConnection signals the Landscape client to attempt to connect to Landscape.
 // It will not block if there is an ative connection. until the reconnect petition
 // has been received.
-func (s *Service) signalRetryConnection() <-chan struct{} {
-	s.connMu.Lock()
-	defer s.connMu.Unlock()
-
-	return s.retryConnection
+func (s *Service) reconnect() {
+	s.connRetrier.Request()
 }
 
 func (s *Service) hasStopped() <-chan struct{} {
-	return s.stopped
+	return s.ctx.Done()
 }
 
 func (s *Service) config() Config {
