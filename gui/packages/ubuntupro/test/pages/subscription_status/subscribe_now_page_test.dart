@@ -143,6 +143,19 @@ void main() {
     // asserts that feedback is shown
     expect(find.byType(SnackBar), findsOneWidget);
   });
+
+  testWidgets('purchase status enum l10n', (tester) async {
+    final model = MockSubscribeNowModel();
+    when(model.purchaseAllowed()).thenReturn(true);
+    final app = buildApp(model, onSubscribeNoop);
+    await tester.pumpWidget(app);
+    final context = tester.element(find.byType(SubscribeNowPage));
+    final lang = AppLocalizations.of(context);
+    for (final value in PurchaseStatus.values) {
+      // localize will throw if new values were added to the enum but not to the method.
+      expect(() => value.localize(lang), returnsNormally);
+    }
+  });
 }
 
 Widget buildApp(

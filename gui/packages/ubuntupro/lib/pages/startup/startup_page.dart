@@ -106,6 +106,8 @@ extension AgentStateL10n on AgentState {
       case AgentState.ok:
         // This state should not need translations.
         return '';
+      default:
+        throw UnimplementedError(toString());
     }
   }
 }

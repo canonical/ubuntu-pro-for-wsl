@@ -107,7 +107,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu' }}
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt update
-          sudo DEBIAN_FRONTEND=noninteractive apt install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev unzip xvfb
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev unzip xvfb lcov
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Set up Go
@@ -122,11 +122,19 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Flutter QA
+        id: flutter-qa
         uses: ./.github/actions/flutter-qa/
         with:
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
           package-dir: gui/packages/${{ matrix.package }}
           run-build-runner: ${{ matrix.package ==  'ubuntupro' }}
+      - name: Report coverage
+        if: ${{ matrix.os == 'ubuntu' }}
+        shell: bash
+        run: echo "${{ steps.flutter-qa.outputs.coverage-info }}" >> /tmp/flutter-coverage.codecov
+      - uses: codecov/codecov-action@v3
+        with:
+          files: /tmp/flutter-coverage.codecov
       - name: Ensure module files are up to date
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:

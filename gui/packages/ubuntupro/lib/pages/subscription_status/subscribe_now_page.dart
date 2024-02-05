@@ -115,6 +115,8 @@ extension PurchaseStatusl10n on PurchaseStatus {
         return lang.purchaseStatusServer;
       case PurchaseStatus.unknown:
         return lang.purchaseStatusUnknown;
+      default:
+        throw UnimplementedError(toString());
     }
   }
 }

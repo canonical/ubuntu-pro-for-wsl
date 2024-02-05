@@ -22,6 +22,15 @@ void main() {
       PurchaseStatus.succeeded,
     );
   });
+
+  test('unimplemented purchaseSubscription', () async {
+    P4wMsStorePlatform.instance = FakeP4wMsStorePlatform();
+    final p4wMsStorePlugin = P4wMsStore();
+    await expectLater(
+      () => p4wMsStorePlugin.purchaseSubscription(productId),
+      throwsUnimplementedError,
+    );
+  });
 }
 
 class MockP4wMsStorePlatform
@@ -31,3 +40,5 @@ class MockP4wMsStorePlatform
   Future<PurchaseStatus> purchaseSubscription(String productId) =>
       Future.value(PurchaseStatus.succeeded);
 }
+
+class FakeP4wMsStorePlatform extends P4wMsStorePlatform {}
