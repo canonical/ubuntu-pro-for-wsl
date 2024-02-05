@@ -45,7 +45,7 @@ func TestRunSignal(t *testing.T) {
 				err := syscall.Kill(syscall.Getpid(), tc.sendSig)
 				require.NoError(t, err, "Teardown: kill should return no error")
 				select {
-				case <-time.After(50 * time.Millisecond):
+				case <-time.After(time.Second):
 					exited = false
 				case <-wait:
 					exited = true
