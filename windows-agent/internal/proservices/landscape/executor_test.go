@@ -143,19 +143,24 @@ func TestInstall(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
+		noCloudInit           bool
 		distroAlredyInstalled bool
 		emptyDistroName       bool
+		cloudInitWriteErr     bool
 		wslInstallErr         bool
 		appxDoesNotExist      bool
 
-		wantInstalled   bool
-		wantNonRootUser bool
+		wantCouldInitWriteCalled bool
+		wantInstalled            bool
+		wantNonRootUser          bool
 	}{
-		"Success": {wantInstalled: true, wantNonRootUser: true},
+		"Success":                    {wantCouldInitWriteCalled: true, wantInstalled: true},
+		"Success with no cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlredyInstalled: true, wantInstalled: true},
+		"Error when cloud-init cannot write":         {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
 	}
 
@@ -184,12 +189,22 @@ func TestInstall(t *testing.T) {
 						distroName = testBed.distro.Name()
 					}
 
+					if tc.cloudInitWriteErr {
+						testBed.cloudInit.writeErr = true
+					}
+
 					if tc.wslInstallErr {
 						testBed.wslMock.InstallError = true
 					}
 
+					var cloudInit *string
+					if !tc.noCloudInit {
+						cloudInit = new(string)
+						*cloudInit = "Hello, this is a cloud-init file"
+					}
+
 					return &landscapeapi.Command{
-						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName}},
+						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName, Cloudinit: cloudInit}},
 					}
 				},
 				// Test assertions
@@ -210,14 +225,17 @@ func TestInstall(t *testing.T) {
 							require.NoError(t, err, "GetConfiguration should return no error")
 							require.NotEqual(t, uint32(0), conf.DefaultUID, "Default user should have been changed from root")
 						}
-						return
+					} else {
+						time.Sleep(timeout)
+
+						distroExists, err := testBed.distro.IsRegistered()
+						require.NoError(t, err, "IsRegistered should return no error")
+						require.False(t, distroExists, "Distro should not have been registered")
 					}
 
-					time.Sleep(timeout)
-
-					distroExists, err := testBed.distro.IsRegistered()
-					require.NoError(t, err, "IsRegistered should return no error")
-					require.False(t, distroExists, "Distro should not have been registered")
+					if tc.wantCouldInitWriteCalled {
+						require.True(t, testBed.cloudInit.writeCalled.Load(), "Cloud-init should have been called to write the user data file")
+					}
 				})
 		})
 	}
@@ -229,13 +247,16 @@ func TestUninstall(t *testing.T) {
 	testCases := map[string]struct {
 		distroNotInstalled bool
 		wslUninstallErr    bool
+		cloudInitRemoveErr bool
 
-		wantNotRegistered bool
+		wantNotRegistered         bool
+		wantCloudInitRemoveCalled bool
 	}{
-		"Success": {wantNotRegistered: true},
+		"Success": {wantNotRegistered: true, wantCloudInitRemoveCalled: true},
 
-		"Error when the distroname does not match any distro": {distroNotInstalled: true, wantNotRegistered: true},
-		"Error when the distro fails to uninstall":            {wslUninstallErr: true},
+		"Error when the distroname does not match any distro":     {distroNotInstalled: true, wantNotRegistered: true},
+		"Error when the distro fails to uninstall":                {wslUninstallErr: true},
+		"Error when cloud-init cannot remove the cloud-init file": {cloudInitRemoveErr: true, wantNotRegistered: true, wantCloudInitRemoveCalled: true},
 	}
 
 	for name, tc := range testCases {
@@ -245,6 +266,10 @@ func TestUninstall(t *testing.T) {
 			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled},
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
+					if tc.cloudInitRemoveErr {
+						testBed.cloudInit.writeErr = true
+					}
+
 					if tc.wslUninstallErr {
 						testBed.wslMock.WslUnregisterDistributionError = true
 					}
@@ -260,13 +285,17 @@ func TestUninstall(t *testing.T) {
 					if tc.wantNotRegistered {
 						ok, _ := checkEventuallyState(t, testBed.distro, wsl.NonRegistered, maxTimeout, time.Second)
 						require.True(t, ok, "Distro should not be registered")
-						return
+					} else {
+						time.Sleep(maxTimeout)
+						distroExists, err := testBed.distro.IsRegistered()
+						require.NoError(t, err, "IsRegistered should return no error")
+						require.True(t, distroExists, "Existing distro should still have been unregistered")
 					}
 
-					time.Sleep(maxTimeout)
-					distroExists, err := testBed.distro.IsRegistered()
-					require.NoError(t, err, "IsRegistered should return no error")
-					require.True(t, distroExists, "Existing distro should still have been unregistered")
+					if tc.wantCloudInitRemoveCalled {
+						require.Eventually(t, testBed.cloudInit.removeCalled.Load, time.Second, 100*time.Millisecond,
+							"Cloud-init should have been called to write the user data file")
+					}
 				})
 		})
 	}
@@ -393,9 +422,10 @@ func TestSetShutdownHost(t *testing.T) {
 type commandTestBed struct {
 	ctx context.Context
 
-	conf   *mockConfig
-	distro *wsl.Distro
-	db     *database.DistroDB
+	conf      *mockConfig
+	distro    *wsl.Distro
+	db        *database.DistroDB
+	cloudInit *mockCloudInit
 
 	serverService *landscapemockservice.Service
 	clientService *landscape.Service
@@ -415,7 +445,7 @@ type distroSettings struct {
 //
 // Before testSetup:
 //   - Set up the mock WSL
-//   - Set up the agent components (config, database...)
+//   - Set up the agent components (config, database, cloud-init...)
 //   - Set up the mock Landscape server
 //   - Set up the landscape client
 //   - Register a distro to test
@@ -463,6 +493,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 	require.NoError(t, err, "Setup: database New should not return an error")
 
 	tb.db = db
+	tb.cloudInit = &mockCloudInit{}
 
 	// Set up Landscape client
 	clientService, err := landscape.New(ctx, tb.conf, tb.db, landscape.WithHostname("HOSTNAME"))
