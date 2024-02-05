@@ -55,7 +55,7 @@ dependencies:
   url_launcher: ^6.2.4
   wizard_router: ^1.0.4
   yaru: ^1.2.1
-  yaru_icons: ^2.3.0
+  yaru_icons: ^2.4.0
   yaru_widgets: ^3.3.1
 
 dev_dependencies:

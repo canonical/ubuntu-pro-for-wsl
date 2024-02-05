@@ -855,10 +855,10 @@ packages:
     dependency: "direct main"
     description:
       name: yaru_icons
-      sha256: cf1235f0c70f186171f84e9ef38611feb5936d14b83d091ae40800092a577edd
+      sha256: "2dff89ee31c2dd888e1ce146f0faef1c8de4ffbc90cb6466aacd55c3a9ad0674"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.0"
+    version: "2.4.0"
   yaru_test:
     dependency: "direct dev"
     description:
