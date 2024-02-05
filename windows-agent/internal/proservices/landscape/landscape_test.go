@@ -548,9 +548,7 @@ func TestReconnect(t *testing.T) {
 	changeAddress := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
 		// We change the address to an equivalent one, so that the reconnect is triggered abd the connection succeeds
 		c.mu.Lock()
-		fmt.Println(c.landscapeClientConfig)
 		c.landscapeClientConfig = strings.ReplaceAll(c.landscapeClientConfig, "127.0.0.1", "localhost")
-		fmt.Println(c.landscapeClientConfig)
 		c.mu.Unlock()
 
 		c.triggerNotifications()
@@ -639,8 +637,6 @@ func TestReconnect(t *testing.T) {
 				tc.trigger(ctx, service, conf)
 				close(ch)
 			}()
-
-			fmt.Println("AAAAAAAAA")
 
 			const timeout = 10 * time.Second
 			const tickRate = 100 * time.Millisecond
