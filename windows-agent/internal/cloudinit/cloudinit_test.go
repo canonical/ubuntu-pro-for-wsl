@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/stretchr/testify/require"
@@ -165,11 +165,11 @@ url = www.example.com/new/rickroll
 			}
 
 			err = ci.WriteAgentData()
-			var opts []golden.Option
+			var opts []testutils.Option
 			if tc.wantErr {
 				require.Error(t, err, "WriteAgentData should have returned an error")
-				errorGolden := filepath.Join(golden.TestFamilyPath(t), "golden", "error-cases")
-				opts = append(opts, golden.WithGoldenPath(errorGolden))
+				errorGolden := filepath.Join(testutils.TestFamilyPath(t), "golden", "error-cases")
+				opts = append(opts, testutils.WithGoldenPath(errorGolden))
 			} else {
 				require.NoError(t, err, "WriteAgentData should return no errors")
 			}
@@ -186,7 +186,7 @@ url = www.example.com/new/rickroll
 			sharedGolden.Lock()
 			defer sharedGolden.Unlock()
 
-			want := golden.LoadWithUpdateFromGolden(t, string(got), opts...)
+			want := testutils.LoadWithUpdateFromGolden(t, string(got), opts...)
 			require.Equal(t, want, string(got), "Agent cloud-init file does not match the golden file")
 		})
 	}
@@ -198,14 +198,14 @@ type goldenMutex struct {
 }
 
 func (mu *goldenMutex) Lock() {
-	if !golden.UpdateEnabled() {
+	if !testutils.UpdateEnabled() {
 		return
 	}
 	mu.Mutex.Lock()
 }
 
 func (mu *goldenMutex) Unlock() {
-	if !golden.UpdateEnabled() {
+	if !testutils.UpdateEnabled() {
 		return
 	}
 	mu.Mutex.Unlock()

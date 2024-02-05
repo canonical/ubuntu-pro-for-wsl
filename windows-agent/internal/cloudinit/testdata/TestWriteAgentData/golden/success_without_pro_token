@@ -1,0 +1,6 @@
+# cloud-init
+# This file was generated automatically and must not be edited
+landscape:
+    client:
+        info: This is the new configuration
+        url: www.example.com/new/rickroll
