@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"text/template"
 	"time"
@@ -167,7 +168,9 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			service, err := landscape.New(ctx, conf, db)
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
 
 			if tc.precancelContext {
@@ -312,7 +315,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -503,7 +508,9 @@ func TestAutoReconnection(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
@@ -733,10 +740,12 @@ func TestReconnect(t *testing.T) {
 			go server.Serve(lis)
 			defer server.Stop()
 
-			db, err := database.New(ctx, t.TempDir(), conf)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			service, err := landscape.New(ctx, conf, db)
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit)
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()
@@ -840,6 +849,34 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
 	return lis, server, service
+}
+
+type mockCloudInit struct {
+	writeCalled  atomic.Bool
+	removeCalled atomic.Bool
+
+	writeErr  bool
+	removeErr bool
+}
+
+func (c *mockCloudInit) WriteDistroData(distroName string, cloudInit string) error {
+	c.writeCalled.Store(true)
+
+	if c.writeErr {
+		return errors.New("could not write distro cloud-init data: mock error")
+	}
+
+	return nil
+}
+
+func (c *mockCloudInit) RemoveDistroData(distroName string) error {
+	c.removeCalled.Store(true)
+
+	if c.removeErr {
+		return errors.New("could not remove distro cloud-init data: mock error")
+	}
+
+	return nil
 }
 
 type mockConfig struct {
