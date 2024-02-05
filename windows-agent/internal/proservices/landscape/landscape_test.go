@@ -546,7 +546,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	changeAddress := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
-		// We change the address to an equivalent one, so that the reconnect is triggered abd the connection succeeds
+		// We change the address to an equivalent one, so that the reconnect is triggered and the connection succeeds
 		c.mu.Lock()
 		c.landscapeClientConfig = strings.ReplaceAll(c.landscapeClientConfig, "127.0.0.1", "localhost")
 		c.mu.Unlock()
