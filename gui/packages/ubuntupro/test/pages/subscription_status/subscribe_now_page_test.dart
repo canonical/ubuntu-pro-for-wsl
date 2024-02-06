@@ -136,7 +136,7 @@ void main() {
     // submits the input.
     final context = tester.element(find.byType(SubscribeNowPage));
     final lang = AppLocalizations.of(context);
-    final button = find.text(lang.apply);
+    final button = find.text(lang.confirm);
     await tester.tap(button);
     await tester.pump();
 

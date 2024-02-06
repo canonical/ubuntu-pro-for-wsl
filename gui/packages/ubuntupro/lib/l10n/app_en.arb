@@ -7,7 +7,7 @@
     "tokenErrorInvalidEncoding": "Token is corrupted",
     "tokenInputTitle": "Already have a token?",
     "tokenInputHint": "Paste your Ubuntu Pro token here",
-    "apply": "Confirm",
+    "confirm": "Confirm",
     "applyProToken": "Apply Pro Token",
     "applyingProToken": "Applying token {token}",
     "@applyingProToken": {

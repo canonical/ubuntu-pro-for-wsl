@@ -81,7 +81,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
                 // allows the suffix button to stand out when enabled while keeping its custom look.
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
               ),
-              child: Text(lang.apply),
+              child: Text(lang.confirm),
             ),
           ),
           onChanged: _token.update,
