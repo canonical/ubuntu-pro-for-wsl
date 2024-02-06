@@ -126,7 +126,7 @@ void main() {
         await tester.pump();
 
         // submits the input.
-        final button = find.text(l10n.apply);
+        final button = find.text(l10n.confirm);
         await tester.tap(button);
         await tester.pumpAndSettle();
 

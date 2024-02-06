@@ -5,9 +5,9 @@
     "tokenErrorTooLong": "Token is too long",
     "tokenErrorInvalidPrefix": "Token prefix is invalid",
     "tokenErrorInvalidEncoding": "Token is corrupted",
-    "tokenInputTitle": "I already have a token",
-    "tokenInputHint": "Paste here your Ubuntu Pro token",
-    "apply": "Apply",
+    "tokenInputTitle": "Already have a token?",
+    "tokenInputHint": "Paste your Ubuntu Pro token here",
+    "confirm": "Confirm",
     "applyProToken": "Apply Pro Token",
     "applyingProToken": "Applying token {token}",
     "@applyingProToken": {
@@ -26,15 +26,15 @@
     "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
     "agentStateUnreachable": "Attempting to recover Ubuntu Pro background agent.",
 
-    "proHeading": "The most comprehensive subscription\nfor open-source software security\nnow available on WSL",
+    "proHeading": "Open source software security by the publishers\nof Ubuntu, now available on Windows.",
     "subscribeNow": "Subscribe Now",
     "subscribeNowTooltipDisabled": "Coming soon",
-    "learnMore": "Learn More",
+    "about": "About Ubuntu Pro",
 
     "subscriptionIsActive": "Your subscription is active!",
-    "storeManaged": "This subscription is managed through Microsoft Store",
+    "storeManaged": "This subscription is managed through Microsoft Store.",
     "manageSubscription": "Manage your subscription",
-    "orgManaged": "This subscription is owned and managed by your company",
+    "orgManaged": "This subscription is owned and managed by your organization.",
     "manuallyManaged": "Visit {proDashboardLink} to manage your subscription.",
     "@manuallyManaged": {
         "placeholders": {
@@ -43,7 +43,7 @@
             }
         }
     },
-    "detachPro": "Detach Pro",
+    "detachPro": "Detach Ubuntu Pro",
 
     "updatingSubscriptionInfo": "Updating the subscription information.",
     "purchaseStatusSuccess":"Thank you for subscribing to Ubuntu Pro.",
@@ -53,4 +53,3 @@
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app."
 }
-

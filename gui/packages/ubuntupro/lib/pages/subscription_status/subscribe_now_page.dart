@@ -75,7 +75,7 @@ class SubscribeNowPage extends StatelessWidget {
                           const Color(0xff010101),
                         ),
                       ),
-              child: Text(lang.learnMore),
+              child: Text(lang.about),
             ),
           ],
         ),
