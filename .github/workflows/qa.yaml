@@ -135,6 +135,7 @@ jobs:
       - uses: codecov/codecov-action@v4
         with:
           files: /tmp/flutter-coverage.codecov
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Ensure module files are up to date
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
@@ -244,3 +245,4 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: /tmp/coverage.out.codecov
+          token: ${{ secrets.CODECOV_TOKEN }}
