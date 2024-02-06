@@ -30,7 +30,7 @@ jobs:
           cd .github/deb-build-docker/
           docker build . -t ubuntu:deb-build
       - name: Build debian package
-        uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
+        uses: canonical/desktop-engineering/gh-actions/common/build-debian@build-deb-lintian
         with:
           source-dir: wsl-pro-service
           token: ${{ secrets.GITHUB_TOKEN }}
