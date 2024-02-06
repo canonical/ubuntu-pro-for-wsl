@@ -831,10 +831,10 @@ packages:
     dependency: "direct main"
     description:
       name: wizard_router
-      sha256: fd3be80c6e53e7eba49ebd6c7f830f501efc38f76f3a7d6119925f5838e7cedc
+      sha256: d0111e4ef486a3abe7d14930b7485c04df1dc41dbfe70ace136ea4c7d4cd5b51
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.2.0"
   yaml:
     dependency: transitive
     description:
