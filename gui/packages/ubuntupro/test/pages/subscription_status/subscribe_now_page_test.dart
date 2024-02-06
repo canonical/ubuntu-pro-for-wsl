@@ -28,7 +28,7 @@ void main() {
     final lang = AppLocalizations.of(context);
 
     expect(called, isFalse);
-    final button = find.text(lang.learnMore);
+    final button = find.text(lang.about);
     await tester.tap(button);
     await tester.pump();
     expect(called, isTrue);
