@@ -35,6 +35,7 @@ jobs:
           source-dir: wsl-pro-service
           token: ${{ secrets.GITHUB_TOKEN }}
           docker-image: ubuntu:deb-build
+          lintian: --fail-on=error,warning
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
