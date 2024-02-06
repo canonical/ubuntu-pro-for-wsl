@@ -1,19 +1,10 @@
 # Welcome to Ubuntu Pro for WSL
 
-[actions-image]: https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa.yaml/badge.svg?branch=main
-[actions-url]: https://github.com/canonical/ubuntu-pro-for-wsl/actions?query=branch%3Amain+event%3Apush
-
-[license-image]: https://img.shields.io/badge/License-GPL3.0-blue.svg
-
-[![Documentation Status](https://readthedocs.com/projects/canonical-ubuntu-pro-for-wsl/badge/?version=latest&token=6ab00afc8f04ec33510f3150a8abbae383dfdfc57c1396c899c8f59d46bb0d76)](https://canonical-ubuntu-pro-for-wsl.readthedocs-hosted.com/en/latest/?badge=latest)
-
-[![Code quality][actions-image]][actions-url]
+[![Documentation Status](https://readthedocs.com/projects/canonical-ubuntu-pro-for-wsl/badge/?version=latest)](https://canonical-ubuntu-pro-for-wsl.readthedocs-hosted.com/en/latest/?badge=latest)
+[![Code quality](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa.yaml/badge.svg?branch=main)](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa.yaml?query=event%3Apush)
 [![Code coverage](https://codecov.io/gh/canonical/ubuntu-pro-for-wsl/branch/main/graph/badge.svg)](https://codecov.io/gh/canonical/ubuntu-pro-for-wsl)
-[![License][license-image]](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL3.0-blue.svg)](LICENSE)
 
-<!--
-[![Go Report Card](https://goreportcard.com/badge/canonical/ubuntu-pro-for-wsl/wsl-pro-service)](https://goreportcard.com/report/canonical/ubuntu-pro-for-wsl/wsl-pro-service)
--->
 This is the code repository for Ubuntu Pro for WSL, the bridge from Ubuntu WSL instances to Ubuntu Pro.
 
 It contains the set of applications to manage Ubuntu WSL instances that allows you to:
