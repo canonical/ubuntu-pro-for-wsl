@@ -131,10 +131,14 @@ jobs:
       - name: Report coverage
         if: ${{ matrix.os == 'ubuntu' }}
         shell: bash
-        run: echo "${{ steps.flutter-qa.outputs.coverage-info }}" >> /tmp/flutter-coverage.codecov
+        run: |
+          set -eu
+
+          mkdir -p ./coverage/codecov
+          echo "${{ steps.flutter-qa.outputs.coverage-info }}" >> ./coverage/codecov/flutter-coverage.codecov
       - uses: codecov/codecov-action@v4
         with:
-          files: /tmp/flutter-coverage.codecov
+          directory: ./coverage/codecov/
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Ensure module files are up to date
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
@@ -232,8 +236,12 @@ jobs:
         if: always() && !cancelled()
         working-directory: ${{ matrix.subproject }}
         run: |
-          go test -shuffle=on -coverpkg=./... -coverprofile=/tmp/coverage.out -covermode=count ./... -tags=gowslmock
-          grep -hv -e "testutils" -e "pb.go:" /tmp/coverage.out > /tmp/coverage.out.codecov
+          set -eu
+
+          cov_dir=$(pwd)/coverage
+          mkdir -p ${cov_dir}/codecov ${cov_dir}/raw
+          go test -shuffle=on -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./... -tags=gowslmock
+          grep -hv -e "testutils" -e "pb.go:" ${cov_dir}/raw/coverage.out > ${cov_dir}/codecov/coverage.out.codecov
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
@@ -244,5 +252,5 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: /tmp/coverage.out.codecov
+          directory: ${{ matrix.subproject }}/coverage/codecov
           token: ${{ secrets.CODECOV_TOKEN }}
