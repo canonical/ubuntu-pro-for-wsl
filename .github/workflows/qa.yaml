@@ -132,7 +132,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu' }}
         shell: bash
         run: echo "${{ steps.flutter-qa.outputs.coverage-info }}" >> /tmp/flutter-coverage.codecov
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           files: /tmp/flutter-coverage.codecov
       - name: Ensure module files are up to date
