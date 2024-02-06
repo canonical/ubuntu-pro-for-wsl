@@ -17,23 +17,30 @@ systemd
 ubuntu
 UbuntuProForWSL
 wsl
+WSL
+WSL's
 zsh
 
 # Other jargon
+autoload
 autopkgtest
 autopkgtests
 backporting
 changelog
+compinit
+config
 dev
 FIPS
+fpath
+FQDN
 HIPAA
 Hostagent
 LTS
 SLA
 SRU
 toolchain
-autoload
-compinit
-config
-fpath
 zshrc
+
+# Registry keys
+UbuntuProToken
+LandscapeClientConfig
