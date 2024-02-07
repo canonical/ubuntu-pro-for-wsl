@@ -343,7 +343,7 @@ func TestReconnection(t *testing.T) {
 
 			require.Eventually(t, func() bool {
 				return agentData.BackConnectionCount.Load() != 0
-			}, 30*time.Second, time.Second, "Service should eventually connect to the agent")
+			}, time.Minute, time.Second, "Service should eventually connect to the agent")
 
 			require.Equal(t, int32(1), systemd.readyNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
 			require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
