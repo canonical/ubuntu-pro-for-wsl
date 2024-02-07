@@ -20,38 +20,40 @@ class Pro4WSLApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return YaruTheme(
-      builder: (context, yaru, child) => ChangeNotifierProvider(
-        create: (_) => ValueNotifier(SubscriptionInfo()),
-        child: MaterialApp(
-          title: 'Ubuntu Pro',
-          theme: yaru.theme,
-          darkTheme: yaru.darkTheme,
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-          builder: (context, child) {
-            return Wizard(
-              routes: {
-                Routes.startup: const WizardRoute(builder: buildStartup),
-                Routes.subscriptionStatus: WizardRoute(
-                  builder: SubscriptionStatusPage.create,
-                  onLoad: (_) async {
-                    final client = getService<AgentApiClient>();
-                    final subscriptionInfo =
-                        context.read<ValueNotifier<SubscriptionInfo>>();
+      builder: (context, yaru, child) {
+        return ChangeNotifierProvider(
+          create: (_) => ValueNotifier(SubscriptionInfo()),
+          child: MaterialApp(
+            title: 'Ubuntu Pro',
+            theme: customize(yaru.darkTheme),
+            darkTheme: customize(yaru.darkTheme),
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            builder: (context, child) {
+              return Wizard(
+                routes: {
+                  Routes.startup: const WizardRoute(builder: buildStartup),
+                  Routes.subscriptionStatus: WizardRoute(
+                    builder: SubscriptionStatusPage.create,
+                    onLoad: (_) async {
+                      final client = getService<AgentApiClient>();
+                      final subscriptionInfo =
+                          context.read<ValueNotifier<SubscriptionInfo>>();
 
-                    subscriptionInfo.value = await client.subscriptionInfo();
+                      subscriptionInfo.value = await client.subscriptionInfo();
 
-                    // never skip this page.
-                    return true;
-                  },
-                ),
-              },
-            );
-          },
-        ),
-      ),
+                      // never skip this page.
+                      return true;
+                    },
+                  ),
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -72,3 +74,50 @@ AgentApiClient defaultClient(int port) =>
     AgentApiClient(host: kDefaultHost, port: port);
 
 Future<bool> launch() => launchAgent(kAgentRelativePath);
+
+ThemeData? customize(ThemeData? theme) {
+  if (theme == null) return null;
+  const padding = MaterialStatePropertyAll<EdgeInsetsGeometry>(
+    EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+  );
+  const shape = MaterialStatePropertyAll<RoundedRectangleBorder>(
+    RoundedRectangleBorder(
+      borderRadius: BorderRadius.zero,
+    ),
+  );
+  final textStyle = MaterialStatePropertyAll<TextStyle>(
+    theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
+  );
+  final filledButtonTheme = FilledButtonThemeData(
+    style: theme.filledButtonTheme.style?.copyWith(
+      shape: shape,
+      padding: padding,
+      textStyle: textStyle,
+    ),
+  );
+  final elevatedButtonTheme = ElevatedButtonThemeData(
+    style: theme.elevatedButtonTheme.style?.copyWith(
+      shape: shape,
+      padding: padding,
+      textStyle: textStyle,
+    ),
+  );
+  final outlinedButtonTheme = OutlinedButtonThemeData(
+    style: theme.outlinedButtonTheme.style?.copyWith(
+      shape: shape,
+      padding: padding,
+      textStyle: textStyle,
+    ),
+  );
+  final buttonTheme = theme.buttonTheme.copyWith(
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.zero,
+    ),
+  );
+  return theme.copyWith(
+    buttonTheme: buttonTheme,
+    filledButtonTheme: filledButtonTheme,
+    elevatedButtonTheme: elevatedButtonTheme,
+    outlinedButtonTheme: outlinedButtonTheme,
+  );
+}

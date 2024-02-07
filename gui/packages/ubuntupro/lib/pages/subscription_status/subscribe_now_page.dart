@@ -63,24 +63,15 @@ class SubscribeNowPage extends StatelessWidget {
                 child: Text(lang.subscribeNow),
               ),
             ),
-            const Padding(padding: EdgeInsets.only(right: 8.0)),
-            FilledButton.tonal(
+            const SizedBox(width: 8.0),
+            OutlinedButton(
               onPressed: model.launchProWebPage,
-              style: // mimics the secondary button in u.c/pro landing page.
-                  Theme.of(context).filledButtonTheme.style!.copyWith(
-                        backgroundColor: MaterialStateProperty.all(
-                          const Color(0xfff2f2f2),
-                        ),
-                        foregroundColor: MaterialStateProperty.all(
-                          const Color(0xff010101),
-                        ),
-                      ),
               child: Text(lang.about),
             ),
           ],
         ),
         const Padding(
-          padding: EdgeInsets.only(top: 8.0),
+          padding: EdgeInsets.only(top: 16.0, bottom: 24.0),
           child: Divider(thickness: 0.2),
         ),
         ProTokenInputField(
