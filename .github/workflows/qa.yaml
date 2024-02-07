@@ -208,9 +208,6 @@ jobs:
         exclude:
           - os: windows
             subproject: wsl-pro-service
-          # Excluded because common/i18n depends on gettext
-          - os: ubuntu
-            subproject: "common"
           # Excluded because microsoftstore_test needs msbuild
           - os: ubuntu
             subproject: "storeapi/go-wrapper/microsoftstore"
@@ -231,6 +228,15 @@ jobs:
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
         if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore'
+      - name: Install gettext on Linux
+        shell: bash
+        if: matrix.os == 'ubuntu'
+        working-directory: ${{ matrix.subproject }}
+        run: |
+          set -eu
+
+          sudo DEBIAN_FRONTEND=noninteractive apt update
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y gettext
       - name: Run tests
         shell: bash
         if: always() && !cancelled()
