@@ -24,6 +24,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yaru/yaru.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
 
@@ -61,11 +62,18 @@ class Pro4WSLPage extends StatelessWidget {
 }
 
 // A more stylized page that mimics the design of the https://ubuntu.com/pro
-// landing page, with a dark background and a title with some opacity, rendering
-// the [children] in a column layout.
+// landing page, with a dark background and an [svgAsset] logo followed by
+// a title with some opacity, rendering the [children] in a column layout.
 class DarkStyledLandingPage extends StatelessWidget {
-  const DarkStyledLandingPage({super.key, required this.children});
+  const DarkStyledLandingPage({
+    super.key,
+    required this.children,
+    this.svgAsset = 'assets/Ubuntu-tag.svg',
+    this.title = 'Ubuntu Pro',
+  });
   final List<Widget> children;
+  final String svgAsset;
+  final String title;
   // TODO: Remove those getters once we have a background image suitable for the light mode theme.
   static ThemeData get _data => yaruDark;
   static TextTheme get textTheme => _data.textTheme;
@@ -83,21 +91,36 @@ class DarkStyledLandingPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(48.0),
-            child: Theme(
-              data: _data,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Opacity(
-                    opacity: 0.7, // mimics the SVG in the u.c/pro website.
-                    child: Text(
-                      'Ubuntu Pro',
-                      style: _data.textTheme.displayMedium,
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      WidgetSpan(
+                        child: SvgPicture.asset(
+                          svgAsset,
+                          height: 70,
+                        ),
+                      ),
+                      const WidgetSpan(
+                        child: SizedBox(
+                          width: 8,
+                        ),
+                      ),
+                      TextSpan(
+                        text: title,
+                        style: _data.textTheme.displaySmall
+                            ?.copyWith(fontWeight: FontWeight.w100),
+                      ),
+                    ],
                   ),
-                  ...children,
-                ],
-              ),
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                ...children,
+              ],
             ),
           ),
         ],
