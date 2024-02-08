@@ -383,7 +383,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	out, err = d.Command(ctx, fmt.Sprintf("DEBIAN_FRONTEND=noninteractive apt install -y $(wslpath -ua '%s')", debPkgPath)).CombinedOutput()
+	out, err = d.Command(ctx, fmt.Sprintf("DEBIAN_FRONTEND=noninteractive bash -ec \"apt update && apt install -y $(wslpath -ua '%s')\"", debPkgPath)).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
