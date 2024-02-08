@@ -215,8 +215,8 @@ func logWindowsAgentOnError(t *testing.T) {
 	// The virtualized LocalAppData is located under a path similar to this one:
 	//
 	//    %LocalAppData%/Packages/CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc/LocalCache/Local
-	//                                                                      ^~~~~~~~~~~~~
-	//                                                                      This part changes from version to version
+	//                                                                              ^~~~~~~~~~~~~
+	//                                                                              This part changes from version to version
 	//
 	pattern := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuPro_*")
 	packageDir, err := globSingleResult(pattern)
