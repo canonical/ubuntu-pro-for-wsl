@@ -25,6 +25,7 @@ Thinking about using Ubuntu Pro for WSL for your next project? Get in touch!
 :titlesonly:
 
 self
+Tutorial </tutorial/index>
 How-to guides </howto/index>
 Reference </reference/index>
 Developer documentation </dev/index>
