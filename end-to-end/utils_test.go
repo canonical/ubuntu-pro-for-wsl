@@ -77,7 +77,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 
 	t.Log("Starting agent")
 
-	out, err := powershellf(ctx, "(Get-AppxPackage CanonicalGroupLimited.UbuntuProForWSL).InstallLocation").CombinedOutput()
+	out, err := powershellf(ctx, "(Get-AppxPackage CanonicalGroupLimited.UbuntuPro).InstallLocation").CombinedOutput()
 	require.NoError(t, err, "could not locate ubuntupro.exe: %v. %s", err, out)
 
 	ubuntupro := filepath.Join(strings.TrimSpace(string(out)), "gui", "ubuntupro.exe")
@@ -214,11 +214,11 @@ func logWindowsAgentOnError(t *testing.T) {
 
 	// The virtualized LocalAppData is located under a path similar to this one:
 	//
-	//    %LocalAppData%/Packages/CanonicalGroupLimited.UbuntuProForWSL_hhj52ngek5ykr/LocalCache/Local
+	//    %LocalAppData%/Packages/CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc/LocalCache/Local
 	//                                                                      ^~~~~~~~~~~~~
 	//                                                                      This part changes from version to version
 	//
-	pattern := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuProForWSL_*")
+	pattern := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuPro_*")
 	packageDir, err := globSingleResult(pattern)
 	if err != nil {
 		t.Logf("could not find Windows Agent's logs: could not locate MSIX virtualized directory: %v", err)

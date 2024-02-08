@@ -150,7 +150,7 @@ jobs:
         working-directory: ci-artifacts
         run: |
           Write-Output "::group::Set up AppxPackage"
-          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage -ErrorAction Ignore
+          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
           Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.msixbundle" -Destination "windows-agent/"
@@ -194,7 +194,7 @@ jobs:
           Remove-Item -Recurse -Path "${HOME}\.gitconfig" -ErrorAction Ignore
 
           # Uninstall Appx
-          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage -ErrorAction Ignore
+          Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage -ErrorAction Ignore
 
           # Uninstall certificate
           $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWSL_*.cer").Thumbprint

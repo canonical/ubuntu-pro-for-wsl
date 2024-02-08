@@ -56,7 +56,7 @@ const (
 	referenceDistroAppx = "CanonicalGroupLimited.UbuntuPreview"
 
 	// up4wAppxPackage is the Ubuntu Pro for WSL package.
-	up4wAppxPackage = "CanonicalGroupLimited.UbuntuProForWSL"
+	up4wAppxPackage = "CanonicalGroupLimited.UbuntuPro"
 )
 
 func TestMain(m *testing.M) {
