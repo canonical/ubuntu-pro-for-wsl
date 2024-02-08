@@ -24,6 +24,67 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func TestStop(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	conf := config.New(ctx, t.TempDir())
+
+	// Trigger a notification that blocks until we desire
+	started := make(chan struct{})
+	blocker := make(chan struct{})
+	conf.Notify(func() {
+		close(started)
+		<-blocker
+	})
+
+	err := conf.SetUserSubscription("HELLO_I_AM_TOKEN")
+	require.NoError(t, err, "Setup: SetUserSubscription should return no error")
+
+	const timeout = 10 * time.Second
+	select {
+	case <-time.After(timeout):
+		require.Fail(t, "Setup: config should have notified its observer")
+	case <-started:
+	}
+
+	// Check that Stop does not return when the observer is running
+	returned := make(chan struct{})
+	go func() {
+		conf.Stop()
+		close(returned)
+	}()
+
+	select {
+	case <-returned:
+		require.Fail(t, "Config's Stop should not return until all callbacks are done")
+	case <-time.After(timeout):
+	}
+
+	// Stop blocking and check that Stop returns
+	close(blocker)
+
+	select {
+	case <-returned:
+	case <-time.After(timeout):
+		require.Fail(t, "Config's Stop should have returned after all callbacks were finished")
+	}
+
+	// Call Stop again to see that it no longer blocks
+	returned = make(chan struct{})
+	go func() {
+		conf.Stop()
+		close(returned)
+	}()
+
+	select {
+	case <-returned:
+	case <-time.After(timeout):
+		require.Fail(t, "Config's Stop should not block when called for a second time")
+	}
+}
+
 // settingsState represents how much data is in the registry.
 type settingsState uint64
 
@@ -103,6 +164,11 @@ func TestSubscription(t *testing.T) {
 			// Test values
 			require.Equal(t, tc.wantToken, token, "Unexpected token value")
 			require.Equal(t, tc.wantSource, source, "Unexpected token source")
+
+			conf.Stop()
+
+			_, _, err = conf.Subscription()
+			require.Error(t, err, "Subscription should return error after the config has stopped")
 		})
 	}
 }
@@ -160,6 +226,11 @@ func TestLandscapeConfig(t *testing.T) {
 			// Test values
 			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected token value")
 			require.Equal(t, tc.wantSource, source, "Unexpected token source")
+
+			conf.Stop()
+
+			_, _, err = conf.LandscapeClientConfig()
+			require.Error(t, err, "LandscapeClientConfig should return error after the config has stopped")
 		})
 	}
 }
@@ -221,6 +292,11 @@ func TestLandscapeAgentUID(t *testing.T) {
 
 			// Test non-default values
 			assert.Equal(t, "landscapeUID1234", v, "LandscapeAgentUID returned an unexpected value")
+
+			conf.Stop()
+
+			_, err = conf.LandscapeAgentUID()
+			require.Error(t, err, "LandscapeAgentUID should return error after the config has stopped")
 		})
 	}
 }
@@ -278,6 +354,11 @@ func TestProvisioningTasks(t *testing.T) {
 			}
 
 			require.ElementsMatch(t, wantTasks, gotTasks, "Unexpected contents returned by ProvisioningTasks")
+
+			conf.Stop()
+
+			_, err = conf.ProvisioningTasks(ctx, "UBUNTU")
+			require.Error(t, err, "ProvisioningTasks should return error after the config has stopped")
 		})
 	}
 }
@@ -335,6 +416,11 @@ func TestSetUserSubscription(t *testing.T) {
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
+
+			conf.Stop()
+
+			err = conf.SetUserSubscription(token)
+			require.Error(t, err, "SetUserSubscription should return error after the config has stopped")
 		})
 	}
 }
@@ -393,6 +479,11 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			require.NoError(t, err, "LandscapeAgentUID should return no error")
 
 			require.Equal(t, tc.want, got, "LandscapeAgentUID returned an unexpected value for the token")
+
+			conf.Stop()
+
+			err = conf.SetLandscapeAgentUID(uid)
+			require.Error(t, err, "SetLandscapeAgentUID should return error after the config has stopped")
 		})
 	}
 }
@@ -487,6 +578,11 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 			token, _, err := c.Subscription()
 			require.NoError(t, err, "ProToken should return no error")
 			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
+
+			c.Stop()
+
+			err = c.FetchMicrosoftStoreSubscription(ctx, contracts.WithProURL(csAddr), contracts.WithMockMicrosoftStore(store))
+			require.Error(t, err, "FetchMicrosoftStoreSubscription should return error after the config has stopped")
 		})
 	}
 }
@@ -624,6 +720,11 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+
+			c.Stop()
+
+			err = c.UpdateRegistryData(ctx, config.RegistryData{}, db)
+			require.Error(t, err, "UpdateRegistryData should return error after the config has stopped")
 		})
 	}
 }
