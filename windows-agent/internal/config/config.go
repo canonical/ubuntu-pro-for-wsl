@@ -23,6 +23,9 @@ import (
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
 type Config struct {
+	ctx    context.Context
+	cancel func()
+
 	// data
 	subscription subscription
 	landscape    landscapeConf
@@ -35,6 +38,7 @@ type Config struct {
 
 	// observers are called after any configuration changes.
 	observers []func()
+	wg        sync.WaitGroup
 }
 
 // New creates and initializes a new Config object.
@@ -44,20 +48,59 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 		mu:          &sync.Mutex{},
 	}
 
+	m.ctx, m.cancel = context.WithCancel(ctx)
+
 	return m
+}
+
+// Stop releases all resources associated with the config.
+func (c *Config) Stop() {
+	c.cancel()
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.wg.Wait()
+}
+
+func (c *Config) stopped() bool {
+	select {
+	case <-c.ctx.Done():
+		return true
+	default:
+		return false
+	}
 }
 
 // Notify appends a callback. It'll be called every time any configuration changes.
 func (c *Config) Notify(f func()) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.observers = append(c.observers, f)
 }
 
+// notifyObservers calls all the observers. Use it under a mutex.
 func (c *Config) notifyObservers() {
+	c.wg.Add(len(c.observers))
+
 	for _, f := range c.observers {
-		// This needs to be in a goroutine because notifyObservers is sometimes
+		f := f
+		// This needs to be in a goroutine because notifyObservers is always
 		// called under the config mutex. The callback trying to grab the mutex
 		// (to read the config) would cause a deadlock otherwise.
-		go f()
+		//
+		// We protect it under "stopped" to avoid running callbacks during the
+		// agent's shutdown.
+		go func() {
+			defer c.wg.Done()
+
+			if c.stopped() {
+				return
+			}
+
+			f()
+		}()
 	}
 }
 
@@ -65,6 +108,10 @@ func (c *Config) notifyObservers() {
 func (c *Config) Subscription() (token string, source Source, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.stopped() {
+		return "", SourceNone, errors.New("config stopped")
+	}
 
 	if err := c.load(); err != nil {
 		return "", SourceNone, fmt.Errorf("config: could not get Ubuntu Pro subscription: %v", err)
@@ -81,6 +128,10 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	// Refresh data from registry
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.stopped() {
+		return nil, errors.New("config stopped")
+	}
 
 	if err := c.load(); err != nil {
 		return nil, fmt.Errorf("config: could not get provisioning tasks: %v", err)
@@ -102,6 +153,10 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 func (c *Config) LandscapeClientConfig() (string, Source, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.stopped() {
+		return "", SourceNone, errors.New("config stopped")
+	}
 
 	if err := c.load(); err != nil {
 		return "", SourceNone, fmt.Errorf("config: could not get Landscape configuration: %v", err)
@@ -147,6 +202,10 @@ func (c *Config) set(field *string, value string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.stopped() {
+		return errors.New("config stopped")
+	}
+
 	// Load before dumping to avoid overriding recent changes to file
 	if err := c.load(); err != nil {
 		return err
@@ -170,6 +229,10 @@ func (c *Config) set(field *string, value string) error {
 func (c *Config) LandscapeAgentUID() (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.stopped() {
+		return "", errors.New("config stopped")
+	}
 
 	if err := c.load(); err != nil {
 		return "", fmt.Errorf("config: could not get Landscape agent UID: %v", err)
@@ -260,6 +323,10 @@ func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data Registry
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.stopped() {
+		return nil, errors.New("config stopped")
+	}
 
 	// Load up-to-date state
 	if err := c.load(); err != nil {

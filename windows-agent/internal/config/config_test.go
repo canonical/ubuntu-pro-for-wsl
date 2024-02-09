@@ -90,6 +90,7 @@ func TestSubscription(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
+			defer conf.Stop()
 			setup(t, conf)
 
 			token, source, err := conf.Subscription()
@@ -146,6 +147,7 @@ func TestLandscapeConfig(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
+			defer conf.Stop()
 			setup(t, conf)
 
 			landscapeConf, source, err := conf.LandscapeClientConfig()
@@ -201,6 +203,7 @@ func TestLandscapeAgentUID(t *testing.T) {
 			}
 
 			conf := config.New(ctx, dir)
+			defer conf.Stop()
 			setup(t, conf)
 
 			v, err := conf.LandscapeAgentUID()
@@ -313,6 +316,7 @@ func TestSetUserSubscription(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
+			defer conf.Stop()
 			setup(t, conf)
 
 			token := "new_token"
@@ -370,6 +374,7 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
+			defer conf.Stop()
 			setup(t, conf)
 
 			uid := "new_uid"
@@ -443,6 +448,7 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile)
 			c := config.New(ctx, dir)
+			defer c.Stop()
 			setup(t, c)
 
 			// Set up the mock Microsoft store
@@ -548,6 +554,7 @@ func TestUpdateRegistryData(t *testing.T) {
 
 			_, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile)
 			c := config.New(ctx, dir)
+			defer c.Stop()
 
 			// Enter a first set of data to override the defaults
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
@@ -651,6 +658,7 @@ func TestNotify(t *testing.T) {
 
 	_, dir := setUpMockSettings(t, ctx, db, untouched, false)
 	c := config.New(ctx, dir)
+	defer c.Stop()
 
 	var notifyCount atomic.Int32
 	var wantNotifyCount int32

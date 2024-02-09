@@ -44,7 +44,7 @@ func (c *Config) load() (err error) {
 	return nil
 }
 
-func (c Config) dump() (err error) {
+func (c *Config) dump() (err error) {
 	defer decorate.OnError(&err, "could not store config to disk")
 
 	h := marshalHelper{

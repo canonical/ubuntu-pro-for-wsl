@@ -26,6 +26,7 @@ type Manager struct {
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
+	conf               *config.Config
 }
 
 // options are the configurable functional options for the daemon.
@@ -69,25 +70,25 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	//[GitHub](https://github.com/canonical/ubuntu-pro-for-wsl/pull/438)
 	InitWSLAPI()
 
-	conf := config.New(ctx, privateDir)
+	s.conf = config.New(ctx, privateDir)
 
-	db, err := database.New(ctx, privateDir, conf)
+	db, err := database.New(ctx, privateDir, s.conf)
 	if err != nil {
 		return s, err
 	}
 	s.db = db
 
-	w := registrywatcher.New(ctx, conf, s.db, registrywatcher.WithRegistry(opts.registry))
+	w := registrywatcher.New(ctx, s.conf, s.db, registrywatcher.WithRegistry(opts.registry))
 	s.registryWatcher = &w
 	s.registryWatcher.Start()
 
-	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
+	if err := s.conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
 		log.Warningf(ctx, "%v", err)
 	}
 
-	s.uiService = ui.New(ctx, conf, s.db)
+	s.uiService = ui.New(ctx, s.conf, s.db)
 
-	landscape, err := landscape.New(ctx, conf, s.db)
+	landscape, err := landscape.New(ctx, s.conf, s.db)
 	if err != nil {
 		return s, err
 	}
@@ -120,6 +121,10 @@ func (m Manager) Stop(ctx context.Context) {
 
 	if m.db != nil {
 		m.db.Close(ctx)
+	}
+
+	if m.conf != nil {
+		m.conf.Stop()
 	}
 }
 

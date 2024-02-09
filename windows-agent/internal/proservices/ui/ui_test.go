@@ -30,6 +30,7 @@ func TestNew(t *testing.T) {
 	defer db.Close(ctx)
 
 	conf := config.New(ctx, dir)
+	defer conf.Stop()
 
 	_ = ui.New(context.Background(), conf, db)
 }
@@ -92,6 +93,8 @@ func TestAttachPro(t *testing.T) {
 			}
 
 			conf := config.New(ctx, dir)
+			defer conf.Stop()
+
 			if tc.higherPriorityToken {
 				err = conf.UpdateRegistryData(ctx, config.RegistryData{
 					UbuntuProToken: "organization_token",
