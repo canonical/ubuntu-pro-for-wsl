@@ -65,19 +65,21 @@ func run(a app) int {
 }
 
 func setLoggerOutput() (func(), error) {
-	lad := os.Getenv("LocalAppData")
-	if lad == "" {
-		return nil, errors.New("could not find LocalAppData")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("could not find UserProfile: %v", err)
+	} else if homeDir == "" {
+		return nil, errors.New("could not find UserProfile: %USERPROFILE% is not set")
 	}
 
-	err := os.MkdirAll(filepath.Join(lad, common.LocalAppDataDir), 0600)
-	if err != nil {
+	publicDir := filepath.Join(homeDir, common.UserProfileDir)
+	if err := os.MkdirAll(publicDir, 0600); err != nil {
 		return nil, errors.New("could not create logs dir")
 	}
 
-	p := filepath.Join(lad, common.LocalAppDataDir, "log")
+	logFile := filepath.Join(publicDir, "log")
 
-	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE, 0600)
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("could not open log file: %v", err)
 	}
