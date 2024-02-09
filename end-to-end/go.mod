@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/sys v0.16.0
+	golang.org/x/sys v0.17.0
 	google.golang.org/grpc v1.61.0
 	gopkg.in/yaml.v3 v3.0.1
 )
