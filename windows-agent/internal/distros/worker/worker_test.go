@@ -197,7 +197,7 @@ func TestTaskProcessing(t *testing.T) {
 			conn := wslInstanceService.newClientConnection(t)
 
 			// End of setup
-			require.Equal(t, nil, w.Client(), "Client() should return nil when there is no connection")
+			require.Nil(t, w.Client(), "Client() should return nil when there is no connection")
 
 			if tc.unregisterAfterConstructor {
 				d.Invalidate(ctx)
@@ -238,7 +238,7 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task before an active connection is established
 			// We sleep to ensure at least one tick has gone by in the "wait for connection"
 			time.Sleep(clientTickPeriod)
-			require.Equal(t, nil, w.Client(), "Client should return nil when there is no connection")
+			require.Nil(t, w.Client(), "Client should return nil when there is no connection")
 			require.Equal(t, int32(0), ttask.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 
 			if tc.forceConnectionTimeout {
@@ -331,7 +331,7 @@ func TestSetConnection(t *testing.T) {
 	wslInstanceService2 := newTestService(t)
 	conn2 := wslInstanceService2.newClientConnection(t)
 
-	require.Equal(t, nil, w.Client(), "Client() should return nil because the connection has not been set yet")
+	require.Nil(t, w.Client(), "Client() should return nil because the connection has not been set yet")
 	require.False(t, w.IsActive(), "IsActive() should return false because the connection has not been set yet")
 
 	// Set first connection as active
@@ -343,7 +343,7 @@ func TestSetConnection(t *testing.T) {
 	const service1pings = 2
 	for i := 0; i < service1pings; i++ {
 		c := w.Client()
-		require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
+		require.NotNil(t, c, "client should be non-nil after setting a connection")
 		_, err = c.Ping(ctx, &wslserviceapi.Empty{})
 		require.NoError(t, err, "Ping attempt #%d should have been done successfully", i)
 		require.Equal(t, i+1, wslInstanceService1.pingCount, "second server should be pinged after c.Ping (iteration #%d)", i)
@@ -357,7 +357,7 @@ func TestSetConnection(t *testing.T) {
 
 	// Ping on renewed connection (new wsl instance service) and ensure only the second service receives the pings
 	c := w.Client()
-	require.NotEqual(t, nil, c, "client should be non-nil after setting a connection")
+	require.NotNil(t, c, "client should be non-nil after setting a connection")
 	_, err = c.Ping(ctx, &wslserviceapi.Empty{})
 	require.NoError(t, err, "Ping should have been done successfully")
 	require.Equal(t, 1, wslInstanceService2.pingCount, "second server should be pinged after c.Ping")
@@ -366,7 +366,7 @@ func TestSetConnection(t *testing.T) {
 
 	// Set connection to nil and ensure that no pings are made
 	w.SetConnection(nil)
-	require.Equal(t, nil, w.Client(), "Client() should return a nil because the connection has been set to nil")
+	require.Nil(t, w.Client(), "Client() should return a nil because the connection has been set to nil")
 	require.False(t, w.IsActive(), "IsActive() should return false because the connection has been set to nil")
 
 	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have received pings after setting the connection to nil")
