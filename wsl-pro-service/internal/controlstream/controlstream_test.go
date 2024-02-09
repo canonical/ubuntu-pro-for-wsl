@@ -184,7 +184,7 @@ func TestConnect(t *testing.T) {
 			defer cs.Disconnect()
 
 			require.Equal(t, int32(1), agentMetaData.ConnectionCount.Load(), "The agent should have received one connection")
-			require.Equal(t, agentMetaData.ReservedPort.Load(), cs.ReservedPort(), "The Windows agent and the Daemon should agree on the reserved port")
+			require.Equal(t, agentMetaData.ReservedPort.Load(), uint32(cs.ReservedPort()), "The Windows agent and the Daemon should agree on the reserved port")
 
 			select {
 			case <-cs.Done(ctx):
