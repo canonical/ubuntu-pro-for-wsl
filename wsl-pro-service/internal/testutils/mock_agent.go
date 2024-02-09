@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -160,7 +158,7 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 		return fmt.Errorf("could not reserve a port for %q: %v", distro, err)
 	}
 
-	var port uint32
+	var port int
 	// localhost:0 is a bad address to send, as 0 is not a real port, but rather instructs
 	// net.Listen to autoselect a new port; hence defeating the point of pre-autoselection.
 	if s.opts.sendBadPort {
@@ -178,8 +176,8 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 		log.Infof(ctx, "wslInstanceMockService: Connection with %q: Reserved port %d", distro, port)
 	}
 
-	s.data.ReservedPort.Store(port)
-	if err := stream.Send(&agentapi.Port{Port: port}); err != nil {
+	s.data.ReservedPort.Store(uint32(port))
+	if err := stream.Send(&agentapi.Port{Port: uint32(port)}); err != nil {
 		return fmt.Errorf("could not send port: %v", err)
 	}
 
@@ -216,11 +214,10 @@ func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_Connected
 	return nil
 }
 
-func portFromAddress(addr string) (uint32, error) {
-	s := strings.Split(addr, ":")
-	p, err := strconv.ParseUint(s[len(s)-1], 10, 32)
+func portFromAddress(addr string) (int, error) {
+	_, p, err := net.SplitHostPort(addr)
 	if err != nil {
 		return 0, fmt.Errorf("could not parse address %q", addr)
 	}
-	return uint32(p), nil
+	return net.LookupPort("tcp4", fmt.Sprint(p))
 }

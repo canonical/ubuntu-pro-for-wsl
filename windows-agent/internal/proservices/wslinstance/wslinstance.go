@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strconv"
-	"strings"
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
@@ -139,7 +137,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 			}
 
 			// Send it to WSL service.
-			if err := send.Send(&agentapi.Port{Port: p}); err != nil {
+			if err := send.Send(&agentapi.Port{Port: uint32(p)}); err != nil {
 				return nil, err
 			}
 
@@ -165,13 +163,13 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 	return conn, err
 }
 
-func getPort(lis net.Listener) (uint32, error) {
-	tmp := strings.Split(lis.Addr().String(), ":")
-	port, err := strconv.ParseUint(tmp[len(tmp)-1], 10, 16)
+func getPort(lis net.Listener) (int, error) {
+	_, port, err := net.SplitHostPort(lis.Addr().String())
 	if err != nil {
 		return 0, fmt.Errorf("could not parse port in address %q: %v", lis.Addr().String(), err)
 	}
-	return uint32(port), nil
+
+	return net.LookupPort("tcp4", port)
 }
 
 func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err error) {

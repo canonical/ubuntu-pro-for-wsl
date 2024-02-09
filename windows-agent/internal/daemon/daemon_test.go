@@ -99,7 +99,7 @@ func TestStartQuit(t *testing.T) {
 			t.Logf("Address is %q", address)
 
 			_, port, err := net.SplitHostPort(address)
-			_, err = net.LookupPort("tcp", port)
+			_, err = net.LookupPort("tcp4", port)
 			require.NoError(t, err, "Port should be valid")
 
 			// We start a connection but don't close it yet, so as to test graceful vs. forceful Quit
