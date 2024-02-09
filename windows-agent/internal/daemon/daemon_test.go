@@ -97,7 +97,10 @@ func TestStartQuit(t *testing.T) {
 
 			address := string(addrContents)
 			t.Logf("Address is %q", address)
-			require.NotEqual(t, nil, net.ParseIP(address), "Address should be valid")
+
+			_, port, err := net.SplitHostPort(address)
+			_, err = net.LookupPort("tcp", port)
+			require.NoError(t, err, "Port should be valid")
 
 			// We start a connection but don't close it yet, so as to test graceful vs. forceful Quit
 			closeHangingConn := grpcPersistentCall(t, address)
