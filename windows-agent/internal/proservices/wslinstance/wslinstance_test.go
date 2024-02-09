@@ -180,13 +180,15 @@ func TestConnected(t *testing.T) {
 
 			wantErrNeverReceivePort := tc.wantDone < afterDatabaseQuery && tc.wantDone != never
 			if !tc.skipLinuxServe {
-				go wsl.serve(t, wantErrNeverReceivePort)
+				go wsl.serve(wantErrNeverReceivePort)
 				defer wsl.stopServer()
+				defer wsl.requireNoServeError(t)
 			}
 
 			// WSL-side server is serving, but no info has been sent yet.
 			now = beforeSendInfo
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+			wsl.requireNoServeError(t)
 			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
 				return
 			}
@@ -205,6 +207,7 @@ func TestConnected(t *testing.T) {
 			// WSL-side server is serving, info was sent.
 			now = afterSendInfo
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+			wsl.requireNoServeError(t)
 			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
 				return
 			}
@@ -234,6 +237,7 @@ func TestConnected(t *testing.T) {
 			// Connected has added the distro to the database.
 			now = afterDatabaseQuery
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+			wsl.requireNoServeError(t)
 			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
 				return
 			}
@@ -269,6 +273,7 @@ func TestConnected(t *testing.T) {
 			// The distro has had its stream attached.
 			now = afterDistroShouldBeActive
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+			wsl.requireNoServeError(t)
 			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
 				return
 			}
@@ -284,6 +289,7 @@ func TestConnected(t *testing.T) {
 			// We have sent info for a second time
 			now = afterSecondSendInfo
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+			wsl.requireNoServeError(t)
 			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
 				return
 			}
@@ -297,6 +303,7 @@ func TestConnected(t *testing.T) {
 			// The database has been updated after the second info
 			now = afterPropertiesRefreshed
 			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
+			wsl.requireNoServeError(t)
 
 			// Ensure landscape sent an update
 			if tc.landscape == disconnected {
@@ -413,6 +420,8 @@ type wslDistroMock struct {
 	grpcServer *grpc.Server
 	ctrlStream agentapi.WSLInstance_ConnectedClient
 
+	errorDuringServe chan error
+
 	clientStop func()
 }
 
@@ -423,7 +432,8 @@ func newWslDistroMock(t *testing.T, ctx context.Context, ctrlAddr string) (mock 
 	t.Helper()
 
 	mock = &wslDistroMock{
-		grpcServer: grpc.NewServer(),
+		grpcServer:       grpc.NewServer(),
+		errorDuringServe: make(chan error),
 	}
 
 	ctrlConn, err := grpc.DialContext(ctx, ctrlAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -442,33 +452,58 @@ func newWslDistroMock(t *testing.T, ctx context.Context, ctrlAddr string) (mock 
 // serve starts the Linux-side service. It is an unimplemented service that exists
 // just so the wslinstance can connect to it, but any GRPC call will cause an error.
 //
+// Errors will not be returned, but rather channeled. Assert there is no error via
+// wsl.requireNoServeError(t).
+//
 // wantErrNeverReceivePort is a test parameter for when you expect the Linux endpoint
 // of the control stream to never receive the port.
-func (m *wslDistroMock) serve(t *testing.T, wantErrNeverReceivePort bool) {
+func (m *wslDistroMock) serve(wantErrNeverReceivePort bool) {
+	err := func() error {
+		msg, err := m.ctrlStream.Recv()
+		if wantErrNeverReceivePort {
+			if err != nil {
+				return nil
+			}
+			return fmt.Errorf("want error, got nil: wslDistroMock should not receive the port to listen to from the control stream")
+		}
+		if err != nil {
+			return fmt.Errorf("Recv did not return the port to listen to: %v", err)
+		}
+
+		log.Printf("wslDistroMock: Received msg: %v", msg)
+
+		p := msg.GetPort()
+		if p == 0 {
+			return errors.New("Received invalid port :0 from server")
+		}
+
+		// Create our service
+		addr := fmt.Sprintf("localhost:%d", p)
+		lis, err := net.Listen("tcp4", addr)
+		if err != nil {
+			return fmt.Errorf("could not listen to %q", addr)
+		}
+
+		log.Printf("wslDistroMock: Listening to: %s", addr)
+
+		wslserviceapi.RegisterWSLServer(m.grpcServer, &wslserviceapi.UnimplementedWSLServer{})
+
+		_ = m.grpcServer.Serve(lis)
+		return nil
+	}()
+
+	m.errorDuringServe <- err
+	close(m.errorDuringServe)
+}
+
+// requireNoServeError checks if serve has asyncronously returned an error.
+func (m *wslDistroMock) requireNoServeError(t *testing.T) {
 	t.Helper()
-
-	msg, err := m.ctrlStream.Recv()
-	if wantErrNeverReceivePort {
-		require.Error(t, err, "wslDistroMock should not receive the port to listen to from the control stream")
-		return
+	select {
+	case err := <-m.errorDuringServe:
+		require.NoError(t, err, "Error happened during serve")
+	default:
 	}
-	require.NoError(t, err, "wslDistroMock should have received the port to listen to from the control stream")
-
-	t.Logf("wslDistroMock: Received msg: %v", msg)
-
-	p := msg.GetPort()
-	require.NotEqual(t, 0, p, "Received invalid port :0 from server")
-
-	// Create our service
-	addr := fmt.Sprintf("localhost:%d", p)
-	lis, err := net.Listen("tcp4", addr)
-	require.NoError(t, err, "wslDistroMock: startServe: could not listen to %q", addr)
-
-	t.Logf("wslDistroMock: Listening to: %s", addr)
-
-	wslserviceapi.RegisterWSLServer(m.grpcServer, &wslserviceapi.UnimplementedWSLServer{})
-
-	_ = m.grpcServer.Serve(lis)
 }
 
 // sendInfo sends the specified info from the Linux-side client to the wslinstance service.
@@ -482,6 +517,9 @@ func (m *wslDistroMock) sendInfo(t *testing.T, info *agentapi.DistroInfo) {
 // stopServer stops the Linux-side service.
 func (m *wslDistroMock) stopServer() {
 	m.grpcServer.Stop()
+
+	// Block until serve exits
+	<-m.errorDuringServe
 }
 
 // stopServe stops the Linux-side service.

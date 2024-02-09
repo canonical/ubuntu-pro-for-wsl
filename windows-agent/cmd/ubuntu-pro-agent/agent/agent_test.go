@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -204,18 +203,18 @@ func startDaemon(t *testing.T) (app *agent.App, done func()) {
 	a := agent.NewForTesting(t, "", "")
 	a.SetArgs()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	// Using a channel because we cannot assert in a goroutine.
+	ch := make(chan error)
 	go func() {
-		defer wg.Done()
-		err := a.Run()
-		require.NoError(t, err, "Run should exits without any error")
+		ch <- a.Run()
+		close(ch)
 	}()
+
 	a.WaitReady()
 	time.Sleep(10 * time.Second)
 
 	return a, func() {
-		wg.Wait()
+		require.NoError(t, <-ch, "Run should exit without any errors")
 	}
 }
 
