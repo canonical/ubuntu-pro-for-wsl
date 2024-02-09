@@ -8,6 +8,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
@@ -72,7 +73,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	conf := config.New(ctx, privateDir)
 
-	db, err := database.New(ctx, privateDir, conf)
+	cloudInit, err := cloudinit.New(ctx, conf, publicDir)
+	if err != nil {
+		return s, err
+	}
+
+	db, err := database.New(ctx, privateDir, s.conf)
 	if err != nil {
 		return s, err
 	}
@@ -83,7 +89,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	s.uiService = ui.New(ctx, conf, s.db)
 
-	landscape, err := landscape.New(ctx, conf, s.db)
+	landscape, err := landscape.New(ctx, conf, s.db, cloudInit)
 	if err != nil {
 		return s, err
 	}
@@ -94,10 +100,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	conf.SetUbuntuProNotifier(func(ctx context.Context, token string) {
 		ubuntupro.Distribute(ctx, s.db, token)
 		landscape.NotifyUbuntuProUpdate(ctx, token)
+		cloudInit.Notify(ctx)
 	})
 
 	conf.SetLandscapeNotifier(func(ctx context.Context, conf, uid string) {
 		landscape.NotifyConfigUpdate(ctx, conf, uid)
+		cloudInit.Notify(ctx)
 	})
 
 	// All notifications have been set up: starting the registry watcher before any services.
