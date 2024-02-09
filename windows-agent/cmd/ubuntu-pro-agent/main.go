@@ -84,11 +84,13 @@ func setLoggerOutput() (func(), error) {
 		return nil, fmt.Errorf("could not open log file: %v", err)
 	}
 
-	fmt.Fprintf(f, "\n======== Startup %s ========\n", time.Now().Format(time.RFC3339))
-
 	// Write both to file and to Stdout. The latter is useful for local development.
 	w := io.MultiWriter(f, os.Stdout)
 	log.SetOutput(w)
+
+	fmt.Fprintf(f, "\n======= STARTUP =======\n")
+	log.Infof("Time: %s", time.Now().Format(time.RFC3339))
+	log.Infof("Version: %s", common.Version)
 
 	return func() { _ = f.Close() }, nil
 }
