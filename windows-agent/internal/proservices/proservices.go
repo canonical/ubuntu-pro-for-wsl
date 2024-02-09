@@ -75,37 +75,35 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	if err != nil {
 		return s, err
 	}
+	s.db = db
 
-	registryWatcher := registrywatcher.New(ctx, conf, db, registrywatcher.WithRegistry(opts.registry))
-	registryWatcher.Start()
+	w := registrywatcher.New(ctx, conf, s.db, registrywatcher.WithRegistry(opts.registry))
+	s.registryWatcher = &w
+	s.registryWatcher.Start()
 
 	if err := conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
 		log.Warningf(ctx, "%v", err)
 	}
 
-	uiService := ui.New(ctx, conf, db)
+	s.uiService = ui.New(ctx, conf, s.db)
 
-	landscape, err := landscape.New(ctx, conf, db)
+	landscape, err := landscape.New(ctx, conf, s.db)
 	if err != nil {
 		return s, err
 	}
+	s.landscapeService = landscape
 
-	if err := landscape.Connect(); err != nil {
+	if err := s.landscapeService.Connect(); err != nil {
 		log.Warningf(ctx, err.Error())
 	}
 
-	wslInstanceService, err := wslinstance.New(ctx, db, landscape.Controller())
+	wslInstanceService, err := wslinstance.New(ctx, s.db, s.landscapeService.Controller())
 	if err != nil {
 		return s, err
 	}
+	s.wslInstanceService = wslInstanceService
 
-	return Manager{
-		uiService:          uiService,
-		wslInstanceService: wslInstanceService,
-		registryWatcher:    &registryWatcher,
-		db:                 db,
-		landscapeService:   landscape,
-	}, nil
+	return s, nil
 }
 
 // Stop deallocates resources in the services.
