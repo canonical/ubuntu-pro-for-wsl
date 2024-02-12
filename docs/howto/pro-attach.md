@@ -33,7 +33,7 @@ If you try to do both at once, the subscription used in the registry will overru
 6. Add a new string value within the `UbuntuPro` key.
    - You can do this with Right Click > New > String value
 8. Name this value `UbuntuProToken`.
-9. Open the `LandscapeConfig` value and paste your token.
+9. Open the `UbuntuProToken` value and paste your token.
 10. That is it. All new and existing distros with the WSL-Pro-Service installed will be pro-attached next time you start them. You can verify it by starting any WSL distro with WSL-Pro-Service installed, and running:
 
     ```bash
