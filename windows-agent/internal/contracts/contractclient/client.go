@@ -38,7 +38,7 @@ func New(base *url.URL, doer HTTPDoer) *Client {
 
 // GetServerAccessToken returns a short-lived auth token identifying the Contract Server backend.
 func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err error) {
-	defer decorate.OnError(&err, "couldn't download access token from server")
+	defer decorate.OnError(&err, "couldn't download auth token from the contracts server")
 
 	// baseurl/v1/token.
 	u := c.baseURL.JoinPath(contractsapi.Version, contractsapi.TokenPath)
@@ -82,7 +82,7 @@ func (c *Client) GetServerAccessToken(ctx context.Context) (token string, err er
 
 // GetProToken returns the (possibly known) Pro Token provided by the Contract Server backend by POST'ing the user JWT.
 func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string, err error) {
-	defer decorate.OnError(&err, "couldn't download a Pro Token from server")
+	defer decorate.OnError(&err, "couldn't download an Ubuntu Pro Token from the contract server")
 
 	if err := checkLength(int64(len(userJWT))); err != nil {
 		return "", fmt.Errorf("invalid user JWT: %v", err)
