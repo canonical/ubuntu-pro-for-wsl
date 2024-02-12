@@ -92,7 +92,9 @@ func (tm *taskManager) submitUnsafe(deferred bool, tasks ...task.Task) (err erro
 
 // resubmit submits a task with lowest priority, meaning that it will be overridden
 // by any equivalent already in the queue.
-func (tm *taskManager) resubmit(t task.Task) error {
+func (tm *taskManager) resubmit(t task.Task) (err error) {
+	defer decorate.OnError(&err, "could not re-submit task")
+
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
@@ -140,7 +142,7 @@ func (tm *taskManager) EnqueueDeferredTasks() {
 
 // save writes the current task queue (plus deferred tasks) to file.
 func (tm *taskManager) save() (err error) {
-	defer decorate.OnError(&err, "could not save current work in progress")
+	defer decorate.OnError(&err, "could not save queued tasks to disk")
 
 	tasks := append(tm.tasks.Data(), tm.deferredTasks.Data()...)
 
@@ -162,7 +164,7 @@ func (tm *taskManager) save() (err error) {
 
 // Load loads tasks from file.
 func (tm *taskManager) load() (err error) {
-	defer decorate.OnError(&err, "could not load previous work in progress")
+	defer decorate.OnError(&err, "could not load tasks from disk")
 
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
