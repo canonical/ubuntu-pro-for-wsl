@@ -21,7 +21,7 @@ Follow these steps in order to access the logs for the Windows agent.
 1. On powershell, go to the package's directory:
 
    ```powershell
-   Set-Location "$env:LocalAppData\Packages\CanonicalGroupLimited.UbuntuProForWSL_*"
+   Set-Location "$env:LocalAppData\Packages\CanonicalGroupLimited.UbuntuPro_*"
    Set-Location "LocalCache\Local\Ubuntu Pro"
    ```
 

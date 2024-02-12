@@ -31,7 +31,7 @@
     <AppxBundlePlatforms>x64</AppxBundlePlatforms>
     <AppInstallerUri>https://ubuntu.com/wsl</AppInstallerUri>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <PackageCertificateThumbprint>083D237292AC491DD1893E440172181791554DFC</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>4D31645B605DF092114DCD4E24958D39DC8F5949</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
   </PropertyGroup>

@@ -72,7 +72,7 @@ function Update-Certificate {
 }
 
 function Install-Appx {
-    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage
 
     $artifacts = (
         Get-ChildItem ".\msix\UbuntuProForWSL\AppPackages\UbuntuProForWSL_*"    `
@@ -97,7 +97,7 @@ function Install-Appx {
 }
 
 # Uninstall currently installed version
-Get-AppxPackage "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage
+Get-AppxPackage "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage
 
 # Going to project root
 Push-Location "${PSScriptRoot}\..\.."

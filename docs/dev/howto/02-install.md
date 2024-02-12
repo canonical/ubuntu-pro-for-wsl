@@ -77,7 +77,7 @@ You can reset Ubuntu Pro for WSL to factory settings following these steps:
 1. Uninstall the package and shut down WSL:
 
     ```powershell
-    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuProForWSL" | Remove-AppxPackage`
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage`
     wsl --shutdown
     ```
 
