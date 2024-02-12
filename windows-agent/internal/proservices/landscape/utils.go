@@ -30,6 +30,8 @@ type landscapeHostConf struct {
 
 // newHostAgentInfo assembles a HostAgentInfo message.
 func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.HostAgentInfo, err error) {
+	defer decorate.OnError(&err, "could not assemble HostAgentInfo message")
+
 	token, _, err := c.config().Subscription()
 	if err != nil {
 		return info, err
@@ -37,7 +39,7 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 
 	conf, err := newLandscapeHostConf(c.config())
 	if err != nil {
-		return info, fmt.Errorf("could not read config: %v", err)
+		return info, err
 	}
 
 	distros := c.database().GetAll()
@@ -46,12 +48,12 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 		instanceInfo, err := newInstanceInfo(d)
 
 		if errors.As(err, &newInstanceInfoMinorError{}) {
-			log.Warningf(ctx, "Skipping from landscape info: %v", err)
+			log.Warningf(ctx, "Landcape: skipping distro %q from landscape info: %v", d.Name(), err)
 			continue
 		}
 
 		if err != nil {
-			log.Errorf(ctx, "Skipping from landscape info: %v", err)
+			log.Errorf(ctx, "Landcape:  skipping distro %q from landscape info: %v", d.Name(), err)
 			continue
 		}
 
@@ -107,14 +109,12 @@ func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCr
 
 // newLandscapeHostConf extracts the information relevant to the agent from the LandscapeConfig
 // configuration data. All values missing in the Config will be set to their defaults.
-func newLandscapeHostConf(config Config) (landscapeHostConf, error) {
-	conf := landscapeHostConf{
-		// TODO: default-initialize the hostagentURL to Canonical's SaaS.
-	}
+func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
+	defer decorate.OnError(&err, "could not extract Windows settings from the config")
 
 	out, _, err := config.LandscapeClientConfig()
 	if err != nil {
-		return conf, fmt.Errorf("could not obtain Landscape config: %v", err)
+		return conf, fmt.Errorf("could not obtain Landscape client config: %v", err)
 	}
 
 	if out == "" {
@@ -124,7 +124,7 @@ func newLandscapeHostConf(config Config) (landscapeHostConf, error) {
 
 	ini, err := ini.Load(strings.NewReader(out))
 	if err != nil {
-		return conf, fmt.Errorf("could not parse Landscape config file: %v", err)
+		return conf, fmt.Errorf("could not parse Landscape client config: %v", err)
 	}
 
 	// Note: all these functions only return errors when the section/key does not exist.
@@ -180,9 +180,9 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	case gowsl.Stopped:
 		instanceState = landscapeapi.InstanceState_Stopped
 	case gowsl.Installing, gowsl.NonRegistered, gowsl.Uninstalling:
-		return nil, newInstanceInfoMinorError{err: fmt.Errorf("distro %q is in state %q. Only %q and %q are accepted", d.Name(), state, gowsl.Running, gowsl.Stopped)}
+		return nil, newInstanceInfoMinorError{err: fmt.Errorf("cannot query distro due to its state: %s", state)}
 	default:
-		return nil, fmt.Errorf("distro %q is in unknown state %q", d.Name(), state)
+		return nil, fmt.Errorf("unknown state %q", state)
 	}
 
 	properties := d.Properties()
