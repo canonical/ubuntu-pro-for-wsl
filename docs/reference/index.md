@@ -13,6 +13,7 @@ ubuntu_pro_for_wsl_gui
 ubuntu_pro_token
 ubuntu_wsl
 windows_agent
+windows_registry
 wsl
 wsl_pro_service
 ```

@@ -59,9 +59,9 @@ log_level = debug
 
 ## Read more
 
-- [How to register your machine to Landscape via the Windows registry](../howto/attach-landscape)
+- [How to install Ubuntu Pro for WSL](../howto/install).
 
 ## External links
 
 - [Landscape documentation](https://ubuntu.com/landscape/docs)
-- [How to perform common tasks with WSL in Landscape](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape)
+- [How to perform common tasks with WSL in Landscape](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape).
