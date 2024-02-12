@@ -92,7 +92,7 @@ func TestSubscription(t *testing.T) {
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
-			token, source, err := conf.Subscription(ctx)
+			token, source, err := conf.Subscription()
 			if tc.wantError {
 				require.Error(t, err, "ProToken should return an error")
 				return
@@ -148,7 +148,7 @@ func TestLandscapeConfig(t *testing.T) {
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
-			landscapeConf, source, err := conf.LandscapeClientConfig(ctx)
+			landscapeConf, source, err := conf.LandscapeClientConfig()
 			if tc.wantError {
 				require.Error(t, err, "ProToken should return an error")
 				return
@@ -203,7 +203,7 @@ func TestLandscapeAgentUID(t *testing.T) {
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
-			v, err := conf.LandscapeAgentUID(ctx)
+			v, err := conf.LandscapeAgentUID()
 			if tc.wantError {
 				require.Error(t, err, "LandscapeAgentUID should return an error")
 				return
@@ -320,14 +320,14 @@ func TestSetUserSubscription(t *testing.T) {
 				token = ""
 			}
 
-			err = conf.SetUserSubscription(ctx, token)
+			err = conf.SetUserSubscription(token)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
 				return
 			}
 			require.NoError(t, err, "SetSubscription should return no error")
 
-			got, _, err := conf.Subscription(ctx)
+			got, _, err := conf.Subscription()
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
@@ -377,14 +377,14 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 				uid = ""
 			}
 
-			err = conf.SetLandscapeAgentUID(ctx, uid)
+			err = conf.SetLandscapeAgentUID(uid)
 			if tc.wantError {
 				require.Error(t, err, "SetLandscapeAgentUID should return an error")
 				return
 			}
 			require.NoError(t, err, "SetLandscapeAgentUID should return no error")
 
-			got, err := conf.LandscapeAgentUID(ctx)
+			got, err := conf.LandscapeAgentUID()
 			require.NoError(t, err, "LandscapeAgentUID should return no error")
 
 			require.Equal(t, tc.want, got, "LandscapeAgentUID returned an unexpected value for the token")
@@ -478,7 +478,7 @@ func TestFetchMicrosoftStoreSubscription(t *testing.T) {
 			}
 			require.NoError(t, err, "FetchMicrosoftStoreSubscription should return no errors")
 
-			token, _, err := c.Subscription(ctx)
+			token, _, err := c.Subscription()
 			require.NoError(t, err, "ProToken should return no error")
 			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
 		})
@@ -564,12 +564,12 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.NotEmpty(t, tokenCsum1, "Subscription checksum should not be empty")
 			require.NotEmpty(t, lcapeCsum1, "Landscape checksum should not be empty")
 
-			token, src, err := c.Subscription(ctx)
+			token, src, err := c.Subscription()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, proToken1, token, "Subscription did not return the token we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
-			lcape, src, err := c.LandscapeClientConfig(ctx)
+			lcape, src, err := c.LandscapeClientConfig()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, landscapeConf1, lcape, "Subscription did not return the landscape config we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
@@ -587,12 +587,12 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.NotEqual(t, tokenCsum1, tokenCsum2, "Subscription checksum should have changed")
 			require.NotEqual(t, lcapeCsum1, lcapeCsum2, "Landscape checksum should have changed")
 
-			token, src, err = c.Subscription(ctx)
+			token, src, err = c.Subscription()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, proToken2, token, "Subscription did not return the token we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
-			lcape, src, err = c.LandscapeClientConfig(ctx)
+			lcape, src, err = c.LandscapeClientConfig()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
@@ -608,12 +608,12 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, tokenCsum2, tokenCsum3, "Subscription checksum should not have changed")
 			require.Equal(t, lcapeCsum2, lcapeCsum3, "Landscape checksum should not have changed")
 
-			token, src, err = c.Subscription(ctx)
+			token, src, err = c.Subscription()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, proToken2, token, "Subscription did not return the token we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
-			lcape, src, err = c.LandscapeClientConfig(ctx)
+			lcape, src, err = c.LandscapeClientConfig()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
@@ -657,14 +657,14 @@ func TestNotify(t *testing.T) {
 
 	c.Notify(func() { notifyCount.Add(1) })
 
-	err = c.SetUserSubscription(ctx, "TOKEN_1")
+	err = c.SetUserSubscription("TOKEN_1")
 	require.NoError(t, err, "SetUserSubscription should return no error")
 	wantNotifyCount++
 
 	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
 		time.Second, 100*time.Millisecond, "Attached function should have been called after changing the pro token")
 
-	err = c.SetLandscapeAgentUID(ctx, "UID_1")
+	err = c.SetLandscapeAgentUID("UID_1")
 	require.NoError(t, err, "SetLandscapeAgentUID should return no error")
 	wantNotifyCount++
 

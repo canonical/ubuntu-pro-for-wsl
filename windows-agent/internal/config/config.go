@@ -62,7 +62,7 @@ func (c *Config) notifyObservers() {
 }
 
 // Subscription returns the ProToken and the method it was acquired with (if any).
-func (c *Config) Subscription(ctx context.Context) (token string, source Source, err error) {
+func (c *Config) Subscription() (token string, source Source, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -99,7 +99,7 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 
 // LandscapeClientConfig returns the value of the landscape server URL and
 // the method it was acquired with (if any).
-func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, error) {
+func (c *Config) LandscapeClientConfig() (string, Source, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -112,7 +112,7 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, err
 }
 
 // SetUserSubscription overwrites the value of the user-provided Ubuntu Pro token.
-func (c *Config) SetUserSubscription(ctx context.Context, proToken string) (err error) {
+func (c *Config) SetUserSubscription(proToken string) (err error) {
 	defer decorate.OnError(&err, "config: could not set user-provided Ubuntu Pro subscription")
 
 	if _, src := c.subscription.resolve(); src > SourceUser {
@@ -123,7 +123,7 @@ func (c *Config) SetUserSubscription(ctx context.Context, proToken string) (err 
 }
 
 // setStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
-func (c *Config) setStoreSubscription(ctx context.Context, proToken string) (err error) {
+func (c *Config) setStoreSubscription(proToken string) (err error) {
 	defer decorate.OnError(&err, "could not set Microsoft-Store-provided Ubuntu Pro subscription")
 
 	if _, src := c.subscription.resolve(); src > SourceMicrosoftStore {
@@ -134,7 +134,7 @@ func (c *Config) setStoreSubscription(ctx context.Context, proToken string) (err
 }
 
 // SetLandscapeAgentUID overrides the Landscape agent UID.
-func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
+func (c *Config) SetLandscapeAgentUID(uid string) error {
 	if err := c.set(&c.landscape.UID, uid); err != nil {
 		return fmt.Errorf("config: could not set Landscape agent UID: %v", err)
 	}
@@ -167,7 +167,7 @@ func (c *Config) set(field *string, value string) error {
 
 // LandscapeAgentUID returns the UID assigned to this agent by the Landscape server.
 // An empty string is returned if no UID has been assigned.
-func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
+func (c *Config) LandscapeAgentUID() (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -183,7 +183,7 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) (err error) {
 	defer decorate.OnError(&err, "config: could not validate subscription against Microsoft Store")
 
-	_, src, err := c.Subscription(ctx)
+	_, src, err := c.Subscription()
 	if err != nil {
 		return fmt.Errorf("could not get current subscription status: %v", err)
 	}
@@ -217,7 +217,7 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...co
 		log.Debugf(ctx, "Config: obtained an Ubuntu Pro token from the Microsoft Store: %q", common.Obfuscate(proToken))
 	}
 
-	if err := c.setStoreSubscription(ctx, proToken); err != nil {
+	if err := c.setStoreSubscription(proToken); err != nil {
 		return err
 	}
 

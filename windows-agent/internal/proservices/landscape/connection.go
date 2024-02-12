@@ -50,7 +50,7 @@ func newConnectionSettings(c landscapeHostConf) connectionSettings {
 func newConnection(ctx context.Context, d serviceData) (conn *connection, err error) {
 	defer decorate.OnError(&err, "could not connect to Landscape")
 
-	conf, err := newLandscapeHostConf(ctx, d.config())
+	conf, err := newLandscapeHostConf(d.config())
 	if err != nil {
 		return nil, fmt.Errorf("could not read config: %v", err)
 	}
@@ -102,7 +102,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		}
 	}()
 
-	if err := handshake(ctx, d, conn); err != nil {
+	if err := handshake(d, conn); err != nil {
 		conn.disconnect()
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 // If this is the first connection ever, the server will respond by assigning
 // the host a UID. This Recv is handled by receiveCommands, but handshake
 // waits until the UID is received before returning.
-func handshake(ctx context.Context, d serviceData, conn *connection) error {
+func handshake(d serviceData, conn *connection) error {
 	// Send first message
 	info, err := newHostAgentInfo(conn.ctx, d)
 	if err != nil {
@@ -132,7 +132,7 @@ func handshake(ctx context.Context, d serviceData, conn *connection) error {
 	conf := d.config()
 
 	// Not the first contact between client and server: done!
-	if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
+	if uid, err := conf.LandscapeAgentUID(); err != nil {
 		return err
 	} else if uid != "" {
 		return nil
@@ -150,12 +150,12 @@ func handshake(ctx context.Context, d serviceData, conn *connection) error {
 		case <-ctx.Done():
 			conn.disconnect()
 			// Avoid races where the UID arrives just after cancelling the context
-			err := conf.SetLandscapeAgentUID(ctx, "")
+			err := conf.SetLandscapeAgentUID("")
 			return errors.Join(err, fmt.Errorf("Landscape server did not respond with a client UID"))
 		case <-ticker.C:
 		}
 
-		if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
+		if uid, err := conf.LandscapeAgentUID(); err != nil {
 			return err
 		} else if uid != "" {
 			// UID received: success.

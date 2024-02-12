@@ -30,12 +30,12 @@ type landscapeHostConf struct {
 
 // newHostAgentInfo assembles a HostAgentInfo message.
 func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.HostAgentInfo, err error) {
-	token, _, err := c.config().Subscription(ctx)
+	token, _, err := c.config().Subscription()
 	if err != nil {
 		return info, err
 	}
 
-	conf, err := newLandscapeHostConf(ctx, c.config())
+	conf, err := newLandscapeHostConf(c.config())
 	if err != nil {
 		return info, fmt.Errorf("could not read config: %v", err)
 	}
@@ -58,7 +58,7 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 		instances = append(instances, instanceInfo)
 	}
 
-	uid, err := c.config().LandscapeAgentUID(ctx)
+	uid, err := c.config().LandscapeAgentUID()
 	if err != nil {
 		return info, err
 	}
@@ -107,12 +107,12 @@ func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCr
 
 // newLandscapeHostConf extracts the information relevant to the agent from the LandscapeConfig
 // configuration data. All values missing in the Config will be set to their defaults.
-func newLandscapeHostConf(ctx context.Context, config Config) (landscapeHostConf, error) {
+func newLandscapeHostConf(config Config) (landscapeHostConf, error) {
 	conf := landscapeHostConf{
 		// TODO: default-initialize the hostagentURL to Canonical's SaaS.
 	}
 
-	out, _, err := config.LandscapeClientConfig(ctx)
+	out, _, err := config.LandscapeClientConfig()
 	if err != nil {
 		return conf, fmt.Errorf("could not obtain Landscape config: %v", err)
 	}

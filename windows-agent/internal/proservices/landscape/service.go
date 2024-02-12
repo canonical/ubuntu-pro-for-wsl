@@ -42,12 +42,12 @@ type Service struct {
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
-	LandscapeClientConfig(context.Context) (string, config.Source, error)
+	LandscapeClientConfig() (string, config.Source, error)
 
-	Subscription(context.Context) (string, config.Source, error)
+	Subscription() (string, config.Source, error)
 
-	LandscapeAgentUID(context.Context) (string, error)
-	SetLandscapeAgentUID(context.Context, string) error
+	LandscapeAgentUID() (string, error)
+	SetLandscapeAgentUID(string) error
 
 	Notify(func())
 }
@@ -181,7 +181,7 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 		s.conn = nil
 	}
 
-	_, src, err := s.conf.Subscription(ctx)
+	_, src, err := s.conf.Subscription()
 	if err != nil {
 		return nil, fmt.Errorf("skipping connection: could not obtain Ubuntu Pro token: %v", err)
 	}
@@ -242,7 +242,7 @@ func (s *Service) watchConfigChanges(ctx context.Context) {
 			return
 		}
 
-		landscapeConf, err := newLandscapeHostConf(ctx, s.conf)
+		landscapeConf, err := newLandscapeHostConf(s.conf)
 		if err != nil {
 			log.Warningf(ctx, "Landscape: could not assemble landscape host configuration: %v", err)
 			return
