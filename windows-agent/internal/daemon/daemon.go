@@ -31,7 +31,6 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 	log.Debug(ctx, "Building new daemon")
 
 	listeningPortFilePath := filepath.Join(addrDir, common.ListeningPortFileName)
-	log.Debugf(ctx, "Daemon port file path: %s", listeningPortFilePath)
 
 	return &Daemon{
 		listeningPortFilePath: listeningPortFilePath,
@@ -44,9 +43,9 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 // to be able to reach our server.
 // This file is removed once the server stops listening.
 func (d Daemon) Serve(ctx context.Context) (err error) {
-	defer decorate.OnError(&err, i18n.G("error while serving"))
+	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
-	log.Debug(ctx, "Starting to serve requests")
+	log.Debug(ctx, "Daemon: starting to serve requests")
 
 	// TODO: get a local port only, please :)
 	var cfg net.ListenConfig
@@ -64,10 +63,11 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 	}
 	defer os.Remove(d.listeningPortFilePath)
 
-	log.Infof(ctx, "Serving GRPC requests on %v", addr)
+	log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
+	log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 
 	if err := d.grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("grpc error: %v", err)
+		return fmt.Errorf("gRPC serve error: %v", err)
 	}
 	return nil
 }
@@ -81,7 +81,7 @@ func (d Daemon) Quit(ctx context.Context, force bool) {
 		return
 	}
 
-	log.Info(ctx, i18n.G("Wait for active requests to close."))
+	log.Info(ctx, i18n.G("Daemon: waiting for active requests to close."))
 	d.grpcServer.GracefulStop()
-	log.Debug(ctx, i18n.G("All connections have now ended."))
+	log.Debug(ctx, i18n.G("Daemon: all connections have now ended."))
 }
