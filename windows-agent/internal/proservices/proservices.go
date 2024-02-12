@@ -108,6 +108,8 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 // Stop deallocates resources in the services.
 func (m Manager) Stop(ctx context.Context) {
+	log.Info(ctx, "Stopping GRPC services manager")
+
 	if m.landscapeService != nil {
 		m.landscapeService.Stop(ctx)
 	}
