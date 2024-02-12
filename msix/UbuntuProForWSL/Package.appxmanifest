@@ -14,7 +14,7 @@
   <Identity
     Name="CanonicalGroupLimited.UbuntuPro"
     Publisher="CN=23596F84-C3EA-4CD8-A7DF-550DCE37BCD0"
-    Version="1.0.0.0" />
+    Version="0.1.0.0" />
 
   <Properties>
     <DisplayName>Ubuntu Pro for WSL</DisplayName>
