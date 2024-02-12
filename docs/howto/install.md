@@ -16,13 +16,13 @@
 	pkg -s wsl-pro-service | grep Status
 	```
 
-	- If the output says `Status: install ok installed` : Congratulations, your WSL instance is already compatible with UP4W.
+	- If the output says `Status: install ok installed`: Congratulations, your WSL instance is already compatible with UP4W.
 	- Otherwise: Install it by running: `sudo apt update && sudo apt install -y wsl-pro-service`
 </details>
 
 <details><summary> Expand to see how to create a new UP4W-compatible distro </summary>
 
-1.	Verify that you have WSL installed: In your Windows terminal, run `wsl --version` and see that there is no error. Otherwise install it with `wsl --install`.
+1.	Verify that you have WSL installed: In your Windows terminal, run `wsl --version` and see that there is no error. Otherwise, install it with `wsl --install`.
 2.	Ensure that you don't have an _Ubuntu (Preview)_ distro registered by running `wsl --list --quiet` on your Windows terminal.
 	- If the output contains _Ubuntu-Preview_, you already have an instance of Ubuntu (Preview).
 		- You can make it compatible with UP4W
@@ -41,7 +41,7 @@ On your Windows host, go to the Microsoft Store, search for _Ubuntu (Preview)_, 
 
 <details><summary> Expand to see how </summary>
 
-Get the Ubuntu Pro token associated to your subscription (it's free for up to 5 machines).
+Get the Ubuntu Pro token associated with your subscription (it's free for up to 5 machines).
 > See more: [Ubuntu Pro dashboard](https://ubuntu.com/pro)
 
 </details>
@@ -50,7 +50,7 @@ Get the Ubuntu Pro token associated to your subscription (it's free for up to 5 
 
 <details><summary> Expand to see how </summary>
 
-1. Set up a Landscape Beta server. Usually you'd run it on another machine (a server), but you can install it on some WSL instance just for demonstration purposes:
+1. Set up a Landscape Beta server. Usually, you'd run it on another machine (a server), but you can install it on some WSL instance just for demonstration purposes:
    1. On the Windows terminal, run `wsl --install Ubuntu-22.04`.
    2. Inside `Ubuntu-22.04`, run `ip r` and take note of the default gateway.
    3. Inside `Ubuntu-22.04`, install the Landscape (beta) following the steps in the [Landscape documentation](https://ubuntu.com/landscape/docs/quickstart-deployment).
@@ -77,7 +77,7 @@ Get the Ubuntu Pro token associated to your subscription (it's free for up to 5 
 </details>
 
 ## 1. Install Ubuntu Pro for WSL
-On your Windows host, go to the Microsoft Store, search for _Ubuntu Pro for WSL_. Click on it and find the _Install_ button. Click on it.
+On your Windows host, go to the Microsoft Store, and search for _Ubuntu_ Pro for WSL_. Click on it and find the _Install_ button. Click on it.
 
 ## 2. Configure Ubuntu Pro for WSL
 You have two ways of setting up UP4W. You can use the graphical interface (GUI), which is recommended for users managing a single Windows machine. If you deploy at scale, we recommend using automated tools to set up UP4W via the registry.
@@ -112,10 +112,10 @@ You have two ways of setting up UP4W. You can use the graphical interface (GUI),
 	2. Set its value to the contents of file `landscape-client.conf` specified during the Landscape server setup:
 		- Right-click `LandscapeConfig` > Modify > Write the contents of the specified file.
 
-## 3. Verify that you Ubuntu Pro for WSL is working
+## 3. Verify that Ubuntu Pro for WSL is working
 > If either verification step fails, wait for a few seconds and try again. This should not take longer than a minute
 1. Start the UP4W GUI and check that your subscription is active.
-   - To open the GUI, search UP4W in you Windows menu and click on it.
+   - To open the GUI, search UP4W in the Windows menu and click on it.
    - The GUI will explicitly say that you are subscribed.
 2. Open any of the distros you want to manage and check that it is pro-attached with `pro status`.
 3. Open Landscape and check that the host and distro were registered. <!-- TODO: how ? -->

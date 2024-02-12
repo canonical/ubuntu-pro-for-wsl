@@ -1,7 +1,7 @@
 # Landscape
 
 Landscape is a systems management tool designed to help you manage and monitor your Ubuntu systems from a unified platform.
-It is a separate project from Ubuntu Pro for WSL [with its own documentation](https://ubuntu.com/landscape/docs).
+It is a separate project from Ubuntu Pro for WSL [with its documentation](https://ubuntu.com/landscape/docs).
 
 Ubuntu Pro for WSL offers a set of conveniences for using Landscape to manage WSL distros. This page explains how these two systems integrate.
 
