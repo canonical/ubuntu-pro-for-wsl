@@ -28,7 +28,7 @@ type Config struct {
 	landscape    landscapeConf
 
 	// disk backing
-	cachePath string
+	storagePath string
 
 	// Sync
 	mu *sync.Mutex
@@ -40,8 +40,8 @@ type Config struct {
 // New creates and initializes a new Config object.
 func New(ctx context.Context, cachePath string) (m *Config) {
 	m = &Config{
-		cachePath: filepath.Join(cachePath, "config"),
-		mu:        &sync.Mutex{},
+		storagePath: filepath.Join(cachePath, "config"),
+		mu:          &sync.Mutex{},
 	}
 
 	return m
@@ -67,7 +67,7 @@ func (c *Config) Subscription(ctx context.Context) (token string, source Source,
 	defer c.mu.Unlock()
 
 	if err := c.load(); err != nil {
-		return "", SourceNone, fmt.Errorf("could not load: %v", err)
+		return "", SourceNone, fmt.Errorf("config: could not get Ubuntu Pro subscription: %v", err)
 	}
 
 	token, source = c.subscription.resolve()
@@ -83,7 +83,7 @@ func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]ta
 	defer c.mu.Unlock()
 
 	if err := c.load(); err != nil {
-		return nil, fmt.Errorf("could not load: %v", err)
+		return nil, fmt.Errorf("config: could not get provisioning tasks: %v", err)
 	}
 
 	// Ubuntu Pro attachment
@@ -104,7 +104,7 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, err
 	defer c.mu.Unlock()
 
 	if err := c.load(); err != nil {
-		return "", SourceNone, fmt.Errorf("could not load: %v", err)
+		return "", SourceNone, fmt.Errorf("config: could not get Landscape configuration: %v", err)
 	}
 
 	conf, src := c.landscape.resolve()
@@ -112,30 +112,38 @@ func (c *Config) LandscapeClientConfig(ctx context.Context) (string, Source, err
 }
 
 // SetUserSubscription overwrites the value of the user-provided Ubuntu Pro token.
-func (c *Config) SetUserSubscription(ctx context.Context, proToken string) error {
+func (c *Config) SetUserSubscription(ctx context.Context, proToken string) (err error) {
+	defer decorate.OnError(&err, "config: could not set user-provided Ubuntu Pro subscription")
+
 	if _, src := c.subscription.resolve(); src > SourceUser {
-		return errors.New("attempted to set a user subscription when there already is a higher priority one")
+		return errors.New("higher priority subscription active")
 	}
 
-	return c.set(ctx, &c.subscription.User, proToken)
+	return c.set(&c.subscription.User, proToken)
 }
 
 // setStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
-func (c *Config) setStoreSubscription(ctx context.Context, proToken string) error {
+func (c *Config) setStoreSubscription(ctx context.Context, proToken string) (err error) {
+	defer decorate.OnError(&err, "could not set Microsoft-Store-provided Ubuntu Pro subscription")
+
 	if _, src := c.subscription.resolve(); src > SourceMicrosoftStore {
-		return errors.New("attempted to set a store subscription when there already is a higher priority one")
+		return errors.New("higher priority subscription active")
 	}
 
-	return c.set(ctx, &c.subscription.Store, proToken)
+	return c.set(&c.subscription.Store, proToken)
 }
 
 // SetLandscapeAgentUID overrides the Landscape agent UID.
 func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
-	return c.set(ctx, &c.landscape.UID, uid)
+	if err := c.set(&c.landscape.UID, uid); err != nil {
+		return fmt.Errorf("config: could not set Landscape agent UID: %v", err)
+	}
+
+	return nil
 }
 
 // set is a generic method to safely modify the config.
-func (c *Config) set(ctx context.Context, field *string, value string) error {
+func (c *Config) set(field *string, value string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -150,7 +158,6 @@ func (c *Config) set(ctx context.Context, field *string, value string) error {
 	c.notifyObservers()
 
 	if err := c.dump(); err != nil {
-		log.Errorf(ctx, "Could not update settings: %v", err)
 		*field = old
 		return err
 	}
@@ -165,7 +172,7 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 	defer c.mu.Unlock()
 
 	if err := c.load(); err != nil {
-		return "", fmt.Errorf("could not load: %v", err)
+		return "", fmt.Errorf("config: could not get Landscape agent UID: %v", err)
 	}
 
 	return c.landscape.UID, nil
@@ -174,7 +181,7 @@ func (c *Config) LandscapeAgentUID(ctx context.Context) (string, error) {
 // FetchMicrosoftStoreSubscription contacts Ubuntu Pro's contract server and the Microsoft Store
 // to check if the user has an active subscription that provides a pro token. If so, that token is used.
 func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) (err error) {
-	defer decorate.OnError(&err, "could not validate subscription against Microsoft Store")
+	defer decorate.OnError(&err, "config: could not validate subscription against Microsoft Store")
 
 	_, src, err := c.Subscription(ctx)
 	if err != nil {
@@ -190,20 +197,24 @@ func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...co
 		}
 
 		if valid {
-			log.Debug(ctx, "Microsoft Store subscription is active")
+			log.Debug(ctx, "Config: Microsoft Store subscription is active")
 			return nil
 		}
 
-		log.Debug(ctx, "No valid Microsoft Store subscription")
+		log.Debug(ctx, "Config: no valid Microsoft Store subscription")
 	}
+
+	log.Debug(ctx, "Config: attempting to obtain Ubuntu Pro token from the Microsoft Store")
 
 	proToken, err := contracts.NewProToken(ctx, args...)
 	if err != nil {
-		return fmt.Errorf("could not get ProToken from Microsoft Store: %v", err)
+		err = fmt.Errorf("could not get the Ubuntu Pro token from the Microsoft Store: %v", err)
+		log.Debugf(ctx, "Config: %v", err)
+		return err
 	}
 
 	if proToken != "" {
-		log.Debugf(ctx, "Obtained Ubuntu Pro token from the Microsoft Store: %q", common.Obfuscate(proToken))
+		log.Debugf(ctx, "Config: obtained an Ubuntu Pro token from the Microsoft Store: %q", common.Obfuscate(proToken))
 	}
 
 	if err := c.setStoreSubscription(ctx, proToken); err != nil {
@@ -219,7 +230,9 @@ type RegistryData struct {
 }
 
 // UpdateRegistryData takes in data from the registry and applies it as necessary.
-func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *database.DistroDB) error {
+func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *database.DistroDB) (err error) {
+	defer decorate.OnError(&err, "config: could not update registry-provided data")
+
 	taskList, err := c.collectRegistrySettingsTasks(ctx, data, db)
 	if err != nil {
 		return err
@@ -240,8 +253,10 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 // collectRegistrySettingsTasks looks at the registry data to see if any of them have changed since this
 // function was last called. It returns a list of tasks to run triggered by these changes, and updates
 // the config.
-func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data RegistryData, db *database.DistroDB) ([]task.Task, error) {
+func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data RegistryData, db *database.DistroDB) (taskList []task.Task, err error) {
 	type getTask = func(*Config, context.Context, RegistryData, *database.DistroDB) (task.Task, error)
+
+	defer decorate.OnError(&err, "could not generate tasks from updated registry settings")
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -253,7 +268,6 @@ func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data Registry
 
 	// Collect tasks for updated settings
 	var errs error
-	var taskList []task.Task
 	for _, f := range []getTask{(*Config).getTaskOnNewSubscription, (*Config).getTaskOnNewLandscape} {
 		task, err := f(c, ctx, data, db)
 		if err != nil {
@@ -266,14 +280,14 @@ func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data Registry
 	}
 
 	if errs != nil {
-		log.Warningf(ctx, "Could not obtain some updated registry settings: %v", errs)
+		log.Warningf(ctx, "Config: could not obtain some updated registry settings: %v", errs)
 	}
 
 	c.notifyObservers()
 
 	// Dump updated checksums
 	if err := c.dump(); err != nil {
-		return nil, fmt.Errorf("could not store updated registry settings: %v", err)
+		return nil, err
 	}
 
 	return taskList, nil
@@ -287,7 +301,7 @@ func (c *Config) getTaskOnNewSubscription(ctx context.Context, data RegistryData
 	if !hasChanged(data.UbuntuProToken, &c.subscription.Checksum) {
 		return nil, nil
 	}
-	log.Debug(ctx, "New organization-provided Ubuntu Pro subscription settings detected in registry")
+	log.Debug(ctx, "Config: new Ubuntu Pro subscription received from the registry")
 
 	proToken, _ := c.subscription.resolve()
 	return tasks.ProAttachment{Token: proToken}, nil
@@ -304,7 +318,7 @@ func (c *Config) getTaskOnNewLandscape(ctx context.Context, data RegistryData, d
 		return nil, nil
 	}
 
-	log.Debug(ctx, "New Landscape settings detected in registry")
+	log.Debug(ctx, "Config: new Landscape configuration received from the registry")
 
 	lconf, _ := c.landscape.resolve()
 	return tasks.LandscapeConfigure{Config: lconf, HostagentUID: c.landscape.UID}, nil
