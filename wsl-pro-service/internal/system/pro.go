@@ -5,29 +5,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+
+	"github.com/ubuntu/decorate"
 )
 
 // ProStatus returns whether this distro is pro-attached.
 func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
+	defer decorate.OnError(&err, "pro status")
+
 	exe, args := s.backend.ProExecutable("status", "--format=json")
 	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
 	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
-		return false, fmt.Errorf("pro status command returned error: %v\nStdout:%s", err, string(out))
+		return false, fmt.Errorf("command returned error: %v\nStdout:%s", err, string(out))
 	}
 
 	var attachedStatus struct {
 		Attached bool
 	}
 	if err = json.Unmarshal(out, &attachedStatus); err != nil {
-		return false, fmt.Errorf("could not parse output of pro status: %v\nOutput: %s", err, string(out))
+		return false, fmt.Errorf("could not parse output: %v\nOutput: %s", err, string(out))
 	}
 
 	return attachedStatus.Attached, nil
 }
 
 // ProAttach attaches the current distro to Ubuntu Pro.
-func (s *System) ProAttach(ctx context.Context, token string) error {
+func (s *System) ProAttach(ctx context.Context, token string) (err error) {
+	defer decorate.OnError(&err, "pro attach")
+
 	/*
 		We don't parse the json from `pro attach` because stdout is polluted:
 		$ pro attach token --format json
@@ -47,7 +53,9 @@ func (s *System) ProAttach(ctx context.Context, token string) error {
 
 // ProDetach detaches the current distro from Ubuntu Pro.
 // If the distro was already detached, nothing is done.
-func (s *System) ProDetach(ctx context.Context) error {
+func (s *System) ProDetach(ctx context.Context) (err error) {
+	defer decorate.OnError(&err, "pro detach")
+
 	exe, args := s.backend.ProExecutable("detach", "--assume-yes", "--format=json")
 	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
 	out, detachErr := exec.CommandContext(ctx, exe, args...).Output()

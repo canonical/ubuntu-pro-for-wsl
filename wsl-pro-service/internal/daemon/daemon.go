@@ -139,7 +139,7 @@ func (d *Daemon) Serve() (err error) {
 			// Irrecoverable errors: broken /etc/resolv.conf, broken pro status, etc
 			return err
 		}
-		log.Errorf(d.ctx, "serve error: %v", err)
+		log.Errorf(d.ctx, "Serve error: %v", err)
 
 		delay = min(delay*growthRate, maxDelay)
 
@@ -157,7 +157,7 @@ func (d *Daemon) Serve() (err error) {
 			return nil
 		}
 
-		log.Infof(d.ctx, "Retrying connection")
+		log.Infof(d.ctx, "Retrying connection to control stream")
 		if err := d.systemdNotifyStatus(d.ctx, serviceStatusRetrying); err != nil {
 			return err
 		}
@@ -220,7 +220,7 @@ func handleServerStop(ctx, gracefulStopCtx, forceStopCtx context.Context, server
 
 // serve listens on a tcp socket and starts serving GRPC requests on it.
 func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
-	log.Debug(ctx, "Starting to serve requests")
+	log.Debug(ctx, "Starting to serve gRPC requests")
 
 	address := fmt.Sprintf("localhost:%d", d.ctrlStream.ReservedPort())
 
@@ -230,7 +230,7 @@ func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
 		return fmt.Errorf("could not listen: %v", err)
 	}
 
-	log.Infof(ctx, "Serving GRPC requests on %v", address)
+	log.Infof(ctx, "Serving gRPC requests on %v", address)
 
 	if err := d.systemdNotifyStatus(d.ctx, serviceStatusServing); err != nil {
 		return err

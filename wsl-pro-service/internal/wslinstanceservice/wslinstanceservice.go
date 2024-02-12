@@ -38,7 +38,7 @@ func New(s system.System) *Service {
 // RegisterGRPCService returns a new grpc Server with the 2 api services attached to it.
 // It also gets the correct middlewares hooked in.
 func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStreamClient) *grpc.Server {
-	log.Debug(ctx, "Registering GRPC WSL instance service")
+	log.Debug(ctx, "Registering gRPC WSL instance service")
 	s.ctrlStream = ctrlStream
 
 	grpcServer := grpc.NewServer()
@@ -50,10 +50,13 @@ func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStr
 
 // ApplyProToken serves ApplyProToken messages sent by the agent.
 func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAttachInfo) (empty *wslserviceapi.Empty, err error) {
+	defer decorate.LogOnError(err)
+	defer decorate.OnError(&err, "ApplyProToken")
+
 	defer func() {
 		// Regardless of success or failure, we send back an updated system info
 		if e := s.sendInfo(ctx); e != nil {
-			log.Warningf(ctx, "Error in ApplyProToken: %v", e)
+			log.Warningf(ctx, "could not send update via control stream: %v", e)
 			err = errors.Join(err, e)
 		}
 	}()
@@ -65,7 +68,6 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 	}
 
 	if err := s.system.ProDetach(ctx); err != nil {
-		log.Errorf(ctx, "Error in ApplyProToken: detachPro: %v", err)
 		return nil, err
 	}
 
@@ -74,7 +76,6 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 	}
 
 	if err := s.system.ProAttach(ctx, info.GetToken()); err != nil {
-		log.Errorf(ctx, "Error in ApplyProToken: attachPro:: %v", err)
 		return nil, err
 	}
 
@@ -88,7 +89,7 @@ func (s *Service) sendInfo(ctx context.Context) error {
 	}
 
 	if err := s.ctrlStream.Send(sysinfo); err != nil {
-		return fmt.Errorf("could not send back system info: %v", err)
+		return fmt.Errorf("could not send system info: %v", err)
 	}
 
 	return nil
@@ -96,11 +97,12 @@ func (s *Service) sendInfo(ctx context.Context) error {
 
 // ApplyLandscapeConfig serves LandscapeConfig messages sent by the agent.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.LandscapeConfig) (empty *wslserviceapi.Empty, err error) {
-	defer decorate.OnError(&err, "ApplyLandscapeConfig error")
+	defer decorate.LogOnError(err)
+	defer decorate.OnError(&err, "ApplyLandscapeConfig")
 
 	conf := msg.GetConfiguration()
 	if conf == "" {
-		log.Info(ctx, "ApplyLandscapeConfig: Received empty config: disabling")
+		log.Info(ctx, "ApplyLandscapeConfig: received empty config: disabling")
 		if err := s.system.LandscapeDisable(ctx); err != nil {
 			return nil, err
 		}
@@ -109,7 +111,7 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.L
 
 	uid := msg.GetHostagentUID()
 
-	log.Infof(ctx, "ApplyLandscapeConfig: Received config: registering")
+	log.Infof(ctx, "ApplyLandscapeConfig: received config: registering")
 	if err := s.system.LandscapeEnable(ctx, conf, uid); err != nil {
 		return nil, err
 	}

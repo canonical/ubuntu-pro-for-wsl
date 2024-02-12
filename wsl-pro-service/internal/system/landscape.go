@@ -21,7 +21,7 @@ const (
 // LandscapeEnable registers the current distro to Landscape with the specified config.
 func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, hostagentUID string) (err error) {
 	// Decorating here to avoid stuttering the URL (url package prints it as well)
-	defer decorate.OnError(&err, "could not register to landscape")
+	defer decorate.OnError(&err, "could not register distro to Landscape")
 
 	if landscapeConfig, err = modifyConfig(ctx, s, landscapeConfig, hostagentUID); err != nil {
 		return err

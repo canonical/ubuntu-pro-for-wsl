@@ -54,7 +54,7 @@ func New(ctx context.Context, s system.System) (ControlStream, error) {
 
 // Connect connects to the control stream. Call Disconnect to release resources.
 func (cs *ControlStream) Connect(ctx context.Context) (err error) {
-	defer decorate.OnError(&err, "could not connect to windows agent via the control stream")
+	defer decorate.OnError(&err, "could not connect to Windows Agent via the control stream")
 
 	ctrlAddr, err := cs.address(ctx)
 	if err != nil {
@@ -66,14 +66,14 @@ func (cs *ControlStream) Connect(ctx context.Context) (err error) {
 		return err
 	}
 
-	log.Debug(ctx, "Connected to Windows agent via the control stream")
+	log.Debug(ctx, "Control stream: starting handshake")
 
 	port, err := cs.handshake(ctx, session)
 	if err != nil {
 		return err
 	}
 
-	log.Debug(ctx, "Completed handshake with Windows agent via the control stream")
+	log.Debug(ctx, "Control stream: completed handshake")
 
 	cs.session = session
 	cs.port = port
