@@ -7,7 +7,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -198,12 +197,11 @@ func startDaemon(t *testing.T, s system.System) (app *service.App, done func()) 
 
 	a.SetArgs("-vvv")
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// Using a channel because we cannot assert in a goroutine.
+	ch := make(chan error)
 	go func() {
-		defer wg.Done()
-		err := a.Run()
-		require.NoError(t, err, "Run should exit without any error")
+		ch <- a.Run()
+		close(ch)
 	}()
 
 	t.Cleanup(a.Quit)
@@ -212,7 +210,7 @@ func startDaemon(t *testing.T, s system.System) (app *service.App, done func()) 
 	time.Sleep(50 * time.Millisecond)
 
 	return a, func() {
-		wg.Wait()
+		require.NoError(t, <-ch, "Run should exit without any error")
 	}
 }
 

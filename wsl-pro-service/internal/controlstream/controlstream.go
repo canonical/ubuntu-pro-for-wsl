@@ -5,9 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
-	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -22,7 +22,7 @@ type ControlStream struct {
 	system   system.System
 	addrPath string
 	session  session
-	port     uint32
+	port     int
 }
 
 // SystemError is an error caused by a misconfiguration of the system, rather than
@@ -81,7 +81,7 @@ func (cs *ControlStream) Connect(ctx context.Context) (err error) {
 	return nil
 }
 
-func (cs *ControlStream) handshake(ctx context.Context, session session) (port uint32, err error) {
+func (cs *ControlStream) handshake(ctx context.Context, session session) (port int, err error) {
 	defer decorate.OnError(&err, "could not complete handshake")
 
 	sysinfo, err := cs.system.Info(ctx)
@@ -103,7 +103,7 @@ func (cs *ControlStream) handshake(ctx context.Context, session session) (port u
 		return 0, errors.New("received invalid message: port cannot be zero")
 	}
 
-	return p, nil
+	return net.LookupPort("tcp4", fmt.Sprint(p))
 }
 
 // Disconnect dumps the existing connection (if any). The connection can be re-established by calling Connect.
@@ -127,19 +127,16 @@ func (cs ControlStream) address(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not read agent port file %q: %v", cs.addrPath, err)
 	}
 
-	fields := strings.Split(string(addr), ":")
-	if len(fields) == 0 {
-		// Avoid a panic. As far as I know, there is no way of triggering this,
-		// but we may as well protect against it.
-		return "", fmt.Errorf("could not extract port out of address %q", addr)
+	_, port, err := net.SplitHostPort(string(addr))
+	if err != nil {
+		return "", fmt.Errorf("could not parse port from %q: %v", addr, err)
 	}
-	port := fields[len(fields)-1]
 
 	return fmt.Sprintf("%s:%s", windowsLocalhost, port), nil
 }
 
 // ReservedPort returns the port assigned to this distro.
-func (cs ControlStream) ReservedPort() uint32 {
+func (cs ControlStream) ReservedPort() int {
 	return cs.port
 }
 
