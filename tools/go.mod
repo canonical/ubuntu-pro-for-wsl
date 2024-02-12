@@ -10,7 +10,7 @@ require (
 	github.com/golangci/golangci-lint v1.56.1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/vuln v1.0.3
+	golang.org/x/vuln v1.0.4
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
