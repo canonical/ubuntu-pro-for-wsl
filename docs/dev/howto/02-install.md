@@ -31,7 +31,7 @@ This is the Windows-side agent that manages the distros.
 1. Uninstall Ubuntu Pro for WSL if you had installed previously:
 
     ```powershell
-    Get-AppxPackage -Name ubuntu-pro-for-wsl | Remove-AppxPackage
+    Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage
     ```
 
 2. Follow the download steps to download UbuntuProForWSL
