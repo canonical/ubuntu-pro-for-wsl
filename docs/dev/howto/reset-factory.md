@@ -1,4 +1,4 @@
-## How to reset UP4W back to factory settings
+# How to reset UP4W back to factory settings
 
 You can reset Ubuntu Pro for WSL to factory settings following these steps:
 
@@ -17,7 +17,7 @@ You can reset Ubuntu Pro for WSL to factory settings following these steps:
     ```
 4. Remove the registry key:
    1. Press Win+R
-   2. Type regedit.exe and click OK
+   2. Type `regedit.exe` and click OK
    3. Write `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` at the address bar
       - If this fails, you are done (the key does not exist).
    4. Find the `UbuntuPro` key on the left
