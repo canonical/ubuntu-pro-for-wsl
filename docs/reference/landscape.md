@@ -1,3 +1,4 @@
+(ref::landscape)=
 # Landscape
 
 Landscape is a systems management tool designed to help you manage and monitor your Ubuntu systems from a unified platform.
@@ -18,7 +19,7 @@ Here is a diagram showing how Ubuntu Pro for WSL interacts with Landscape:
 
 The Landscape server can manage the WSL distros once the Agent and the distros are configured. Refer to the Landscape documentation to learn how to set up a Landscape server and how to configure it.
 
-(landscape-config)=
+(ref::landscape-config)=
 
 ## Landscape configuration
 

@@ -9,5 +9,5 @@ UP4W reads the key located at path `HK_CURRENT_USER\Software\Canonical\UbuntuPro
 
 - Value `UbuntuProToken` (type `String`) expects the Ubuntu Pro Token for the user. Read more: [Ubuntu Pro token](ubuntu_pro_token).
 
-- Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the contents of the Landscape configuration file. Read more: [Landscape configuration](landscape-config).
+- Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the contents of the Landscape configuration file. See more: [Landscape configuration](ref::landscape-config).
 

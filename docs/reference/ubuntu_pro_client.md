@@ -1,4 +1,4 @@
-(ref::ubuntu-pro)=
+(ref::ubuntu-pro-client)=
 # Ubuntu Pro (client)
 
 The Ubuntu Pro client is an executable program that manages the different offerings of your Ubuntu Pro subscription. For _Ubuntu Pro for WSL_ users, this executable is used within each of the managed WSL distros to enable pro services within that distro.

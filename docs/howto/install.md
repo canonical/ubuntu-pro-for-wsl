@@ -70,7 +70,7 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
 	ping_url = ${PING_API_ENDPOINT}
 	account_name = standalone
 	```
-	> See more: [UP4W Landscape config reference](landscape-config).
+	> See more: [UP4W Landscape config reference](ref::landscape-config).
 4. Open a `Ubuntu-22.04` terminal and keep it open.
 	- This ensures this distro keeps running in the background. See more: [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-use-wsl-for-production-scenarios--).
 
