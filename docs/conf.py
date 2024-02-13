@@ -2,6 +2,7 @@ import sys
 
 sys.path.append('./')
 from custom_conf import *
+from build_requirements import *
 
 # Configuration file for the Sphinx documentation builder.
 # You should not do any modifications to this file. Put your custom
@@ -17,43 +18,38 @@ from custom_conf import *
 
 extensions = [
     'sphinx_design',
-    'sphinx_tabs.tabs',
-    'sphinx_reredirects',
-    'youtube-links',
-    'related-links',
-    'custom-rst-roles',
-    'terminal-output',
     'sphinx_copybutton',
-    'sphinxext.opengraph',
-    'myst_parser',
     'sphinxcontrib.jquery',
-    'notfound.extension'
 ]
+
+# Only add redirects extension if any redirects are specified.
+if AreRedirectsDefined():
+    extensions.append('sphinx_reredirects')
+
+# Only add myst extensions if any configuration is present.
+if IsMyStParserUsed():
+    extensions.append('myst_parser')
+
+    # Additional MyST syntax
+    myst_enable_extensions = [
+        'substitution',
+        'deflist',
+        'linkify'
+    ]
+    myst_enable_extensions.extend(custom_myst_extensions)
+
+# Only add Open Graph extension if any configuration is present.
+if IsOpenGraphConfigured():
+    extensions.append('sphinxext.opengraph')
+    
 extensions.extend(custom_extensions)
+extensions = DeduplicateExtensions(extensions)
 
 ### Configuration for extensions
-
-# Additional MyST syntax
-myst_enable_extensions = [
-    'substitution',
-    'deflist',
-    'linkify'
-]
-myst_enable_extensions.extend(custom_myst_extensions)
 
 # Used for related links
 if not 'discourse_prefix' in html_context and 'discourse' in html_context:
     html_context['discourse_prefix'] = html_context['discourse'] + '/t/'
-
-# The default for notfound_urls_prefix usually works, but not for
-# documentation on documentation.ubuntu.com
-if slug:
-    notfound_urls_prefix = '/' + slug + '/en/latest/'
-
-notfound_context = {
-    'title': 'Page not found',
-    'body': '<h1>Page not found</h1>\n\n<p>Sorry, but the documentation page that you are looking for was not found.</p>\n<p>Documentation changes over time, and pages are moved around. We try to redirect you to the updated content where possible, but unfortunately, that didn\'t work this time (maybe because the content you were looking for does not exist in this version of the documentation).</p>\n<p>You can try to use the navigation to locate the content you\'re looking for, or search for a similar page.</p>\n',
-}
 
 # Default image for OGP (to prevent font errors, see
 # https://github.com/canonical/sphinx-docs-starter-pack/pull/54 )
