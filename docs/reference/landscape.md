@@ -42,21 +42,13 @@ This section is the same one you'd see in other Landscape platforms, with some c
 
 All other data is ignored by the Agent and passed on verbatim to the Landscape client. You can see the reference for all the other keys in the [Landscape repository](https://github.com/canonical/landscape-client/blob/master/example.conf).
 
-The following keys are used by the Landscape client:
-
-- `account_name`: The Landscape account name this computer belongs to. For self-hosted Landscape accounts, the account name defaults to “standalone”.
-- `url`: The main URL for the Landscape Server to connect this client to. This defaults to the URL of your Landscape account followed by `/message-system`.
-- `ping_url`: The ping URL you want this client to report to. This defaults to the URL of your Landscape account followed by `/ping`.
-- `log_level`: This can be one of: "debug", "info", "warning", "error", "critical"
-- (Optional) `registration_key`: An optional account-wide key used to register new clients. There is no key defined by default, but one can be set in your Landscape account.
-
 ### Example
 
 Here is an example of a self-hosted Landscape configuration:
 
 ```ini
 [host]
-url = https://landscape-server.domain.com/6554
+url = https://landscape-server.domain.com:6554
 
 [client]
 url = https://landscape-server.domain.com/message-system
@@ -64,6 +56,8 @@ ping_url  = https://landscape-server.domain.com/ping
 account_name = standalone
 log_level = debug
 ```
+
+For more information, see [how to configure Ubuntu Pro for WSL for Landscape](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape#heading--configure-ubuntu-pro-for-wsl-for-landscape) in the Landscape documentation.
 
 ## Read more
 
