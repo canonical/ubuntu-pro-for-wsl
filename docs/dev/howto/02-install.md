@@ -23,6 +23,7 @@ This guide will show you how to install Ubuntu Pro for WSL for local development
 
 Notice that, for the step above, there is also an alternative version of the MSIX bundle enabled for end-to-end testing. Most likely, that's not what you want to download.
 
+(dev::install::agent)=
 ### Install the Windows agent
 
 This is the Windows-side agent that manages the distros.
@@ -69,18 +70,3 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
     ```bash
     systemctl status wsl-pro.service
     ```
-
-## Reset Ubuntu Pro for WSL back to factory settings
-
-You can reset Ubuntu Pro for WSL to factory settings following these steps:
-
-1. Uninstall the package and shut down WSL:
-
-    ```powershell
-    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage`
-    wsl --shutdown
-    ```
-
-2. Remove registry key `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
-3. Install the package again (see the section on [how to install](./02-install.md)).
-4. You're done. Next time you start the GUI it'll be like a fresh install.
