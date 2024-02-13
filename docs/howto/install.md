@@ -83,7 +83,7 @@ On your Windows host, go to the Microsoft Store, and search for _Ubuntu_ Pro for
 You have two ways of setting up UP4W. You can use the graphical interface (GUI), which is recommended for users managing a single Windows machine. If you deploy at scale, we recommend using automated tools to set up UP4W via the registry.
 
 ### Using the GUI
-> See more: [Ubuntu Pro for WSL GUI](up4w-gui)
+> See more: [Ubuntu Pro for WSL GUI](ref::up4w-gui)
 1. Open the Windows menu, search and click on Ubuntu Pro for WSL.
 2. Input your Ubuntu Pro Token:
 	1. Click on **Already have a token?**.
