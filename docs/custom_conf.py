@@ -47,6 +47,8 @@ copyright = '%s, %s' % (datetime.date.today().year, author)
 ## when linking to the documentation from another website (see https://ogp.me/)
 # The URL where the documentation will be hosted (leave empty if you
 # don't know yet)
+# NOTE: If no ogp_* variable is defined (e.g. if you remove this section) the
+# sphinxext.opengraph extension will be disabled.
 ogp_site_url = 'https://canonical-starter-pack.readthedocs-hosted.com/'
 # The documentation website name (usually the same as the product name)
 ogp_site_name = project
@@ -105,7 +107,10 @@ slug = ""
 
 # Set up redirects (https://documatt.gitlab.io/sphinx-reredirects/usage.html)
 # For example: 'explanation/old-name.html': '../how-to/prettify.html',
-
+# You can also configure redirects in the Read the Docs project dashboard
+# (see https://docs.readthedocs.io/en/stable/guides/redirects.html).
+# NOTE: If this variable is not defined, set to None, or the dictionary is empty,
+# the sphinx_reredirects extension will be disabled.
 redirects = {}
 
 ############################################################
@@ -133,17 +138,34 @@ custom_linkcheck_anchors_ignore_for_url = [
 
 ## The following settings are appended to the default configuration.
 ## Use them to extend the default functionality.
-
-# Add extensions
-custom_extensions = []
-
-# Add MyST extensions
+# NOTE: Remove this variable to disable the MyST parser extensions.
 custom_myst_extensions = []
+
+# Add custom Sphinx extensions as needed.
+# This array contains recommended extensions that should be used.
+# NOTE: The following extensions are handled automatically and do
+# not need to be added here: myst_parser, sphinx_copybutton, sphinx_design,
+# sphinx_reredirects, sphinxcontrib.jquery, sphinxext.opengraph
+custom_extensions = [
+    'sphinx_tabs.tabs',
+    'canonical.youtube-links',
+    'canonical.related-links',
+    'canonical.custom-rst-roles',
+    'canonical.terminal-output'
+    ]
+
+# Add custom required Python modules that must be added to the
+# .sphinx/requirements.txt file.
+# NOTE: The following modules are handled automatically and do not need to be
+# added here: canonical-sphinx-extensions, furo, linkify-it-py, myst-parser,
+# pyspelling, sphinx, sphinx-autobuild, sphinx-copybutton, sphinx-design,
+# sphinx-reredirects, sphinx-tabs, sphinxcontrib-jquery, sphinxext-opengraph
+custom_required_modules = []
 
 # Add files or directories that should be excluded from processing.
 custom_excludes = [
     'doc-cheat-sheet*',
-]
+    ]
 
 # Add CSS files (located in .sphinx/_static/)
 custom_html_css_files = []
@@ -171,3 +193,9 @@ custom_tags = []
 ############################################################
 
 ## Add any configuration that is not covered by the common conf.py file.
+
+# Define a :center: role that can be used to center the content of table cells.
+rst_prolog = '''
+.. role:: center
+   :class: align-center
+'''
