@@ -7,9 +7,12 @@ enablement
 # Tools and brands
 apport
 appx
+Center
+CIS
 Codecov
 distro
 distros
+ESM
 macOS
 MSIX
 powershell
