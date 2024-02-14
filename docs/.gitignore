@@ -3,6 +3,9 @@
 .sphinx/warnings.txt
 .sphinx/.wordlist.dic
 .sphinx/.doctrees/
+.sphinx/node_modules/
+.sphinx/package-lock.json
+.sphinx/package.json
 _build
 .DS_Store
 __pycache__
