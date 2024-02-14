@@ -104,7 +104,7 @@ if __name__ == "__main__":
     requirements = list(dict.fromkeys(requirements))
     requirements.sort()
 
-    with open(".sphinx/requirements.txt", 'w') as requirements_file:
+    with open("./docs/.sphinx/requirements.txt", 'w') as requirements_file:
         requirements_file.write(
             "# DO NOT MODIFY THIS FILE DIRECTLY!\n"
             "#\n"
