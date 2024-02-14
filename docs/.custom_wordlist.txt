@@ -20,6 +20,7 @@ wsl
 WSL
 WSL's
 zsh
+Quickstart
 
 # Other jargon
 autoload

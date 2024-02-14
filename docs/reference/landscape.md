@@ -31,7 +31,7 @@ This file contains two sections: host and client.
 
 This section contains a single key:
 
-- `url` is the URL to the Landscape Hostagent API endpoint.
+- `url`: The URL of your Landscape account followed by a colon (`:`) and the port number. Port 6554 is the default for Landscape Quickstart installations.
 
 ### Client section
 
@@ -49,7 +49,7 @@ Here is an example of a self-hosted Landscape configuration:
 
 ```ini
 [host]
-url = https://landscape-server.domain.com/hostagent
+url = https://landscape-server.domain.com:6554
 
 [client]
 url = https://landscape-server.domain.com/message-system
@@ -57,6 +57,8 @@ ping_url  = https://landscape-server.domain.com/ping
 account_name = standalone
 log_level = debug
 ```
+
+For more information, see [the Landscape guide on how to configure Ubuntu Pro for WSL](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape/#heading--configure-ubuntu-pro-for-wsl-for-landscape).
 
 ## Read more
 
