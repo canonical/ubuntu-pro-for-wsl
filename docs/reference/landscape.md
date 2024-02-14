@@ -1,3 +1,4 @@
+(ref::landscape)=
 # Landscape
 
 Landscape is a systems management tool designed to help you manage and monitor your Ubuntu systems from a unified platform.
@@ -7,7 +8,7 @@ Ubuntu Pro for WSL offers a set of conveniences for using Landscape to manage WS
 
 WSL distros are incapable of performing certain actions that other Ubuntu flavours (server, desktop, etc.) can. These relate mainly to lifetime management: creating, removing, starting, and stopping themselves.
 
-The [Windows Agent](./windows_agent.md) can perform these actions because it runs on the Windows operating system. Hence, Landscape's capabilities are split between those that must be performed by the Agent, and those that can be performed by the Landscape client within each distro. This client is the same one you'd use in other flavours of Ubuntu.
+The [Windows Agent](ref::up4w-windows-agent) can perform these actions because it runs on the Windows operating system. Hence, Landscape's capabilities are split between those that must be performed by the Agent, and those that can be performed by the Landscape client within each distro. This client is the same one you'd use in other flavours of Ubuntu.
 
 To configure Landscape, we need to configure the Agent as well as the Landscape Client running inside every distro. That would be inconvenient to do at scale, so instead you can input the configuration only once, and Ubuntu Pro for WSL will distribute it accordingly.
 
@@ -18,7 +19,7 @@ Here is a diagram showing how Ubuntu Pro for WSL interacts with Landscape:
 
 The Landscape server can manage the WSL distros once the Agent and the distros are configured. Refer to the Landscape documentation to learn how to set up a Landscape server and how to configure it.
 
-(landscape-config)=
+(ref::landscape-config)=
 
 ## Landscape configuration
 

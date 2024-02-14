@@ -70,7 +70,7 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
 	ping_url = ${PING_API_ENDPOINT}
 	account_name = standalone
 	```
-	> See more: [UP4W Landscape config reference](landscape-config).
+	> See more: [UP4W Landscape config reference](ref::landscape-config).
 4. Open a `Ubuntu-22.04` terminal and keep it open.
 	- This ensures this distro keeps running in the background. See more: [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-use-wsl-for-production-scenarios--).
 
@@ -83,7 +83,7 @@ On your Windows host, go to the Microsoft Store, and search for _Ubuntu_ Pro for
 You have two ways of setting up UP4W. You can use the graphical interface (GUI), which is recommended for users managing a single Windows machine. If you deploy at scale, we recommend using automated tools to set up UP4W via the registry.
 
 ### Using the GUI
-> See more: [Ubuntu Pro for WSL GUI](up4w-gui)
+> See more: [Ubuntu Pro for WSL GUI](ref::up4w-gui)
 1. Open the Windows menu, search and click on Ubuntu Pro for WSL.
 2. Input your Ubuntu Pro Token:
 	1. Click on **Already have a token?**.

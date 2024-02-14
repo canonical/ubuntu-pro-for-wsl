@@ -8,12 +8,12 @@ pieces that make up the Ubuntu Pro for WSL tool and the value it provides.
 
 landscape
 ubuntu_pro
-ubuntu_pro_for_wsl
-ubuntu_pro_for_wsl_gui
-ubuntu_pro_token
+ubuntu_pro_client
 ubuntu_wsl
-windows_agent
+UP4W <up4w>
+up4w-gui
+up4w-windows_agent
+up4w-wsl_pro_service
 windows_registry
 wsl
-wsl_pro_service
 ```

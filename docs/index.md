@@ -1,4 +1,4 @@
-# Ubuntu Pro for WSL
+# Ubuntu Pro for WSL (UP4W)
 
 ![System Landscape](./assets/up4w-systemlandscape.png)
 
