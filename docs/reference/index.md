@@ -7,6 +7,7 @@ pieces that make up the Ubuntu Pro for WSL tool and the value it provides.
 :titlesonly:
 
 landscape
+landscape_client
 ubuntu_pro
 ubuntu_pro_client
 ubuntu_wsl

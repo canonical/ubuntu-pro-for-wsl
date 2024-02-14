@@ -4,7 +4,7 @@
 Landscape is a systems management tool designed to help you manage and monitor your Ubuntu systems from a unified platform.
 > See more: [Landscape | Documentation ](https://ubuntu.com/landscape/docs).
 
-In the context of UP4W, Landscape consists of a remote server and two clients, (1) the usual Ubuntu-side client, in this case a Landscape client that comes automatically with any Ubuntu WSL instance, and (2) a Windows-side client, a Landscape client that is built into your UP4W agent. The latter, Windows-side client, offers Ubuntu WSL specific advantages – the ability to create new instances through Landscape and the ability to configure all your instances at scale (when you configure the Windows-side client, the UP4W agent forwards the configuration to the client on each instance).
+In the context of UP4W, Landscape consists of a remote server and two clients, (1) the usual Ubuntu-side client, in this case a [Landscape client](ref::landscape-client) that comes automatically with any Ubuntu WSL instance, and (2) a Windows-side client, a Landscape client that is built into your UP4W agent. The latter, Windows-side client, offers Ubuntu WSL specific advantages – the ability to create new instances through Landscape and the ability to configure all your instances at scale (when you configure the Windows-side client, the UP4W agent forwards the configuration to the client on each instance).
 
 (ref::landscape-config)=
 ## Landscape configuration schema
