@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
 	"github.com/stretchr/testify/require"
@@ -179,6 +180,50 @@ func TestAppGetRootCmd(t *testing.T) {
 
 	a := agent.NewForTesting(t, "", "")
 	require.NotNil(t, a.RootCmd(), "Returns root command")
+}
+
+func TestPublicDir(t *testing.T) {
+	// Not parallel because we modify the environment
+
+	testCases := map[string]struct {
+		emptyEnv bool
+		badPath  bool
+
+		wantErr bool
+	}{
+		"Success providing a public directory":               {},
+		"Error when %UserProfile% is empty":                  {emptyEnv: true, wantErr: true},
+		"Error when %UserProfile% points to an invalid path": {badPath: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			if tc.emptyEnv {
+				t.Setenv("UserProfile", "")
+			} else if tc.badPath {
+				badPath := filepath.Join(dir, "bad_dir")
+				err := os.WriteFile(badPath, []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file to interfere with PublicDir")
+				t.Setenv("UserProfile", badPath)
+			} else {
+				t.Setenv("UserProfile", dir)
+			}
+
+			var a agent.App
+			got, err := a.PublicDir()
+			if tc.wantErr {
+				require.Error(t, err, "PublicDir should have returned an error")
+				return
+			}
+
+			want := filepath.Join(dir, common.UserProfileDir)
+
+			require.NoError(t, err, "PublicDir should return no error")
+			require.Equal(t, want, got, "PublicDir should have returned the path under %UserProfile%")
+		})
+	}
 }
 
 // requireGoroutineStarted starts a goroutine and blocks until it has been launched.

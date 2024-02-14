@@ -9,7 +9,8 @@ import (
 )
 
 type myApp struct {
-	done chan struct{}
+	tmpDir string
+	done   chan struct{}
 
 	runError         bool
 	usageErrorReturn bool
@@ -31,16 +32,26 @@ func (a *myApp) Quit() {
 	close(a.done)
 }
 
+func (a *myApp) PublicDir() (string, error) {
+	if a.tmpDir == "PUBLIC_DIR_ERROR" {
+		return "", errors.New("mock error")
+	}
+	return a.tmpDir, nil
+}
+
 func TestRun(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
 		runError         bool
 		usageErrorReturn bool
+		logDirError      bool
 
 		wantReturnCode int
 	}{
-		"Run and exit successfully":              {},
+		"Run and exit successfully":                                {},
+		"Run and exit successfully despite logs not being written": {logDirError: true},
+
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
 		"Run and return usage error":             {usageErrorReturn: true, runError: true, wantReturnCode: 2},
 		"Run and usage error only does not fail": {usageErrorReturn: true, runError: false, wantReturnCode: 0},
@@ -54,6 +65,11 @@ func TestRun(t *testing.T) {
 				done:             make(chan struct{}),
 				runError:         tc.runError,
 				usageErrorReturn: tc.usageErrorReturn,
+				tmpDir:           t.TempDir(),
+			}
+
+			if tc.logDirError {
+				a.tmpDir = "PUBLIC_DIR_ERROR"
 			}
 
 			var rc int

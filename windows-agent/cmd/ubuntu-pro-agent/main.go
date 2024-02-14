@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,6 +30,7 @@ type app interface {
 	Run() error
 	UsageError() bool
 	Quit()
+	PublicDir() (string, error)
 }
 
 func run(a app) int {
@@ -45,7 +45,7 @@ func run(a app) int {
 		ForceColors: true,
 	})
 
-	cleanup, err := setLoggerOutput()
+	cleanup, err := setLoggerOutput(a)
 	if err != nil {
 		log.Warningf("could not set logger output: %v", err)
 	} else {
@@ -64,17 +64,10 @@ func run(a app) int {
 	return 0
 }
 
-func setLoggerOutput() (func(), error) {
-	homeDir, err := os.UserHomeDir()
+func setLoggerOutput(a app) (func(), error) {
+	publicDir, err := a.PublicDir()
 	if err != nil {
-		return nil, fmt.Errorf("could not find UserProfile: %v", err)
-	} else if homeDir == "" {
-		return nil, errors.New("could not find UserProfile: %USERPROFILE% is not set")
-	}
-
-	publicDir := filepath.Join(homeDir, common.UserProfileDir)
-	if err := os.MkdirAll(publicDir, 0600); err != nil {
-		return nil, errors.New("could not create logs dir")
+		return nil, err
 	}
 
 	logFile := filepath.Join(publicDir, "log")
