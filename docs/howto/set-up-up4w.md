@@ -96,6 +96,8 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
 ## 1. Install Ubuntu Pro for WSL
 On your Windows host, go to the Microsoft Store, search for _Ubuntu Pro for WSL_ and click on the result. Find the _Install_ button. Click on it.
 
+(howto::configure-up4w)=
+
 ## 2. Configure Ubuntu Pro for WSL
 You have two ways of setting up UP4W. You can use the graphical interface (GUI), which is recommended for users managing a single Windows machine. Alternatively, you can use the registry which we recommend for users who want to deploy at scale.
 

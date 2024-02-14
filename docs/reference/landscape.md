@@ -2,51 +2,21 @@
 # Landscape
 
 Landscape is a systems management tool designed to help you manage and monitor your Ubuntu systems from a unified platform.
-It is a separate project from Ubuntu Pro for WSL [with its documentation](https://ubuntu.com/landscape/docs).
+> See more: [Landscape | Documentation ](https://ubuntu.com/landscape/docs).
 
-Ubuntu Pro for WSL offers a set of conveniences for using Landscape to manage WSL distros. This page explains how these two systems integrate.
-
-WSL distros are incapable of performing certain actions that other Ubuntu flavours (server, desktop, etc.) can. These relate mainly to lifetime management: creating, removing, starting, and stopping themselves.
-
-The [Windows Agent](ref::up4w-windows-agent) can perform these actions because it runs on the Windows operating system. Hence, Landscape's capabilities are split between those that must be performed by the Agent, and those that can be performed by the Landscape client within each distro. This client is the same one you'd use in other flavours of Ubuntu.
-
-To configure Landscape, we need to configure the Agent as well as the Landscape Client running inside every distro. That would be inconvenient to do at scale, so instead you can input the configuration only once, and Ubuntu Pro for WSL will distribute it accordingly.
-
-Here is a diagram showing how Ubuntu Pro for WSL interacts with Landscape:
-![Landscape architecture](./assets/Landscape.drawio.svg)
-
-## Managing WSL distros with Landscape
-
-The Landscape server can manage the WSL distros once the Agent and the distros are configured. Refer to the Landscape documentation to learn how to set up a Landscape server and how to configure it.
+In the context of UP4W, Landscape consists of a remote server and two clients, (1) the usual Ubuntu-side client, in this case a Landscape client that comes automatically with any Ubuntu WSL instance, and (2) a Windows-side client, a Landscape client that is built into your UP4W agent. The latter, Windows-side client, offers Ubuntu WSL specific advantages – the ability to create new instances through Landscape and the ability to configure all your instances at scale (when you configure the Windows-side client, the UP4W agent forwards the configuration to the client on each instance).
 
 (ref::landscape-config)=
+## Landscape configuration schema
 
-## Landscape configuration
+As in other Landscape setups, in UP4W Landscape is configured via an `.ini` file. In UP4W this file is provided to the Windows host.
+> See more: [How to configure UP4W](howto::configure-up4w)
 
-This section details the configuration of Ubuntu Pro for WSL as it differs from other platforms. As in other platforms, Ubuntu Pro for WSL uses a `.ini` file to configure the client (both the Agent and Landscape Client).
+The schema for this file is as usual, with a few additional keys specific to the WSL setting, which can be grouped into keys that affect just the Windows-side client and keys that affect both the Windows-side client and the Ubuntu WSL-side client(s). These additions are documented below.
 
-This file contains two sections: host and client.
+> See more: [Landscape | Configure Ubuntu Pro for WSL for Landscape](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape/#heading--configure-ubuntu-pro-for-wsl-for-landscape)
 
-### Host section
-
-This section contains a single key:
-
-- `url`: The URL of your Landscape account followed by a colon (`:`) and the port number. Port 6554 is the default for Landscape Quickstart installations.
-
-### Client section
-
-This section is the same one you'd see in other Landscape platforms, with some changes:
-
-- `ssl_public_key`: This key must be a Windows path. The WSL instances will have this path translated automatically.
-- `computer_title`: This key will be used for the Agent. The WSL instances will use their Distro name as the title.
-- `hostagent_uid`: This setting will be ignored and overridden.
-
-All other data is ignored by the Agent and passed on verbatim to the Landscape client. You can see the reference for all the other keys in the [Landscape repository](https://github.com/canonical/landscape-client/blob/master/example.conf).
-
-### Example
-
-Here is an example of a self-hosted Landscape configuration:
-
+Here is an example of what the configuration looks like:
 ```ini
 [host]
 url = https://landscape-server.domain.com:6554
@@ -58,13 +28,16 @@ account_name = standalone
 log_level = debug
 ```
 
-For more information, see [the Landscape guide on how to configure Ubuntu Pro for WSL](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape/#heading--configure-ubuntu-pro-for-wsl-for-landscape).
+### Host
 
-## Read more
+This section contains settings unique to the Windows-side client. It contains a single key:
+- `url`: The URL of your Landscape account followed by a colon (`:`) and the port number. Port 6554 is the default for Landscape Quickstart installations.
 
-- [How to set up Ubuntu Pro for WSL](../howto/set-up-up4w).
+### Client
 
-## External links
+This section contains settings used by both clients. Most keys in this section behave the same way that they would on a traditional Landscape setup. Only the following keys behave differently:
+- `ssl_public_key`: This key must be a Windows path. The WSL instances will have this path translated automatically.
+- `computer_title`: This key will be ignored. Instead, each WSL instance will use its Distro name as computer title.
+- `hostagent_uid`: This key will be ignored.
 
-- [Landscape documentation](https://ubuntu.com/landscape/docs)
-- [How to perform common tasks with WSL in Landscape](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape).
+> See more: [GitHub | Landscape client configuration schema](https://github.com/canonical/landscape-client/blob/master/example.conf)
