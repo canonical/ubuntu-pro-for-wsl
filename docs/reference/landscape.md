@@ -57,7 +57,7 @@ account_name = standalone
 log_level = debug
 ```
 
-For more information, see [the Landscape guide on how to configure Ubuntu Pro for WSL](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape#heading--configure-ubuntu-pro-for-wsl-for-landscape).
+For more information, see [the Landscape guide on how to configure Ubuntu Pro for WSL](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape/#heading--configure-ubuntu-pro-for-wsl-for-landscape).
 
 ## Read more
 
