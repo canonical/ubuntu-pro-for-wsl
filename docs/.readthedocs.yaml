@@ -12,7 +12,7 @@ build:
     python: "3.11"
   jobs:
     post_checkout:
-      - python3 build_requirements.py
+      - python3 docs/build_requirements.py
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
