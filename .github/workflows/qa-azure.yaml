@@ -23,18 +23,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Add our own needed packages to the container
-        run: |
-          set -eu
-
-          cd .github/deb-build-docker/
-          docker build . -t ubuntu:deb-build
       - name: Build debian package
         uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
         with:
           source-dir: wsl-pro-service
           token: ${{ secrets.GITHUB_TOKEN }}
-          docker-image: ubuntu:deb-build
+          docker-image: ubuntu:devel
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
