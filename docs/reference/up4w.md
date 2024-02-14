@@ -1,6 +1,6 @@
-# UP4W
+# Ubuntu Pro for WSL (UP4W)
 
-Ubuntu Pro for WSL (UP4W) is an automation tool running on Windows hosts to manage Ubuntu WSL instances, providing them with compliance by attaching them to Ubuntu Pro and enrolling them into Landscape. Some Ubuntu Pro for WSL components run on the Windows host:
+Ubuntu Pro for WSL is an automation tool running on Windows hosts to manage Ubuntu WSL instances, providing them with compliance by attaching them to Ubuntu Pro and enrolling them into Landscape. Some Ubuntu Pro for WSL components run on the Windows host:
 - the [Windows Agent](ref::up4w-windows-agent) providing automation services.
 - the [GUI](ref::up4w-gui) for end users to manage their Ubuntu Pro subscription and Landscape configuration.
 

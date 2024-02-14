@@ -10,7 +10,7 @@ landscape
 ubuntu_pro
 ubuntu_pro_client
 ubuntu_wsl
-up4w
+UP4W <up4w>
 up4w-gui
 up4w-windows_agent
 up4w-wsl_pro_service
