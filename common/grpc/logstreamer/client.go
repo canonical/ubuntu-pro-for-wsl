@@ -13,18 +13,39 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 )
 
+type opts struct {
+	clientID string
+}
+
+// Option is an optional argument for the StreamClientInterceptor.
+type Option func(*opts)
+
+func WithClientID(clientID string) Option {
+	return func(o *opts) {
+		o.clientID = clientID
+	}
+}
+
 // StreamClientInterceptor allows to tag the client with an unique ID and request the server
 // to stream back to the client logs corresponding to that request to the given logger.
 // It will use ReportCaller value from logger to decide if we print the callstack (first frame outside
 // of that package).
-func StreamClientInterceptor(logger *logrus.Logger) grpc.StreamClientInterceptor {
-	clientID := strconv.Itoa(os.Getpid())
+func StreamClientInterceptor(logger *logrus.Logger, args ...Option) grpc.StreamClientInterceptor {
+	var o opts
+	for _, f := range args {
+		f(&o)
+	}
+
+	if o.clientID == "" {
+		o.clientID = strconv.Itoa(os.Getpid())
+	}
+
 	localLoggerMu.RLock()
 	reportCallerMsg := strconv.FormatBool(logger.ReportCaller)
 	localLoggerMu.RUnlock()
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 		ctx = metadata.AppendToOutgoingContext(ctx,
-			clientIDKey, clientID,
+			clientIDKey, o.clientID,
 			clientWantCallerKey, reportCallerMsg)
 		clientStream, err := streamer(ctx, desc, cc, method, opts...)
 		return &logClientStream{
