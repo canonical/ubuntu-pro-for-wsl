@@ -118,7 +118,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 // waits until the UID is received before returning.
 func handshake(ctx context.Context, d serviceData, conn *connection) (err error) {
 	defer decorate.OnError(&err, "could not complete handshake")
-	log.Debugf(ctx, "Landscape: starting handshake")
+	log.Debug(ctx, "Landscape: starting handshake")
 
 	// Send first message
 	info, err := newHostAgentInfo(conn.ctx, d)
