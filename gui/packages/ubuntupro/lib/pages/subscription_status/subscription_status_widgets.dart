@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:yaru/yaru.dart';
 import '../widgets/page_widgets.dart';
 
@@ -22,12 +24,24 @@ class SubscriptionStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
 
+    final linkStyle = MarkdownStyleSheet.fromTheme(
+      Theme.of(context).copyWith(
+        textTheme: DarkStyledLandingPage.textTheme.copyWith(
+          bodyMedium: DarkStyledLandingPage.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w100,
+            color: YaruColors.warmGrey,
+          ),
+        ),
+      ),
+    );
+
     return DarkStyledLandingPage(
       children: [
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle,
+              color: YaruColors.dark.success,
             ),
             const SizedBox(width: 8.0),
             Text(
@@ -38,12 +52,10 @@ class SubscriptionStatus extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16.0),
-        Text(
-          caption,
-          style: DarkStyledLandingPage.textTheme.bodyMedium!.copyWith(
-            fontWeight: FontWeight.w100,
-            color: YaruColors.warmGrey,
-          ),
+        MarkdownBody(
+          data: caption,
+          onTapLink: (_, href, __) => launchUrlString(href!),
+          styleSheet: linkStyle,
         ),
         if (actionButton != null)
           Padding(
