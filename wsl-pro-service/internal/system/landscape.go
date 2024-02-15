@@ -34,7 +34,7 @@ func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, ho
 	exe, args := s.backend.LandscapeConfigExecutable("--config", landscapeConfigPath, "--silent")
 	//nolint:gosec // In production code, these variables are hard-coded.
 	if out, err := exec.CommandContext(ctx, exe, args...).Output(); err != nil {
-		return fmt.Errorf("%s returned an error: %v\nOutput:%s", exe, err, string(out))
+		return fmt.Errorf("%s returned an error: %v. Output: %s", exe, err, strings.TrimSpace(string(out)))
 	}
 
 	return nil

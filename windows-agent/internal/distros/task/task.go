@@ -37,5 +37,5 @@ type NeedsRetryError struct {
 }
 
 func (e NeedsRetryError) Error() string {
-	return fmt.Sprintf("%v. Marked for retrial.", e.SourceErr)
+	return fmt.Sprintf("task marked for retrial: %v", e.SourceErr)
 }
