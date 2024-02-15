@@ -90,12 +90,12 @@ func (cs *ControlStream) handshake(ctx context.Context, session session) (port i
 	}
 
 	if err := session.send(sysinfo); err != nil {
-		return 0, fmt.Errorf("could not send system info: %v", err)
+		return 0, err
 	}
 
 	message, err := session.recv()
 	if err != nil {
-		return 0, fmt.Errorf("could not receive: %v", err)
+		return 0, err
 	}
 
 	p := message.GetPort()
