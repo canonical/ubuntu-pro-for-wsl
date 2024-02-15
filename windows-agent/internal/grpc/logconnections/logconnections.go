@@ -2,7 +2,6 @@
 package logconnections
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -27,17 +26,19 @@ func StreamServerInterceptor() func(srv interface{}, ss grpc.ServerStream, info 
 		if info != nil {
 			log.Debugf(ss.Context(), "New request %s", info.FullMethod)
 		}
+
+		// We don't want to send the closing logs to the client, as the client
+		// will log the closing of the connection itself.
+		ctx := log.WithoutRemoteSend(ss.Context())
+
 		defer func() {
 			if info != nil {
-				// we don’t forward to the client as it’s uneeded and if the client stopped already
-				// (for instance, Ctrl+C), we don’t have any stream to send it to.
-				log.Debugf(context.Background(), "Request %s done", info.FullMethod)
+				log.Debugf(ctx, "Request %s done", info.FullMethod)
 			}
 		}()
 		err := handler(srv, loggedss)
 		if err != nil {
-			// Don’t forward the error by logging to the client as the client will handle it directly
-			log.Infof(context.Background(), "Error sent to client: %v", err)
+			log.Infof(ctx, "Error sent to client: %v", err)
 		}
 		return err
 	}

@@ -135,6 +135,21 @@ func SetReportCaller(reportCaller bool) {
 	localLogger.SetReportCaller(reportCaller)
 }
 
+// WithoutRemoteSend takes a context with a logContext and returns a new context without the remote send.
+// It is useful when we want a log to show what client it relates to, but we don't want to send it to the
+// client.
+func WithoutRemoteSend(ctx context.Context) context.Context {
+	logCtx, withRemote := ctx.Value(logContextKey).(logContext)
+	if !withRemote {
+		return ctx
+	}
+
+	// Disable sending it to the client
+	logCtx.sendStream = nil
+
+	return context.WithValue(ctx, logContextKey, logCtx)
+}
+
 func log(ctx context.Context, level logrus.Level, args ...interface{}) {
 	msg := fmt.Sprint(args...)
 
