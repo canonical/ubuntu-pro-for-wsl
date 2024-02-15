@@ -61,10 +61,6 @@ type DistroDB struct {
 func New(ctx context.Context, storageDir string, provisioning worker.Provisioning) (db *DistroDB, err error) {
 	defer decorate.OnError(&err, "could not initialize database")
 
-	if err := os.MkdirAll(storageDir, 0600); err != nil {
-		return nil, fmt.Errorf("could not create database directory: %w", err)
-	}
-
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

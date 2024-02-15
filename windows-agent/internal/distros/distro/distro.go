@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"sync/atomic"
 
@@ -141,10 +140,6 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 			distroIdentity: id,
 			startupMu:      startupMu,
 		},
-	}
-
-	if err := os.MkdirAll(storageDir, 0600); err != nil {
-		return nil, err
 	}
 
 	distro.worker, err = opts.newWorkerFunc(opts.taskProcessingContext, distro, storageDir, opts.provisioning)
