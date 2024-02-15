@@ -62,7 +62,7 @@ For more information, see [the Landscape guide on how to configure Ubuntu Pro fo
 
 ## Read more
 
-- [How to install Ubuntu Pro for WSL](../howto/install).
+- [How to set up Ubuntu Pro for WSL](../howto/set-up-up4w).
 
 ## External links
 
