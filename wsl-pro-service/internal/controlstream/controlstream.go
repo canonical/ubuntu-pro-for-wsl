@@ -61,7 +61,13 @@ func (cs *ControlStream) Connect(ctx context.Context) (err error) {
 		return fmt.Errorf("could not get address: %w", err)
 	}
 
-	session, err := newSession(ctx, ctrlAddr)
+	distroName, err := cs.system.WslDistroName(ctx)
+	if err != nil {
+		log.Warningf(ctx, "Controlstream: assigning arbitrary connection ID because of error: %v", err)
+		distroName = ""
+	}
+
+	session, err := newSession(ctx, ctrlAddr, distroName)
 	if err != nil {
 		return err
 	}

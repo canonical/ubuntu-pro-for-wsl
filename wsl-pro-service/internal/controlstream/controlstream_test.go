@@ -84,6 +84,7 @@ func TestConnect(t *testing.T) {
 	testCases := map[string]struct {
 		portFile              dataFileState
 		breakWindowsLocalhost bool
+		breakWSlDisroName     bool
 
 		agentDoesntRecv   bool
 		agentSendsNoPort  bool
@@ -91,7 +92,8 @@ func TestConnect(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success": {},
+		"Success":                         {},
+		"Success without WSL distro name": {breakWSlDisroName: true},
 
 		// Port file errors
 		"No connection because port file does not exist":             {portFile: dataFileNotExist, wantErr: true},
@@ -168,6 +170,11 @@ func TestConnect(t *testing.T) {
 
 			cs, err := controlstream.New(ctx, system)
 			require.NoError(t, err, "New should return no error")
+
+			if tc.breakWSlDisroName {
+				// Must be set after New to avoid breaking system.UserProfileDir
+				mock.SetControlArg(testutils.WslpathErr)
+			}
 
 			select {
 			case <-cs.Done(ctx):

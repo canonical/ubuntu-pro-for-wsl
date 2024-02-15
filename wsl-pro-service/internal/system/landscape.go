@@ -89,7 +89,7 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string, hostag
 
 	data.DeleteSection("host")
 
-	distroName, err := s.wslDistroName(ctx)
+	distroName, err := s.WslDistroName(ctx)
 	if err != nil {
 		return "", err
 	}

@@ -23,6 +23,8 @@ import (
 type System struct {
 	backend Backend // Not embedding to avoid calling its backend directly
 	cmdExe  string  // Linux path to cmd.exe
+
+	wslDistroNameCache string
 }
 
 // Backend is the engine behind the System object, and defines the interactions
@@ -69,7 +71,7 @@ func New(args ...Option) System {
 // Info returns the current information about the system relevant to the GRPC
 // connection to the agent.
 func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
-	distroName, err := s.wslDistroName(ctx)
+	distroName, err := s.WslDistroName(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,10 +125,17 @@ func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
 	return nil
 }
 
-// wslDistroName obtains the name of the current WSL distro from these sources
+// WslDistroName obtains the name of the current WSL distro from these sources
 // 1. From environment variable WSL_DISTRO_NAME, as long as it is not empty
 // 2. From the Windows path to the distro's root ("\\wsl.localhost\<DISTRO_NAME>\").
-func (s System) wslDistroName(ctx context.Context) (string, error) {
+func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
+	defer decorate.OnError(&err, "could not obtain WSL distro name")
+
+	if s.wslDistroNameCache != "" {
+		// Cache hit
+		return s.wslDistroNameCache, nil
+	}
+
 	// TODO: request Microsoft to expose this to systemd services.
 	env := s.backend.GetenvWslDistroName()
 	if env != "" {
@@ -147,7 +156,8 @@ func (s System) wslDistroName(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not parse distro name from path %q", out)
 	}
 
-	return fields[3], nil
+	s.wslDistroNameCache = fields[3]
+	return s.wslDistroNameCache, nil
 }
 
 // UserProfileDir provides the path to Windows' user profile directory from WSL,
