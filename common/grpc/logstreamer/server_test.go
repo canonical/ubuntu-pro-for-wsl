@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -159,7 +159,7 @@ func addMetaToContext(ctx context.Context, reportCaller bool) context.Context {
 func msgContains(t *testing.T, expected string, msg interface{}, description string) {
 	t.Helper()
 
-	l, ok := msg.(*log.LogMsg)
+	l, ok := msg.(*log.Log)
 	if !ok {
 		t.Fatalf("Expected a log, but send: %+v", msg)
 	}
@@ -189,7 +189,7 @@ func createLogStream(t *testing.T, level logrus.Level, callerForLocal, callerFor
 	return stream, localLogs, func() string {
 		var out []string
 		for _, m := range myS.msgs {
-			l, ok := m.(*log.LogMsg)
+			l, ok := m.(*log.Log)
 			if !ok {
 				t.Fatalf("Expected a log, but send: %+v", m)
 			}

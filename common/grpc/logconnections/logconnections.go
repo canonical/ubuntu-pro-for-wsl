@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"google.golang.org/grpc"
 )
 

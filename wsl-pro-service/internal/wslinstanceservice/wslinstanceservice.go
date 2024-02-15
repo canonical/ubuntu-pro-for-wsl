@@ -8,9 +8,9 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/interceptorschain"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logconnections"
-	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/sirupsen/logrus"

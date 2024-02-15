@@ -6,7 +6,7 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logconnections"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

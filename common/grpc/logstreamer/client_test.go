@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer/test"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer/test"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
