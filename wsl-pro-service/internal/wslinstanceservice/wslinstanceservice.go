@@ -56,7 +56,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAtta
 	defer func() {
 		// Regardless of success or failure, we send back an updated system info
 		if e := s.sendInfo(ctx); e != nil {
-			log.Warningf(ctx, "could not send update via control stream: %v", e)
+			log.Warningf(ctx, "ApplyProToken: could not send update via control stream: %v", e)
 			err = errors.Join(err, e)
 		}
 	}()
