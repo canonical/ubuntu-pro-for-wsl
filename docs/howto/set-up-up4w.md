@@ -77,6 +77,8 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
       	- Hostagent API endpoint: `${WINDOWS_HOST_IP}:6554`
       	- Message API endpoint: `${WINDOWS_HOST_IP}/message-system`
       	- Ping API endpoint: `${WINDOWS_HOST_IP}/ping`
+   5. Open a `Ubuntu-22.04` terminal and keep it open during the rest of the guide.
+      	- This ensures this distro keeps running in the background. See more: [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-use-wsl-for-production-scenarios--).
 2. Store the following file somewhere in your Windows system. Name it `landscape-client.conf`. Replace the variables in the file with the relevant values for your server.
 	```ini
 	[host]
@@ -88,8 +90,6 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
 	account_name = standalone
 	```
 	> See more: [UP4W Landscape config reference](ref::landscape-config).
-3. Open a `Ubuntu-22.04` terminal and keep it open.
-	- This ensures this distro keeps running in the background. See more: [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-use-wsl-for-production-scenarios--).
 
 </details>
 
