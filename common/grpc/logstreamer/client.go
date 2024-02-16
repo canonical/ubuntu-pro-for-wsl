@@ -20,6 +20,7 @@ type opts struct {
 // Option is an optional argument for the StreamClientInterceptor.
 type Option func(*opts)
 
+// WithClientID is an optional argument to override the default client ID.
 func WithClientID(clientID string) Option {
 	return func(o *opts) {
 		o.clientID = clientID
