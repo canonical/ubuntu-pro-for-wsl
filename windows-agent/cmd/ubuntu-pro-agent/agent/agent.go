@@ -204,24 +204,19 @@ func (a *App) SetArgs(args ...string) {
 
 // PublicDir creates a directory to store public data in.
 func (a *App) PublicDir() (string, error) {
-	homeDir := os.Getenv("UserProfile")
-	if homeDir == "" {
-		return "", errors.New("could not create public dir: %UserProfile% is not set")
-	}
-
-	publicDir := filepath.Join(homeDir, common.UserProfileDir)
-
-	if err := os.MkdirAll(publicDir, 0600); err != nil {
-		return "", fmt.Errorf("could not create public dir %s: %v", publicDir, err)
-	}
-
-	return publicDir, nil
+	// This wrapper is used to have a cleaner public API.
+	return a.publicDir(options{})
 }
 
 // publicDir is a wrapper around PublicDir to allow overriding its path with an option.
 func (a *App) publicDir(opts options) (string, error) {
 	if opts.publicDir == "" {
-		return a.PublicDir()
+		homeDir := os.Getenv("UserProfile")
+		if homeDir == "" {
+			return "", errors.New("could not create public dir: %UserProfile% is not set")
+		}
+
+		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
 	}
 
 	if err := os.MkdirAll(opts.publicDir, 0600); err != nil {
