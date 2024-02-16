@@ -65,7 +65,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 
 			defer logWslProServiceOnError(t, ctx, d)
 
-			out, err := d.Command(ctx, "exit 0").CombinedOutput()
+			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
 			if tc.whenToken == afterDistroRegistration {
@@ -99,7 +99,7 @@ func TestOrganizationProvidedToken(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			info := landscape.RequireReceivedInfo(t, proToken, d, hostname)
+			info := landscape.RequireReceivedInfo(t, proToken, []wsl.Distro{d}, hostname)
 			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
