@@ -59,6 +59,7 @@ type Config interface {
 type CloudInit interface {
 	WriteDistroData(distroName string, cloudInit string) error
 	RemoveDistroData(distroName string) error
+	DefaultDistroData(ctx context.Context) (string, error)
 }
 
 type options struct {

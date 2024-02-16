@@ -144,6 +144,7 @@ func TestInstall(t *testing.T) {
 
 	testCases := map[string]struct {
 		noCloudInit           bool
+		breakDefaultCloudInit bool
 		distroAlredyInstalled bool
 		emptyDistroName       bool
 		cloudInitWriteErr     bool
@@ -152,10 +153,10 @@ func TestInstall(t *testing.T) {
 
 		wantCouldInitWriteCalled bool
 		wantInstalled            bool
-		wantNonRootUser          bool
 	}{
-		"Success":                    {wantCouldInitWriteCalled: true, wantInstalled: true},
-		"Success with no cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
+		"Success":                         {wantCouldInitWriteCalled: true, wantInstalled: true},
+		"Success with default cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
+		"Success failing to generate default cloud-init": {noCloudInit: true, breakDefaultCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
@@ -193,6 +194,10 @@ func TestInstall(t *testing.T) {
 						testBed.cloudInit.writeErr = true
 					}
 
+					if tc.breakDefaultCloudInit {
+						testBed.cloudInit.defaultDataErr = true
+					}
+
 					if tc.wslInstallErr {
 						testBed.wslMock.InstallError = true
 					}
@@ -219,12 +224,6 @@ func TestInstall(t *testing.T) {
 							}
 							return registered
 						}, timeout, 100*time.Millisecond, "Distro should have been registered")
-
-						if tc.wantNonRootUser {
-							conf, err := testBed.distro.GetConfiguration()
-							require.NoError(t, err, "GetConfiguration should return no error")
-							require.NotEqual(t, uint32(0), conf.DefaultUID, "Default user should have been changed from root")
-						}
 					} else {
 						time.Sleep(timeout)
 

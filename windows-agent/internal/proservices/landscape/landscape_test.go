@@ -854,8 +854,9 @@ type mockCloudInit struct {
 	writeCalled  atomic.Bool
 	removeCalled atomic.Bool
 
-	writeErr  bool
-	removeErr bool
+	writeErr       bool
+	removeErr      bool
+	defaultDataErr bool
 }
 
 func (c *mockCloudInit) WriteDistroData(distroName string, cloudInit string) error {
@@ -876,6 +877,13 @@ func (c *mockCloudInit) RemoveDistroData(distroName string) error {
 	}
 
 	return nil
+}
+
+func (c *mockCloudInit) DefaultDistroData(context.Context) (string, error) {
+	if c.defaultDataErr {
+		return "", errors.New("could not generate default cloud-init data: mock error")
+	}
+	return "# THIS IS A MOCKED DEFAULT DATA", nil
 }
 
 type mockConfig struct {
