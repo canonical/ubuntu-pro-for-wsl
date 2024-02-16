@@ -8,9 +8,12 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/interceptorschain"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
+	"github.com/sirupsen/logrus"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 )
@@ -41,7 +44,11 @@ func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStr
 	log.Debug(ctx, "Registering gRPC WSL instance service")
 	s.ctrlStream = ctrlStream
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.StreamInterceptor(
+		interceptorschain.StreamServer(
+			log.StreamServerInterceptor(logrus.StandardLogger()),
+			logconnections.StreamServerInterceptor(),
+		)))
 
 	wslserviceapi.RegisterWSLServer(grpcServer, s)
 
@@ -50,8 +57,7 @@ func (s *Service) RegisterGRPCService(ctx context.Context, ctrlStream ControlStr
 
 // ApplyProToken serves ApplyProToken messages sent by the agent.
 func (s *Service) ApplyProToken(ctx context.Context, info *wslserviceapi.ProAttachInfo) (empty *wslserviceapi.Empty, err error) {
-	defer decorate.LogOnError(err)
-	defer decorate.OnError(&err, "ApplyProToken")
+	defer decorate.OnError(&err, "WSL service")
 
 	defer func() {
 		// Regardless of success or failure, we send back an updated system info
@@ -97,7 +103,7 @@ func (s *Service) sendInfo(ctx context.Context) error {
 
 // ApplyLandscapeConfig serves LandscapeConfig messages sent by the agent.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.LandscapeConfig) (empty *wslserviceapi.Empty, err error) {
-	defer decorate.LogOnError(err)
+	defer decorate.OnError(&err, "WSL service")
 
 	conf := msg.GetConfiguration()
 	if conf == "" {

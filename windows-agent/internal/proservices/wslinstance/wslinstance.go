@@ -32,7 +32,7 @@ type Service struct {
 
 // New returns a new service handling WSL Instance API.
 func New(ctx context.Context, db *database.DistroDB, landscape LandscapeController) (s Service, err error) {
-	log.Debug(ctx, "Building new GRPC WSL Instance service")
+	log.Debug(ctx, "Building new GRPC WSLInstance server")
 
 	return Service{db: db, landscape: landscape}, nil
 }
@@ -40,73 +40,68 @@ func New(ctx context.Context, db *database.DistroDB, landscape LandscapeControll
 // Connected establishes a connection with a WSL instance and keeps its properties
 // in the database up-to-date.
 func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
-	defer decorate.LogOnError(err)
-	defer decorate.OnError(&err, "WSL instance service: Connected")
-
 	ctx := stream.Context()
-
-	log.Debug(ctx, "WSL instance service: new connection detected")
 
 	info, err := stream.Recv()
 	if err != nil {
-		return fmt.Errorf("did not receive info from WSL distro: %v", err)
+		return fmt.Errorf("WSLInstance service: incomplete handshake: did not receive info from WSL distro: %v", err)
 	}
 
-	log.Infof(ctx, "WSL instance service: new connection comes from distro %s", info.GetId())
+	distroName := info.GetWslName()
 
 	props, err := propsFromInfo(info)
 	if err != nil {
-		return fmt.Errorf("connection from %q: invalid DistroInfo: %v", info.GetWslName(), err)
+		return fmt.Errorf("invalid DistroInfo: %v", err)
 	}
 
-	log.Debugf(ctx, "WSL instance service: distro %s: received properties: %v", info.GetWslName(), props)
+	log.Debugf(ctx, "received properties: %v", props)
 
-	d, err := s.db.GetDistroAndUpdateProperties(ctx, info.GetWslName(), props)
+	d, err := s.db.GetDistroAndUpdateProperties(ctx, distroName, props)
 	if err != nil {
-		return fmt.Errorf("connection from %q: %v", info.GetWslName(), err)
+		return err
 	}
 
 	// Load deferred tasks
 	d.EnqueueDeferredTasks()
 
 	// Update landscape when connecting and disconnecting
-	s.landscapeSendUpdatedInfo(ctx)
-	defer s.landscapeSendUpdatedInfo(ctx)
+	s.landscapeSendUpdatedInfo(ctx, distroName)
+	defer s.landscapeSendUpdatedInfo(ctx, distroName)
 
 	conn, err := newWslServiceConn(ctx, d.Name(), stream)
 	if err != nil {
-		return fmt.Errorf("connection from %q: could not connect to Linux-side service: %v", d.Name(), err)
+		return fmt.Errorf("could not connect to Linux-side WSL service: %v", err)
 	}
 
 	if err := d.SetConnection(conn); err != nil {
-		return fmt.Errorf("connection from %q: %v", info.GetWslName(), err)
+		return err
 	}
 
 	//nolint:errcheck // We don't care about this error because we're cleaning up
 	defer d.SetConnection(nil)
 
-	log.Debugf(ctx, "WSL instance service: distro %q: connection to Linux-side service established", d.Name())
+	log.Debug(ctx, "connection to Linux-side WSL service established")
 
 	// Blocking connection for the lifetime of the WSL service.
 	for {
 		info, err := stream.Recv()
 		if err != nil {
-			return fmt.Errorf("connection from %q: Failed to receive info: %v", d.Name(), err)
+			return fmt.Errorf("could not receive info: %v", err)
 		}
 
 		props, err = propsFromInfo(info)
 		if err != nil {
-			return fmt.Errorf("connection from %q: invalid DistroInfo: %v", d.Name(), err)
+			return fmt.Errorf("invalid DistroInfo: %v", err)
 		}
-		log.Infof(ctx, "WSL instance service: distro %q: Updated properties to %+v", d.Name(), props)
+		log.Infof(ctx, "Updated properties to %+v", props)
 
 		if d.SetProperties(props) {
 			if err := s.db.Dump(); err != nil {
-				log.Warningf(ctx, "WSL instance service: connection from %q: updating properties: %v", d.Name(), err)
+				log.Warningf(ctx, "updating properties: %v", err)
 			}
 		}
 
-		s.landscapeSendUpdatedInfo(ctx)
+		s.landscapeSendUpdatedInfo(ctx, distroName)
 	}
 }
 
@@ -117,10 +112,10 @@ type portSender interface {
 const maxConnectionAttempts = 5
 
 func newWslServiceConn(ctx context.Context, distroName string, send portSender) (conn *grpc.ClientConn, err error) {
-	log.Debugf(ctx, "WSL instance service: connection from %q: reserving a port", distroName)
+	log.Debugf(ctx, "WSLInstance service (%s): reserving a port", distroName)
 	for i := 0; i < maxConnectionAttempts && conn == nil; i++ {
 		if err != nil {
-			log.Warningf(ctx, "WSL instance service: connection from %q: retrying to reserve a port: %v", distroName, err)
+			log.Warningf(ctx, "WSLInstance service (%s): retrying to reserve a port: %v", distroName, err)
 		}
 		conn, err = func() (conn *grpc.ClientConn, err error) {
 			// Port reservation.
@@ -133,7 +128,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 			if err != nil {
 				return nil, err
 			}
-			log.Debugf(ctx, "WSL instance service: connection from %q: reserved port %d", distroName, p)
+			log.Debugf(ctx, "WSLInstance service (%s): reserved port %d", distroName, p)
 
 			if err := lis.Close(); err != nil {
 				return nil, err
@@ -146,7 +141,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 
 			// Connection.
 			addr := fmt.Sprintf("localhost:%d", p)
-			log.Debugf(ctx, "WSL instance service: connection from %q: connecting to Linux-side service via %s", distroName, addr)
+			log.Debugf(ctx, "WSLInstance service (%s): connecting to Linux-side WSL service via %s", distroName, addr)
 
 			ctxTimeout, cancel := context.WithTimeout(ctx, 2*time.Second)
 			defer cancel()
@@ -155,7 +150,7 @@ func newWslServiceConn(ctx context.Context, distroName string, send portSender) 
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 				grpc.WithBlock())
 			if err != nil {
-				return nil, fmt.Errorf("could not dial WSL instance service: %v", err)
+				return nil, fmt.Errorf("could not dial WSL service: %v", err)
 			}
 
 			// This will signal the task worker that we are ready to process tasks.
@@ -193,9 +188,9 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 
 // landscapeSendUpdatedInfo is syntactic sugar to update landscape and
 // log in the case error.
-func (s *Service) landscapeSendUpdatedInfo(ctx context.Context) {
+func (s *Service) landscapeSendUpdatedInfo(ctx context.Context, distroName string) {
 	go func() {
-		log.Debugf(ctx, "WSL instance service: sending updated info to Landscape")
+		log.Debugf(ctx, "WSLInstance service (%s): sending updated info to Landscape", distroName)
 
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
