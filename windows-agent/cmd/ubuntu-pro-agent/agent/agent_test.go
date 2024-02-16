@@ -191,7 +191,8 @@ func TestPublicDir(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success providing a public directory":               {},
+		"Success providing a public directory": {},
+
 		"Error when %UserProfile% is empty":                  {emptyEnv: true, wantErr: true},
 		"Error when %UserProfile% points to an invalid path": {badPath: true, wantErr: true},
 	}
