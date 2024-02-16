@@ -9,7 +9,6 @@ import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
-	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )
 
@@ -19,26 +18,34 @@ type executor struct {
 }
 
 func (e executor) exec(ctx context.Context, command *landscapeapi.Command) (err error) {
-	defer decorate.OnError(&err, "could not execute command %s", commandString(command))
+	log.Infof(ctx, "Landcape: received command %s", commandString(command))
+	err = func() error {
+		switch cmd := command.GetCmd().(type) {
+		case *landscapeapi.Command_AssignHost_:
+			return e.assignHost(ctx, cmd.AssignHost)
+		case *landscapeapi.Command_Start_:
+			return e.start(ctx, cmd.Start)
+		case *landscapeapi.Command_Stop_:
+			return e.stop(ctx, cmd.Stop)
+		case *landscapeapi.Command_Install_:
+			return e.install(ctx, cmd.Install)
+		case *landscapeapi.Command_Uninstall_:
+			return e.uninstall(ctx, cmd.Uninstall)
+		case *landscapeapi.Command_SetDefault_:
+			return e.setDefault(ctx, cmd.SetDefault)
+		case *landscapeapi.Command_ShutdownHost_:
+			return e.shutdownHost(ctx, cmd.ShutdownHost)
+		default:
+			return fmt.Errorf("unknown command type %T: %v", command.GetCmd(), command.GetCmd())
+		}
+	}()
 
-	switch cmd := command.GetCmd().(type) {
-	case *landscapeapi.Command_AssignHost_:
-		return e.assignHost(ctx, cmd.AssignHost)
-	case *landscapeapi.Command_Start_:
-		return e.start(ctx, cmd.Start)
-	case *landscapeapi.Command_Stop_:
-		return e.stop(ctx, cmd.Stop)
-	case *landscapeapi.Command_Install_:
-		return e.install(ctx, cmd.Install)
-	case *landscapeapi.Command_Uninstall_:
-		return e.uninstall(ctx, cmd.Uninstall)
-	case *landscapeapi.Command_SetDefault_:
-		return e.setDefault(ctx, cmd.SetDefault)
-	case *landscapeapi.Command_ShutdownHost_:
-		return e.shutdownHost(ctx, cmd.ShutdownHost)
-	default:
-		return fmt.Errorf("unknown command type %T: %v", command.GetCmd(), command.GetCmd())
+	if err != nil {
+		return fmt.Errorf("could not execute command %s: %v", commandString(command), err)
 	}
+	log.Infof(ctx, "Landcape: completed command %s", commandString(command))
+
+	return nil
 }
 
 func commandString(command *landscapeapi.Command) string {
@@ -65,21 +72,21 @@ func commandString(command *landscapeapi.Command) string {
 func (e executor) assignHost(ctx context.Context, cmd *landscapeapi.Command_AssignHost) error {
 	conf := e.config()
 
-	if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
+	if uid, err := conf.LandscapeAgentUID(); err != nil {
 		log.Warningf(ctx, "Possibly overriding current landscape client UID: could not read current Landscape UID: %v", err)
 	} else if uid != "" {
 		log.Warning(ctx, "Overriding current landscape client UID")
 	}
 
-	if err := conf.SetLandscapeAgentUID(ctx, cmd.GetUid()); err != nil {
+	if err := conf.SetLandscapeAgentUID(cmd.GetUid()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+//nolint:unparam // Unused context so that all commands have the same signature.
 func (e executor) start(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
-	log.Debugf(ctx, "Landscape: received command Start. Target: %s", cmd.GetId())
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
@@ -88,8 +95,8 @@ func (e executor) start(ctx context.Context, cmd *landscapeapi.Command_Start) (e
 	return d.LockAwake()
 }
 
+//nolint:unparam // Unused context so that all commands have the same signature.
 func (e executor) stop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err error) {
-	log.Debugf(ctx, "Landscape: received command Stop. Target: %s", cmd.GetId())
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
@@ -99,7 +106,6 @@ func (e executor) stop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err
 }
 
 func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install) (err error) {
-	log.Debugf(ctx, "Landscape: received command Install. Target: %s", cmd.GetId())
 	if cmd.GetCloudinit() != "" {
 		return fmt.Errorf("Cloud Init support is not yet available")
 	}
@@ -122,7 +128,7 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		// Avoid error states by cleaning up on error
 		err := distro.Uninstall(ctx)
 		if err != nil {
-			log.Infof(ctx, "Landscape Install: failed to clean up %q after failed Install: %v", distro.Name(), err)
+			log.Warningf(ctx, "Landscape Install: failed to clean up %q after failed Install: %v", distro.Name(), err)
 		}
 	}()
 
@@ -154,7 +160,6 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 }
 
 func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
-	log.Debugf(ctx, "Landscape: received command Uninstall. Target: %s", cmd.GetId())
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
@@ -164,13 +169,11 @@ func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Unins
 }
 
 func (e executor) setDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault) error {
-	log.Debugf(ctx, "Landscape: received command SetDefault. Target: %s", cmd.GetId())
 	d := gowsl.NewDistro(ctx, cmd.GetId())
 	return d.SetAsDefault()
 }
 
 //nolint:unparam // cmd is not used, but kep here for consistency with other commands.
 func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
-	log.Debug(ctx, "Landscape: received command ShutdownHost")
 	return gowsl.Shutdown(ctx)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
+	"github.com/ubuntu/decorate"
 )
 
 // Service is a service that monitors the Windows registry for any changes to the key
@@ -126,6 +127,9 @@ func (s *Service) run() {
 	)
 	retryRate := minRate
 
+	log.Info(s.ctx, "Registry watcher: started watching")
+	defer log.Info(s.ctx, "Registry watcher: stopped watching")
+
 	for {
 		select {
 		case <-s.ctx.Done():
@@ -237,7 +241,7 @@ func (s *Service) waitForSingleObject(ctx context.Context, event registry.Event)
 func (s *Service) readThenPushRegistryData(ctx context.Context) {
 	data, err := loadRegistry(s.registry)
 	if err != nil {
-		log.Warningf(ctx, "Registry watcher: could not read registry: %v", err)
+		log.Warningf(ctx, "Registry watcher: %v", err)
 		return
 	}
 
@@ -247,6 +251,8 @@ func (s *Service) readThenPushRegistryData(ctx context.Context) {
 }
 
 func loadRegistry(reg Registry) (data config.RegistryData, err error) {
+	defer decorate.OnError(&err, "could not read registry")
+
 	k, err := reg.HKCUOpenKey(filepath.Join(registryPath...))
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		// Default values
@@ -279,7 +285,7 @@ func readFromRegistry(r Registry, key registry.Key, field string) (string, error
 		return "", nil
 	}
 	if err != nil {
-		return "", fmt.Errorf("could not read %q from registry", field)
+		return "", fmt.Errorf("could not read field %q", field)
 	}
 
 	return value, nil

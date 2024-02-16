@@ -112,7 +112,7 @@ func TestAttachPro(t *testing.T) {
 			require.NoError(t, err, "Adding the task to existing distros should succeed.")
 			wantToken = tc.token
 
-			token, _, err := conf.Subscription(ctx)
+			token, _, err := conf.Subscription()
 			require.NoError(t, err, "conf.ProToken should return no error")
 			require.Equal(t, wantToken, token, "unexpected active token")
 		})
@@ -217,7 +217,7 @@ type mockConfig struct {
 	source config.Source // stores the configured subscription source.
 }
 
-func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) error {
+func (m *mockConfig) SetUserSubscription(token string) error {
 	if m.setSubscriptionErr {
 		return errors.New("SetSubscription error")
 	}
@@ -226,7 +226,7 @@ func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) erro
 	return nil
 }
 
-func (m mockConfig) Subscription(context.Context) (string, config.Source, error) {
+func (m mockConfig) Subscription() (string, config.Source, error) {
 	if m.subscriptionErr {
 		return "", config.SourceNone, errors.New("Subscription error")
 	}

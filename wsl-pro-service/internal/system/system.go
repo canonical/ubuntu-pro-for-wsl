@@ -5,13 +5,13 @@ package system
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/ubuntu/decorate"
 	"gopkg.in/ini.v1"
 )
 
@@ -99,9 +99,11 @@ func (s System) Info(ctx context.Context) (*agentapi.DistroInfo, error) {
 
 // fillOSRelease fills the info with os-release file content.
 func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
-	out, err := os.ReadFile(s.backend.Path("/etc/os-release"))
+	const fileName = "/etc/os-release"
+
+	out, err := os.ReadFile(s.backend.Path(fileName))
 	if err != nil {
-		return fmt.Errorf("could not read /etc/os-release file: %v", err)
+		return fmt.Errorf("could not read %s: %v", fileName, err)
 	}
 
 	var marshaller struct {
@@ -111,7 +113,7 @@ func (s System) fillOsRelease(info *agentapi.DistroInfo) error {
 	}
 
 	if err := ini.MapToWithMapper(&marshaller, ini.SnackCase, out); err != nil {
-		return fmt.Errorf("could not parse /etc/os-release file contents:\n%v", err)
+		return fmt.Errorf("could not parse %s: %v", fileName, err)
 	}
 
 	info.PrettyName = marshaller.PrettyName
@@ -151,6 +153,8 @@ func (s System) wslDistroName(ctx context.Context) (string, error) {
 // UserProfileDir provides the path to Windows' user profile directory from WSL,
 // usually `/mnt/c/Users/JohnDoe/`.
 func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error) {
+	defer decorate.OnError(&err, "could not locate Windows' user profile directory")
+
 	// Find folder where windows is mounted on
 	cmdExe, err := s.findCmdExe()
 	if err != nil {
@@ -161,7 +165,7 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	//nolint:gosec //this function simply prepends the WSL path to "cmd.exe" to the args.
 	out, err := exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
-		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
+		return wslPath, fmt.Errorf("%s: error: %v, stdout: %s", exe, err, string(out))
 	}
 
 	// Path from Windows' perspective ( C:\Users\... )
@@ -172,7 +176,7 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
 	out, err = exec.CommandContext(ctx, exe, args...).Output()
 	if err != nil {
-		return wslPath, fmt.Errorf("error: %v, stdout: %s", err, string(out))
+		return wslPath, fmt.Errorf("%s: error: %v, stdout: %s", exe, err, string(out))
 	}
 
 	winHomeLinux := strings.TrimSpace(string(out))
@@ -180,9 +184,10 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 
 	// wslpath can return invalid paths, so we make sure that it exists
 	if s, err := os.Stat(wslPath); err != nil {
-		return wslPath, fmt.Errorf("could not stat windows home directory %q: %v", wslPath, err)
+		// Stat errors contain the path and the error description
+		return wslPath, err
 	} else if !s.IsDir() {
-		return wslPath, fmt.Errorf("windows home %q is not a directory", wslPath)
+		return wslPath, fmt.Errorf("%q is not a directory", wslPath)
 	}
 
 	return wslPath, nil
@@ -199,17 +204,22 @@ func (s System) Path(path ...string) string {
 //
 // The result is cached so the search only happens once.
 func (s *System) findCmdExe() (cmdExe string, err error) {
+	defer decorate.OnError(&err, "could not locate Windows' cmd.exe")
+
 	// Path can be cached
 	if s.cmdExe != "" {
 		return s.cmdExe, nil
 	}
 	defer func() { s.cmdExe = cmdExe }()
 
-	f, err := os.Open(s.backend.Path("/proc/mounts"))
+	const fileName = "/proc/mounts"
+	f, err := os.Open(s.backend.Path(fileName))
 	if err != nil {
-		return "", fmt.Errorf("could not read mounts: %v", err)
+		return "", fmt.Errorf("could not find where the Windows drive is mounted: %v", err)
 	}
 	defer f.Close()
+
+	const subPath = "WINDOWS/system32/cmd.exe"
 
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
@@ -224,7 +234,7 @@ func (s *System) findCmdExe() (cmdExe string, err error) {
 			continue
 		}
 
-		path := s.backend.Path(fields[1], "WINDOWS/system32/cmd.exe")
+		path := s.backend.Path(fields[1], subPath)
 		if _, err := os.Stat(path); err != nil {
 			continue
 		}
@@ -233,8 +243,8 @@ func (s *System) findCmdExe() (cmdExe string, err error) {
 	}
 
 	if err := sc.Err(); err != nil {
-		return "", err
+		return "", fmt.Errorf("could not find where the Windows drive is mounted: could not parse %s: %v", fileName, err)
 	}
 
-	return "", errors.New("could not find cmd.exe")
+	return "", fmt.Errorf("none of the mounted drives contains subpath %s", subPath)
 }

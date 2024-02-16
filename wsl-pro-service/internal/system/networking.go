@@ -46,7 +46,7 @@ func (s *System) networkingMode(ctx context.Context) (string, error) {
 	//nolint:gosec // In production code, these variables are hard-coded.
 	out, err := exec.CommandContext(ctx, exe, argv...).CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("failed call to wslinfo: %v", err)
+		return "", fmt.Errorf("failed call to wslinfo: %v. Output: %s", err, out)
 	}
 
 	return strings.TrimSpace(string(out)), nil
@@ -64,10 +64,10 @@ func (s *System) nameServer() (ip net.IP, err error) {
 		nameserver 172.22.16.1
 	*/
 	const fileName = "/etc/resolv.conf"
-	defer decorate.OnError(&err, "could not parse %s", fileName)
 
 	r, err := os.Open(s.Path(fileName))
 	if err != nil {
+		// Error mesage already says could not open <filename>
 		return nil, err
 	}
 	defer r.Close()
@@ -86,6 +86,8 @@ func (s *System) nameServer() (ip net.IP, err error) {
 		address = strings.TrimSpace(suffix)
 		break
 	}
+
+	defer decorate.OnError(&err, "could not parse %s", fileName)
 
 	if err := sc.Err(); err != nil {
 		return nil, fmt.Errorf("line %d: %v", line, err)

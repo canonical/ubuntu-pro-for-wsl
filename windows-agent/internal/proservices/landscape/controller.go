@@ -3,7 +3,6 @@ package landscape
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -23,7 +22,7 @@ func (c Controller) SendUpdatedInfo(ctx context.Context) error {
 
 	info, err := newHostAgentInfo(ctx, c)
 	if err != nil {
-		return fmt.Errorf("could not assemble message: %v", err)
+		return err
 	}
 
 	return c.sendInfo(info)

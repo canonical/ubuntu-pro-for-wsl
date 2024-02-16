@@ -11,6 +11,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts/contractclient"
+	"github.com/ubuntu/decorate"
 )
 
 type options struct {
@@ -70,7 +71,7 @@ func ValidSubscription(args ...Option) (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("could not get subscription expiration date: %v", err)
+		return false, err
 	}
 
 	if expiration.Before(time.Now()) {
@@ -86,6 +87,8 @@ func ValidSubscription(args ...Option) (bool, error) {
 // validate a store entitlement and obtain its associated pro token. If there is no entitlement,
 // the token is returned as an empty string.
 func NewProToken(ctx context.Context, args ...Option) (token string, err error) {
+	defer decorate.OnError(&err, "couldn't get a Microsoft-Store-provided Ubuntu Pro token")
+
 	opts := options{
 		microsoftStore: msftStoreDLL{},
 	}
@@ -97,7 +100,7 @@ func NewProToken(ctx context.Context, args ...Option) (token string, err error) 
 	if opts.proURL == nil {
 		url, err := defaultProBackendURL()
 		if err != nil {
-			return "", fmt.Errorf("could not parse default contract server URL: %v", err)
+			return "", fmt.Errorf("could not parse contract server URL: %v", err)
 		}
 		opts.proURL = url
 	}

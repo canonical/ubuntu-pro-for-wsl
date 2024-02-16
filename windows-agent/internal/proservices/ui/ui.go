@@ -13,12 +13,13 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
+	"github.com/ubuntu/decorate"
 )
 
 // Config is a provider for the subcription configuration.
 type Config interface {
-	SetUserSubscription(ctx context.Context, token string) error
-	Subscription(context.Context) (string, config.Source, error)
+	SetUserSubscription(token string) error
+	Subscription() (string, config.Source, error)
 	FetchMicrosoftStoreSubscription(context.Context, ...contracts.Option) error
 }
 
@@ -32,7 +33,7 @@ type Service struct {
 
 // New returns a new service handling the UI API.
 func New(ctx context.Context, config Config, db *database.DistroDB) (s Service) {
-	log.Debug(ctx, "Building new GRPC UI service")
+	log.Debug(ctx, "Building gRPC UI service")
 
 	return Service{
 		db:     db,
@@ -41,12 +42,14 @@ func New(ctx context.Context, config Config, db *database.DistroDB) (s Service) 
 }
 
 // ApplyProToken handles the gRPC call to pro attach all distros using a token provided by the GUI.
-func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (*agentapi.SubscriptionInfo, error) {
-	token := info.GetToken()
-	log.Debugf(ctx, "Received token %s", common.Obfuscate(token))
+func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInfo) (_ *agentapi.SubscriptionInfo, err error) {
+	defer decorate.LogOnError(err)
+	defer decorate.OnError(&err, "UI service: ApplyProToken")
 
-	err := s.config.SetUserSubscription(ctx, token)
-	if err != nil {
+	token := info.GetToken()
+	log.Infof(ctx, "UI service: received token %s", common.Obfuscate(token))
+
+	if err := s.config.SetUserSubscription(token); err != nil {
 		return nil, err
 	}
 
@@ -56,29 +59,43 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	}
 
 	if err != nil {
-		log.Debugf(ctx, "Found errors while submitting the ProAttachment task to existing distros:\n%v", err)
-		return nil, err
+		return nil, fmt.Errorf("some distros could not pro-attach: %v", err)
 	}
 
-	subs, err := s.GetSubscriptionInfo(ctx, &agentapi.Empty{})
+	subs, err := s.getSubscriptionInfo()
 	if err != nil {
-		log.Warningf(ctx, "could not get subscription info after applying a pro token: %v", err)
-		return subs, err
+		return subs, fmt.Errorf("could not assemble response: %v", err)
 	}
 
+	log.Debugf(ctx, "UI service: responding ApplyProToken with info: %v", info)
 	return subs, nil
 }
 
 // Ping replies a keep-alive request.
 func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.Empty, error) {
+	log.Info(ctx, "UI service: received Ping")
 	return request, nil
 }
 
 // GetSubscriptionInfo handles the gRPC call to return the type of subscription.
-func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
+func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (_ *agentapi.SubscriptionInfo, err error) {
+	log.Info(ctx, "UI service: received GetSubscriptionInfo message")
+
+	info, err := s.getSubscriptionInfo()
+	if err != nil {
+		err = fmt.Errorf("UI service: GetSubscriptionInfo: %v", err)
+		log.Warningf(ctx, "%v", err)
+		return nil, err
+	}
+
+	log.Debugf(ctx, "UI service: responding GetSubscriptionInfo with %v", info)
+	return info, nil
+}
+
+func (s *Service) getSubscriptionInfo() (*agentapi.SubscriptionInfo, error) {
 	info := &agentapi.SubscriptionInfo{}
 
-	_, source, err := s.config.Subscription(ctx)
+	_, source, err := s.config.Subscription()
 	if err != nil {
 		return nil, err
 	}
@@ -100,13 +117,20 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 }
 
 // NotifyPurchase handles the client notification of a successful purchase through MS Store.
-func (s *Service) NotifyPurchase(ctx context.Context, empty *agentapi.Empty) (*agentapi.SubscriptionInfo, error) {
-	fetchErr := s.config.FetchMicrosoftStoreSubscription(ctx)
-	info, err := s.GetSubscriptionInfo(ctx, empty)
-	err = errors.Join(fetchErr, err)
-	if err != nil {
-		log.Warningf(ctx, "Subscription purchase notification check failed: %v", err)
+func (s *Service) NotifyPurchase(ctx context.Context, empty *agentapi.Empty) (info *agentapi.SubscriptionInfo, errs error) {
+	log.Info(ctx, "UI service: received NotifyPurchase message")
+
+	if err := s.config.FetchMicrosoftStoreSubscription(ctx); err != nil {
+		log.Warningf(ctx, "UI service: NotifyPurchase: %v", err)
+		errs = errors.Join(errs, err)
 	}
 
-	return info, err
+	info, err := s.getSubscriptionInfo()
+	if err != nil {
+		log.Warningf(ctx, "UI service: NotifyPurchase: %v", err)
+		errs = errors.Join(errs, err)
+	}
+
+	log.Debugf(ctx, "UI service: responding NotifyPurchase with info: %v", info)
+	return info, errs
 }

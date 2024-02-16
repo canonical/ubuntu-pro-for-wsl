@@ -16,19 +16,19 @@ type marshalHelper struct {
 }
 
 func (c *Config) load() (err error) {
-	defer decorate.OnError(&err, "could not load data for Config")
+	defer decorate.OnError(&err, "could not load config from disk")
 
 	var h marshalHelper
 
-	out, err := os.ReadFile(c.cachePath)
+	out, err := os.ReadFile(c.storagePath)
 	if errors.Is(err, fs.ErrNotExist) {
 		out = []byte{}
 	} else if err != nil {
-		return fmt.Errorf("could not read cache file: %v", err)
+		return fmt.Errorf("could not read config file: %v", err)
 	}
 
 	if err := yaml.Unmarshal(out, &h); err != nil {
-		return fmt.Errorf("could not umarshal cache file: %v", err)
+		return fmt.Errorf("could not umarshal config file: %v", err)
 	}
 
 	// Registry data must not be overridden
@@ -45,7 +45,7 @@ func (c *Config) load() (err error) {
 }
 
 func (c Config) dump() (err error) {
-	defer decorate.OnError(&err, "could not store Config data")
+	defer decorate.OnError(&err, "could not store config to disk")
 
 	h := marshalHelper{
 		Landscape:    c.landscape,
@@ -57,8 +57,8 @@ func (c Config) dump() (err error) {
 		return fmt.Errorf("could not marshal config: %v", err)
 	}
 
-	if err := os.WriteFile(c.cachePath, out, 0600); err != nil {
-		return fmt.Errorf("could not write config cache file: %v", err)
+	if err := os.WriteFile(c.storagePath, out, 0600); err != nil {
+		return fmt.Errorf("could not write config file: %v", err)
 	}
 
 	return nil

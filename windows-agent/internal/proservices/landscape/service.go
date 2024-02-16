@@ -42,12 +42,12 @@ type Service struct {
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
-	LandscapeClientConfig(context.Context) (string, config.Source, error)
+	LandscapeClientConfig() (string, config.Source, error)
 
-	Subscription(context.Context) (string, config.Source, error)
+	Subscription() (string, config.Source, error)
 
-	LandscapeAgentUID(context.Context) (string, error)
-	SetLandscapeAgentUID(context.Context, string) error
+	LandscapeAgentUID() (string, error)
+	SetLandscapeAgentUID(string) error
 
 	Notify(func())
 }
@@ -60,7 +60,8 @@ type options struct {
 type Option = func(*options)
 
 // New creates a new Landscape service object.
-func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option) (*Service, error) {
+func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option) (s *Service, err error) {
+	defer decorate.OnError(&err, "could not initizalize Landscape service")
 	var opts options
 
 	for _, f := range args {
@@ -77,7 +78,7 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 
 	ctx, cancel := context.WithCancel(ctx)
 
-	s := &Service{
+	s = &Service{
 		ctx:         ctx,
 		cancel:      cancel,
 		conf:        conf,
@@ -94,7 +95,7 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 // Connect starts the connection and starts talking to the server.
 // Call Stop to deallocate resources.
 func (s *Service) Connect() (err error) {
-	defer decorate.OnError(&err, "could not connect to Landscape")
+	defer decorate.OnError(&err, "could not connect to Landscape server")
 
 	if s.connected() {
 		return errors.New("already connected")
@@ -181,7 +182,7 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 		s.conn = nil
 	}
 
-	_, src, err := s.conf.Subscription(ctx)
+	_, src, err := s.conf.Subscription()
 	if err != nil {
 		return nil, fmt.Errorf("skipping connection: could not obtain Ubuntu Pro token: %v", err)
 	}
@@ -207,6 +208,8 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 
 // Stop terminates the connection and deallocates resources.
 func (s *Service) Stop(ctx context.Context) {
+	log.Infof(ctx, "Landscape: stopping")
+
 	s.cancel()
 	s.connRetrier.Stop()
 
@@ -242,9 +245,9 @@ func (s *Service) watchConfigChanges(ctx context.Context) {
 			return
 		}
 
-		landscapeConf, err := newLandscapeHostConf(ctx, s.conf)
+		landscapeConf, err := newLandscapeHostConf(s.conf)
 		if err != nil {
-			log.Warningf(ctx, "Landscape: could not assemble landscape host configuration: %v", err)
+			log.Warningf(ctx, "Landscape: config monitor: %v", err)
 			return
 		}
 
@@ -252,6 +255,8 @@ func (s *Service) watchConfigChanges(ctx context.Context) {
 		if newSett == oldSettings {
 			return
 		}
+
+		log.Info(ctx, "Landscape: config monitor: detected configuration change: starting reconnection.")
 
 		s.reconnect()
 	})

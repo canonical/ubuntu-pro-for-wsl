@@ -21,7 +21,7 @@ const (
 // LandscapeEnable registers the current distro to Landscape with the specified config.
 func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, hostagentUID string) (err error) {
 	// Decorating here to avoid stuttering the URL (url package prints it as well)
-	defer decorate.OnError(&err, "could not register to landscape")
+	defer decorate.OnError(&err, "could not register distro to Landscape")
 
 	if landscapeConfig, err = modifyConfig(ctx, s, landscapeConfig, hostagentUID); err != nil {
 		return err
@@ -34,7 +34,7 @@ func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, ho
 	exe, args := s.backend.LandscapeConfigExecutable("--config", landscapeConfigPath, "--silent")
 	//nolint:gosec // In production code, these variables are hard-coded.
 	if out, err := exec.CommandContext(ctx, exe, args...).Output(); err != nil {
-		return fmt.Errorf("%s returned an error: %v\nOutput:%s", exe, err, string(out))
+		return fmt.Errorf("%s returned an error: %v. Output: %s", exe, err, strings.TrimSpace(string(out)))
 	}
 
 	return nil

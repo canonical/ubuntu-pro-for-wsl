@@ -48,11 +48,11 @@ func newConnectionSettings(c landscapeHostConf) connectionSettings {
 // newConnection attempts to connect to the Landscape server, and blocks until the first
 // handshake is complete.
 func newConnection(ctx context.Context, d serviceData) (conn *connection, err error) {
-	defer decorate.OnError(&err, "could not connect to Landscape")
+	defer decorate.OnError(&err, "could not connect to Landscape server")
 
-	conf, err := newLandscapeHostConf(ctx, d.config())
+	conf, err := newLandscapeHostConf(d.config())
 	if err != nil {
-		return nil, fmt.Errorf("could not read config: %v", err)
+		return nil, err
 	}
 	if conf.hostagentURL == "" {
 		return nil, errors.New("no hostagent URL provided in the Landscape configuration")
@@ -96,9 +96,9 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		defer conn.receivingCommands.Done()
 
 		if err := conn.receiveCommands(executor{d}); err != nil {
-			log.Warningf(ctx, "Stopped listening for Landscape commands: %v", err)
+			log.Warningf(ctx, "Landscape: stopped listening for commands: %v", err)
 		} else {
-			log.Info(ctx, "Finished listening for Landscape commands.")
+			log.Info(ctx, "Landscape: finished listening for commands.")
 		}
 	}()
 
@@ -106,8 +106,6 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		conn.disconnect()
 		return nil, err
 	}
-
-	log.Infof(ctx, "Connection to Landscape established")
 
 	return conn, nil
 }
@@ -118,11 +116,14 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 // If this is the first connection ever, the server will respond by assigning
 // the host a UID. This Recv is handled by receiveCommands, but handshake
 // waits until the UID is received before returning.
-func handshake(ctx context.Context, d serviceData, conn *connection) error {
+func handshake(ctx context.Context, d serviceData, conn *connection) (err error) {
+	defer decorate.OnError(&err, "could not complete handshake")
+	log.Debug(ctx, "Landscape: starting handshake")
+
 	// Send first message
 	info, err := newHostAgentInfo(conn.ctx, d)
 	if err != nil {
-		return fmt.Errorf("could not assemble message: %v", err)
+		return err
 	}
 
 	if err := conn.sendInfo(info); err != nil {
@@ -132,11 +133,14 @@ func handshake(ctx context.Context, d serviceData, conn *connection) error {
 	conf := d.config()
 
 	// Not the first contact between client and server: done!
-	if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
+	if uid, err := conf.LandscapeAgentUID(); err != nil {
 		return err
 	} else if uid != "" {
+		log.Info(ctx, "Landscape: handshake completed")
 		return nil
 	}
+
+	log.Debug(ctx, "Landscape: waiting to be assigned a UID")
 
 	// First contact. Wait to receive a client UID.
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -150,19 +154,21 @@ func handshake(ctx context.Context, d serviceData, conn *connection) error {
 		case <-ctx.Done():
 			conn.disconnect()
 			// Avoid races where the UID arrives just after cancelling the context
-			err := conf.SetLandscapeAgentUID(ctx, "")
-			return errors.Join(err, fmt.Errorf("Landscape server did not respond with a client UID"))
+			err := conf.SetLandscapeAgentUID("")
+			return fmt.Errorf("Landscape server did not respond with a client UID: %v", err)
 		case <-ticker.C:
 		}
 
-		if uid, err := conf.LandscapeAgentUID(ctx); err != nil {
-			return err
+		if uid, err := conf.LandscapeAgentUID(); err != nil {
+			return fmt.Errorf("could not ascertain if the server provided a client UID: %v", err)
 		} else if uid != "" {
 			// UID received: success.
+			log.Debugf(ctx, "Landscape: assigned client UID %s", uid)
 			break
 		}
 	}
 
+	log.Debug(ctx, "Landscape: handshake completed")
 	return nil
 }
 
@@ -210,11 +216,11 @@ func (conn *connection) receiveCommands(e executor) error {
 			return errors.New("stream closed by server")
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("could not receive commands: %v", err)
 		}
 
 		if err := e.exec(conn.ctx, command); err != nil {
-			log.Errorf(conn.ctx, "could not execute command: %v", err)
+			log.Errorf(conn.ctx, "Landscape: %v", err)
 		}
 	}
 }

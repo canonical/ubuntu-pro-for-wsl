@@ -18,6 +18,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/worker"
 	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	"github.com/ubuntu/decorate"
 	"gopkg.in/yaml.v3"
 )
 
@@ -57,20 +58,22 @@ type DistroDB struct {
 // Every certain amount of times, the database wil purge all distros that
 // are no longer registered or that have been marked as unreachable. This
 // cleanup can be triggered on demmand with TriggerCleanup.
-func New(ctx context.Context, storageDir string, provisioning worker.Provisioning) (*DistroDB, error) {
+func New(ctx context.Context, storageDir string, provisioning worker.Provisioning) (db *DistroDB, err error) {
+	defer decorate.OnError(&err, "could not initialize database")
+
 	if err := os.MkdirAll(storageDir, 0600); err != nil {
 		return nil, fmt.Errorf("could not create database directory: %w", err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return nil, fmt.Errorf("Database New: %v", ctx.Err())
+		return nil, ctx.Err()
 	default:
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
 
-	db := &DistroDB{
+	db = &DistroDB{
 		storageDir:      storageDir,
 		scheduleTrigger: make(chan struct{}),
 		provisioning:    provisioning,
@@ -92,7 +95,7 @@ func New(ctx context.Context, storageDir string, provisioning worker.Provisionin
 			}
 
 			if err := db.cleanup(ctx); err != nil {
-				log.Errorf(ctx, "Failed to clean up potentially unused distros: %v", err)
+				log.Errorf(ctx, "Database: failed to clean up potentially unused distros: %v", err)
 			}
 		}
 	}()
@@ -149,7 +152,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 
 	// Name not in database: create a new distro and returns it
 	if !found {
-		log.Debugf(ctx, "Cache miss, creating %q and adding it to the database", name)
+		log.Debugf(ctx, "Database: cache miss, creating %q and adding it to the database", name)
 
 		d, err := distro.New(db.ctx, name, props, db.storageDir, &db.distroStartMu, distro.WithProvisioning(db.provisioning))
 		if err != nil {
@@ -164,7 +167,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 
 	// Name in database, wrong GUID: stops previous distro runner and creates a new one.
 	if !d.IsValid() {
-		log.Debugf(ctx, "Cache overwrite. Distro %q removed and added again", name)
+		log.Debugf(ctx, "Database: cache overwrite. Distro %q removed and added again", name)
 
 		go d.Cleanup(ctx)
 		delete(db.distros, normalizedName)
@@ -178,7 +181,7 @@ func (db *DistroDB) GetDistroAndUpdateProperties(ctx context.Context, name strin
 		return d, err
 	}
 
-	log.Debugf(ctx, "Cache hit. Overwriting properties for %q", name)
+	log.Debugf(ctx, "Database: cache hit. Overwriting properties for %q", name)
 
 	// Name in database, correct GUID: refresh with latest properties of a valid distro
 	var err error
@@ -223,7 +226,7 @@ func (db *DistroDB) cleanup(ctx context.Context) error {
 			continue
 		}
 
-		log.Infof(ctx, "Cleanup: Distro %q became invalid, cleaning up.", d.Name())
+		log.Infof(ctx, "Database: distro %q became invalid, cleaning up.", d.Name())
 		go d.Cleanup(ctx)
 		delete(db.distros, name)
 		needsDBDump = true
@@ -235,7 +238,9 @@ func (db *DistroDB) cleanup(ctx context.Context) error {
 }
 
 // load reads the database from disk.
-func (db *DistroDB) load(ctx context.Context) error {
+func (db *DistroDB) load(ctx context.Context) (err error) {
+	defer decorate.OnError(&err, "failed to load database from disk")
+
 	// Read raw database from disk
 	out, err := os.ReadFile(filepath.Join(db.storageDir, consts.DatabaseFileName))
 	if errors.Is(err, fs.ErrNotExist) {
@@ -250,7 +255,7 @@ func (db *DistroDB) load(ctx context.Context) error {
 	distros := make([]serializableDistro, 0)
 	err = yaml.Unmarshal(out, &distros)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not unmarshal: %v", err)
 	}
 
 	// Initializing distros into database
@@ -258,7 +263,7 @@ func (db *DistroDB) load(ctx context.Context) error {
 	for _, inert := range distros {
 		d, err := inert.newDistro(ctx, db.storageDir, &db.distroStartMu)
 		if err != nil {
-			log.Warningf(ctx, "Read invalid distro from database: %#+v", inert)
+			log.Warningf(ctx, "Database: read invalid distro from database: %#+v", inert)
 			continue
 		}
 		db.distros[strings.ToLower(d.Name())] = d
@@ -269,7 +274,9 @@ func (db *DistroDB) load(ctx context.Context) error {
 
 // dump writes the database contents into the file inside db.storageDir.
 // The dump is deterministic, with distros always sorted alphabetically.
-func (db *DistroDB) dump() error {
+func (db *DistroDB) dump() (err error) {
+	defer decorate.OnError(&err, "failed to dump database to disk")
+
 	// Sort distros case-independently.
 	normalizedNames := make([]string, 0, len(db.distros))
 	for n := range db.distros {
@@ -286,7 +293,7 @@ func (db *DistroDB) dump() error {
 	// Generate dump
 	out, err := yaml.Marshal(distros)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not marshal: %v", err)
 	}
 
 	// Write dump
@@ -320,11 +327,11 @@ func (db *DistroDB) Close(ctx context.Context) {
 		db.cancelCtx()
 
 		if err := db.cleanup(ctx); err != nil {
-			log.Warningf(ctx, "Database close: Error cleaning up the database: %v", err)
+			log.Warningf(ctx, "Database: error while closing: %v", err)
 		}
 
 		if err := db.dump(); err != nil {
-			log.Warningf(ctx, "Database close: Error dumping database contents to disk: %v", err)
+			log.Warningf(ctx, "Database: error while closing: %v", err)
 		}
 
 		close(db.scheduleTrigger)

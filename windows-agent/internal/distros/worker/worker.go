@@ -59,7 +59,9 @@ func WithProvisioning(provisioning Provisioning) Option {
 }
 
 // New creates a new worker and starts it. Call Stop when you're done to avoid leaking the task execution goroutine.
-func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Worker, error) {
+func New(ctx context.Context, d distro, storageDir string, args ...Option) (w *Worker, err error) {
+	defer decorate.OnError(&err, "distro %q: could not create worker", d.Name())
+
 	storagePath := filepath.Join(storageDir, d.Name()+".tasks")
 
 	var opts options
@@ -72,7 +74,7 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (*Wor
 		return nil, err
 	}
 
-	w := &Worker{
+	w = &Worker{
 		distro:  d,
 		manager: tm,
 	}
@@ -123,7 +125,7 @@ func (w *Worker) SetConnection(conn *grpc.ClientConn) {
 
 	if w.conn != nil {
 		if err := w.conn.Close(); err != nil {
-			log.Warningf(context.TODO(), "distro %q: could not close previous grpc connection: %v", w.distro.Name(), err)
+			log.Warningf(context.TODO(), "Distro %q: could not close previous grpc connection: %v", w.distro.Name(), err)
 		}
 	}
 	w.conn = conn
@@ -201,14 +203,14 @@ func (w *Worker) processTasks(ctx context.Context) {
 
 		var target unreachableDistroError
 		if errors.Is(resultErr, &target) {
-			log.Errorf(ctx, "distro %q: task %q: distro not reachable: %v", w.distro.Name(), t, target.sourceErr)
+			log.Errorf(ctx, "Distro %q: task %q: distro not reachable: %v", w.distro.Name(), t, target.sourceErr)
 			w.distro.Invalidate(ctx)
 			continue
 		}
 
 		err := w.manager.TaskDone(ctx, t, resultErr)
 		if err != nil {
-			log.Errorf(ctx, "distro %q: %v", w.distro.Name(), err)
+			log.Errorf(ctx, "Distro %q: %v", w.distro.Name(), err)
 		}
 	}
 }
@@ -231,7 +233,7 @@ func (err unreachableDistroError) Error() string {
 }
 
 func (w *Worker) processSingleTask(ctx context.Context, t task.Task) error {
-	log.Debugf(ctx, "Distro %q: task %q: dequeued", w.distro.Name(), t)
+	log.Debugf(ctx, "Distro %q: starting task %q", w.distro.Name(), t)
 
 	if !w.distro.IsValid() {
 		return newUnreachableDistroErr(errors.New("distro marked as invalid"))

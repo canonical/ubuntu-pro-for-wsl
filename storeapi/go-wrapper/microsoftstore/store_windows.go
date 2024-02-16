@@ -27,11 +27,11 @@ var (
 
 // GenerateUserJWT takes an azure AD server access token and returns a Windows store token.
 func GenerateUserJWT(azureADToken string) (jwt string, err error) {
-	defer decorate.OnError(&err, "GenerateUserJWT")
+	defer decorate.OnError(&err, "couldn't generate a user JWT from the Microsoft Store API")
 
 	accessToken, err := syscall.BytePtrFromString(azureADToken)
 	if err != nil {
-		return "", fmt.Errorf("could not convert the AzureAD token to a byte array: %v", err)
+		return "", fmt.Errorf("could not convert the auth token to a byte array: %v", err)
 	}
 
 	var userJWTbegin *byte
@@ -56,7 +56,7 @@ func GenerateUserJWT(azureADToken string) (jwt string, err error) {
 
 // GetSubscriptionExpirationDate returns the expiration date for the current subscription.
 func GetSubscriptionExpirationDate() (tm time.Time, err error) {
-	defer decorate.OnError(&err, "GetSubscriptionExpirationDate")
+	defer decorate.OnError(&err, "could not get the Ubuntu Pro subscription expiration date from the Microsoft Store API")
 
 	prodID, err := syscall.BytePtrFromString(common.MsStoreProductID)
 	if err != nil {
@@ -128,13 +128,13 @@ func loadDll() error {
 
 	path, err := locateStoreDll()
 	if err != nil {
-		return fmt.Errorf("could not find Windows Store API dll: %v", err)
+		return fmt.Errorf("could not find Microsoft Store API dll: %v", err)
 	}
 
 	dll.Name = path
 	if err = dll.Load(); err != nil {
 		dll.Name = ""
-		return fmt.Errorf("could not load the Windows Store API dll: %v", err)
+		return fmt.Errorf("could not load the Microsoft Store API dll: %v", err)
 	}
 
 	return nil
