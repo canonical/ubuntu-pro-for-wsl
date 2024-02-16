@@ -122,7 +122,6 @@ class DarkStyledLandingPage extends StatelessWidget {
 
 class _PageContent extends StatelessWidget {
   const _PageContent({
-    super.key,
     required this.svgAsset,
     required this.title,
     required ThemeData data,
