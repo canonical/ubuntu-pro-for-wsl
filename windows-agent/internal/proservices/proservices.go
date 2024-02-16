@@ -8,11 +8,13 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/interceptorschain"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/wslinstance"
+	"github.com/sirupsen/logrus"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
 )
@@ -130,8 +132,8 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 
 	grpcServer := grpc.NewServer(grpc.StreamInterceptor(
 		interceptorschain.StreamServer(
-		/*log.StreamServerInterceptor(logrus.StandardLogger()),
-		logconnections.StreamServerInterceptor(),*/
+			log.StreamServerInterceptor(logrus.StandardLogger()),
+			logconnections.StreamServerInterceptor(),
 		)))
 	agent_api.RegisterUIServer(grpcServer, &m.uiService)
 	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)

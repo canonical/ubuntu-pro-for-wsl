@@ -98,7 +98,6 @@ func (s *Service) sendInfo(ctx context.Context) error {
 // ApplyLandscapeConfig serves LandscapeConfig messages sent by the agent.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, msg *wslserviceapi.LandscapeConfig) (empty *wslserviceapi.Empty, err error) {
 	defer decorate.LogOnError(err)
-	defer decorate.OnError(&err, "ApplyLandscapeConfig")
 
 	conf := msg.GetConfiguration()
 	if conf == "" {
