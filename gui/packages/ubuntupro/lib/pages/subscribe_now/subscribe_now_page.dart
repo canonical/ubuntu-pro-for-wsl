@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
+import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 import '../widgets/page_widgets.dart';
+import '/core/agent_api_client.dart';
+import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
-import 'subscription_status_model.dart';
 
 class SubscribeNowPage extends StatelessWidget {
   const SubscribeNowPage({super.key, required this.onSubscriptionUpdate});
@@ -14,7 +17,7 @@ class SubscribeNowPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<SubscriptionStatusModel>() as SubscribeNowModel;
+    final model = context.watch<SubscribeNowModel>();
     final lang = AppLocalizations.of(context);
     return DarkStyledLandingPage(
       children: [
@@ -87,6 +90,19 @@ class SubscribeNowPage extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+
+  static Widget create(BuildContext context) {
+    final client = getService<AgentApiClient>();
+    return Provider<SubscribeNowModel>(
+      create: (context) => SubscribeNowModel(client),
+      child: SubscribeNowPage(
+        onSubscriptionUpdate: (info) {
+          context.read<ValueNotifier<SubscriptionInfo>>().value = info;
+          Wizard.of(context).next();
+        },
+      ),
     );
   }
 }

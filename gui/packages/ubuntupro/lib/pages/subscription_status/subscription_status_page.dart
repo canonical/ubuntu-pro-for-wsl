@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
 import '/core/agent_api_client.dart';
-import 'subscribe_now_page.dart';
 import 'subscription_status_model.dart';
 import 'subscription_status_widgets.dart';
 
@@ -39,18 +39,16 @@ class SubscriptionStatusPage extends StatelessWidget {
                 backgroundColor: YaruColors.red,
               ),
               onPressed: () async {
-                context.read<ValueNotifier<SubscriptionInfo>>().value =
-                    await model.detachPro();
+                await model.detachPro();
+                if (context.mounted) {
+                  Wizard.of(context).back();
+                }
               },
               child: Text(lang.detachPro),
             ),
           ),
         OrgSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.orgManaged,
-          ),
-        SubscribeNowModel() => SubscribeNowPage(
-            onSubscriptionUpdate: (info) =>
-                context.read<ValueNotifier<SubscriptionInfo>>().value = info,
           ),
       },
     );

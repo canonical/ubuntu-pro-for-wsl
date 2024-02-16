@@ -1,3 +1,4 @@
+import 'package:dart_either/dart_either.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:yaru/yaru.dart';
@@ -36,6 +37,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
   // This is never called if the token is invalid.
   void _handleApplyButton() {
     widget.onApply(_token.valueOrNull!);
+    _token.clear();
     _controller.clear();
   }
 
@@ -104,6 +106,10 @@ class ProTokenValue extends EitherValueNotifier<TokenError, ProToken?> {
 
   void update(String token) {
     value = ProToken.create(token);
+  }
+
+  void clear() {
+    value = const Right<TokenError, ProToken?>(null);
   }
 }
 
