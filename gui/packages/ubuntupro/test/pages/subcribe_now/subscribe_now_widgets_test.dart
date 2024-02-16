@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/core/pro_token.dart';
-import 'package:ubuntupro/pages/subscription_status/subscribe_now_widgets.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
 import 'token_samples.dart' as tks;
 
 void main() {
