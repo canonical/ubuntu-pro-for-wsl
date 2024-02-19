@@ -63,10 +63,6 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 // Stop releases all resources associated with the config.
 func (c *Config) Stop() {
 	c.cancel()
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	c.wg.Wait()
 }
 
