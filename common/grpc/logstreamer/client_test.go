@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -28,6 +29,7 @@ func TestRecvLogMsg(t *testing.T) {
 		errRecv           error
 		withCaller        bool
 		invalidObjectCall bool
+		overrideClientID  string
 
 		wantLogs      [][]string
 		wantNotInLogs []string
@@ -42,6 +44,17 @@ func TestRecvLogMsg(t *testing.T) {
 			}},
 			wantLogs:      [][]string{{"level=info", `msg="My server log"`}},
 			wantNotInLogs: []string{"my/caller/function"},
+		},
+		"One log (and one closing empty message) with overridden client ID": {logMsgs: []*log.Log{
+			{
+				LogHeader: log.LogIdentifier,
+				Level:     logrus.InfoLevel.String(),
+				Msg:       "My server log",
+				Caller:    "my/caller/function",
+			}},
+			overrideClientID: "TEST_CLIENT_ID",
+			wantLogs:         [][]string{{"level=info", `msg="My server log"`}},
+			wantNotInLogs:    []string{"my/caller/function"},
 		},
 		"Two logs with different debug level": {logMsgs: []*log.Log{
 			{
@@ -146,11 +159,29 @@ func TestRecvLogMsg(t *testing.T) {
 				wantErrRecvMsg: tc.errRecv,
 			}
 
+			var opts []log.Option
+			if tc.overrideClientID != "" {
+				opts = append(opts, log.WithClientID(tc.overrideClientID))
+			}
+
+			var gotCtx context.Context
+
 			streamCreation := func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+				gotCtx = ctx
 				return s, nil
 			}
-			c, err := log.StreamClientInterceptor(logger)(context.Background(), nil, nil, "method", streamCreation)
+			c, err := log.StreamClientInterceptor(logger, opts...)(context.Background(), nil, nil, "method", streamCreation)
 			require.NoError(t, err, "StreamClient Interceptor should return no error")
+
+			require.NotNil(t, gotCtx, "StreamClient Interceptor should have called the streamer with a non-nil context")
+			md, ok := metadata.FromOutgoingContext(gotCtx)
+			require.True(t, ok, "stream context should contain metadata")
+			gotClientIDs := md.Get(log.ClientIDKey)
+			require.Len(t, gotClientIDs, 1, "clientID should be set")
+			require.NotEmpty(t, gotClientIDs[0], "clientID should be set")
+			if tc.overrideClientID != "" {
+				assert.Equal(t, tc.overrideClientID, gotClientIDs[0], "clientID should be overridden")
+			}
 
 			logs := captureLogs(t, logger)
 
