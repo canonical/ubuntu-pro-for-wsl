@@ -92,8 +92,7 @@ func TestConnect(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success":                         {},
-		"Success without WSL distro name": {breakWSlDisroName: true},
+		"Success": {},
 
 		// Port file errors
 		"No connection because port file does not exist":             {portFile: dataFileNotExist, wantErr: true},
@@ -109,6 +108,9 @@ func TestConnect(t *testing.T) {
 		"Incomplete handshake because Agent never receives":     {agentDoesntRecv: true, wantErr: true},
 		"Incomplete handshake because Agent never sends a port": {agentSendsNoPort: true, wantErr: true},
 		"Incomplete handshake because Agent sends port :0":      {agentSendsBadPort: true, wantErr: true},
+
+		// Other errors
+		"Error when system cannot retrieve the WSL distro name": {breakWSlDisroName: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -174,6 +176,7 @@ func TestConnect(t *testing.T) {
 			if tc.breakWSlDisroName {
 				// Must be set after New to avoid breaking system.UserProfileDir
 				mock.SetControlArg(testutils.WslpathErr)
+				mock.WslDistroName = ""
 			}
 
 			select {
