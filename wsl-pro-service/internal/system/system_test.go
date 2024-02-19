@@ -148,12 +148,17 @@ func TestWslDistroName(t *testing.T) {
 
 			got, err := system.WslDistroName(ctx)
 			if tc.wantErr {
-				require.Error(t, err, "Expected Get() to return an error")
+				require.Error(t, err, "Expected WslDistroName() to return an error")
 				return
 			}
-			require.NoError(t, err, "Expected Get() to return no errors")
-
+			require.NoError(t, err, "Expected WslDistroName() to return no errors")
 			assert.Equal(t, "TEST_DISTRO", got, "WslName does not match expected value")
+
+			// Test the cache: second call should not call wslpath
+			mock.SetControlArg(testutils.WslpathErr)
+			got, err = system.WslDistroName(ctx)
+			require.NoError(t, err, "WslDistroName should return no error as the cache should be used")
+			assert.Equal(t, "TEST_DISTRO", got, "WslName does not match expected value in second call")
 		})
 	}
 }
