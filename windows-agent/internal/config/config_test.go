@@ -378,9 +378,9 @@ func TestSetUserSubscription(t *testing.T) {
 	}{
 		"Success":                          {settingsState: userTokenHasValue, want: "new_token"},
 		"Success disabling a subscription": {settingsState: userTokenHasValue, emptyToken: true, want: ""},
-		"Success when there is a store token active": {settingsState: storeTokenHasValue, want: "store_token"},
 
-		"Error when the file cannot be opened": {settingsState: fileExists, breakFile: true, wantError: true},
+		"Error when there is a store token active": {settingsState: storeTokenHasValue, wantError: true},
+		"Error when the file cannot be opened":     {settingsState: fileExists, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
