@@ -118,21 +118,22 @@ func TestConnect(t *testing.T) {
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p)
 			defer lis.Close()
 
-			conf := &mockConfig{
-				proToken: "TOKEN",
+			conf := newMockConfig(ctx)
+			defer conf.Stop()
 
-				// We trigger an error on first-contact SendUpdatedInfo by erroring out in conf.ProToken()
-				proTokenErr: tc.tokenErr,
+			conf.proToken = "TOKEN"
 
-				// We trigger errors trying to read or write to/from the registry
-				landscapeUIDErr:    tc.landscapeUIDReadErr,
-				setLandscapeUIDErr: tc.landscapeUIDWriteErr,
+			// We trigger an error on first-contact SendUpdatedInfo by erroring out in conf.ProToken()
+			conf.proTokenErr = tc.tokenErr
 
-				// We trigger an error when deciding to use a certificate or not
-				landscapeConfigErr: tc.breakLandscapeClientConfig,
+			// We trigger errors trying to read or write to/from the registry
+			conf.landscapeUIDErr = tc.landscapeUIDReadErr
+			conf.setLandscapeUIDErr = tc.landscapeUIDWriteErr
 
-				landscapeAgentUID: tc.uid,
-			}
+			// We trigger an error when deciding to use a certificate or not
+			conf.landscapeConfigErr = tc.breakLandscapeClientConfig
+
+			conf.landscapeAgentUID = tc.uid
 
 			if tc.emptyToken {
 				conf.proToken = ""
@@ -244,10 +245,11 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
 
-			conf := &mockConfig{
-				proToken:              "TOKEN",
-				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
-			}
+			conf := newMockConfig(ctx)
+			defer conf.Stop()
+
+			conf.proToken = "TOKEN"
+			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr())
 
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
@@ -439,10 +441,11 @@ func TestAutoReconnection(t *testing.T) {
 			defer lis.Close()
 			defer server.Stop()
 
-			conf := &mockConfig{
-				proToken:              "TOKEN",
-				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
-			}
+			conf := newMockConfig(ctx)
+			defer conf.Stop()
+
+			conf.proToken = "TOKEN"
+			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr())
 
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
@@ -610,10 +613,11 @@ func TestReconnect(t *testing.T) {
 
 			lis, server, _ := setUpLandscapeMock(t, ctx, "localhost:", certPath)
 
-			conf := &mockConfig{
-				proToken:              "TOKEN",
-				landscapeClientConfig: executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr()),
-			}
+			conf := newMockConfig(ctx)
+			defer conf.Stop()
+
+			conf.proToken = "TOKEN"
+			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr())
 
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
@@ -737,6 +741,9 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 }
 
 type mockConfig struct {
+	ctx    context.Context
+	cancel func()
+
 	proToken              string
 	landscapeClientConfig string
 	landscapeAgentUID     string
@@ -747,8 +754,27 @@ type mockConfig struct {
 	setLandscapeUIDErr bool
 
 	callbacks []func()
+	wg        sync.WaitGroup
 
 	mu sync.Mutex
+}
+
+func newMockConfig(ctx context.Context) *mockConfig {
+	ctx, cancel := context.WithCancel(ctx)
+
+	return &mockConfig{
+		ctx:    ctx,
+		cancel: cancel,
+	}
+}
+
+func (m *mockConfig) Stop() {
+	m.cancel()
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.wg.Wait()
 }
 
 func (m *mockConfig) LandscapeClientConfig() (string, config.Source, error) {
@@ -811,6 +837,18 @@ func (m *mockConfig) Notify(f func()) {
 
 func (m *mockConfig) triggerNotifications() {
 	for _, f := range m.callbacks {
-		go f()
+		m.wg.Add(1)
+		f := f
+		go func() {
+			defer m.wg.Done()
+
+			select {
+			case <-m.ctx.Done():
+				return
+			default:
+			}
+
+			f()
+		}()
 	}
 }

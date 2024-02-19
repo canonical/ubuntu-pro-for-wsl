@@ -10,15 +10,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type marshalHelper struct {
-	Landscape    landscapeConf
-	Subscription subscription
-}
-
 func (c *Config) load() (err error) {
 	defer decorate.OnError(&err, "could not load config from disk")
 
-	var h marshalHelper
+	var s configState
 
 	out, err := os.ReadFile(c.storagePath)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -27,32 +22,26 @@ func (c *Config) load() (err error) {
 		return fmt.Errorf("could not read config file: %v", err)
 	}
 
-	if err := yaml.Unmarshal(out, &h); err != nil {
+	if err := yaml.Unmarshal(out, &s); err != nil {
 		return fmt.Errorf("could not umarshal config file: %v", err)
 	}
 
 	// Registry data must not be overridden
-	tokenOrg := c.subscription.Organization
-	landscapeOrg := c.landscape.OrgConfig
+	tokenOrg := c.configState.Subscription.Organization
+	landscapeOrg := c.configState.Landscape.OrgConfig
 
-	c.subscription = h.Subscription
-	c.landscape = h.Landscape
+	c.configState = s
 
-	c.subscription.Organization = tokenOrg
-	c.landscape.OrgConfig = landscapeOrg
+	c.configState.Subscription.Organization = tokenOrg
+	c.configState.Landscape.OrgConfig = landscapeOrg
 
 	return nil
 }
 
-func (c Config) dump() (err error) {
+func (c *Config) dump() (err error) {
 	defer decorate.OnError(&err, "could not store config to disk")
 
-	h := marshalHelper{
-		Landscape:    c.landscape,
-		Subscription: c.subscription,
-	}
-
-	out, err := yaml.Marshal(&h)
+	out, err := yaml.Marshal(c.configState)
 	if err != nil {
 		return fmt.Errorf("could not marshal config: %v", err)
 	}

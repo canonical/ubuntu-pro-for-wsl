@@ -455,10 +455,9 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 
 	// Set up agent components (config, database, etc.)
 	if tb.conf == nil {
-		tb.conf = &mockConfig{
-			proToken:              "TOKEN",
-			landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
-		}
+		tb.conf = newMockConfig(ctx)
+		tb.conf.proToken = "TOKEN"
+		tb.conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr())
 	}
 
 	db, err := database.New(ctx, t.TempDir(), tb.conf)
