@@ -47,9 +47,14 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
-	// TODO: get a local port only, please :)
+	wslIP, err := getWslIP()
+	if err != nil {
+		log.Warningf(ctx, "Daemon: serving on all interfaces because we could not get the WSL adapter IP: %v", err)
+		wslIP = net.IPv4zero
+	}
+
 	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp", "")
+	lis, err := cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
 	if err != nil {
 		return fmt.Errorf("can't listen: %v", err)
 	}
