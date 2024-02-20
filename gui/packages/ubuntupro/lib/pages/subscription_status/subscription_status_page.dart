@@ -15,7 +15,6 @@ import 'subscription_status_widgets.dart';
 class SubscriptionStatusPage extends StatelessWidget {
   const SubscriptionStatusPage({super.key});
 
-  // TODO: Replace the constants below with YaruColors.dark.link and YaruColors.dark.error once we release yaru v0.9 or v1.0.0.
   @override
   Widget build(BuildContext context) {
     final model = context.watch<SubscriptionStatusModel>();
@@ -33,8 +32,7 @@ class SubscriptionStatusPage extends StatelessWidget {
           ),
         UserSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.manuallyManaged(
-              'ubuntu.com/pro/dashboard',
-              'https://ubuntu.com/pro/dashboard',
+              '[ubuntu.com/pro/dashboard](https://ubuntu.com/pro/dashboard)',
             ),
             actionButton: FilledButton(
               style: FilledButton.styleFrom(

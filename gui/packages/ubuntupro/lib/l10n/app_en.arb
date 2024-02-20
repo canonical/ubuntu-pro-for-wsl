@@ -35,13 +35,10 @@
     "storeManaged": "This subscription is managed through Microsoft Store.",
     "manageSubscription": "Manage your subscription",
     "orgManaged": "This subscription is owned and managed by your organization.",
-    "manuallyManaged": "Visit [{proDashboardLink}]({proDashboardLinkHref}) to manage your subscription.",
+    "manuallyManaged": "Visit {proDashboardLink} to manage your subscription.",
     "@manuallyManaged": {
         "placeholders": {
             "proDashboardLink": {
-                "type": "String"
-            },
-            "proDashboardLinkHref": {
                 "type": "String"
             }
         }
