@@ -278,7 +278,7 @@ func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslservice
 			// Connect to GRPC client
 			client, err := w.waitForClient(ctx)
 			if err != nil {
-				return nil, newUnreachableDistroErr(err)
+				return nil, err
 			}
 
 			log.Debugf(ctx, "Distro %q: connection is active.", w.distro.Name())
@@ -302,9 +302,13 @@ func (w *Worker) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, er
 	tickRate := 0 * time.Second
 	for {
 		select {
+		case <-ctx.Done():
+			// Context cancelled means agent teardown.
+			return nil, fmt.Errorf("stopped waiting for client: %v", timedOutCtx.Err())
 		case <-timedOutCtx.Done():
-			log.Warningf(ctx, "Distro %q: timed out waiting for client\n", w.distro.Name())
-			return nil, fmt.Errorf("when waiting for client: %v", timedOutCtx.Err())
+			// Timeout means the distro is not reachable.
+			// log.Warningf(ctx, "Distro %q: timed out waiting for client\n", w.distro.Name())
+			return nil, newUnreachableDistroErr(errors.New("timed out waiting for client"))
 		case <-time.After(tickRate):
 			client := w.Client()
 
