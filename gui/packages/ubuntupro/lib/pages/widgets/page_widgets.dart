@@ -70,10 +70,12 @@ class DarkStyledLandingPage extends StatelessWidget {
     required this.children,
     this.svgAsset = 'assets/Ubuntu-tag.svg',
     this.title = 'Ubuntu Pro',
+    this.centered = false,
   });
   final List<Widget> children;
   final String svgAsset;
   final String title;
+  final bool centered;
   // TODO: Remove those getters once we have a background image suitable for the light mode theme.
   static ThemeData get _data => yaruDark;
   static TextTheme get textTheme => _data.textTheme;
@@ -82,6 +84,7 @@ class DarkStyledLandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pro4WSLPage(
       body: Stack(
+        fit: StackFit.expand,
         children: [
           Positioned.fill(
             child: Image.asset(
@@ -91,40 +94,82 @@ class DarkStyledLandingPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(48.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      WidgetSpan(
-                        child: SvgPicture.asset(
-                          svgAsset,
-                          height: 70,
-                        ),
+            child: centered
+                ? Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480.0),
+                      child: _PageContent(
+                        svgAsset: svgAsset,
+                        title: title,
+                        data: _data,
+                        centered: true,
+                        children: children,
                       ),
-                      const WidgetSpan(
-                        child: SizedBox(
-                          width: 8,
-                        ),
-                      ),
-                      TextSpan(
-                        text: title,
-                        style: _data.textTheme.displaySmall
-                            ?.copyWith(fontWeight: FontWeight.w100),
-                      ),
-                    ],
+                    ),
+                  )
+                : _PageContent(
+                    svgAsset: svgAsset,
+                    title: title,
+                    data: _data,
+                    children: children,
                   ),
-                ),
-                const SizedBox(
-                  height: 24,
-                ),
-                ...children,
-              ],
-            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PageContent extends StatelessWidget {
+  const _PageContent({
+    required this.svgAsset,
+    required this.title,
+    required ThemeData data,
+    required this.children,
+    this.centered = false,
+  }) : _data = data;
+
+  final String svgAsset;
+  final String title;
+  final ThemeData _data;
+  final List<Widget> children;
+  final bool centered;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment:
+          centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      mainAxisAlignment:
+          centered ? MainAxisAlignment.center : MainAxisAlignment.start,
+      children: [
+        RichText(
+          text: TextSpan(
+            children: [
+              WidgetSpan(
+                child: SvgPicture.asset(
+                  svgAsset,
+                  height: 70,
+                ),
+              ),
+              const WidgetSpan(
+                child: SizedBox(
+                  width: 8,
+                ),
+              ),
+              TextSpan(
+                text: title,
+                style: _data.textTheme.displaySmall
+                    ?.copyWith(fontWeight: FontWeight.w100),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(
+          height: 24,
+        ),
+        ...children,
+      ],
     );
   }
 }

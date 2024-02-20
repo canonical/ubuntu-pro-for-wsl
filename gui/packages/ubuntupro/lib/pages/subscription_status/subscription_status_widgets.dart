@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:yaru/yaru.dart';
 import '../widgets/page_widgets.dart';
 
@@ -22,33 +24,72 @@ class SubscriptionStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
 
-    return DarkStyledLandingPage(
-      children: [
-        Row(
-          children: [
-            const Icon(
-              Icons.check_circle,
-            ),
-            const SizedBox(width: 8.0),
-            Text(
-              lang.subscriptionIsActive,
-              style: DarkStyledLandingPage.textTheme.bodyLarge!
-                  .copyWith(fontWeight: FontWeight.w100),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16.0),
-        Text(
-          caption,
-          style: DarkStyledLandingPage.textTheme.bodyMedium!.copyWith(
+    final linkStyle = MarkdownStyleSheet.fromTheme(
+      Theme.of(context).copyWith(
+        textTheme: DarkStyledLandingPage.textTheme.copyWith(
+          bodyMedium: DarkStyledLandingPage.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w100,
-            color: YaruColors.warmGrey,
+            color: YaruColors.jet,
+          ),
+        ),
+      ),
+    ).copyWith(
+      a: const TextStyle(
+        decoration: TextDecoration.underline,
+        color: YaruColors.jet,
+      ),
+    );
+
+    return DarkStyledLandingPage(
+      centered: true,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFF0E8420), width: 1.0),
+            color: const Color(0xFFE6F8E8),
+            borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.check_circle_outline_outlined,
+                color: Color(0xFF0E8420),
+                size: 24.0,
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang.subscriptionIsActive,
+                      style:
+                          DarkStyledLandingPage.textTheme.bodyLarge!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: YaruColors.darkJet,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    MarkdownBody(
+                      data: caption,
+                      onTapLink: (_, href, __) => launchUrlString(href!),
+                      styleSheet: linkStyle,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
         if (actionButton != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 32.0),
-            child: actionButton!,
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 32.0),
+              child: actionButton!,
+            ),
           ),
       ],
     );
