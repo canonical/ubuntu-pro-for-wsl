@@ -9,6 +9,8 @@ In UP4W, you can use the Windows registry to supply the configuration for [Ubunt
 
 > See more: [How to configure UP4W > Using the Windows registry](howto::configure::registry)
 
+![Screenshot of the Windows registry showing how to edit the Landscape configuration for Ubuntu Pro for WSL](./assets/windows-registry.png)
+
 ## Expected contents of the UbuntuPro registry key
 
 The Windows agent will read the following values from the key at `HK_CURRENT_USER\Software\Canonical\UbuntuPro`:
@@ -16,5 +18,3 @@ The Windows agent will read the following values from the key at `HK_CURRENT_USE
 - Value `UbuntuProToken` (type `String`) expects the [Ubuntu Pro token](ref::ubuntu-pro-token) for the user.
 
 - Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the [Landscape configuration](ref::landscape-config).
-
-<!--TODO: Screenshot -->
