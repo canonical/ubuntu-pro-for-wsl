@@ -124,44 +124,78 @@ func (s *Service) keepConnected() error {
 		first := true
 
 		for {
-			// Waiting before reconnecting
+			err := func() error {
+				cooldown := time.NewTimer(wait)
+				defer cooldown.Stop()
+
+				// Waiting before reconnecting
+				if wait > minWait {
+					log.Infof(s.ctx, "Landscape will attempt to connect in %s", wait)
+				}
+
+				select {
+				case <-s.ctx.Done():
+					return s.ctx.Err()
+				case <-s.connRetrier.Await():
+				case <-cooldown.C:
+					// We use the cooldown to see if the connection is long-lived.
+					// Short-lived connections will be considered a failure.
+					// This avoids spamming the server with short-lived connections.
+					cooldown.Stop()
+					cooldown.Reset(wait)
+				}
+
+				// Retrial petitions are all satisfied.
+				s.connRetrier.Reset()
+
+				log.Info(s.ctx, "Landscape: connecting")
+				connectionDone, err := s.connectOnce(s.ctx)
+
+				if first {
+					started <- err
+					close(started)
+					wait = minWait
+					first = false
+				}
+
+				if err != nil {
+					return err
+				}
+
+				log.Info(s.ctx, "Landscape: connected")
+
+				select {
+				case <-s.ctx.Done():
+					return s.ctx.Err()
+				case <-s.connRetrier.Await():
+					log.Info(s.ctx, "Landscape: reconnection requested")
+					s.disconnect()
+				case <-connectionDone:
+					if cooldown.Stop() {
+						// Connection was dropped so fast we'll consider it a failure.
+						return errors.New("connection dropped unexpectedly")
+					}
+					log.Warningf(s.ctx, "Landscape: connection dropped unexpectedly")
+				}
+
+				return nil
+			}()
+
 			select {
 			case <-s.ctx.Done():
+				log.Info(s.ctx, "Landscape: stopped by context")
 				return
-			case <-s.connRetrier.Await():
-			case <-time.After(wait):
-			}
-
-			log.Info(s.ctx, "Landscape: connecting")
-			connectionDone, err := s.connectOnce(s.ctx)
-
-			if first {
-				started <- err
-				close(started)
-				wait = minWait
-				first = false
+			default:
 			}
 
 			if err != nil {
 				log.Warningf(s.ctx, "Landscape: %v", err)
+				wait = min(growthFactor*wait, maxWait)
 				continue
 			}
 
-			log.Info(s.ctx, "Landscape: connected")
-
-			select {
-			case <-s.ctx.Done():
-				log.Info(s.ctx, "Landscape: connection stopped by context")
-				return
-			case <-s.connRetrier.Await():
-				log.Infof(s.ctx, "Landscape: reconnection requested: reconnecting in %d seconds", wait/time.Second)
-				s.connRetrier.Reset()
-				s.disconnect()
-				wait = minWait
-			case <-connectionDone:
-				log.Infof(s.ctx, "Landscape: connection dropped: reconnecting in %d seconds", wait/time.Second)
-				wait = min(growthFactor*wait, maxWait)
-			}
+			// Connection was long-lived. We don't need to wait before reconnecting.
+			wait = minWait
 		}
 	}()
 
@@ -201,7 +235,6 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 		conn.grpcConn.WaitForStateChange(ctx, connectivity.Ready)
 	}()
 
-	s.connRetrier.Reset()
 	s.conn = conn
 	return connectionDone, nil
 }
