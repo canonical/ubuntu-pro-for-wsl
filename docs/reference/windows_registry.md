@@ -1,13 +1,20 @@
 (windows-registry)=
 # Windows registry
-> See more about the Windows registry in Microsoft's documentation:
-[Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
 
-The Windows registry is a database provided by Windows where programs can read and write information. Ubuntu Pro for WSL (UP4W) uses it as a read-only source of configuration.
+The Windows registry is a database provided by Windows where programs can read and write information. UP4W uses it as a read-only source of configuration.
+> See more:
+[Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
 
-UP4W reads the key located at path `HK_CURRENT_USER\Software\Canonical\UbuntuPro`. Any changes to this key will be detected automatically and the config will be applied. The values it will read are the following:
+In UP4W, you can use the Windows registry to supply the configuration for [Ubuntu Pro](ref::ubuntu-pro) and [Landscape](ref::landscape) to the [Windows Agent](ref::up4w-windows-agent).
 
-- Value `UbuntuProToken` (type `String`) expects the Ubuntu Pro Token for the user. See more: [Ubuntu Pro token](ref::ubuntu-pro-token).
+> See more: [How to configure UP4W > Using the Windows registry](howto::configure::registry)
 
-- Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the contents of the Landscape configuration file. See more: [Landscape configuration](ref::landscape-config).
+## Expected contents of the UbuntuPro registry key
 
+The Windows agent will read the following values from the key at `HK_CURRENT_USER\Software\Canonical\UbuntuPro`:
+
+- Value `UbuntuProToken` (type `String`) expects the [Ubuntu Pro token](ref::ubuntu-pro-token) for the user.
+
+- Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the [Landscape configuration](ref::landscape-config).
+
+<!--TODO: Screenshot -->

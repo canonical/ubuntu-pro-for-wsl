@@ -16,5 +16,5 @@ up4w-gui
 up4w-windows_agent
 up4w-wsl_pro_service
 windows_registry
-wsl
+WSL <wsl>
 ```
