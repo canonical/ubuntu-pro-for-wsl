@@ -307,7 +307,6 @@ func (w *Worker) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, er
 			return nil, fmt.Errorf("stopped waiting for client: %v", timedOutCtx.Err())
 		case <-timedOutCtx.Done():
 			// Timeout means the distro is not reachable.
-			// log.Warningf(ctx, "Distro %q: timed out waiting for client\n", w.distro.Name())
 			return nil, newUnreachableDistroErr(errors.New("timed out waiting for client"))
 		case <-time.After(tickRate):
 			client := w.Client()
