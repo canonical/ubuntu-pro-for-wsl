@@ -312,6 +312,19 @@ func (s *Service) reconnect() {
 	s.connRetrier.Request()
 }
 
+func (s *Service) connDone() <-chan struct{} {
+	s.connMu.RLock()
+	defer s.connMu.RUnlock()
+
+	if s.conn == nil {
+		ch := make(chan struct{})
+		close(ch)
+		return ch
+	}
+
+	return s.conn.ctx.Done()
+}
+
 func (s *Service) hasStopped() <-chan struct{} {
 	return s.ctx.Done()
 }

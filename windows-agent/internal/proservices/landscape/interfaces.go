@@ -20,5 +20,6 @@ type serviceData interface {
 type serviceConn interface {
 	connected() bool
 	reconnect()
+	connDone() <-chan struct{}
 	sendInfo(*landscapeapi.HostAgentInfo) error
 }
