@@ -70,6 +70,18 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	return subs, nil
 }
 
+// ApplyLandscapeConfig does nothing :).
+func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.Empty, error) {
+	c := landscapeConfig.GetConfig()
+
+	err := s.config.SetUserLandscapeConfig(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agentapi.Empty{}, nil
+}
+
 // Ping replies a keep-alive request.
 func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.Empty, error) {
 	log.Info(ctx, "UI service: received Ping")
