@@ -3,23 +3,20 @@ package endtoend_test
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"log/slog"
 	"net"
-	"path/filepath"
 	"testing"
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/gowsl"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // landscape manages all the aspects necessary to hosting a Landscape mock server.
@@ -40,45 +37,28 @@ type landscape struct {
 //
 //nolint:revive // Context goes after testing.T
 func NewLandscape(t *testing.T, ctx context.Context) (l landscape) {
+	// TODO: Restore TLS when the agent supports it.
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(ctx)
 	l.stop = cancel
 	t.Cleanup(cancel)
 
-	certPath := t.TempDir()
-	testutils.GenerateTempCertificate(t, certPath)
-
-	certificatePath := filepath.Join(certPath, "cert.pem")
-	privateKeyPath := filepath.Join(certPath, "key.pem")
-
-	serverCert, err := tls.LoadX509KeyPair(certificatePath, privateKeyPath)
-	require.NoError(t, err, "Setup: could not load Landscape mock server credentials")
-
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp", "localhost:")
 	require.NoError(t, err, "Setup: can't listen")
 	l.lis = lis
 
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.NoClientCert,
-		MinVersion:   tls.VersionTLS12,
-	}
-
 	h := slog.NewTextHandler(&l.logs, &slog.HandlerOptions{Level: slog.LevelDebug})
 	l.service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)))
 
-	l.server = grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))
+	l.server = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 	landscapeapi.RegisterLandscapeHostAgentServer(l.server, l.service)
 
 	l.ClientConfig = fmt.Sprintf(`
 	[host]
 	url = %s
-	
-	[client]
-	ssl_public_key = %s
-	`, lis.Addr(), certificatePath)
+	`, lis.Addr())
 
 	return l
 }
