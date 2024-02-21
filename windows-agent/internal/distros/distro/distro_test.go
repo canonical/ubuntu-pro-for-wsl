@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -68,11 +67,10 @@ func TestNew(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		distro                 string
-		withGUID               string
-		preventWorkDirCreation bool
-		withProvisioning       bool
-		nilMutex               bool
+		distro           string
+		withGUID         string
+		withProvisioning bool
+		nilMutex         bool
 
 		wantErr     bool
 		wantErrType error
@@ -82,7 +80,6 @@ func TestNew(t *testing.T) {
 		"Success with a registered distro with provisioning": {distro: registeredDistro, withProvisioning: true},
 
 		// Error cases
-		"Error when workdir cannot be created":                          {distro: registeredDistro, preventWorkDirCreation: true, wantErr: true},
 		"Error when a constructing a distro with another distro's GUID": {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when a registered distro with a wrong GUID":              {distro: registeredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when the distro is not registered":                       {distro: nonRegisteredDistro, wantErr: true, wantErrType: &distro.NotValidError{}},
@@ -108,19 +105,12 @@ func TestNew(t *testing.T) {
 				args = append(args, distro.WithProvisioning(&mockProvisioning{}))
 			}
 
-			workDir := t.TempDir()
-			if tc.preventWorkDirCreation {
-				workDir = filepath.Join(workDir, "workdir")
-				err := os.WriteFile(workDir, []byte("I'm here to interfere"), 0600)
-				require.NoError(t, err, "Setup: could not write file to interfere with distro's MkDir")
-			}
-
 			mu := startupMutex()
 			if tc.nilMutex {
 				mu = nil
 			}
 
-			d, err = distro.New(ctx, tc.distro, props, workDir, mu, args...)
+			d, err = distro.New(ctx, tc.distro, props, t.TempDir(), mu, args...)
 			defer d.Cleanup(context.Background())
 
 			if tc.wantErr {

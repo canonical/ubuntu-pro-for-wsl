@@ -3,6 +3,7 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -108,11 +109,21 @@ func (a *App) serve(args ...option) error {
 		f(&opt)
 	}
 
-	publicDir, privateDir, err := setupDirectories(ctx, &opt)
+	publicDir, err := a.publicDir(opt)
 	if err != nil {
 		close(a.ready)
 		return err
 	}
+
+	log.Debugf(ctx, "Agent public directory: %s", publicDir)
+
+	privateDir, err := a.privateDir(opt)
+	if err != nil {
+		close(a.ready)
+		return err
+	}
+
+	log.Debugf(ctx, "Agent private directory: %s", privateDir)
 
 	proservice, err := proservices.New(ctx,
 		publicDir,
@@ -130,45 +141,6 @@ func (a *App) serve(args ...option) error {
 	close(a.ready)
 
 	return a.daemon.Serve(ctx)
-}
-
-func setupDirectories(ctx context.Context, opt *options) (public, private string, err error) {
-	public, err = valueOrAfterEnv(opt.publicDir, "UserProfile", common.UserProfileDir)
-	if err != nil {
-		return "", "", err
-	}
-	log.Debugf(ctx, "Agent public directory: %s", public)
-
-	private, err = valueOrAfterEnv(opt.privateDir, "LocalAppData", common.LocalAppDataDir)
-	if err != nil {
-		return "", "", err
-	}
-	log.Debugf(ctx, "Agent private directory: %s", private)
-
-	if err := os.MkdirAll(public, 0600); err != nil {
-		return "", "", fmt.Errorf("could not create public directory: %v", err)
-	}
-
-	if err := os.MkdirAll(private, 0600); err != nil {
-		return "", "", fmt.Errorf("could not create private directory: %v", err)
-	}
-
-	return public, private, nil
-}
-
-// valueOrAfterEnv is a helper for parsing optional inputs.
-// Returns "input" if it is non-empty. Otherwise it returns "${env}/relative".
-func valueOrAfterEnv(input string, env string, relative string) (string, error) {
-	if input != "" {
-		return input, nil
-	}
-
-	dir := os.Getenv(env)
-	if dir == "" {
-		return dir, fmt.Errorf("Could not read env variable %q", env)
-	}
-
-	return filepath.Join(dir, relative), nil
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.
@@ -228,4 +200,46 @@ func (a App) RootCmd() cobra.Command {
 // SetArgs changes the root command args. Shouldn't be in general necessary apart for tests.
 func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
+}
+
+// PublicDir creates a directory to store public data in.
+func (a *App) PublicDir() (string, error) {
+	// This wrapper is used to have a cleaner public API.
+	return a.publicDir(options{})
+}
+
+// publicDir is a wrapper around PublicDir to allow overriding its path with an option.
+func (a *App) publicDir(opts options) (string, error) {
+	if opts.publicDir == "" {
+		homeDir := os.Getenv("UserProfile")
+		if homeDir == "" {
+			return "", errors.New("could not create public dir: %UserProfile% is not set")
+		}
+
+		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
+	}
+
+	if err := os.MkdirAll(opts.publicDir, 0600); err != nil {
+		return "", fmt.Errorf("could not create public dir %s: %v", opts.publicDir, err)
+	}
+
+	return opts.publicDir, nil
+}
+
+// privateDir creates a directory to store private data in, with the option of overriding the path.
+func (a *App) privateDir(opts options) (string, error) {
+	if opts.privateDir == "" {
+		localAppData := os.Getenv("LocalAppData")
+		if localAppData == "" {
+			return "", errors.New("could not create private dir: %LocalAppData% is not set")
+		}
+
+		opts.privateDir = filepath.Join(localAppData, common.LocalAppDataDir)
+	}
+
+	if err := os.MkdirAll(opts.privateDir, 0600); err != nil {
+		return "", fmt.Errorf("could not create private dir %s: %v", opts.privateDir, err)
+	}
+
+	return opts.privateDir, nil
 }

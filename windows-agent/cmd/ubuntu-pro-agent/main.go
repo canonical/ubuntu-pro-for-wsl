@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,6 +30,7 @@ type app interface {
 	Run() error
 	UsageError() bool
 	Quit()
+	PublicDir() (string, error)
 }
 
 func run(a app) int {
@@ -45,7 +45,7 @@ func run(a app) int {
 		ForceColors: true,
 	})
 
-	cleanup, err := setLoggerOutput()
+	cleanup, err := setLoggerOutput(a)
 	if err != nil {
 		log.Warningf("could not set logger output: %v", err)
 	} else {
@@ -64,29 +64,26 @@ func run(a app) int {
 	return 0
 }
 
-func setLoggerOutput() (func(), error) {
-	lad := os.Getenv("LocalAppData")
-	if lad == "" {
-		return nil, errors.New("could not find LocalAppData")
-	}
-
-	err := os.MkdirAll(filepath.Join(lad, common.LocalAppDataDir), 0600)
+func setLoggerOutput(a app) (func(), error) {
+	publicDir, err := a.PublicDir()
 	if err != nil {
-		return nil, errors.New("could not create logs dir")
+		return nil, err
 	}
 
-	p := filepath.Join(lad, common.LocalAppDataDir, "log")
+	logFile := filepath.Join(publicDir, "log")
 
-	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE, 0600)
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("could not open log file: %v", err)
 	}
 
-	fmt.Fprintf(f, "\n======== Startup %s ========\n", time.Now().Format(time.RFC3339))
-
 	// Write both to file and to Stdout. The latter is useful for local development.
 	w := io.MultiWriter(f, os.Stdout)
 	log.SetOutput(w)
+
+	fmt.Fprintf(f, "\n======= STARTUP =======\n")
+	log.Infof("Time: %s", time.Now().Format(time.RFC3339))
+	log.Infof("Version: %s", common.Version)
 
 	return func() { _ = f.Close() }, nil
 }

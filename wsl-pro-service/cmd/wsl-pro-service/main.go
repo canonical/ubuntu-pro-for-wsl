@@ -40,6 +40,8 @@ func run(a app) int {
 		ForceColors: true,
 	})
 
+	log.Infof("Starting WSL Pro Service version %s", common.Version)
+
 	if err := a.Run(); err != nil {
 		log.Error(context.Background(), err)
 

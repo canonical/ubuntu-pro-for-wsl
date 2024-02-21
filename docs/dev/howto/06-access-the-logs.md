@@ -16,15 +16,11 @@ These logs may be insufficient for proper debugging, so you may be interested in
 
 ## Windows agent
 
-Follow these steps in order to access the logs for the Windows agent.
+Follow these steps to access the logs for the Windows agent.
 
-1. On powershell, go to the package's directory:
-
-   ```powershell
-   Set-Location "$env:LocalAppData\Packages\CanonicalGroupLimited.UbuntuPro_*"
-   Set-Location "LocalCache\Local\Ubuntu Pro"
-   ```
-
-2. If any of these folders are missing, the Appx probably did not install. Otherwise, proceed with the next steps.
-3. In the current folder, there should be various files. Be aware that modifying any of them could result in data loss.
-4. Open file `log` with any text editor to see the logs. They are sorted with the oldest entries at the top and the newest at the bottom.
+1. Go to your home directory
+   - Open the file explorer
+   - Write `%USERPROFILE%` at the address
+2. In the home directory, find the `.ubuntupro` directory and double-click on it.
+2. In the `.ubuntupto` folder, find file `log` and open it with any text editor.
+   - This file contains the logs sorted with the oldest entries at the top and the newest at the bottom.

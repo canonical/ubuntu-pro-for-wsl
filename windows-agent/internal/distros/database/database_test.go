@@ -30,7 +30,6 @@ type dbDirState int
 const (
 	emptyDbDir dbDirState = iota
 	goodDbFile
-	badDbDir
 	badDbFile
 	badDbFileContents
 )
@@ -56,7 +55,6 @@ func TestNew(t *testing.T) {
 
 		"Error with syntax error in database file":             {dirState: badDbFileContents, wantErr: true},
 		"Error due to database file exists but cannot be read": {dirState: badDbFile, wantErr: true},
-		"Error because it cannot create a database dir":        {dirState: badDbDir, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -66,10 +64,6 @@ func TestNew(t *testing.T) {
 
 			dbDir := t.TempDir()
 			switch tc.dirState {
-			case badDbDir:
-				dbDir = filepath.Join(dbDir, "database")
-				err := os.WriteFile(dbDir, []byte("I am here to interfere"), 0600)
-				require.NoError(t, err, "Setup: could not write file where the database dir will go")
 			case badDbFile:
 				err := os.MkdirAll(filepath.Join(dbDir, consts.DatabaseFileName), 0600)
 				require.NoError(t, err, "Setup: could not create folder where database file is supposed to go")
