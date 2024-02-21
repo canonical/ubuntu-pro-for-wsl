@@ -34,6 +34,18 @@ const ProAttachInfo$json = {
 final $typed_data.Uint8List proAttachInfoDescriptor = $convert.base64Decode(
     'Cg1Qcm9BdHRhY2hJbmZvEhQKBXRva2VuGAEgASgJUgV0b2tlbg==');
 
+@$core.Deprecated('Use landscapeConfigDescriptor instead')
+const LandscapeConfig$json = {
+  '1': 'LandscapeConfig',
+  '2': [
+    {'1': 'config', '3': 1, '4': 1, '5': 9, '10': 'config'},
+  ],
+};
+
+/// Descriptor for `LandscapeConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List landscapeConfigDescriptor = $convert.base64Decode(
+    'Cg9MYW5kc2NhcGVDb25maWcSFgoGY29uZmlnGAEgASgJUgZjb25maWc=');
+
 @$core.Deprecated('Use subscriptionInfoDescriptor instead')
 const SubscriptionInfo$json = {
   '1': 'SubscriptionInfo',
