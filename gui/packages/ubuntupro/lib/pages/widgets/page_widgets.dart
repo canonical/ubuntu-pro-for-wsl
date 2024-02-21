@@ -67,6 +67,9 @@ class ColumnLandingPage extends StatelessWidget {
     super.key,
     required this.leftChildren,
     required this.children,
+    this.onNext,
+    this.onSkip,
+    this.onBack,
     this.svgAsset = 'assets/Ubuntu-tag.svg',
     this.title = 'Landscape',
   });
@@ -75,6 +78,10 @@ class ColumnLandingPage extends StatelessWidget {
   final List<Widget> children;
   final String svgAsset;
   final String title;
+
+  final void Function()? onNext;
+  final void Function()? onSkip;
+  final void Function()? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -89,12 +96,13 @@ class ColumnLandingPage extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(48.0),
+            padding: const EdgeInsets.all(32.0),
             child: Column(
               children: [
                 IntrinsicHeight(
                   child: Row(
                     children: [
+                      // Left column "header"
                       Expanded(
                         flex: 5,
                         child: Column(
@@ -132,6 +140,7 @@ class ColumnLandingPage extends StatelessWidget {
                           ],
                         ),
                       ),
+                      // Divider
                       const Expanded(
                         flex: 1,
                         child: VerticalDivider(
@@ -139,6 +148,7 @@ class ColumnLandingPage extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
+                      // Right column content
                       Expanded(
                         flex: 6,
                         child: Column(
@@ -151,11 +161,13 @@ class ColumnLandingPage extends StatelessWidget {
                 const SizedBox(
                   height: 32.0,
                 ),
+                // Navigation buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     OutlinedButton(
                       onPressed: () async {
+                        onBack?.call();
                         if (context.mounted) {
                           Wizard.of(context).back();
                         }
@@ -166,6 +178,7 @@ class ColumnLandingPage extends StatelessWidget {
                       children: [
                         FilledButton(
                           onPressed: () async {
+                            onSkip?.call();
                             if (context.mounted) {
                               await Wizard.of(context).next();
                             }
@@ -177,6 +190,7 @@ class ColumnLandingPage extends StatelessWidget {
                         ),
                         FilledButton(
                           onPressed: () async {
+                            onNext?.call();
                             if (context.mounted) {
                               await Wizard.of(context).next();
                             }
@@ -192,7 +206,7 @@ class ColumnLandingPage extends StatelessWidget {
                           child: const Text('Continue'),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ],
