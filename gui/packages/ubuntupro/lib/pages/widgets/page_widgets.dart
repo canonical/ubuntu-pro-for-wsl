@@ -25,6 +25,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
 
@@ -57,6 +58,148 @@ class Pro4WSLPage extends StatelessWidget {
             )
           : null,
       body: body,
+    );
+  }
+}
+
+class ColumnLandingPage extends StatelessWidget {
+  const ColumnLandingPage({
+    super.key,
+    required this.leftChildren,
+    required this.children,
+    this.svgAsset = 'assets/Ubuntu-tag.svg',
+    this.title = 'Landscape',
+  });
+
+  final List<Widget> leftChildren;
+  final List<Widget> children;
+  final String svgAsset;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pro4WSLPage(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/05_suru2_dark_2K.jpg',
+              fit: BoxFit.fill,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(48.0),
+            child: Column(
+              children: [
+                IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  WidgetSpan(
+                                    child: SvgPicture.asset(
+                                      svgAsset,
+                                      height: 70,
+                                    ),
+                                  ),
+                                  const WidgetSpan(
+                                    child: SizedBox(
+                                      width: 8,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displaySmall
+                                        ?.copyWith(fontWeight: FontWeight.w100),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 24,
+                            ),
+                            ...leftChildren,
+                          ],
+                        ),
+                      ),
+                      const Expanded(
+                        flex: 1,
+                        child: VerticalDivider(
+                          thickness: 0.2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          children: [...children],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 32.0,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () async {
+                        if (context.mounted) {
+                          Wizard.of(context).back();
+                        }
+                      },
+                      child: const Text('Back'),
+                    ),
+                    Row(
+                      children: [
+                        FilledButton(
+                          onPressed: () async {
+                            if (context.mounted) {
+                              await Wizard.of(context).next();
+                            }
+                          },
+                          child: const Text('Skip'),
+                        ),
+                        const SizedBox(
+                          width: 16.0,
+                        ),
+                        FilledButton(
+                          onPressed: () async {
+                            if (context.mounted) {
+                              await Wizard.of(context).next();
+                            }
+                          },
+                          style: Theme.of(context)
+                              .filledButtonTheme
+                              .style
+                              ?.copyWith(
+                                backgroundColor: MaterialStatePropertyAll(
+                                  YaruColors.dark.success,
+                                ),
+                              ),
+                          child: const Text('Continue'),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
