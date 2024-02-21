@@ -46,5 +46,6 @@ toolchain
 zshrc
 
 # Registry keys
+UbuntuPro
 UbuntuProToken
-LandscapeClientConfig
+LandscapeConfig
