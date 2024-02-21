@@ -30,6 +30,12 @@ class AgentApiClient {
     return _client.applyProToken(info);
   }
 
+  Future<void> applyLandscapeConfig(String config) {
+    final request = LandscapeConfig();
+    request.config = config;
+    return _client.applyLandscapeConfig(request);
+  }
+
   /// Attempts to ping the Agent Service at the supplied endpoint
   /// ([host] and [port]). Returns true on success.
   Future<bool> ping() => _client
