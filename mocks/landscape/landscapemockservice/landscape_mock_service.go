@@ -71,7 +71,9 @@ type host struct {
 	send      func(*landscapeapi.Command) error
 	info      HostInfo
 	connected *bool
-	stop      func()
+
+	ctx  context.Context
+	stop func()
 }
 
 // Service is a minimalistic server for the landscape API.
@@ -236,8 +238,9 @@ func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo Host
 	}
 
 	h := host{
-		send:      sendFunc,
+		ctx:       ctx,
 		stop:      cancel,
+		send:      sendFunc,
 		info:      hostInfo,
 		connected: new(bool),
 	}
@@ -261,6 +264,21 @@ func (s *Service) IsConnected(uid string) bool {
 	defer s.mu.RUnlock()
 
 	return s.isConnected(uid)
+}
+
+// WaitDisconnection returns a channel that will be closed when the connection with the host assigned to the
+// specified UID is terminated.
+//
+// If the UID is not registered, the second return value will be false.
+func (s *Service) WaitDisconnection(uid string) <-chan struct{} {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if !s.isConnected(uid) {
+		return nil
+	}
+
+	return s.hosts[uid].ctx.Done()
 }
 
 // isConnected is the unsafe version of IsConnected. It checks if a client with the

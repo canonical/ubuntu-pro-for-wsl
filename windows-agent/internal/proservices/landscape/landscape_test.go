@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
@@ -30,6 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
+	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -504,27 +506,23 @@ func TestAutoReconnection(t *testing.T) {
 
 			hosts := mockService.Hosts()
 			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
+			uid := maps.Keys(hosts)[0]
 
-			for uid := range hosts {
-				err = mockService.Disconnect(uid)
-				require.NoError(t, err, "Server should not fail to disconnect the client")
-			}
-
-			// Fast tickrate to ensure we detect the disconnection. The client reconnects after 1s so we should always win.
-			const tick = 10 * time.Millisecond
-			require.Eventually(t, func() bool {
-				return !service.Connected()
-			}, 5*time.Second, tick, "Client should have disconnected after the stream is dropped")
+			ok := monitorDisconnection(t, mockService, uid, func() error {
+				return mockService.Disconnect(uid)
+			})
+			require.True(t, ok, "Client should have disconnected after terminating the connection from the server")
 
 			// Detecting reconnection
 			require.Eventually(t, func() bool {
 				return service.Connected()
-			}, 5*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
+			}, 10*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
 
-			server.Stop()
-			require.Eventually(t, func() bool {
-				return !service.Connected()
-			}, 5*time.Second, 100*time.Millisecond, "Client should have disconnected after the server is stopped")
+			ok = monitorDisconnection(t, mockService, uid, func() error {
+				server.Stop()
+				return nil
+			})
+			require.True(t, ok, "Client should have disconnected after stopping the server")
 
 			// Restart server at the same address
 			lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), "")
@@ -536,8 +534,52 @@ func TestAutoReconnection(t *testing.T) {
 
 			require.Eventually(t, func() bool {
 				return service.Connected()
-			}, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
+			}, 60*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
+			// Seems a bit long of a timeout, but the wait-time doubles after each failed attempt,
+			// so after 6 failed attempts, we're waiting for 64 seconds.
+			//
+			// In local testing I have not seen it go beyond 16 seconds, but I'd rather avoid flaky tests.
 		})
+	}
+}
+
+func monitorDisconnection(t *testing.T, landscapeService *landscapemockservice.Service, uid string, trigger func() error) bool {
+	t.Helper()
+
+	require.True(t, landscapeService.IsConnected(uid), "Client should be connected before disconnection")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// We must already be waiting when we trigger the disconnection. Otherwise, the disconnection may be missed.
+	wait := make(chan struct{})
+	go func() {
+		// Signal that we the client has disconnected
+		defer close(wait)
+
+		disconnected := landscapeService.WaitDisconnection(uid)
+
+		// Signal that we're entering the select statement
+		wait <- struct{}{}
+
+		select {
+		case <-disconnected:
+		case <-ctx.Done():
+		}
+	}()
+
+	// This is as sure as we can get that the goroutine has reached the select statement.
+	<-wait
+	time.Sleep(time.Second)
+
+	require.NoErrorf(t, trigger(), "Failed to trigger disconnection")
+
+	// Wait for disconnection
+	select {
+	case <-wait:
+		return true
+	case <-time.After(30 * time.Second):
+		return false
 	}
 }
 
@@ -611,7 +653,7 @@ func TestReconnect(t *testing.T) {
 				lcapeConfig = fmt.Sprintf("%s\nssl_public_key = {{ .CertPath }}/cert.pem", defaultLandscapeConfig)
 			}
 
-			lis, server, _ := setUpLandscapeMock(t, ctx, "localhost:", certPath)
+			lis, server, mockServerService := setUpLandscapeMock(t, ctx, "localhost:", certPath)
 
 			conf := newMockConfig(ctx)
 			defer conf.Stop()
@@ -636,27 +678,20 @@ func TestReconnect(t *testing.T) {
 				return service.Connected()
 			}, 5*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
 
-			ch := make(chan struct{})
-			go func() {
-				tc.trigger(ctx, service, conf)
-				close(ch)
-			}()
+			hosts := mockServerService.Hosts()
+			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
+			uid := maps.Keys(hosts)[0]
 
-			const timeout = 10 * time.Second
-			const tickRate = 100 * time.Millisecond
+			ok := monitorDisconnection(t, mockServerService, uid, func() error {
+				tc.trigger(ctx, service, conf)
+				return nil
+			})
+
 			if tc.wantNoReconnect {
-				requireAlways(t, service.Connected, timeout, tickRate, "Client should not have disconnected")
+				require.False(t, ok, "Client should not have disconnected")
 				return
 			}
-
-			require.Eventually(t, func() bool { return !service.Connected() },
-				timeout, tickRate, "Client should have disconnected during reconnection")
-
-			select {
-			case <-ch:
-			case <-time.After(20 * time.Second):
-				require.Fail(t, "Reconnect should have returned")
-			}
+			require.True(t, ok, "Client should have disconnected")
 
 			if tc.wantImmediateRconnect {
 				require.True(t, service.Connected(), "Client should have connected before returning")
@@ -666,26 +701,6 @@ func TestReconnect(t *testing.T) {
 			require.Eventually(t, service.Connected,
 				20*time.Second, time.Second, "Client should have connected after reconnection")
 		})
-	}
-}
-
-func requireAlways(t *testing.T, predicate func() bool, waitFor time.Duration, tick time.Duration, msgAndArgs ...interface{}) {
-	t.Helper()
-
-	tk := time.NewTicker(tick)
-	defer tk.Stop()
-
-	tm := time.NewTimer(waitFor)
-	defer tm.Stop()
-
-	for {
-		select {
-		case <-tm.C:
-			return
-		case <-tk.C:
-		}
-
-		require.True(t, predicate(), msgAndArgs...)
 	}
 }
 
@@ -733,8 +748,20 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 		opts = append(opts, grpc.Creds(credentials.NewTLS(config)))
 	}
 
+	var logs bytes.Buffer
+	h := slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug})
+	service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)))
+
+	t.Cleanup(func() {
+		if !t.Failed() {
+			return
+		}
+
+		// Cannot use t.Log outside the main goroutine
+		log.Printf("Landscape server logs:\n%s", logs.String())
+	})
+
 	server = grpc.NewServer(opts...)
-	service = landscapemockservice.New()
 	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
 	return lis, server, service

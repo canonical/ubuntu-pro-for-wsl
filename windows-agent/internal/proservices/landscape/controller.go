@@ -52,18 +52,12 @@ func (c Controller) forceReconnect(ctx context.Context) bool {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return false
-		case <-c.hasStopped():
-			return false
-		case <-ticker.C:
-		}
-
-		if !c.connected() {
-			break
-		}
+	select {
+	case <-ctx.Done():
+		return false
+	case <-c.hasStopped():
+		return false
+	case <-c.connDone():
 	}
 
 	// Waiting until re-connection
