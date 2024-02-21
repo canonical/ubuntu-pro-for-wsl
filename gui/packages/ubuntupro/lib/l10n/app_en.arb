@@ -51,5 +51,14 @@
     "purchaseStatusUserGaveUp":"Purchase attempt was canceled.",
     "purchaseStatusNetwork":"A network issue prevented the purchase to proceed. Please try again once connected.",
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
-    "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app."
+    "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
+
+    "landscapeHeading": "You can make your Ubuntu instances remotely with {landscapeLink}.",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    }
 }

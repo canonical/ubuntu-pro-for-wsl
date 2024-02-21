@@ -9,6 +9,7 @@ import 'package:yaru/yaru.dart';
 import 'constants.dart';
 import 'core/agent_api_client.dart';
 import 'launch_agent.dart';
+import 'pages/landscape/landscape_page.dart';
 import 'pages/startup/agent_monitor.dart';
 import 'pages/startup/startup_page.dart';
 import 'pages/subscribe_now/subscribe_now_page.dart';
@@ -38,6 +39,8 @@ class Pro4WSLApp extends StatelessWidget {
                   Routes.startup: const WizardRoute(builder: buildStartup),
                   Routes.subscribeNow:
                       const WizardRoute(builder: SubscribeNowPage.create),
+                  Routes.configureLandscape:
+                      const WizardRoute(builder: LandscapePage.create),
                   Routes.subscriptionStatus: WizardRoute(
                     builder: SubscriptionStatusPage.create,
                     onLoad: (_) async {

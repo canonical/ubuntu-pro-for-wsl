@@ -37,6 +37,7 @@ dependencies:
   base_x: ^2.0.1
   crypto: ^3.0.2
   dart_either: ^1.0.0
+  file_picker: ^6.1.1
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -90,6 +91,7 @@ flutter:
   assets:
     - assets/05_suru2_dark_2K.jpg
     - assets/Ubuntu-tag.svg
+    - assets/Landscape-tag.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

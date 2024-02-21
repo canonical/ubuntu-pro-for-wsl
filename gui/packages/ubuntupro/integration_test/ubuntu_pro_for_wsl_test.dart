@@ -13,7 +13,7 @@ import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/launch_agent.dart';
 import 'package:ubuntupro/main.dart' as app;
 import 'package:ubuntupro/pages/startup/startup_page.dart';
-import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 import 'package:yaru_test/yaru_test.dart';
 
