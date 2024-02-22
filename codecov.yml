@@ -1,0 +1,12 @@
+coverage:
+  range: 85..100
+  status:
+    project:
+      default:
+        # Some tests are causing coverage fluctuation (race condition or flakyness)
+        # TODO: Investigate and fix, then reduce this threshold.
+        threshold: 1%
+    patch:
+      # TODO: Consider relaxing the patch target vs range for the global project in the long term, being more lenient on the patches themselves.
+      default:
+        threshold: 1%
