@@ -36,6 +36,10 @@ type app interface {
 func run(a app) int {
 	defer installSignalHandler(a)()
 
+	log.SetFormatter(&log.TextFormatter{
+		DisableQuote: true,
+	})
+
 	cleanup, err := setLoggerOutput(a)
 	if err != nil {
 		log.Warningf("could not set logger output: %v", err)
