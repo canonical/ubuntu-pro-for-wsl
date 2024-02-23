@@ -16,7 +16,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/contractsapi"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts/contractclient"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro/contractclient"
 	"github.com/stretchr/testify/require"
 )
 

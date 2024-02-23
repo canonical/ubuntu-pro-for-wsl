@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts/contractclient"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro/contractclient"
 	"github.com/ubuntu/decorate"
 )
 
