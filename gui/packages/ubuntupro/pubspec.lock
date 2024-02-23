@@ -919,10 +919,10 @@ packages:
     dependency: "direct main"
     description:
       name: yaru
-      sha256: "572850652931d0c0a3baa6d1ad880f7fea6ffa45a2821e04272357a656485fa7"
+      sha256: e9ccb22cb283ecf3f6b21d64dee9764d4abff65a44f48ce21aa13b9eae3e3be5
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.1"
+    version: "1.2.2"
   yaru_icons:
     dependency: "direct main"
     description:
