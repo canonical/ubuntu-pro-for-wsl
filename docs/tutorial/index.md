@@ -413,7 +413,7 @@ All packages are up to date.
 
 Great! Your new WSL instance is granted access to extended security patches automatically!
 
-## Check that the new Ubuntu-Preview instance with registered in Landscape
+## Check that the new Ubuntu-Preview instance is registered with Landscape
 
 Go back to the Landscape web page and refresh it. UP4W has taken care to register your WSL instance automatically! You should see it listed under the "Computers needing authorisation" section.
 
