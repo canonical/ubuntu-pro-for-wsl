@@ -129,6 +129,15 @@ func (c *Config) setStoreSubscription(ctx context.Context, proToken string) erro
 	return c.set(ctx, &c.subscription.Store, proToken)
 }
 
+// SetUserLandscapeConfig overwrites the value of the user-provided Landscape configuration.
+func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig string) error {
+	if _, src := c.landscape.resolve(); src > SourceUser {
+		return errors.New("attempted to set a user-provided landscape configuration when there already is a higher priority one")
+	}
+
+	return c.set(ctx, &c.landscape.UserConfig, landscapeConfig)
+}
+
 // SetLandscapeAgentUID overrides the Landscape agent UID.
 func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 	return c.set(ctx, &c.landscape.UID, uid)

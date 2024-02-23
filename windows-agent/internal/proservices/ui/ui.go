@@ -15,9 +15,10 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 )
 
-// Config is a provider for the subcription configuration.
+// Config is a provider for the subscription configuration.
 type Config interface {
 	SetUserSubscription(ctx context.Context, token string) error
+	SetUserLandscapeConfig(ctx context.Context, token string) error
 	Subscription(context.Context) (string, config.Source, error)
 	FetchMicrosoftStoreSubscription(context.Context, ...contracts.Option) error
 }
@@ -69,11 +70,11 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	return subs, nil
 }
 
-// ApplyLandscapeConfig does nothing :).
+// ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.Empty, error) {
 	c := landscapeConfig.GetConfig()
 
-	err := s.config.SetUserLandscapeConfig(c)
+	err := s.config.SetUserLandscapeConfig(ctx, c)
 	if err != nil {
 		return nil, err
 	}
