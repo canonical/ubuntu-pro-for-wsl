@@ -84,7 +84,7 @@ func TestConnect(t *testing.T) {
 	testCases := map[string]struct {
 		portFile              dataFileState
 		breakWindowsLocalhost bool
-		breakWSlDisroName     bool
+		breakWSlDistroName    bool
 
 		agentDoesntRecv   bool
 		agentSendsNoPort  bool
@@ -110,7 +110,7 @@ func TestConnect(t *testing.T) {
 		"Incomplete handshake because Agent sends port :0":      {agentSendsBadPort: true, wantErr: true},
 
 		// Other errors
-		"Error when system cannot retrieve the WSL distro name": {breakWSlDisroName: true, wantErr: true},
+		"Error when system cannot retrieve the WSL distro name": {breakWSlDistroName: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -173,7 +173,7 @@ func TestConnect(t *testing.T) {
 			cs, err := controlstream.New(ctx, system)
 			require.NoError(t, err, "New should return no error")
 
-			if tc.breakWSlDisroName {
+			if tc.breakWSlDistroName {
 				// Must be set after New to avoid breaking system.UserProfileDir
 				mock.SetControlArg(testutils.WslpathErr)
 				mock.WslDistroName = ""
