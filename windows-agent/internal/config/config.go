@@ -13,7 +13,6 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
@@ -167,8 +166,8 @@ func (c *Config) SetUserSubscription(proToken string) (err error) {
 	return c.set(&c.configState.Subscription.User, proToken)
 }
 
-// setStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
-func (c *Config) setStoreSubscription(proToken string) (err error) {
+// SetStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
+func (c *Config) SetStoreSubscription(proToken string) (err error) {
 	defer decorate.OnError(&err, "could not set Microsoft-Store-provided Ubuntu Pro subscription")
 
 	s, err := c.get()
@@ -243,52 +242,6 @@ func (c *Config) LandscapeAgentUID() (string, error) {
 	}
 
 	return s.Landscape.UID, nil
-}
-
-// FetchMicrosoftStoreSubscription contacts Ubuntu Pro's contract server and the Microsoft Store
-// to check if the user has an active subscription that provides a pro token. If so, that token is used.
-func (c *Config) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) (err error) {
-	defer decorate.OnError(&err, "config: could not validate subscription against Microsoft Store")
-
-	_, src, err := c.Subscription()
-	if err != nil {
-		return fmt.Errorf("could not get current subscription status: %v", err)
-	}
-
-	// Shortcut to avoid spamming the contract server
-	// We don't need to request a new token if we have a non-expired one
-	if src == SourceMicrosoftStore {
-		valid, err := contracts.ValidSubscription(args...)
-		if err != nil {
-			return fmt.Errorf("could not obtain current subscription status: %v", err)
-		}
-
-		if valid {
-			log.Debug(ctx, "Config: Microsoft Store subscription is active")
-			return nil
-		}
-
-		log.Debug(ctx, "Config: no valid Microsoft Store subscription")
-	}
-
-	log.Debug(ctx, "Config: attempting to obtain Ubuntu Pro token from the Microsoft Store")
-
-	proToken, err := contracts.NewProToken(ctx, args...)
-	if err != nil {
-		err = fmt.Errorf("could not get the Ubuntu Pro token from the Microsoft Store: %v", err)
-		log.Debugf(ctx, "Config: %v", err)
-		return err
-	}
-
-	if proToken != "" {
-		log.Debugf(ctx, "Config: obtained an Ubuntu Pro token from the Microsoft Store: %q", common.Obfuscate(proToken))
-	}
-
-	if err := c.setStoreSubscription(proToken); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // RegistryData contains the data that the Ubuntu Pro registry key can provide.

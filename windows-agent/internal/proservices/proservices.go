@@ -14,6 +14,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/wslinstance"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro"
 	"github.com/sirupsen/logrus"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
@@ -82,7 +83,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	s.registryWatcher = &w
 	s.registryWatcher.Start()
 
-	if err := s.conf.FetchMicrosoftStoreSubscription(ctx); err != nil {
+	if err := ubuntupro.FetchFromMicrosoftStore(ctx, s.conf, s.db); err != nil {
 		log.Warningf(ctx, "%v", err)
 	}
 

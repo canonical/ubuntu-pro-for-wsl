@@ -383,6 +383,7 @@ func TestSetUserSubscription(t *testing.T) {
 		"Error when the file cannot be opened":     {settingsState: fileExists, breakFile: true, wantError: true},
 	}
 
+	//nolint:dupl // This is mostly duplicate with TestSetStoreConfig but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
@@ -421,6 +422,63 @@ func TestSetUserSubscription(t *testing.T) {
 
 			err = conf.SetUserSubscription(token)
 			require.Error(t, err, "SetUserSubscription should return error after the config has stopped")
+		})
+	}
+}
+
+func TestSetStoreSubscription(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testCases := map[string]struct {
+		settingsState settingsState
+		breakFile     bool
+		emptyToken    bool
+
+		want      string
+		wantError bool
+	}{
+		"Success":                          {settingsState: userTokenHasValue, want: "new_token"},
+		"Success disabling a subscription": {settingsState: storeTokenHasValue, emptyToken: true, want: ""},
+		"Success overriding an existing store token": {settingsState: storeTokenHasValue, want: "new_token"},
+
+		"Error when the file cannot be opened": {settingsState: fileExists, breakFile: true, wantError: true},
+	}
+
+	//nolint:dupl // This is mostly duplicate with TestSetUserConfig but de-duplicating with a meta-test worsens readability
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			db, err := database.New(ctx, t.TempDir(), nil)
+			require.NoError(t, err, "Setup: could not create empty database")
+
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			conf := config.New(ctx, dir)
+			setup(t, conf)
+
+			token := "new_token"
+			if tc.emptyToken {
+				token = ""
+			}
+
+			err = conf.SetStoreSubscription(ctx, token)
+			if tc.wantError {
+				require.Error(t, err, "SetSubscription should return an error")
+				return
+			}
+			require.NoError(t, err, "SetSubscription should return no error")
+
+			got, _, err := conf.Subscription()
+			require.NoError(t, err, "ProToken should return no error")
+
+			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
 		})
 	}
 }
