@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
@@ -77,7 +76,6 @@ func setLoggerOutput(a app) (func(), error) {
 	log.SetOutput(w)
 
 	fmt.Fprintf(f, "\n======= STARTUP =======\n")
-	log.Infof("Time: %s", time.Now().Format(time.RFC3339))
 	log.Infof("Version: %s", common.Version)
 
 	return func() { _ = f.Close() }, nil
