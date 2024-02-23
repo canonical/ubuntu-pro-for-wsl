@@ -36,15 +36,6 @@ type app interface {
 func run(a app) int {
 	defer installSignalHandler(a)()
 
-	log.SetFormatter(&log.TextFormatter{
-		DisableLevelTruncation: true,
-		DisableTimestamp:       true,
-
-		// ForceColors is necessary on Windows, not only to have colors but to
-		// prevent logrus from falling back to structured logs.
-		ForceColors: true,
-	})
-
 	cleanup, err := setLoggerOutput(a)
 	if err != nil {
 		log.Warningf("could not set logger output: %v", err)
