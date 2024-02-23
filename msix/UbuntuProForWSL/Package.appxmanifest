@@ -76,8 +76,8 @@
   <Extensions>
     <desktop2:Extension Category="windows.firewallRules" Executable="agent\ubuntu-pro-agent.exe" EntryPoint="Windows.FullTrustApplication">
       <desktop2:FirewallRules Executable="agent\ubuntu-pro-agent.exe">
-        <desktop2:Rule Profile="private" IPProtocol="TCP" Direction="in"></desktop2:Rule>
-        <desktop2:Rule Profile="private" IPProtocol="TCP" Direction="out"></desktop2:Rule>
+        <desktop2:Rule Profile="all" IPProtocol="TCP" Direction="in" LocalPortMin=49152 LocalPortMax=65535 ></desktop2:Rule>
+        <desktop2:Rule Profile="all" IPProtocol="TCP" Direction="out" LocalPortMin=49152 LocalPortMax=65535 ></desktop2:Rule>
       </desktop2:FirewallRules>
     </desktop2:Extension>
   </Extensions>
