@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"sync"
@@ -119,19 +120,21 @@ func (tm *taskManager) NextTask(ctx context.Context) (task.Task, bool) {
 func (tm *taskManager) TaskDone(ctx context.Context, t task.Task, taskResult error) (err error) {
 	decorate.OnError(&err, "task %s", t)
 
+	if errors.As(taskResult, &task.NeedsRetryError{}) {
+		log.Errorf(ctx, "%v", taskResult) // Error message already mentions resubmission
+		return tm.resubmit(t)
+	}
+
+	if err := tm.save(); err != nil {
+		return fmt.Errorf("cleanup: could not save task queue: %v", err)
+	}
+
 	if taskResult == nil {
-		// Successful task: nothing to do
 		return nil
 	}
 
-	log.Errorf(ctx, "%v", taskResult)
-
-	if !errors.As(taskResult, &task.NeedsRetryError{}) {
-		// Task failed but does not need re-submission
-		return nil
-	}
-
-	return tm.resubmit(t)
+	log.Errorf(ctx, "failed and will not be retried: %v", taskResult)
+	return taskResult
 }
 
 // EnqueueDeferredTasks takes all deferred tasks and promotes them
