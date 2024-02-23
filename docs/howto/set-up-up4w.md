@@ -78,7 +78,7 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
       	- Message API endpoint: `${WINDOWS_HOST_IP}/message-system`
       	- Ping API endpoint: `${WINDOWS_HOST_IP}/ping`
    5. Open a `Ubuntu-22.04` terminal and keep it open during the rest of the guide.
-      	- This ensures this distro keeps running in the background. See more: [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-use-wsl-for-production-scenarios--).
+      	- This ensures this distro keeps running in the background. See also: [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-use-wsl-for-production-scenarios--).
 2. Store the following file somewhere in your Windows system. Name it `landscape-client.conf`. Replace the variables in the file with the relevant values for your server.
 	```ini
 	[host]
@@ -96,11 +96,13 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
 ## 1. Install Ubuntu Pro for WSL
 On your Windows host, go to the Microsoft Store, search for _Ubuntu Pro for WSL_ and click on the result. Find the _Install_ button. Click on it.
 
+(howto::configure-up4w)=
+
 ## 2. Configure Ubuntu Pro for WSL
 You have two ways of setting up UP4W. You can use the graphical interface (GUI), which is recommended for users managing a single Windows machine. Alternatively, you can use the registry which we recommend for users who want to deploy at scale.
 
 ### Using the GUI
-> See more: [Ubuntu Pro for WSL GUI](ref::up4w-gui)
+> See also: [Ubuntu Pro for WSL GUI](ref::up4w-gui)
 1. Open the Windows menu, search and click on Ubuntu Pro for WSL.
 2. Input your Ubuntu Pro Token:
 	1. Click on **Already have a token?**.
@@ -109,8 +111,9 @@ You have two ways of setting up UP4W. You can use the graphical interface (GUI),
 	1. Click on [TO BE ADDED] <!--TODO: Landscape data input GUI is not implemented yet-->
 	2. Write the path to file `landscape-client.conf` specified during the Landscape server setup.
 
+(howto::configure::registry)=
 ### Using the registry
-> See more: [Windows registry](windows-registry)
+> See also: [Windows registry](windows-registry)
 1. Press Win+R, type `regedit.exe`, and click OK.
 2. Navigate the tree to `HKEY_CURRENT_USER\Software`.
 3. Under this key, search for key `Canonical`. If it does not exist, create it:
@@ -135,6 +138,6 @@ You have two ways of setting up UP4W. You can use the graphical interface (GUI),
    - To open the GUI, search _Ubuntu Pro for WSL_ in the Windows menu and click on it.
    - The GUI will explicitly say that you are subscribed.
 2. Open any of the distros you want to manage and check that it is pro-attached with `pro status`.
-	> See more: [Ubuntu Pro client](ref::ubuntu-pro-client)
+	> See also: [Ubuntu Pro client](ref::ubuntu-pro-client)
 1. Open Landscape and check that the host and distro were registered.
 	> See more: [Landscape | View WSL host machines and child computers](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape/#heading--view-wsl-host-machines-and-child-computers)

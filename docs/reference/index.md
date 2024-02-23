@@ -7,6 +7,7 @@ pieces that make up the Ubuntu Pro for WSL tool and the value it provides.
 :titlesonly:
 
 landscape
+landscape_client
 ubuntu_pro
 ubuntu_pro_client
 ubuntu_wsl
@@ -15,5 +16,5 @@ up4w-gui
 up4w-windows_agent
 up4w-wsl_pro_service
 windows_registry
-wsl
+WSL <wsl>
 ```

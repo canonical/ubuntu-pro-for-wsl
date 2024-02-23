@@ -1,9 +1,7 @@
+(ref::wsl)=
 # Windows Subsystem for Linux (WSL)
 
-> See more: [WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/about)
 
-Windows Subsystem for Linux (WSL) is a feature of the Windows OS that allows you
-to run a Linux environment on your Windows machine, without the need for
-manually setting up a separate virtual machine or dual booting. WSL is designed
-to provide a seamless and productive experience for developers who want to use
-both Windows and Linux at the same time.
+Windows Subsystem for Linux (WSL) is a Microsoft product, distributed as part of Windows 10 and Windows 11. It allows the user to run a Linux environment on the Windows machine, without the need for a traditional virtual machine or a dual boot setup.
+
+> See more: [WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/about)
