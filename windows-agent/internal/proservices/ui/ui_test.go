@@ -4,17 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/ui"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro/contracts"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
@@ -173,19 +176,19 @@ func TestNotifyPurchase(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		config mockConfig
+		haveUserToken     bool
+		breakConfig       bool
+		breakConfigSource bool
 
 		wantType      interface{}
 		wantImmutable bool
 		wantErr       bool
 	}{
-		"Success with a non-subscription":            {config: mockConfig{source: config.SourceNone}, wantType: store},
-		"Success with an existing user subscription": {config: mockConfig{source: config.SourceUser}, wantType: store},
+		"Success with a non-subscription":            {wantType: store},
+		"Success with an existing user subscription": {haveUserToken: true, wantType: store},
 
-		"Error to fetch MS Store":                   {config: mockConfig{source: config.SourceNone, fetchErr: true}, wantType: none, wantErr: true},
-		"Error to set the subscription":             {config: mockConfig{source: config.SourceNone, setSubscriptionErr: true}, wantType: none, wantErr: true},
-		"Error to read the registry":                {config: mockConfig{source: config.SourceNone, subscriptionErr: true}, wantType: none, wantErr: true},
-		"Error with an existing store subscription": {config: mockConfig{source: config.SourceMicrosoftStore}, wantType: store, wantErr: true},
+		"Error when FetchMicrosoftStoreSubscription returns an error": {breakConfig: true, wantType: none, wantErr: true},
+		"Error when the subscription source is unknown":               {breakConfigSource: true, wantType: none, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -197,8 +200,20 @@ func TestNotifyPurchase(t *testing.T) {
 			dir := t.TempDir()
 			db, err := database.New(ctx, dir, nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
-			service := ui.New(ctx, &tc.config, db)
 
+			opts, stop := setupMockContracts(t, ctx)
+			defer stop()
+
+			conf := &mockConfig{
+				subscriptionErr: tc.breakConfig,
+				returnBadSource: tc.breakConfigSource,
+			}
+			if tc.haveUserToken {
+				conf.token = "USER_TOKEN"
+				conf.source = config.SourceUser
+			}
+
+			service := ui.New(ctx, conf, db, opts...)
 			info, err := service.NotifyPurchase(ctx, &agentapi.Empty{})
 			if tc.wantErr {
 				require.Error(t, err, "NotifyPurchase should return an error")
@@ -212,20 +227,27 @@ func TestNotifyPurchase(t *testing.T) {
 }
 
 type mockConfig struct {
-	setSubscriptionErr bool // Config errors out in SetSubscription function
-	subscriptionErr    bool // Config errors out in Subscription function
-	fetchErr           bool // Config errors out in FetchMicrosoftStoreSubscription function
+	setUserSubscriptionErr bool // Config errors out in SetUserSubscription function
+	subscriptionErr        bool // Config errors out in Subscription function
 
 	token  string        // stores the configured Pro token
 	source config.Source // stores the configured subscription source.
+
+	returnBadSource bool
 }
 
 func (m *mockConfig) SetUserSubscription(token string) error {
-	if m.setSubscriptionErr {
-		return errors.New("SetSubscription error")
+	if m.setUserSubscriptionErr {
+		return errors.New("SetUserSubscription: mock error")
 	}
 	m.token = token
 	m.source = config.SourceUser
+	return nil
+}
+
+func (m *mockConfig) SetStoreSubscription(token string) error {
+	m.token = token
+	m.source = config.SourceMicrosoftStore
 	return nil
 }
 
@@ -233,27 +255,39 @@ func (m mockConfig) Subscription() (string, config.Source, error) {
 	if m.subscriptionErr {
 		return "", config.SourceNone, errors.New("Subscription error")
 	}
+	if m.returnBadSource {
+		return "", config.Source(100000), nil
+	}
 	return m.token, m.source, nil
 }
 
-func (m *mockConfig) FetchMicrosoftStoreSubscription(ctx context.Context, args ...contracts.Option) error {
-	if len(args) != 0 {
-		panic("The variadic argument exists solely to match the interface. Do not use.")
+//nolint:revive // Testing t comes before the context.
+func setupMockContracts(t *testing.T, ctx context.Context) (opts []contracts.Option, stop func()) {
+	t.Helper()
+
+	csSettings := contractsmockserver.DefaultSettings()
+	server := contractsmockserver.NewServer(csSettings)
+
+	err := server.Serve(ctx, "localhost:0")
+	require.NoError(t, err, "Setup: Server should return no error")
+
+	csAddr, err := url.Parse(fmt.Sprintf("http://%s", server.Address()))
+	require.NoError(t, err, "Setup: Server URL should have been parsed with no issues")
+
+	opts = []contracts.Option{
+		contracts.WithProURL(csAddr),
+		contracts.WithMockMicrosoftStore(mockMSStore{}),
 	}
 
-	if m.fetchErr {
-		return errors.New("FetchMicrosoftStoreSubscription error")
-	}
-	if m.source == config.SourceMicrosoftStore {
-		return errors.New("Already subscribed")
-	}
+	return opts, func() { _ = server.Stop() }
+}
 
-	if m.setSubscriptionErr {
-		return errors.New("SetSubscription error")
-	}
+type mockMSStore struct{}
 
-	m.token = "MS"
-	m.source = config.SourceMicrosoftStore
+func (s mockMSStore) GenerateUserJWT(azureADToken string) (jwt string, err error) {
+	return "JWT", nil
+}
 
-	return nil
+func (s mockMSStore) GetSubscriptionExpirationDate() (tm time.Time, err error) {
+	return time.Now().Add(time.Hour), nil
 }

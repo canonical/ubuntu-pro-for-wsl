@@ -2,18 +2,14 @@ package config_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
 	config "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
@@ -544,129 +540,6 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			require.Error(t, err, "SetLandscapeAgentUID should return error after the config has stopped")
 		})
 	}
-}
-
-func TestFetchMicrosoftStoreSubscription(t *testing.T) {
-	if wsl.MockAvailable() {
-		t.Parallel()
-	}
-
-	//nolint:gosec // These are not real credentials
-	const (
-		proToken     = "UBUNTU_PRO_TOKEN_456"
-		azureADToken = "AZURE_AD_TOKEN_789"
-	)
-
-	testCases := map[string]struct {
-		settingsState       settingsState
-		subscriptionExpired bool
-
-		breakConfigFile      bool
-		msStoreJWTErr        bool
-		msStoreExpirationErr bool
-
-		wantToken string
-		wantErr   bool
-	}{
-		// Tests where there is no pre-existing subscription
-		"Success": {wantToken: proToken},
-
-		"Error when the Microsoft Store cannot provide the JWT": {msStoreJWTErr: true, wantErr: true},
-
-		// Tests where there is a pre-existing subscription
-		"Success when there is a store token already":  {settingsState: storeTokenHasValue, wantToken: "store_token"},
-		"Success when there is an expired store token": {settingsState: storeTokenHasValue, subscriptionExpired: true, wantToken: proToken},
-
-		"Error when the Microsoft Store cannot provide the expiration date": {settingsState: storeTokenHasValue, msStoreExpirationErr: true, wantToken: "store_token", wantErr: true},
-
-		// Tests where pre-existing subscription is irrelevant
-		"Error when the current subscription cannot be obtained": {breakConfigFile: true, wantErr: true},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
-			if wsl.MockAvailable() {
-				t.Parallel()
-				ctx = wsl.WithMock(ctx, wslmock.New())
-			}
-
-			db, err := database.New(ctx, t.TempDir(), nil)
-			require.NoError(t, err, "Setup: could not create empty database")
-
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile)
-			c := config.New(ctx, dir)
-			defer c.Stop()
-			setup(t, c)
-
-			// Set up the mock Microsoft store
-			store := mockMSStore{
-				expirationDate:    time.Now().Add(24 * 365 * time.Hour), // Next year
-				expirationDateErr: tc.msStoreExpirationErr,
-
-				jwt:    "JWT_123",
-				jwtErr: tc.msStoreJWTErr,
-			}
-
-			if tc.subscriptionExpired {
-				store.expirationDate = time.Now().Add(-24 * 365 * time.Hour) // Last year
-			}
-
-			// Set up the mock contract server
-			csSettings := contractsmockserver.DefaultSettings()
-			csSettings.Token.OnSuccess.Value = azureADToken
-			csSettings.Subscription.OnSuccess.Value = proToken
-			server := contractsmockserver.NewServer(csSettings)
-			err = server.Serve(ctx, "localhost:0")
-			require.NoError(t, err, "Setup: Server should return no error")
-			//nolint:errcheck // Nothing we can do about it
-			defer server.Stop()
-
-			csAddr, err := url.Parse(fmt.Sprintf("http://%s", server.Address()))
-			require.NoError(t, err, "Setup: Server URL should have been parsed with no issues")
-
-			err = c.FetchMicrosoftStoreSubscription(ctx, contracts.WithProURL(csAddr), contracts.WithMockMicrosoftStore(store))
-			if tc.wantErr {
-				require.Error(t, err, "FetchMicrosoftStoreSubscription should return an error")
-				return
-			}
-			require.NoError(t, err, "FetchMicrosoftStoreSubscription should return no errors")
-
-			token, _, err := c.Subscription()
-			require.NoError(t, err, "ProToken should return no error")
-			require.Equal(t, tc.wantToken, token, "Unexpected value for ProToken")
-
-			c.Stop()
-
-			err = c.FetchMicrosoftStoreSubscription(ctx, contracts.WithProURL(csAddr), contracts.WithMockMicrosoftStore(store))
-			require.Error(t, err, "FetchMicrosoftStoreSubscription should return error after the config has stopped")
-		})
-	}
-}
-
-type mockMSStore struct {
-	jwt    string
-	jwtErr bool
-
-	expirationDate    time.Time
-	expirationDateErr bool
-}
-
-func (s mockMSStore) GenerateUserJWT(azureADToken string) (jwt string, err error) {
-	if s.jwtErr {
-		return "", errors.New("mock error")
-	}
-
-	return s.jwt, nil
-}
-
-func (s mockMSStore) GetSubscriptionExpirationDate() (tm time.Time, err error) {
-	if s.expirationDateErr {
-		return time.Time{}, errors.New("mock error")
-	}
-
-	return s.expirationDate, nil
 }
 
 func TestUpdateRegistryData(t *testing.T) {
