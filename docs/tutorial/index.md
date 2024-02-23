@@ -523,5 +523,7 @@ In this tutorial you learned how to ensure new Ubuntu WSL instances are automati
 registered into a self hosted Landscape server thanks to the automation provided by Ubuntu Pro for WSL.
 Here is a complete overview of what we just achieved:
 
+<!-- TODO: Add the diagram -->
+
 [Diagram]
 
