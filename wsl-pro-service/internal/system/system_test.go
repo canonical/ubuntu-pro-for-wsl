@@ -28,11 +28,7 @@ func TestInfo(t *testing.T) {
 
 	testCases := map[string]struct {
 		// This causes Get to look at the Windows' path for /
-		distroNameEnvDisabled bool
-
-		// The path of "/" according to the Windows host
-		distroNameWslPath mockBehaviour
-
+		badWslDistroName bool
 		proStatusCommand mockBehaviour
 		osRelease        mockBehaviour
 
@@ -40,11 +36,9 @@ func TestInfo(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success reading from WSL_DISTRO_NAME": {},
-		"Success using wslpath":                {distroNameEnvDisabled: true},
+		"Success": {},
 
-		"Error when WSL_DISTRO_NAME is empty and wslpath fails":            {distroNameEnvDisabled: true, distroNameWslPath: mockError, wantErr: true},
-		"Error when WSL_DISTRO_NAME is empty and wslpath returns bad text": {distroNameEnvDisabled: true, distroNameWslPath: mockBadOutput, wantErr: true},
+		"Error when WslDistroName fails": {badWslDistroName: true, wantErr: true},
 
 		"Error when pro status command fails":           {proStatusCommand: mockError, wantErr: true},
 		"Error when pro status output cannot be parsed": {proStatusCommand: mockBadOutput, wantErr: true},
@@ -64,22 +58,13 @@ func TestInfo(t *testing.T) {
 			system, mock := testutils.MockSystem(t)
 			mock.SetControlArg(testutils.ProStatusAttached)
 
-			if tc.distroNameEnvDisabled {
+			if tc.badWslDistroName {
+				mock.SetControlArg(testutils.WslpathErr)
 				mock.WslDistroNameEnvEnabled = false
 			}
 
 			if tc.hostnameErr {
 				mock.DistroHostname = nil
-			}
-
-			switch tc.distroNameWslPath {
-			case mockOK:
-			case mockError:
-				mock.SetControlArg(testutils.WslpathErr)
-			case mockBadOutput:
-				mock.SetControlArg(testutils.WslpathBadOutput)
-			default:
-				require.Fail(t, "Unknown enum value for distroNameWslPath", "Value: %d", tc.distroNameWslPath)
 			}
 
 			switch tc.proStatusCommand {
@@ -105,10 +90,10 @@ func TestInfo(t *testing.T) {
 
 			info, err := system.Info(ctx)
 			if tc.wantErr {
-				require.Error(t, err, "Expected Get() to return an error")
+				require.Error(t, err, "Expected Info() to return an error")
 				return
 			}
-			require.NoError(t, err, "Expected Get() to return no errors")
+			require.NoError(t, err, "Expected Info() to return no errors")
 
 			assert.Equal(t, "TEST_DISTRO", info.GetWslName(), "WslName does not match expected value")
 			assert.Equal(t, "ubuntu", info.GetId(), "Id does not match expected value")
@@ -116,6 +101,64 @@ func TestInfo(t *testing.T) {
 			assert.Equal(t, "Ubuntu 22.04.1 LTS", info.GetPrettyName(), "PrettyName does not match expected value")
 			assert.Equal(t, "TEST_DISTRO_HOSTNAME", info.GetHostname(), "Hostname does not match expected value")
 			assert.True(t, info.GetProAttached(), "ProAttached does not match expected value")
+		})
+	}
+}
+
+func TestWslDistroName(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// This causes Get to look at the Windows' path for /
+		distroNameEnvDisabled bool
+
+		// The path of "/" according to the Windows host
+		distroNameWslPath mockBehaviour
+
+		wantErr bool
+	}{
+		"Success reading from WSL_DISTRO_NAME": {},
+		"Success using wslpath":                {distroNameEnvDisabled: true},
+
+		"Error when WSL_DISTRO_NAME is empty and wslpath fails":            {distroNameEnvDisabled: true, distroNameWslPath: mockError, wantErr: true},
+		"Error when WSL_DISTRO_NAME is empty and wslpath returns bad text": {distroNameEnvDisabled: true, distroNameWslPath: mockBadOutput, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			system, mock := testutils.MockSystem(t)
+
+			if tc.distroNameEnvDisabled {
+				mock.WslDistroNameEnvEnabled = false
+			}
+
+			switch tc.distroNameWslPath {
+			case mockOK:
+			case mockError:
+				mock.SetControlArg(testutils.WslpathErr)
+			case mockBadOutput:
+				mock.SetControlArg(testutils.WslpathBadOutput)
+			default:
+				require.Fail(t, "Unknown enum value for distroNameWslPath", "Value: %d", tc.distroNameWslPath)
+			}
+
+			got, err := system.WslDistroName(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "Expected WslDistroName() to return an error")
+				return
+			}
+			require.NoError(t, err, "Expected WslDistroName() to return no errors")
+			assert.Equal(t, "TEST_DISTRO", got, "WslDistroName does not match expected value")
+
+			// Test the cache: second call should not call wslpath
+			mock.SetControlArg(testutils.WslpathErr)
+			got, err = system.WslDistroName(ctx)
+			require.NoError(t, err, "WslDistroName should return no error as the cache should be used")
+			assert.Equal(t, "TEST_DISTRO", got, "WslDistroName does not match expected value in second call")
 		})
 	}
 }

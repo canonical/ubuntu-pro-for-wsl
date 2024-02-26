@@ -9,9 +9,9 @@ import (
 	"sync"
 	"sync/atomic"
 
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/worker"
-	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/google/uuid"
 	"github.com/ubuntu/decorate"

@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/interceptorschain"
-	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -21,12 +21,12 @@ type session struct {
 }
 
 // newSession starts a connection to the control stream. Call close to release resources.
-func newSession(ctx context.Context, address string) (s session, err error) {
+func newSession(ctx context.Context, address, clientID string) (s session, err error) {
 	log.Infof(ctx, "Connecting to control stream at %q", address)
 
 	s.conn, err = grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
-			log.StreamClientInterceptor(logrus.StandardLogger()),
+			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(clientID)),
 		)))
 
 	if err != nil {

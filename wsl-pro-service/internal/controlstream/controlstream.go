@@ -11,7 +11,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
-	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc/connectivity"
@@ -61,7 +61,13 @@ func (cs *ControlStream) Connect(ctx context.Context) (err error) {
 		return fmt.Errorf("could not get address: %w", err)
 	}
 
-	session, err := newSession(ctx, ctrlAddr)
+	distroName, err := cs.system.WslDistroName(ctx)
+	if err != nil {
+		log.Warningf(ctx, "Controlstream: assigning arbitrary connection ID because of error: %v", err)
+		distroName = ""
+	}
+
+	session, err := newSession(ctx, ctrlAddr, distroName)
 	if err != nil {
 		return err
 	}

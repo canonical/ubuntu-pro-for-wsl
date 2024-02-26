@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro/touchdistro"
-	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
 	wsl "github.com/ubuntu/gowsl"
 )
 

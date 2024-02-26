@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"gopkg.in/ini.v1"
 )
@@ -89,7 +89,7 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string, hostag
 
 	data.DeleteSection("host")
 
-	distroName, err := s.wslDistroName(ctx)
+	distroName, err := s.WslDistroName(ctx)
 	if err != nil {
 		return "", err
 	}

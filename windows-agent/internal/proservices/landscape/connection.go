@@ -9,7 +9,7 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	log "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/grpc/logstreamer"
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
