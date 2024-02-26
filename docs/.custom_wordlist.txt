@@ -16,6 +16,7 @@ ESM
 macOS
 MSIX
 powershell
+PowerShell
 systemd
 ubuntu
 UbuntuProForWSL
@@ -23,9 +24,11 @@ wsl
 WSL
 WSL's
 zsh
+Postfix
 Quickstart
 
 # Other jargon
+adapter
 autoload
 autopkgtest
 autopkgtests
@@ -44,6 +47,7 @@ SLA
 SRU
 toolchain
 zshrc
+ESM
 
 # Registry keys
 UbuntuPro
