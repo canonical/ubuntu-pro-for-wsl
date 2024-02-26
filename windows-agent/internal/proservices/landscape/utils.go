@@ -131,12 +131,13 @@ func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
 
 	sec, err := ini.GetSection("client")
 	if err == nil {
-		k, err := sec.GetKey("ssl_public_key")
-		if err == nil {
-			conf.sslPublicKey = k.String()
-		}
+		// TODO: Re-enable this code path when Landscape server start supporting gRPC over TLS.
+		// k, err := sec.GetKey("ssl_public_key")
+		// if err == nil {
+		// 	conf.sslPublicKey = k.String()
+		// }
 
-		k, err = sec.GetKey("account_name")
+		k, err := sec.GetKey("account_name")
 		if err == nil {
 			conf.accountName = k.String()
 		}
