@@ -515,7 +515,7 @@ func TestAutoReconnection(t *testing.T) {
 
 			// Detecting reconnection
 			require.Eventually(t, func() bool {
-				return service.Connected()
+				return mockService.IsConnected(uid)
 			}, 10*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
 
 			ok = monitorDisconnection(t, mockService, uid, func() error {
