@@ -27,7 +27,6 @@ type Manager struct {
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
-	conf               *config.Config
 }
 
 // options are the configurable functional options for the daemon.
@@ -71,39 +70,43 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	//[GitHub](https://github.com/canonical/ubuntu-pro-for-wsl/pull/438)
 	InitWSLAPI()
 
-	s.conf = config.New(ctx, privateDir)
+	conf := config.New(ctx, privateDir)
 
-	db, err := database.New(ctx, privateDir, s.conf)
+	db, err := database.New(ctx, privateDir, conf)
 	if err != nil {
 		return s, err
 	}
 	s.db = db
 
-	w := registrywatcher.New(ctx, s.conf, s.db, registrywatcher.WithRegistry(opts.registry))
+	w := registrywatcher.New(ctx, conf, s.db, registrywatcher.WithRegistry(opts.registry))
 	s.registryWatcher = &w
-	s.registryWatcher.Start()
 
-	if err := ubuntupro.FetchFromMicrosoftStore(ctx, s.conf, s.db); err != nil {
-		log.Warningf(ctx, "%v", err)
-	}
+	s.uiService = ui.New(ctx, conf, s.db)
 
-	s.uiService = ui.New(ctx, s.conf, s.db)
-
-	landscape, err := landscape.New(ctx, s.conf, s.db)
+	landscape, err := landscape.New(ctx, conf, s.db)
 	if err != nil {
 		return s, err
 	}
 	s.landscapeService = landscape
-
-	if err := s.landscapeService.Connect(); err != nil {
-		log.Warningf(ctx, err.Error())
-	}
 
 	wslInstanceService, err := wslinstance.New(ctx, s.db, s.landscapeService.Controller())
 	if err != nil {
 		return s, err
 	}
 	s.wslInstanceService = wslInstanceService
+
+	// TODO: attach notifiers here.
+
+	// All notifications have been set up: starting the registry watcher before any services.
+	s.registryWatcher.Start()
+
+	if err := ubuntupro.FetchFromMicrosoftStore(ctx, conf, s.db); err != nil {
+		log.Warningf(ctx, "%v", err)
+	}
+
+	if err := s.landscapeService.Connect(); err != nil {
+		log.Warningf(ctx, err.Error())
+	}
 
 	return s, nil
 }
@@ -122,10 +125,6 @@ func (m Manager) Stop(ctx context.Context) {
 
 	if m.db != nil {
 		m.db.Close(ctx)
-	}
-
-	if m.conf != nil {
-		m.conf.Stop()
 	}
 }
 

@@ -33,7 +33,6 @@ func TestNew(t *testing.T) {
 	defer db.Close(ctx)
 
 	conf := config.New(ctx, dir)
-	defer conf.Stop()
 
 	_ = ui.New(context.Background(), conf, db)
 }
@@ -96,7 +95,6 @@ func TestAttachPro(t *testing.T) {
 			}
 
 			conf := config.New(ctx, dir)
-			defer conf.Stop()
 
 			if tc.higherPriorityToken {
 				err = conf.UpdateRegistryData(ctx, config.RegistryData{
@@ -236,7 +234,7 @@ type mockConfig struct {
 	returnBadSource bool
 }
 
-func (m *mockConfig) SetUserSubscription(token string) error {
+func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) error {
 	if m.setUserSubscriptionErr {
 		return errors.New("SetUserSubscription: mock error")
 	}
@@ -245,7 +243,7 @@ func (m *mockConfig) SetUserSubscription(token string) error {
 	return nil
 }
 
-func (m *mockConfig) SetStoreSubscription(token string) error {
+func (m *mockConfig) SetStoreSubscription(ctx context.Context, token string) error {
 	m.token = token
 	m.source = config.SourceMicrosoftStore
 	return nil

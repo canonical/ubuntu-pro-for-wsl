@@ -22,9 +22,6 @@ import (
 // Config manages configuration parameters. It is a wrapper around a dictionary
 // that reads and updates the config file.
 type Config struct {
-	ctx    context.Context
-	cancel func()
-
 	// data
 	configState
 
@@ -34,10 +31,16 @@ type Config struct {
 	// Sync
 	mu *sync.Mutex
 
-	// observers are called after any configuration changes.
-	observers []func()
-	wg        sync.WaitGroup
+	// observers are notified after any configuration changes.
+	notifyLandsape  LandscapeNotifier
+	notifyUbuntuPro UbuntuProNotifier
 }
+
+// UbuntuProNotifier is a function that is called when the Ubuntu Pro subscription changes.
+type UbuntuProNotifier func(ctx context.Context, token string)
+
+// LandscapeNotifier is a function that is called when the Landscape configuration changes.
+type LandscapeNotifier func(ctx context.Context, config string, uid string)
 
 // configState contains the actual configuration data.
 //
@@ -52,58 +55,29 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 	m = &Config{
 		storagePath: filepath.Join(cachePath, "config"),
 		mu:          &sync.Mutex{},
-	}
 
-	m.ctx, m.cancel = context.WithCancel(ctx)
+		// No-ops to avoid nil checks
+		notifyUbuntuPro: func(ctx context.Context, token string) {},
+		notifyLandsape:  func(ctx context.Context, config string, uid string) {},
+	}
 
 	return m
 }
 
-// Stop releases all resources associated with the config.
-func (c *Config) Stop() {
-	c.cancel()
-	c.wg.Wait()
-}
-
-func (c *Config) stopped() bool {
-	select {
-	case <-c.ctx.Done():
-		return true
-	default:
-		return false
-	}
-}
-
-// Notify appends a callback. It'll be called every time any configuration changes.
-func (c *Config) Notify(f func()) {
+// SetLandscapeNotifier sets the function to be called when the Landscape configuration changes.
+func (c *Config) SetLandscapeNotifier(notify LandscapeNotifier) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.observers = append(c.observers, f)
+	c.notifyLandsape = notify
 }
 
-// notifyObservers calls all the observers. Use it under a mutex.
-func (c *Config) notifyObservers() {
-	c.wg.Add(len(c.observers))
+// SetUbuntuProNotifier sets the function to be called when the Ubuntu Pro subscription changes.
+func (c *Config) SetUbuntuProNotifier(notify UbuntuProNotifier) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	for _, f := range c.observers {
-		f := f
-		// This needs to be in a goroutine because notifyObservers is always
-		// called under the config mutex. The callback trying to grab the mutex
-		// (to read the config) would cause a deadlock otherwise.
-		//
-		// We protect it under "stopped" to avoid running callbacks during the
-		// agent's shutdown.
-		go func() {
-			defer c.wg.Done()
-
-			if c.stopped() {
-				return
-			}
-
-			f()
-		}()
-	}
+	c.notifyUbuntuPro = notify
 }
 
 // Subscription returns the ProToken and the method it was acquired with (if any).
@@ -151,7 +125,7 @@ func (c *Config) LandscapeClientConfig() (string, Source, error) {
 }
 
 // SetUserSubscription overwrites the value of the user-provided Ubuntu Pro token.
-func (c *Config) SetUserSubscription(proToken string) (err error) {
+func (c *Config) SetUserSubscription(ctx context.Context, proToken string) (err error) {
 	defer decorate.OnError(&err, "config: could not set user-provided Ubuntu Pro subscription")
 
 	s, err := c.get()
@@ -163,11 +137,20 @@ func (c *Config) SetUserSubscription(proToken string) (err error) {
 		return errors.New("higher priority subscription active")
 	}
 
-	return c.set(&c.configState.Subscription.User, proToken)
+	isNew, err := c.set(&c.configState.Subscription.User, proToken)
+	if err != nil {
+		return err
+	}
+
+	if isNew {
+		c.notifyUbuntuPro(ctx, proToken)
+	}
+
+	return nil
 }
 
 // SetStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
-func (c *Config) SetStoreSubscription(proToken string) (err error) {
+func (c *Config) SetStoreSubscription(ctx context.Context, proToken string) (err error) {
 	defer decorate.OnError(&err, "could not set Microsoft-Store-provided Ubuntu Pro subscription")
 
 	s, err := c.get()
@@ -179,12 +162,21 @@ func (c *Config) SetStoreSubscription(proToken string) (err error) {
 		return errors.New("higher priority subscription active")
 	}
 
-	return c.set(&c.configState.Subscription.Store, proToken)
+	isNew, err := c.set(&c.configState.Subscription.Store, proToken)
+	if err != nil {
+		return err
+	}
+
+	if isNew {
+		c.notifyUbuntuPro(ctx, proToken)
+	}
+
+	return nil
 }
 
 // SetLandscapeAgentUID overrides the Landscape agent UID.
 func (c *Config) SetLandscapeAgentUID(uid string) error {
-	if err := c.set(&c.Landscape.UID, uid); err != nil {
+	if _, err := c.set(&c.Landscape.UID, uid); err != nil {
 		return fmt.Errorf("config: could not set Landscape agent UID: %v", err)
 	}
 
@@ -195,10 +187,10 @@ func (c *Config) get() (s configState, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.stopped() {
-		return s, errors.New("config stopped")
-	}
+	return c.getUnsafe()
+}
 
+func (c *Config) getUnsafe() (s configState, err error) {
 	if err := c.load(); err != nil {
 		return s, err
 	}
@@ -207,30 +199,32 @@ func (c *Config) get() (s configState, err error) {
 }
 
 // set is a generic method to safely modify the config.
-func (c *Config) set(field *string, value string) error {
+func (c *Config) set(field *string, value string) (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.stopped() {
-		return errors.New("config stopped")
-	}
+	return c.setUnsafe(field, value)
+}
 
+func (c *Config) setUnsafe(field *string, value string) (bool, error) {
 	// Load before dumping to avoid overriding recent changes to file
 	if err := c.load(); err != nil {
-		return err
+		return false, err
 	}
 
 	old := *field
-	*field = value
+	if old == value {
+		return false, nil
+	}
 
-	c.notifyObservers()
+	*field = value
 
 	if err := c.dump(); err != nil {
 		*field = old
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
 // LandscapeAgentUID returns the UID assigned to this agent by the Landscape server.
@@ -240,6 +234,12 @@ func (c *Config) LandscapeAgentUID() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("config: could not get Landscape agent UID: %v", err)
 	}
+
+	// We do not notify Landscape to avoid a potential infinite loop:
+	// 1. Start connection
+	// 2. Get UID
+	// 3. Notify Landscape
+	// 4. Landcape drops connection, and reconnects
 
 	return s.Landscape.UID, nil
 }
@@ -253,99 +253,56 @@ type RegistryData struct {
 func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *database.DistroDB) (err error) {
 	defer decorate.OnError(&err, "config: could not update registry-provided data")
 
-	taskList, err := c.collectRegistrySettingsTasks(ctx, data, db)
-	if err != nil {
-		return err
-	}
-
-	// Apply tasks for updated settings
-	for _, d := range db.GetAll() {
-		err = errors.Join(err, d.SubmitDeferredTasks(taskList...))
-	}
-
-	if err != nil {
-		return fmt.Errorf("could not submit new task to certain distros: %v", err)
-	}
-
-	return nil
-}
-
-// collectRegistrySettingsTasks looks at the registry data to see if any of them have changed since this
-// function was last called. It returns a list of tasks to run triggered by these changes, and updates
-// the config.
-func (c *Config) collectRegistrySettingsTasks(ctx context.Context, data RegistryData, db *database.DistroDB) (taskList []task.Task, err error) {
-	type getTask = func(*Config, context.Context, RegistryData, *database.DistroDB) (task.Task, error)
-
-	defer decorate.OnError(&err, "could not generate tasks from updated registry settings")
+	// We must perform the notification outside the lock to avoid deadlocks
+	afterUnlock := []func(){}
+	defer func() {
+		for _, f := range afterUnlock {
+			f()
+		}
+	}()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.stopped() {
-		return nil, errors.New("config stopped")
-	}
-
-	// Load up-to-date state
 	if err := c.load(); err != nil {
-		return nil, err
+		return err
 	}
 
-	// Collect tasks for updated settings
-	var errs error
-	for _, f := range []getTask{(*Config).getTaskOnNewSubscription, (*Config).getTaskOnNewLandscape} {
-		task, err := f(c, ctx, data, db)
-		if err != nil {
-			errs = errors.Join(errs, err)
-			continue
+	func() {
+		c.configState.Subscription.Organization = data.UbuntuProToken
+		if !hasChanged(data.UbuntuProToken, &c.configState.Subscription.Checksum) {
+			return
 		}
-		if task != nil {
-			taskList = append(taskList, task)
+		log.Debug(ctx, "Config: new Ubuntu Pro subscription received from the registry")
+
+		// We must resolve the subscription in case a lower priority token becomes active
+		resolv, _ := c.configState.Subscription.resolve()
+		afterUnlock = append(afterUnlock, func() {
+			c.notifyUbuntuPro(ctx, resolv)
+		})
+	}()
+
+	func() {
+		c.Landscape.OrgConfig = data.LandscapeConfig
+		checksumInput := data.LandscapeConfig + c.Landscape.UID
+		if !hasChanged(checksumInput, &c.Landscape.Checksum) {
+			return
 		}
-	}
 
-	if errs != nil {
-		log.Warningf(ctx, "Config: could not obtain some updated registry settings: %v", errs)
-	}
+		log.Debug(ctx, "Config: new Landscape configuration received from the registry")
 
-	c.notifyObservers()
+		// We must resolve the landscape config in case a lower priority config becomes active
+		resolv, _ := c.Landscape.resolve()
+		afterUnlock = append(afterUnlock, func() {
+			c.notifyLandsape(ctx, resolv, c.Landscape.UID)
+		})
+	}()
 
-	// Dump updated checksums
 	if err := c.dump(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return taskList, nil
-}
-
-// getTaskOnNewSubscription checks if the subscription has changed since the last time it was called. If so, the new subscription
-// is returned in the form of a task.
-func (c *Config) getTaskOnNewSubscription(ctx context.Context, data RegistryData, db *database.DistroDB) (task.Task, error) {
-	c.configState.Subscription.Organization = data.UbuntuProToken
-
-	if !hasChanged(data.UbuntuProToken, &c.configState.Subscription.Checksum) {
-		return nil, nil
-	}
-	log.Debug(ctx, "Config: new Ubuntu Pro subscription received from the registry")
-
-	proToken, _ := c.configState.Subscription.resolve()
-	return tasks.ProAttachment{Token: proToken}, nil
-}
-
-// getTaskOnNewLandscape checks if the Landscape settings has changed since the last time it was called. If so, the
-// new Landscape settings are returned in the form of a task.
-func (c *Config) getTaskOnNewLandscape(ctx context.Context, data RegistryData, db *database.DistroDB) (task.Task, error) {
-	c.Landscape.OrgConfig = data.LandscapeConfig
-
-	// We append them just so we can compute a combined checksum
-	serialized := fmt.Sprintf("%s%s", data.LandscapeConfig, c.Landscape.UID)
-	if !hasChanged(serialized, &c.Landscape.Checksum) {
-		return nil, nil
-	}
-
-	log.Debug(ctx, "Config: new Landscape configuration received from the registry")
-
-	lconf, _ := c.Landscape.resolve()
-	return tasks.LandscapeConfigure{Config: lconf, HostagentUID: c.Landscape.UID}, nil
+	return nil
 }
 
 // hasChanged detects if the current value is different from the last time it was used.

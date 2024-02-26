@@ -18,8 +18,8 @@ import (
 
 // Config is a provider for the subcription configuration.
 type Config interface {
-	SetUserSubscription(token string) error
-	SetStoreSubscription(token string) error
+	SetUserSubscription(ctx context.Context, token string) error
+	SetStoreSubscription(ctx context.Context, token string) error
 	Subscription() (string, config.Source, error)
 }
 
@@ -53,7 +53,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.GetToken()
 	log.Infof(ctx, "UI service: received token %s", common.Obfuscate(token))
 
-	if err := s.config.SetUserSubscription(token); err != nil {
+	if err := s.config.SetUserSubscription(ctx, token); err != nil {
 		return nil, err
 	}
 

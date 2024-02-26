@@ -2,12 +2,9 @@ package config_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
-	"sync/atomic"
 	"testing"
-	"time"
 
 	config "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
@@ -19,67 +16,6 @@ import (
 	wslmock "github.com/ubuntu/gowsl/mock"
 	"gopkg.in/yaml.v3"
 )
-
-func TestStop(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	conf := config.New(ctx, t.TempDir())
-
-	// Trigger a notification that blocks until we desire
-	started := make(chan struct{})
-	blocker := make(chan struct{})
-	conf.Notify(func() {
-		close(started)
-		<-blocker
-	})
-
-	err := conf.SetUserSubscription("HELLO_I_AM_TOKEN")
-	require.NoError(t, err, "Setup: SetUserSubscription should return no error")
-
-	const timeout = 10 * time.Second
-	select {
-	case <-time.After(timeout):
-		require.Fail(t, "Setup: config should have notified its observer")
-	case <-started:
-	}
-
-	// Check that Stop does not return when the observer is running
-	returned := make(chan struct{})
-	go func() {
-		conf.Stop()
-		close(returned)
-	}()
-
-	select {
-	case <-returned:
-		require.Fail(t, "Config's Stop should not return until all callbacks are done")
-	case <-time.After(timeout):
-	}
-
-	// Stop blocking and check that Stop returns
-	close(blocker)
-
-	select {
-	case <-returned:
-	case <-time.After(timeout):
-		require.Fail(t, "Config's Stop should have returned after all callbacks were finished")
-	}
-
-	// Call Stop again to see that it no longer blocks
-	returned = make(chan struct{})
-	go func() {
-		conf.Stop()
-		close(returned)
-	}()
-
-	select {
-	case <-returned:
-	case <-time.After(timeout):
-		require.Fail(t, "Config's Stop should not block when called for a second time")
-	}
-}
 
 // settingsState represents how much data is in the registry.
 type settingsState uint64
@@ -147,7 +83,6 @@ func TestSubscription(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
-			defer conf.Stop()
 			setup(t, conf)
 
 			token, source, err := conf.Subscription()
@@ -160,11 +95,6 @@ func TestSubscription(t *testing.T) {
 			// Test values
 			require.Equal(t, tc.wantToken, token, "Unexpected token value")
 			require.Equal(t, tc.wantSource, source, "Unexpected token source")
-
-			conf.Stop()
-
-			_, _, err = conf.Subscription()
-			require.Error(t, err, "Subscription should return error after the config has stopped")
 		})
 	}
 }
@@ -209,7 +139,6 @@ func TestLandscapeConfig(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
-			defer conf.Stop()
 			setup(t, conf)
 
 			landscapeConf, source, err := conf.LandscapeClientConfig()
@@ -222,11 +151,6 @@ func TestLandscapeConfig(t *testing.T) {
 			// Test values
 			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected token value")
 			require.Equal(t, tc.wantSource, source, "Unexpected token source")
-
-			conf.Stop()
-
-			_, _, err = conf.LandscapeClientConfig()
-			require.Error(t, err, "LandscapeClientConfig should return error after the config has stopped")
 		})
 	}
 }
@@ -270,7 +194,6 @@ func TestLandscapeAgentUID(t *testing.T) {
 			}
 
 			conf := config.New(ctx, dir)
-			defer conf.Stop()
 			setup(t, conf)
 
 			v, err := conf.LandscapeAgentUID()
@@ -288,11 +211,6 @@ func TestLandscapeAgentUID(t *testing.T) {
 
 			// Test non-default values
 			assert.Equal(t, "landscapeUID1234", v, "LandscapeAgentUID returned an unexpected value")
-
-			conf.Stop()
-
-			_, err = conf.LandscapeAgentUID()
-			require.Error(t, err, "LandscapeAgentUID should return error after the config has stopped")
 		})
 	}
 }
@@ -350,11 +268,6 @@ func TestProvisioningTasks(t *testing.T) {
 			}
 
 			require.ElementsMatch(t, wantTasks, gotTasks, "Unexpected contents returned by ProvisioningTasks")
-
-			conf.Stop()
-
-			_, err = conf.ProvisioningTasks(ctx, "UBUNTU")
-			require.Error(t, err, "ProvisioningTasks should return error after the config has stopped")
 		})
 	}
 }
@@ -394,7 +307,6 @@ func TestSetUserSubscription(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
-			defer conf.Stop()
 			setup(t, conf)
 
 			token := "new_token"
@@ -402,22 +314,34 @@ func TestSetUserSubscription(t *testing.T) {
 				token = ""
 			}
 
-			err = conf.SetUserSubscription(token)
+			var calledProNotifier int
+			conf.SetUbuntuProNotifier(func(context.Context, string) {
+				calledProNotifier++
+			})
+
+			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+				require.Fail(t, "LandscapeNotifier should not be called")
+			})
+
+			err = conf.SetUserSubscription(ctx, token)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
 				return
 			}
 			require.NoError(t, err, "SetSubscription should return no error")
 
+			require.Equal(t, 1, calledProNotifier, "ProNotifier should have been called once")
+
 			got, _, err := conf.Subscription()
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
 
-			conf.Stop()
-
-			err = conf.SetUserSubscription(token)
-			require.Error(t, err, "SetUserSubscription should return error after the config has stopped")
+			// Set the same token again
+			calledProNotifier = 0
+			err = conf.SetUserSubscription(ctx, token)
+			require.NoError(t, err, "SetUserSubscription should return no error")
+			require.Zero(t, calledProNotifier, "ProNotifier should not have been called again")
 		})
 	}
 }
@@ -464,6 +388,15 @@ func TestSetStoreSubscription(t *testing.T) {
 				token = ""
 			}
 
+			var calledProNotifier int
+			conf.SetUbuntuProNotifier(func(context.Context, string) {
+				calledProNotifier++
+			})
+
+			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+				require.Fail(t, "LandscapeNotifier should not be called")
+			})
+
 			err = conf.SetStoreSubscription(ctx, token)
 			if tc.wantError {
 				require.Error(t, err, "SetSubscription should return an error")
@@ -471,10 +404,18 @@ func TestSetStoreSubscription(t *testing.T) {
 			}
 			require.NoError(t, err, "SetSubscription should return no error")
 
+			require.Equal(t, 1, calledProNotifier, "ProNotifier should have been called once")
+
 			got, _, err := conf.Subscription()
 			require.NoError(t, err, "ProToken should return no error")
 
 			require.Equal(t, tc.want, got, "ProToken returned an unexpected value for the token")
+
+			// Set the same token again
+			calledProNotifier = 0
+			err = conf.SetStoreSubscription(ctx, token)
+			require.NoError(t, err, "SetStoreSubscription should return no error")
+			require.Zero(t, calledProNotifier, "ProNotifier should not have been called again")
 		})
 	}
 }
@@ -514,13 +455,20 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
 			conf := config.New(ctx, dir)
-			defer conf.Stop()
 			setup(t, conf)
 
 			uid := "new_uid"
 			if tc.emptyUID {
 				uid = ""
 			}
+
+			conf.SetUbuntuProNotifier(func(context.Context, string) {
+				require.Fail(t, "UbuntuProNotifier should not be called")
+			})
+
+			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+				require.Fail(t, "LandscapeNotifier should not be called")
+			})
 
 			err = conf.SetLandscapeAgentUID(uid)
 			if tc.wantError {
@@ -533,11 +481,6 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			require.NoError(t, err, "LandscapeAgentUID should return no error")
 
 			require.Equal(t, tc.want, got, "LandscapeAgentUID returned an unexpected value for the token")
-
-			conf.Stop()
-
-			err = conf.SetLandscapeAgentUID(uid)
-			require.Error(t, err, "SetLandscapeAgentUID should return error after the config has stopped")
 		})
 	}
 }
@@ -581,7 +524,16 @@ func TestUpdateRegistryData(t *testing.T) {
 
 			_, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile)
 			c := config.New(ctx, dir)
-			defer c.Stop()
+
+			var calledUbuntuProNotifier int
+			c.SetUbuntuProNotifier(func(context.Context, string) {
+				calledUbuntuProNotifier++
+			})
+
+			var calledLandscapeNotifier int
+			c.SetLandscapeNotifier(func(context.Context, string, string) {
+				calledLandscapeNotifier++
+			})
 
 			// Enter a first set of data to override the defaults
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
@@ -597,6 +549,11 @@ func TestUpdateRegistryData(t *testing.T) {
 			tokenCsum1, lcapeCsum1 := loadChecksums(t, dir)
 			require.NotEmpty(t, tokenCsum1, "Subscription checksum should not be empty")
 			require.NotEmpty(t, lcapeCsum1, "Landscape checksum should not be empty")
+
+			require.Equal(t, 1, calledUbuntuProNotifier, "UbuntuProNotifier called an unexpected amount of times")
+			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
+			calledUbuntuProNotifier = 0
+			calledLandscapeNotifier = 0
 
 			token, src, err := c.Subscription()
 			require.NoError(t, err, "Subscription should not return any errors")
@@ -621,6 +578,11 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.NotEqual(t, tokenCsum1, tokenCsum2, "Subscription checksum should have changed")
 			require.NotEqual(t, lcapeCsum1, lcapeCsum2, "Landscape checksum should have changed")
 
+			require.Equal(t, 1, calledUbuntuProNotifier, "UbuntuProNotifier called an unexpected amount of times")
+			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
+			calledUbuntuProNotifier = 0
+			calledLandscapeNotifier = 0
+
 			token, src, err = c.Subscription()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, proToken2, token, "Subscription did not return the token we wrote")
@@ -642,6 +604,11 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, tokenCsum2, tokenCsum3, "Subscription checksum should not have changed")
 			require.Equal(t, lcapeCsum2, lcapeCsum3, "Landscape checksum should not have changed")
 
+			require.Zero(t, calledUbuntuProNotifier, "UbuntuProNotifier called an unexpected amount of times")
+			require.Zero(t, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
+			calledUbuntuProNotifier = 0
+			calledLandscapeNotifier = 0
+
 			token, src, err = c.Subscription()
 			require.NoError(t, err, "Subscription should not return any errors")
 			require.Equal(t, proToken2, token, "Subscription did not return the token we wrote")
@@ -652,10 +619,29 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
-			c.Stop()
+			// Change only the pro token
+			err = c.UpdateRegistryData(ctx, config.RegistryData{
+				UbuntuProToken:  proToken1,
+				LandscapeConfig: landscapeConf2,
+			}, db)
+			require.NoError(t, err, "UpdateRegistryData should not have failed")
 
-			err = c.UpdateRegistryData(ctx, config.RegistryData{}, db)
-			require.Error(t, err, "UpdateRegistryData should return error after the config has stopped")
+			require.Equal(t, 1, calledUbuntuProNotifier, "UbuntuProNotifier called an unexpected amount of times")
+			require.Zero(t, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
+			calledUbuntuProNotifier = 0
+			calledLandscapeNotifier = 0
+
+			// Change only the landscape config
+			err = c.UpdateRegistryData(ctx, config.RegistryData{
+				UbuntuProToken:  proToken1,
+				LandscapeConfig: landscapeConf1,
+			}, db)
+			require.NoError(t, err, "UpdateRegistryData should not have failed")
+
+			require.Zero(t, calledUbuntuProNotifier, "UbuntuProNotifier called an unexpected amount of times")
+			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
+			calledUbuntuProNotifier = 0
+			calledLandscapeNotifier = 0
 		})
 	}
 }
@@ -676,84 +662,6 @@ func loadChecksums(t *testing.T, confDir string) (string, string) {
 	require.NoError(t, err, "Could not marshal config file")
 
 	return fileData.Subscription.Checksum, fileData.Landscape.Checksum
-}
-
-func TestNotify(t *testing.T) {
-	ctx := context.Background()
-	if wsl.MockAvailable() {
-		t.Parallel()
-		ctx = wsl.WithMock(ctx, wslmock.New())
-	}
-
-	db, err := database.New(ctx, t.TempDir(), nil)
-	require.NoError(t, err, "Setup: could not create empty database")
-
-	_, dir := setUpMockSettings(t, ctx, db, untouched, false)
-	c := config.New(ctx, dir)
-	defer c.Stop()
-
-	var notifyCount atomic.Int32
-	var wantNotifyCount int32
-
-	c.Notify(func() { notifyCount.Add(1) })
-
-	err = c.SetUserSubscription("TOKEN_1")
-	require.NoError(t, err, "SetUserSubscription should return no error")
-	wantNotifyCount++
-
-	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
-		time.Second, 100*time.Millisecond, "Attached function should have been called after changing the pro token")
-
-	err = c.SetLandscapeAgentUID("UID_1")
-	require.NoError(t, err, "SetLandscapeAgentUID should return no error")
-	wantNotifyCount++
-
-	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
-		time.Second, 100*time.Millisecond, "Attached function should have been called after changing the landscape UID")
-
-	err = c.UpdateRegistryData(ctx, config.RegistryData{UbuntuProToken: "TOKEN_2"}, db)
-	require.NoError(t, err, "UpdateRegistryData should return no error")
-	wantNotifyCount++
-
-	eventually(t, notifyCount.Load, func(got int32) bool { return wantNotifyCount == got },
-		time.Second, 100*time.Millisecond, "Attached function should have been called after changing registry data")
-}
-
-// eventually solves the main issue with 'require.Eventually': you don't know what failed.
-// See what happens if you try to build the 'want vs. got' error message:
-//
-//	  require.Eventuallyf(t, func()bool{ return 5==got() },
-//			t, trate, "Mismatch: wanted %d but got %d", 5, got())
-//	                                                       ^^^
-//														   OUTDATED!
-//
-// Got is passed by value so we have the value obtained at t=0, not at t=timeout.
-//
-//nolint:thelper // This is not a helper but an assertion itself.
-func eventually[T any](t *testing.T, getter func() T, predicate func(T) bool, timeout, tickRate time.Duration, message string, args ...any) {
-	tk := time.NewTicker(tickRate)
-	defer tk.Stop()
-
-	tm := time.NewTimer(timeout)
-	defer tk.Stop()
-
-	got := getter()
-	if predicate(got) {
-		return
-	}
-
-	for {
-		select {
-		case <-tm.C:
-			require.Failf(t, "Condition not satisfied", "Last value: %v\n%s", got, fmt.Sprintf(message, args...))
-		case <-tk.C:
-		}
-
-		got = getter()
-		if predicate(got) {
-			return
-		}
-	}
 }
 
 // is defines equality between flags. It is convenience function to check if a settingsState matches a certain state.
