@@ -486,7 +486,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 	// the server sends the client a UID. This UID is the distributed to all distros, waking them up. This interferes with
 	// the tests for Start and Stop as we cannot really assert what started the distro.
 	//
-	// Hence, we register the distro after the client and server have connected. In production, this would still wake up the,
+	// Hence, we register the distro after the client and server have connected. In production, this would still wake up the
 	// distros but our tests mock the Config so that ProvisioningTasks always returns an empty list.
 	if distrosettings.name == "" {
 		distrosettings.name = wsltestutils.RandomDistroName(t)
