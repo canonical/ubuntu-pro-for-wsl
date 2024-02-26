@@ -16,6 +16,10 @@ type Controller struct {
 // SendUpdatedInfo sends a message to the Landscape server with updated
 // info about the machine and the distros.
 func (c Controller) SendUpdatedInfo(ctx context.Context) error {
+	if c.isDisabled() {
+		return nil
+	}
+
 	if connected := c.tryReconnect(ctx); !connected {
 		return errors.New("could not connect to Landscape")
 	}
@@ -31,6 +35,10 @@ func (c Controller) SendUpdatedInfo(ctx context.Context) error {
 // Reconnect makes Landscape drop its current connection and start a new one.
 // Blocks until the new connection is available (or failed).
 func (c Controller) Reconnect(ctx context.Context) (succcess bool) {
+	if c.isDisabled() {
+		return false
+	}
+
 	return c.forceReconnect(ctx)
 }
 

@@ -65,8 +65,8 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 	d.EnqueueDeferredTasks()
 
 	// Update landscape when connecting and disconnecting
-	s.landscapeSendUpdatedInfo(ctx, distroName)
-	defer s.landscapeSendUpdatedInfo(ctx, distroName)
+	s.landscapeSendUpdatedInfo(ctx)
+	defer s.landscapeSendUpdatedInfo(ctx)
 
 	conn, err := newWslServiceConn(ctx, d.Name(), stream)
 	if err != nil {
@@ -101,7 +101,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 			}
 		}
 
-		s.landscapeSendUpdatedInfo(ctx, distroName)
+		s.landscapeSendUpdatedInfo(ctx)
 	}
 }
 
@@ -188,10 +188,8 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 
 // landscapeSendUpdatedInfo is syntactic sugar to update landscape and
 // log in the case error.
-func (s *Service) landscapeSendUpdatedInfo(ctx context.Context, distroName string) {
+func (s *Service) landscapeSendUpdatedInfo(ctx context.Context) {
 	go func() {
-		log.Debugf(ctx, "WSLInstance service (%s): sending updated info to Landscape", distroName)
-
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 
