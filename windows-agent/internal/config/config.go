@@ -186,10 +186,6 @@ func (c *Config) get() (s configState, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return c.getUnsafe()
-}
-
-func (c *Config) getUnsafe() (s configState, err error) {
 	if err := c.load(); err != nil {
 		return s, err
 	}
@@ -202,11 +198,6 @@ func (c *Config) set(field *string, value string) (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return c.setUnsafe(field, value)
-}
-
-func (c *Config) setUnsafe(field *string, value string) (bool, error) {
-	// Load before dumping to avoid overriding recent changes to file
 	if err := c.load(); err != nil {
 		return false, err
 	}
