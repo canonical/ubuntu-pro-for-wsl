@@ -144,7 +144,6 @@ func (s *Service) keepConnected() error {
 				// Retrial petitions are all satisfied.
 				s.connRetrier.Reset()
 
-				log.Info(s.ctx, "Landscape: connecting")
 				connectionDone, err := s.connectOnce(s.ctx)
 
 				if first {

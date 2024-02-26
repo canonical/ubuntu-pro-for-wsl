@@ -76,6 +76,8 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
+	log.Info(ctx, "Landscape: connecting")
+
 	grpcConn, err := grpc.DialContext(dialCtx, conn.settings.url, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
