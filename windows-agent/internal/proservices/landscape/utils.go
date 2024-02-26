@@ -28,16 +28,12 @@ type landscapeHostConf struct {
 	accountName     string
 	registrationKey string
 	hostagentURL    string
+	ubuntuProToken  string
 }
 
 // newHostAgentInfo assembles a HostAgentInfo message.
 func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.HostAgentInfo, err error) {
 	defer decorate.OnError(&err, "could not assemble HostAgentInfo message")
-
-	token, _, err := c.config().Subscription()
-	if err != nil {
-		return info, err
-	}
 
 	conf, err := newLandscapeHostConf(c.config())
 	if err != nil {
@@ -68,7 +64,7 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 	}
 
 	info = &landscapeapi.HostAgentInfo{
-		Token:       token,
+		Token:       conf.ubuntuProToken,
 		Uid:         uid,
 		Hostname:    c.hostname(),
 		Instances:   instances,
@@ -113,6 +109,11 @@ func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCr
 // configuration data. All values missing in the Config will be set to their defaults.
 func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
 	defer decorate.OnError(&err, "could not extract Windows settings from the config")
+
+	conf.ubuntuProToken, _, err = config.Subscription()
+	if err != nil {
+		return conf, err
+	}
 
 	out, _, err := config.LandscapeClientConfig()
 	if err != nil {

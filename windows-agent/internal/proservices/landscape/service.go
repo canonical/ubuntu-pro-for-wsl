@@ -211,14 +211,6 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 		s.conn = nil
 	}
 
-	_, src, err := s.conf.Subscription()
-	if err != nil {
-		return nil, fmt.Errorf("skipping connection: could not obtain Ubuntu Pro token: %v", err)
-	}
-	if src == config.SourceNone {
-		return nil, errors.New("skipping connection: no Ubuntu Pro token provided")
-	}
-
 	conn, err := newConnection(ctx, s)
 	if err != nil {
 		return nil, err
