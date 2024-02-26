@@ -94,13 +94,17 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 // Connect starts the connection and starts talking to the server.
 // Call Stop to deallocate resources.
 func (s *Service) Connect() (err error) {
-	defer decorate.OnError(&err, "could not connect to Landscape server")
-
 	if s.connected() {
-		return errors.New("already connected")
+		return errors.New("could not connect to Landscape server: already connected")
 	}
 
-	return s.keepConnected()
+	if err := s.keepConnected(); errors.Is(err, noConfigError{}) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // keepConnected supervises the connection. It attempts connecting before returning.

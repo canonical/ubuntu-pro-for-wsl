@@ -81,6 +81,7 @@ func TestConnect(t *testing.T) {
 		uid          string
 
 		wantErr           bool
+		wantNotConnected  bool
 		wantDistroSkipped bool
 	}{
 		"Success":                      {},
@@ -88,18 +89,20 @@ func TestConnect(t *testing.T) {
 		// TODO: Re-enable this test case when Landscape server start supporting gRPC over TLS.
 		// "Success with an SSL certificate": {requireCertificate: true},
 
-		//"Error when the SSL certificate cannot be read":        {wantErr: true},
-		//"Error when the SSL certificate is not valid":          {wantErr: true},
+		// These tests are for the error cases when the error is logged but not returned
+		"Silent error when the config is empty":                   {wantNotConnected: true},
+		"Silent error when the landscape URL cannot be retrieved": {wantNotConnected: true},
+		"Silent error when there is no Ubuntu Pro token":          {emptyToken: true, wantNotConnected: true},
+
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
-		"Error when the config is empty":                       {wantErr: true},
-		"Error when the landscape URL cannot be retrieved":     {wantErr: true},
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
 		"Error when the config cannot be parsed":               {wantErr: true},
-		"Error when there is no Ubuntu Pro token":              {emptyToken: true, wantErr: true},
+		// "Error when the SSL certificate cannot be read":        {wantErr: true},
+		// "Error when the SSL certificate is not valid":          {wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -178,9 +181,14 @@ func TestConnect(t *testing.T) {
 				require.False(t, service.Connected(), "Connected should have returned false after failing to connect")
 				return
 			}
+
 			require.NoError(t, err, "Connect should return no errors")
 			defer service.Stop(ctx)
 
+			if tc.wantNotConnected {
+				require.False(t, service.Connected(), "Connected should have returned false")
+				return
+			}
 			require.True(t, service.Connected(), "Connected should have returned false after succeeding to connect")
 
 			require.Eventually(t, func() bool {
@@ -628,10 +636,19 @@ func TestReconnect(t *testing.T) {
 		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
 	}
 
+	changeRemoveConfig := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		c.mu.Lock()
+		c.landscapeClientConfig = ""
+		c.mu.Unlock()
+
+		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
+	}
+
 	testCases := map[string]struct {
 		useCertificate bool
 		trigger        func(context.Context, *landscape.Service, *mockConfig)
 
+		wantNoDisconnect       bool
 		wantNoReconnect        bool
 		wantImmediateReconnect bool
 	}{
@@ -640,8 +657,10 @@ func TestReconnect(t *testing.T) {
 		// TODO: Re-enable this test case when Landscape server start supporting gRPC over TLS.
 		// "Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
 
-		"Don't reconnect when changing irrelevant config":    {trigger: changeIrrelevant, wantNoReconnect: true},
+		"Don't disconnect when changing irrelevant config": {trigger: changeIrrelevant, wantNoDisconnect: true},
+
 		"Don't reconnect when removing the Ubuntu Pro token": {trigger: changeProToken, wantNoReconnect: true},
+		"Don't reconnect when missing configuration":         {trigger: changeRemoveConfig, wantNoReconnect: true},
 	}
 
 	for name, tc := range testCases {
@@ -697,7 +716,7 @@ func TestReconnect(t *testing.T) {
 				return nil
 			})
 
-			if tc.wantNoReconnect {
+			if tc.wantNoDisconnect {
 				require.False(t, ok, "Client should not have disconnected")
 				return
 			}
@@ -708,8 +727,15 @@ func TestReconnect(t *testing.T) {
 				return
 			}
 
+			maxTimeout := 20 * time.Second
+			if tc.wantNoReconnect {
+				time.Sleep(maxTimeout)
+				require.False(t, service.Connected(), "Client should not have reconnected")
+				return
+			}
+
 			require.Eventually(t, service.Connected,
-				20*time.Second, time.Second, "Client should have connected after reconnection")
+				maxTimeout, time.Second, "Client should have connected after reconnection")
 		})
 	}
 }
