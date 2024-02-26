@@ -48,8 +48,6 @@ type Config interface {
 
 	LandscapeAgentUID() (string, error)
 	SetLandscapeAgentUID(string) error
-
-	Notify(func())
 }
 
 type options struct {
@@ -86,8 +84,6 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 		hostName:    opts.hostname,
 		connRetrier: newRetryConnection(),
 	}
-
-	s.watchConfigChanges(ctx)
 
 	return s, nil
 }
@@ -260,39 +256,40 @@ func (s *Service) Controller() Controller {
 	}
 }
 
-// watchConfigChanges watches for config changes to detect if a reconnection is in order.
-func (s *Service) watchConfigChanges(ctx context.Context) {
-	s.conf.Notify(func() {
-		oldSettings, ok := func() (connectionSettings, bool) {
-			s.connMu.RLock()
-			defer s.connMu.RUnlock()
+// NotifyUbuntuProUpdate is called when the Ubuntu Pro token changes. It will trigger a reconnection if needed.
+func (s *Service) NotifyUbuntuProUpdate(ctx context.Context, token string) {
+	s.reconnectIfNewSettings(ctx)
+}
 
-			if s.conn != nil {
-				return s.conn.settings, true
-			}
-			return connectionSettings{}, false
-		}()
+// NotifyConfigUpdate is called when the configuration changes. It will trigger a reconnection if needed.
+func (s *Service) NotifyConfigUpdate(ctx context.Context, landscapeConf, agentUID string) {
+	distributeConfig(ctx, s.db, landscapeConf, agentUID)
+	s.reconnectIfNewSettings(ctx)
+}
 
-		if !ok {
-			// Not connected yet
-			return
+func (s *Service) reconnectIfNewSettings(ctx context.Context) {
+	oldSettings := func() connectionSettings {
+		s.connMu.RLock()
+		defer s.connMu.RUnlock()
+
+		if s.conn != nil {
+			return s.conn.settings
 		}
+		return connectionSettings{}
+	}()
 
-		landscapeConf, err := newLandscapeHostConf(s.conf)
-		if err != nil {
-			log.Warningf(ctx, "Landscape: config monitor: %v", err)
-			return
-		}
+	hostagentConf, err := newLandscapeHostConf(s.conf)
+	if err != nil {
+		log.Warningf(ctx, "Landscape: config monitor: %v", err)
+		return
+	}
 
-		newSett := newConnectionSettings(landscapeConf)
-		if newSett == oldSettings {
-			return
-		}
+	newSett := newConnectionSettings(hostagentConf)
+	if newSett == oldSettings {
+		return
+	}
 
-		log.Info(ctx, "Landscape: config monitor: detected configuration change: starting reconnection.")
-
-		s.reconnect()
-	})
+	s.reconnect()
 }
 
 func (s *Service) disconnect() {

@@ -12,7 +12,9 @@ import (
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 	"google.golang.org/grpc/credentials"
@@ -195,6 +197,21 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	}
 
 	return info, nil
+}
+
+func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf string, hostAgentUID string) {
+	var err error
+	for _, distro := range db.GetAll() {
+		t := tasks.LandscapeConfigure{
+			Config:       landscapeConf,
+			HostagentUID: hostAgentUID,
+		}
+		err = errors.Join(err, distro.SubmitTasks(t))
+	}
+
+	if err != nil {
+		log.Warningf(ctx, "Landscape: could not submit configuration tasks: %v", err)
+	}
 }
 
 type retryConnection struct {

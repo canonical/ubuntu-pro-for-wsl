@@ -78,9 +78,21 @@ func (e executor) assignHost(ctx context.Context, cmd *landscapeapi.Command_Assi
 		log.Warning(ctx, "Overriding current landscape client UID")
 	}
 
-	if err := conf.SetLandscapeAgentUID(cmd.GetUid()); err != nil {
+	uid := cmd.GetUid()
+	if uid == "" {
+		return errors.New("UID is empty")
+	}
+
+	if err := conf.SetLandscapeAgentUID(uid); err != nil {
 		return err
 	}
+
+	landscapeConf, _, err := conf.LandscapeClientConfig()
+	if err != nil {
+		return err
+	}
+
+	distributeConfig(ctx, e.database(), landscapeConf, uid)
 
 	return nil
 }
