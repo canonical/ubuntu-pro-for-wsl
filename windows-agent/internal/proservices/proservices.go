@@ -95,7 +95,9 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	}
 	s.wslInstanceService = wslInstanceService
 
-	// TODO: attach notifiers here.
+	conf.SetUbuntuProNotifier(func(ctx context.Context, token string) {
+		ubuntupro.Distribute(ctx, s.db, token)
+	})
 
 	// All notifications have been set up: starting the registry watcher before any services.
 	s.registryWatcher.Start()
