@@ -54,9 +54,6 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	if err != nil {
 		return nil, err
 	}
-	if conf.hostagentURL == "" {
-		return nil, errors.New("no hostagent URL provided in the Landscape configuration")
-	}
 
 	// A context to control the Landscape client with (needed for as long as the connection lasts)
 	ctx, cancel := context.WithCancel(ctx)

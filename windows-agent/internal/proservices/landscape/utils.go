@@ -31,6 +31,19 @@ type landscapeHostConf struct {
 	ubuntuProToken  string
 }
 
+type noConfigError struct {
+	missing string
+}
+
+func (e noConfigError) Error() string {
+	return fmt.Sprintf("missing configuration: %s", e.missing)
+}
+
+func (e noConfigError) Is(target error) bool {
+	_, ok := target.(noConfigError)
+	return ok
+}
+
 // newHostAgentInfo assembles a HostAgentInfo message.
 func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.HostAgentInfo, err error) {
 	defer decorate.OnError(&err, "could not assemble HostAgentInfo message")
@@ -106,13 +119,17 @@ func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCr
 }
 
 // newLandscapeHostConf extracts the information relevant to the agent from the LandscapeConfig
-// configuration data. All values missing in the Config will be set to their defaults.
+// configuration data.
+// Any missing necessary value will result in a noConfigError.
+// Any missing optional value will be set to a default value.
 func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
 	defer decorate.OnError(&err, "could not extract Windows settings from the config")
 
 	conf.ubuntuProToken, _, err = config.Subscription()
 	if err != nil {
 		return conf, err
+	} else if conf.ubuntuProToken == "" {
+		return landscapeHostConf{}, noConfigError{missing: "Ubuntu Pro token"}
 	}
 
 	out, _, err := config.LandscapeClientConfig()
@@ -122,7 +139,7 @@ func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
 
 	if out == "" {
 		// No Landscape config: return defaults
-		return conf, nil
+		return landscapeHostConf{}, noConfigError{missing: "Landscape configuration"}
 	}
 
 	ini, err := ini.Load(strings.NewReader(out))
@@ -152,12 +169,15 @@ func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
 	}
 
 	sec, err = ini.GetSection("host")
-	if err == nil {
-		k, err := sec.GetKey("url")
-		if err == nil {
-			conf.hostagentURL = k.String()
-		}
+	if err != nil {
+		return landscapeHostConf{}, noConfigError{missing: "Host URL"}
 	}
+
+	k, err := sec.GetKey("url")
+	if err != nil {
+		return landscapeHostConf{}, noConfigError{missing: "Host URL"}
+	}
+	conf.hostagentURL = k.String()
 
 	return conf, nil
 }
