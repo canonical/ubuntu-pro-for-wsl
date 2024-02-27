@@ -182,7 +182,6 @@ func TestConnect(t *testing.T) {
 				require.False(t, service.Connected(), "Connected should have returned false after failing to connect")
 				return
 			}
-
 			require.NoError(t, err, "Connect should return no errors")
 			defer service.Stop(ctx)
 
@@ -197,7 +196,7 @@ func TestConnect(t *testing.T) {
 				require.False(t, service.Connected(), "SendUpdatedInfo should not reconnect when the service is disabled")
 
 				ok := service.Controller().Reconnect(ctx)
-				require.False(t, ok, "Reconnect not succeed when the service is disabled")
+				require.False(t, ok, "Reconnect should not succeed when the service is disabled")
 				time.Sleep(10 * time.Second)
 				require.False(t, service.Connected(), "SendUpdatedInfo should not reconnect when the service is disabled")
 
