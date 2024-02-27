@@ -35,12 +35,12 @@ class LandscapePage extends StatelessWidget {
     return ColumnLandingPage(
       svgAsset: 'assets/Landscape-tag.svg',
       title: 'Landscape',
-      onNext: () {
-        // TODO:
-        // call validation
-        // get file string
-        // pass to agent
-        model.applyManualLandscapeConfig();
+      onNext: () async {
+        if (!model.validConfig()) {
+          return false;
+        }
+        final success = await model.applyConfig();
+        return success;
       },
       leftChildren: [
         MarkdownBody(
@@ -60,28 +60,38 @@ class LandscapePage extends StatelessWidget {
     final client = getService<AgentApiClient>();
     return ChangeNotifierProvider<LandscapeModel>(
       create: (context) => LandscapeModel(client),
-      child: LandscapePage(),
+      child: const LandscapePage(),
     );
   }
 }
 
 class LandscapeInput extends StatefulWidget {
-  const LandscapeInput({
-    super.key,
-  });
+  const LandscapeInput({super.key});
 
   @override
   State<LandscapeInput> createState() => _LandscapeInputState();
 }
 
 class _LandscapeInputState extends State<LandscapeInput> {
-  int item = 0;
+  late TextEditingController txt;
+
+  @override
+  void initState() {
+    super.initState();
+    txt = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    txt.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final sectionTitleStyle = Theme.of(context).primaryTextTheme.titleMedium;
     final sectionBodyStyle = Theme.of(context).primaryTextTheme.bodySmall;
-    final txt = TextEditingController();
+    final model = context.watch<LandscapeModel>();
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -90,12 +100,10 @@ class _LandscapeInputState extends State<LandscapeInput> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Radio(
-              value: 0,
-              groupValue: item,
+              value: LandscapeConfigType.manual,
+              groupValue: model.selected,
               onChanged: (v) {
-                setState(() {
-                  item = v!;
-                });
+                model.selected = v!;
               },
             ),
             const SizedBox(
@@ -104,14 +112,12 @@ class _LandscapeInputState extends State<LandscapeInput> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    item = 0;
-                  });
+                  model.selected = LandscapeConfigType.manual;
                 },
                 child: _ConfigForm(
                   sectionTitleStyle: sectionTitleStyle,
                   sectionBodyStyle: sectionBodyStyle,
-                  enabled: item == 0,
+                  enabled: model.selected == LandscapeConfigType.manual,
                 ),
               ),
             ),
@@ -124,12 +130,10 @@ class _LandscapeInputState extends State<LandscapeInput> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Radio(
-              value: 1,
-              groupValue: item,
+              value: LandscapeConfigType.file,
+              groupValue: model.selected,
               onChanged: (v) {
-                setState(() {
-                  item = v!;
-                });
+                model.selected = v!;
               },
             ),
             const SizedBox(
@@ -138,15 +142,13 @@ class _LandscapeInputState extends State<LandscapeInput> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    item = 1;
-                  });
+                  model.selected = LandscapeConfigType.file;
                 },
                 child: _FileForm(
                   sectionTitleStyle: sectionTitleStyle,
                   sectionBodyStyle: sectionBodyStyle,
+                  enabled: model.selected == LandscapeConfigType.file,
                   txt: txt,
-                  enabled: item == 1,
                 ),
               ),
             ),
@@ -191,7 +193,7 @@ class _ConfigForm extends StatelessWidget {
           decoration: InputDecoration(
             label: const Text('Landscape FQDN'),
             hintText: 'landscape.canonical.com',
-            errorText: model.fqdnError ? 'Invalid URI' : null,
+            errorText: model.fqdnError && enabled ? 'Invalid URI' : null,
           ),
           onChanged: (value) {
             model.fqdn = value;
@@ -252,19 +254,18 @@ class _FileForm extends StatelessWidget {
           height: 16.0,
         ),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: TextField(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'C:\\landscape.conf',
+                  errorText: model.fileError && enabled ? 'Invalid file' : null,
                 ),
                 enabled: enabled,
                 controller: txt,
                 onChanged: (value) {
                   model.path = value;
-                },
-                onEditingComplete: () {
-                  print('finished editing');
                 },
               ),
             ),
