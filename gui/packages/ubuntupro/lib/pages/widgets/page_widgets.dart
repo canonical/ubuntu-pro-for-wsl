@@ -172,8 +172,7 @@ class ColumnLandingPage extends StatelessWidget {
                       onPressed: () async {
                         onBack?.call();
                         if (context.mounted) {
-                          Wizard.of(context).home();
-                          await Wizard.of(context).next();
+                          Wizard.of(context).back();
                         }
                       },
                       child: Text(lang.buttonBack),
