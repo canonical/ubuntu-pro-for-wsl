@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
@@ -23,6 +24,8 @@ type Service struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
 	running chan struct{}
+
+	disabled atomic.Bool
 
 	db   *database.DistroDB
 	conf Config
@@ -91,13 +94,17 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 // Connect starts the connection and starts talking to the server.
 // Call Stop to deallocate resources.
 func (s *Service) Connect() (err error) {
-	defer decorate.OnError(&err, "could not connect to Landscape server")
-
 	if s.connected() {
-		return errors.New("already connected")
+		return errors.New("could not connect to Landscape server: already connected")
 	}
 
-	return s.keepConnected()
+	if err := s.keepConnected(); errors.Is(err, noConfigError{}) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // keepConnected supervises the connection. It attempts connecting before returning.
@@ -121,30 +128,33 @@ func (s *Service) keepConnected() error {
 
 		for {
 			err := func() error {
-				cooldown := time.NewTimer(wait)
-				defer cooldown.Stop()
+				var waitCh <-chan time.Time
 
-				// Waiting before reconnecting
-				if wait > minWait {
-					log.Infof(s.ctx, "Landscape will attempt to connect in %s", wait)
+				if !s.disabled.Load() {
+					cooldown := time.NewTimer(wait)
+					defer cooldown.Stop()
+					waitCh = cooldown.C
+					if wait > minWait {
+						log.Infof(s.ctx, "Landscape will attempt to connect in %s", wait)
+					}
 				}
 
 				select {
 				case <-s.ctx.Done():
 					return s.ctx.Err()
 				case <-s.connRetrier.Await():
-				case <-cooldown.C:
+				case <-waitCh:
 					// We use the cooldown to see if the connection is long-lived.
 					// Short-lived connections will be considered a failure.
 					// This avoids spamming the server with short-lived connections.
-					cooldown.Stop()
-					cooldown.Reset(wait)
+					cooldown := time.NewTimer(wait)
+					defer cooldown.Stop()
+					waitCh = cooldown.C
 				}
 
 				// Retrial petitions are all satisfied.
 				s.connRetrier.Reset()
 
-				log.Info(s.ctx, "Landscape: connecting")
 				connectionDone, err := s.connectOnce(s.ctx)
 
 				if first {
@@ -159,6 +169,7 @@ func (s *Service) keepConnected() error {
 				}
 
 				log.Info(s.ctx, "Landscape: connected")
+				s.disabled.Store(false)
 
 				select {
 				case <-s.ctx.Done():
@@ -167,9 +178,11 @@ func (s *Service) keepConnected() error {
 					log.Info(s.ctx, "Landscape: reconnection requested")
 					s.disconnect()
 				case <-connectionDone:
-					if cooldown.Stop() {
+					select {
+					case <-waitCh:
 						// Connection was dropped so fast we'll consider it a failure.
 						return errors.New("connection dropped unexpectedly")
+					default:
 					}
 					log.Warningf(s.ctx, "Landscape: connection dropped unexpectedly")
 				}
@@ -182,6 +195,17 @@ func (s *Service) keepConnected() error {
 				log.Info(s.ctx, "Landscape: stopped by context")
 				return
 			default:
+			}
+
+			if target := (noConfigError{}); errors.As(err, &target) {
+				if s.disabled.Load() {
+					// "Landscape: service disabled" already logged.
+					continue
+				}
+				// We only log this once.
+				log.Infof(s.ctx, "Landscape: service disabled: %v", target)
+				s.disabled.Store(true)
+				continue
 			}
 
 			if err != nil {
@@ -210,14 +234,6 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 	if s.conn != nil {
 		s.conn.disconnect()
 		s.conn = nil
-	}
-
-	_, src, err := s.conf.Subscription()
-	if err != nil {
-		return nil, fmt.Errorf("skipping connection: could not obtain Ubuntu Pro token: %v", err)
-	}
-	if src == config.SourceNone {
-		return nil, errors.New("skipping connection: no Ubuntu Pro token provided")
 	}
 
 	conn, err := newConnection(ctx, s)
@@ -279,7 +295,7 @@ func (s *Service) reconnectIfNewSettings(ctx context.Context) {
 	}()
 
 	hostagentConf, err := newLandscapeHostConf(s.conf)
-	if err != nil {
+	if err != nil && !errors.Is(err, noConfigError{}) {
 		log.Warningf(ctx, "Landscape: config monitor: %v", err)
 		return
 	}
@@ -350,4 +366,8 @@ func (s *Service) sendInfo(info *landscapeapi.HostAgentInfo) error {
 	defer s.connMu.RUnlock()
 
 	return s.conn.sendInfo(info)
+}
+
+func (s *Service) isDisabled() bool {
+	return s.disabled.Load()
 }

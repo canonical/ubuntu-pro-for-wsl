@@ -18,6 +18,7 @@ type serviceData interface {
 
 // serviceConn is an internal interface to manage the connection to the Landscape service.
 type serviceConn interface {
+	isDisabled() bool
 	connected() bool
 	reconnect()
 	connDone() <-chan struct{}
