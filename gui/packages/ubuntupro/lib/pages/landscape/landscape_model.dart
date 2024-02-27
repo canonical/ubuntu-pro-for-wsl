@@ -85,12 +85,7 @@ class LandscapeModel extends ChangeNotifier {
         throw UnimplementedError('Unknown configuration status');
     }
 
-    final subscriptionInfo = await client.subscriptionInfo();
-    final subscriptionType = subscriptionInfo.whichSubscriptionType();
-    return ![
-      SubscriptionInfo_SubscriptionType.none,
-      SubscriptionInfo_SubscriptionType.notSet,
-    ].contains(subscriptionType);
+    return true;
   }
 
   Future<void> applyLandscapeConfig() async {
