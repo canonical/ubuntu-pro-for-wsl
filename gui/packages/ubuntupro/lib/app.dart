@@ -53,6 +53,9 @@ class Pro4WSLApp extends StatelessWidget {
                       // never skip this page.
                       return true;
                     },
+                    onBack: (settings) {
+                      return Routes.subscribeNow;
+                    },
                   ),
                 },
               );
