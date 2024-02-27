@@ -98,6 +98,7 @@ class ColumnLandingPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(32.0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IntrinsicHeight(
                   child: Row(
@@ -169,7 +170,8 @@ class ColumnLandingPage extends StatelessWidget {
                       onPressed: () async {
                         onBack?.call();
                         if (context.mounted) {
-                          Wizard.of(context).back();
+                          Wizard.of(context).home();
+                          await Wizard.of(context).next();
                         }
                       },
                       child: const Text('Back'),
