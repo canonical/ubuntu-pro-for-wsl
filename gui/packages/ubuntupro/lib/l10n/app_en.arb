@@ -60,5 +60,19 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "landscapeQuickSetup": "Quick Setup (Recommended)",
+    "landscapeQuickSetupHint": "Provide your Landscape enrollment information",
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "landscapeFQDNError": "Invalid URI",
+    "landscapeAccountNameLabel": "Landscape Account Name",
+    "landscapeKeyLabel": "Registration Key",
+    "landscapeCustomSetup": "Custom Configuration",
+    "landscapeCustomSetupHint": "Load a custom client configuration file",
+    "landscapeFileError": "Invalid file",
+    "landscapeFilePicker": "Select file...",
+
+    "buttonNext": "Continue",
+    "buttonSkip": "Skip",
+    "buttonBack": "Back"
 }
