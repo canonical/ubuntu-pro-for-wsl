@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"context"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -81,7 +82,7 @@ func TestSubscription(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
@@ -137,7 +138,7 @@ func TestLandscapeConfig(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
@@ -187,7 +188,7 @@ func TestLandscapeAgentUID(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
 			if tc.breakFileContents {
 				err := os.WriteFile(filepath.Join(dir, "config"), []byte("\tmessage:\n\t\tthis is not YAML!["), 0600)
 				require.NoError(t, err, "Setup: could not re-write config file")
@@ -248,7 +249,7 @@ func TestProvisioningTasks(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, false)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, false, false)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
@@ -278,9 +279,10 @@ func TestSetUserSubscription(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		settingsState settingsState
-		breakFile     bool
-		emptyToken    bool
+		settingsState   settingsState
+		breakFile       bool
+		cannotWriteFile bool
+		emptyToken      bool
 
 		want      string
 		wantError bool
@@ -290,6 +292,7 @@ func TestSetUserSubscription(t *testing.T) {
 
 		"Error when there is a store token active": {settingsState: storeTokenHasValue, wantError: true},
 		"Error when the file cannot be opened":     {settingsState: fileExists, breakFile: true, wantError: true},
+		"Error when the file cannot be written":    {settingsState: fileExists, cannotWriteFile: true, wantError: true},
 	}
 
 	//nolint:dupl // This is mostly duplicate with TestSetStoreConfig but de-duplicating with a meta-test worsens readability
@@ -305,7 +308,7 @@ func TestSetUserSubscription(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, tc.cannotWriteFile)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
@@ -352,9 +355,10 @@ func TestSetStoreSubscription(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		settingsState settingsState
-		breakFile     bool
-		emptyToken    bool
+		settingsState   settingsState
+		breakFile       bool
+		cannotWriteFile bool
+		emptyToken      bool
 
 		want      string
 		wantError bool
@@ -363,7 +367,8 @@ func TestSetStoreSubscription(t *testing.T) {
 		"Success disabling a subscription": {settingsState: storeTokenHasValue, emptyToken: true, want: ""},
 		"Success overriding an existing store token": {settingsState: storeTokenHasValue, want: "new_token"},
 
-		"Error when the file cannot be opened": {settingsState: fileExists, breakFile: true, wantError: true},
+		"Error when the file cannot be opened":  {settingsState: fileExists, breakFile: true, wantError: true},
+		"Error when the file cannot be written": {settingsState: fileExists, cannotWriteFile: true, wantError: true},
 	}
 
 	//nolint:dupl // This is mostly duplicate with TestSetUserConfig but de-duplicating with a meta-test worsens readability
@@ -379,7 +384,7 @@ func TestSetStoreSubscription(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, tc.cannotWriteFile)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
@@ -426,9 +431,10 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		settingsState settingsState
-		emptyUID      bool
-		breakFile     bool
+		settingsState   settingsState
+		emptyUID        bool
+		breakFile       bool
+		cannotWriteFile bool
 
 		want      string
 		wantError bool
@@ -438,7 +444,8 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 		"Success when the file does not exist":            {settingsState: untouched, want: "new_uid"},
 		"Success when the pro token field does not exist": {settingsState: fileExists, want: "new_uid"},
 
-		"Error when the file cannot be opened": {settingsState: landscapeUIDHasValue, breakFile: true, want: "landscapeUID1234", wantError: true},
+		"Error when the file cannot be opened":  {settingsState: landscapeUIDHasValue, breakFile: true, want: "landscapeUID1234", wantError: true},
+		"Error when the file cannot be written": {settingsState: fileExists, cannotWriteFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -453,7 +460,7 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, tc.cannotWriteFile)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
@@ -522,7 +529,7 @@ func TestUpdateRegistryData(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			_, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile)
+			_, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile, false)
 			c := config.New(ctx, dir)
 
 			var calledUbuntuProNotifier int
@@ -670,7 +677,7 @@ func (state settingsState) is(flag settingsState) bool {
 }
 
 //nolint:revive // testing.T always first!
-func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB, state settingsState, fileBroken bool) (func(*testing.T, *config.Config), string) {
+func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB, state settingsState, fileBroken, fileCannotWrite bool) (func(*testing.T, *config.Config), string) {
 	t.Helper()
 
 	// Sets up the config
@@ -700,8 +707,12 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 
 	// Mock file config
 	cacheDir := t.TempDir()
+	var filemode fs.FileMode = 0600
+	if fileCannotWrite {
+		filemode = 0444 // read-only
+	}
 	if fileBroken {
-		err := os.MkdirAll(filepath.Join(cacheDir, "config"), 0600)
+		err := os.MkdirAll(filepath.Join(cacheDir, "config"), filemode)
 		require.NoError(t, err, "Setup: could not create directory to interfere with config")
 		return setupConfig, cacheDir
 	}
@@ -749,7 +760,7 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 	out, err := yaml.Marshal(fileData)
 	require.NoError(t, err, "Setup: could not marshal fake config")
 
-	err = os.WriteFile(filepath.Join(cacheDir, "config"), out, 0600)
+	err = os.WriteFile(filepath.Join(cacheDir, "config"), out, filemode)
 	require.NoError(t, err, "Setup: could not write config file")
 
 	return setupConfig, cacheDir
