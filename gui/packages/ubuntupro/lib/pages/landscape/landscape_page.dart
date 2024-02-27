@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
 import '/pages/widgets/page_widgets.dart';
@@ -35,13 +36,13 @@ class LandscapePage extends StatelessWidget {
     return ColumnLandingPage(
       svgAsset: 'assets/Landscape-tag.svg',
       title: 'Landscape',
-      onNext: () async {
-        if (!model.validConfig()) {
-          return false;
-        }
-        final success = await model.applyConfig();
-        return success;
-      },
+      onNext: !(model.fqdnError || model.fileError != FileError.none)
+          ? () async {
+              if (await model.applyConfig() && context.mounted) {
+                await Wizard.of(context).next();
+              }
+            }
+          : null,
       leftChildren: [
         MarkdownBody(
           data: lang

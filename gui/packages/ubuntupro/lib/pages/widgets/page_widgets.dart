@@ -79,7 +79,7 @@ class ColumnLandingPage extends StatelessWidget {
   final String svgAsset;
   final String title;
 
-  final Future<bool> Function()? onNext;
+  final void Function()? onNext;
   final void Function()? onSkip;
   final void Function()? onBack;
 
@@ -192,13 +192,7 @@ class ColumnLandingPage extends StatelessWidget {
                           width: 16.0,
                         ),
                         FilledButton(
-                          onPressed: () async {
-                            final success = await onNext?.call();
-                            if (!success!) return;
-                            if (context.mounted) {
-                              await Wizard.of(context).next();
-                            }
-                          },
+                          onPressed: onNext,
                           style: Theme.of(context)
                               .filledButtonTheme
                               .style
