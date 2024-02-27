@@ -27,7 +27,7 @@ class LandscapeModel extends ChangeNotifier {
   FileError get fileError => _fileError;
 
   set fqdn(String value) {
-    if (!value.startsWith('https://')) {
+    if (value.isNotEmpty && !value.startsWith('https://')) {
       value = 'https://$value';
     }
     _fqdn = value;
@@ -36,6 +36,9 @@ class LandscapeModel extends ChangeNotifier {
 
   set selected(LandscapeConfigType value) {
     _selected = value;
+    _fqdnError = false;
+    _fileError = FileError.none;
+    validConfig();
     notifyListeners();
   }
 
