@@ -265,8 +265,8 @@ class _FileForm extends StatelessWidget {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'C:\\landscape.conf',
-                  errorText: model.fileError && enabled
-                      ? lang.landscapeFileError
+                  errorText: model.fileError != FileError.none && enabled
+                      ? model.fileError.localize(lang)
                       : null,
                 ),
                 enabled: enabled,
@@ -296,5 +296,20 @@ class _FileForm extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+extension FileErrorl10n on FileError {
+  String localize(AppLocalizations lang) {
+    switch (this) {
+      case FileError.empty:
+        return lang.landscapeFileEmpty;
+      case FileError.notFound:
+        return lang.landscapeFileNotFound;
+      case FileError.tooLarge:
+        return lang.landscapeFileTooLarge;
+      default:
+        throw UnimplementedError(toString());
+    }
   }
 }
