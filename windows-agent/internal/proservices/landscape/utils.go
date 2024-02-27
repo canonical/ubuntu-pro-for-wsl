@@ -173,11 +173,11 @@ func newLandscapeHostConf(config Config) (conf landscapeHostConf, err error) {
 		return landscapeHostConf{}, noConfigError{missing: "Host URL"}
 	}
 
-	k, err := sec.GetKey("url")
+	urlKey, err := sec.GetKey("url")
 	if err != nil {
 		return landscapeHostConf{}, noConfigError{missing: "Host URL"}
 	}
-	conf.hostagentURL = k.String()
+	conf.hostagentURL = urlKey.String()
 
 	return conf, nil
 }
