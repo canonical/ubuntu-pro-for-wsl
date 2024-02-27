@@ -10,7 +10,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
 	"github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro/contracts"
 	"github.com/stretchr/testify/require"
 )
 

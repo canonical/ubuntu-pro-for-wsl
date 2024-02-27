@@ -10,17 +10,17 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/contracts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro/contracts"
 	"github.com/ubuntu/decorate"
 )
 
 // Config is a provider for the subcription configuration.
 type Config interface {
-	SetUserSubscription(token string) error
+	SetUserSubscription(ctx context.Context, token string) error
+	SetStoreSubscription(ctx context.Context, token string) error
 	Subscription() (string, config.Source, error)
-	FetchMicrosoftStoreSubscription(context.Context, ...contracts.Option) error
 }
 
 // Service it the UI GRPC service implementation.
@@ -28,16 +28,20 @@ type Service struct {
 	db     *database.DistroDB
 	config Config
 
+	// contractsArgs allows for overriding the contract server's behaviour.
+	contractsArgs []contracts.Option
+
 	agentapi.UnimplementedUIServer
 }
 
 // New returns a new service handling the UI API.
-func New(ctx context.Context, config Config, db *database.DistroDB) (s Service) {
+func New(ctx context.Context, config Config, db *database.DistroDB, args ...contracts.Option) (s Service) {
 	log.Debug(ctx, "Building gRPC UI service")
 
 	return Service{
-		db:     db,
-		config: config,
+		db:            db,
+		config:        config,
+		contractsArgs: args,
 	}
 }
 
@@ -49,13 +53,8 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.GetToken()
 	log.Infof(ctx, "UI service: received token %s", common.Obfuscate(token))
 
-	if err := s.config.SetUserSubscription(token); err != nil {
+	if err := s.config.SetUserSubscription(ctx, token); err != nil {
 		return nil, err
-	}
-
-	distros := s.db.GetAll()
-	for _, d := range distros {
-		err = errors.Join(err, d.SubmitTasks(tasks.ProAttachment{Token: token}))
 	}
 
 	if err != nil {
@@ -120,7 +119,7 @@ func (s *Service) getSubscriptionInfo() (*agentapi.SubscriptionInfo, error) {
 func (s *Service) NotifyPurchase(ctx context.Context, empty *agentapi.Empty) (info *agentapi.SubscriptionInfo, errs error) {
 	log.Info(ctx, "UI service: received NotifyPurchase message")
 
-	if err := s.config.FetchMicrosoftStoreSubscription(ctx); err != nil {
+	if err := ubuntupro.FetchFromMicrosoftStore(ctx, s.config, s.db, s.contractsArgs...); err != nil {
 		log.Warningf(ctx, "UI service: NotifyPurchase: %v", err)
 		errs = errors.Join(errs, err)
 	}

@@ -121,10 +121,9 @@ func TestConnect(t *testing.T) {
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p)
 			defer lis.Close()
 
-			conf := newMockConfig(ctx)
-			defer conf.Stop()
-
-			conf.proToken = "TOKEN"
+			conf := &mockConfig{
+				proToken: "TOKEN",
+			}
 
 			// We trigger an error on first-contact SendUpdatedInfo by erroring out in conf.ProToken()
 			conf.proTokenErr = tc.tokenErr
@@ -248,11 +247,10 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
 
-			conf := newMockConfig(ctx)
-			defer conf.Stop()
-
-			conf.proToken = "TOKEN"
-			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr())
+			conf := &mockConfig{
+				proToken:              "TOKEN",
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+			}
 
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
@@ -444,11 +442,10 @@ func TestAutoReconnection(t *testing.T) {
 			defer lis.Close()
 			defer server.Stop()
 
-			conf := newMockConfig(ctx)
-			defer conf.Stop()
-
-			conf.proToken = "TOKEN"
-			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr())
+			conf := &mockConfig{
+				proToken:              "TOKEN",
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+			}
 
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
@@ -597,7 +594,7 @@ func TestReconnect(t *testing.T) {
 		c.landscapeClientConfig = strings.ReplaceAll(c.landscapeClientConfig, "127.0.0.1", "localhost")
 		c.mu.Unlock()
 
-		c.triggerNotifications()
+		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
 	}
 
 	changeCertificate := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
@@ -610,7 +607,15 @@ func TestReconnect(t *testing.T) {
 		c.landscapeClientConfig = strings.Replace(c.landscapeClientConfig, from, to, 1)
 		c.mu.Unlock()
 
-		c.triggerNotifications()
+		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
+	}
+
+	changeProToken := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		c.mu.Lock()
+		c.proToken = ""
+		c.mu.Unlock()
+
+		s.NotifyUbuntuProUpdate(ctx, c.proToken)
 	}
 	// TODO:Remove this silly assignment when Landscape server start supporting gRPC over TLS.
 	_ = changeCertificate
@@ -620,21 +625,23 @@ func TestReconnect(t *testing.T) {
 		c.landscapeClientConfig = c.landscapeClientConfig + "\n[exta]\ninfo=this section does not matter"
 		c.mu.Unlock()
 
-		c.triggerNotifications()
+		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
 	}
 
 	testCases := map[string]struct {
 		useCertificate bool
 		trigger        func(context.Context, *landscape.Service, *mockConfig)
 
-		wantNoReconnect       bool
-		wantImmediateRconnect bool
+		wantNoReconnect        bool
+		wantImmediateReconnect bool
 	}{
-		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateRconnect: true},
+		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateReconnect: true},
 		"Reconnect when changing the URL":                     {trigger: changeAddress},
 		// TODO: Re-enable this test case when Landscape server start supporting gRPC over TLS.
 		// "Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
-		"Don't reconnect when changing irrelevant config": {trigger: changeIrrelevant, wantNoReconnect: true},
+
+		"Don't reconnect when changing irrelevant config":    {trigger: changeIrrelevant, wantNoReconnect: true},
+		"Don't reconnect when removing the Ubuntu Pro token": {trigger: changeProToken, wantNoReconnect: true},
 	}
 
 	for name, tc := range testCases {
@@ -659,11 +666,10 @@ func TestReconnect(t *testing.T) {
 
 			lis, server, mockServerService := setUpLandscapeMock(t, ctx, "localhost:", certPath)
 
-			conf := newMockConfig(ctx)
-			defer conf.Stop()
-
-			conf.proToken = "TOKEN"
-			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr())
+			conf := &mockConfig{
+				proToken:              "TOKEN",
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr()),
+			}
 
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
@@ -697,7 +703,7 @@ func TestReconnect(t *testing.T) {
 			}
 			require.True(t, ok, "Client should have disconnected")
 
-			if tc.wantImmediateRconnect {
+			if tc.wantImmediateReconnect {
 				require.True(t, service.Connected(), "Client should have connected before returning")
 				return
 			}
@@ -772,9 +778,6 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 }
 
 type mockConfig struct {
-	ctx    context.Context
-	cancel func()
-
 	proToken              string
 	landscapeClientConfig string
 	landscapeAgentUID     string
@@ -784,28 +787,7 @@ type mockConfig struct {
 	landscapeUIDErr    bool
 	setLandscapeUIDErr bool
 
-	callbacks []func()
-	wg        sync.WaitGroup
-
 	mu sync.Mutex
-}
-
-func newMockConfig(ctx context.Context) *mockConfig {
-	ctx, cancel := context.WithCancel(ctx)
-
-	return &mockConfig{
-		ctx:    ctx,
-		cancel: cancel,
-	}
-}
-
-func (m *mockConfig) Stop() {
-	m.cancel()
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.wg.Wait()
 }
 
 func (m *mockConfig) LandscapeClientConfig() (string, config.Source, error) {
@@ -853,33 +835,6 @@ func (m *mockConfig) SetLandscapeAgentUID(uid string) error {
 		return errors.New("Mock error")
 	}
 
-	defer m.triggerNotifications()
-
 	m.landscapeAgentUID = uid
 	return nil
-}
-
-func (m *mockConfig) Notify(f func()) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.callbacks = append(m.callbacks, f)
-}
-
-func (m *mockConfig) triggerNotifications() {
-	for _, f := range m.callbacks {
-		m.wg.Add(1)
-		f := f
-		go func() {
-			defer m.wg.Done()
-
-			select {
-			case <-m.ctx.Done():
-				return
-			default:
-			}
-
-			f()
-		}()
-	}
 }
