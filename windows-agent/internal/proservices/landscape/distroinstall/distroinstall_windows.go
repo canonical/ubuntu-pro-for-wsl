@@ -23,7 +23,8 @@ func executableInstallCommand(ctx context.Context, executable string) (out []byt
 	// We need to use powershell because the Appx executable is not in the path
 	cmd := exec.CommandContext(ctx, "powershell.exe",
 		"-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
-		executable, "install", "--root", "--ui=none")
+		executable, "install", "--root")
+	cmd.Env = append(cmd.Env, "WSL_UTF8=1")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow:    true,
 		CreationFlags: createNoWindow,

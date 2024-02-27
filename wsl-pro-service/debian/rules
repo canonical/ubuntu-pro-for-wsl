@@ -14,7 +14,7 @@ export GOTOOLCHAIN := local
 	dh $@ --builddirectory=_build --with=apport
 
 execute_after_dh_auto_clean:
-	[ -d vendor/ ] || ( ./debian/update-internal-dependencies && go mod vendor )
+	[ -d vendor/ ] || ( ./debian/update-internal-dependencies && GOWORK=off go mod vendor )
 
 override_dh_auto_install:
 	dh_auto_install -- --no-source
