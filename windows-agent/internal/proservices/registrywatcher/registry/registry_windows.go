@@ -16,7 +16,7 @@ type Windows struct{}
 
 // HKCUOpenKey opens a key in the specified path under the HK_CURRENT_USER registry with read permissions.
 func (Windows) HKCUOpenKey(path string) (Key, error) {
-	key, err := registry.OpenKey(registry.CURRENT_USER, path, registry.READ)
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.READ)
 	if errors.Is(err, registry.ErrNotExist) {
 		return 0, ErrKeyNotExist
 	}
