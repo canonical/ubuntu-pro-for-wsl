@@ -91,8 +91,9 @@ func TestConnect(t *testing.T) {
 
 		// These tests are for the error cases when the error is logged but not returned
 		"Silent error when the config is empty":                   {wantNotConnected: true},
-		"Silent error when the landscape URL cannot be retrieved": {wantNotConnected: true},
-		"Silent error when there is no Ubuntu Pro token":          {emptyToken: true, wantNotConnected: true},
+		"Silent error when the landscape URL is missing":          {wantNotConnected: true},
+		"Silent error when the landscape host section is missing": {wantNotConnected: true},
+		"Silent error when the Ubuntu Pro token is missing":       {emptyToken: true, wantNotConnected: true},
 
 		"Error when the context is cancelled before Connected": {precancelContext: true, wantErr: true},
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
@@ -186,7 +187,20 @@ func TestConnect(t *testing.T) {
 			defer service.Stop(ctx)
 
 			if tc.wantNotConnected {
+				// Service is disabled due to missing configuration
 				require.False(t, service.Connected(), "Connected should have returned false")
+				time.Sleep(10 * time.Second)
+
+				err = service.Controller().SendUpdatedInfo(ctx)
+				require.NoError(t, err, "SendUpdatedInfo should fail silently when the service is disabled")
+				time.Sleep(10 * time.Second)
+				require.False(t, service.Connected(), "SendUpdatedInfo should not reconnect when the service is disabled")
+
+				ok := service.Controller().Reconnect(ctx)
+				require.False(t, ok, "Reconnect not succeed when the service is disabled")
+				time.Sleep(10 * time.Second)
+				require.False(t, service.Connected(), "SendUpdatedInfo should not reconnect when the service is disabled")
+
 				return
 			}
 			require.True(t, service.Connected(), "Connected should have returned false after succeeding to connect")
@@ -194,6 +208,9 @@ func TestConnect(t *testing.T) {
 			require.Eventually(t, func() bool {
 				return len(mockService.MessageLog()) > 0
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a message from the client")
+
+			err = service.Connect()
+			require.Error(t, err, "Connect should return an error when already connected")
 
 			service.Stop(ctx)
 			require.NotPanics(t, func() { service.Stop(ctx) }, "Stop should not panic, even when called twice")
