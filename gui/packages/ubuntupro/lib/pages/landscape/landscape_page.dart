@@ -173,16 +173,17 @@ class _ConfigForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<LandscapeModel>();
+    final lang = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Setup (Recommended)',
+          lang.landscapeQuickSetup,
           style: sectionTitleStyle,
         ),
         Text(
-          'Provide your Landscape enrollment information',
+          lang.landscapeQuickSetupHint,
           style: sectionBodyStyle,
         ),
         const SizedBox(
@@ -191,9 +192,10 @@ class _ConfigForm extends StatelessWidget {
         TextField(
           enabled: enabled,
           decoration: InputDecoration(
-            label: const Text('Landscape FQDN'),
+            label: Text(lang.landscapeFQDNLabel),
             hintText: 'landscape.canonical.com',
-            errorText: model.fqdnError && enabled ? 'Invalid URI' : null,
+            errorText:
+                model.fqdnError && enabled ? lang.landscapeFQDNError : null,
           ),
           onChanged: (value) {
             model.fqdn = value;
@@ -204,8 +206,8 @@ class _ConfigForm extends StatelessWidget {
         ),
         TextField(
           enabled: enabled,
-          decoration: const InputDecoration(
-            label: Text('Landscape Account Name'),
+          decoration: InputDecoration(
+            label: Text(lang.landscapeAccountNameLabel),
             hintText: 'standalone',
           ),
         ),
@@ -214,8 +216,8 @@ class _ConfigForm extends StatelessWidget {
         ),
         TextField(
           enabled: enabled,
-          decoration: const InputDecoration(
-            label: Text('Registration Key'),
+          decoration: InputDecoration(
+            label: Text(lang.landscapeKeyLabel),
             hintText: '123456',
           ),
         ),
@@ -240,16 +242,19 @@ class _FileForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<LandscapeModel>();
+    final lang = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Custom Configuration',
+          lang.landscapeCustomSetup,
           style: sectionTitleStyle,
         ),
-        Text('Load a custom client configuration file',
-            style: sectionBodyStyle),
+        Text(
+          lang.landscapeCustomSetupHint,
+          style: sectionBodyStyle,
+        ),
         const SizedBox(
           height: 16.0,
         ),
@@ -260,7 +265,9 @@ class _FileForm extends StatelessWidget {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'C:\\landscape.conf',
-                  errorText: model.fileError && enabled ? 'Invalid file' : null,
+                  errorText: model.fileError && enabled
+                      ? lang.landscapeFileError
+                      : null,
                 ),
                 enabled: enabled,
                 controller: txt,
@@ -283,10 +290,10 @@ class _FileForm extends StatelessWidget {
                       }
                     }
                   : null,
-              child: const Text('Select file...'),
+              child: Text(lang.landscapeFilePicker),
             ),
           ],
-        )
+        ),
       ],
     );
   }

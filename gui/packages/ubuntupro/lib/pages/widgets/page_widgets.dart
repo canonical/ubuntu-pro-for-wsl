@@ -85,6 +85,8 @@ class ColumnLandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context);
+
     return Pro4WSLPage(
       body: Stack(
         fit: StackFit.expand,
@@ -174,7 +176,7 @@ class ColumnLandingPage extends StatelessWidget {
                           await Wizard.of(context).next();
                         }
                       },
-                      child: const Text('Back'),
+                      child: Text(lang.buttonBack),
                     ),
                     Row(
                       children: [
@@ -185,7 +187,7 @@ class ColumnLandingPage extends StatelessWidget {
                               await Wizard.of(context).next();
                             }
                           },
-                          child: const Text('Skip'),
+                          child: Text(lang.buttonSkip),
                         ),
                         const SizedBox(
                           width: 16.0,
@@ -206,7 +208,7 @@ class ColumnLandingPage extends StatelessWidget {
                                   YaruColors.dark.success,
                                 ),
                               ),
-                          child: const Text('Continue'),
+                          child: Text(lang.buttonNext),
                         ),
                       ],
                     ),
