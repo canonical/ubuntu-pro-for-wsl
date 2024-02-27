@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:agentapi/agentapi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '/core/agent_api_client.dart';
 
 enum LandscapeConfigType { manual, file }
+enum FileError { notFound, tooLarge, empty, none }
 
 class LandscapeModel extends ChangeNotifier {
   LandscapeModel(this.client);
@@ -20,8 +20,11 @@ class LandscapeModel extends ChangeNotifier {
   String accountName = 'standalone';
   String key = '';
 
-  bool fqdnError = false;
-  bool fileError = false;
+  bool _fqdnError = false;
+  FileError _fileError = FileError.none;
+
+  bool get fqdnError => _fqdnError;
+  FileError get fileError => _fileError;
 
   set fqdn(String value) {
     if (!value.startsWith('https://')) {
@@ -46,15 +49,25 @@ class LandscapeModel extends ChangeNotifier {
   }
 
   bool validateFQDN() {
-    fqdnError = _fqdn.isEmpty || Uri.tryParse(_fqdn) == null;
+    _fqdnError = _fqdn.isEmpty || Uri.tryParse(_fqdn) == null;
     notifyListeners();
     return !fqdnError;
   }
 
   bool validatePath() {
-    fileError = _path.isEmpty || !File(_path).existsSync();
+    final file = File(_path);
+    final fileStat = file.statSync();
+    if (_path.isEmpty) {
+      _fileError = FileError.empty;
+    } else if (fileStat.size >= 1024 * 1024) {
+      _fileError = FileError.tooLarge;
+    } else if (fileStat.type == FileSystemEntityType.notFound) {
+      _fileError = FileError.notFound;
+    } else {
+      _fileError = FileError.none;
+    }
     notifyListeners();
-    return !fileError;
+    return fileError == FileError.none;
   }
 
   bool validConfig() {
