@@ -53,7 +53,7 @@
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
-    "landscapeHeading": "You can make your Ubuntu instances remotely with {landscapeLink}.",
+    "landscapeHeading": "You can manage your Ubuntu instances remotely with {landscapeLink}.",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
