@@ -11,14 +11,6 @@ import 'landscape_model_test.mocks.dart';
 @GenerateMocks([AgentApiClient])
 void main() {
   group('landscape config', () {
-    const pluginChannel = MethodChannelP4wMsStore.methodChannel;
-    final pluginMessenger =
-        TestWidgetsFlutterBinding.ensureInitialized().defaultBinaryMessenger;
-    // Resets the plugin message handler after each test.
-    tearDown(() {
-      pluginMessenger.setMockMethodCallHandler(pluginChannel, null);
-    });
-
     final client = MockAgentApiClient();
 
     test('default Landscape configuration', () {
