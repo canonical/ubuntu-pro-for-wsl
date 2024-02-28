@@ -5,6 +5,7 @@ package distroinstall
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"syscall"
 
@@ -24,7 +25,7 @@ func executableInstallCommand(ctx context.Context, executable string) (out []byt
 	cmd := exec.CommandContext(ctx, "powershell.exe",
 		"-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
 		executable, "install", "--root")
-	cmd.Env = append(cmd.Env, "WSL_UTF8=1")
+	cmd.Env = append(os.Environ(), "WSL_UTF8=1")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow:    true,
 		CreationFlags: createNoWindow,
