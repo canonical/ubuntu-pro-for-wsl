@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/rand"
 	"path/filepath"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -12,7 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const registryPath = `Software\Canonical\UbuntuPro`
+var validPaths = []string{
+	`Software\Canonical\UbuntuPro`,
+	`Software/Canonical/UbuntuPro`,
+}
 
 // Mock is a fake registry stored in memory.
 type Mock struct {
@@ -137,7 +141,7 @@ func (r *Mock) HKCUOpenKey(path string) (Key, error) {
 func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
 	path = filepath.Clean(path)
 
-	if path != registryPath {
+	if !slices.Contains(validPaths, path) {
 		panic("Attempting to access key outside of UbuntuPro")
 	}
 
