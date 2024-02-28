@@ -13,7 +13,8 @@ import '/pages/widgets/page_widgets.dart';
 import 'landscape_model.dart';
 
 class LandscapePage extends StatelessWidget {
-  const LandscapePage({super.key});
+  const LandscapePage({super.key, required this.onApplyConfig});
+  final void Function() onApplyConfig;
 
   @override
   Widget build(BuildContext context) {
@@ -36,10 +37,12 @@ class LandscapePage extends StatelessWidget {
     return ColumnLandingPage(
       svgAsset: 'assets/Landscape-tag.svg',
       title: 'Landscape',
-      onNext: !(model.fqdnError || model.fileError != FileError.none)
+      onNext: !(model.fqdnError ||
+              model.fileError != FileError.none ||
+              !model.receivedInput)
           ? () async {
               if (await model.applyConfig() && context.mounted) {
-                await Wizard.of(context).next();
+                onApplyConfig();
               }
             }
           : null,
@@ -61,7 +64,8 @@ class LandscapePage extends StatelessWidget {
     final client = getService<AgentApiClient>();
     return ChangeNotifierProvider<LandscapeModel>(
       create: (context) => LandscapeModel(client),
-      child: const LandscapePage(),
+      child:
+          LandscapePage(onApplyConfig: () async => Wizard.of(context).next()),
     );
   }
 }
@@ -265,6 +269,7 @@ class _FileForm extends StatelessWidget {
             Expanded(
               child: TextField(
                 decoration: InputDecoration(
+                  label: Text(lang.landscapeFileLabel),
                   hintText: 'C:\\landscape.conf',
                   errorText: model.fileError != FileError.none && enabled
                       ? model.fileError.localize(lang)

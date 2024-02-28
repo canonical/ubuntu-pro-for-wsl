@@ -69,6 +69,7 @@
     "landscapeKeyLabel": "Registration Key",
     "landscapeCustomSetup": "Custom Configuration",
     "landscapeCustomSetupHint": "Load a custom client configuration file",
+    "landscapeFileLabel": "Config file path",
     "landscapeFileTooLarge": "Configuration file is too large",
     "landscapeFileEmpty": "A path must be specified",
     "landscapeFileNotFound": "File not found",

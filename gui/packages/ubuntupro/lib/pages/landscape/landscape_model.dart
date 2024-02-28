@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '/core/agent_api_client.dart';
 
 enum LandscapeConfigType { manual, file }
+
 enum FileError { notFound, tooLarge, empty, none }
 
 class LandscapeModel extends ChangeNotifier {
@@ -20,17 +21,22 @@ class LandscapeModel extends ChangeNotifier {
   String accountName = 'standalone';
   String key = '';
 
+  bool _receivedInput = false;
+
   bool _fqdnError = false;
   FileError _fileError = FileError.none;
 
   bool get fqdnError => _fqdnError;
   FileError get fileError => _fileError;
 
+  bool get receivedInput => _receivedInput;
+
   set fqdn(String value) {
     if (value.isNotEmpty && !value.startsWith('https://')) {
       value = 'https://$value';
     }
     _fqdn = value;
+    _receivedInput = true;
     validateFQDN();
   }
 
@@ -50,6 +56,7 @@ class LandscapeModel extends ChangeNotifier {
 
   set path(String value) {
     _path = value;
+    _receivedInput = true;
     validatePath();
   }
 

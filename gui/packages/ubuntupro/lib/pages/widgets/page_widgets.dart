@@ -162,7 +162,7 @@ class ColumnLandingPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(
-                  height: 32.0,
+                  height: 16.0,
                 ),
                 // Navigation buttons
                 Row(
