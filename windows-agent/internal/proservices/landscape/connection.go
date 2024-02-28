@@ -181,7 +181,7 @@ func (conn *connection) connected() bool {
 		return false
 	}
 
-	return conn.grpcConn.GetState() == connectivity.Ready
+	return conn.grpcConn.GetState() != connectivity.Shutdown
 }
 
 // disconnect stops the connection and releases resources.

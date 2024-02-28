@@ -244,7 +244,17 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 	connectionDone := make(chan struct{})
 	go func() {
 		defer close(connectionDone)
-		conn.grpcConn.WaitForStateChange(ctx, connectivity.Ready)
+
+		status := connectivity.Ready // Don't do GetState() just in case we already failed.
+		for {
+			conn.grpcConn.WaitForStateChange(ctx, status)
+			status = conn.grpcConn.GetState()
+
+			if status == connectivity.Shutdown {
+				// Connection was closed.
+				break
+			}
+		}
 	}()
 
 	s.conn = conn
