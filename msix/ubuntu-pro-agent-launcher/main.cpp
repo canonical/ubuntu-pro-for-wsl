@@ -30,6 +30,9 @@ std::filesystem::path thisBinaryDir() {
 }
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR pCmdLine, int) try {
+  // Request to restart if closed for installing updates.
+  RegisterApplicationRestart(
+      pCmdLine, RESTART_NO_CRASH | RESTART_NO_HANG | RESTART_NO_REBOOT);
   // setup the app: pipes and console
   up4w::PseudoConsole console{{.X = 80, .Y = 80}};
 
