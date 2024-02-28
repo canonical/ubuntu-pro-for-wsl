@@ -11,6 +11,16 @@ import 'landscape_model_test.mocks.dart';
 void main() {
   group('landscape config', () {
     final client = MockAgentApiClient();
+    final tempDir = Directory.systemTemp;
+    const tempFileName = 'Pro4WSLLandscapeTEMP.conf';
+    final tempFilePath = '${tempDir.path}/$tempFileName';
+
+    tearDown(() async {
+      final file = File(tempFilePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    });
 
     test('default Landscape configuration', () {
       final model = LandscapeModel(client);
@@ -24,6 +34,8 @@ void main() {
       final model = LandscapeModel(client);
       expect(model.fqdnError, isFalse);
       expect(model.fileError, FileError.none);
+      expect(model.receivedInput, isFalse);
+      expect(model.hasError, isTrue);
     });
 
     test('valid FQDN', () {
@@ -31,6 +43,11 @@ void main() {
       model.fqdn = 'example.com';
       expect(model.validateFQDN(), isTrue);
       expect(model.fqdnError, isFalse);
+      expect(model.fqdn, 'https://example.com');
+      model.fqdn = 'https://anotherexample.com';
+      expect(model.validateFQDN(), isTrue);
+      expect(model.fqdnError, isFalse);
+      expect(model.fqdn, 'https://anotherexample.com');
     });
 
     test('invalid fqdn', () {
@@ -40,12 +57,9 @@ void main() {
       expect(model.fqdnError, isTrue);
     });
 
-    const tempFileName = 'Pro4WSLLandscapeTest.conf';
-
     test('valid path', () async {
       final model = LandscapeModel(client);
-      final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/$tempFileName');
+      final tempFile = File(tempFilePath);
       await tempFile.writeAsString('');
       model.path = tempFile.path;
       expect(model.validatePath(), isTrue);
@@ -55,11 +69,15 @@ void main() {
 
     test('invalid path', () async {
       final model = LandscapeModel(client);
-      final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/$tempFileName');
+      final tempFile = File(tempFilePath);
       model.path = tempFile.path;
       expect(model.validatePath(), isFalse);
       expect(model.fileError, FileError.notFound);
+
+      model.path = tempFile.path;
+      await tempFile.writeAsString('.' * (1024 * 1024 + 1));
+      expect(model.validatePath(), isFalse);
+      expect(model.fileError, FileError.tooLarge);
 
       model.path = '';
       expect(model.validatePath(), isFalse);
@@ -74,8 +92,7 @@ void main() {
 
       model.selected = LandscapeConfigType.file;
       expect(model.validConfig(), isFalse);
-      final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/$tempFileName');
+      final tempFile = File(tempFilePath);
       await tempFile.writeAsString('');
       model.path = tempFile.path;
       expect(model.validConfig(), isTrue);
@@ -85,6 +102,47 @@ void main() {
 
       model.selected = LandscapeConfigType.manual;
       expect(model.validConfig(), isFalse);
+    });
+
+    test('valid apply', () async {
+      var model = LandscapeModel(client);
+      model.fqdn = 'example.com';
+      expect(await model.applyConfig(), isTrue);
+
+      model = LandscapeModel(client);
+      model.selected = LandscapeConfigType.file;
+      final tempFile = File(tempFilePath);
+      await tempFile.writeAsString('');
+      model.path = tempFile.path;
+      expect(await model.applyConfig(), isTrue);
+    });
+
+    test('invalid apply', () async {
+      final model = LandscapeModel(client);
+      expect(await model.applyConfig(), isFalse);
+    });
+
+    test('successful apply', () async {
+      var model = LandscapeModel(client);
+      model.fqdn = 'example.com';
+      expect(model.applyManualLandscapeConfig(), completes);
+
+      model = LandscapeModel(client);
+      final tempFile = File(tempFilePath);
+      await tempFile.writeAsString('');
+      model.path = tempFile.path;
+      expect(model.applyLandscapeConfig(), completes);
+    });
+
+    test('unsuccessful apply', () async {
+      var model = LandscapeModel(client);
+      model.fqdn = '::';
+      expect(model.applyManualLandscapeConfig(), throwsA(isA<Exception>()));
+
+      model = LandscapeModel(client);
+      final tempFile = File(tempFilePath);
+      model.path = tempFile.path;
+      expect(model.applyLandscapeConfig(), throwsA(isA<Exception>()));
     });
   });
 }
