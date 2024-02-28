@@ -13,11 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var validPaths = []string{
-	`Software\Canonical\UbuntuPro`,
-	`Software/Canonical/UbuntuPro`,
-}
-
 // Mock is a fake registry stored in memory.
 type Mock struct {
 	// registry contains the registry key database.
@@ -136,6 +131,11 @@ func (r *Mock) RequireNoLeaks(t *testing.T) {
 // HKCUOpenKey mocks opening a key in the specified path under the HK_CURRENT_USER registry.
 func (r *Mock) HKCUOpenKey(path string) (Key, error) {
 	return r.openKey(path, true)
+}
+
+var validPaths = []string{
+	`Software\Canonical\UbuntuPro`,
+	`Software/Canonical/UbuntuPro`,
 }
 
 func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
