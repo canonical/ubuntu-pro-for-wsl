@@ -12,10 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const registryPath = `Software\Canonical\UbuntuPro`
+
 // Mock is a fake registry stored in memory.
 type Mock struct {
 	// registry contains the registry key database.
-	registry map[string]*key
+	ubuntuPro key
 
 	// keyHandles contains the handles to the keys. The Win32API returns void pointers to the
 	// key handles, and we mimic this behaviour so we can fit the interface. The user of this
@@ -37,7 +39,6 @@ type Mock struct {
 // key mocks a registry key.
 type key struct {
 	mu     *sync.RWMutex
-	parent *key
 	data   map[string]string
 	events []Event
 }
@@ -57,11 +58,6 @@ func (r *Mock) notify(k *key) {
 
 	// Reset the list
 	k.events = make([]Event, 0)
-
-	// Notify parents
-	if k.parent != nil {
-		r.notify(k.parent)
-	}
 }
 
 func (r *Mock) setValue(k *key, field, value string) {
@@ -113,13 +109,12 @@ func NewMock() *Mock {
 	// We initialize the root and Software keys, as we consider that to be the minimal
 	// "sane" Windows install.
 	m := &Mock{
-		registry: map[string]*key{filepath.Clean("/"): {
-			data: make(map[string]string),
-			mu:   &sync.RWMutex{},
-		}},
+		ubuntuPro: key{
+			mu:     &sync.RWMutex{},
+			data:   make(map[string]string),
+			events: make([]Event, 0),
+		},
 	}
-
-	m.newKey("/Software")
 
 	m.keyHandles.data = make(map[Key]*keyHandle)
 	m.eventHandles.data = make(map[Event]*eventHandle)
@@ -140,23 +135,18 @@ func (r *Mock) HKCUOpenKey(path string) (Key, error) {
 }
 
 func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
-	path = filepath.Clean("/" + path)
+	path = filepath.Clean(path)
+
+	if path != registryPath {
+		panic("Attempting to access key outside of UbuntuPro")
+	}
 
 	if r.CannotOpen.Load() {
 		return 0, ErrMock
 	}
 
-	k, ok := r.registry[path]
-	if !ok {
-		if readOnly {
-			return 0, ErrKeyNotExist
-		}
-		k = r.newKey(path)
-		r.notify(k.parent)
-	}
-
 	return r.keyHandles.alloc(&keyHandle{
-		key:      k,
+		key:      &r.ubuntuPro,
 		readOnly: readOnly,
 	}), nil
 }
@@ -261,6 +251,11 @@ func (r *Mock) WaitForSingleObject(handle Event) error {
 // HKCUOpenKeyWrite opens a key in the specified path under the HK_CURRENT_USER registry with write permissions.
 // Only tests may use it.
 func (r *Mock) HKCUOpenKeyWrite(path string) (Key, error) {
+	if !testing.Testing() {
+		// Production code must not write to the registry
+		panic("This registry function should be used by tests only")
+	}
+
 	return r.openKey(path, false)
 }
 
@@ -282,30 +277,6 @@ func (r *Mock) WriteValue(ptr Key, field, value string) error {
 	r.setValue(handle.key, field, value)
 
 	return nil
-}
-
-// newKey creates a key at the given path and all its parents.
-func (r *Mock) newKey(path string) *key {
-	// Clean and make abs
-	path = filepath.Clean(path)
-
-	k, ok := r.registry[path]
-	if ok {
-		// Already exists
-		return k
-	}
-
-	parent := r.newKey(filepath.Dir(path))
-
-	k = &key{
-		mu:     &sync.RWMutex{},
-		data:   make(map[string]string),
-		parent: parent,
-	}
-
-	r.registry[path] = k
-
-	return k
 }
 
 func (r *Mock) newEvent(ctx context.Context) Event {
