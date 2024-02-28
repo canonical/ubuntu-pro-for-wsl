@@ -26,6 +26,9 @@ class LandscapeModel extends ChangeNotifier {
   bool _fqdnError = false;
   FileError _fileError = FileError.none;
 
+  bool get hasError =>
+      fqdnError || fileError != FileError.none || !receivedInput;
+
   bool get fqdnError => _fqdnError;
   FileError get fileError => _fileError;
 

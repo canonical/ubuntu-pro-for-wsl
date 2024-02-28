@@ -37,9 +37,7 @@ class LandscapePage extends StatelessWidget {
     return ColumnLandingPage(
       svgAsset: 'assets/Landscape-tag.svg',
       title: 'Landscape',
-      onNext: !(model.fqdnError ||
-              model.fileError != FileError.none ||
-              !model.receivedInput)
+      onNext: !model.hasError
           ? () async {
               if (await model.applyConfig() && context.mounted) {
                 onApplyConfig();

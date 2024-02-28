@@ -89,6 +89,12 @@ class MockLandscapeModel extends _i1.Mock implements _i3.LandscapeModel {
       );
 
   @override
+  bool get hasError => (super.noSuchMethod(
+        Invocation.getter(#hasError),
+        returnValue: false,
+      ) as bool);
+
+  @override
   bool get fqdnError => (super.noSuchMethod(
         Invocation.getter(#fqdnError),
         returnValue: false,

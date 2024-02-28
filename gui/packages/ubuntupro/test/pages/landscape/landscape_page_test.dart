@@ -27,6 +27,7 @@ void main() {
     when(await model.applyConfig()).thenReturn(false);
     when(model.selected).thenReturn(LandscapeConfigType.manual);
     when(model.receivedInput).thenReturn(false);
+    when(model.hasError).thenReturn(false);
 
     final app = buildApp(model);
     await tester.pumpWidget(app);
@@ -47,6 +48,7 @@ void main() {
       when(await model.applyConfig()).thenReturn(false);
       when(model.selected).thenReturn(LandscapeConfigType.manual);
       when(model.receivedInput).thenReturn(false);
+      when(model.hasError).thenReturn(true);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -85,6 +87,7 @@ void main() {
       when(model.receivedInput).thenReturn(true);
       when(await model.applyConfig()).thenReturn(true);
       when(model.selected).thenReturn(LandscapeConfigType.manual);
+      when(model.hasError).thenReturn(false);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -110,6 +113,7 @@ void main() {
         return true;
       });
       when(model.selected).thenReturn(LandscapeConfigType.manual);
+      when(model.hasError).thenReturn(false);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -131,6 +135,7 @@ void main() {
       when(model.fileError).thenReturn(FileError.none);
       when(model.receivedInput).thenReturn(true);
       when(model.selected).thenReturn(LandscapeConfigType.manual);
+      when(model.hasError).thenReturn(true);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -154,6 +159,7 @@ void main() {
       when(model.fileError).thenReturn(FileError.notFound);
       when(model.receivedInput).thenReturn(true);
       when(model.selected).thenReturn(LandscapeConfigType.file);
+      when(model.hasError).thenReturn(true);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
