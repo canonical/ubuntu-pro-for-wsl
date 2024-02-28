@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -31,7 +30,7 @@ type Service struct {
 	db       *database.DistroDB
 }
 
-var registryPath = []string{"Software", "Canonical", "UbuntuPro"}
+const registryPath = `Software\Canonical\UbuntuPro`
 
 // Registry is an interface to the Windows registry.
 type Registry interface {
@@ -142,29 +141,29 @@ func (s *Service) run() {
 			ctx, cancel := context.WithCancel(s.ctx)
 			defer cancel()
 
-			k, path, err := s.openDeepestExistingKey(registryPath)
+			k, err := s.registry.HKCUOpenKey(registryPath)
 			if err != nil {
-				return err
+				return fmt.Errorf(`could not open registry key HKCU\%s: %v`, registryPath, err)
 			}
 			defer s.registry.CloseKey(k)
 
 			// Start to watch
 			event, err := s.registry.RegNotifyChangeKeyValue(k)
 			if err != nil {
-				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, path, err)
+				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, registryPath, err)
 			}
 			defer s.registry.CloseEvent(event)
 
-			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, path)
+			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, registryPath)
 
 			// Push update right after having started to watch
 			s.readThenPushRegistryData(ctx)
 
 			// Wait until the key is modified or the context is cancelled, whichever one happens first
 			if err := s.waitForSingleObject(ctx, event); err != nil {
-				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, path, err)
+				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, registryPath, err)
 			}
-			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, path)
+			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, registryPath)
 
 			return nil
 		}()
@@ -185,33 +184,6 @@ func (s *Service) run() {
 
 		retryRate = minRate
 	}
-}
-
-// openDeepestExistingKey opens the key that is deepest existing key in the tree
-// defined by the path.
-//
-// This intends to solve the problem of 'what if the key does not exist?'.
-// AKA: any default install. The solution is to watch its parent directory,
-// and wait until our key is created.
-func (s *Service) openDeepestExistingKey(registryPath []string) (k registry.Key, path string, err error) {
-	for depth := len(registryPath); depth >= 1; depth-- {
-		//                          ^~~~~~~~~~
-		// We go up to depth 1. Going to depth 0 would watch the entire
-		// registry hive and that is overkill.
-		path = filepath.Join(registryPath[:depth]...)
-
-		k, err = s.registry.HKCUOpenKey(path)
-		if err != nil {
-			if errors.Is(err, registry.ErrKeyNotExist) {
-				continue
-			}
-			break
-		}
-		return k, path, nil
-	}
-
-	// We failed to open a key, or we could not find any key along the path
-	return 0, "", fmt.Errorf(`could not open registry key HKCU\%s: %v`, path, err)
 }
 
 // waitForSingleObject is a utility wrapper around Win32's WaitForSingleObject. It allows
@@ -253,7 +225,7 @@ func (s *Service) readThenPushRegistryData(ctx context.Context) {
 func loadRegistry(reg Registry) (data config.RegistryData, err error) {
 	defer decorate.OnError(&err, "could not read registry")
 
-	k, err := reg.HKCUOpenKey(filepath.Join(registryPath...))
+	k, err := reg.HKCUOpenKey(registryPath)
 	if errors.Is(err, registry.ErrKeyNotExist) {
 		// Default values
 		return data, nil

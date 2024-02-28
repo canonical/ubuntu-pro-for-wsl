@@ -258,11 +258,9 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 		return err
 	}
 
-	func() {
-		c.configState.Subscription.Organization = data.UbuntuProToken
-		if !hasChanged(data.UbuntuProToken, &c.configState.Subscription.Checksum) {
-			return
-		}
+	// Ubuntu Pro subscription
+	c.configState.Subscription.Organization = data.UbuntuProToken
+	if hasChanged(data.UbuntuProToken, &c.configState.Subscription.Checksum) {
 		log.Debug(ctx, "Config: new Ubuntu Pro subscription received from the registry")
 
 		// We must resolve the subscription in case a lower priority token becomes active
@@ -270,15 +268,12 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 		afterUnlock = append(afterUnlock, func() {
 			c.notifyUbuntuPro(ctx, resolv)
 		})
-	}()
+	}
 
-	func() {
-		c.Landscape.OrgConfig = data.LandscapeConfig
-		checksumInput := data.LandscapeConfig + c.Landscape.UID
-		if !hasChanged(checksumInput, &c.Landscape.Checksum) {
-			return
-		}
-
+	// Landscape configuration
+	c.Landscape.OrgConfig = data.LandscapeConfig
+	checksumInput := data.LandscapeConfig + c.Landscape.UID
+	if hasChanged(checksumInput, &c.Landscape.Checksum) {
 		log.Debug(ctx, "Config: new Landscape configuration received from the registry")
 
 		// We must resolve the landscape config in case a lower priority config becomes active
@@ -286,7 +281,7 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 		afterUnlock = append(afterUnlock, func() {
 			c.notifyLandsape(ctx, resolv, c.Landscape.UID)
 		})
-	}()
+	}
 
 	if err := c.dump(); err != nil {
 		return err

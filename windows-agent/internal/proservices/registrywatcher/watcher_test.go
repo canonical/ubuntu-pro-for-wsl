@@ -130,14 +130,6 @@ func TestRegistryWatcher(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create key")
 			defer reg.CloseKey(k)
 
-			if tc.startEmptyRegistry {
-				// Opening the key created it: we should receive an update
-				require.Eventually(t, func() bool { return conf.ReceivedLen() == wantMsgLen },
-					maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config  after creating the key")
-				require.Empty(t, conf.LatestReceived().UbuntuProToken, "Ubuntu Pro token config should have been empty")
-				require.Empty(t, conf.LatestReceived().LandscapeConfig, "Landscape config should have been empty")
-			}
-
 			wantMsgLen = conf.ReceivedLen() + 1
 			err = reg.WriteValue(k, "UbuntuProToken", newProToken)
 			require.NoError(t, err, "Setup: could not write UbuntuProToken into the registry")
