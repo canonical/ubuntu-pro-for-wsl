@@ -63,7 +63,8 @@ class LandscapeModel extends ChangeNotifier {
   String get path => _path;
 
   bool validateFQDN() {
-    _fqdnError = _fqdn.isEmpty || Uri.tryParse(_fqdn) == null;
+    final uri = Uri.tryParse(_fqdn);
+    _fqdnError = _fqdn.isEmpty || uri == null || uri.hasPort;
     notifyListeners();
     return !fqdnError;
   }
