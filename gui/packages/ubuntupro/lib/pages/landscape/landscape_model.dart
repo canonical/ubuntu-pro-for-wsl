@@ -34,6 +34,8 @@ class LandscapeModel extends ChangeNotifier {
     validateFQDN();
   }
 
+  String get fqdn => _fqdn;
+
   set selected(LandscapeConfigType value) {
     _selected = value;
     _fqdnError = false;
@@ -50,6 +52,8 @@ class LandscapeModel extends ChangeNotifier {
     _path = value;
     validatePath();
   }
+
+  String get path => _path;
 
   bool validateFQDN() {
     _fqdnError = _fqdn.isEmpty || Uri.tryParse(_fqdn) == null;

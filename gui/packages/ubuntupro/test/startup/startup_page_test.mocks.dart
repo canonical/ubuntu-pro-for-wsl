@@ -129,6 +129,16 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
       ) as _i5.Future<_i3.SubscriptionInfo>);
 
   @override
+  _i5.Future<void> applyLandscapeConfig(String? config) => (super.noSuchMethod(
+        Invocation.method(
+          #applyLandscapeConfig,
+          [config],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
+
+  @override
   _i5.Future<bool> ping() => (super.noSuchMethod(
         Invocation.method(
           #ping,
