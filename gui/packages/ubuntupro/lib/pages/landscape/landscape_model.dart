@@ -85,17 +85,14 @@ class LandscapeModel extends ChangeNotifier {
   }
 
   bool validConfig() {
-    var valid = false;
     switch (selected) {
       case LandscapeConfigType.manual:
-        valid = validateFQDN();
+        return validateFQDN();
       case LandscapeConfigType.file:
-        valid = validatePath();
+        return validatePath();
       default:
         throw UnimplementedError('Unknown configuration type');
     }
-
-    return valid;
   }
 
   Future<bool> applyConfig() async {
