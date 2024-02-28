@@ -138,6 +138,6 @@ ping_url = $_fqdn/ping
   }
 
   void launchLandscapeWebPage() {
-    launchUrl(Uri.parse('https://ubuntu.com/landscape'));
+    launchUrl(Uri.https('ubuntu.com', '/landscape'));
   }
 }
