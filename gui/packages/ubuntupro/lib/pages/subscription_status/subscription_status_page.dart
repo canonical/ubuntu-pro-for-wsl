@@ -25,27 +25,54 @@ class SubscriptionStatusPage extends StatelessWidget {
       child: switch (model) {
         StoreSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.storeManaged,
-            actionButton: OutlinedButton(
-              onPressed: model.launchManagementWebPage,
-              child: Text(lang.manageSubscription),
-            ),
+            actionButtons: [
+              OutlinedButton(
+                onPressed: () async {
+                  if (context.mounted) {
+                    await Wizard.of(context).next();
+                  }
+                },
+                child: Text(lang.landscapeConfigureButton),
+              ),
+              const SizedBox(
+                width: 16.0,
+              ),
+              OutlinedButton(
+                onPressed: model.launchManagementWebPage,
+                child: Text(lang.manageSubscription),
+              ),
+            ],
           ),
         UserSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.manuallyManaged(
               '[ubuntu.com/pro/dashboard](https://ubuntu.com/pro/dashboard)',
             ),
-            actionButton: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: YaruColors.red,
+            actionButtons: [
+              OutlinedButton(
+                onPressed: () async {
+                  if (context.mounted) {
+                    await Wizard.of(context).next();
+                  }
+                },
+                child: Text(lang.landscapeConfigureButton),
               ),
-              onPressed: () async {
-                await model.detachPro();
-                if (context.mounted) {
-                  Wizard.of(context).back();
-                }
-              },
-              child: Text(lang.detachPro),
-            ),
+              const SizedBox(
+                width: 16.0,
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: YaruColors.red,
+                ),
+                onPressed: () async {
+                  await model.detachPro();
+                  if (context.mounted) {
+                    Wizard.of(context).home();
+                    await Wizard.of(context).next();
+                  }
+                },
+                child: Text(lang.detachPro),
+              ),
+            ],
           ),
         OrgSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.orgManaged,

@@ -25,7 +25,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
 
@@ -169,23 +168,13 @@ class ColumnLandingPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     OutlinedButton(
-                      onPressed: () async {
-                        onBack?.call();
-                        if (context.mounted) {
-                          Wizard.of(context).back();
-                        }
-                      },
+                      onPressed: onBack,
                       child: Text(lang.buttonBack),
                     ),
                     Row(
                       children: [
                         FilledButton(
-                          onPressed: () async {
-                            onSkip?.call();
-                            if (context.mounted) {
-                              await Wizard.of(context).next();
-                            }
-                          },
+                          onPressed: onSkip,
                           child: Text(lang.buttonSkip),
                         ),
                         const SizedBox(

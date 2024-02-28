@@ -74,6 +74,7 @@
     "landscapeFileEmpty": "A path must be specified",
     "landscapeFileNotFound": "File not found",
     "landscapeFilePicker": "Select file...",
+    "landscapeConfigureButton": "Configure Landscape",
 
     "buttonNext": "Continue",
     "buttonSkip": "Skip",

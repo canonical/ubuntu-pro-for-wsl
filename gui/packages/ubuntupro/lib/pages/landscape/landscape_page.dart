@@ -13,8 +13,16 @@ import '/pages/widgets/page_widgets.dart';
 import 'landscape_model.dart';
 
 class LandscapePage extends StatelessWidget {
-  const LandscapePage({super.key, required this.onApplyConfig});
+  const LandscapePage({
+    super.key,
+    required this.onApplyConfig,
+    this.onSkip,
+    this.onBack,
+  });
+
   final void Function() onApplyConfig;
+  final void Function()? onSkip;
+  final void Function()? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +52,8 @@ class LandscapePage extends StatelessWidget {
               }
             }
           : null,
+      onBack: onBack ?? () => Wizard.of(context).back(),
+      onSkip: onSkip ?? () => Wizard.of(context).next(),
       leftChildren: [
         MarkdownBody(
           data: lang
@@ -58,12 +68,23 @@ class LandscapePage extends StatelessWidget {
     );
   }
 
-  static Widget create(BuildContext context) {
+  static Widget create(BuildContext context, {bool isLate = false}) {
     final client = getService<AgentApiClient>();
+    LandscapePage landscapePage;
+    if (isLate) {
+      landscapePage = LandscapePage(
+        onApplyConfig: () => Wizard.of(context).back(),
+        onSkip: () => Wizard.of(context).back(),
+      );
+    } else {
+      landscapePage = LandscapePage(
+        onApplyConfig: () => Wizard.of(context).next(),
+      );
+    }
+
     return ChangeNotifierProvider<LandscapeModel>(
       create: (context) => LandscapeModel(client),
-      child:
-          LandscapePage(onApplyConfig: () async => Wizard.of(context).next()),
+      child: landscapePage,
     );
   }
 }

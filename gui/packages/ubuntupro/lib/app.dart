@@ -57,6 +57,12 @@ class Pro4WSLApp extends StatelessWidget {
                       return Routes.subscribeNow;
                     },
                   ),
+                  Routes.configureLandscapeLate: WizardRoute(
+                    builder: (context) => LandscapePage.create(
+                      context,
+                      isLate: true,
+                    ),
+                  ),
                 },
               );
             },
