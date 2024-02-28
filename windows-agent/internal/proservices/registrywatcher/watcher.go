@@ -141,14 +141,14 @@ func (s *Service) run() {
 			ctx, cancel := context.WithCancel(s.ctx)
 			defer cancel()
 
-			key, err := s.registry.HKCUOpenKey(registryPath)
+			k, err := s.registry.HKCUOpenKey(registryPath)
 			if err != nil {
 				return fmt.Errorf(`could not open registry key HKCU\%s: %v`, registryPath, err)
 			}
-			defer s.registry.CloseKey(key)
+			defer s.registry.CloseKey(k)
 
 			// Start to watch
-			event, err := s.registry.RegNotifyChangeKeyValue(key)
+			event, err := s.registry.RegNotifyChangeKeyValue(k)
 			if err != nil {
 				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, registryPath, err)
 			}
