@@ -437,6 +437,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		"Success": {settingsState: untouched},
 
 		"Error when an organization landscape config is already set": {settingsState: orgLandscapeConfigHasValue, wantError: true},
+		"Error when an configuration cannot be read": {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -452,7 +453,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty database")
 
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, false, false)
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
