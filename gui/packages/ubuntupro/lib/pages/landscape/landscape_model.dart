@@ -120,9 +120,10 @@ class LandscapeModel extends ChangeNotifier {
   }
 
   Future<void> applyManualLandscapeConfig() async {
+    final uri = Uri.parse(_fqdn).replace(port: 6554);
     final config = '''
 [host]
-url = $_fqdn:6554
+url = ${uri.authority}
 [client]
 account_name = $accountName
 registration_key = $key
