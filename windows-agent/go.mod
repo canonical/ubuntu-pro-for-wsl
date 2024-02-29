@@ -18,7 +18,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c
-	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
+	github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sys v0.17.0
 	google.golang.org/grpc v1.62.0
