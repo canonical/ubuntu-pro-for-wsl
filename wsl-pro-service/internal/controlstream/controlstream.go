@@ -138,7 +138,7 @@ func (cs ControlStream) address(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not parse port from %q: %v", addr, err)
 	}
 
-	return fmt.Sprintf("%s:%s", windowsLocalhost, port), nil
+	return net.JoinHostPort(windowsLocalhost.String(), port), nil
 }
 
 // ReservedPort returns the port assigned to this distro.
