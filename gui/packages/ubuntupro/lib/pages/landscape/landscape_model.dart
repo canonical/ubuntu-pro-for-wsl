@@ -49,7 +49,16 @@ class LandscapeModel extends ChangeNotifier {
     _selected = value;
     _fqdnError = false;
     _fileError = FileError.none;
-    validConfig();
+    switch (selected) {
+      case LandscapeConfigType.manual:
+        _receivedInput = _fqdn.isNotEmpty;
+      case LandscapeConfigType.file:
+        _receivedInput = _path.isNotEmpty;
+    }
+    if (_receivedInput) {
+      validConfig();
+    }
+
     notifyListeners();
   }
 
