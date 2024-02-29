@@ -3,9 +3,11 @@ package registry
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -17,6 +19,7 @@ import (
 type Mock struct {
 	// registry contains the registry key database.
 	ubuntuPro key
+	keyExists bool
 
 	// keyHandles contains the handles to the keys. The Win32API returns void pointers to the
 	// key handles, and we mimic this behaviour so we can fit the interface. The user of this
@@ -29,10 +32,11 @@ type Mock struct {
 	eventHandles mockedHeap[Event, *eventHandle]
 
 	// Settings to break the registry
-	CannotOpen  atomic.Bool
-	CannotRead  atomic.Bool
-	CannotWatch atomic.Bool
-	CannotWait  atomic.Bool
+	CannotCreate atomic.Bool
+	CannotOpen   atomic.Bool
+	CannotRead   atomic.Bool
+	CannotWatch  atomic.Bool
+	CannotWait   atomic.Bool
 }
 
 // key mocks a registry key.
@@ -121,6 +125,14 @@ func NewMock() *Mock {
 	return m
 }
 
+// UbuntuProKeyExists returns whether the UbuntuPro key exists in the mock registry.
+func (r *Mock) UbuntuProKeyExists() bool {
+	r.ubuntuPro.mu.Lock()
+	defer r.ubuntuPro.mu.Unlock()
+
+	return r.keyExists
+}
+
 // RequireNoLeaks is a test helper to ensure we freed all allocations.
 func (r *Mock) RequireNoLeaks(t *testing.T) {
 	t.Helper()
@@ -130,7 +142,28 @@ func (r *Mock) RequireNoLeaks(t *testing.T) {
 
 // HKCUOpenKey mocks opening a key in the specified path under the HK_CURRENT_USER registry.
 func (r *Mock) HKCUOpenKey(path string) (Key, error) {
+	r.ubuntuPro.mu.Lock()
+	defer r.ubuntuPro.mu.Unlock()
+
+	if r.CannotOpen.Load() {
+		return 0, ErrMock
+	}
+
 	return r.openKey(path, true)
+}
+
+// HKCUCreateKey opens a key in the specified path under the HK_CURRENT_USER registry with write permissions.
+func (r *Mock) HKCUCreateKey(path string) (Key, error) {
+	r.ubuntuPro.mu.Lock()
+	defer r.ubuntuPro.mu.Unlock()
+
+	if r.CannotCreate.Load() {
+		return 0, ErrMock
+	}
+
+	r.keyExists = true
+
+	return r.openKey(path, false)
 }
 
 var validPaths = []string{
@@ -143,10 +176,6 @@ func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
 
 	if !slices.Contains(validPaths, path) {
 		panic("Attempting to access key outside of UbuntuPro")
-	}
-
-	if r.CannotOpen.Load() {
-		return 0, ErrMock
 	}
 
 	return r.keyHandles.alloc(&keyHandle{
@@ -187,9 +216,6 @@ func (r *Mock) ReadValue(ptr Key, field string) (value string, err error) {
 	if r.CannotRead.Load() {
 		return "", ErrMock
 	}
-
-	r.keyHandles.mu.Lock()
-	defer r.keyHandles.mu.Unlock()
 
 	handle, ok := r.keyHandles.data[ptr]
 
@@ -252,19 +278,8 @@ func (r *Mock) WaitForSingleObject(handle Event) error {
 	return nil
 }
 
-// HKCUOpenKeyWrite opens a key in the specified path under the HK_CURRENT_USER registry with write permissions.
-// Only tests may use it.
-func (r *Mock) HKCUOpenKeyWrite(path string) (Key, error) {
-	if !testing.Testing() {
-		// Production code must not write to the registry
-		panic("This registry function should be used by tests only")
-	}
-
-	return r.openKey(path, false)
-}
-
 // WriteValue is used to write a value into the registry.
-func (r *Mock) WriteValue(ptr Key, field, value string) error {
+func (r *Mock) WriteValue(ptr Key, field, value string, multiString bool) error {
 	r.keyHandles.mu.Lock()
 	defer r.keyHandles.mu.Unlock()
 
@@ -276,6 +291,10 @@ func (r *Mock) WriteValue(ptr Key, field, value string) error {
 
 	if handle.readOnly {
 		return ErrAccessDenied
+	}
+
+	if strings.Contains(value, "\n") && !multiString {
+		return fmt.Errorf("mock error: value contains newline, but multiString is false: %q", value)
 	}
 
 	r.setValue(handle.key, field, value)

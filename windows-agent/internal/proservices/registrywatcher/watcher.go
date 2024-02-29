@@ -35,8 +35,10 @@ const registryPath = `Software\Canonical\UbuntuPro`
 // Registry is an interface to the Windows registry.
 type Registry interface {
 	HKCUOpenKey(path string) (registry.Key, error)
+	HKCUCreateKey(path string) (registry.Key, error)
 	CloseKey(k registry.Key)
 	ReadValue(k registry.Key, field string) (value string, err error)
+	WriteValue(k registry.Key, field, value string, multiline bool) (err error)
 
 	// Win32 stuff: not strictly registry but not worth separating out
 	RegNotifyChangeKeyValue(k registry.Key) (registry.Event, error)
