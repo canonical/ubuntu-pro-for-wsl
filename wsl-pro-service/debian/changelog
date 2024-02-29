@@ -1,4 +1,4 @@
-wsl-pro-service (0.1.2) UNRELEASED; urgency=medium
+wsl-pro-service (0.1.2) noble; urgency=medium
 
   * Improved log and error messages
   * Added usage of gRPC logstreamer in connection with Windows-Agent
