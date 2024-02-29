@@ -51,6 +51,7 @@ func TestDistribute(t *testing.T) {
 
 			dist, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no error")
+			defer dist.Cleanup(ctx)
 
 			if tc.distroIsDead {
 				dist.Invalidate(ctx)
