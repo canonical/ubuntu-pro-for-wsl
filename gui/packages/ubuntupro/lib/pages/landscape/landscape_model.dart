@@ -94,8 +94,6 @@ class LandscapeModel extends ChangeNotifier {
         return validateFQDN();
       case LandscapeConfigType.file:
         return validatePath();
-      default:
-        throw UnimplementedError('Unknown configuration type');
     }
   }
 
@@ -109,8 +107,6 @@ class LandscapeModel extends ChangeNotifier {
         await applyManualLandscapeConfig();
       case LandscapeConfigType.file:
         await applyLandscapeConfig();
-      default:
-        throw UnimplementedError('Unknown configuration status');
     }
 
     return true;
