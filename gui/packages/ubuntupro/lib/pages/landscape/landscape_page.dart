@@ -89,27 +89,8 @@ class LandscapePage extends StatelessWidget {
   }
 }
 
-class LandscapeInput extends StatefulWidget {
+class LandscapeInput extends StatelessWidget {
   const LandscapeInput({super.key});
-
-  @override
-  State<LandscapeInput> createState() => _LandscapeInputState();
-}
-
-class _LandscapeInputState extends State<LandscapeInput> {
-  late TextEditingController txt;
-
-  @override
-  void initState() {
-    super.initState();
-    txt = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    txt.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +153,6 @@ class _LandscapeInputState extends State<LandscapeInput> {
                   sectionTitleStyle: sectionTitleStyle,
                   sectionBodyStyle: sectionBodyStyle,
                   enabled: model.selected == LandscapeConfigType.file,
-                  txt: txt,
                 ),
               ),
             ),
@@ -250,18 +230,35 @@ class _ConfigForm extends StatelessWidget {
   }
 }
 
-class _FileForm extends StatelessWidget {
+class _FileForm extends StatefulWidget {
   const _FileForm({
     required this.sectionTitleStyle,
     required this.sectionBodyStyle,
-    required this.txt,
     required this.enabled,
   });
 
   final TextStyle? sectionTitleStyle;
   final TextStyle? sectionBodyStyle;
-  final TextEditingController txt;
   final bool enabled;
+
+  @override
+  State<_FileForm> createState() => _FileFormState();
+}
+
+class _FileFormState extends State<_FileForm> {
+  late TextEditingController txt;
+
+  @override
+  void initState() {
+    super.initState();
+    txt = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    txt.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,11 +270,11 @@ class _FileForm extends StatelessWidget {
       children: [
         Text(
           lang.landscapeCustomSetup,
-          style: sectionTitleStyle,
+          style: widget.sectionTitleStyle,
         ),
         Text(
           lang.landscapeCustomSetupHint,
-          style: sectionBodyStyle,
+          style: widget.sectionBodyStyle,
         ),
         const SizedBox(
           height: 16.0,
@@ -290,11 +287,11 @@ class _FileForm extends StatelessWidget {
                 decoration: InputDecoration(
                   label: Text(lang.landscapeFileLabel),
                   hintText: 'C:\\landscape.conf',
-                  errorText: model.fileError != FileError.none && enabled
+                  errorText: model.fileError != FileError.none && widget.enabled
                       ? model.fileError.localize(lang)
                       : null,
                 ),
-                enabled: enabled,
+                enabled: widget.enabled,
                 controller: txt,
                 onChanged: (value) {
                   model.path = value;
@@ -305,7 +302,7 @@ class _FileForm extends StatelessWidget {
               width: 8.0,
             ),
             FilledButton(
-              onPressed: enabled
+              onPressed: widget.enabled
                   ? () async {
                       final result = await FilePicker.platform.pickFiles();
                       if (result != null) {
