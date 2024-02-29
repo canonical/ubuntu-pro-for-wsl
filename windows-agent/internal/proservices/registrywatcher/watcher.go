@@ -94,6 +94,10 @@ func New(ctx context.Context, conf Config, database *database.DistroDB, args ...
 func (s *Service) Start() {
 	s.ctx, s.stop = context.WithCancel(s.ctx)
 
+	if err := setDefaultRegistry(s.registry); err != nil {
+		log.Warningf(s.ctx, "Registry watcher: %v", err)
+	}
+
 	s.readThenPushRegistryData(s.ctx)
 
 	go s.run()
@@ -224,6 +228,12 @@ func (s *Service) readThenPushRegistryData(ctx context.Context) {
 	}
 }
 
+//nolint:gosec // These are not credentials
+const (
+	ubuntuProTokenField  = "UbuntuProToken"
+	landscapeConfigField = "LandscapeConfig"
+)
+
 func loadRegistry(reg Registry) (data config.RegistryData, err error) {
 	defer decorate.OnError(&err, "could not read registry")
 
@@ -237,12 +247,12 @@ func loadRegistry(reg Registry) (data config.RegistryData, err error) {
 	}
 	defer reg.CloseKey(k)
 
-	proToken, err := readFromRegistry(reg, k, "UbuntuProToken")
+	proToken, err := readFromRegistry(reg, k, ubuntuProTokenField)
 	if err != nil {
 		return data, err
 	}
 
-	conf, err := readFromRegistry(reg, k, "LandscapeConfig")
+	conf, err := readFromRegistry(reg, k, landscapeConfigField)
 	if err != nil {
 		return data, err
 	}
@@ -263,4 +273,40 @@ func readFromRegistry(r Registry, key registry.Key, field string) (string, error
 	}
 
 	return value, nil
+}
+
+func setDefaultRegistry(r Registry) (err error) {
+	defer decorate.OnError(&err, "could not set default contents")
+
+	k, err := r.HKCUCreateKey(registryPath)
+	if err != nil {
+		return fmt.Errorf(`could not create registry key HKCU\%s: %v`, registryPath, err)
+	}
+	defer r.CloseKey(k)
+
+	err = errors.Join(err,
+		createIfNotExist(r, k, ubuntuProTokenField, false),
+		createIfNotExist(r, k, landscapeConfigField, true),
+	)
+
+	return err
+}
+
+func createIfNotExist(r Registry, k registry.Key, field string, multiline bool) (err error) {
+	defer decorate.OnError(&err, "could not initialize field %q", field)
+
+	if _, err := r.ReadValue(k, field); err == nil {
+		// Field already exists
+		return nil
+	} else if !errors.Is(err, registry.ErrFieldNotExist) {
+		// Some other error
+		return fmt.Errorf("could not read pre-existing value: %v", err)
+	}
+
+	// Field does not exist
+	if err := r.WriteValue(k, field, "", multiline); err != nil {
+		return fmt.Errorf("could not write default value: %v", err)
+	}
+
+	return nil
 }
