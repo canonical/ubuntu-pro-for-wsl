@@ -430,14 +430,14 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 
 	testCases := map[string]struct {
 		settingsState settingsState
-		breakFile bool
+		breakFile     bool
 
 		wantError bool
 	}{
 		"Success": {settingsState: untouched},
 
 		"Error when an organization landscape config is already set": {settingsState: orgLandscapeConfigHasValue, wantError: true},
-		"Error when an configuration cannot be read": {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when an configuration cannot be read":                 {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
