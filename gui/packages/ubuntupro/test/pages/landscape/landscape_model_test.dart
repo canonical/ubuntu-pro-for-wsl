@@ -121,28 +121,5 @@ void main() {
       final model = LandscapeModel(client);
       expect(await model.applyConfig(), isFalse);
     });
-
-    test('successful apply', () async {
-      var model = LandscapeModel(client);
-      model.fqdn = 'example.com';
-      expect(model.applyManualLandscapeConfig(), completes);
-
-      model = LandscapeModel(client);
-      final tempFile = File(tempFilePath);
-      await tempFile.writeAsString('');
-      model.path = tempFile.path;
-      expect(model.applyLandscapeConfig(), completes);
-    });
-
-    test('unsuccessful apply', () async {
-      var model = LandscapeModel(client);
-      model.fqdn = '::';
-      expect(model.applyManualLandscapeConfig(), throwsA(isA<Exception>()));
-
-      model = LandscapeModel(client);
-      final tempFile = File(tempFilePath);
-      model.path = tempFile.path;
-      expect(model.applyLandscapeConfig(), throwsA(isA<Exception>()));
-    });
   });
 }

@@ -104,21 +104,21 @@ class LandscapeModel extends ChangeNotifier {
 
     switch (selected) {
       case LandscapeConfigType.manual:
-        await applyManualLandscapeConfig();
+        await _applyManualLandscapeConfig();
       case LandscapeConfigType.file:
-        await applyLandscapeConfig();
+        await _applyLandscapeConfig();
     }
 
     return true;
   }
 
-  Future<void> applyLandscapeConfig() async {
+  Future<void> _applyLandscapeConfig() async {
     final file = File(_path);
     final content = await file.readAsString();
     await client.applyLandscapeConfig(content);
   }
 
-  Future<void> applyManualLandscapeConfig() async {
+  Future<void> _applyManualLandscapeConfig() async {
     final uri = Uri.parse(_fqdn).replace(port: 6554);
     final config = '''
 [host]
