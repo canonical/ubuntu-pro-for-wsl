@@ -278,8 +278,6 @@ func TestApplyLandscapeConfig(t *testing.T) {
 type mockConfig struct {
 	setUserSubscriptionErr    bool // Config errors out in SetUserSubscription function
 	subscriptionErr           bool // Config errors out in Subscription function
-	setSubscriptionErr        bool // Config errors out in SetSubscription function
-	fetchErr                  bool // Config errors out in FetchMicrosoftStoreSubscription function
 	setUserLandscapeConfigErr bool // Config errors out in SetUserLandscapeConfig function
 
 	token  string        // stores the configured Pro token
