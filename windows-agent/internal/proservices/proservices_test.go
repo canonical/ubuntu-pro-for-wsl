@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 			privateDir := t.TempDir()
 
 			reg := registry.NewMock()
-			k, err := reg.HKCUOpenKeyWrite("Software/Canonical/UbuntuPro")
+			k, err := reg.HKCUCreateKey("Software/Canonical/UbuntuPro")
 			require.NoError(t, err, "Setup: could not create Ubuntu Pro registry key")
 			reg.CloseKey(k)
 
