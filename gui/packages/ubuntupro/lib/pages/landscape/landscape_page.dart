@@ -56,8 +56,7 @@ class LandscapePage extends StatelessWidget {
       onSkip: onSkip ?? () => Wizard.of(context).next(),
       leftChildren: [
         MarkdownBody(
-          data: lang
-              .landscapeHeading('[Landscape](https://ubuntu.com/landscape)'),
+          data: lang.landscapeHeading('[Landscape](${model.landscapeURI})'),
           onTapLink: (_, href, __) => model.launchLandscapeWebPage(),
           styleSheet: linkStyle,
         ),

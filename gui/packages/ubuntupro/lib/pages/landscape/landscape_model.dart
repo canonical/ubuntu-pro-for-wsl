@@ -13,6 +13,8 @@ class LandscapeModel extends ChangeNotifier {
   LandscapeModel(this.client);
   final AgentApiClient client;
 
+  final landscapeURI = Uri.https('ubuntu.com', '/landscape');
+
   LandscapeConfigType _selected = LandscapeConfigType.manual;
 
   String _path = '';
@@ -143,6 +145,6 @@ ping_url = $_fqdn/ping
   }
 
   void launchLandscapeWebPage() {
-    launchUrl(Uri.https('ubuntu.com', '/landscape'));
+    launchUrl(landscapeURI);
   }
 }
