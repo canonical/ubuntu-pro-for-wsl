@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
@@ -57,7 +58,7 @@ class LandscapePage extends StatelessWidget {
       leftChildren: [
         MarkdownBody(
           data: lang.landscapeHeading('[Landscape](${model.landscapeURI})'),
-          onTapLink: (_, href, __) => model.launchLandscapeWebPage(),
+          onTapLink: (_, href, __) => launchUrl(model.landscapeURI),
           styleSheet: linkStyle,
         ),
       ],
@@ -162,7 +163,7 @@ class LandscapeInput extends StatelessWidget {
   }
 }
 
-class _ConfigForm extends StatelessWidget {
+class _ConfigForm extends StatefulWidget {
   const _ConfigForm({
     required this.sectionTitleStyle,
     required this.sectionBodyStyle,
@@ -174,6 +175,29 @@ class _ConfigForm extends StatelessWidget {
   final bool enabled;
 
   @override
+  State<_ConfigForm> createState() => _ConfigFormState();
+}
+
+class _ConfigFormState extends State<_ConfigForm> {
+  late TextEditingController accountNameController;
+
+  @override
+  void initState() {
+    super.initState();
+    accountNameController = TextEditingController();
+    final model = context.read<LandscapeModel>();
+    model.addListener(() {
+      accountNameController.text = model.accountName;
+    });
+  }
+
+  @override
+  void dispose() {
+    accountNameController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final model = context.watch<LandscapeModel>();
     final lang = AppLocalizations.of(context);
@@ -183,22 +207,23 @@ class _ConfigForm extends StatelessWidget {
       children: [
         Text(
           lang.landscapeQuickSetup,
-          style: sectionTitleStyle,
+          style: widget.sectionTitleStyle,
         ),
         Text(
           lang.landscapeQuickSetupHint,
-          style: sectionBodyStyle,
+          style: widget.sectionBodyStyle,
         ),
         const SizedBox(
           height: 16.0,
         ),
         TextField(
-          enabled: enabled,
+          enabled: widget.enabled,
           decoration: InputDecoration(
             label: Text(lang.landscapeFQDNLabel),
-            hintText: 'landscape.canonical.com',
-            errorText:
-                model.fqdnError && enabled ? lang.landscapeFQDNError : null,
+            hintText: LandscapeModel.landscapeSaas,
+            errorText: model.fqdnError && widget.enabled
+                ? lang.landscapeFQDNError
+                : null,
           ),
           onChanged: (value) {
             model.fqdn = value;
@@ -208,21 +233,32 @@ class _ConfigForm extends StatelessWidget {
           height: 8.0,
         ),
         TextField(
-          enabled: enabled,
+          enabled: widget.enabled && model.canEnterAccountName,
+          controller: accountNameController,
           decoration: InputDecoration(
             label: Text(lang.landscapeAccountNameLabel),
-            hintText: 'standalone',
+            hintText:
+                model.canEnterAccountName ? null : LandscapeModel.standalone,
+            errorText: model.accountNameError && widget.enabled
+                ? lang.landscapeAccountNameError
+                : null,
           ),
+          onChanged: (value) {
+            model.accountName = value;
+          },
         ),
         const SizedBox(
           height: 8.0,
         ),
         TextField(
-          enabled: enabled,
+          enabled: widget.enabled,
           decoration: InputDecoration(
             label: Text(lang.landscapeKeyLabel),
             hintText: '123456',
           ),
+          onChanged: (value) {
+            model.key = value;
+          },
         ),
       ],
     );

@@ -3,13 +3,11 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
-import 'dart:ui' as _i6;
+import 'dart:async' as _i4;
 
+import 'package:agentapi/agentapi.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i4;
-import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/pages/landscape/landscape_model.dart' as _i3;
+import 'package:ubuntupro/core/agent_api_client.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -24,9 +22,9 @@ import 'package:ubuntupro/pages/landscape/landscape_model.dart' as _i3;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeAgentApiClient_0 extends _i1.SmartFake
-    implements _i2.AgentApiClient {
-  _FakeAgentApiClient_0(
+class _FakeSubscriptionInfo_0 extends _i1.SmartFake
+    implements _i2.SubscriptionInfo {
+  _FakeSubscriptionInfo_0(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -35,238 +33,79 @@ class _FakeAgentApiClient_0 extends _i1.SmartFake
         );
 }
 
-/// A class which mocks [LandscapeModel].
+/// A class which mocks [AgentApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockLandscapeModel extends _i1.Mock implements _i3.LandscapeModel {
-  MockLandscapeModel() {
+class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
+  MockAgentApiClient() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i2.AgentApiClient get client => (super.noSuchMethod(
-        Invocation.getter(#client),
-        returnValue: _FakeAgentApiClient_0(
-          this,
-          Invocation.getter(#client),
-        ),
-      ) as _i2.AgentApiClient);
-
-  @override
-  String get accountName => (super.noSuchMethod(
-        Invocation.getter(#accountName),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#accountName),
-        ),
-      ) as String);
-
-  @override
-  set accountName(String? _accountName) => super.noSuchMethod(
-        Invocation.setter(
-          #accountName,
-          _accountName,
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  String get key => (super.noSuchMethod(
-        Invocation.getter(#key),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#key),
-        ),
-      ) as String);
-
-  @override
-  set key(String? _key) => super.noSuchMethod(
-        Invocation.setter(
-          #key,
-          _key,
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  bool get hasError => (super.noSuchMethod(
-        Invocation.getter(#hasError),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  bool get fqdnError => (super.noSuchMethod(
-        Invocation.getter(#fqdnError),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  _i3.FileError get fileError => (super.noSuchMethod(
-        Invocation.getter(#fileError),
-        returnValue: _i3.FileError.notFound,
-      ) as _i3.FileError);
-
-  @override
-  bool get receivedInput => (super.noSuchMethod(
-        Invocation.getter(#receivedInput),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  set fqdn(String? value) => super.noSuchMethod(
-        Invocation.setter(
-          #fqdn,
-          value,
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  String get fqdn => (super.noSuchMethod(
-        Invocation.getter(#fqdn),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#fqdn),
-        ),
-      ) as String);
-
-  @override
-  set selected(_i3.LandscapeConfigType? value) => super.noSuchMethod(
-        Invocation.setter(
-          #selected,
-          value,
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  _i3.LandscapeConfigType get selected => (super.noSuchMethod(
-        Invocation.getter(#selected),
-        returnValue: _i3.LandscapeConfigType.manual,
-      ) as _i3.LandscapeConfigType);
-
-  @override
-  set path(String? value) => super.noSuchMethod(
-        Invocation.setter(
-          #path,
-          value,
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  String get path => (super.noSuchMethod(
-        Invocation.getter(#path),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#path),
-        ),
-      ) as String);
-
-  @override
-  bool get hasListeners => (super.noSuchMethod(
-        Invocation.getter(#hasListeners),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  bool validateFQDN() => (super.noSuchMethod(
+  _i4.Future<_i2.SubscriptionInfo> applyProToken(String? token) =>
+      (super.noSuchMethod(
         Invocation.method(
-          #validateFQDN,
-          [],
+          #applyProToken,
+          [token],
         ),
-        returnValue: false,
-      ) as bool);
+        returnValue:
+            _i4.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_0(
+          this,
+          Invocation.method(
+            #applyProToken,
+            [token],
+          ),
+        )),
+      ) as _i4.Future<_i2.SubscriptionInfo>);
 
   @override
-  bool validatePath() => (super.noSuchMethod(
-        Invocation.method(
-          #validatePath,
-          [],
-        ),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  bool validConfig() => (super.noSuchMethod(
-        Invocation.method(
-          #validConfig,
-          [],
-        ),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  _i5.Future<bool> applyConfig() => (super.noSuchMethod(
-        Invocation.method(
-          #applyConfig,
-          [],
-        ),
-        returnValue: _i5.Future<bool>.value(false),
-      ) as _i5.Future<bool>);
-
-  @override
-  _i5.Future<void> applyLandscapeConfig() => (super.noSuchMethod(
+  _i4.Future<void> applyLandscapeConfig(String? config) => (super.noSuchMethod(
         Invocation.method(
           #applyLandscapeConfig,
+          [config],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<bool> ping() => (super.noSuchMethod(
+        Invocation.method(
+          #ping,
           [],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 
   @override
-  _i5.Future<void> applyManualLandscapeConfig() => (super.noSuchMethod(
+  _i4.Future<_i2.SubscriptionInfo> subscriptionInfo() => (super.noSuchMethod(
         Invocation.method(
-          #applyManualLandscapeConfig,
+          #subscriptionInfo,
           [],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue:
+            _i4.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_0(
+          this,
+          Invocation.method(
+            #subscriptionInfo,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.SubscriptionInfo>);
 
   @override
-  void launchLandscapeWebPage() => super.noSuchMethod(
+  _i4.Future<_i2.SubscriptionInfo> notifyPurchase() => (super.noSuchMethod(
         Invocation.method(
-          #launchLandscapeWebPage,
+          #notifyPurchase,
           [],
         ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
-        Invocation.method(
-          #addListener,
-          [listener],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
-        Invocation.method(
-          #removeListener,
-          [listener],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void dispose() => super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void notifyListeners() => super.noSuchMethod(
-        Invocation.method(
-          #notifyListeners,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+        returnValue:
+            _i4.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_0(
+          this,
+          Invocation.method(
+            #notifyPurchase,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.SubscriptionInfo>);
 }

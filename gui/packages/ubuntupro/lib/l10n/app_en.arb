@@ -66,6 +66,7 @@
     "landscapeFQDNLabel": "Landscape FQDN",
     "landscapeFQDNError": "Invalid URI. Format should be a hostname or IP address.",
     "landscapeAccountNameLabel": "Landscape Account Name",
+    "landscapeAccountNameError": "Invalid account name",
     "landscapeKeyLabel": "Registration Key",
     "landscapeCustomSetup": "Custom Configuration",
     "landscapeCustomSetupHint": "Load a custom client configuration file",

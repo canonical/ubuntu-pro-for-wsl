@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '/core/agent_api_client.dart';
 
@@ -13,6 +12,8 @@ class LandscapeModel extends ChangeNotifier {
   LandscapeModel(this.client);
   final AgentApiClient client;
 
+  static const landscapeSaas = 'landscape.canonical.com';
+  static const standalone = 'standalone';
   final landscapeURI = Uri.https('ubuntu.com', '/landscape');
 
   LandscapeConfigType _selected = LandscapeConfigType.manual;
@@ -20,16 +21,23 @@ class LandscapeModel extends ChangeNotifier {
   String _path = '';
 
   String _fqdn = '';
-  String accountName = 'standalone';
+  String _accountName = '';
   String key = '';
 
   bool _receivedInput = false;
 
   bool _fqdnError = false;
+  bool _accountNameError = false;
+  bool get accountNameError => _accountNameError;
+  bool get canEnterAccountName => _fqdn.endsWith(landscapeSaas);
+
   FileError _fileError = FileError.none;
 
   bool get hasError =>
-      fqdnError || fileError != FileError.none || !receivedInput;
+      fqdnError ||
+      accountNameError ||
+      fileError != FileError.none ||
+      !receivedInput;
 
   bool get fqdnError => _fqdnError;
   FileError get fileError => _fileError;
@@ -41,11 +49,29 @@ class LandscapeModel extends ChangeNotifier {
       value = 'https://$value';
     }
     _fqdn = value;
+    if (!_fqdn.endsWith(landscapeSaas)) {
+      _accountName = standalone;
+      _accountNameError = false;
+    } else {
+      _accountName = '';
+    }
     _receivedInput = true;
     validateFQDN();
+    notifyListeners();
   }
 
   String get fqdn => _fqdn;
+
+  set accountName(String value) {
+    // Only accept account names if it's for Landscape SaaS.
+    if (_fqdn.endsWith(landscapeSaas)) {
+      _accountName = value;
+    }
+    validateAccountName();
+    notifyListeners();
+  }
+
+  String get accountName => _accountName;
 
   set selected(LandscapeConfigType value) {
     _selected = value;
@@ -79,8 +105,18 @@ class LandscapeModel extends ChangeNotifier {
   bool validateFQDN() {
     final uri = Uri.tryParse(_fqdn);
     _fqdnError = _fqdn.isEmpty || uri == null || uri.hasPort;
+
     notifyListeners();
     return !fqdnError;
+  }
+
+  bool validateAccountName() {
+    if (_fqdn.endsWith(landscapeSaas)) {
+      _accountNameError = _accountName.isEmpty || _accountName == standalone;
+    } else {
+      _accountNameError = _accountName != standalone;
+    }
+    return !accountNameError;
   }
 
   bool validatePath() {
@@ -102,7 +138,7 @@ class LandscapeModel extends ChangeNotifier {
   bool validConfig() {
     switch (selected) {
       case LandscapeConfigType.manual:
-        return validateFQDN();
+        return validateFQDN() && validateAccountName();
       case LandscapeConfigType.file:
         return validatePath();
     }
@@ -142,9 +178,5 @@ log_level = debug
 ping_url = $_fqdn/ping
 ''';
     await client.applyLandscapeConfig(config);
-  }
-
-  void launchLandscapeWebPage() {
-    launchUrl(landscapeURI);
   }
 }

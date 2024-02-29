@@ -47,6 +47,8 @@ class SubscribeNowPage extends StatelessWidget {
                           ifLeft: (status) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
+                                width: 200.0,
+                                behavior: SnackBarBehavior.floating,
                                 content: Center(
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -82,6 +84,8 @@ class SubscribeNowPage extends StatelessWidget {
             model.applyProToken(token).then(onSubscriptionUpdate);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
+                width: 400.0,
+                behavior: SnackBarBehavior.floating,
                 content: Text(
                   lang.applyingProToken(token.value),
                 ),

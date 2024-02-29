@@ -11,21 +11,20 @@ import 'landscape_model_test.mocks.dart';
 void main() {
   group('landscape config', () {
     final client = MockAgentApiClient();
-    final tempDir = Directory.systemTemp;
-    const tempFileName = 'Pro4WSLLandscapeTEMP.conf';
+    final tempDir = Directory.systemTemp.createTempSync();
+    const tempFileName = 'Pro4WSLLandscapePageTEMP.conf';
     final tempFilePath = '${tempDir.path}/$tempFileName';
 
-    tearDown(() async {
-      final file = File(tempFilePath);
-      if (await file.exists()) {
-        await file.delete();
+    tearDownAll(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
       }
     });
 
     test('default Landscape configuration', () {
       final model = LandscapeModel(client);
       expect(model.fqdn, '');
-      expect(model.accountName, 'standalone');
+      expect(model.accountName, '');
       expect(model.key, '');
       expect(model.path, '');
     });

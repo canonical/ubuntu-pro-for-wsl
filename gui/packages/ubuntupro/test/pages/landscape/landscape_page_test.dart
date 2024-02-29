@@ -1,10 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
+import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/widgets/page_widgets.dart';
@@ -13,42 +16,26 @@ import 'package:yaru_test/yaru_test.dart';
 
 import 'landscape_page_test.mocks.dart';
 
-@GenerateMocks([LandscapeModel])
+@GenerateMocks([AgentApiClient])
 void main() {
-  testWidgets('launch Landscape page', (tester) async {
-    final model = MockLandscapeModel();
+  const tempFileName = 'Pro4WSLLandscapePageTEMP.conf';
+  Directory? tempDir;
+  var tempFilePath = '';
 
-    var launched = false;
-    when(model.launchLandscapeWebPage()).thenAnswer((_) async {
-      launched = true;
-    });
-    when(model.fqdnError).thenReturn(false);
-    when(model.fileError).thenReturn(FileError.none);
-    when(await model.applyConfig()).thenReturn(false);
-    when(model.selected).thenReturn(LandscapeConfigType.manual);
-    when(model.receivedInput).thenReturn(false);
-    when(model.hasError).thenReturn(false);
+  setUpAll(() {
+    tempDir = Directory.systemTemp.createTempSync();
+    tempFilePath = '${tempDir!.path}/$tempFileName';
+  });
 
-    final app = buildApp(model);
-    await tester.pumpWidget(app);
-
-    expect(launched, isFalse);
-    final button = tester.widget<MarkdownBody>(find.byType(MarkdownBody));
-    button.onTapLink!('', '', '');
-    await tester.pump();
-    expect(launched, isTrue);
+  tearDownAll(() {
+    if (tempDir != null && tempDir!.existsSync()) {
+      tempDir?.deleteSync(recursive: true);
+    }
   });
 
   group('input sections', () {
     testWidgets('default state', (tester) async {
-      final model = MockLandscapeModel();
-
-      when(model.fqdnError).thenReturn(false);
-      when(model.fileError).thenReturn(FileError.none);
-      when(await model.applyConfig()).thenReturn(false);
-      when(model.selected).thenReturn(LandscapeConfigType.manual);
-      when(model.receivedInput).thenReturn(false);
-      when(model.hasError).thenReturn(true);
+      final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -80,14 +67,8 @@ void main() {
     });
 
     testWidgets('continue enabled', (tester) async {
-      final model = MockLandscapeModel();
-
-      when(model.fqdnError).thenReturn(false);
-      when(model.fileError).thenReturn(FileError.none);
-      when(model.receivedInput).thenReturn(true);
-      when(await model.applyConfig()).thenReturn(true);
-      when(model.selected).thenReturn(LandscapeConfigType.manual);
-      when(model.hasError).thenReturn(false);
+      final model = LandscapeModel(MockAgentApiClient());
+      model.fqdn = LandscapeModel.landscapeSaas;
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -101,41 +82,99 @@ void main() {
   });
 
   group('input', () {
-    testWidgets('calls back on success', (tester) async {
-      final model = MockLandscapeModel();
+    setUp(() async {
+      final tempFile = File(tempFilePath);
+      await tempFile.writeAsString('');
+    });
+
+    testWidgets('calls back on success manual', (tester) async {
+      // TODO: Sometimes the Column in the LandscapePage extends past the test
+      // environment's screen. This should be resolved so that we don't have to
+      // specify a manual size.
+      await tester.binding.setSurfaceSize(const Size(900, 600));
+      final agent = MockAgentApiClient();
+      final model = LandscapeModel(agent);
 
       var applied = false;
-      when(model.fqdnError).thenReturn(false);
-      when(model.fileError).thenReturn(FileError.none);
-      when(model.receivedInput).thenReturn(true);
-      when(model.applyConfig()).thenAnswer((_) async {
+      when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
         applied = true;
-        return true;
       });
-      when(model.selected).thenReturn(LandscapeConfigType.manual);
-      when(model.hasError).thenReturn(false);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
       final context = tester.element(find.byType(ColumnLandingPage));
       final lang = AppLocalizations.of(context);
 
+      final fqdnInput = find.ancestor(
+        of: find.text(lang.landscapeFQDNLabel),
+        matching: find.byType(TextField),
+      );
       final continueButton = find.button(lang.buttonNext);
+
+      // expect false since when FQDN is landscapeSaas, an account name is required
+      await tester.enterText(fqdnInput, LandscapeModel.landscapeSaas);
+      await tester.pump();
+      await tester.tap(continueButton);
+      expect(model.accountName, isEmpty);
       expect(applied, isFalse);
+
+      // an account name is now provided, so we expect applied
+      final accountNameInput = find.ancestor(
+        of: find.text(lang.landscapeAccountNameLabel),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(accountNameInput, 'test');
+      await tester.pump();
       await tester.tap(continueButton);
       await tester.pump();
+      expect(model.accountName, 'test');
       expect(applied, isTrue);
     });
 
-    testWidgets('feedback on manual error', (tester) async {
-      final model = MockLandscapeModel();
+    testWidgets('calls back on success file', (tester) async {
+      // TODO: Sometimes the Column in the LandscapePage extends past the test
+      // environment's screen. This should be resolved so that we don't have to
+      // specify a manual size.
       await tester.binding.setSurfaceSize(const Size(900, 600));
+      final agent = MockAgentApiClient();
+      final model = LandscapeModel(MockAgentApiClient());
 
-      when(model.fqdnError).thenReturn(true);
-      when(model.fileError).thenReturn(FileError.none);
-      when(model.receivedInput).thenReturn(true);
-      when(model.selected).thenReturn(LandscapeConfigType.manual);
-      when(model.hasError).thenReturn(true);
+      var applied = false;
+      when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
+        applied = true;
+      });
+
+      final app = buildApp(model);
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(ColumnLandingPage));
+      final lang = AppLocalizations.of(context);
+
+      final fileInput = find.ancestor(
+        of: find.text(lang.landscapeFileLabel),
+        matching: find.byType(TextField),
+      );
+      expect(fileInput, findsOne);
+      await tester.tap(fileInput);
+      await tester.pump();
+
+      await tester.enterText(fileInput, tempFilePath);
+      await tester.pump();
+
+      final continueButton = find.button(lang.buttonNext);
+      expect(tester.widget<FilledButton>(continueButton).enabled, isTrue);
+      expect(applied, isFalse);
+
+      // Ideally we'd test if `applied` is true after continue is pressed,
+      // however Flutter has issues with reading files asynchronously in this
+      // test environment
+    });
+
+    testWidgets('feedback on manual error', (tester) async {
+      final model = LandscapeModel(MockAgentApiClient());
+      // TODO: Sometimes the Column in the LandscapePage extends past the test
+      // environment's screen. This should be resolved so that we don't have to
+      // specify a manual size.
+      await tester.binding.setSurfaceSize(const Size(900, 600));
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -147,33 +186,61 @@ void main() {
         matching: find.byType(TextField),
       );
       expect(fqdnInput, findsOne);
+
+      await tester.enterText(fqdnInput, '::');
+      await tester.pump();
+
       final errorText = find.text(lang.landscapeFQDNError);
       expect(errorText, findsOne);
     });
 
     testWidgets('feedback on file error', (tester) async {
-      final model = MockLandscapeModel();
+      final model = LandscapeModel(MockAgentApiClient());
+      // TODO: Sometimes the Column in the LandscapePage extends past the test
+      // environment's screen. This should be resolved so that we don't have to
+      // specify a manual size.
       await tester.binding.setSurfaceSize(const Size(900, 600));
-
-      when(model.fqdnError).thenReturn(false);
-      when(model.fileError).thenReturn(FileError.notFound);
-      when(model.receivedInput).thenReturn(true);
-      when(model.selected).thenReturn(LandscapeConfigType.file);
-      when(model.hasError).thenReturn(true);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
       final context = tester.element(find.byType(ColumnLandingPage));
       final lang = AppLocalizations.of(context);
 
-      final fqdnInput = find.ancestor(
+      final fileInput = find.ancestor(
         of: find.text(lang.landscapeFileLabel),
         matching: find.byType(TextField),
       );
-      expect(fqdnInput, findsOne);
+      expect(fileInput, findsOne);
+      await tester.tap(fileInput);
+      await tester.pump();
+
+      await tester.enterText(fileInput, '${tempDir!.path}/Invalid.conf');
+      await tester.pump();
+
       final errorText = find.text(lang.landscapeFileNotFound);
       expect(errorText, findsOne);
     });
+  });
+
+  testWidgets('creates a model', (tester) async {
+    final mockClient = MockAgentApiClient();
+    // TODO: Sometimes the Column in the LandscapePage extends past the test
+    // environment's screen. This should be resolved so that we don't have to
+    // specify a manual size.
+    await tester.binding.setSurfaceSize(const Size(900, 650));
+    registerServiceInstance<AgentApiClient>(mockClient);
+    const app = MaterialApp(
+      routes: {'/': LandscapePage.create},
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+    );
+
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(LandscapePage));
+    final model = Provider.of<LandscapeModel>(context, listen: false);
+
+    expect(model, isNotNull);
   });
 }
 
