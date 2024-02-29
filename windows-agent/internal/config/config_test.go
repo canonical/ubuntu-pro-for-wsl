@@ -426,7 +426,9 @@ func TestSetStoreSubscription(t *testing.T) {
 }
 
 func TestSetUserLandscapeConfig(t *testing.T) {
-	t.Parallel()
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
 
 	testCases := map[string]struct {
 		settingsState settingsState
