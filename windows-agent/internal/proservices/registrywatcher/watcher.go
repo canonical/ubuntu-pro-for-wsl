@@ -30,7 +30,12 @@ type Service struct {
 	db       *database.DistroDB
 }
 
+// registryPath is the path to the registry key we want to watch.
 const registryPath = `Software\Canonical\UbuntuPro`
+
+// registryParentPath is the path to the first parent that we can guarantee exists.
+// We watch this key if registryPath does not exist.
+const registryParentPath = `Software\`
 
 // Registry is an interface to the Windows registry.
 type Registry interface {
@@ -147,29 +152,37 @@ func (s *Service) run() {
 			ctx, cancel := context.WithCancel(s.ctx)
 			defer cancel()
 
-			k, err := s.registry.HKCUOpenKey(registryPath)
+			path := registryPath
+			k, err := s.registry.HKCUOpenKey(path)
+			if errors.Is(err, registry.ErrKeyNotExist) {
+				// Watch the Software/ key instead, which we're almost guaranteed exists
+				path = registryParentPath
+				k, err = s.registry.HKCUOpenKey(path)
+				// ^This is not covered in tests because it significantly
+				// complicates the mock registry.
+			}
 			if err != nil {
-				return fmt.Errorf(`could not open registry key HKCU\%s: %v`, registryPath, err)
+				return fmt.Errorf(`could not open registry key HKCU\%s: %v`, path, err)
 			}
 			defer s.registry.CloseKey(k)
 
 			// Start to watch
 			event, err := s.registry.RegNotifyChangeKeyValue(k)
 			if err != nil {
-				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, registryPath, err)
+				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, path, err)
 			}
 			defer s.registry.CloseEvent(event)
 
-			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, registryPath)
+			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, path)
 
 			// Push update right after having started to watch
 			s.readThenPushRegistryData(ctx)
 
 			// Wait until the key is modified or the context is cancelled, whichever one happens first
 			if err := s.waitForSingleObject(ctx, event); err != nil {
-				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, registryPath, err)
+				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, path, err)
 			}
-			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, registryPath)
+			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, path)
 
 			return nil
 		}()
