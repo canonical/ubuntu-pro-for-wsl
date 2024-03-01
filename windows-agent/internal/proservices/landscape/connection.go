@@ -221,6 +221,16 @@ func (conn *connection) receiveCommands(e executor) error {
 		if err := e.exec(conn.ctx, command); err != nil {
 			log.Errorf(conn.ctx, "Landscape: %v", err)
 		}
+
+		// Ping back the server with the updated info
+		info, err := newHostAgentInfo(conn.ctx, e.serviceData)
+		if err != nil {
+			log.Warningf(conn.ctx, "Landscape: after completing command: %v", err)
+		}
+
+		if err := conn.sendInfo(info); err != nil {
+			log.Warningf(conn.ctx, "Landscape: after completing command: %v", err)
+		}
 	}
 }
 
