@@ -218,7 +218,10 @@ func (conn *connection) receiveCommands(e executor) error {
 			return fmt.Errorf("could not receive commands: %v", err)
 		}
 
-		if err := e.exec(conn.ctx, command); err != nil {
+		// Removing the cancel context so that the command is executed even if the connection is lost.
+		ctx := context.WithoutCancel(conn.ctx)
+
+		if err := e.exec(ctx, command); err != nil {
 			log.Errorf(conn.ctx, "Landscape: %v", err)
 		}
 
