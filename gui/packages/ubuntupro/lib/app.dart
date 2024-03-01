@@ -38,7 +38,7 @@ class Pro4WSLApp extends StatelessWidget {
                 routes: {
                   Routes.startup: WizardRoute(
                     builder: buildStartup,
-                    onNext: (_) async {
+                    onReplace: (_) async {
                       final subscriptionInfo =
                           context.read<ValueNotifier<SubscriptionInfo>>();
                       final client = getService<AgentApiClient>();

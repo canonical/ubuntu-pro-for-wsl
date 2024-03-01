@@ -66,11 +66,9 @@ class SubscriptionStatusPage extends StatelessWidget {
                 onPressed: () async {
                   await model.detachPro();
                   if (context.mounted) {
-                    // TODO: Find a way to place this logic upwards.
-                    final countOfLoadedPages =
-                        Wizard.of(context).controller.state.length;
-                    // If more than just Startup and this one, we can go back.
-                    if (countOfLoadedPages > 2) {
+                    final wizard = Wizard.of(context);
+                    // If more than just this one, we can go back.
+                    if (wizard.hasPrevious) {
                       Wizard.of(context).back();
                     } else {
                       // otherwise we need .replace() or .jump(). [small detail of the wizard_router package]
