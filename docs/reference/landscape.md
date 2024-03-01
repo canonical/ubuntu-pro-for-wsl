@@ -19,13 +19,14 @@ The schema for this file is the same as Landscape for Ubuntu desktop or server, 
 Here is an example of what the configuration looks like:
 ```ini
 [host]
-url = https://landscape-server.domain.com:6554
+url = landscape-server.domain.com:6554
 
 [client]
 url = https://landscape-server.domain.com/message-system
 ping_url  = https://landscape-server.domain.com/ping
 account_name = standalone
 log_level = debug
+ssl_public_key = C:\Users\user\Downloads\landscape_server.pem
 ```
 
 ### Host
