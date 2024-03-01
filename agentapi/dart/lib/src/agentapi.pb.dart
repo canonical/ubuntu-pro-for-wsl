@@ -95,6 +95,56 @@ class ProAttachInfo extends $pb.GeneratedMessage {
   void clearToken() => clearField(1);
 }
 
+class LandscapeConfig extends $pb.GeneratedMessage {
+  factory LandscapeConfig({
+    $core.String? config,
+  }) {
+    final $result = create();
+    if (config != null) {
+      $result.config = config;
+    }
+    return $result;
+  }
+  LandscapeConfig._() : super();
+  factory LandscapeConfig.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory LandscapeConfig.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LandscapeConfig', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'config')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  LandscapeConfig clone() => LandscapeConfig()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  LandscapeConfig copyWith(void Function(LandscapeConfig) updates) => super.copyWith((message) => updates(message as LandscapeConfig)) as LandscapeConfig;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LandscapeConfig create() => LandscapeConfig._();
+  LandscapeConfig createEmptyInstance() => create();
+  static $pb.PbList<LandscapeConfig> createRepeated() => $pb.PbList<LandscapeConfig>();
+  @$core.pragma('dart2js:noInline')
+  static LandscapeConfig getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LandscapeConfig>(create);
+  static LandscapeConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get config => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set config($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasConfig() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearConfig() => clearField(1);
+}
+
 enum SubscriptionInfo_SubscriptionType {
   none, 
   user, 

@@ -11,14 +11,14 @@ class SubscriptionStatus extends StatelessWidget {
   const SubscriptionStatus({
     super.key,
     required this.caption,
-    this.actionButton,
+    this.actionButtons,
   });
 
   /// The caption to render below the active subscription subtitle.
   final String caption;
 
   /// The optional action button matching the capabilities of the current subscription type.
-  final Widget? actionButton;
+  final List<Widget>? actionButtons;
 
   @override
   Widget build(BuildContext context) {
@@ -84,11 +84,16 @@ class SubscriptionStatus extends StatelessWidget {
             ],
           ),
         ),
-        if (actionButton != null)
+        if (actionButtons != null)
           Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 32.0),
-              child: actionButton!,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...actionButtons!.map((e) => Flexible(child: e)),
+                ],
+              ),
             ),
           ),
       ],

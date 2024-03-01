@@ -6,7 +6,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:stack_trace/stack_trace.dart' as stack_trace;
 import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/main.dart' as app;
-import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 
 import '../test/utils/l10n_tester.dart';

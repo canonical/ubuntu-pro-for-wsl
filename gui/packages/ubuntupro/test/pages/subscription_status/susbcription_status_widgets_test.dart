@@ -25,10 +25,12 @@ void main() {
         MaterialApp(
           home: SubscriptionStatus(
             caption: caption,
-            actionButton: TextButton(
-              onPressed: () => clicked = true,
-              child: const Text(buttonName),
-            ),
+            actionButtons: [
+              TextButton(
+                onPressed: () => clicked = true,
+                child: const Text(buttonName),
+              ),
+            ],
           ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
         ),

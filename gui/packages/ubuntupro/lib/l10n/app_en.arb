@@ -51,5 +51,33 @@
     "purchaseStatusUserGaveUp":"Purchase attempt was canceled.",
     "purchaseStatusNetwork":"A network issue prevented the purchase to proceed. Please try again once connected.",
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
-    "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app."
+    "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
+
+    "landscapeHeading": "You can manage your Ubuntu instances remotely with {landscapeLink}.",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeQuickSetup": "Quick Setup (Recommended)",
+    "landscapeQuickSetupHint": "Provide your Landscape enrollment information",
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "landscapeFQDNError": "Invalid URI. Format should be a hostname or IP address.",
+    "landscapeAccountNameLabel": "Landscape Account Name",
+    "landscapeAccountNameError": "Invalid account name",
+    "landscapeKeyLabel": "Registration Key",
+    "landscapeCustomSetup": "Custom Configuration",
+    "landscapeCustomSetupHint": "Load a custom client configuration file",
+    "landscapeFileLabel": "Config file path",
+    "landscapeFileTooLarge": "Configuration file is too large",
+    "landscapeFileEmpty": "A path must be specified",
+    "landscapeFileNotFound": "File not found",
+    "landscapeFilePicker": "Select file...",
+    "landscapeConfigureButton": "Configure Landscape",
+
+    "buttonNext": "Continue",
+    "buttonSkip": "Skip",
+    "buttonBack": "Back"
 }

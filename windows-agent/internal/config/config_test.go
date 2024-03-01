@@ -425,6 +425,57 @@ func TestSetStoreSubscription(t *testing.T) {
 	}
 }
 
+func TestSetUserLandscapeConfig(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testCases := map[string]struct {
+		settingsState settingsState
+		breakFile     bool
+
+		wantError bool
+	}{
+		"Success": {settingsState: untouched},
+
+		"Error when an organization landscape config is already set": {settingsState: orgLandscapeConfigHasValue, wantError: true},
+		"Error when an configuration cannot be read":                 {settingsState: untouched, breakFile: true, wantError: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			db, err := database.New(ctx, t.TempDir(), nil)
+			require.NoError(t, err, "Setup: could not create empty database")
+
+			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
+			conf := config.New(ctx, dir)
+			setup(t, conf)
+
+			landscapeConfig := "LANDSCAPE CONFIG"
+
+			err = conf.SetUserLandscapeConfig(ctx, landscapeConfig)
+			if tc.wantError {
+				require.Error(t, err, "SetUserLandscapeConfig should return an error")
+				return
+			}
+			require.NoError(t, err, "SetUserLandscapeConfig should return no errors")
+
+			got, src, err := conf.LandscapeClientConfig()
+			require.NoError(t, err, "LandscapeClientConfig should return no errors")
+			require.Equal(t, landscapeConfig, got, "Did not get the same value for landscape config as we set")
+			require.Equal(t, config.SourceUser, src, "Did not get the same value for landscape config as we set")
+		})
+	}
+}
+
 func TestSetLandscapeAgentUID(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()

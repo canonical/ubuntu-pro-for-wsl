@@ -224,14 +224,67 @@ func TestNotifyPurchase(t *testing.T) {
 	}
 }
 
+func TestApplyLandscapeConfig(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		setUserLandscapeConfigErr bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when setting the config returns error": {setUserLandscapeConfigErr: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			landscapeConfig := "look at me! I am a Landscape config"
+
+			dir := t.TempDir()
+			db, err := database.New(ctx, dir, nil)
+			require.NoError(t, err, "Setup: empty database New() should return no error")
+			defer db.Close(ctx)
+
+			conf := &mockConfig{
+				setUserLandscapeConfigErr: tc.setUserLandscapeConfigErr,
+			}
+
+			uiService := ui.New(context.Background(), conf, db)
+
+			msg := &agentapi.LandscapeConfig{
+				Config: landscapeConfig,
+			}
+
+			got, err := uiService.ApplyLandscapeConfig(ctx, msg)
+			if tc.wantErr {
+				require.Error(t, err, "ApplyLandscapeConfig should return an error")
+				return
+			}
+			require.NoError(t, err, "ApplyLandscapeConfig should return no errors")
+
+			require.NotNil(t, got, "ApplyLandscapeConfig should not return a nil ageEmpty")
+			require.Equal(t, landscapeConfig, conf.gotLandscapeConfig, "Config received unexpected Landscape config")
+		})
+	}
+}
+
 type mockConfig struct {
-	setUserSubscriptionErr bool // Config errors out in SetUserSubscription function
-	subscriptionErr        bool // Config errors out in Subscription function
+	setUserSubscriptionErr    bool // Config errors out in SetUserSubscription function
+	subscriptionErr           bool // Config errors out in Subscription function
+	setUserLandscapeConfigErr bool // Config errors out in SetUserLandscapeConfig function
 
 	token  string        // stores the configured Pro token
 	source config.Source // stores the configured subscription source.
 
-	returnBadSource bool
+	returnBadSource    bool
+	gotLandscapeConfig string
 }
 
 func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) error {
@@ -246,6 +299,16 @@ func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) erro
 func (m *mockConfig) SetStoreSubscription(ctx context.Context, token string) error {
 	m.token = token
 	m.source = config.SourceMicrosoftStore
+	return nil
+}
+
+func (m *mockConfig) SetUserLandscapeConfig(ctx context.Context, landscapeConfig string) error {
+	if m.setUserLandscapeConfigErr {
+		return errors.New("mock error")
+	}
+
+	m.gotLandscapeConfig = landscapeConfig
+
 	return nil
 }
 

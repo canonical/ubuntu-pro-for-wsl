@@ -37,5 +37,12 @@ void main() {
       expect(info.productId, isEmpty);
       expect(info.whichSubscriptionType(), SubscriptionType.none);
     });
+
+    test('setting landscape config succeeds', () {
+      expect(
+        () async => await client.applyLandscapeConfig('test config'),
+        returnsNormally,
+      );
+    });
   });
 }

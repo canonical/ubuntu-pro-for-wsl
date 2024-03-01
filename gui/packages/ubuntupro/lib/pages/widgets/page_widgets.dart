@@ -61,6 +61,150 @@ class Pro4WSLPage extends StatelessWidget {
   }
 }
 
+class ColumnLandingPage extends StatelessWidget {
+  const ColumnLandingPage({
+    super.key,
+    required this.leftChildren,
+    required this.children,
+    this.onNext,
+    this.onSkip,
+    this.onBack,
+    this.svgAsset = 'assets/Ubuntu-tag.svg',
+    this.title = 'Landscape',
+  });
+
+  final List<Widget> leftChildren;
+  final List<Widget> children;
+  final String svgAsset;
+  final String title;
+
+  final void Function()? onNext;
+  final void Function()? onSkip;
+  final void Function()? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context);
+
+    return Pro4WSLPage(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/05_suru2_dark_2K.jpg',
+              fit: BoxFit.fill,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      // Left column "header"
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  WidgetSpan(
+                                    child: SvgPicture.asset(
+                                      svgAsset,
+                                      height: 70,
+                                    ),
+                                  ),
+                                  const WidgetSpan(
+                                    child: SizedBox(
+                                      width: 8,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displaySmall
+                                        ?.copyWith(fontWeight: FontWeight.w100),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 24,
+                            ),
+                            ...leftChildren,
+                          ],
+                        ),
+                      ),
+                      // Divider
+                      const Expanded(
+                        flex: 1,
+                        child: VerticalDivider(
+                          thickness: 0.2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      // Right column content
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          children: [...children],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 16.0,
+                ),
+                // Navigation buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    OutlinedButton(
+                      onPressed: onBack,
+                      child: Text(lang.buttonBack),
+                    ),
+                    Row(
+                      children: [
+                        FilledButton(
+                          onPressed: onSkip,
+                          child: Text(lang.buttonSkip),
+                        ),
+                        const SizedBox(
+                          width: 16.0,
+                        ),
+                        FilledButton(
+                          onPressed: onNext,
+                          style: Theme.of(context)
+                              .filledButtonTheme
+                              .style
+                              ?.copyWith(
+                                backgroundColor: MaterialStatePropertyAll(
+                                  YaruColors.dark.success,
+                                ),
+                              ),
+                          child: Text(lang.buttonNext),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // A more stylized page that mimics the design of the https://ubuntu.com/pro
 // landing page, with a dark background and an [svgAsset] logo followed by
 // a title with some opacity, rendering the [children] in a column layout.

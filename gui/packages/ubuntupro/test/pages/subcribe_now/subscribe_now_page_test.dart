@@ -7,8 +7,8 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
-import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
-import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:yaru/yaru.dart';
 import 'subscribe_now_page_test.mocks.dart';
 import 'token_samples.dart' as tks;
@@ -159,7 +159,7 @@ void main() {
 }
 
 Widget buildApp(
-  SubscriptionStatusModel model,
+  SubscribeNowModel model,
   void Function(SubscriptionInfo) onSubs,
 ) {
   return YaruTheme(

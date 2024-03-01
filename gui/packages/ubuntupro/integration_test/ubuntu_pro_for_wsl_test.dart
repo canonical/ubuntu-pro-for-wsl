@@ -12,8 +12,10 @@ import 'package:ubuntupro/constants.dart';
 import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/launch_agent.dart';
 import 'package:ubuntupro/main.dart' as app;
+import 'package:ubuntupro/pages/landscape/landscape_model.dart';
+import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
-import 'package:ubuntupro/pages/subscription_status/subscribe_now_page.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 import 'package:yaru_test/yaru_test.dart';
 
@@ -109,7 +111,7 @@ void main() {
       });
 
       // Tests the user journey for manual input of a pro token followed by a detach call.
-      testWidgets('manual', (tester) async {
+      testWidgets('manual skip Landscape', (tester) async {
         await app.main();
         await tester.pumpAndSettle();
 
@@ -128,6 +130,79 @@ void main() {
         // submits the input.
         final button = find.text(l10n.confirm);
         await tester.tap(button);
+        await tester.pumpAndSettle();
+
+        // check that we transitioned to the LandscapePage
+        l10n = tester.l10n<LandscapePage>();
+        final radios = find.byType(Radio<LandscapeConfigType>);
+        expect(radios, findsNWidgets(2));
+        await tester.tap(radios.at(1));
+        await tester.pump();
+        await tester.tap(radios.at(0));
+        await tester.pump();
+        final skip = find.button(l10n.buttonSkip);
+        await tester.tap(skip);
+        await tester.pumpAndSettle();
+
+        // checks that we transitioned to the SubscriptionStatusPage
+        l10n = tester.l10n<SubscriptionStatusPage>();
+
+        // finds and taps the "detach pro" button.
+        final detachButton = find.text(l10n.detachPro);
+        expect(detachButton, findsOneWidget);
+        await tester.tap(detachButton);
+        await tester.pumpAndSettle();
+
+        // checks that we went back to the SubscribeNowPage
+        expect(find.byType(SubscribeNowPage), findsOneWidget);
+      });
+
+      testWidgets('manual with landscape', (tester) async {
+        await app.main();
+        await tester.pumpAndSettle();
+
+        // The "subscribe now page" is only shown if the GUI communicates with the background agent.
+        var l10n = tester.l10n<SubscribeNowPage>();
+        // expands the collapsed input field group
+        final toggle = find.byType(IconButton);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+
+        // enters a good token value
+        final inputField = find.byType(TextField);
+        await tester.enterText(inputField, 'CJd8MMN8wXSWsv7wJT8c8dDK');
+        await tester.pump();
+
+        // submits the input.
+        final button = find.text(l10n.confirm);
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+
+        // check that we transitioned to the LandscapePage
+        l10n = tester.l10n<LandscapePage>();
+        final radios = find.byType(Radio<LandscapeConfigType>);
+        expect(radios, findsNWidgets(2));
+        await tester.tap(radios.at(1));
+        await tester.pump();
+        await tester.tap(radios.at(0));
+        await tester.pump();
+
+        final continueButton = find.button(l10n.buttonNext);
+
+        // check that invalid input disables continue
+        final fqdnInput = find.ancestor(
+          of: find.text(l10n.landscapeFQDNLabel),
+          matching: find.byType(TextField),
+        );
+        await tester.enterText(fqdnInput, '::');
+        await tester.pump();
+        expect(tester.widget<FilledButton>(continueButton).enabled, isFalse);
+
+        // check that valid input enabled continue, and continue
+        await tester.enterText(fqdnInput, 'example.com');
+        await tester.pump();
+        expect(tester.widget<FilledButton>(continueButton).enabled, isTrue);
+        await tester.tap(continueButton);
         await tester.pumpAndSettle();
 
         // checks that we transitioned to the SubscriptionStatusPage

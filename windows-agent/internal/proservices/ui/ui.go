@@ -16,11 +16,12 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-// Config is a provider for the subcription configuration.
+// Config is a provider for the subscription configuration.
 type Config interface {
 	SetUserSubscription(ctx context.Context, token string) error
 	SetStoreSubscription(ctx context.Context, token string) error
 	Subscription() (string, config.Source, error)
+	SetUserLandscapeConfig(ctx context.Context, token string) error
 }
 
 // Service it the UI GRPC service implementation.
@@ -68,6 +69,18 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 
 	log.Debugf(ctx, "UI service: responding ApplyProToken with info: %v", info)
 	return subs, nil
+}
+
+// ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
+func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.Empty, error) {
+	c := landscapeConfig.GetConfig()
+
+	err := s.config.SetUserLandscapeConfig(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agentapi.Empty{}, nil
 }
 
 // Ping replies a keep-alive request.

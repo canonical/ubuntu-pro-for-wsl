@@ -8,6 +8,7 @@ message Empty {}
 
 service UI {
     rpc ApplyProToken (ProAttachInfo) returns (SubscriptionInfo) {}
+    rpc ApplyLandscapeConfig(LandscapeConfig) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
     rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
     rpc NotifyPurchase(Empty) returns (SubscriptionInfo) {}
@@ -17,9 +18,13 @@ message ProAttachInfo {
     string token = 1;
 }
 
+message LandscapeConfig {
+    string config = 1;
+}
+
 message SubscriptionInfo {
     string productId = 1;           // The ID of the Ubuntu Pro for WSL product on the Microsoft Store.
-    
+
     oneof subscriptionType {
         Empty none = 2;             // There is no active subscription.
         Empty user = 3;             // The subscription is managed by the user with a pro token from the GUI or the registry.
@@ -44,5 +49,3 @@ message DistroInfo {
 message Port {
     uint32 port = 1;
 }
-
-
