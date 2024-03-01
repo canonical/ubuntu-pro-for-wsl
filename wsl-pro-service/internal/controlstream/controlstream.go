@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -125,20 +126,46 @@ func (cs ControlStream) address(ctx context.Context) (string, error) {
 		return "", SystemError{err}
 	}
 
-	/*
-		We parse the port from the file written by the windows agent.
-	*/
+	// Parse the port from the file written by the windows agent.
 	addr, err := os.ReadFile(cs.addrPath)
 	if err != nil {
 		return "", fmt.Errorf("could not read agent port file %q: %v", cs.addrPath, err)
 	}
 
-	_, port, err := net.SplitHostPort(string(addr))
+	port, err := splitPort(string(addr))
 	if err != nil {
-		return "", fmt.Errorf("could not parse port from %q: %v", addr, err)
+		return "", err
 	}
 
-	return net.JoinHostPort(windowsLocalhost.String(), port), nil
+	// Join the address and port, and validate it.
+	address := net.JoinHostPort(windowsLocalhost.String(), fmt.Sprint(port))
+
+	return address, nil
+}
+
+// splitPort splits the port from the address, and validates that the port is a strictly positive integer.
+func splitPort(addr string) (p int, err error) {
+	defer decorate.OnError(&err, "could not parse port from %q", addr)
+
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 0, fmt.Errorf("could not split address: %v", err)
+	}
+
+	p, err = strconv.Atoi(port)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse port as an integer: %v", err)
+	}
+
+	if p == 0 {
+		return 0, errors.New("port cannot be zero")
+	}
+
+	if p < 0 {
+		return 0, errors.New("port cannot be negative")
+	}
+
+	return p, nil
 }
 
 // ReservedPort returns the port assigned to this distro.
