@@ -53,7 +53,7 @@ dependencies:
       url: https://github.com/canonical/ubuntu-pro-for-wsl
       path: gui/packages/p4w_ms_store
   path: ^1.8.0
-  provider: ^6.1.1
+  provider: ^6.1.2
   ubuntu_service: ^0.3.0
   url_launcher: ^6.2.4
   wizard_router: ^1.2.0
