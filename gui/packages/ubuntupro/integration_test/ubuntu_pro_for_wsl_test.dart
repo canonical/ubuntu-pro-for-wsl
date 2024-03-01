@@ -274,6 +274,58 @@ void main() {
           expect(find.byType(SnackBar), findsOneWidget);
         },
       );
+      // Tests the journey in which the user is already subscribed.
+      group('already subscribed', () {
+        // config created by the agent.
+        const configContents = '''
+subscription:
+    user: CJd8MMN8wXSWsv7wJT8c8dDK
+    store: ""
+    checksum: ""
+landscape:
+    config: |
+        [host]
+        url = landscape.canonical.com:6554
+        [client]
+        account_name = test-user
+        registration_key = 
+        url = https://landscape.canonical.com/message-system
+        log_level = debug
+        ping_url = https://landscape.canonical.com/ping
+    uid: b95842dd41454d29970040fe9492bc88
+    checksum: jE8mRRqhDcoheaansWXCtjicU9L3vupxaxwk9JKBmLy+xJLaH+9WPWTmJrBMxBLI7N6gVDzpMEU3RhCyIVYDLA==
+''';
+        Directory? configDir;
+        setUpAll(() async {
+          // seed a pre-existing configuration.
+          configDir =
+              await Directory(p.join(tmpLocalAppData!.path, 'Ubuntu Pro'))
+                  .create(recursive: true);
+          final config = File(p.join(configDir!.path, 'config'));
+          await config.writeAsString(configContents);
+        });
+
+        tearDownAll(() {
+          configDir?.deleteSync(recursive: true);
+        });
+
+        testWidgets('success', (tester) async {
+          await app.main();
+          await tester.pumpAndSettle();
+
+          // We should have transitioned straight into the Subscription status page.
+          final l10n = tester.l10n<SubscriptionStatusPage>();
+
+          // finds and taps the "detach pro" button.
+          final detachButton = find.text(l10n.detachPro);
+          expect(detachButton, findsOneWidget);
+          await tester.tap(detachButton);
+          await tester.pumpAndSettle();
+
+          // checks that we went back to the SubscribeNowPage
+          expect(find.byType(SubscribeNowPage), findsOneWidget);
+        });
+      });
     },
     skip: !Platform.isWindows,
     // skips the whole group of tests if not on Windows since it relies on compiling and running the agent.
