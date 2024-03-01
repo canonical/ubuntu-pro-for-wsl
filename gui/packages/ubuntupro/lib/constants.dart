@@ -11,4 +11,7 @@ const kDefaultMargin = 32.0;
 const kAgentRelativePath = 'agent/ubuntu-pro-agent-launcher.exe';
 
 /// The full decorated version string
-const kVersion = String.fromEnvironment('UP4W_FULL_VERSION', defaultValue: 'Dev');
+const kVersion = String.fromEnvironment(
+  'UP4W_FULL_VERSION',
+  defaultValue: 'Dev',
+);
