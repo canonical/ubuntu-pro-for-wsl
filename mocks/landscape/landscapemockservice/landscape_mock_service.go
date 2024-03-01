@@ -32,7 +32,8 @@ type HostInfo struct {
 	AccountName     string
 	RegistrationKey string
 
-	Instances []InstanceInfo
+	Instances         []InstanceInfo
+	DefaultInstanceID string
 }
 
 // receiveHostInfo receives a landscapeapi.HostAgentInfo and converts it to a HostInfo.
@@ -47,12 +48,13 @@ func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (Host
 	}
 
 	h := HostInfo{
-		UID:             src.GetUid(),
-		Hostname:        src.GetHostname(),
-		Token:           src.GetToken(),
-		Instances:       make([]InstanceInfo, 0, len(src.GetInstances())),
-		AccountName:     src.GetAccountName(),
-		RegistrationKey: src.GetRegistrationKey(),
+		UID:               src.GetUid(),
+		Hostname:          src.GetHostname(),
+		Token:             src.GetToken(),
+		Instances:         make([]InstanceInfo, 0, len(src.GetInstances())),
+		AccountName:       src.GetAccountName(),
+		RegistrationKey:   src.GetRegistrationKey(),
+		DefaultInstanceID: src.GetDefaultInstanceId(),
 	}
 
 	for _, inst := range src.GetInstances() {
