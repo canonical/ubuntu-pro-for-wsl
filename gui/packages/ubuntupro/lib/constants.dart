@@ -9,3 +9,6 @@ const kDefaultMargin = 32.0;
 
 /// The path of the agent executable relative to the msix root directory.
 const kAgentRelativePath = 'agent/ubuntu-pro-agent-launcher.exe';
+
+/// The full decorated version string
+const kVersion = String.fromEnvironment('UP4W_FULL_VERSION', defaultValue: 'Dev');

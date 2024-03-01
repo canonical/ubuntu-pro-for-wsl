@@ -4,6 +4,7 @@
 		<GoAppRoot>$(MSBuildThisFileDirectory)..\..\windows-agent\</GoAppRoot>
 		<GoAppDir>$(GoAppRoot)cmd\ubuntu-pro-agent\</GoAppDir>
         <GoBuildTags Condition="'$(UP4W_TEST_WITH_MS_STORE_MOCK)' != ''">-tags=server_mocks</GoBuildTags>
+        <VersionDefine Condition="$(UP4W_FULL_VERSION) != '' ">-ldflags="-X=github.com/canonical/ubuntu-pro-for-wsl/common.Version=$(UP4W_FULL_VERSION)"</VersionDefine>
 	</PropertyGroup>
     <ItemGroup>
       <None Include="$(GoAppRoot)\**\*.go" />
@@ -30,7 +31,7 @@
         </ItemGroup>
         <Message Text="Building Go artifacts to $(OutDir) and bundling @(DepAssemblies)" Importance="high"/>
         <MakeDir Directories="$(OutDir)" />
-		<Exec Command="go build $(GoBuildTags) $(GoAppDir)" WorkingDirectory="$(OutDir)" />
+		<Exec Command="go build $(GoBuildTags) $(VersionDefine) $(GoAppDir)" WorkingDirectory="$(OutDir)" />
 	</Target>
     <Target Name="Clean" Condition="Exists($(TargetPath))">
 		<Message Text="Cleaning $(TargetPath)" Importance="high" />

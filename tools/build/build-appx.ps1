@@ -71,6 +71,23 @@ function Update-Certificate {
     | Set-Content -Path "${wapproj}"
 }
 
+function Set-Version {
+    $env:UP4W_FULL_VERSION=$(go run .\tools\build\compute_version.go)
+
+    $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
+    # Update the AppxManifest version
+    [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
+    $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
+
+    Write-Output "Setting version to $UP4W_VERSION in file $path"
+    Write-Output "Building with full-version $env:UP4W_FULL_VERSION"
+
+    $doc = [System.Xml.Linq.XDocument]::Load($path)
+    $xName = [System.Xml.Linq.XName]::Get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Identity")
+    $doc.Root.Element($xName).Attribute("Version").Value = "$UP4W_VERSION.0";
+    $doc.Save($path)
+}
+
 function Install-Appx {
     Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage
 
@@ -102,6 +119,8 @@ Get-AppxPackage "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage
 # Going to project root
 Push-Location "${PSScriptRoot}\..\.."
 
+# Must be the first thing otherwise it may append `-dirty` in the full version string.
+Set-Version
 Update-Certificate
 
 try {
