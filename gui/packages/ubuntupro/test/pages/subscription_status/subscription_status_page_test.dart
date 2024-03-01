@@ -7,10 +7,12 @@ import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
+import 'package:wizard_router/wizard_router.dart';
 
 void main() {
   group('subscription info', () {
     final client = FakeAgentApiClient();
+    registerServiceInstance<AgentApiClient>(client);
     final info = SubscriptionInfo();
     testWidgets('user', (tester) async {
       info.ensureUser();
@@ -49,10 +51,9 @@ void main() {
     });
   });
   testWidgets('creates a model', (tester) async {
-    final mockClient = FakeAgentApiClient();
     final info = ValueNotifier(SubscriptionInfo());
     info.value.ensureUser();
-    registerServiceInstance<AgentApiClient>(mockClient);
+
     final app = ChangeNotifierProvider.value(
       value: info,
       child: const MaterialApp(
@@ -69,6 +70,103 @@ void main() {
 
     expect(model, isNotNull);
   });
+  group('sane navigation', () {
+    Widget buildWizardApp(Map<String, WizardRoute> routes) {
+      final info = ValueNotifier(SubscriptionInfo());
+      info.value.ensureUser();
+      return ChangeNotifierProvider.value(
+        value: info,
+        child: MaterialApp(
+          builder: (context, _) => Wizard(routes: routes),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+        ),
+      );
+    }
+
+    testWidgets('no backwards', (tester) async {
+      var replaced = false;
+      var retrocessed = false;
+
+      final app = buildWizardApp({
+        '/': WizardRoute(
+          builder: SubscriptionStatusPage.create,
+          onReplace: (_) async {
+            replaced = true;
+            return null;
+          },
+          onBack: (_) async {
+            retrocessed = true;
+            return null;
+          },
+        ),
+        '/second': WizardRoute(
+          builder: (_) => const Placeholder(),
+        ),
+      });
+
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(SubscriptionStatusPage));
+      final lang = AppLocalizations.of(context);
+      final detach = find.text(lang.detachPro);
+
+      expect(detach, findsOneWidget);
+      await tester.tap(detach);
+      await tester.pumpAndSettle();
+
+      expect(replaced, isTrue);
+      expect(retrocessed, isFalse);
+    });
+
+    testWidgets('backwards', (tester) async {
+      var replaced = false;
+      var retrocessed = false;
+      const clickMe = 'Click me';
+
+      final app = buildWizardApp({
+        '/': WizardRoute(
+          builder: (context) => Center(
+            child: FilledButton(
+              onPressed: () {
+                Wizard.of(context).next();
+              },
+              child: const Text(clickMe),
+            ),
+          ),
+        ),
+        '/second': WizardRoute(
+          builder: SubscriptionStatusPage.create,
+          onReplace: (_) async {
+            replaced = true;
+            return null;
+          },
+          onBack: (_) async {
+            retrocessed = true;
+            return null;
+          },
+        ),
+      });
+
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+
+      final clickButton = find.text(clickMe);
+      await tester.tap(clickButton);
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(SubscriptionStatusPage));
+      final lang = AppLocalizations.of(context);
+      final detach = find.text(lang.detachPro);
+
+      expect(detach, findsOneWidget);
+      await tester.tap(detach);
+      await tester.pumpAndSettle();
+
+      expect(retrocessed, isTrue);
+      expect(replaced, isFalse);
+    });
+  });
 }
 
 Widget buildApp(SubscriptionInfo info, AgentApiClient client) {
@@ -82,4 +180,13 @@ Widget buildApp(SubscriptionInfo info, AgentApiClient client) {
   );
 }
 
-class FakeAgentApiClient extends Fake implements AgentApiClient {}
+class FakeAgentApiClient extends Fake implements AgentApiClient {
+  @override
+  Future<void> applyLandscapeConfig(String config) async {}
+  @override
+  Future<SubscriptionInfo> applyProToken(String token) async {
+    final info = SubscriptionInfo();
+    info.ensureUser();
+    return info;
+  }
+}
