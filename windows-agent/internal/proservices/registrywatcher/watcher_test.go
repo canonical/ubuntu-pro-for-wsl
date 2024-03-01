@@ -31,15 +31,21 @@ func TestRegistryWatcher(t *testing.T) {
 
 	testCases := map[string]struct {
 		startEmptyRegistry        bool
+		breakCreateKey            bool
 		breakOpenKey              bool
 		breakReadValue            bool
 		breakNotifyChangeKeyValue bool
 		breakWaitForSingleObject  bool
+
+		wantKeyNotExist bool
+		wantCannotRead  bool
 	}{
 		"Success": {},
-		"Success with an empty starting registry":         {startEmptyRegistry: true},
-		"Success after not being able to open keys":       {breakOpenKey: true},
-		"Success after not being able to read from keys":  {breakReadValue: true},
+		"Success with an empty starting registry":                      {startEmptyRegistry: true},
+		"Success with an empty starting registry and broken CreateKey": {startEmptyRegistry: true, breakCreateKey: true, wantKeyNotExist: true},
+
+		"Success after not being able to open keys":       {breakOpenKey: true, wantCannotRead: true},
+		"Success after not being able to read from keys":  {breakReadValue: true, wantCannotRead: true},
 		"Success after not being able to watch keys":      {breakNotifyChangeKeyValue: true},
 		"Success after not being able to wait for events": {breakWaitForSingleObject: true},
 	}
@@ -58,31 +64,32 @@ func TestRegistryWatcher(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), nil)
 			require.NoError(t, err, "Setup: could not create empty DB")
 
+			reg := registry.NewMock()
+			defer reg.RequireNoLeaks(t)
+
 			var startingProToken, startingLandscapeConfig string
 			if !tc.startEmptyRegistry {
 				startingProToken = defaultProToken
 				startingLandscapeConfig = defaultLandscapeConfig
-			}
 
-			reg := registry.NewMock()
-			defer reg.RequireNoLeaks(t)
-
-			if !tc.startEmptyRegistry {
 				func() {
-					k, err := reg.HKCUOpenKeyWrite("Software/Canonical/UbuntuPro")
+					k, err := reg.HKCUCreateKey("Software/Canonical/UbuntuPro")
 					require.NoError(t, err, "Setup: could not create key")
 					defer reg.CloseKey(k)
 
-					err = reg.WriteValue(k, "UbuntuProToken", defaultProToken)
+					err = reg.WriteValue(k, "UbuntuProToken", startingProToken, false)
 					require.NoError(t, err, "Setup: could not write UbuntuProToken into the registry")
 
-					err = reg.WriteValue(k, "LandscapeConfig", defaultLandscapeConfig)
+					err = reg.WriteValue(k, "LandscapeConfig", startingLandscapeConfig, true)
 					require.NoError(t, err, "Setup: could not write LandscapeConfig into the registry")
 				}()
 			}
 
 			if tc.breakOpenKey {
 				reg.CannotOpen.Store(true)
+			}
+			if tc.breakCreateKey {
+				reg.CannotCreate.Store(true)
 			}
 			if tc.breakReadValue {
 				reg.CannotRead.Store(true)
@@ -98,10 +105,16 @@ func TestRegistryWatcher(t *testing.T) {
 			w.Start()
 			defer w.Stop()
 
+			if tc.wantKeyNotExist {
+				require.False(t, reg.UbuntuProKeyExists(), "UbuntuPro key should not exist after the watcher starts")
+			} else {
+				require.True(t, reg.UbuntuProKeyExists(), "UbuntuPro key should exist after the watcher starts")
+			}
+
 			// wantMsgLen is the expected number of times that data is sent to the config
 			var wantMsgLen int
 
-			if tc.breakOpenKey || tc.breakReadValue {
+			if tc.wantCannotRead {
 				// Cannot read from the registry: no data should be pushed
 				time.Sleep(30 * time.Second)
 				require.Equal(t, wantMsgLen, conf.ReceivedLen(), "Registry watcher should not have updated the config")
@@ -126,12 +139,18 @@ func TestRegistryWatcher(t *testing.T) {
 
 			wantMsgLen = conf.ReceivedLen() + 1
 
-			k, err := reg.HKCUOpenKeyWrite("Software/Canonical/UbuntuPro")
+			if tc.breakCreateKey {
+				// We disable the mock's broken CreateKey.
+				// We need to do this because we need to pretend a user changed the registry.
+				reg.CannotCreate.Store(false)
+			}
+
+			k, err := reg.HKCUCreateKey("Software/Canonical/UbuntuPro")
 			require.NoError(t, err, "Setup: could not create key")
 			defer reg.CloseKey(k)
 
 			wantMsgLen = conf.ReceivedLen() + 1
-			err = reg.WriteValue(k, "UbuntuProToken", newProToken)
+			err = reg.WriteValue(k, "UbuntuProToken", newProToken, false)
 			require.NoError(t, err, "Setup: could not write UbuntuProToken into the registry")
 
 			require.Eventuallyf(t, func() bool { return conf.ReceivedLen() >= wantMsgLen },
@@ -140,7 +159,7 @@ func TestRegistryWatcher(t *testing.T) {
 			require.Equal(t, startingLandscapeConfig, conf.LatestReceived().LandscapeConfig, "Landscape config should have contained the new registry value")
 
 			wantMsgLen = conf.ReceivedLen() + 1
-			err = reg.WriteValue(k, "LandscapeConfig", newLandscapeConfig)
+			err = reg.WriteValue(k, "LandscapeConfig", newLandscapeConfig, true)
 			require.NoError(t, err, "Setup: could not write LandscapeConfig into the registry")
 
 			require.Eventually(t, func() bool { return conf.ReceivedLen() >= wantMsgLen },

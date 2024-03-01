@@ -30,13 +30,20 @@ type Service struct {
 	db       *database.DistroDB
 }
 
+// registryPath is the path to the registry key we want to watch.
 const registryPath = `Software\Canonical\UbuntuPro`
+
+// registryParentPath is the path to the first parent that we can guarantee exists.
+// We watch this key if registryPath does not exist.
+const registryParentPath = `Software\`
 
 // Registry is an interface to the Windows registry.
 type Registry interface {
 	HKCUOpenKey(path string) (registry.Key, error)
+	HKCUCreateKey(path string) (registry.Key, error)
 	CloseKey(k registry.Key)
 	ReadValue(k registry.Key, field string) (value string, err error)
+	WriteValue(k registry.Key, field, value string, multiline bool) (err error)
 
 	// Win32 stuff: not strictly registry but not worth separating out
 	RegNotifyChangeKeyValue(k registry.Key) (registry.Event, error)
@@ -92,6 +99,10 @@ func New(ctx context.Context, conf Config, database *database.DistroDB, args ...
 func (s *Service) Start() {
 	s.ctx, s.stop = context.WithCancel(s.ctx)
 
+	if err := setDefaultRegistry(s.registry); err != nil {
+		log.Warningf(s.ctx, "Registry watcher: %v", err)
+	}
+
 	s.readThenPushRegistryData(s.ctx)
 
 	go s.run()
@@ -141,29 +152,37 @@ func (s *Service) run() {
 			ctx, cancel := context.WithCancel(s.ctx)
 			defer cancel()
 
-			k, err := s.registry.HKCUOpenKey(registryPath)
+			path := registryPath
+			k, err := s.registry.HKCUOpenKey(path)
+			if errors.Is(err, registry.ErrKeyNotExist) {
+				// Watch the Software/ key instead, which we're almost guaranteed exists
+				path = registryParentPath
+				k, err = s.registry.HKCUOpenKey(path)
+				// ^This is not covered in tests because it significantly
+				// complicates the mock registry.
+			}
 			if err != nil {
-				return fmt.Errorf(`could not open registry key HKCU\%s: %v`, registryPath, err)
+				return fmt.Errorf(`could not open registry key HKCU\%s: %v`, path, err)
 			}
 			defer s.registry.CloseKey(k)
 
 			// Start to watch
 			event, err := s.registry.RegNotifyChangeKeyValue(k)
 			if err != nil {
-				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, registryPath, err)
+				return fmt.Errorf(`could not watch changes to registry key HKCU\%s: %v`, path, err)
 			}
 			defer s.registry.CloseEvent(event)
 
-			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, registryPath)
+			log.Debugf(ctx, `Registry watcher: watching key HKCU\%s`, path)
 
 			// Push update right after having started to watch
 			s.readThenPushRegistryData(ctx)
 
 			// Wait until the key is modified or the context is cancelled, whichever one happens first
 			if err := s.waitForSingleObject(ctx, event); err != nil {
-				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, registryPath, err)
+				return fmt.Errorf(`could not wait for changes to registry key HKCU\%s: %v`, path, err)
 			}
-			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, registryPath)
+			log.Infof(ctx, `Registry watcher: detected change in registry key HKCU\%s or one of its children`, path)
 
 			return nil
 		}()
@@ -222,6 +241,12 @@ func (s *Service) readThenPushRegistryData(ctx context.Context) {
 	}
 }
 
+//nolint:gosec // These are not credentials
+const (
+	ubuntuProTokenField  = "UbuntuProToken"
+	landscapeConfigField = "LandscapeConfig"
+)
+
 func loadRegistry(reg Registry) (data config.RegistryData, err error) {
 	defer decorate.OnError(&err, "could not read registry")
 
@@ -235,12 +260,12 @@ func loadRegistry(reg Registry) (data config.RegistryData, err error) {
 	}
 	defer reg.CloseKey(k)
 
-	proToken, err := readFromRegistry(reg, k, "UbuntuProToken")
+	proToken, err := readFromRegistry(reg, k, ubuntuProTokenField)
 	if err != nil {
 		return data, err
 	}
 
-	conf, err := readFromRegistry(reg, k, "LandscapeConfig")
+	conf, err := readFromRegistry(reg, k, landscapeConfigField)
 	if err != nil {
 		return data, err
 	}
@@ -261,4 +286,40 @@ func readFromRegistry(r Registry, key registry.Key, field string) (string, error
 	}
 
 	return value, nil
+}
+
+func setDefaultRegistry(r Registry) (err error) {
+	defer decorate.OnError(&err, "could not set default contents")
+
+	k, err := r.HKCUCreateKey(registryPath)
+	if err != nil {
+		return fmt.Errorf(`could not create registry key HKCU\%s: %v`, registryPath, err)
+	}
+	defer r.CloseKey(k)
+
+	err = errors.Join(err,
+		createIfNotExist(r, k, ubuntuProTokenField, false),
+		createIfNotExist(r, k, landscapeConfigField, true),
+	)
+
+	return err
+}
+
+func createIfNotExist(r Registry, k registry.Key, field string, multiline bool) (err error) {
+	defer decorate.OnError(&err, "could not initialize field %q", field)
+
+	if _, err := r.ReadValue(k, field); err == nil {
+		// Field already exists
+		return nil
+	} else if !errors.Is(err, registry.ErrFieldNotExist) {
+		// Some other error
+		return fmt.Errorf("could not read pre-existing value: %v", err)
+	}
+
+	// Field does not exist
+	if err := r.WriteValue(k, field, "", multiline); err != nil {
+		return fmt.Errorf("could not write default value: %v", err)
+	}
+
+	return nil
 }

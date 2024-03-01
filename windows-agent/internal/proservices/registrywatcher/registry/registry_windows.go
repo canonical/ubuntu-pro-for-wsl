@@ -16,7 +16,19 @@ type Windows struct{}
 
 // HKCUOpenKey opens a key in the specified path under the HK_CURRENT_USER registry with read permissions.
 func (Windows) HKCUOpenKey(path string) (Key, error) {
-	key, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.READ)
+	key, err := registry.OpenKey(registry.CURRENT_USER, path, registry.READ)
+	if errors.Is(err, registry.ErrNotExist) {
+		return 0, ErrKeyNotExist
+	}
+	if errors.Is(err, syscall.Errno(5)) { // Access is denied
+		return 0, ErrAccessDenied
+	}
+	return Key(key), err
+}
+
+// HKCUCreateKey creaters a key in the specified path under the HK_CURRENT_USER registry with write permissions.
+func (Windows) HKCUCreateKey(path string) (Key, error) {
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.READ|registry.WRITE)
 	if errors.Is(err, registry.ErrNotExist) {
 		return 0, ErrKeyNotExist
 	}
@@ -57,6 +69,24 @@ func (Windows) ReadValue(k Key, field string) (string, error) {
 	}
 
 	return "", errs
+}
+
+// WriteValue writes the value to the specified field in the specified key.
+func (Windows) WriteValue(k Key, field, value string, multiLine bool) error {
+	var err error
+	if multiLine {
+		err = registry.Key(k).SetStringsValue(field, strings.Split(value, "\n"))
+	} else {
+		err = registry.Key(k).SetStringValue(field, value)
+	}
+
+	if errors.Is(err, registry.ErrNotExist) {
+		return ErrKeyNotExist
+	}
+	if errors.Is(err, syscall.Errno(5)) {
+		return ErrAccessDenied
+	}
+	return err
 }
 
 // RegNotifyChangeKeyValue creates an event and attaches it to a registry key.
