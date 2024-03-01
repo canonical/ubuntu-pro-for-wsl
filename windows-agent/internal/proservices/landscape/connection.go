@@ -234,6 +234,8 @@ func (conn *connection) receiveCommands(e executor) error {
 		if err := conn.sendInfo(info); err != nil {
 			log.Warningf(conn.ctx, "Landscape: after completing command: %v", err)
 		}
+
+		log.Infof(conn.ctx, "Landscape: replied to command %s ", commandString(command))
 	}
 }
 

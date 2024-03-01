@@ -83,9 +83,10 @@ func TestConnect(t *testing.T) {
 		wantErr           bool
 		wantNotConnected  bool
 		wantDistroSkipped bool
+		wantSingleMessage bool
 	}{
 		"Success":                      {},
-		"Success in non-first contact": {uid: "123"},
+		"Success in non-first contact": {uid: "123", wantSingleMessage: true},
 		// TODO: Re-enable this test case when Landscape server start supporting gRPC over TLS.
 		// "Success with an SSL certificate": {requireCertificate: true},
 
@@ -208,6 +209,16 @@ func TestConnect(t *testing.T) {
 				return len(mockService.MessageLog()) > 0
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a message from the client")
 
+			const timeout = 10 * time.Second
+			if tc.wantSingleMessage {
+				time.Sleep(timeout)
+				require.Len(t, mockService.MessageLog(), 1, "Exactly one message should've been sent to Landscape")
+			} else {
+				require.Eventually(t, func() bool {
+					return len(mockService.MessageLog()) == 2
+				}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a second message from the client in response to the UID assignment")
+			}
+
 			err = service.Connect()
 			require.Error(t, err, "Connect should return an error when already connected")
 
@@ -224,9 +235,6 @@ func TestConnect(t *testing.T) {
 
 			server.Stop()
 			lis.Close()
-
-			messages := mockService.MessageLog()
-			require.Len(t, messages, 1, "Exactly one message should've been sent to Landscape")
 		})
 	}
 }
@@ -333,14 +341,19 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			// Asserting on the first-contact SendUpdatedInfo
 			require.Eventually(t, func() bool {
-				return len(mockService.MessageLog()) > 0
+				return len(mockService.MessageLog()) > 1
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a message from the client")
 
 			messages := mockService.MessageLog()
-			require.Len(t, messages, 1, "Exactly one message should've been sent to Landscape")
-			msg := &messages[0] // Pointer to avoid copying mutex
+			// Two messages:
+			// 1. First-contact message
+			// 2. Reply after the assignHost message is completed
+			require.Len(t, messages, 2, "Exactly two messages should've been sent to Landscape")
 
-			assert.Empty(t, msg.UID, "First UID received by the server should be empty")
+			assert.Empty(t, messages[0].UID, "First UID received by the server should be empty")
+			assertHasPrefix(t, wantUIDprefix, messages[1].UID, "Second UID received by the server should be the one assigned by the server")
+
+			msg := &messages[1] // Pointer to avoid copying mutex
 			assert.Equal(t, wantAccountName, msg.AccountName, "Mismatch between local account name and that received by the server")
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
@@ -350,7 +363,10 @@ func TestSendUpdatedInfo(t *testing.T) {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
 			} else {
 				require.Len(t, msg.Instances, 1, "Exactly one distro should've been sent to Landscape")
-				got := msg.Instances[0]
+
+				// Assigning the Landscape UID can affect the state of the distros, so we assert on the
+				// sent received before this assignment
+				got := messages[0].Instances[0]
 				assert.Equal(t, wantDistroID, got.ID, "Mismatch between local distro Id and that received by the server")
 				assert.Equal(t, wantDistroName, got.Name, "Mismatch between local distro Name and that received by the server")
 				assert.Equal(t, wantDistroVersionID, got.VersionID, "Mismatch between local distro VersionId and that received by the server")
@@ -387,12 +403,12 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			// Asserting on the second SendUpdatedInfo
 			require.Eventually(t, func() bool {
-				return len(mockService.MessageLog()) > 1
+				return len(mockService.MessageLog()) > 2
 			}, 10*time.Second, 100*time.Millisecond, "Landscape server should receive a second message from the client")
 
 			messages = mockService.MessageLog()
-			require.Len(t, messages, 2, "Exactly two messages should've been sent to Landscape")
-			msg = &messages[1] // Pointer to avoid copying mutex
+			require.Len(t, messages, 3, "Exactly two messages should've been sent to Landscape")
+			msg = &messages[2] // Pointer to avoid copying mutex
 
 			assertHasPrefix(t, wantUIDprefix, msg.UID, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantAccountName, msg.AccountName, "Mismatch between local account name and that received by the server")
