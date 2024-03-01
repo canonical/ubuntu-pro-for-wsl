@@ -10,10 +10,16 @@ export DH_GOLANG_INSTALL_ALL=1
 # as long as it matches the go.mod go stenza which is the language requirement.
 export GOTOOLCHAIN := local
 
+
 %:
 	dh $@ --builddirectory=_build --with=apport
 
 execute_after_dh_auto_clean:
+	# Overriding version file
+	# We must do this during the source package build because we still have access to git.
+	# We can't do this during the binary package, so we cannot use the usual -ldflags.
+	go run ../tools/build/compute_version.go > ../common/version
+
 	[ -d vendor/ ] || ( ./debian/update-internal-dependencies && GOWORK=off go mod vendor )
 
 override_dh_auto_install:
@@ -27,7 +33,7 @@ override_dh_auto_install:
 	mv debian/wsl-pro-service/usr/bin/ debian/wsl-pro-service/usr/libexec/
 
 override_dh_auto_test:
-	cd _build && GOWORK=off go test -mod=vendor github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/...
+	cd _build && GOWORK=off go test $(GOFLAGS) -mod=vendor github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/...
 
 # dwz does not support golang binaries yet
 override_dh_dwz:
