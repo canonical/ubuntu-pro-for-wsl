@@ -355,6 +355,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
+			require.Equal(t, wantDistroID, msg.DefaultInstanceID, "The only distro that is registered should have been labeled default")
 
 			if tc.wantDistroSkipped {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
@@ -412,6 +413,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host hostname and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
+			require.Equal(t, wantDistroID, msg.DefaultInstanceID, "The only distro that is registered should have been labeled default")
+
 			if tc.wantDistroSkipped {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
 			} else {
