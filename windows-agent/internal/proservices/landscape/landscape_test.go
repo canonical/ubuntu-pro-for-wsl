@@ -85,10 +85,9 @@ func TestConnect(t *testing.T) {
 		wantDistroSkipped bool
 		wantSingleMessage bool
 	}{
-		"Success":                      {},
-		"Success in non-first contact": {uid: "123", wantSingleMessage: true},
-		// TODO: Re-enable this test case when Landscape server start supporting gRPC over TLS.
-		// "Success with an SSL certificate": {requireCertificate: true},
+		"Success":                         {},
+		"Success in non-first contact":    {uid: "123", wantSingleMessage: true},
+		"Success with an SSL certificate": {requireCertificate: true},
 
 		// These tests are for the error cases when the error is logged but not returned
 		"Silent error when the config is empty":                   {wantNotConnected: true},
@@ -103,8 +102,8 @@ func TestConnect(t *testing.T) {
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
 		"Error when the config cannot be parsed":               {wantErr: true},
-		// "Error when the SSL certificate cannot be read":        {wantErr: true},
-		// "Error when the SSL certificate is not valid":          {wantErr: true},
+		"Error when the SSL certificate cannot be read":        {wantErr: true},
+		"Error when the SSL certificate is not valid":          {wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -657,8 +656,6 @@ func TestReconnect(t *testing.T) {
 
 		s.NotifyUbuntuProUpdate(ctx, c.proToken)
 	}
-	// TODO:Remove this silly assignment when Landscape server start supporting gRPC over TLS.
-	_ = changeCertificate
 
 	changeIrrelevant := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
 		c.mu.Lock()
@@ -686,8 +683,7 @@ func TestReconnect(t *testing.T) {
 	}{
 		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateReconnect: true},
 		"Reconnect when changing the URL":                     {trigger: changeAddress},
-		// TODO: Re-enable this test case when Landscape server start supporting gRPC over TLS.
-		// "Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
+		"Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
 
 		"Don't disconnect when changing irrelevant config": {trigger: changeIrrelevant, wantNoDisconnect: true},
 
