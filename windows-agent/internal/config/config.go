@@ -179,8 +179,13 @@ func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig str
 		return errors.New("attempted to set a user-provided landscape configuration when there already is a higher priority one")
 	}
 
-	if _, err := c.set(&c.Landscape.UserConfig, landscapeConfig); err != nil {
+	isNew, err := c.set(&c.Landscape.UserConfig, landscapeConfig)
+	if err != nil {
 		return errors.New("config: could not set Landscape configuration")
+	}
+
+	if isNew {
+		c.notifyLandsape(ctx, landscapeConfig, c.Landscape.UID)
 	}
 
 	return nil
