@@ -47,7 +47,7 @@ class _StartupAnimatedChildState extends State<StartupAnimatedChild> {
     model.init();
     model.addListener(() async {
       if (model.view == ViewState.ok) {
-        await Wizard.of(context).next();
+        await Wizard.of(context).replace();
       }
       if (model.view == ViewState.retry) {
         await model.resetAgent();

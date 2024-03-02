@@ -66,8 +66,14 @@ class SubscriptionStatusPage extends StatelessWidget {
                 onPressed: () async {
                   await model.detachPro();
                   if (context.mounted) {
-                    Wizard.of(context).home();
-                    await Wizard.of(context).next();
+                    final wizard = Wizard.of(context);
+                    // If more than just this one, we can go back.
+                    if (wizard.hasPrevious) {
+                      Wizard.of(context).back();
+                    } else {
+                      // otherwise we need .replace() or .jump(). [small detail of the wizard_router package]
+                      await Wizard.of(context).replace();
+                    }
                   }
                 },
                 child: Text(lang.detachPro),

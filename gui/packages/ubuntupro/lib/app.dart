@@ -36,26 +36,29 @@ class Pro4WSLApp extends StatelessWidget {
             builder: (context, child) {
               return Wizard(
                 routes: {
-                  Routes.startup: const WizardRoute(builder: buildStartup),
+                  Routes.startup: WizardRoute(
+                    builder: buildStartup,
+                    onReplace: (_) async {
+                      final subscriptionInfo =
+                          context.read<ValueNotifier<SubscriptionInfo>>();
+                      final client = getService<AgentApiClient>();
+                      subscriptionInfo.value = await client.subscriptionInfo();
+
+                      if (subscriptionInfo.value.whichSubscriptionType() !=
+                          SubscriptionType.none) {
+                        return Routes.subscriptionStatus;
+                      }
+                      return null;
+                    },
+                  ),
                   Routes.subscribeNow:
                       const WizardRoute(builder: SubscribeNowPage.create),
                   Routes.configureLandscape:
                       const WizardRoute(builder: LandscapePage.create),
                   Routes.subscriptionStatus: WizardRoute(
                     builder: SubscriptionStatusPage.create,
-                    onLoad: (_) async {
-                      final client = getService<AgentApiClient>();
-                      final subscriptionInfo =
-                          context.read<ValueNotifier<SubscriptionInfo>>();
-
-                      subscriptionInfo.value = await client.subscriptionInfo();
-
-                      // never skip this page.
-                      return true;
-                    },
-                    onBack: (settings) {
-                      return Routes.subscribeNow;
-                    },
+                    onReplace: (_) => Routes.subscribeNow,
+                    onBack: (_) => Routes.subscribeNow,
                   ),
                   Routes.configureLandscapeLate: WizardRoute(
                     builder: (context) => LandscapePage.create(
