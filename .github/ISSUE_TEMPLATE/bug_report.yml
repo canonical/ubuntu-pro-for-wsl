@@ -8,14 +8,7 @@ body:
       value: >
         :warning: **Please do not report security vulnerabilities here**
 
-        Be careful with sensitive information and security vulnerabilities. In order to report bugs that could contain
-        sensitive information:
-        - If the bug is on the Windows side (Graphical interface or agent running as a background service on Windows):
-        Please use the advisories page of the repository and not a public bug report.
-
-        - If the bug affects the `ubuntu-wsl` service running on Ubuntu: please use [Launchpad](https://bugs.launchpad.net/ubuntu/+source/ubuntu-wsl-service/+filebug) instead.
-        On Ubuntu machines, you can use `ubuntu-bug ubuntu-wsl-service` to collect relevant information.
-
+        Be careful with sensitive information and security vulnerabilities.
 
         Thanks for taking the time to report an issue and helping to improve Ubuntu Pro for WSL! Please fill out the form below as
         best as you can so that we can help you.
@@ -71,6 +64,8 @@ body:
 
         ```
         %USERPROFILE%/.ubuntupro/log
+        ```,
+        ```
         %USERPROFILE%/.ubuntupro/log.old
         ```
 
