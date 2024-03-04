@@ -461,6 +461,15 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 
 			landscapeConfig := "LANDSCAPE CONFIG"
 
+			var calledLandscapeNotifier int
+			conf.SetUbuntuProNotifier(func(context.Context, string) {
+				require.Fail(t, "UbuntuPro should not be called")
+			})
+
+			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+				calledLandscapeNotifier++
+			})
+
 			err = conf.SetUserLandscapeConfig(ctx, landscapeConfig)
 			if tc.wantError {
 				require.Error(t, err, "SetUserLandscapeConfig should return an error")
@@ -472,6 +481,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 			require.NoError(t, err, "LandscapeClientConfig should return no errors")
 			require.Equal(t, landscapeConfig, got, "Did not get the same value for landscape config as we set")
 			require.Equal(t, config.SourceUser, src, "Did not get the same value for landscape config as we set")
+			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier should have been called once")
 		})
 	}
 }
