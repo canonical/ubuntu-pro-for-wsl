@@ -218,9 +218,24 @@ func (conn *connection) receiveCommands(e executor) error {
 			return fmt.Errorf("could not receive commands: %v", err)
 		}
 
-		if err := e.exec(conn.ctx, command); err != nil {
+		// Removing the cancel context so that the command is executed even if the connection is lost.
+		ctx := context.WithoutCancel(conn.ctx)
+
+		if err := e.exec(ctx, command); err != nil {
 			log.Errorf(conn.ctx, "Landscape: %v", err)
 		}
+
+		// Ping back the server with the updated info
+		info, err := newHostAgentInfo(conn.ctx, e.serviceData)
+		if err != nil {
+			log.Warningf(conn.ctx, "Landscape: after completing command: %v", err)
+		}
+
+		if err := conn.sendInfo(info); err != nil {
+			log.Warningf(conn.ctx, "Landscape: after completing command: %v", err)
+		}
+
+		log.Infof(conn.ctx, "Landscape: replied to command %s ", commandString(command))
 	}
 }
 
