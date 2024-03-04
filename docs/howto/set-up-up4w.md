@@ -115,22 +115,14 @@ You have two ways of setting up UP4W. You can use the graphical interface (GUI),
 ### Using the registry
 > See also: [Windows registry](windows-registry)
 1. Press Win+R, type `regedit.exe`, and click OK.
-2. Navigate the tree to `HKEY_CURRENT_USER\Software`.
-3. Under this key, search for key `Canonical`. If it does not exist, create it:
-	- Right-click `Software` > New > Key > Write `Canonical`.
-4. Under this key, search for key `UbuntuPro`. If it does not exist, create it:
-	- Right-click `Canonical` > New > Key > Write `UbuntuPro`.
-5. Click on the `UbuntuPro` key. Its full path should be `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
+2. Navigate the tree to `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`.
+	```{note}
+	This key will not exist until you've run UP4W at least once. Otherwise, you'll have to create the key and values yourself. See more: [Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
+	```
 6. Input your Ubuntu Pro token:
-	1. Create a new string value with the title `UbuntuProToken`:
-		- Right-click the `UbuntuPro` key > New > String value > Write `UbuntuProToken`.
-	2. Set its value to your Ubuntu Pro token:
-		- Right-click `UbuntuProToken` > Modify > Write the Ubuntu Pro token.
+	- Right-click `UbuntuProToken` > Modify > Write the Ubuntu Pro token.
 7. Input your Landscape configuration:
-	1. Create a new multi-string value with the title `LandscapeConfig`:
-		- Right-click the `UbuntuPro` key > New > Multi-string value > Write `LandscapeConfig`.
-	2. Set its value to the contents of file `landscape-client.conf` specified during the Landscape server setup:
-		- Right-click `LandscapeConfig` > Modify > Write the contents of the specified file.
+	- Right-click `LandscapeConfig` > Modify > Write the contents of the specified file.
 
 ## 3. Verify that UP4W is working
 > If either verification step fails, wait for a few seconds and try again. This should not take longer than a minute.
