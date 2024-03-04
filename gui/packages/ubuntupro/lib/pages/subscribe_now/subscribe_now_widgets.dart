@@ -77,12 +77,8 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
             hintText: lang.tokenInputHint,
             errorText: _token.errorOrNull?.localize(lang),
             counterText: '',
-            suffixIcon: TextButton(
+            suffixIcon: ElevatedButton(
               onPressed: canSubmit ? _handleApplyButton : null,
-              style: TextButton.styleFrom(
-                // allows the suffix button to stand out when enabled while keeping its custom look.
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-              ),
               child: Text(lang.confirm),
             ),
           ),
