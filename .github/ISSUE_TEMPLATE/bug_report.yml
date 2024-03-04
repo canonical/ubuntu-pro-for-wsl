@@ -55,24 +55,36 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: "Ubuntu System information"
-      description: >
-        If the bug is on the `ubuntu-wsl` service running in the WSL machine, you can run `ubuntu-bug ubuntu-wsl-service --save=/tmp/report.txt`
-        and drag the file below.
-
-        It will contain useful information pertaining to the system and the packages installed.
+      label: Installed versions
+      value: |
+        * Windows version: *Run cmd /c ver*
+        * WSL version: *wsl --status*
+        * Windows application version: Open Pro for Windows GUI, check version in status bar.
+        * WSL distribution: Name of the Ubuntu distribution you are using
+        * WSL OS: (`/etc/os-release`) in the wsl instance
+        * ubuntu wsl service version: (`apt policy wsl-pro-service` output)
   - type: textarea
     attributes:
-      label: "Installed versions"
-      value: |
-        TODO: we should probably have a binary on the windows side collecting all this for you.
+      label: System logs
+      description: >
+        Drag and drop the following files here:
 
-        * Windows version: TODO, describe how to get it
-        * WSL version: TODO, describe how to get it
-        * WSL distribution: TODO, describe how to get it
-        * Windows application version:  TODO, describe how to get it
-        * WSL OS: (`/etc/os-release`) in the wsl instance
-        * ubuntu wsl service version: (`apt policy ubuntu-wsl-service` output)
+        ```
+        %USERPROFILE%/.ubuntupro/log
+        %USERPROFILE%/.ubuntupro/log.old
+        ```
+
+        Also, report any impacted WSL instance logs, by pasting here the output of:
+
+        ```
+        journalctl -u wsl-pro.service
+        ```
+  - type: checkboxes
+    attributes:
+      label: Double check your logs
+      options:
+        - label: I have redacted any sensitive information from the logs
+          required: true
   - type: textarea
     attributes:
       label: Additional information
@@ -81,9 +93,3 @@ body:
         Please take a look at our [Troubleshooting guide](../#troubleshooting) to understand a bit more about what you
         can do to get more information and logs about the project.
       placeholder: Remember to redact any sensitive information from them.
-  - type: checkboxes
-    attributes:
-      label: Double check your logs
-      options:
-        - label: I have redacted any sensitive information from the logs
-          required: true
