@@ -199,7 +199,7 @@ void main() {
         expect(tester.widget<FilledButton>(continueButton).enabled, isFalse);
 
         // check that valid input enabled continue, and continue
-        await tester.enterText(fqdnInput, 'example.com');
+        await tester.enterText(fqdnInput, 'localhost');
         await tester.pump();
         expect(tester.widget<FilledButton>(continueButton).enabled, isTrue);
         await tester.tap(continueButton);
