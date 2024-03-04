@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
 	google.golang.org/grpc v1.62.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
