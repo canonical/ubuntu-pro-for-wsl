@@ -206,26 +206,13 @@ func logWindowsAgentOnError(t *testing.T) {
 		return
 	}
 
-	localAppData := os.Getenv("LocalAppData")
-	if localAppData == "" {
-		t.Log("could not find Windows Agent's logs: $env:LocalAppData is not assigned")
+	userProfile := os.Getenv("UserProfile")
+	if userProfile == "" {
+		t.Log("could not find Windows Agent's logs: $env:UserProfile is not assigned")
 		return
 	}
 
-	// The virtualized LocalAppData is located under a path similar to this one:
-	//
-	//    %LocalAppData%/Packages/CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc/LocalCache/Local
-	//                                                                              ^~~~~~~~~~~~~
-	//                                                                              This part changes from version to version
-	//
-	pattern := filepath.Join(localAppData, "Packages", "CanonicalGroupLimited.UbuntuPro_*")
-	packageDir, err := globSingleResult(pattern)
-	if err != nil {
-		t.Logf("could not find Windows Agent's logs: could not locate MSIX virtualized directory: %v", err)
-		return
-	}
-
-	logsPath := filepath.Join(packageDir, "LocalCache", "Local", common.LocalAppDataDir, "log")
+	logsPath := filepath.Join(userProfile, common.UserProfileDir, "log")
 	out, err := os.ReadFile(logsPath)
 	if err != nil {
 		t.Logf("could not read Windows Agent's logs at %q: %v", logsPath, err)
