@@ -10,7 +10,6 @@ export DH_GOLANG_INSTALL_ALL=1
 # as long as it matches the go.mod go stenza which is the language requirement.
 export GOTOOLCHAIN := local
 
-
 %:
 	dh $@ --builddirectory=_build --with=apport
 
@@ -18,7 +17,7 @@ execute_after_dh_auto_clean:
 	# Overriding version file
 	# We must do this during the source package build because we still have access to git.
 	# We can't do this during the binary package, so we cannot use the usual -ldflags.
-	go run ../tools/build/compute_version.go > ../common/version
+	[ "$(shell cat ../common/version)" = "Dev" ] && go run ../tools/build/compute_version.go > ../common/version || true
 
 	[ -d vendor/ ] || ( ./debian/update-internal-dependencies && GOWORK=off go mod vendor )
 
