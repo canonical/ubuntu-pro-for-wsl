@@ -56,6 +56,7 @@ dependencies:
   provider: ^6.1.2
   ubuntu_service: ^0.3.0
   url_launcher: ^6.2.4
+  windows_single_instance: ^1.0.1
   wizard_router: ^1.2.0
   yaru: ^1.2.2
   yaru_icons: ^2.4.0
