@@ -66,6 +66,13 @@ func setLoggerOutput(a app) (func(), error) {
 
 	logFile := filepath.Join(publicDir, "log")
 
+	// Move old log file
+	fileInfo, err := os.Stat(logFile)
+	if err == nil && fileInfo.Size() > 0 {
+		oldLogFile := filepath.Join(publicDir, "log.old")
+		_ = os.Rename(logFile, oldLogFile)
+	}
+
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("could not open log file: %v", err)

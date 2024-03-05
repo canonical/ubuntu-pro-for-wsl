@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -43,6 +45,7 @@ func TestRun(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
+		createLog        bool
 		runError         bool
 		usageErrorReturn bool
 		logDirError      bool
@@ -51,6 +54,7 @@ func TestRun(t *testing.T) {
 	}{
 		"Run and exit successfully":                                {},
 		"Run and exit successfully despite logs not being written": {logDirError: true},
+		"Run and exit successfully when logs already exist":        {createLog: true},
 
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
 		"Run and return usage error":             {usageErrorReturn: true, runError: true, wantReturnCode: 2},
@@ -72,6 +76,13 @@ func TestRun(t *testing.T) {
 				a.tmpDir = "PUBLIC_DIR_ERROR"
 			}
 
+			if tc.createLog {
+				publicDir, _ := a.PublicDir()
+				logFile := filepath.Join(publicDir, "log")
+				err := os.WriteFile(logFile, []byte("test log"), 0600)
+				require.NoError(t, err, "")
+			}
+
 			var rc int
 			wait := make(chan struct{})
 			go func() {
@@ -83,6 +94,16 @@ func TestRun(t *testing.T) {
 
 			a.Quit()
 			<-wait
+
+			publicDir, _ := a.PublicDir()
+			oldLogfile := filepath.Join(publicDir, "log.old")
+			_, err := os.Stat(oldLogfile)
+
+			if tc.createLog {
+				require.NoError(t, err, "Old log file should be created")
+			} else {
+				require.Error(t, err, "Old log file should not be created")
+			}
 
 			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
 		})
