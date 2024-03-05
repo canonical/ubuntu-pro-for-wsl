@@ -45,17 +45,23 @@ func TestRun(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		createLog        bool
+		existingLogContent string
+
 		runError         bool
 		usageErrorReturn bool
 		logDirError      bool
 
 		wantReturnCode int
+		wantOldLogFile bool
 	}{
 		"Run and exit successfully":                                {},
 		"Run and exit successfully despite logs not being written": {logDirError: true},
-		"Run and exit successfully when logs already exist":        {createLog: true},
 
+		// Log file handling
+		"Existing log file has been renamed to old": {existingLogContent: "foo", wantOldLogFile: true},
+		"Empty existing log file is overwritten":    {existingLogContent: "-", wantOldLogFile: false},
+
+		// Error cases
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
 		"Run and return usage error":             {usageErrorReturn: true, runError: true, wantReturnCode: 2},
 		"Run and usage error only does not fail": {usageErrorReturn: true, runError: false, wantReturnCode: 0},
@@ -76,11 +82,14 @@ func TestRun(t *testing.T) {
 				a.tmpDir = "PUBLIC_DIR_ERROR"
 			}
 
-			if tc.createLog {
+			if tc.existingLogContent != "" {
+				if tc.existingLogContent == "-" {
+					tc.existingLogContent = ""
+				}
 				publicDir, _ := a.PublicDir()
 				logFile := filepath.Join(publicDir, "log")
-				err := os.WriteFile(logFile, []byte("test log"), 0600)
-				require.NoError(t, err, "")
+				err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
+				require.NoError(t, err, "Setup: creating pre-existing log file")
 			}
 
 			var rc int
@@ -96,13 +105,11 @@ func TestRun(t *testing.T) {
 			<-wait
 
 			publicDir, _ := a.PublicDir()
-			oldLogfile := filepath.Join(publicDir, "log.old")
-			_, err := os.Stat(oldLogfile)
-
-			if tc.createLog {
-				require.NoError(t, err, "Old log file should be created")
+			oldLogFile := filepath.Join(publicDir, "log.old")
+			if tc.wantOldLogFile {
+				require.FileExists(t, oldLogFile, "Old log file should exist")
 			} else {
-				require.Error(t, err, "Old log file should not be created")
+				require.NoFileExists(t, oldLogFile, "Old log file should not exist")
 			}
 
 			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
