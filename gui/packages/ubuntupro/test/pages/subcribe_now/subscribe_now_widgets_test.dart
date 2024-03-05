@@ -89,7 +89,8 @@ void main() {
       testWidgets('starts with button disabled', (tester) async {
         await tester.pumpWidget(theApp);
 
-        final button = tester.firstWidget<TextButton>(find.byType(TextButton));
+        final button =
+            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
 
         expect(button.enabled, isFalse);
       });
@@ -105,7 +106,8 @@ void main() {
         expect(input.decoration!.errorText, isNotNull);
         expect(input.decoration!.errorText, contains('too short'));
 
-        final button = tester.firstWidget<TextButton>(find.byType(TextButton));
+        final button =
+            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
         expect(button.enabled, isFalse);
       });
 
@@ -120,7 +122,8 @@ void main() {
         expect(input.decoration!.errorText, isNotNull);
         expect(input.decoration!.errorText, contains('too long'));
 
-        final button = tester.firstWidget<TextButton>(find.byType(TextButton));
+        final button =
+            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
         expect(button.enabled, isFalse);
       });
 
@@ -134,7 +137,8 @@ void main() {
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.errorText, isNull);
 
-        final button = tester.firstWidget<TextButton>(find.byType(TextButton));
+        final button =
+            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
         expect(button.enabled, isTrue);
       });
     });
@@ -149,7 +153,7 @@ void main() {
       await tester.pump();
 
       expect(called, isFalse);
-      final button = find.byType(TextButton);
+      final button = find.byType(ElevatedButton);
       await tester.tap(button);
       await tester.pumpAndSettle();
       expect(called, isTrue);

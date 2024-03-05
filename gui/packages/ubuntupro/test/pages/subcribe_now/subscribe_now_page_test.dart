@@ -42,12 +42,12 @@ void main() {
       final context = tester.element(find.byType(SubscribeNowPage));
       final lang = AppLocalizations.of(context);
 
-      final button = find.byType(ElevatedButton);
       // check that's the right button
-      expect(
-        find.descendant(of: button, matching: find.text(lang.subscribeNow)),
-        findsOneWidget,
+      final button = find.ancestor(
+        of: find.text(lang.subscribeNow),
+        matching: find.byType(ElevatedButton),
       );
+      expect(button, findsOneWidget);
       expect(tester.widget<ElevatedButton>(button).enabled, isFalse);
     });
     testWidgets('enabled', (tester) async {
@@ -58,12 +58,12 @@ void main() {
       final context = tester.element(find.byType(SubscribeNowPage));
       final lang = AppLocalizations.of(context);
 
-      final button = find.byType(ElevatedButton);
       // check that's the right button
-      expect(
-        find.descendant(of: button, matching: find.text(lang.subscribeNow)),
-        findsOneWidget,
+      final button = find.ancestor(
+        of: find.text(lang.subscribeNow),
+        matching: find.byType(ElevatedButton),
       );
+      expect(button, findsOneWidget);
       expect(tester.widget<ElevatedButton>(button).enabled, isTrue);
     });
   });
