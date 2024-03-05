@@ -70,7 +70,10 @@ func setLoggerOutput(a app) (func(), error) {
 	fileInfo, err := os.Stat(logFile)
 	if err == nil && fileInfo.Size() > 0 {
 		oldLogFile := filepath.Join(publicDir, "log.old")
-		_ = os.Rename(logFile, oldLogFile)
+		err = os.Rename(logFile, oldLogFile)
+		if err != nil {
+			log.Warnf("Could not archive previous log file: %v", err)
+		}
 	}
 
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
