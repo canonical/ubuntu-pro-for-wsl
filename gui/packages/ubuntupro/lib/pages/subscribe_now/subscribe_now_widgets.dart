@@ -70,20 +70,30 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
       isExpanded: widget.isExpanded,
       child: ValueListenableBuilder(
         valueListenable: _token,
-        builder: (context, _, __) => TextField(
-          autofocus: false,
-          controller: _controller,
-          decoration: InputDecoration(
-            hintText: lang.tokenInputHint,
-            errorText: _token.errorOrNull?.localize(lang),
-            counterText: '',
-            suffixIcon: ElevatedButton(
+        builder: (context, _, __) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                autofocus: false,
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: lang.tokenInputHint,
+                  errorText: _token.errorOrNull?.localize(lang),
+                  counterText: '',
+                ),
+                onChanged: _token.update,
+                onSubmitted: _onSubmitted,
+              ),
+            ),
+            const SizedBox(
+              width: 8.0,
+            ),
+            ElevatedButton(
               onPressed: canSubmit ? _handleApplyButton : null,
               child: Text(lang.confirm),
             ),
-          ),
-          onChanged: _token.update,
-          onSubmitted: _onSubmitted,
+          ],
         ),
       ),
     );
