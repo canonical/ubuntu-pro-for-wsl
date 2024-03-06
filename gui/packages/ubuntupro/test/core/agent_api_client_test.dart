@@ -11,8 +11,11 @@ void main() {
   });
 
   group('with mocked grpc', () {
-    final mockGrpc = MockUIClient();
-    final client = AgentApiClient.withClient(mockGrpc);
+    final client = AgentApiClient(
+      host: '127.0.0.1',
+      port: 9,
+      stubFactory: MockUIClient.new,
+    );
 
     test('ping succeeds', () async {
       expect(await client.ping(), isTrue);
@@ -43,6 +46,15 @@ void main() {
         () async => await client.applyLandscapeConfig('test config'),
         returnsNormally,
       );
+    });
+
+    test('connect to new endpoint', () async {
+      final otherRef = client;
+      final connected = await otherRef.connectTo(host: 'localhost', port: 9);
+      // A real connection would never succeed in port 9 (Discard Protocol).
+      expect(connected, isTrue);
+      // The client object is still the same, although internals may have changed.
+      expect(otherRef.hashCode, client.hashCode);
     });
   });
 }

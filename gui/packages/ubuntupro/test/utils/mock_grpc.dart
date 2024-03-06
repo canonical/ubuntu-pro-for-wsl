@@ -25,16 +25,7 @@ class MockedResponse<R> extends DelegatingFuture<R>
 class MockUIClient extends UIClient {
   SubscriptionInfo subscriptionInfo = SubscriptionInfo();
 
-  MockUIClient()
-      : super(
-          ClientChannel(
-            '127.0.0.1',
-            port: 9,
-            options: const ChannelOptions(
-              credentials: ChannelCredentials.insecure(),
-            ),
-          ),
-        ) {
+  MockUIClient(super.channel) {
     subscriptionInfo.ensureNone();
   }
 

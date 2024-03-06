@@ -7,8 +7,11 @@ typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
 
 /// AgentApiClient hides the gRPC details in a more convenient API.
 class AgentApiClient {
-  AgentApiClient({required String host, required int port})
-      : _client = UIClient(
+  AgentApiClient({
+    required String host,
+    required int port,
+    this.stubFactory = UIClient.new,
+  }) : _client = stubFactory.call(
           ClientChannel(
             host,
             port: port,
@@ -18,10 +21,25 @@ class AgentApiClient {
           ),
         );
 
-  final UIClient _client;
-
+  /// A factory for UIClient and derived classes objects, only meaningful for testing.
+  /// In production it should always default to [UIClient.new].
   @visibleForTesting
-  AgentApiClient.withClient(this._client);
+  final UIClient Function(ClientChannel) stubFactory;
+
+  /// Never null, but reassignable inside [connectTo].
+  late UIClient _client;
+
+  /// Changes the endpoint this API client is connected to.
+  Future<bool> connectTo({required String host, required int port}) {
+    _client = stubFactory.call(ClientChannel(
+      host,
+      port: port,
+      options: const ChannelOptions(
+        credentials: ChannelCredentials.insecure(),
+      ),
+    ));
+    return ping();
+  }
 
   /// Dispatches a applyProToken request with the supplied Pro [token].
   Future<SubscriptionInfo> applyProToken(String token) {
