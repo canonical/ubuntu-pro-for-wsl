@@ -22,7 +22,6 @@ func TestRunSignal(t *testing.T) {
 		"Send SIGTERM exits": {sendSig: syscall.SIGTERM},
 	}
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// Signal handlers tests: can’t be parallel
 

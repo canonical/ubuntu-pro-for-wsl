@@ -34,7 +34,6 @@ func TestUsernameIsValid(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -85,7 +84,6 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 
@@ -185,7 +183,6 @@ func TestInstallFromExecutable(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {

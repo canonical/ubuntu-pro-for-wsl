@@ -58,7 +58,6 @@ func TestNew(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -113,7 +112,6 @@ func TestDatabaseGetAll(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -182,7 +180,6 @@ func TestDatabaseGet(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -245,7 +242,6 @@ func TestDatabaseDump(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			dbDir := t.TempDir()
@@ -395,7 +391,6 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			dbDir := t.TempDir()
 			databaseFromTemplate(t, dbDir,
@@ -486,7 +481,6 @@ func TestDatabaseCleanup(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			dbDir := t.TempDir()
 			dbFile := filepath.Join(dbDir, consts.DatabaseFileName)

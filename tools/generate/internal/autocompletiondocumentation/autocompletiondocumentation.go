@@ -231,7 +231,6 @@ func genManPages(cmds []cobra.Command, dir string) {
 	}
 
 	for _, cmd := range cmds {
-		cmd := cmd
 		// Run ExecuteC to install completion and help commands
 		_, _ = cmd.ExecuteC()
 		opts := doc.GenManTreeOptions{
@@ -363,7 +362,6 @@ func genManTreeFromOpts(cmd *cobra.Command, opts doc.GenManTreeOptions) error {
 
 func getCmdsAndHiddens(cmds []cobra.Command) (user []cobra.Command, hidden []cobra.Command) {
 	for _, cmd := range cmds {
-		cmd := cmd
 		// Run ExecuteC to install completion and help commands
 		_, _ = cmd.ExecuteC()
 		user = append(user, cmd)
@@ -371,7 +369,6 @@ func getCmdsAndHiddens(cmds []cobra.Command) (user []cobra.Command, hidden []cob
 	}
 
 	for _, cmd := range cmds {
-		cmd := cmd
 		// Run ExecuteC to install completion and help commands
 		_, _ = cmd.ExecuteC()
 		hidden = append(hidden, collectSubCmds(cmd, true /* selectHidden */, false /* parentWasHidden */)...)
@@ -411,7 +408,6 @@ func filterCommandMarkdown(cmds []cobra.Command, w io.Writer) {
 
 	go func() {
 		for _, cmd := range cmds {
-			cmd := cmd
 			if err := doc.GenMarkdown(&cmd, pw); err != nil {
 				pw.CloseWithError(fmt.Errorf("couldn't generate markdown for %s: %v", cmd.Name(), err))
 				return
