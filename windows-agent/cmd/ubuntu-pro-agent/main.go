@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -67,13 +68,10 @@ func setLoggerOutput(a app) (func(), error) {
 	logFile := filepath.Join(publicDir, "log")
 
 	// Move old log file
-	fileInfo, err := os.Stat(logFile)
-	if err == nil && fileInfo.Size() > 0 {
-		oldLogFile := filepath.Join(publicDir, "log.old")
-		err = os.Rename(logFile, oldLogFile)
-		if err != nil {
-			log.Warnf("Could not archive previous log file: %v", err)
-		}
+	oldLogFile := filepath.Join(publicDir, "log.old")
+	err = os.Rename(logFile, oldLogFile)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Warnf("Could not archive previous log file: %v", err)
 	}
 
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)

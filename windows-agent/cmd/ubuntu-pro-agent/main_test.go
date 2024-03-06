@@ -44,6 +44,8 @@ func (a *myApp) PublicDir() (string, error) {
 func TestRun(t *testing.T) {
 	t.Parallel()
 
+	fooContent := "foo"
+
 	tests := map[string]struct {
 		existingLogContent string
 
@@ -51,15 +53,15 @@ func TestRun(t *testing.T) {
 		usageErrorReturn bool
 		logDirError      bool
 
-		wantReturnCode int
-		wantOldLogFile bool
+		wantReturnCode        int
+		wantOldLogFileContent *string
 	}{
 		"Run and exit successfully":                                {},
 		"Run and exit successfully despite logs not being written": {logDirError: true},
 
 		// Log file handling
-		"Existing log file has been renamed to old": {existingLogContent: "foo", wantOldLogFile: true},
-		"Empty existing log file is overwritten":    {existingLogContent: "-", wantOldLogFile: false},
+		"Existing log file has been renamed to old": {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
+		"Ignore when failing to archive log file":   {existingLogContent: "OLD_IS_DIRECTORY", wantReturnCode: 0},
 
 		// Error cases
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
@@ -81,12 +83,17 @@ func TestRun(t *testing.T) {
 				a.tmpDir = "PUBLIC_DIR_ERROR"
 			}
 
-			if tc.existingLogContent != "" {
-				if tc.existingLogContent == "-" {
-					tc.existingLogContent = ""
-				}
-				publicDir, _ := a.PublicDir()
-				logFile := filepath.Join(publicDir, "log")
+			publicDir, _ := a.PublicDir()
+			logFile := filepath.Join(publicDir, "log")
+			oldLogFile := logFile + ".old"
+			switch tc.existingLogContent {
+			case "":
+			case "OLD_IS_DIRECTORY":
+				err := os.Mkdir(oldLogFile, 0700)
+				require.NoError(t, err, "Setup: create invalid log.old file")
+				err = os.WriteFile(logFile, []byte("Old log content"), 0600)
+				require.NoError(t, err, "Setup: creating pre-existing log file")
+			default:
 				err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
 				require.NoError(t, err, "Setup: creating pre-existing log file")
 			}
@@ -103,15 +110,16 @@ func TestRun(t *testing.T) {
 			a.Quit()
 			<-wait
 
-			publicDir, _ := a.PublicDir()
-			oldLogFile := filepath.Join(publicDir, "log.old")
-			if tc.wantOldLogFile {
+			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
+
+			if tc.wantOldLogFileContent != nil {
 				require.FileExists(t, oldLogFile, "Old log file should exist")
+				content, err := os.ReadFile(oldLogFile)
+				require.NoError(t, err, "Should be able to read old log file")
+				require.Equal(t, tc.existingLogContent, string(content), "Old log file content should be log's content")
 			} else {
 				require.NoFileExists(t, oldLogFile, "Old log file should not exist")
 			}
-
-			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
 		})
 	}
 }
