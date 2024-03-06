@@ -43,7 +43,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always fail.
       agentLauncher: () async => false,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -70,7 +70,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -93,7 +93,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -115,7 +115,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -145,7 +145,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -171,7 +171,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -197,7 +197,7 @@ void main() {
       agentLauncher: () async {
         return true;
       },
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -224,7 +224,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) async {
         // This function only completes when the completer is manually set complete.

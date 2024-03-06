@@ -23,7 +23,7 @@ Future<void> main() async {
   runApp(Pro4WSLApp(agentMonitor));
 }
 
-AgentApiClient defaultClient(int port) =>
-    AgentApiClient(host: kDefaultHost, port: port);
+AgentApiClient defaultClient(String host, int port) =>
+    AgentApiClient(host: host, port: port);
 
 Future<bool> launch() => launchAgent(kAgentRelativePath);

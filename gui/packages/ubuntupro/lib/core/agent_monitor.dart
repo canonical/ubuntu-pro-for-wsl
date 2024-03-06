@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
+import '/constants.dart';
 import 'agent_api_client.dart';
 import 'agent_api_paths.dart';
 
@@ -39,8 +40,8 @@ enum AgentState {
   }
 }
 
-/// A Function that knows how to create an AgentApiClient from a port.
-typedef ApiClientFactory = AgentApiClient Function(int port);
+/// A Function that knows how to create an AgentApiClient from a host and a port.
+typedef ApiClientFactory = AgentApiClient Function(String host, int port);
 
 /// A Function that knows how to launch the agent and report success.
 typedef AgentLauncher = Future<bool> Function();
@@ -149,7 +150,7 @@ class AgentStartupMonitor {
   }
 
   Future<AgentState> _onPort(int port) async {
-    final client = clientFactory(port);
+    final client = clientFactory(kDefaultHost, port);
     if (await client.ping()) {
       await onClient(client);
       return AgentState.ok;

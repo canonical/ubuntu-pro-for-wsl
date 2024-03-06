@@ -119,8 +119,7 @@ void main() {
         create: (context) => AgentStartupMonitor(
           addrFileName: 'anywhere',
           agentLauncher: () async => true,
-          clientFactory: (port) =>
-              AgentApiClient(host: 'localhost', port: port),
+          clientFactory: (host, port) => AgentApiClient(host: host, port: port),
           onClient: (_) {},
         ),
         child: const StartupPage(),
