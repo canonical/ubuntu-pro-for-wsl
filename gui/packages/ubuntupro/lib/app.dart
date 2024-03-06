@@ -6,18 +6,17 @@ import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
-import 'constants.dart';
 import 'core/agent_api_client.dart';
-import 'launch_agent.dart';
-import 'pages/landscape/landscape_page.dart';
 import 'core/agent_monitor.dart';
+import 'pages/landscape/landscape_page.dart';
 import 'pages/startup/startup_page.dart';
 import 'pages/subscribe_now/subscribe_now_page.dart';
 import 'pages/subscription_status/subscription_status_page.dart';
 import 'routes.dart';
 
 class Pro4WSLApp extends StatelessWidget {
-  const Pro4WSLApp({super.key});
+  const Pro4WSLApp(this.agentMonitor, {super.key});
+  final AgentStartupMonitor agentMonitor;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,10 @@ class Pro4WSLApp extends StatelessWidget {
               return Wizard(
                 routes: {
                   Routes.startup: WizardRoute(
-                    builder: buildStartup,
+                    builder: (context) => Provider.value(
+                      value: agentMonitor,
+                      child: const StartupPage(),
+                    ),
                     onReplace: (_) async {
                       final subscriptionInfo =
                           context.read<ValueNotifier<SubscriptionInfo>>();
@@ -75,23 +77,6 @@ class Pro4WSLApp extends StatelessWidget {
     );
   }
 }
-
-Widget buildStartup(BuildContext context) {
-  return Provider<AgentStartupMonitor>(
-    create: (context) => AgentStartupMonitor(
-      addrFileName: kAddrFileName,
-      agentLauncher: launch,
-      clientFactory: defaultClient,
-      onClient: registerServiceInstance<AgentApiClient>,
-    ),
-    child: const StartupPage(),
-  );
-}
-
-AgentApiClient defaultClient(int port) =>
-    AgentApiClient(host: kDefaultHost, port: port);
-
-Future<bool> launch() => launchAgent(kAgentRelativePath);
 
 ThemeData? customize(ThemeData? theme) {
   if (theme == null) return null;
