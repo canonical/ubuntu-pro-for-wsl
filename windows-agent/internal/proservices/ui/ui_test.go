@@ -154,7 +154,8 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			dir := t.TempDir()
 			db, err := database.New(ctx, dir, nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
-			service := ui.New(ctx, &tc.config, db)
+			config := tc.config
+			service := ui.New(ctx, &config, db)
 
 			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
 			if tc.wantErr {
