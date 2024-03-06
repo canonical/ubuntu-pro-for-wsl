@@ -83,19 +83,21 @@ func TestRun(t *testing.T) {
 				a.tmpDir = "PUBLIC_DIR_ERROR"
 			}
 
-			publicDir, _ := a.PublicDir()
+			publicDir, err := a.PublicDir()
 			logFile := filepath.Join(publicDir, "log")
 			oldLogFile := logFile + ".old"
-			switch tc.existingLogContent {
-			case "":
-			case "OLD_IS_DIRECTORY":
-				err := os.Mkdir(oldLogFile, 0700)
-				require.NoError(t, err, "Setup: create invalid log.old file")
-				err = os.WriteFile(logFile, []byte("Old log content"), 0600)
-				require.NoError(t, err, "Setup: creating pre-existing log file")
-			default:
-				err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
-				require.NoError(t, err, "Setup: creating pre-existing log file")
+			if err == nil {
+				switch tc.existingLogContent {
+				case "":
+				case "OLD_IS_DIRECTORY":
+					err := os.Mkdir(oldLogFile, 0700)
+					require.NoError(t, err, "Setup: create invalid log.old file")
+					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
+					require.NoError(t, err, "Setup: creating pre-existing log file")
+				default:
+					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
+					require.NoError(t, err, "Setup: creating pre-existing log file")
+				}
 			}
 
 			var rc int
