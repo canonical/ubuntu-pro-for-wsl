@@ -6,13 +6,16 @@ This documentation describes a future release of Ubuntu Pro for WSL. Ubuntu Pro 
 ![System Landscape](./assets/up4w-systemlandscape.png)
 
 
-Ubuntu Pro for WSL (UP4W) is a desktop application that facilitates access to [Ubuntu Pro]( https://ubuntu.com/pro) for [Ubuntu WSL](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/) instances.
+Ubuntu Pro for WSL (UP4W) is a desktop application that facilitates access to your [Ubuntu Pro]( https://ubuntu.com/pro) subscription benefits in the context of [Ubuntu WSL](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/).
 
-It allows you to add your **Ubuntu** Pro subscription and your Landscape configuration to your Windows host. That will then automatically add your Ubuntu Pro subscription and Landscape configuration to all your Ubuntu WSL instances as well.
+When you install UP4W on your Windows host:
 
-When you have a large Ubuntu WSL fleet, configuring every Ubuntu WSL instance manually can be a pain; with Ubuntu Pro for WSL it’s a breeze – regardless of the size of your fleet.
+- If you attach your Ubuntu Pro token to UP4W on the host, UP4W will automatically add it to the Ubuntu Pro client on any Ubuntu WSL instance on the host as well, so that all of your instances are added to your Ubuntu Pro subscription.
+- If you configure the Landscape client component of UP4W on the host, UP4W will automatically configure the Landscape client on any Ubuntu WSL instance on the host as well, so that both your host and the instances on the host are registered with Landscape. You can then use Landscape not just to manage the instances but also to create and provision new instances on the host.
 
-Ubuntu Pro for WSL is of value to system administrators, corporate security teams and desktop users.
+Pro-attaching and Landscape-enrolling an Ubuntu instance is not difficult, but when your Ubuntu instance fleet is large it can get tedious.  UP4W takes advantage of the WSL setting to make it a breeze -- regardless of the size of your fleet.
+
+Ubuntu Pro for WSL is of value to system administrators, corporate security teams, and desktop users.
 
 ## Project and community
 
