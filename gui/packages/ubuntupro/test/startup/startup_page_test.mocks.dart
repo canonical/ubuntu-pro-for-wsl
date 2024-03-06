@@ -6,6 +6,7 @@
 import 'dart:async' as _i5;
 
 import 'package:agentapi/agentapi.dart' as _i3;
+import 'package:grpc/grpc.dart' as _i6;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
 import 'package:ubuntupro/core/agent_monitor.dart' as _i4;
@@ -34,9 +35,19 @@ class _FakeAgentApiClient_0 extends _i1.SmartFake
         );
 }
 
-class _FakeSubscriptionInfo_1 extends _i1.SmartFake
+class _FakeUIClient_1 extends _i1.SmartFake implements _i3.UIClient {
+  _FakeUIClient_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeSubscriptionInfo_2 extends _i1.SmartFake
     implements _i3.SubscriptionInfo {
-  _FakeSubscriptionInfo_1(
+  _FakeSubscriptionInfo_2(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -63,17 +74,24 @@ class MockAgentStartupMonitor extends _i1.Mock
   @override
   _i4.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
-        returnValue: (int port) => _FakeAgentApiClient_0(
+        returnValue: (
+          String host,
+          int port,
+        ) =>
+            _FakeAgentApiClient_0(
           this,
           Invocation.getter(#clientFactory),
         ),
       ) as _i4.ApiClientFactory);
 
   @override
-  _i4.AgentApiCallback get onClient => (super.noSuchMethod(
-        Invocation.getter(#onClient),
-        returnValue: (_i2.AgentApiClient __p0) => null,
-      ) as _i4.AgentApiCallback);
+  bool addNewClientListener(_i4.AgentApiCallback? cb) => (super.noSuchMethod(
+        Invocation.method(
+          #addNewClientListener,
+          [cb],
+        ),
+        returnValue: false,
+      ) as bool);
 
   @override
   _i5.Stream<_i4.AgentState> start({
@@ -112,6 +130,40 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
   }
 
   @override
+  _i3.UIClient Function(_i6.ClientChannel) get stubFactory =>
+      (super.noSuchMethod(
+        Invocation.getter(#stubFactory),
+        returnValue: (_i6.ClientChannel __p0) => _FakeUIClient_1(
+          this,
+          Invocation.getter(#stubFactory),
+        ),
+      ) as _i3.UIClient Function(_i6.ClientChannel));
+
+  @override
+  _i5.Stream<_i2.ConnectionEvent> get onConnectionChanged =>
+      (super.noSuchMethod(
+        Invocation.getter(#onConnectionChanged),
+        returnValue: _i5.Stream<_i2.ConnectionEvent>.empty(),
+      ) as _i5.Stream<_i2.ConnectionEvent>);
+
+  @override
+  _i5.Future<bool> connectTo({
+    required String? host,
+    required int? port,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #connectTo,
+          [],
+          {
+            #host: host,
+            #port: port,
+          },
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
   _i5.Future<_i3.SubscriptionInfo> applyProToken(String? token) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -119,7 +171,7 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
           [token],
         ),
         returnValue:
-            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_2(
           this,
           Invocation.method(
             #applyProToken,
@@ -154,7 +206,7 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
           [],
         ),
         returnValue:
-            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_2(
           this,
           Invocation.method(
             #subscriptionInfo,
@@ -170,7 +222,7 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
           [],
         ),
         returnValue:
-            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_2(
           this,
           Invocation.method(
             #notifyPurchase,

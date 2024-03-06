@@ -51,17 +51,24 @@ class MockAgentStartupMonitor extends _i1.Mock
   @override
   _i3.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
-        returnValue: (int port) => _FakeAgentApiClient_0(
+        returnValue: (
+          String host,
+          int port,
+        ) =>
+            _FakeAgentApiClient_0(
           this,
           Invocation.getter(#clientFactory),
         ),
       ) as _i3.ApiClientFactory);
 
   @override
-  _i3.AgentApiCallback get onClient => (super.noSuchMethod(
-        Invocation.getter(#onClient),
-        returnValue: (_i2.AgentApiClient __p0) => null,
-      ) as _i3.AgentApiCallback);
+  bool addNewClientListener(_i3.AgentApiCallback? cb) => (super.noSuchMethod(
+        Invocation.method(
+          #addNewClientListener,
+          [cb],
+        ),
+        returnValue: false,
+      ) as bool);
 
   @override
   _i4.Stream<_i3.AgentState> start({
