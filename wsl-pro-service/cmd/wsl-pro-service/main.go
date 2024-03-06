@@ -11,6 +11,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/cmd/wsl-pro-service/service"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -40,7 +41,7 @@ func run(a app) int {
 		ForceColors: true,
 	})
 
-	log.Infof("Starting WSL Pro Service version %s", common.Version)
+	log.Infof("Starting WSL Pro Service version %s", consts.Version)
 
 	if err := a.Run(); err != nil {
 		log.Error(context.Background(), err)

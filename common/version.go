@@ -1,10 +1,4 @@
 package common
 
-import (
-	_ "embed"
-)
-
-// Version is the version number for Ubuntu Pro for WSL
-//
-//go:embed version
-var Version string
+// Version is the version name for Ubuntu Pro for WSL.
+var Version = "Dev"
