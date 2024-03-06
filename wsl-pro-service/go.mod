@@ -1,8 +1,8 @@
 module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 
-go 1.21.0
+go 1.22.0
 
-toolchain go1.21.5
+toolchain go1.22.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240301021145-c6a250560d1d

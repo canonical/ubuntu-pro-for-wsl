@@ -5,7 +5,7 @@
 `wsl-pro-service` is seeded only on WSL images.
 
 ```
-Build-dep: golang-go (\>= 2:1.21\~)
+Build-dep: golang-go (\>= 2:1.22\~)
 ```
 
 At any point in time, only the latest two versions of the Go toolchain receive security patches. Hence, we need to keep backporting new releases to fix vulnerabilities. They follow an approximate 6-month release cycle, so Go 1.21 should fall out of support by August 2024.

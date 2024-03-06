@@ -1,8 +1,8 @@
 module github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi
 
-go 1.21.0
+go 1.22.0
 
-toolchain go1.21.5
+toolchain go1.22.0
 
 require (
 	google.golang.org/grpc v1.62.0
