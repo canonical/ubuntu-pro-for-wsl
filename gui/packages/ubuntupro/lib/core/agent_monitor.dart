@@ -68,6 +68,10 @@ class AgentStartupMonitor {
   /// The callback to invoke once the client is responsive.
   final AgentApiCallback onClient;
 
+  /// The agent API client resulting of a successful startup.
+  AgentApiClient? _agentApiClient;
+  AgentApiClient? get agentApiClient => _agentApiClient;
+
   /// Models the background agent as seen by the GUI as a state machine, i.e.:
   /// 1. Agent running state is checked (by looking for the `.ubuntpro` file).
   /// 2. Agent start is requested by calling [agentLaucher] if not running.
@@ -150,8 +154,14 @@ class AgentStartupMonitor {
   }
 
   Future<AgentState> _onPort(int port) async {
+    if (_agentApiClient != null) {
+      await _agentApiClient!.connectTo(host: kDefaultHost, port: port);
+      return AgentState.ok;
+    }
+
     final client = clientFactory(kDefaultHost, port);
     if (await client.ping()) {
+      _agentApiClient = client;
       await onClient(client);
       return AgentState.ok;
     }

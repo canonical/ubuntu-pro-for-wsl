@@ -254,6 +254,54 @@ void main() {
       ]),
     );
   });
+
+  test('reconnect preserves client instance', () async {
+    final mockClient = MockAgentApiClient();
+    // Fakes a successful ping.
+    when(mockClient.ping()).thenAnswer((_) async => true);
+    // fakes a succesful connectTo call.
+    when(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
+        .thenAnswer((_) async => true);
+    final monitor = AgentStartupMonitor(
+      /// A launch request will always succeed.
+      agentLauncher: () async {
+        writeDummyAddrFile(homeDir!);
+        return true;
+      },
+      clientFactory: (host, port) => mockClient,
+      addrFileName: kAddrFileName,
+      onClient: (_) {},
+    );
+
+    await expectLater(
+      monitor.start(interval: kInterval),
+      emitsInOrder([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.ok,
+        emitsDone,
+      ]),
+    );
+
+    final currentClient = monitor.agentApiClient;
+    expect(currentClient.hashCode, mockClient.hashCode);
+    // Reset and reconnect
+    await monitor.reset();
+    await expectLater(
+      monitor.start(interval: kInterval),
+      emitsInOrder([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.ok,
+        emitsDone,
+      ]),
+    );
+
+    final newClient = monitor.agentApiClient;
+    verify(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
+        .called(1);
+    expect(newClient.hashCode, currentClient.hashCode);
+  });
 }
 
 /// Writes a sample address file to the destination containing either a proper
@@ -265,5 +313,9 @@ void writeDummyAddrFile(Directory homeDir, {String? line}) {
   final addr = File(filePath);
   addr.parent.createSync(recursive: true);
   addr.writeAsStringSync(line ?? goodLine);
-  addTearDown(addr.deleteSync);
+  addTearDown(() {
+    if (addr.existsSync()) {
+      addr.deleteSync();
+    }
+  });
 }
