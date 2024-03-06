@@ -71,7 +71,6 @@ func TestSubscription(t *testing.T) {
 
 	//nolint: dupl // This is mostly duplicate but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -127,7 +126,6 @@ func TestLandscapeConfig(t *testing.T) {
 
 	//nolint: dupl // This is mostly duplicate but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -177,7 +175,6 @@ func TestLandscapeAgentUID(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -238,7 +235,6 @@ func TestProvisioningTasks(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -297,7 +293,6 @@ func TestSetUserSubscription(t *testing.T) {
 
 	//nolint:dupl // This is mostly duplicate with TestSetStoreConfig but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -373,7 +368,6 @@ func TestSetStoreSubscription(t *testing.T) {
 
 	//nolint:dupl // This is mostly duplicate with TestSetUserConfig but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -443,8 +437,6 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -510,7 +502,6 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {

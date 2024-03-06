@@ -343,7 +343,6 @@ func (db *DistroDB) cleanupAllDistros(ctx context.Context) {
 
 	var wg sync.WaitGroup
 	for _, d := range db.distros {
-		d := d
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

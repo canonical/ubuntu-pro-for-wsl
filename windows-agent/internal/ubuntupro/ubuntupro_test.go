@@ -36,7 +36,6 @@ func TestDistribute(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -101,7 +100,6 @@ func TestFetchFromMicrosoftStore(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {

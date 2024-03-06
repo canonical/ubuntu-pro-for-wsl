@@ -97,7 +97,6 @@ func TestTranslations(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// We can't run those subtests in parallel as we want defer of global functions to end once all subtests are.
 

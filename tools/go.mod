@@ -1,12 +1,12 @@
 module github.com/canonical/ubuntu-pro-for-wsl/tools
 
-go 1.21.0
+go 1.22.0
 
-toolchain go1.21.5
+toolchain go1.22.1
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240131155254-d69397537350
-	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240131155254-d69397537350
+	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240306142941-0d452b8a5a90
+	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240306142331-92bc29c88c71
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
@@ -49,11 +49,11 @@ require (
 	github.com/butuzov/ireturn v0.3.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240131151255-f872a5c016b8 // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131151255-f872a5c016b8 // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131151255-f872a5c016b8 // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240131151255-f872a5c016b8 // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240131151255-f872a5c016b8 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240306140056-b2552aec01d2 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240306140056-b2552aec01d2 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240306140056-b2552aec01d2 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240306142331-92bc29c88c71 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240306140056-b2552aec01d2 // indirect
 	github.com/catenacyber/perfsprint v0.6.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -183,7 +183,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.8.1 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c // indirect
-	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394 // indirect
+	github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12 // indirect
 	github.com/ultraware/funlen v0.1.0 // indirect
 	github.com/ultraware/whitespace v0.1.0 // indirect
 	github.com/uudashr/gocognit v1.1.2 // indirect
@@ -202,11 +202,11 @@ require (
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-	google.golang.org/grpc v1.61.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
+	google.golang.org/grpc v1.62.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect

@@ -67,7 +67,6 @@ func TestAttachPro(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -148,7 +147,6 @@ func TestGetSubscriptionInfo(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
@@ -156,7 +154,8 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			dir := t.TempDir()
 			db, err := database.New(ctx, dir, nil)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
-			service := ui.New(ctx, &tc.config, db)
+			config := tc.config
+			service := ui.New(ctx, &config, db)
 
 			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
 			if tc.wantErr {
@@ -190,7 +189,6 @@ func TestNotifyPurchase(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
@@ -238,8 +236,6 @@ func TestApplyLandscapeConfig(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

@@ -167,8 +167,6 @@ func buildProject(ctx context.Context) (string, error) {
 
 	results := make(chan error)
 	for jobName, cmd := range jobs {
-		jobName := jobName
-		cmd := cmd
 		go func() {
 			log.Printf("Started job: %s\n", jobName)
 

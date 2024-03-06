@@ -57,7 +57,6 @@ func TestRun(t *testing.T) {
 		"Run and usage error only does not fail": {usageErrorReturn: true, runError: false, wantReturnCode: 0},
 	}
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

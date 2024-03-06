@@ -17,12 +17,11 @@ func TestSet(t *testing.T) {
 	// Concurrently add items to it
 	var wg sync.WaitGroup
 	for i := 0; i < testSize; i++ {
-		i := i
 		wg.Add(1)
-		go func() {
+		go func(i int) {
 			set.Set(i)
 			wg.Done()
-		}()
+		}(i)
 	}
 	wg.Wait()
 
@@ -35,12 +34,11 @@ func TestSet(t *testing.T) {
 	// Concurrently remove items
 	wg = sync.WaitGroup{}
 	for i := 0; i < testSize; i++ {
-		i := i
 		wg.Add(1)
-		go func() {
+		go func(i int) {
 			set.Unset(i)
 			wg.Done()
-		}()
+		}(i)
 	}
 	wg.Wait()
 
