@@ -5,13 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:ubuntupro/constants.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
+import 'package:ubuntupro/core/agent_monitor.dart';
 import 'package:ubuntupro/core/environment.dart';
-import 'package:ubuntupro/pages/startup/agent_monitor.dart';
 
-import 'agent_monitor_test.mocks.dart';
+import './agent_monitor_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
 void main() {

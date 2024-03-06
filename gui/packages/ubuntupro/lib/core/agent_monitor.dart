@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
-import '../../core/agent_api_client.dart';
-import '../../core/agent_api_paths.dart';
+import 'agent_api_client.dart';
+import 'agent_api_paths.dart';
 
 enum AgentState {
   /// Querying agent state, not yet known.

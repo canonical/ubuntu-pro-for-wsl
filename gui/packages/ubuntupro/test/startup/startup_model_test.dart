@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:ubuntupro/pages/startup/agent_monitor.dart';
+import 'package:ubuntupro/core/agent_monitor.dart';
 import 'package:ubuntupro/pages/startup/startup_model.dart';
 
 import 'startup_model_test.mocks.dart';

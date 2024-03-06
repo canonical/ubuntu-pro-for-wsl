@@ -7,7 +7,7 @@ import 'dart:async' as _i4;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/pages/startup/agent_monitor.dart' as _i3;
+import 'package:ubuntupro/core/agent_monitor.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values

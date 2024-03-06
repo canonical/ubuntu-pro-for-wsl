@@ -5,7 +5,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
-import 'package:ubuntupro/pages/startup/agent_monitor.dart';
+import 'package:ubuntupro/core/agent_monitor.dart';
 import 'package:ubuntupro/pages/startup/startup_model.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
 import 'package:wizard_router/wizard_router.dart';
