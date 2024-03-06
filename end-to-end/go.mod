@@ -1,13 +1,13 @@
 module github.com/canonical/ubuntu-pro-for-wsl/end-to-end
 
-go 1.21.0
+go 1.22.0
 
-toolchain go1.21.5
+toolchain go1.22.1
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240131155254-d69397537350
-	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240131155254-d69397537350
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240306140056-b2552aec01d2
+	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240306142331-92bc29c88c71
 	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
@@ -17,7 +17,7 @@ require (
 )
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131154921-6a764837eef6 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240306140056-b2552aec01d2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect

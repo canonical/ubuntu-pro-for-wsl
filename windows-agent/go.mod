@@ -1,17 +1,17 @@
 module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 
-go 1.21.0
+go 1.22.0
 
-toolchain go1.21.5
+toolchain go1.22.1
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240131151255-f872a5c016b8
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240223150104-3fe27a63a820
-	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240131151255-f872a5c016b8
-	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240131151255-f872a5c016b8
-	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240131151255-f872a5c016b8
-	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240131151255-f872a5c016b8
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240306140056-b2552aec01d2
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240306140056-b2552aec01d2
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240306140056-b2552aec01d2
+	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240306142331-92bc29c88c71
+	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240306142331-92bc29c88c71
+	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240306140056-b2552aec01d2
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
