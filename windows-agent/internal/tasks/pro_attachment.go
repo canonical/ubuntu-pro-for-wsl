@@ -3,7 +3,9 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 )
@@ -30,7 +32,7 @@ func (t ProAttachment) Execute(ctx context.Context, client wslserviceapi.WSLClie
 
 // String is needed to fulfil Task.
 func (t ProAttachment) String() string {
-	return "AttachPro"
+	return fmt.Sprintf("%T task with token: %s", t, common.Obfuscate(t.Token))
 }
 
 // Is is a custom comparator. All AttachPro tasks are considered equivalent.

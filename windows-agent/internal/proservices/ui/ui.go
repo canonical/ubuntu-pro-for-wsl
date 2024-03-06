@@ -62,12 +62,12 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 		return nil, fmt.Errorf("some distros could not pro-attach: %v", err)
 	}
 
-	subs, err := s.getSubscriptionInfo()
+	subs, err := s.getSubscriptionSource()
 	if err != nil {
 		return subs, fmt.Errorf("could not assemble response: %v", err)
 	}
 
-	log.Debugf(ctx, "UI service: responding ApplyProToken with info: %v", info)
+	log.Debugf(ctx, "UI service: responding ApplyProToken with following info: %v", subs)
 	return subs, nil
 }
 
@@ -93,7 +93,7 @@ func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.
 func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (_ *agentapi.SubscriptionInfo, err error) {
 	log.Info(ctx, "UI service: received GetSubscriptionInfo message")
 
-	info, err := s.getSubscriptionInfo()
+	info, err := s.getSubscriptionSource()
 	if err != nil {
 		err = fmt.Errorf("UI service: GetSubscriptionInfo: %v", err)
 		log.Warningf(ctx, "%v", err)
@@ -104,7 +104,7 @@ func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty
 	return info, nil
 }
 
-func (s *Service) getSubscriptionInfo() (*agentapi.SubscriptionInfo, error) {
+func (s *Service) getSubscriptionSource() (*agentapi.SubscriptionInfo, error) {
 	info := &agentapi.SubscriptionInfo{}
 
 	_, source, err := s.config.Subscription()
@@ -137,7 +137,7 @@ func (s *Service) NotifyPurchase(ctx context.Context, empty *agentapi.Empty) (in
 		errs = errors.Join(errs, err)
 	}
 
-	info, err := s.getSubscriptionInfo()
+	info, err := s.getSubscriptionSource()
 	if err != nil {
 		log.Warningf(ctx, "UI service: NotifyPurchase: %v", err)
 		errs = errors.Join(errs, err)
