@@ -67,7 +67,6 @@ func TestAttachPro(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -148,7 +147,6 @@ func TestGetSubscriptionInfo(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
@@ -190,7 +188,6 @@ func TestNotifyPurchase(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
@@ -238,7 +235,6 @@ func TestApplyLandscapeConfig(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()

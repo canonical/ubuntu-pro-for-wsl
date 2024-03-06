@@ -89,7 +89,6 @@ func TestNew(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			var d *distro.Distro
 			var err error
@@ -178,7 +177,6 @@ func TestIsValid(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// Create an always valid distro
 			d, err := distro.New(ctx, distro1, distro.Properties{}, t.TempDir(), startupMutex())
@@ -228,7 +226,6 @@ func TestSetProperties(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -298,7 +295,6 @@ func TestLockReleaseAwake(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			var mock *wslmock.Backend
@@ -494,7 +490,6 @@ func TestState(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
@@ -555,7 +550,6 @@ func TestWorkerConstruction(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -662,7 +656,6 @@ func TestWorkerWrappers(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -745,7 +738,6 @@ func TestUninstall(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 			if wsl.MockAvailable() {
