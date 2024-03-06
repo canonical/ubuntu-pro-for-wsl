@@ -2,8 +2,6 @@ module github.com/canonical/ubuntu-pro-for-wsl/tools
 
 go 1.22.0
 
-toolchain go1.22.0
-
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240131155254-d69397537350
 	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240131155254-d69397537350
@@ -142,7 +140,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/polyfloyd/go-errorlint v1.4.8 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
-	github.com/prometheus/client_model v0.4.0 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.0 // indirect
@@ -183,7 +181,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.8.1 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c // indirect
-	github.com/ubuntu/gowsl v0.0.0-20231004124730-8fd8df02f394 // indirect
+	github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12 // indirect
 	github.com/ultraware/funlen v0.1.0 // indirect
 	github.com/ultraware/whitespace v0.1.0 // indirect
 	github.com/uudashr/gocognit v1.1.2 // indirect
@@ -202,11 +200,11 @@ require (
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-	google.golang.org/grpc v1.61.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
+	google.golang.org/grpc v1.62.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
