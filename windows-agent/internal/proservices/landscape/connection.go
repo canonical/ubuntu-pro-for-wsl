@@ -9,6 +9,7 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
@@ -245,6 +246,10 @@ func (conn *connection) sendInfo(info *landscapeapi.HostAgentInfo) (err error) {
 		return errors.New("disconnected")
 	}
 
+	//nolint:govet // We are only using copy for logging
+	logInfo := *info
+	logInfo.Token = common.Obfuscate(logInfo.GetToken())
+	log.Debugf(conn.ctx, "Landscape: sending info: %+v", logInfo) //nolint:govet
 	if err := conn.grpcClient.Send(info); err != nil {
 		return fmt.Errorf("could not send message: %v", err)
 	}
