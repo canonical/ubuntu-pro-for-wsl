@@ -85,10 +85,11 @@ func TestRun(t *testing.T) {
 				a.tmpDir = "PUBLIC_DIR_ERROR"
 			}
 
+			var logFile, oldLogFile string
 			publicDir, err := a.PublicDir()
-			logFile := filepath.Join(publicDir, "log")
-			oldLogFile := logFile + ".old"
 			if err == nil {
+				logFile = filepath.Join(publicDir, "log")
+				oldLogFile = logFile + ".old"
 				switch tc.existingLogContent {
 				case "":
 				case "OLD_IS_DIRECTORY":
@@ -119,6 +120,10 @@ func TestRun(t *testing.T) {
 
 			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
 
+			// Don't check for log files if the directory was not writable
+			if logFile == "" {
+				return
+			}
 			if tc.wantOldLogFileContent != nil {
 				require.FileExists(t, oldLogFile, "Old log file should exist")
 				content, err := os.ReadFile(oldLogFile)
