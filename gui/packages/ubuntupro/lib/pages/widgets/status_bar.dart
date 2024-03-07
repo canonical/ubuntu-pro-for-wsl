@@ -25,6 +25,7 @@ class StatusBar extends StatelessWidget {
     final lang = AppLocalizations.of(context);
     return Row(
       children: <Widget>[
+        const SizedBox(width: 8.0),
         Text(
           constants.kVersion,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
