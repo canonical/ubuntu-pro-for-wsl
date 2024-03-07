@@ -7,6 +7,7 @@ import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
 import 'core/agent_api_client.dart';
+import 'core/agent_connection.dart';
 import 'core/agent_monitor.dart';
 import 'pages/landscape/landscape_page.dart';
 import 'pages/startup/startup_page.dart';
@@ -22,8 +23,15 @@ class Pro4WSLApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return YaruTheme(
       builder: (context, yaru, child) {
-        return ChangeNotifierProvider(
-          create: (_) => ValueNotifier(SubscriptionInfo()),
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(
+              create: (_) => ValueNotifier(SubscriptionInfo()),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => AgentConnection(agentMonitor),
+            ),
+          ],
           child: MaterialApp(
             title: 'Ubuntu Pro',
             theme: customize(yaru.darkTheme),
