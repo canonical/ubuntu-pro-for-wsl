@@ -38,8 +38,8 @@ void main() {
       expect(info.whichSubscriptionType(), SubscriptionType.none);
     });
 
-    test('setting landscape config succeeds', () {
-      expect(
+    test('setting landscape config succeeds', () async {
+      await expectLater(
         () async => await client.applyLandscapeConfig('test config'),
         returnsNormally,
       );

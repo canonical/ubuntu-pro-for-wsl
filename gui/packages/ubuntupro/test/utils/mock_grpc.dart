@@ -39,6 +39,14 @@ class MockUIClient extends UIClient {
   }
 
   @override
+  ResponseFuture<Empty> applyLandscapeConfig(
+    LandscapeConfig request, {
+    CallOptions? options,
+  }) {
+    return MockedResponse(Empty());
+  }
+
+  @override
   ResponseFuture<SubscriptionInfo> applyProToken(
     ProAttachInfo request, {
     CallOptions? options,
