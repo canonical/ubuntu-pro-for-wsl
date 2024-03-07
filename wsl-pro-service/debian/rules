@@ -17,6 +17,9 @@ export GOFLAGS := $(shell ./debian/prepare-source.sh)
 	@echo "Building with flags $(GOFLAGS)"
 	dh $@ --builddirectory=_build --with=apport
 
+override_dh_auto_build:
+	GOWORK=off go build -mod=vendor -o _build/ github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/cmd/wsl-pro-service
+
 override_dh_auto_install:
 	dh_auto_install -- --no-source
 
@@ -25,10 +28,11 @@ override_dh_auto_install:
 	cp -a services/* debian/wsl-pro-service/lib/systemd/system/
 
 	# Install our service in libexec as it's not intended for end user
-	mv debian/wsl-pro-service/usr/bin/ debian/wsl-pro-service/usr/libexec/
+	mkdir -p debian/wsl-pro-service/usr/libexec/
+	mv _build/wsl-pro-service debian/wsl-pro-service/usr/libexec/
 
 override_dh_auto_test:
-	cd _build && GOWORK=off go test $(GOFLAGS) -mod=vendor github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/...
+	cd _build && GOWORK=off go test -mod=vendor github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/...
 
 # dwz does not support golang binaries yet
 override_dh_dwz:
