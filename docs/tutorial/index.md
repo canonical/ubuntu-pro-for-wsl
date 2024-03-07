@@ -56,9 +56,6 @@ See: [Microsoft Store | Windows Subsystem for Linux](https://www.microsoft.com/s
 
 All set. From now on you can use it to launch  WSL instances.
 
-% :tmihoc: I thought we'd need some blank space here, but one full line break seems too much. WDYT?
-% better than the lack of spacing. Add more throughout the tutorial!
-
 <br />
 
 ### Install the `Ubuntu 22.04 LTS` and `Ubuntu (Preview)` applications
