@@ -217,37 +217,68 @@ func TestConnect(t *testing.T) {
 func TestSend(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	testCases := map[string]struct {
+		changePort string
 
-	system, mock := testutils.MockSystem(t)
+		wantErr bool
+	}{
+		"Success": {changePort: "FALSE"}, // Cannot use "" as default because we want to test the empty string
 
-	portFile := mock.DefaultAddrFile()
-	_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile)
+		"Error when port is wrong":        {changePort: "123", wantErr: true},
+		"Error when port is empty":        {changePort: "", wantErr: true},
+		"Error when port is not a number": {changePort: "abc", wantErr: true},
+		"Error when port is negative":     {changePort: "-1", wantErr: true},
+		"Error when port is zero":         {changePort: "0", wantErr: true},
+	}
 
-	cs, err := controlstream.New(ctx, system)
-	require.NoError(t, err, "New should return no error")
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	err = cs.Connect(ctx)
-	require.NoError(t, err, "Connect should have returned no error")
-	defer cs.Disconnect()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-	require.Equal(t, int32(1), agentMetaData.ConnectionCount.Load(), "The agent should have received one connection via the control stream")
-	require.Equal(t, int32(1), agentMetaData.RecvCount.Load(), "The agent should have received one message via the control stream")
+			system, mock := testutils.MockSystem(t)
 
-	var c net.ListenConfig
-	l, err := c.Listen(ctx, "tcp4", fmt.Sprintf("localhost:%d", cs.ReservedPort()))
-	require.NoError(t, err, "could not serve assigned port")
-	defer l.Close()
+			portFile := mock.DefaultAddrFile()
+			_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile)
 
-	err = cs.Send(&agentapi.DistroInfo{WslName: "HELLO"})
-	require.NoError(t, err, "Send should return no error")
+			// Override the port file with a different port
+			if tc.changePort != "FALSE" {
+				newAddr := fmt.Sprintf("127.0.0.1:%s", tc.changePort)
+				err := os.WriteFile(portFile, []byte(newAddr), 0600)
+				require.NoError(t, err, "Setup: could not overwrite new address file")
+			}
 
-	require.Eventually(t, func() bool {
-		return agentMetaData.RecvCount.Load() > 1
-	}, 20*time.Second, time.Second, "The agent should have received another message via the control stream")
+			cs, err := controlstream.New(ctx, system)
+			require.NoError(t, err, "New should return no error")
 
-	require.Equal(t, int32(2), agentMetaData.RecvCount.Load(), "The agent should have received exactly two messages via the control stream")
+			err = cs.Connect(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "Connect should have returned an error")
+				return
+			}
+			require.NoError(t, err, "Connect should have returned no error")
+			defer cs.Disconnect()
+
+			require.Equal(t, int32(1), agentMetaData.ConnectionCount.Load(), "The agent should have received one connection via the control stream")
+			require.Equal(t, int32(1), agentMetaData.RecvCount.Load(), "The agent should have received one message via the control stream")
+
+			var c net.ListenConfig
+			l, err := c.Listen(ctx, "tcp4", fmt.Sprintf("localhost:%d", cs.ReservedPort()))
+			require.NoError(t, err, "could not serve assigned port")
+			defer l.Close()
+
+			err = cs.Send(&agentapi.DistroInfo{WslName: "HELLO"})
+			require.NoError(t, err, "Send should return no error")
+
+			require.Eventually(t, func() bool {
+				return agentMetaData.RecvCount.Load() > 1
+			}, 20*time.Second, time.Second, "The agent should have received another message via the control stream")
+
+			require.Equal(t, int32(2), agentMetaData.RecvCount.Load(), "The agent should have received exactly two messages via the control stream")
+		})
+	}
 }
 
 func TestReconnection(t *testing.T) {
