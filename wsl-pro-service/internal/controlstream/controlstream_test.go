@@ -222,10 +222,10 @@ func TestSend(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success": {forcePort: "-"},
+		"Success": {},
 
 		"Error when port is wrong":        {forcePort: "123", wantErr: true},
-		"Error when port is empty":        {forcePort: "", wantErr: true},
+		"Error when port is empty":        {forcePort: "-", wantErr: true},
 		"Error when port is not a number": {forcePort: "abc", wantErr: true},
 		"Error when port is negative":     {forcePort: "-1", wantErr: true},
 		"Error when port is zero":         {forcePort: "0", wantErr: true},
@@ -244,8 +244,11 @@ func TestSend(t *testing.T) {
 			_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile)
 
 			// Override the port file with a different port
-			if tc.forcePort != "-" {
-				newAddr := fmt.Sprintf("127.0.0.1:%s", tc.forcePort)
+			if tc.forcePort != "" {
+				newAddr := "127.0.0.1"
+				if tc.forcePort != "-" {
+					newAddr = fmt.Sprintf("%s:%s", newAddr, tc.forcePort)
+				}
 				err := os.WriteFile(portFile, []byte(newAddr), 0600)
 				require.NoError(t, err, "Setup: could not overwrite new address file")
 			}
