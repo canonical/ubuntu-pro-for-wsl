@@ -202,7 +202,7 @@ func (w *Worker) processTasks(ctx context.Context) {
 		resultErr := w.processSingleTask(ctx, t)
 
 		var target unreachableDistroError
-		if errors.Is(resultErr, &target) {
+		if errors.As(resultErr, &target) {
 			log.Errorf(ctx, "Distro %q: task %q: distro not reachable: %v", w.distro.Name(), t, target.sourceErr)
 			w.distro.Invalidate(ctx)
 			continue
