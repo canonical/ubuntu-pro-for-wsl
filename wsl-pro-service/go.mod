@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240306152255-504f5b1b12fd
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240306152255-504f5b1b12fd
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240307082020-056565ea95dd
 	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240306152255-504f5b1b12fd
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
@@ -22,7 +22,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -44,6 +44,6 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
