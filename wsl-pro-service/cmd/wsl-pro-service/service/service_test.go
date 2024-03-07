@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/cmd/wsl-pro-service/service"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
@@ -67,7 +67,7 @@ func TestVersion(t *testing.T) {
 	}
 
 	require.Equal(t, want, fields[0], "Wrong executable name")
-	require.Equal(t, consts.Version, fields[1], "Wrong version")
+	require.Equal(t, common.Version, fields[1], "Wrong version")
 }
 
 func TestNoUsageError(t *testing.T) {
