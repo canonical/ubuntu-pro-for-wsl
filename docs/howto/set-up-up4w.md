@@ -89,8 +89,6 @@ Get the Ubuntu Pro token associated with your subscription (it's free for up to 
 	ping_url = ${PING_API_ENDPOINT}
 	account_name = standalone
 	```
-	> See more: [UP4W Landscape config reference](ref::landscape-config).
-
 </details>
 
 ## 1. Install Ubuntu Pro for WSL
@@ -108,8 +106,10 @@ You have two ways of setting up UP4W. You can use the graphical interface (GUI),
 	1. Click on **Already have a token?**.
 	2. Write your Ubuntu Pro token and click **Confirm**.
 3. Input your Landscape configuration:
-	1. Click on [TO BE ADDED] <!--TODO: Landscape data input GUI is not implemented yet-->
-	2. Write the path to file `landscape-client.conf` specified during the Landscape server setup.
+	1. Click on **Quick setup**.
+	2. Write the **FQDN** of your server.
+	3. Leave the **registration key** field empty.
+	4. Click the **Continue** button.
 
 (howto::configure::registry)=
 ### Using the registry
@@ -122,7 +122,8 @@ You have two ways of setting up UP4W. You can use the graphical interface (GUI),
 6. Input your Ubuntu Pro token:
 	- Right-click `UbuntuProToken` > Modify > Write the Ubuntu Pro token.
 7. Input your Landscape configuration:
-	- Right-click `LandscapeConfig` > Modify > Write the contents of the specified file.
+	- Right-click `LandscapeConfig` > Modify > Write the Landscape config.
+	  > See more: [UP4W Landscape config reference](ref::landscape-config).
 
 ## 3. Verify that UP4W is working
 > If either verification step fails, wait for a few seconds and try again. This should not take longer than a minute.
