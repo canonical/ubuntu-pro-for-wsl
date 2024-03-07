@@ -52,10 +52,10 @@ class MockAgentConnection extends _i1.Mock implements _i3.AgentConnection {
       ) as _i2.AgentStartupMonitor);
 
   @override
-  bool get isConnected => (super.noSuchMethod(
-        Invocation.getter(#isConnected),
-        returnValue: false,
-      ) as bool);
+  _i3.AgentConnectionState get state => (super.noSuchMethod(
+        Invocation.getter(#state),
+        returnValue: _i3.AgentConnectionState.connected,
+      ) as _i3.AgentConnectionState);
 
   @override
   bool get hasListeners => (super.noSuchMethod(

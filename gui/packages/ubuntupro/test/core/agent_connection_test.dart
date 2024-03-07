@@ -22,7 +22,7 @@ void main() {
 
       final conn = AgentConnection(monitor);
 
-      expect(conn.isConnected, isTrue);
+      expect(conn.state, AgentConnectionState.connected);
     });
 
     test('detects changes', () async {
@@ -36,13 +36,13 @@ void main() {
       when(monitor.agentApiClient).thenReturn(client);
 
       final conn = AgentConnection(monitor);
-      expect(conn.isConnected, isTrue);
+      expect(conn.state, AgentConnectionState.connected);
 
       await events.first;
-      expect(conn.isConnected, isFalse);
+      expect(conn.state, AgentConnectionState.disconnected);
 
       await events.last;
-      expect(conn.isConnected, isTrue);
+      expect(conn.state, AgentConnectionState.connected);
     });
   });
 
@@ -54,7 +54,7 @@ void main() {
 
       final conn = AgentConnection(monitor);
 
-      expect(conn.isConnected, isFalse);
+      expect(conn.state, AgentConnectionState.disconnected);
     });
 
     test('never connects', () async {
@@ -63,10 +63,10 @@ void main() {
       when(monitor.addNewClientListener(captureAny)).thenReturn(true);
 
       final conn = AgentConnection(monitor);
-      expect(conn.isConnected, isFalse);
+      expect(conn.state, AgentConnectionState.disconnected);
 
       // Callback never called, we never got a running API client.
-      expect(conn.isConnected, isFalse);
+      expect(conn.state, AgentConnectionState.disconnected);
     });
 
     test('reconnects on request', () async {
@@ -80,10 +80,20 @@ void main() {
       when(client.onConnectionChanged).thenAnswer((_) => const Stream.empty());
 
       final conn = AgentConnection(monitor);
-      expect(conn.isConnected, isFalse);
+      expect(conn.state, AgentConnectionState.disconnected);
+
+      var notifiedWhenConnecting = false;
+      conn.addListener(() {
+        // once set never resests.
+        if (!notifiedWhenConnecting) {
+          notifiedWhenConnecting =
+              conn.state == AgentConnectionState.connecting;
+        }
+      });
 
       await conn.restartAgent();
-      expect(conn.isConnected, isTrue);
+      expect(conn.state, AgentConnectionState.connected);
+      expect(notifiedWhenConnecting, isTrue);
     });
 
     test('connects ok', () async {
@@ -96,14 +106,14 @@ void main() {
       });
 
       final conn = AgentConnection(monitor);
-      expect(conn.isConnected, isFalse);
+      expect(conn.state, AgentConnectionState.disconnected);
 
       // Eventually we get a running API client.
       final client = MockAgentApiClient();
       when(client.onConnectionChanged).thenAnswer((_) => const Stream.empty());
       callback!(client);
 
-      expect(conn.isConnected, isTrue);
+      expect(conn.state, AgentConnectionState.connected);
     });
   });
 }

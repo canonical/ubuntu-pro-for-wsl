@@ -6,8 +6,8 @@ import 'agent_api_client.dart';
 import 'agent_monitor.dart';
 
 class AgentConnection extends ChangeNotifier {
-  bool _isConnected = false;
-  bool get isConnected => _isConnected;
+  AgentConnectionState _state = AgentConnectionState.disconnected;
+  AgentConnectionState get state => _state;
 
   StreamSubscription<bool>? _connectivitySubscription;
 
@@ -25,22 +25,32 @@ class AgentConnection extends ChangeNotifier {
     _connectivitySubscription = client?.onConnectionChanged
         .map((event) => event == ConnectionEvent.connected)
         .listen((state) {
-      _isConnected = state;
+      _state = state
+          ? AgentConnectionState.connected
+          : AgentConnectionState.disconnected;
       notifyListeners();
     });
     // If we got a stream subscription we have an active connection.
-    _isConnected = _connectivitySubscription != null;
+    _state = _connectivitySubscription != null
+        ? AgentConnectionState.connected
+        : AgentConnectionState.disconnected;
     notifyListeners();
   }
 
   Future<void> restartAgent() async {
     await _connectivitySubscription?.cancel();
-    _isConnected = false;
+    _state = AgentConnectionState.connecting;
     notifyListeners();
     await monitor.reset();
-    _isConnected = await monitor.start().last == AgentState.ok;
-    notifyListeners();
+    final monitorEvent = await monitor.start().last;
+    if (monitorEvent != AgentState.ok) {
+      _state = AgentConnectionState.disconnected;
+      notifyListeners();
+      return;
+    }
+    _state = AgentConnectionState.connected;
     _refreshSubscription(monitor.agentApiClient);
+    notifyListeners();
   }
 
   @override
@@ -48,4 +58,10 @@ class AgentConnection extends ChangeNotifier {
     _connectivitySubscription?.cancel();
     super.dispose();
   }
+}
+
+enum AgentConnectionState {
+  connected,
+  connecting,
+  disconnected,
 }

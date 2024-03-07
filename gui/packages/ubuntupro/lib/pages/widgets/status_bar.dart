@@ -53,20 +53,42 @@ class StatusBar extends StatelessWidget {
         if (showAgentStatus)
           Consumer<AgentConnection>(
             builder: (context, conn, _) => IconButton(
-              tooltip: conn.isConnected
-                  ? lang.statusBarAgentRunningTooltip
-                  : lang.statusBarAgentDownTooltip,
+              tooltip: conn.state.localize(lang),
               icon: Icon(
                 size: 14.0,
                 agentConnIcon,
-                color: conn.isConnected
-                    ? YaruColors.of(context).success
-                    : YaruColors.red,
+                color: conn.state.toColor(context),
               ),
-              onPressed: conn.isConnected ? null : conn.restartAgent,
+              onPressed: conn.state == AgentConnectionState.disconnected
+                  ? conn.restartAgent
+                  : null,
             ),
           ),
       ],
     );
+  }
+}
+
+extension AgentConnectionStateX on AgentConnectionState {
+  String localize(AppLocalizations lang) {
+    switch (this) {
+      case AgentConnectionState.connected:
+        return lang.statusBarAgentRunningTooltip;
+      case AgentConnectionState.connecting:
+        return lang.statusBarAgentConnectingTooltip;
+      case AgentConnectionState.disconnected:
+        return lang.statusBarAgentDownTooltip;
+    }
+  }
+
+  Color toColor(BuildContext context) {
+    switch (this) {
+      case AgentConnectionState.connected:
+        return YaruColors.of(context).success;
+      case AgentConnectionState.connecting:
+        return YaruColors.of(context).warning;
+      case AgentConnectionState.disconnected:
+        return YaruColors.red;
+    }
   }
 }

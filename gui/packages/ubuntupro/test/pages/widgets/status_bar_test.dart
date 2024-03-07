@@ -14,7 +14,7 @@ void main() {
   group('display agent status', () {
     testWidgets('by default ON when connected', (tester) async {
       final conn = MockAgentConnection();
-      when(conn.isConnected).thenReturn(false);
+      when(conn.state).thenReturn(AgentConnectionState.disconnected);
       final app = buildApp(conn, const StatusBar());
       await tester.pumpWidget(app);
       final agentStatusButton = find.byIcon(Icons.circle_rounded);
@@ -22,7 +22,7 @@ void main() {
     });
     testWidgets('by default ON when disconnected', (tester) async {
       final conn = MockAgentConnection();
-      when(conn.isConnected).thenReturn(true);
+      when(conn.state).thenReturn(AgentConnectionState.connected);
       final app = buildApp(conn, const StatusBar());
       await tester.pumpWidget(app);
       final agentStatusButton = find.byIcon(Icons.circle_rounded);
@@ -30,7 +30,7 @@ void main() {
     });
     testWidgets('can be hidden', (tester) async {
       final conn = MockAgentConnection();
-      when(conn.isConnected).thenReturn(true);
+      when(conn.state).thenReturn(AgentConnectionState.connected);
       final app = buildApp(conn, const StatusBar(showAgentStatus: false));
       await tester.pumpWidget(app);
       final agentStatusButton = find.byIcon(Icons.circle_rounded);
@@ -41,7 +41,7 @@ void main() {
   group('agent status click', () {
     testWidgets('disabled when connected', (tester) async {
       final conn = MockAgentConnection();
-      when(conn.isConnected).thenReturn(true);
+      when(conn.state).thenReturn(AgentConnectionState.connected);
       final app = buildApp(conn, const StatusBar());
       await tester.pumpWidget(app);
       final agentStatusButton = find.ancestor(
@@ -54,7 +54,7 @@ void main() {
     });
     testWidgets('enabled when disconneted', (tester) async {
       final conn = MockAgentConnection();
-      when(conn.isConnected).thenReturn(false);
+      when(conn.state).thenReturn(AgentConnectionState.disconnected);
       final app = buildApp(conn, const StatusBar());
       await tester.pumpWidget(app);
       final agentStatusButton = find.ancestor(
@@ -71,7 +71,7 @@ void main() {
       Uri? launchedUri;
 
       final conn = MockAgentConnection();
-      when(conn.isConnected).thenReturn(true);
+      when(conn.state).thenReturn(AgentConnectionState.connected);
       final app = buildApp(
         conn,
         StatusBar(

@@ -83,5 +83,6 @@
     
     "statusBarReportBugTooltip": "Report a bug",
     "statusBarAgentRunningTooltip": "Ubuntu Pro agent is running",
+    "statusBarAgentConnectingTooltip": "Connecting to Ubuntu Pro agent...",
     "statusBarAgentDownTooltip": "Ubuntu Pro agent is disconnected. Press to start the agent."
 }

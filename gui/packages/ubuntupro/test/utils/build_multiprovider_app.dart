@@ -66,7 +66,7 @@ class _MockAgentConnection extends AgentConnection {
   _MockAgentConnection() : super(_MockAgentStartupMonitor());
 
   @override
-  bool get isConnected => true;
+  AgentConnectionState get state => AgentConnectionState.connected;
   @override
   Future<void> restartAgent() {
     return Future<void>.value();
