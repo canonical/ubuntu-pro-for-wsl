@@ -218,17 +218,17 @@ func TestSend(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		changePort string
+		forcePort string
 
 		wantErr bool
 	}{
-		"Success": {changePort: "FALSE"}, // Cannot use "" as default because we want to test the empty string
+		"Success": {forcePort: "-"},
 
-		"Error when port is wrong":        {changePort: "123", wantErr: true},
-		"Error when port is empty":        {changePort: "", wantErr: true},
-		"Error when port is not a number": {changePort: "abc", wantErr: true},
-		"Error when port is negative":     {changePort: "-1", wantErr: true},
-		"Error when port is zero":         {changePort: "0", wantErr: true},
+		"Error when port is wrong":        {forcePort: "123", wantErr: true},
+		"Error when port is empty":        {forcePort: "", wantErr: true},
+		"Error when port is not a number": {forcePort: "abc", wantErr: true},
+		"Error when port is negative":     {forcePort: "-1", wantErr: true},
+		"Error when port is zero":         {forcePort: "0", wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -244,8 +244,8 @@ func TestSend(t *testing.T) {
 			_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile)
 
 			// Override the port file with a different port
-			if tc.changePort != "FALSE" {
-				newAddr := fmt.Sprintf("127.0.0.1:%s", tc.changePort)
+			if tc.forcePort != "-" {
+				newAddr := fmt.Sprintf("127.0.0.1:%s", tc.forcePort)
 				err := os.WriteFile(portFile, []byte(newAddr), 0600)
 				require.NoError(t, err, "Setup: could not overwrite new address file")
 			}
