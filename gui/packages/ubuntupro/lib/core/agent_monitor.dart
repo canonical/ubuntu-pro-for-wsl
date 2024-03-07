@@ -54,8 +54,12 @@ class AgentStartupMonitor {
     required String addrFileName,
     required this.agentLauncher,
     required this.clientFactory,
-    required this.onClient,
-  }) : _addrFilePath = agentAddrFilePath(addrFileName);
+    AgentApiCallback? onClient,
+  }) : _addrFilePath = agentAddrFilePath(addrFileName) {
+    if (onClient != null) {
+      addNewClientListener(onClient);
+    }
+  }
 
   final String? _addrFilePath;
 
@@ -65,12 +69,22 @@ class AgentStartupMonitor {
   /// To create a client once the agent is up and running.
   final ApiClientFactory clientFactory;
 
-  /// The callback to invoke once the client is responsive.
-  final AgentApiCallback onClient;
-
   /// The agent API client resulting of a successful startup.
   AgentApiClient? _agentApiClient;
   AgentApiClient? get agentApiClient => _agentApiClient;
+
+  /// The callbacks to invoke once the client is responsive for the first time.
+  final List<AgentApiCallback> _onClient = [];
+
+  /// Adds a callback to be invoked once the client is responsive for the first time.
+  /// Returns true if the callback was added, false if the client is already responsive.
+  bool addNewClientListener(AgentApiCallback cb) {
+    if (_agentApiClient != null) {
+      return false;
+    }
+    _onClient.add(cb);
+    return true;
+  }
 
   /// Models the background agent as seen by the GUI as a state machine, i.e.:
   /// 1. Agent running state is checked (by looking for the `.ubuntpro` file).
@@ -78,7 +92,7 @@ class AgentStartupMonitor {
   /// 3. Contents of the `.ubuntpro` file are scanned periodically (between [interval]).
   /// 4. When a port is available, [clientFactory] is called to create a new
   ///    [AgentApiClient].
-  /// 5. When a PING request succeeds, the [onClient] function is called with
+  /// 5. When a PING request succeeds, the [_onClient] function is called with
   ///    that [AgentApiClient] instance.
   ///
   /// The loop stops if a terminal condition is found or [timeout] expires.
@@ -162,7 +176,9 @@ class AgentStartupMonitor {
     final client = clientFactory(kDefaultHost, port);
     if (await client.ping()) {
       _agentApiClient = client;
-      await onClient(client);
+      for (final cb in _onClient) {
+        await cb(client);
+      }
       return AgentState.ok;
     }
 
