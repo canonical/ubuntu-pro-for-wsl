@@ -105,7 +105,7 @@ See:
 - [Microsoft Store | Ubuntu 22.04 LTS](https://www.microsoft.com/store/productId/9PN20MSR04DW)
 - [Microsoft Store | Ubuntu (Preview)](https://www.microsoft.com/store/productId/9P7BDVKVNXZ6)
 
-All set. From now on you can launch WSL instances of the Ubuntu 22.04 LTS and Ubuntu (Preview) kind.
+All set. From now on you can launch WSL instances of the Ubuntu 22.04 LTS and Ubuntu (Preview) releases.
 
 (ref::ensure-ubuntu-pro)=
 ### Get an Ubuntu Pro subscription token
