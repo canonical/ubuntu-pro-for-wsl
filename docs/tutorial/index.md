@@ -309,6 +309,7 @@ Open a new terminal window and run `ubuntu2204.exe`. Landscape server and relate
 
 ### Install UP4W
 
+% :TODO: remove this warning once the app is made generally available (after the beta period).
 
 ```{warning}
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
