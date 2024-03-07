@@ -61,7 +61,7 @@ class StatusBar extends StatelessWidget {
                 agentConnIcon,
                 color: conn.isConnected
                     ? YaruColors.of(context).success
-                    : YaruColors.of(context).error,
+                    : YaruColors.red,
               ),
               onPressed: conn.isConnected ? null : conn.restartAgent,
             ),
