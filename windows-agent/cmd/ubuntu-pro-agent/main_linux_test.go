@@ -26,7 +26,8 @@ func TestRunSignal(t *testing.T) {
 			// Signal handlers tests: can’t be parallel
 
 			a := myApp{
-				done: make(chan struct{}),
+				done:   make(chan struct{}),
+				tmpDir: t.TempDir(),
 			}
 
 			var rc int
