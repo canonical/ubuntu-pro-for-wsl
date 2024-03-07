@@ -11,15 +11,15 @@ class AgentApiClient {
     required String host,
     required int port,
     this.stubFactory = UIClient.new,
-  }) : _client = stubFactory.call(
-          ClientChannel(
-            host,
-            port: port,
-            options: const ChannelOptions(
-              credentials: ChannelCredentials.insecure(),
-            ),
+  }) : _channel = ClientChannel(
+          host,
+          port: port,
+          options: const ChannelOptions(
+            credentials: ChannelCredentials.insecure(),
           ),
-        );
+        ) {
+    _client = stubFactory.call(_channel);
+  }
 
   /// A factory for UIClient and derived classes objects, only meaningful for testing.
   /// In production it should always default to [UIClient.new].
@@ -28,16 +28,19 @@ class AgentApiClient {
 
   /// Never null, but reassignable inside [connectTo].
   late UIClient _client;
+  ClientChannel _channel;
 
   /// Changes the endpoint this API client is connected to.
   Future<bool> connectTo({required String host, required int port}) {
-    _client = stubFactory.call(ClientChannel(
+    _channel.shutdown();
+    _channel = ClientChannel(
       host,
       port: port,
       options: const ChannelOptions(
         credentials: ChannelCredentials.insecure(),
       ),
-    ));
+    );
+    _client = stubFactory.call(_channel);
     return ping();
   }
 
@@ -68,4 +71,16 @@ class AgentApiClient {
   /// Notifies the background agent of a succesfull purchase transaction on MS Store.
   /// It's expected that an updated SubscriptionInfo will be returned.
   Future<SubscriptionInfo> notifyPurchase() => _client.notifyPurchase(Empty());
+
+  Stream<ConnectionEvent> get onConnectionChanged =>
+      _channel.onConnectionStateChanged.map(
+        (event) => event == ConnectionState.ready
+            ? ConnectionEvent.connected
+            : ConnectionEvent.dropped,
+      );
+}
+
+enum ConnectionEvent {
+  dropped,
+  connected,
 }
