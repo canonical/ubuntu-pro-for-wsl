@@ -15,16 +15,16 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 
 	exe, args := s.backend.ProExecutable("status", "--format=json")
 	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
-	out, err := exec.CommandContext(ctx, exe, args...).Output()
+	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
 	if err != nil {
-		return false, fmt.Errorf("command returned error: %v\nStdout:%s", err, string(out))
+		return false, fmt.Errorf("command returned error: %v. Output:%s", err, string(out))
 	}
 
 	var attachedStatus struct {
 		Attached bool
 	}
 	if err = json.Unmarshal(out, &attachedStatus); err != nil {
-		return false, fmt.Errorf("could not parse output: %v\nOutput: %s", err, string(out))
+		return false, fmt.Errorf("could not parse output: %v. Output: %s", err, string(out))
 	}
 
 	return attachedStatus.Attached, nil
@@ -43,7 +43,7 @@ func (s *System) ProAttach(ctx context.Context, token string) (err error) {
 
 	exe, args := s.backend.ProExecutable("attach", token, "--format=json")
 	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
-	out, err := exec.CommandContext(ctx, exe, args...).Output()
+	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("command returned error: %v\nOutput:%s", err, string(out))
 	}
@@ -72,7 +72,7 @@ func (s *System) ProDetach(ctx context.Context) (err error) {
 		}
 
 		if len(detachedError.Errors) == 0 {
-			return fmt.Errorf("command returned error: %v.\nOutput: %s", detachErr, string(out))
+			return fmt.Errorf("command returned error: %v. Output: %s", detachErr, string(out))
 		}
 
 		if detachedError.Errors[0].MessageCode == "unattached" {
