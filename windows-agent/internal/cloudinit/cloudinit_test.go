@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -188,6 +189,58 @@ url = www.example.com/new/rickroll
 
 			want := testutils.LoadWithUpdateFromGolden(t, string(got), opts...)
 			require.Equal(t, want, string(got), "Agent cloud-init file does not match the golden file")
+		})
+	}
+}
+
+func TestDefaultDistroData(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		userErr bool
+		nilUser bool
+
+		wantErr bool
+	}{
+		"Success": {},
+		"Success when the user cannot be obtained": {userErr: true},
+
+		"Error when the template cannot be executed": {nilUser: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			ci, err := cloudinit.New(ctx, &mockConfig{}, t.TempDir())
+			require.NoError(t, err, "Setup: cloud-init New should return no errors")
+
+			ci.InjectUser(func() (*user.User, error) {
+				if tc.userErr {
+					return nil, errors.New("could not get user: mock error")
+				}
+
+				if tc.nilUser {
+					return nil, nil
+				}
+
+				return &user.User{
+					Username: "testuser",
+					Name:     "Test User",
+				}, nil
+			})
+
+			got, err := ci.DefaultDistroData(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "DefaultDistroData should have returned an error")
+				return
+			}
+			require.NoError(t, err, "DefaultDistroData should return no errors")
+
+			want := golden.LoadWithUpdateFromGolden(t, got)
+			require.Equal(t, want, got, "DefaultDistroData does not match the golden file")
 		})
 	}
 }

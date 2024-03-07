@@ -4,12 +4,15 @@ package cloudinit
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
@@ -28,13 +31,22 @@ type Config interface {
 type CloudInit struct {
 	dataDir string
 	conf    Config
+
+	// user is a function to get the Windows user. It exists for easier dependency injection in tests.
+	user func() (*user.User, error)
 }
+
+// defaultDistroUserData is a template for the default user data, used to generate DefaultDistroData.
+//
+//go:embed default-user-data.template
+var defaultDistroUserData string
 
 // New creates a CloudInit object and attaches it to the configuration notifier.
 func New(ctx context.Context, conf Config, publicDir string) (CloudInit, error) {
 	c := CloudInit{
 		dataDir: filepath.Join(publicDir, ".cloud-init"),
 		conf:    conf,
+		user:    user.Current,
 	}
 
 	if err := c.WriteAgentData(); err != nil {
@@ -117,6 +129,32 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 		return err
 	}
 	return nil
+}
+
+// DefaultDistroData generates the default cloud-init user data for the distro.
+// It returns user data to create a user and set it as default.
+func (c CloudInit) DefaultDistroData(ctx context.Context) (string, error) {
+	userData, err := c.user()
+	if err != nil {
+		log.Warningf(ctx, "Cloud-init: using default username because we could not get Windows user: %v", err)
+
+		userData = &user.User{
+			Username: "ubuntu",
+			Name:     "Ubuntu",
+		}
+	}
+
+	t, err := template.New("cloud-init").Parse(defaultDistroUserData)
+	if err != nil {
+		return "", fmt.Errorf("could not parse default user data template: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, userData); err != nil {
+		return "", fmt.Errorf("could not execute default user data template: %v", err)
+	}
+
+	return buf.String(), nil
 }
 
 func marshalConfig(conf Config) ([]byte, error) {
