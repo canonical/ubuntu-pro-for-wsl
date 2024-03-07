@@ -47,7 +47,7 @@ func computeNumericVersion() string {
 		os.Exit(1)
 	}
 
-	expr := regexp.MustCompile(`^v(\d+\.\d+\.\d+)-`)
+	expr := regexp.MustCompile(`(\d+\.\d+\.\d+)-`)
 	matches := expr.FindStringSubmatch(tag)
 	if len(matches) != 2 {
 		fmt.Fprintf(os.Stderr, "Error: tag %s does not match the expected format\n", tag)
