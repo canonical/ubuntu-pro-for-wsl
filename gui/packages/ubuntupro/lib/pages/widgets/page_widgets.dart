@@ -28,6 +28,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yaru/yaru.dart';
 import 'package:yaru_widgets/yaru_widgets.dart';
 
+import 'status_bar.dart';
+
 /// The simplest material page that covers most of the use cases in this app,
 /// which may have a consistent title bar or no title bar at all.
 class Pro4WSLPage extends StatelessWidget {
@@ -39,6 +41,7 @@ class Pro4WSLPage extends StatelessWidget {
     super.key,
     required this.body,
     this.showTitleBar = true,
+    this.statusBar,
   });
 
   /// Whether to show the window title bar or not. Defaults to true.
@@ -46,6 +49,9 @@ class Pro4WSLPage extends StatelessWidget {
 
   /// The [Scaffold] body widget.
   final Widget body;
+
+  /// The status bar widget to be shown at the bottom of the page.
+  final Widget? statusBar;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +63,7 @@ class Pro4WSLPage extends StatelessWidget {
             )
           : null,
       body: body,
+      persistentFooterButtons: <Widget>[statusBar ?? const StatusBar()],
     );
   }
 }
