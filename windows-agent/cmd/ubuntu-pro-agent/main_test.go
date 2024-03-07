@@ -45,6 +45,7 @@ func TestRun(t *testing.T) {
 	t.Parallel()
 
 	fooContent := "foo"
+	emptyContent := ""
 
 	tests := map[string]struct {
 		existingLogContent string
@@ -60,8 +61,9 @@ func TestRun(t *testing.T) {
 		"Run and exit successfully despite logs not being written": {logDirError: true},
 
 		// Log file handling
-		"Existing log file has been renamed to old": {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
-		"Ignore when failing to archive log file":   {existingLogContent: "OLD_IS_DIRECTORY", wantReturnCode: 0},
+		"Existing log file has been renamed to old":       {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
+		"Existing empty log file has been renamed to old": {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
+		"Ignore when failing to archive log file":         {existingLogContent: "OLD_IS_DIRECTORY", wantReturnCode: 0},
 
 		// Error cases
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
@@ -94,6 +96,9 @@ func TestRun(t *testing.T) {
 					require.NoError(t, err, "Setup: create invalid log.old file")
 					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
 					require.NoError(t, err, "Setup: creating pre-existing log file")
+				case "-":
+					tc.existingLogContent = ""
+					fallthrough
 				default:
 					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
 					require.NoError(t, err, "Setup: creating pre-existing log file")
