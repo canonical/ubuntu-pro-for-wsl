@@ -11,9 +11,10 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/widgets/page_widgets.dart';
-import 'package:yaru/yaru.dart';
+import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru_test/yaru_test.dart';
 
+import '../../utils/build_multiprovider_app.dart';
 import 'landscape_page_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
@@ -216,9 +217,10 @@ void main() {
   testWidgets('creates a model', (tester) async {
     final mockClient = MockAgentApiClient();
     registerServiceInstance<AgentApiClient>(mockClient);
-    const app = MaterialApp(
-      routes: {'/': LandscapePage.create},
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+    final app = buildMultiProviderWizardApp(
+      routes: {
+        '/': const WizardRoute(builder: LandscapePage.create),
+      },
     );
 
     await tester.pumpWidget(app);
@@ -234,19 +236,8 @@ void main() {
 Widget buildApp(
   LandscapeModel model,
 ) {
-  return YaruTheme(
-    builder: (context, yaru, child) => MaterialApp(
-      theme: yaru.theme,
-      darkTheme: yaru.darkTheme,
-      home: Scaffold(
-        body: ChangeNotifierProvider<LandscapeModel>(
-          create: (_) => model,
-          child: LandscapePage(
-            onApplyConfig: () {},
-          ),
-        ),
-      ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-    ),
+  return buildSingleRouteMultiProviderApp(
+    child: LandscapePage(onApplyConfig: () {}),
+    providers: [ChangeNotifierProvider<LandscapeModel>.value(value: model)],
   );
 }

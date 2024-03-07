@@ -9,6 +9,8 @@ import 'package:ubuntupro/pages/subscription_status/subscription_status_model.da
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 import 'package:wizard_router/wizard_router.dart';
 
+import '../../utils/build_multiprovider_app.dart';
+
 void main() {
   group('subscription info', () {
     final client = FakeAgentApiClient();
@@ -54,12 +56,13 @@ void main() {
     final info = ValueNotifier(SubscriptionInfo());
     info.value.ensureUser();
 
-    final app = ChangeNotifierProvider.value(
-      value: info,
-      child: const MaterialApp(
-        routes: {'/': SubscriptionStatusPage.create},
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-      ),
+    final app = buildMultiProviderWizardApp(
+      routes: {'/': const WizardRoute(builder: SubscriptionStatusPage.create)},
+      providers: [
+        ChangeNotifierProvider.value(
+          value: info,
+        ),
+      ],
     );
 
     await tester.pumpWidget(app);
@@ -71,18 +74,6 @@ void main() {
     expect(model, isNotNull);
   });
   group('sane navigation', () {
-    Widget buildWizardApp(Map<String, WizardRoute> routes) {
-      final info = ValueNotifier(SubscriptionInfo());
-      info.value.ensureUser();
-      return ChangeNotifierProvider.value(
-        value: info,
-        child: MaterialApp(
-          builder: (context, _) => Wizard(routes: routes),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-        ),
-      );
-    }
-
     testWidgets('no backwards', (tester) async {
       var replaced = false;
       var retrocessed = false;
@@ -171,12 +162,22 @@ void main() {
 
 Widget buildApp(SubscriptionInfo info, AgentApiClient client) {
   final model = SubscriptionStatusModel(info, client);
-  return MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    home: Provider.value(
-      value: model,
-      child: const SubscriptionStatusPage(),
-    ),
+  return buildSingleRouteMultiProviderApp(
+    child: const SubscriptionStatusPage(),
+    providers: [
+      Provider.value(value: model),
+    ],
+  );
+}
+
+Widget buildWizardApp(Map<String, WizardRoute> routes) {
+  return buildMultiProviderWizardApp(
+    routes: routes,
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => ValueNotifier(SubscriptionInfo()..ensureUser()),
+      ),
+    ],
   );
 }
 

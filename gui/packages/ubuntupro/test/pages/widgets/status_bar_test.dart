@@ -72,12 +72,15 @@ void main() {
 
       final conn = MockAgentConnection();
       when(conn.isConnected).thenReturn(true);
-      final app = buildApp(conn, StatusBar(
-        launchUrlFn: (uri) async {
-          launchedUri = uri;
-          return true;
-        },
-      ));
+      final app = buildApp(
+        conn,
+        StatusBar(
+          launchUrlFn: (uri) async {
+            launchedUri = uri;
+            return true;
+          },
+        ),
+      );
       await tester.pumpWidget(app);
       final agentStatusButton = find.ancestor(
         of: find.byIcon(StatusBar.bugIcon),

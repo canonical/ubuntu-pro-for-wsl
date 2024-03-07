@@ -8,9 +8,11 @@ import 'package:mockito/mockito.dart';
 import 'package:p4w_ms_store/p4w_ms_store_method_channel.dart';
 import 'package:p4w_ms_store/p4w_ms_store_platform_interface.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
+import 'package:ubuntupro/core/pro_token.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 
 import 'subscribe_now_model_test.mocks.dart';
+import 'token_samples.dart' as tks;
 
 @GenerateMocks([AgentApiClient])
 void main() {
@@ -74,5 +76,22 @@ void main() {
       expect(result.isRight, isTrue);
       expect(result.getOrThrow(), expectedValue);
     });
+  });
+
+  test('apply pro token', () async {
+    final info = SubscriptionInfo()..ensureUser();
+    final client = MockAgentApiClient();
+    when(client.applyProToken(any)).thenAnswer(
+      (_) async => info,
+    );
+    when(client.subscriptionInfo()).thenAnswer(
+      (_) async => info,
+    );
+    final token = ProToken.create(tks.good).getOrThrow();
+    final model = SubscribeNowModel(client);
+
+    final newInfo = await model.applyProToken(token);
+
+    expect(newInfo, info);
   });
 }
