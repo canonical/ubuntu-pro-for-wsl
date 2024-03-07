@@ -1,0 +1,14 @@
+#cloud-config
+# This file was generated automatically and must not be edited.
+users:
+- name: ubuntu
+  gecos: Ubuntu
+  groups: [adm,dialout,cdrom,floppy,sudo,audio,dip,video,plugdev,users,netdev]
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  shell: /bin/bash
+write_files:
+- path: /etc/wsl.conf
+  append: true
+  content: |
+    [user]
+    default= ubuntu
