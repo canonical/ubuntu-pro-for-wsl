@@ -22,6 +22,13 @@ void main() {
   Directory? tempDir;
   var tempFilePath = '';
 
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  // TODO: Sometimes the Column in the LandscapePage extends past the test environment's screen
+  // due differences in font size between production and testing environments.
+  // This should be resolved so that we don't have to specify a manual text scale factor.
+  // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
+  binding.platformDispatcher.textScaleFactorTestValue = 0.6;
+
   setUpAll(() {
     tempDir = Directory.systemTemp.createTempSync();
     tempFilePath = '${tempDir!.path}/$tempFileName';
@@ -88,10 +95,6 @@ void main() {
     });
 
     testWidgets('calls back on success manual', (tester) async {
-      // TODO: Sometimes the Column in the LandscapePage extends past the test
-      // environment's screen. This should be resolved so that we don't have to
-      // specify a manual size.
-      await tester.binding.setSurfaceSize(const Size(900, 600));
       final agent = MockAgentApiClient();
       final model = LandscapeModel(agent);
 
@@ -132,10 +135,6 @@ void main() {
     });
 
     testWidgets('calls back on success file', (tester) async {
-      // TODO: Sometimes the Column in the LandscapePage extends past the test
-      // environment's screen. This should be resolved so that we don't have to
-      // specify a manual size.
-      await tester.binding.setSurfaceSize(const Size(900, 600));
       final agent = MockAgentApiClient();
       final model = LandscapeModel(MockAgentApiClient());
 
@@ -171,10 +170,6 @@ void main() {
 
     testWidgets('feedback on manual error', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
-      // TODO: Sometimes the Column in the LandscapePage extends past the test
-      // environment's screen. This should be resolved so that we don't have to
-      // specify a manual size.
-      await tester.binding.setSurfaceSize(const Size(900, 600));
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -196,10 +191,6 @@ void main() {
 
     testWidgets('feedback on file error', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
-      // TODO: Sometimes the Column in the LandscapePage extends past the test
-      // environment's screen. This should be resolved so that we don't have to
-      // specify a manual size.
-      await tester.binding.setSurfaceSize(const Size(900, 600));
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -224,10 +215,6 @@ void main() {
 
   testWidgets('creates a model', (tester) async {
     final mockClient = MockAgentApiClient();
-    // TODO: Sometimes the Column in the LandscapePage extends past the test
-    // environment's screen. This should be resolved so that we don't have to
-    // specify a manual size.
-    await tester.binding.setSurfaceSize(const Size(900, 650));
     registerServiceInstance<AgentApiClient>(mockClient);
     const app = MaterialApp(
       routes: {'/': LandscapePage.create},
