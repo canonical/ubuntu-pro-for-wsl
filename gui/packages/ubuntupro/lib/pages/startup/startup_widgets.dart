@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../constants.dart';
 import '../widgets/page_widgets.dart';
+import '../widgets/status_bar.dart';
 
 /// Builds a centered-column containg [bottom] and a [Text] widget containing
 /// [message] or an empty string.
@@ -74,6 +75,7 @@ class StartupErrorWidget extends StatelessWidget {
         top: const Icon(Icons.error_outline, size: 64),
         message: message,
       ),
+      statusBar: const StatusBar(showAgentStatus: false),
     );
   }
 }
