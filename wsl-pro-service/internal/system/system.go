@@ -144,9 +144,9 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 
 	exe, args := s.backend.WslpathExecutable("-w", "/")
 	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
-	out, err := exec.CommandContext(ctx, exe, args...).Output()
+	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("could not get distro root path: %v. Stdout: %s", err, string(out))
+		return "", fmt.Errorf("could not get distro root path: %v. Output: %s", err, string(out))
 	}
 
 	// Example output for Windows 11: "\\wsl.localhost\Ubuntu-Preview\"
@@ -173,9 +173,9 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 
 	exe, args := s.backend.CmdExe(cmdExe, "/C", "echo %UserProfile%")
 	//nolint:gosec //this function simply prepends the WSL path to "cmd.exe" to the args.
-	out, err := exec.CommandContext(ctx, exe, args...).Output()
+	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
 	if err != nil {
-		return wslPath, fmt.Errorf("%s: error: %v, stdout: %s", exe, err, string(out))
+		return wslPath, fmt.Errorf("%s: error: %v. Output: %s", exe, err, string(out))
 	}
 
 	// Path from Windows' perspective ( C:\Users\... )
@@ -184,9 +184,9 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 
 	exe, args = s.backend.WslpathExecutable("-ua", winHome)
 	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
-	out, err = exec.CommandContext(ctx, exe, args...).Output()
+	out, err = exec.CommandContext(ctx, exe, args...).CombinedOutput()
 	if err != nil {
-		return wslPath, fmt.Errorf("%s: error: %v, stdout: %s", exe, err, string(out))
+		return wslPath, fmt.Errorf("%s: error: %v. Output: %s", exe, err, string(out))
 	}
 
 	winHomeLinux := strings.TrimSpace(string(out))
