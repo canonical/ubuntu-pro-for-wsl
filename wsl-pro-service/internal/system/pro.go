@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 
 	"github.com/ubuntu/decorate"
 )
@@ -13,11 +12,10 @@ import (
 func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 	defer decorate.OnError(&err, "pro status")
 
-	exe, args := s.backend.ProExecutable("status", "--format=json")
-	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
-	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
+	cmd := s.backend.ProExecutable(ctx, "status", "--format=json")
+	out, err := runCommand(cmd)
 	if err != nil {
-		return false, fmt.Errorf("command returned error: %v. Output:%s", err, string(out))
+		return false, err
 	}
 
 	var attachedStatus struct {
@@ -41,11 +39,9 @@ func (s *System) ProAttach(ctx context.Context, token string) (err error) {
 		{"_schema_version": "0.1", "errors": [], "failed_services": [], "needs_reboot": false, "processed_services": [], "result": "success", "warnings": []}
 	*/
 
-	exe, args := s.backend.ProExecutable("attach", token, "--format=json")
-	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
-	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("command returned error: %v\nOutput:%s", err, string(out))
+	cmd := s.backend.ProExecutable(ctx, "attach", token, "--format=json")
+	if _, err := runCommand(cmd); err != nil {
+		return err
 	}
 
 	return nil
@@ -56,9 +52,8 @@ func (s *System) ProAttach(ctx context.Context, token string) (err error) {
 func (s *System) ProDetach(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "pro detach")
 
-	exe, args := s.backend.ProExecutable("detach", "--assume-yes", "--format=json")
-	//nolint:gosec // In production code, these variables are hard-coded (except for the token).
-	out, detachErr := exec.CommandContext(ctx, exe, args...).Output()
+	cmd := s.backend.ProExecutable(ctx, "detach", "--assume-yes", "--format=json")
+	out, detachErr := runCommand(cmd)
 	if detachErr != nil {
 		// check that the error is not that the machine is already detached
 		var detachedError struct {
@@ -72,7 +67,7 @@ func (s *System) ProDetach(ctx context.Context) (err error) {
 		}
 
 		if len(detachedError.Errors) == 0 {
-			return fmt.Errorf("command returned error: %v. Output: %s", detachErr, string(out))
+			return detachErr
 		}
 
 		if detachedError.Errors[0].MessageCode == "unattached" {

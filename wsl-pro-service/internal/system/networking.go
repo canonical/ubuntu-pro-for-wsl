@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -41,12 +40,11 @@ func (s *System) WindowsHostAddress(ctx context.Context) (ip net.IP, err error) 
 }
 
 func (s *System) networkingMode(ctx context.Context) (string, error) {
-	exe, argv := s.backend.WslinfoExecutable("--networking-mode", "-n")
+	cmd := s.backend.WslinfoExecutable(ctx, "--networking-mode", "-n")
 
-	//nolint:gosec // In production code, these variables are hard-coded.
-	out, err := exec.CommandContext(ctx, exe, argv...).CombinedOutput()
+	out, err := runCommand(cmd)
 	if err != nil {
-		return "", fmt.Errorf("failed call to wslinfo: %v. Output: %s", err, out)
+		return "", err
 	}
 
 	return strings.TrimSpace(string(out)), nil
