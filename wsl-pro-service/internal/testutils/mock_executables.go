@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -163,70 +164,72 @@ func (m *SystemMock) GetenvWslDistroName() string {
 // At the core of the script we have
 //
 //	```
-//	SWITCH1=1 SWITCH1=2 go test -run <FAUX_TEST> -- <ARGS...>
+//	go test -run ^<FAUX_TEST>$ -- <ARGS...>
 //	````
 //
-// The switches control the behaviour of the mock, and FAUX_TEST is the name of a Test* function
+// The environment controls the behaviour of the mock, and FAUX_TEST is the name of a Test* function
 // that mocks the behaviour of the executable. The ARGS are the arguments that would be passed to
 // the real binary, in this case being passed to the mocked one.
 //
-// The faux test is in charge of interpreting the switches and the args.
+// The faux test is in charge of interpreting the environment and the args.
 //
 // The script has some more boilerplate to trim out text from the testing module.
 // In order to make the mock work, the faux test needs to be defined in the test module,
 // see the documentation on ProMock for an example.
-func (m *SystemMock) mockExec(fauxTestName string, argv ...string) (string, []string) {
+func (m *SystemMock) mockExec(ctx context.Context, fauxTestName string, argv ...string) *exec.Cmd {
+	if !testing.Testing() {
+		panic("mockExec can only be used within a test")
+	}
+
 	// Switches
-	env := make([]string, len(m.extraEnv))
-	copy(env, m.extraEnv)
+	env := append(os.Environ(), m.extraEnv...)
 	env = append(env,
 		fmt.Sprintf("%s=1", mockExecutable),                      // Ensures the faux test is not skipped
-		fmt.Sprintf("%s=%q", wslpathDistroName, m.WslDistroName), // Informs the faux tests what the mock distro name is
-		fmt.Sprintf("%s=%q", FileSystemRoot, m.FsRoot),           // Indicates where the mock filesystem is
+		fmt.Sprintf("%s=%s", wslpathDistroName, m.WslDistroName), // Informs the faux tests what the mock distro name is
+		fmt.Sprintf("%s=%s", FileSystemRoot, m.FsRoot),           // Indicates where the mock filesystem is
 	)
-	switches := strings.Join(env, " ")
 
-	// Supplanted executable
-	exec := fmt.Sprintf("go test -run ^%s$", fauxTestName)
-
-	// Arguments
+	// Quote arguments
 	for i := range argv {
 		argv[i] = fmt.Sprintf("%q", argv[i])
 	}
 	args := strings.Join(argv, " ")
 
 	// Heart of the script
-	script := fmt.Sprintf("%s %s -- %s", switches, exec, args)
+	heart := fmt.Sprintf("go test -run ^%s$ -- %s", fauxTestName, args)
 
 	// Trimming testing framework text
-	script = fmt.Sprintf("set -o pipefail && %s | head -n -2", script)
+	script := fmt.Sprintf("set -o pipefail && %s | head -n -2", heart)
 
-	return "bash", []string{"-ec", script}
+	//nolint:gosec // This is test code
+	cmd := exec.CommandContext(ctx, "bash", "-ec", script)
+	cmd.Env = env
+	return cmd
 }
 
 // ProExecutable mocks `pro $args...`.
-func (m *SystemMock) ProExecutable(args ...string) (string, []string) {
-	return m.mockExec("TestWithProMock", args...)
+func (m *SystemMock) ProExecutable(ctx context.Context, args ...string) *exec.Cmd {
+	return m.mockExec(ctx, "TestWithProMock", args...)
 }
 
 // LandscapeConfigExecutable mocks `landscape-config $q`.
-func (m *SystemMock) LandscapeConfigExecutable(args ...string) (string, []string) {
-	return m.mockExec("TestWithLandscapeConfigMock", args...)
+func (m *SystemMock) LandscapeConfigExecutable(ctx context.Context, args ...string) *exec.Cmd {
+	return m.mockExec(ctx, "TestWithLandscapeConfigMock", args...)
 }
 
 // WslpathExecutable mocks `wslpath $args...`.
-func (m *SystemMock) WslpathExecutable(args ...string) (string, []string) {
-	return m.mockExec("TestWithWslPathMock", args...)
+func (m *SystemMock) WslpathExecutable(ctx context.Context, args ...string) *exec.Cmd {
+	return m.mockExec(ctx, "TestWithWslPathMock", args...)
 }
 
 // WslinfoExecutable mocks `wslinfo $args...`.
-func (m *SystemMock) WslinfoExecutable(args ...string) (string, []string) {
-	return m.mockExec("TestWithWslInfoMock", args...)
+func (m *SystemMock) WslinfoExecutable(ctx context.Context, args ...string) *exec.Cmd {
+	return m.mockExec(ctx, "TestWithWslInfoMock", args...)
 }
 
 // CmdExe mocks `cmd.exe $args...`.
-func (m *SystemMock) CmdExe(path string, args ...string) (string, []string) {
-	return m.mockExec("TestWithCmdExeMock", args...)
+func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *exec.Cmd {
+	return m.mockExec(ctx, "TestWithCmdExeMock", args...)
 }
 
 type exitCode int
