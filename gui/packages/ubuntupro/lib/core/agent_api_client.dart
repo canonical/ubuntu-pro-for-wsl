@@ -73,14 +73,25 @@ class AgentApiClient {
   Future<SubscriptionInfo> notifyPurchase() => _client.notifyPurchase(Empty());
 
   Stream<ConnectionEvent> get onConnectionChanged =>
-      _channel.onConnectionStateChanged.map(
-        (event) => event == ConnectionState.ready
-            ? ConnectionEvent.connected
-            : ConnectionEvent.dropped,
-      );
+      mapGRPCConnectionEvents(_channel.onConnectionStateChanged);
 }
 
 enum ConnectionEvent {
   dropped,
   connected,
+}
+
+/// Maps gRPC connection events to a stream of [ConnectionEvent] enum values.
+Stream<ConnectionEvent> mapGRPCConnectionEvents(
+  Stream<ConnectionState> stream,
+) {
+  return stream.map((event) {
+    // Being in idle is not a problem for gRPC. It quickly reconnects and
+    // dispatches an RPC call successfully if the server is still up.
+    if (event == ConnectionState.ready || event == ConnectionState.idle) {
+      return ConnectionEvent.connected;
+    }
+
+    return ConnectionEvent.dropped;
+  });
 }
