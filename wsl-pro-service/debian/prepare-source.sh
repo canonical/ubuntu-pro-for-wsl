@@ -19,4 +19,4 @@ if [ -n "${is_source_build}" ]; then
 fi
 
 version=$(cat ${VERSION_FILE})
-echo -ldflags=-X=github.com/canonical/ubuntu-pro-for-wsl/common.Version=${version}
+echo -ldflags=-X=github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts.Version=${version}
