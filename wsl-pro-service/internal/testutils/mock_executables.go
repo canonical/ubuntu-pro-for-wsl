@@ -7,13 +7,11 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
-	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
@@ -585,10 +583,6 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 		argv = os.Args[begin+1:]
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go fuzzStderr(ctx)
-
 	exit := int(f(argv))
 	if exit == 0 {
 		// testing library only prints this line when it fails
@@ -596,27 +590,6 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 		fmt.Fprintln(os.Stdout, "exit status 0")
 	}
 	syscall.Exit(exit)
-}
-
-// fuzzStderr prints a message to stderr approximately every second.
-// This ensures that tested subprocesses separate their stderr from their stdout.
-func fuzzStderr(ctx context.Context) {
-	fmt.Fprintln(os.Stderr, "MOCK STDERR FUZZING")
-
-	go func() {
-		for {
-			//nolint:gosec // No need for a secure random number
-			randMs := time.Duration(rand.Int()%200) * time.Millisecond
-
-			select {
-			case <-time.After(time.Second + randMs):
-				return
-			case <-ctx.Done():
-			}
-
-			fmt.Fprintln(os.Stderr, "MOCK STDERR FUZZING")
-		}
-	}()
 }
 
 // mockFilesystemRoot sets up a skelleton filesystem with files used by the wsl-pro-service and returns
