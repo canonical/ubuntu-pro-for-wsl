@@ -18,6 +18,7 @@ windows-agent/cmd/ubuntu-pro-agent/ubuntu-pro-agent
 **/vendor/
 
 # Debian package build artifacts
+wsl-pro-service/version
 wsl-pro-service_*
 wsl-pro-service*.ddeb
 wsl-pro-service/_build

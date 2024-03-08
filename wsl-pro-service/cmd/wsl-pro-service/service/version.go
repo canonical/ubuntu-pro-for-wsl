@@ -3,8 +3,8 @@ package service
 import (
 	"fmt"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +20,6 @@ func (a *App) installVersion() {
 
 // getVersion returns the current service version.
 func getVersion() (err error) {
-	fmt.Printf(i18n.G("%s\t%s")+"\n", cmdName, common.Version)
+	fmt.Printf(i18n.G("%s\t%s")+"\n", cmdName, consts.Version)
 	return nil
 }

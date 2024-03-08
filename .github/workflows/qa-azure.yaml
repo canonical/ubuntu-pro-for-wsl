@@ -23,6 +23,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
       - name: Build debian package
         uses: canonical/desktop-engineering/gh-actions/common/build-debian@main
         with:
@@ -45,6 +48,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
@@ -71,8 +77,22 @@ jobs:
           Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
       - name: Build Bundle
         run: |
+          # Set up the full version (displayed in logs)
+          $env:UP4W_FULL_VERSION=$(go run .\tools\build\compute_version.go)
+          
+          # Set up the numeric version (used in the AppxManifest)
+          $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
+          [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
+          $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
+          $doc = [System.Xml.Linq.XDocument]::Load($path)
+          $xName = [System.Xml.Linq.XName]::Get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Identity")
+          $doc.Root.Element($xName).Attribute("Version").Value = "$UP4W_VERSION.0";
+          $doc.Save($path)
+          
+          # Set up the mock
           $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ matrix.mode == 'end_to_end_tests' && '1' || '$null'}}
 
+          # Build
           msbuild                                                                             `
             .\msix\msix.sln                                                                   `
             -target:Build                                                                     `

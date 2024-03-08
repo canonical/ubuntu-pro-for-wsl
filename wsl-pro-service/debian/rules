@@ -10,11 +10,12 @@ export DH_GOLANG_INSTALL_ALL=1
 # as long as it matches the go.mod go stenza which is the language requirement.
 export GOTOOLCHAIN := local
 
-%:
-	dh $@ --builddirectory=_build --with=apport
+# Computes the version ID and updates vendoring
+export GOFLAGS := $(shell ./debian/prepare-source.sh)
 
-execute_after_dh_auto_clean:
-	[ -d vendor/ ] || ( ./debian/update-internal-dependencies && GOWORK=off go mod vendor )
+%:
+	@echo "Building with flags $(GOFLAGS)"
+	dh $@ --builddirectory=_build --with=apport
 
 override_dh_auto_install:
 	dh_auto_install -- --no-source
