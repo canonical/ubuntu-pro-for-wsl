@@ -203,6 +203,24 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	return wslPath, nil
 }
 
+// runCommand is a helper that runs a command and returns stdout.
+// The first return value is the always trimmed stdout, even in case of error.
+// In case of error, both Stdout and Stderr are included in the error message.
+func runCommand(cmd *exec.Cmd) ([]byte, error) {
+	var stdout, stderr bytes.Buffer
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	out := bytes.TrimSpace(stdout.Bytes())
+	if err != nil {
+		return out, fmt.Errorf("%s: error: %v.\n    Stdout: %s\n    Stderr: %s", cmd.Path, err, out, stderr.String())
+	}
+
+	return out, nil
+}
+
 // Path converts an absolute path into one inside the mocked filesystem.
 func (s System) Path(path ...string) string {
 	return s.backend.Path(path...)
