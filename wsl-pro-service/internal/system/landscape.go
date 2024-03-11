@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -31,10 +30,9 @@ func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, ho
 		return err
 	}
 
-	exe, args := s.backend.LandscapeConfigExecutable("--config", landscapeConfigPath, "--silent")
-	//nolint:gosec // In production code, these variables are hard-coded.
-	if out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("%s returned an error: %v. Output: %s", exe, err, strings.TrimSpace(string(out)))
+	cmd := s.backend.LandscapeConfigExecutable(ctx, "--config", landscapeConfigPath, "--silent")
+	if _, err := runCommand(cmd); err != nil {
+		return fmt.Errorf("could not enable Landscape: %v", err)
 	}
 
 	return nil
@@ -42,11 +40,9 @@ func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, ho
 
 // LandscapeDisable unregisters the current distro from Landscape.
 func (s *System) LandscapeDisable(ctx context.Context) (err error) {
-	exe, args := s.backend.LandscapeConfigExecutable("--disable")
-
-	//nolint:gosec // In production code, these variables are hard-coded (except for the URLs).
-	if out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("could not disable Landscape: %s returned an error: %v\nOutput:%s", exe, err, string(out))
+	cmd := s.backend.LandscapeConfigExecutable(ctx, "--disable")
+	if _, err := runCommand(cmd); err != nil {
+		return fmt.Errorf("could not disable Landscape:%v", err)
 	}
 
 	return nil
@@ -154,11 +150,10 @@ func overrideSSLCertificate(ctx context.Context, s *System, data *ini.File) erro
 
 	pathWindows := k.String()
 
-	cmd, args := s.backend.WslpathExecutable("-ua", pathWindows)
-	//nolint:gosec // In production code, the executable (wslpath) is hardcoded.
-	out, err := exec.CommandContext(ctx, cmd, args...).CombinedOutput()
+	cmd := s.backend.WslpathExecutable(ctx, "-ua", pathWindows)
+	out, err := runCommand(cmd)
 	if err != nil {
-		return fmt.Errorf("could not translate SSL certificate path %q to a WSL path: %v: %s", pathWindows, err, out)
+		return fmt.Errorf("could not translate SSL certificate path %q to a WSL path: %v", pathWindows, err)
 	}
 
 	pathLinux := s.Path(strings.TrimSpace(string(out)))

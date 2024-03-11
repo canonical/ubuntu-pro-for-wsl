@@ -4,6 +4,7 @@ package system
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -33,11 +34,13 @@ type Backend interface {
 	Path(p ...string) string
 	Hostname() (string, error)
 	GetenvWslDistroName() string
-	ProExecutable(args ...string) (string, []string)
-	LandscapeConfigExecutable(args ...string) (string, []string)
-	WslpathExecutable(args ...string) (string, []string)
-	WslinfoExecutable(args ...string) (string, []string)
-	CmdExe(path string, args ...string) (string, []string)
+
+	ProExecutable(ctx context.Context, args ...string) *exec.Cmd
+	LandscapeConfigExecutable(ctx context.Context, args ...string) *exec.Cmd
+	WslpathExecutable(ctx context.Context, args ...string) *exec.Cmd
+	WslinfoExecutable(ctx context.Context, args ...string) *exec.Cmd
+
+	CmdExe(ctx context.Context, path string, args ...string) *exec.Cmd
 }
 
 type options struct {
@@ -142,9 +145,8 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 		return env, nil
 	}
 
-	exe, args := s.backend.WslpathExecutable("-w", "/")
-	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
-	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
+	cmd := s.backend.WslpathExecutable(ctx, "-w", "/")
+	out, err := runCommand(cmd)
 	if err != nil {
 		return "", fmt.Errorf("could not get distro root path: %v. Output: %s", err, string(out))
 	}
@@ -171,26 +173,22 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 		return wslPath, err
 	}
 
-	exe, args := s.backend.CmdExe(cmdExe, "/C", "echo %UserProfile%")
-	//nolint:gosec //this function simply prepends the WSL path to "cmd.exe" to the args.
-	out, err := exec.CommandContext(ctx, exe, args...).CombinedOutput()
+	cmd := s.backend.CmdExe(ctx, cmdExe, "/C", "echo %UserProfile%")
+	winHome, err := runCommand(cmd)
 	if err != nil {
-		return wslPath, fmt.Errorf("%s: error: %v. Output: %s", exe, err, string(out))
+		return wslPath, err
 	}
 
-	// Path from Windows' perspective ( C:\Users\... )
+	// We have the path from Windows' perspective ( C:\Users\... )
 	// It must be converted to linux ( /mnt/c/Users/... )
-	winHome := strings.TrimSpace(string(out))
 
-	exe, args = s.backend.WslpathExecutable("-ua", winHome)
-	//nolint:gosec //outside of tests, this function simply prepends "wslpath" to the args.
-	out, err = exec.CommandContext(ctx, exe, args...).CombinedOutput()
+	cmd = s.backend.WslpathExecutable(ctx, "-ua", string(winHome))
+	winHomeLinux, err := runCommand(cmd)
 	if err != nil {
-		return wslPath, fmt.Errorf("%s: error: %v. Output: %s", exe, err, string(out))
+		return wslPath, err
 	}
 
-	winHomeLinux := strings.TrimSpace(string(out))
-	wslPath = s.Path(winHomeLinux)
+	wslPath = s.Path(string(winHomeLinux))
 
 	// wslpath can return invalid paths, so we make sure that it exists
 	if s, err := os.Stat(wslPath); err != nil {
@@ -201,6 +199,24 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	}
 
 	return wslPath, nil
+}
+
+// runCommand is a helper that runs a command and returns stdout.
+// The first return value is the always trimmed stdout, even in case of error.
+// In case of error, both Stdout and Stderr are included in the error message.
+func runCommand(cmd *exec.Cmd) ([]byte, error) {
+	var stdout, stderr bytes.Buffer
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	out := bytes.TrimSpace(stdout.Bytes())
+	if err != nil {
+		return out, fmt.Errorf("%s: error: %v.\n    Stdout: %s\n    Stderr: %s", cmd.Path, err, out, stderr.String())
+	}
+
+	return out, nil
 }
 
 // Path converts an absolute path into one inside the mocked filesystem.
