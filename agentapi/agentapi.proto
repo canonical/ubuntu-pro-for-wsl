@@ -10,7 +10,7 @@ service UI {
     rpc ApplyProToken (ProAttachInfo) returns (SubscriptionInfo) {}
     rpc ApplyLandscapeConfig(LandscapeConfig) returns (Empty) {}
     rpc Ping (Empty) returns (Empty) {}
-    rpc GetSubscriptionInfo(Empty) returns (SubscriptionInfo) {}
+    rpc GetConfigSources(Empty) returns (ConfigSources) {}
     rpc NotifyPurchase(Empty) returns (SubscriptionInfo) {}
 }
 
@@ -31,6 +31,19 @@ message SubscriptionInfo {
         Empty organization = 4;     // The subscription is managed by the sysadmin with a pro token from the registry.
         Empty microsoftStore = 5;   // The subscription is managed via the Microsoft store.
     };
+}
+
+message LandscapeSource {
+    oneof landscapeSourceType {
+        Empty none = 1;             // There is no active Landscape config data.
+        Empty user = 2;             // The Landscape config is managed by the user, set via the GUI.
+        Empty organization = 3;     // The Landscape config is managedby the sysadmin, set via the registry.
+    };
+}
+
+message ConfigSources {
+    SubscriptionInfo proSubscription = 1;
+    LandscapeSource landscapeSource = 2;
 }
 
 service WSLInstance {
