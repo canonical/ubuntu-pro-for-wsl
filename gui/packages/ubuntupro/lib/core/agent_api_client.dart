@@ -2,8 +2,9 @@ import 'package:agentapi/agentapi.dart';
 import 'package:grpc/grpc.dart';
 import 'package:meta/meta.dart';
 
-/// A type alias for the gRPC message enum which by default has a big name.
+/// Type aliases for the gRPC message enums which by default have big names.
 typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
+typedef LandscapeSourceType = LandscapeSource_LandscapeSourceType;
 
 /// AgentApiClient hides the gRPC details in a more convenient API.
 class AgentApiClient {
@@ -64,9 +65,8 @@ class AgentApiClient {
       .then((_) => true)
       .onError<GrpcError>((_, __) => false);
 
-  /// Returns information about the current subscription, if any.
-  Future<SubscriptionInfo> subscriptionInfo() =>
-      _client.getSubscriptionInfo(Empty());
+  /// Returns current information about the config sources, if any, to determine which parts of the UI are enabled.
+  Future<ConfigSources> configSources() => _client.getConfigSources(Empty());
 
   /// Notifies the background agent of a succesfull purchase transaction on MS Store.
   /// It's expected that an updated SubscriptionInfo will be returned.

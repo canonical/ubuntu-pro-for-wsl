@@ -2,6 +2,8 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:async/async.dart';
 import 'package:grpc/grpc.dart';
+// Required to enable updating the gRPC message types so the mock can store some state.
+import 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class MockedResponse<R> extends DelegatingFuture<R>
     implements ResponseFuture<R> {
@@ -23,17 +25,30 @@ class MockedResponse<R> extends DelegatingFuture<R>
 
 /// A stateful mock of the UIClient gRPC service.
 class MockUIClient extends UIClient {
-  SubscriptionInfo subscriptionInfo = SubscriptionInfo();
+  SubscriptionInfo subs = SubscriptionInfo()
+    ..ensureNone()
+    ..freeze();
 
-  MockUIClient(super.channel) {
-    subscriptionInfo.ensureNone();
-  }
+  LandscapeSource landscape = LandscapeSource()
+    ..ensureNone()
+    ..freeze();
+
+  MockUIClient(super.channel);
 
   @override
   ResponseFuture<Empty> applyLandscapeConfig(
     LandscapeConfig request, {
     CallOptions? options,
   }) {
+    if (request.config.isEmpty) {
+      landscape = landscape.rebuild((ls) {
+        ls.ensureNone();
+      });
+    } else {
+      landscape = landscape.rebuild((ls) {
+        ls.ensureUser();
+      });
+    }
     return MockedResponse(Empty());
   }
 
@@ -43,19 +58,28 @@ class MockUIClient extends UIClient {
     CallOptions? options,
   }) {
     if (request.token.isEmpty) {
-      subscriptionInfo.ensureNone();
+      subs = subs.rebuild((s) {
+        s.ensureNone();
+      });
     } else {
-      subscriptionInfo.ensureUser();
+      subs = subs.rebuild((s) {
+        s.ensureUser();
+      });
     }
-    return MockedResponse(subscriptionInfo);
+    return MockedResponse(subs);
   }
 
   @override
-  ResponseFuture<SubscriptionInfo> getSubscriptionInfo(
+  ResponseFuture<ConfigSources> getConfigSources(
     Empty request, {
     CallOptions? options,
   }) {
-    return MockedResponse(subscriptionInfo);
+    return MockedResponse(
+      ConfigSources(
+        landscapeSource: landscape,
+        proSubscription: subs,
+      ),
+    );
   }
 
   @override

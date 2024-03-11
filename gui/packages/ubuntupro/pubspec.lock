@@ -591,7 +591,7 @@ packages:
     source: hosted
     version: "4.2.4"
   protobuf:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: protobuf
       sha256: "68645b24e0716782e58948f8467fd42a880f255096a821f9e7d0ec625b00c84d"
