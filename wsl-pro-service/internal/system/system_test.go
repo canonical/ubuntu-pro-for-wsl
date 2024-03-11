@@ -399,6 +399,8 @@ func TestLandscapeEnable(t *testing.T) {
 	}{
 		"Success":                                    {},
 		"Success overriding computer_title":          {},
+		"Success when empty tags are present":        {},
+		"Success when custom tags are present":       {},
 		"Success overriding the SSL certficate path": {},
 
 		"Error when the file cannot be parsed":                   {wantErr: true},
