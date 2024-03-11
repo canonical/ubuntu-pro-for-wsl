@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
-import 'package:yaru_widgets/yaru_widgets.dart';
+import 'package:yaru/widgets.dart';
 import 'app.dart';
 import 'constants.dart';
 import 'core/agent_api_client.dart';
