@@ -123,7 +123,7 @@ func overrideKey(ctx context.Context, data *ini.File, section, key, value string
 	}
 
 	if sec.HasKey(key) {
-		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden with %s", key, value)
+		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden.", key)
 		sec.DeleteKey(key)
 	}
 
