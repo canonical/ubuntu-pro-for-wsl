@@ -10,7 +10,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
 	github.com/stretchr/testify v1.9.0
-	github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12
+	github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa
 	google.golang.org/grpc v1.62.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.33.0

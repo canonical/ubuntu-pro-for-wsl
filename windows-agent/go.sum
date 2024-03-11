@@ -85,8 +85,8 @@ github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
-github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12 h1:LrBQDPvsK4Pqluy05iw8w51F6XWndIfyssL4g/fLAzo=
-github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12/go.mod h1:7hcEt67BNrsJHVZtWBCU0tJG0JQEvoMSi+TN1hFZHHg=
+github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa h1:kKgqEuEgZ3yOCKNFZ6Bvn0/Xuzlf/yxeN2eEIotGKms=
+github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa/go.mod h1:1BBypuxD3Q91vOqv4Du+9o3YIWJbwhML6I1PuPm1+e4=
 go.uber.org/atomic v1.9.0 h1:ECmE8Bn/WFTYwEW/bpKD3M8VtR/zQVbavAoalC1PYyE=
 go.uber.org/atomic v1.9.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/multierr v1.9.0 h1:7fIwc/ZtS0q++VgcfqFDxSBZVv/Xo49/SYnDFupUwlI=

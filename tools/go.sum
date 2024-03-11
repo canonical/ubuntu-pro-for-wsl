@@ -573,8 +573,8 @@ github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
-github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12 h1:LrBQDPvsK4Pqluy05iw8w51F6XWndIfyssL4g/fLAzo=
-github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12/go.mod h1:7hcEt67BNrsJHVZtWBCU0tJG0JQEvoMSi+TN1hFZHHg=
+github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa h1:kKgqEuEgZ3yOCKNFZ6Bvn0/Xuzlf/yxeN2eEIotGKms=
+github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa/go.mod h1:1BBypuxD3Q91vOqv4Du+9o3YIWJbwhML6I1PuPm1+e4=
 github.com/ultraware/funlen v0.1.0 h1:BuqclbkY6pO+cvxoq7OsktIXZpgBSkYTQtmwhAK81vI=
 github.com/ultraware/funlen v0.1.0/go.mod h1:XJqmOQja6DpxarLj6Jj1U7JuoS8PvL4nEqDaQhy22p4=
 github.com/ultraware/whitespace v0.1.0 h1:O1HKYoh0kIeqE8sFqZf1o0qbORXUCOQFrlaQyZsczZw=
