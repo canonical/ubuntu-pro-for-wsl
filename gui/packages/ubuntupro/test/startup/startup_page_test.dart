@@ -5,28 +5,13 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
-import 'package:ubuntupro/pages/startup/agent_monitor.dart';
+import 'package:ubuntupro/core/agent_monitor.dart';
 import 'package:ubuntupro/pages/startup/startup_model.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
 import 'package:wizard_router/wizard_router.dart';
 
+import '../utils/build_multiprovider_app.dart';
 import 'startup_page_test.mocks.dart';
-
-const lastText = 'LAST TEXT';
-MaterialApp buildApp(StartupModel model) => MaterialApp(
-      home: Wizard(
-        routes: {
-          '/': WizardRoute(
-            builder: (_) => ChangeNotifierProvider.value(
-              value: model,
-              child: const StartupAnimatedChild(),
-            ),
-          ),
-          '/next': WizardRoute(builder: (_) => const Text(lastText)),
-        },
-      ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-    );
 
 @GenerateMocks([AgentStartupMonitor, AgentApiClient])
 void main() {
@@ -114,19 +99,24 @@ void main() {
     when(mockClient.ping()).thenAnswer((_) async => true);
     // Builds a less trivial app using the higher level Startup widget
     // to evaluate whether the instantiation of the model happens.
-    final app = MaterialApp(
-      home: Provider<AgentStartupMonitor>(
-        create: (context) => AgentStartupMonitor(
-          addrFileName: 'anywhere',
-          agentLauncher: () async => true,
-          clientFactory: (port) =>
-              AgentApiClient(host: 'localhost', port: port),
-          onClient: (_) {},
+    final app = buildMultiProviderWizardApp(
+      providers: [
+        Provider<AgentStartupMonitor>(
+          create: (context) => AgentStartupMonitor(
+            addrFileName: 'anywhere',
+            agentLauncher: () async => true,
+            clientFactory: (host, port) =>
+                AgentApiClient(host: host, port: port),
+            onClient: (_) {},
+          ),
         ),
-        child: const StartupPage(),
-      ),
-      routes: {'/next': (_) => const Text(lastText)},
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      ],
+      routes: {
+        '/': WizardRoute(builder: (_) => const StartupPage()),
+        '/next': WizardRoute(
+          builder: (_) => const Text(lastText),
+        ),
+      },
     );
 
     await tester.pumpWidget(app);
@@ -137,3 +127,14 @@ void main() {
     expect(model, isNotNull);
   });
 }
+
+const lastText = 'LAST TEXT';
+Widget buildApp(StartupModel model) => buildMultiProviderWizardApp(
+      providers: [
+        ChangeNotifierProvider.value(value: model),
+      ],
+      routes: {
+        '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
+        '/next': WizardRoute(builder: (_) => const Text(lastText)),
+      },
+    );

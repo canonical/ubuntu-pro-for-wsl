@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import 'agent_monitor.dart';
+import '/core/agent_monitor.dart';
 
 enum ViewState {
   inProgress,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_widgets.dart';
+
+import '../../utils/build_multiprovider_app.dart';
 
 void main() {
   group('subscription status', () {
@@ -10,9 +11,8 @@ void main() {
 
     testWidgets('caption', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SubscriptionStatus(caption: caption),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+        buildSingleRouteMultiProviderApp(
+          child: const SubscriptionStatus(caption: caption),
         ),
       );
 
@@ -22,8 +22,8 @@ void main() {
     testWidgets('action button', (tester) async {
       var clicked = false;
       await tester.pumpWidget(
-        MaterialApp(
-          home: SubscriptionStatus(
+        buildSingleRouteMultiProviderApp(
+          child: SubscriptionStatus(
             caption: caption,
             actionButtons: [
               TextButton(
@@ -32,7 +32,6 @@ void main() {
               ),
             ],
           ),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
         ),
       );
 

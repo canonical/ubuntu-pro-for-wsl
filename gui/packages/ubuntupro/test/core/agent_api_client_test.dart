@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grpc/grpc.dart' as grpc;
 import 'package:ubuntupro/core/agent_api_client.dart';
 
 import '../utils/mock_grpc.dart';
@@ -11,8 +12,11 @@ void main() {
   });
 
   group('with mocked grpc', () {
-    final mockGrpc = MockUIClient();
-    final client = AgentApiClient.withClient(mockGrpc);
+    final client = AgentApiClient(
+      host: '127.0.0.1',
+      port: 9,
+      stubFactory: MockUIClient.new,
+    );
 
     test('ping succeeds', () async {
       expect(await client.ping(), isTrue);
@@ -38,10 +42,58 @@ void main() {
       expect(info.whichSubscriptionType(), SubscriptionType.none);
     });
 
-    test('setting landscape config succeeds', () {
-      expect(
+    test('setting landscape config succeeds', () async {
+      await expectLater(
         () async => await client.applyLandscapeConfig('test config'),
         returnsNormally,
+      );
+    });
+
+    test('connect to new endpoint', () async {
+      final otherRef = client;
+      final connected = await otherRef.connectTo(host: 'localhost', port: 9);
+      // A real connection would never succeed in port 9 (Discard Protocol).
+      expect(connected, isTrue);
+      // The client object is still the same, although internals may have changed.
+      expect(otherRef.hashCode, client.hashCode);
+    });
+  });
+
+  group('connection events', () {
+    test('idle is ok', () {
+      // assuming we start in the grpc.ConnectionState.ready state.
+      final grpcEvents = Stream.fromIterable([
+        grpc.ConnectionState.idle,
+        grpc.ConnectionState.connecting,
+        grpc.ConnectionState.ready,
+      ]);
+
+      expect(
+        mapGRPCConnectionEvents(grpcEvents),
+        emitsInOrder(<ConnectionEvent>[
+          ConnectionEvent.connected,
+          ConnectionEvent.dropped,
+          ConnectionEvent.connected,
+        ]),
+      );
+    });
+    test('conn dropped', () {
+      // assuming we start in the grpc.ConnectionState.ready state.
+      final grpcEvents = Stream.fromIterable([
+        grpc.ConnectionState.connecting,
+        grpc.ConnectionState.transientFailure,
+        grpc.ConnectionState.connecting,
+        grpc.ConnectionState.shutdown,
+      ]);
+
+      expect(
+        mapGRPCConnectionEvents(grpcEvents),
+        emitsInOrder(<ConnectionEvent>[
+          ConnectionEvent.dropped,
+          ConnectionEvent.dropped,
+          ConnectionEvent.dropped,
+          ConnectionEvent.dropped,
+        ]),
       );
     });
   });

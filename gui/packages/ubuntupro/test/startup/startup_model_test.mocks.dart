@@ -7,7 +7,7 @@ import 'dart:async' as _i4;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/pages/startup/agent_monitor.dart' as _i3;
+import 'package:ubuntupro/core/agent_monitor.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -51,17 +51,24 @@ class MockAgentStartupMonitor extends _i1.Mock
   @override
   _i3.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
-        returnValue: (int port) => _FakeAgentApiClient_0(
+        returnValue: (
+          String host,
+          int port,
+        ) =>
+            _FakeAgentApiClient_0(
           this,
           Invocation.getter(#clientFactory),
         ),
       ) as _i3.ApiClientFactory);
 
   @override
-  _i3.AgentApiCallback get onClient => (super.noSuchMethod(
-        Invocation.getter(#onClient),
-        returnValue: (_i2.AgentApiClient __p0) => null,
-      ) as _i3.AgentApiCallback);
+  bool addNewClientListener(_i3.AgentApiCallback? cb) => (super.noSuchMethod(
+        Invocation.method(
+          #addNewClientListener,
+          [cb],
+        ),
+        returnValue: false,
+      ) as bool);
 
   @override
   _i4.Stream<_i3.AgentState> start({

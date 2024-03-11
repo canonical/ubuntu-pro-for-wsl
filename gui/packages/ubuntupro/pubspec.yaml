@@ -74,6 +74,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
+  nested: ^1.0.0
   stack_trace: ^1.11.0
   yaru_test: ^0.1.5
 

@@ -9,7 +9,8 @@ import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
-import 'package:yaru/yaru.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
+import '../../utils/build_multiprovider_app.dart';
 import 'subscribe_now_page_test.mocks.dart';
 import 'token_samples.dart' as tks;
 
@@ -124,7 +125,7 @@ void main() {
     await tester.pumpWidget(app);
 
     // expands the collapsed input field group
-    final toggle = find.byType(IconButton);
+    final toggle = find.byIcon(ProTokenInputField.expandIcon);
     await tester.tap(toggle);
     await tester.pumpAndSettle();
 
@@ -162,20 +163,13 @@ Widget buildApp(
   SubscribeNowModel model,
   void Function(SubscriptionInfo) onSubs,
 ) {
-  return YaruTheme(
-    builder: (context, yaru, child) => MaterialApp(
-      theme: yaru.theme,
-      darkTheme: yaru.darkTheme,
-      home: Scaffold(
-        body: Provider.value(
-          value: model,
-          child: SubscribeNowPage(
-            onSubscriptionUpdate: onSubs,
-          ),
-        ),
-      ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+  return buildSingleRouteMultiProviderApp(
+    child: SubscribeNowPage(
+      onSubscriptionUpdate: onSubs,
     ),
+    providers: [
+      Provider.value(value: model),
+    ],
   );
 }
 

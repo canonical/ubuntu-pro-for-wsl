@@ -5,13 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:ubuntupro/constants.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
+import 'package:ubuntupro/core/agent_monitor.dart';
 import 'package:ubuntupro/core/environment.dart';
-import 'package:ubuntupro/pages/startup/agent_monitor.dart';
 
-import 'agent_monitor_test.mocks.dart';
+import './agent_monitor_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
 void main() {
@@ -44,7 +43,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always fail.
       agentLauncher: () async => false,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -71,7 +70,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -94,7 +93,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -116,7 +115,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -146,7 +145,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -172,7 +171,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -198,7 +197,7 @@ void main() {
       agentLauncher: () async {
         return true;
       },
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -225,7 +224,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (port) => mockClient,
+      clientFactory: (host, port) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) async {
         // This function only completes when the completer is manually set complete.
@@ -255,6 +254,54 @@ void main() {
       ]),
     );
   });
+
+  test('reconnect preserves client instance', () async {
+    final mockClient = MockAgentApiClient();
+    // Fakes a successful ping.
+    when(mockClient.ping()).thenAnswer((_) async => true);
+    // fakes a succesful connectTo call.
+    when(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
+        .thenAnswer((_) async => true);
+    final monitor = AgentStartupMonitor(
+      /// A launch request will always succeed.
+      agentLauncher: () async {
+        writeDummyAddrFile(homeDir!);
+        return true;
+      },
+      clientFactory: (host, port) => mockClient,
+      addrFileName: kAddrFileName,
+      onClient: (_) {},
+    );
+
+    await expectLater(
+      monitor.start(interval: kInterval),
+      emitsInOrder([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.ok,
+        emitsDone,
+      ]),
+    );
+
+    final currentClient = monitor.agentApiClient;
+    expect(currentClient.hashCode, mockClient.hashCode);
+    // Reset and reconnect
+    await monitor.reset();
+    await expectLater(
+      monitor.start(interval: kInterval),
+      emitsInOrder([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.ok,
+        emitsDone,
+      ]),
+    );
+
+    final newClient = monitor.agentApiClient;
+    verify(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
+        .called(1);
+    expect(newClient.hashCode, currentClient.hashCode);
+  });
 }
 
 /// Writes a sample address file to the destination containing either a proper
@@ -266,5 +313,9 @@ void writeDummyAddrFile(Directory homeDir, {String? line}) {
   final addr = File(filePath);
   addr.parent.createSync(recursive: true);
   addr.writeAsStringSync(line ?? goodLine);
-  addTearDown(addr.deleteSync);
+  addTearDown(() {
+    if (addr.existsSync()) {
+      addr.deleteSync();
+    }
+  });
 }

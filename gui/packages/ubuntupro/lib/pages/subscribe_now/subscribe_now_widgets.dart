@@ -22,6 +22,9 @@ class ProTokenInputField extends StatefulWidget {
   /// Whether the field should be shown expanded or collapsed by default.
   final bool isExpanded;
 
+  /// The icon to be used for the expandable widget, mainly visible for stable tests.
+  static const expandIcon = YaruIcons.pan_end;
+
   @override
   State<ProTokenInputField> createState() => _ProTokenInputFieldState();
 }
@@ -64,7 +67,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
             .copyWith(fontWeight: FontWeight.w100),
       ),
       expandIcon: Icon(
-        YaruIcons.pan_end,
+        ProTokenInputField.expandIcon,
         color: yaruDark.textTheme.bodyMedium!.color,
       ),
       isExpanded: widget.isExpanded,
