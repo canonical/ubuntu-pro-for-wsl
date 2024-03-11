@@ -22,7 +22,7 @@ const (
 	UI_ApplyProToken_FullMethodName        = "/agentapi.UI/ApplyProToken"
 	UI_ApplyLandscapeConfig_FullMethodName = "/agentapi.UI/ApplyLandscapeConfig"
 	UI_Ping_FullMethodName                 = "/agentapi.UI/Ping"
-	UI_GetSubscriptionInfo_FullMethodName  = "/agentapi.UI/GetSubscriptionInfo"
+	UI_GetConfigSources_FullMethodName     = "/agentapi.UI/GetConfigSources"
 	UI_NotifyPurchase_FullMethodName       = "/agentapi.UI/NotifyPurchase"
 )
 
@@ -33,7 +33,7 @@ type UIClient interface {
 	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*SubscriptionInfo, error)
 	ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*Empty, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
-	GetSubscriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
+	GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ConfigSources, error)
 	NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
 }
 
@@ -72,9 +72,9 @@ func (c *uIClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption)
 	return out, nil
 }
 
-func (c *uIClient) GetSubscriptionInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error) {
-	out := new(SubscriptionInfo)
-	err := c.cc.Invoke(ctx, UI_GetSubscriptionInfo_FullMethodName, in, out, opts...)
+func (c *uIClient) GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ConfigSources, error) {
+	out := new(ConfigSources)
+	err := c.cc.Invoke(ctx, UI_GetConfigSources_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ type UIServer interface {
 	ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error)
 	ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*Empty, error)
 	Ping(context.Context, *Empty) (*Empty, error)
-	GetSubscriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error)
+	GetConfigSources(context.Context, *Empty) (*ConfigSources, error)
 	NotifyPurchase(context.Context, *Empty) (*SubscriptionInfo, error)
 	mustEmbedUnimplementedUIServer()
 }
@@ -115,8 +115,8 @@ func (UnimplementedUIServer) ApplyLandscapeConfig(context.Context, *LandscapeCon
 func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedUIServer) GetSubscriptionInfo(context.Context, *Empty) (*SubscriptionInfo, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSubscriptionInfo not implemented")
+func (UnimplementedUIServer) GetConfigSources(context.Context, *Empty) (*ConfigSources, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfigSources not implemented")
 }
 func (UnimplementedUIServer) NotifyPurchase(context.Context, *Empty) (*SubscriptionInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NotifyPurchase not implemented")
@@ -188,20 +188,20 @@ func _UI_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UI_GetSubscriptionInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UI_GetConfigSources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UIServer).GetSubscriptionInfo(ctx, in)
+		return srv.(UIServer).GetConfigSources(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UI_GetSubscriptionInfo_FullMethodName,
+		FullMethod: UI_GetConfigSources_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UIServer).GetSubscriptionInfo(ctx, req.(*Empty))
+		return srv.(UIServer).GetConfigSources(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -244,8 +244,8 @@ var UI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UI_Ping_Handler,
 		},
 		{
-			MethodName: "GetSubscriptionInfo",
-			Handler:    _UI_GetSubscriptionInfo_Handler,
+			MethodName: "GetConfigSources",
+			Handler:    _UI_GetConfigSources_Handler,
 		},
 		{
 			MethodName: "NotifyPurchase",

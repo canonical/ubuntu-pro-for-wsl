@@ -69,6 +69,41 @@ final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
     'BSDG9yZ2FuaXphdGlvbhI5Cg5taWNyb3NvZnRTdG9yZRgFIAEoCzIPLmFnZW50YXBpLkVtcHR5'
     'SABSDm1pY3Jvc29mdFN0b3JlQhIKEHN1YnNjcmlwdGlvblR5cGU=');
 
+@$core.Deprecated('Use landscapeSourceDescriptor instead')
+const LandscapeSource$json = {
+  '1': 'LandscapeSource',
+  '2': [
+    {'1': 'none', '3': 1, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
+    {'1': 'user', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'user'},
+    {'1': 'organization', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
+  ],
+  '8': [
+    {'1': 'landscapeSourceType'},
+  ],
+};
+
+/// Descriptor for `LandscapeSource`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List landscapeSourceDescriptor = $convert.base64Decode(
+    'Cg9MYW5kc2NhcGVTb3VyY2USJQoEbm9uZRgBIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSBG5vbm'
+    'USJQoEdXNlchgCIAEoCzIPLmFnZW50YXBpLkVtcHR5SABSBHVzZXISNQoMb3JnYW5pemF0aW9u'
+    'GAMgASgLMg8uYWdlbnRhcGkuRW1wdHlIAFIMb3JnYW5pemF0aW9uQhUKE2xhbmRzY2FwZVNvdX'
+    'JjZVR5cGU=');
+
+@$core.Deprecated('Use configSourcesDescriptor instead')
+const ConfigSources$json = {
+  '1': 'ConfigSources',
+  '2': [
+    {'1': 'proSubscription', '3': 1, '4': 1, '5': 11, '6': '.agentapi.SubscriptionInfo', '10': 'proSubscription'},
+    {'1': 'landscapeSource', '3': 2, '4': 1, '5': 11, '6': '.agentapi.LandscapeSource', '10': 'landscapeSource'},
+  ],
+};
+
+/// Descriptor for `ConfigSources`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List configSourcesDescriptor = $convert.base64Decode(
+    'Cg1Db25maWdTb3VyY2VzEkQKD3Byb1N1YnNjcmlwdGlvbhgBIAEoCzIaLmFnZW50YXBpLlN1Yn'
+    'NjcmlwdGlvbkluZm9SD3Byb1N1YnNjcmlwdGlvbhJDCg9sYW5kc2NhcGVTb3VyY2UYAiABKAsy'
+    'GS5hZ2VudGFwaS5MYW5kc2NhcGVTb3VyY2VSD2xhbmRzY2FwZVNvdXJjZQ==');
+
 @$core.Deprecated('Use distroInfoDescriptor instead')
 const DistroInfo$json = {
   '1': 'DistroInfo',
