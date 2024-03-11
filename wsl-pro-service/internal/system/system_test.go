@@ -590,6 +590,46 @@ func TestLandscapeDisable(t *testing.T) {
 	}
 }
 
+func TestRealBackend(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	b := system.RealBackend{}
+
+	// Asserting generated commands
+	//
+	// Note that we cannot test the cmd.Path directly as it will depend on the install location,
+	// so we only test the base of the path.
+
+	pro := b.ProExecutable(ctx, "arg1", "arg2")
+	assertBasePath(t, "pro", pro.Path, "ProExecutable did not return the expected command")
+	assert.Equal(t, []string{"pro", "arg1", "arg2"}, pro.Args, "ProExecutable did not return the expected arguments")
+
+	lpe := b.LandscapeConfigExecutable(ctx, "arg1", "arg2")
+	assertBasePath(t, "landscape-config", lpe.Path, "LandscapeConfigExecutable did not return the expected command")
+	assert.Equal(t, []string{"landscape-config", "arg1", "arg2"}, lpe.Args, "LandscapeConfigExecutable did not return the expected arguments")
+
+	wpath := b.WslpathExecutable(ctx, "arg1", "arg2")
+	assertBasePath(t, "wslpath", wpath.Path, "WslpathExecutable did not return the expected command")
+	assert.Equal(t, []string{"wslpath", "arg1", "arg2"}, wpath.Args, "WslpathExecutable did not return the expected arguments")
+
+	winfo := b.WslinfoExecutable(ctx, "arg1", "arg2")
+	assertBasePath(t, "wslinfo", winfo.Path, "WslinfoExecutable did not return the expected command")
+	assert.Equal(t, []string{"wslinfo", "arg1", "arg2"}, winfo.Args, "WslinfoExecutable did not return the expected arguments")
+
+	cmd := b.CmdExe(ctx, "/mnt/c/WINDOWS/whatever/cmd.exe", "arg1", "arg2")
+	assert.Equal(t, "/mnt/c/WINDOWS/whatever", cmd.Dir, "CmdExe did not set the expected directory")
+	assert.Equal(t, "/mnt/c/WINDOWS/whatever/cmd.exe", cmd.Path, "CmdExe did not return the expected command")
+	assert.Equal(t, []string{"/mnt/c/WINDOWS/whatever/cmd.exe", "arg1", "arg2"}, cmd.Args, "CmdExe did not return the expected arguments")
+}
+
+// Asserts that the base of got is equal to wantBase, and if not, it fails the test with a message.
+func assertBasePath(t *testing.T, wantBase, got, msg string) {
+	t.Helper()
+	base := filepath.Base(got)
+	assert.Equalf(t, wantBase, base, "Mismatch in base path.\n%s", msg)
+}
+
 func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
 func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
 func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
