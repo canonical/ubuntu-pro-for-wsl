@@ -48,6 +48,7 @@ SRU
 toolchain
 zshrc
 ESM
+Ok
 
 # Registry keys
 UbuntuPro
