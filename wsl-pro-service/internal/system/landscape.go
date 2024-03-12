@@ -123,13 +123,13 @@ func createKey(ctx context.Context, data *ini.File, section, key, value string, 
 	}
 
 	if sec.HasKey(key) {
-		if override {
-			log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden.", key)
-			sec.DeleteKey(key)
-		} else {
+		if !override {
 			log.Infof(ctx, "Landscape config contains key %q. Its value will not be overridden.", key)
 			return nil
 		}
+
+		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden.", key)
+		sec.DeleteKey(key)
 	}
 
 	if _, err := sec.NewKey(key, value); err != nil {
