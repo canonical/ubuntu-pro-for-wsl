@@ -17,7 +17,7 @@ class SubscribeNowModel {
   }
 
   void launchProWebPage() {
-    launchUrl(Uri.parse('https://ubuntu.com/pro'));
+    launchUrl(Uri.https('ubuntu.com/pro'));
   }
 
   /// Triggers a purchase transaction via MS Store.

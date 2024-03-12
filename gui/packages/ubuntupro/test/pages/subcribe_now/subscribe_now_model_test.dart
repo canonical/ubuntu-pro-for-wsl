@@ -84,9 +84,6 @@ void main() {
     when(client.applyProToken(any)).thenAnswer(
       (_) async => info,
     );
-    when(client.subscriptionInfo()).thenAnswer(
-      (_) async => info,
-    );
     final token = ProToken.create(tks.good).getOrThrow();
     final model = SubscribeNowModel(client);
 
