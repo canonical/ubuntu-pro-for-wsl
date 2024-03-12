@@ -567,6 +567,12 @@ In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right
 
 % Skipping the registry clean-up because we'll use the GUI instead of the registry.%
 
+Additionally remove the `.ubuntupro` directory from your Windows user profile directory.
+
+```powershell
+PS C:\Users\me\tutorial> Remove-Item -Recurse -Force C:\Users\me\.ubuntupro
+```
+
 ### Remove the Ubuntu WSL apps
 
 ```{warning}
