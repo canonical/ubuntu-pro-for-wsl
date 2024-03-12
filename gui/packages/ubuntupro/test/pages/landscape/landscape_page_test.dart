@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,6 +103,7 @@ void main() {
       var applied = false;
       when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
         applied = true;
+        return LandscapeSource()..ensureUser();
       });
 
       final app = buildApp(model);
@@ -142,6 +144,7 @@ void main() {
       var applied = false;
       when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
         applied = true;
+        return LandscapeSource()..ensureUser();
       });
 
       final app = buildApp(model);

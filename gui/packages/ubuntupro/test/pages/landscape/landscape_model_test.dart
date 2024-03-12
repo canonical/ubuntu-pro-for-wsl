@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:agentapi/agentapi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 
@@ -104,6 +106,9 @@ void main() {
     });
 
     test('valid apply', () async {
+      when(client.applyLandscapeConfig(any))
+          .thenAnswer((_) async => LandscapeSource()..ensureUser());
+      //when(client.applyProToken(any)).thenAnswer((_) async => SubscriptionInfo()..ensureUser());
       var model = LandscapeModel(client);
       model.fqdn = 'example.com';
       expect(await model.applyConfig(), isTrue);
