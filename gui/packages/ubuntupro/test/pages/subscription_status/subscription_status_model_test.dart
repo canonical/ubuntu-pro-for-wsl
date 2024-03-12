@@ -11,13 +11,20 @@ void main() {
   group('instantiation', () {
     final client = MockAgentApiClient();
     final info = SubscriptionInfo();
+    final landscape = LandscapeSource();
     info.productId = 'my prod ID';
 
-    test('none subscribes now', () async {
+    test('no subscription throws', () async {
       info.ensureNone();
       expect(
         () {
-          SubscriptionStatusModel(info, client);
+          SubscriptionStatusModel(
+            ConfigSources(
+              proSubscription: info,
+              landscapeSource: landscape,
+            ),
+            client,
+          );
         },
         throwsUnimplementedError,
       );
@@ -26,7 +33,7 @@ void main() {
     test('unset throws', () async {
       expect(
         () {
-          SubscriptionStatusModel(SubscriptionInfo(), client);
+          SubscriptionStatusModel(ConfigSources(), client);
         },
         throwsUnimplementedError,
       );
@@ -34,28 +41,82 @@ void main() {
     test('store', () async {
       info.ensureMicrosoftStore();
 
-      final model = SubscriptionStatusModel(info, client);
+      final model = SubscriptionStatusModel(
+        ConfigSources(
+          proSubscription: info,
+          landscapeSource: landscape,
+        ),
+        client,
+      );
       expect(model.runtimeType, StoreSubscriptionStatusModel);
     });
 
     test('user', () async {
       info.ensureUser();
 
-      final model = SubscriptionStatusModel(info, client);
+      final model = SubscriptionStatusModel(
+        ConfigSources(
+          proSubscription: info,
+          landscapeSource: landscape,
+        ),
+        client,
+      );
       expect(model.runtimeType, UserSubscriptionStatusModel);
     });
 
     test('organization', () async {
       info.ensureOrganization();
 
-      final model = SubscriptionStatusModel(info, client);
+      final model = SubscriptionStatusModel(
+        ConfigSources(
+          proSubscription: info,
+          landscapeSource: landscape,
+        ),
+        client,
+      );
       expect(model.runtimeType, OrgSubscriptionStatusModel);
     });
   });
 
+  group('config Landscape:', () {
+    final client = MockAgentApiClient();
+    final susbcriptions = [
+      SubscriptionInfo()..ensureOrganization(),
+      SubscriptionInfo()..ensureMicrosoftStore(),
+      SubscriptionInfo()..ensureUser(),
+    ];
+    final landscapeSources = [
+      LandscapeSource()..ensureNone(),
+      LandscapeSource()..ensureOrganization(),
+      LandscapeSource()..ensureUser(),
+    ];
+
+    String makeSubTestName(LandscapeSource landscape, SubscriptionInfo sub) {
+      final want = landscape.hasOrganization() ? 'disallowed' : 'allowed';
+      return 'landscape ${landscape.toString().split(':').first} with pro ${sub.toString().split(':').first} => $want';
+    }
+
+    for (final subs in susbcriptions) {
+      for (final landscape in landscapeSources) {
+        test(makeSubTestName(landscape, subs), () {
+          final want = landscape.hasOrganization() ? isFalse : isTrue;
+
+          final model = SubscriptionStatusModel(
+            ConfigSources(
+              proSubscription: subs,
+              landscapeSource: landscape,
+            ),
+            client,
+          );
+          expect(model.canConfigureLandscape, want);
+        });
+      }
+    }
+  });
+
   test('ms account link', () {
     const product = 'id';
-    final model = StoreSubscriptionStatusModel(product);
+    final model = StoreSubscriptionStatusModel(ConfigSources(), product);
 
     expect(model.uri.pathSegments, contains(product));
   });
@@ -70,7 +131,7 @@ void main() {
       }
       return SubscriptionInfo()..ensureNone();
     });
-    final model = UserSubscriptionStatusModel(client);
+    final model = UserSubscriptionStatusModel(ConfigSources(), client);
 
     // asserts that detachPro calls applyProToken with an empty String.
     expect(token, isNull);
