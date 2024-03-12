@@ -244,6 +244,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 	testCases := map[string]struct {
 		setUserLandscapeConfigErr bool
 		landscapeSource           config.Source
+		returnBadSource           bool
 
 		wantErr bool
 		want    interface{}
@@ -252,6 +253,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 
 		"Error when setting the config returns error":  {setUserLandscapeConfigErr: true, wantErr: true},
 		"Error when attempting to override org config": {landscapeSource: config.SourceRegistry, wantErr: true},
+		"Error when Landscape source is incoherent":    {returnBadSource: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -270,6 +272,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			conf := &mockConfig{
 				setUserLandscapeConfigErr: tc.setUserLandscapeConfigErr,
 				landscapeSource:           tc.landscapeSource,
+				returnBadSource:           tc.returnBadSource,
 			}
 
 			uiService := ui.New(context.Background(), conf, db)
