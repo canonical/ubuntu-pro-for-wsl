@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/contractserver/contractsmockserver"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/storeserver/storemockserver"
 	"github.com/stretchr/testify/require"
@@ -88,7 +88,7 @@ func TestPurchase(t *testing.T) {
 
 			contractsEndpointEnvOverride := fmt.Sprintf("%s=%s", contractsEndpointEnv, cs.Address())
 
-			testData, err := os.ReadFile(filepath.Join(golden.TestFamilyPath(t), "storemock_config.yaml"))
+			testData, err := os.ReadFile(filepath.Join(testutils.TestFamilyPath(t), "storemock_config.yaml"))
 			require.NoError(t, err, "Setup: Could not read test fixture input file")
 
 			storeSettings := storemockserver.DefaultSettings()

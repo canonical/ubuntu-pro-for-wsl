@@ -17,7 +17,6 @@ import (
 	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
-	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
@@ -145,7 +144,7 @@ func TestConnect(t *testing.T) {
 			}
 
 			lconf := defaultLandscapeConfig
-			if fixture, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf")); err != nil {
+			if fixture, err := os.ReadFile(filepath.Join(testutils.TestFixturePath(t), "landscape.conf")); err != nil {
 				require.ErrorIs(t, err, os.ErrNotExist, "Setup: could not load landscape config")
 				// Fixture does not exist: use base Landcape confing
 			} else {
