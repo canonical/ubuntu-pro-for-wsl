@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.22.1
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240307105924-373a97d8dd51
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240312194633-c4665ef95b37
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240308112834-64161f192df9
 	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240307105924-373a97d8dd51
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
