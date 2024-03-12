@@ -44,6 +44,16 @@ class _FakeSubscriptionInfo_1 extends _i1.SmartFake
         );
 }
 
+class _FakeConfigSources_2 extends _i1.SmartFake implements _i2.ConfigSources {
+  _FakeConfigSources_2(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [AgentApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -123,20 +133,19 @@ class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
       ) as _i5.Future<bool>);
 
   @override
-  _i5.Future<_i2.SubscriptionInfo> subscriptionInfo() => (super.noSuchMethod(
+  _i5.Future<_i2.ConfigSources> configSources() => (super.noSuchMethod(
         Invocation.method(
-          #subscriptionInfo,
+          #configSources,
           [],
         ),
-        returnValue:
-            _i5.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+        returnValue: _i5.Future<_i2.ConfigSources>.value(_FakeConfigSources_2(
           this,
           Invocation.method(
-            #subscriptionInfo,
+            #configSources,
             [],
           ),
         )),
-      ) as _i5.Future<_i2.SubscriptionInfo>);
+      ) as _i5.Future<_i2.ConfigSources>);
 
   @override
   _i5.Future<_i2.SubscriptionInfo> notifyPurchase() => (super.noSuchMethod(
