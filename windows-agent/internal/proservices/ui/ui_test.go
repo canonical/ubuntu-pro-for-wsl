@@ -243,12 +243,15 @@ func TestApplyLandscapeConfig(t *testing.T) {
 
 	testCases := map[string]struct {
 		setUserLandscapeConfigErr bool
+		landscapeSource           config.Source
 
 		wantErr bool
+		want    interface{}
 	}{
-		"Success": {},
+		"Success": {want: lsUser},
 
-		"Error when setting the config returns error": {setUserLandscapeConfigErr: true, wantErr: true},
+		"Error when setting the config returns error":  {setUserLandscapeConfigErr: true, wantErr: true},
+		"Error when attempting to override org config": {landscapeSource: config.SourceRegistry, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -266,6 +269,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 
 			conf := &mockConfig{
 				setUserLandscapeConfigErr: tc.setUserLandscapeConfigErr,
+				landscapeSource:           tc.landscapeSource,
 			}
 
 			uiService := ui.New(context.Background(), conf, db)
@@ -281,7 +285,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			}
 			require.NoError(t, err, "ApplyLandscapeConfig should return no errors")
 
-			require.NotNil(t, got, "ApplyLandscapeConfig should not return a nil ageEmpty")
+			require.IsType(t, tc.want, got.GetLandscapeSourceType(), "Mismatched Landscape source types")
 			require.Equal(t, landscapeConfig, conf.gotLandscapeConfig, "Config received unexpected Landscape config")
 		})
 	}
@@ -321,7 +325,12 @@ func (m *mockConfig) SetUserLandscapeConfig(ctx context.Context, landscapeConfig
 		return errors.New("mock error")
 	}
 
+	if m.landscapeSource == config.SourceRegistry {
+		return errors.New("mock error cannot overwrite organization's configuration data")
+	}
+
 	m.gotLandscapeConfig = landscapeConfig
+	m.landscapeSource = config.SourceUser
 
 	return nil
 }

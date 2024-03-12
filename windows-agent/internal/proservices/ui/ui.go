@@ -73,7 +73,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 }
 
 // ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
-func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.Empty, error) {
+func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.LandscapeSource, error) {
 	c := landscapeConfig.GetConfig()
 
 	err := s.config.SetUserLandscapeConfig(ctx, c)
@@ -81,7 +81,13 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *age
 		return nil, err
 	}
 
-	return &agentapi.Empty{}, nil
+	landscape, err := s.getLandscapeConfigSource()
+	if err != nil {
+		err = fmt.Errorf("UI service: ApplyLandscapeConfig: %v", err)
+		log.Warningf(ctx, "%v", err)
+		return nil, err
+	}
+	return landscape, nil
 }
 
 // Ping replies a keep-alive request.

@@ -31,7 +31,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UIClient interface {
 	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*SubscriptionInfo, error)
-	ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*Empty, error)
+	ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*LandscapeSource, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 	GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ConfigSources, error)
 	NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
@@ -54,8 +54,8 @@ func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ..
 	return out, nil
 }
 
-func (c *uIClient) ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *uIClient) ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*LandscapeSource, error) {
+	out := new(LandscapeSource)
 	err := c.cc.Invoke(ctx, UI_ApplyLandscapeConfig_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (c *uIClient) NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.C
 // for forward compatibility
 type UIServer interface {
 	ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error)
-	ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*Empty, error)
+	ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*LandscapeSource, error)
 	Ping(context.Context, *Empty) (*Empty, error)
 	GetConfigSources(context.Context, *Empty) (*ConfigSources, error)
 	NotifyPurchase(context.Context, *Empty) (*SubscriptionInfo, error)
@@ -109,7 +109,7 @@ type UnimplementedUIServer struct {
 func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyProToken not implemented")
 }
-func (UnimplementedUIServer) ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*Empty, error) {
+func (UnimplementedUIServer) ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*LandscapeSource, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyLandscapeConfig not implemented")
 }
 func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {

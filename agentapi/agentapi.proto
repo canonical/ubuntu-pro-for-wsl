@@ -8,7 +8,7 @@ message Empty {}
 
 service UI {
     rpc ApplyProToken (ProAttachInfo) returns (SubscriptionInfo) {}
-    rpc ApplyLandscapeConfig(LandscapeConfig) returns (Empty) {}
+    rpc ApplyLandscapeConfig(LandscapeConfig) returns (LandscapeSource) {}
     rpc Ping (Empty) returns (Empty) {}
     rpc GetConfigSources(Empty) returns (ConfigSources) {}
     rpc NotifyPurchase(Empty) returns (SubscriptionInfo) {}

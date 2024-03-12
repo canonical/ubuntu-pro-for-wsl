@@ -25,10 +25,10 @@ class UIClient extends $grpc.Client {
       '/agentapi.UI/ApplyProToken',
       ($0.ProAttachInfo value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.SubscriptionInfo.fromBuffer(value));
-  static final _$applyLandscapeConfig = $grpc.ClientMethod<$0.LandscapeConfig, $0.Empty>(
+  static final _$applyLandscapeConfig = $grpc.ClientMethod<$0.LandscapeConfig, $0.LandscapeSource>(
       '/agentapi.UI/ApplyLandscapeConfig',
       ($0.LandscapeConfig value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $0.Empty.fromBuffer(value));
+      ($core.List<$core.int> value) => $0.LandscapeSource.fromBuffer(value));
   static final _$ping = $grpc.ClientMethod<$0.Empty, $0.Empty>(
       '/agentapi.UI/Ping',
       ($0.Empty value) => value.writeToBuffer(),
@@ -52,7 +52,7 @@ class UIClient extends $grpc.Client {
     return $createUnaryCall(_$applyProToken, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.Empty> applyLandscapeConfig($0.LandscapeConfig request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.LandscapeSource> applyLandscapeConfig($0.LandscapeConfig request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$applyLandscapeConfig, request, options: options);
   }
 
@@ -81,13 +81,13 @@ abstract class UIServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.ProAttachInfo.fromBuffer(value),
         ($0.SubscriptionInfo value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.LandscapeConfig, $0.Empty>(
+    $addMethod($grpc.ServiceMethod<$0.LandscapeConfig, $0.LandscapeSource>(
         'ApplyLandscapeConfig',
         applyLandscapeConfig_Pre,
         false,
         false,
         ($core.List<$core.int> value) => $0.LandscapeConfig.fromBuffer(value),
-        ($0.Empty value) => value.writeToBuffer()));
+        ($0.LandscapeSource value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.Empty, $0.Empty>(
         'Ping',
         ping_Pre,
@@ -115,7 +115,7 @@ abstract class UIServiceBase extends $grpc.Service {
     return applyProToken(call, await request);
   }
 
-  $async.Future<$0.Empty> applyLandscapeConfig_Pre($grpc.ServiceCall call, $async.Future<$0.LandscapeConfig> request) async {
+  $async.Future<$0.LandscapeSource> applyLandscapeConfig_Pre($grpc.ServiceCall call, $async.Future<$0.LandscapeConfig> request) async {
     return applyLandscapeConfig(call, await request);
   }
 
@@ -132,7 +132,7 @@ abstract class UIServiceBase extends $grpc.Service {
   }
 
   $async.Future<$0.SubscriptionInfo> applyProToken($grpc.ServiceCall call, $0.ProAttachInfo request);
-  $async.Future<$0.Empty> applyLandscapeConfig($grpc.ServiceCall call, $0.LandscapeConfig request);
+  $async.Future<$0.LandscapeSource> applyLandscapeConfig($grpc.ServiceCall call, $0.LandscapeConfig request);
   $async.Future<$0.Empty> ping($grpc.ServiceCall call, $0.Empty request);
   $async.Future<$0.ConfigSources> getConfigSources($grpc.ServiceCall call, $0.Empty request);
   $async.Future<$0.SubscriptionInfo> notifyPurchase($grpc.ServiceCall call, $0.Empty request);
