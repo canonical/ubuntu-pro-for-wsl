@@ -52,7 +52,7 @@ class AgentApiClient {
     return _client.applyProToken(info);
   }
 
-  Future<void> applyLandscapeConfig(String config) {
+  Future<LandscapeSource> applyLandscapeConfig(String config) {
     final request = LandscapeConfig();
     request.config = config;
     return _client.applyLandscapeConfig(request);

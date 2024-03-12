@@ -245,7 +245,10 @@ Widget buildWizardApp(Map<String, WizardRoute> routes) {
 
 class FakeAgentApiClient extends Fake implements AgentApiClient {
   @override
-  Future<void> applyLandscapeConfig(String config) async {}
+  Future<LandscapeSource> applyLandscapeConfig(String config) async {
+    return LandscapeSource()..ensureUser();
+  }
+
   @override
   Future<SubscriptionInfo> applyProToken(String token) async {
     final info = SubscriptionInfo();

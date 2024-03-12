@@ -36,7 +36,7 @@ class MockUIClient extends UIClient {
   MockUIClient(super.channel);
 
   @override
-  ResponseFuture<Empty> applyLandscapeConfig(
+  ResponseFuture<LandscapeSource> applyLandscapeConfig(
     LandscapeConfig request, {
     CallOptions? options,
   }) {
@@ -49,7 +49,7 @@ class MockUIClient extends UIClient {
         ls.ensureUser();
       });
     }
-    return MockedResponse(Empty());
+    return MockedResponse(landscape);
   }
 
   @override
