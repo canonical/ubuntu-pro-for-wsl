@@ -103,7 +103,8 @@ class SubscribeNowPage extends StatelessWidget {
       create: (context) => SubscribeNowModel(client),
       child: SubscribeNowPage(
         onSubscriptionUpdate: (info) {
-          context.read<ValueNotifier<SubscriptionInfo>>().value = info;
+          final src = context.read<ValueNotifier<ConfigSources>>();
+          src.value.proSubscription = info;
           Wizard.of(context).next();
         },
       ),
