@@ -26,6 +26,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.2.0"
+  animated_vector:
+    dependency: transitive
+    description:
+      name: animated_vector
+      sha256: e15c6596549ca6e2e7491c11fbe168a1dead87475a828a4bc81cf104feca0432
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
+  animated_vector_annotations:
+    dependency: transitive
+    description:
+      name: animated_vector_annotations
+      sha256: baa6b4ed98407220f2c9634f7da3cfa5eedb46798e090466f441e666e2f7c8c0
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   archive:
     dependency: transitive
     description:
@@ -400,6 +416,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  image:
+    dependency: transitive
+    description:
+      name: image
+      sha256: "4c68bfd5ae83e700b5204c1e74451e7bf3cf750e6843c6e158289cf56bda018e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.7"
   integration_test:
     dependency: "direct dev"
     description: flutter
@@ -951,50 +975,34 @@ packages:
     dependency: "direct main"
     description:
       name: yaru
-      sha256: e9ccb22cb283ecf3f6b21d64dee9764d4abff65a44f48ce21aa13b9eae3e3be5
+      sha256: "15779218517af2e7cb1313f91afb8e71d68988cc18c23e6b3918b13605dc6d89"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
-  yaru_icons:
-    dependency: "direct main"
-    description:
-      name: yaru_icons
-      sha256: "2dff89ee31c2dd888e1ce146f0faef1c8de4ffbc90cb6466aacd55c3a9ad0674"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.0"
+    version: "4.0.0"
   yaru_test:
     dependency: "direct dev"
     description:
       name: yaru_test
-      sha256: a62539bd03465065e4067e1c88472d5789a7215bd4a0873f051abb7896ff0934
+      sha256: f6a4cb60706950fa09e6d86d4db0770432124ad7924f6220cc01c66bf6e45caa
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.5"
-  yaru_widgets:
-    dependency: "direct main"
-    description:
-      name: yaru_widgets
-      sha256: "730c1e46b8ccfe1a11602a2b5c1a09ceb84d85e5a45fa6a813f50fe8930629f2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.3.1"
+    version: "0.1.6"
   yaru_window:
     dependency: transitive
     description:
       name: yaru_window
-      sha256: "55c8f039d13aaa1b211a8cf0b7731ae2fdcac9b1be1e0994eb14ad1d17fecaf7"
+      sha256: c9d16f78962652ad71aa160ab0a1e2e5924359439303394f980fd00eefc905eb
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.3"
+    version: "0.2.1"
   yaru_window_linux:
     dependency: transitive
     description:
       name: yaru_window_linux
-      sha256: c45606cf75880ae6427bbe176dc5313356f16c876c7013a19aeee782882c40c2
+      sha256: "3676355492eba0461f03acf1b7420f7885982d1bffe113fccdca9415fbe39f5d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.3"
+    version: "0.2.0"
   yaru_window_manager:
     dependency: transitive
     description:

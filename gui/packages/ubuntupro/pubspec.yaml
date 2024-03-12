@@ -58,9 +58,7 @@ dependencies:
   url_launcher: ^6.2.4
   windows_single_instance: ^1.0.1
   wizard_router: ^1.2.0
-  yaru: ^1.2.2
-  yaru_icons: ^2.4.0
-  yaru_widgets: ^3.3.1
+  yaru: ^4.0.0
 
 dev_dependencies:
   build_runner: ^2.4.8
