@@ -91,7 +91,7 @@ func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.
 }
 
 // GetConfigSources handles the gRPC call to return the type of subscription and Landscape config sources.
-func (s *Service) GetConfigSources(ctx context.Context, empty *agentapi.Empty) (_ *agentapi.ConfigSources, err error) {
+func (s *Service) GetConfigSources(ctx context.Context, empty *agentapi.Empty) (*agentapi.ConfigSources, error) {
 	log.Info(ctx, "UI service: received GetConfigSources message")
 
 	subs, err := s.getSubscriptionSource()
@@ -108,9 +108,10 @@ func (s *Service) GetConfigSources(ctx context.Context, empty *agentapi.Empty) (
 		return nil, err
 	}
 
-	src := &agentapi.ConfigSources{}
-	src.LandscapeSource = landscape
-	src.ProSubscription = subs
+	src := &agentapi.ConfigSources{
+		LandscapeSource: landscape,
+		ProSubscription: subs,
+	}
 	log.Debugf(ctx, "UI service: responding GetConfigSources with %v", src)
 	return src, nil
 }
