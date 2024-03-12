@@ -12,13 +12,12 @@ class SubscribeNowModel {
   bool? _isPurchaseAllowed;
   SubscribeNowModel(this.client);
 
-  Future<SubscriptionInfo> applyProToken(ProToken token) async {
-    await client.applyProToken(token.value);
-    return client.subscriptionInfo();
+  Future<SubscriptionInfo> applyProToken(ProToken token) {
+    return client.applyProToken(token.value);
   }
 
   void launchProWebPage() {
-    launchUrl(Uri.parse('https://ubuntu.com/pro'));
+    launchUrl(Uri.https('ubuntu.com/pro'));
   }
 
   /// Triggers a purchase transaction via MS Store.

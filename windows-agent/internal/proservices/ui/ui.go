@@ -22,6 +22,7 @@ type Config interface {
 	SetStoreSubscription(ctx context.Context, token string) error
 	Subscription() (string, config.Source, error)
 	SetUserLandscapeConfig(ctx context.Context, token string) error
+	LandscapeClientConfig() (string, config.Source, error)
 }
 
 // Service it the UI GRPC service implementation.
@@ -72,7 +73,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 }
 
 // ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
-func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.Empty, error) {
+func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.LandscapeSource, error) {
 	c := landscapeConfig.GetConfig()
 
 	err := s.config.SetUserLandscapeConfig(ctx, c)
@@ -80,7 +81,13 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *age
 		return nil, err
 	}
 
-	return &agentapi.Empty{}, nil
+	landscape, err := s.getLandscapeConfigSource()
+	if err != nil {
+		err = fmt.Errorf("UI service: ApplyLandscapeConfig: %v", err)
+		log.Warningf(ctx, "%v", err)
+		return nil, err
+	}
+	return landscape, nil
 }
 
 // Ping replies a keep-alive request.
@@ -89,19 +96,30 @@ func (s *Service) Ping(ctx context.Context, request *agentapi.Empty) (*agentapi.
 	return request, nil
 }
 
-// GetSubscriptionInfo handles the gRPC call to return the type of subscription.
-func (s *Service) GetSubscriptionInfo(ctx context.Context, empty *agentapi.Empty) (_ *agentapi.SubscriptionInfo, err error) {
-	log.Info(ctx, "UI service: received GetSubscriptionInfo message")
+// GetConfigSources handles the gRPC call to return the type of subscription and Landscape config sources.
+func (s *Service) GetConfigSources(ctx context.Context, empty *agentapi.Empty) (*agentapi.ConfigSources, error) {
+	log.Info(ctx, "UI service: received GetConfigSources message")
 
-	info, err := s.getSubscriptionSource()
+	subs, err := s.getSubscriptionSource()
 	if err != nil {
-		err = fmt.Errorf("UI service: GetSubscriptionInfo: %v", err)
+		err = fmt.Errorf("UI service: GetConfigSources: %v", err)
 		log.Warningf(ctx, "%v", err)
 		return nil, err
 	}
 
-	log.Debugf(ctx, "UI service: responding GetSubscriptionInfo with %v", info)
-	return info, nil
+	landscape, err := s.getLandscapeConfigSource()
+	if err != nil {
+		err = fmt.Errorf("UI service: GetConfigSources: %v", err)
+		log.Warningf(ctx, "%v", err)
+		return nil, err
+	}
+
+	src := &agentapi.ConfigSources{
+		LandscapeSource: landscape,
+		ProSubscription: subs,
+	}
+	log.Debugf(ctx, "UI service: responding GetConfigSources with %v", src)
+	return src, nil
 }
 
 func (s *Service) getSubscriptionSource() (*agentapi.SubscriptionInfo, error) {
@@ -126,6 +144,28 @@ func (s *Service) getSubscriptionSource() (*agentapi.SubscriptionInfo, error) {
 	}
 
 	return info, nil
+}
+
+func (s *Service) getLandscapeConfigSource() (*agentapi.LandscapeSource, error) {
+	src := &agentapi.LandscapeSource{}
+
+	_, source, err := s.config.LandscapeClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	switch source {
+	case config.SourceNone:
+		src.LandscapeSourceType = &agentapi.LandscapeSource_None{}
+	case config.SourceUser:
+		src.LandscapeSourceType = &agentapi.LandscapeSource_User{}
+	case config.SourceRegistry:
+		src.LandscapeSourceType = &agentapi.LandscapeSource_Organization{}
+	default:
+		return nil, fmt.Errorf("unrecognized Landscape source: %d", source)
+	}
+
+	return src, nil
 }
 
 // NotifyPurchase handles the client notification of a successful purchase through MS Store.

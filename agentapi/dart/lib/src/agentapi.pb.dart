@@ -278,6 +278,175 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   Empty ensureMicrosoftStore() => $_ensure(4);
 }
 
+enum LandscapeSource_LandscapeSourceType {
+  none, 
+  user, 
+  organization, 
+  notSet
+}
+
+class LandscapeSource extends $pb.GeneratedMessage {
+  factory LandscapeSource({
+    Empty? none,
+    Empty? user,
+    Empty? organization,
+  }) {
+    final $result = create();
+    if (none != null) {
+      $result.none = none;
+    }
+    if (user != null) {
+      $result.user = user;
+    }
+    if (organization != null) {
+      $result.organization = organization;
+    }
+    return $result;
+  }
+  LandscapeSource._() : super();
+  factory LandscapeSource.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory LandscapeSource.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static const $core.Map<$core.int, LandscapeSource_LandscapeSourceType> _LandscapeSource_LandscapeSourceTypeByTag = {
+    1 : LandscapeSource_LandscapeSourceType.none,
+    2 : LandscapeSource_LandscapeSourceType.user,
+    3 : LandscapeSource_LandscapeSourceType.organization,
+    0 : LandscapeSource_LandscapeSourceType.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LandscapeSource', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..oo(0, [1, 2, 3])
+    ..aOM<Empty>(1, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
+    ..aOM<Empty>(2, _omitFieldNames ? '' : 'user', subBuilder: Empty.create)
+    ..aOM<Empty>(3, _omitFieldNames ? '' : 'organization', subBuilder: Empty.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  LandscapeSource clone() => LandscapeSource()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  LandscapeSource copyWith(void Function(LandscapeSource) updates) => super.copyWith((message) => updates(message as LandscapeSource)) as LandscapeSource;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LandscapeSource create() => LandscapeSource._();
+  LandscapeSource createEmptyInstance() => create();
+  static $pb.PbList<LandscapeSource> createRepeated() => $pb.PbList<LandscapeSource>();
+  @$core.pragma('dart2js:noInline')
+  static LandscapeSource getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LandscapeSource>(create);
+  static LandscapeSource? _defaultInstance;
+
+  LandscapeSource_LandscapeSourceType whichLandscapeSourceType() => _LandscapeSource_LandscapeSourceTypeByTag[$_whichOneof(0)]!;
+  void clearLandscapeSourceType() => clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  Empty get none => $_getN(0);
+  @$pb.TagNumber(1)
+  set none(Empty v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasNone() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNone() => clearField(1);
+  @$pb.TagNumber(1)
+  Empty ensureNone() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  Empty get user => $_getN(1);
+  @$pb.TagNumber(2)
+  set user(Empty v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasUser() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUser() => clearField(2);
+  @$pb.TagNumber(2)
+  Empty ensureUser() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  Empty get organization => $_getN(2);
+  @$pb.TagNumber(3)
+  set organization(Empty v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasOrganization() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOrganization() => clearField(3);
+  @$pb.TagNumber(3)
+  Empty ensureOrganization() => $_ensure(2);
+}
+
+class ConfigSources extends $pb.GeneratedMessage {
+  factory ConfigSources({
+    SubscriptionInfo? proSubscription,
+    LandscapeSource? landscapeSource,
+  }) {
+    final $result = create();
+    if (proSubscription != null) {
+      $result.proSubscription = proSubscription;
+    }
+    if (landscapeSource != null) {
+      $result.landscapeSource = landscapeSource;
+    }
+    return $result;
+  }
+  ConfigSources._() : super();
+  factory ConfigSources.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ConfigSources.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConfigSources', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..aOM<SubscriptionInfo>(1, _omitFieldNames ? '' : 'proSubscription', protoName: 'proSubscription', subBuilder: SubscriptionInfo.create)
+    ..aOM<LandscapeSource>(2, _omitFieldNames ? '' : 'landscapeSource', protoName: 'landscapeSource', subBuilder: LandscapeSource.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ConfigSources clone() => ConfigSources()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ConfigSources copyWith(void Function(ConfigSources) updates) => super.copyWith((message) => updates(message as ConfigSources)) as ConfigSources;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ConfigSources create() => ConfigSources._();
+  ConfigSources createEmptyInstance() => create();
+  static $pb.PbList<ConfigSources> createRepeated() => $pb.PbList<ConfigSources>();
+  @$core.pragma('dart2js:noInline')
+  static ConfigSources getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConfigSources>(create);
+  static ConfigSources? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  SubscriptionInfo get proSubscription => $_getN(0);
+  @$pb.TagNumber(1)
+  set proSubscription(SubscriptionInfo v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasProSubscription() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProSubscription() => clearField(1);
+  @$pb.TagNumber(1)
+  SubscriptionInfo ensureProSubscription() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  LandscapeSource get landscapeSource => $_getN(1);
+  @$pb.TagNumber(2)
+  set landscapeSource(LandscapeSource v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasLandscapeSource() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLandscapeSource() => clearField(2);
+  @$pb.TagNumber(2)
+  LandscapeSource ensureLandscapeSource() => $_ensure(1);
+}
+
 class DistroInfo extends $pb.GeneratedMessage {
   factory DistroInfo({
     $core.String? wslName,

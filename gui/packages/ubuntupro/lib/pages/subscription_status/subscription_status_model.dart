@@ -5,24 +5,30 @@ import '/core/agent_api_client.dart';
 
 /// A base class for the view-models that may represent different types of subscriptions and the optional actions they allow.
 sealed class SubscriptionStatusModel {
-  /// Returns the appropriate view-model subclass based on the SubscriptionInfo that was passed.
+  /// Returns the appropriate view-model subclass based on the subscription source type that was passed.
   factory SubscriptionStatusModel(
-    SubscriptionInfo info,
+    ConfigSources src,
     AgentApiClient client,
   ) {
+    final info = src.proSubscription;
     switch (info.whichSubscriptionType()) {
       case SubscriptionType.organization:
-        return OrgSubscriptionStatusModel();
+        return OrgSubscriptionStatusModel(src);
       case SubscriptionType.user:
-        return UserSubscriptionStatusModel(client);
+        return UserSubscriptionStatusModel(src, client);
       case SubscriptionType.microsoftStore:
-        return StoreSubscriptionStatusModel(info.productId);
+        return StoreSubscriptionStatusModel(src, info.productId);
       case SubscriptionType.none:
       case SubscriptionType.notSet:
         throw UnimplementedError('Unknown subscription type');
     }
   }
-  SubscriptionStatusModel._();
+
+  SubscriptionStatusModel._(ConfigSources src)
+      : _canConfigureLandscape = !src.landscapeSource.hasOrganization();
+
+  final bool _canConfigureLandscape;
+  bool get canConfigureLandscape => _canConfigureLandscape;
 }
 
 /// Represents an active subscription through Microsoft Store.
@@ -31,7 +37,7 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
   @visibleForTesting
   final Uri uri;
 
-  StoreSubscriptionStatusModel(String productID)
+  StoreSubscriptionStatusModel(super.src, String productID)
       : uri = Uri.https(
           'account.microsoft.com',
           '/services/${productID.toLowerCase()}/details#billing',
@@ -45,7 +51,7 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
 /// Represents a subscription in which the user manually provided the Pro token.
 /// The only action supported is Pro-detaching all instances.
 class UserSubscriptionStatusModel extends SubscriptionStatusModel {
-  UserSubscriptionStatusModel(this._client) : super._();
+  UserSubscriptionStatusModel(super.src, this._client) : super._();
 
   final AgentApiClient _client;
 
@@ -56,5 +62,5 @@ class UserSubscriptionStatusModel extends SubscriptionStatusModel {
 /// Represents a subscription provided by the user's Organization.
 /// There is no action supported.
 class OrgSubscriptionStatusModel extends SubscriptionStatusModel {
-  OrgSubscriptionStatusModel() : super._();
+  OrgSubscriptionStatusModel(super.src) : super._();
 }

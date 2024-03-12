@@ -12,55 +12,103 @@ import 'package:wizard_router/wizard_router.dart';
 import '../../utils/build_multiprovider_app.dart';
 
 void main() {
-  group('subscription info', () {
+  group('subscription info:', () {
     final client = FakeAgentApiClient();
     registerServiceInstance<AgentApiClient>(client);
     final info = SubscriptionInfo();
-    testWidgets('user', (tester) async {
-      info.ensureUser();
-      final app = buildApp(info, client);
+    group('org landscape:', () {
+      final landscape = LandscapeSource()..ensureOrganization();
+      testWidgets('user', (tester) async {
+        info.ensureUser();
+        final app = buildApp(info, landscape, client);
 
-      await tester.pumpWidget(app);
+        await tester.pumpWidget(app);
 
-      final context = tester.element(find.byType(SubscriptionStatusPage));
-      final lang = AppLocalizations.of(context);
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
 
-      expect(find.text(lang.detachPro), findsOneWidget);
+        expect(find.text(lang.detachPro), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsNothing);
+      });
+
+      testWidgets('store', (tester) async {
+        info.ensureMicrosoftStore();
+        final app = buildApp(info, landscape, client);
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsNothing);
+      });
+
+      testWidgets('organization', (tester) async {
+        info.ensureOrganization();
+        final app = buildApp(info, landscape, client);
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsNothing);
+      });
     });
+    group('landscape:', () {
+      testWidgets('user', (tester) async {
+        final landscape = LandscapeSource()..ensureNone();
+        info.ensureUser();
+        final app = buildApp(info, landscape, client);
 
-    testWidgets('store', (tester) async {
-      info.ensureMicrosoftStore();
-      final app = buildApp(info, client);
+        await tester.pumpWidget(app);
 
-      await tester.pumpWidget(app);
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
 
-      final context = tester.element(find.byType(SubscriptionStatusPage));
-      final lang = AppLocalizations.of(context);
+        expect(find.text(lang.detachPro), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
+      });
 
-      expect(find.text(lang.manageSubscription), findsOneWidget);
-    });
+      testWidgets('store', (tester) async {
+        final landscape = LandscapeSource()..ensureUser();
+        info.ensureMicrosoftStore();
+        final app = buildApp(info, landscape, client);
 
-    testWidgets('organization', (tester) async {
-      info.ensureOrganization();
-      final app = buildApp(info, client);
+        await tester.pumpWidget(app);
 
-      await tester.pumpWidget(app);
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
 
-      final context = tester.element(find.byType(SubscriptionStatusPage));
-      final lang = AppLocalizations.of(context);
+        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
+      });
 
-      expect(find.text(lang.orgManaged), findsOneWidget);
+      testWidgets('organization', (tester) async {
+        final landscape = LandscapeSource();
+        info.ensureOrganization();
+        final app = buildApp(info, landscape, client);
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
+      });
     });
   });
   testWidgets('creates a model', (tester) async {
-    final info = ValueNotifier(SubscriptionInfo());
-    info.value.ensureUser();
-
     final app = buildMultiProviderWizardApp(
       routes: {'/': const WizardRoute(builder: SubscriptionStatusPage.create)},
       providers: [
-        ChangeNotifierProvider.value(
-          value: info,
+        ChangeNotifierProvider(
+          create: (_) => ValueNotifier(
+            ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
+          ),
         ),
       ],
     );
@@ -160,12 +208,24 @@ void main() {
   });
 }
 
-Widget buildApp(SubscriptionInfo info, AgentApiClient client) {
-  final model = SubscriptionStatusModel(info, client);
-  return buildSingleRouteMultiProviderApp(
-    child: const SubscriptionStatusPage(),
+Widget buildApp(
+  SubscriptionInfo info,
+  LandscapeSource landscape,
+  AgentApiClient client,
+) {
+  return buildMultiProviderWizardApp(
+    routes: {
+      '/': WizardRoute(
+        builder: (_) => const SubscriptionStatusPage(),
+      ),
+    },
     providers: [
-      Provider.value(value: model),
+      Provider(
+        create: (_) => SubscriptionStatusModel(
+          ConfigSources(proSubscription: info, landscapeSource: landscape),
+          client,
+        ),
+      ),
     ],
   );
 }
@@ -175,7 +235,9 @@ Widget buildWizardApp(Map<String, WizardRoute> routes) {
     routes: routes,
     providers: [
       ChangeNotifierProvider(
-        create: (_) => ValueNotifier(SubscriptionInfo()..ensureUser()),
+        create: (_) => ValueNotifier(
+          ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
+        ),
       ),
     ],
   );
@@ -183,7 +245,10 @@ Widget buildWizardApp(Map<String, WizardRoute> routes) {
 
 class FakeAgentApiClient extends Fake implements AgentApiClient {
   @override
-  Future<void> applyLandscapeConfig(String config) async {}
+  Future<LandscapeSource> applyLandscapeConfig(String config) async {
+    return LandscapeSource()..ensureUser();
+  }
+
   @override
   Future<SubscriptionInfo> applyProToken(String token) async {
     final info = SubscriptionInfo();

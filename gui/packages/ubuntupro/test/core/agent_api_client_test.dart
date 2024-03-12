@@ -23,13 +23,19 @@ void main() {
     });
 
     test('no subscription info', () async {
-      final info = await client.subscriptionInfo();
+      final src = await client.configSources();
+      final info = src.proSubscription;
       expect(info.productId, isEmpty);
       expect(info.whichSubscriptionType(), SubscriptionType.none);
+      expect(
+        src.landscapeSource.whichLandscapeSourceType(),
+        LandscapeSourceType.none,
+      );
     });
     test('pro attach user subscription', () async {
       await client.applyProToken('C123');
-      final info = await client.subscriptionInfo();
+      final src = await client.configSources();
+      final info = src.proSubscription;
 
       expect(info.productId, isEmpty);
       expect(info.whichSubscriptionType(), SubscriptionType.user);
@@ -43,9 +49,11 @@ void main() {
     });
 
     test('setting landscape config succeeds', () async {
-      await expectLater(
-        () async => await client.applyLandscapeConfig('test config'),
-        returnsNormally,
+      await client.applyLandscapeConfig('test config');
+      final src = await client.configSources();
+      expect(
+        src.landscapeSource.whichLandscapeSourceType(),
+        LandscapeSourceType.user,
       );
     });
 

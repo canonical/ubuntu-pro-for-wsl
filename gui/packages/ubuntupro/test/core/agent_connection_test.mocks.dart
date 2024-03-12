@@ -56,6 +56,27 @@ class _FakeSubscriptionInfo_2 extends _i1.SmartFake
         );
 }
 
+class _FakeLandscapeSource_3 extends _i1.SmartFake
+    implements _i3.LandscapeSource {
+  _FakeLandscapeSource_3(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeConfigSources_4 extends _i1.SmartFake implements _i3.ConfigSources {
+  _FakeConfigSources_4(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [AgentStartupMonitor].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -181,14 +202,21 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
       ) as _i5.Future<_i3.SubscriptionInfo>);
 
   @override
-  _i5.Future<void> applyLandscapeConfig(String? config) => (super.noSuchMethod(
+  _i5.Future<_i3.LandscapeSource> applyLandscapeConfig(String? config) =>
+      (super.noSuchMethod(
         Invocation.method(
           #applyLandscapeConfig,
           [config],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue:
+            _i5.Future<_i3.LandscapeSource>.value(_FakeLandscapeSource_3(
+          this,
+          Invocation.method(
+            #applyLandscapeConfig,
+            [config],
+          ),
+        )),
+      ) as _i5.Future<_i3.LandscapeSource>);
 
   @override
   _i5.Future<bool> ping() => (super.noSuchMethod(
@@ -200,20 +228,19 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
       ) as _i5.Future<bool>);
 
   @override
-  _i5.Future<_i3.SubscriptionInfo> subscriptionInfo() => (super.noSuchMethod(
+  _i5.Future<_i3.ConfigSources> configSources() => (super.noSuchMethod(
         Invocation.method(
-          #subscriptionInfo,
+          #configSources,
           [],
         ),
-        returnValue:
-            _i5.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_2(
+        returnValue: _i5.Future<_i3.ConfigSources>.value(_FakeConfigSources_4(
           this,
           Invocation.method(
-            #subscriptionInfo,
+            #configSources,
             [],
           ),
         )),
-      ) as _i5.Future<_i3.SubscriptionInfo>);
+      ) as _i5.Future<_i3.ConfigSources>);
 
   @override
   _i5.Future<_i3.SubscriptionInfo> notifyPurchase() => (super.noSuchMethod(

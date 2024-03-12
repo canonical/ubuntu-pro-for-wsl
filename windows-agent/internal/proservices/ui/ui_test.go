@@ -123,27 +123,39 @@ func TestAttachPro(t *testing.T) {
 }
 
 var (
-	none         = &agentapi.SubscriptionInfo_None{}
-	user         = &agentapi.SubscriptionInfo_User{}
-	organization = &agentapi.SubscriptionInfo_Organization{}
-	store        = &agentapi.SubscriptionInfo_MicrosoftStore{}
+	subsNone         = &agentapi.SubscriptionInfo_None{}
+	subsOrganization = &agentapi.SubscriptionInfo_Organization{}
+	subsUser         = &agentapi.SubscriptionInfo_User{}
+	subsStore        = &agentapi.SubscriptionInfo_MicrosoftStore{}
 )
 
-func TestGetSubscriptionInfo(t *testing.T) {
+var (
+	lsNone         = &agentapi.LandscapeSource_None{}
+	lsOrganization = &agentapi.LandscapeSource_Organization{}
+	lsUser         = &agentapi.LandscapeSource_User{}
+)
+
+func TestGetConfigSources(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
 		config mockConfig
 
-		wantType      interface{}
-		wantImmutable bool
-		wantErr       bool
+		wantSubscriptionType interface{}
+		wantLandscapeType    interface{}
+		wantErr              bool
 	}{
-		"Success with a non-subscription":                 {config: mockConfig{source: config.SourceNone}, wantType: none},
-		"Success with an organization subscription":       {config: mockConfig{source: config.SourceRegistry}, wantType: organization},
-		"Success with a user subscription":                {config: mockConfig{source: config.SourceUser}, wantType: user},
-		"Success with a store subscription":               {config: mockConfig{source: config.SourceMicrosoftStore}, wantType: store},
-		"Error when the subscription cannot be retrieved": {config: mockConfig{subscriptionErr: true}, wantErr: true},
+		"Success with no config": {config: mockConfig{}, wantSubscriptionType: subsNone, wantLandscapeType: lsNone},
+
+		"Success with an organization subscription": {config: mockConfig{proSource: config.SourceRegistry}, wantSubscriptionType: subsOrganization, wantLandscapeType: lsNone},
+		"Success with a user subscription":          {config: mockConfig{proSource: config.SourceUser}, wantSubscriptionType: subsUser, wantLandscapeType: lsNone},
+		"Success with a store subscription":         {config: mockConfig{proSource: config.SourceMicrosoftStore}, wantSubscriptionType: subsStore, wantLandscapeType: lsNone},
+
+		"Success with a user Landscape source":          {config: mockConfig{landscapeSource: config.SourceUser}, wantSubscriptionType: subsNone, wantLandscapeType: lsUser},
+		"Success with an organization Landscape source": {config: mockConfig{landscapeSource: config.SourceRegistry}, wantSubscriptionType: subsNone, wantLandscapeType: lsOrganization},
+
+		"Error when the subscription cannot be retrieved":     {config: mockConfig{subscriptionErr: true}, wantErr: true},
+		"Error when the Landscape source cannot be retrieved": {config: mockConfig{landscapeErr: true}, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -157,14 +169,18 @@ func TestGetSubscriptionInfo(t *testing.T) {
 			config := tc.config
 			service := ui.New(ctx, &config, db)
 
-			info, err := service.GetSubscriptionInfo(ctx, &agentapi.Empty{})
+			src, err := service.GetConfigSources(ctx, &agentapi.Empty{})
 			if tc.wantErr {
-				require.Error(t, err, "GetSubscriptionInfo should return an error")
+				require.Error(t, err, "GetConfigSources should return an error")
 				return
 			}
-			require.NoError(t, err, "GetSubscriptionInfo should return no errors")
+			require.NoError(t, err, "GetConfigSources should return no errors")
 
-			require.IsType(t, tc.wantType, info.GetSubscriptionType(), "Mismatched subscription types")
+			info := src.GetProSubscription()
+			require.IsType(t, tc.wantSubscriptionType, info.GetSubscriptionType(), "Mismatched subscription types")
+
+			l := src.GetLandscapeSource()
+			require.IsType(t, tc.wantLandscapeType, l.GetLandscapeSourceType(), "Mismatched Landscape source types")
 		})
 	}
 }
@@ -181,11 +197,11 @@ func TestNotifyPurchase(t *testing.T) {
 		wantImmutable bool
 		wantErr       bool
 	}{
-		"Success with a non-subscription":            {wantType: store},
-		"Success with an existing user subscription": {haveUserToken: true, wantType: store},
+		"Success with a non-subscription":            {wantType: subsStore},
+		"Success with an existing user subscription": {haveUserToken: true, wantType: subsStore},
 
-		"Error when FetchMicrosoftStoreSubscription returns an error": {breakConfig: true, wantType: none, wantErr: true},
-		"Error when the subscription source is unknown":               {breakConfigSource: true, wantType: none, wantErr: true},
+		"Error when FetchMicrosoftStoreSubscription returns an error": {breakConfig: true, wantType: subsNone, wantErr: true},
+		"Error when the subscription source is unknown":               {breakConfigSource: true, wantType: subsNone, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -206,7 +222,7 @@ func TestNotifyPurchase(t *testing.T) {
 			}
 			if tc.haveUserToken {
 				conf.token = "USER_TOKEN"
-				conf.source = config.SourceUser
+				conf.proSource = config.SourceUser
 			}
 
 			service := ui.New(ctx, conf, db, opts...)
@@ -227,12 +243,17 @@ func TestApplyLandscapeConfig(t *testing.T) {
 
 	testCases := map[string]struct {
 		setUserLandscapeConfigErr bool
+		landscapeSource           config.Source
+		returnBadSource           bool
 
 		wantErr bool
+		want    interface{}
 	}{
-		"Success": {},
+		"Success": {want: lsUser},
 
-		"Error when setting the config returns error": {setUserLandscapeConfigErr: true, wantErr: true},
+		"Error when setting the config returns error":  {setUserLandscapeConfigErr: true, wantErr: true},
+		"Error when attempting to override org config": {landscapeSource: config.SourceRegistry, wantErr: true},
+		"Error when Landscape source is incoherent":    {returnBadSource: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -250,6 +271,8 @@ func TestApplyLandscapeConfig(t *testing.T) {
 
 			conf := &mockConfig{
 				setUserLandscapeConfigErr: tc.setUserLandscapeConfigErr,
+				landscapeSource:           tc.landscapeSource,
+				returnBadSource:           tc.returnBadSource,
 			}
 
 			uiService := ui.New(context.Background(), conf, db)
@@ -265,7 +288,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			}
 			require.NoError(t, err, "ApplyLandscapeConfig should return no errors")
 
-			require.NotNil(t, got, "ApplyLandscapeConfig should not return a nil ageEmpty")
+			require.IsType(t, tc.want, got.GetLandscapeSourceType(), "Mismatched Landscape source types")
 			require.Equal(t, landscapeConfig, conf.gotLandscapeConfig, "Config received unexpected Landscape config")
 		})
 	}
@@ -275,9 +298,11 @@ type mockConfig struct {
 	setUserSubscriptionErr    bool // Config errors out in SetUserSubscription function
 	subscriptionErr           bool // Config errors out in Subscription function
 	setUserLandscapeConfigErr bool // Config errors out in SetUserLandscapeConfig function
+	landscapeErr              bool // Config errors out in LandscapeClientConfig function
 
-	token  string        // stores the configured Pro token
-	source config.Source // stores the configured subscription source.
+	token           string        // stores the configured Pro token
+	proSource       config.Source // stores the configured subscription source.
+	landscapeSource config.Source // stores the configured landscape source.
 
 	returnBadSource    bool
 	gotLandscapeConfig string
@@ -288,13 +313,13 @@ func (m *mockConfig) SetUserSubscription(ctx context.Context, token string) erro
 		return errors.New("SetUserSubscription: mock error")
 	}
 	m.token = token
-	m.source = config.SourceUser
+	m.proSource = config.SourceUser
 	return nil
 }
 
 func (m *mockConfig) SetStoreSubscription(ctx context.Context, token string) error {
 	m.token = token
-	m.source = config.SourceMicrosoftStore
+	m.proSource = config.SourceMicrosoftStore
 	return nil
 }
 
@@ -303,7 +328,12 @@ func (m *mockConfig) SetUserLandscapeConfig(ctx context.Context, landscapeConfig
 		return errors.New("mock error")
 	}
 
+	if m.landscapeSource == config.SourceRegistry {
+		return errors.New("mock error cannot overwrite organization's configuration data")
+	}
+
 	m.gotLandscapeConfig = landscapeConfig
+	m.landscapeSource = config.SourceUser
 
 	return nil
 }
@@ -315,7 +345,17 @@ func (m mockConfig) Subscription() (string, config.Source, error) {
 	if m.returnBadSource {
 		return "", config.Source(100000), nil
 	}
-	return m.token, m.source, nil
+	return m.token, m.proSource, nil
+}
+
+func (m mockConfig) LandscapeClientConfig() (string, config.Source, error) {
+	if m.landscapeErr {
+		return "", config.SourceNone, errors.New("LandscapeClientConfig error")
+	}
+	if m.returnBadSource {
+		return "", config.Source(100000), nil
+	}
+	return "[host]", m.landscapeSource, nil
 }
 
 //nolint:revive // Testing t comes before the context.

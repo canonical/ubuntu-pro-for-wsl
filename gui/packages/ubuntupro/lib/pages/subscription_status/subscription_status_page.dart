@@ -26,17 +26,7 @@ class SubscriptionStatusPage extends StatelessWidget {
         StoreSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.storeManaged,
             actionButtons: [
-              OutlinedButton(
-                onPressed: () async {
-                  if (context.mounted) {
-                    await Wizard.of(context).next();
-                  }
-                },
-                child: Text(lang.landscapeConfigureButton),
-              ),
-              const SizedBox(
-                width: 16.0,
-              ),
+              if (model.canConfigureLandscape) _landscapeButton(context),
               OutlinedButton(
                 onPressed: model.launchManagementWebPage,
                 child: Text(lang.manageSubscription),
@@ -48,17 +38,7 @@ class SubscriptionStatusPage extends StatelessWidget {
               '[ubuntu.com/pro/dashboard](https://ubuntu.com/pro/dashboard)',
             ),
             actionButtons: [
-              OutlinedButton(
-                onPressed: () async {
-                  if (context.mounted) {
-                    await Wizard.of(context).next();
-                  }
-                },
-                child: Text(lang.landscapeConfigureButton),
-              ),
-              const SizedBox(
-                width: 16.0,
-              ),
+              if (model.canConfigureLandscape) _landscapeButton(context),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: YaruColors.red,
@@ -82,18 +62,31 @@ class SubscriptionStatusPage extends StatelessWidget {
           ),
         OrgSubscriptionStatusModel() => SubscriptionStatus(
             caption: lang.orgManaged,
+            actionButtons: model.canConfigureLandscape
+                ? [_landscapeButton(context)]
+                : null,
           ),
       },
+    );
+  }
+
+  Widget _landscapeButton(BuildContext context) {
+    final lang = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: OutlinedButton(
+        onPressed: Wizard.of(context).next,
+        child: Text(lang.landscapeConfigureButton),
+      ),
     );
   }
 
   /// Initializes the view-model and inject it in the widget tree so the child page can access it via the BuildContext.
   static Widget create(BuildContext context) {
     final client = getService<AgentApiClient>();
-    return ProxyProvider<ValueNotifier<SubscriptionInfo>,
-        SubscriptionStatusModel>(
-      update: (context, subscriptionInfo, _) =>
-          SubscriptionStatusModel(subscriptionInfo.value, client),
+    return ProxyProvider<ValueNotifier<ConfigSources>, SubscriptionStatusModel>(
+      update: (context, src, _) => SubscriptionStatusModel(src.value, client),
       child: const SubscriptionStatusPage(),
     );
   }
