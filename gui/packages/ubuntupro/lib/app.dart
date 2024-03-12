@@ -26,7 +26,7 @@ class Pro4WSLApp extends StatelessWidget {
         return MultiProvider(
           providers: [
             ChangeNotifierProvider(
-              create: (_) => ValueNotifier(SubscriptionInfo()),
+              create: (_) => ValueNotifier(ConfigSources()),
             ),
             ChangeNotifierProvider(
               create: (_) => AgentConnection(agentMonitor),
@@ -49,20 +49,29 @@ class Pro4WSLApp extends StatelessWidget {
                       child: const StartupPage(),
                     ),
                     onReplace: (_) async {
-                      final subscriptionInfo =
-                          context.read<ValueNotifier<SubscriptionInfo>>();
+                      final src = context.read<ValueNotifier<ConfigSources>>();
                       final client = getService<AgentApiClient>();
-                      subscriptionInfo.value = await client.subscriptionInfo();
+                      src.value = await client.configSources();
 
-                      if (subscriptionInfo.value.whichSubscriptionType() !=
-                          SubscriptionType.none) {
+                      final subs = src.value.proSubscription;
+                      if (!subs.hasNone()) {
                         return Routes.subscriptionStatus;
                       }
                       return null;
                     },
                   ),
-                  Routes.subscribeNow:
-                      const WizardRoute(builder: SubscribeNowPage.create),
+                  Routes.subscribeNow: WizardRoute(
+                    builder: SubscribeNowPage.create,
+                    onNext: (_) {
+                      final src = context.read<ValueNotifier<ConfigSources>>();
+                      final landscape = src.value.landscapeSource;
+                      if (landscape.hasOrganization()) {
+                        // skip configuring Landscape.
+                        return Routes.subscriptionStatus;
+                      }
+                      return null;
+                    },
+                  ),
                   Routes.configureLandscape:
                       const WizardRoute(builder: LandscapePage.create),
                   Routes.subscriptionStatus: WizardRoute(
