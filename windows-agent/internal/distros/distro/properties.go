@@ -33,7 +33,6 @@ type Properties struct {
 }
 
 // isValid checks that the properties against the registry.
-// TODO: check all calls for isValid(), and if when !ok -> return error in the caller, just returns an error.
 func (id identity) isValid() (ok bool) {
 	distro := wsl.NewDistro(id.ctx, id.Name)
 
