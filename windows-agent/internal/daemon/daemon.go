@@ -49,8 +49,7 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 
 	wslIP, err := getWslIP()
 	if err != nil {
-		log.Warningf(ctx, "Daemon: serving on all interfaces because we could not get the WSL adapter IP: %v", err)
-		wslIP = net.IPv4zero
+		return fmt.Errorf("could not get the WSL adapter IP: %v", err)
 	}
 
 	var cfg net.ListenConfig

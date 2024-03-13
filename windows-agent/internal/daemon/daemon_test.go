@@ -149,46 +149,31 @@ func TestServeNoWSLIP(t *testing.T) {
 	// affects the behavior of the getWslIP function.
 	daemon.SetWslIPErr(t)
 
-	ctx := context.Background()
 	addrDir := t.TempDir()
 
 	registerer := func(context.Context) *grpc.Server {
-		server := grpc.NewServer()
-		var service testGRPCService
-		grpctestservice.RegisterTestServiceServer(server, service)
-		return server
+		return grpc.NewServer()
 	}
+
+	// Very lenient timeout because we expect the Serve to fail immediately.
+	// If it doesn't, the test will fail due to the context timeout (otherwise
+	// it would hang indefinitely).
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
 
 	d := daemon.New(ctx, registerer, addrDir)
 	defer d.Quit(ctx, false)
 
-	serveCh := make(chan error)
-	go func() {
-		serveCh <- d.Serve(ctx)
-		close(serveCh)
-	}()
+	err := d.Serve(ctx)
+	require.Error(t, err, "Serve should fail when the WSL IP cannot be found")
 
-	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
-	require.Eventually(t, func() bool {
-		if _, err := os.Stat(addrPath); err != nil {
-			return false
-		}
-		return true
-	}, 30*time.Second, time.Second, "Address file should be written even if WSL IP could not be found")
-
-	addr, err := os.ReadFile(addrPath)
-	require.NoError(t, err, "Address file should be readable")
-
-	closeConn := grpcPersistentCall(t, string(addr))
-
-	// Let connection exist for a while
-	time.Sleep(time.Second)
-
-	code := closeConn()
-	require.Equal(t, codes.Canceled, code, "GRPC call should return %s, instead returned %s", codes.Canceled, code)
-
-	d.Quit(ctx, true)
-	require.NoError(t, <-serveCh, "Serve should return no error when stopped normally")
+	select {
+	case <-ctx.Done():
+		// Most likely, Serve did not fail and instead started serving,
+		// only to be stopped by the test timeout.
+		require.Fail(t, "Serve should have failed immediately")
+	default:
+	}
 }
 
 func TestServeError(t *testing.T) {
