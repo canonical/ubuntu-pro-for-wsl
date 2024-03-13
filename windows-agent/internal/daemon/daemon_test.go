@@ -144,6 +144,46 @@ func TestStartQuit(t *testing.T) {
 	}
 }
 
+func TestServeNoWSLIP(t *testing.T) {
+	// This test is not parallel because it modifies a global flag that
+	// affects the behavior of the getWslIP function.
+	daemon.SetWslIPErr(t)
+
+	ctx := context.Background()
+	addrDir := t.TempDir()
+
+	registerer := func(context.Context) *grpc.Server {
+		server := grpc.NewServer()
+		var service testGRPCService
+		grpctestservice.RegisterTestServiceServer(server, service)
+		return server
+	}
+
+	d := daemon.New(ctx, registerer, addrDir)
+	defer d.Quit(ctx, false)
+
+	go func() { _ = d.Serve(ctx) }()
+
+	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+	require.Eventually(t, func() bool {
+		if _, err := os.Stat(addrPath); err != nil {
+			return false
+		}
+		return true
+	}, 30*time.Second, time.Second, "Address file should be written even if WSL IP could not be found")
+
+	addr, err := os.ReadFile(addrPath)
+	require.NoError(t, err, "Address file should be readable")
+
+	closeConn := grpcPersistentCall(t, string(addr))
+
+	// Let connection exist for a while
+	time.Sleep(time.Second)
+
+	code := closeConn()
+	require.Equal(t, codes.Canceled, code, "GRPC call should return %s, instead returned %s", codes.Canceled, code)
+}
+
 func TestServeError(t *testing.T) {
 	t.Parallel()
 
