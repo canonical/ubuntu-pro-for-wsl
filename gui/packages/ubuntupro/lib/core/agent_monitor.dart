@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
-import '/constants.dart';
 import 'agent_api_client.dart';
 import 'agent_api_paths.dart';
 
@@ -131,7 +130,7 @@ class AgentStartupMonitor {
       final portResult = await readAgentPortFromFile(_addrFilePath!);
       st = await portResult.fold(
         ifLeft: _onAddrError,
-        ifRight: _onPort,
+        ifRight: _onAddress,
       );
       yield st;
     }
@@ -167,13 +166,15 @@ class AgentStartupMonitor {
     }
   }
 
-  Future<AgentState> _onPort(int port) async {
+  Future<AgentState> _onAddress((String, int) address) async {
+    final (host, port) = address;
+
     if (_agentApiClient != null) {
-      await _agentApiClient!.connectTo(host: kDefaultHost, port: port);
+      await _agentApiClient!.connectTo(host: host, port: port);
       return AgentState.ok;
     }
 
-    final client = clientFactory(kDefaultHost, port);
+    final client = clientFactory(host, port);
     if (await client.ping()) {
       _agentApiClient = client;
       for (final cb in _onClient) {
