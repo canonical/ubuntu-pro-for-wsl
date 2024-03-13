@@ -2,6 +2,7 @@ package distro
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -36,22 +37,17 @@ type Properties struct {
 func (id identity) isValid() (ok bool) {
 	distro := wsl.NewDistro(id.ctx, id.Name)
 
-	// Ensuring distro still exists.
-	registered, err := distro.IsRegistered()
-	if err != nil {
-		panic(fmt.Errorf("could not access the registry: %v", err))
-	}
-	if !registered {
+	inRegistry, err := distro.GUID()
+	if errors.Is(err, wsl.ErrNotExist) {
+		// Distro was not registered
 		return false
+	} else if err != nil {
+		// Registry inaccessible
+		panic(fmt.Errorf("could not access the Windows Registry: %v", err))
 	}
 
-	// Ensuring it has not been unregistered and re-registered again.
-	inProperties := id.GUID
-	inRegistry, err := distro.GUID()
-	if err != nil {
-		panic(fmt.Errorf("could not access the registry: %v", err))
-	}
-	if inProperties != inRegistry {
+	if id.GUID != inRegistry {
+		// Distro was unregistered and re-registered
 		return false
 	}
 
