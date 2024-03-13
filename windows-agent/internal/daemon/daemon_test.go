@@ -162,7 +162,11 @@ func TestServeNoWSLIP(t *testing.T) {
 	d := daemon.New(ctx, registerer, addrDir)
 	defer d.Quit(ctx, false)
 
-	go func() { _ = d.Serve(ctx) }()
+	serveCh := make(chan error)
+	go func() {
+		serveCh <- d.Serve(ctx)
+		close(serveCh)
+	}()
 
 	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
 	require.Eventually(t, func() bool {
@@ -182,6 +186,9 @@ func TestServeNoWSLIP(t *testing.T) {
 
 	code := closeConn()
 	require.Equal(t, codes.Canceled, code, "GRPC call should return %s, instead returned %s", codes.Canceled, code)
+
+	d.Quit(ctx, true)
+	require.NoError(t, <-serveCh, "Serve should return no error when stopped normally")
 }
 
 func TestServeError(t *testing.T) {
