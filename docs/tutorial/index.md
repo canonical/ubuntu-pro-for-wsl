@@ -60,6 +60,7 @@ All set. From now on you can use it to launch  WSL instances.
 
 ### Install the `Ubuntu 22.04 LTS` and `Ubuntu (Preview)` applications
 
+(ref::backup-warning)=
 ```{warning}
 **If you already have them pre-installed:** 
 
@@ -558,7 +559,46 @@ Congratulations -- now that UP4W has removed all the pro-attachment and Landscap
 
 ## Tear things down
 
-[TO BE ADDED]
+### Uninstall UP4W
+
+In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right-click on it, then select "Uninstall".
+
+![Uninstall Ubuntu Pro for WSL](./assets/start-menu-uninstall.png)
+
+% Skipping the registry clean-up because we'll use the GUI instead of the registry.%
+
+Additionally remove the `.ubuntupro` directory from your Windows user profile directory.
+
+```powershell
+PS C:\Users\me\tutorial> Remove-Item -Recurse -Force C:\Users\me\.ubuntupro
+```
+
+### Remove the Ubuntu WSL apps
+
+```{warning}
+**If you already have them pre-installed:**
+
+Refer to the [backup instructions](ref::backup-warning) to restore your pre-existing instances.
+
+Otherwise, proceed with the commands below.
+```
+
+In PowerShell run the following command to stop WSL:
+
+```powershell
+PS C:\Users\me\tutorial> wsl --shutdown
+```
+
+Then, in the Windows Start Menu, locate the "Ubuntu 22.04 LTS" application, right-click on it, and select "Uninstall",
+as done with UP4W. Do the same for the "Ubuntu (Preview)" and "Ubuntu" applications.
+
+The instances will be removed automatically.
+
+### Optionally remove the WSL application
+
+Only do this if you don't need WSL in this Windows machine for any other reason.
+
+As before, in the Windows Start Menu, locate the "WSL" application, right-click on it, and select "Uninstall".
 
 ## Next steps
 
