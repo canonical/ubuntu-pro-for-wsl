@@ -397,11 +397,11 @@ func TestLandscapeEnable(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success":                                    {},
-		"Success overriding computer_title":          {},
-		"Success when empty tags are present":        {},
-		"Success when custom tags are present":       {},
-		"Success overriding the SSL certficate path": {},
+		"Success":                                                     {},
+		"Success overriding computer_title":                           {},
+		"Success overriding the SSL certficate path":                  {},
+		"Do not append wsl tag when config tag is provided":           {},
+		"Do not append wsl tag when config tag is provided but empty": {},
 
 		"Error when the file cannot be parsed":                   {wantErr: true},
 		"Error when the config file cannot be written":           {breakWriteConfig: true, wantErr: true},
