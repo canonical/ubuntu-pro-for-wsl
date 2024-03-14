@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/canonical/ubuntu-pro-for-wsl/common"
 )
 
 func locateStoreDll() (string, error) {
@@ -63,7 +61,7 @@ func locateStoreDllAppx() (path string, err error) {
 // locateStoreDll when running tests. Tests are run at the path of the testfile, so we know that
 // the repo root is above the CWD.
 func locateStoreDllRepo(path string) (string, error) {
-	repoRoot, err := common.FindWorkspaceRoot()
+	repoRoot, err := findWorkspaceRoot()
 	if err != nil {
 		return "", fmt.Errorf("could not find repository root: %v", err)
 	}

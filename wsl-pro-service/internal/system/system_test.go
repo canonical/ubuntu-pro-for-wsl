@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
 	commontestutils "github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
@@ -235,7 +234,7 @@ func TestUserProfileDir(t *testing.T) {
 func overrideProcMount(t *testing.T, mock *testutils.SystemMock) {
 	t.Helper()
 
-	procMount := filepath.Join(golden.TestFixturePath(t), "proc/mounts")
+	procMount := filepath.Join(commontestutils.TestFixturePath(t), "proc/mounts")
 	if _, err := os.Stat(procMount); err != nil {
 		require.ErrorIsf(t, err, os.ErrNotExist, "Setup: could not stat %q", procMount)
 
@@ -427,7 +426,7 @@ func TestLandscapeEnable(t *testing.T) {
 				mock.SetControlArg(testutils.WslpathErr)
 			}
 
-			config, err := os.ReadFile(filepath.Join(golden.TestFixturePath(t), "landscape.conf"))
+			config, err := os.ReadFile(filepath.Join(commontestutils.TestFixturePath(t), "landscape.conf"))
 			require.NoError(t, err, "Setup: could not load fixture")
 
 			err = s.LandscapeEnable(ctx, string(config), "landscapeUID1234")
@@ -446,7 +445,7 @@ func TestLandscapeEnable(t *testing.T) {
 			// runs, so the golden file would never match. This is the solution:
 			got := strings.ReplaceAll(string(out), mock.FsRoot, "${FILESYSTEM_ROOT}")
 
-			want := golden.LoadWithUpdateFromGolden(t, got)
+			want := commontestutils.LoadWithUpdateFromGolden(t, got)
 			require.Equal(t, want, got, "Landscape executable did not receive the right config")
 		})
 	}
@@ -540,8 +539,8 @@ func TestWindowsHostAddress(t *testing.T) {
 				mock.SetControlArg(testutils.WslInfoIsNAT)
 			}
 
-			copyFile(t, tc.etcResolv, filepath.Join(golden.TestFamilyPath(t), "etc-resolv.conf"), mock.Path("/etc/resolv.conf"))
-			copyFile(t, tc.procNetRoute, filepath.Join(golden.TestFamilyPath(t), "proc-net-route"), mock.Path("/proc/net/route"))
+			copyFile(t, tc.etcResolv, filepath.Join(commontestutils.TestFamilyPath(t), "etc-resolv.conf"), mock.Path("/etc/resolv.conf"))
+			copyFile(t, tc.procNetRoute, filepath.Join(commontestutils.TestFamilyPath(t), "proc-net-route"), mock.Path("/proc/net/route"))
 
 			got, err := sys.WindowsHostAddress(ctx)
 			if tc.wantErr {

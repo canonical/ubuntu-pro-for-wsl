@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore"
 	"github.com/stretchr/testify/require"
 )
@@ -92,7 +91,7 @@ func buildStoreAPI(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
-	root, err := common.FindWorkspaceRoot()
+	root, err := microsoftstore.FindWorkspaceRoot()
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-wsl/common/golden"
+	commontestutils "github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
@@ -187,7 +187,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			require.FileExists(t, p, "Landscape executable was not called to enable")
 			out, err := os.ReadFile(p)
 
-			want := golden.LoadWithUpdateFromGolden(t, string(out))
+			want := commontestutils.LoadWithUpdateFromGolden(t, string(out))
 
 			require.NoError(t, err, "Could not read .landscape-enabled file")
 			require.Equal(t, want, string(out), "Landscape config does not match expectation")

@@ -1,6 +1,4 @@
-// Package golden implements helper functions for golden file and fixture-related
-// functionality in tests.
-package golden
+package testutils
 
 import (
 	"os"
