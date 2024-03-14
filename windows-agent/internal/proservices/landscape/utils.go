@@ -84,8 +84,17 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 		AccountName: conf.accountName,
 	}
 
+	// Optional arguments
 	if conf.registrationKey != "" {
 		info.RegistrationKey = &conf.registrationKey
+	}
+
+	if defaultDistro, ok, err := gowsl.DefaultDistro(ctx); err != nil {
+		log.Warningf(ctx, "Landscape: could not get default distro: %v", err)
+		return info, nil
+	} else if ok {
+		n := defaultDistro.Name()
+		info.DefaultInstanceId = &n
 	}
 
 	return info, nil

@@ -48,7 +48,7 @@ require (
 	github.com/breml/errchkjson v0.3.6 // indirect
 	github.com/butuzov/ireturn v0.3.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
-	github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d // indirect
+	github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240306140056-b2552aec01d2 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240306140056-b2552aec01d2 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240306140056-b2552aec01d2 // indirect
@@ -183,7 +183,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.8.1 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c // indirect
-	github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12 // indirect
+	github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 // indirect
 	github.com/ultraware/funlen v0.1.0 // indirect
 	github.com/ultraware/whitespace v0.1.0 // indirect
 	github.com/uudashr/gocognit v1.1.2 // indirect

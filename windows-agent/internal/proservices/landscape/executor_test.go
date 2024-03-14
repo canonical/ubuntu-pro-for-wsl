@@ -317,16 +317,20 @@ func TestSetDefaultDistro(t *testing.T) {
 
 					if tc.wantSetAsDefault {
 						require.Eventually(t, func() bool {
-							d, err := wsl.DefaultDistro(testBed.ctx)
+							d, ok, err := wsl.DefaultDistro(testBed.ctx)
 							if err != nil {
+								return false
+							}
+							if !ok {
 								return false
 							}
 							return d.Name() == testBed.distro.Name()
 						}, maxTimeout, time.Second, "Distro should have been made default")
 					} else {
 						time.Sleep(maxTimeout)
-						d, err := wsl.DefaultDistro(testBed.ctx)
+						d, ok, err := wsl.DefaultDistro(testBed.ctx)
 						require.NoError(t, err, "DefaultDistro should return no error")
+						require.True(t, ok, "There should be a default distro")
 						require.NotEqual(t, testBed.distro.Name(), d.Name(), "Distro should not have been default")
 					}
 				})

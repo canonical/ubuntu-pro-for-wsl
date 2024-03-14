@@ -1,7 +1,7 @@
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
-github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d h1:PTSPzsRV4/nnpZv4PhqxBHUezvSm49IHNM0qkWQGn/s=
-github.com/canonical/landscape-hostagent-api v0.0.0-20231122074150-cd77c9c81c2d/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922 h1:Ww78pNVWaxmaINcUqMH/G15Ov28dj/ZKOcpXb7hmGNE=
+github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240306140056-b2552aec01d2 h1:BSmvyKvJZriLg+frszLmux8G07Ws5uOHA/fkFmGE4Rw=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240306140056-b2552aec01d2/go.mod h1:5ZR+5HS/Da2AUJSWyvWCe9IpZkYDsbPIOLjomYQltNk=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240306140056-b2552aec01d2 h1:1LdjWxhDaYxBRC/MStDE+rthINYaJbjimYwHWJhPTv4=
@@ -85,8 +85,8 @@ github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
-github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12 h1:LrBQDPvsK4Pqluy05iw8w51F6XWndIfyssL4g/fLAzo=
-github.com/ubuntu/gowsl v0.0.0-20240213160838-c27a23d27d12/go.mod h1:7hcEt67BNrsJHVZtWBCU0tJG0JQEvoMSi+TN1hFZHHg=
+github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 h1:GBrsd49DdWFkpmwzGoDBdQKg3Jei8BTaKRp+dRhoveg=
+github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 go.uber.org/atomic v1.9.0 h1:ECmE8Bn/WFTYwEW/bpKD3M8VtR/zQVbavAoalC1PYyE=
 go.uber.org/atomic v1.9.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/multierr v1.9.0 h1:7fIwc/ZtS0q++VgcfqFDxSBZVv/Xo49/SYnDFupUwlI=

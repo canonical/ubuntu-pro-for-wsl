@@ -246,6 +246,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 		tokenErr bool
 		stateErr bool
 
+		breakWSLRegistry   bool // Needs dontRegisterDistro to be true
+		dontRegisterDistro bool
+
 		precancelContext     bool
 		disconnectBeforeSend bool
 		distroIsRunning      bool
@@ -254,9 +257,10 @@ func TestSendUpdatedInfo(t *testing.T) {
 		wantErr           bool
 		wantDistroSkipped bool
 	}{
-		"Success with a stopped distro":                     {},
-		"Success with a running distro":                     {distroIsRunning: true},
-		"Success when the distro State cannot be retreived": {stateErr: true, wantDistroSkipped: true},
+		"Success with a stopped distro":                       {},
+		"Success with a running distro":                       {distroIsRunning: true},
+		"Success when the distro State cannot be retreived":   {stateErr: true, wantDistroSkipped: true},
+		"Success when the default distro cannot be retreived": {breakWSLRegistry: true, dontRegisterDistro: true, wantDistroSkipped: true},
 
 		"Error when the token cannot be retreived":                           {tokenErr: true, wantErr: true},
 		"Error when attempting to SendUpdatedInfo after having disconnected": {disconnectBeforeSend: true, wantErr: true},
@@ -269,6 +273,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				t.Parallel()
 				mock := wslmock.New()
 				mock.StateError = tc.stateErr
+				mock.OpenLxssKeyError = tc.breakWSLRegistry
 				ctx = wsl.WithMock(ctx, mock)
 			} else if tc.stateErr {
 				t.Skip("This test is skipped because it necessitates the GoWSL mock")
@@ -288,17 +293,23 @@ func TestSendUpdatedInfo(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
-			props := distro.Properties{
-				DistroID:    "Cool Ubuntu",
-				VersionID:   "NewerThanYours",
-				PrettyName:  "😎 Cool guy 🎸",
-				Hostname:    "CoolMachine",
-				ProAttached: true,
-			}
+			var d *distro.Distro
+			var distroName string
+			var props distro.Properties
 
-			distro, err := db.GetDistroAndUpdateProperties(ctx, distroName, props)
-			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
+			if !tc.dontRegisterDistro {
+				distroName, _ = wsltestutils.RegisterDistro(t, ctx, true)
+				props = distro.Properties{
+					DistroID:    "Cool Ubuntu",
+					VersionID:   "NewerThanYours",
+					PrettyName:  "😎 Cool guy 🎸",
+					Hostname:    "CoolMachine",
+					ProAttached: true,
+				}
+
+				d, err = db.GetDistroAndUpdateProperties(ctx, distroName, props)
+				require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
+			}
 
 			const hostname = "HOSTNAME"
 
@@ -307,15 +318,17 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			ctl := service.Controller()
 
-			if tc.distroIsRunning {
-				err := distro.LockAwake()
-				//nolint:errcheck // Nothing we can do about it
-				defer distro.ReleaseAwake()
-				require.NoError(t, err, "Setup: could not keep distro alive")
-			} else {
-				d := wsl.NewDistro(ctx, distroName)
-				err := d.Terminate()
-				require.NoError(t, err, "Setup: could not terminate the distro")
+			if !tc.dontRegisterDistro {
+				if tc.distroIsRunning {
+					err := d.LockAwake()
+					//nolint:errcheck // Nothing we can do about it
+					defer d.ReleaseAwake()
+					require.NoError(t, err, "Setup: could not keep distro alive")
+				} else {
+					d := wsl.NewDistro(ctx, distroName)
+					err := d.Terminate()
+					require.NoError(t, err, "Setup: could not terminate the distro")
+				}
 			}
 
 			err = service.Connect()
@@ -355,6 +368,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
+			require.Equal(t, wantDistroID, msg.DefaultInstanceID, "The only distro that is registered should have been labeled default")
 
 			if tc.wantDistroSkipped {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
@@ -385,7 +399,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			wantHostToken = conf.proToken
 
-			if !tc.distroIsRunning {
+			if !tc.dontRegisterDistro && !tc.distroIsRunning {
 				d := wsl.NewDistro(ctx, distroName)
 				err := d.Terminate()
 				require.NoError(t, err, "Setup: could not terminate distro")
@@ -412,6 +426,8 @@ func TestSendUpdatedInfo(t *testing.T) {
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host hostname and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
+			require.Equal(t, wantDistroID, msg.DefaultInstanceID, "The only distro that is registered should have been labeled default")
+
 			if tc.wantDistroSkipped {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
 			} else {
