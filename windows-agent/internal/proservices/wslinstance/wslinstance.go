@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
+	"sync"
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
@@ -13,8 +13,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/ubuntu/decorate"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // LandscapeController is the  controller for the Landscape client proservice.
@@ -28,13 +26,19 @@ type Service struct {
 
 	db        *database.DistroDB
 	landscape LandscapeController
+
+	clients   map[string]*client
+	clientsMu sync.Mutex
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *database.DistroDB, landscape LandscapeController) (s Service, err error) {
+func New(ctx context.Context, db *database.DistroDB, landscape LandscapeController) (s *Service) {
 	log.Debug(ctx, "Building new GRPC WSLInstance server")
-
-	return Service{db: db, landscape: landscape}, nil
+	return &Service{
+		db:        db,
+		landscape: landscape,
+		clients:   make(map[string]*client),
+	}
 }
 
 // Connected establishes a connection with a WSL instance and keeps its properties
@@ -42,38 +46,39 @@ func New(ctx context.Context, db *database.DistroDB, landscape LandscapeControll
 func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
 	ctx := stream.Context()
 
-	info, err := stream.Recv()
+	client, info, err := handshake(ctx, s, stream.Recv)
 	if err != nil {
-		return fmt.Errorf("WSLInstance service: incomplete handshake: did not receive info from WSL distro: %v", err)
+		return err
 	}
+	defer client.Close()
 
-	distroName := info.GetWslName()
+	if err := client.SetConnectedStream(stream); err != nil {
+		return err
+	}
 
 	props, err := propsFromInfo(info)
 	if err != nil {
 		return fmt.Errorf("invalid DistroInfo: %v", err)
 	}
 
-	log.Debugf(ctx, "received properties: %v", props)
-
-	d, err := s.db.GetDistroAndUpdateProperties(ctx, distroName, props)
+	d, err := s.db.GetDistroAndUpdateProperties(ctx, client.name, props)
 	if err != nil {
+		return err
+	}
+
+	// Update landscape host agent when connecting and disconnecting.
+	s.landscapeHostagentSendUpdatedInfo(ctx)
+	defer s.landscapeHostagentSendUpdatedInfo(ctx)
+
+	// Wait for other streams to connect
+	if err := client.WaitReady(ctx); err != nil {
 		return err
 	}
 
 	// Load deferred tasks
 	d.EnqueueDeferredTasks()
 
-	// Update landscape when connecting and disconnecting
-	s.landscapeSendUpdatedInfo(ctx)
-	defer s.landscapeSendUpdatedInfo(ctx)
-
-	conn, err := newWslServiceConn(ctx, d.Name(), stream)
-	if err != nil {
-		return fmt.Errorf("could not connect to Linux-side WSL service: %v", err)
-	}
-
-	if err := d.SetConnection(conn); err != nil {
+	if err := d.SetConnection(client); err != nil {
 		return err
 	}
 
@@ -84,7 +89,7 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 
 	// Blocking connection for the lifetime of the WSL service.
 	for {
-		info, err := stream.Recv()
+		info, err := recvContext(client.ctx, stream.Recv)
 		if err != nil {
 			return fmt.Errorf("could not receive info: %v", err)
 		}
@@ -93,7 +98,6 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 		if err != nil {
 			return fmt.Errorf("invalid DistroInfo: %v", err)
 		}
-		log.Infof(ctx, "Updated properties to %+v", props)
 
 		if d.SetProperties(props) {
 			if err := s.db.Dump(); err != nil {
@@ -101,73 +105,8 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 			}
 		}
 
-		s.landscapeSendUpdatedInfo(ctx)
+		s.landscapeHostagentSendUpdatedInfo(ctx)
 	}
-}
-
-type portSender interface {
-	Send(*agentapi.Port) error
-}
-
-const maxConnectionAttempts = 5
-
-func newWslServiceConn(ctx context.Context, distroName string, send portSender) (conn *grpc.ClientConn, err error) {
-	log.Debugf(ctx, "WSLInstance service (%s): reserving a port", distroName)
-	for i := 0; i < maxConnectionAttempts && conn == nil; i++ {
-		if err != nil {
-			log.Warningf(ctx, "WSLInstance service (%s): retrying to reserve a port: %v", distroName, err)
-		}
-		conn, err = func() (conn *grpc.ClientConn, err error) {
-			// Port reservation.
-			lis, err := net.Listen("tcp4", "localhost:")
-			if err != nil {
-				return nil, err
-			}
-
-			p, err := getPort(lis)
-			if err != nil {
-				return nil, err
-			}
-			log.Debugf(ctx, "WSLInstance service (%s): reserved port %d", distroName, p)
-
-			if err := lis.Close(); err != nil {
-				return nil, err
-			}
-
-			// Send it to WSL service.
-			if err := send.Send(&agentapi.Port{Port: uint32(p)}); err != nil {
-				return nil, fmt.Errorf("could not send reserved port: %v", err)
-			}
-
-			// Connection.
-			addr := fmt.Sprintf("localhost:%d", p)
-			log.Debugf(ctx, "WSLInstance service (%s): connecting to Linux-side WSL service via %s", distroName, addr)
-
-			ctxTimeout, cancel := context.WithTimeout(ctx, 2*time.Second)
-			defer cancel()
-
-			conn, err = grpc.DialContext(ctxTimeout, addr,
-				grpc.WithTransportCredentials(insecure.NewCredentials()),
-				grpc.WithBlock())
-			if err != nil {
-				return nil, fmt.Errorf("could not dial WSL service: %v", err)
-			}
-
-			// This will signal the task worker that we are ready to process tasks.
-			return conn, nil
-		}()
-	}
-
-	return conn, err
-}
-
-func getPort(lis net.Listener) (int, error) {
-	_, port, err := net.SplitHostPort(lis.Addr().String())
-	if err != nil {
-		return 0, fmt.Errorf("could not parse port in address %q: %v", lis.Addr().String(), err)
-	}
-
-	return net.LookupPort("tcp4", port)
 }
 
 func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err error) {
@@ -186,9 +125,54 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 	}, nil
 }
 
-// landscapeSendUpdatedInfo is syntactic sugar to update landscape and
+type handshaker interface {
+	GetWslName() string
+}
+
+// handshake contains the logic common to all three streams.
+func handshake[MessageT handshaker](ctx context.Context, s *Service, recv func() (MessageT, error)) (c *client, m MessageT, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+
+	msg, err := recvContext(ctx, recv)
+	if err != nil {
+		return nil, m, fmt.Errorf("could not start handshake: did not receive: %v", err)
+	}
+
+	if msg.GetWslName() == "" {
+		return nil, msg, errors.New("could not complete handshake: no WSL name provided")
+	}
+
+	return s.client(msg.GetWslName()), msg, err
+}
+
+// recvContext returns as soon as either:
+// - A message is received.
+// - The context is cancelled.
+func recvContext[MessageT handshaker](ctx context.Context, recv func() (MessageT, error)) (msg MessageT, err error) {
+	type tuple struct {
+		msg MessageT
+		err error
+	}
+
+	ch := make(chan tuple)
+	go func() {
+		m, err := recv()
+		ch <- tuple{m, err}
+		close(ch)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return msg, ctx.Err()
+	case m := <-ch:
+		return m.msg, m.err
+	}
+}
+
+// landscapeHostagentSendUpdatedInfo is syntactic sugar to update landscape and
 // log in the case error.
-func (s *Service) landscapeSendUpdatedInfo(ctx context.Context) {
+func (s *Service) landscapeHostagentSendUpdatedInfo(ctx context.Context) {
 	go func() {
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()

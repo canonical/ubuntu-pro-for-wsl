@@ -5,12 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -21,12 +18,9 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/worker"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func init() {
@@ -190,11 +184,8 @@ func TestTaskProcessing(t *testing.T) {
 			require.NoError(t, err, "Setup: worker New() should return no error")
 			defer w.Stop(ctx)
 
-			wslInstanceService := newTestService(t)
-			conn := wslInstanceService.newClientConnection(t)
-
 			// End of setup
-			require.Nil(t, w.Client(), "Client() should return nil when there is no connection")
+			require.Nil(t, w.Connection(), "Connection() should return nil when there is no connection")
 
 			if tc.unregisterAfterConstructor {
 				d.Invalidate(ctx)
@@ -235,7 +226,7 @@ func TestTaskProcessing(t *testing.T) {
 			// Testing task before an active connection is established
 			// We sleep to ensure at least one tick has gone by in the "wait for connection"
 			time.Sleep(clientTickPeriod)
-			require.Nil(t, w.Client(), "Client should return nil when there is no connection")
+			require.Nil(t, w.Connection(), "Connection should return nil when there is no connection")
 			require.Equal(t, int32(0), ttask.ExecuteCalls.Load(), "Task unexpectedly executed without a connection")
 
 			if tc.forceConnectionTimeout {
@@ -244,7 +235,7 @@ func TestTaskProcessing(t *testing.T) {
 			}
 
 			// Testing task with active connection
-			w.SetConnection(conn)
+			w.SetConnection(&mockConnection{})
 
 			if !tc.wantExecuteCalled {
 				time.Sleep(2 * clientTickPeriod)
@@ -252,7 +243,7 @@ func TestTaskProcessing(t *testing.T) {
 				return
 			}
 
-			require.Eventuallyf(t, func() bool { return w.Client() != nil }, clientTickPeriod, 100*time.Millisecond,
+			require.Eventuallyf(t, func() bool { return w.Connection() != nil }, clientTickPeriod, 100*time.Millisecond,
 				"Client should become non-nil after setting the connection")
 
 			// Wait for task to start
@@ -322,13 +313,10 @@ func TestSetConnection(t *testing.T) {
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
-	wslInstanceService1 := newTestService(t)
-	conn1 := wslInstanceService1.newClientConnection(t)
+	conn1 := &mockConnection{}
+	conn2 := &mockConnection{}
 
-	wslInstanceService2 := newTestService(t)
-	conn2 := wslInstanceService2.newClientConnection(t)
-
-	require.Nil(t, w.Client(), "Client() should return nil because the connection has not been set yet")
+	require.Nil(t, w.Connection(), "Client() should return nil because the connection has not been set yet")
 	require.False(t, w.IsActive(), "IsActive() should return false because the connection has not been set yet")
 
 	// Set first connection as active
@@ -337,37 +325,37 @@ func TestSetConnection(t *testing.T) {
 	require.True(t, w.IsActive(), "IsActive() should return true because the connection has been set")
 
 	// GetClient twice and ensure we ping the same service
-	const service1pings = 2
-	for i := 0; i < service1pings; i++ {
-		c := w.Client()
+	const conn1calls = 2
+	for i := 0; i < conn1calls; i++ {
+		c := w.Connection()
 		require.NotNil(t, c, "client should be non-nil after setting a connection")
-		_, err = c.Ping(ctx, &wslserviceapi.Empty{})
-		require.NoError(t, err, "Ping attempt #%d should have been done successfully", i)
-		require.Equal(t, i+1, wslInstanceService1.pingCount, "second server should be pinged after c.Ping (iteration #%d)", i)
+		err = c.SendProAttachment("123")
+		require.NoError(t, err, "SendProAttachment attempt #%d should have been done successfully", i)
+		require.EqualValues(t, i+1, conn1.proAttachmentCount.Load(), "second server should be pinged after c.Ping (iteration #%d)", i)
 	}
 
-	require.Equal(t, 0, wslInstanceService2.pingCount, "second service should not be called yet")
+	require.Zero(t, conn2.proAttachmentCount.Load(), "second connection should not be used yet")
 
 	// Set second connection as active
 	w.SetConnection(conn2)
 	require.True(t, w.IsActive(), "IsActive() should return true even if the connection has changed")
 
 	// Ping on renewed connection (new wsl instance service) and ensure only the second service receives the pings
-	c := w.Client()
+	c := w.Connection()
 	require.NotNil(t, c, "client should be non-nil after setting a connection")
-	_, err = c.Ping(ctx, &wslserviceapi.Empty{})
-	require.NoError(t, err, "Ping should have been done successfully")
-	require.Equal(t, 1, wslInstanceService2.pingCount, "second server should be pinged after c.Ping")
+	err = c.SendProAttachment("123")
+	require.NoError(t, err, "SendProAttachment should have been done successfully")
+	require.EqualValues(t, 1, conn2.proAttachmentCount.Load(), "second connection's ProAttach should have been called")
 
-	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have received pings after setting the connection to the second service")
+	require.EqualValues(t, conn1calls, conn1.proAttachmentCount.Load(), "first service should not have been called again")
 
 	// Set connection to nil and ensure that no pings are made
 	w.SetConnection(nil)
-	require.Nil(t, w.Client(), "Client() should return a nil because the connection has been set to nil")
+	require.Nil(t, w.Connection(), "Client() should return a nil because the connection has been set to nil")
 	require.False(t, w.IsActive(), "IsActive() should return false because the connection has been set to nil")
 
-	require.Equal(t, service1pings, wslInstanceService1.pingCount, "first service should not have received pings after setting the connection to nil")
-	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should not have received pings after setting the connection to nil")
+	require.EqualValues(t, conn1calls, conn1.proAttachmentCount.Load(), "first connection should not have been used setting the connection to nil")
+	require.EqualValues(t, 1, conn2.proAttachmentCount.Load(), "second connection should not have been used setting the connection to nil")
 }
 
 func TestSetConnectionOnClosedConnection(t *testing.T) {
@@ -383,21 +371,18 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
-	wslInstanceService1 := newTestService(t)
-	conn1 := wslInstanceService1.newClientConnection(t)
-
-	wslInstanceService2 := newTestService(t)
-	conn2 := wslInstanceService2.newClientConnection(t)
+	conn1 := &mockConnection{}
+	conn2 := &mockConnection{}
 
 	w.SetConnection(conn1)
-	_ = conn1.Close()
+	conn1.Close()
 
 	w.SetConnection(conn2)
 
 	// New connection is functional.
-	_, err = w.Client().Ping(ctx, &wslserviceapi.Empty{})
-	require.NoError(t, err, "Ping should have been done successfully")
-	require.Equal(t, 1, wslInstanceService2.pingCount, "second service should be called once")
+	err = w.Connection().SendLandscapeConfig("123", "abc")
+	require.NoError(t, err, "SendLandscapeConfig should have been done successfully")
+	require.EqualValues(t, 1, conn2.LandscapeConfigCount.Load(), "second service have been used once")
 }
 
 func TestTaskDeferral(t *testing.T) {
@@ -438,9 +423,7 @@ func TestTaskDeferral(t *testing.T) {
 			deferredTask := emptyTask{ID: uuid.NewString()}
 
 			// Testing task with active connection
-			wslInstanceService := newTestService(t)
-			conn := wslInstanceService.newClientConnection(t)
-			w.SetConnection(conn)
+			w.SetConnection(&mockConnection{})
 
 			// blocker is a task meant to block task processing
 			blocker := newBlockingTask(ctx)
@@ -532,9 +515,7 @@ func TestTaskDeduplication(t *testing.T) {
 			require.NoError(t, err, "Setup: unexpected error creating the worker")
 			defer w.Stop(ctx)
 
-			wslInstanceService := newTestService(t)
-			conn := wslInstanceService.newClientConnection(t)
-			w.SetConnection(conn)
+			w.SetConnection(&mockConnection{})
 
 			// These are equivalent, they should be de-duplicated
 			blocker := newBlockingTask(ctx)
@@ -602,9 +583,7 @@ func TestFailedTaskIsDeferred(t *testing.T) {
 	require.NoError(t, err, "Setup: unexpected error creating the worker")
 	defer w.Stop(ctx)
 
-	wslInstanceService := newTestService(t)
-	conn := wslInstanceService.newClientConnection(t)
-	w.SetConnection(conn)
+	w.SetConnection(&mockConnection{})
 
 	// Submit the failing task
 	failingTask := testTask{Returns: task.NeedsRetryError{SourceErr: errors.New("mock error")}}
@@ -630,64 +609,6 @@ func requireEventuallyTaskCompletes(t *testing.T, task emptyTask, msg string, ar
 	}, 5*time.Second, 100*time.Millisecond, msg, args)
 }
 
-type testService struct {
-	wslserviceapi.UnimplementedWSLServer
-	pingCount int
-	port      uint16
-}
-
-func (s *testService) Ping(context.Context, *wslserviceapi.Empty) (*wslserviceapi.Empty, error) {
-	s.pingCount++
-	return &wslserviceapi.Empty{}, nil
-}
-
-// newTestService creates a testService and starts serving asyncronously.
-func newTestService(t *testing.T) *testService {
-	t.Helper()
-
-	server := grpc.NewServer()
-
-	lis, err := net.Listen("tcp4", "localhost:")
-	require.NoErrorf(t, err, "Setup: could not listen.")
-
-	fields := strings.Split(lis.Addr().String(), ":")
-	portTmp, err := strconv.ParseUint(fields[len(fields)-1], 10, 16)
-	require.NoError(t, err, "Setup: could not parse address")
-
-	service := testService{port: uint16(portTmp)}
-	wslserviceapi.RegisterWSLServer(server, &service)
-	go func() {
-		err := server.Serve(lis)
-		if err != nil {
-			t.Logf("Setup: server.Serve returned non-nil error: %v", err)
-		}
-	}()
-
-	t.Cleanup(server.Stop)
-
-	t.Logf("Setup: Started listening at %q", lis.Addr())
-
-	return &service
-}
-
-func (s testService) newClientConnection(t *testing.T) *grpc.ClientConn {
-	t.Helper()
-
-	addr := fmt.Sprintf("localhost:%d", s.port)
-
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctxTimeout, addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock())
-	require.NoError(t, err, "Setup: could not contact the grpc server at %q", addr)
-
-	t.Cleanup(func() { conn.Close() })
-
-	return conn
-}
-
 // completedEmptyTasks tracks which empty tasks have completed. We need to use this global
 // variable because tasks may be written to file and read back, so no callbacks or pointers
 // can be used.
@@ -697,7 +618,7 @@ type emptyTask struct {
 	ID string
 }
 
-func (t emptyTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+func (t emptyTask) Execute(ctx context.Context, _ task.Connection) error {
 	completedEmptyTasks.Set(t.ID)
 	return nil
 }
@@ -735,7 +656,7 @@ func (t *testTask) MarshalYAML() (interface{}, error) {
 	}, nil
 }
 
-func (t *testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+func (t *testTask) Execute(ctx context.Context, _ task.Connection) error {
 	t.ExecuteCalls.Add(1)
 	select {
 	case <-time.After(t.Delay):
@@ -778,7 +699,7 @@ func (t *blockingTask) MarshalYAML() (interface{}, error) {
 	return struct{}{}, nil
 }
 
-func (t *blockingTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+func (t *blockingTask) Execute(ctx context.Context, _ task.Connection) error {
 	t.executing.Store(true)
 	defer t.executing.Store(false)
 
@@ -898,4 +819,24 @@ func (c mockProvisioning) ProvisioningTasks(ctx context.Context, distroName stri
 		return nil, nil
 	}
 	return []task.Task{&testTask{}}, nil
+}
+
+type mockConnection struct {
+	proAttachmentCount   atomic.Int32
+	LandscapeConfigCount atomic.Int32
+	closed               atomic.Bool
+}
+
+func (conn *mockConnection) SendProAttachment(proToken string) error {
+	conn.proAttachmentCount.Add(1)
+	return nil
+}
+
+func (conn *mockConnection) SendLandscapeConfig(lpeConfig, hostagentUID string) error {
+	conn.LandscapeConfigCount.Add(1)
+	return nil
+}
+
+func (conn *mockConnection) Close() {
+	conn.closed.Store(true)
 }

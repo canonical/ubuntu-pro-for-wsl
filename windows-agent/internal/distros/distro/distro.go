@@ -12,11 +12,9 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/worker"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/google/uuid"
 	"github.com/ubuntu/decorate"
 	wsl "github.com/ubuntu/gowsl"
-	"google.golang.org/grpc"
 )
 
 // Distro is a wrapper around gowsl.Distro that tracks both the distroname and
@@ -41,8 +39,8 @@ type Distro struct {
 // for woker.workerInterface, and to allow dependency injection in tests.
 type workerInterface interface {
 	IsActive() bool
-	Client() wslserviceapi.WSLClient
-	SetConnection(*grpc.ClientConn)
+	Connection() worker.Connection
+	SetConnection(worker.Connection)
 	SubmitTasks(...task.Task) error
 	SubmitDeferredTasks(...task.Task) error
 	EnqueueDeferredTasks()
@@ -194,17 +192,17 @@ func (d *Distro) IsActive() (bool, error) {
 	return d.worker.IsActive(), nil
 }
 
-// Client returns the client to the WSL task service.
-// Client returns nil when no connection is set up.
-func (d *Distro) Client() (wslserviceapi.WSLClient, error) {
+// Connection returns the Connection to the WSL task service.
+// Connection returns nil when no connection is set up.
+func (d *Distro) Connection() (worker.Connection, error) {
 	if !d.IsValid() {
 		return nil, &NotValidError{}
 	}
-	return d.worker.Client(), nil
+	return d.worker.Connection(), nil
 }
 
 // SetConnection removes the connection associated with the distro.
-func (d *Distro) SetConnection(conn *grpc.ClientConn) error {
+func (d *Distro) SetConnection(conn worker.Connection) error {
 	// Allowing IsValid check to be bypassed when resetting the connection
 	if conn == nil {
 		d.worker.SetConnection(nil)

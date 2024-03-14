@@ -11,9 +11,7 @@ import (
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/ubuntu/decorate"
-	"google.golang.org/grpc"
 )
 
 type distro interface {
@@ -26,6 +24,14 @@ type distro interface {
 	Invalidate(context.Context)
 }
 
+// Connection encapsulates the logic behind sending and receiving messages
+// with the WSL-Pro-Service.
+type Connection interface {
+	SendProAttachment(proToken string) error
+	SendLandscapeConfig(lpeConfig, hostagentUID string) error
+	Close()
+}
+
 // Worker contains all the logic around task queueing and execution for one particular distro.
 type Worker struct {
 	distro  distro
@@ -34,7 +40,7 @@ type Worker struct {
 	cancel     context.CancelFunc
 	processing chan struct{}
 
-	conn   *grpc.ClientConn
+	conn   Connection
 	connMu sync.RWMutex
 }
 
@@ -102,32 +108,30 @@ func New(ctx context.Context, d distro, storageDir string, args ...Option) (w *W
 // IsActive returns true when the worker is running, and there exists an active
 // connection to its GRPC service.
 func (w *Worker) IsActive() bool {
-	return w.Client() != nil
-}
-
-// Client returns the client to the WSL task service.
-// Client returns nil when no connection is set up.
-func (w *Worker) Client() wslserviceapi.WSLClient {
 	w.connMu.RLock()
 	defer w.connMu.RUnlock()
 
-	if w.conn == nil {
-		return nil
-	}
+	return w.conn != nil
+}
 
-	return wslserviceapi.NewWSLClient(w.conn)
+// Connection returns the client to the WSL task service.
+// Connection returns nil when no connection is set up.
+func (w *Worker) Connection() Connection {
+	w.connMu.RLock()
+	defer w.connMu.RUnlock()
+
+	return w.conn
 }
 
 // SetConnection removes the connection associated with the distro.
-func (w *Worker) SetConnection(conn *grpc.ClientConn) {
+func (w *Worker) SetConnection(conn Connection) {
 	w.connMu.Lock()
 	defer w.connMu.Unlock()
 
 	if w.conn != nil {
-		if err := w.conn.Close(); err != nil {
-			log.Warningf(context.TODO(), "Distro %q: could not close previous grpc connection: %v", w.distro.Name(), err)
-		}
+		w.conn.Close()
 	}
+
 	w.conn = conn
 }
 
@@ -263,11 +267,11 @@ func (w *Worker) processSingleTask(ctx context.Context, t task.Task) error {
 	return nil
 }
 
-func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslserviceapi.WSLClient, err error) {
+func (w *Worker) waitForActiveConnection(ctx context.Context) (conn Connection, err error) {
 	log.Debugf(ctx, "Distro %q: ensuring active connection.", w.distro.Name())
 
 	for i := 0; i < 5; i++ {
-		client, err = func() (wslserviceapi.WSLClient, error) {
+		conn, err = func() (Connection, error) {
 			// Potentially restart distro if it was stopped for some reason
 			if err := w.distro.LockAwake(); err != nil {
 				return nil, newUnreachableDistroErr(err)
@@ -290,12 +294,12 @@ func (w *Worker) waitForActiveConnection(ctx context.Context) (client wslservice
 		}
 	}
 
-	return client, err
+	return conn, err
 }
 
 // waitForClient waits for a valid GRPC client to connect to. It will retry for a while before
 // erroring out.
-func (w *Worker) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, error) {
+func (w *Worker) waitForClient(ctx context.Context) (Connection, error) {
 	timedOutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -309,14 +313,14 @@ func (w *Worker) waitForClient(ctx context.Context) (wslserviceapi.WSLClient, er
 			// Timeout means the distro is not reachable.
 			return nil, newUnreachableDistroErr(errors.New("timed out waiting for client"))
 		case <-time.After(tickRate):
-			client := w.Client()
+			conn := w.Connection()
 
-			if client == nil {
+			if conn == nil {
 				tickRate = time.Second
 				continue
 			}
 
-			return client, nil
+			return conn, nil
 		}
 	}
 }

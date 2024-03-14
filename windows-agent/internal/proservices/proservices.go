@@ -23,7 +23,7 @@ import (
 // Manager is the orchestrator of GRPC API services and business logic.
 type Manager struct {
 	uiService          ui.Service
-	wslInstanceService wslinstance.Service
+	wslInstanceService *wslinstance.Service
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
@@ -89,11 +89,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	}
 	s.landscapeService = landscape
 
-	wslInstanceService, err := wslinstance.New(ctx, s.db, s.landscapeService.Controller())
-	if err != nil {
-		return s, err
-	}
-	s.wslInstanceService = wslInstanceService
+	s.wslInstanceService = wslinstance.New(ctx, s.db, s.landscapeService.Controller())
 
 	conf.SetUbuntuProNotifier(func(ctx context.Context, token string) {
 		ubuntupro.Distribute(ctx, s.db, token)
@@ -146,7 +142,7 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 			logconnections.StreamServerInterceptor(),
 		)))
 	agent_api.RegisterUIServer(grpcServer, &m.uiService)
-	agent_api.RegisterWSLInstanceServer(grpcServer, &m.wslInstanceService)
+	agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
 
 	return grpcServer
 }

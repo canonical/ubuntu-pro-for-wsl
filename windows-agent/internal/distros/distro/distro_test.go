@@ -12,13 +12,11 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/worker"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
-	"google.golang.org/grpc"
 )
 
 func TestMain(m *testing.M) {
@@ -639,8 +637,8 @@ func TestWorkerWrappers(t *testing.T) {
 		"IsActive succeeds":                 {function: "IsActive", wantWorkerCalled: true},
 		"IsActive errors on invalid distro": {function: "IsActive", invalidDistro: true, wantErr: true},
 
-		"Client succeeds":                 {function: "Client", wantWorkerCalled: true},
-		"Client errors on invalid distro": {function: "Client", invalidDistro: true, wantErr: true},
+		"Connection succeeds":                 {function: "Connection", wantWorkerCalled: true},
+		"Connection errors on invalid distro": {function: "Connection", invalidDistro: true, wantErr: true},
 
 		"SetConnection succeeds":                                       {function: "SetConnection", wantWorkerCalled: true},
 		"SetConnection succeeds with nil connection":                   {function: "SetConnection", nilArg: true, wantWorkerCalled: true},
@@ -677,16 +675,12 @@ func TestWorkerWrappers(t *testing.T) {
 				_, err = d.IsActive()
 				funcCalled = worker.isActiveCalled
 
-			case "Client":
-				_, err = d.Client()
-				funcCalled = worker.clientCalled
+			case "Connection":
+				_, err = d.Connection()
+				funcCalled = worker.connectionCalled
 
 			case "SetConnection":
-				var conn *grpc.ClientConn
-				if !tc.nilArg {
-					conn = &grpc.ClientConn{}
-				}
-				err = d.SetConnection(conn)
+				err = d.SetConnection(&mockConnection{})
 				funcCalled = worker.setConnectionCalled
 
 			case "SubmitTasks":
@@ -778,7 +772,7 @@ type mockWorker struct {
 	newProvisioning worker.Provisioning
 
 	isActiveCalled      bool
-	clientCalled        bool
+	connectionCalled    bool
 	setConnectionCalled bool
 	submitTasksCalled   bool
 	stopCalled          bool
@@ -808,12 +802,12 @@ func (w *mockWorker) IsActive() bool {
 	return false
 }
 
-func (w *mockWorker) Client() wslserviceapi.WSLClient {
-	w.clientCalled = true
+func (w *mockWorker) Connection() worker.Connection {
+	w.connectionCalled = true
 	return nil
 }
 
-func (w *mockWorker) SetConnection(conn *grpc.ClientConn) {
+func (w *mockWorker) SetConnection(conn worker.Connection) {
 	w.setConnectionCalled = true
 }
 
@@ -838,4 +832,17 @@ type mockProvisioning struct{}
 
 func (c mockProvisioning) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
 	return nil, nil
+}
+
+type mockConnection struct{}
+
+func (c *mockConnection) SendProAttachment(proToken string) error {
+	return nil
+}
+
+func (c *mockConnection) SendLandscapeConfig(lpeConfig, hostagentUID string) error {
+	return nil
+}
+
+func (c *mockConnection) Close() {
 }
