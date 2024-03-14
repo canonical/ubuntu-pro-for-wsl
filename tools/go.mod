@@ -183,7 +183,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.8.1 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c // indirect
-	github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa // indirect
+	github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 // indirect
 	github.com/ultraware/funlen v0.1.0 // indirect
 	github.com/ultraware/whitespace v0.1.0 // indirect
 	github.com/uudashr/gocognit v1.1.2 // indirect

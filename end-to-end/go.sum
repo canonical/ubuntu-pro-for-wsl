@@ -45,8 +45,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c h1:jO41xNLddTDkrfz4w4RCMWCmX8Y+ZHz5jSbJWNLDvqU=
 github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c/go.mod h1:edGgz97NOqS2oqzbKrZqO9YU9neosRrkEZbVJVQynAA=
-github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa h1:kKgqEuEgZ3yOCKNFZ6Bvn0/Xuzlf/yxeN2eEIotGKms=
-github.com/ubuntu/gowsl v0.0.0-20240311113207-ef97500f04fa/go.mod h1:1BBypuxD3Q91vOqv4Du+9o3YIWJbwhML6I1PuPm1+e4=
+github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 h1:GBrsd49DdWFkpmwzGoDBdQKg3Jei8BTaKRp+dRhoveg=
+github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc h1:ao2WRsKSzW6KuUY9IWPwWahcHCgR0s52IfwutMfEbdM=
 golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc/go.mod h1:iRJReGqOEeBhDZGkGbynYwcHlctCvnjTYIamk7uXpHI=
 golang.org/x/net v0.21.0 h1:AQyQV4dYCvJ7vGmJyKki9+PBdyvhkSd8EIx/qb0AYv4=
