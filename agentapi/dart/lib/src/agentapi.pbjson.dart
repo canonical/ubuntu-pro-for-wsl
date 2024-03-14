@@ -124,15 +124,46 @@ final $typed_data.Uint8List distroInfoDescriptor = $convert.base64Decode(
     'ZXR0eU5hbWUSIQoMcHJvX2F0dGFjaGVkGAUgASgIUgtwcm9BdHRhY2hlZBIaCghob3N0bmFtZR'
     'gGIAEoCVIIaG9zdG5hbWU=');
 
-@$core.Deprecated('Use portDescriptor instead')
-const Port$json = {
-  '1': 'Port',
+@$core.Deprecated('Use proAttachCmdDescriptor instead')
+const ProAttachCmd$json = {
+  '1': 'ProAttachCmd',
   '2': [
-    {'1': 'port', '3': 1, '4': 1, '5': 13, '10': 'port'},
+    {'1': 'token', '3': 1, '4': 1, '5': 9, '10': 'token'},
   ],
 };
 
-/// Descriptor for `Port`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List portDescriptor = $convert.base64Decode(
-    'CgRQb3J0EhIKBHBvcnQYASABKA1SBHBvcnQ=');
+/// Descriptor for `ProAttachCmd`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List proAttachCmdDescriptor = $convert.base64Decode(
+    'CgxQcm9BdHRhY2hDbWQSFAoFdG9rZW4YASABKAlSBXRva2Vu');
+
+@$core.Deprecated('Use landscapeConfigCmdDescriptor instead')
+const LandscapeConfigCmd$json = {
+  '1': 'LandscapeConfigCmd',
+  '2': [
+    {'1': 'config', '3': 1, '4': 1, '5': 9, '10': 'config'},
+    {'1': 'hostagent_uid', '3': 2, '4': 1, '5': 9, '10': 'hostagentUid'},
+  ],
+};
+
+/// Descriptor for `LandscapeConfigCmd`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List landscapeConfigCmdDescriptor = $convert.base64Decode(
+    'ChJMYW5kc2NhcGVDb25maWdDbWQSFgoGY29uZmlnGAEgASgJUgZjb25maWcSIwoNaG9zdGFnZW'
+    '50X3VpZBgCIAEoCVIMaG9zdGFnZW50VWlk');
+
+@$core.Deprecated('Use resultDescriptor instead')
+const Result$json = {
+  '1': 'Result',
+  '2': [
+    {'1': 'wsl_name', '3': 1, '4': 1, '5': 9, '10': 'wslName'},
+    {'1': 'error', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'error', '17': true},
+  ],
+  '8': [
+    {'1': '_error'},
+  ],
+};
+
+/// Descriptor for `Result`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List resultDescriptor = $convert.base64Decode(
+    'CgZSZXN1bHQSGQoId3NsX25hbWUYASABKAlSB3dzbE5hbWUSGQoFZXJyb3IYAiABKAlIAFIFZX'
+    'Jyb3KIAQFCCAoGX2Vycm9y');
 

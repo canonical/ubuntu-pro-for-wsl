@@ -567,22 +567,22 @@ class DistroInfo extends $pb.GeneratedMessage {
   void clearHostname() => clearField(6);
 }
 
-class Port extends $pb.GeneratedMessage {
-  factory Port({
-    $core.int? port,
+class ProAttachCmd extends $pb.GeneratedMessage {
+  factory ProAttachCmd({
+    $core.String? token,
   }) {
     final $result = create();
-    if (port != null) {
-      $result.port = port;
+    if (token != null) {
+      $result.token = token;
     }
     return $result;
   }
-  Port._() : super();
-  factory Port.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Port.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  ProAttachCmd._() : super();
+  factory ProAttachCmd.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ProAttachCmd.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Port', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'port', $pb.PbFieldType.OU3)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProAttachCmd', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'token')
     ..hasRequiredFields = false
   ;
 
@@ -590,31 +590,159 @@ class Port extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Port clone() => Port()..mergeFromMessage(this);
+  ProAttachCmd clone() => ProAttachCmd()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Port copyWith(void Function(Port) updates) => super.copyWith((message) => updates(message as Port)) as Port;
+  ProAttachCmd copyWith(void Function(ProAttachCmd) updates) => super.copyWith((message) => updates(message as ProAttachCmd)) as ProAttachCmd;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Port create() => Port._();
-  Port createEmptyInstance() => create();
-  static $pb.PbList<Port> createRepeated() => $pb.PbList<Port>();
+  static ProAttachCmd create() => ProAttachCmd._();
+  ProAttachCmd createEmptyInstance() => create();
+  static $pb.PbList<ProAttachCmd> createRepeated() => $pb.PbList<ProAttachCmd>();
   @$core.pragma('dart2js:noInline')
-  static Port getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Port>(create);
-  static Port? _defaultInstance;
+  static ProAttachCmd getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProAttachCmd>(create);
+  static ProAttachCmd? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.int get port => $_getIZ(0);
+  $core.String get token => $_getSZ(0);
   @$pb.TagNumber(1)
-  set port($core.int v) { $_setUnsignedInt32(0, v); }
+  set token($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasPort() => $_has(0);
+  $core.bool hasToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPort() => clearField(1);
+  void clearToken() => clearField(1);
+}
+
+class LandscapeConfigCmd extends $pb.GeneratedMessage {
+  factory LandscapeConfigCmd({
+    $core.String? config,
+    $core.String? hostagentUid,
+  }) {
+    final $result = create();
+    if (config != null) {
+      $result.config = config;
+    }
+    if (hostagentUid != null) {
+      $result.hostagentUid = hostagentUid;
+    }
+    return $result;
+  }
+  LandscapeConfigCmd._() : super();
+  factory LandscapeConfigCmd.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory LandscapeConfigCmd.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LandscapeConfigCmd', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'config')
+    ..aOS(2, _omitFieldNames ? '' : 'hostagentUid')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  LandscapeConfigCmd clone() => LandscapeConfigCmd()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  LandscapeConfigCmd copyWith(void Function(LandscapeConfigCmd) updates) => super.copyWith((message) => updates(message as LandscapeConfigCmd)) as LandscapeConfigCmd;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LandscapeConfigCmd create() => LandscapeConfigCmd._();
+  LandscapeConfigCmd createEmptyInstance() => create();
+  static $pb.PbList<LandscapeConfigCmd> createRepeated() => $pb.PbList<LandscapeConfigCmd>();
+  @$core.pragma('dart2js:noInline')
+  static LandscapeConfigCmd getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LandscapeConfigCmd>(create);
+  static LandscapeConfigCmd? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get config => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set config($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasConfig() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearConfig() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get hostagentUid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set hostagentUid($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasHostagentUid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHostagentUid() => clearField(2);
+}
+
+class Result extends $pb.GeneratedMessage {
+  factory Result({
+    $core.String? wslName,
+    $core.String? error,
+  }) {
+    final $result = create();
+    if (wslName != null) {
+      $result.wslName = wslName;
+    }
+    if (error != null) {
+      $result.error = error;
+    }
+    return $result;
+  }
+  Result._() : super();
+  factory Result.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Result.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Result', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'wslName')
+    ..aOS(2, _omitFieldNames ? '' : 'error')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Result clone() => Result()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Result copyWith(void Function(Result) updates) => super.copyWith((message) => updates(message as Result)) as Result;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Result create() => Result._();
+  Result createEmptyInstance() => create();
+  static $pb.PbList<Result> createRepeated() => $pb.PbList<Result>();
+  @$core.pragma('dart2js:noInline')
+  static Result getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Result>(create);
+  static Result? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get wslName => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set wslName($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasWslName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearWslName() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get error => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set error($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasError() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearError() => clearField(2);
 }
 
 

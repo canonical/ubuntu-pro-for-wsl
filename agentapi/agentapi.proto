@@ -69,7 +69,7 @@ message ProAttachCmd {
 
 message LandscapeConfigCmd {
     string config = 1;
-    string host_uid = 2;
+    string hostagent_uid = 2;
 }
 
 message Result {
