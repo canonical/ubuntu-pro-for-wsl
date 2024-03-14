@@ -12,5 +12,4 @@ use (
 	./tools
 	./windows-agent
 	./wsl-pro-service
-	./wslserviceapi
 )
