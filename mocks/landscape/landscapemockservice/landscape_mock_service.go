@@ -38,26 +38,26 @@ type HostInfo struct {
 
 // receiveHostInfo receives a landscapeapi.HostAgentInfo and converts it to a HostInfo.
 func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (HostInfo, error) {
-	src, err := stream.Recv()
+	msg, err := stream.Recv()
 	if err != nil {
 		return HostInfo{}, err
 	}
 
-	if src == nil {
+	if msg == nil {
 		return HostInfo{}, errors.New("nil HostAgentInfo")
 	}
 
 	h := HostInfo{
-		UID:               src.GetUid(),
-		Hostname:          src.GetHostname(),
-		Token:             src.GetToken(),
-		Instances:         make([]InstanceInfo, 0, len(src.GetInstances())),
-		AccountName:       src.GetAccountName(),
-		RegistrationKey:   src.GetRegistrationKey(),
-		DefaultInstanceID: src.GetDefaultInstanceId(),
+		UID:               msg.GetUid(),
+		Hostname:          msg.GetHostname(),
+		Token:             msg.GetToken(),
+		Instances:         make([]InstanceInfo, 0, len(msg.GetInstances())),
+		AccountName:       msg.GetAccountName(),
+		RegistrationKey:   msg.GetRegistrationKey(),
+		DefaultInstanceID: msg.GetDefaultInstanceId(),
 	}
 
-	for _, inst := range src.GetInstances() {
+	for _, inst := range msg.GetInstances() {
 		h.Instances = append(h.Instances, InstanceInfo{
 			ID:            inst.GetId(),
 			Name:          inst.GetName(),
