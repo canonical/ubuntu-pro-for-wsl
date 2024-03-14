@@ -8,6 +8,7 @@ import (
 	"net"
 	"reflect"
 
+	"github.com/ubuntu/decorate"
 	"golang.org/x/sys/windows"
 )
 
@@ -22,23 +23,28 @@ func getWslIP() (net.IP, error) {
 		return nil, err
 	}
 
-	for addr := head; addr != nil; addr = addr.Next {
-		desc := safeUTF16ToString(addr.Description, len(targetName)+1)
+	for node := head; node != nil; node = node.Next {
+		desc := windows.UTF16PtrToString(node.Description)
 		if desc != targetName {
 			continue
 		}
 
-		return addr.FirstUnicastAddress.Address.IP(), nil
+		return node.FirstUnicastAddress.Address.IP(), nil
 	}
 
 	return nil, fmt.Errorf("could not find WSL adapter")
 }
 
 // getAdaptersAddresses returns the head of a linked list of network adapters.
-func getAdaptersAddresses() (*windows.IpAdapterAddresses, error) {
-	// Flags from the Windows API.
+func getAdaptersAddresses() (head *windows.IpAdapterAddresses, err error) {
+	defer decorate.OnError(&err, "could not get network adapter addresses")
+
+	// This function is a wrapper around the Windows API GetAdaptersAddresses.
 	// https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
 	//
+	// This function takes in a buffer and fills it with a linked list.
+
+	// Flags from the Windows API.
 	//nolint:revive // Windows API constants are in shout case.
 	const (
 		GAA_FLAG_SKIP_ANYCAST       uint32 = 0x0002
