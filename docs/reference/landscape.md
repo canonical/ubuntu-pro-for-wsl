@@ -2,15 +2,21 @@
 # Landscape
 
 Landscape is a systems management tool designed to help you manage and monitor your Ubuntu systems from a unified platform.
-> See more: [Landscape | Documentation ](https://ubuntu.com/landscape/docs).
+> See more: [Landscape | Documentation ](https://ubuntu.com/landscape/docs)
 
-In UP4W, Landscape consists of a remote server and two clients, (1) the usual Ubuntu-side client, in this case a [Landscape client](ref::landscape-client) that comes automatically with any Ubuntu WSL instance, and (2) a Windows-side client, a Landscape client that is built into the [UP4W Windows Agent](ref::up4w-windows-agent). The latter offers advantages unique to Ubuntu WSL – the ability to create new instances through Landscape and the ability to configure all your instances at scale (when you configure the Windows-side client, the UP4W agent forwards the configuration to the client on each instance).
+In UP4W, Landscape consists of a remote server and two clients:
+
+1. the usual Ubuntu-side client, in this case a [Landscape client](ref::landscape-client) that comes automatically with any Ubuntu WSL instance, and 
+
+2. a Windows-side client, a Landscape client that is built into the [UP4W Windows Agent](ref::up4w-windows-agent). 
+
+The latter offers advantages unique to Ubuntu WSL – the ability to create new instances through Landscape and the ability to configure all your instances at scale (when you configure the Windows-side client, the UP4W agent forwards the configuration to the client on each instance).
 
 (ref::landscape-config)=
 ## Landscape configuration schema
 
 Both Landscape clients are configured via a single `.ini` file. This file is provided to the Windows host.
-> See more: [How to configure UP4W](howto::configure-up4w)
+> See more: [How to configure UP4W for Ubuntu Pro and Landscape](howto::configure-up4w)
 
 The schema for this file is the same as Landscape for Ubuntu desktop or server, with a few additional keys specific to the WSL settings, which can be grouped into keys that affect just the Windows-side client and keys that affect both the Windows-side client and the Ubuntu WSL-side client(s). These additions are documented below.
 
@@ -31,7 +37,7 @@ ssl_public_key = C:\Users\user\Downloads\landscape_server.pem
 
 ### Host
 
-This section contains settings unique to the Windows-side client. It contains a single key:
+This section contains settings unique to the Windows-side client. Currently these consist of a single key:
 - `url`: The URL of your Landscape account followed by a colon (`:`) and the port number. Port 6554 is the default for Landscape Quickstart installations.
 
 ### Client

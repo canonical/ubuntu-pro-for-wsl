@@ -1,10 +1,10 @@
-# How to install Ubuntu Pro for WSL
+# How to install UP4W
 
-This guide will show you how to install Ubuntu Pro for WSL for local development and testing.
+This guide will show you how to install UP4W for local development and testing.
 
-## Install Ubuntu Pro for WSL from scratch
+<br/>
 
-### Requirements
+**Requirements:**
 
 - A Windows machine with access to the internet
 - Appx from the Microsoft Store:
@@ -12,7 +12,7 @@ This guide will show you how to install Ubuntu Pro for WSL for local development
   - Either Ubuntu, Ubuntu 22.04, or Ubuntu (Preview)
 - The Windows Subsystem for Windows optional feature enabled
 
-### Download
+## 1. Download the Windows Agent and the  WSL Pro Service
 <!-- TODO: Update when we change were artifacts are hosted -->
 1. Go to the [repository actions page](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa-azure.yaml?query=branch%3Amain+).
 2. Click the latest successful workflow run.
@@ -24,7 +24,7 @@ This guide will show you how to install Ubuntu Pro for WSL for local development
 Notice that, for the step above, there is also an alternative version of the MSIX bundle enabled for end-to-end testing. Most likely, that's not what you want to download.
 
 (dev::install::agent)=
-### Install the Windows agent
+## 2. Install the Windows Agent
 
 This is the Windows-side agent that manages the distros.
 
@@ -41,7 +41,7 @@ This is the Windows-side agent that manages the distros.
 6. The Firewall may ask for an exception. Allow it.
 7. The GUI should show up. You’re done.
 
-### Install the WSL Pro Service
+## 2. Install the WSL Pro Service
 
 This is the Linux-side component that talks to the agent. Choose one or more distros Jammy or greater, and follow the instructions.
 

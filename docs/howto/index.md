@@ -2,10 +2,10 @@
 
 # How-to guides
 
-These how-to guides cover key operations and processes in Ubuntu Pro for WSL.
+These how-to guides cover key operations and processes in UP4W.
 
 ```{toctree}
 :titlesonly:
 
-set-up-up4w
+Install and configure UP4W <set-up-up4w>
 ```

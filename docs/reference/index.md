@@ -12,7 +12,7 @@ ubuntu_pro
 ubuntu_pro_client
 ubuntu_wsl
 UP4W <up4w>
-up4w-gui
+UP4W - GUI <up4w-gui>
 up4w-windows_agent
 up4w-wsl_pro_service
 windows_registry

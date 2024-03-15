@@ -1,6 +1,7 @@
-# Windows Agent command-line reference
+# Windows Agent CLI
 
-The Windows Agent is the component that runs on the host Windows machine.
+> See first: [UP4W - Windows Agent](ref::up4w-windows-agent)
+
 
 ## Usage
 

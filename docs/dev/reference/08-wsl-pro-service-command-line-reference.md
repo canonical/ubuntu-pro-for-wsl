@@ -1,6 +1,6 @@
-# WSL-Pro-Service command-line reference
+# WSL Pro Service CLI
 
-The WSL Pro Service is the component that runs on each guest Ubuntu distro.
+> See first: [UP4W - WSL Pro Service](ref::up4w-wsl-pro-service)
 
 ## Usage
 
