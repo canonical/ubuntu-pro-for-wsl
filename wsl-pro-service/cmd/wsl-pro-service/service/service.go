@@ -112,7 +112,9 @@ func (a *App) serve(args ...option) (err error) {
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.
 func installVerbosityFlag(cmd *cobra.Command, viper *viper.Viper) *int {
 	r := cmd.PersistentFlags().CountP("verbosity", "v", i18n.G("issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"))
-	decorate.LogOnError(viper.BindPFlag("verbosity", cmd.PersistentFlags().Lookup("verbosity")))
+	if err := viper.BindPFlag("verbosity", cmd.PersistentFlags().Lookup("verbosity")); err != nil {
+		log.Warning(context.Background(), err)
+	}
 	return r
 }
 
