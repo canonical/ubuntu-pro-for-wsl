@@ -16,7 +16,7 @@ var update bool
 const (
 	// UpdateGoldenFilesEnv is the environment variable used to indicate go test that
 	// the golden files should be overwritten with the current test results.
-	UpdateGoldenFilesEnv = `GOLDEN_FILE_UPDATE`
+	UpdateGoldenFilesEnv = `TESTS_UPDATE_GOLDEN`
 )
 
 func init() {
