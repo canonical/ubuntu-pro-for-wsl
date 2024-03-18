@@ -2,222 +2,286 @@ package testutils
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
-	"sync/atomic"
+	"path/filepath"
+	"sync"
 	"testing"
-	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/stretchr/testify/require"
+	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 )
 
-// This file deals with mocking the Windows Agent, and introducing errors
-// when necessary.
+// MockWindowsAgent mocks the windows agent server.
+type MockWindowsAgent struct {
+	Server   *grpc.Server
+	Service  *mockWSLInstanceService
+	Listener net.Listener
 
-type options struct {
-	sendBadPort                 bool
-	dropStreamBeforeSendingPort bool
-	dropStreamBeforeFirstRecv   bool
-}
-
-// AgentOption is used for optional arguments in New.
-type AgentOption func(*options)
-
-// WithSendBadPort orders the WslInstance service mock to send port :0,
-// which is not a valid port to-presect.
-func WithSendBadPort() AgentOption {
-	return func(o *options) {
-		o.sendBadPort = true
-	}
-}
-
-// WithDropStreamBeforeReceivingInfo orders the WslInstance service mock
-// to drop the connection before receiving the first info.
-func WithDropStreamBeforeReceivingInfo() AgentOption {
-	return func(o *options) {
-		o.dropStreamBeforeFirstRecv = true
-	}
-}
-
-// WithDropStreamBeforeSendingPort orders the WslInstance service mock
-// to drop the connection before sending the port.
-func WithDropStreamBeforeSendingPort() AgentOption {
-	return func(o *options) {
-		o.dropStreamBeforeSendingPort = true
-	}
+	Started chan struct{}
+	Stopped chan struct{}
 }
 
 // MockWindowsAgent mocks the windows-agent. It starts a GRPC service that will perform
 // the port dance and stay connected. It'll write the port file as well.
+// For simplicity's sake, it only suports one WSL distro at a time.
 //
-// You can stop the server manually, otherwise it'll stop during cleanup.
+// You can stop it manually, otherwise it'll stop during cleanup.
 //
 //nolint:revive // testing.T should go before context, regardless of what these linters say.
-func MockWindowsAgent(t *testing.T, ctx context.Context, addrFile string, args ...AgentOption) (*grpc.Server, *MockAgentData) {
+func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *MockWindowsAgent {
 	t.Helper()
-
-	var opts options
-	for _, f := range args {
-		f(&opts)
-	}
-
-	server := grpc.NewServer()
-	service := &wslInstanceMockService{
-		opts: opts,
-	}
-
-	agentapi.RegisterWSLInstanceServer(server, service)
 
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
 	require.NoError(t, err, "Setup: could not listen to agent address")
 
+	m := MockWindowsAgent{
+		Listener: lis,
+		Server:   grpc.NewServer(),
+		Service:  &mockWSLInstanceService{},
+		Started:  make(chan struct{}),
+		Stopped:  make(chan struct{}),
+	}
+	agentapi.RegisterWSLInstanceServer(m.Server, m.Service)
+	t.Cleanup(m.Stop)
+
+	addrFile := filepath.Join(publicDir, common.ListeningPortFileName)
+	err = os.WriteFile(addrFile, []byte(lis.Addr().String()), 0600)
+	if err != nil {
+		close(m.Started)
+		close(m.Stopped)
+		require.Fail(t, "Setup: could not write listening port file: %v", err)
+	}
+
 	go func() {
 		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on %q", lis.Addr().String())
 
-		t.Cleanup(server.Stop)
+		close(m.Started)
+		defer close(m.Stopped)
 
-		if err := server.Serve(lis); err != nil {
+		if err := m.Server.Serve(lis); err != nil {
 			log.Infof(ctx, "MockWindowsAgent: Serve returned an error: %v", err)
 		}
 
-		if err := os.Remove(addrFile); err != nil {
+		if err := os.RemoveAll(addrFile); err != nil {
 			log.Infof(ctx, "MockWindowsAgent: Remove address file returned an error: %v", err)
 		}
 	}()
 
-	err = os.WriteFile(addrFile, []byte(lis.Addr().String()), 0600)
-	require.NoError(t, err, "Setup: could not write listening port file")
+	<-m.Started
 
-	return server, &service.data
+	return &m
 }
 
-type wslInstanceMockService struct {
+// Stop releases all resources associated with the MockWindowsAgent.
+func (m *MockWindowsAgent) Stop() {
+	<-m.Started
+
+	if m.Server != nil {
+		m.Server.Stop()
+	}
+
+	if m.Listener != nil {
+		m.Listener.Close()
+	}
+
+	<-m.Stopped
+}
+
+type mockWSLInstanceService struct {
 	agentapi.UnimplementedWSLInstanceServer
 
-	opts options
-	data MockAgentData
+	Connect         channel[agentapi.DistroInfo, int, agentapi.WSLInstance_ConnectedServer]
+	ProAttachment   channel[agentapi.Result, agentapi.ProAttachCmd, agentapi.WSLInstance_ProAttachmentCommandsServer]
+	LandscapeConfig channel[agentapi.Result, agentapi.LandscapeConfigCmd, agentapi.WSLInstance_LandscapeConfigCommandsServer]
 }
 
-// MockAgentData contains some stats about the agent and the connections it made.
-type MockAgentData struct {
-	// ConnectionCount is the number of times the WSL Pro Service has connected to the stream
-	ConnectionCount atomic.Int32
-
-	// ConnectionCount is the number of times the Agent has connected to the WSLInstance service
-	BackConnectionCount atomic.Int32
-
-	// RecvCount is the number of completed Recv performed by the Agent
-	RecvCount atomic.Int32
-
-	// ReservedPort is the latest port reserved for the WSLProService
-	ReservedPort atomic.Uint32
+func (s *mockWSLInstanceService) AllConnected() bool {
+	return s.Connect.connected() && s.ProAttachment.connected() && s.LandscapeConfig.connected()
 }
 
-func (s *wslInstanceMockService) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
-	ctx := context.Background()
+func (s *mockWSLInstanceService) AnyConnected() bool {
+	return s.Connect.connected() || s.ProAttachment.connected() || s.LandscapeConfig.connected()
+}
 
-	defer func(err *error) {
-		if *err != nil {
-			log.Warningf(ctx, "wslInstanceMockService: dropped connection: %v", *err)
-			return
-		}
-		log.Info(ctx, "wslInstanceMockService: dropped connection")
-	}(&err)
+type receiver[Recv any] interface {
+	Recv() (*Recv, error)
+}
 
-	s.data.ConnectionCount.Add(1)
+type sender[Send any] interface {
+	Send(*Send) error
+}
 
-	log.Infof(ctx, "wslInstanceMockService: Received incoming connection")
+type channel[Recv any, Send any, Stream grpc.ServerStream] struct {
+	callCount   int
+	recvHistory []Recv
+	stream      *Stream
+	mu          sync.Mutex
+}
 
-	if s.opts.dropStreamBeforeFirstRecv {
-		log.Infof(ctx, "wslInstanceMockService: mock error: dropping stream before first Recv")
-		return nil
+func (ch *channel[Recv, Send, Stream]) connected() bool {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
+
+	return ch.stream != nil
+}
+
+func (ch *channel[Recv, Send, Stream]) History() []*Recv {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
+
+	out := make([]*Recv, len(ch.recvHistory))
+	for i, rcv := range ch.recvHistory {
+		cpy := rcv
+		out[i] = &cpy
 	}
 
-	info, err := stream.Recv()
+	return out
+}
+
+func (ch *channel[Recv, Send, Stream]) NConnections() int {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
+
+	return ch.callCount
+}
+
+func (ch *channel[Recv, Send, Stream]) Send(msg *Send) error {
+	ch.mu.Lock()
+	tmp := ch.stream
+	ch.mu.Unlock()
+
+	if tmp == nil {
+		return errors.New("not connected")
+	}
+
+	snd, ok := any(*tmp).(sender[Send])
+	if !ok {
+		panic("this channel cannot send")
+	}
+
+	return snd.Send(msg)
+}
+
+func (ch *channel[Recv, Send, Stream]) recv() (*Recv, error) {
+	ch.mu.Lock()
+	tmp := ch.stream
+	ch.mu.Unlock()
+
+	if tmp == nil {
+		return nil, errors.New("not connected")
+	}
+
+	r, ok := any(*tmp).(receiver[Recv])
+	if !ok {
+		panic("this channel cannot receive")
+	}
+
+	rcv, err := r.Recv()
 	if err != nil {
-		return fmt.Errorf("new connection: did not receive info from WSL distro: %v", err)
-	}
-	s.data.RecvCount.Add(1)
-
-	distro := info.GetWslName()
-	log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
-
-	if s.opts.dropStreamBeforeSendingPort {
-		log.Infof(ctx, "connection with %q: mock error: dropping stream before sending port", distro)
-		return nil
+		return nil, err
 	}
 
-	// Get a port and send it
-	lis, err := net.Listen("tcp4", "localhost:")
-	if err != nil {
-		return fmt.Errorf("could not reserve a port for %q: %v", distro, err)
-	}
+	ch.mu.Lock()
+	ch.recvHistory = append(ch.recvHistory, *rcv)
+	ch.mu.Unlock()
 
-	var port int
-	// localhost:0 is a bad address to send, as 0 is not a real port, but rather instructs
-	// net.Listen to autoselect a new port; hence defeating the point of pre-autoselection.
-	if s.opts.sendBadPort {
-		log.Infof(ctx, "wslInstanceMockService: Connection with %q: Sending bad port %d", distro, port)
-	} else {
-		port, err = portFromAddress(lis.Addr().String())
-		if err != nil {
-			return fmt.Errorf("could not parse address for %q: %v", distro, err)
-		}
+	return rcv, nil
+}
 
-		if err := lis.Close(); err != nil {
-			return fmt.Errorf("could not close port reserved for %q: %v", distro, err)
-		}
+func (ch *channel[Recv, Send, Stream]) set(s Stream) {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
 
-		log.Infof(ctx, "wslInstanceMockService: Connection with %q: Reserved port %d", distro, port)
-	}
+	ch.callCount++
+	ch.stream = &s
+}
 
-	s.data.ReservedPort.Store(uint32(port))
-	if err := stream.Send(&agentapi.Port{Port: uint32(port)}); err != nil {
-		return fmt.Errorf("could not send port: %v", err)
-	}
+func (ch *channel[Recv, Send, Stream]) reset() {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
 
-	// Connect back
-	for i := 0; i < 5; i++ {
-		time.Sleep(5 * time.Second)
-		_, err = net.Dial("tcp4", fmt.Sprintf("127.0.0.1:%d", port))
-		if err != nil {
-			err = fmt.Errorf("wslInstanceMockService: could not dial %q: %v", distro, err)
-			continue
-		}
-		break
-	}
+	ch.stream = nil
+}
 
-	if err != nil {
+func (s *mockWSLInstanceService) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
+	defer decorate.LogOnError(&err)
+
+	if msg, err := stream.Recv(); err != nil {
 		return err
+	} else if msg.GetWslName() == "" {
+		return errors.New("WSL name not provided")
 	}
 
-	s.data.BackConnectionCount.Add(1)
+	s.Connect.set(stream)
+	defer s.Connect.reset()
 
-	log.Infof(ctx, "wslInstanceMockService: Connection with %q: connected back via reserved port", distro)
+	log.Info(stream.Context(), "Connected ready")
 
-	// Stay connected
 	for {
-		_, err = stream.Recv()
-		if err != nil {
-			log.Infof(ctx, "wslInstanceMockService: Connection with %q ended: %v", distro, err)
-			break
+		_, err := s.Connect.recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		} else if err != nil {
+			return fmt.Errorf("Connected stopped: %v", err)
 		}
-		log.Infof(ctx, "wslInstanceMockService: Connection with %q: received info: %+v", distro, info)
-		s.data.RecvCount.Add(1)
 	}
-
-	return nil
 }
 
-func portFromAddress(addr string) (int, error) {
-	_, p, err := net.SplitHostPort(addr)
-	if err != nil {
-		return 0, fmt.Errorf("could not parse address %q", addr)
+func (s *mockWSLInstanceService) ProAttachmentCommands(stream agentapi.WSLInstance_ProAttachmentCommandsServer) (err error) {
+	defer decorate.LogOnError(&err)
+
+	if msg, err := stream.Recv(); err != nil {
+		return err
+	} else if msg.GetWslName() == "" {
+		return errors.New("WSL name not provided")
 	}
-	return net.LookupPort("tcp4", fmt.Sprint(p))
+
+	s.ProAttachment.set(stream)
+	defer s.ProAttachment.reset()
+
+	log.Info(stream.Context(), "ProAttachmentCommands ready")
+
+	for {
+		_, err := s.ProAttachment.recv()
+		if errors.Is(err, io.EOF) {
+			log.Info(stream.Context(), "ProAttachmentCommands finished")
+			return nil
+		} else if err != nil {
+			return fmt.Errorf("ProAttachmentCommands stopped: %v", err)
+		}
+	}
+}
+
+func (s *mockWSLInstanceService) LandscapeConfigCommands(stream agentapi.WSLInstance_LandscapeConfigCommandsServer) (err error) {
+	defer decorate.LogOnError(&err)
+
+	if msg, err := stream.Recv(); err != nil {
+		return err
+	} else if msg.GetWslName() == "" {
+		return errors.New("WSL name not provided")
+	}
+
+	s.LandscapeConfig.set(stream)
+	defer s.LandscapeConfig.reset()
+
+	log.Info(stream.Context(), "LandscapeConfigCommands ready")
+
+	for {
+		_, err := s.LandscapeConfig.recv()
+		if errors.Is(err, io.EOF) {
+			log.Info(stream.Context(), "LandscapeConfigCommands finished")
+			return nil
+		} else if err != nil {
+			return fmt.Errorf("LandscapeConfigCommands stopped: %v", err)
+		}
+	}
 }

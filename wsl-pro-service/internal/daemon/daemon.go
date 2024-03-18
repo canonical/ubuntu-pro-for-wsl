@@ -6,43 +6,58 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
+	"path/filepath"
+	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/controlstream"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streammulticlient"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streamserver"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/coreos/go-systemd/daemon"
+	"github.com/sirupsen/logrus"
+	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Daemon is a grpc daemon with systemd support.
 type Daemon struct {
-	ctrlStream      *controlstream.ControlStream
-	registerService GRPCServiceRegisterer
+	addressPath string
 
-	// ctx and cancel used to stop the currently active service.
-	ctx    context.Context
-	cancel func()
-
-	// Channels for internal messaging.
-	started      atomic.Bool
-	running      chan struct{}
-	gracefulStop func()
-	forceStop    func()
+	// Interface to the WSL distro
+	system *system.System
 
 	// Systemd status management.
 	systemdSdNotifier systemdSdNotifier
+	readyOnce         sync.Once
+
+	// Channels for internal messaging.
+	started atomic.Bool
+	running chan struct{}
+
+	// This context is used to interrupt any action.
+	// It must be the parent of gracefulCtx.
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	// This context waits until the next blocking Recv to interrupt.
+	gracefulCtx    context.Context
+	gracefulCancel context.CancelFunc
 }
 
 // Status sent to systemd.
 const (
-	serviceStatusWaiting  = "Not serving: waiting to retry"
-	serviceStatusRetrying = "Not serving: retrying"
-	serviceStatusServing  = "Serving"
-	serviceStatusStopped  = "Stopped"
+	serviceStatusWaiting    = "Not connected: waiting to retry"
+	serviceStatusConnecting = "Connecting"
+	serviceStatusConnected  = "Connected"
+	serviceStatusStopped    = "Stopped"
 )
 
 type options struct {
@@ -54,12 +69,9 @@ type systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
 // Option is the function signature used to tweak the daemon creation.
 type Option func(*options)
 
-// GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
-type GRPCServiceRegisterer func(context.Context, wslinstanceservice.ControlStreamClient) *grpc.Server
-
 // New returns an new, initialized daemon server, which handles systemd activation.
 // If systemd activation is used, it will override any socket passed here.
-func New(ctx context.Context, registerGRPCService GRPCServiceRegisterer, s system.System, args ...Option) (*Daemon, error) {
+func New(ctx context.Context, s *system.System, args ...Option) (*Daemon, error) {
 	log.Debug(ctx, "Building new daemon")
 
 	// Set default options.
@@ -72,175 +84,122 @@ func New(ctx context.Context, registerGRPCService GRPCServiceRegisterer, s syste
 		f(&opts)
 	}
 
-	ctrlStream, err := controlstream.New(ctx, s)
+	home, err := s.UserProfileDir(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find address file: could not find $env:UserProfile: %v", err)
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
+	gCtx, gCancel := context.WithCancel(ctx)
 
 	return &Daemon{
-		registerService:   registerGRPCService,
 		systemdSdNotifier: opts.systemdSdNotifier,
-		ctrlStream:        &ctrlStream,
-		ctx:               ctx,
-		cancel:            cancel,
+		system:            s,
+		addressPath:       filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName),
+
+		ctx:    ctx,
+		cancel: cancel,
+
+		gracefulCtx:    gCtx,
+		gracefulCancel: gCancel,
 	}, nil
 }
 
-// Serve sets up the GRPC server to listen to the address reserved by the
-// control stream. If either the server or the connection to the stream
-// fail, both server and stream are restarted.
-func (d *Daemon) Serve() (err error) {
-	defer func() {
-		if err := d.systemdNotifyStatus(d.ctx, serviceStatusStopped); err != nil {
-			log.Warningf(d.ctx, "Could not change systemd status: %v", err)
-		}
-	}()
-
-	select {
-	case <-d.ctx.Done():
-		return d.ctx.Err()
-	default:
-	}
-
-	var gracefulStopCtx context.Context
-	gracefulStopCtx, d.gracefulStop = context.WithCancel(d.ctx)
-	defer d.gracefulStop()
-
-	var forceStopCtx context.Context
-	forceStopCtx, d.forceStop = context.WithCancel(d.ctx)
-	defer d.forceStop()
+// Serve serves on the streamserver, automatically reconnecting when the connection drops.
+// Call Quit to deallocate the resources used in Serve.
+func (d *Daemon) Serve(service streamserver.CommandService) error {
+	defer d.cancel()
+	defer d.systemdNotifyStatus(d.ctx, serviceStatusStopped)
 
 	d.running = make(chan struct{})
 	defer close(d.running)
 
 	d.started.Store(true)
 
-	const (
-		minDelay   = 1 * time.Second
-		maxDelay   = 5 * time.Minute
-		growthRate = 2
-	)
-
-	delay := minDelay
-
-	if err := d.systemdNotifyReady(d.ctx); err != nil {
-		return err
+	select {
+	case <-d.gracefulCtx.Done():
+		return d.gracefulCtx.Err()
+	default:
 	}
+
+	// Exponential back-off
+	const (
+		minWait      = time.Second
+		maxWait      = time.Minute
+		growthFactor = 2
+	)
+	wait := 0 * time.Second
 
 	for {
-		err := d.serveOnce(gracefulStopCtx, forceStopCtx)
-		if err == nil {
-			return nil
-		}
-		var target controlstream.SystemError
-		if errors.As(err, &target) {
-			// Irrecoverable errors: broken /etc/resolv.conf, broken pro status, etc
-			return err
-		}
-		log.Errorf(d.ctx, "Serve error: %v", err)
-
-		delay = min(delay*growthRate, maxDelay)
-
-		if err := d.systemdNotifyStatus(d.ctx, serviceStatusWaiting); err != nil {
-			return err
-		}
-
 		select {
-		case <-d.ctx.Done():
-			return d.ctx.Err()
-		case <-time.After(delay):
-		case <-forceStopCtx.Done():
+		case <-d.gracefulCtx.Done():
 			return nil
-		case <-gracefulStopCtx.Done():
-			return nil
+		case <-time.After(wait):
 		}
 
-		log.Infof(d.ctx, "Retrying connection to control stream")
-		if err := d.systemdNotifyStatus(d.ctx, serviceStatusRetrying); err != nil {
+		success, err := func() (success bool, err error) {
+			// ctx handles force-quit
+			ctx, cancel := context.WithCancel(d.ctx)
+			defer cancel()
+
+			log.Info(ctx, "Daemon: connecting to Windows Agent")
+			d.systemdNotifyStatus(ctx, serviceStatusConnecting)
+
+			server, err := d.connect(ctx)
+			if errors.Is(err, streamserver.SystemError{}) {
+				return false, err
+			} else if err != nil {
+				log.Warningf(ctx, "Daemon: %v", err)
+				return false, nil
+			}
+
+			go func() {
+				// Handle graceful quit.
+				select {
+				case <-d.gracefulCtx.Done():
+				case <-ctx.Done():
+				}
+				server.GracefulStop()
+			}()
+
+			log.Info(ctx, "Daemon: completed connection to Windows Agent")
+
+			d.systemdNotifyStatus(ctx, serviceStatusConnected)
+
+			t := time.NewTimer(time.Minute)
+			defer t.Stop()
+			err = server.Serve(service)
+			if errors.Is(err, streamserver.SystemError{}) {
+				return false, err
+			} else if err != nil {
+				log.Warningf(ctx, "Daemon: disconnected from Windows host: %v", err)
+			} else {
+				log.Warning(ctx, "Daemon: disconnected from Windows host")
+			}
+
+			select {
+			case <-t.C:
+				// Long-lived connection is not a failure
+				return true, nil
+			default:
+				// Connection was short-lived: consider it a failure
+				return false, nil
+			}
+		}()
+
+		if err != nil {
 			return err
 		}
-	}
-}
 
-func (d *Daemon) serveOnce(gracefulStopCtx, forceStopCtx context.Context) error {
-	ctx, cancel := context.WithCancel(d.ctx)
-	defer cancel()
-
-	// Initial setup
-	if err := d.ctrlStream.Connect(ctx); err != nil {
-		return err
-	}
-	defer d.ctrlStream.Disconnect()
-	log.Infof(ctx, "Connected to control stream")
-
-	server := d.registerService(ctx, d.ctrlStream)
-	go handleServerStop(ctx, gracefulStopCtx, forceStopCtx, server)
-
-	// Start serving
-	serveDone := make(chan error)
-	go func() {
-		defer close(serveDone)
-		serveDone <- d.serve(ctx, server)
-	}()
-
-	// Block until either the service or the control stream stops
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-serveDone:
-		if err != nil {
-			return fmt.Errorf("WSL Pro Service stopped serving: %v", err)
+		if success {
+			wait *= 0
+			continue
 		}
-		return nil
-	case <-d.ctrlStream.Done(ctx):
-		return errors.New("lost connection to Windows Agent")
+
+		wait = clamp(minWait, wait*growthFactor, maxWait)
+		log.Infof(d.ctx, "Reconnecting to Windows host in %d seconds", int(wait/time.Second))
+		d.systemdNotifyStatus(d.ctx, serviceStatusWaiting)
 	}
-}
-
-func handleServerStop(ctx, gracefulStopCtx, forceStopCtx context.Context, server *grpc.Server) {
-	defer server.Stop()
-
-	select {
-	case <-ctx.Done():
-		return
-	case <-forceStopCtx.Done():
-		return
-	case <-gracefulStopCtx.Done():
-		server.GracefulStop()
-	}
-
-	// Graceful stop can be overridden by a later forced Stop
-	select {
-	case <-ctx.Done():
-	case <-forceStopCtx.Done():
-	}
-}
-
-// serve listens on a tcp socket and starts serving GRPC requests on it.
-func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
-	log.Debug(ctx, "Starting to serve gRPC requests")
-
-	address := fmt.Sprintf("localhost:%d", d.ctrlStream.ReservedPort())
-
-	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp4", address)
-	if err != nil {
-		return fmt.Errorf("could not listen: %v", err)
-	}
-
-	log.Infof(ctx, "Serving gRPC requests on %v", address)
-
-	if err := d.systemdNotifyStatus(d.ctx, serviceStatusServing); err != nil {
-		return err
-	}
-
-	if err := server.Serve(lis); err != nil {
-		return fmt.Errorf("grpc error: %v", err)
-	}
-
-	return nil
 }
 
 // Quit gracefully quits listening loop and stops the grpc server.
@@ -248,21 +207,20 @@ func (d *Daemon) serve(ctx context.Context, server *grpc.Server) error {
 func (d *Daemon) Quit(ctx context.Context, force bool) {
 	defer d.cancel()
 
+	// Signal
+	log.Info(ctx, "Stopping daemon requested.")
+	if force {
+		d.cancel()
+		log.Info(ctx, i18n.G("Stopping active requests."))
+	} else {
+		d.gracefulCancel()
+		log.Info(ctx, i18n.G("Waiting for active requests to close."))
+	}
+
 	if !d.started.Load() {
 		return
 	}
 
-	// Signal
-	log.Info(ctx, "Stopping daemon requested.")
-	if force {
-		d.forceStop()
-		<-d.running
-		return
-	}
-
-	d.gracefulStop()
-
-	log.Info(ctx, i18n.G("Waiting for active requests to close."))
 	<-d.running
 	log.Debug(ctx, i18n.G("All connections have now ended."))
 }
@@ -278,7 +236,7 @@ func (d *Daemon) systemdNotifyReady(ctx context.Context) error {
 	return nil
 }
 
-func (d *Daemon) systemdNotifyStatus(ctx context.Context, status string) error {
+func (d *Daemon) systemdNotifyStatus(ctx context.Context, status string) {
 	message := fmt.Sprintf("STATUS=%s", status)
 	//                             ^^
 	// You may think that this should be %q, but you'd be wrong!
@@ -289,10 +247,113 @@ func (d *Daemon) systemdNotifyStatus(ctx context.Context, status string) error {
 
 	sent, err := d.systemdSdNotifier(false, message)
 	if err != nil {
-		return fmt.Errorf("couldn't update status to systemd: %v", err)
+		log.Warningf(ctx, "Daemon: couldn't update systemd status to %q: %v", status, err)
+		return
 	}
+
 	if sent {
 		log.Debugf(ctx, "Updated systemd status to %q", status)
 	}
-	return nil
+}
+
+func clamp(minimum, value, maximum time.Duration) time.Duration {
+	return max(minimum, min(value, maximum))
+}
+
+// connect connects to the Windows Agent and returns a reverse server.
+// Cancel the context to quit gracefully, or Stop the server to abort.
+func (d *Daemon) connect(ctx context.Context) (server *streamserver.Server, err error) {
+	defer decorate.OnError(&err, "could not connect to Windows Agent")
+
+	addr, err := d.address(ctx, d.system)
+	if err != nil {
+		return nil, fmt.Errorf("could not get address: %w", err)
+	}
+
+	distroName, err := d.system.WslDistroName(ctx)
+	if err != nil {
+		log.Warningf(ctx, "Windows host connection: assigning arbitrary connection ID because of error: %v", err)
+		distroName = ""
+	}
+
+	log.Infof(ctx, "Daemon: starting connection to Windows Agent via %s", addr)
+
+	// Signal systemd before dialing for the first time
+	// We don't want to delay startup due to a timeout
+	err = nil
+	d.readyOnce.Do(func() { err = d.systemdNotifyReady(ctx) })
+	if err != nil {
+		return nil, streamserver.NewSystemError("could not notify systemd: %v", err)
+	}
+
+	conn, err := grpc.DialContext(ctx, addr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
+			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
+		)))
+	if err != nil {
+		return nil, fmt.Errorf("could not dial: %v", err)
+	}
+
+	defer func(err *error) {
+		if *err != nil {
+			conn.Close()
+		}
+	}(&err)
+
+	multiclient, err := streammulticlient.Connect(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return streamserver.New(ctx, d.system, multiclient), nil
+}
+
+// address fetches the address of the control stream from the Windows filesystem.
+func (d *Daemon) address(ctx context.Context, system *system.System) (string, error) {
+	// Parse the port from the file written by the windows agent.
+	addr, err := os.ReadFile(d.addressPath)
+	if err != nil {
+		return "", fmt.Errorf("could not read agent port file %q: %v", d.addressPath, err)
+	}
+
+	port, err := splitPort(string(addr))
+	if err != nil {
+		return "", err
+	}
+
+	windowsLocalhost, err := system.WindowsHostAddress(ctx)
+	if err != nil {
+		return "", streamserver.NewSystemError("%w", err)
+	}
+
+	// Join the address and port, and validate it.
+	address := net.JoinHostPort(windowsLocalhost.String(), fmt.Sprint(port))
+
+	return address, nil
+}
+
+// splitPort splits the port from the address, and validates that the port is a strictly positive integer.
+func splitPort(addr string) (p int, err error) {
+	defer decorate.OnError(&err, "could not parse port from %q", addr)
+
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 0, fmt.Errorf("could not split address: %v", err)
+	}
+
+	p, err = strconv.Atoi(port)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse port as an integer: %v", err)
+	}
+
+	if p == 0 {
+		return 0, errors.New("port cannot be zero")
+	}
+
+	if p < 0 {
+		return 0, errors.New("port cannot be negative")
+	}
+
+	return p, nil
 }

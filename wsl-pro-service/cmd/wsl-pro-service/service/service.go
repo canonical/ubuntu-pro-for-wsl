@@ -7,14 +7,13 @@ import (
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/commandservice"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/ubuntu/decorate"
 )
 
 // cmdName is the binary name for the service.
@@ -36,7 +35,7 @@ type daemonConfig struct {
 }
 
 type options struct {
-	system system.System
+	system *system.System
 }
 
 type option func(*options)
@@ -95,18 +94,17 @@ func (a *App) serve(args ...option) (err error) {
 		f(&opt)
 	}
 
-	srv := wslinstanceservice.New(opt.system)
-
 	// Connect with the agent.
-	a.daemon, err = daemon.New(ctx, srv.RegisterGRPCService, opt.system)
+	a.daemon, err = daemon.New(ctx, opt.system)
 	if err != nil {
 		close(a.ready)
 		return fmt.Errorf("could not create daemon: %v", err)
 	}
 
+	service := commandservice.New(opt.system)
 	close(a.ready)
 
-	return a.daemon.Serve()
+	return a.daemon.Serve(service)
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.
@@ -148,9 +146,6 @@ func (a App) UsageError() bool {
 // Quit gracefully shutdown the service.
 func (a *App) Quit() {
 	a.WaitReady()
-	if a.daemon == nil {
-		return
-	}
 	a.daemon.Quit(context.Background(), false)
 }
 

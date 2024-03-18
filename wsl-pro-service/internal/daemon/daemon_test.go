@@ -3,19 +3,19 @@ package daemon_test
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/wslinstanceservice"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
 )
 
 func TestMain(m *testing.M) {
@@ -49,7 +49,7 @@ func TestNew(t *testing.T) {
 				mock.SetControlArg(testutils.WslpathErr)
 			}
 
-			_, err := daemon.New(ctx, nil, sys)
+			_, err := daemon.New(ctx, sys)
 			if tc.wantErr {
 				require.Error(t, err, "New should return an error")
 				return
@@ -65,37 +65,43 @@ func TestServe(t *testing.T) {
 
 	testCases := map[string]struct {
 		precancelContext        bool
-		breakPortFile           bool
 		breakWindowsHostAddress bool
+		dontServe               bool
 
-		// Breaking the agent
-		agentDoesntRecv   bool
-		agentSendsNoPort  bool
-		agentSendsBadPort bool
+		// Break the port file in various ways
+		breakPortFile         bool
+		portFileEmpty         bool
+		portFilePortNotNumber bool
+		portFileZeroPort      bool
+		portFileNegativePort  bool
 
 		// Return values for the mock SystemdSdNotifier
 		notifierReturn bool
 		notifierErr    bool
 
-		wantSystemdNotReady      bool
-		wantConnectControlStream bool
-		wantErr                  bool
+		wantSystemdNotReady bool
+		wantConnected       bool
+		wantErr             bool
 	}{
-		"Success": {wantConnectControlStream: true},
-		"Success with systemd notifier returning true": {notifierReturn: true, wantConnectControlStream: true},
+		"Success": {wantConnected: true},
+		"Success with systemd notifier returning true": {notifierReturn: true, wantConnected: true},
 
 		// No connection:
 		// These problems do not cause the agent to return error because it
 		// keeps retrying the connection
 		//
-		// We instead chech that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because port file does not exist": {breakPortFile: true},
-		"No connection because of faulty agent":          {agentDoesntRecv: true, wantConnectControlStream: true},
+		// We instead check that a connection was/wasn't made with the agent, and that systemd was notified
+		"No connection because the port file does not exist":      {breakPortFile: true, wantSystemdNotReady: true, wantConnected: false},
+		"No connection because the port file is empty":            {portFileEmpty: true, wantSystemdNotReady: true, wantConnected: false},
+		"No connection because the port file has a bad port":      {portFilePortNotNumber: true, wantSystemdNotReady: true, wantConnected: false},
+		"No connection because the port file has port 0":          {portFileZeroPort: true, wantSystemdNotReady: true, wantConnected: false},
+		"No connection because the port file has a negative port": {portFileNegativePort: true, wantSystemdNotReady: true, wantConnected: false},
+		"No connection because there is no server":                {dontServe: true},
 
 		// Errors
-		"Error because of notifier returning error":      {notifierErr: true, wantErr: true},
-		"Error because WindowsHostAddress returns error": {breakWindowsHostAddress: true, wantErr: true},
-		"Error because of context cancelled":             {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
+		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
+		"Error because the notifier returns an error":       {notifierErr: true, wantErr: true},
+		"Error because WindowsHostAddress returns an error": {breakWindowsHostAddress: true, wantSystemdNotReady: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -107,20 +113,12 @@ func TestServe(t *testing.T) {
 
 			system, mock := testutils.MockSystem(t)
 
-			var agentArgs []testutils.AgentOption
-			if tc.agentDoesntRecv {
-				agentArgs = append(agentArgs, testutils.WithDropStreamBeforeReceivingInfo())
-			} else if tc.agentSendsNoPort {
-				agentArgs = append(agentArgs, testutils.WithDropStreamBeforeSendingPort())
-			} else if tc.agentSendsBadPort {
-				agentArgs = append(agentArgs, testutils.WithSendBadPort())
-			}
-
-			portFile := mock.DefaultAddrFile()
-			_, agentMetaData := testutils.MockWindowsAgent(t, ctx, portFile, agentArgs...)
+			publicDir := mock.DefaultPublicDir()
+			agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
+			defer agent.Stop()
 
 			if tc.breakPortFile {
-				err := os.Remove(portFile)
+				err := os.RemoveAll(publicDir)
 				require.NoError(t, err, "Setup: could not remove port file")
 			}
 
@@ -128,9 +126,23 @@ func TestServe(t *testing.T) {
 				mock.SetControlArg(testutils.WslInfoErr)
 			}
 
-			registerService := func(context.Context, wslinstanceservice.ControlStreamClient) *grpc.Server {
-				// No need for an actual service
-				return grpc.NewServer()
+			portFile := filepath.Join(publicDir, common.ListeningPortFileName)
+			if tc.portFileEmpty {
+				require.NoError(t, os.WriteFile(portFile, []byte{}, 0600), "Setup: could not overwrite port file")
+			}
+			if tc.portFilePortNotNumber {
+				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:portyMcPortface"), 0600), "Setup: could not overwrite port file")
+			}
+			if tc.portFileZeroPort {
+				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:0"), 0600), "Setup: could not overwrite port file")
+			}
+			if tc.portFileNegativePort {
+				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:-5"), 0600), "Setup: could not overwrite port file")
+			}
+			if tc.dontServe {
+				addr := agent.Listener.Addr().String()
+				agent.Stop()
+				require.NoError(t, os.WriteFile(portFile, []byte(addr), 0600), "Setup: could not overwrite port file")
 			}
 
 			systemd := SystemdSdNotifierMock{
@@ -138,21 +150,16 @@ func TestServe(t *testing.T) {
 				returnErr: tc.notifierErr,
 			}
 
-			d, err := daemon.New(
-				ctx,
-				registerService,
-				system,
-				daemon.WithSystemdNotifier(systemd.notify),
-			)
+			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
 			require.NoError(t, err, "New should return no error")
 
 			if tc.precancelContext {
 				cancel()
 			}
 
-			time.AfterFunc(10*time.Second, func() { d.Quit(ctx, true) })
+			time.AfterFunc(20*time.Second, func() { d.Quit(ctx, true) })
 
-			err = d.Serve()
+			err = d.Serve(&mockService{})
 			if tc.wantErr {
 				require.Error(t, err, "Serve() should have returned an error")
 			} else {
@@ -165,11 +172,20 @@ func TestServe(t *testing.T) {
 				require.Equal(t, int32(1), systemd.readyNotifications.Load(), "daemon should have notified systemd once")
 			}
 
-			if tc.wantConnectControlStream {
-				require.NotZero(t, agentMetaData.ConnectionCount.Load(), "daemon should have succefully connected to the agent")
-			} else {
-				require.Zero(t, agentMetaData.ConnectionCount.Load(), "daemon should not have connected to the agent")
+			if tc.dontServe {
+				return // Nothing to assert server-side
 			}
+
+			if !tc.wantConnected {
+				require.Zero(t, agent.Service.Connect.NConnections(), "daemon should not have connected to the agent (connected stream)")
+				require.Zero(t, agent.Service.ProAttachment.NConnections(), "daemon should not have connected to the agent (pro attach stream)")
+				require.Zero(t, agent.Service.LandscapeConfig.NConnections(), "daemon should not have connected to the agent (landscape config stream)")
+				return
+			}
+
+			require.NotZero(t, agent.Service.Connect.NConnections(), "daemon should have connected to the agent (connected stream)")
+			require.NotZero(t, agent.Service.ProAttachment.NConnections(), "daemon should have connected to the agent (pro attach stream)")
+			require.NotZero(t, agent.Service.LandscapeConfig.NConnections(), "daemon should have connected to the agent (landscape config stream)")
 		})
 	}
 }
@@ -201,32 +217,23 @@ func TestServeAndQuit(t *testing.T) {
 
 			system, mock := testutils.MockSystem(t)
 
-			portFile := mock.DefaultAddrFile()
-			testutils.MockWindowsAgent(t, ctx, portFile)
-
-			registerer := func(ctx context.Context, ctrl wslinstanceservice.ControlStreamClient) *grpc.Server {
-				// No need for a real GRPC service
-				return grpc.NewServer()
-			}
+			publicDir := mock.DefaultPublicDir()
+			agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
 
 			systemd := SystemdSdNotifierMock{
 				returns: true,
 			}
 
-			d, err := daemon.New(ctx,
-				registerer,
-				system,
-				daemon.WithSystemdNotifier(systemd.notify),
-			)
+			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
 			require.NoError(t, err, "New should return no error")
+
+			if tc.quitBeforeServe {
+				d.Quit(ctx, tc.quitForcefully)
+			}
 
 			serveExit := make(chan error)
 			go func() {
-				if tc.quitBeforeServe {
-					d.Quit(ctx, tc.quitForcefully)
-				}
-
-				serveExit <- d.Serve()
+				serveExit <- d.Serve(&mockService{})
 				close(serveExit)
 			}()
 
@@ -234,24 +241,35 @@ func TestServeAndQuit(t *testing.T) {
 				// Wait for the server to start
 				require.Eventually(t, func() bool {
 					return systemd.readyNotifications.Load() > 0
-				}, 10*time.Second, 100*time.Millisecond, "Systemd should have been notified")
+				}, 20*time.Second, 100*time.Millisecond, "Systemd should have been notified")
 
-				const wantState = "STATUS=Serving"
+				const wantState = "STATUS=Connected"
 				require.Eventually(t, func() bool {
 					return systemd.gotState.Load() == wantState
-				}, 60*time.Second, time.Second, "Systemd state should have been set to %q ", wantState)
+				}, 20*time.Second, time.Second, "Systemd state should have been set to %q ", wantState)
 
 				require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
+
+				require.Eventually(t, agent.Service.AllConnected, 10*time.Second, 100*time.Millisecond, "Daemon never connected to agent's service")
 			}
 
 			d.Quit(ctx, tc.quitForcefully)
 
+			select {
+			case <-time.After(20 * time.Second):
+				require.Fail(t, "Serve should have exited after calling Quit")
+			case err = <-serveExit:
+			}
+
 			if tc.wantErr {
-				require.Error(t, <-serveExit, "Serve should have returned an error")
+				require.Error(t, err, "Serve should have returned an error")
 				require.LessOrEqual(t, systemd.readyNotifications.Load(), int32(1), "Systemd notifier should have been notified at most once")
 				return
 			}
-			require.NoError(t, <-serveExit, "Serve should have returned no errors")
+			require.NoError(t, err, "Serve should have returned no errors")
+
+			require.Eventually(t, func() bool { return !agent.Service.AnyConnected() },
+				10*time.Second, 100*time.Millisecond, "Service should have disconnected from the agent")
 
 			require.Equal(t, int32(1), systemd.readyNotifications.Load(), "Systemd notifier should have been notified exactly once")
 			require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
@@ -271,9 +289,11 @@ func TestReconnection(t *testing.T) {
 
 	testCases := map[string]struct {
 		firstConnectionSuccesful bool
+		firstConnectionLong      bool
 	}{
-		"Success connecting after failing to connect":          {},
-		"Success connecting after previous connection dropped": {firstConnectionSuccesful: true},
+		"Success connecting after failing to connect":                     {},
+		"Success connecting after previous connection dropped":            {firstConnectionSuccesful: true},
+		"Success connecting after previous long-lived connection dropped": {firstConnectionLong: true, firstConnectionSuccesful: true},
 	}
 
 	for name, tc := range testCases {
@@ -284,65 +304,50 @@ func TestReconnection(t *testing.T) {
 			defer cancel()
 
 			system, mock := testutils.MockSystem(t)
-
-			portFile := mock.DefaultAddrFile()
-
-			registerer := func(ctx context.Context, ctrl wslinstanceservice.ControlStreamClient) *grpc.Server {
-				// No need for a real GRPC service
-				return grpc.NewServer()
-			}
+			publicDir := mock.DefaultPublicDir()
 
 			systemd := SystemdSdNotifierMock{returns: true}
 
-			d, err := daemon.New(ctx,
-				registerer,
-				system,
-				daemon.WithSystemdNotifier(systemd.notify),
-			)
+			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
 			require.NoError(t, err, "New should return no error")
 
 			defer d.Quit(ctx, true)
 
-			var server *grpc.Server
-			var agentData *testutils.MockAgentData
+			var agent *testutils.MockWindowsAgent
 			if tc.firstConnectionSuccesful {
-				server, agentData = testutils.MockWindowsAgent(t, ctx, portFile)
-				defer server.Stop()
+				agent = testutils.NewMockWindowsAgent(t, ctx, publicDir)
+				defer agent.Stop()
 			}
 
 			//nolint:errcheck // We don't really care
-			go d.Serve()
+			go d.Serve(&mockService{})
 
 			const maxTimeout = 60 * time.Second
 
 			if tc.firstConnectionSuccesful {
 				require.Eventually(t, func() bool {
-					return systemd.gotState.Load() == "STATUS=Serving"
-				}, maxTimeout, time.Second, "Service should have set systemd state to Serving")
+					return systemd.gotState.Load() == "STATUS=Connected"
+				}, maxTimeout, time.Second, "Service should have set systemd state to Connected")
 
-				require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
-				server.Stop()
+				require.Eventually(t, agent.Service.AllConnected, 10*time.Second, 100*time.Millisecond, "Daemon never connected to agent's service")
 
-				// Avoid a race where the portfile is not removed until after the next server starts
-				require.Eventually(t, func() bool {
-					_, err := os.Stat(portFile)
-					return errors.Is(err, fs.ErrNotExist)
-				}, 20*time.Second, 100*time.Millisecond, "Stopping the Windows-Agent mock server should remove the port file")
+				if tc.firstConnectionLong {
+					// "Long-lived" means longer than a minute
+					time.Sleep(65 * time.Second)
+				}
+
+				agent.Stop()
 			} else {
 				require.Eventually(t, func() bool {
-					return systemd.gotState.Load() == "STATUS=Not serving: waiting to retry"
-				}, maxTimeout, 100*time.Millisecond, "State should have been set to 'Not serving'")
+					return systemd.gotState.Load() == "STATUS=Not connected: waiting to retry"
+				}, maxTimeout, 100*time.Millisecond, "State should have been set to 'Not connected: waiting to retry'")
 			}
 
-			server, agentData = testutils.MockWindowsAgent(t, ctx, portFile)
-			defer server.Stop()
+			agent = testutils.NewMockWindowsAgent(t, ctx, publicDir)
+			defer agent.Stop()
 
-			require.Eventually(t, func() bool {
-				return agentData.BackConnectionCount.Load() != 0
-			}, time.Minute, time.Second, "Service should eventually connect to the agent")
-
-			require.Equal(t, int32(1), systemd.readyNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
-			require.Equal(t, int32(1), agentData.ConnectionCount.Load(), "Service should have connected to the control stream")
+			require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 100*time.Millisecond, "Daemon never connected to agent's service")
+			require.EqualValues(t, 1, systemd.readyNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
 		})
 	}
 }
@@ -384,6 +389,16 @@ func (s *atomicString) Load() string {
 		return ""
 	}
 	return str
+}
+
+type mockService struct{}
+
+func (s *mockService) ApplyProToken(ctx context.Context, msg *agentapi.ProAttachCmd) error {
+	return nil
+}
+
+func (s *mockService) ApplyLandscapeConfig(ctx context.Context, msg *agentapi.LandscapeConfigCmd) error {
+	return nil
 }
 
 func TestWithProMock(t *testing.T)     { testutils.ProMock(t) }

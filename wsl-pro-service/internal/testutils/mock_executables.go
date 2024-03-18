@@ -48,8 +48,8 @@ var (
 	windowsUserProfileDir = `D:\Users\TestUser\`
 	linuxUserProfileDir   = "/mnt/d/Users/TestUser/"
 
-	// defaultAddrFile is the default path used in tests to store the address of the Windows Agent service.
-	defaultAddrFile = filepath.Join(linuxUserProfileDir, common.UserProfileDir, common.ListeningPortFileName)
+	// defaultPublicDir is the default path used in tests to store the address of the Windows Agent service.
+	defaultPublicDir = filepath.Join(linuxUserProfileDir, common.UserProfileDir)
 
 	//go:embed filesystem_defaults/os-release
 	defaultOsReleaseContents []byte
@@ -111,7 +111,7 @@ const (
 
 // MockSystem sets up a few mocks:
 // - filesystem and mock executables for wslpath, pro.
-func MockSystem(t *testing.T) (system.System, *SystemMock) {
+func MockSystem(t *testing.T) (*system.System, *SystemMock) {
 	t.Helper()
 
 	distroHostname := "TEST_DISTRO_HOSTNAME"
@@ -125,10 +125,10 @@ func MockSystem(t *testing.T) (system.System, *SystemMock) {
 	return system.New(system.WithTestBackend(mock)), mock
 }
 
-// DefaultAddrFile is the location where a mocked system will expect the addr file to be located,
+// DefaultPublicDir is the location where a mocked system will expect the addr file to be located,
 // and its containing directory will be created in New().
-func (m *SystemMock) DefaultAddrFile() string {
-	return m.Path(defaultAddrFile)
+func (m *SystemMock) DefaultPublicDir() string {
+	return m.Path(defaultPublicDir)
 }
 
 // SetControlArg adds control arguments to the mock executables.
@@ -626,9 +626,9 @@ func mockFilesystemRoot(t *testing.T) (rootDir string) {
 	require.NoError(t, err, "Setup: could not write mock /proc/mounts")
 
 	// Mock Windows FS
-	portDir := filepath.Join(rootDir, defaultAddrFile)
-	err = os.MkdirAll(filepath.Dir(portDir), 0750)
-	require.NoErrorf(t, err, "Setup: could not create mock %s", portDir)
+	publicDir := filepath.Join(rootDir, defaultPublicDir)
+	err = os.MkdirAll(publicDir, 0750)
+	require.NoErrorf(t, err, "Setup: could not create mock %s", publicDir)
 
 	system32 := filepath.Join(rootDir, defaultWindowsMount, "WINDOWS/system32")
 	err = os.MkdirAll(system32, 0750)
