@@ -89,11 +89,15 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string, hostag
 	if err != nil {
 		return "", err
 	}
-	if err := overrideKey(ctx, data, "client", "computer_title", distroName); err != nil {
+	if err := createKey(ctx, data, "client", "computer_title", distroName, true); err != nil {
 		return "", err
 	}
 
-	if err := overrideKey(ctx, data, "client", "hostagent_uid", hostagentUID); err != nil {
+	if err := createKey(ctx, data, "client", "hostagent_uid", hostagentUID, true); err != nil {
+		return "", err
+	}
+
+	if err := createKey(ctx, data, "client", "tags", "wsl", false); err != nil {
 		return "", err
 	}
 
@@ -109,8 +113,8 @@ func modifyConfig(ctx context.Context, s *System, landscapeConfig string, hostag
 	return w.String(), nil
 }
 
-// overrideKey sets a key to a particular value.
-func overrideKey(ctx context.Context, data *ini.File, section, key, value string) error {
+// createKey tries to create a key with a particular value, optionally overriding an existing key.
+func createKey(ctx context.Context, data *ini.File, section, key, value string, override bool) error {
 	sec, err := data.GetSection(section)
 	if err != nil {
 		if sec, err = data.NewSection(section); err != nil {
@@ -119,6 +123,11 @@ func overrideKey(ctx context.Context, data *ini.File, section, key, value string
 	}
 
 	if sec.HasKey(key) {
+		if !override {
+			log.Infof(ctx, "Landscape config contains key %q. Its value will not be overridden.", key)
+			return nil
+		}
+
 		log.Infof(ctx, "Landscape config contains key %q. Its value will be overridden.", key)
 		sec.DeleteKey(key)
 	}
