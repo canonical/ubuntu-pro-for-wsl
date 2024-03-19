@@ -41,7 +41,7 @@ This is the Windows-side agent that manages the distros.
 6. The Firewall may ask for an exception. Allow it.
 7. The GUI should show up. You’re done.
 
-## 2. Install the WSL Pro Service
+## 3. Install the WSL Pro Service
 
 This is the Linux-side component that talks to the agent. Choose one or more distros Jammy or greater, and follow the instructions.
 
