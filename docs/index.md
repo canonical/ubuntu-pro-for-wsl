@@ -15,21 +15,21 @@ When you install UP4W on your Windows host:
 
 Pro-attaching and Landscape-enrolling an Ubuntu instance is not difficult, but when your Ubuntu instance fleet is large it can get tedious.  UP4W takes advantage of the WSL setting to make it a breeze -- regardless of the size of your fleet.
 
-Ubuntu Pro for WSL is of value to system administrators, corporate security teams, and desktop users.
+UP4W is of value to system administrators, corporate security teams, and desktop users.
 
 ## Project and community
 
-Ubuntu Pro for WSL is a member of the Ubuntu family. It’s an open-source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions, and much more!
+UP4W is a member of the Ubuntu family. It’s an open-source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions, and much more!
 
-Thinking about using Ubuntu Pro for WSL for your next project? Get in touch!
+Thinking about using UP4W for your next project? Get in touch!
 
 ```{toctree}
 :hidden:
 :titlesonly:
 
-self
+UP4W <self>
 Tutorial </tutorial/index>
 How-to guides </howto/index>
 Reference </reference/index>
-Developer documentation </dev/index>
+UP4W Dev </dev/index>
 ```

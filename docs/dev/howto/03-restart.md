@@ -1,12 +1,12 @@
-# How to restart Ubuntu Pro for WSL
+# How to restart UP4W
 
-Some configuration changes only apply when you restart Ubuntu Pro for WSL. Here is a guide on how to restart it.
+Some configuration changes only apply when you restart UP4W. Here is a guide on how to restart it. There are two options.
 
-## Option 1: Restart your machine
+## Option 1: Restart your UP4W host machine
 
 This is the simple one. If you're not in a hurry to see the configuration updated, just wait until next time you boot your machine.
 
-## Option 2: Restart only Ubuntu Pro for WSL
+## Option 2: Restart only UP4W
 
 1. Stop the agent:
 

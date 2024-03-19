@@ -1,8 +1,8 @@
-# How to access the logs
+# How to access UP4W logs
 
-At some point you may want to read the logs of Ubuntu Pro for WSL, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
+At some point you may want to read the UP4W logs, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
 
-## WSL Pro service
+## Access the logs for the WSL Pro service
 
 To access the logs of a specific distribution's WSL-Pro-Service, you must first launch the distribution and then query the journal:
 
@@ -14,9 +14,9 @@ For more information on using the journal, you can check out its man page with `
 
 These logs may be insufficient for proper debugging, so you may be interested in looking at the agent's logs as well.
 
-## Windows agent
+## Access the logs for the Windows Agent
 
-Follow these steps to access the logs for the Windows agent.
+To access the logs for the Windows Agent:
 
 1. Go to your home directory
    - Open the file explorer
