@@ -19,8 +19,8 @@ String? agentAddrFilePath(String filename) {
 
 enum AgentAddrFileError { nonexistent, isEmpty, formatError, accessDenied }
 
-/// Reads the agent port from the addr file located at the full path [filepath].
-Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
+/// Reads the agent host and port from the addr file located at the full path [filepath].
+Future<Either<AgentAddrFileError, (String, int)>> readAgentPortFromFile(
   String filepath,
 ) async {
   try {
@@ -37,18 +37,37 @@ Future<Either<AgentAddrFileError, int>> readAgentPortFromFile(
       return const Left(AgentAddrFileError.isEmpty);
     }
 
-    final port = readAgentPortFromLine(lines[0]);
-    if (port == null) {
+    final address = parseAddress(lines[0]);
+    if (address == null) {
       // error: format error
       return const Left(AgentAddrFileError.formatError);
     }
 
-    return Right(port);
+    return Right(address);
   } on FileSystemException catch (_) {
     // error: permission denied
     return const Left(AgentAddrFileError.accessDenied);
   }
 }
 
-/// Parses [line] assuming it's from Windows Agent addr file. Returns null on error.
-int? readAgentPortFromLine(String line) => int.tryParse(line.split(':').last);
+/// Parses [line] assuming it's from Windows Agent addr file.
+/// Returns a (host, port) tuple on success, or null on error
+(String, int)? parseAddress(String line) {
+  final parts = line.split(':');
+  if (parts.length < 2) {
+    return null;
+  }
+
+  final host = parts.sublist(0, parts.length - 1).join(':');
+  final port = int.tryParse(parts.last);
+
+  if (port == null) {
+    return null;
+  }
+  if (port <= 0) {
+    // Port must be strictly positive.
+    return null;
+  }
+
+  return (host, port);
+}

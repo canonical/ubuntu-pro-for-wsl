@@ -144,6 +144,38 @@ func TestStartQuit(t *testing.T) {
 	}
 }
 
+func TestServeNoWSLIP(t *testing.T) {
+	// This test is not parallel because it modifies a global flag that
+	// affects the behavior of the getWslIP function.
+	daemon.SetWslIPErr(t)
+
+	addrDir := t.TempDir()
+
+	registerer := func(context.Context) *grpc.Server {
+		return grpc.NewServer()
+	}
+
+	// Very lenient timeout because we expect the Serve to fail immediately.
+	// If it doesn't, the test will fail due to the context timeout (otherwise
+	// it would hang indefinitely).
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	d := daemon.New(ctx, registerer, addrDir)
+	defer d.Quit(ctx, false)
+
+	err := d.Serve(ctx)
+	require.Error(t, err, "Serve should fail when the WSL IP cannot be found")
+
+	select {
+	case <-ctx.Done():
+		// Most likely, Serve did not fail and instead started serving,
+		// only to be stopped by the test timeout.
+		require.Fail(t, "Serve should have failed immediately")
+	default:
+	}
+}
+
 func TestServeError(t *testing.T) {
 	t.Parallel()
 
