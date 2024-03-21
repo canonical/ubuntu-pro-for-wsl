@@ -38,7 +38,7 @@ type SystemMock struct {
 	WslDistroNameEnvEnabled bool
 
 	// LookupGroupError makes the LookupGroup function fail.
-	LookupGroupError bool
+	LandscapeGroupGID string
 
 	// extraEnv are extra environment variables that will be passed to mocked executables
 	extraEnv []string
@@ -118,12 +118,16 @@ const (
 func MockSystem(t *testing.T) (system.System, *SystemMock) {
 	t.Helper()
 
+	u, err := user.Current()
+	require.NoError(t, err, "Setup: could not get current user")
+
 	distroHostname := "TEST_DISTRO_HOSTNAME"
 	mock := &SystemMock{
 		FsRoot:                  mockFilesystemRoot(t),
 		WslDistroName:           "TEST_DISTRO",
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
+		LandscapeGroupGID:       u.Gid,
 	}
 
 	return system.New(system.WithTestBackend(mock)), mock
@@ -162,20 +166,18 @@ func (m *SystemMock) GetenvWslDistroName() string {
 	return ""
 }
 
-// LookupGroup mocks the LookupGroup function so that it always returns the
-// current user's group.
+// LookupGroup mocks the user.LookupGroup function.
 func (m *SystemMock) LookupGroup(name string) (*user.Group, error) {
-	if m.LookupGroupError {
-		return nil, errors.New("mock LookupGroup error")
+	if name != "landscape" {
+		return nil, fmt.Errorf("mock does not support group %q", name)
 	}
 
-	u, err := user.Current()
-	if err != nil {
-		return nil, fmt.Errorf("unexpected error in mock: %v", err)
+	if m.LandscapeGroupGID == "" {
+		return nil, user.UnknownGroupError(name)
 	}
 
 	return &user.Group{
-		Gid:  u.Gid,
+		Gid:  m.LandscapeGroupGID,
 		Name: name,
 	}, nil
 }
