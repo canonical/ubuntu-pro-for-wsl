@@ -143,13 +143,13 @@ class WSLInstanceClient extends $grpc.Client {
       '/agentapi.WSLInstance/Connected',
       ($0.DistroInfo value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.Empty.fromBuffer(value));
-  static final _$proAttachmentCommands = $grpc.ClientMethod<$0.Result, $0.ProAttachCmd>(
+  static final _$proAttachmentCommands = $grpc.ClientMethod<$0.MSG, $0.ProAttachCmd>(
       '/agentapi.WSLInstance/ProAttachmentCommands',
-      ($0.Result value) => value.writeToBuffer(),
+      ($0.MSG value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.ProAttachCmd.fromBuffer(value));
-  static final _$landscapeConfigCommands = $grpc.ClientMethod<$0.Result, $0.LandscapeConfigCmd>(
+  static final _$landscapeConfigCommands = $grpc.ClientMethod<$0.MSG, $0.LandscapeConfigCmd>(
       '/agentapi.WSLInstance/LandscapeConfigCommands',
-      ($0.Result value) => value.writeToBuffer(),
+      ($0.MSG value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.LandscapeConfigCmd.fromBuffer(value));
 
   WSLInstanceClient($grpc.ClientChannel channel,
@@ -162,11 +162,11 @@ class WSLInstanceClient extends $grpc.Client {
     return $createStreamingCall(_$connected, request, options: options).single;
   }
 
-  $grpc.ResponseStream<$0.ProAttachCmd> proAttachmentCommands($async.Stream<$0.Result> request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseStream<$0.ProAttachCmd> proAttachmentCommands($async.Stream<$0.MSG> request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$proAttachmentCommands, request, options: options);
   }
 
-  $grpc.ResponseStream<$0.LandscapeConfigCmd> landscapeConfigCommands($async.Stream<$0.Result> request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseStream<$0.LandscapeConfigCmd> landscapeConfigCommands($async.Stream<$0.MSG> request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$landscapeConfigCommands, request, options: options);
   }
 }
@@ -183,23 +183,23 @@ abstract class WSLInstanceServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.DistroInfo.fromBuffer(value),
         ($0.Empty value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.Result, $0.ProAttachCmd>(
+    $addMethod($grpc.ServiceMethod<$0.MSG, $0.ProAttachCmd>(
         'ProAttachmentCommands',
         proAttachmentCommands,
         true,
         true,
-        ($core.List<$core.int> value) => $0.Result.fromBuffer(value),
+        ($core.List<$core.int> value) => $0.MSG.fromBuffer(value),
         ($0.ProAttachCmd value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.Result, $0.LandscapeConfigCmd>(
+    $addMethod($grpc.ServiceMethod<$0.MSG, $0.LandscapeConfigCmd>(
         'LandscapeConfigCommands',
         landscapeConfigCommands,
         true,
         true,
-        ($core.List<$core.int> value) => $0.Result.fromBuffer(value),
+        ($core.List<$core.int> value) => $0.MSG.fromBuffer(value),
         ($0.LandscapeConfigCmd value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.Empty> connected($grpc.ServiceCall call, $async.Stream<$0.DistroInfo> request);
-  $async.Stream<$0.ProAttachCmd> proAttachmentCommands($grpc.ServiceCall call, $async.Stream<$0.Result> request);
-  $async.Stream<$0.LandscapeConfigCmd> landscapeConfigCommands($grpc.ServiceCall call, $async.Stream<$0.Result> request);
+  $async.Stream<$0.ProAttachCmd> proAttachmentCommands($grpc.ServiceCall call, $async.Stream<$0.MSG> request);
+  $async.Stream<$0.LandscapeConfigCmd> landscapeConfigCommands($grpc.ServiceCall call, $async.Stream<$0.MSG> request);
 }

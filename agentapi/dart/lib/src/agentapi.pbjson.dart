@@ -150,20 +150,20 @@ final $typed_data.Uint8List landscapeConfigCmdDescriptor = $convert.base64Decode
     'ChJMYW5kc2NhcGVDb25maWdDbWQSFgoGY29uZmlnGAEgASgJUgZjb25maWcSIwoNaG9zdGFnZW'
     '50X3VpZBgCIAEoCVIMaG9zdGFnZW50VWlk');
 
-@$core.Deprecated('Use resultDescriptor instead')
-const Result$json = {
-  '1': 'Result',
+@$core.Deprecated('Use mSGDescriptor instead')
+const MSG$json = {
+  '1': 'MSG',
   '2': [
-    {'1': 'wsl_name', '3': 1, '4': 1, '5': 9, '10': 'wslName'},
-    {'1': 'error', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'error', '17': true},
+    {'1': 'wsl_name', '3': 1, '4': 1, '5': 9, '9': 0, '10': 'wslName'},
+    {'1': 'result', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'result'},
   ],
   '8': [
-    {'1': '_error'},
+    {'1': 'data'},
   ],
 };
 
-/// Descriptor for `Result`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List resultDescriptor = $convert.base64Decode(
-    'CgZSZXN1bHQSGQoId3NsX25hbWUYASABKAlSB3dzbE5hbWUSGQoFZXJyb3IYAiABKAlIAFIFZX'
-    'Jyb3KIAQFCCAoGX2Vycm9y');
+/// Descriptor for `MSG`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List mSGDescriptor = $convert.base64Decode(
+    'CgNNU0cSGwoId3NsX25hbWUYASABKAlIAFIHd3NsTmFtZRIYCgZyZXN1bHQYAiABKAlIAFIGcm'
+    'VzdWx0QgYKBGRhdGE=');
 

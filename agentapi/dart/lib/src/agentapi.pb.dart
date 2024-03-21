@@ -681,27 +681,39 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
   void clearHostagentUid() => clearField(2);
 }
 
-class Result extends $pb.GeneratedMessage {
-  factory Result({
+enum MSG_Data {
+  wslName, 
+  result, 
+  notSet
+}
+
+class MSG extends $pb.GeneratedMessage {
+  factory MSG({
     $core.String? wslName,
-    $core.String? error,
+    $core.String? result,
   }) {
     final $result = create();
     if (wslName != null) {
       $result.wslName = wslName;
     }
-    if (error != null) {
-      $result.error = error;
+    if (result != null) {
+      $result.result = result;
     }
     return $result;
   }
-  Result._() : super();
-  factory Result.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Result.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  MSG._() : super();
+  factory MSG.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory MSG.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Result', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+  static const $core.Map<$core.int, MSG_Data> _MSG_DataByTag = {
+    1 : MSG_Data.wslName,
+    2 : MSG_Data.result,
+    0 : MSG_Data.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MSG', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..oo(0, [1, 2])
     ..aOS(1, _omitFieldNames ? '' : 'wslName')
-    ..aOS(2, _omitFieldNames ? '' : 'error')
+    ..aOS(2, _omitFieldNames ? '' : 'result')
     ..hasRequiredFields = false
   ;
 
@@ -709,22 +721,25 @@ class Result extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Result clone() => Result()..mergeFromMessage(this);
+  MSG clone() => MSG()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Result copyWith(void Function(Result) updates) => super.copyWith((message) => updates(message as Result)) as Result;
+  MSG copyWith(void Function(MSG) updates) => super.copyWith((message) => updates(message as MSG)) as MSG;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Result create() => Result._();
-  Result createEmptyInstance() => create();
-  static $pb.PbList<Result> createRepeated() => $pb.PbList<Result>();
+  static MSG create() => MSG._();
+  MSG createEmptyInstance() => create();
+  static $pb.PbList<MSG> createRepeated() => $pb.PbList<MSG>();
   @$core.pragma('dart2js:noInline')
-  static Result getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Result>(create);
-  static Result? _defaultInstance;
+  static MSG getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MSG>(create);
+  static MSG? _defaultInstance;
+
+  MSG_Data whichData() => _MSG_DataByTag[$_whichOneof(0)]!;
+  void clearData() => clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get wslName => $_getSZ(0);
@@ -736,13 +751,13 @@ class Result extends $pb.GeneratedMessage {
   void clearWslName() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get error => $_getSZ(1);
+  $core.String get result => $_getSZ(1);
   @$pb.TagNumber(2)
-  set error($core.String v) { $_setString(1, v); }
+  set result($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasError() => $_has(1);
+  $core.bool hasResult() => $_has(1);
   @$pb.TagNumber(2)
-  void clearError() => clearField(2);
+  void clearResult() => clearField(2);
 }
 
 

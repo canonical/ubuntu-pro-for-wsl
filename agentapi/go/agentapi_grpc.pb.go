@@ -324,7 +324,7 @@ func (c *wSLInstanceClient) ProAttachmentCommands(ctx context.Context, opts ...g
 }
 
 type WSLInstance_ProAttachmentCommandsClient interface {
-	Send(*Result) error
+	Send(*MSG) error
 	Recv() (*ProAttachCmd, error)
 	grpc.ClientStream
 }
@@ -333,7 +333,7 @@ type wSLInstanceProAttachmentCommandsClient struct {
 	grpc.ClientStream
 }
 
-func (x *wSLInstanceProAttachmentCommandsClient) Send(m *Result) error {
+func (x *wSLInstanceProAttachmentCommandsClient) Send(m *MSG) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -355,7 +355,7 @@ func (c *wSLInstanceClient) LandscapeConfigCommands(ctx context.Context, opts ..
 }
 
 type WSLInstance_LandscapeConfigCommandsClient interface {
-	Send(*Result) error
+	Send(*MSG) error
 	Recv() (*LandscapeConfigCmd, error)
 	grpc.ClientStream
 }
@@ -364,7 +364,7 @@ type wSLInstanceLandscapeConfigCommandsClient struct {
 	grpc.ClientStream
 }
 
-func (x *wSLInstanceLandscapeConfigCommandsClient) Send(m *Result) error {
+func (x *wSLInstanceLandscapeConfigCommandsClient) Send(m *MSG) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -445,7 +445,7 @@ func _WSLInstance_ProAttachmentCommands_Handler(srv interface{}, stream grpc.Ser
 
 type WSLInstance_ProAttachmentCommandsServer interface {
 	Send(*ProAttachCmd) error
-	Recv() (*Result, error)
+	Recv() (*MSG, error)
 	grpc.ServerStream
 }
 
@@ -457,8 +457,8 @@ func (x *wSLInstanceProAttachmentCommandsServer) Send(m *ProAttachCmd) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *wSLInstanceProAttachmentCommandsServer) Recv() (*Result, error) {
-	m := new(Result)
+func (x *wSLInstanceProAttachmentCommandsServer) Recv() (*MSG, error) {
+	m := new(MSG)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -471,7 +471,7 @@ func _WSLInstance_LandscapeConfigCommands_Handler(srv interface{}, stream grpc.S
 
 type WSLInstance_LandscapeConfigCommandsServer interface {
 	Send(*LandscapeConfigCmd) error
-	Recv() (*Result, error)
+	Recv() (*MSG, error)
 	grpc.ServerStream
 }
 
@@ -483,8 +483,8 @@ func (x *wSLInstanceLandscapeConfigCommandsServer) Send(m *LandscapeConfigCmd) e
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *wSLInstanceLandscapeConfigCommandsServer) Recv() (*Result, error) {
-	m := new(Result)
+func (x *wSLInstanceLandscapeConfigCommandsServer) Recv() (*MSG, error) {
+	m := new(MSG)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
