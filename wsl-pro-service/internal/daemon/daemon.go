@@ -17,8 +17,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streammulticlient"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streamserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/sirupsen/logrus"
@@ -105,9 +104,9 @@ func New(ctx context.Context, s *system.System, args ...Option) (*Daemon, error)
 	}, nil
 }
 
-// Serve serves on the streamserver, automatically reconnecting when the connection drops.
+// Serve serves on the streams, automatically reconnecting when the connection drops.
 // Call Quit to deallocate the resources used in Serve.
-func (d *Daemon) Serve(service streamserver.CommandService) error {
+func (d *Daemon) Serve(service streams.CommandService) error {
 	defer d.cancel()
 	defer d.systemdNotifyStatus(d.ctx, serviceStatusStopped)
 
@@ -146,7 +145,7 @@ func (d *Daemon) Serve(service streamserver.CommandService) error {
 			d.systemdNotifyStatus(ctx, serviceStatusConnecting)
 
 			server, err := d.connect(ctx)
-			if errors.Is(err, streamserver.SystemError{}) {
+			if errors.Is(err, streams.SystemError{}) {
 				return false, err
 			} else if err != nil {
 				log.Warningf(ctx, "Daemon: %v", err)
@@ -169,7 +168,7 @@ func (d *Daemon) Serve(service streamserver.CommandService) error {
 			t := time.NewTimer(time.Minute)
 			defer t.Stop()
 			err = server.Serve(service)
-			if errors.Is(err, streamserver.SystemError{}) {
+			if errors.Is(err, streams.SystemError{}) {
 				return false, err
 			} else if err != nil {
 				log.Warningf(ctx, "Daemon: disconnected from Windows host: %v", err)
@@ -262,7 +261,7 @@ func clamp(minimum, value, maximum time.Duration) time.Duration {
 
 // connect connects to the Windows Agent and returns a reverse server.
 // Cancel the context to quit gracefully, or Stop the server to abort.
-func (d *Daemon) connect(ctx context.Context) (server *streamserver.Server, err error) {
+func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error) {
 	defer decorate.OnError(&err, "could not connect to Windows Agent")
 
 	addr, err := d.address(ctx, d.system)
@@ -283,7 +282,7 @@ func (d *Daemon) connect(ctx context.Context) (server *streamserver.Server, err 
 	err = nil
 	d.readyOnce.Do(func() { err = d.systemdNotifyReady(ctx) })
 	if err != nil {
-		return nil, streamserver.NewSystemError("could not notify systemd: %v", err)
+		return nil, streams.NewSystemError("could not notify systemd: %v", err)
 	}
 
 	conn, err := grpc.DialContext(ctx, addr,
@@ -301,12 +300,7 @@ func (d *Daemon) connect(ctx context.Context) (server *streamserver.Server, err 
 		}
 	}(&err)
 
-	multiclient, err := streammulticlient.Connect(ctx, conn)
-	if err != nil {
-		return nil, err
-	}
-
-	return streamserver.New(ctx, d.system, multiclient), nil
+	return streams.NewServer(ctx, d.system, conn), nil
 }
 
 // address fetches the address of the control stream from the Windows filesystem.
@@ -324,7 +318,7 @@ func (d *Daemon) address(ctx context.Context, system *system.System) (string, er
 
 	windowsLocalhost, err := system.WindowsHostAddress(ctx)
 	if err != nil {
-		return "", streamserver.NewSystemError("%w", err)
+		return "", streams.NewSystemError("%w", err)
 	}
 
 	// Join the address and port, and validate it.

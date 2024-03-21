@@ -1,4 +1,4 @@
-package streammulticlient_test
+package streams_test
 
 import (
 	"context"
@@ -10,33 +10,28 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streammulticlient"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func TestLifecycle(t *testing.T) {
+func TestConnect(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// One of these four must be true
-		dontServe     bool
-		stopWithClose bool
-		stopServer    bool
+		dontServe bool
 
 		wantErr bool
 	}{
-		"Success stopping with Close":  {stopWithClose: true},
-		"Success stopping server-side": {stopServer: true},
+		"Success": {},
 
-		"Error dialing when there is no server": {dontServe: true, wantErr: true},
+		"Error dialing an address that is not serving": {dontServe: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
@@ -45,59 +40,50 @@ func TestLifecycle(t *testing.T) {
 			require.NoError(t, err, "Setup: could not listen")
 			defer lis.Close()
 
-			s := grpc.NewServer()
-			go func() {
-				err := s.Serve(lis)
-				if err != nil {
-					log.Warningf(ctx, "Serve error: %v", err)
-				}
-			}()
-			defer s.Stop()
+			service := &agentAPIServer{}
 
-			if tc.dontServe {
-				// We serve and stop, so that the port is reserved but unused
-				s.Stop()
-				lis.Close()
+			if !tc.dontServe {
+				s := grpc.NewServer()
+				agentapi.RegisterWSLInstanceServer(s, service)
+				go func() {
+					err = s.Serve(lis)
+					if err != nil {
+						log.Warningf(ctx, "Serve error: %v", err)
+					}
+				}()
+				defer s.Stop()
 			}
 
 			conn, err := grpc.DialContext(ctx, lis.Addr().String(),
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 			)
-			require.NoError(t, err, "Dial should return no error")
+			require.NoError(t, err, "Setup: Dial should have succeeded")
 			defer conn.Close()
 
-			client, err := streammulticlient.Connect(ctx, conn)
+			client, err := streams.Connect(ctx, conn)
 			if tc.wantErr {
-				require.Error(t, err, "Connect should have returned an error")
+				require.Error(t, err, "Connect should return an error")
 				return
 			}
-			require.NoError(t, err, "Connect should return no error")
+			require.NoError(t, err, "Connect should not return an error")
 
-			select {
-			case <-client.Done(ctx):
-				require.Fail(t, "Done should not have returned yet")
-			case <-time.After(5 * time.Second):
-			}
+			// Connection is immediate but updating the counts is not: hence the waits
+			require.Eventually(t, func() bool { return service.connected.callCount.Load() >= 1 },
+				5*time.Second, 100*time.Millisecond, "Should have connected to the Connected stream")
 
-			if tc.stopServer {
-				s.Stop()
-			} else if tc.stopWithClose {
-				client.Close()
-			}
+			require.Eventually(t, func() bool { return service.proattachment.callCount.Load() >= 1 },
+				5*time.Second, 100*time.Millisecond, "Should have connected to the Pro attachment stream")
 
-			select {
-			case <-client.Done(ctx):
-				return
-			case <-time.After(20 * time.Second):
-				require.Fail(t, "Done should have returned after stopping the connection")
-			}
+			require.Eventually(t, func() bool { return service.landscapeConfig.callCount.Load() >= 1 },
+				5*time.Second, 100*time.Millisecond, "Should have connected to the Landscape configuration stream")
+
+			require.NotNil(t, client.ProAttachStream(), "ProAttachStream should not return nil")
+			require.NotNil(t, client.LandscapeConfigStream(), "LandscapeConfigStream should not return nil")
 		})
 	}
 }
 
-func TestConnect(t *testing.T) {
-	t.Parallel()
-
+func TestSendAndRecv(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -124,18 +110,15 @@ func TestConnect(t *testing.T) {
 	require.NoError(t, err, "Setup: Dial should have succeeded")
 	defer conn.Close()
 
-	client, err := streammulticlient.Connect(ctx, conn)
-	require.NoError(t, err, "Connect should not return an error")
+	client, err := streams.Connect(ctx, conn)
+	require.NoError(t, err, "Setup: Connect should not return an error")
 
-	// Connection is immediate but updating the counts is not: hence the waits
-	require.Eventually(t, func() bool { return service.connected.callCount.Load() >= 1 },
-		5*time.Second, 100*time.Millisecond, "Should have connected to the Connected stream")
-
-	require.Eventually(t, func() bool { return service.proattachment.callCount.Load() >= 1 },
-		5*time.Second, 100*time.Millisecond, "Should have connected to the Pro attachment stream")
-
-	require.Eventually(t, func() bool { return service.landscapeConfig.callCount.Load() >= 1 },
-		5*time.Second, 100*time.Millisecond, "Should have connected to the Landscape configuration stream")
+	require.Eventually(t, func() bool {
+		connReady := service.connected.callCount.Load() > 0
+		proReady := service.proattachment.callCount.Load() > 0
+		lpeReady := service.landscapeConfig.callCount.Load() > 0
+		return connReady && proReady && lpeReady
+	}, 10*time.Second, 100*time.Millisecond, "Setup: streams never connected")
 
 	// Test sending messages Server->Client
 	err = service.SendProAttachmentCmd("token123")
@@ -170,10 +153,9 @@ func TestConnect(t *testing.T) {
 		5*time.Second, 100*time.Millisecond, "The server should have received a result message via the Landscape stream")
 
 	// Disconnect to exercise error cases
-	client.Close()
 	conn.Close()
 
-	_, err = streammulticlient.Connect(ctx, conn)
+	_, err = streams.Connect(ctx, conn)
 	require.Error(t, err, "Connect should return an error when using a closed connection")
 
 	// Test sending messages after disconnecting

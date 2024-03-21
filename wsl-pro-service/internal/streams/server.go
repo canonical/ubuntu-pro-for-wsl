@@ -1,5 +1,5 @@
-// Package streamserver abstracts the bi-directional gRPC stream and provides a faux server that mimics a unary call server.
-package streamserver
+// Package streams abstracts the bi-directional gRPC stream and provides a faux server that mimics a unary call server.
+package streams
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streammulticlient"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
+	"google.golang.org/grpc"
 )
 
 // CommandService is the interface that the real service must implement to handle the commands received from the control stream.
@@ -24,7 +24,7 @@ type CommandService interface {
 //
 // It is used to make unary calls from the real gRPC server (Windows Agent) to the real client (this faux server).
 type Server struct {
-	conn   *streammulticlient.Connected
+	conn   *grpc.ClientConn
 	system *system.System
 
 	done chan struct{}
@@ -57,8 +57,8 @@ func (err SystemError) Is(e error) bool {
 	return ok
 }
 
-// New creates a new Server.
-func New(ctx context.Context, sys *system.System, conn *streammulticlient.Connected) *Server {
+// NewServer creates a new Server.
+func NewServer(ctx context.Context, sys *system.System, conn *grpc.ClientConn) *Server {
 	ctx, cancel := context.WithCancel(ctx)
 	gCtx, gCancel := context.WithCancel(ctx)
 
@@ -73,11 +73,6 @@ func New(ctx context.Context, sys *system.System, conn *streammulticlient.Connec
 		gracefulCtx:    gCtx,
 		gracefulCancel: gCancel,
 	}
-
-	go func() {
-		<-ctx.Done()
-		s.conn.Close()
-	}()
 
 	return s
 }
@@ -102,17 +97,25 @@ func (s *Server) Serve(service CommandService) error {
 	defer s.cancel()
 	defer close(s.done)
 
+	client, err := Connect(s.ctx, s.conn)
+	if err != nil {
+		return fmt.Errorf("could not start serving: could not connect: %v", err)
+	}
+
 	ch := make(chan error)
 	var wg sync.WaitGroup
 
 	for _, h := range []handler{
-		newHandler(s.conn.ProAttachStream(), service.ApplyProToken),
-		newHandler(s.conn.LandscapeConfigStream(), service.ApplyLandscapeConfig),
+		newHandler(client.ProAttachStream(), service.ApplyProToken),
+		newHandler(client.LandscapeConfigStream(), service.ApplyLandscapeConfig),
 	} {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ch <- h.run(s)
+			ch <- h.run(s, client)
+
+			// Gracefully stop other handlers once any of them exits.
+			s.gracefulCancel()
 		}()
 	}
 
@@ -122,15 +125,15 @@ func (s *Server) Serve(service CommandService) error {
 		return NewSystemError("could not serve: %v", err)
 	}
 
-	if err := s.conn.SendInfo(info); err != nil {
+	if err := client.SendInfo(info); err != nil {
 		return fmt.Errorf("could not serve: could not send first Connnected message: %v", err)
 	}
 
-	if err := s.conn.ProAttachStream().Send(&agentapi.Result{WslName: info.GetWslName()}); err != nil {
+	if err := client.ProAttachStream().Send(&agentapi.Result{WslName: info.GetWslName()}); err != nil {
 		return fmt.Errorf("could not serve: could not send first ProAttachCmd message: %v", err)
 	}
 
-	if err := s.conn.LandscapeConfigStream().Send(&agentapi.Result{WslName: info.GetWslName()}); err != nil {
+	if err := client.LandscapeConfigStream().Send(&agentapi.Result{WslName: info.GetWslName()}); err != nil {
 		return fmt.Errorf("could not serve: could not send first LandscapeConfigCmd message: %v", err)
 	}
 
@@ -153,12 +156,12 @@ func (s *Server) Serve(service CommandService) error {
 
 // handler interface for type erasure: it allows for having all handlerImpl in the same slice.
 type handler interface {
-	run(s *Server) error
+	run(s *Server, client *multiClient) error
 }
 
 // newHandler takes the ingredients for a handler and hides their type under the type-erased handler.
 // This is essentially a handler factory.
-func newHandler[Command any](stream streammulticlient.Stream[Command], callback func(context.Context, *Command) error) handler {
+func newHandler[Command any](stream stream[Command], callback func(context.Context, *Command) error) handler {
 	return &handlerImpl[Command]{
 		stream:   stream,
 		callback: callback,
@@ -167,26 +170,29 @@ func newHandler[Command any](stream streammulticlient.Stream[Command], callback 
 
 // handlerImpl implements the logic of the handling loop.
 type handlerImpl[Command any] struct {
-	stream   streammulticlient.Stream[Command]
+	stream   stream[Command]
 	callback func(context.Context, *Command) error
 }
 
-func (h *handlerImpl[Command]) run(s *Server) error {
-	// Gracefully stop other handlers once any of them exits.
-	defer s.gracefulCancel()
+func (h *handlerImpl[Command]) run(s *Server, client *multiClient) error {
+	// Use this context to log onto the stream, and to cancel with server.Stop
+	ctx, cancel := cancelWith(h.stream.Context(), s.ctx)
+	defer cancel()
 
-	streamCtx := h.stream.Context()
+	// Use this context to log onto the stream, but cancel with server.GracefulStop
+	gCtx, cancel := cancelWith(ctx, s.gracefulCtx)
+	defer cancel()
 
 	for {
 		// Graceful stop
 		select {
-		case <-s.gracefulCtx.Done():
+		case <-gCtx.Done():
 			return nil
 		default:
 		}
 
 		// Handle a single command
-		msg, ok, err := receiveWithContext(s.gracefulCtx, h.stream.Recv)
+		msg, ok, err := receiveWithContext(gCtx, h.stream.Recv)
 		if err != nil {
 			return fmt.Errorf("could not receive ProAttachCmd: %w", err)
 		} else if !ok {
@@ -194,22 +200,29 @@ func (h *handlerImpl[Command]) run(s *Server) error {
 			return nil
 		}
 
-		r := newResult(h.callback(streamCtx, msg))
+		r := newResult(h.callback(ctx, msg))
 
 		if err := h.stream.Send(r); err != nil {
 			return fmt.Errorf("could not send ProAttachCmd result: %w", err)
 		}
 
 		// Send back updated info after command completion
-		info, err := s.system.Info(streamCtx)
+		info, err := s.system.Info(ctx)
 		if err != nil {
-			log.Warningf(streamCtx, "Streamserver: could not gather info after command completion: %v", err)
+			log.Warningf(ctx, "Streamserver: could not gather info after command completion: %v", err)
 		}
 
-		if err = s.conn.SendInfo(info); err != nil {
-			log.Warningf(streamCtx, "Streamserver: could not stream back info after command completion")
+		if err = client.SendInfo(info); err != nil {
+			log.Warningf(ctx, "Streamserver: could not stream back info after command completion")
 		}
 	}
+}
+
+// cancelWith creates a child context that is cancelled when with is done.
+func cancelWith(ctx, with context.Context) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(ctx)
+	context.AfterFunc(with, cancel)
+	return ctx, cancel
 }
 
 // Receive with context calls the recv receiver asyncronously.

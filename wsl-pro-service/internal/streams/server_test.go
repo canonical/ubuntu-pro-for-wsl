@@ -1,4 +1,4 @@
-package streamserver_test
+package streams_test
 
 import (
 	"context"
@@ -7,8 +7,7 @@ import (
 	"time"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streammulticlient"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streamserver"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -29,10 +28,7 @@ func TestServe(t *testing.T) {
 	require.NoError(t, err, "Setup: could not Dial the mock windows agent")
 	defer conn.Close()
 
-	client, err := streammulticlient.Connect(ctx, conn)
-	require.NoError(t, err, "Setup: Could not connect")
-
-	server := streamserver.New(ctx, sys, client)
+	server := streams.NewServer(ctx, sys, conn)
 
 	service := &mockService{}
 	errCh := make(chan error, 1)
@@ -115,10 +111,7 @@ func TestStop(t *testing.T) {
 	require.NoError(t, err, "Setup: could not Dial the mock windows agent")
 	defer conn.Close()
 
-	client, err := streammulticlient.Connect(ctx, conn)
-	require.NoError(t, err, "Setup: Could not connect")
-
-	server := streamserver.New(ctx, sys, client)
+	server := streams.NewServer(ctx, sys, conn)
 
 	service := &mockService{}
 	errCh := make(chan error)
