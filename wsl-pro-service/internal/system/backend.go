@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 )
 
@@ -49,4 +50,8 @@ func (b realBackend) CmdExe(ctx context.Context, path string, args ...string) *e
 	cmd.Dir = filepath.Dir(path)
 
 	return cmd
+}
+
+func (b realBackend) LookupGroup(name string) (*user.Group, error) {
+	return user.LookupGroup("landscape")
 }

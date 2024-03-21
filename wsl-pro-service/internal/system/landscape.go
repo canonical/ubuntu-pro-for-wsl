@@ -51,6 +51,16 @@ func (s *System) LandscapeDisable(ctx context.Context) (err error) {
 func (s *System) writeConfig(landscapeConfig string) (err error) {
 	defer decorate.OnError(&err, "could not write Landscape configuration")
 
+	userID, err := s.currentUser()
+	if err != nil {
+		return err
+	}
+
+	groupID, err := s.lookupGroup("landscape")
+	if err != nil {
+		return err
+	}
+
 	tmp := s.backend.Path(landscapeConfigPath + ".new")
 	final := s.backend.Path(landscapeConfigPath)
 
@@ -58,9 +68,14 @@ func (s *System) writeConfig(landscapeConfig string) (err error) {
 		return fmt.Errorf("could not create config directory: %v", err)
 	}
 
-	//nolint:gosec // Needs 0604 for the Landscape client to be able to read it
-	if err = os.WriteFile(tmp, []byte(landscapeConfig), 0604); err != nil {
+	//nolint:gosec // Needs 0640 for the landscape client to be able to read it.
+	if err := os.WriteFile(tmp, []byte(landscapeConfig), 0640); err != nil {
 		return fmt.Errorf("could not write to file: %v", err)
+	}
+
+	if err := os.Chown(tmp, userID, groupID); err != nil {
+		_ = os.RemoveAll(tmp)
+		return fmt.Errorf("could not change ownership to landscape group: %v", err)
 	}
 
 	if err := os.Rename(tmp, final); err != nil {

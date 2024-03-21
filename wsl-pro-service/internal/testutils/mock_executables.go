@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -35,6 +36,9 @@ type SystemMock struct {
 	// WslDistroNameEnvEnabled sets the mocked WSL_DISTRO_NAME to $WslDistroName when true, and to an empty
 	// string when false
 	WslDistroNameEnvEnabled bool
+
+	// LookupGroupError makes the LookupGroup function fail.
+	LookupGroupError bool
 
 	// extraEnv are extra environment variables that will be passed to mocked executables
 	extraEnv []string
@@ -156,6 +160,24 @@ func (m *SystemMock) GetenvWslDistroName() string {
 		return m.WslDistroName
 	}
 	return ""
+}
+
+// LookupGroup mocks the LookupGroup function so that it always returns the
+// current user's group.
+func (m *SystemMock) LookupGroup(name string) (*user.Group, error) {
+	if m.LookupGroupError {
+		return nil, errors.New("mock LookupGroup error")
+	}
+
+	u, err := user.Current()
+	if err != nil {
+		return nil, fmt.Errorf("unexpected error in mock: %v", err)
+	}
+
+	return &user.Group{
+		Gid:  u.Gid,
+		Name: name,
+	}, nil
 }
 
 // mockExec generates a command of the form `bash -ec <SCRIPT>` that will call an alternate binary
