@@ -276,6 +276,19 @@ func ProMock(t *testing.T) {
 				fmt.Fprintln(os.Stdout, `{"message": "This error is produced by a mock instructed to fail on pro attach", "message_code": "mock_error"}`)
 				return exitError
 			}
+
+			// Proving that this executable has run
+			root := os.Getenv(FileSystemRoot)
+			if root == "" {
+				fmt.Fprintf(os.Stderr, "Missing environment variable %s\n", FileSystemRoot)
+				return exitBadUsage
+			}
+
+			p := filepath.Join(root, ".pro-attached")
+			if err := os.WriteFile(p, []byte{}, 0600); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
+			}
+
 			return exitOk
 
 		case "detach":
@@ -300,6 +313,18 @@ func ProMock(t *testing.T) {
 			if envExists(ProDetachErrGeneric) {
 				fmt.Fprintln(os.Stdout, `{"errors": [{"message": "This error is produced by a mock instructed to fail on pro detach", "message_code": "mock_error"}]}`)
 				return exitError
+			}
+
+			// Proving that this executable has run
+			root := os.Getenv(FileSystemRoot)
+			if root == "" {
+				fmt.Fprintf(os.Stderr, "Missing environment variable %s\n", FileSystemRoot)
+				return exitBadUsage
+			}
+
+			p := filepath.Join(root, ".pro-detached")
+			if err := os.WriteFile(p, []byte{}, 0600); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
 			}
 
 			return exitOk

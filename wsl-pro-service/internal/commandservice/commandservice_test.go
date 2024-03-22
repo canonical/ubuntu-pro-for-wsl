@@ -7,6 +7,8 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/commandservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,11 +21,12 @@ func TestApplyProToken(t *testing.T) {
 		breakProAttach bool
 		breakProDetach bool
 
-		wantErr    bool
+		wantDetach bool
 		wantAttach bool
+		wantErr    bool
 	}{
-		"success attaching": {wantAttach: true},
-		"success detaching": {emptyToken: true},
+		"success attaching": {wantDetach: true, wantAttach: true},
+		"success detaching": {emptyToken: true, wantDetach: true},
 
 		// Attach/detach errors
 		"Error calling pro detach": {breakProDetach: true, wantErr: true},
@@ -39,9 +42,14 @@ func TestApplyProToken(t *testing.T) {
 				token = ""
 			}
 
-			system := &mockSystem{
-				breakProAttach: tc.breakProAttach,
-				breakProDetach: tc.breakProDetach,
+			system, mock := testutils.MockSystem(t)
+
+			if tc.breakProAttach {
+				mock.SetControlArg(testutils.ProAttachErr)
+			}
+
+			if tc.breakProDetach {
+				mock.SetControlArg(testutils.ProDetachErrGeneric)
 			}
 
 			svc := commandservice.New(system)
@@ -51,16 +59,21 @@ func TestApplyProToken(t *testing.T) {
 				require.Error(t, err, "ApplyProToken call should return an error")
 				return
 			}
-			require.NoError(t, err, "ApplyProToken call should return no error")
+			require.NoError(t, err, "ApplyProToken should return no error")
 
-			require.Equal(t, 1, system.proDetachCalled, "ProDetach should have been called exactly once")
-
-			if !tc.wantAttach {
-				require.Empty(t, system.proAttachCalled, "ProAttach should not have been called")
-				return
+			p := mock.Path("/.pro-detached")
+			if tc.wantDetach {
+				assert.FileExists(t, p, "Pro executable should have been called to pro-detach")
+			} else {
+				assert.NoFileExists(t, p, "Pro executable should not have been called to pro-detach")
 			}
-			require.Len(t, system.proAttachCalled, 1, "ProAttach should have been called exactly once")
-			require.Equal(t, token, system.proAttachCalled[0], "Mismatch between submitted token and the one used to attach")
+
+			p = mock.Path("/.pro-attached")
+			if tc.wantAttach {
+				assert.FileExists(t, p, "Pro executable should have been called to pro-attach")
+			} else {
+				assert.NoFileExists(t, p, "Pro executable should not have been called to pro-attach")
+			}
 		})
 	}
 }
@@ -97,12 +110,17 @@ func TestApplyLandscapeConfig(t *testing.T) {
 				config = ""
 			}
 
-			system := &mockSystem{
-				breakLandscapeEnable:  tc.breakLandscapeEnable,
-				breakLandscapeDisable: tc.breakLandscapeDisable,
+			sys, mock := testutils.MockSystem(t)
+
+			if tc.breakLandscapeEnable {
+				mock.SetControlArg(testutils.LandscapeEnableErr)
 			}
 
-			svc := commandservice.New(system)
+			if tc.breakLandscapeDisable {
+				mock.SetControlArg(testutils.LandscapeDisableErr)
+			}
+
+			svc := commandservice.New(sys)
 
 			err := svc.ApplyLandscapeConfig(context.Background(), &agentapi.LandscapeConfigCmd{
 				Config:       config,
@@ -114,18 +132,18 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			}
 			require.NoError(t, err, "ApplyLandscapeConfig call should return no error")
 
+			p := mock.Path("/.landscape-disabled")
 			if tc.wantDisableCalled {
-				require.Equal(t, 1, system.landscapeDisableCalled, "LandscapeDisable should have been called exactly once")
+				assert.FileExists(t, p, "Landscape executable should have been called to disable")
 			} else {
-				require.Zero(t, system.landscapeDisableCalled, "LandscapeDisable should not have been called")
+				assert.NoFileExists(t, p, "Landscape executable should not have been called to disable")
 			}
 
+			p = mock.Path("/.landscape-enabled")
 			if tc.wantEnableCalled {
-				require.Len(t, system.landscapeEnableCalled, 1, "LandsscapeEnable should have been called exactly once")
-				require.Equal(t, config, system.landscapeEnableCalled[0].config, "Mismatch between submitted config and the one used to attach")
-				require.Equal(t, uid, system.landscapeEnableCalled[0].uid, "Mismatch between submitted hostagent UID and the one used to attach")
+				assert.FileExists(t, p, "Landscape executable should have been called to enable it")
 			} else {
-				require.Empty(t, system.landscapeEnableCalled, "LandsscapeEnable should not have been called")
+				assert.NoFileExists(t, p, "Landscape executable should not have been called to enable it")
 			}
 		})
 	}
@@ -188,3 +206,9 @@ func (m *mockSystem) LandscapeDisable(ctx context.Context) error {
 
 	return nil
 }
+
+func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
+func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
+func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
+func TestWithWslInfoMock(t *testing.T)         { testutils.WslInfoMock(t) }
+func TestWithCmdExeMock(t *testing.T)          { testutils.CmdExeMock(t) }

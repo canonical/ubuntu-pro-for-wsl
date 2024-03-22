@@ -7,23 +7,16 @@ import (
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 )
-
-// System is an interface to interact with the Distro the service runs on.
-type System interface {
-	ProAttach(ctx context.Context, token string) error
-	ProDetach(ctx context.Context) error
-	LandscapeEnable(ctx context.Context, conf, uid string) error
-	LandscapeDisable(ctx context.Context) error
-}
 
 // Service is the object in charge of communicating to the Windows agent.
 type Service struct {
-	system System
+	system *system.System
 }
 
 // New creates a new Wsl instance Service with the provided system.
-func New(s System) Service {
+func New(s *system.System) Service {
 	return Service{
 		system: s,
 	}
