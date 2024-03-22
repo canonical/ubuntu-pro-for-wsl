@@ -157,13 +157,40 @@ func TestServe(t *testing.T) {
 				cancel()
 			}
 
-			time.AfterFunc(20*time.Second, func() { d.Quit(ctx, true) })
+			serveExit := make(chan error)
+			go func() {
+				serveExit <- d.Serve(&mockService{})
+				close(serveExit)
+			}()
 
-			err = d.Serve(&mockService{})
 			if tc.wantErr {
-				require.Error(t, err, "Serve() should have returned an error")
+				select {
+				case err := <-serveExit:
+					require.Error(t, err, "Serve should have returned an error")
+				case <-time.After(30 * time.Second):
+					require.Fail(t, "Serve should have returned an error, but is still serving")
+				}
+				d.Quit(ctx, true)
 			} else {
-				require.NoError(t, err, "Serve() should have returned no error")
+				// Wait for server to serve and to complete handshake
+				require.Eventually(t, agent.Service.AllConnected,
+					30*time.Second, time.Second, "The daemon should have connected to the Windows Agent")
+
+				require.Eventually(t, func() bool {
+					conOk := len(agent.Service.Connect.History()) > 0
+					proOk := len(agent.Service.ProAttachment.History()) > 0
+					lpeOk := len(agent.Service.LandscapeConfig.History()) > 0
+					return conOk && proOk && lpeOk
+				}, 30*time.Second, time.Second, "The server should have been sent the Hello message on every stream")
+
+				d.Quit(ctx, true)
+
+				select {
+				case err := <-serveExit:
+					require.NoError(t, err, "Serve() should have returned no error")
+				case <-time.After(30 * time.Second):
+					require.Fail(t, "Serve should have exited after calling Quit")
+				}
 			}
 
 			if tc.wantSystemdNotReady {
