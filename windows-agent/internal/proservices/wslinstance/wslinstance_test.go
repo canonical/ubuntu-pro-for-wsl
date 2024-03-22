@@ -324,14 +324,14 @@ func newMockWSLProService(t *testing.T, ctx context.Context, opt mockWslProServi
 	mock.proStream, err = c.ProAttachmentCommands(ctx)
 	require.NoError(t, err, "wslDistroMock: could not connect to ProAttachmentCommands stream")
 	if !opt.noHandshakeProCommands {
-		err = mock.proStream.Send(&agentapi.Result{WslName: opt.distroName})
+		err = sendWslName(mock.proStream.Send, opt.distroName)
 		require.NoError(t, err, "wslDistroMock: could not send wsl name via ProAttachmentCommands stream")
 	}
 
 	mock.lpeStream, err = c.LandscapeConfigCommands(ctx)
 	require.NoError(t, err, "wslDistroMock: could not connect to LandscapeConfigCommands stream")
 	if !opt.noHandshakeLandscapeCommands {
-		err = mock.lpeStream.Send(&agentapi.Result{WslName: opt.distroName})
+		err = sendWslName(mock.lpeStream.Send, opt.distroName)
 		require.NoError(t, err, "wslDistroMock: could not send wsl name via LandscapeConfigCommands stream")
 	}
 
@@ -340,6 +340,27 @@ func newMockWSLProService(t *testing.T, ctx context.Context, opt mockWslProServi
 	go mock.replyLandscapeConfigCommands(t)
 
 	return mock
+}
+
+func sendWslName(send func(*agentapi.MSG) error, wslName string) error {
+	return send(&agentapi.MSG{
+		Data: &agentapi.MSG_WslName{
+			WslName: wslName,
+		},
+	})
+}
+
+func sendResult(send func(*agentapi.MSG) error, result error) error {
+	var errMsg string
+	if result != nil {
+		errMsg = result.Error()
+	}
+
+	return send(&agentapi.MSG{
+		Data: &agentapi.MSG_Result{
+			Result: errMsg,
+		},
+	})
 }
 
 // stopServe stops the Linux-side service.
@@ -379,13 +400,12 @@ func (m *mockWSLProService) replyProAttachmentCommands(t *testing.T) {
 			return
 		}
 
-		reply := agentapi.Result{}
+		var send error
 		if msg.GetToken() == "HARDCODED_ERROR" {
-			msg := "mock error"
-			reply.Error = &msg
+			send = errors.New("mock error")
 		}
 
-		err = m.proStream.Send(&reply)
+		err = sendResult(m.proStream.Send, send)
 		if err != nil {
 			log.Warningf("%s: Could not send pro command result: %v", t.Name(), err)
 			m.Stop()
@@ -406,13 +426,12 @@ func (m *mockWSLProService) replyLandscapeConfigCommands(t *testing.T) {
 			return
 		}
 
-		reply := agentapi.Result{}
+		var send error
 		if msg.GetConfig() == "HARDCODED_ERROR" {
-			msg := "mock error"
-			reply.Error = &msg
+			send = errors.New("mock error")
 		}
 
-		err = m.lpeStream.Send(&reply)
+		err = sendResult(m.lpeStream.Send, send)
 		if err != nil {
 			log.Warningf("%s: Could not send Landscape command result: %v", t.Name(), err)
 			m.Stop()

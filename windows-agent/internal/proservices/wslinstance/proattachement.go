@@ -2,6 +2,7 @@ package wslinstance
 
 import (
 	"errors"
+	"fmt"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -13,7 +14,7 @@ func (s *Service) ProAttachmentCommands(stream agentapi.WSLInstance_ProAttachmen
 	defer decorate.OnError(&err, "WslInstance: could not handle pro attachment commands")
 	ctx := stream.Context()
 
-	client, _, err := handshake(ctx, s, stream.Recv)
+	client, err := commandHandshake(ctx, s, stream.Recv)
 	if err != nil {
 		return err
 	}
@@ -72,12 +73,16 @@ func (c *client) SendProAttachment(proToken string) error {
 		return errors.New("could not send pro attachment: disconnected")
 	}
 
-	result, err := recvContext(c.ctx, c.proStream.Recv)
+	msg, err := recvContext(c.ctx, c.proStream.Recv)
 	if err != nil {
 		c.Close()
 		log.Warningf(c.proStream.Context(), "ProAttachmentCommands stream could not receive: %v", err)
 		return errors.New("could not receive pro attachment result: disconnected")
 	}
 
-	return resultToError(result)
+	err, ok := msgToError(msg)
+	if ok {
+		return err
+	}
+	return fmt.Errorf("did not receive landscape config result: %v", err)
 }

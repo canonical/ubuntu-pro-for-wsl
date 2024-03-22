@@ -2,6 +2,7 @@ package wslinstance
 
 import (
 	"errors"
+	"fmt"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -13,7 +14,7 @@ func (s *Service) LandscapeConfigCommands(stream agentapi.WSLInstance_LandscapeC
 	defer decorate.OnError(&err, "WslInstance: could not handle landscape config commands")
 	ctx := stream.Context()
 
-	client, _, err := handshake(ctx, s, stream.Recv)
+	client, err := commandHandshake(ctx, s, stream.Recv)
 	if err != nil {
 		return err
 	}
@@ -80,5 +81,9 @@ func (c *client) SendLandscapeConfig(config string, uid string) error {
 		return errors.New("could not receive landscape config result: disconnected")
 	}
 
-	return resultToError(result)
+	err, ok := msgToError(result)
+	if ok {
+		return err
+	}
+	return fmt.Errorf("did not receive landscape config result: %v", err)
 }

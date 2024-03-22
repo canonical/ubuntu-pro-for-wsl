@@ -46,7 +46,7 @@ func New(ctx context.Context, db *database.DistroDB, landscape LandscapeControll
 func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
 	ctx := stream.Context()
 
-	client, info, err := handshake(ctx, s, stream.Recv)
+	client, info, err := mainHandshake(ctx, s, stream.Recv)
 	if err != nil {
 		return err
 	}
@@ -125,12 +125,8 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 	}, nil
 }
 
-type handshaker interface {
-	GetWslName() string
-}
-
-// handshake contains the logic common to all three streams.
-func handshake[MessageT handshaker](ctx context.Context, s *Service, recv func() (MessageT, error)) (c *client, m MessageT, err error) {
+// mainHandshake receives the first message from the main stream and attaches the stream to the client.
+func mainHandshake(ctx context.Context, s *Service, recv func() (*agentapi.DistroInfo, error)) (c *client, m *agentapi.DistroInfo, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
@@ -146,12 +142,30 @@ func handshake[MessageT handshaker](ctx context.Context, s *Service, recv func()
 	return s.client(msg.GetWslName()), msg, err
 }
 
+// commandHandshake receives the first message from a command-sending stream and attaches the stream to the client.
+func commandHandshake(ctx context.Context, s *Service, recv func() (*agentapi.MSG, error)) (c *client, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+
+	msg, err := recvContext(ctx, recv)
+	if err != nil {
+		return nil, fmt.Errorf("could not start handshake: did not receive: %v", err)
+	}
+
+	name := msg.GetWslName()
+	if name == "" {
+		return nil, errors.New("could not complete handshake: no WSL name received")
+	}
+
+	return s.client(name), err
+}
+
 // recvContext returns as soon as either:
 // - A message is received.
 // - The context is cancelled.
-func recvContext[MessageT handshaker](ctx context.Context, recv func() (MessageT, error)) (msg MessageT, err error) {
+func recvContext[MessageT any](ctx context.Context, recv func() (*MessageT, error)) (msg *MessageT, err error) {
 	type tuple struct {
-		msg MessageT
+		msg *MessageT
 		err error
 	}
 
