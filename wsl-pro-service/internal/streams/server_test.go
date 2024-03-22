@@ -52,8 +52,7 @@ func TestServe(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return len(agent.Service.ProAttachment.History()) >= 1
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	//nolint:protogetter // I acces the field directly because I want to see if it is Nil
-	require.Nil(t, agent.Service.ProAttachment.History()[0].Error, "ProAttachment should return a successful result")
+	require.Empty(t, agent.Service.ProAttachment.History()[0].GetResult(), "ProAttachment should return a successful result")
 
 	// Test receiving a pro token and returning error
 
@@ -63,8 +62,7 @@ func TestServe(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return len(agent.Service.ProAttachment.History()) >= 2
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	//nolint:protogetter // I acces the field directly because I want to see if it is Nil
-	require.NotNil(t, agent.Service.ProAttachment.History()[1].Error, "ProAttachment should return an error result")
+	require.Empty(t, agent.Service.ProAttachment.History()[1].GetResult(), "ProAttachment should return an error result")
 
 	// Test receiving a Landscape config and returning success
 
@@ -74,8 +72,7 @@ func TestServe(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return len(agent.Service.LandscapeConfig.History()) >= 1
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	//nolint:protogetter // I acces the field directly because I want to see if it is Nil
-	require.Nil(t, agent.Service.LandscapeConfig.History()[0].Error, "LandscapeConfig should return a successful result")
+	require.Empty(t, agent.Service.LandscapeConfig.History()[0].GetResult(), "LandscapeConfig should return a successful result")
 
 	// Test receiving a Landscape config and returning error
 
@@ -85,8 +82,7 @@ func TestServe(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return len(agent.Service.LandscapeConfig.History()) >= 2
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	//nolint:protogetter // I acces the field directly because I want to see if it is Nil
-	require.NotNil(t, agent.Service.LandscapeConfig.History()[1].Error, "LandscapeConfig should return an error result")
+	require.Empty(t, agent.Service.LandscapeConfig.History()[1].GetResult(), "LandscapeConfig should return an error result")
 
 	server.GracefulStop()
 	select {

@@ -129,11 +129,11 @@ func (s *Server) Serve(service CommandService) error {
 		return fmt.Errorf("could not serve: could not send first Connnected message: %v", err)
 	}
 
-	if err := client.ProAttachStream().Send(&agentapi.Result{WslName: info.GetWslName()}); err != nil {
+	if err := client.ProAttachStream().SendWslName(info.GetWslName()); err != nil {
 		return fmt.Errorf("could not serve: could not send first ProAttachCmd message: %v", err)
 	}
 
-	if err := client.LandscapeConfigStream().Send(&agentapi.Result{WslName: info.GetWslName()}); err != nil {
+	if err := client.LandscapeConfigStream().SendWslName(info.GetWslName()); err != nil {
 		return fmt.Errorf("could not serve: could not send first LandscapeConfigCmd message: %v", err)
 	}
 
@@ -200,9 +200,9 @@ func (h *handlerImpl[Command]) run(s *Server, client *multiClient) error {
 			return nil
 		}
 
-		r := newResult(h.callback(ctx, msg))
+		result := h.callback(ctx, msg)
 
-		if err := h.stream.Send(r); err != nil {
+		if err := h.stream.SendResult(result); err != nil {
 			return fmt.Errorf("could not send ProAttachCmd result: %w", err)
 		}
 
@@ -256,12 +256,4 @@ func receiveWithContext[MessageT any](ctx context.Context, recv func() (*Message
 		}
 		return msg.t, true, msg.err
 	}
-}
-
-func newResult(err error) *agentapi.Result {
-	if err == nil {
-		return &agentapi.Result{Error: nil}
-	}
-	msg := err.Error()
-	return &agentapi.Result{Error: &msg}
 }

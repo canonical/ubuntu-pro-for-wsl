@@ -12,8 +12,6 @@ import (
 // It abstracts away the multiple streams into a single object.
 // It only provides communication primitives, it does not handle the logic of the messages themselves.
 type multiClient struct {
-	conn *grpc.ClientConn
-
 	mainStream agentapi.WSLInstance_ConnectedClient
 	proStream  agentapi.WSLInstance_ProAttachmentCommandsClient
 	lpeStream  agentapi.WSLInstance_LandscapeConfigCommandsClient
@@ -44,7 +42,6 @@ func Connect(ctx context.Context, conn *grpc.ClientConn) (c *multiClient, err er
 	defer closeOnError(&err, lpeStream)
 
 	return &multiClient{
-		conn:       conn,
 		mainStream: mainStream,
 		proStream:  proStream,
 		lpeStream:  lpeStream,
@@ -62,19 +59,48 @@ func (s *multiClient) SendInfo(info *agentapi.DistroInfo) error {
 	return s.mainStream.Send(info)
 }
 
-// stream provides a restricted interface for sending and receiving messages.
-type stream[Command any] interface {
-	Context() context.Context
-	Recv() (*Command, error)
-	Send(r *agentapi.Result) error
-}
-
 // ProAttachStream is a getter for the ProAttachmentCmd stream.
 func (s *multiClient) ProAttachStream() stream[agentapi.ProAttachCmd] {
-	return s.proStream
+	return stream[agentapi.ProAttachCmd]{
+		grpcStream: s.proStream,
+	}
 }
 
 // LandscapeConfigStream is a getter for the LandscapeConfigCmd stream.
 func (s *multiClient) LandscapeConfigStream() stream[agentapi.LandscapeConfigCmd] {
-	return s.lpeStream
+	return stream[agentapi.LandscapeConfigCmd]{
+		grpcStream: s.lpeStream,
+	}
+}
+
+type grpcStream[Command any] interface {
+	Context() context.Context
+	Recv() (*Command, error)
+	Send(r *agentapi.MSG) error
+}
+
+// stream provides a restricted interface for sending and receiving messages.
+type stream[Command any] struct {
+	grpcStream[Command]
+}
+
+func (s stream[Command]) SendResult(err error) error {
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+	}
+
+	return s.grpcStream.Send(&agentapi.MSG{
+		Data: &agentapi.MSG_Result{
+			Result: errMsg,
+		},
+	})
+}
+
+func (s stream[Command]) SendWslName(wslName string) error {
+	return s.grpcStream.Send(&agentapi.MSG{
+		Data: &agentapi.MSG_WslName{
+			WslName: wslName,
+		},
+	})
 }

@@ -142,12 +142,12 @@ func TestSendAndRecv(t *testing.T) {
 	require.Eventually(t, func() bool { return service.connected.recvCount.Load() >= 1 }, // We already received a message during the handshake
 		5*time.Second, 100*time.Millisecond, "The server should have received a distro info message")
 
-	err = client.ProAttachStream().Send(&agentapi.Result{})
+	err = client.ProAttachStream().SendResult(nil)
 	require.NoError(t, err, "SendProAttachCmdResult should not return error")
 	require.Eventually(t, func() bool { return service.proattachment.recvCount.Load() >= 1 },
 		5*time.Second, 100*time.Millisecond, "The server should have received a result message via the Pro attachment stream")
 
-	err = client.LandscapeConfigStream().Send(&agentapi.Result{})
+	err = client.LandscapeConfigStream().SendResult(nil)
 	require.NoError(t, err, "SendLandscapeConfigCmdResult should not return error")
 	require.Eventually(t, func() bool { return service.landscapeConfig.recvCount.Load() >= 1 },
 		5*time.Second, 100*time.Millisecond, "The server should have received a result message via the Landscape stream")
@@ -162,10 +162,10 @@ func TestSendAndRecv(t *testing.T) {
 	err = client.SendInfo(&agentapi.DistroInfo{})
 	require.Error(t, err, "SendInfo should return an error after disconnecting")
 
-	err = client.ProAttachStream().Send(&agentapi.Result{})
+	err = client.ProAttachStream().SendResult(nil)
 	require.Error(t, err, "SendProAttachCmdResult should return an error after disconnecting")
 
-	err = client.LandscapeConfigStream().Send(&agentapi.Result{})
+	err = client.LandscapeConfigStream().SendResult(nil)
 	require.Error(t, err, "SendLandscapeConfigCmdResult should return an error after disconnecting")
 
 	// Test receiving messages after disconnecting

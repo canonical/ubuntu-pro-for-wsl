@@ -100,8 +100,8 @@ type mockWSLInstanceService struct {
 	agentapi.UnimplementedWSLInstanceServer
 
 	Connect         channel[agentapi.DistroInfo, int, agentapi.WSLInstance_ConnectedServer]
-	ProAttachment   channel[agentapi.Result, agentapi.ProAttachCmd, agentapi.WSLInstance_ProAttachmentCommandsServer]
-	LandscapeConfig channel[agentapi.Result, agentapi.LandscapeConfigCmd, agentapi.WSLInstance_LandscapeConfigCommandsServer]
+	ProAttachment   channel[agentapi.MSG, agentapi.ProAttachCmd, agentapi.WSLInstance_ProAttachmentCommandsServer]
+	LandscapeConfig channel[agentapi.MSG, agentapi.LandscapeConfigCmd, agentapi.WSLInstance_LandscapeConfigCommandsServer]
 }
 
 func (s *mockWSLInstanceService) AllConnected() bool {
