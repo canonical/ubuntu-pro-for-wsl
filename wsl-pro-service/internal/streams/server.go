@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"sync"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
@@ -137,6 +138,8 @@ func (s *Server) Serve(service CommandService) error {
 		return fmt.Errorf("could not serve: could not send first LandscapeConfigCmd message: %v", err)
 	}
 
+	log.Debug(s.ctx, "Server: sent preface messages to all streams")
+
 	go func() {
 		wg.Wait()
 		close(ch)
@@ -190,6 +193,8 @@ func (h *handlerImpl[Command]) run(s *Server, client *multiClient) error {
 			return nil
 		default:
 		}
+
+		log.Debugf(ctx, "Started serving %s requests", reflect.TypeOf((*Command)(nil)).Elem())
 
 		// Handle a single command
 		msg, ok, err := receiveWithContext(gCtx, h.stream.Recv)
