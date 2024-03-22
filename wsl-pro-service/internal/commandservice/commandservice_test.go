@@ -2,7 +2,6 @@ package commandservice_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
@@ -147,64 +146,6 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			}
 		})
 	}
-}
-
-type mockSystem struct {
-	breakProAttach        bool
-	breakProDetach        bool
-	breakLandscapeEnable  bool
-	breakLandscapeDisable bool
-
-	proAttachCalled       []string
-	proDetachCalled       int
-	landscapeEnableCalled []struct {
-		config string
-		uid    string
-	}
-	landscapeDisableCalled int
-}
-
-func (m *mockSystem) ProAttach(ctx context.Context, token string) error {
-	if m.breakProAttach {
-		return errors.New("ProAttach: mock error")
-	}
-
-	m.proAttachCalled = append(m.proAttachCalled, token)
-
-	return nil
-}
-
-func (m *mockSystem) ProDetach(ctx context.Context) error {
-	if m.breakProDetach {
-		return errors.New("ProDetach: mock error")
-	}
-
-	m.proDetachCalled++
-
-	return nil
-}
-
-func (m *mockSystem) LandscapeEnable(ctx context.Context, conf, uid string) error {
-	if m.breakLandscapeEnable {
-		return errors.New("LandscapeEnable: mock error")
-	}
-
-	m.landscapeEnableCalled = append(m.landscapeEnableCalled, struct {
-		config string
-		uid    string
-	}{conf, uid})
-
-	return nil
-}
-
-func (m *mockSystem) LandscapeDisable(ctx context.Context) error {
-	if m.breakLandscapeDisable {
-		return errors.New("LandscapeDisable: mock error")
-	}
-
-	m.landscapeDisableCalled++
-
-	return nil
 }
 
 func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
