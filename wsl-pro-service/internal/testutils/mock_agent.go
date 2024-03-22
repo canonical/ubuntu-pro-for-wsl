@@ -62,7 +62,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	}
 
 	go func() {
-		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on %q", lis.Addr().String())
+		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on %s", lis.Addr().String())
 
 		close(m.Started)
 		defer close(m.Stopped)
@@ -160,12 +160,12 @@ func (ch *channel[Recv, Send, Stream]) Send(msg *Send) error {
 	ch.mu.Unlock()
 
 	if tmp == nil {
-		return errors.New("not connected")
+		return errors.New("MockWindowsAgent: not connected")
 	}
 
 	snd, ok := any(*tmp).(sender[Send])
 	if !ok {
-		panic("this channel cannot send")
+		panic("MockWindowsAgent: this channel cannot send")
 	}
 
 	return snd.Send(msg)
@@ -177,12 +177,12 @@ func (ch *channel[Recv, Send, Stream]) recv() (*Recv, error) {
 	ch.mu.Unlock()
 
 	if tmp == nil {
-		return nil, errors.New("not connected")
+		return nil, errors.New("MockWindowsAgent: not connected")
 	}
 
 	r, ok := any(*tmp).(receiver[Recv])
 	if !ok {
-		panic("this channel cannot receive")
+		panic("MockWindowsAgent: this channel cannot receive")
 	}
 
 	rcv, err := r.Recv()
@@ -197,12 +197,13 @@ func (ch *channel[Recv, Send, Stream]) recv() (*Recv, error) {
 	return rcv, nil
 }
 
-func (ch *channel[Recv, Send, Stream]) set(s Stream) {
+func (ch *channel[Recv, Send, Stream]) set(s Stream, helloMsg *Recv) {
 	ch.mu.Lock()
 	defer ch.mu.Unlock()
 
-	ch.callCount++
 	ch.stream = &s
+	ch.callCount++
+	ch.recvHistory = append(ch.recvHistory, *helloMsg)
 }
 
 func (ch *channel[Recv, Send, Stream]) reset() {
@@ -215,23 +216,24 @@ func (ch *channel[Recv, Send, Stream]) reset() {
 func (s *mockWSLInstanceService) Connected(stream agentapi.WSLInstance_ConnectedServer) (err error) {
 	defer decorate.LogOnError(&err)
 
-	if msg, err := stream.Recv(); err != nil {
+	msg, err := stream.Recv()
+	if err != nil {
 		return err
 	} else if msg.GetWslName() == "" {
-		return errors.New("WSL name not provided")
+		return errors.New("MockWindowsAgent: WSL name not provided")
 	}
 
-	s.Connect.set(stream)
+	s.Connect.set(stream, msg)
 	defer s.Connect.reset()
 
-	log.Info(stream.Context(), "Connected ready")
+	log.Info(stream.Context(), "MockWindowsAgent: Connected ready")
 
 	for {
 		_, err := s.Connect.recv()
 		if errors.Is(err, io.EOF) {
 			return nil
 		} else if err != nil {
-			return fmt.Errorf("Connected stopped: %v", err)
+			return fmt.Errorf("MockWindowsAgent: Connected stopped: %v", err)
 		}
 	}
 }
@@ -239,24 +241,25 @@ func (s *mockWSLInstanceService) Connected(stream agentapi.WSLInstance_Connected
 func (s *mockWSLInstanceService) ProAttachmentCommands(stream agentapi.WSLInstance_ProAttachmentCommandsServer) (err error) {
 	defer decorate.LogOnError(&err)
 
-	if msg, err := stream.Recv(); err != nil {
+	msg, err := stream.Recv()
+	if err != nil {
 		return err
 	} else if msg.GetWslName() == "" {
-		return errors.New("WSL name not provided")
+		return errors.New("MockWindowsAgent: WSL name not provided")
 	}
 
-	s.ProAttachment.set(stream)
+	s.ProAttachment.set(stream, msg)
 	defer s.ProAttachment.reset()
 
-	log.Info(stream.Context(), "ProAttachmentCommands ready")
+	log.Info(stream.Context(), "MockWindowsAgent: ProAttachmentCommands ready")
 
 	for {
 		_, err := s.ProAttachment.recv()
 		if errors.Is(err, io.EOF) {
-			log.Info(stream.Context(), "ProAttachmentCommands finished")
+			log.Info(stream.Context(), "MockWindowsAgent: ProAttachmentCommands finished")
 			return nil
 		} else if err != nil {
-			return fmt.Errorf("ProAttachmentCommands stopped: %v", err)
+			return fmt.Errorf("MockWindowsAgent: ProAttachmentCommands stopped: %v", err)
 		}
 	}
 }
@@ -264,24 +267,25 @@ func (s *mockWSLInstanceService) ProAttachmentCommands(stream agentapi.WSLInstan
 func (s *mockWSLInstanceService) LandscapeConfigCommands(stream agentapi.WSLInstance_LandscapeConfigCommandsServer) (err error) {
 	defer decorate.LogOnError(&err)
 
-	if msg, err := stream.Recv(); err != nil {
+	msg, err := stream.Recv()
+	if err != nil {
 		return err
 	} else if msg.GetWslName() == "" {
-		return errors.New("WSL name not provided")
+		return errors.New("MockWindowsAgent: WSL name not provided")
 	}
 
-	s.LandscapeConfig.set(stream)
+	s.LandscapeConfig.set(stream, msg)
 	defer s.LandscapeConfig.reset()
 
-	log.Info(stream.Context(), "LandscapeConfigCommands ready")
+	log.Info(stream.Context(), "MockWindowsAgent: LandscapeConfigCommands ready")
 
 	for {
 		_, err := s.LandscapeConfig.recv()
 		if errors.Is(err, io.EOF) {
-			log.Info(stream.Context(), "LandscapeConfigCommands finished")
+			log.Info(stream.Context(), "MockWindowsAgent: LandscapeConfigCommands finished")
 			return nil
 		} else if err != nil {
-			return fmt.Errorf("LandscapeConfigCommands stopped: %v", err)
+			return fmt.Errorf("MockWindowsAgent: LandscapeConfigCommands stopped: %v", err)
 		}
 	}
 }

@@ -91,17 +91,17 @@ func TestServe(t *testing.T) {
 		// keeps retrying the connection
 		//
 		// We instead check that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because the port file does not exist":      {breakPortFile: true, wantSystemdNotReady: true, wantConnected: false},
-		"No connection because the port file is empty":            {portFileEmpty: true, wantSystemdNotReady: true, wantConnected: false},
-		"No connection because the port file has a bad port":      {portFilePortNotNumber: true, wantSystemdNotReady: true, wantConnected: false},
-		"No connection because the port file has port 0":          {portFileZeroPort: true, wantSystemdNotReady: true, wantConnected: false},
-		"No connection because the port file has a negative port": {portFileNegativePort: true, wantSystemdNotReady: true, wantConnected: false},
+		"No connection because the port file does not exist":      {breakPortFile: true, wantConnected: false},
+		"No connection because the port file is empty":            {portFileEmpty: true, wantConnected: false},
+		"No connection because the port file has a bad port":      {portFilePortNotNumber: true, wantConnected: false},
+		"No connection because the port file has port 0":          {portFileZeroPort: true, wantConnected: false},
+		"No connection because the port file has a negative port": {portFileNegativePort: true, wantConnected: false},
 		"No connection because there is no server":                {dontServe: true},
 
 		// Errors
 		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
 		"Error because the notifier returns an error":       {notifierErr: true, wantErr: true},
-		"Error because WindowsHostAddress returns an error": {breakWindowsHostAddress: true, wantSystemdNotReady: true, wantErr: true},
+		"Error because WindowsHostAddress returns an error": {breakWindowsHostAddress: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -145,7 +145,7 @@ func TestServe(t *testing.T) {
 				require.NoError(t, os.WriteFile(portFile, []byte(addr), 0600), "Setup: could not overwrite port file")
 			}
 
-			systemd := SystemdSdNotifierMock{
+			systemd := &SystemdSdNotifierMock{
 				returns:   tc.notifierReturn,
 				returnErr: tc.notifierErr,
 			}
@@ -163,16 +163,11 @@ func TestServe(t *testing.T) {
 				close(serveExit)
 			}()
 
-			if tc.wantErr {
-				select {
-				case err := <-serveExit:
-					require.Error(t, err, "Serve should have returned an error")
-				case <-time.After(30 * time.Second):
-					require.Fail(t, "Serve should have returned an error, but is still serving")
-				}
-				d.Quit(ctx, true)
-			} else {
-				// Wait for server to serve and to complete handshake
+			if tc.wantConnected {
+				require.Eventually(t, func() bool {
+					return systemd.gotState.Load() == "STATUS=Connected"
+				}, 30*time.Second, time.Second, "Systemd never switched states to 'Connected'")
+
 				require.Eventually(t, agent.Service.AllConnected,
 					30*time.Second, time.Second, "The daemon should have connected to the Windows Agent")
 
@@ -182,9 +177,23 @@ func TestServe(t *testing.T) {
 					lpeOk := len(agent.Service.LandscapeConfig.History()) > 0
 					return conOk && proOk && lpeOk
 				}, 30*time.Second, time.Second, "The server should have been sent the Hello message on every stream")
+			} else if tc.wantErr {
+				select {
+				case err := <-serveExit:
+					require.Error(t, err, "Serve should have returned an error")
+				case <-time.After(30 * time.Second):
+					require.Fail(t, "Serve should have returned an error, but is still serving")
+				}
+			} else {
+				// Not connected, but no return either: silent error and retrial
+				require.Eventually(t, func() bool {
+					return strings.HasPrefix(systemd.gotState.Load(), "STATUS=Not connected")
+				}, 30*time.Second, time.Second, "Systemd never switched states to 'Not connected'")
+			}
 
-				d.Quit(ctx, true)
+			d.Quit(ctx, false)
 
+			if !tc.wantErr {
 				select {
 				case err := <-serveExit:
 					require.NoError(t, err, "Serve() should have returned no error")
@@ -196,7 +205,7 @@ func TestServe(t *testing.T) {
 			if tc.wantSystemdNotReady {
 				require.Zero(t, systemd.readyNotifications.Load(), "daemon should not have notified systemd")
 			} else {
-				require.Equal(t, int32(1), systemd.readyNotifications.Load(), "daemon should have notified systemd once")
+				require.EqualValues(t, 1, systemd.readyNotifications.Load(), "daemon should have notified systemd once")
 			}
 
 			if tc.dontServe {
@@ -209,10 +218,6 @@ func TestServe(t *testing.T) {
 				require.Zero(t, agent.Service.LandscapeConfig.NConnections(), "daemon should not have connected to the agent (landscape config stream)")
 				return
 			}
-
-			require.NotZero(t, agent.Service.Connect.NConnections(), "daemon should have connected to the agent (connected stream)")
-			require.NotZero(t, agent.Service.ProAttachment.NConnections(), "daemon should have connected to the agent (pro attach stream)")
-			require.NotZero(t, agent.Service.LandscapeConfig.NConnections(), "daemon should have connected to the agent (landscape config stream)")
 		})
 	}
 }
@@ -247,7 +252,7 @@ func TestServeAndQuit(t *testing.T) {
 			publicDir := mock.DefaultPublicDir()
 			agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
 
-			systemd := SystemdSdNotifierMock{
+			systemd := &SystemdSdNotifierMock{
 				returns: true,
 			}
 
@@ -333,7 +338,7 @@ func TestReconnection(t *testing.T) {
 			system, mock := testutils.MockSystem(t)
 			publicDir := mock.DefaultPublicDir()
 
-			systemd := SystemdSdNotifierMock{returns: true}
+			systemd := &SystemdSdNotifierMock{returns: true}
 
 			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
 			require.NoError(t, err, "New should return no error")

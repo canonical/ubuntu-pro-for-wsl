@@ -132,7 +132,7 @@ func TestStop(t *testing.T) {
 	require.NoError(t, err, "mock agent could not send a landscape-config command")
 
 	// Wait for unary calls to be made
-	time.Sleep(2 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	server.Stop()
 	select {
