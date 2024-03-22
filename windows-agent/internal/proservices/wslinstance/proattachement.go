@@ -80,7 +80,7 @@ func (c *client) SendProAttachment(proToken string) error {
 		return errors.New("could not receive pro attachment result: disconnected")
 	}
 
-	err, ok := msgToError(msg)
+	ok, err := msgToError(msg)
 	if ok {
 		return err
 	}

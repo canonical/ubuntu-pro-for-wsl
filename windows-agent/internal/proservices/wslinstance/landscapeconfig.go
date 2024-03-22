@@ -81,7 +81,7 @@ func (c *client) SendLandscapeConfig(config string, uid string) error {
 		return errors.New("could not receive landscape config result: disconnected")
 	}
 
-	err, ok := msgToError(result)
+	ok, err := msgToError(result)
 	if ok {
 		return err
 	}

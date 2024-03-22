@@ -101,21 +101,21 @@ func (c *client) Close() {
 // msgToError translates a result received via gRPC into an error.
 // If there is a problem translating, and error will be returned and the second argument
 // will be false.
-func msgToError(message *agentapi.MSG) (error, bool) {
+func msgToError(message *agentapi.MSG) (bool, error) {
 	if message == nil {
-		return errors.New("message is empty"), false
+		return false, errors.New("message is empty")
 	}
 
 	result, ok := message.GetData().(*agentapi.MSG_Result)
 	if !ok {
-		return errors.New("message is not a result"), false
+		return false, errors.New("message is not a result")
 	}
 
 	if result.Result != "" {
-		return errors.New(result.Result), true
+		return true, errors.New(result.Result)
 	}
 
-	return nil, true
+	return true, nil
 }
 
 // SetConnectedStream sets the Connected stream for the client.
