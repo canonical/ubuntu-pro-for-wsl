@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -35,7 +34,6 @@ type Daemon struct {
 
 	// Systemd status management.
 	systemdSdNotifier systemdSdNotifier
-	readyOnce         sync.Once
 
 	// Channels for internal messaging.
 	started atomic.Bool
@@ -117,7 +115,7 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 
 	select {
 	case <-d.gracefulCtx.Done():
-		return d.gracefulCtx.Err()
+		return errors.New("already quit")
 	default:
 	}
 
@@ -128,6 +126,13 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 		growthFactor = 2
 	)
 	wait := 0 * time.Second
+
+	// Signal systemd before dialing for the first time
+	// We don't want to delay startup due to a timeout
+	err := d.systemdNotifyReady(d.ctx)
+	if err != nil {
+		return fmt.Errorf("could not notify systemd: %v", err)
+	}
 
 	for {
 		select {
@@ -162,12 +167,13 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 			}()
 
 			log.Info(ctx, "Daemon: completed connection to Windows Agent")
-
 			d.systemdNotifyStatus(ctx, serviceStatusConnected)
 
 			t := time.NewTimer(time.Minute)
 			defer t.Stop()
+
 			err = server.Serve(service)
+
 			if errors.Is(err, streams.SystemError{}) {
 				return false, err
 			} else if err != nil {
@@ -276,14 +282,6 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	}
 
 	log.Infof(ctx, "Daemon: starting connection to Windows Agent via %s", addr)
-
-	// Signal systemd before dialing for the first time
-	// We don't want to delay startup due to a timeout
-	err = nil
-	d.readyOnce.Do(func() { err = d.systemdNotifyReady(ctx) })
-	if err != nil {
-		return nil, streams.NewSystemError("could not notify systemd: %v", err)
-	}
 
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
