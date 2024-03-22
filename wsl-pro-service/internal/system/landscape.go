@@ -56,7 +56,7 @@ func (s *System) writeConfig(landscapeConfig string) (err error) {
 		return err
 	}
 
-	groupID, err := s.lookupGroup("landscape")
+	groupID, err := s.groupToGUID("landscape")
 	if err != nil {
 		return err
 	}

@@ -279,8 +279,8 @@ func (s *System) findCmdExe() (cmdExe string, err error) {
 	return "", fmt.Errorf("none of the mounted drives contains subpath %s", subPath)
 }
 
-// lookupGroup searches the group with the specified name and returns its GID.
-func (s *System) lookupGroup(name string) (int, error) {
+// groupToGUID searches the group with the specified name and returns its GID.
+func (s *System) groupToGUID(name string) (int, error) {
 	group, err := s.backend.LookupGroup(name)
 	if err != nil {
 		return 0, err
