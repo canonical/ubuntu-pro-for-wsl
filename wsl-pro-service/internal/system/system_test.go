@@ -393,6 +393,7 @@ func TestLandscapeEnable(t *testing.T) {
 		breakWriteConfig     bool
 		breakLandscapeConfig bool
 		breakWSLPath         bool
+		noLandscapeGroup     bool
 
 		wantErr bool
 	}{
@@ -406,6 +407,7 @@ func TestLandscapeEnable(t *testing.T) {
 		"Error when the config file cannot be written":           {breakWriteConfig: true, wantErr: true},
 		"Error when the landscape-config command fails":          {breakLandscapeConfig: true, wantErr: true},
 		"Error when failing to override the SSL certficate path": {breakWSLPath: true, wantErr: true},
+		"Error when the Landscape user does not exist":           {noLandscapeGroup: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -426,6 +428,10 @@ func TestLandscapeEnable(t *testing.T) {
 
 			if tc.breakWSLPath {
 				mock.SetControlArg(testutils.WslpathErr)
+			}
+
+			if tc.noLandscapeGroup {
+				mock.LandscapeGroupGID = ""
 			}
 
 			config, err := os.ReadFile(filepath.Join(commontestutils.TestFixturePath(t), "landscape.conf"))

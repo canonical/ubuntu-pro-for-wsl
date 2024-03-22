@@ -6,9 +6,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
+	"strconv"
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
@@ -34,6 +37,7 @@ type Backend interface {
 	Path(p ...string) string
 	Hostname() (string, error)
 	GetenvWslDistroName() string
+	LookupGroup(string) (*user.Group, error)
 
 	ProExecutable(ctx context.Context, args ...string) *exec.Cmd
 	LandscapeConfigExecutable(ctx context.Context, args ...string) *exec.Cmd
@@ -273,4 +277,34 @@ func (s *System) findCmdExe() (cmdExe string, err error) {
 	}
 
 	return "", fmt.Errorf("none of the mounted drives contains subpath %s", subPath)
+}
+
+// groupToGUID searches the group with the specified name and returns its GID.
+func (s *System) groupToGUID(name string) (int, error) {
+	group, err := s.backend.LookupGroup(name)
+	if err != nil {
+		return 0, err
+	}
+
+	guid, err := strconv.ParseInt(group.Gid, 10, 32)
+	if err != nil {
+		return 0, errors.New("could not parse %s as an integer")
+	}
+
+	return int(guid), nil
+}
+
+// currentUser returns the UID of the current user.
+func (s *System) currentUser() (int, error) {
+	user, err := user.Current()
+	if err != nil {
+		return 0, err
+	}
+
+	userID, err := strconv.ParseInt(user.Uid, 10, 32)
+	if err != nil {
+		return 0, errors.New("could not parse %s as an integer")
+	}
+
+	return int(userID), nil
 }

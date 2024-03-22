@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -35,6 +36,9 @@ type SystemMock struct {
 	// WslDistroNameEnvEnabled sets the mocked WSL_DISTRO_NAME to $WslDistroName when true, and to an empty
 	// string when false
 	WslDistroNameEnvEnabled bool
+
+	// LookupGroupError makes the LookupGroup function fail.
+	LandscapeGroupGID string
 
 	// extraEnv are extra environment variables that will be passed to mocked executables
 	extraEnv []string
@@ -114,12 +118,16 @@ const (
 func MockSystem(t *testing.T) (system.System, *SystemMock) {
 	t.Helper()
 
+	u, err := user.Current()
+	require.NoError(t, err, "Setup: could not get current user")
+
 	distroHostname := "TEST_DISTRO_HOSTNAME"
 	mock := &SystemMock{
 		FsRoot:                  mockFilesystemRoot(t),
 		WslDistroName:           "TEST_DISTRO",
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
+		LandscapeGroupGID:       u.Gid,
 	}
 
 	return system.New(system.WithTestBackend(mock)), mock
@@ -156,6 +164,22 @@ func (m *SystemMock) GetenvWslDistroName() string {
 		return m.WslDistroName
 	}
 	return ""
+}
+
+// LookupGroup mocks the user.LookupGroup function.
+func (m *SystemMock) LookupGroup(name string) (*user.Group, error) {
+	if name != "landscape" {
+		return nil, fmt.Errorf("mock does not support group %q", name)
+	}
+
+	if m.LandscapeGroupGID == "" {
+		return nil, user.UnknownGroupError(name)
+	}
+
+	return &user.Group{
+		Gid:  m.LandscapeGroupGID,
+		Name: name,
+	}, nil
 }
 
 // mockExec generates a command of the form `bash -ec <SCRIPT>` that will call an alternate binary
