@@ -33,7 +33,7 @@ func (s *Service) ProAttachmentCommands(stream agentapi.WSLInstance_ProAttachmen
 	return nil
 }
 
-// SetProStream sets the pro attachment stream for the client.
+// SetProAttachmentStream sets the pro attachment stream for the client.
 // This step is necessary for WaitReady to return.
 func (c *client) SetProAttachmentStream(stream agentapi.WSLInstance_ProAttachmentCommandsServer) error {
 	c.mu.Lock()
