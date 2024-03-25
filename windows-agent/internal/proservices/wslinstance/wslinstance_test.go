@@ -232,13 +232,13 @@ func TestSendCommands(t *testing.T) {
 	err = conn.SendProAttachment("hello123")
 	require.NoError(t, err, "SendProAttachment should return no error")
 
-	err = conn.SendProAttachment("HARDCODED_ERROR")
+	err = conn.SendProAttachment("MOCK_ERROR")
 	require.Error(t, err, "SendProAttachment should have returned an error")
 
 	err = conn.SendLandscapeConfig("hello=world", "uid1234")
 	require.NoError(t, err, "SendLandscapeConfig should return no error")
 
-	err = conn.SendLandscapeConfig("HARDCODED_ERROR", "uid5321")
+	err = conn.SendLandscapeConfig("MOCK_ERROR", "uid5321")
 	require.Error(t, err, "SendLandscapeConfig should have returned an error")
 
 	wps.Stop()
@@ -401,7 +401,7 @@ func (m *mockWSLProService) replyProAttachmentCommands(t *testing.T) {
 		}
 
 		var send error
-		if msg.GetToken() == "HARDCODED_ERROR" {
+		if msg.GetToken() == "MOCK_ERROR" {
 			send = errors.New("mock error")
 		}
 
@@ -427,7 +427,7 @@ func (m *mockWSLProService) replyLandscapeConfigCommands(t *testing.T) {
 		}
 
 		var send error
-		if msg.GetConfig() == "HARDCODED_ERROR" {
+		if msg.GetConfig() == "MOCK_ERROR" {
 			send = errors.New("mock error")
 		}
 
