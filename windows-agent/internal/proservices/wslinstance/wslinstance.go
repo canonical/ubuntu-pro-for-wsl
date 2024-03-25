@@ -113,7 +113,7 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 	defer decorate.OnError(&err, "received invalid distribution info")
 
 	if info.GetWslName() == "" {
-		return props, errors.New("no id provided")
+		return props, errors.New("no WSL name provided in DistroInfo message")
 	}
 
 	return distro.Properties{
