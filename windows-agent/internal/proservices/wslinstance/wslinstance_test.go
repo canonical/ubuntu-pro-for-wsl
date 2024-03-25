@@ -100,7 +100,7 @@ func TestServe(t *testing.T) {
 				distroName, _ = wsltestutils.RegisterDistro(t, ctx, false)
 			}
 
-			wps := newMockWSLProService(t, ctx, mockWslProServiceOtions{
+			wps := newMockWSLProService(t, ctx, mockWslProServiceOptions{
 				address:    lis.Addr().String(),
 				distroName: distroName,
 
@@ -202,7 +202,7 @@ func TestSendCommands(t *testing.T) {
 
 	distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
-	wps := newMockWSLProService(t, ctx, mockWslProServiceOtions{
+	wps := newMockWSLProService(t, ctx, mockWslProServiceOptions{
 		address:    lis.Addr().String(),
 		distroName: distroName,
 	})
@@ -285,7 +285,7 @@ type mockWSLProService struct {
 	running sync.WaitGroup
 }
 
-type mockWslProServiceOtions struct {
+type mockWslProServiceOptions struct {
 	address    string
 	distroName string
 
@@ -297,7 +297,7 @@ type mockWslProServiceOtions struct {
 // newMockWSLProService creates a wslDistroMock, establishing a connection to the control stream.
 //
 //nolint:revive // testing.T should go before context, regardless of what these linters say.
-func newMockWSLProService(t *testing.T, ctx context.Context, opt mockWslProServiceOtions) (mock *mockWSLProService) {
+func newMockWSLProService(t *testing.T, ctx context.Context, opt mockWslProServiceOptions) (mock *mockWSLProService) {
 	t.Helper()
 
 	mock = &mockWSLProService{}
