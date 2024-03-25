@@ -28,25 +28,19 @@ type client struct {
 	mu sync.RWMutex
 }
 
-// Client finds or creates a new multi-stream client.
-func (s *Service) client(name string) *client {
+// client finds or creates a new multi-stream client.
+func (s *Service) client(ctx context.Context, name string) *client {
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
-	client, ok := s.clients[name]
+	c, ok := s.clients[name]
 	if ok {
-		return client
+		return c
 	}
 
-	return newClient(s, name)
-}
-
-// newClient creates a new client.
-// Must be called under the streams mutex.
-func newClient(s *Service, name string) *client {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	c := &client{
+	// Create a new client.
+	ctx, cancel := context.WithCancel(ctx)
+	c = &client{
 		name:    name,
 		ctx:     ctx,
 		cancel:  cancel,

@@ -139,7 +139,7 @@ func mainHandshake(ctx context.Context, s *Service, recv func() (*agentapi.Distr
 		return nil, msg, errors.New("could not complete handshake: no WSL name provided")
 	}
 
-	return s.client(msg.GetWslName()), msg, err
+	return s.client(ctx, msg.GetWslName()), msg, err
 }
 
 // commandHandshake receives the first message from a command-sending stream and attaches the stream to the client.
@@ -157,7 +157,7 @@ func commandHandshake(ctx context.Context, s *Service, recv func() (*agentapi.MS
 		return nil, errors.New("could not complete handshake: no WSL name received")
 	}
 
-	return s.client(name), err
+	return s.client(ctx, name), err
 }
 
 // recvContext returns as soon as either:
