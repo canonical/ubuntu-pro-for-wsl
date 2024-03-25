@@ -127,10 +127,10 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 
 // mainHandshake receives the first message from the main stream and attaches the stream to the client.
 func mainHandshake(ctx context.Context, s *Service, recv func() (*agentapi.DistroInfo, error)) (c *client, m *agentapi.DistroInfo, err error) {
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	recvCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	msg, err := recvContext(ctx, recv)
+	msg, err := recvContext(recvCtx, recv)
 	if err != nil {
 		return nil, m, fmt.Errorf("could not start handshake: did not receive: %v", err)
 	}
@@ -144,10 +144,10 @@ func mainHandshake(ctx context.Context, s *Service, recv func() (*agentapi.Distr
 
 // commandHandshake receives the first message from a command-sending stream and attaches the stream to the client.
 func commandHandshake(ctx context.Context, s *Service, recv func() (*agentapi.MSG, error)) (c *client, err error) {
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	recvCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	msg, err := recvContext(ctx, recv)
+	msg, err := recvContext(recvCtx, recv)
 	if err != nil {
 		return nil, fmt.Errorf("could not start handshake: did not receive: %v", err)
 	}
