@@ -40,7 +40,8 @@ func TestServe(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		dontRegister bool
+		dontRegister       bool
+		dontSendDistroName bool
 
 		skipConnectedHandshake bool
 		skipProHandshake       bool
@@ -57,6 +58,7 @@ func TestServe(t *testing.T) {
 		"Error when two streams connect under the same name": {duplicateStream: true},
 
 		// Early failure: before/during add to database
+		"Error when the distro name is not sent":            {dontSendDistroName: true, wantNeverInDatabase: true},
 		"Error when the distro does not exist":              {dontRegister: true, wantNeverInDatabase: true},
 		"Error when Connected never performs the handshake": {skipConnectedHandshake: true, wantNeverInDatabase: true},
 
@@ -105,9 +107,14 @@ func TestServe(t *testing.T) {
 				distroName, _ = wsltestutils.RegisterDistro(t, ctx, false)
 			}
 
+			sendName := distroName
+			if tc.dontSendDistroName {
+				sendName = ""
+			}
+
 			wps := newMockWSLProService(t, ctx, mockWslProServiceOptions{
 				address:    lis.Addr().String(),
-				distroName: distroName,
+				distroName: sendName,
 
 				noHandshakeConnected:         tc.skipConnectedHandshake,
 				noHandshakeProCommands:       tc.skipProHandshake,
