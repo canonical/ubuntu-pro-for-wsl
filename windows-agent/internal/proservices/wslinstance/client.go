@@ -93,7 +93,7 @@ func (c *client) Close() {
 }
 
 // msgToError translates a result received via gRPC into an error.
-// If there is a problem translating, and error will be returned and the second argument
+// If there is a problem translating, an error will be returned and the second argument
 // will be false.
 func msgToError(message *agentapi.MSG) (bool, error) {
 	if message == nil {

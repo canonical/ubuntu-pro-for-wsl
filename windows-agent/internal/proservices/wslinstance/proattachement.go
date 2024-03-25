@@ -81,8 +81,8 @@ func (c *client) SendProAttachment(proToken string) error {
 	}
 
 	ok, err := msgToError(msg)
-	if ok {
-		return err
+	if !ok {
+		return fmt.Errorf("did not receive landscape config result: %v", err)
 	}
-	return fmt.Errorf("did not receive landscape config result: %v", err)
+	return err
 }

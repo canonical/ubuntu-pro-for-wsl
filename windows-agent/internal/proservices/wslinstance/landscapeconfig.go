@@ -82,8 +82,8 @@ func (c *client) SendLandscapeConfig(config string, uid string) error {
 	}
 
 	ok, err := msgToError(result)
-	if ok {
-		return err
+	if !ok {
+		return fmt.Errorf("did not receive landscape config result: %v", err)
 	}
-	return fmt.Errorf("did not receive landscape config result: %v", err)
+	return err
 }
