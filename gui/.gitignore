@@ -49,3 +49,6 @@ app.*.map.json
 /android/app/release
 # Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
 pubspec.lock
+
+# The icon is overriden by the build system
+packages/ubuntupro/windows/runner/resources/app_icon.ico

@@ -5,8 +5,7 @@
 		<AppDir>$(AppRoot)packages\ubuntupro\</AppDir>
 		<AppOutDir>$(AppDir)build\windows\$(Platform)\runner\$(Configuration)\</AppOutDir>
 		<AppIconPath>$(AppDir)windows\runner\resources\app_icon.ico</AppIconPath>
-        <!-- TODO: replace this location by a common icon path for the whole app -->
-		<MsixIconPath>$(MSBuildThisFileDirectory)\icon.ico</MsixIconPath>
+		<MsixIconPath>$(SolutionDir)\UbuntuProForWSL\Images\icon.ico</MsixIconPath>
 		<AppConfiguration>$(Configuration.ToLower())</AppConfiguration>
 		<OverrideEntryPoint Condition="$(UP4W_END_TO_END) != '' And $(UP4W_END_TO_END) != 'false'">-t end_to_end/end_to_end_test.dart</OverrideEntryPoint>
 		<VersionDefine Condition="$(UP4W_FULL_VERSION) != '' ">--dart-define="UP4W_FULL_VERSION=$(UP4W_FULL_VERSION)"</VersionDefine>
