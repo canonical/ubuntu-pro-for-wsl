@@ -45,14 +45,13 @@ func TestServe(t *testing.T) {
 	}, 20*time.Second, 100*time.Millisecond, "Setup: Agent service never became ready")
 
 	// Test receiving a pro token and returning success
-
 	err = agent.Service.ProAttachment.Send(&agentapi.ProAttachCmd{Token: "token345"})
 	require.NoError(t, err, "Send should return no error")
 
 	require.Eventually(t, func() bool {
-		return len(agent.Service.ProAttachment.History()) >= 1
+		return len(agent.Service.ProAttachment.History()) > 1
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	require.Empty(t, agent.Service.ProAttachment.History()[0].GetResult(), "ProAttachment should return a successful result")
+	require.Empty(t, agent.Service.ProAttachment.History()[1].GetResult(), "ProAttachment should return a successful result")
 
 	// Test receiving a pro token and returning error
 
@@ -60,9 +59,9 @@ func TestServe(t *testing.T) {
 	require.NoError(t, err, "Send should return no error")
 
 	require.Eventually(t, func() bool {
-		return len(agent.Service.ProAttachment.History()) >= 2
+		return len(agent.Service.ProAttachment.History()) > 2
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	require.NotEmpty(t, agent.Service.ProAttachment.History()[1].GetResult(), "ProAttachment should return an error result")
+	require.NotEmpty(t, agent.Service.ProAttachment.History()[2].GetResult(), "ProAttachment should return an error result")
 
 	// Test receiving a Landscape config and returning success
 
@@ -70,9 +69,9 @@ func TestServe(t *testing.T) {
 	require.NoError(t, err, "Send should return no error")
 
 	require.Eventually(t, func() bool {
-		return len(agent.Service.LandscapeConfig.History()) >= 1
+		return len(agent.Service.LandscapeConfig.History()) > 1
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	require.Empty(t, agent.Service.LandscapeConfig.History()[0].GetResult(), "LandscapeConfig should return a successful result")
+	require.Empty(t, agent.Service.LandscapeConfig.History()[1].GetResult(), "LandscapeConfig should return a successful result")
 
 	// Test receiving a Landscape config and returning error
 
@@ -80,9 +79,9 @@ func TestServe(t *testing.T) {
 	require.NoError(t, err, "Send should return no error")
 
 	require.Eventually(t, func() bool {
-		return len(agent.Service.LandscapeConfig.History()) >= 2
+		return len(agent.Service.LandscapeConfig.History()) > 2
 	}, 20*time.Second, 100*time.Millisecond, "Server did not send a response to the Pro attach command")
-	require.NotEmpty(t, agent.Service.LandscapeConfig.History()[1].GetResult(), "LandscapeConfig should return an error result")
+	require.NotEmpty(t, agent.Service.LandscapeConfig.History()[2].GetResult(), "LandscapeConfig should return an error result")
 
 	server.GracefulStop()
 	select {
