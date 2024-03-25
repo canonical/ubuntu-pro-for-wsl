@@ -125,14 +125,14 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(t, err, "Sending commands should not fail")
 
 	proMsg, err := client.ProAttachStream().Recv()
-	require.NoError(t, err, "RecvProAttachCmd should not return error")
+	require.NoError(t, err, "ProAttachStream.Recv should not return error")
 	require.Equal(t, "token123", proMsg.GetToken(), "Mismatch between sent and received Pro token")
 
 	err = service.SendLandscapeConfig("[client]\nhello=world", "uid1234")
 	require.NoError(t, err, "Sending commands should not fail")
 
 	lpeMsg, err := client.LandscapeConfigStream().Recv()
-	require.NoError(t, err, "RecvLandscapeConfigCmd should not return error")
+	require.NoError(t, err, "LandscapeConfigStream.Recv should not return error")
 	require.Equal(t, "[client]\nhello=world", lpeMsg.GetConfig(), "Mismatch between sent and received Landscape config")
 	require.Equal(t, "uid1234", lpeMsg.GetHostagentUid(), "Mismatch between sent and received Landscape hostagent UID")
 
@@ -143,12 +143,12 @@ func TestSendAndRecv(t *testing.T) {
 		5*time.Second, 100*time.Millisecond, "The server should have received a distro info message")
 
 	err = client.ProAttachStream().SendResult(nil)
-	require.NoError(t, err, "SendProAttachCmdResult should not return error")
+	require.NoError(t, err, "ProAttachStream.SendResult should not return error")
 	require.Eventually(t, func() bool { return service.proattachment.recvCount.Load() >= 1 },
 		5*time.Second, 100*time.Millisecond, "The server should have received a result message via the Pro attachment stream")
 
 	err = client.LandscapeConfigStream().SendResult(nil)
-	require.NoError(t, err, "SendLandscapeConfigCmdResult should not return error")
+	require.NoError(t, err, "LandscapeConfigStream.SendResult should not return error")
 	require.Eventually(t, func() bool { return service.landscapeConfig.recvCount.Load() >= 1 },
 		5*time.Second, 100*time.Millisecond, "The server should have received a result message via the Landscape stream")
 
@@ -163,17 +163,17 @@ func TestSendAndRecv(t *testing.T) {
 	require.Error(t, err, "SendInfo should return an error after disconnecting")
 
 	err = client.ProAttachStream().SendResult(nil)
-	require.Error(t, err, "SendProAttachCmdResult should return an error after disconnecting")
+	require.Error(t, err, "ProAttachStream.SendResult should return an error after disconnecting")
 
 	err = client.LandscapeConfigStream().SendResult(nil)
-	require.Error(t, err, "SendLandscapeConfigCmdResult should return an error after disconnecting")
+	require.Error(t, err, "LandscapeConfigStream.SendResult should return an error after disconnecting")
 
 	// Test receiving messages after disconnecting
 	_, err = client.ProAttachStream().Recv()
-	require.Error(t, err, "RecvProAttachCmd should return an error after disconnecting")
+	require.Error(t, err, "ProAttachStream.Recv should return an error after disconnecting")
 
 	_, err = client.LandscapeConfigStream().Recv()
-	require.Error(t, err, "RecvLandscapeConfigCmd should return an error after disconnecting")
+	require.Error(t, err, "SendResult.Recv should return an error after disconnecting")
 }
 
 type agentAPIServer struct {
