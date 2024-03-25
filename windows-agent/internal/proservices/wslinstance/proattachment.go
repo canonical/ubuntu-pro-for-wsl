@@ -18,11 +18,10 @@ func (s *Service) ProAttachmentCommands(stream agentapi.WSLInstance_ProAttachmen
 	if err != nil {
 		return err
 	}
-	defer client.Close()
-
 	if err := client.SetProAttachmentStream(stream); err != nil {
 		return err
 	}
+	defer client.Close()
 
 	if err := client.WaitReady(ctx); err != nil {
 		return err

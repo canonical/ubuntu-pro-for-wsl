@@ -46,10 +46,15 @@ func TestServe(t *testing.T) {
 		skipProHandshake       bool
 		skipLandscapeHandshake bool
 
+		duplicateStream bool
+
 		wantNeverInDatabase         bool
 		wantConnectionNeverAttached bool
 	}{
 		"Success": {},
+
+		// Partial failure: only one stream connects
+		"Error when two streams connect under the same name": {duplicateStream: true},
 
 		// Early failure: before/during add to database
 		"Error when the distro does not exist":              {dontRegister: true, wantNeverInDatabase: true},
@@ -120,6 +125,25 @@ func TestServe(t *testing.T) {
 				_, ok := db.Get(distroName)
 				return ok
 			}, timeout, time.Second, "Distro was never added to database")
+
+			if tc.duplicateStream {
+				wps2 := newMockWSLProService(t, ctx, mockWslProServiceOptions{
+					address:    lis.Addr().String(),
+					distroName: distroName,
+				})
+				defer wps2.Stop()
+
+				time.Sleep(time.Second)
+
+				err := wps2.connStream.Send(&agentapi.DistroInfo{WslName: distroName})
+				require.Error(t, err, "Second stream should have errored")
+
+				err = wps2.proStream.Send(&agentapi.MSG{Data: &agentapi.MSG_WslName{WslName: distroName}})
+				require.Error(t, err, "Second stream should have errored")
+
+				err = wps2.lpeStream.Send(&agentapi.MSG{Data: &agentapi.MSG_WslName{WslName: distroName}})
+				require.Error(t, err, "Second stream should have errored")
+			}
 
 			require.Eventually(t, func() bool {
 				return landscape.updateCount.Load() > 0

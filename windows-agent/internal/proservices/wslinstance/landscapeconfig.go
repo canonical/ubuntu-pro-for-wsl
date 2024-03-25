@@ -18,11 +18,10 @@ func (s *Service) LandscapeConfigCommands(stream agentapi.WSLInstance_LandscapeC
 	if err != nil {
 		return err
 	}
-	defer client.Close()
-
 	if err := client.SetLandscapeConfigStream(stream); err != nil {
 		return err
 	}
+	defer client.Close()
 
 	if err := client.WaitReady(ctx); err != nil {
 		return err

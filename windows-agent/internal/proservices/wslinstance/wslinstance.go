@@ -50,11 +50,11 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
 	if err := client.SetConnectedStream(stream); err != nil {
 		return err
 	}
+	defer client.Close()
 
 	props, err := propsFromInfo(info)
 	if err != nil {
