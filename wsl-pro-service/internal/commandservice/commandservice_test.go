@@ -24,8 +24,8 @@ func TestApplyProToken(t *testing.T) {
 		wantAttach bool
 		wantErr    bool
 	}{
-		"success attaching": {wantDetach: true, wantAttach: true},
-		"success detaching": {emptyToken: true, wantDetach: true},
+		"Success attaching": {wantDetach: true, wantAttach: true},
+		"Success detaching": {emptyToken: true, wantDetach: true},
 
 		// Attach/detach errors
 		"Error calling pro detach": {breakProDetach: true, wantErr: true},
@@ -91,8 +91,8 @@ func TestApplyLandscapeConfig(t *testing.T) {
 		wantDisableCalled bool
 		wantEnableCalled  bool
 	}{
-		"success enabling Landscape":  {wantEnableCalled: true},
-		"success disabling Landscape": {emptyConfig: true, wantDisableCalled: true},
+		"Success enabling Landscape":  {wantEnableCalled: true},
+		"Success disabling Landscape": {emptyConfig: true, wantDisableCalled: true},
 
 		// Attach/detach errors
 		"Error calling landscape disable": {emptyConfig: true, breakLandscapeDisable: true, wantErr: true},
