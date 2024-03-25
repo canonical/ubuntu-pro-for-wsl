@@ -363,7 +363,7 @@ func sendResult(send func(*agentapi.MSG) error, result error) error {
 	})
 }
 
-// stopServe stops the Linux-side service.
+// Stop stops the Linux-side service.
 func (m *mockWSLProService) Stop() {
 	m.cancel()
 	m.conn.Close()
