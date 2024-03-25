@@ -33,8 +33,7 @@ func TestServe(t *testing.T) {
 	service := &mockService{}
 	errCh := make(chan error, 1)
 	go func() {
-		err := server.Serve(service)
-		errCh <- err
+		errCh <- server.Serve(service)
 		close(errCh)
 	}()
 

@@ -149,7 +149,6 @@ func (s *Server) Serve(service CommandService) error {
 	for msg := range ch {
 		err = errors.Join(err, msg)
 	}
-
 	if err != nil {
 		return fmt.Errorf("serve error: %w", err)
 	}
@@ -165,19 +164,19 @@ type handler interface {
 // newHandler takes the ingredients for a handler and hides their type under the type-erased handler.
 // This is essentially a handler factory.
 func newHandler[Command any](stream stream[Command], callback func(context.Context, *Command) error) handler {
-	return &handlerImpl[Command]{
+	return &handlingLoop[Command]{
 		stream:   stream,
 		callback: callback,
 	}
 }
 
-// handlerImpl implements the logic of the handling loop.
-type handlerImpl[Command any] struct {
+// handlingLoop implements the logic of the request handling loop.
+type handlingLoop[Command any] struct {
 	stream   stream[Command]
 	callback func(context.Context, *Command) error
 }
 
-func (h *handlerImpl[Command]) run(s *Server, client *multiClient) error {
+func (h *handlingLoop[Command]) run(s *Server, client *multiClient) error {
 	// Use this context to log onto the stream, and to cancel with server.Stop
 	ctx, cancel := cancelWith(h.stream.Context(), s.ctx)
 	defer cancel()
@@ -194,7 +193,7 @@ func (h *handlerImpl[Command]) run(s *Server, client *multiClient) error {
 		default:
 		}
 
-		log.Debugf(ctx, "Started serving %s requests", reflect.TypeOf((*Command)(nil)).Elem())
+		log.Debugf(ctx, "Started serving %s requests", reflect.TypeFor[Command]())
 
 		// Handle a single command
 		msg, ok, err := receiveWithContext(gCtx, h.stream.Recv)
