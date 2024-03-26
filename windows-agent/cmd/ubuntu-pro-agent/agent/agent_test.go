@@ -316,6 +316,83 @@ func TestLogs(t *testing.T) {
 	}
 }
 
+func TestClean(t *testing.T) {
+	// Not parallel because we modify the environment
+
+	testCases := map[string]struct {
+		emptyUserProfile bool
+		emptyLocalAppDir bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when %UserProfile% is empty":  {emptyUserProfile: true, wantErr: true},
+		"Error when %LocalAppData% is empty": {emptyLocalAppDir: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Not parallel because we modify the environment
+
+			home := t.TempDir()
+			appData := filepath.Join(home, "AppData/Local")
+
+			t.Setenv("LocalAppData", appData)
+
+			if tc.emptyUserProfile {
+				t.Setenv("UserProfile", "")
+			} else {
+				t.Setenv("UserProfile", home)
+
+				err := os.MkdirAll(filepath.Join(home, common.UserProfileDir), 0700)
+				require.NoError(t, err, "Setup: could not crate fake public directory")
+
+				err = os.WriteFile(filepath.Join(home, common.UserProfileDir, "file"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file inside the public directory")
+
+				err = os.WriteFile(filepath.Join(home, ".unrelated"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file outside the public directory")
+			}
+
+			if tc.emptyLocalAppDir {
+				t.Setenv("LocalAppData", "")
+			} else {
+				t.Setenv("LocalAppData", appData)
+
+				err := os.MkdirAll(filepath.Join(appData, common.LocalAppDataDir), 0700)
+				require.NoError(t, err, "Setup: could not crate fake private directory")
+
+				err = os.WriteFile(filepath.Join(appData, common.LocalAppDataDir, "file"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file inside the private directory")
+
+				err = os.WriteFile(filepath.Join(appData, ".unrelated"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file outside the private directory")
+			}
+
+			a := agent.New(agent.WithRegistry(registry.NewMock()))
+			a.SetArgs("clean")
+
+			err := a.Run()
+			if tc.wantErr {
+				require.Error(t, err, "Run should return an error")
+			} else {
+				require.NoError(t, err, "Run should not return an error")
+			}
+
+			require.NoFileExists(t, filepath.Join(home, common.UserProfileDir), "Public directory should have been removed")
+			if !tc.emptyUserProfile {
+				require.FileExists(t, filepath.Join(home, ".unrelated"), "Unrelated file in home directory should still exist")
+			}
+
+			require.NoFileExists(t, filepath.Join(appData, common.LocalAppDataDir), "Private directory should have been removed")
+			if !tc.emptyLocalAppDir {
+				require.FileExists(t, filepath.Join(appData, ".unrelated"), "Unrelated file in LocalAppData directory should still exist")
+			}
+		})
+	}
+}
+
 // requireGoroutineStarted starts a goroutine and blocks until it has been launched.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()
