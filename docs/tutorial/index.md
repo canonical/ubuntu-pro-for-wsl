@@ -8,7 +8,7 @@ In this tutorial you will learn all the basic things that you need to know to st
 
 - A Windows 11 machine with access to the Microsoft Store and a minimum of 16GB of RAM and 8-core processor.
 
-- Familiarity with the Windows Registry Editor and the PowerShell.
+- Familiarity with the Windows PowerShell.
 
 <br/>
 
@@ -281,7 +281,7 @@ Once the installation has completed, Landscape will be served on `localhost` por
 admin account. Enter the following credentials and click the **Sign Up** button:
 
 | Field             | Value           |
-|-------------------|-----------------|
+| ----------------- | --------------- |
 | Name              | Admin           |
 | E-mail address    | `admin@mib.com` |
 | Passphrase        | 123             |
@@ -321,22 +321,22 @@ Time to install UP4W! Click on [this link](https://www.microsoft.com/store/produ
 ![Install Ubuntu Pro for WSL from the Store](./assets/store.png)
 
 
-Once the installation is complete, you will see a **Start** button. Click it. That will start the UP4W Windows agent. When the progress bar indicates that the process has been completed, close the application: At this point your UP4W GUI as well as your UP4W Windows Agent are both up and running, and you can continue to interact with the UP4W Windows Agent via the UP4W GUI, but here we will do that through the Windows registry -- that way you get a taste of what this might look like when you use UP4W to do things at scale.
+Once the installation is complete, you will see a **Start** button. Click it. That will start the UP4W Windows application. We'll use it to configure UP4W at next.
 
+
+```{note}
+Instead of using the GUI, it's possible to configure UP4W through the Windows registry, which enables you to do things at scale.
+```
 
 ### Configure UP4W for Ubuntu Pro and Landscape
 
+In the UP4W GUI click in the label "Already have a token?" to expand the Ubuntu Pro token input field.
 
-In the Windows Start Menu, locate the Registry Editor and open it.
+![UP4W GUI main screen](./assets/up4w_gui.png)
 
-In the left pane, navigate to `HKEY_CURRENT_USER\Software\`.
+Paste your token retrieved from your Ubuntu Pro dashboard during [Setup](ref::ensure-ubuntu-pro) and click on the "Confirm" button (the button becomes green when there is a valid token in the input field). The app will then show the Landscape configuration screen.
 
-Create a new key named `Canonical` and, inside of it, create another key named `UbuntuPro`.
-
-Inside the newly created `UbuntuPro` key, add a string value named `UbuntuProToken` and, in its value data field, paste your Ubuntu Pro token. (The token you retrieved from your Ubuntu Pro dashboard during [Setup](ref::ensure-ubuntu-pro)).
-
-Still inside the `UbuntuPro` key, add a multi string value named `LandscapeConfig` and paste into its
-data field the following contents, replacing:
+Create a new file in your home directory named `landscape.txt` and enter following contents, replacing:
 
 - `<HOSTNAME>` by the actual host name of your Windows machine and
 - `<YOUR_WINDOWS_USER_NAME>` by the actual user name of your Windows account.
@@ -354,10 +354,16 @@ ssl_public_key = C:\Users\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
 ```
 % If really needed we can start without the SSL public key and add it after the Windows host is registered in Landscape.
 
-![Registry Editor with the Ubuntu Pro configuration](./assets/regedit-config.png)
 
+Then load that file using the "Custom Configuration" part of the the screen, as shown below:
 
-Done! 
+![Loading Landscape custom config](./assets/loading-custom-landscape-config.png)
+
+Click on the "Continue" button. You'll see a status screen confirming the configuration is complete.
+
+![Configuration is complete](image.png)
+
+Done! You can close the UP4W window if you want.
 
 This has attached your Ubuntu Pro subscription to UP4W on the Windows host; UP4W will automatically forward it to the Ubuntu Pro client on your Ubuntu WSL instances; thus, all of your Ubuntu WSL instances will be automatically added to your Ubuntu Pro subscription.
 
@@ -507,7 +513,7 @@ On your Landscape server page, navigate to `Organization` > `Profiles` and click
 `Package Profiles`, then `Add package profile`. Fill in the form with the following values and click "Save".
 
 | Field               | Value                                  |
-| ---                 | ---                                    |
+| ------------------- | -------------------------------------- |
 | Title               | Vision                                 |
 | Description         | Computer Vision work                   |
 | Access group        | Global                                 |
@@ -565,8 +571,6 @@ In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right
 
 ![Uninstall Ubuntu Pro for WSL](./assets/start-menu-uninstall.png)
 
-% Skipping the registry clean-up because we'll use the GUI instead of the registry.%
-
 Additionally remove the `.ubuntupro` directory from your Windows user profile directory.
 
 ```powershell
@@ -604,11 +608,11 @@ As before, in the Windows Start Menu, locate the "WSL" application, right-click 
 
 This tutorial has introduced you to all the basic things you can do with UP4W. But there is more to explore:
 
-| IF YOU ARE WONDERING…	| VISIT… |
-|-|-|
-| “How do I…?”	| UP4W How-to docs |
-| “What is…?”	| UP4W Reference docs |
-| “How do I contribute to UP4W?”	| Developer docs |
+| IF YOU ARE WONDERING…          | VISIT…              |
+| ------------------------------ | ------------------- |
+| “How do I…?”                   | UP4W How-to docs    |
+| “What is…?”                    | UP4W Reference docs |
+| “How do I contribute to UP4W?” | Developer docs      |
 
 %| “Why…?”, “So what?”	UP4W Explanation docs 
 
