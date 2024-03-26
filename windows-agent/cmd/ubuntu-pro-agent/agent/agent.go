@@ -228,7 +228,7 @@ func (a *App) publicDir(opts options) (string, error) {
 		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
 	}
 
-	if err := os.MkdirAll(opts.publicDir, 0600); err != nil {
+	if err := os.MkdirAll(opts.publicDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create public dir %s: %v", opts.publicDir, err)
 	}
 
@@ -246,7 +246,7 @@ func (a *App) privateDir(opts options) (string, error) {
 		opts.privateDir = filepath.Join(localAppData, common.LocalAppDataDir)
 	}
 
-	if err := os.MkdirAll(opts.privateDir, 0600); err != nil {
+	if err := os.MkdirAll(opts.privateDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create private dir %s: %v", opts.privateDir, err)
 	}
 
