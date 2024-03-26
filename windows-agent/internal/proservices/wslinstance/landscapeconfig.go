@@ -32,7 +32,7 @@ func (s *Service) LandscapeConfigCommands(stream agentapi.WSLInstance_LandscapeC
 	return nil
 }
 
-// SetLandscapeConfigStream sets the landscape config stream for the client.
+// SetLandscapeConfigStream sets the Landscape config stream for the client.
 // This step is necessary for WaitReady to return.
 func (c *client) SetLandscapeConfigStream(stream agentapi.WSLInstance_LandscapeConfigCommandsServer) error {
 	c.mu.Lock()
