@@ -36,7 +36,8 @@ type App struct {
 	viper   *viper.Viper
 	config  daemonConfig
 
-	daemon *daemon.Daemon
+	daemon      *daemon.Daemon
+	proServices *proservices.Manager
 
 	ready chan struct{}
 }
@@ -125,7 +126,7 @@ func (a *App) serve(args ...option) error {
 
 	log.Debugf(ctx, "Agent private directory: %s", privateDir)
 
-	proservice, err := proservices.New(ctx,
+	proservices, err := proservices.New(ctx,
 		publicDir,
 		privateDir,
 		proservices.WithRegistry(opt.registry),
@@ -134,9 +135,9 @@ func (a *App) serve(args ...option) error {
 		close(a.ready)
 		return err
 	}
-	defer proservice.Stop(ctx)
+	a.proServices = &proservices
 
-	a.daemon = daemon.New(ctx, proservice.RegisterGRPCServices, publicDir)
+	a.daemon = daemon.New(ctx, proservices.RegisterGRPCServices, publicDir)
 
 	close(a.ready)
 
@@ -184,6 +185,7 @@ func (a *App) Quit() {
 		return
 	}
 	a.daemon.Quit(context.Background(), false)
+	a.proServices.Stop(context.Background())
 }
 
 // WaitReady signals when the daemon is ready
