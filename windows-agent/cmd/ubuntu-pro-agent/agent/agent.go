@@ -97,6 +97,7 @@ func New(o ...option) *App {
 
 	// subcommands
 	a.installVersion()
+	a.installClean()
 
 	return &a
 }
