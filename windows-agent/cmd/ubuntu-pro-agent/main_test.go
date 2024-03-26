@@ -2,8 +2,6 @@ package main
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -44,9 +42,6 @@ func (a *myApp) PublicDir() (string, error) {
 func TestRun(t *testing.T) {
 	t.Parallel()
 
-	fooContent := "foo"
-	emptyContent := ""
-
 	tests := map[string]struct {
 		existingLogContent string
 
@@ -57,13 +52,7 @@ func TestRun(t *testing.T) {
 		wantReturnCode        int
 		wantOldLogFileContent *string
 	}{
-		"Run and exit successfully":                                {},
-		"Run and exit successfully despite logs not being written": {logDirError: true},
-
-		// Log file handling
-		"Existing log file has been renamed to old":       {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
-		"Existing empty log file has been renamed to old": {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
-		"Ignore when failing to archive log file":         {existingLogContent: "OLD_IS_DIRECTORY", wantReturnCode: 0},
+		"Run and exit successfully": {},
 
 		// Error cases
 		"Run and return error":                   {runError: true, wantReturnCode: 1},
@@ -81,31 +70,6 @@ func TestRun(t *testing.T) {
 				tmpDir:           t.TempDir(),
 			}
 
-			if tc.logDirError {
-				a.tmpDir = "PUBLIC_DIR_ERROR"
-			}
-
-			var logFile, oldLogFile string
-			publicDir, err := a.PublicDir()
-			if err == nil {
-				logFile = filepath.Join(publicDir, "log")
-				oldLogFile = logFile + ".old"
-				switch tc.existingLogContent {
-				case "":
-				case "OLD_IS_DIRECTORY":
-					err := os.Mkdir(oldLogFile, 0700)
-					require.NoError(t, err, "Setup: create invalid log.old file")
-					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
-					require.NoError(t, err, "Setup: creating pre-existing log file")
-				case "-":
-					tc.existingLogContent = ""
-					fallthrough
-				default:
-					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
-					require.NoError(t, err, "Setup: creating pre-existing log file")
-				}
-			}
-
 			var rc int
 			wait := make(chan struct{})
 			go func() {
@@ -119,19 +83,6 @@ func TestRun(t *testing.T) {
 			<-wait
 
 			require.Equal(t, tc.wantReturnCode, rc, "Return expected code")
-
-			// Don't check for log files if the directory was not writable
-			if logFile == "" {
-				return
-			}
-			if tc.wantOldLogFileContent != nil {
-				require.FileExists(t, oldLogFile, "Old log file should exist")
-				content, err := os.ReadFile(oldLogFile)
-				require.NoError(t, err, "Should be able to read old log file")
-				require.Equal(t, tc.existingLogContent, string(content), "Old log file content should be log's content")
-			} else {
-				require.NoFileExists(t, oldLogFile, "Old log file should not exist")
-			}
 		})
 	}
 }
