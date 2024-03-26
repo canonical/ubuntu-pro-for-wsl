@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -81,7 +82,6 @@ func New(o ...option) *App {
 			}
 
 			setVerboseMode(a.config.Verbosity)
-			log.Debug(context.Background(), "Debug mode is enabled")
 
 			return nil
 		},
@@ -103,7 +103,13 @@ func New(o ...option) *App {
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve(args ...option) error {
-	ctx := context.TODO()
+	ctx := context.Background()
+
+	cleanup, err := a.setUpLogger(ctx)
+	if err != nil {
+		log.Warningf(ctx, "could not set logger output: %v", err)
+	}
+	defer cleanup()
 
 	var opt options
 	for _, f := range args {
@@ -244,4 +250,41 @@ func (a *App) privateDir(opts options) (string, error) {
 	}
 
 	return opts.privateDir, nil
+}
+
+func (a *App) setUpLogger(ctx context.Context) (func(), error) {
+	noop := func() {}
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableQuote: true,
+	})
+
+	publicDir, err := a.PublicDir()
+	if err != nil {
+		return noop, err
+	}
+
+	logFile := filepath.Join(publicDir, "log")
+
+	// Move old log file
+	oldLogFile := filepath.Join(publicDir, "log.old")
+	err = os.Rename(logFile, oldLogFile)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Warningf(ctx, "Could not archive previous log file: %v", err)
+	}
+
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
+	if err != nil {
+		return noop, fmt.Errorf("could not open log file: %v", err)
+	}
+
+	// Write both to file and to Stdout. The latter is useful for local development.
+	w := io.MultiWriter(f, os.Stdout)
+	logrus.SetOutput(w)
+
+	fmt.Fprintf(f, "\n======= STARTUP =======\n")
+	log.Infof(ctx, "Version: %s", consts.Version)
+	log.Debug(ctx, "Debug mode is enabled")
+
+	return func() { _ = f.Close() }, nil
 }

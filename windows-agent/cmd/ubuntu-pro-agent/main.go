@@ -3,19 +3,14 @@ package main
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"io"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 	"syscall"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,17 +32,6 @@ type app interface {
 func run(a app) int {
 	defer installSignalHandler(a)()
 
-	log.SetFormatter(&log.TextFormatter{
-		DisableQuote: true,
-	})
-
-	cleanup, err := setLoggerOutput(a)
-	if err != nil {
-		log.Warningf("could not set logger output: %v", err)
-	} else {
-		defer cleanup()
-	}
-
 	if err := a.Run(); err != nil {
 		log.Error(context.Background(), err)
 
@@ -58,36 +42,6 @@ func run(a app) int {
 	}
 
 	return 0
-}
-
-func setLoggerOutput(a app) (func(), error) {
-	publicDir, err := a.PublicDir()
-	if err != nil {
-		return nil, err
-	}
-
-	logFile := filepath.Join(publicDir, "log")
-
-	// Move old log file
-	oldLogFile := filepath.Join(publicDir, "log.old")
-	err = os.Rename(logFile, oldLogFile)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Warnf("Could not archive previous log file: %v", err)
-	}
-
-	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
-	if err != nil {
-		return nil, fmt.Errorf("could not open log file: %v", err)
-	}
-
-	// Write both to file and to Stdout. The latter is useful for local development.
-	w := io.MultiWriter(f, os.Stdout)
-	log.SetOutput(w)
-
-	fmt.Fprintf(f, "\n======= STARTUP =======\n")
-	log.Infof("Version: %s", consts.Version)
-
-	return func() { _ = f.Close() }, nil
 }
 
 func installSignalHandler(a app) func() {
