@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -14,10 +15,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/wslinstance"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
@@ -35,359 +34,251 @@ func TestMain(m *testing.M) {
 	defer os.Exit(exit)
 }
 
-func TestNew(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	db, err := database.New(ctx, t.TempDir(), nil)
-	require.NoError(t, err, "Setup: empty database New() should return no error")
-	defer db.Close(ctx)
-
-	c := &landscapeCtlMock{}
-
-	_, err = wslinstance.New(context.Background(), db, c)
-	require.NoError(t, err, "New should never return an error")
-}
-
-type step int
-
-const (
-	never step = iota
-	beforeLinuxServe
-	beforeSendInfo
-	afterSendInfo
-	afterDatabaseQuery
-	afterDistroShouldBeActive
-	beforeSecondSendInfo
-	afterSecondSendInfo
-	afterPropertiesRefreshed
-)
-
-func (w step) String() string {
-	switch w {
-	case never:
-		return "never"
-	case beforeLinuxServe:
-		return "beforeLinuxServe"
-	case beforeSendInfo:
-		return "beforeSendInfo"
-	case afterSendInfo:
-		return "afterSendInfo"
-	case afterDatabaseQuery:
-		return "afterDatabaseQuery"
-	case afterDistroShouldBeActive:
-		return "afterDistroShouldBeActive"
-	case beforeSecondSendInfo:
-		return "beforeSecondSendInfo"
-	case afterSecondSendInfo:
-		return "afterSecondSendInfo"
-	case afterPropertiesRefreshed:
-		return "afterPropertiesRefreshed"
+func TestServe(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
 	}
-	return fmt.Sprintf("Unknown when (%d)", int(w))
+
+	testCases := map[string]struct {
+		dontRegister       bool
+		dontSendDistroName bool
+
+		skipConnectedHandshake bool
+		skipProHandshake       bool
+		skipLandscapeHandshake bool
+
+		duplicateStream bool
+
+		wantNeverInDatabase         bool
+		wantConnectionNeverAttached bool
+	}{
+		"Success": {},
+
+		// Partial failure: only one stream connects
+		"Error when two streams connect under the same name": {duplicateStream: true},
+
+		// Early failure: before/during add to database
+		"Error when the distro name is not sent":            {dontSendDistroName: true, wantNeverInDatabase: true},
+		"Error when the distro does not exist":              {dontRegister: true, wantNeverInDatabase: true},
+		"Error when Connected never performs the handshake": {skipConnectedHandshake: true, wantNeverInDatabase: true},
+
+		// Late failure: during wait for other streams
+		"Error when Pro never performs the handshake":       {skipProHandshake: true, wantConnectionNeverAttached: true},
+		"Error when Landscape never performs the handshake": {skipLandscapeHandshake: true, wantConnectionNeverAttached: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			db, err := database.New(ctx, t.TempDir(), nil)
+			require.NoError(t, err, "Setup: could not create empty database")
+
+			landscape := &landscapeCtlMock{}
+
+			service := wslinstance.New(ctx, db, landscape)
+			server := grpc.NewServer()
+			agentapi.RegisterWSLInstanceServer(server, service)
+
+			lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp4", "127.0.0.1:0")
+			require.NoError(t, err, "Setup: could not listen to dynamically-allocated port")
+			defer lis.Close()
+
+			var wg sync.WaitGroup
+			wg.Add(1)
+			defer wg.Wait()
+			go func() {
+				defer wg.Done()
+				err := server.Serve(lis)
+				if err != nil {
+					t.Logf("Serve exited with error: %v", err)
+				}
+			}()
+			defer server.Stop()
+
+			distroName := wsltestutils.RandomDistroName(t)
+			if !tc.dontRegister {
+				distroName, _ = wsltestutils.RegisterDistro(t, ctx, false)
+			}
+
+			sendName := distroName
+			if tc.dontSendDistroName {
+				sendName = ""
+			}
+
+			wps := newMockWSLProService(t, ctx, mockWslProServiceOptions{
+				address:    lis.Addr().String(),
+				distroName: sendName,
+
+				noHandshakeConnected:         tc.skipConnectedHandshake,
+				noHandshakeProCommands:       tc.skipProHandshake,
+				noHandshakeLandscapeCommands: tc.skipLandscapeHandshake,
+			})
+			defer wps.Stop()
+
+			timeout := time.Minute
+			if tc.wantNeverInDatabase {
+				wps.requireDone(t, timeout, "did not disconnect before adding the distro to the database")
+				require.Empty(t, db.GetAll(), "No distro should have been added to the database")
+				return
+			}
+			require.Eventually(t, func() bool {
+				_, ok := db.Get(distroName)
+				return ok
+			}, timeout, time.Second, "Distro was never added to database")
+
+			if tc.duplicateStream {
+				wps2 := newMockWSLProService(t, ctx, mockWslProServiceOptions{
+					address:    lis.Addr().String(),
+					distroName: distroName,
+				})
+				defer wps2.Stop()
+
+				time.Sleep(time.Second)
+
+				err := wps2.connStream.Send(&agentapi.DistroInfo{WslName: distroName})
+				require.Error(t, err, "Second stream should have errored")
+
+				err = wps2.proStream.Send(&agentapi.MSG{Data: &agentapi.MSG_WslName{WslName: distroName}})
+				require.Error(t, err, "Second stream should have errored")
+
+				err = wps2.lpeStream.Send(&agentapi.MSG{Data: &agentapi.MSG_WslName{WslName: distroName}})
+				require.Error(t, err, "Second stream should have errored")
+			}
+
+			require.Eventually(t, func() bool {
+				return landscape.updateCount.Load() > 0
+			}, 10*time.Second, time.Second, "Landscape was never notified")
+
+			if tc.wantConnectionNeverAttached {
+				wps.requireDone(t, timeout, "did not disconnect before assigning a connection")
+				d, _ := db.Get(distroName)
+				conn, err := d.Connection()
+				require.NoError(t, err, "Connection should return no error")
+				require.Nil(t, conn, "Distro should not have been assigned a connection")
+				return
+			}
+			require.Eventually(t, func() bool {
+				d, _ := db.Get(distroName)
+				conn, err := d.Connection()
+				if err != nil {
+					return false
+				}
+				return conn != nil
+			}, timeout, time.Second, "Distro never got assigned a connection")
+
+			wps.sendInfo(t, &agentapi.DistroInfo{
+				WslName:     distroName,
+				Id:          "TEST_ID",
+				VersionId:   "TEST_VERSION_ID",
+				PrettyName:  "TEST_PRETTY_NAME",
+				ProAttached: true,
+				Hostname:    "TEST_HOSTNAME",
+			})
+
+			require.Eventually(t, func() bool {
+				return landscape.updateCount.Load() > 1
+			}, 10*time.Second, time.Second, "Landscape was never notified after sending info")
+
+			d, _ := db.Get(distroName)
+			props := d.Properties()
+			require.Equal(t, "TEST_ID", props.DistroID, "Mismatch between sent and stored properties")
+			require.Equal(t, "TEST_VERSION_ID", props.VersionID, "Mismatch between sent and stored properties")
+			require.Equal(t, "TEST_PRETTY_NAME", props.PrettyName, "Mismatch between sent and stored properties")
+			require.True(t, props.ProAttached, "Mismatch between sent and stored properties")
+			require.Equal(t, "TEST_HOSTNAME", props.Hostname, "Mismatch between sent and stored properties")
+		})
+	}
 }
 
-//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
-func TestConnected(t *testing.T) {
-	ctx := context.Background()
+func TestSendCommands(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	if wsl.MockAvailable() {
 		t.Parallel()
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	defaultDistroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
+	db, err := database.New(ctx, t.TempDir(), nil)
+	require.NoError(t, err, "Setup: could not create empty database")
 
-	type landscapeState int
-	const (
-		connected landscapeState = iota
-		disconnected
-		connectedWithError
-	)
+	landscape := &landscapeCtlMock{}
 
-	testCases := map[string]struct {
-		useEmptyDistroName      bool
-		stopLinuxSideClient     step
-		sendSecondInfo          bool
-		skipLinuxServe          bool
-		landscape               landscapeState
-		distroAlreadyInDatabase bool
+	service := wslinstance.New(ctx, db, landscape)
+	server := grpc.NewServer()
+	agentapi.RegisterWSLInstanceServer(server, service)
 
-		wantDone step
-		wantErr  bool
-	}{
-		"Successful connection with WSL distro":                           {},
-		"Successful connection and property refresh":                      {sendSecondInfo: true},
-		"Successful connection and property refresh without Landscape":    {sendSecondInfo: true, landscape: disconnected},
-		"Successful connection and property refresh with Landscape error": {sendSecondInfo: true, landscape: connectedWithError},
+	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp4", "127.0.0.1:0")
+	require.NoError(t, err, "Setup: could not listen to dynamically-allocated port")
+	defer lis.Close()
 
-		"Successful connection with a pre-existing distro": {distroAlreadyInDatabase: true},
-
-		"Error on never serving on Linux":              {skipLinuxServe: true, wantDone: afterDistroShouldBeActive, wantErr: true},
-		"Error on disconnect before send info":         {stopLinuxSideClient: beforeLinuxServe, wantDone: beforeLinuxServe, wantErr: true},
-		"Error with blank distro name":                 {useEmptyDistroName: true, wantDone: afterSendInfo, wantErr: true},
-		"Error when it cannot send the port to distro": {stopLinuxSideClient: afterSendInfo, wantDone: afterSendInfo, wantErr: true},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			distroName := defaultDistroName
-			if tc.useEmptyDistroName {
-				distroName = ""
-			}
-
-			landscape := &landscapeCtlMock{}
-			switch tc.landscape {
-			case disconnected:
-				landscape.disconnected = true
-			case connectedWithError:
-				landscape.err = true
-			}
-
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
-
-			db, err := database.New(ctx, t.TempDir(), nil)
-			require.NoError(t, err, "Setup: empty database New() should return no error")
-			defer db.Close(ctx)
-
-			srv, err := newWrappedService(ctx, db, landscape)
-			require.NoError(t, err, "Setup: wslinstance New() should never return an error")
-
-			if tc.distroAlreadyInDatabase {
-				d, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
-				require.NoError(t, err, "Setup: could not get pre-existing distro into database")
-
-				// Submit a deferred task to check if it is reloaded
-				err = d.SubmitDeferredTasks(testTask{ID: d.GUID()})
-				require.NoError(t, err, "Setup: submitting a deferred task should succeed")
-			}
-
-			grpcServer, ctrlAddr := serveWSLInstance(t, ctx, srv)
-			defer grpcServer.Stop()
-
-			wsl := newWslDistroMock(t, ctx, ctrlAddr)
-			defer wsl.stopClient()
-
-			// WSL-side server is not serving yet.
-			now := beforeLinuxServe
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
-
-			wantErrNeverReceivePort := tc.wantDone < afterDatabaseQuery && tc.wantDone != never
-			if !tc.skipLinuxServe {
-				go wsl.serve(wantErrNeverReceivePort)
-				defer wsl.stopServer()
-				defer wsl.requireNoServeError(t)
-			}
-
-			// WSL-side server is serving, but no info has been sent yet.
-			now = beforeSendInfo
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			wsl.requireNoServeError(t)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
-
-			// Simulate Linux-side client sending its info.
-			info := &agentapi.DistroInfo{
-				WslName:     distroName,
-				Id:          "ubuntu",
-				VersionId:   "22.04",
-				PrettyName:  "Ubuntu 22.04.1 LTS",
-				ProAttached: false,
-				Hostname:    "TestMachine",
-			}
-			wsl.sendInfo(t, info)
-
-			// WSL-side server is serving, info was sent.
-			now = afterSendInfo
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			wsl.requireNoServeError(t)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
-
-			// Distro should eventually appear in the database.
-			var d *distro.Distro
-			require.Eventuallyf(t, func() (ok bool) {
-				d, ok = db.Get(distroName)
-				return ok
-			}, time.Second, 10*time.Millisecond, "Distro %q should be added to the database after sending its info", distroName)
-
-			// Ensure we got matching properties on the agent side.
-			props := propsFromInfo(t, info)
-			require.Equal(t, props, d.Properties(), "Distro properties should match those sent via the SendInfo.")
-
-			// Ensure landscape sent an update
-			const landscapeTimeout = 15 * time.Second
-			if tc.landscape == disconnected {
-				time.Sleep(landscapeTimeout)
-				require.Equal(t, int32(0), landscape.updateCount.Load(), "No updates should have been sent to a disconnected Landscape.")
-			} else {
-				var c int32
-				require.Eventuallyf(t, func() bool { return landscape.updateCount.Load() == 1 },
-					landscapeTimeout, time.Second, "Landscape should have had an update sent (had %d)", c)
-			}
-
-			// Connected has added the distro to the database.
-			now = afterDatabaseQuery
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			wsl.requireNoServeError(t)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
-
-			// Small amount of time to mitigate races
-			const epsilon = 100 * time.Millisecond
-
-			// newWslServiceConn has a 2 second timeout with 5 retries
-			const maxDelay = 5*2*time.Second + epsilon
-
-			if tc.skipLinuxServe {
-				// Distro should not become active: there is no service on Linux to connect to.
-				time.Sleep(maxDelay)
-				active, err := d.IsActive()
-				require.NoError(t, err, "IsActive should return no error as the distro should still be valid")
-				require.False(t, active, "Distro should never become active if there is no Linux-side service to connect to")
-			} else {
-				// Distro should become active (establish a connection to the Linux-side service).
-				require.Eventually(t, func() bool {
-					v, err := d.IsActive()
-					require.NoError(t, err, "IsActive should return no error as the distro should still be valid")
-					return v
-				}, maxDelay, 10*time.Millisecond,
-					"Distro should become active after sending its info for the first time")
-
-				if tc.distroAlreadyInDatabase {
-					require.Eventually(t, func() bool {
-						return completedTeskTasks.Has(d.GUID())
-					}, 10*time.Second, 100*time.Millisecond, "Deferred task should have been loaded after contact")
-				}
-			}
-
-			// The distro has had its stream attached.
-			now = afterDistroShouldBeActive
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			wsl.requireNoServeError(t)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
-
-			if !tc.sendSecondInfo {
-				return
-			}
-
-			// Send new info with changing parameter.
-			info.ProAttached = true
-			wsl.sendInfo(t, info)
-
-			// We have sent info for a second time
-			now = afterSecondSendInfo
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			wsl.requireNoServeError(t)
-			if continueTest := checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv); !continueTest {
-				return
-			}
-
-			// One of the property should have changed.
-			props = propsFromInfo(t, info)
-			require.Eventually(t, func() bool {
-				return d.Properties() == props
-			}, time.Second, 10*time.Millisecond, "Distro properties should be refreshed after every call to SendInfo to the control stream")
-
-			// The database has been updated after the second info
-			now = afterPropertiesRefreshed
-			stopWSLClientOnMatchingStep(tc.stopLinuxSideClient, now, wsl)
-			wsl.requireNoServeError(t)
-
-			// Ensure landscape sent an update
-			if tc.landscape == disconnected {
-				time.Sleep(landscapeTimeout)
-				require.Equal(t, int32(0), landscape.updateCount.Load(), "No updates should have been sent to a disconnected Landscape.")
-			} else {
-				require.Eventually(t, func() bool { return landscape.updateCount.Load() == 2 },
-					landscapeTimeout, time.Second, "Landscape should have had a second update sent (had %d)", landscape.updateCount.Load())
-			}
-
-			checkConnectedStatus(t, tc.wantDone, tc.wantErr, now, srv)
-		})
-	}
-}
-
-// testLoggerInterceptor replaces the logging middleware by printing the return
-// error of Connected to the test Log.
-//
-//nolint:thelper // The logs would be reported to come from the entrails of the GRPC module. It's more helpful to reference this function to see that it is the middleware reporting.
-func testLoggerInterceptor(t *testing.T) grpc.StreamServerInterceptor {
-	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		if err := handler(srv, stream); err != nil {
-			fmt.Printf("Connected returned error: %v\n", err)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	defer wg.Wait()
+	go func() {
+		defer wg.Done()
+		err := server.Serve(lis)
+		if err != nil {
+			t.Logf("Serve exited with error: %v", err)
 		}
-		fmt.Println("Connected returned with no error")
-		return nil
-	}
-}
+	}()
+	defer server.Stop()
 
-// wrappedService is a wrapper around the tested wslinstance.Service in order to
-// get some information about what and when Connected() returns.
-type wrappedService struct {
-	wslinstance.Service
-	Errch chan error
-}
+	distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
 
-// newWrappedService is a wrapper around wslinstance.New. It initializes the monitoring
-// around the service.
-func newWrappedService(ctx context.Context, db *database.DistroDB, landscape *landscapeCtlMock) (s wrappedService, err error) {
-	inst, err := wslinstance.New(ctx, db, landscape)
-	return wrappedService{
-		Service: inst,
-		Errch:   make(chan error),
-	}, err
-}
+	wps := newMockWSLProService(t, ctx, mockWslProServiceOptions{
+		address:    lis.Addr().String(),
+		distroName: distroName,
+	})
+	defer wps.Stop()
 
-// Connected is a wrapper around wslinstance.Connected.
-func (s *wrappedService) Connected(stream agentapi.WSLInstance_ConnectedServer) error {
-	err := s.Service.Connected(stream)
-	s.Errch <- err
-	return err
-}
+	timeout := time.Minute
 
-// wait waits until the function Connected has returned.
-// - if ok is true, returnErr is the return value of Connected.
-// - if ok is false, the wait times out hence Connected has not returned yet. returnedErr is therefore not valid.
-//
-//nolint:revive // Returning the error as first argument is strange but it makes sense here, we mimic the (value, ok) return type of a map access.
-func (s *wrappedService) wait(timeout time.Duration) (returnedErr error, connectedHasReturned bool) {
-	select {
-	case returnedErr = <-s.Errch:
-		return returnedErr, true
-	case <-time.After(timeout):
-		return nil, false
-	}
-}
+	require.Eventually(t, func() bool {
+		d, ok := db.Get(distroName)
+		if !ok {
+			return false
+		}
+		conn, err := d.Connection()
+		if err != nil {
+			return false
+		}
+		return conn != nil
+	}, timeout, time.Second, "Distro never got assigned a connection")
 
-//nolint:revive // testing.T should go before context, I won't listen to anyone arguing the contrary.
-func serveWSLInstance(t *testing.T, ctx context.Context, srv wrappedService) (server *grpc.Server, address string) {
-	t.Helper()
+	distro, ok := db.Get(distroName)
+	require.True(t, ok, "Distro should not be removed from the database")
 
-	server = grpc.NewServer(grpc.StreamInterceptor(testLoggerInterceptor(t)))
-	agentapi.RegisterWSLInstanceServer(server, &srv)
+	conn, err := distro.Connection()
+	require.NoError(t, err, "distro.Connection should return no error")
+	require.NotNil(t, conn, "Connection should not have been nil")
 
-	t.Logf("serveWSLInstance: selecting port")
+	err = conn.SendProAttachment("hello123")
+	require.NoError(t, err, "SendProAttachment should return no error")
 
-	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp4", "localhost:")
-	require.NoError(t, err, "Setup: could not listen to autoselected port")
+	err = conn.SendProAttachment("MOCK_ERROR")
+	require.Error(t, err, "SendProAttachment should have returned an error")
 
-	t.Logf("serveWSLInstance: serving on: %v", lis.Addr().String())
+	err = conn.SendLandscapeConfig("hello=world", "uid1234")
+	require.NoError(t, err, "SendLandscapeConfig should return no error")
 
-	go func() { _ = server.Serve(lis) }()
+	err = conn.SendLandscapeConfig("MOCK_ERROR", "uid5321")
+	require.Error(t, err, "SendLandscapeConfig should have returned an error")
 
-	return server, lis.Addr().String()
+	wps.Stop()
+
+	err = conn.SendProAttachment("hello123")
+	require.Error(t, err, "SendProAttachment should return an error after disconnecting")
+
+	err = conn.SendLandscapeConfig("hello123", "uid852")
+	require.Error(t, err, "SendLandscapeConfig should return an error after disconnecting")
 }
 
 // landscapeCtlMock mocks the landscape client.
@@ -402,11 +293,11 @@ type landscapeCtlMock struct {
 }
 
 func (c *landscapeCtlMock) SendUpdatedInfo(ctx context.Context) error {
+	c.updateCount.Add(1)
+
 	if c.disconnected {
 		return errors.New("Sending updated info to disconnected landscape")
 	}
-
-	c.updateCount.Add(1)
 
 	if c.err {
 		return errors.New("mock error")
@@ -414,154 +305,178 @@ func (c *landscapeCtlMock) SendUpdatedInfo(ctx context.Context) error {
 	return nil
 }
 
-// wslDistroMock mocks the actions performed by the Linux-side client and services.
-type wslDistroMock struct {
-	grpcServer *grpc.Server
-	ctrlStream agentapi.WSLInstance_ConnectedClient
+// mockWSLProService mocks the actions performed by the Linux-side client and services.
+type mockWSLProService struct {
+	connStream agentapi.WSLInstance_ConnectedClient
+	proStream  agentapi.WSLInstance_ProAttachmentCommandsClient
+	lpeStream  agentapi.WSLInstance_LandscapeConfigCommandsClient
 
-	errorDuringServe chan error
-
-	clientStop func()
+	cancel  func()
+	conn    *grpc.ClientConn
+	running sync.WaitGroup
 }
 
-// newWslDistroMock creates a wslDistroMock, establishing a connection to the control stream.
+type mockWslProServiceOptions struct {
+	address    string
+	distroName string
+
+	noHandshakeConnected         bool
+	noHandshakeProCommands       bool
+	noHandshakeLandscapeCommands bool
+}
+
+// newMockWSLProService creates a wslDistroMock, establishing a connection to the control stream.
 //
 //nolint:revive // testing.T should go before context, regardless of what these linters say.
-func newWslDistroMock(t *testing.T, ctx context.Context, ctrlAddr string) (mock *wslDistroMock) {
+func newMockWSLProService(t *testing.T, ctx context.Context, opt mockWslProServiceOptions) (mock *mockWSLProService) {
 	t.Helper()
 
-	mock = &wslDistroMock{
-		grpcServer:       grpc.NewServer(),
-		errorDuringServe: make(chan error),
-	}
+	mock = &mockWSLProService{}
 
-	ctrlConn, err := grpc.DialContext(ctx, ctrlAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(ctx, opt.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err, "wslDistroMock: could not dial control address")
 
 	ctx, cancel := context.WithCancel(ctx)
-	mock.clientStop = cancel
+	t.Cleanup(cancel)
 
-	c := agentapi.NewWSLInstanceClient(ctrlConn)
-	mock.ctrlStream, err = c.Connected(ctx)
-	require.NoError(t, err, "wslDistroMock: could not connect to control stream")
+	mock.conn = conn
+	mock.cancel = cancel
+
+	c := agentapi.NewWSLInstanceClient(conn)
+
+	mock.connStream, err = c.Connected(ctx)
+	require.NoError(t, err, "wslDistroMock: could not connect to Connected stream")
+
+	if !opt.noHandshakeConnected {
+		err = mock.connStream.Send(&agentapi.DistroInfo{WslName: opt.distroName})
+		require.NoError(t, err, "wslDistroMock: could not send info via Connected stream")
+	}
+
+	mock.proStream, err = c.ProAttachmentCommands(ctx)
+	require.NoError(t, err, "wslDistroMock: could not connect to ProAttachmentCommands stream")
+	if !opt.noHandshakeProCommands {
+		err = sendWslName(mock.proStream.Send, opt.distroName)
+		require.NoError(t, err, "wslDistroMock: could not send wsl name via ProAttachmentCommands stream")
+	}
+
+	mock.lpeStream, err = c.LandscapeConfigCommands(ctx)
+	require.NoError(t, err, "wslDistroMock: could not connect to LandscapeConfigCommands stream")
+	if !opt.noHandshakeLandscapeCommands {
+		err = sendWslName(mock.lpeStream.Send, opt.distroName)
+		require.NoError(t, err, "wslDistroMock: could not send wsl name via LandscapeConfigCommands stream")
+	}
+
+	mock.running.Add(2)
+	go mock.replyProAttachmentCommands(t)
+	go mock.replyLandscapeConfigCommands(t)
 
 	return mock
 }
 
-// serve starts the Linux-side service. It is an unimplemented service that exists
-// just so the wslinstance can connect to it, but any GRPC call will cause an error.
-//
-// Errors will not be returned, but rather channeled. Assert there is no error via
-// wsl.requireNoServeError(t).
-//
-// wantErrNeverReceivePort is a test parameter for when you expect the Linux endpoint
-// of the control stream to never receive the port.
-func (m *wslDistroMock) serve(wantErrNeverReceivePort bool) {
-	err := func() error {
-		msg, err := m.ctrlStream.Recv()
-		if wantErrNeverReceivePort {
-			if err != nil {
-				return nil
-			}
-			return fmt.Errorf("want error, got nil: wslDistroMock should not receive the port to listen to from the control stream")
-		}
-		if err != nil {
-			return fmt.Errorf("Recv did not return the port to listen to: %v", err)
-		}
-
-		log.Printf("wslDistroMock: Received msg: %v", msg)
-
-		p := msg.GetPort()
-		if p == 0 {
-			return errors.New("Received invalid port :0 from server")
-		}
-
-		// Create our service
-		addr := fmt.Sprintf("localhost:%d", p)
-		lis, err := net.Listen("tcp4", addr)
-		if err != nil {
-			return fmt.Errorf("could not listen to %q", addr)
-		}
-
-		log.Printf("wslDistroMock: Listening to: %s", addr)
-
-		wslserviceapi.RegisterWSLServer(m.grpcServer, &wslserviceapi.UnimplementedWSLServer{})
-
-		_ = m.grpcServer.Serve(lis)
-		return nil
-	}()
-
-	m.errorDuringServe <- err
-	close(m.errorDuringServe)
+func sendWslName(send func(*agentapi.MSG) error, wslName string) error {
+	return send(&agentapi.MSG{
+		Data: &agentapi.MSG_WslName{
+			WslName: wslName,
+		},
+	})
 }
 
-// requireNoServeError checks if serve has asyncronously returned an error.
-func (m *wslDistroMock) requireNoServeError(t *testing.T) {
+func sendResult(send func(*agentapi.MSG) error, result error) error {
+	var errMsg string
+	if result != nil {
+		errMsg = result.Error()
+	}
+
+	return send(&agentapi.MSG{
+		Data: &agentapi.MSG_Result{
+			Result: errMsg,
+		},
+	})
+}
+
+// Stop stops the Linux-side service.
+func (m *mockWSLProService) Stop() {
+	m.cancel()
+	m.conn.Close()
+	m.running.Wait()
+}
+
+func (m *mockWSLProService) requireDone(t *testing.T, timeout time.Duration, msg string, args ...any) {
 	t.Helper()
+
+	ch := make(chan struct{})
+	go func() {
+		m.running.Wait()
+		close(ch)
+	}()
+
 	select {
-	case err := <-m.errorDuringServe:
-		require.NoError(t, err, "Error happened during serve")
-	default:
+	case <-ch:
+		return
+	case <-time.After(timeout):
+	}
+
+	require.Failf(t, "WSL Pro service was not done", msg, args...)
+}
+
+func (m *mockWSLProService) replyProAttachmentCommands(t *testing.T) {
+	t.Helper()
+	defer m.running.Done()
+	defer m.cancel()
+
+	for {
+		msg, err := m.proStream.Recv()
+		if err != nil {
+			log.Warningf("%s: Could not receive pro command: %v", t.Name(), err)
+			return
+		}
+
+		var send error
+		if msg.GetToken() == "MOCK_ERROR" {
+			send = errors.New("mock error")
+		}
+
+		err = sendResult(m.proStream.Send, send)
+		if err != nil {
+			log.Warningf("%s: Could not send pro command result: %v", t.Name(), err)
+			m.Stop()
+			return
+		}
+	}
+}
+
+func (m *mockWSLProService) replyLandscapeConfigCommands(t *testing.T) {
+	t.Helper()
+	defer m.running.Done()
+	defer m.cancel()
+
+	for {
+		msg, err := m.lpeStream.Recv()
+		if err != nil {
+			log.Warningf("%s: Could not receive Landscape command: %v", t.Name(), err)
+			return
+		}
+
+		var send error
+		if msg.GetConfig() == "MOCK_ERROR" {
+			send = errors.New("mock error")
+		}
+
+		err = sendResult(m.lpeStream.Send, send)
+		if err != nil {
+			log.Warningf("%s: Could not send Landscape command result: %v", t.Name(), err)
+			m.Stop()
+			return
+		}
 	}
 }
 
 // sendInfo sends the specified info from the Linux-side client to the wslinstance service.
-func (m *wslDistroMock) sendInfo(t *testing.T, info *agentapi.DistroInfo) {
+func (m *mockWSLProService) sendInfo(t *testing.T, info *agentapi.DistroInfo) {
 	t.Helper()
 
-	err := m.ctrlStream.Send(info)
+	err := m.connStream.Send(info)
 	require.NoError(t, err, "wslDistroMock SendInfo expected no errors")
-}
-
-// stopServer stops the Linux-side service.
-func (m *wslDistroMock) stopServer() {
-	m.grpcServer.Stop()
-
-	// Block until serve exits
-	<-m.errorDuringServe
-}
-
-// stopServe stops the Linux-side service.
-func (m *wslDistroMock) stopClient() {
-	m.clientStop()
-}
-
-// stopWSLClientOnMatchingStep stops the Linux-side client if wantStopStep is the same as currentStep.
-func stopWSLClientOnMatchingStep(wantStopStep, currentStep step, wsl *wslDistroMock) {
-	if currentStep == wantStopStep {
-		wsl.stopClient()
-	}
-}
-
-// checkConnectedStatus has two options:
-//   - if wantDoneStep != currentStep: assert that wslservice.Connected has not yet returned.
-//   - otherwise, assert that it has returned, and that its return value matches wantErr.
-func checkConnectedStatus(t *testing.T, wantDoneStep step, wantErr bool, currentStep step, srv wrappedService) (continueTest bool) {
-	t.Helper()
-
-	connectedErr, stopped := srv.wait(300 * time.Millisecond)
-	if currentStep != wantDoneStep {
-		require.False(t, stopped, "Connect() function should still be running at step %q but is has now stopped (should stop at step %q)", currentStep, wantDoneStep)
-		return true
-	}
-
-	require.True(t, stopped, "Connect() function should have stopped at step %q", currentStep)
-
-	if wantErr {
-		require.Error(t, connectedErr, "Connect() should return an error at step %q", currentStep)
-		return false
-	}
-	require.NoError(t, connectedErr, "Connect() should return no error at step %q", currentStep)
-
-	return false
-}
-
-// propsFromInfo converts a DistroInfo object into a Properties, failing the test in case of error.
-func propsFromInfo(t *testing.T, info *agentapi.DistroInfo) distro.Properties {
-	t.Helper()
-	props, err := wslinstance.PropsFromInfo(info)
-	require.NoErrorf(t, err, "PropsFromInfo should not return any error. Info: %#v", info)
-	return props
 }
 
 type testTask struct {
@@ -570,7 +485,7 @@ type testTask struct {
 
 var completedTeskTasks = testutils.NewSet[string]()
 
-func (t testTask) Execute(ctx context.Context, _ wslserviceapi.WSLClient) error {
+func (t testTask) Execute(ctx context.Context, _ task.Connection) error {
 	completedTeskTasks.Set(t.ID)
 	return nil
 }

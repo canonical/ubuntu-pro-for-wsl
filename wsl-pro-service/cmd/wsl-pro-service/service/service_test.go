@@ -104,13 +104,14 @@ func TestCanQuitWhenExecute(t *testing.T) {
 	defer cancel()
 
 	system, mock := testutils.MockSystem(t)
-	srv, _ := testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
+	agent := testutils.NewMockWindowsAgent(t, ctx, mock.DefaultPublicDir())
+	defer agent.Stop()
 
 	a, wait := startDaemon(t, system)
 	defer wait()
 
 	time.Sleep(time.Second)
-	srv.Stop()
+	agent.Stop()
 
 	a.Quit()
 }
@@ -122,7 +123,8 @@ func TestCanQuitTwice(t *testing.T) {
 	defer cancel()
 
 	system, mock := testutils.MockSystem(t)
-	testutils.MockWindowsAgent(t, ctx, mock.DefaultAddrFile())
+	agent := testutils.NewMockWindowsAgent(t, ctx, mock.DefaultPublicDir())
+	defer agent.Stop()
 
 	a, wait := startDaemon(t, system)
 
@@ -160,6 +162,9 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 	a := service.New(service.WithSystem(sys))
 
+	agent := testutils.NewMockWindowsAgent(t, context.Background(), mock.DefaultPublicDir())
+	defer agent.Stop()
+
 	a.SetArgs()
 
 	defer a.Quit()
@@ -191,7 +196,7 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and starts the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T, s system.System) (app *service.App, done func()) {
+func startDaemon(t *testing.T, s *system.System) (app *service.App, done func()) {
 	t.Helper()
 
 	a := service.New(service.WithSystem(s))

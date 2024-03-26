@@ -47,7 +47,11 @@ message ConfigSources {
 }
 
 service WSLInstance {
-    rpc Connected (stream DistroInfo) returns (stream Port) {}
+    rpc Connected(stream DistroInfo) returns (Empty) {}
+
+    // Reverse unary calls
+    rpc ProAttachmentCommands(stream MSG) returns (stream ProAttachCmd) {}
+    rpc LandscapeConfigCommands(stream MSG) returns (stream LandscapeConfigCmd) {}
 }
 
 message DistroInfo {
@@ -59,6 +63,18 @@ message DistroInfo {
     string hostname = 6;
 }
 
-message Port {
-    uint32 port = 1;
+message ProAttachCmd {
+    string token = 1;
+}
+
+message LandscapeConfigCmd {
+    string config = 1;
+    string hostagent_uid = 2;
+}
+
+message MSG {
+    oneof data {
+        string wsl_name = 1;    // Used during handshake to identify the WSL instance.
+        string result = 2;      // Used in response to a command
+    }
 }

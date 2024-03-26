@@ -64,13 +64,13 @@ func WithTestBackend(b Backend) Option {
 
 // New instantiates a stateless object that mediates interactions with the filesystem
 // as well as a few key executables.
-func New(args ...Option) System {
+func New(args ...Option) *System {
 	opts := options{backend: realBackend{}}
 	for _, f := range args {
 		f(&opts)
 	}
 
-	return System{
+	return &System{
 		backend: opts.backend,
 	}
 }

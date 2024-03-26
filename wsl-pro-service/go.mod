@@ -5,15 +5,14 @@ go 1.22.0
 toolchain go1.22.1
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240312194633-c4665ef95b37
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240315142241-2ba654b9a6aa
-	github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240307105924-373a97d8dd51
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
-	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c
+	github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 	google.golang.org/grpc v1.62.1
 	gopkg.in/ini.v1 v1.67.0

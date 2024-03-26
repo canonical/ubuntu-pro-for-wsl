@@ -139,10 +139,18 @@ abstract class UIServiceBase extends $grpc.Service {
 }
 @$pb.GrpcServiceName('agentapi.WSLInstance')
 class WSLInstanceClient extends $grpc.Client {
-  static final _$connected = $grpc.ClientMethod<$0.DistroInfo, $0.Port>(
+  static final _$connected = $grpc.ClientMethod<$0.DistroInfo, $0.Empty>(
       '/agentapi.WSLInstance/Connected',
       ($0.DistroInfo value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $0.Port.fromBuffer(value));
+      ($core.List<$core.int> value) => $0.Empty.fromBuffer(value));
+  static final _$proAttachmentCommands = $grpc.ClientMethod<$0.MSG, $0.ProAttachCmd>(
+      '/agentapi.WSLInstance/ProAttachmentCommands',
+      ($0.MSG value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.ProAttachCmd.fromBuffer(value));
+  static final _$landscapeConfigCommands = $grpc.ClientMethod<$0.MSG, $0.LandscapeConfigCmd>(
+      '/agentapi.WSLInstance/LandscapeConfigCommands',
+      ($0.MSG value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.LandscapeConfigCmd.fromBuffer(value));
 
   WSLInstanceClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -150,8 +158,16 @@ class WSLInstanceClient extends $grpc.Client {
       : super(channel, options: options,
         interceptors: interceptors);
 
-  $grpc.ResponseStream<$0.Port> connected($async.Stream<$0.DistroInfo> request, {$grpc.CallOptions? options}) {
-    return $createStreamingCall(_$connected, request, options: options);
+  $grpc.ResponseFuture<$0.Empty> connected($async.Stream<$0.DistroInfo> request, {$grpc.CallOptions? options}) {
+    return $createStreamingCall(_$connected, request, options: options).single;
+  }
+
+  $grpc.ResponseStream<$0.ProAttachCmd> proAttachmentCommands($async.Stream<$0.MSG> request, {$grpc.CallOptions? options}) {
+    return $createStreamingCall(_$proAttachmentCommands, request, options: options);
+  }
+
+  $grpc.ResponseStream<$0.LandscapeConfigCmd> landscapeConfigCommands($async.Stream<$0.MSG> request, {$grpc.CallOptions? options}) {
+    return $createStreamingCall(_$landscapeConfigCommands, request, options: options);
   }
 }
 
@@ -160,14 +176,30 @@ abstract class WSLInstanceServiceBase extends $grpc.Service {
   $core.String get $name => 'agentapi.WSLInstance';
 
   WSLInstanceServiceBase() {
-    $addMethod($grpc.ServiceMethod<$0.DistroInfo, $0.Port>(
+    $addMethod($grpc.ServiceMethod<$0.DistroInfo, $0.Empty>(
         'Connected',
         connected,
         true,
-        true,
+        false,
         ($core.List<$core.int> value) => $0.DistroInfo.fromBuffer(value),
-        ($0.Port value) => value.writeToBuffer()));
+        ($0.Empty value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.MSG, $0.ProAttachCmd>(
+        'ProAttachmentCommands',
+        proAttachmentCommands,
+        true,
+        true,
+        ($core.List<$core.int> value) => $0.MSG.fromBuffer(value),
+        ($0.ProAttachCmd value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.MSG, $0.LandscapeConfigCmd>(
+        'LandscapeConfigCommands',
+        landscapeConfigCommands,
+        true,
+        true,
+        ($core.List<$core.int> value) => $0.MSG.fromBuffer(value),
+        ($0.LandscapeConfigCmd value) => value.writeToBuffer()));
   }
 
-  $async.Stream<$0.Port> connected($grpc.ServiceCall call, $async.Stream<$0.DistroInfo> request);
+  $async.Future<$0.Empty> connected($grpc.ServiceCall call, $async.Stream<$0.DistroInfo> request);
+  $async.Stream<$0.ProAttachCmd> proAttachmentCommands($grpc.ServiceCall call, $async.Stream<$0.MSG> request);
+  $async.Stream<$0.LandscapeConfigCmd> landscapeConfigCommands($grpc.ServiceCall call, $async.Stream<$0.MSG> request);
 }

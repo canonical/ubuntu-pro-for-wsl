@@ -4,13 +4,18 @@ package task
 import (
 	"context"
 	"fmt"
-
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 )
+
+// Connection is a connection to the WSL-Pro-Service that allows for
+// sending commands.
+type Connection interface {
+	SendProAttachment(proToken string) error
+	SendLandscapeConfig(lpeConfig, hostagentUID string) error
+}
 
 // Task represents a given task that is ging to be executed by a distro.
 type Task interface {
-	Execute(context.Context, wslserviceapi.WSLClient) error
+	Execute(context.Context, Connection) error
 }
 
 // taskWithIs are tasks that implement the Is method as a custom comparator.

@@ -7,7 +7,6 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 	"github.com/stretchr/testify/require"
 )
 
@@ -164,6 +163,6 @@ type unregisteredTask struct {
 // Boilerplate to implement the interface.
 type DummyImplementer struct{}
 
-func (DummyImplementer) Execute(context.Context, wslserviceapi.WSLClient) error {
+func (DummyImplementer) Execute(context.Context, task.Connection) error {
 	return nil
 }

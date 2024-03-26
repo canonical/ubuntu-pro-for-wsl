@@ -7,7 +7,6 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi"
 )
 
 func init() {
@@ -22,8 +21,8 @@ type ProAttachment struct {
 }
 
 // Execute is needed to fulfil Task.
-func (t ProAttachment) Execute(ctx context.Context, client wslserviceapi.WSLClient) error {
-	_, err := client.ApplyProToken(ctx, &wslserviceapi.ProAttachInfo{Token: t.Token})
+func (t ProAttachment) Execute(ctx context.Context, conn task.Connection) error {
+	err := conn.SendProAttachment(t.Token)
 	if err != nil {
 		return task.NeedsRetryError{SourceErr: err}
 	}
