@@ -98,7 +98,7 @@ func (s *Server) Serve(service CommandService) error {
 	defer s.cancel()
 	defer close(s.done)
 
-	client, err := Connect(s.ctx, s.conn)
+	client, err := connect(s.ctx, s.conn)
 	if err != nil {
 		return fmt.Errorf("could not start serving: could not connect: %v", err)
 	}

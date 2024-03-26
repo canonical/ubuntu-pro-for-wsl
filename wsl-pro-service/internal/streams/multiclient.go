@@ -17,10 +17,8 @@ type multiClient struct {
 	lpeStream  agentapi.WSLInstance_LandscapeConfigCommandsClient
 }
 
-// Connect connects to the three streams. Call Close to release resources.
-//
-//nolint:revive // This method is only public to tests, where multiClient has an alias available
-func Connect(ctx context.Context, conn *grpc.ClientConn) (c *multiClient, err error) {
+// connect connects to the three streams. Call Close to release resources.
+func connect(ctx context.Context, conn *grpc.ClientConn) (c *multiClient, err error) {
 	client := agentapi.NewWSLInstanceClient(conn)
 
 	mainStream, err := client.Connected(ctx)
