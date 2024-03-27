@@ -108,7 +108,7 @@ See:
 
 All set. From now on you can launch WSL instances of the Ubuntu 22.04 LTS and Ubuntu (Preview) releases.
 
-(ref::ensure-ubuntu-pro)=
+(tut::ensure-ubuntu-pro)=
 ### Get an Ubuntu Pro subscription token
 
 Visit the Ubuntu Pro page to get a subscription.
@@ -334,7 +334,7 @@ In the UP4W GUI click in the label "Already have a token?" to expand the Ubuntu 
 
 ![UP4W GUI main screen](./assets/up4w_gui.png)
 
-Paste your token retrieved from your Ubuntu Pro dashboard during [Setup](ref::ensure-ubuntu-pro) and click on the "Confirm" button (the button becomes green when there is a valid token in the input field). The app will then show the Landscape configuration screen.
+Paste your token retrieved from your Ubuntu Pro dashboard during [Setup](tut::ensure-ubuntu-pro) and click on the "Confirm" button (the button becomes green when there is a valid token in the input field). The app will then show the Landscape configuration screen.
 
 Create a new file in your home directory named `landscape.txt` and enter following contents, replacing:
 
