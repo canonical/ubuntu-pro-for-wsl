@@ -52,7 +52,7 @@ func stopAgent() error {
 		"/FI", filterPID, // Filter out the current process.
 	).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("could not list stop process %s: %v. %s", cmdName(), err, out)
+		return fmt.Errorf("could not stop process %s: %v. %s", cmdName(), err, out)
 	}
 
 	return nil
