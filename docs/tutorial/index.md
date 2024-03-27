@@ -361,7 +361,7 @@ Then load that file using the "Custom Configuration" part of the the screen, as 
 
 Click on the "Continue" button. You'll see a status screen confirming the configuration is complete.
 
-![Configuration is complete](image.png)
+![Configuration is complete](./assets/status-complete.png)
 
 Done! You can close the UP4W window if you want.
 
