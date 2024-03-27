@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os/user"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -131,7 +130,16 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return errors.New("already installed")
 	}
 
-	if err := e.cloudInit().WriteDistroData(cmd.GetId(), cmd.GetCloudinit()); err != nil {
+	cloudInitData := cmd.GetCloudinit()
+	if cloudInitData == "" {
+		cloudInitData, err = e.cloudInit().DefaultDistroData(ctx)
+		if err != nil {
+			log.Warningf(ctx, "Landscape install: distro will be created without a user: %v", err)
+			cloudInitData = "" // Avoid malformed cloud-init data
+		}
+	}
+
+	if err := e.cloudInit().WriteDistroData(cmd.GetId(), cloudInitData); err != nil {
 		return fmt.Errorf("skipped installation: %v", err)
 	}
 
@@ -152,30 +160,6 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 
 	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
 		return err
-	}
-
-	if cmd.GetCloudinit() != "" {
-		return nil
-	}
-
-	// TODO: The rest of this function will need to be rethought once cloud-init support exists.
-	windowsUser, err := user.Current()
-	if err != nil {
-		return err
-	}
-
-	userName := windowsUser.Username
-	if !distroinstall.UsernameIsValid(userName) {
-		userName = "ubuntu"
-	}
-
-	uid, err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name)
-	if err != nil {
-		return err
-	}
-
-	if err := distro.DefaultUID(uid); err != nil {
-		return fmt.Errorf("could not set user as default: %v", err)
 	}
 
 	return nil
