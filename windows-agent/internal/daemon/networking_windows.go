@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// Does nothing, exists so we can compile the tests without mocks.
+//nolint:unused // Does nothing; it exists so we can compile the tests without mocks.
 var wslIPErr bool
 
 func getWslIP() (net.IP, error) {
