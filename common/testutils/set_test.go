@@ -16,7 +16,7 @@ func TestSet(t *testing.T) {
 
 	// Concurrently add items to it
 	var wg sync.WaitGroup
-	for i := 0; i < testSize; i++ {
+	for i := range testSize {
 		wg.Add(1)
 		go func(i int) {
 			set.Set(i)
@@ -26,14 +26,14 @@ func TestSet(t *testing.T) {
 	wg.Wait()
 
 	// Check all items are eventually added
-	for i := 0; i < testSize; i++ {
+	for i := range testSize {
 		require.True(t, set.Has(i), "Value %d should have been added to the set", i)
 	}
 	require.Equal(t, testSize, set.Len(), "Set should have all items in it")
 
 	// Concurrently remove items
 	wg = sync.WaitGroup{}
-	for i := 0; i < testSize; i++ {
+	for i := range testSize {
 		wg.Add(1)
 		go func(i int) {
 			set.Unset(i)
@@ -43,7 +43,7 @@ func TestSet(t *testing.T) {
 	wg.Wait()
 
 	// Check all items are eventually removed
-	for i := 0; i < testSize; i++ {
+	for i := range testSize {
 		require.False(t, set.Has(i), "Value %d should have been removed from the set", i)
 	}
 }

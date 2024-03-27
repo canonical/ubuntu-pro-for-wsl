@@ -270,7 +270,7 @@ func (w *Worker) processSingleTask(ctx context.Context, t task.Task) error {
 func (w *Worker) waitForActiveConnection(ctx context.Context) (conn Connection, err error) {
 	log.Debugf(ctx, "Distro %q: ensuring active connection.", w.distro.Name())
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		conn, err = func() (Connection, error) {
 			// Potentially restart distro if it was stopped for some reason
 			if err := w.distro.LockAwake(); err != nil {

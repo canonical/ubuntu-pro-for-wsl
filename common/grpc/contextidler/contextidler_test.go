@@ -31,7 +31,7 @@ func TestActiveConnection(t *testing.T) {
 	require.Equal(t, "something", s.recvMsgCalledWith, "Streamer RecvMsg called with expected message")
 
 	// Ping multiple times, each ping is less than timeout, but total time is more than the timeout
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		time.Sleep(30 * time.Millisecond)
 		require.NoError(t, c.RecvMsg("something"), "RecvMsg with no error")
 	}
