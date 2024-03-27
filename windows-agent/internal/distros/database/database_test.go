@@ -72,7 +72,7 @@ func TestNew(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro, guid})
 			}
 
-			db, err := database.New(ctx, dbDir, nil)
+			db, err := database.New(ctx, dbDir)
 			if err == nil {
 				defer db.Close(ctx)
 			}
@@ -114,7 +114,7 @@ func TestDatabaseGetAll(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database creation should not fail")
 			defer db.Close(ctx)
 
@@ -157,7 +157,7 @@ func TestDatabaseGet(t *testing.T) {
 		distroID{registeredDistroInDB, registeredGUID},
 		distroID{nonRegisteredDistroInDB, oldGUID})
 
-	db, err := database.New(ctx, databaseDir, nil)
+	db, err := database.New(ctx, databaseDir)
 	require.NoError(t, err, "Setup: New() should return no error")
 
 	// Must use Cleanup. If we use defer, it'll run before the subtests are launched.
@@ -202,7 +202,7 @@ func TestDatabaseGetAfterClose(t *testing.T) {
 		ctx = wsl.WithMock(ctx, wslmock.New())
 	}
 
-	db, err := database.New(ctx, t.TempDir(), nil)
+	db, err := database.New(ctx, t.TempDir())
 	require.NoError(t, err, "Setup: New() should return no error")
 
 	db.Close(ctx)
@@ -249,7 +249,7 @@ func TestDatabaseDump(t *testing.T) {
 				databaseFromTemplate(t, dbDir, distroID{distro1, guid1}, distroID{distro2, guid2})
 			}
 
-			db, err := database.New(ctx, dbDir, nil)
+			db, err := database.New(ctx, dbDir)
 			require.NoError(t, err, "Setup: empty database should be created without issue")
 			defer db.Close(ctx)
 
@@ -396,7 +396,7 @@ func TestGetDistroAndUpdateProperties(t *testing.T) {
 				distroID{distroInDB, guids[distroInDB]},
 				distroID{reRegisteredDistro, guids[reRegisteredDistro]})
 
-			db, err := database.New(ctx, dbDir, nil)
+			db, err := database.New(ctx, dbDir)
 			require.NoError(t, err, "Setup: New() should return no error")
 			defer db.Close(ctx)
 
@@ -497,7 +497,7 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			databaseFromTemplate(t, dbDir, distros...)
 
-			db, err := database.New(ctx, dbDir, nil)
+			db, err := database.New(ctx, dbDir)
 			require.NoError(t, err, "Setup: New() should have returned no error")
 			defer db.Close(ctx)
 

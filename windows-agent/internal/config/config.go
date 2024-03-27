@@ -13,8 +13,6 @@ import (
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	"github.com/ubuntu/decorate"
 )
 
@@ -88,27 +86,6 @@ func (c *Config) Subscription() (token string, source Source, err error) {
 
 	token, source = s.Subscription.resolve()
 	return token, source, nil
-}
-
-// ProvisioningTasks returns a slice of all tasks to be submitted upon first contact with a distro.
-func (c *Config) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
-	var taskList []task.Task
-
-	// Refresh data from registry
-	s, err := c.get()
-	if err != nil {
-		return nil, fmt.Errorf("config: could not get provisioning tasks: %v", err)
-	}
-
-	// Ubuntu Pro attachment
-	proToken, _ := s.Subscription.resolve()
-	taskList = append(taskList, tasks.ProAttachment{Token: proToken})
-
-	// Landscape config
-	lconf, _ := s.Landscape.resolve()
-	taskList = append(taskList, tasks.LandscapeConfigure{Config: lconf, HostagentUID: s.Landscape.UID})
-
-	return taskList, nil
 }
 
 // LandscapeClientConfig returns the value of the landscape server URL and
