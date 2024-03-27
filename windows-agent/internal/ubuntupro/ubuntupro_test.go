@@ -43,7 +43,7 @@ func TestDistribute(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: Database creation should return no error")
 
 			distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)

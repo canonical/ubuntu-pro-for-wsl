@@ -489,14 +489,14 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 		}
 	}
 
-	db, err := database.New(ctx, t.TempDir(), tb.conf)
+	db, err := database.New(ctx, t.TempDir())
 	require.NoError(t, err, "Setup: database New should not return an error")
 
 	tb.db = db
 	tb.cloudInit = &mockCloudInit{}
 
 	// Set up Landscape client
-	clientService, err := landscape.New(ctx, tb.conf, tb.db, landscape.WithHostname("HOSTNAME"))
+	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 
 	err = clientService.Connect()

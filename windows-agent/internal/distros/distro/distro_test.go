@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -65,17 +66,16 @@ func TestNew(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		distro           string
-		withGUID         string
-		withProvisioning bool
-		nilMutex         bool
+		distro                 string
+		withGUID               string
+		preventWorkDirCreation bool
+		nilMutex               bool
 
 		wantErr     bool
 		wantErrType error
 	}{
-		"Success with a registered distro":                   {distro: registeredDistro},
-		"Success with a registered distro and its GUID":      {distro: registeredDistro, withGUID: registeredGUID},
-		"Success with a registered distro with provisioning": {distro: registeredDistro, withProvisioning: true},
+		"Success with a registered distro":              {distro: registeredDistro},
+		"Success with a registered distro and its GUID": {distro: registeredDistro, withGUID: registeredGUID},
 
 		// Error cases
 		"Error when a constructing a distro with another distro's GUID": {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
@@ -98,8 +98,11 @@ func TestNew(t *testing.T) {
 				args = append(args, distro.WithGUID(GUID))
 			}
 
-			if tc.withProvisioning {
-				args = append(args, distro.WithProvisioning(&mockProvisioning{}))
+			workDir := t.TempDir()
+			if tc.preventWorkDirCreation {
+				workDir = filepath.Join(workDir, "workdir")
+				err := os.WriteFile(workDir, []byte("I'm here to interfere"), 0600)
+				require.NoError(t, err, "Setup: could not write file to interfere with distro's MkDir")
 			}
 
 			mu := startupMutex()
@@ -557,7 +560,6 @@ func TestWorkerConstruction(t *testing.T) {
 			withMockWorker, worker := mockWorkerInjector(tc.constructorReturnErr)
 
 			workDir := t.TempDir()
-			provisioning := mockProvisioning{}
 
 			d, err := distro.New(ctx,
 				distroName,
@@ -565,7 +567,6 @@ func TestWorkerConstruction(t *testing.T) {
 				workDir,
 				startupMutex(),
 				distro.WithTaskProcessingContext(ctx),
-				distro.WithProvisioning(provisioning),
 				withMockWorker)
 			defer d.Cleanup(context.Background())
 
@@ -579,7 +580,6 @@ func TestWorkerConstruction(t *testing.T) {
 			require.NotNil(t, (*worker).newCtx.Value(testContextMarker(42)), "Worker's constructor should be called with the distro's context or a child of it")
 			require.Equal(t, d, (*worker).newDistro, "Worker's constructor should be called with the distro it is attached to")
 			require.Equal(t, workDir, (*worker).newDir, "Worker's constructor should be called with the same workdir as the distro's")
-			require.Equal(t, provisioning, (*worker).newProvisioning, "Worker's constructor should be called with the config passed to the distro")
 		})
 	}
 }
@@ -766,10 +766,9 @@ func TestUninstall(t *testing.T) {
 }
 
 type mockWorker struct {
-	newCtx          context.Context
-	newDistro       *distro.Distro
-	newDir          string
-	newProvisioning worker.Provisioning
+	newCtx    context.Context
+	newDistro *distro.Distro
+	newDir    string
 
 	isActiveCalled      bool
 	connectionCalled    bool
@@ -780,12 +779,11 @@ type mockWorker struct {
 
 func mockWorkerInjector(constructorReturnsError bool) (distro.Option, **mockWorker) {
 	mock := new(*mockWorker)
-	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string, conf worker.Provisioning) (distro.Worker, error) {
+	newMockWorker := func(ctx context.Context, d *distro.Distro, tmpDir string) (distro.Worker, error) {
 		w := &mockWorker{
-			newCtx:          ctx,
-			newDistro:       d,
-			newDir:          tmpDir,
-			newProvisioning: conf,
+			newCtx:    ctx,
+			newDistro: d,
+			newDir:    tmpDir,
 		}
 		*mock = w
 		if constructorReturnsError {
@@ -826,12 +824,6 @@ func (w *mockWorker) EnqueueDeferredTasks() {
 
 func (w *mockWorker) Stop(context.Context) {
 	w.stopCalled = true
-}
-
-type mockProvisioning struct{}
-
-func (c mockProvisioning) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
-	return nil, nil
 }
 
 type mockConnection struct{}

@@ -56,9 +56,8 @@ func (*NotValidError) Error() string {
 
 type options struct {
 	guid                  uuid.UUID
-	provisioning          worker.Provisioning
 	taskProcessingContext context.Context
-	newWorkerFunc         func(context.Context, *Distro, string, worker.Provisioning) (workerInterface, error)
+	newWorkerFunc         func(context.Context, *Distro, string) (workerInterface, error)
 }
 
 // Option is an optional argument for distro.New.
@@ -69,14 +68,6 @@ type Option func(*options)
 func WithGUID(guid uuid.UUID) Option {
 	return func(o *options) {
 		o.guid = guid
-	}
-}
-
-// WithProvisioning allows for providing a worker.Provisioning. If that is done,
-// it'll be queried for the provisioning tasks and these will be submitted.
-func WithProvisioning(c worker.Provisioning) Option {
-	return func(o *options) {
-		o.provisioning = c
 	}
 }
 
@@ -96,8 +87,8 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 	opts := options{
 		guid:                  nilGUID,
 		taskProcessingContext: context.Background(),
-		newWorkerFunc: func(ctx context.Context, d *Distro, dir string, provisioning worker.Provisioning) (workerInterface, error) {
-			return worker.New(ctx, d, dir, worker.WithProvisioning(provisioning))
+		newWorkerFunc: func(ctx context.Context, d *Distro, dir string) (workerInterface, error) {
+			return worker.New(ctx, d, dir)
 		},
 	}
 
@@ -140,7 +131,7 @@ func New(ctx context.Context, name string, props Properties, storageDir string, 
 		},
 	}
 
-	distro.worker, err = opts.newWorkerFunc(opts.taskProcessingContext, distro, storageDir, opts.provisioning)
+	distro.worker, err = opts.newWorkerFunc(opts.taskProcessingContext, distro, storageDir)
 	if err != nil {
 		return nil, err
 	}

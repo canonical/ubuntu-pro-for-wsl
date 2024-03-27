@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	db, err := database.New(ctx, dir, nil)
+	db, err := database.New(ctx, dir)
 	require.NoError(t, err, "Setup: empty database New() should return no error")
 	defer db.Close(ctx)
 
@@ -71,7 +71,7 @@ func TestAttachPro(t *testing.T) {
 			t.Parallel()
 
 			dir := t.TempDir()
-			db, err := database.New(ctx, dir, nil)
+			db, err := database.New(ctx, dir)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 			defer db.Close(ctx)
 
@@ -164,7 +164,7 @@ func TestGetConfigSources(t *testing.T) {
 			ctx := context.Background()
 
 			dir := t.TempDir()
-			db, err := database.New(ctx, dir, nil)
+			db, err := database.New(ctx, dir)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 			config := tc.config
 			service := ui.New(ctx, &config, db)
@@ -210,7 +210,7 @@ func TestNotifyPurchase(t *testing.T) {
 			ctx := context.Background()
 
 			dir := t.TempDir()
-			db, err := database.New(ctx, dir, nil)
+			db, err := database.New(ctx, dir)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 
 			opts, stop := setupMockContracts(t, ctx)
@@ -265,7 +265,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			landscapeConfig := "look at me! I am a Landscape config"
 
 			dir := t.TempDir()
-			db, err := database.New(ctx, dir, nil)
+			db, err := database.New(ctx, dir)
 			require.NoError(t, err, "Setup: empty database New() should return no error")
 			defer db.Close(ctx)
 

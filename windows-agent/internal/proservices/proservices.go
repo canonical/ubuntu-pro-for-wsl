@@ -85,7 +85,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		return s, err
 	}
 
-	db, err := database.New(ctx, privateDir, s.conf)
+	db, err := database.New(ctx, privateDir)
 	if err != nil {
 		return s, err
 	}
