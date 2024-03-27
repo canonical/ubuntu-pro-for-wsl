@@ -45,6 +45,8 @@ github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5 h1:qO8m+4mLbo1HRpD
 github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
 github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 h1:GBrsd49DdWFkpmwzGoDBdQKg3Jei8BTaKRp+dRhoveg=
 github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
+github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b h1:UDf0h0aC4W4OsU7Dy4/68/zR2Vbkg8f7qPABLOOUDu4=
+github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc h1:ao2WRsKSzW6KuUY9IWPwWahcHCgR0s52IfwutMfEbdM=
 golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc/go.mod h1:iRJReGqOEeBhDZGkGbynYwcHlctCvnjTYIamk7uXpHI=
 golang.org/x/net v0.21.0 h1:AQyQV4dYCvJ7vGmJyKki9+PBdyvhkSd8EIx/qb0AYv4=
