@@ -49,7 +49,7 @@ func (ss loggedServerStream) RecvMsg(m interface{}) error {
 	err := ss.ServerStream.RecvMsg(m)
 	v := reflect.ValueOf(m).Elem()
 	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		n := t.Field(i).Name
 		// Only print exported fields
 		val := v.FieldByName(n)

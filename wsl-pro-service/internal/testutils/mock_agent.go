@@ -140,8 +140,7 @@ func (ch *channel[Recv, Send, Stream]) History() []*Recv {
 
 	out := make([]*Recv, len(ch.recvHistory))
 	for i, rcv := range ch.recvHistory {
-		cpy := rcv
-		out[i] = &cpy
+		out[i] = &rcv
 	}
 
 	return out

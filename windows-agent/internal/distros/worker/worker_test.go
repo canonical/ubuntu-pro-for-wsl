@@ -326,7 +326,7 @@ func TestSetConnection(t *testing.T) {
 
 	// GetClient twice and ensure we ping the same service
 	const conn1calls = 2
-	for i := 0; i < conn1calls; i++ {
+	for i := range conn1calls {
 		c := w.Connection()
 		require.NotNil(t, c, "client should be non-nil after setting a connection")
 		err = c.SendProAttachment("123")

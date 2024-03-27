@@ -207,7 +207,7 @@ func removeIf(array []task.Task, predicate func(task.Task) bool) []task.Task {
 	// 0                 j                   i                 end
 	//
 	j := 0
-	for i := 0; i < len(array); i++ {
+	for i := range array {
 		if predicate(array[i]) {
 			// Rejected
 			continue

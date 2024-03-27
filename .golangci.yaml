@@ -4,12 +4,12 @@
 linters:
   # linters to run in addition to default ones
   enable:
+    - copyloopvar
     - dupl
     - dupword
     - durationcheck
     - errname
     - errorlint
-    - exportloopref
     - forbidigo
     - forcetypeassert
     - gci
@@ -17,6 +17,7 @@ linters:
     - godot
     - gofmt
     - gosec
+    - intrange
     - misspell
     - nakedret
     - nolintlint
@@ -51,8 +52,11 @@ issues:
     - non-wrapping format verb for fmt.Errorf. Use `%w` to format errors
     # We want named parameters even if unused, as they help better document the function
     - unused-parameter
-    # Sometimes it is more readable it do a `if err:=a(); err != nil` tha simpy `return a()`
+    # Sometimes it is more readable it do a `if err:=a(); err != nil` than simpy `return a()`
     - if-return
+    # Outdated warining, it only applies to Go < 1.22
+    # G601: Implicit memory aliasing in for loop.
+    - G601
 
 nolintlint:
   require-explanation: true
@@ -70,4 +74,4 @@ linters-settings:
   staticcheck:
     # Should be better for it to be autodetected
     # https://github.com/golangci/golangci-lint/issues/2234
-    go: "1.21.5"
+    go: "1.22.0"

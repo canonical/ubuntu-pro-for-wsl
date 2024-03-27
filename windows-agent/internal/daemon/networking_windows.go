@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// Does nothing, exists so we can compile the tests without mocks.
+//nolint:unused // Does nothing; it exists so we can compile the tests without mocks.
 var wslIPErr bool
 
 func getWslIP() (net.IP, error) {
@@ -66,7 +66,7 @@ func getAdaptersAddresses() (head *windows.IpAdapterAddresses, err error) {
 	// Win32 API docs recommend a buff size of 15KB.
 	buff.resizeBytes(15 * kilobyte)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		size := buff.byteCount()
 		err := windows.GetAdaptersAddresses(family, flags, 0, &buff.data[0], &size)
 		if errors.Is(err, windows.ERROR_BUFFER_OVERFLOW) {
