@@ -86,7 +86,15 @@ func New(o ...option) *App {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return a.serve(o...)
+			ctx := context.Background()
+
+			cleanup, err := a.setUpLogger(ctx)
+			if err != nil {
+				log.Warningf(ctx, "could not set logger output: %v", err)
+			}
+			defer cleanup()
+
+			return a.serve(ctx, o...)
 		},
 		// We display usage error ourselves
 		SilenceErrors: true,
@@ -103,15 +111,7 @@ func New(o ...option) *App {
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve(args ...option) error {
-	ctx := context.Background()
-
-	cleanup, err := a.setUpLogger(ctx)
-	if err != nil {
-		log.Warningf(ctx, "could not set logger output: %v", err)
-	}
-	defer cleanup()
-
+func (a *App) serve(ctx context.Context, args ...option) error {
 	var opt options
 	for _, f := range args {
 		f(&opt)
