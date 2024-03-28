@@ -2,9 +2,15 @@ package landscape
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"os/user"
+	"path/filepath"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -129,10 +135,6 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return errors.New("already installed")
 	}
 
-	if err := gowsl.Install(ctx, distro.Name()); err != nil {
-		return err
-	}
-
 	defer func() {
 		if err == nil {
 			return
@@ -144,8 +146,14 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	}()
 
-	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
-		return err
+	if rootfs := cmd.GetRootfs(); rootfs != nil {
+		if err = installFromURL(ctx, distro, rootfs); err != nil {
+			return err
+		}
+	} else {
+		if err = installFromMicrosoftStore(ctx, distro); err != nil {
+			return err
+		}
 	}
 
 	// TODO: The rest of this function will need to be rethought once cloud-init support exists.
@@ -188,4 +196,127 @@ func (e executor) setDefault(ctx context.Context, cmd *landscapeapi.Command_SetD
 //nolint:unparam // cmd is not used, but kep here for consistency with other commands.
 func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
 	return gowsl.Shutdown(ctx)
+}
+
+func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) error {
+	if err := gowsl.Install(ctx, distro.Name()); err != nil {
+		return err
+	}
+
+	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func installFromURL(ctx context.Context, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
+	// Since we are going to remove the tarball soon, I'd say it's fine to write it to a subfolder of the current working directory,
+	// as it will be somewhere inside the Windows Apps private folders:
+	// %USERPROFILE%\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	tmpDir := filepath.Join(cwd, distro.Name())
+	if err := os.MkdirAll(tmpDir, 0700); err != nil {
+		return err
+	}
+	// Remove tarball once installed
+	defer os.RemoveAll(tmpDir)
+
+	tarball := filepath.Join(tmpDir, distro.Name()+".tar.gz")
+
+	f, err := os.Create(tarball)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if err := download(ctx, f, rootfs.GetUrl()); err != nil {
+		return err
+	}
+
+	if err := checksumMatches(tarball, rootfs.GetSha256Sum()); err != nil {
+		return err
+	}
+
+	home := os.Getenv("UserProfile")
+	if home == "" {
+		return errors.New("%UserProfile% is empty")
+	}
+
+	// Create the directory that will contain the vhdx
+	vhdxDir := filepath.Join(home, "WSL", distro.Name())
+	if err := os.MkdirAll(vhdxDir, 0700); err != nil {
+		return err
+	}
+
+	if _, err := gowsl.Import(ctx, distro.Name(), tarball, vhdxDir); err != nil {
+		_ = os.RemoveAll(vhdxDir)
+		return err
+	}
+	return nil
+}
+
+// https://github.com/ubuntu/WSL/blob/main/wsl-builder/prepare-build/build.go#L214
+func download(ctx context.Context, w io.Writer, url string) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("could not download %q: %v", url, err)
+		}
+	}()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("http request failed with code %d", resp.StatusCode)
+	}
+
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// https://github.com/ubuntu/WSL/blob/main/wsl-builder/prepare-build/build.go#L295
+func checksumMatches(path, wantChecksum string) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("error checking checksum for: %q: %v", path, err)
+		}
+	}()
+
+	if wantChecksum == "" {
+		return nil
+	}
+
+	// Checksum of the rootfs
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return err
+	}
+	gotChecksum := base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+	out, err := os.ReadFile(path)
+
+	// Compare checksums
+	if gotChecksum != wantChecksum {
+		return fmt.Errorf("checksums do not match (want: %s got: %s) (from %s)", wantChecksum, gotChecksum, string(out))
+	}
+
+	return nil
 }
