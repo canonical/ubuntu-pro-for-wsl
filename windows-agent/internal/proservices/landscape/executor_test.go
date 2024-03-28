@@ -2,6 +2,10 @@ package landscape_test
 
 import (
 	"context"
+	"fmt"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -144,13 +148,25 @@ func TestReceiveCommandStartStop(t *testing.T) {
 func TestInstall(t *testing.T) {
 	t.Parallel()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	fileServerAddr := mockRootfsFileServer(t, ctx)
+
+	emptyFileChecksum := "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+	mockErrorChecksum := "r+Vc2kIQwkObR8YsAQOQJ1IvftSr2xE5crMDCzNZUyo="
+	mockMismatchChecksum := "1234"
+
 	testCases := map[string]struct {
-		noCloudInit           bool
-		distroAlredyInstalled bool
-		emptyDistroName       bool
-		cloudInitWriteErr     bool
-		wslInstallErr         bool
-		appxDoesNotExist      bool
+		noCloudInit            bool
+		cloudInitWriteErr      bool
+		distroAlreadyInstalled bool
+		emptyDistroName        bool
+		wslInstallErr          bool
+		appxDoesNotExist       bool
+
+		sendRootfsURL      string
+		sendRootfsChecksum string
 
 		wantCouldInitWriteCalled bool
 		wantInstalled            bool
@@ -158,12 +174,18 @@ func TestInstall(t *testing.T) {
 	}{
 		"Success":            {wantCouldInitWriteCalled: true, wantInstalled: true},
 		"With no cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
+		"Error when cannot write cloud-init file": {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
+		"Success with a rootfs":                   {sendRootfsURL: "goodfile", wantInstalled: true},
+		"Success with a rootfs and a checksum":    {sendRootfsURL: "goodfile", sendRootfsChecksum: emptyFileChecksum, wantInstalled: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
-		"Error when the distro is already installed": {distroAlredyInstalled: true, wantInstalled: true},
-		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
+		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
+
+		"Error when the rootfs isn't a valid tarball": {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
+		"Error when the checksum doesn't match":       {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
+		"Error when the rootfs doesn't exist":         {sendRootfsURL: "badresponse", wantInstalled: false},
 	}
 
 	for name, tc := range testCases {
@@ -174,12 +196,12 @@ func TestInstall(t *testing.T) {
 				name: testDistroAppx,
 			}
 
-			if tc.appxDoesNotExist {
+			if tc.appxDoesNotExist || tc.sendRootfsURL != "" || tc.sendRootfsURL == "goodfile" {
 				// WSLMock Install only accepts ubuntu-22.04
 				settings.name = wsltestutils.RandomDistroName(t)
 			}
 
-			if tc.distroAlredyInstalled {
+			if tc.distroAlreadyInstalled {
 				settings.install = true
 			}
 
@@ -204,8 +226,29 @@ func TestInstall(t *testing.T) {
 						cloudInit = "Hello, this is a cloud-init file"
 					}
 
+					if tc.sendRootfsURL == "" {
+						return &landscapeapi.Command{
+							Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName}},
+						}
+					}
+
+					var checksum *string
+					if tc.sendRootfsChecksum != "" {
+						checksum = &tc.sendRootfsChecksum
+					}
+
+					url, err := url.JoinPath(fileServerAddr, tc.sendRootfsURL)
+					require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
+
 					return &landscapeapi.Command{
-						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName, Cloudinit: &cloudInit}},
+						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{
+							Id:        distroName,
+							Cloudinit: &cloudInit,
+							Rootfs: &landscapeapi.Command_Install_Rootfs{
+								Url:       url,
+								Sha256Sum: checksum,
+							},
+						}},
 					}
 				},
 				// Test assertions
@@ -240,6 +283,37 @@ func TestInstall(t *testing.T) {
 				})
 		})
 	}
+}
+
+func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
+	t.Helper()
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/goodfile", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
+	mux.HandleFunc("/badfile", func(w http.ResponseWriter, r *http.Request) {
+		_, err := fmt.Fprintf(w, "MOCK_ERROR")
+		if err != nil {
+			t.Logf("mockRootfsFileServer: could not write response: %v", err)
+		}
+	})
+	mux.HandleFunc("/badresponse", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp", "localhost:")
+	require.NoError(t, err, "Setup: mockRootfsFileServer could not listen")
+
+	go func() {
+		err := http.Serve(lis, mux)
+		if err != nil {
+			t.Logf("mockRootfsFileServer: serve error: %v", err)
+		}
+	}()
+
+	addr := "http://" + lis.Addr().String()
+	t.Logf("Serving on %s", addr)
+	return addr
 }
 
 func TestUninstall(t *testing.T) {
