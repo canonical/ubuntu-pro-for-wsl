@@ -25,6 +25,26 @@ ubuntu-pro-agent COMMAND [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
+#### ubuntu-pro-agent clean
+
+Removes all the agent's data and exits
+
+```
+ubuntu-pro-agent clean [flags]
+```
+
+##### Options
+
+```
+  -h, --help   help for clean
+```
+
+##### Options inherited from parent commands
+
+```
+  -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
+```
+
 #### ubuntu-pro-agent completion
 
 Generate the autocompletion script for the specified shell
