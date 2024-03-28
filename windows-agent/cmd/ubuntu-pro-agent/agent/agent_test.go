@@ -225,6 +225,174 @@ func TestPublicDir(t *testing.T) {
 	}
 }
 
+func TestLogs(t *testing.T) {
+	// Not parallel because we modify the environment
+
+	fooContent := "foo"
+	emptyContent := ""
+
+	tests := map[string]struct {
+		existingLogContent string
+
+		runError         bool
+		usageErrorReturn bool
+		logDirError      bool
+
+		wantOldLogFileContent *string
+	}{
+		"Run and exit successfully despite logs not being written": {logDirError: true},
+		"Existing log file has been renamed to old":                {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
+		"Existing empty log file has been renamed to old":          {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
+		"Ignore when failing to archive log file":                  {existingLogContent: "OLD_IS_DIRECTORY"},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Not parallel because we modify the environment
+
+			home := t.TempDir()
+			appData := filepath.Join(home, "AppData/Local")
+
+			t.Setenv("UserProfile", home)
+			t.Setenv("LocalAppData", appData)
+
+			a := agent.New(agent.WithRegistry(registry.NewMock()))
+
+			var logFile, oldLogFile string
+			publicDir, err := a.PublicDir()
+			if err == nil {
+				logFile = filepath.Join(publicDir, "log")
+				oldLogFile = logFile + ".old"
+				switch tc.existingLogContent {
+				case "":
+				case "OLD_IS_DIRECTORY":
+					err := os.Mkdir(oldLogFile, 0700)
+					require.NoError(t, err, "Setup: create invalid log.old file")
+					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
+					require.NoError(t, err, "Setup: creating pre-existing log file")
+				case "-":
+					tc.existingLogContent = ""
+					fallthrough
+				default:
+					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
+					require.NoError(t, err, "Setup: creating pre-existing log file")
+				}
+			}
+
+			ch := make(chan struct{})
+			go func() {
+				_ = a.Run() // This always returns an error because the gRPC server is stopped
+				close(ch)
+			}()
+
+			a.WaitReady()
+
+			select {
+			case <-ch:
+				require.Fail(t, "Run should not exit")
+			default:
+			}
+
+			a.Quit()
+
+			select {
+			case <-time.After(20 * time.Second):
+				require.Fail(t, "Run should have exited")
+			default:
+			}
+
+			// Don't check for log files if the directory was not writable
+			if logFile == "" {
+				return
+			}
+			if tc.wantOldLogFileContent != nil {
+				require.FileExists(t, oldLogFile, "Old log file should exist")
+				content, err := os.ReadFile(oldLogFile)
+				require.NoError(t, err, "Should be able to read old log file")
+				require.Equal(t, tc.existingLogContent, string(content), "Old log file content should be log's content")
+			} else {
+				require.NoFileExists(t, oldLogFile, "Old log file should not exist")
+			}
+		})
+	}
+}
+
+func TestClean(t *testing.T) {
+	// Not parallel because we modify the environment
+
+	testCases := map[string]struct {
+		emptyUserProfile bool
+		emptyLocalAppDir bool
+
+		wantErr bool
+	}{
+		"Success": {},
+
+		"Error when %UserProfile% is empty":  {emptyUserProfile: true, wantErr: true},
+		"Error when %LocalAppData% is empty": {emptyLocalAppDir: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Not parallel because we modify the environment
+
+			home := t.TempDir()
+			appData := filepath.Join(home, "AppData/Local")
+
+			t.Setenv("LocalAppData", appData)
+
+			if tc.emptyUserProfile {
+				t.Setenv("UserProfile", "")
+			} else {
+				t.Setenv("UserProfile", home)
+
+				err := os.MkdirAll(filepath.Join(home, common.UserProfileDir), 0700)
+				require.NoError(t, err, "Setup: could not crate fake public directory")
+
+				err = os.WriteFile(filepath.Join(home, common.UserProfileDir, "file"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file inside the public directory")
+
+				err = os.WriteFile(filepath.Join(home, ".unrelated"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file outside the public directory")
+			}
+
+			if tc.emptyLocalAppDir {
+				t.Setenv("LocalAppData", "")
+			} else {
+				t.Setenv("LocalAppData", appData)
+
+				err := os.MkdirAll(filepath.Join(appData, common.LocalAppDataDir), 0700)
+				require.NoError(t, err, "Setup: could not crate fake private directory")
+
+				err = os.WriteFile(filepath.Join(appData, common.LocalAppDataDir, "file"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file inside the private directory")
+
+				err = os.WriteFile(filepath.Join(appData, ".unrelated"), []byte("test file"), 0600)
+				require.NoError(t, err, "Setup: could not write file outside the private directory")
+			}
+
+			a := agent.New(agent.WithRegistry(registry.NewMock()))
+			a.SetArgs("clean")
+
+			err := a.Run()
+			if tc.wantErr {
+				require.Error(t, err, "Run should return an error")
+			} else {
+				require.NoError(t, err, "Run should not return an error")
+			}
+
+			require.NoFileExists(t, filepath.Join(home, common.UserProfileDir), "Public directory should have been removed")
+			if !tc.emptyUserProfile {
+				require.FileExists(t, filepath.Join(home, ".unrelated"), "Unrelated file in home directory should still exist")
+			}
+
+			require.NoFileExists(t, filepath.Join(appData, common.LocalAppDataDir), "Private directory should have been removed")
+			if !tc.emptyLocalAppDir {
+				require.FileExists(t, filepath.Join(appData, ".unrelated"), "Unrelated file in LocalAppData directory should still exist")
+			}
+		})
+	}
+}
+
 // requireGoroutineStarted starts a goroutine and blocks until it has been launched.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()

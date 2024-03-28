@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -80,12 +81,19 @@ func New(o ...option) *App {
 			}
 
 			setVerboseMode(a.config.Verbosity)
-			log.Debug(context.Background(), "Debug mode is enabled")
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return a.serve(o...)
+			ctx := context.Background()
+
+			cleanup, err := a.setUpLogger(ctx)
+			if err != nil {
+				log.Warningf(ctx, "could not set logger output: %v", err)
+			}
+			defer cleanup()
+
+			return a.serve(ctx, o...)
 		},
 		// We display usage error ourselves
 		SilenceErrors: true,
@@ -96,14 +104,13 @@ func New(o ...option) *App {
 
 	// subcommands
 	a.installVersion()
+	a.installClean()
 
 	return &a
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve(args ...option) error {
-	ctx := context.TODO()
-
+func (a *App) serve(ctx context.Context, args ...option) error {
 	var opt options
 	for _, f := range args {
 		f(&opt)
@@ -222,7 +229,7 @@ func (a *App) publicDir(opts options) (string, error) {
 		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
 	}
 
-	if err := os.MkdirAll(opts.publicDir, 0600); err != nil {
+	if err := os.MkdirAll(opts.publicDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create public dir %s: %v", opts.publicDir, err)
 	}
 
@@ -240,9 +247,46 @@ func (a *App) privateDir(opts options) (string, error) {
 		opts.privateDir = filepath.Join(localAppData, common.LocalAppDataDir)
 	}
 
-	if err := os.MkdirAll(opts.privateDir, 0600); err != nil {
+	if err := os.MkdirAll(opts.privateDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create private dir %s: %v", opts.privateDir, err)
 	}
 
 	return opts.privateDir, nil
+}
+
+func (a *App) setUpLogger(ctx context.Context) (func(), error) {
+	noop := func() {}
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableQuote: true,
+	})
+
+	publicDir, err := a.PublicDir()
+	if err != nil {
+		return noop, err
+	}
+
+	logFile := filepath.Join(publicDir, "log")
+
+	// Move old log file
+	oldLogFile := filepath.Join(publicDir, "log.old")
+	err = os.Rename(logFile, oldLogFile)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Warningf(ctx, "Could not archive previous log file: %v", err)
+	}
+
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
+	if err != nil {
+		return noop, fmt.Errorf("could not open log file: %v", err)
+	}
+
+	// Write both to file and to Stdout. The latter is useful for local development.
+	w := io.MultiWriter(f, os.Stdout)
+	logrus.SetOutput(w)
+
+	fmt.Fprintf(f, "\n======= STARTUP =======\n")
+	log.Infof(ctx, "Version: %s", consts.Version)
+	log.Debug(ctx, "Debug mode is enabled")
+
+	return func() { _ = f.Close() }, nil
 }
