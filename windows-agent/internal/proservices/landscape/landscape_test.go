@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"text/template"
 	"time"
@@ -23,7 +24,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -160,14 +160,16 @@ func TestConnect(t *testing.T) {
 				defer server.Stop()
 			}
 
-			db, err := database.New(ctx, t.TempDir(), conf)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
 
 			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			service, err := landscape.New(ctx, conf, db)
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit)
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
 
 			if tc.precancelContext {
@@ -289,7 +291,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			go server.Serve(lis)
 			defer server.Stop()
 
-			db, err := database.New(ctx, t.TempDir(), conf)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
 
 			var d *distro.Distro
@@ -312,7 +314,9 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -498,12 +502,14 @@ func TestAutoReconnection(t *testing.T) {
 				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
 			}
 
-			db, err := database.New(ctx, t.TempDir(), conf)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
@@ -733,10 +739,12 @@ func TestReconnect(t *testing.T) {
 			go server.Serve(lis)
 			defer server.Stop()
 
-			db, err := database.New(ctx, t.TempDir(), conf)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			service, err := landscape.New(ctx, conf, db)
+			var cloudInit mockCloudInit
+
+			service, err := landscape.New(ctx, conf, db, &cloudInit)
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()
@@ -842,6 +850,34 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 	return lis, server, service
 }
 
+type mockCloudInit struct {
+	writeCalled  atomic.Bool
+	removeCalled atomic.Bool
+
+	writeErr  bool
+	removeErr bool
+}
+
+func (c *mockCloudInit) WriteDistroData(distroName string, cloudInit string) error {
+	c.writeCalled.Store(true)
+
+	if c.writeErr {
+		return errors.New("could not write distro cloud-init data: mock error")
+	}
+
+	return nil
+}
+
+func (c *mockCloudInit) RemoveDistroData(distroName string) error {
+	c.removeCalled.Store(true)
+
+	if c.removeErr {
+		return errors.New("could not remove distro cloud-init data: mock error")
+	}
+
+	return nil
+}
+
 type mockConfig struct {
 	proToken              string
 	landscapeClientConfig string
@@ -863,10 +899,6 @@ func (m *mockConfig) LandscapeClientConfig() (string, config.Source, error) {
 		return "", config.SourceNone, errors.New("Mock error")
 	}
 	return m.landscapeClientConfig, config.SourceUser, nil
-}
-
-func (m *mockConfig) ProvisioningTasks(ctx context.Context, distroName string) ([]task.Task, error) {
-	return nil, nil
 }
 
 func (m *mockConfig) Subscription() (string, config.Source, error) {

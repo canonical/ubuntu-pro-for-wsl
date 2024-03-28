@@ -109,7 +109,7 @@ func (l landscape) Stop() {
 }
 
 // RequireReceivedInfo checks that a connection to Landscape was made and the proper information was sent.
-func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistro gowsl.Distro, wantHostname string) landscapemockservice.HostInfo {
+func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistros []gowsl.Distro, wantHostname string) landscapemockservice.HostInfo {
 	t.Helper()
 
 	require.Eventually(t, func() bool {
@@ -122,9 +122,12 @@ func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistr
 	// Validate token
 	require.Equal(t, wantToken, info.Token, "Landscape did not receive the right pro token")
 
-	// Validate distro
-	require.Len(t, info.Instances, 1, "Landscape did not receive the right number of distros")
-	require.Equal(t, wantDistro.Name(), info.Instances[0].ID, "Landscape did not receive the right distro name from the agent")
+	// Validate distros
+	gotDistros := make([]string, 0)
+	for _, instance := range info.Instances {
+		gotDistros = append(gotDistros, instance.ID)
+	}
+	require.ElementsMatch(t, wantDistros, gotDistros, "Landscape did not receive the right distros")
 
 	// Validate hostname
 	require.Equal(t, wantHostname, info.Hostname, "Landscape did not receive the right hostname from the agent")

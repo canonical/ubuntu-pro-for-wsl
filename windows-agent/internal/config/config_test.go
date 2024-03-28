@@ -9,8 +9,6 @@ import (
 
 	config "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
@@ -69,7 +67,6 @@ func TestSubscription(t *testing.T) {
 		"Error when the file cannot be read from": {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
-	//nolint: dupl // This is mostly duplicate but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
@@ -78,7 +75,7 @@ func TestSubscription(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
@@ -124,7 +121,6 @@ func TestLandscapeConfig(t *testing.T) {
 		"Error when the file cannot be read from": {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
-	//nolint: dupl // This is mostly duplicate but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
@@ -133,7 +129,7 @@ func TestLandscapeConfig(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
@@ -182,7 +178,7 @@ func TestLandscapeAgentUID(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
@@ -209,62 +205,6 @@ func TestLandscapeAgentUID(t *testing.T) {
 
 			// Test non-default values
 			assert.Equal(t, "landscapeUID1234", v, "LandscapeAgentUID returned an unexpected value")
-		})
-	}
-}
-
-func TestProvisioningTasks(t *testing.T) {
-	if wsl.MockAvailable() {
-		t.Parallel()
-	}
-
-	testCases := map[string]struct {
-		settingsState settingsState
-
-		wantToken         string
-		wantLandscapeConf string
-		wantLandscapeUID  string
-
-		wantError bool
-	}{
-		"Success when there is no data":                               {settingsState: untouched},
-		"Success when there is an empty config file":                  {settingsState: fileExists},
-		"Success when the file's pro token field exists but is empty": {settingsState: userTokenExists},
-		"Success with a user token":                                   {settingsState: userTokenHasValue, wantToken: "user_token"},
-		"Success when there is Landscape config":                      {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConf: "[client]\nuser=JohnDoe", wantLandscapeUID: "landscapeUID1234"},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
-			if wsl.MockAvailable() {
-				t.Parallel()
-				ctx = wsl.WithMock(ctx, wslmock.New())
-			}
-
-			db, err := database.New(ctx, t.TempDir(), nil)
-			require.NoError(t, err, "Setup: could not create empty database")
-
-			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, false, false)
-			conf := config.New(ctx, dir)
-			setup(t, conf)
-
-			gotTasks, err := conf.ProvisioningTasks(ctx, "UBUNTU")
-			if tc.wantError {
-				require.Error(t, err, "ProvisioningTasks should return an error")
-				return
-			}
-			require.NoError(t, err, "ProvisioningTasks should return no error")
-
-			wantTasks := []task.Task{
-				tasks.ProAttachment{Token: tc.wantToken},
-				tasks.LandscapeConfigure{
-					Config:       tc.wantLandscapeConf,
-					HostagentUID: tc.wantLandscapeUID,
-				},
-			}
-
-			require.ElementsMatch(t, wantTasks, gotTasks, "Unexpected contents returned by ProvisioningTasks")
 		})
 	}
 }
@@ -300,7 +240,7 @@ func TestSetUserSubscription(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, tc.cannotWriteFile)
@@ -375,7 +315,7 @@ func TestSetStoreSubscription(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, tc.cannotWriteFile)
@@ -444,7 +384,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
@@ -509,7 +449,7 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, tc.cannotWriteFile)
@@ -578,7 +518,7 @@ func TestUpdateRegistryData(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			_, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakConfigFile, false)

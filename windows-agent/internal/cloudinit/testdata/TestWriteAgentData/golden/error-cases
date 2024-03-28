@@ -1,0 +1,8 @@
+# cloud-init
+# This file was generated automatically and must not be edited
+landscape:
+    client:
+        data: This is an old data field
+        info: This is the old configuration
+ubuntu_advantage:
+    token: OLD_PRO_TOKEN

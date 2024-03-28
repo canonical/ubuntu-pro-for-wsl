@@ -121,7 +121,7 @@ func TestPurchase(t *testing.T) {
 
 			defer logWslProServiceOnError(t, ctx, d)
 
-			out, err := d.Command(ctx, "exit 0").CombinedOutput()
+			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
 			// ... or after registration, but never both.
@@ -153,7 +153,7 @@ func TestPurchase(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			landscape.RequireReceivedInfo(t, token, d, hostname)
+			landscape.RequireReceivedInfo(t, token, []wsl.Distro{d}, hostname)
 			// Skipping because we know it to be broken
 			// See https://warthogs.atlassian.net/browse/UDENG-1810
 			//

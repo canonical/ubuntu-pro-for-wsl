@@ -1,0 +1,13 @@
+#cloud-config
+users:
+  - name: testuser
+    gecos: Test User
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [adm,dialout,cdrom,floppy,sudo,audio,dip,video,plugdev,users,netdev]
+    shell: /bin/bash
+write_files:
+- path: /etc/wsl.conf
+  append: true
+  content: |
+    [user]
+    default=testuser
