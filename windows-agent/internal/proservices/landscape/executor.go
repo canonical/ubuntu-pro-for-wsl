@@ -255,7 +255,7 @@ func installFromURL(ctx context.Context, distro gowsl.Distro, rootfs *landscapea
 	}
 	defer f.Close()
 
-	if err := download(ctx, f, rootfs.GetUrl()); err != nil {
+	if err := download(f, rootfs.GetUrl()); err != nil {
 		return err
 	}
 
@@ -281,8 +281,7 @@ func installFromURL(ctx context.Context, distro gowsl.Distro, rootfs *landscapea
 	return nil
 }
 
-// https://github.com/ubuntu/WSL/blob/main/wsl-builder/prepare-build/build.go#L214
-func download(ctx context.Context, w io.Writer, url string) (err error) {
+func download(w io.Writer, url string) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("could not download %q: %v", url, err)
@@ -304,10 +303,8 @@ func download(ctx context.Context, w io.Writer, url string) (err error) {
 	}
 
 	return nil
-
 }
 
-// https://github.com/ubuntu/WSL/blob/main/wsl-builder/prepare-build/build.go#L295
 func checksumMatches(path, wantChecksum string) (err error) {
 	defer func() {
 		if err != nil {
