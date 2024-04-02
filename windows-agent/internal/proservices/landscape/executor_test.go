@@ -189,7 +189,7 @@ func TestInstall(t *testing.T) {
 				name: testDistroAppx,
 			}
 
-			if tc.appxDoesNotExist || tc.sendRootfsURL != "" || tc.sendRootfsURL == "goodfile" {
+			if tc.appxDoesNotExist || tc.sendRootfsURL != "" {
 				// WSLMock Install only accepts ubuntu-22.04
 				settings.name = wsltestutils.RandomDistroName(t)
 			}
