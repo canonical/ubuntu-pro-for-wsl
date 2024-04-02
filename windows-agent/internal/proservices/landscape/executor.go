@@ -3,7 +3,6 @@ package landscape
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -309,7 +308,7 @@ func checksumMatches(path, wantChecksum string) (err error) {
 	if _, err := io.Copy(h, f); err != nil {
 		return err
 	}
-	gotChecksum := base64.StdEncoding.EncodeToString(h.Sum(nil))
+	gotChecksum := fmt.Sprintf("%x", h.Sum(nil))
 
 	out, err := os.ReadFile(path)
 
