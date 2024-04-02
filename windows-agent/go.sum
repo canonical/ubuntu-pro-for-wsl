@@ -1,9 +1,5 @@
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922 h1:Ww78pNVWaxmaINcUqMH/G15Ov28dj/ZKOcpXb7hmGNE=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240325143712-cbffffee5665 h1:SKXWPO18KUcB/gJpORCpfylSBkKYmpcSy8414af0MmQ=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240325143712-cbffffee5665/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/landscape-hostagent-api v0.0.0-20240327162205-3c655e2766d2 h1:s0iup+889bWzKBaYcRM36tbA8UOLbR41AxmRcmucrJc=
 github.com/canonical/landscape-hostagent-api v0.0.0-20240327162205-3c655e2766d2/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3 h1:HSc1LV3CyGIXHvIL/VViAf6xixLLFdJGPd4J831HTa4=
@@ -87,8 +83,6 @@ github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5 h1:qO8m+4mLbo1HRpD5lfhEfr7R1PuqZvbAmjaRzYEy+tM=
 github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
-github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 h1:GBrsd49DdWFkpmwzGoDBdQKg3Jei8BTaKRp+dRhoveg=
-github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b h1:UDf0h0aC4W4OsU7Dy4/68/zR2Vbkg8f7qPABLOOUDu4=
 github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 go.uber.org/atomic v1.9.0 h1:ECmE8Bn/WFTYwEW/bpKD3M8VtR/zQVbavAoalC1PYyE=
