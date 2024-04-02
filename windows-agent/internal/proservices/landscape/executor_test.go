@@ -153,8 +153,8 @@ func TestInstall(t *testing.T) {
 
 	fileServerAddr := mockRootfsFileServer(t, ctx)
 
-	emptyFileChecksum := "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
-	mockErrorChecksum := "r+Vc2kIQwkObR8YsAQOQJ1IvftSr2xE5crMDCzNZUyo="
+	emptyFileChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	mockErrorChecksum := "afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a"
 	mockMismatchChecksum := "1234"
 
 	testCases := map[string]struct {
