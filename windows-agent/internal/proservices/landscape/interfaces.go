@@ -14,6 +14,7 @@ type serviceData interface {
 	config() Config
 	database() *database.DistroDB
 	hostname() string
+	homeDir() string
 }
 
 // serviceConn is an internal interface to manage the connection to the Landscape service.

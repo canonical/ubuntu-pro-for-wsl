@@ -146,7 +146,7 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 	}()
 
 	if rootfs := cmd.GetRootfs(); rootfs != nil {
-		if err = installFromURL(ctx, distro, rootfs); err != nil {
+		if err = installFromURL(ctx, e.homeDir(), distro, rootfs); err != nil {
 			return err
 		}
 	} else {
@@ -209,7 +209,7 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) error {
 	return nil
 }
 
-func installFromURL(ctx context.Context, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
+func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
 	// Since we are going to remove the tarball soon, I'd say it's fine to write it to a subfolder of the current working directory,
 	// as it will be somewhere inside the Windows Apps private folders:
 	// %USERPROFILE%\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\
@@ -241,13 +241,8 @@ func installFromURL(ctx context.Context, distro gowsl.Distro, rootfs *landscapea
 		return err
 	}
 
-	home := os.Getenv("UserProfile")
-	if home == "" {
-		return errors.New("%UserProfile% is empty")
-	}
-
 	// Create the directory that will contain the vhdx
-	vhdxDir := filepath.Join(home, "WSL", distro.Name())
+	vhdxDir := filepath.Join(homeDir, "WSL", distro.Name())
 	if err := os.MkdirAll(vhdxDir, 0700); err != nil {
 		return err
 	}

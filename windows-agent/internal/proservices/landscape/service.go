@@ -32,6 +32,8 @@ type Service struct {
 
 	// Cached hostName
 	hostName string
+	// Where to store persistent artifacts, such as an imported WSL VHDX.
+	homedir string
 
 	// Connection
 	conn   *connection
@@ -55,6 +57,7 @@ type Config interface {
 
 type options struct {
 	hostname string
+	homedir  string
 }
 
 // Option is an optional argument for NewClient.
@@ -77,6 +80,15 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 		opts.hostname = hostname
 	}
 
+	if opts.homedir == "" {
+		homeDir := os.Getenv("UserProfile")
+		if homeDir == "" {
+			return nil, errors.New("could not create public dir: %UserProfile% is not set")
+		}
+
+		opts.homedir = homeDir
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 
 	s = &Service{
@@ -85,6 +97,7 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 		conf:        conf,
 		db:          db,
 		hostName:    opts.hostname,
+		homedir:     opts.homedir,
 		connRetrier: newRetryConnection(),
 	}
 
@@ -362,6 +375,10 @@ func (s *Service) database() *database.DistroDB {
 
 func (s *Service) hostname() string {
 	return s.hostName
+}
+
+func (s *Service) homeDir() string {
+	return s.homedir
 }
 
 func (s *Service) connected() bool {
