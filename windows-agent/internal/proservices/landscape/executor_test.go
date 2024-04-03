@@ -285,6 +285,7 @@ func TestInstall(t *testing.T) {
 	}
 }
 
+//nolint:revive // Context goes after testing.T
 func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 	t.Helper()
 
