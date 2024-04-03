@@ -261,6 +261,7 @@ func download(w io.Writer, url string) (err error) {
 		}
 	}()
 
+	//nolint:gosec // G107 expects url to be const, but we are reading it from Landscape.
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

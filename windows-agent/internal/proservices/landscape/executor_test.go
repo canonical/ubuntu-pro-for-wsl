@@ -286,6 +286,7 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 	require.NoError(t, err, "Setup: mockRootfsFileServer could not listen")
 
 	go func() {
+		//nolint:gosec // For the sake of simplicity and readability.
 		err := http.Serve(lis, mux)
 		if err != nil {
 			t.Logf("mockRootfsFileServer: serve error: %v", err)
