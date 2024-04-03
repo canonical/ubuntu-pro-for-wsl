@@ -572,7 +572,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 	tb.cloudInit = &mockCloudInit{}
 
 	// Set up Landscape client
-	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"))
+	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(t.TempDir()))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 
 	err = clientService.Connect()
