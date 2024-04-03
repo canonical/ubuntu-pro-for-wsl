@@ -45,7 +45,7 @@ func TestAssignHost(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{},
+			testReceiveCommand(t, distroSettings{}, t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.confErr {
@@ -110,7 +110,7 @@ func TestReceiveCommandStartStop(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: !tc.dontRegisterDistro},
+			testReceiveCommand(t, distroSettings{install: !tc.dontRegisterDistro}, t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.wslErr {
@@ -164,7 +164,10 @@ func TestInstall(t *testing.T) {
 		emptyDistroName        bool
 		wslInstallErr          bool
 		appxDoesNotExist       bool
-		nonResponsiveServer    bool
+		// to improve testing coverage
+		nonResponsiveServer  bool
+		breakVhdxDir         bool
+		breakTarballCreation bool
 
 		sendRootfsURL      string
 		sendRootfsChecksum string
@@ -184,10 +187,12 @@ func TestInstall(t *testing.T) {
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
 
-		"Error when the rootfs isn't a valid tarball": {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
-		"Error when the checksum doesn't match":       {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
-		"Error when the rootfs doesn't exist":         {sendRootfsURL: "badresponse", wantInstalled: false},
-		"Error when URL doesn't respond":              {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
+		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
+		"Error when the checksum doesn't match":                         {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
+		"Error when the rootfs doesn't exist":                           {sendRootfsURL: "badresponse", wantInstalled: false},
+		"Error when URL doesn't respond":                                {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
+		"Error when the destination dir for the VHDX cannot be created": {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
+		"Error when the rootfs tarball cannot be created":               {sendRootfsURL: "goodfile", breakTarballCreation: true, wantInstalled: false},
 	}
 
 	for name, tc := range testCases {
@@ -207,7 +212,22 @@ func TestInstall(t *testing.T) {
 				settings.install = true
 			}
 
-			testReceiveCommand(t, settings,
+			// Here we depend on implementation details to increase test coverage :see_no_evil:
+			home := t.TempDir()
+			if tc.breakVhdxDir {
+				err := os.MkdirAll(filepath.Join(home, "WSL"), 0700)
+				require.NoError(t, err, "Setup: creating destination dir shouldn't fail")
+				f, err := os.Create(filepath.Join(home, "WSL", settings.name))
+				require.NoError(t, err, "Setup: breaking the destination dir shouldn't fail")
+				f.Close()
+			}
+
+			if tc.breakTarballCreation {
+				err := os.MkdirAll(filepath.Join(".", settings.name, settings.name+".tar.gz"), 0000)
+				require.NoError(t, err, "Setup: breaking the destination tarball shouldn't fail")
+			}
+
+			testReceiveCommand(t, settings, home,
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					var distroName string
@@ -346,7 +366,7 @@ func TestUninstall(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled},
+			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled}, t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.cloudInitRemoveErr {
@@ -405,7 +425,7 @@ func TestSetDefaultDistro(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled},
+			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled}, t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if !tc.alreadyDefault {
@@ -467,7 +487,7 @@ func TestSetShutdownHost(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: true},
+			testReceiveCommand(t, distroSettings{install: true}, t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					d := wsl.NewDistro(testBed.ctx, testBed.distro.Name())
@@ -537,7 +557,7 @@ type distroSettings struct {
 //   - Send the command
 //
 // Then, testAssertions is called.
-func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup func(*commandTestBed) *landscapeapi.Command, testAssertions func(*commandTestBed)) {
+func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir string, testSetup func(*commandTestBed) *landscapeapi.Command, testAssertions func(*commandTestBed)) {
 	t.Helper()
 	var tb commandTestBed
 
@@ -579,7 +599,10 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, testSetup f
 	tb.cloudInit = &mockCloudInit{}
 
 	// Set up Landscape client
-	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(t.TempDir()))
+	if homedir == "" {
+		homedir = t.TempDir()
+	}
+	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(homedir))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 
 	err = clientService.Connect()

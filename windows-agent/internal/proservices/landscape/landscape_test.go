@@ -168,9 +168,8 @@ func TestConnect(t *testing.T) {
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit)
-			require.NoError(t, err, "Setup: NewClient should return no errrors")
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
+			require.NoError(t, err, "Setup: NewClient should return no errors")
 
 			if tc.precancelContext {
 				cancel()
@@ -315,8 +314,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			const hostname = "HOSTNAME"
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -508,8 +506,7 @@ func TestAutoReconnection(t *testing.T) {
 			const hostname = "HOSTNAME"
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
@@ -743,8 +740,7 @@ func TestReconnect(t *testing.T) {
 			require.NoError(t, err, "Setup: database New should not return an error")
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit)
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()
