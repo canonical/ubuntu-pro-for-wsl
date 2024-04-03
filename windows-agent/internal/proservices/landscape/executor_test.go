@@ -164,6 +164,7 @@ func TestInstall(t *testing.T) {
 		emptyDistroName        bool
 		wslInstallErr          bool
 		appxDoesNotExist       bool
+		nonResponsiveServer    bool
 
 		sendRootfsURL      string
 		sendRootfsChecksum string
@@ -186,6 +187,7 @@ func TestInstall(t *testing.T) {
 		"Error when the rootfs isn't a valid tarball": {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
 		"Error when the checksum doesn't match":       {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
 		"Error when the rootfs doesn't exist":         {sendRootfsURL: "badresponse", wantInstalled: false},
+		"Error when URL doesn't respond":              {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
 	}
 
 	for name, tc := range testCases {
@@ -239,6 +241,10 @@ func TestInstall(t *testing.T) {
 
 					url, err := url.JoinPath(fileServerAddr, tc.sendRootfsURL)
 					require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
+
+					if tc.nonResponsiveServer {
+						url = "localhost:9"
+					}
 
 					return &landscapeapi.Command{
 						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{
