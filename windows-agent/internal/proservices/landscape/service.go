@@ -83,7 +83,7 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, args ...Option
 	if opts.homedir == "" {
 		homeDir := os.Getenv("UserProfile")
 		if homeDir == "" {
-			return nil, errors.New("could not create public dir: %UserProfile% is not set")
+			return nil, errors.New("could not locate the user profile dir: %UserProfile% is not set")
 		}
 
 		opts.homedir = homeDir

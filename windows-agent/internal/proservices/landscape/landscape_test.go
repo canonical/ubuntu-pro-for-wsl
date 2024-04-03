@@ -167,7 +167,7 @@ func TestConnect(t *testing.T) {
 			_, err = db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
-			service, err := landscape.New(ctx, conf, db)
+			service, err := landscape.New(ctx, conf, db, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: NewClient should return no errrors")
 
 			if tc.precancelContext {
@@ -312,7 +312,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -503,7 +503,7 @@ func TestAutoReconnection(t *testing.T) {
 
 			const hostname = "HOSTNAME"
 
-			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
@@ -736,7 +736,7 @@ func TestReconnect(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir(), conf)
 			require.NoError(t, err, "Setup: database New should not return an error")
 
-			service, err := landscape.New(ctx, conf, db)
+			service, err := landscape.New(ctx, conf, db, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()
