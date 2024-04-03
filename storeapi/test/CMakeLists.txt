@@ -85,4 +85,4 @@ if(MSVC)
  endif()
 
 include(GoogleTest)
-gtest_discover_tests(StoreApiServicesTests)
+gtest_discover_tests(StoreApiServicesTests DISCOVERY_MODE PRE_TEST)
