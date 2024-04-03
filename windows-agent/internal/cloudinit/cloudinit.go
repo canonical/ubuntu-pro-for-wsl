@@ -53,7 +53,7 @@ func (c CloudInit) Notify(ctx context.Context) {
 
 // WriteAgentData writes the agent's cloud-init data file.
 func (c CloudInit) WriteAgentData() (err error) {
-	defer decorate.OnError(&err, "could not create distro-specific cloud-init file")
+	defer decorate.OnError(&err, "could not create agent's cloud-init file")
 
 	cloudInit, err := marshalConfig(c.conf)
 	if err != nil {
