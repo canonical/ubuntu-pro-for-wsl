@@ -216,7 +216,7 @@ func TestInstall(t *testing.T) {
 			}
 
 			if tc.breakTarballCreation {
-				err := os.MkdirAll(filepath.Join(".", settings.name, settings.name+".tar.gz"), 0000)
+				err := os.MkdirAll(filepath.Join(".", settings.name, settings.name+".tar.gz"), 0700)
 				require.NoError(t, err, "Setup: breaking the destination tarball shouldn't fail")
 			}
 
