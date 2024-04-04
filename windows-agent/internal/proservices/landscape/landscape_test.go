@@ -51,6 +51,40 @@ account_name = testuser
 registration_key = password1
 `
 
+func TestNew(t *testing.T) {
+	testCases := map[string]struct {
+		breakHome bool
+
+		wantError bool
+	}{
+		"Success": {},
+
+		"Error when no user home is available": {breakHome: true, wantError: true},
+	}
+
+	for _, tc := range testCases {
+		ctx := context.Background()
+		conf := &mockConfig{}
+		db, err := database.New(ctx, t.TempDir(), conf)
+		require.NoError(t, err, "Setup: database New should not return an error")
+
+		// Note that these tests cannot be run in parallel due to manipulating
+		// these test environment variables
+		if tc.breakHome {
+			t.Setenv("UserProfile", "")
+			t.Setenv("HOME", "")
+		}
+
+		_, err = landscape.New(ctx, conf, db)
+
+		if tc.wantError {
+			require.Error(t, err, "Creating a new Landscape instance should fail")
+			return
+		}
+		require.NoError(t, err, "Creating a new Landscape instance should not fail")
+	}
+}
+
 func TestConnect(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
