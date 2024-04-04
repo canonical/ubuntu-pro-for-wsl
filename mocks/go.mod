@@ -2,7 +2,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/mocks
 
 go 1.22.0
 
-toolchain go1.22.1
+toolchain go1.22.2
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922
@@ -19,7 +19,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
