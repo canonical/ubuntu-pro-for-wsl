@@ -234,7 +234,7 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) error {
 func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
 	// Since we are going to remove the tarball soon, I'd say it's fine to write it to a subfolder of the current working directory,
 	// as it will be somewhere inside the Windows Apps private folders:
-	// %USERPROFILE%\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\
+	// %USERPROFILE%\AppData\Local\Packages\CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc\LocalState\
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
