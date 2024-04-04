@@ -6,6 +6,7 @@ pieces that make up the Ubuntu Pro for WSL tool and the value it provides.
 ```{toctree}
 :titlesonly:
 
+firewall_requirements
 landscape
 landscape_client
 ubuntu_pro

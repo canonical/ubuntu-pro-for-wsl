@@ -1,11 +1,12 @@
 # How to install and configure UP4W
 
-## 1. Check that you meet UP4W prerequisites
+## 1. Check that you meet the prerequisites
 
 To install and configure UP4W you will need:
 
 - A Windows host
 - An Ubuntu Pro token
+- Verify that the [firewall rules are correctly set up](../reference/firewall_requirements.md)
 
 
 <details><summary> How do I get an Ubuntu Pro token? </summary> 
