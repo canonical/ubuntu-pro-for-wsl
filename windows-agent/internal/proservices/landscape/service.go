@@ -89,9 +89,9 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit Clou
 	}
 
 	if opts.homedir == "" {
-		homeDir := os.Getenv("UserProfile")
-		if homeDir == "" {
-			return nil, errors.New("could not locate the user profile dir: %UserProfile% is not set")
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("could not locate the user home dir: %v", err)
 		}
 
 		opts.homedir = homeDir
