@@ -2,7 +2,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/common
 
 go 1.22.0
 
-toolchain go1.22.1
+toolchain go1.22.2
 
 require (
 	github.com/golang/protobuf v1.5.4

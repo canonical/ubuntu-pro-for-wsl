@@ -2,7 +2,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 
 go 1.22.0
 
-toolchain go1.22.1
+toolchain go1.22.2
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922

@@ -156,7 +156,7 @@ cloud.google.com/go/contactcenterinsights v1.12.1/go.mod h1:HHX5wrz5LHVAwfI2smIo
 cloud.google.com/go/container v1.7.0/go.mod h1:Dp5AHtmothHGX3DwwIHPgq45Y8KmNsgN3amoYfxVkLo=
 cloud.google.com/go/container v1.13.1/go.mod h1:6wgbMPeQRw9rSnKBCAJXnds3Pzj03C4JHamr8asWKy4=
 cloud.google.com/go/container v1.15.0/go.mod h1:ft+9S0WGjAyjDggg5S06DXj+fHJICWg8L7isCQe9pQA=
-cloud.google.com/go/container v1.22.1/go.mod h1:lTNExE2R7f+DLbAN+rJiKTisauFCaoDq6NURZ83eVH4=
+cloud.google.com/go/container v1.22.2/go.mod h1:lTNExE2R7f+DLbAN+rJiKTisauFCaoDq6NURZ83eVH4=
 cloud.google.com/go/container v1.24.0/go.mod h1:lTNExE2R7f+DLbAN+rJiKTisauFCaoDq6NURZ83eVH4=
 cloud.google.com/go/container v1.27.1/go.mod h1:b1A1gJeTBXVLQ6GGw9/9M4FG94BEGsqJ5+t4d/3N7O4=
 cloud.google.com/go/container v1.29.0/go.mod h1:b1A1gJeTBXVLQ6GGw9/9M4FG94BEGsqJ5+t4d/3N7O4=
