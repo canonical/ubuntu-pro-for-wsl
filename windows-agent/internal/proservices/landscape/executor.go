@@ -276,7 +276,7 @@ func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, ro
 func download(ctx context.Context, f io.Writer, url, checksum string) (err error) {
 	defer decorate.OnError(&err, "could not download %q", url)
 
-	//nolint:gosec // G107 expects url to be const, but we are reading it from Landscape.
+	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

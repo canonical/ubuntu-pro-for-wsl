@@ -164,10 +164,9 @@ func TestInstall(t *testing.T) {
 		emptyDistroName        bool
 		wslInstallErr          bool
 		appxDoesNotExist       bool
-		// to improve testing coverage
-		nonResponsiveServer  bool
-		breakVhdxDir         bool
-		breakTarballCreation bool
+		nonResponsiveServer    bool
+		breakVhdxDir           bool
+		breakTarballCreation   bool
 
 		sendRootfsURL      string
 		sendRootfsChecksum string
@@ -332,7 +331,7 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 	require.NoError(t, err, "Setup: mockRootfsFileServer could not listen")
 
 	go func() {
-		//nolint:gosec // For the sake of simplicity and readability.
+		//nolint:gosec // ignore G114 for the sake of simplicity and readability.
 		err := http.Serve(lis, mux)
 		if err != nil {
 			t.Logf("mockRootfsFileServer: serve error: %v", err)
