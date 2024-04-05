@@ -75,13 +75,14 @@ func TestNew(t *testing.T) {
 			t.Setenv("HOME", "")
 		}
 
-		_, err = landscape.New(ctx, conf, db)
+		inst, err := landscape.New(ctx, conf, db)
 
 		if tc.wantError {
 			require.Error(t, err, "Creating a new Landscape instance should fail")
 			return
 		}
 		require.NoError(t, err, "Creating a new Landscape instance should not fail")
+		require.NotNil(t, inst, "Landscape instance should not be nil")
 	}
 }
 
