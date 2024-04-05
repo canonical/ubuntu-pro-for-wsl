@@ -3,6 +3,7 @@ package landscape_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -151,7 +152,13 @@ func TestInstall(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	fileServerAddr := mockRootfsFileServer(t, ctx)
+	fileServerAddr, closer := mockRootfsFileServer(t, ctx)
+	t.Cleanup(func() {
+		err := closer.Close()
+		if err != nil {
+			t.Logf("Could not close mock fileserver: %v", err)
+		}
+	})
 
 	emptyFileChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	mockErrorChecksum := "afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a"
@@ -311,19 +318,19 @@ func TestInstall(t *testing.T) {
 }
 
 //nolint:revive // Context goes after testing.T
-func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
+func mockRootfsFileServer(t *testing.T, ctx context.Context) (string, io.Closer) {
 	t.Helper()
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/goodfile", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
-	mux.HandleFunc("/badfile", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
+	mux.HandleFunc("GET /badfile", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "MOCK_ERROR")
 		if err != nil {
 			t.Logf("mockRootfsFileServer: could not write response: %v", err)
 		}
 	})
-	mux.HandleFunc("/badresponse", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /badresponse", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
@@ -340,7 +347,7 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 
 	addr := "http://" + lis.Addr().String()
 	t.Logf("Serving on %s", addr)
-	return addr
+	return addr, lis
 }
 
 func TestUninstall(t *testing.T) {
