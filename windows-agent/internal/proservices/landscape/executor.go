@@ -220,7 +220,9 @@ func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_Sh
 	return gowsl.Shutdown(ctx)
 }
 
-func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) error {
+func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err error) {
+	defer decorate.OnError(&err, "can't install from Microsoft Store")
+
 	if err := gowsl.Install(ctx, distro.Name()); err != nil {
 		return err
 	}
@@ -233,6 +235,8 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) error {
 }
 
 func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
+	defer decorate.OnError(&err, "can't install from URL: %q", rootfs.GetUrl())
+
 	tmpDir := filepath.Join(os.TempDir(), distro.Name())
 	if err := os.MkdirAll(tmpDir, 0700); err != nil {
 		return err
