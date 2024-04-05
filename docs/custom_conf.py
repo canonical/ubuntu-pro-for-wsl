@@ -124,9 +124,6 @@ linkcheck_ignore = [
 
     # Linkcheck does not have access to the repo
     'https://github.com/canonical/ubuntu-pro-for-wsl/*',
-
-    # Not a URL in the reference document
-    r'http://contracts.canonical.com'
     ]
 
 # Pages on which to ignore anchors
