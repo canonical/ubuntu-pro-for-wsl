@@ -182,16 +182,16 @@ func TestInstall(t *testing.T) {
 		wantInstalled            bool
 		wantNonRootUser          bool
 	}{
-		"Success":            {wantCouldInitWriteCalled: true, wantInstalled: true},
-		"With no cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
-		"Error when cannot write cloud-init file": {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
-		"Success with a rootfs":                   {sendRootfsURL: "goodfile", wantInstalled: true},
-		"Success with a rootfs and a checksum":    {sendRootfsURL: "goodfile", sendRootfsChecksum: emptyFileChecksum, wantInstalled: true},
+		"From the store":                    {wantInstalled: true, wantNonRootUser: true, wantCouldInitWriteCalled: true},
+		"From a rootfs URL":                 {sendRootfsURL: "goodfile", wantInstalled: true},
+		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", sendRootfsChecksum: emptyFileChecksum, wantInstalled: true},
+		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
+		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
 
 		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
 		"Error when the checksum doesn't match":                         {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
