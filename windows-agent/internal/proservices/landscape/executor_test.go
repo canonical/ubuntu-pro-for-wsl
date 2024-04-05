@@ -267,7 +267,7 @@ func TestUninstall(t *testing.T) {
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.cloudInitRemoveErr {
-						testBed.cloudInit.writeErr = true
+						testBed.cloudInit.removeErr = true
 					}
 
 					if tc.wslUninstallErr {
