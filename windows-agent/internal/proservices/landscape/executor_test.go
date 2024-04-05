@@ -28,10 +28,12 @@ func TestAssignHost(t *testing.T) {
 
 	testCases := map[string]struct {
 		confErr bool
+		uid     string
 		wantErr bool
 	}{
-		"Success ": {},
+		"Success with some uid": {uid: "HostUID123"},
 
+		"Error with an empty uid":            {uid: "", wantErr: true},
 		"Error when config returns an error": {confErr: true, wantErr: true},
 	}
 
@@ -47,7 +49,7 @@ func TestAssignHost(t *testing.T) {
 					}
 
 					return &landscapeapi.Command{
-						Cmd: &landscapeapi.Command_AssignHost_{AssignHost: &landscapeapi.Command_AssignHost{Uid: "HostUID123"}},
+						Cmd: &landscapeapi.Command_AssignHost_{AssignHost: &landscapeapi.Command_AssignHost{Uid: tc.uid}},
 					}
 				},
 				// Test assertions
@@ -55,7 +57,7 @@ func TestAssignHost(t *testing.T) {
 					const maxTimeout = time.Second
 					if tc.wantErr {
 						time.Sleep(maxTimeout)
-						require.NotEqual(t, "HostUID123", testBed.conf.landscapeAgentUID, "Landscape UID should not have been assigned")
+						require.NotEqual(t, tc.uid, testBed.conf.landscapeAgentUID, "Landscape UID should not have been assigned")
 						return
 					}
 
@@ -63,7 +65,7 @@ func TestAssignHost(t *testing.T) {
 						testBed.conf.mu.Lock()
 						defer testBed.conf.mu.Unlock()
 
-						return testBed.conf.landscapeAgentUID == "HostUID123"
+						return testBed.conf.landscapeAgentUID == tc.uid
 					}, maxTimeout, 100*time.Millisecond, "Landscape client should have overridden the initial UID sent by the server")
 				})
 		})
