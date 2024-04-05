@@ -260,7 +260,10 @@ func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, ro
 	}
 
 	if _, err := gowsl.Import(ctx, distro.Name(), tarball, vhdxDir); err != nil {
-		_ = os.RemoveAll(vhdxDir)
+		err = os.RemoveAll(vhdxDir)
+		if err != nil {
+			log.Warningf(ctx, "could not cleanup install directory: %v", err)
+		}
 		return err
 	}
 	return nil
