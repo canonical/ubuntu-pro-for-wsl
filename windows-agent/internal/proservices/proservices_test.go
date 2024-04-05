@@ -37,6 +37,7 @@ func TestNew(t *testing.T) {
 		breakNewDistroDB     bool
 		breakCertificatesDir bool
 		breakCA              bool
+		breakCloudInit       bool
 
 		wantErr bool
 	}{
@@ -46,6 +47,7 @@ func TestNew(t *testing.T) {
 		"Error when database cannot create its dump file":     {breakNewDistroDB: true, wantErr: true},
 		"Error when certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
 		"Error when CA certificate cannot be created":         {breakCA: true, wantErr: true},
+		"Error when cloud-init dir cannot be created":         {breakCloudInit: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -71,6 +73,12 @@ func TestNew(t *testing.T) {
 			}
 			if tc.breakCA {
 				require.NoError(t, os.MkdirAll(filepath.Join(publicDir, common.CertificatesDir, common.RootCACertFileName), 0700), "Setup: could not break the root CA certificate file")
+			}
+
+			if tc.breakCloudInit {
+				f, err := os.Create(filepath.Join(publicDir, ".cloud-init"))
+				require.NoError(t, err, "Setup: could not write the file that replaces cloud-init data directory")
+				f.Close()
 			}
 
 			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
