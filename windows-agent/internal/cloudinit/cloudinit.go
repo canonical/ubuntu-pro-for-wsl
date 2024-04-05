@@ -122,12 +122,8 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 func marshalConfig(conf Config) ([]byte, error) {
 	w := &bytes.Buffer{}
 
-	if _, err := fmt.Fprintln(w, "# cloud-init"); err != nil {
-		return nil, fmt.Errorf("could not write # cloud-init stenza: %v", err)
-	}
-
-	if _, err := fmt.Fprintln(w, "# This file was generated automatically and must not be edited"); err != nil {
-		return nil, fmt.Errorf("could not write warning message: %v", err)
+	if _, err := fmt.Fprintln(w, "# cloud-init\n# This file was generated automatically and must not be edited"); err != nil {
+		return nil, fmt.Errorf("could not write # cloud-init stenza and warning message: %v", err)
 	}
 
 	contents := make(map[string]interface{})
