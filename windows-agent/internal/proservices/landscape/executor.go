@@ -14,6 +14,7 @@ import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
+	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )
 
@@ -255,11 +256,8 @@ func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, ro
 	}
 	defer f.Close()
 
-	if err := download(f, rootfs.GetUrl()); err != nil {
-		return err
-	}
-
-	if err := checksumMatches(tarball, rootfs.GetSha256Sum()); err != nil {
+	err = download(ctx, f, rootfs.GetUrl(), rootfs.GetSha256Sum())
+	if err != nil {
 		return err
 	}
 
@@ -276,61 +274,47 @@ func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, ro
 	return nil
 }
 
-func download(w io.Writer, url string) (err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("could not download %q: %v", url, err)
-		}
-	}()
+func download(ctx context.Context, f io.Writer, url, checksum string) (err error) {
+	defer decorate.OnError(&err, "could not download %q", url)
 
 	//nolint:gosec // G107 expects url to be const, but we are reading it from Landscape.
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("http request failed with code %d", resp.StatusCode)
 	}
 
-	if _, err := io.Copy(w, resp.Body); err != nil {
+	// Verify checksum and write file to disk
+	reader := io.TeeReader(resp.Body, f)
+	match, err := checksumMatches(ctx, reader, checksum)
+	if err != nil {
 		return err
+	}
+	if !match {
+		return errors.New("got unexpected checksum")
 	}
 
 	return nil
 }
 
-func checksumMatches(path, wantChecksum string) (err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("error checking checksum for: %q: %v", path, err)
-		}
-	}()
-
-	if wantChecksum == "" {
-		return nil
-	}
+func checksumMatches(ctx context.Context, reader io.Reader, wantChecksum string) (match bool, err error) {
+	defer decorate.OnError(&err, "error checking checksum for: %q", reader)
 
 	// Checksum of the rootfs
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return err
+	if _, err := io.Copy(h, reader); err != nil {
+		return match, err
 	}
 	gotChecksum := fmt.Sprintf("%x", h.Sum(nil))
 
-	out, err := os.ReadFile(path)
-
 	// Compare checksums
-	if gotChecksum != wantChecksum {
-		return fmt.Errorf("checksums do not match (want: %s got: %s) (from %s)", wantChecksum, gotChecksum, string(out))
+	match = wantChecksum == "" || wantChecksum == gotChecksum
+	if !match {
+		log.Errorf(ctx, "checksums do not match (want: %s got: %s)", wantChecksum, gotChecksum)
 	}
 
-	return nil
+	return match, nil
 }
