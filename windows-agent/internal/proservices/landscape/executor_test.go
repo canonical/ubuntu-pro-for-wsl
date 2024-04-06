@@ -173,7 +173,8 @@ func TestInstall(t *testing.T) {
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
 		breakVhdxDir           bool
-		breakTarballCreation   bool
+		breakTarFile           bool
+		breakTempDir           bool
 
 		sendRootfsURL      string
 		sendRootfsChecksum string
@@ -198,7 +199,8 @@ func TestInstall(t *testing.T) {
 		"Error when the rootfs doesn't exist":                           {sendRootfsURL: "badresponse", wantInstalled: false},
 		"Error when URL doesn't respond":                                {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
 		"Error when the destination dir for the VHDX cannot be created": {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
-		"Error when the rootfs tarball cannot be created":               {sendRootfsURL: "goodfile", breakTarballCreation: true, wantInstalled: false},
+		"Error when the rootfs tarball cannot be created":               {sendRootfsURL: "goodfile", breakTarFile: true, wantInstalled: false},
+		"Error when the rootfs temporary dir cannot be created":         {sendRootfsURL: "goodfile", breakTempDir: true, wantInstalled: false},
 	}
 
 	for name, tc := range testCases {
@@ -228,9 +230,14 @@ func TestInstall(t *testing.T) {
 				f.Close()
 			}
 
-			if tc.breakTarballCreation {
+			if tc.breakTarFile {
 				err := os.MkdirAll(filepath.Join(os.TempDir(), settings.name, settings.name+".tar.gz"), 0700)
 				require.NoError(t, err, "Setup: breaking the destination tarball shouldn't fail")
+			}
+
+			if tc.breakTempDir {
+				_, err := os.Create(filepath.Join(os.TempDir(), settings.name))
+				require.NoError(t, err, "Setup: breaking the destination temp dir shouldn't fail")
 			}
 
 			testReceiveCommand(t, settings, home,
