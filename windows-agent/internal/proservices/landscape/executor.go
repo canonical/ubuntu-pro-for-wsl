@@ -287,13 +287,20 @@ func download(ctx context.Context, f io.Writer, url, checksum string) (err error
 	}
 
 	// Verify checksum and write file to disk
-	reader := io.TeeReader(resp.Body, f)
-	match, err := checksumMatches(ctx, reader, checksum)
-	if err != nil {
-		return err
-	}
-	if !match {
-		return errors.New("got unexpected checksum")
+	r := io.TeeReader(resp.Body, f)
+	if checksum != "" {
+		match, err := checksumMatches(ctx, r, checksum)
+		if err != nil {
+			return err
+		}
+		if !match {
+			return fmt.Errorf("checksum %s for %s does not match", checksum, url)
+		}
+	} else {
+		_, err := io.Copy(io.Discard, r)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -305,15 +312,11 @@ func checksumMatches(ctx context.Context, reader io.Reader, wantChecksum string)
 	// Checksum of the rootfs
 	h := sha256.New()
 	if _, err := io.Copy(h, reader); err != nil {
-		return match, err
+		return false, err
 	}
 	gotChecksum := fmt.Sprintf("%x", h.Sum(nil))
+	log.Debugf(ctx, "Want checksum: %s, Got checksum: %s", wantChecksum, gotChecksum)
 
 	// Compare checksums
-	match = wantChecksum == "" || wantChecksum == gotChecksum
-	if !match {
-		log.Errorf(ctx, "checksums do not match (want: %s got: %s)", wantChecksum, gotChecksum)
-	}
-
-	return match, nil
+	return wantChecksum == gotChecksum, nil
 }
