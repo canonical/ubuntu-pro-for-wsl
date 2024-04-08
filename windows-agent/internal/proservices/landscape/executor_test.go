@@ -152,13 +152,7 @@ func TestInstall(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	fileServerAddr, closer := mockRootfsFileServer(t, ctx)
-	t.Cleanup(func() {
-		err := closer.Close()
-		if err != nil {
-			t.Logf("Could not close mock fileserver: %v", err)
-		}
-	})
+	fileServerAddr, _ := mockRootfsFileServer(t, ctx)
 
 	emptyFileChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	mockErrorChecksum := "afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a"
@@ -355,6 +349,12 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) (string, io.Closer)
 			t.Logf("mockRootfsFileServer: serve error: %v", err)
 		}
 	}()
+
+	t.Cleanup(func() {
+		if err := lis.Close(); err != nil {
+			t.Logf("Cleanup: could not close mock fileserver: %v", err)
+		}
+	})
 
 	addr := "http://" + lis.Addr().String()
 	t.Logf("Serving on %s", addr)
