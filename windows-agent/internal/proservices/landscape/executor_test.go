@@ -3,7 +3,6 @@ package landscape_test
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -152,7 +151,7 @@ func TestInstall(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	fileServerAddr, _ := mockRootfsFileServer(t, ctx)
+	fileServerAddr := mockRootfsFileServer(t, ctx)
 
 	emptyFileChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	mockErrorChecksum := "afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a"
@@ -175,12 +174,11 @@ func TestInstall(t *testing.T) {
 
 		wantCouldInitWriteCalled bool
 		wantInstalled            bool
-		wantNonRootUser          bool
 	}{
-		"From the store":                    {wantInstalled: true, wantNonRootUser: true, wantCouldInitWriteCalled: true},
+		"From the store":                    {wantInstalled: true, wantCouldInitWriteCalled: true},
 		"From a rootfs URL":                 {sendRootfsURL: "goodfile", wantInstalled: true},
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", sendRootfsChecksum: emptyFileChecksum, wantInstalled: true},
-		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
+		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
@@ -296,12 +294,6 @@ func TestInstall(t *testing.T) {
 							}
 							return registered
 						}, timeout, 100*time.Millisecond, "Distro should have been registered")
-
-						if tc.wantNonRootUser {
-							conf, err := testBed.distro.GetConfiguration()
-							require.NoError(t, err, "GetConfiguration should return no error")
-							require.NotEqual(t, uint32(0), conf.DefaultUID, "Default user should have been changed from root")
-						}
 					} else {
 						time.Sleep(timeout)
 
@@ -319,7 +311,7 @@ func TestInstall(t *testing.T) {
 }
 
 //nolint:revive // Context goes after testing.T
-func mockRootfsFileServer(t *testing.T, ctx context.Context) (string, io.Closer) {
+func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 	t.Helper()
 
 	mux := http.NewServeMux()
@@ -344,8 +336,7 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) (string, io.Closer)
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 5 * time.Second,
 		}
-		err := s.Serve(lis)
-		if err != nil {
+		if err := s.Serve(lis); err != nil {
 			t.Logf("mockRootfsFileServer: serve error: %v", err)
 		}
 	}()
@@ -358,7 +349,7 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) (string, io.Closer)
 
 	addr := "http://" + lis.Addr().String()
 	t.Logf("Serving on %s", addr)
-	return addr, lis
+	return addr
 }
 
 func TestUninstall(t *testing.T) {

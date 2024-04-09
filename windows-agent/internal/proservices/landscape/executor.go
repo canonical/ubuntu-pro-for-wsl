@@ -297,8 +297,7 @@ func download(ctx context.Context, f io.Writer, url, checksum string) (err error
 			return fmt.Errorf("checksum %s for %s does not match", checksum, url)
 		}
 	} else {
-		_, err := io.Copy(io.Discard, r)
-		if err != nil {
+		if _, err := io.Copy(io.Discard, r); err != nil {
 			return err
 		}
 	}
