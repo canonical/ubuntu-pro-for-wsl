@@ -167,3 +167,18 @@ final $typed_data.Uint8List mSGDescriptor = $convert.base64Decode(
     'CgNNU0cSGwoId3NsX25hbWUYASABKAlIAFIHd3NsTmFtZRIYCgZyZXN1bHQYAiABKAlIAFIGcm'
     'VzdWx0QgYKBGRhdGE=');
 
+@$core.Deprecated('Use authTargetDescriptor instead')
+const AuthTarget$json = {
+  '1': 'AuthTarget',
+  '2': [
+    {'1': 'host', '3': 1, '4': 1, '5': 9, '10': 'host'},
+    {'1': 'port', '3': 2, '4': 1, '5': 9, '10': 'port'},
+    {'1': 'authToken', '3': 3, '4': 1, '5': 9, '10': 'authToken'},
+  ],
+};
+
+/// Descriptor for `AuthTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List authTargetDescriptor = $convert.base64Decode(
+    'CgpBdXRoVGFyZ2V0EhIKBGhvc3QYASABKAlSBGhvc3QSEgoEcG9ydBgCIAEoCVIEcG9ydBIcCg'
+    'lhdXRoVG9rZW4YAyABKAlSCWF1dGhUb2tlbg==');
+

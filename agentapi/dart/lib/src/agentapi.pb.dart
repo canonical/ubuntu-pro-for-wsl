@@ -760,6 +760,84 @@ class MSG extends $pb.GeneratedMessage {
   void clearResult() => clearField(2);
 }
 
+class AuthTarget extends $pb.GeneratedMessage {
+  factory AuthTarget({
+    $core.String? host,
+    $core.String? port,
+    $core.String? authToken,
+  }) {
+    final $result = create();
+    if (host != null) {
+      $result.host = host;
+    }
+    if (port != null) {
+      $result.port = port;
+    }
+    if (authToken != null) {
+      $result.authToken = authToken;
+    }
+    return $result;
+  }
+  AuthTarget._() : super();
+  factory AuthTarget.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AuthTarget.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AuthTarget', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'host')
+    ..aOS(2, _omitFieldNames ? '' : 'port')
+    ..aOS(3, _omitFieldNames ? '' : 'authToken', protoName: 'authToken')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  AuthTarget clone() => AuthTarget()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  AuthTarget copyWith(void Function(AuthTarget) updates) => super.copyWith((message) => updates(message as AuthTarget)) as AuthTarget;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AuthTarget create() => AuthTarget._();
+  AuthTarget createEmptyInstance() => create();
+  static $pb.PbList<AuthTarget> createRepeated() => $pb.PbList<AuthTarget>();
+  @$core.pragma('dart2js:noInline')
+  static AuthTarget getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AuthTarget>(create);
+  static AuthTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get host => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set host($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasHost() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHost() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get port => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set port($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPort() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPort() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get authToken => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set authToken($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAuthToken() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthToken() => clearField(3);
+}
+
 
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
 const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

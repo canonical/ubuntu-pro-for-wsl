@@ -78,3 +78,9 @@ message MSG {
         string result = 2;      // Used in response to a command
     }
 }
+
+message AuthTarget { // Defined here for serialization purposes, not for sending via any RPC.
+    string host = 1;
+    string port = 2; // Ideally an int16 (which doesn't exist in proto3), but making an int just complicates (de)serialization.
+    string authToken = 3;
+}
