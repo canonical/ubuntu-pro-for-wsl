@@ -3,12 +3,15 @@ package agent
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -131,10 +134,16 @@ func (a *App) serve(ctx context.Context, args ...option) error {
 	}
 
 	log.Debugf(ctx, "Agent private directory: %s", privateDir)
+	// This will be written to the listening port file
+	authToken := generateAuthtoken()
+	// This will be checked by the server.
+	// Just copying the authToken to the listening port file is not enough, one must know the secret encoding :)
+	authTokenRaw := "Bearer " + base64.StdEncoding.EncodeToString([]byte(authToken))
 
 	proservices, err := proservices.New(ctx,
 		publicDir,
 		privateDir,
+		authTokenRaw,
 		proservices.WithRegistry(opt.registry),
 	)
 	if err != nil {
@@ -147,7 +156,7 @@ func (a *App) serve(ctx context.Context, args ...option) error {
 
 	close(a.ready)
 
-	return a.daemon.Serve(ctx)
+	return a.daemon.Serve(ctx, authToken)
 }
 
 // installVerbosityFlag adds the -v and -vv options and returns the reference to it.
@@ -289,4 +298,11 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	log.Debug(ctx, "Debug mode is enabled")
 
 	return func() { _ = f.Close() }, nil
+}
+
+// generateAuthtoken generates a fixed size token to be used as a base for authenticated requests.
+func generateAuthtoken() string {
+	h := sha256.New()
+	h.Write([]byte(time.Now().Format(time.RFC850)))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
