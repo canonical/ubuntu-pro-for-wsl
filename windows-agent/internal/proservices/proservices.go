@@ -3,6 +3,8 @@ package proservices
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
@@ -18,6 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 // Manager is the orchestrator of GRPC API services and business logic.
@@ -27,6 +30,7 @@ type Manager struct {
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
+	auth               *Authenticator
 }
 
 // options are the configurable functional options for the daemon.
@@ -48,7 +52,7 @@ func WithRegistry(registry registrywatcher.Registry) func(o *options) {
 // It instantiates both ui and wsl instance services.
 //
 // Once done, Stop must be called to deallocate resources.
-func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s Manager, err error) {
+func New(ctx context.Context, publicDir, privateDir string, authToken string, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	defer func() {
@@ -111,6 +115,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		log.Warningf(ctx, err.Error())
 	}
 
+	s.auth = &Authenticator{authToken: authToken}
 	return s, nil
 }
 
@@ -138,9 +143,10 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 
 	grpcServer := grpc.NewServer(grpc.StreamInterceptor(
 		interceptorschain.StreamServer(
+			grpc.StreamServerInterceptor(m.auth.ensureValidTokenStream),
 			log.StreamServerInterceptor(logrus.StandardLogger()),
 			logconnections.StreamServerInterceptor(),
-		)))
+		)), grpc.UnaryInterceptor(m.auth.ensureValidTokenUnary))
 	agent_api.RegisterUIServer(grpcServer, &m.uiService)
 	agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
 
@@ -152,4 +158,53 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 func InitWSLAPI() {
 	d := wsl.NewDistro(context.Background(), "Whatever")
 	_, _ = d.GetConfiguration()
+}
+
+// Authenticator holds the logic to authenticate and authorize gRPC requests based on a token provided via their metadata.
+type Authenticator struct {
+	authToken string
+}
+
+// isValid validates the authorization.
+func (a *Authenticator) isValid(authorization string) bool {
+	if len(authorization) < 1 {
+		return false
+	}
+
+	return authorization == a.authToken
+}
+
+// ensureValidToken ensures a valid token exists within a request's metadata. If
+// the token is missing or invalid, the interceptor blocks execution of the
+// handler and returns an error. Otherwise, the interceptor invokes the unary
+// handler.
+func (a *Authenticator) ensureValidToken(ctx context.Context) error {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return errors.New("missing metadata")
+	}
+
+	gotToken := md["authorization"][0]
+	if !a.isValid(gotToken) {
+		log.Debugf(ctx, "Authentication failed for request with auth token %q", gotToken)
+		return fmt.Errorf("invalid token: %q", gotToken)
+	}
+
+	return nil
+}
+
+// ensureValidTokenUnary implements an authentication interceptor for unary calls
+func (a *Authenticator) ensureValidTokenUnary(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	if err := a.ensureValidToken(ctx); err != nil {
+		return nil, err
+	}
+	return handler(ctx, req)
+}
+
+// ensureValidTokenStream implements an authentication interceptor for streaming calls
+func (a *Authenticator) ensureValidTokenStream(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	if err := a.ensureValidToken(ss.Context()); err != nil {
+		return err
+	}
+	return handler(srv, ss)
 }
