@@ -14,7 +14,7 @@ func WithHomeDir(homeDir string) Option {
 	}
 }
 
-// WithDownloadDir allows tests to override temporary download directories
+// WithDownloadDir allows tests to override temporary download directories.
 func WithDownloadDir(downloadDir string) Option {
 	return func(o *options) {
 		o.downloaddir = downloadDir
