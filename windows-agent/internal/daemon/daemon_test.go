@@ -85,7 +85,7 @@ func TestStartQuit(t *testing.T) {
 					addrContents, err = os.ReadFile(addrPath)
 					require.NoError(t, err, "Address file should be readable")
 					return string(addrContents) != "# Old port file"
-				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
+				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing address file should be overwritten after daemon.New()")
 			} else {
 				requireWaitPathExists(t, addrPath, "Serve should create an address file")
 				addrContents, err = os.ReadFile(addrPath)
