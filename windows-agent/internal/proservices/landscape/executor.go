@@ -157,7 +157,7 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 	}()
 
 	if rootfs := cmd.GetRootfs(); rootfs != nil {
-		if err = installFromURL(ctx, e.homeDir(), distro, rootfs); err != nil {
+		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, rootfs); err != nil {
 			return err
 		}
 	} else {
@@ -234,10 +234,10 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err er
 	return nil
 }
 
-func installFromURL(ctx context.Context, homeDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
+func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
 	defer decorate.OnError(&err, "can't install from URL: %q", rootfs.GetUrl())
 
-	tmpDir := filepath.Join(os.TempDir(), distro.Name())
+	tmpDir := filepath.Join(downloadDir, distro.Name())
 	if err := os.MkdirAll(tmpDir, 0700); err != nil {
 		return err
 	}

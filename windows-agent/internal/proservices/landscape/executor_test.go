@@ -45,7 +45,7 @@ func TestAssignHost(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{}, t.TempDir(),
+			testReceiveCommand(t, distroSettings{}, t.TempDir(), t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.confErr {
@@ -110,7 +110,7 @@ func TestReceiveCommandStartStop(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: !tc.dontRegisterDistro}, t.TempDir(),
+			testReceiveCommand(t, distroSettings{install: !tc.dontRegisterDistro}, t.TempDir(), t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.wslErr {
@@ -222,17 +222,18 @@ func TestInstall(t *testing.T) {
 				f.Close()
 			}
 
+			downloadDir := t.TempDir()
 			if tc.breakTarFile {
-				err := os.MkdirAll(filepath.Join(os.TempDir(), settings.name, settings.name+".tar.gz"), 0700)
+				err := os.MkdirAll(filepath.Join(downloadDir, settings.name, settings.name+".tar.gz"), 0700)
 				require.NoError(t, err, "Setup: breaking the destination tarball shouldn't fail")
 			}
 
 			if tc.breakTempDir {
-				_, err := os.Create(filepath.Join(os.TempDir(), settings.name))
+				_, err := os.Create(filepath.Join(downloadDir, settings.name))
 				require.NoError(t, err, "Setup: breaking the destination temp dir shouldn't fail")
 			}
 
-			testReceiveCommand(t, settings, home,
+			testReceiveCommand(t, settings, home, downloadDir,
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					var distroName string
@@ -374,7 +375,7 @@ func TestUninstall(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled}, t.TempDir(),
+			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled}, t.TempDir(), t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if tc.cloudInitRemoveErr {
@@ -433,7 +434,7 @@ func TestSetDefaultDistro(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled}, t.TempDir(),
+			testReceiveCommand(t, distroSettings{install: !tc.distroNotInstalled}, t.TempDir(), t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					if !tc.alreadyDefault {
@@ -495,7 +496,7 @@ func TestSetShutdownHost(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			testReceiveCommand(t, distroSettings{install: true}, t.TempDir(),
+			testReceiveCommand(t, distroSettings{install: true}, t.TempDir(), t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					d := wsl.NewDistro(testBed.ctx, testBed.distro.Name())
@@ -565,7 +566,7 @@ type distroSettings struct {
 //   - Send the command
 //
 // Then, testAssertions is called.
-func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir string, testSetup func(*commandTestBed) *landscapeapi.Command, testAssertions func(*commandTestBed)) {
+func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir string, downloaddir string, testSetup func(*commandTestBed) *landscapeapi.Command, testAssertions func(*commandTestBed)) {
 	t.Helper()
 	var tb commandTestBed
 
@@ -610,7 +611,10 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	if homedir == "" {
 		homedir = t.TempDir()
 	}
-	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(homedir))
+	if downloaddir == "" {
+		downloaddir = t.TempDir()
+	}
+	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(homedir), landscape.WithDownloadDir(downloaddir))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 
 	err = clientService.Connect()

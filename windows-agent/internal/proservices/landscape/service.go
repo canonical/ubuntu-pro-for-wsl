@@ -34,6 +34,8 @@ type Service struct {
 	hostName string
 	// Where to store persistent artifacts, such as an imported WSL VHDX.
 	homedir string
+	// Where to download temporary artifacts
+	downloaddir string
 
 	// Connection
 	conn   *connection
@@ -64,8 +66,9 @@ type CloudInit interface {
 }
 
 type options struct {
-	hostname string
-	homedir  string
+	hostname    string
+	homedir     string
+	downloaddir string
 }
 
 // Option is an optional argument for NewClient.
@@ -97,6 +100,10 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit Clou
 		opts.homedir = homeDir
 	}
 
+	if opts.downloaddir == "" {
+		opts.downloaddir = os.TempDir()
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 
 	s = &Service{
@@ -106,6 +113,7 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit Clou
 		db:          db,
 		hostName:    opts.hostname,
 		homedir:     opts.homedir,
+		downloaddir: opts.downloaddir,
 		connRetrier: newRetryConnection(),
 		cloudinit:   cloudInit,
 	}
@@ -388,6 +396,10 @@ func (s *Service) hostname() string {
 
 func (s *Service) homeDir() string {
 	return s.homedir
+}
+
+func (s *Service) downloadDir() string {
+	return s.downloaddir
 }
 
 func (s *Service) connected() bool {

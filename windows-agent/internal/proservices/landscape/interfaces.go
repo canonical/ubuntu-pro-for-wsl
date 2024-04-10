@@ -16,6 +16,7 @@ type serviceData interface {
 	hostname() string
 	cloudInit() CloudInit
 	homeDir() string
+	downloadDir() string
 }
 
 // serviceConn is an internal interface to manage the connection to the Landscape service.
