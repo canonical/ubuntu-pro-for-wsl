@@ -8,11 +8,13 @@ import (
 	"os"
 	"path/filepath"
 
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
@@ -42,7 +44,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 // Before serving, it writes a file on disk on which port it's listening on for client
 // to be able to reach our server.
 // This file is removed once the server stops listening.
-func (d Daemon) Serve(ctx context.Context) (err error) {
+func (d Daemon) Serve(ctx context.Context, authToken string) (err error) {
 	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
@@ -59,10 +61,24 @@ func (d Daemon) Serve(ctx context.Context) (err error) {
 	}
 
 	addr := lis.Addr().String()
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("can't parse listener address: %v", err)
+	}
+
+	t := agentapi.AuthTarget{
+		Host:      host,
+		Port:      port,
+		AuthToken: authToken,
+	}
 
 	// Write a file on disk to signal selected ports to clients.
 	// We write it here to signal error when calling service.Start().
-	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
+	c, err := protojson.Marshal(&t)
+	if err != nil {
+		return fmt.Errorf("can't write the listening port file: %v", err)
+	}
+	if err := os.WriteFile(d.listeningPortFilePath, c, 0600); err != nil {
 		return err
 	}
 	defer os.Remove(d.listeningPortFilePath)

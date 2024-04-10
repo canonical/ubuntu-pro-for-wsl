@@ -2,6 +2,7 @@ package daemon_test
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"net"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
@@ -18,6 +20,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestNew(t *testing.T) {
@@ -72,7 +75,7 @@ func TestStartQuit(t *testing.T) {
 
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx)
+				serveErr <- d.Serve(ctx, testAuthToken)
 			}()
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
@@ -93,16 +96,21 @@ func TestStartQuit(t *testing.T) {
 			}
 
 			// Now we know the TCP server has started.
+			var authTarget agentapi.AuthTarget
+			err = protojson.Unmarshal(addrContents, &authTarget)
+			require.NoError(t, err, "could not deserialize the addressfile")
+			if err != nil {
+				return
+			}
+			host := authTarget.GetHost()
+			port := authTarget.GetPort()
+			t.Logf("Address is \"%s:%s\"", host, port)
 
-			address := string(addrContents)
-			t.Logf("Address is %q", address)
-
-			_, port, err := net.SplitHostPort(address)
 			_, err = net.LookupPort("tcp4", port)
 			require.NoError(t, err, "Port should be valid")
 
 			// We start a connection but don't close it yet, so as to test graceful vs. forceful Quit
-			closeHangingConn := grpcPersistentCall(t, address)
+			closeHangingConn := grpcPersistentCall(t, fmt.Sprintf("%s:%s", host, port))
 			defer closeHangingConn()
 
 			// Now we know the GRPC server has started serving.
@@ -129,7 +137,7 @@ func TestStartQuit(t *testing.T) {
 			} else {
 				// We have an hanging connection which should make us time out
 				require.False(t, immediateQuit, "Quit should wait for exisiting connections to close before quitting")
-				requireCannotDialGRPC(t, address, "No new connection should be allowed after calling Quit")
+				requireCannotDialGRPC(t, host, "No new connection should be allowed after calling Quit")
 
 				// release hanging connection and wait for Quit to exit.
 				code := closeHangingConn()
@@ -138,7 +146,7 @@ func TestStartQuit(t *testing.T) {
 			}
 
 			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
-			requireCannotDialGRPC(t, address, "No new connection should be allowed when the server is no longer running")
+			requireCannotDialGRPC(t, host, "No new connection should be allowed when the server is no longer running")
 			requireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after quitting the server")
 		})
 	}
@@ -164,7 +172,7 @@ func TestServeNoWSLIP(t *testing.T) {
 	d := daemon.New(ctx, registerer, addrDir)
 	defer d.Quit(ctx, false)
 
-	err := d.Serve(ctx)
+	err := d.Serve(ctx, testAuthToken)
 	require.Error(t, err, "Serve should fail when the WSL IP cannot be found")
 
 	select {
@@ -192,7 +200,7 @@ func TestServeError(t *testing.T) {
 	// Remove parent directory to prevent listening port file to be written
 	require.NoError(t, os.RemoveAll(addrDir), "Setup: could not remove cache directory")
 
-	err := d.Serve(ctx)
+	err := d.Serve(ctx, testAuthToken)
 	require.Error(t, err, "Serve should fail when the cache dir does not exist")
 }
 
@@ -209,7 +217,7 @@ func TestQuitBeforeServe(t *testing.T) {
 	d := daemon.New(ctx, registerer, addrDir)
 	d.Quit(ctx, false)
 
-	err := d.Serve(ctx)
+	err := d.Serve(ctx, testAuthToken)
 	require.Error(t, err, "Calling Serve() after Quit() should result in an error")
 
 	requireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
@@ -326,3 +334,5 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 	<-ctx.Done()
 	return &grpctestservice.Empty{}, nil
 }
+
+const testAuthToken = "test-auth-token"
