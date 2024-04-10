@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -43,10 +44,11 @@ func initViperConfig(name string, cmd *cobra.Command, vip *viper.Viper) (err err
 
 	// Load the config
 	if err := vip.ReadInConfig(); err != nil {
-		if e, ok := err.(viper.ConfigFileNotFoundError); ok {
+		var e viper.ConfigFileNotFoundError
+		if errors.As(err, &e) {
 			log.Infof(context.Background(), "No configuration file: %v", e)
 		} else {
-			log.Errorf(context.Background(), "invalid configuration file: %v", err)
+			return fmt.Errorf("invalid configuration file: %v", err)
 		}
 	} else {
 		log.Infof(context.Background(), "Using configuration file: %v", vip.ConfigFileUsed())
