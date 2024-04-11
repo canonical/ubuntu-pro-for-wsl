@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:agentapi/agentapi.dart';
 import 'package:path/path.dart' as p;
 
 import 'agent_api_client.dart';
@@ -40,7 +41,7 @@ enum AgentState {
 }
 
 /// A Function that knows how to create an AgentApiClient from a host and a port.
-typedef ApiClientFactory = AgentApiClient Function(String host, int port);
+typedef ApiClientFactory = AgentApiClient Function(AuthTarget);
 
 /// A Function that knows how to launch the agent and report success.
 typedef AgentLauncher = Future<bool> Function();
@@ -127,7 +128,7 @@ class AgentStartupMonitor {
     // caller's request, which can even impose wait intervals between subsequent
     // calls.
     for (var st = AgentState.querying; !st.isTerminal();) {
-      final portResult = await readAgentPortFromFile(_addrFilePath!);
+      final portResult = await readAgentPortFile(_addrFilePath!);
       st = await portResult.fold(
         ifLeft: _onAddrError,
         ifRight: _onAddress,
@@ -166,15 +167,13 @@ class AgentStartupMonitor {
     }
   }
 
-  Future<AgentState> _onAddress((String, int) address) async {
-    final (host, port) = address;
-
+  Future<AgentState> _onAddress(AuthTarget address) async {
     if (_agentApiClient != null) {
-      await _agentApiClient!.connectTo(host: host, port: port);
+      await _agentApiClient!.connectTo(address);
       return AgentState.ok;
     }
 
-    final client = clientFactory(host, port);
+    final client = clientFactory(address);
     if (await client.ping()) {
       _agentApiClient = client;
       for (final cb in _onClient) {

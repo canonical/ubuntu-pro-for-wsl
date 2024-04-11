@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:agentapi/agentapi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -43,7 +45,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always fail.
       agentLauncher: () async => false,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -70,7 +72,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -93,7 +95,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -115,7 +117,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -145,7 +147,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -171,7 +173,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -197,7 +199,7 @@ void main() {
       agentLauncher: () async {
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -224,7 +226,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) async {
         // This function only completes when the completer is manually set complete.
@@ -260,15 +262,14 @@ void main() {
     // Fakes a successful ping.
     when(mockClient.ping()).thenAnswer((_) async => true);
     // fakes a succesful connectTo call.
-    when(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
-        .thenAnswer((_) async => true);
+    when(mockClient.connectTo(any)).thenAnswer((_) async => true);
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -298,8 +299,7 @@ void main() {
     );
 
     final newClient = monitor.agentApiClient;
-    verify(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
-        .called(1);
+    verify(mockClient.connectTo(any)).called(1);
     expect(newClient.hashCode, currentClient.hashCode);
   });
 }
@@ -308,8 +308,8 @@ void main() {
 /// contents as if the agent would have written it or [line], if supplied.
 void writeDummyAddrFile(Directory homeDir, {String? line}) {
   final filePath = p.join(homeDir.path, kAddrFileName);
-  const port = 56789;
-  const goodLine = '[::]:$port';
+  final auth = AuthTarget(host: '[::]', port: '56789', authToken: 'test-token');
+  final goodLine = jsonEncode(auth.toProto3Json());
   final addr = File(filePath);
   addr.parent.createSync(recursive: true);
   addr.writeAsStringSync(line ?? goodLine);
