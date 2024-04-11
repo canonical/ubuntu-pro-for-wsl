@@ -229,8 +229,9 @@ func TestInstall(t *testing.T) {
 			}
 
 			if tc.breakTempDir {
-				_, err := os.Create(filepath.Join(downloadDir, settings.name))
+				f, err := os.Create(filepath.Join(downloadDir, settings.name))
 				require.NoError(t, err, "Setup: breaking the destination temp dir shouldn't fail")
+				f.Close()
 			}
 
 			testReceiveCommand(t, settings, home, downloadDir,
