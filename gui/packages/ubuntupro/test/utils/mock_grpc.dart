@@ -33,7 +33,7 @@ class MockUIClient extends UIClient {
     ..ensureNone()
     ..freeze();
 
-  MockUIClient(super.channel);
+  MockUIClient(super.channel, {super.options});
 
   @override
   ResponseFuture<LandscapeSource> applyLandscapeConfig(
