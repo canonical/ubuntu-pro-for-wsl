@@ -17,6 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // MockWindowsAgent mocks the windows agent server.
@@ -28,6 +30,12 @@ type MockWindowsAgent struct {
 	Started chan struct{}
 	Stopped chan struct{}
 }
+
+// The token the mock agent will write to the port file.
+const MockAuthToken string = "mock-auth-token"
+
+// The encoded version of the MockAuthToken that must be in every request.
+const MockAuthTokenRaw string = "Bearer bW9jay1hdXRoLXRva2Vu"
 
 // MockWindowsAgent mocks the windows-agent. It starts a GRPC service that will perform
 // the port dance and stay connected. It'll write the port file as well.
@@ -45,7 +53,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 
 	m := MockWindowsAgent{
 		Listener: lis,
-		Server:   grpc.NewServer(),
+		Server:   grpc.NewServer(grpc.UnaryInterceptor(authUnaryInterceptor), grpc.StreamInterceptor(authStreamInterceptor)),
 		Service:  &mockWSLInstanceService{},
 		Started:  make(chan struct{}),
 		Stopped:  make(chan struct{}),
@@ -54,7 +62,16 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	t.Cleanup(m.Stop)
 
 	addrFile := filepath.Join(publicDir, common.ListeningPortFileName)
-	err = os.WriteFile(addrFile, []byte(lis.Addr().String()), 0600)
+	host, port, err := net.SplitHostPort(lis.Addr().String())
+	require.NoError(t, err, "Setup: could not split listening host/port from address")
+	at := agentapi.AuthTarget{
+		Host:      host,
+		Port:      port,
+		AuthToken: MockAuthToken,
+	}
+	b, err := protojson.Marshal(&at)
+	require.NoError(t, err, "Setup: could not marshal listening address")
+	err = os.WriteFile(addrFile, b, 0600)
 	if err != nil {
 		close(m.Started)
 		close(m.Stopped)
@@ -74,11 +91,46 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 		if err := os.RemoveAll(addrFile); err != nil {
 			log.Infof(ctx, "MockWindowsAgent: Remove address file returned an error: %v", err)
 		}
+		log.Info(ctx, "MockWindowsAgent: Up and running")
 	}()
 
 	<-m.Started
 
 	return &m
+}
+
+// validateAuthMetadata checks if the request context has the correct authorization token.
+func validateAuthMetadata(ctx context.Context) error {
+	m, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return errors.New("MockWindowsAgent: missing request metadata")
+	}
+	t := m.Get("authorization")[0]
+	if MockAuthTokenRaw != t {
+		return fmt.Errorf("MockWindowsAgent: invalid authorization token. Got %q, want %q", t, MockAuthTokenRaw)
+	}
+	return nil
+
+}
+
+// authUnaryInterceptor implements the unary interceptor that checks if the request has the correct authorization token.
+func authUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Infof(ctx, "MockWindowsAgent: Received request %T", req)
+	if err := validateAuthMetadata(ctx); err != nil {
+		log.Infof(ctx, "MockWindowsAgent: Error %v", err)
+		return nil, err
+	}
+	return handler(ctx, req)
+}
+
+// authStreamInterceptor implements the stream interceptor that checks if the request has the correct authorization token.
+func authStreamInterceptor(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	log.Infof(stream.Context(), "MockWindowsAgent: Received stream %T", srv)
+	if err := validateAuthMetadata(stream.Context()); err != nil {
+		log.Infof(stream.Context(), "MockWindowsAgent: Error %v", err)
+		return err
+	}
+	return handler(srv, stream)
 }
 
 // Stop releases all resources associated with the MockWindowsAgent.

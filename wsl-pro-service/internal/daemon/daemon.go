@@ -3,15 +3,16 @@ package daemon
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync/atomic"
 	"time"
 
+	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -23,6 +24,7 @@ import (
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // Daemon is a grpc daemon with systemd support.
@@ -270,10 +272,13 @@ func clamp(minimum, value, maximum time.Duration) time.Duration {
 func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error) {
 	defer decorate.OnError(&err, "could not connect to Windows Agent")
 
-	addr, err := d.address(ctx, d.system)
+	at, err := d.authTarget(ctx, d.system)
 	if err != nil {
 		return nil, fmt.Errorf("could not get address: %w", err)
 	}
+	// Join the address and port, and validate it.
+	addr := net.JoinHostPort(at.GetHost(), at.GetPort())
+	rawToken := "Bearer " + base64.StdEncoding.EncodeToString([]byte(at.GetAuthToken()))
 
 	distroName, err := d.system.WslDistroName(ctx)
 	if err != nil {
@@ -285,6 +290,7 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithPerRPCCredentials(NewCreds(rawToken)),
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
 			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
 		)))
@@ -301,51 +307,43 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	return streams.NewServer(ctx, d.system, conn), nil
 }
 
-// address fetches the address of the control stream from the Windows filesystem.
-func (d *Daemon) address(ctx context.Context, system *system.System) (string, error) {
+// authTarget fetches the address and authentication token of the control stream from the Windows filesystem,
+// while updating the host address with the IP seen by a WSL instance.
+func (d *Daemon) authTarget(ctx context.Context, system *system.System) (*agentapi.AuthTarget, error) {
 	// Parse the port from the file written by the windows agent.
 	addr, err := os.ReadFile(d.addressPath)
 	if err != nil {
-		return "", fmt.Errorf("could not read agent port file %q: %v", d.addressPath, err)
+		return nil, fmt.Errorf("could not read agent port file %q: %v", d.addressPath, err)
 	}
 
-	port, err := splitPort(string(addr))
-	if err != nil {
-		return "", err
+	var authTarget agentapi.AuthTarget
+	if err := protojson.Unmarshal(addr, &authTarget); err != nil {
+		return nil, fmt.Errorf("could not parse agent port file %q: %v", d.addressPath, err)
 	}
 
 	windowsLocalhost, err := system.WindowsHostAddress(ctx)
 	if err != nil {
-		return "", streams.NewSystemError("%w", err)
+		return nil, streams.NewSystemError("%w", err)
 	}
 
-	// Join the address and port, and validate it.
-	address := net.JoinHostPort(windowsLocalhost.String(), fmt.Sprint(port))
-
-	return address, nil
+	authTarget.Host = windowsLocalhost.String()
+	return &authTarget, nil
 }
 
-// splitPort splits the port from the address, and validates that the port is a strictly positive integer.
-func splitPort(addr string) (p int, err error) {
-	defer decorate.OnError(&err, "could not parse port from %q", addr)
+// creds implements the credentials.PerRPCCredentials interface with a fixed authorization token.
+type creds struct {
+	metadata map[string]string
+}
 
-	_, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		return 0, fmt.Errorf("could not split address: %v", err)
-	}
+// NewCredentials creates a new creds with the given token.
+func NewCreds(token string) creds {
+	return creds{metadata: map[string]string{"authorization": token}}
+}
 
-	p, err = strconv.Atoi(port)
-	if err != nil {
-		return 0, fmt.Errorf("could not parse port as an integer: %v", err)
-	}
+func (a creds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return a.metadata, nil
+}
 
-	if p == 0 {
-		return 0, errors.New("port cannot be zero")
-	}
-
-	if p < 0 {
-		return 0, errors.New("port cannot be negative")
-	}
-
-	return p, nil
+func (a creds) RequireTransportSecurity() bool {
+	return false
 }

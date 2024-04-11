@@ -3,6 +3,7 @@ package daemon_test
 import (
 	"context"
 	"errors"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestMain(m *testing.M) {
@@ -74,6 +76,7 @@ func TestServe(t *testing.T) {
 		portFilePortNotNumber bool
 		portFileZeroPort      bool
 		portFileNegativePort  bool
+		invalidToken          bool
 
 		// Return values for the mock SystemdSdNotifier
 		notifierReturn bool
@@ -91,12 +94,13 @@ func TestServe(t *testing.T) {
 		// keeps retrying the connection
 		//
 		// We instead check that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because the port file does not exist":      {breakPortFile: true, wantConnected: false},
-		"No connection because the port file is empty":            {portFileEmpty: true, wantConnected: false},
-		"No connection because the port file has a bad port":      {portFilePortNotNumber: true, wantConnected: false},
-		"No connection because the port file has port 0":          {portFileZeroPort: true, wantConnected: false},
-		"No connection because the port file has a negative port": {portFileNegativePort: true, wantConnected: false},
-		"No connection because there is no server":                {dontServe: true},
+		"No connection because the port file does not exist":       {breakPortFile: true, wantConnected: false},
+		"No connection because the port file is empty":             {portFileEmpty: true, wantConnected: false},
+		"No connection because the port file has a bad port":       {portFilePortNotNumber: true, wantConnected: false},
+		"No connection because the port file has port 0":           {portFileZeroPort: true, wantConnected: false},
+		"No connection because the port file has a negative port":  {portFileNegativePort: true, wantConnected: false},
+		"No connection because there is no server":                 {dontServe: true},
+		"No connection because of an invalid authentication token": {invalidToken: true, wantConnected: false},
 
 		// Errors
 		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
@@ -128,21 +132,30 @@ func TestServe(t *testing.T) {
 
 			portFile := filepath.Join(publicDir, common.ListeningPortFileName)
 			if tc.portFileEmpty {
-				require.NoError(t, os.WriteFile(portFile, []byte{}, 0600), "Setup: could not overwrite port file")
+				require.NoError(t, os.WriteFile(portFile, []byte{}, 0600), "Setup: could not empty the port file")
 			}
+			host, port, err := net.SplitHostPort(agent.Listener.Addr().String())
+			require.NoError(t, err, "Setup: could not split listening host/port from listener address")
+			at := agentapi.AuthTarget{Host: host, Port: port, AuthToken: testutils.MockAuthToken}
 			if tc.portFilePortNotNumber {
-				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:portyMcPortface"), 0600), "Setup: could not overwrite port file")
+				at.Port = "portyMcPortface"
+				writePortFile(t, portFile, &at)
 			}
 			if tc.portFileZeroPort {
-				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:0"), 0600), "Setup: could not overwrite port file")
+				at.Port = "0"
+				writePortFile(t, portFile, &at)
 			}
 			if tc.portFileNegativePort {
-				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:-5"), 0600), "Setup: could not overwrite port file")
+				at.Port = "-5"
+				writePortFile(t, portFile, &at)
+			}
+			if tc.invalidToken {
+				at.AuthToken = "invalid-token"
+				writePortFile(t, portFile, &at)
 			}
 			if tc.dontServe {
-				addr := agent.Listener.Addr().String()
 				agent.Stop()
-				require.NoError(t, os.WriteFile(portFile, []byte(addr), 0600), "Setup: could not overwrite port file")
+				writePortFile(t, portFile, &at)
 			}
 
 			systemd := &SystemdSdNotifierMock{
@@ -220,6 +233,12 @@ func TestServe(t *testing.T) {
 			}
 		})
 	}
+}
+
+func writePortFile(t *testing.T, portFile string, at *agentapi.AuthTarget) {
+	b, err := protojson.Marshal(at)
+	require.NoError(t, err, "Setup: could not serialize the port file contents")
+	require.NoError(t, os.WriteFile(portFile, b, 0600), "Setup: could not write port file")
 }
 
 func TestServeAndQuit(t *testing.T) {
