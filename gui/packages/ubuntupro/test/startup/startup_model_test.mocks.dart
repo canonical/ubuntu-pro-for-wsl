@@ -5,6 +5,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
+import 'package:agentapi/agentapi.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
 import 'package:ubuntupro/core/agent_monitor.dart' as _i3;
@@ -51,11 +52,7 @@ class MockAgentStartupMonitor extends _i1.Mock
   @override
   _i3.ApiClientFactory get clientFactory => (super.noSuchMethod(
         Invocation.getter(#clientFactory),
-        returnValue: (
-          String host,
-          int port,
-        ) =>
-            _FakeAgentApiClient_0(
+        returnValue: (_i5.AuthTarget __p0) => _FakeAgentApiClient_0(
           this,
           Invocation.getter(#clientFactory),
         ),

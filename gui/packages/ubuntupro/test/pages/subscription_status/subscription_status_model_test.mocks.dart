@@ -74,14 +74,23 @@ class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
   }
 
   @override
-  _i2.UIClient Function(_i4.ClientChannel) get stubFactory =>
-      (super.noSuchMethod(
+  _i2.UIClient Function(
+    _i4.ClientChannel, {
+    _i4.CallOptions? options,
+  }) get stubFactory => (super.noSuchMethod(
         Invocation.getter(#stubFactory),
-        returnValue: (_i4.ClientChannel __p0) => _FakeUIClient_0(
+        returnValue: (
+          _i4.ClientChannel __p0, {
+          _i4.CallOptions? options,
+        }) =>
+            _FakeUIClient_0(
           this,
           Invocation.getter(#stubFactory),
         ),
-      ) as _i2.UIClient Function(_i4.ClientChannel));
+      ) as _i2.UIClient Function(
+        _i4.ClientChannel, {
+        _i4.CallOptions? options,
+      }));
 
   @override
   _i5.Stream<_i3.ConnectionEvent> get onConnectionChanged =>
@@ -91,18 +100,10 @@ class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
       ) as _i5.Stream<_i3.ConnectionEvent>);
 
   @override
-  _i5.Future<bool> connectTo({
-    required String? host,
-    required int? port,
-  }) =>
-      (super.noSuchMethod(
+  _i5.Future<bool> connectTo(_i2.AuthTarget? target) => (super.noSuchMethod(
         Invocation.method(
           #connectTo,
-          [],
-          {
-            #host: host,
-            #port: port,
-          },
+          [target],
         ),
         returnValue: _i5.Future<bool>.value(false),
       ) as _i5.Future<bool>);
