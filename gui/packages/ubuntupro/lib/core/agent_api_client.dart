@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:agentapi/agentapi.dart';
 import 'package:grpc/grpc.dart';
 import 'package:meta/meta.dart';
@@ -8,40 +10,41 @@ typedef LandscapeSourceType = LandscapeSource_LandscapeSourceType;
 
 /// AgentApiClient hides the gRPC details in a more convenient API.
 class AgentApiClient {
-  AgentApiClient({
-    required String host,
-    required int port,
-    this.stubFactory = UIClient.new,
-  }) : _channel = ClientChannel(
-          host,
-          port: port,
+  AgentApiClient(AuthTarget target, {this.stubFactory = UIClient.new})
+      : _channel = ClientChannel(
+          target.host,
+          port: int.parse(target.port),
           options: const ChannelOptions(
             credentials: ChannelCredentials.insecure(),
           ),
         ) {
-    _client = stubFactory.call(_channel);
+    _client =
+        stubFactory.call(_channel, options: withMetadata(target.authToken));
   }
 
   /// A factory for UIClient and derived classes objects, only meaningful for testing.
   /// In production it should always default to [UIClient.new].
   @visibleForTesting
-  final UIClient Function(ClientChannel) stubFactory;
+  final UIClient Function(ClientChannel, {CallOptions? options}) stubFactory;
 
   /// Never null, but reassignable inside [connectTo].
   late UIClient _client;
   ClientChannel _channel;
 
   /// Changes the endpoint this API client is connected to.
-  Future<bool> connectTo({required String host, required int port}) {
+  Future<bool> connectTo(AuthTarget target) {
     _channel.shutdown();
     _channel = ClientChannel(
-      host,
-      port: port,
+      target.host,
+      port: int.parse(target.port),
       options: const ChannelOptions(
         credentials: ChannelCredentials.insecure(),
       ),
     );
-    _client = stubFactory.call(_channel);
+    _client = stubFactory.call(
+      _channel,
+      options: withMetadata(target.authToken),
+    );
     return ping();
   }
 
@@ -94,4 +97,11 @@ Stream<ConnectionEvent> mapGRPCConnectionEvents(
 
     return ConnectionEvent.dropped;
   });
+}
+
+CallOptions withMetadata(String authToken) {
+  final metadata = <String, String>{
+    'authorization': 'Bearer ${base64Encode(utf8.encode(authToken))}',
+  };
+  return CallOptions(metadata: metadata);
 }

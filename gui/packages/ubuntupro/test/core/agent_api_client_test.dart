@@ -1,3 +1,4 @@
+import 'package:agentapi/agentapi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart' as grpc;
 import 'package:ubuntupro/core/agent_api_client.dart';
@@ -5,18 +6,19 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import '../utils/mock_grpc.dart';
 
 void main() {
+  final target = AuthTarget(
+    host: '127.0.0.1',
+    port: '9',
+    authToken: '',
+  );
   test('ping fails', timeout: const Timeout(Duration(seconds: 5)), () async {
-    final client = AgentApiClient(host: '127.0.0.1', port: 9);
+    final client = AgentApiClient(target);
     // IANA discard protol: There should be no service running at this port.
     expect(await client.ping(), isFalse);
   });
 
   group('with mocked grpc', () {
-    final client = AgentApiClient(
-      host: '127.0.0.1',
-      port: 9,
-      stubFactory: MockUIClient.new,
-    );
+    final client = AgentApiClient(target, stubFactory: MockUIClient.new);
 
     test('ping succeeds', () async {
       expect(await client.ping(), isTrue);
@@ -59,7 +61,7 @@ void main() {
 
     test('connect to new endpoint', () async {
       final otherRef = client;
-      final connected = await otherRef.connectTo(host: 'localhost', port: 9);
+      final connected = await otherRef.connectTo(target);
       // A real connection would never succeed in port 9 (Discard Protocol).
       expect(connected, isTrue);
       // The client object is still the same, although internals may have changed.
