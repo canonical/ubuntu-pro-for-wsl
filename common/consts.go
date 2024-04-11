@@ -20,4 +20,10 @@ const (
 	//
 	// TODO: Replace with real product ID.
 	MsStoreProductID = "9P25B50XMKXT"
+
+	// CertificatesDir is the agent's public subdirectory where the certificates are stored.
+	CertificatesDir = "certs"
+
+	// GRPCServerNameOverride is the name to override the server name in when configuring TLS for local clients.
+	GRPCServerNameOverride = "UP4W"
 )
