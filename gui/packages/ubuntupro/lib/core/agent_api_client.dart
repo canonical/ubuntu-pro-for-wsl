@@ -1,6 +1,10 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:agentapi/agentapi.dart';
 import 'package:grpc/grpc.dart';
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' as p;
 
 /// Type aliases for the gRPC message enums which by default have big names.
 typedef SubscriptionType = SubscriptionInfo_SubscriptionType;
@@ -8,15 +12,16 @@ typedef LandscapeSourceType = LandscapeSource_LandscapeSourceType;
 
 /// AgentApiClient hides the gRPC details in a more convenient API.
 class AgentApiClient {
-  AgentApiClient({
-    required String host,
-    required int port,
+  AgentApiClient(
+    String host,
+    int port,
+    Directory certsDir, [
     this.stubFactory = UIClient.new,
-  }) : _channel = ClientChannel(
+  ]) : _channel = ClientChannel(
           host,
           port: port,
-          options: const ChannelOptions(
-            credentials: ChannelCredentials.insecure(),
+          options: ChannelOptions(
+            credentials: credentialsfromDirectory(certsDir),
           ),
         ) {
     _client = stubFactory.call(_channel);
@@ -32,13 +37,17 @@ class AgentApiClient {
   ClientChannel _channel;
 
   /// Changes the endpoint this API client is connected to.
-  Future<bool> connectTo({required String host, required int port}) {
+  Future<bool> connectTo(
+    String host,
+    int port,
+    Directory certsDir,
+  ) {
     _channel.shutdown();
     _channel = ClientChannel(
       host,
       port: port,
-      options: const ChannelOptions(
-        credentials: ChannelCredentials.insecure(),
+      options: ChannelOptions(
+        credentials: credentialsfromDirectory(certsDir),
       ),
     );
     _client = stubFactory.call(_channel);
@@ -94,4 +103,51 @@ Stream<ConnectionEvent> mapGRPCConnectionEvents(
 
     return ConnectionEvent.dropped;
   });
+}
+
+// A custom ChannelCredentials implementation that allows for setting the client's certificate chain and private key.
+// This is loosely a translation of grpc.TransportCredentials with tls.Config for Go gRPC clients into Dart.
+class AgentApiChannelCredentials extends ChannelCredentials {
+  final Uint8List? certificateChain;
+  final Uint8List? privateKey;
+
+  AgentApiChannelCredentials({
+    Uint8List? trustedRoots,
+    this.certificateChain,
+    this.privateKey,
+    super.authority,
+    super.onBadCertificate,
+  }) : super.secure(
+          certificates: trustedRoots,
+        );
+
+  @override
+  SecurityContext? get securityContext {
+    final ctx = super.securityContext;
+    if (ctx == null) return null;
+
+    if (certificateChain != null) {
+      ctx.useCertificateChainBytes(certificateChain!);
+    }
+    if (privateKey != null) {
+      ctx.usePrivateKeyBytes(privateKey!);
+    }
+    return ctx;
+  }
+}
+
+// A factory method to create a new instance of AgentApiChannelCredentials from a
+// directory containing the necessary certificates.
+AgentApiChannelCredentials credentialsfromDirectory(Directory d) {
+  final trustedRoots = File(p.join(d.path, 'ca_cert.pem')).readAsBytesSync();
+  final certificateChain =
+      File(p.join(d.path, 'client_cert.pem')).readAsBytesSync();
+  final privateKey = File(p.join(d.path, 'client_key.pem')).readAsBytesSync();
+
+  return AgentApiChannelCredentials(
+    trustedRoots: trustedRoots,
+    certificateChain: certificateChain,
+    privateKey: privateKey,
+    authority: 'UP4W',
+  );
 }
