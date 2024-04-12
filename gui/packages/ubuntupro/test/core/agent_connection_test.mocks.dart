@@ -4,9 +4,10 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i5;
+import 'dart:io' as _i6;
 
 import 'package:agentapi/agentapi.dart' as _i3;
-import 'package:grpc/grpc.dart' as _i6;
+import 'package:grpc/grpc.dart' as _i7;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
 import 'package:ubuntupro/core/agent_monitor.dart' as _i4;
@@ -98,6 +99,7 @@ class MockAgentStartupMonitor extends _i1.Mock
         returnValue: (
           String host,
           int port,
+          _i6.Directory certsDir,
         ) =>
             _FakeAgentApiClient_0(
           this,
@@ -151,14 +153,14 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
   }
 
   @override
-  _i3.UIClient Function(_i6.ClientChannel) get stubFactory =>
+  _i3.UIClient Function(_i7.ClientChannel) get stubFactory =>
       (super.noSuchMethod(
         Invocation.getter(#stubFactory),
-        returnValue: (_i6.ClientChannel __p0) => _FakeUIClient_1(
+        returnValue: (_i7.ClientChannel __p0) => _FakeUIClient_1(
           this,
           Invocation.getter(#stubFactory),
         ),
-      ) as _i3.UIClient Function(_i6.ClientChannel));
+      ) as _i3.UIClient Function(_i7.ClientChannel));
 
   @override
   _i5.Stream<_i2.ConnectionEvent> get onConnectionChanged =>
@@ -168,18 +170,19 @@ class MockAgentApiClient extends _i1.Mock implements _i2.AgentApiClient {
       ) as _i5.Stream<_i2.ConnectionEvent>);
 
   @override
-  _i5.Future<bool> connectTo({
-    required String? host,
-    required int? port,
-  }) =>
+  _i5.Future<bool> connectTo(
+    String? host,
+    int? port,
+    _i6.Directory? certsDir,
+  ) =>
       (super.noSuchMethod(
         Invocation.method(
           #connectTo,
-          [],
-          {
-            #host: host,
-            #port: port,
-          },
+          [
+            host,
+            port,
+            certsDir,
+          ],
         ),
         returnValue: _i5.Future<bool>.value(false),
       ) as _i5.Future<bool>);

@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i5;
+import 'dart:io' as _i6;
 
 import 'package:agentapi/agentapi.dart' as _i2;
 import 'package:grpc/grpc.dart' as _i4;
@@ -91,18 +92,19 @@ class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
       ) as _i5.Stream<_i3.ConnectionEvent>);
 
   @override
-  _i5.Future<bool> connectTo({
-    required String? host,
-    required int? port,
-  }) =>
+  _i5.Future<bool> connectTo(
+    String? host,
+    int? port,
+    _i6.Directory? certsDir,
+  ) =>
       (super.noSuchMethod(
         Invocation.method(
           #connectTo,
-          [],
-          {
-            #host: host,
-            #port: port,
-          },
+          [
+            host,
+            port,
+            certsDir,
+          ],
         ),
         returnValue: _i5.Future<bool>.value(false),
       ) as _i5.Future<bool>);
