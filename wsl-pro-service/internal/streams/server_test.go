@@ -11,7 +11,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func TestServe(t *testing.T) {
@@ -24,7 +23,7 @@ func TestServe(t *testing.T) {
 	defer agent.Stop()
 
 	conn, err := grpc.DialContext(ctx, agent.Listener.Addr().String(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(agent.ClientCredentials))
 	require.NoError(t, err, "Setup: could not Dial the mock windows agent")
 	defer conn.Close()
 
@@ -101,7 +100,7 @@ func TestStop(t *testing.T) {
 	defer agent.Stop()
 
 	conn, err := grpc.DialContext(ctx, agent.Listener.Addr().String(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(agent.ClientCredentials))
 	require.NoError(t, err, "Setup: could not Dial the mock windows agent")
 	defer conn.Close()
 

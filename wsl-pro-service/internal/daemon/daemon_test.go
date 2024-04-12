@@ -67,6 +67,8 @@ func TestServe(t *testing.T) {
 		precancelContext        bool
 		breakWindowsHostAddress bool
 		dontServe               bool
+		missingCertsDir         bool
+		missingCaCert           bool
 
 		// Break the port file in various ways
 		breakPortFile         bool
@@ -97,6 +99,8 @@ func TestServe(t *testing.T) {
 		"No connection because the port file has port 0":          {portFileZeroPort: true, wantConnected: false},
 		"No connection because the port file has a negative port": {portFileNegativePort: true, wantConnected: false},
 		"No connection because there is no server":                {dontServe: true},
+		"No connection because there are no certificates":         {missingCertsDir: true, wantConnected: false},
+		"No connection because cannot read ca_cert":               {missingCaCert: true, wantConnected: false},
 
 		// Errors
 		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
@@ -116,6 +120,16 @@ func TestServe(t *testing.T) {
 			publicDir := mock.DefaultPublicDir()
 			agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
 			defer agent.Stop()
+
+			if tc.missingCertsDir {
+				err := os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir))
+				require.NotErrorIs(t, err, os.ErrNotExist, "Setup: could not remove certificates")
+			}
+
+			if tc.missingCaCert {
+				err := os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, "ca_cert.pem"))
+				require.NotErrorIs(t, err, os.ErrNotExist, "Setup: could not remove ca_cert.pem")
+			}
 
 			if tc.breakPortFile {
 				err := os.RemoveAll(publicDir)

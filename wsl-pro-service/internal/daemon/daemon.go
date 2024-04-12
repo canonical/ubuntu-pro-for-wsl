@@ -3,6 +3,8 @@ package daemon
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
@@ -22,12 +24,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Daemon is a grpc daemon with systemd support.
 type Daemon struct {
-	addressPath string
+	addressPath, certsPath string
 
 	// Interface to the WSL distro
 	system *system.System
@@ -93,6 +96,7 @@ func New(ctx context.Context, s *system.System, args ...Option) (*Daemon, error)
 		systemdSdNotifier: opts.systemdSdNotifier,
 		system:            s,
 		addressPath:       filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName),
+		certsPath:         filepath.Join(home, common.UserProfileDir, common.CertificatesDir),
 
 		ctx:    ctx,
 		cancel: cancel,
@@ -283,11 +287,15 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 
 	log.Infof(ctx, "Daemon: starting connection to Windows Agent via %s", addr)
 
+	tlsConfig, err := tlsConfigFromDir(d.certsPath)
+	if err != nil {
+		return nil, err
+	}
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
 			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
-		)))
+		)), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	if err != nil {
 		return nil, fmt.Errorf("could not dial: %v", err)
 	}
@@ -299,6 +307,32 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	}(&err)
 
 	return streams.NewServer(ctx, d.system, conn), nil
+}
+
+// tlsConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.
+func tlsConfigFromDir(certsPath string) (conf *tls.Config, err error) {
+	decorate.OnError(&err, "could not load TLS config")
+	cert, err := tls.LoadX509KeyPair(filepath.Join(certsPath, "client_cert.pem"), filepath.Join(certsPath, "client_key.pem"))
+	if err != nil {
+		return nil, err
+	}
+
+	ca := x509.NewCertPool()
+	caFilePath := filepath.Join(certsPath, "ca_cert.pem")
+	caBytes, err := os.ReadFile(caFilePath)
+	if err != nil {
+		return nil, err
+	}
+	if ok := ca.AppendCertsFromPEM(caBytes); !ok {
+		return nil, fmt.Errorf("failed to parse %q", caFilePath)
+	}
+
+	return &tls.Config{
+		ServerName:   common.GRPCServerNameOverride,
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      ca,
+		MinVersion:   tls.VersionTLS13,
+	}, nil
 }
 
 // address fetches the address of the control stream from the Windows filesystem.
