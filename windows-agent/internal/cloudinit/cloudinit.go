@@ -114,8 +114,7 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 	err = os.Remove(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil
-	}
-	if err != nil {
+	} else if err != nil {
 		return err
 	}
 	return nil
