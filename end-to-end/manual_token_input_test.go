@@ -44,9 +44,16 @@ func TestManualTokenInput(t *testing.T) {
 			landscape := NewLandscape(t, ctx)
 			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
 
-			go landscape.Serve()
+			serverDone := make(chan struct{})
+			go func() {
+				defer close(serverDone)
+				landscape.Serve()
+			}()
+			t.Cleanup(func() {
+				landscape.Stop()
+				<-serverDone
+			})
 			defer landscape.LogOnError(t)
-			defer landscape.Stop()
 
 			hostname, err := os.Hostname()
 			require.NoError(t, err, "Setup: could not test machine's hostname")
