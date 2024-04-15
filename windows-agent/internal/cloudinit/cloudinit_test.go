@@ -120,8 +120,8 @@ url = www.example.com/new/rickroll
 
 			// Test a clean filesystem (New calls WriteAgentData internally)
 			ci, err := cloudinit.New(ctx, conf, publicDir)
-			require.NoError(t, err, "cloudinit.New should return no error")
-			require.FileExists(t, path, "New() should have created an agent cloud-init file")
+			require.NoError(t, err, "Setup: cloudinit.New should return no error")
+			require.FileExists(t, path, "Setup: New() should have created an agent cloud-init file")
 
 			// Test overriding the file: New() created the agent.yaml file
 			conf.subcriptionErr = tc.breakSubscription
