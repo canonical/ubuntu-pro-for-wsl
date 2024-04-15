@@ -94,7 +94,9 @@ func writeFileInDir(dir string, file string, contents []byte) error {
 	}
 
 	if err := os.Rename(tmp, path); err != nil {
-		_ = os.Remove(tmp)
+		if r := os.Remove(tmp); r != nil {
+			log.Warningf(context.Background(), "could not remove temporary file: %v", r)
+		}
 		return err // Error message already says 'cannot rename'
 	}
 
