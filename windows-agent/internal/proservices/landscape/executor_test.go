@@ -199,14 +199,13 @@ func TestInstall(t *testing.T) {
 						testBed.wslMock.InstallError = true
 					}
 
-					var cloudInit *string
+					var cloudInit string
 					if !tc.noCloudInit {
-						cloudInit = new(string)
-						*cloudInit = "Hello, this is a cloud-init file"
+						cloudInit = "Hello, this is a cloud-init file"
 					}
 
 					return &landscapeapi.Command{
-						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName, Cloudinit: cloudInit}},
+						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName, Cloudinit: &cloudInit}},
 					}
 				},
 				// Test assertions
