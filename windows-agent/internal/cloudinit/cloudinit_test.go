@@ -93,11 +93,11 @@ url = www.example.com/new/rickroll
 
 		wantErr bool
 	}{
-		"Success":                                    {},
-		"Success without pro token":                  {skipProToken: true},
-		"Success without Landscape":                  {skipLandscapeConf: true},
-		"Success without Landscape [client] section": {landscapeNoClientSection: true},
-		"Success with empty contents":                {skipProToken: true, skipLandscapeConf: true},
+		"Success":                            {},
+		"Without pro token":                  {skipProToken: true},
+		"Without Landscape":                  {skipLandscapeConf: true},
+		"Without Landscape [client] section": {landscapeNoClientSection: true},
+		"With empty contents":                {skipProToken: true, skipLandscapeConf: true},
 
 		"Error obtaining pro token":             {breakSubscription: true, wantErr: true},
 		"Error obtaining Landscape config":      {breakLandscape: true, wantErr: true},
@@ -237,9 +237,9 @@ data:
 
 		wantErr bool
 	}{
-		"Success":                  {},
-		"Success with no old data": {noOldData: true},
-		"Success with empty data":  {emptyData: true},
+		"Success":          {},
+		"With no old data": {noOldData: true},
+		"With empty data":  {emptyData: true},
 
 		"Error when the datadir cannot be created":   {breakDir: true, wantErr: true},
 		"Error when the temp file cannot be written": {breakTempFile: true, wantErr: true},

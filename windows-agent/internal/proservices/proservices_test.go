@@ -41,8 +41,8 @@ func TestNew(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success when the subscription stays empty":               {},
-		"Success when the config cannot check if it is read-only": {breakConfig: true},
+		"When the subscription stays empty":               {},
+		"When the config cannot check if it is read-only": {breakConfig: true},
 
 		"Error when database cannot create its dump file":     {breakNewDistroDB: true, wantErr: true},
 		"Error when certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},

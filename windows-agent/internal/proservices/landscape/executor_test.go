@@ -31,7 +31,7 @@ func TestAssignHost(t *testing.T) {
 		uid     string
 		wantErr bool
 	}{
-		"Success with some uid": {uid: "HostUID123"},
+		"With some uid": {uid: "HostUID123"},
 
 		"Error with an empty uid":            {uid: "", wantErr: true},
 		"Error when config returns an error": {confErr: true, wantErr: true},
@@ -92,8 +92,8 @@ func TestReceiveCommandStartStop(t *testing.T) {
 		wantState wsl.State
 		wantErr   bool
 	}{
-		"Success with command Start": {cmd: start, wantState: wsl.Running},
-		"Success with command Stop":  {cmd: stop, wantState: wsl.Stopped},
+		"With command Start": {cmd: start, wantState: wsl.Running},
+		"With command Stop":  {cmd: stop, wantState: wsl.Stopped},
 
 		"Error with Start when the distro does not exist": {cmd: start, dontRegisterDistro: true, wantErr: true},
 		"Error with Stop when the distro does not exist":  {cmd: stop, dontRegisterDistro: true, wantErr: true},
@@ -156,8 +156,8 @@ func TestInstall(t *testing.T) {
 		wantInstalled            bool
 		wantNonRootUser          bool
 	}{
-		"Success":                    {wantCouldInitWriteCalled: true, wantInstalled: true},
-		"Success with no cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
+		"Success":            {wantCouldInitWriteCalled: true, wantInstalled: true},
+		"With no cloud-init": {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true, wantNonRootUser: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
