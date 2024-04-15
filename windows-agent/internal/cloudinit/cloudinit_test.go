@@ -258,10 +258,10 @@ data:
 			err = ci.WriteDistroData(distroName, input)
 			var want string
 			if tc.wantErr {
-				require.Error(t, err, "WriteAgentData should have returned an error")
+				require.Error(t, err, "WriteDistroData should have returned an error")
 				want = oldCloudInit
 			} else {
-				require.NoError(t, err, "WriteAgentData should return no errors")
+				require.NoError(t, err, "WriteDistroData should return no errors")
 				want = input
 			}
 
