@@ -12,6 +12,10 @@ import (
 )
 
 func TestManualTokenInput(t *testing.T) {
+	// TODO: Remove this line when cloud-init support for UP4W is released.
+	// Follow this PR for more information: https://github.com/canonical/cloud-init/pull/5116
+	t.Skip("This test depends on cloud-init support for UP4W being released.")
+
 	type whenToken int
 	const (
 		never whenToken = iota
