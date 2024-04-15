@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"sync"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
@@ -51,11 +50,8 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestWriteAgentData(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	t.Parallel()
-
-	// All error cases share a golden file so we need to protect it during updates
-	var sharedGolden goldenMutex
 
 	const landscapeConfigOld string = `[irrelevant]
 info=this section should have been omitted
@@ -90,8 +86,6 @@ url = www.example.com/new/rickroll
 		breakDir      bool
 		breakTempFile bool
 		breakFile     bool
-
-		wantErr bool
 	}{
 		"Success":                            {},
 		"Without pro token":                  {skipProToken: true},
@@ -99,13 +93,13 @@ url = www.example.com/new/rickroll
 		"Without Landscape [client] section": {landscapeNoClientSection: true},
 		"With empty contents":                {skipProToken: true, skipLandscapeConf: true},
 
-		"Error obtaining pro token":             {breakSubscription: true, wantErr: true},
-		"Error obtaining Landscape config":      {breakLandscape: true, wantErr: true},
-		"Error with erroneous Landscape config": {badLandscape: true, wantErr: true},
+		"Error obtaining pro token":             {breakSubscription: true},
+		"Error obtaining Landscape config":      {breakLandscape: true},
+		"Error with erroneous Landscape config": {badLandscape: true},
 
-		"Error when the datadir cannot be created":   {breakDir: true, wantErr: true},
-		"Error when the temp file cannot be written": {breakTempFile: true, wantErr: true},
-		"Error when the temp file cannot be renamed": {breakFile: true, wantErr: true},
+		"Error when the datadir cannot be created":   {breakDir: true},
+		"Error when the temp file cannot be written": {breakTempFile: true},
+		"Error when the temp file cannot be renamed": {breakFile: true},
 	}
 
 	for name, tc := range testCases {
@@ -162,15 +156,7 @@ url = www.example.com/new/rickroll
 				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
 			}
 
-			err = ci.WriteAgentData()
-			var opts []testutils.Option
-			if tc.wantErr {
-				require.Error(t, err, "WriteAgentData should have returned an error")
-				errorGolden := filepath.Join(testutils.TestFamilyPath(t), "golden", "error-cases")
-				opts = append(opts, testutils.WithGoldenPath(errorGolden))
-			} else {
-				require.NoError(t, err, "WriteAgentData should return no errors")
-			}
+			ci.Update(ctx)
 
 			// Assert that the file was updated (success case) or that the old one remains (error case)
 			if tc.breakFile || tc.breakDir {
@@ -181,32 +167,11 @@ url = www.example.com/new/rickroll
 			got, err := os.ReadFile(path)
 			require.NoError(t, err, "There should be no error reading the cloud-init agent file")
 
-			sharedGolden.Lock()
-			defer sharedGolden.Unlock()
+			want := testutils.LoadWithUpdateFromGolden(t, string(got))
 
-			want := testutils.LoadWithUpdateFromGolden(t, string(got), opts...)
 			require.Equal(t, want, string(got), "Agent cloud-init file does not match the golden file")
 		})
 	}
-}
-
-// goldenMutex is a mutex that only works when golden update is enabled.
-type goldenMutex struct {
-	sync.Mutex
-}
-
-func (mu *goldenMutex) Lock() {
-	if !testutils.UpdateEnabled() {
-		return
-	}
-	mu.Mutex.Lock()
-}
-
-func (mu *goldenMutex) Unlock() {
-	if !testutils.UpdateEnabled() {
-		return
-	}
-	mu.Mutex.Unlock()
 }
 
 func TestWriteDistroData(t *testing.T) {

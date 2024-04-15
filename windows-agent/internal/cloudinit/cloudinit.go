@@ -37,22 +37,22 @@ func New(ctx context.Context, conf Config, publicDir string) (CloudInit, error) 
 		conf:    conf,
 	}
 
-	if err := c.WriteAgentData(); err != nil {
+	if err := c.writeAgentData(); err != nil {
 		return c, err
 	}
 
 	return c, nil
 }
 
-// Notify is syntax sugar to call WriteAgentData and log any error.
-func (c CloudInit) Notify(ctx context.Context) {
-	if err := c.WriteAgentData(); err != nil {
+// Update is syntax sugar to call writeAgentData and log any error.
+func (c CloudInit) Update(ctx context.Context) {
+	if err := c.writeAgentData(); err != nil {
 		log.Warningf(ctx, "Cloud-init: %v", err)
 	}
 }
 
-// WriteAgentData writes the agent's cloud-init data file.
-func (c CloudInit) WriteAgentData() (err error) {
+// writeAgentData writes the agent's cloud-init data file.
+func (c CloudInit) writeAgentData() (err error) {
 	defer decorate.OnError(&err, "could not create agent's cloud-init file")
 
 	cloudInit, err := marshalConfig(c.conf)

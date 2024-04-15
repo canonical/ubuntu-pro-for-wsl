@@ -107,12 +107,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	conf.SetUbuntuProNotifier(func(ctx context.Context, token string) {
 		ubuntupro.Distribute(ctx, s.db, token)
 		landscape.NotifyUbuntuProUpdate(ctx, token)
-		cloudInit.Notify(ctx)
+		cloudInit.Update(ctx)
 	})
 
 	conf.SetLandscapeNotifier(func(ctx context.Context, conf, uid string) {
 		landscape.NotifyConfigUpdate(ctx, conf, uid)
-		cloudInit.Notify(ctx)
+		cloudInit.Update(ctx)
 	})
 
 	// All notifications have been set up: starting the registry watcher before any services.
