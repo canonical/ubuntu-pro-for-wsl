@@ -194,7 +194,6 @@ data:
 
 	testCases := map[string]struct {
 		// Break marshalling
-		emptyData bool
 		noOldData bool
 
 		// Break writing to file
@@ -202,15 +201,16 @@ data:
 		breakTempFile bool
 		breakFile     bool
 
+		want    string
 		wantErr bool
 	}{
-		"Success":          {},
-		"With no old data": {noOldData: true},
-		"With empty data":  {emptyData: true},
+		"Success":             {},
+		"With no old data":    {want: newCloudInit, noOldData: true},
+		"With new valid data": {want: newCloudInit},
 
-		"Error when the datadir cannot be created":   {breakDir: true, wantErr: true},
-		"Error when the temp file cannot be written": {breakTempFile: true, wantErr: true},
-		"Error when the temp file cannot be renamed": {breakFile: true, wantErr: true},
+		"Error when the datadir cannot be created":   {breakDir: true, want: oldCloudInit, wantErr: true},
+		"Error when the temp file cannot be written": {breakTempFile: true, want: oldCloudInit, wantErr: true},
+		"Error when the temp file cannot be renamed": {breakFile: true, want: oldCloudInit, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -250,19 +250,11 @@ data:
 				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
 			}
 
-			var input string
-			if !tc.emptyData {
-				input = newCloudInit
-			}
-
-			err = ci.WriteDistroData(distroName, input)
-			var want string
+			err = ci.WriteDistroData(distroName, tc.want)
 			if tc.wantErr {
 				require.Error(t, err, "WriteDistroData should have returned an error")
-				want = oldCloudInit
 			} else {
 				require.NoError(t, err, "WriteDistroData should return no errors")
-				want = input
 			}
 
 			// Assert that the file was updated (success case) or that the old one remains (error case)
@@ -273,7 +265,7 @@ data:
 
 			got, err := os.ReadFile(path)
 			require.NoError(t, err, "There should be no error reading the distro's cloud-init file")
-			require.Equal(t, want, string(got), "Agent cloud-init file does not match the golden file")
+			require.Equal(t, tc.want, string(got), "Agent cloud-init file does not match the golden file")
 		})
 	}
 }
