@@ -39,11 +39,11 @@ func TestNew(t *testing.T) {
 			ci, err := cloudinit.New(ctx, conf, publicDir)
 			if tc.wantErr {
 				require.Error(t, err, "Cloud-init creation should have returned an error")
-				require.Nil(t, ci, "Cloud-init creation should not have returned a CloudInit object")
+				require.Empty(t, ci, "Cloud-init creation should not have returned a CloudInit object")
 				return
 			}
 			require.NoError(t, err, "Cloud-init creation should have returned no error")
-			require.NotNil(t, ci, "Cloud-init creation should have returned a CloudInit object")
+			require.NotEmpty(t, ci, "Cloud-init creation should have returned a CloudInit object")
 
 			// We don't assert on specifics, as they are tested in WriteAgentData tests.
 			path := filepath.Join(publicDir, ".cloud-init", "agent.yaml")

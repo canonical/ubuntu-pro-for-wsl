@@ -38,7 +38,7 @@ func New(ctx context.Context, conf Config, publicDir string) (CloudInit, error) 
 	}
 
 	if err := c.writeAgentData(); err != nil {
-		return c, err
+		return CloudInit{}, err
 	}
 
 	return c, nil
