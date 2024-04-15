@@ -162,7 +162,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlredyInstalled: true, wantInstalled: true},
-		"Error when cloud-init cannot write":         {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
+		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
 	}
 
