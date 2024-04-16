@@ -4,12 +4,12 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXDIR     = .sphinx
-SPHINXOPTS    ?= -c . -d $(SPHINXDIR)/.doctrees
+SPHINXOPTS    ?= -c . -d $(SPHINXDIR)/.doctrees -j auto
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 VENVDIR       = $(SPHINXDIR)/venv
-PA11Y         = $(SPHINXDIR)/node_modules/pa11y/bin/pa11y.js
+PA11Y         = $(SPHINXDIR)/node_modules/pa11y/bin/pa11y.js --config $(SPHINXDIR)/pa11y.json
 VENV          = $(VENVDIR)/bin/activate
 
 .PHONY: help full-help woke-install pa11y-install install run html epub serve \
@@ -39,7 +39,7 @@ full-help: $(VENVDIR)
 # Shouldn't assume that venv is available on Ubuntu by default; discussion here:
 # https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847
 $(SPHINXDIR)/requirements.txt:
-	python3 build_requirements.py
+	python3 $(SPHINXDIR)/build_requirements.py
 	python3 -c "import venv" || sudo apt install python3-venv
 
 # If requirements are updated, venv should be rebuilt and timestamped.

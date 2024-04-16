@@ -78,7 +78,15 @@ html_context = {
     # (use an empty value if you don't want to link)
     'discourse': 'https://discourse.ubuntu.com/c/wsl/27',
 
-    # Change to the GitHub info for your project
+    # Change to the Mattermost channel you want to link to
+    # (use an empty value if you don't want to link)
+    # 'mattermost': 'https://chat.canonical.com/canonical/channels/documentation',
+
+    # Change to the Matrix channel you want to link to
+    # (use an empty value if you don't want to link)
+    'matrix': 'https://matrix.to/#/#documentation:ubuntu.com',
+
+    # Change to the GitHub URL for your project
     'github_url': 'https://github.com/canonical/ubuntu-pro-for-wsl',
 
     # Change to the branch for this version of the documentation
@@ -151,7 +159,8 @@ custom_extensions = [
     'canonical.youtube-links',
     'canonical.related-links',
     'canonical.custom-rst-roles',
-    'canonical.terminal-output'
+    'canonical.terminal-output',
+    'notfound.extension'
     ]
 
 # Add custom required Python modules that must be added to the
@@ -159,7 +168,8 @@ custom_extensions = [
 # NOTE: The following modules are handled automatically and do not need to be
 # added here: canonical-sphinx-extensions, furo, linkify-it-py, myst-parser,
 # pyspelling, sphinx, sphinx-autobuild, sphinx-copybutton, sphinx-design,
-# sphinx-reredirects, sphinx-tabs, sphinxcontrib-jquery, sphinxext-opengraph
+# sphinx-notfound-page, sphinx-reredirects, sphinx-tabs, sphinxcontrib-jquery,
+# sphinxext-opengraph
 custom_required_modules = []
 
 # Add files or directories that should be excluded from processing.

@@ -1,7 +1,9 @@
 import sys
+import os
 
 sys.path.append('./')
 from custom_conf import *
+sys.path.append('.sphinx/')
 from build_requirements import *
 
 # Configuration file for the Sphinx documentation builder.
@@ -41,7 +43,7 @@ if IsMyStParserUsed():
 # Only add Open Graph extension if any configuration is present.
 if IsOpenGraphConfigured():
     extensions.append('sphinxext.opengraph')
-    
+
 extensions.extend(custom_extensions)
 extensions = DeduplicateExtensions(extensions)
 
@@ -50,6 +52,34 @@ extensions = DeduplicateExtensions(extensions)
 # Used for related links
 if not 'discourse_prefix' in html_context and 'discourse' in html_context:
     html_context['discourse_prefix'] = html_context['discourse'] + '/t/'
+
+# The URL prefix for the notfound extension depends on whether the documentation uses versions.
+# For documentation on documentation.ubuntu.com, we also must add the slug.
+url_version = ''
+url_lang = ''
+
+# Determine if the URL uses versions and language
+if 'READTHEDOCS_CANONICAL_URL' in os.environ and os.environ['READTHEDOCS_CANONICAL_URL']:
+    url_parts = os.environ['READTHEDOCS_CANONICAL_URL'].split('/')
+
+    if len(url_parts) >= 2 and 'READTHEDOCS_VERSION' in os.environ and os.environ['READTHEDOCS_VERSION'] == url_parts[-2]:
+        url_version = url_parts[-2] + '/'
+
+    if len(url_parts) >= 3 and 'READTHEDOCS_LANGUAGE' in os.environ and os.environ['READTHEDOCS_LANGUAGE'] == url_parts[-3]:
+        url_lang = url_parts[-3] + '/'
+
+# Set notfound_urls_prefix to the slug (if defined) and the version/language affix
+if slug:
+    notfound_urls_prefix = '/' + slug  + '/' + url_lang + url_version
+elif len(url_lang + url_version) > 0:
+    notfound_urls_prefix = '/' + url_lang + url_version
+else:
+    notfound_urls_prefix = ''
+
+notfound_context = {
+    'title': 'Page not found',
+    'body': '<p><strong>Sorry, but the documentation page that you are looking for was not found.</strong></p>\n\n<p>Documentation changes over time, and pages are moved around. We try to redirect you to the updated content where possible, but unfortunately, that didn\'t work this time (maybe because the content you were looking for does not exist in this version of the documentation).</p>\n<p>You can try to use the navigation to locate the content you\'re looking for, or search for a similar page.</p>\n',
+}
 
 # Default image for OGP (to prevent font errors, see
 # https://github.com/canonical/sphinx-docs-starter-pack/pull/54 )
@@ -104,6 +134,7 @@ if '-b' in sys.argv:
 # Setting templates_path for epub makes the build fail
 if builder == 'dirhtml' or builder == 'html':
     templates_path = ['.sphinx/_templates']
+    notfound_template = '404.html'
 
 # Theme configuration
 html_theme = 'furo'

@@ -25,7 +25,7 @@ body {
     --color-admonition-title--tip: #24598F;
     --color-admonition-title--important: #C7162B;
     --color-admonition-title--caution: #F99B11;
-    --color-highlighted-background: #EbEbEb;
+    --color-highlighted-background: #EBEBEB;
     --color-link-underline: var(--color-background-primary);
     --color-link-underline--hover: var(--color-background-primary);
     --color-version-popup: #772953;
