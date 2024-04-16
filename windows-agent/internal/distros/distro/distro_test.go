@@ -84,6 +84,7 @@ func TestNew(t *testing.T) {
 		"Error when the distro is not registered, but the GUID is":      {distro: nonRegisteredDistro, withGUID: registeredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when neither the distro nor the GUID are registered":     {distro: nonRegisteredDistro, withGUID: fakeGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
 		"Error when the startup mutex is nil":                           {distro: registeredDistro, nilMutex: true, wantErr: true},
+		"Error when the distro working directory cannot be created":     {distro: nonRegisteredDistro, preventWorkDirCreation: true, wantErr: true, wantErrType: &distro.NotValidError{}},
 	}
 
 	for name, tc := range testCases {
