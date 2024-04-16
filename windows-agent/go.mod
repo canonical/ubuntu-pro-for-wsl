@@ -7,7 +7,7 @@ toolchain go1.22.2
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240416151841-57e6fccf946e
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240322101935-3e73eb563dc3
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3
 	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240322101935-3e73eb563dc3
