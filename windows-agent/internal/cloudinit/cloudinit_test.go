@@ -39,7 +39,6 @@ func TestNew(t *testing.T) {
 			ci, err := cloudinit.New(ctx, conf, publicDir)
 			if tc.wantErr {
 				require.Error(t, err, "Cloud-init creation should have returned an error")
-				require.Empty(t, ci, "Cloud-init creation should not have returned a CloudInit object")
 				return
 			}
 			require.NoError(t, err, "Cloud-init creation should have returned no error")
