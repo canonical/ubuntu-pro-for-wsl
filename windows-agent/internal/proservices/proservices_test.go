@@ -12,6 +12,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
@@ -61,7 +62,7 @@ func TestNew(t *testing.T) {
 			reg := registry.NewMock()
 			k, err := reg.HKCUCreateKey("Software/Canonical/UbuntuPro")
 			require.NoError(t, err, "Setup: could not create Ubuntu Pro registry key")
-			reg.CloseKey(k)
+			defer reg.CloseKey(k)
 
 			if tc.breakNewDistroDB {
 				dbFile := filepath.Join(privateDir, consts.DatabaseFileName)
@@ -82,15 +83,25 @@ func TestNew(t *testing.T) {
 			}
 
 			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
-			if err == nil {
-				defer s.Stop(ctx)
-			}
-
 			if tc.wantErr {
 				require.Error(t, err, "New should return an error")
 				return
 			}
 			require.NoError(t, err, "New should return no error")
+			defer s.Stop(ctx)
+
+			// defer is needed here because the registry mock will defer notifying the registry watcher after the following writes.
+			defer func() {
+				got, err := os.ReadFile(filepath.Join(publicDir, ".cloud-init", "agent.yaml"))
+				require.NoError(t, err, "Setup: could not read agent.yaml file post test completion")
+				want := testutils.LoadWithUpdateFromGolden(t, string(got))
+				require.Equal(t, want, string(got), "agent.yaml file should be the same as the golden file")
+			}()
+			err = reg.WriteValue(k, "LandscapeConfig", "[client]\nuser=JohnDoe", true)
+			require.NoError(t, err, "Setup: could not write LandscapeConfig to the registry mock")
+			err = reg.WriteValue(k, "UbuntuProToken", "test-token", false)
+			require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
+			// registry notifications are triggered after this point and if proservices.New() made the right connections thye will cause cloudinit to update the agent.yaml file.
 		})
 	}
 }
