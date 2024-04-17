@@ -179,9 +179,7 @@ func loadClientCertificates(t *testing.T, certsDir string) credentials.Transport
 	caBytes, err := os.ReadFile(caFilePath)
 	require.NoError(t, err, "failed to read ca cert %q: %v", caFilePath, err)
 
-	if ok := ca.AppendCertsFromPEM(caBytes); !ok {
-		require.NoError(t, err, "failed to parse %q", caFilePath)
-	}
+	require.True(t, ca.AppendCertsFromPEM(caBytes), "failed to parse %q", caFilePath)
 
 	tlsConfig := &tls.Config{
 		MinVersion:   tls.VersionTLS13,
