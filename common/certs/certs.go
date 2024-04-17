@@ -98,7 +98,7 @@ func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACe
 }
 
 // createCert invokes x509.CreateCertificate and returns the certificate and it's DER as bytes for serialization.
-func createCert(template, parent *x509.Certificate, pub interface{}, parentPriv interface{}) (cert *x509.Certificate, certDER []byte, err error) {
+func createCert(template, parent *x509.Certificate, pub, parentPriv any) (cert *x509.Certificate, certDER []byte, err error) {
 	decorate.OnError(&err, "could not create certificate:")
 
 	certDER, err = x509.CreateCertificate(rand.Reader, template, parent, pub, parentPriv)
