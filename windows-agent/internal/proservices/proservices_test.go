@@ -67,9 +67,7 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
 			}
 			if tc.breakCertificatesDir {
-				f, err := os.Create(filepath.Join(publicDir, common.CertificatesDir))
-				require.NoError(t, err, "Setup: could not create the file that should break writing the certificates")
-				f.Close()
+				require.NoError(t, os.WriteFile(filepath.Join(publicDir, common.CertificatesDir), []byte{}, 0600), "Setup: could not create the file that should break writing the certificates")
 			}
 			if tc.breakCA {
 				require.NoError(t, os.MkdirAll(filepath.Join(publicDir, common.CertificatesDir, "ca_cert.pem"), 0700), "Setup: could break ca_cert.pem")
