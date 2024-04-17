@@ -63,10 +63,9 @@ func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACe
 	}
 
 	certTmpl := template(certCN, serial)
-
 	// Customizing the usage for client and server certificates:
-	//   I only got the certificates signed by the root one when I manually set the AuthorityKeyId,
-	//   even though x509.CreateCertificate documentation says it will use it, if present.
+	// Even though x509.CreateCertificate documentation says it will use it, if present,
+	// it seems we need to set AuthorityKeyId manually to make the verification work.
 	certTmpl.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement | x509.KeyUsageKeyEncipherment
 	certTmpl.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth}
 	certTmpl.AuthorityKeyId = rootCACert.SubjectKeyId
