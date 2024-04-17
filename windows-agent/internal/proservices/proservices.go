@@ -122,12 +122,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	if err := os.MkdirAll(destDir, 0700); err != nil {
 		return s, fmt.Errorf("failed to create certificates directory: %s", err)
 	}
-	certs, err := NewTLSCertificates(destDir)
+	certs, err := newTLSCertificates(destDir)
 	if err != nil {
 		return s, fmt.Errorf("failed to create certificates: %s", err)
 	}
 
-	s.creds = credentials.NewTLS(certs.ServerTLSConfig())
+	s.creds = credentials.NewTLS(certs.agentTLSConfig())
 	return s, err
 }
 

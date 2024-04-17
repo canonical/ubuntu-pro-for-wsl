@@ -1,11 +1,10 @@
-package proservices_test
+package proservices
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	ps "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,7 +37,7 @@ func TestNewTLSCertificates(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory that should break %s", tc.breakKeyFile)
 			}
 
-			c, err := ps.NewTLSCertificates(dir)
+			c, err := newTLSCertificates(dir)
 			if tc.wantErr {
 				require.Error(t, err, "NewTLSCertificates should have failed")
 				return
