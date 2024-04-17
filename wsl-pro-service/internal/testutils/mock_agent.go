@@ -51,8 +51,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
 	require.NoError(t, err, "Setup: could not listen to agent address")
 
-	clientCreds, serverCreds, err := agentTLSCreds(filepath.Join(publicDir, common.CertificatesDir))
-	require.NoError(t, err, "Setup: could not create TLS certificates and config")
+	clientCreds, serverCreds := agentTLSCreds(t, filepath.Join(publicDir, common.CertificatesDir))
 
 	m := MockWindowsAgent{
 		Listener:          lis,
@@ -93,45 +92,40 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	return &m
 }
 
-func agentTLSCreds(destDir string) (clientCreds, serverCreds credentials.TransportCredentials, err error) {
+// agentTLSCreds is a helper that creates a pair of TLS credentials for the agent and the WSL Pro service for testing.
+func agentTLSCreds(t *testing.T, destDir string) (wslProService, agentCreds credentials.TransportCredentials) {
+	t.Helper()
+
 	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate serial number for the CA cert: %v", err)
-	}
-	if err := os.MkdirAll(destDir, 0700); err != nil {
-		return nil, nil, fmt.Errorf("failed to create certificates directory: %v", err)
-	}
+	require.NoError(t, err, "failed to generate serial number for the CA cert", err)
+
+	require.NoError(t, os.MkdirAll(destDir, 0700), "failed to create certificates directory", err)
+
 	rootCert, rootKey, err := certs.CreateRootCA("UP4W Test", serial, destDir)
-	if err != nil {
-		return nil, nil, err
-	}
+	require.NoError(t, err, "failed to create root CA", err)
 
 	// Create and write the server and client certificates signed by the root certificate created above.
-	serverCert, err := certs.CreateTLSCertificateSignedBy("server", common.GRPCServerNameOverride, serial.Rsh(serial, 2), rootCert, rootKey, destDir)
-	if err != nil {
-		return nil, nil, err
-	}
-	clientCert, err := certs.CreateTLSCertificateSignedBy("client", "test-client", serial.Lsh(serial, 3), rootCert, rootKey, destDir)
-	if err != nil {
-		return nil, nil, err
-	}
+	agentCert, err := certs.CreateTLSCertificateSignedBy("server", common.GRPCServerNameOverride, serial.Rsh(serial, 2), rootCert, rootKey, destDir)
+	require.NoError(t, err, "failed to create agent certificate", err)
+	wslProServiceCert, err := certs.CreateTLSCertificateSignedBy("client", "wsl-pro-service-test", serial.Lsh(serial, 3), rootCert, rootKey, destDir)
+	require.NoError(t, err, "failed to create WSL Pro service certificate", err)
 
 	ca := x509.NewCertPool()
 	ca.AddCert(rootCert)
-	clientCreds = credentials.NewTLS(&tls.Config{
+	wslProService = credentials.NewTLS(&tls.Config{
 		MinVersion:   tls.VersionTLS13,
 		ServerName:   common.GRPCServerNameOverride,
-		Certificates: []tls.Certificate{*clientCert},
+		Certificates: []tls.Certificate{*wslProServiceCert},
 		RootCAs:      ca,
 	})
-	serverCreds = credentials.NewTLS(&tls.Config{
-		Certificates: []tls.Certificate{*serverCert},
+	agentCreds = credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{*agentCert},
 		ClientCAs:    ca,
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		MinVersion:   tls.VersionTLS13,
 	})
 
-	return clientCreds, serverCreds, nil
+	return wslProService, agentCreds
 }
 
 // Stop releases all resources associated with the MockWindowsAgent.
