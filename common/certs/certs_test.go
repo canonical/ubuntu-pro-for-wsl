@@ -15,10 +15,9 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 
 	testcases := map[string]struct {
 		missingSerialNumber bool
-
-		rootIsNotCA  bool
-		breakCertPem bool
-		breakKeyPem  bool
+		rootIsNotCA         bool
+		breakCertPem        bool
+		breakKeyPem         bool
 
 		wantErr bool
 	}{
@@ -75,9 +74,7 @@ func TestCreateRooCA(t *testing.T) {
 
 	testcases := map[string]struct {
 		missingSerialNumber bool
-		rootIsNotCA         bool
 		breakCertPem        bool
-		breakKeyPem         bool
 
 		wantErr bool
 	}{
