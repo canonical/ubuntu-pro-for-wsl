@@ -53,6 +53,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 
 	clientCreds, serverCreds, err := agentTLSCreds(filepath.Join(publicDir, common.CertificatesDir))
 	require.NoError(t, err, "Setup: could not create TLS certificates and config")
+
 	m := MockWindowsAgent{
 		Listener:          lis,
 		Server:            grpc.NewServer(grpc.Creds(serverCreds)),
