@@ -38,12 +38,13 @@ func TestNewTLSCertificates(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write directory that should break %s", tc.breakKeyFile)
 			}
 
-			_, err := ps.NewTLSCertificates(dir)
+			c, err := ps.NewTLSCertificates(dir)
 			if tc.wantErr {
 				require.Error(t, err, "NewTLSCertificates should have failed")
 				return
 			}
 			require.NoError(t, err, "NewTLSCertificates failed")
+			require.NotEmpty(t, c, "NewTLSCertificates should have returned a non-empty value")
 		})
 	}
 }
