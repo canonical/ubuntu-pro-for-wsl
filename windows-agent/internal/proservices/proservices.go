@@ -128,7 +128,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	}
 
 	s.creds = credentials.NewTLS(certs.agentTLSConfig())
-	return s, err
+	return s, nil
 }
 
 // Stop deallocates resources in the services.
