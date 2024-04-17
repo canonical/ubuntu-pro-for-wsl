@@ -1,4 +1,3 @@
-// Package proservices is in charge of managing the GRPC services and all business-logic side.
 package proservices
 
 import (
