@@ -39,7 +39,7 @@ full-help: $(VENVDIR)
 # Shouldn't assume that venv is available on Ubuntu by default; discussion here:
 # https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847
 $(SPHINXDIR)/requirements.txt:
-	python3 $(SPHINXDIR)/build_requirements.py
+	python3 build_requirements.py
 	python3 -c "import venv" || sudo apt install python3-venv
 
 # If requirements are updated, venv should be rebuilt and timestamped.
