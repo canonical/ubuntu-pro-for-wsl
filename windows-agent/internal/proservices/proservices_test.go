@@ -83,6 +83,7 @@ func TestNew(t *testing.T) {
 			}
 
 			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
+			defer s.Stop(ctx)
 			if tc.wantErr {
 				require.Error(t, err, "New should return an error")
 				return
