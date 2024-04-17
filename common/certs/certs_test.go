@@ -65,6 +65,7 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 			require.NoError(t, err, "CreateTLSCertificateSignedBy failed")
 			require.NotNil(t, tlsCert, "CreateTLSCertificateSignedBy returned a nil certificate")
 			require.FileExists(t, filepath.Join(dir, "server_cert.pem"), "CreateTLSCertificateSignedBy failed to write the certificate")
+			require.FileExists(t, filepath.Join(dir, "server_key.pem"), "CreateTLSCertificateSignedBy failed to write the certificate")
 		})
 	}
 }
