@@ -287,7 +287,7 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 
 	log.Infof(ctx, "Daemon: starting connection to Windows Agent via %s", addr)
 
-	tlsConfig, err := tlsConfigFromDir(d.certsPath)
+	tlsConfig, err := newTLSConfigFromDir(d.certsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +309,8 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	return streams.NewServer(ctx, d.system, conn), nil
 }
 
-// tlsConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.
-func tlsConfigFromDir(certsPath string) (conf *tls.Config, err error) {
+// newTLSConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.
+func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
 	decorate.OnError(&err, "could not load TLS config")
 	cert, err := tls.LoadX509KeyPair(filepath.Join(certsPath, "client_cert.pem"), filepath.Join(certsPath, "client_key.pem"))
 	if err != nil {
