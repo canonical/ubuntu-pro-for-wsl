@@ -172,16 +172,13 @@ func loadClientCertificates(t *testing.T, certsDir string) credentials.Transport
 	t.Helper()
 
 	cert, err := tls.LoadX509KeyPair(filepath.Join(certsDir, "client_cert.pem"), filepath.Join(certsDir, "client_key.pem"))
-	if err != nil {
-		require.NoError(t, err, "failed to load client cert: %v", err)
-	}
+	require.NoError(t, err, "failed to load client cert: %v", err)
 
 	ca := x509.NewCertPool()
 	caFilePath := filepath.Join(certsDir, "ca_cert.pem")
 	caBytes, err := os.ReadFile(caFilePath)
-	if err != nil {
-		require.NoError(t, err, "failed to read ca cert %q: %v", caFilePath, err)
-	}
+	require.NoError(t, err, "failed to read ca cert %q: %v", caFilePath, err)
+
 	if ok := ca.AppendCertsFromPEM(caBytes); !ok {
 		require.NoError(t, err, "failed to parse %q", caFilePath)
 	}
