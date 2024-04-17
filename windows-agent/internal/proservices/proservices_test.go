@@ -155,7 +155,7 @@ func TestRegisterGRPCServices(t *testing.T) {
 			c := agentapi.NewUIClient(conn)
 
 			// Test the client connection.
-			ctx, cancel = context.WithTimeout(context.Background(), 200*time.Hour)
+			ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
 			defer cancel()
 			_, err = c.Ping(ctx, &agentapi.Empty{})
 
