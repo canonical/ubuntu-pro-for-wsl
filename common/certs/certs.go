@@ -24,6 +24,35 @@ import (
 // - https://github.com/grpc/grpc-go/blob/master/examples/features/encryption/mTLS
 // - and https://gist.github.com/annanay25/43e3846e21b30818d8dcd5f9987e852d.
 
+// CreateRootCA creates a new root certificate authority (CA) certificate and private key pair with the serial number and common name provided.
+// Only the cert is written into destDir in the PEM format. Being a CA, the certificate and private key returned can be used to sign other certificates.
+func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCert *x509.Certificate, rootKey *ecdsa.PrivateKey, err error) {
+	// generate a new key-pair for the root certificate based on the P256 elliptic curve
+	rootKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate random key: %v", err)
+	}
+
+	rootCertTmpl := template(commonName, serialNo)
+	// this cert will be the CA that we will use to sign the server cert
+	rootCertTmpl.IsCA = true
+	rootCertTmpl.Subject.CommonName = commonName + " CA"
+	rootCertTmpl.KeyUsage = x509.KeyUsageCertSign
+
+	rootCert, rootDER, err := createCert(rootCertTmpl, rootCertTmpl, &rootKey.PublicKey, rootKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Write the CA certificate to disk.
+	// Notice that we don't write the private key to disk. Only the caller of this function can create other certificates signed by this root CA.
+	if err = writeCert(filepath.Join(destDir, "ca_cert.pem"), rootDER); err != nil {
+		return nil, nil, err
+	}
+
+	return rootCert, rootKey, nil
+}
+
 // CreateTLSCertificateSignedBy creates a certificate and key pair usable for authentication signed by the root certificate authority (root CA) certificate and key provided and write them into destDir in the PEM format.
 func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey, destDir string) (tlsCert *tls.Certificate, err error) {
 	decorate.OnError(&err, "could not create root signed certificate pair for %s:", name)
@@ -66,36 +95,6 @@ func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACe
 		PrivateKey:  key,
 		Leaf:        cert,
 	}, nil
-}
-
-// CreateRootCA creates a new root certificate authority (CA) certificate and private key pair with the serial number and common name provided.
-// Only the cert is written into destDir in the PEM format. Being a CA, the certificate and private key returned can be used to sign other certificates.
-func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCert *x509.Certificate, rootKey *ecdsa.PrivateKey, err error) {
-	// generate a new key-pair for the root certificate based on the P256 elliptic curve
-	rootKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate random key: %v", err)
-	}
-
-	rootCertTmpl := template(commonName, serialNo)
-
-	// this cert will be the CA that we will use to sign the server cert
-	rootCertTmpl.IsCA = true
-	rootCertTmpl.Subject.CommonName = commonName + " CA"
-	rootCertTmpl.KeyUsage = x509.KeyUsageCertSign
-
-	rootCert, rootDER, err := createCert(rootCertTmpl, rootCertTmpl, &rootKey.PublicKey, rootKey)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Write the CA certificate to disk.
-	// Notice that we don't write the private key to disk. Only the caller of this function can create other certificates signed by this root CA.
-	if err = writeCert(filepath.Join(destDir, "ca_cert.pem"), rootDER); err != nil {
-		return nil, nil, err
-	}
-
-	return rootCert, rootKey, nil
 }
 
 // createCert invokes x509.CreateCertificate and returns the certificate and it's DER as bytes for serialization.
