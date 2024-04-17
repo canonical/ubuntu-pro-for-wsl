@@ -12,22 +12,24 @@ import (
 func TestNewTLSCertificates(t *testing.T) {
 	t.Parallel()
 	testcases := map[string]struct {
-		breakDestDir bool
-		breakKeyFile string
+		inexistentDestDir bool
+		breakKeyFile      string
 
 		wantErr bool
 	}{
 		"Success": {},
-		"Error when the destination directory cannot be written into": {breakDestDir: true, wantErr: true},
-		"Error when the server private key cannot be written":         {breakKeyFile: "server_key.pem", wantErr: true},
-		"Error when the client private key cannot be written":         {breakKeyFile: "client_key.pem", wantErr: true},
+
+		"Error when the destination directory does not exist": {inexistentDestDir: true, wantErr: true},
+		"Error when the server private key cannot be written": {breakKeyFile: "server_key.pem", wantErr: true},
+		"Error when the client private key cannot be written": {breakKeyFile: "client_key.pem", wantErr: true},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			dir := t.TempDir()
-			if tc.breakDestDir {
+			if tc.inexistentDestDir {
 				dir = filepath.Join(dir, "inexistent")
 			}
 
