@@ -122,18 +122,15 @@ func TestServe(t *testing.T) {
 			defer agent.Stop()
 
 			if tc.missingCertsDir {
-				err := os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir))
-				require.NotErrorIs(t, err, os.ErrNotExist, "Setup: could not remove certificates")
+				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir)), "Setup: could not remove certificates")
 			}
 
 			if tc.missingCaCert {
-				err := os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, "ca_cert.pem"))
-				require.NotErrorIs(t, err, os.ErrNotExist, "Setup: could not remove ca_cert.pem")
+				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, "ca_cert.pem")), "Setup: could not remove ca_cert.pem")
 			}
 
 			if tc.breakPortFile {
-				err := os.RemoveAll(publicDir)
-				require.NoError(t, err, "Setup: could not remove port file")
+				require.NoError(t, os.RemoveAll(publicDir), "Setup: could not remove port file")
 			}
 
 			if tc.breakWindowsHostAddress {
