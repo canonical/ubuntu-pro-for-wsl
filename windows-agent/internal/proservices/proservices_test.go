@@ -145,10 +145,8 @@ func TestRegisterGRPCServices(t *testing.T) {
 
 			// Create a client connection to the server.
 			addr := lis.Addr().String()
-			var creds credentials.TransportCredentials
-			if tc.insecureClient {
-				creds = insecure.NewCredentials()
-			} else {
+			creds := insecure.NewCredentials()
+			if !tc.insecureClient {
 				creds = loadClientCertificates(t, filepath.Join(publicDir, common.CertificatesDir))
 			}
 			conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
