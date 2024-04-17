@@ -111,11 +111,11 @@ func TestRegisterGRPCServices(t *testing.T) {
 
 			publicDir := t.TempDir()
 
-			ps, err := proservices.New(ctx, publicDir, t.TempDir(), proservices.WithRegistry(registry.NewMock()))
+			s, err := proservices.New(ctx, publicDir, t.TempDir(), proservices.WithRegistry(registry.NewMock()))
 			require.NoError(t, err, "Setup: New should return no error")
-			defer ps.Stop(ctx)
+			defer s.Stop(ctx)
 
-			server := ps.RegisterGRPCServices(context.Background())
+			server := s.RegisterGRPCServices(context.Background())
 			info := server.GetServiceInfo()
 
 			_, ok := info["agentapi.UI"]
