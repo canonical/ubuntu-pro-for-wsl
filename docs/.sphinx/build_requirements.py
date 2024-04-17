@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('./')
+sys.path.append('../')
 from custom_conf import *
 
 # The file contains helper functions and the mechanism to build the
