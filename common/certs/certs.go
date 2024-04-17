@@ -39,6 +39,7 @@ func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCer
 	rootCertTmpl.Subject.CommonName = commonName + " CA"
 	rootCertTmpl.KeyUsage = x509.KeyUsageCertSign
 
+	// We pass the template as the parent as well so that the certificate is self-signed.
 	rootCert, rootDER, err := createCert(rootCertTmpl, rootCertTmpl, &rootKey.PublicKey, rootKey)
 	if err != nil {
 		return nil, nil, err
