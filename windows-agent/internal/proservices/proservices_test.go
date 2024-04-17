@@ -132,13 +132,18 @@ func TestRegisterGRPCServices(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create a listener")
 			defer lis.Close()
 
+			serverDone := make(chan struct{})
 			go func() {
+				defer close(serverDone)
 				err := server.Serve(lis)
 				if err != nil {
 					t.Logf("Serve exited with error: %v", err)
 				}
 			}()
-			defer server.Stop()
+			t.Cleanup(func() {
+				server.Stop()
+				<-serverDone
+			})
 
 			// Create a client connection to the server.
 			addr := lis.Addr().String()
