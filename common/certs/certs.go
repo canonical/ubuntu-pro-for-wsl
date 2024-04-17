@@ -127,25 +127,25 @@ func template(commonName string, serial *big.Int) *x509.Certificate {
 
 // writeCert writes a certificate to disk in PEM format to the given filename.
 func writeCert(filename string, DER []byte) error {
-	certOut, err := os.Create(filename)
+	w, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to open %q for writing: %v", filename, err)
 	}
-	defer certOut.Close()
-	return pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: DER})
+	defer w.Close()
+	return pem.Encode(w, &pem.Block{Type: "CERTIFICATE", Bytes: DER})
 }
 
 // writeKey writes a private key to disk in PEM format to the given filename.
 func writeKey(filename string, priv *ecdsa.PrivateKey) error {
-	keyOut, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	k, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open %q for writing: %v", filename, err)
 	}
-	defer keyOut.Close()
+	defer k.Close()
 	p, err := x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
 		return fmt.Errorf("failed to marshal private key: %v", err)
 	}
 
-	return pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: p})
+	return pem.Encode(k, &pem.Block{Type: "PRIVATE KEY", Bytes: p})
 }
