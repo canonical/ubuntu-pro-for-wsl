@@ -132,6 +132,7 @@ func writeCert(filename string, DER []byte) error {
 		return fmt.Errorf("failed to open %q for writing: %v", filename, err)
 	}
 	defer w.Close()
+
 	return pem.Encode(w, &pem.Block{Type: "CERTIFICATE", Bytes: DER})
 }
 
@@ -142,6 +143,7 @@ func writeKey(filename string, priv *ecdsa.PrivateKey) error {
 		return fmt.Errorf("failed to open %q for writing: %v", filename, err)
 	}
 	defer k.Close()
+
 	p, err := x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
 		return fmt.Errorf("failed to marshal private key: %v", err)
