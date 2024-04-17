@@ -89,20 +89,17 @@ func TestNew(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "New should return no error")
-			defer s.Stop(ctx)
 
-			// defer is needed here because the registry mock will defer notifying the registry watcher after the following writes.
-			defer func() {
-				got, err := os.ReadFile(filepath.Join(publicDir, ".cloud-init", "agent.yaml"))
-				require.NoError(t, err, "Setup: could not read agent.yaml file post test completion")
-				want := testutils.LoadWithUpdateFromGolden(t, string(got))
-				require.Equal(t, want, string(got), "agent.yaml file should be the same as the golden file")
-			}()
+			// Those lines are just to trigger the registry watcher callbacks, they don't write anything to the agent.yaml file by the time we check, that's why goldens are empty.
 			err = reg.WriteValue(k, "LandscapeConfig", "[client]\nuser=JohnDoe", true)
 			require.NoError(t, err, "Setup: could not write LandscapeConfig to the registry mock")
 			err = reg.WriteValue(k, "UbuntuProToken", "test-token", false)
 			require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
-			// registry notifications are triggered after this point and if proservices.New() made the right connections thye will cause cloudinit to update the agent.yaml file.
+
+			got, err := os.ReadFile(filepath.Join(publicDir, ".cloud-init", "agent.yaml"))
+			require.NoError(t, err, "Setup: could not read agent.yaml file post test completion")
+			want := testutils.LoadWithUpdateFromGolden(t, string(got))
+			require.Equal(t, want, string(got), "agent.yaml file should be the same as the golden file")
 		})
 	}
 }
