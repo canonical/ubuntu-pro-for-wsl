@@ -12,24 +12,6 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-// Certs conveniently holds the root CA and server certificates to make it easy to create a TLS config.
-type Certs struct {
-	RootCA     *x509.Certificate
-	ServerCert tls.Certificate
-}
-
-// ServerTLSConfig returns a TLS config for servers that require and verify client certificates.
-func (c Certs) ServerTLSConfig() *tls.Config {
-	ca := x509.NewCertPool()
-	ca.AddCert(c.RootCA)
-	return &tls.Config{
-		Certificates: []tls.Certificate{c.ServerCert},
-		ClientCAs:    ca,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		MinVersion:   tls.VersionTLS13,
-	}
-}
-
 // NewTLSCertificates creates a root CA and a server self-signed certificates and writes them into destDir.
 func NewTLSCertificates(destDir string) (c Certs, err error) {
 	decorate.OnError(&err, "could not create TLS credentials:")
@@ -58,4 +40,22 @@ func NewTLSCertificates(destDir string) (c Certs, err error) {
 	}
 
 	return Certs{RootCA: rootCert, ServerCert: *serverCert}, nil
+}
+
+// ServerTLSConfig returns a TLS config for servers that require and verify client certificates.
+func (c Certs) ServerTLSConfig() *tls.Config {
+	ca := x509.NewCertPool()
+	ca.AddCert(c.RootCA)
+	return &tls.Config{
+		Certificates: []tls.Certificate{c.ServerCert},
+		ClientCAs:    ca,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		MinVersion:   tls.VersionTLS13,
+	}
+}
+
+// Certs conveniently holds the root CA and server certificates to make it easy to create a TLS config.
+type Certs struct {
+	RootCA     *x509.Certificate
+	ServerCert tls.Certificate
 }
