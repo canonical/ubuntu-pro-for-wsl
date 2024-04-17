@@ -32,7 +32,7 @@ func NewTLSCertificates(destDir string) (c Certs, err error) {
 	if err != nil {
 		return Certs{}, err
 	}
-	// We won't store the TLS client certificate, because only the agent should acess this function and it's not interested in the client TLS certificate.
+	// We won't store the TLS client certificate, because only the agent should access this function and it's not interested in the client TLS certificate.
 	// But we still need to write them to disk, so clients can construct their TLS configs from there.
 	_, err = certs.CreateTLSCertificateSignedBy("client", common.GRPCServerNameOverride, serial.Lsh(serial, 3), rootCert, rootKey, destDir)
 	if err != nil {
