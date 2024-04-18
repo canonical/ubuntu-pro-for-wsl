@@ -40,7 +40,11 @@ enum AgentState {
 }
 
 /// A Function that knows how to create an AgentApiClient from a host and a port.
-typedef ApiClientFactory = AgentApiClient Function(String host, int port);
+typedef ApiClientFactory = AgentApiClient Function(
+  String host,
+  int port,
+  Directory certsDir,
+);
 
 /// A Function that knows how to launch the agent and report success.
 typedef AgentLauncher = Future<bool> Function();
@@ -168,13 +172,14 @@ class AgentStartupMonitor {
 
   Future<AgentState> _onAddress((String, int) address) async {
     final (host, port) = address;
+    final dir = Directory(p.join(p.dirname(_addrFilePath!), 'certs'));
 
     if (_agentApiClient != null) {
-      await _agentApiClient!.connectTo(host: host, port: port);
+      await _agentApiClient!.connectTo(host, port, dir);
       return AgentState.ok;
     }
 
-    final client = clientFactory(host, port);
+    final client = clientFactory(host, port, dir);
     if (await client.ping()) {
       _agentApiClient = client;
       for (final cb in _onClient) {

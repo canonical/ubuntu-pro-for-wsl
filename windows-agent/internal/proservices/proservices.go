@@ -3,8 +3,12 @@ package proservices
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -18,6 +22,7 @@ import (
 	"github.com/sirupsen/logrus"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Manager is the orchestrator of GRPC API services and business logic.
@@ -27,6 +32,8 @@ type Manager struct {
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
+
+	creds credentials.TransportCredentials
 }
 
 // options are the configurable functional options for the daemon.
@@ -111,6 +118,16 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		log.Warningf(ctx, err.Error())
 	}
 
+	destDir := filepath.Join(publicDir, common.CertificatesDir)
+	if err := os.MkdirAll(destDir, 0700); err != nil {
+		return s, fmt.Errorf("failed to create certificates directory: %s", err)
+	}
+	certs, err := newTLSCertificates(destDir)
+	if err != nil {
+		return s, fmt.Errorf("failed to create certificates: %s", err)
+	}
+
+	s.creds = credentials.NewTLS(certs.agentTLSConfig())
 	return s, nil
 }
 
@@ -140,7 +157,7 @@ func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
 		interceptorschain.StreamServer(
 			log.StreamServerInterceptor(logrus.StandardLogger()),
 			logconnections.StreamServerInterceptor(),
-		)))
+		)), grpc.Creds(m.creds))
 	agent_api.RegisterUIServer(grpcServer, &m.uiService)
 	agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
 

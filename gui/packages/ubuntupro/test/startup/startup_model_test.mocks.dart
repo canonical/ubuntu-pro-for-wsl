@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
+import 'dart:io' as _i5;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
@@ -54,6 +55,7 @@ class MockAgentStartupMonitor extends _i1.Mock
         returnValue: (
           String host,
           int port,
+          _i5.Directory certsDir,
         ) =>
             _FakeAgentApiClient_0(
           this,

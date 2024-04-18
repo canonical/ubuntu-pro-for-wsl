@@ -67,6 +67,8 @@ func TestServe(t *testing.T) {
 		precancelContext        bool
 		breakWindowsHostAddress bool
 		dontServe               bool
+		missingCertsDir         bool
+		missingCaCert           bool
 
 		// Break the port file in various ways
 		breakPortFile         bool
@@ -91,12 +93,14 @@ func TestServe(t *testing.T) {
 		// keeps retrying the connection
 		//
 		// We instead check that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because the port file does not exist":      {breakPortFile: true, wantConnected: false},
-		"No connection because the port file is empty":            {portFileEmpty: true, wantConnected: false},
-		"No connection because the port file has a bad port":      {portFilePortNotNumber: true, wantConnected: false},
-		"No connection because the port file has port 0":          {portFileZeroPort: true, wantConnected: false},
-		"No connection because the port file has a negative port": {portFileNegativePort: true, wantConnected: false},
-		"No connection because there is no server":                {dontServe: true},
+		"No connection because the port file does not exist":         {breakPortFile: true, wantConnected: false},
+		"No connection because the port file is empty":               {portFileEmpty: true, wantConnected: false},
+		"No connection because the port file has a bad port":         {portFilePortNotNumber: true, wantConnected: false},
+		"No connection because the port file has port 0":             {portFileZeroPort: true, wantConnected: false},
+		"No connection because the port file has a negative port":    {portFileNegativePort: true, wantConnected: false},
+		"No connection because there is no server":                   {dontServe: true},
+		"No connection because there are no certificates":            {missingCertsDir: true, wantConnected: false},
+		"No connection because cannot read root CA certificate file": {missingCaCert: true, wantConnected: false},
 
 		// Errors
 		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
@@ -117,9 +121,16 @@ func TestServe(t *testing.T) {
 			agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
 			defer agent.Stop()
 
+			if tc.missingCertsDir {
+				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir)), "Setup: could not remove certificates")
+			}
+
+			if tc.missingCaCert {
+				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, common.RootCACertFileName)), "Setup: could not remove the root CA certificate file")
+			}
+
 			if tc.breakPortFile {
-				err := os.RemoveAll(publicDir)
-				require.NoError(t, err, "Setup: could not remove port file")
+				require.NoError(t, os.RemoveAll(publicDir), "Setup: could not remove port file")
 			}
 
 			if tc.breakWindowsHostAddress {

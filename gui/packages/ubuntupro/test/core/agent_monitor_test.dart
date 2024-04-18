@@ -43,7 +43,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always fail.
       agentLauncher: () async => false,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -70,7 +70,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -93,7 +93,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -115,7 +115,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -145,7 +145,7 @@ void main() {
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async => true,
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -163,6 +163,7 @@ void main() {
 
   test('start agent with mocks', () async {
     final mockClient = MockAgentApiClient();
+    Directory? certsDirPassed;
     // Fakes a successful ping.
     when(mockClient.ping()).thenAnswer((_) async => true);
     final monitor = AgentStartupMonitor(
@@ -171,7 +172,10 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, d) {
+        certsDirPassed = d;
+        return mockClient;
+      },
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -186,6 +190,8 @@ void main() {
       ]),
     );
     verify(mockClient.ping()).called(1);
+    expect(certsDirPassed, isNotNull);
+    expect(certsDirPassed!.path, contains(homeDir!.path));
   });
 
   test('timeout if never addr', () async {
@@ -197,7 +203,7 @@ void main() {
       agentLauncher: () async {
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -224,7 +230,7 @@ void main() {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) async {
         // This function only completes when the completer is manually set complete.
@@ -260,15 +266,14 @@ void main() {
     // Fakes a successful ping.
     when(mockClient.ping()).thenAnswer((_) async => true);
     // fakes a succesful connectTo call.
-    when(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
-        .thenAnswer((_) async => true);
+    when(mockClient.connectTo(any, any, any)).thenAnswer((_) async => true);
     final monitor = AgentStartupMonitor(
       /// A launch request will always succeed.
       agentLauncher: () async {
         writeDummyAddrFile(homeDir!);
         return true;
       },
-      clientFactory: (host, port) => mockClient,
+      clientFactory: (_, __, ___) => mockClient,
       addrFileName: kAddrFileName,
       onClient: (_) {},
     );
@@ -298,8 +303,7 @@ void main() {
     );
 
     final newClient = monitor.agentApiClient;
-    verify(mockClient.connectTo(host: anyNamed('host'), port: anyNamed('port')))
-        .called(1);
+    verify(mockClient.connectTo(any, any, any)).called(1);
     expect(newClient.hashCode, currentClient.hashCode);
   });
 }
