@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -35,11 +33,6 @@ func initViperConfig(name string, cmd *cobra.Command, vip *viper.Viper) (err err
 		vip.AddConfigPath("./")
 		vip.AddConfigPath("$HOME")
 		vip.AddConfigPath(fmt.Sprintf("$HOME/%s", common.UserProfileDir))
-		if binPath, err := os.Executable(); err != nil {
-			log.Warningf(context.Background(), "Failed to get the current executable path, not adding it as a config dir: %v", err)
-		} else {
-			vip.AddConfigPath(filepath.Dir(binPath))
-		}
 	}
 
 	// Load the config
