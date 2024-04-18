@@ -72,11 +72,7 @@ func installVerbosityFlag(cmd *cobra.Command, viper *viper.Viper) *int {
 
 // installConfigFlag adds the --config flag to allow for custom config paths.
 func installConfigFlag(cmd *cobra.Command, viper *viper.Viper) *string {
-	r := cmd.PersistentFlags().StringP("config", "c", "", i18n.G("configuration file path"))
-	if err := viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config")); err != nil {
-		log.Warning(context.Background(), err)
-	}
-	return r
+	return cmd.PersistentFlags().StringP("config", "c", "", i18n.G("configuration file path"))
 }
 
 // SetVerboseMode change ErrorFormat and logs between very, middly and non verbose.
