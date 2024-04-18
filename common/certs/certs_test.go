@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	"github.com/stretchr/testify/require"
 )
@@ -21,8 +22,8 @@ func TestCreateRooCA(t *testing.T) {
 	}{
 		"Success": {},
 
-		"Error when serial number is missing":               {missingSerialNumber: true, wantErr: true},
-		"Error when the ca_cert.pem file cannot be written": {breakCertPem: true, wantErr: true},
+		"Error when serial number is missing":                       {missingSerialNumber: true, wantErr: true},
+		"Error when the root CA certificate file cannot be written": {breakCertPem: true, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -37,7 +38,7 @@ func TestCreateRooCA(t *testing.T) {
 			dir := t.TempDir()
 
 			if tc.breakCertPem {
-				require.NoError(t, os.MkdirAll(filepath.Join(dir, "ca_cert.pem"), 0700), "Setup: failed to create a directory that should break cert.pem")
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, common.RootCACertFileName), 0700), "Setup: failed to create a directory that should break cert.pem")
 			}
 
 			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", testSerial, dir)
@@ -49,7 +50,7 @@ func TestCreateRooCA(t *testing.T) {
 			require.NoError(t, err, "CreateRootCA failed")
 			require.NotNil(t, rootCert, "CreateRootCA didn't return a certificate")
 			require.NotNil(t, rootKey, "CreateRootCA didn't return a private key")
-			require.FileExists(t, filepath.Join(dir, "ca_cert.pem"), "CreateRootCA failed to write the certificate to disk")
+			require.FileExists(t, filepath.Join(dir, common.RootCACertFileName), "CreateRootCA failed to write the certificate to disk")
 		})
 	}
 }
@@ -91,15 +92,18 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 
 			dir := t.TempDir()
 
+			agentCertName := common.AgentCertFilePrefix + common.CertificateSuffix
+			agentKeyName := common.AgentCertFilePrefix + common.KeySuffix
+
 			if tc.breakCertPem {
-				require.NoError(t, os.MkdirAll(filepath.Join(dir, "server_cert.pem"), 0700), "Setup: failed to create a directory that should break cert.pem")
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, agentCertName), 0700), "Setup: failed to create a directory that should break cert.pem")
 			}
 
 			if tc.breakKeyPem {
-				require.NoError(t, os.MkdirAll(filepath.Join(dir, "server_key.pem"), 0700), "Setup: failed to create a directory that should break key.pem")
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, agentKeyName), 0700), "Setup: failed to create a directory that should break key.pem")
 			}
 
-			tlsCert, err := certs.CreateTLSCertificateSignedBy("server", "test-server-cn", testSerial, rootCert, rootKey, dir)
+			tlsCert, err := certs.CreateTLSCertificateSignedBy(common.AgentCertFilePrefix, "test-server-cn", testSerial, rootCert, rootKey, dir)
 
 			if tc.wantErr {
 				require.Error(t, err, "CreateTLSCertificateSignedBy should have failed")
@@ -107,8 +111,8 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 			}
 			require.NoError(t, err, "CreateTLSCertificateSignedBy failed")
 			require.NotNil(t, tlsCert, "CreateTLSCertificateSignedBy returned a nil certificate")
-			require.FileExists(t, filepath.Join(dir, "server_cert.pem"), "CreateTLSCertificateSignedBy failed to write the certificate")
-			require.FileExists(t, filepath.Join(dir, "server_key.pem"), "CreateTLSCertificateSignedBy failed to write the certificate")
+			require.FileExists(t, filepath.Join(dir, agentCertName), "CreateTLSCertificateSignedBy failed to write the certificate")
+			require.FileExists(t, filepath.Join(dir, agentKeyName), "CreateTLSCertificateSignedBy failed to write the certificate")
 		})
 	}
 }

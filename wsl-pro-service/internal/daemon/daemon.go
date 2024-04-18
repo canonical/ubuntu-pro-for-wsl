@@ -313,13 +313,13 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
 	decorate.OnError(&err, "could not load TLS config")
 
-	cert, err := tls.LoadX509KeyPair(filepath.Join(certsPath, "client_cert.pem"), filepath.Join(certsPath, "client_key.pem"))
+	cert, err := tls.LoadX509KeyPair(filepath.Join(certsPath, common.ClientsCertFilePrefix+common.CertificateSuffix), filepath.Join(certsPath, common.ClientsCertFilePrefix+common.KeySuffix))
 	if err != nil {
 		return nil, err
 	}
 
 	ca := x509.NewCertPool()
-	caFilePath := filepath.Join(certsPath, "ca_cert.pem")
+	caFilePath := filepath.Join(certsPath, common.RootCACertFileName)
 	caBytes, err := os.ReadFile(caFilePath)
 	if err != nil {
 		return nil, err

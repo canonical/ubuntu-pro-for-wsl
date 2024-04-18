@@ -93,14 +93,14 @@ func TestServe(t *testing.T) {
 		// keeps retrying the connection
 		//
 		// We instead check that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because the port file does not exist":      {breakPortFile: true, wantConnected: false},
-		"No connection because the port file is empty":            {portFileEmpty: true, wantConnected: false},
-		"No connection because the port file has a bad port":      {portFilePortNotNumber: true, wantConnected: false},
-		"No connection because the port file has port 0":          {portFileZeroPort: true, wantConnected: false},
-		"No connection because the port file has a negative port": {portFileNegativePort: true, wantConnected: false},
-		"No connection because there is no server":                {dontServe: true},
-		"No connection because there are no certificates":         {missingCertsDir: true, wantConnected: false},
-		"No connection because cannot read ca_cert":               {missingCaCert: true, wantConnected: false},
+		"No connection because the port file does not exist":         {breakPortFile: true, wantConnected: false},
+		"No connection because the port file is empty":               {portFileEmpty: true, wantConnected: false},
+		"No connection because the port file has a bad port":         {portFilePortNotNumber: true, wantConnected: false},
+		"No connection because the port file has port 0":             {portFileZeroPort: true, wantConnected: false},
+		"No connection because the port file has a negative port":    {portFileNegativePort: true, wantConnected: false},
+		"No connection because there is no server":                   {dontServe: true},
+		"No connection because there are no certificates":            {missingCertsDir: true, wantConnected: false},
+		"No connection because cannot read root CA certificate file": {missingCaCert: true, wantConnected: false},
 
 		// Errors
 		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
@@ -126,7 +126,7 @@ func TestServe(t *testing.T) {
 			}
 
 			if tc.missingCaCert {
-				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, "ca_cert.pem")), "Setup: could not remove ca_cert.pem")
+				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, common.RootCACertFileName)), "Setup: could not remove the root CA certificate file")
 			}
 
 			if tc.breakPortFile {

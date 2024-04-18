@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,9 +19,9 @@ func TestNewTLSCertificates(t *testing.T) {
 	}{
 		"Success": {},
 
-		"Error when the destination directory does not exist": {inexistentDestDir: true, wantErr: true},
-		"Error when the server private key cannot be written": {breakKeyFile: "server_key.pem", wantErr: true},
-		"Error when the client private key cannot be written": {breakKeyFile: "client_key.pem", wantErr: true},
+		"Error when the destination directory does not exist":  {inexistentDestDir: true, wantErr: true},
+		"Error when the agent private key cannot be written":   {breakKeyFile: common.AgentCertFilePrefix + common.KeySuffix, wantErr: true},
+		"Error when the clients private key cannot be written": {breakKeyFile: common.ClientsCertFilePrefix + common.KeySuffix, wantErr: true},
 	}
 
 	for name, tc := range testcases {

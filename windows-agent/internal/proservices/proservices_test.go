@@ -70,7 +70,7 @@ func TestNew(t *testing.T) {
 				require.NoError(t, os.WriteFile(filepath.Join(publicDir, common.CertificatesDir), []byte{}, 0600), "Setup: could not create the file that should break writing the certificates")
 			}
 			if tc.breakCA {
-				require.NoError(t, os.MkdirAll(filepath.Join(publicDir, common.CertificatesDir, "ca_cert.pem"), 0700), "Setup: could break ca_cert.pem")
+				require.NoError(t, os.MkdirAll(filepath.Join(publicDir, common.CertificatesDir, common.RootCACertFileName), 0700), "Setup: could not break the root CA certificate file")
 			}
 
 			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
@@ -171,11 +171,11 @@ func TestRegisterGRPCServices(t *testing.T) {
 func loadClientCertificates(t *testing.T, certsDir string) credentials.TransportCredentials {
 	t.Helper()
 
-	cert, err := tls.LoadX509KeyPair(filepath.Join(certsDir, "client_cert.pem"), filepath.Join(certsDir, "client_key.pem"))
+	cert, err := tls.LoadX509KeyPair(filepath.Join(certsDir, common.ClientsCertFilePrefix+common.CertificateSuffix), filepath.Join(certsDir, common.ClientsCertFilePrefix+common.KeySuffix))
 	require.NoError(t, err, "failed to load client cert: %v", err)
 
 	ca := x509.NewCertPool()
-	caFilePath := filepath.Join(certsDir, "ca_cert.pem")
+	caFilePath := filepath.Join(certsDir, common.RootCACertFileName)
 	caBytes, err := os.ReadFile(caFilePath)
 	require.NoError(t, err, "failed to read ca cert %q: %v", caFilePath, err)
 

@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/ubuntu/decorate"
 )
 
@@ -34,7 +35,6 @@ func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCer
 	}
 
 	rootCertTmpl := template(commonName, serialNo)
-	// this cert will be the CA that we will use to sign the server cert
 	rootCertTmpl.IsCA = true
 	rootCertTmpl.Subject.CommonName = commonName + " CA"
 	rootCertTmpl.KeyUsage = x509.KeyUsageCertSign
@@ -47,7 +47,7 @@ func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCer
 
 	// Write the CA certificate to disk.
 	// Notice that we don't write the private key to disk. Only the caller of this function can create other certificates signed by this root CA.
-	if err = writeCert(filepath.Join(destDir, "ca_cert.pem"), rootDER); err != nil {
+	if err = writeCert(filepath.Join(destDir, common.RootCACertFileName), rootDER); err != nil {
 		return nil, nil, err
 	}
 
@@ -64,7 +64,7 @@ func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACe
 	}
 
 	certTmpl := template(certCN, serial)
-	// Customizing the usage for client and server certificates:
+	// Customizing the usage for client and server applications:
 	// Even though x509.CreateCertificate documentation says it will use it, if present,
 	// it seems we need to set AuthorityKeyId manually to make the verification work.
 	certTmpl.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement | x509.KeyUsageKeyEncipherment
@@ -83,10 +83,10 @@ func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACe
 		return nil, fmt.Errorf("certificate verification failed: %v", err)
 	}
 
-	if err = writeCert(filepath.Join(destDir, name+"_cert.pem"), der); err != nil {
+	if err = writeCert(filepath.Join(destDir, name+common.CertificateSuffix), der); err != nil {
 		return nil, err
 	}
-	if err = writeKey(filepath.Join(destDir, name+"_key.pem"), key); err != nil {
+	if err = writeKey(filepath.Join(destDir, name+common.KeySuffix), key); err != nil {
 		return nil, err
 	}
 
