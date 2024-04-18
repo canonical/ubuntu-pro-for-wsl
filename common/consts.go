@@ -26,4 +26,19 @@ const (
 
 	// GRPCServerNameOverride is the name to override the server name in when configuring TLS for local clients.
 	GRPCServerNameOverride = "UP4W"
+
+	// The name of the certificate file that identifies the root certificate authority in the PEM format.
+	RootCACertFileName = "ca_cert.pem"
+
+	// The file name prefix to identify the certificate/key pair of the agent in the PEM format.
+	AgentCertFilePrefix = "agent"
+
+	// The file name prefix to identify the certificate/key pair of the clients (GUI and all WSL instances) in the PEM format.
+	ClientsCertFilePrefix = "client"
+
+	// The file name suffix to the (public) certificate in the PEM format.
+	CertificateSuffix = "_cert.pem"
+
+	// The file name suffix to the private key in the PEM format.
+	KeySuffix = "_key.pem"
 )
