@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -68,6 +69,55 @@ func TestVersion(t *testing.T) {
 
 	require.Equal(t, want, fields[0], "Wrong executable name")
 	require.Equal(t, consts.Version, fields[1], "Wrong version")
+}
+
+func TestConfigBadArg(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	filename := "wsl-pro-service.yaml"
+	configPath := filepath.Join(t.TempDir(), filename)
+
+	sys, _ := testutils.MockSystem(t)
+	a := service.New(service.WithSystem(sys))
+	a.SetArgs("version", "--config", configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.Error(t, err, "Run should return an error, stdout: %v", out)
+}
+
+func TestConfigArg(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	filename := "wsl-pro-service.yaml"
+	configPath := filepath.Join(t.TempDir(), filename)
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+
+	sys, _ := testutils.MockSystem(t)
+	a := service.New(service.WithSystem(sys))
+	a.SetArgs("version", "--config", configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.NoError(t, err, "Run should not return an error, stdout: %v", out)
+	require.Equal(t, 3, a.Config().Verbosity)
+}
+
+func TestConfigAutoDetect(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	sys, _ := testutils.MockSystem(t)
+	a := service.New(service.WithSystem(sys))
+	a.SetArgs("version")
+
+	filename := "wsl-pro-service.yaml"
+	configNextToBinaryPath := filepath.Join(filepath.Dir(os.Args[0]), filename)
+	require.NoError(t, os.WriteFile(configNextToBinaryPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+
+	err := a.Run()
+	out := getStdout()
+	require.NoError(t, err, "Run should not return an error, stdout: %v", out)
+	require.Equal(t, 3, a.Config().Verbosity)
 }
 
 func TestNoUsageError(t *testing.T) {

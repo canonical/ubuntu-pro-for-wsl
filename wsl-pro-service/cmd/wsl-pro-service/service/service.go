@@ -137,3 +137,7 @@ func (a App) RootCmd() cobra.Command {
 func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
 }
+
+func (a App) Config() daemonConfig {
+	return a.config
+}
