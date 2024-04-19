@@ -74,7 +74,7 @@ func New(o ...option) *App {
 	a.viper = viper.New()
 
 	installVerbosityFlag(&a.rootCmd, a.viper)
-	installConfigFlag(&a.rootCmd, a.viper)
+	installConfigFlag(&a.rootCmd)
 
 	// subcommands
 	a.installVersion()
@@ -138,6 +138,9 @@ func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
 }
 
+// Config returns the daemonConfig for test purposes.
+//
+//nolint:revive
 func (a App) Config() daemonConfig {
 	return a.config
 }

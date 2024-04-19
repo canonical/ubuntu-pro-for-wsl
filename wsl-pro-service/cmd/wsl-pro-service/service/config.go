@@ -70,7 +70,7 @@ func installVerbosityFlag(cmd *cobra.Command, viper *viper.Viper) *int {
 }
 
 // installConfigFlag adds the --config flag to allow for custom config paths.
-func installConfigFlag(cmd *cobra.Command, viper *viper.Viper) *string {
+func installConfigFlag(cmd *cobra.Command) *string {
 	return cmd.PersistentFlags().StringP("config", "c", "", i18n.G("configuration file path"))
 }
 
