@@ -23,6 +23,10 @@ const (
 )
 
 func TestPurchase(t *testing.T) {
+	// TODO: Remove this line when cloud-init support for UP4W is released.
+	// Follow this PR for more information: https://github.com/canonical/cloud-init/pull/5116
+	t.Skip("This test depends on cloud-init support for UP4W being released.")
+
 	type whenToken int
 	const (
 		never whenToken = iota
@@ -58,9 +62,16 @@ func TestPurchase(t *testing.T) {
 			landscape := NewLandscape(t, ctx)
 			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
 
-			go landscape.Serve()
+			serverDone := make(chan struct{})
+			go func() {
+				defer close(serverDone)
+				landscape.Serve()
+			}()
+			t.Cleanup(func() {
+				landscape.Stop()
+				<-serverDone
+			})
 			defer landscape.LogOnError(t)
-			defer landscape.Stop()
 
 			hostname, err := os.Hostname()
 			require.NoError(t, err, "Setup: could not test machine's hostname")
@@ -121,7 +132,7 @@ func TestPurchase(t *testing.T) {
 
 			defer logWslProServiceOnError(t, ctx, d)
 
-			out, err := d.Command(ctx, "exit 0").CombinedOutput()
+			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
 			// ... or after registration, but never both.
@@ -153,7 +164,7 @@ func TestPurchase(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			landscape.RequireReceivedInfo(t, token, d, hostname)
+			landscape.RequireReceivedInfo(t, token, []wsl.Distro{d}, hostname)
 			// Skipping because we know it to be broken
 			// See https://warthogs.atlassian.net/browse/UDENG-1810
 			//

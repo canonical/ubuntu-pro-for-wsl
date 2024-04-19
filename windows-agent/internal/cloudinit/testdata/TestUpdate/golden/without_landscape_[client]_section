@@ -1,0 +1,4 @@
+# cloud-init
+# This file was generated automatically and must not be edited
+ubuntu_advantage:
+    token: NEW_PRO_TOKEN

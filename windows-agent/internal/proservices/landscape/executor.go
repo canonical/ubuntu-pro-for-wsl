@@ -118,8 +118,10 @@ func (e executor) stop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err
 }
 
 func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install) (err error) {
-	if cmd.GetCloudinit() != "" {
-		return fmt.Errorf("Cloud Init support is not yet available")
+	log.Debugf(ctx, "Landscape: received command Install. Target: %s", cmd.GetId())
+
+	if cmd.GetId() == "" {
+		return errors.New("empty distro name")
 	}
 
 	distro := gowsl.NewDistro(ctx, cmd.GetId())
@@ -127,6 +129,10 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return err
 	} else if registered {
 		return errors.New("already installed")
+	}
+
+	if err := e.cloudInit().WriteDistroData(cmd.GetId(), cmd.GetCloudinit()); err != nil {
+		return fmt.Errorf("skipped installation: %v", err)
 	}
 
 	if err := gowsl.Install(ctx, distro.Name()); err != nil {
@@ -146,6 +152,10 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 
 	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
 		return err
+	}
+
+	if cmd.GetCloudinit() != "" {
+		return nil
 	}
 
 	// TODO: The rest of this function will need to be rethought once cloud-init support exists.
@@ -174,10 +184,18 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
-		return fmt.Errorf("distro %q not in database", cmd.GetId())
+		return errors.New("distro not in database")
 	}
 
-	return d.Uninstall(ctx)
+	if err := d.Uninstall(ctx); err != nil {
+		return err
+	}
+
+	if err := e.cloudInit().RemoveDistroData(d.Name()); err != nil {
+		log.Warningf(ctx, "Landscape uninstall: distro %q: %v", d.Name(), err)
+	}
+
+	return nil
 }
 
 func (e executor) setDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault) error {

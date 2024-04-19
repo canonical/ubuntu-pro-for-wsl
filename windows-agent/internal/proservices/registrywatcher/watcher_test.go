@@ -60,7 +60,7 @@ func TestRegistryWatcher(t *testing.T) {
 
 			conf := &mockConfig{}
 
-			db, err := database.New(ctx, t.TempDir(), nil)
+			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: could not create empty DB")
 
 			reg := registry.NewMock()

@@ -26,6 +26,7 @@ void main(List<String> args) {
 
   const testCases = {
     'TestOrganizationProvidedToken': testOrganizationProvidedToken,
+    'TestCloudInitIntegration': testOrganizationProvidedToken,
     'TestManualTokenInput': testManualTokenInput,
     'TestPurchase': testPurchase,
   };
