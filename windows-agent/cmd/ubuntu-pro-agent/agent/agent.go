@@ -102,7 +102,7 @@ func New(o ...option) *App {
 	a.viper = viper.New()
 
 	installVerbosityFlag(&a.rootCmd, a.viper)
-	installConfigFlag(&a.rootCmd, a.viper)
+	installConfigFlag(&a.rootCmd)
 
 	// subcommands
 	a.installVersion()
@@ -186,6 +186,13 @@ func (a App) RootCmd() cobra.Command {
 // SetArgs changes the root command args. Shouldn't be in general necessary apart for tests.
 func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
+}
+
+// Config returns the DaemonConfig for test purposes.
+//
+//nolint:revive
+func (a App) Config() daemonConfig {
+	return a.config
 }
 
 // PublicDir creates a directory to store public data in.

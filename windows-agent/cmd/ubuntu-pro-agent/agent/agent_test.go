@@ -83,6 +83,53 @@ func TestUsageError(t *testing.T) {
 	require.True(t, isUsageError, "Usage error is reported as such")
 }
 
+func TestConfigBadArg(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	filename := "ubuntu-pro-agent.yaml"
+	configPath := filepath.Join(t.TempDir(), filename)
+
+	a := agent.New()
+	a.SetArgs("version", "--config", configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.Error(t, err, "Run should return an error, stdout: %v", out)
+}
+
+func TestConfigArg(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	filename := "ubuntu-pro-agent.yaml"
+	configPath := filepath.Join(t.TempDir(), filename)
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+
+	a := agent.New()
+	a.SetArgs("version", "--config", configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.NoError(t, err, "Run should not return an error, stdout: %v", out)
+	require.Equal(t, 3, a.Config().Verbosity)
+}
+
+func TestConfigAutoDetect(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	a := agent.New()
+	a.SetArgs("version")
+
+	filename := "ubuntu-pro-agent.yaml"
+	configPath := filepath.Join(".", filename)
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+	defer os.Remove(configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.NoError(t, err, "Run should not return an error, stdout: %v", out)
+	require.Equal(t, 3, a.Config().Verbosity)
+}
+
 func TestCanQuitWhenExecute(t *testing.T) {
 	t.Parallel()
 
@@ -409,11 +456,11 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 
 // startDaemon prepares and starts the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
-func startDaemon(t *testing.T) (app *agent.App, done func()) {
+func startDaemon(t *testing.T, args ...string) (app *agent.App, done func()) {
 	t.Helper()
 
 	a := agent.NewForTesting(t, "", "")
-	a.SetArgs()
+	a.SetArgs(args...)
 
 	// Using a channel because we cannot assert in a goroutine.
 	ch := make(chan error)
