@@ -65,7 +65,7 @@ func TestNew(t *testing.T) {
 	for _, tc := range testCases {
 		ctx := context.Background()
 		conf := &mockConfig{}
-		db, err := database.New(ctx, t.TempDir(), conf)
+		db, err := database.New(ctx, t.TempDir())
 		require.NoError(t, err, "Setup: database New should not return an error")
 
 		// Note that these tests cannot be run in parallel due to manipulating
@@ -75,7 +75,8 @@ func TestNew(t *testing.T) {
 			t.Setenv("HOME", "")
 		}
 
-		inst, err := landscape.New(ctx, conf, db)
+		var cloudInit mockCloudInit
+		inst, err := landscape.New(ctx, conf, db, &cloudInit)
 
 		if tc.wantError {
 			require.Error(t, err, "Creating a new Landscape instance should fail")
