@@ -102,7 +102,7 @@ func TestConfigArg(t *testing.T) {
 
 	filename := "ubuntu-pro-agent.yaml"
 	configPath := filepath.Join(t.TempDir(), filename)
-	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
 
 	a := agent.New()
 	a.SetArgs("version", "--config", configPath)
@@ -121,7 +121,7 @@ func TestConfigAutoDetect(t *testing.T) {
 
 	filename := "ubuntu-pro-agent.yaml"
 	configPath := filepath.Join(".", filename)
-	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
 	defer os.Remove(configPath)
 
 	err := a.Run()
