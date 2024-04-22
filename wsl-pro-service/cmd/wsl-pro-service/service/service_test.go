@@ -91,7 +91,7 @@ func TestConfigArg(t *testing.T) {
 
 	filename := "wsl-pro-service.yaml"
 	configPath := filepath.Join(t.TempDir(), filename)
-	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
 
 	sys, _ := testutils.MockSystem(t)
 	a := service.New(service.WithSystem(sys))
@@ -112,7 +112,7 @@ func TestConfigAutoDetect(t *testing.T) {
 
 	filename := "wsl-pro-service.yaml"
 	configNextToBinaryPath := filepath.Join(filepath.Dir(os.Args[0]), filename)
-	require.NoError(t, os.WriteFile(configNextToBinaryPath, []byte("verbosity: 3"), 0644), "Setup: couldn't write config file")
+	require.NoError(t, os.WriteFile(configNextToBinaryPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
 
 	err := a.Run()
 	out := getStdout()
