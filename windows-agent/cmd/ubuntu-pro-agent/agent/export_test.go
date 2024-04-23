@@ -39,3 +39,10 @@ func NewForTesting(t *testing.T, publicDir, privateDir string) *App {
 
 	return New(WithPrivateDir(privateDir), WithPublicDir(publicDir), WithRegistry(registry.NewMock()))
 }
+
+// Config returns the DaemonConfig for test purposes.
+//
+//nolint:revive
+func (a App) Config() daemonConfig {
+	return a.config
+}

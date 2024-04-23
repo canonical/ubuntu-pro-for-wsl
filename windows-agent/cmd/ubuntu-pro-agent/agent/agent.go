@@ -188,13 +188,6 @@ func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
 }
 
-// Config returns the DaemonConfig for test purposes.
-//
-//nolint:revive
-func (a App) Config() daemonConfig {
-	return a.config
-}
-
 // PublicDir creates a directory to store public data in.
 func (a *App) PublicDir() (string, error) {
 	// This wrapper is used to have a cleaner public API.
