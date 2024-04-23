@@ -137,10 +137,3 @@ func (a App) RootCmd() cobra.Command {
 func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
 }
-
-// Config returns the daemonConfig for test purposes.
-//
-//nolint:revive
-func (a App) Config() daemonConfig {
-	return a.config
-}

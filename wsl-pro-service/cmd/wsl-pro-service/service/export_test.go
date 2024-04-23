@@ -7,3 +7,10 @@ func WithSystem(s *system.System) func(*options) {
 		o.system = s
 	}
 }
+
+// Config returns the daemonConfig for test purposes.
+//
+//nolint:revive
+func (a App) Config() daemonConfig {
+	return a.config
+}
