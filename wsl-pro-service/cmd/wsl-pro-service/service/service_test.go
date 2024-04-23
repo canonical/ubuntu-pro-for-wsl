@@ -91,7 +91,7 @@ func TestConfigArg(t *testing.T) {
 
 	filename := "wsl-pro-service.yaml"
 	configPath := filepath.Join(t.TempDir(), filename)
-	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 1"), 0600), "Setup: couldn't write config file")
 
 	sys, _ := testutils.MockSystem(t)
 	a := service.New(service.WithSystem(sys))
@@ -100,7 +100,7 @@ func TestConfigArg(t *testing.T) {
 	err := a.Run()
 	out := getStdout()
 	require.NoError(t, err, "Run should not return an error, stdout: %v", out)
-	require.Equal(t, 3, a.Config().Verbosity)
+	require.Equal(t, 1, a.Config().Verbosity)
 }
 
 func TestConfigAutoDetect(t *testing.T) {
