@@ -21,6 +21,7 @@ wsl-pro-service COMMAND [flags]
 ##### Options
 
 ```
+  -c, --config string     configuration file path
   -h, --help              help for wsl-pro-service
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
@@ -44,6 +45,7 @@ See each sub-command's help for details on how to use the generated script.
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -89,6 +91,7 @@ wsl-pro-service completion bash
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -125,6 +128,7 @@ wsl-pro-service completion fish [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -158,6 +162,7 @@ wsl-pro-service completion powershell [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -205,6 +210,7 @@ wsl-pro-service completion zsh [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -225,6 +231,7 @@ wsl-pro-service version [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
