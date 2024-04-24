@@ -4,7 +4,7 @@ ConditionVirtualization=wsl
 
 [Service]
 Type=notify
-ExecStart=/usr/libexec/wsl-pro-service -vv
+ExecStart=/usr/libexec/wsl-pro-service
 Restart=always
 RestartSec=2s
 
