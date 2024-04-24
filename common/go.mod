@@ -11,7 +11,7 @@ require (
 	github.com/snapcore/go-gettext v0.0.0-20201130093759-38740d1bd3d2
 	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/decorate v0.0.0-20230905131025-e968fa48a85c
-	github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0
+	github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b
 	google.golang.org/grpc v1.63.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.33.0

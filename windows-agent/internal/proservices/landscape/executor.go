@@ -2,13 +2,19 @@ package landscape
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"os/user"
+	"path/filepath"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
+	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
 )
 
@@ -150,8 +156,14 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	}()
 
-	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
-		return err
+	if rootfs := cmd.GetRootfs(); rootfs != nil {
+		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, rootfs); err != nil {
+			return err
+		}
+	} else {
+		if err = installFromMicrosoftStore(ctx, distro); err != nil {
+			return err
+		}
 	}
 
 	if cmd.GetCloudinit() != "" {
@@ -206,4 +218,104 @@ func (e executor) setDefault(ctx context.Context, cmd *landscapeapi.Command_SetD
 //nolint:unparam // cmd is not used, but kep here for consistency with other commands.
 func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
 	return gowsl.Shutdown(ctx)
+}
+
+func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err error) {
+	defer decorate.OnError(&err, "can't install from Microsoft Store")
+
+	if err := gowsl.Install(ctx, distro.Name()); err != nil {
+		return err
+	}
+
+	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
+	defer decorate.OnError(&err, "can't install from URL: %q", rootfs.GetUrl())
+
+	tmpDir := filepath.Join(downloadDir, distro.Name())
+	if err := os.MkdirAll(tmpDir, 0700); err != nil {
+		return err
+	}
+	// Remove tarball once installed
+	defer os.RemoveAll(tmpDir)
+
+	tarball := filepath.Join(tmpDir, distro.Name()+".tar.gz")
+
+	f, err := os.Create(tarball)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = download(ctx, f, rootfs.GetUrl(), rootfs.GetSha256Sum())
+	if err != nil {
+		return err
+	}
+
+	// Create the directory that will contain the vhdx
+	vhdxDir := filepath.Join(homeDir, "WSL", distro.Name())
+	if err := os.MkdirAll(vhdxDir, 0700); err != nil {
+		return err
+	}
+
+	if _, err := gowsl.Import(ctx, distro.Name(), tarball, vhdxDir); err != nil {
+		rmErr := os.RemoveAll(vhdxDir)
+		if rmErr != nil {
+			log.Warningf(ctx, "could not cleanup install directory: %v", rmErr)
+		}
+		return err
+	}
+	return nil
+}
+
+func download(ctx context.Context, f io.Writer, url, checksum string) (err error) {
+	defer decorate.OnError(&err, "could not download %q", url)
+
+	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("http request failed with code %d", resp.StatusCode)
+	}
+
+	// Verify checksum and write file to disk
+	r := io.TeeReader(resp.Body, f)
+	if checksum != "" {
+		match, err := checksumMatches(ctx, r, checksum)
+		if err != nil {
+			return err
+		}
+		if !match {
+			return fmt.Errorf("checksum %s for %s does not match", checksum, url)
+		}
+	} else {
+		if _, err := io.Copy(io.Discard, r); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checksumMatches(ctx context.Context, reader io.Reader, wantChecksum string) (match bool, err error) {
+	defer decorate.OnError(&err, "error checking checksum for: %q", reader)
+
+	// Checksum of the rootfs
+	h := sha256.New()
+	if _, err := io.Copy(h, reader); err != nil {
+		return false, err
+	}
+	gotChecksum := fmt.Sprintf("%x", h.Sum(nil))
+	log.Debugf(ctx, "Want checksum: %s, Got checksum: %s", wantChecksum, gotChecksum)
+
+	// Compare checksums
+	return wantChecksum == gotChecksum, nil
 }

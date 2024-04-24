@@ -51,6 +51,42 @@ account_name = testuser
 registration_key = password1
 `
 
+func TestNew(t *testing.T) {
+	testCases := map[string]struct {
+		breakHome bool
+
+		wantError bool
+	}{
+		"Success": {},
+
+		"Error when no user home is available": {breakHome: true, wantError: true},
+	}
+
+	for _, tc := range testCases {
+		ctx := context.Background()
+		conf := &mockConfig{}
+		db, err := database.New(ctx, t.TempDir())
+		require.NoError(t, err, "Setup: database New should not return an error")
+
+		// Note that these tests cannot be run in parallel due to manipulating
+		// these test environment variables
+		if tc.breakHome {
+			t.Setenv("UserProfile", "")
+			t.Setenv("HOME", "")
+		}
+
+		var cloudInit mockCloudInit
+		inst, err := landscape.New(ctx, conf, db, &cloudInit)
+
+		if tc.wantError {
+			require.Error(t, err, "Creating a new Landscape instance should fail")
+			return
+		}
+		require.NoError(t, err, "Creating a new Landscape instance should not fail")
+		require.NotNil(t, inst, "Landscape instance should not be nil")
+	}
+}
+
 func TestConnect(t *testing.T) {
 	if wsl.MockAvailable() {
 		t.Parallel()
@@ -168,9 +204,8 @@ func TestConnect(t *testing.T) {
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit)
-			require.NoError(t, err, "Setup: NewClient should return no errrors")
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
+			require.NoError(t, err, "Setup: NewClient should return no errors")
 
 			if tc.precancelContext {
 				cancel()
@@ -315,8 +350,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			const hostname = "HOSTNAME"
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -508,8 +542,7 @@ func TestAutoReconnection(t *testing.T) {
 			const hostname = "HOSTNAME"
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
@@ -743,8 +776,7 @@ func TestReconnect(t *testing.T) {
 			require.NoError(t, err, "Setup: database New should not return an error")
 
 			var cloudInit mockCloudInit
-
-			service, err := landscape.New(ctx, conf, db, &cloudInit)
+			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()

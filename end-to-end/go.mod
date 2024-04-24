@@ -5,11 +5,11 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922
+	github.com/canonical/landscape-hostagent-api v0.0.0-20240327162205-3c655e2766d2
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3
 	github.com/stretchr/testify v1.9.0
-	github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0
+	github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 	golang.org/x/sys v0.19.0
 	google.golang.org/grpc v1.63.2
