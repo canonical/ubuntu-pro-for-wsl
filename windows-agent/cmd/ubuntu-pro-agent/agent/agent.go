@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -72,9 +73,9 @@ func New(o ...option) *App {
 			// command parsing has been successful. Returns to not print usage anymore.
 			a.rootCmd.SilenceUsage = true
 
-			// Parse environment veriables
-			a.viper.SetEnvPrefix("UP4W")
-			a.viper.AutomaticEnv()
+			if err := initViperConfig(strings.ReplaceAll(cmdName(), ".exe", ""), &a.rootCmd, a.viper); err != nil {
+				return err
+			}
 
 			if err := a.viper.Unmarshal(&a.config); err != nil {
 				return fmt.Errorf("unable to decode configuration into struct: %w", err)
@@ -101,6 +102,7 @@ func New(o ...option) *App {
 	a.viper = viper.New()
 
 	installVerbosityFlag(&a.rootCmd, a.viper)
+	installConfigFlag(&a.rootCmd)
 
 	// subcommands
 	a.installVersion()
@@ -148,32 +150,6 @@ func (a *App) serve(ctx context.Context, args ...option) error {
 	close(a.ready)
 
 	return a.daemon.Serve(ctx)
-}
-
-// installVerbosityFlag adds the -v and -vv options and returns the reference to it.
-func installVerbosityFlag(cmd *cobra.Command, viper *viper.Viper) *int {
-	r := cmd.PersistentFlags().CountP("verbosity", "v", i18n.G("issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"))
-	if err := viper.BindPFlag("verbosity", cmd.PersistentFlags().Lookup("verbosity")); err != nil {
-		log.Warning(context.Background(), err)
-	}
-	return r
-}
-
-// SetVerboseMode change ErrorFormat and logs between very, middly and non verbose.
-func setVerboseMode(level int) {
-	var reportCaller bool
-	switch level {
-	case 0:
-		logrus.SetLevel(consts.DefaultLogLevel)
-	case 1:
-		logrus.SetLevel(logrus.InfoLevel)
-	case 3:
-		reportCaller = true
-		fallthrough
-	default:
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-	log.SetReportCaller(reportCaller)
 }
 
 // Run executes the command and associated process. It returns an error on syntax/usage error.
