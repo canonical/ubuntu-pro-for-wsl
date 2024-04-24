@@ -3,11 +3,14 @@
 package daemon
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
+	"os/exec"
 	"reflect"
 
+	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/sys/windows"
 )
@@ -16,6 +19,14 @@ import (
 var wslIPErr bool
 
 func getWslIP() (net.IP, error) {
+	isMirrored, err := networkIsMirrored()
+	if err != nil {
+		log.Warningf(context.Background(), "could not determine if WSL network is mirrored (assuming NAT): %v", err)
+	}
+	if isMirrored {
+		return net.IPv4(127, 0, 0, 1), nil
+	}
+
 	const targetName = "Hyper-V Virtual Ethernet Adapter"
 
 	head, err := getAdaptersAddresses()
@@ -33,6 +44,17 @@ func getWslIP() (net.IP, error) {
 	}
 
 	return nil, fmt.Errorf("could not find WSL adapter")
+}
+
+// networkIsMirrored detects whether the WSL network is mirrored by launching the system distribution.
+func networkIsMirrored() (bool, error) {
+	cmd := exec.CommandContext(context.Background(), "wsl", "--system", "wslinfo", "--networking-mode", "-n")
+
+	out, err := cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("could not get networking mode: %w", err)
+	}
+	return string(out) == "mirrored", nil
 }
 
 // getAdaptersAddresses returns the head of a linked list of network adapters.
