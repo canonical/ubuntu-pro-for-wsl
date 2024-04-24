@@ -9,6 +9,7 @@ import (
 	"net"
 	"os/exec"
 	"reflect"
+	"strings"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
@@ -18,6 +19,7 @@ import (
 //nolint:unused // Does nothing; it exists so we can compile the tests without mocks.
 var wslIPErr bool
 
+// getWslIP returns the loopback address if the networking mode is mirrored or iterates over the network adapters to find the IP address of the WSL one.
 func getWslIP() (net.IP, error) {
 	isMirrored, err := networkIsMirrored()
 	if err != nil {
@@ -27,16 +29,33 @@ func getWslIP() (net.IP, error) {
 		return net.IPv4(127, 0, 0, 1), nil
 	}
 
-	const targetName = "Hyper-V Virtual Ethernet Adapter"
+	const targetDesc = "Hyper-V Virtual Ethernet Adapter"
+	const vEthernetName = "vEthernet (WSL"
 
 	head, err := getAdaptersAddresses()
 	if err != nil {
 		return nil, err
 	}
 
+	// Filter the adapters by description.
+	var candidates []*windows.IpAdapterAddresses
 	for node := head; node != nil; node = node.Next {
 		desc := windows.UTF16PtrToString(node.Description)
-		if desc != targetName {
+		// The adapter description could be "Hyper-V Virtual Ethernet Adapter #No"
+		if !strings.Contains(desc, targetDesc) {
+			continue
+		}
+
+		candidates = append(candidates, node)
+	}
+
+	if len(candidates) == 1 {
+		return candidates[0].FirstUnicastAddress.Address.IP(), nil
+	}
+
+	// Desambiguates the adapters by friendly name.
+	for _, node := range candidates {
+		if !strings.Contains(windows.UTF16PtrToString(node.FriendlyName), vEthernetName) {
 			continue
 		}
 
@@ -46,8 +65,9 @@ func getWslIP() (net.IP, error) {
 	return nil, fmt.Errorf("could not find WSL adapter")
 }
 
-// networkIsMirrored detects whether the WSL network is mirrored by launching the system distribution.
+// networkIsMirrored detects whether the WSL network is mirrored or not.
 func networkIsMirrored() (bool, error) {
+	// It does so by launching the system distribution.
 	cmd := exec.CommandContext(context.Background(), "wsl", "--system", "wslinfo", "--networking-mode", "-n")
 
 	out, err := cmd.Output()
