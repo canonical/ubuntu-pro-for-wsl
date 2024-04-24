@@ -22,6 +22,7 @@ ubuntu-pro-agent COMMAND [flags]
 ##### Options
 
 ```
+  -c, --config string     configuration file path
   -h, --help              help for ubuntu-pro-agent
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
@@ -43,6 +44,7 @@ ubuntu-pro-agent clean [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -65,6 +67,7 @@ See each sub-command's help for details on how to use the generated script.
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -110,6 +113,7 @@ ubuntu-pro-agent completion bash
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -146,6 +150,7 @@ ubuntu-pro-agent completion fish [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -179,6 +184,7 @@ ubuntu-pro-agent completion powershell [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -226,6 +232,7 @@ ubuntu-pro-agent completion zsh [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
@@ -246,6 +253,7 @@ ubuntu-pro-agent version [flags]
 ##### Options inherited from parent commands
 
 ```
+  -c, --config string     configuration file path
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
