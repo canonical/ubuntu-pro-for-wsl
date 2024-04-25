@@ -72,7 +72,7 @@ func networkIsMirrored() (bool, error) {
 
 	out, err := cmd.Output()
 	if err != nil {
-		return false, fmt.Errorf("could not get networking mode: %w", err)
+		return false, fmt.Errorf("could not get networking mode: %w\n%s", err, string(out))
 	}
 	return string(out) == "mirrored", nil
 }
