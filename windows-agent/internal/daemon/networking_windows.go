@@ -89,16 +89,15 @@ func getAdaptersAddresses() (head *windows.IpAdapterAddresses, err error) {
 	// Flags from the Windows API.
 	//nolint:revive // Windows API constants are in shout case.
 	const (
-		GAA_FLAG_SKIP_ANYCAST       uint32 = 0x0002
-		GAA_FLAG_SKIP_MULTICAST     uint32 = 0x0004
-		GAA_FLAG_SKIP_DNS_SERVER    uint32 = 0x0008
-		GAA_FLAG_SKIP_FRIENDLY_NAME uint32 = 0x0010
+		GAA_FLAG_SKIP_ANYCAST    uint32 = 0x0002
+		GAA_FLAG_SKIP_MULTICAST  uint32 = 0x0004
+		GAA_FLAG_SKIP_DNS_SERVER uint32 = 0x0008
 	)
 
 	// Return only IPv4 unicast addresses
 	const (
 		family uint32 = windows.AF_INET
-		flags  uint32 = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME
+		flags  uint32 = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER
 	)
 
 	// We need a typed buffer rather than []byte because we don't want the GC to move
