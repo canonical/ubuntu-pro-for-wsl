@@ -38,16 +38,45 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 	}
 }
 
+type options struct {
+	h   hostIpconfig
+	wsl wslSystemDistro
+}
+
+// Option is an optional argument for Serve.
+type Option = func(*options)
+
+// WithHostIpConfig is an optional argument for Serve that injects a backend to access network adapter information.
+// For testing purposes only.
+func WithHostIpConfig(h hostIpconfig) Option {
+	return func(o *options) {
+		o.h = h
+	}
+}
+
+// WithWslSystemDistro is an optional argument for Serve that injects a backend to run commands inside the wsl --system distro.
+// For testing purposes only.
+func WithWslSystemDistro(wsl wslSystemDistro) Option {
+	return func(o *options) {
+		o.wsl = wsl
+	}
+}
+
 // Serve listens on a tcp socket and starts serving GRPC requests on it.
 // Before serving, it writes a file on disk on which port it's listening on for client
 // to be able to reach our server.
 // This file is removed once the server stops listening.
-func (d Daemon) Serve(ctx context.Context) (err error) {
+func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
 	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
-	wslIP, err := getWslIP()
+	opts := options{h: ipConfig{}, wsl: wslSystem{}}
+	for _, f := range args {
+		f(&opts)
+	}
+
+	wslIP, err := getWslIP(ctx, opts.h, opts.wsl)
 	if err != nil {
 		return fmt.Errorf("could not get the WSL adapter IP: %v", err)
 	}
