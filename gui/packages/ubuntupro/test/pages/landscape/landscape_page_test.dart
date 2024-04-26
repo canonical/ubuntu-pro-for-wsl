@@ -53,7 +53,7 @@ void main() {
 
       final continueButton = find.button(lang.buttonNext);
       expect(continueButton, findsOne);
-      expect(tester.widget<FilledButton>(continueButton).enabled, isFalse);
+      expect(tester.widget<ElevatedButton>(continueButton).enabled, isFalse);
 
       final radio1 = find.byWidgetPredicate(
         (widget) =>
@@ -86,7 +86,7 @@ void main() {
 
       final continueButton = find.button(lang.buttonNext);
       expect(continueButton, findsOne);
-      expect(tester.widget<FilledButton>(continueButton).enabled, isTrue);
+      expect(tester.widget<ElevatedButton>(continueButton).enabled, isTrue);
     });
   });
 
@@ -164,7 +164,7 @@ void main() {
       await tester.pump();
 
       final continueButton = find.button(lang.buttonNext);
-      expect(tester.widget<FilledButton>(continueButton).enabled, isTrue);
+      expect(tester.widget<ElevatedButton>(continueButton).enabled, isTrue);
       expect(applied, isFalse);
 
       // Ideally we'd test if `applied` is true after continue is pressed,
