@@ -1,69 +1,15 @@
-//go:build !gowslmock
-
 package daemon
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"os/exec"
 	"reflect"
-	"strings"
 
-	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"golang.org/x/sys/windows"
 )
-
-//nolint:unused // Does nothing; it exists so we can compile the tests without mocks.
-var wslIPErr bool
-
-// getWslIP returns the loopback address if the networking mode is mirrored or iterates over the network adapters to find the IP address of the WSL one.
-func getWslIP() (net.IP, error) {
-	isMirrored, err := networkIsMirrored()
-	if err != nil {
-		log.Warningf(context.Background(), "could not determine if WSL network is mirrored (assuming NAT): %v", err)
-	}
-	if isMirrored {
-		return net.IPv4(127, 0, 0, 1), nil
-	}
-
-	const targetDesc = "Hyper-V Virtual Ethernet Adapter"
-	const vEthernetName = "vEthernet (WSL"
-
-	head, err := getAdaptersAddresses()
-	if err != nil {
-		return nil, err
-	}
-
-	// Filter the adapters by description.
-	var candidates []*winIpAdapterAddresses
-	for node := head; node != nil; node = node.Next() {
-		desc := node.Description()
-		// The adapter description could be "Hyper-V Virtual Ethernet Adapter #No"
-		if !strings.Contains(desc, targetDesc) {
-			continue
-		}
-
-		candidates = append(candidates, node)
-	}
-
-	if len(candidates) == 1 {
-		return candidates[0].IP(), nil
-	}
-
-	// Desambiguates the adapters by friendly name.
-	for _, node := range candidates {
-		if !strings.Contains(node.FriendlyName(), vEthernetName) {
-			continue
-		}
-
-		return node.IP(), nil
-	}
-
-	return nil, fmt.Errorf("could not find WSL adapter")
-}
 
 type winIpAdapterAddresses struct {
 	node *windows.IpAdapterAddresses
@@ -178,4 +124,12 @@ func (b *buffer[T]) ptr() *T {
 		return nil
 	}
 	return &b.data[0]
+}
+
+type wslSystem struct{}
+
+// Command provides an *exec.Command configured to run inside the always present system distro, useful when we cannot guaratee the presence of any other distro instance.
+func (wsl wslSystem) Command(ctx context.Context, name string, arg ...string) *exec.Cmd {
+	args := append([]string{"--system", name}, arg...)
+	return exec.CommandContext(ctx, "wsl", args...)
 }
