@@ -24,10 +24,11 @@ class SubscriptionStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
 
+    final theme = Theme.of(context);
     final linkStyle = MarkdownStyleSheet.fromTheme(
-      Theme.of(context).copyWith(
-        textTheme: DarkStyledLandingPage.textTheme.copyWith(
-          bodyMedium: DarkStyledLandingPage.textTheme.bodyMedium?.copyWith(
+      theme.copyWith(
+        textTheme: theme.textTheme.copyWith(
+          bodyMedium: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w100,
             color: YaruColors.jet,
           ),
@@ -40,7 +41,7 @@ class SubscriptionStatus extends StatelessWidget {
       ),
     );
 
-    return DarkStyledLandingPage(
+    return LandingPage(
       centered: true,
       children: [
         Container(
@@ -66,8 +67,7 @@ class SubscriptionStatus extends StatelessWidget {
                   children: [
                     Text(
                       lang.subscriptionIsActive,
-                      style:
-                          DarkStyledLandingPage.textTheme.bodyLarge!.copyWith(
+                      style: theme.textTheme.bodyLarge!.copyWith(
                         fontWeight: FontWeight.bold,
                         color: YaruColors.darkJet,
                       ),

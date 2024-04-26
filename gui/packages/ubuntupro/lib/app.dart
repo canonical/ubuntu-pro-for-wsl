@@ -34,7 +34,7 @@ class Pro4WSLApp extends StatelessWidget {
           ],
           child: MaterialApp(
             title: 'Ubuntu Pro',
-            theme: customize(yaru.darkTheme),
+            theme: customize(yaru.theme),
             darkTheme: customize(yaru.darkTheme),
             debugShowCheckedModeBanner: false,
             localizationsDelegates: AppLocalizations.localizationsDelegates,

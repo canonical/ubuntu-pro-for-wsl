@@ -29,10 +29,11 @@ class LandscapePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = context.watch<LandscapeModel>();
     final lang = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final linkStyle = MarkdownStyleSheet.fromTheme(
       Theme.of(context).copyWith(
-        textTheme: DarkStyledLandingPage.textTheme.copyWith(
-          bodyMedium: DarkStyledLandingPage.textTheme.bodyMedium?.copyWith(
+        textTheme: theme.textTheme.copyWith(
+          bodyMedium: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w100,
           ),
         ),
@@ -94,8 +95,9 @@ class LandscapeInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sectionTitleStyle = Theme.of(context).primaryTextTheme.titleMedium;
-    final sectionBodyStyle = Theme.of(context).primaryTextTheme.bodySmall;
+    final theme = Theme.of(context);
+    final sectionTitleStyle = theme.textTheme.titleMedium;
+    final sectionBodyStyle = theme.textTheme.bodySmall;
     final model = context.watch<LandscapeModel>();
 
     return Column(

@@ -39,8 +39,8 @@ class SubscriptionStatusPage extends StatelessWidget {
             ),
             actionButtons: [
               if (model.canConfigureLandscape) _landscapeButton(context),
-              FilledButton(
-                style: FilledButton.styleFrom(
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
                   backgroundColor: YaruColors.red,
                 ),
                 onPressed: () async {

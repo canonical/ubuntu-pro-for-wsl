@@ -91,17 +91,20 @@ class ColumnLandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
 
     return Pro4WSLPage(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/05_suru2_dark_2K.jpg',
-              fit: BoxFit.fill,
+          if (dark)
+            Positioned.fill(
+              child: Image.asset(
+                'assets/05_suru2_dark_2K.jpg',
+                fit: BoxFit.fill,
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.all(32.0),
             child: Column(
@@ -133,9 +136,7 @@ class ColumnLandingPage extends StatelessWidget {
                                   ),
                                   TextSpan(
                                     text: title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displaySmall
+                                    style: theme.textTheme.displaySmall
                                         ?.copyWith(fontWeight: FontWeight.w100),
                                   ),
                                 ],
@@ -186,16 +187,8 @@ class ColumnLandingPage extends StatelessWidget {
                         const SizedBox(
                           width: 16.0,
                         ),
-                        FilledButton(
+                        ElevatedButton(
                           onPressed: onNext,
-                          style: Theme.of(context)
-                              .filledButtonTheme
-                              .style
-                              ?.copyWith(
-                                backgroundColor: MaterialStatePropertyAll(
-                                  YaruColors.dark.success,
-                                ),
-                              ),
                           child: Text(lang.buttonNext),
                         ),
                       ],
@@ -214,8 +207,8 @@ class ColumnLandingPage extends StatelessWidget {
 // A more stylized page that mimics the design of the https://ubuntu.com/pro
 // landing page, with a dark background and an [svgAsset] logo followed by
 // a title with some opacity, rendering the [children] in a column layout.
-class DarkStyledLandingPage extends StatelessWidget {
-  const DarkStyledLandingPage({
+class LandingPage extends StatelessWidget {
+  const LandingPage({
     super.key,
     required this.children,
     this.svgAsset = 'assets/Ubuntu-tag.svg',
@@ -226,22 +219,23 @@ class DarkStyledLandingPage extends StatelessWidget {
   final String svgAsset;
   final String title;
   final bool centered;
-  // TODO: Remove those getters once we have a background image suitable for the light mode theme.
-  static ThemeData get _data => yaruDark;
-  static TextTheme get textTheme => _data.textTheme;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+
     return Pro4WSLPage(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/05_suru2_dark_2K.jpg',
-              fit: BoxFit.fill,
+          if (dark)
+            Positioned.fill(
+              child: Image.asset(
+                'assets/05_suru2_dark_2K.jpg',
+                fit: BoxFit.fill,
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.all(48.0),
             child: centered
@@ -251,7 +245,7 @@ class DarkStyledLandingPage extends StatelessWidget {
                       child: _PageContent(
                         svgAsset: svgAsset,
                         title: title,
-                        data: _data,
+                        data: theme,
                         centered: true,
                         children: children,
                       ),
@@ -260,7 +254,7 @@ class DarkStyledLandingPage extends StatelessWidget {
                 : _PageContent(
                     svgAsset: svgAsset,
                     title: title,
-                    data: _data,
+                    data: theme,
                     children: children,
                   ),
           ),
