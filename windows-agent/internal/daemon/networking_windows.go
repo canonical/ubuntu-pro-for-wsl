@@ -38,9 +38,9 @@ func getWslIP() (net.IP, error) {
 	}
 
 	// Filter the adapters by description.
-	var candidates []*windows.IpAdapterAddresses
-	for node := head; node != nil; node = node.Next {
-		desc := windows.UTF16PtrToString(node.Description)
+	var candidates []*winIpAdapterAddresses
+	for node := head; node != nil; node = node.Next() {
+		desc := node.Description()
 		// The adapter description could be "Hyper-V Virtual Ethernet Adapter #No"
 		if !strings.Contains(desc, targetDesc) {
 			continue
@@ -50,35 +50,46 @@ func getWslIP() (net.IP, error) {
 	}
 
 	if len(candidates) == 1 {
-		return candidates[0].FirstUnicastAddress.Address.IP(), nil
+		return candidates[0].IP(), nil
 	}
 
 	// Desambiguates the adapters by friendly name.
 	for _, node := range candidates {
-		if !strings.Contains(windows.UTF16PtrToString(node.FriendlyName), vEthernetName) {
+		if !strings.Contains(node.FriendlyName(), vEthernetName) {
 			continue
 		}
 
-		return node.FirstUnicastAddress.Address.IP(), nil
+		return node.IP(), nil
 	}
 
 	return nil, fmt.Errorf("could not find WSL adapter")
 }
 
-// networkIsMirrored detects whether the WSL network is mirrored or not.
-func networkIsMirrored() (bool, error) {
-	// It does so by launching the system distribution.
-	cmd := exec.CommandContext(context.Background(), "wsl", "--system", "wslinfo", "--networking-mode", "-n")
+type winIpAdapterAddresses struct {
+	node *windows.IpAdapterAddresses
+}
 
-	out, err := cmd.Output()
-	if err != nil {
-		return false, fmt.Errorf("could not get networking mode: %w\n%s", err, string(out))
+func (n *winIpAdapterAddresses) Next() ipAdapterAddresses {
+	if n.node.Next == nil {
+		return nil
 	}
-	return string(out) == "mirrored", nil
+	return &winIpAdapterAddresses{n.node.Next}
+}
+
+func (n *winIpAdapterAddresses) Description() string {
+	return windows.UTF16PtrToString(n.node.Description)
+}
+
+func (n *winIpAdapterAddresses) FriendlyName() string {
+	return windows.UTF16PtrToString(n.node.FriendlyName)
+}
+
+func (n *winIpAdapterAddresses) IP() net.IP {
+	return n.node.FirstUnicastAddress.Address.IP()
 }
 
 // getAdaptersAddresses returns the head of a linked list of network adapters.
-func getAdaptersAddresses() (head *windows.IpAdapterAddresses, err error) {
+func (i ipConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
 	defer decorate.OnError(&err, "could not get network adapter addresses")
 
 	// This function is a wrapper around the Windows API GetAdaptersAddresses.
@@ -121,12 +132,14 @@ func getAdaptersAddresses() (head *windows.IpAdapterAddresses, err error) {
 
 		// The buffer is filled with the linked list of adapters, with the first element being the head.
 		// We return a pointer to the start of the buffer.
-		return buff.ptr(), nil
+		return &winIpAdapterAddresses{buff.ptr()}, nil
 	}
 
 	// We tried 10 times and the buffer is still too small: give up.
 	return nil, errors.New("iteration limit reached")
 }
+
+type ipConfig struct{}
 
 // Constants for byte size conversion.
 const kilobyte uint32 = 1024
