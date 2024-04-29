@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -11,20 +12,28 @@ import (
 )
 
 // getWslIP returns the loopback address if the networking mode is mirrored or iterates over the network adapters to find the IP address of the WSL one.
-func getWslIP(i hostIpconfig, w wslSystemDistro) (net.IP, error) {
-	isMirrored, err := networkIsMirrored(w)
+func getWslIP(ctx context.Context, i hostIpconfig, w wslSystemDistro) (net.IP, error) {
+	mode, err := networkingMode(ctx, w)
 	if err != nil {
-		log.Warningf(context.Background(), "could not determine if WSL network is mirrored (assuming NAT): %v", err)
-		isMirrored = false
-	}
-	if isMirrored {
-		return net.IPv4(127, 0, 0, 1), nil
+		log.Warningf(ctx, "could not determine if WSL network is mirrored (assuming NAT): %v", err)
+		mode = "nat"
 	}
 
+	switch mode {
+	case "mirrored":
+		return net.IPv4(127, 0, 0, 1), nil
+	case "nat":
+		return findWslAdapterIP(i)
+	default:
+		return nil, fmt.Errorf("unknown networking mode: %s", mode)
+	}
+}
+
+func findWslAdapterIP(i hostIpconfig) (net.IP, error) {
 	const targetDesc = "Hyper-V Virtual Ethernet Adapter"
 	const vEthernetName = "vEthernet (WSL"
 
-	head, err := i.getAdaptersAddresses() // blow on nil?
+	head, err := i.getAdaptersAddresses()
 	if err != nil {
 		return nil, err
 	}
@@ -57,16 +66,23 @@ func getWslIP(i hostIpconfig, w wslSystemDistro) (net.IP, error) {
 	return nil, fmt.Errorf("could not find WSL adapter")
 }
 
-// networkIsMirrored detects whether the WSL network is mirrored or not.
-func networkIsMirrored(wsl wslSystemDistro) (bool, error) {
+// networkingMode detects whether the WSL network is mirrored or not.
+func networkingMode(ctx context.Context, wsl wslSystemDistro) (string, error) {
 	// It does so by launching the system distribution.
-	cmd := wsl.Command(context.Background(), "wslinfo", "--networking-mode", "-n")
+	cmd := wsl.Command(ctx, "wslinfo", "--networking-mode", "-n")
 
-	out, err := cmd.Output()
+	var stdout, stderr bytes.Buffer
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	out := bytes.TrimSpace(stdout.Bytes())
 	if err != nil {
-		return false, fmt.Errorf("could not get networking mode: %w\n%s", err, string(out))
+		return "", fmt.Errorf("%s: error: %v.\n    Stdout: %s\n    Stderr: %s", cmd.Path, err, out, stderr.String())
 	}
-	return string(out) == "mirrored", nil
+
+	return strings.Split(string(out), "\n")[0], nil
 }
 
 type wslSystemDistro interface {
