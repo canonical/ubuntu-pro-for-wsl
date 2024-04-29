@@ -112,17 +112,16 @@ type mockWslSystem struct {
 	cmdError bool
 }
 
-func newWslSystemMock(t *testing.T, netmode string, extraEnv []string, cmdError bool) *mockWslSystem {
-	t.Helper()
+func newWslSystemMock(netmode string, extraEnv []string, cmdError bool) *mockWslSystem {
 	return &mockWslSystem{netmode: netmode, extraEnv: extraEnv, cmdError: cmdError}
 }
 
-func (m *mockWslSystem) Command(ctx context.Context, cmd string, args ...string) *exec.Cmd {
+func (m *mockWslSystem) Command(ctx context.Context, name string, args ...string) *exec.Cmd {
 	if !testing.Testing() {
 		panic("mockWslSystem can only be used within a test")
 	}
 
-	goArgs := append([]string{"test", "-run", "^TestWithWslSystemMock$", "--"}, args...)
+	goArgs := append([]string{"test", "-run", "^TestWithWslSystemMock$", "--", name}, args...)
 	// Switches
 	env := append(os.Environ(), m.extraEnv...)
 	env = append(env,
@@ -175,7 +174,7 @@ wslinfo usage:
 
 	// Action
 	exit := func(args []string) int {
-		a := strings.Join(args, " ")
+		a := strings.TrimSpace(strings.Join(args, " "))
 		netmode := os.Getenv("UP4W_MOCK_NETWORKING_MODE")
 		if netmode == "" {
 			netmode = "nat"
@@ -194,6 +193,7 @@ wslinfo usage:
 			return 0
 
 		default:
+			fmt.Fprintf(os.Stderr, "Invalid argument: [%s]\n", a)
 			fmt.Fprintln(os.Stderr, errorUsage)
 			return 1
 		}
@@ -204,7 +204,7 @@ wslinfo usage:
 	if exit == 0 {
 		// testing library only prints this line when it fails
 		// Manually printing it means that we can simply remove the last two lines to get the true output
-		fmt.Fprintln(os.Stdout, "exit status 0")
+		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
 	}
 	syscall.Exit(exit)
 }

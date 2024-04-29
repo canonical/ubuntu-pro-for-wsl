@@ -180,7 +180,7 @@ func TestServeWSLIP(t *testing.T) {
 
 			d := daemon.New(ctx, registerer, addrDir)
 
-			wsl := daemon.NewWslSystemMock(t, tc.netmode, nil, tc.denyWslSystemAccess)
+			wsl := daemon.NewWslSystemMock(tc.netmode, nil, tc.denyWslSystemAccess)
 			ipconfig := daemon.NewHostIPConfigMock(tc.withAdapters)
 			serveErr := make(chan error)
 			go func() {

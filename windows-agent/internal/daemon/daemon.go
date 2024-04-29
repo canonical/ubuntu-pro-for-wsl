@@ -71,7 +71,7 @@ func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
-	opts := options{h: ipConfig{}, wsl: wslSystem{}}
+	opts := options{h: newIPConfig(), wsl: newWslSystem()}
 	for _, f := range args {
 		f(&opts)
 	}

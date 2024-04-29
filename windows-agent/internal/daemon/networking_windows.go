@@ -87,6 +87,10 @@ func (i ipConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
 
 type ipConfig struct{}
 
+func newIPConfig() ipConfig {
+	return ipConfig{}
+}
+
 // Constants for byte size conversion.
 const kilobyte uint32 = 1024
 
@@ -127,6 +131,10 @@ func (b *buffer[T]) ptr() *T {
 }
 
 type wslSystem struct{}
+
+func newWslSystem() wslSystem {
+	return wslSystem{}
+}
 
 // Command provides an *exec.Command configured to run inside the always present system distro, useful when we cannot guaratee the presence of any other distro instance.
 func (wsl wslSystem) Command(ctx context.Context, name string, arg ...string) *exec.Cmd {
