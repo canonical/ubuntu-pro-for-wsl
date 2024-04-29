@@ -144,35 +144,71 @@ func TestStartQuit(t *testing.T) {
 	}
 }
 
-func TestServeNoWSLIP(t *testing.T) {
-	// This test is not parallel because it modifies a global flag that
-	// affects the behavior of the getWslIP function.
-	daemon.SetWslIPErr(t)
-
-	addrDir := t.TempDir()
+func TestServeWSLIP(t *testing.T) {
+	t.Parallel()
 
 	registerer := func(context.Context) *grpc.Server {
 		return grpc.NewServer()
 	}
 
-	// Very lenient timeout because we expect the Serve to fail immediately.
-	// If it doesn't, the test will fail due to the context timeout (otherwise
-	// it would hang indefinitely).
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
+	testcases := map[string]struct {
+		netmode             string
+		denyWslSystemAccess bool
+		withAdapters        daemon.MockIPAdaptersState
 
-	d := daemon.New(ctx, registerer, addrDir)
-	defer d.Quit(ctx, false)
+		wantErr bool
+	}{
+		"Success":                       {withAdapters: daemon.Ok},
+		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemon.Ok},
+		"With no access to wsl --system but net mode is the default (NAT)": {denyWslSystemAccess: true, withAdapters: daemon.Ok},
 
-	err := d.Serve(ctx)
-	require.Error(t, err, "Serve should fail when the WSL IP cannot be found")
+		"Error when the networking mode is unknown":       {netmode: "unknown", wantErr: true},
+		"Error when the list of adapters is empty":        {withAdapters: daemon.EmptyList, wantErr: true},
+		"Error when there is no Hyper-V adapter the list": {withAdapters: daemon.NoHyperVAdapterInList, wantErr: true},
+	}
 
-	select {
-	case <-ctx.Done():
-		// Most likely, Serve did not fail and instead started serving,
-		// only to be stopped by the test timeout.
-		require.Fail(t, "Serve should have failed immediately")
-	default:
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			addrDir := t.TempDir()
+			// Very lenient timeout because we either expect Serve to fail immediately or we stop it manually.
+			// As the last resource, the test will fail due to the context timeout (otherwise it would hang indefinitely).
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+
+			d := daemon.New(ctx, registerer, addrDir)
+
+			wsl := daemon.NewWslSystemMock(t, tc.netmode, nil, tc.denyWslSystemAccess)
+			ipconfig := daemon.NewHostIpConfigMock(tc.withAdapters)
+			serveErr := make(chan error)
+			go func() {
+				serveErr <- d.Serve(ctx, daemon.WithWslSystemDistro(wsl), daemon.WithHostIpConfig(&ipconfig))
+			}()
+
+			if tc.wantErr {
+				require.NotErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should fail when the WSL IP cannot be found")
+				return
+			} else {
+				serverStopped := make(chan struct{})
+				go func() {
+					time.Sleep(500 * time.Millisecond)
+					d.Quit(ctx, false)
+					close(serverStopped)
+				}()
+				<-serverStopped
+
+				require.ErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should not fail when the WSL IP is found")
+			}
+
+			select {
+			case <-ctx.Done():
+				// Most likely, Serve did not fail and instead started serving,
+				// only to be stopped by the test timeout. Let's force-quit just in case.
+				d.Quit(context.Background(), true)
+				require.Fail(t, "Serve should have stopped")
+			default:
+			}
+
+		})
 	}
 }
 
@@ -326,3 +362,5 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 	<-ctx.Done()
 	return &grpctestservice.Empty{}, nil
 }
+
+func TestWithWslSystemMock(t *testing.T) { daemon.WslSystemMock(t) }
