@@ -159,6 +159,7 @@ func TestServeWSLIP(t *testing.T) {
 		wantErr bool
 	}{
 		"Success":                       {withAdapters: daemon.Ok},
+		"With a single Hyper-V Adapter": {withAdapters: daemon.SingleHyperVAdapterInList},
 		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemon.Ok},
 		"With no access to wsl --system but net mode is the default (NAT)": {denyWslSystemAccess: true, withAdapters: daemon.Ok},
 
@@ -169,6 +170,8 @@ func TestServeWSLIP(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			addrDir := t.TempDir()
 			// Very lenient timeout because we either expect Serve to fail immediately or we stop it manually.
 			// As the last resource, the test will fail due to the context timeout (otherwise it would hang indefinitely).
@@ -178,26 +181,26 @@ func TestServeWSLIP(t *testing.T) {
 			d := daemon.New(ctx, registerer, addrDir)
 
 			wsl := daemon.NewWslSystemMock(t, tc.netmode, nil, tc.denyWslSystemAccess)
-			ipconfig := daemon.NewHostIpConfigMock(tc.withAdapters)
+			ipconfig := daemon.NewHostIPConfigMock(tc.withAdapters)
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslSystemDistro(wsl), daemon.WithHostIpConfig(&ipconfig))
+				serveErr <- d.Serve(ctx, daemon.WithWslSystemDistro(wsl), daemon.WithHostIPConfig(&ipconfig))
 			}()
 
 			if tc.wantErr {
 				require.NotErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should fail when the WSL IP cannot be found")
 				return
-			} else {
-				serverStopped := make(chan struct{})
-				go func() {
-					time.Sleep(500 * time.Millisecond)
-					d.Quit(ctx, false)
-					close(serverStopped)
-				}()
-				<-serverStopped
-
-				require.ErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should not fail when the WSL IP is found")
 			}
+
+			serverStopped := make(chan struct{})
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				d.Quit(ctx, false)
+				close(serverStopped)
+			}()
+			<-serverStopped
+
+			require.ErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should not fail when the WSL IP is found")
 
 			select {
 			case <-ctx.Done():
@@ -207,7 +210,6 @@ func TestServeWSLIP(t *testing.T) {
 				require.Fail(t, "Serve should have stopped")
 			default:
 			}
-
 		})
 	}
 }

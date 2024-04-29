@@ -23,15 +23,21 @@ const (
 	ok
 )
 
-func NewHostIpConfigMock(state mockIPAdaptersState) mockIpConfig {
-	return mockIpConfig{state: state}
+func newHostIPConfigMock(state mockIPAdaptersState) mockIPConfig {
+	return mockIPConfig{state: state}
 }
 
-func (m *mockIpConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
-	adaptersList := []mockIpAdapterAddresses{
+func (m *mockIPConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
+	adaptersList := []mockIPAdapterAddresses{
 		{ipconfig: m, name: "Ethernet adapter Ethernet", desc: " Realtek(R) PCI(e) Ethernet Controller", ip: net.IPv4(192, 168, 17, 15)},
 		{ipconfig: m, name: "Wireless LAN adapter Wi-Fi", desc: "Qualcomm Atheros QCA9377 Wireless Network Adapter", ip: net.IPv4(192, 168, 17, 4)},
 		{ipconfig: m, name: "Wireless LAN adapter Local Area Connection* 1", desc: " Microsoft Wi-Fi Direct Virtual Adapter", ip: nil},
+	}
+
+	// prefer not to listen on public interfaces if possible.
+	localIP := getLocalPrivateIP()
+	if localIP == nil {
+		localIP = net.IPv4(0, 0, 0, 0)
 	}
 
 	switch m.state {
@@ -42,18 +48,13 @@ func (m *mockIpConfig) getAdaptersAddresses() (head ipAdapterAddresses, err erro
 	case noHyperVAdapterInList:
 		m.adapters = adaptersList
 	case singleHyperVAdapterInList:
-		m.adapters = append(adaptersList, mockIpAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))", desc: " Hyper-V Virtual Ethernet Adapter", ip: net.IPv4(172, 18, 64, 1)})
+		m.adapters = append(adaptersList, mockIPAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))", desc: " Hyper-V Virtual Ethernet Adapter", ip: localIP})
 	case ok:
-		// prefer not to listen on public interfaces if possible.
-		localIP := getLocalPrivateIP()
-		if localIP == nil {
-			localIP = net.IPv4(0, 0, 0, 0)
-		}
 		m.adapters = append(adaptersList,
-			mockIpAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (Default Switch)", desc: " Hyper-V Virtual Ethernet Adapter", ip: net.IPv4(172, 27, 48, 1)},
-			mockIpAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))", desc: " Hyper-V Virtual Ethernet Adapter #2", ip: localIP})
-
+			mockIPAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (Default Switch)", desc: " Hyper-V Virtual Ethernet Adapter", ip: net.IPv4(172, 27, 48, 1)},
+			mockIPAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))", desc: " Hyper-V Virtual Ethernet Adapter #2", ip: localIP})
 	}
+
 	return &m.adapters[0], nil
 }
 
@@ -70,37 +71,37 @@ func getLocalPrivateIP() net.IP {
 	}
 	return nil
 }
-func (m *mockIpAdapterAddresses) Next() ipAdapterAddresses {
+func (m *mockIPAdapterAddresses) Next() ipAdapterAddresses {
 	return m.ipconfig.next()
 }
 
-func (m *mockIpAdapterAddresses) Description() string {
+func (m *mockIPAdapterAddresses) Description() string {
 	return m.desc
 }
 
-func (m *mockIpAdapterAddresses) IP() net.IP {
+func (m *mockIPAdapterAddresses) IP() net.IP {
 	return m.ip
 }
 
-func (m *mockIpAdapterAddresses) FriendlyName() string {
+func (m *mockIPAdapterAddresses) FriendlyName() string {
 	return m.name
 }
 
-func (m *mockIpConfig) next() ipAdapterAddresses {
+func (m *mockIPConfig) next() ipAdapterAddresses {
 	if m.current+1 >= len(m.adapters) {
 		return nil
 	}
-	m.current += 1
+	m.current++
 	return &m.adapters[m.current]
 }
 
-type mockIpConfig struct {
+type mockIPConfig struct {
 	state    mockIPAdaptersState
-	adapters []mockIpAdapterAddresses
+	adapters []mockIPAdapterAddresses
 	current  int
 }
-type mockIpAdapterAddresses struct {
-	ipconfig   *mockIpConfig
+type mockIPAdapterAddresses struct {
+	ipconfig   *mockIPConfig
 	name, desc string
 	ip         net.IP
 }
@@ -111,7 +112,7 @@ type mockWslSystem struct {
 	cmdError bool
 }
 
-func NewWslSystemMock(t *testing.T, netmode string, extraEnv []string, cmdError bool) *mockWslSystem {
+func newWslSystemMock(t *testing.T, netmode string, extraEnv []string, cmdError bool) *mockWslSystem {
 	t.Helper()
 	return &mockWslSystem{netmode: netmode, extraEnv: extraEnv, cmdError: cmdError}
 }
@@ -130,8 +131,9 @@ func (m *mockWslSystem) Command(ctx context.Context, cmd string, args ...string)
 	)
 	if m.cmdError {
 		env = append(env, fmt.Sprintf("%s=1", "UP4W_MOCK_NETWORKING_MODE_ERROR"))
-
 	}
+
+	//nolint: gosec // Subprocess launched with variable (gosec) intentionally so we can mock it.
 	c := exec.CommandContext(ctx, "go", goArgs...)
 	c.Env = env
 	return c
@@ -192,7 +194,7 @@ wslinfo usage:
 			return 0
 
 		default:
-			fmt.Fprintln(os.Stderr, netmode)
+			fmt.Fprintln(os.Stderr, errorUsage)
 			return 1
 		}
 	}(argv)

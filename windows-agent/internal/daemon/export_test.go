@@ -9,3 +9,6 @@ const (
 )
 
 type MockIPAdaptersState = mockIPAdaptersState
+
+var NewWslSystemMock = newWslSystemMock
+var NewHostIPConfigMock = newHostIPConfigMock

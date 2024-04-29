@@ -11,26 +11,26 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-type winIpAdapterAddresses struct {
+type winIPAdapterAddresses struct {
 	node *windows.IpAdapterAddresses
 }
 
-func (n *winIpAdapterAddresses) Next() ipAdapterAddresses {
+func (n *winIPAdapterAddresses) Next() ipAdapterAddresses {
 	if n.node.Next == nil {
 		return nil
 	}
-	return &winIpAdapterAddresses{n.node.Next}
+	return &winIPAdapterAddresses{n.node.Next}
 }
 
-func (n *winIpAdapterAddresses) Description() string {
+func (n *winIPAdapterAddresses) Description() string {
 	return windows.UTF16PtrToString(n.node.Description)
 }
 
-func (n *winIpAdapterAddresses) FriendlyName() string {
+func (n *winIPAdapterAddresses) FriendlyName() string {
 	return windows.UTF16PtrToString(n.node.FriendlyName)
 }
 
-func (n *winIpAdapterAddresses) IP() net.IP {
+func (n *winIPAdapterAddresses) IP() net.IP {
 	return n.node.FirstUnicastAddress.Address.IP()
 }
 
@@ -78,7 +78,7 @@ func (i ipConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
 
 		// The buffer is filled with the linked list of adapters, with the first element being the head.
 		// We return a pointer to the start of the buffer.
-		return &winIpAdapterAddresses{buff.ptr()}, nil
+		return &winIPAdapterAddresses{buff.ptr()}, nil
 	}
 
 	// We tried 10 times and the buffer is still too small: give up.
@@ -131,5 +131,6 @@ type wslSystem struct{}
 // Command provides an *exec.Command configured to run inside the always present system distro, useful when we cannot guaratee the presence of any other distro instance.
 func (wsl wslSystem) Command(ctx context.Context, name string, arg ...string) *exec.Cmd {
 	args := append([]string{"--system", name}, arg...)
+	//nolint: gosec // Subprocess launched with variable (gosec) intentionally so we can mock it.
 	return exec.CommandContext(ctx, "wsl", args...)
 }

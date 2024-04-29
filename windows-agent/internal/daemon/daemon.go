@@ -46,9 +46,9 @@ type options struct {
 // Option is an optional argument for Serve.
 type Option = func(*options)
 
-// WithHostIpConfig is an optional argument for Serve that injects a backend to access network adapter information.
+// WithHostIPConfig is an optional argument for Serve that injects a backend to access network adapter information.
 // For testing purposes only.
-func WithHostIpConfig(h hostIpconfig) Option {
+func WithHostIPConfig(h hostIpconfig) Option {
 	return func(o *options) {
 		o.h = h
 	}
