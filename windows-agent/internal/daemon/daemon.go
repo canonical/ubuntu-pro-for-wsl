@@ -78,13 +78,13 @@ func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
 
 	wslIP, err := getWslIP(ctx, opts.h, opts.wsl)
 	if err != nil {
-		return fmt.Errorf("could not get the WSL adapter IP: %v", err)
+		return fmt.Errorf("could not get the WSL adapter IP: %w", err)
 	}
 
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
 	if err != nil {
-		return fmt.Errorf("can't listen: %v", err)
+		return fmt.Errorf("can't listen: %w", err)
 	}
 
 	addr := lis.Addr().String()
@@ -100,7 +100,7 @@ func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
 	log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 
 	if err := d.grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("gRPC serve error: %v", err)
+		return fmt.Errorf("gRPC serve error: %w", err)
 	}
 	return nil
 }
