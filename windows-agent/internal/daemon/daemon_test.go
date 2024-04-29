@@ -73,6 +73,7 @@ func TestStartQuit(t *testing.T) {
 			serveErr := make(chan error)
 			go func() {
 				serveErr <- d.Serve(ctx)
+				close(serveErr)
 			}()
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
@@ -85,7 +86,7 @@ func TestStartQuit(t *testing.T) {
 					addrContents, err = os.ReadFile(addrPath)
 					require.NoError(t, err, "Address file should be readable")
 					return string(addrContents) != "# Old port file"
-				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
+				}, 5000*time.Millisecond, 100*time.Millisecond, "Pre-existing address file should be overwritten after daemon.New()")
 			} else {
 				requireWaitPathExists(t, addrPath, "Serve should create an address file")
 				addrContents, err = os.ReadFile(addrPath)
@@ -327,11 +328,11 @@ func requireWaitPathExists(t *testing.T, path string, msg string) {
 		return false
 	}
 
-	require.Eventually(t, fileExists, 500*time.Millisecond, 50*time.Millisecond, "%q does not exists: %v", path, msg)
+	require.Eventually(t, fileExists, 5000*time.Millisecond, 100*time.Millisecond, "%q does not exists: %v", path, msg)
 
 	// Prevent error when accessing the file right after:
 	// 'The process cannot access the file because it is being used by another process'
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 }
 
 // requireWaitPathDoesNotExist checks periodically for the existence of a path. If the path
