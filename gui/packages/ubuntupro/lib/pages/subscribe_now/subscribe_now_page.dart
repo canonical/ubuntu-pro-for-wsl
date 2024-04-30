@@ -5,7 +5,6 @@ import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
-import 'package:yaru/yaru.dart';
 import '../widgets/page_widgets.dart';
 import '/core/agent_api_client.dart';
 import 'subscribe_now_model.dart';
@@ -19,12 +18,13 @@ class SubscribeNowPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = context.watch<SubscribeNowModel>();
     final lang = AppLocalizations.of(context);
-    return DarkStyledLandingPage(
+    final theme = Theme.of(context);
+    return LandingPage(
       children: [
         Text(
           lang.proHeading,
-          style: yaruDark.textTheme.bodyLarge!
-              .copyWith(fontWeight: FontWeight.w100),
+          style:
+              theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w100),
         ),
         const SizedBox(height: 16),
         Row(

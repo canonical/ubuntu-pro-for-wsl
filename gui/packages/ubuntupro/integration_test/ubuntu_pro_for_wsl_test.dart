@@ -197,12 +197,12 @@ void main() {
         );
         await tester.enterText(fqdnInput, '::');
         await tester.pump();
-        expect(tester.widget<FilledButton>(continueButton).enabled, isFalse);
+        expect(tester.widget<ElevatedButton>(continueButton).enabled, isFalse);
 
         // check that valid input enabled continue, and continue
         await tester.enterText(fqdnInput, 'localhost');
         await tester.pump();
-        expect(tester.widget<FilledButton>(continueButton).enabled, isTrue);
+        expect(tester.widget<ElevatedButton>(continueButton).enabled, isTrue);
         await tester.tap(continueButton);
         await tester.pumpAndSettle();
 
@@ -289,7 +289,7 @@ landscape:
         url = landscape.canonical.com:6554
         [client]
         account_name = test-user
-        registration_key = 
+        registration_key =
         url = https://landscape.canonical.com/message-system
         log_level = debug
         ping_url = https://landscape.canonical.com/ping

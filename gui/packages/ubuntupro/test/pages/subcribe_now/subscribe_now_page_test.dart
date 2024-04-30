@@ -16,6 +16,13 @@ import 'token_samples.dart' as tks;
 
 @GenerateMocks([SubscribeNowModel])
 void main() {
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  // TODO: Sometimes the Column in the LandscapePage extends past the test environment's screen
+  // due differences in font size between production and testing environments.
+  // This should be resolved so that we don't have to specify a manual text scale factor.
+  // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
+  binding.platformDispatcher.textScaleFactorTestValue = 0.6;
+
   testWidgets('launch web page', (tester) async {
     final model = MockSubscribeNowModel();
     when(model.purchaseAllowed()).thenReturn(true);

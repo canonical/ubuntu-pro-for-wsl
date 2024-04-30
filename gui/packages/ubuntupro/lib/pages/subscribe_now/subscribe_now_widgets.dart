@@ -58,15 +58,17 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     return YaruExpandable(
       header: Text(
         lang.tokenInputTitle,
-        style: yaruDark.textTheme.bodyMedium!
-            .copyWith(fontWeight: FontWeight.w100),
+        style:
+            theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w100),
       ),
       expandIcon: Icon(
         ProTokenInputField.expandIcon,
-        color: yaruDark.textTheme.bodyMedium!.color,
+        color: theme.textTheme.bodyMedium!.color,
       ),
       isExpanded: widget.isExpanded,
       child: ValueListenableBuilder(
