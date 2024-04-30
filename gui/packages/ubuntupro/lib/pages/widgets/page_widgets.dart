@@ -92,113 +92,100 @@ class ColumnLandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
 
     return Pro4WSLPage(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (dark)
-            Positioned.fill(
-              child: Image.asset(
-                'assets/05_suru2_dark_2K.jpg',
-                fit: BoxFit.fill,
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      // Left column "header"
-                      Expanded(
-                        flex: 5,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  WidgetSpan(
-                                    child: SvgPicture.asset(
-                                      svgAsset,
-                                      height: 70,
-                                    ),
-                                  ),
-                                  const WidgetSpan(
-                                    child: SizedBox(
-                                      width: 8,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: title,
-                                    style: theme.textTheme.displaySmall
-                                        ?.copyWith(fontWeight: FontWeight.w100),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 24,
-                            ),
-                            ...leftChildren,
-                          ],
-                        ),
-                      ),
-                      // Divider
-                      const Expanded(
-                        flex: 1,
-                        child: VerticalDivider(
-                          thickness: 0.2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      // Right column content
-                      Expanded(
-                        flex: 6,
-                        child: Column(
-                          children: [...children],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 16.0,
-                ),
-                // Navigation buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OutlinedButton(
-                      onPressed: onBack,
-                      child: Text(lang.buttonBack),
-                    ),
-                    Row(
+      body: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  // Left column "header"
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        FilledButton(
-                          onPressed: onSkip,
-                          child: Text(lang.buttonSkip),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              WidgetSpan(
+                                child: SvgPicture.asset(
+                                  svgAsset,
+                                  height: 70,
+                                ),
+                              ),
+                              const WidgetSpan(
+                                child: SizedBox(
+                                  width: 8,
+                                ),
+                              ),
+                              TextSpan(
+                                text: title,
+                                style: theme.textTheme.displaySmall
+                                    ?.copyWith(fontWeight: FontWeight.w100),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(
-                          width: 16.0,
+                          height: 24,
                         ),
-                        ElevatedButton(
-                          onPressed: onNext,
-                          child: Text(lang.buttonNext),
-                        ),
+                        ...leftChildren,
                       ],
+                    ),
+                  ),
+                  // Divider
+                  const Expanded(
+                    flex: 1,
+                    child: VerticalDivider(
+                      thickness: 0.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  // Right column content
+                  Expanded(
+                    flex: 6,
+                    child: Column(
+                      children: [...children],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 16.0,
+            ),
+            // Navigation buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                OutlinedButton(
+                  onPressed: onBack,
+                  child: Text(lang.buttonBack),
+                ),
+                Row(
+                  children: [
+                    FilledButton(
+                      onPressed: onSkip,
+                      child: Text(lang.buttonSkip),
+                    ),
+                    const SizedBox(
+                      width: 16.0,
+                    ),
+                    ElevatedButton(
+                      onPressed: onNext,
+                      child: Text(lang.buttonNext),
                     ),
                   ],
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -223,42 +210,29 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
 
     return Pro4WSLPage(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (dark)
-            Positioned.fill(
-              child: Image.asset(
-                'assets/05_suru2_dark_2K.jpg',
-                fit: BoxFit.fill,
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(48.0),
-            child: centered
-                ? Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 480.0),
-                      child: _PageContent(
-                        svgAsset: svgAsset,
-                        title: title,
-                        data: theme,
-                        centered: true,
-                        children: children,
-                      ),
-                    ),
-                  )
-                : _PageContent(
+      body: Padding(
+        padding: const EdgeInsets.all(48.0),
+        child: centered
+            ? Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480.0),
+                  child: _PageContent(
                     svgAsset: svgAsset,
                     title: title,
                     data: theme,
+                    centered: true,
                     children: children,
                   ),
-          ),
-        ],
+                ),
+              )
+            : _PageContent(
+                svgAsset: svgAsset,
+                title: title,
+                data: theme,
+                children: children,
+              ),
       ),
     );
   }
