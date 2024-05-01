@@ -1,38 +1,68 @@
 package daemon
 
 import (
-	"context"
-	"os/exec"
+	"net"
+	"os"
+	"syscall"
+
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 )
 
-type ipConfig struct {
-	m mockIPConfig
-}
+func init() {
+	m := newHostIPConfigMock(multipleHyperVAdaptersInList)
 
-func newIPConfig() ipConfig {
-	return ipConfig{
-		m: newHostIPConfigMock(ok),
+	defaultOptions = options{
+		wslSystemCmd: []string{
+			os.Args[0],
+			"-test.run",
+			"TestWithWslSystemMock",
+			"--",
+			"wslinfo",
+			"--networking-mode",
+			"-n",
+			"nat",
+		},
+		wslCmdEnv:            []string{"GO_WANT_HELPER_PROCESS=1"},
+		getAdaptersAddresses: m.GetAdaptersAddresses,
 	}
 }
 
-type wslSystem struct {
-	m *mockWslSystem
+// ERROR_BUFFER_OVERFLOW is the error returned by GetAdaptersAddresses when the buffer is too small.
+//
+//nolint:revive // Windows API constants are in shout case.
+const ERROR_BUFFER_OVERFLOW = syscall.EOVERFLOW
+
+// ipAdapterAddresses redefines the wrapper type for the IP_ADAPTER_ADDRESSES structure for testing on Linux.
+type ipAdapterAddresses struct {
+	Next                *ipAdapterAddresses
+	FriendlyName        string
+	Description         string
+	FirstUnicastAddress net.IP
 }
 
-func newWslSystem() wslSystem {
-	return wslSystem{
-		m: newWslSystemMock("nat", []string{
-			"UP4W_MOCK_EXECUTABLE=1",
-			"UP4W_MOCK_EXECUTABLE=1",
-		}, false),
-	}
+func (a *ipAdapterAddresses) next() *ipAdapterAddresses {
+	return a.Next
 }
 
-func (i ipConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
-	return i.m.getAdaptersAddresses()
+func (a *ipAdapterAddresses) friendlyName() string {
+	return a.FriendlyName
 }
 
-func (wsl wslSystem) Command(ctx context.Context, name string, arg ...string) *exec.Cmd {
-	wsl.m.netmode = "nat"
-	return wsl.m.Command(ctx, name, arg...)
+func (a *ipAdapterAddresses) description() string {
+	return a.Description
+}
+
+func (a *ipAdapterAddresses) ip() net.IP {
+	return a.FirstUnicastAddress
+}
+
+// fillFromTemplate fills the ipAdapterAddresses structure with the values from the template.
+func (a *ipAdapterAddresses) fillFromTemplate(template *mockIPAddrsTemplate, next *ipAdapterAddresses) {
+	testdetection.MustBeTesting()
+
+	a.FriendlyName = template.friendlyName
+	a.Description = template.desc
+
+	a.FirstUnicastAddress = template.ip
+	a.Next = next
 }
