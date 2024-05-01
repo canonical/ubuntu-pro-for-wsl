@@ -1,16 +1,11 @@
 package daemon
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"net"
-	"os"
-	"os/exec"
-	"slices"
-	"strings"
-	"syscall"
-	"testing"
+	"unsafe"
+
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 )
 
 type mockIPAdaptersState int
@@ -20,18 +15,31 @@ const (
 	emptyList
 	noHyperVAdapterInList
 	singleHyperVAdapterInList
-	ok
+	multipleHyperVAdaptersInList
 )
 
+// newHostIPConfigMock initializes a mockIPConfig object with the state provided so it can be used instead of the real GetAdaptersAddresses Win32 API.
 func newHostIPConfigMock(state mockIPAdaptersState) mockIPConfig {
-	return mockIPConfig{state: state}
-}
+	testdetection.MustBeTesting()
 
-func (m *mockIPConfig) getAdaptersAddresses() (head ipAdapterAddresses, err error) {
-	adaptersList := []mockIPAdapterAddresses{
-		{ipconfig: m, name: "Ethernet adapter Ethernet", desc: " Realtek(R) PCI(e) Ethernet Controller", ip: net.IPv4(192, 168, 17, 15)},
-		{ipconfig: m, name: "Wireless LAN adapter Wi-Fi", desc: "Qualcomm Atheros QCA9377 Wireless Network Adapter", ip: net.IPv4(192, 168, 17, 4)},
-		{ipconfig: m, name: "Wireless LAN adapter Local Area Connection* 1", desc: " Microsoft Wi-Fi Direct Virtual Adapter", ip: nil},
+	m := mockIPConfig{state: state}
+
+	adaptersList := []mockIPAddrsTemplate{
+		{
+			friendlyName: "Ethernet adapter Ethernet",
+			desc:         "Realtek(R) PCI(e) Ethernet Controller",
+			ip:           net.IPv4(192, 168, 17, 15),
+		},
+		{
+			friendlyName: "Wireless LAN adapter Wi-Fi",
+			desc:         "Qualcomm Atheros QCA9377 Wireless Network Adapter",
+			ip:           net.IPv4(192, 168, 17, 4),
+		},
+		{
+			friendlyName: "Wireless LAN adapter Local Area Connection* 1",
+			desc:         "Microsoft Wi-Fi Direct Virtual Adapter",
+			ip:           nil,
+		},
 	}
 
 	// prefer not to listen on public interfaces if possible.
@@ -41,21 +49,71 @@ func (m *mockIPConfig) getAdaptersAddresses() (head ipAdapterAddresses, err erro
 	}
 
 	switch m.state {
-	case mockError:
-		return nil, errors.New("mock error")
-	case emptyList:
-		return nil, nil
 	case noHyperVAdapterInList:
-		m.adapters = adaptersList
+		m.addrs = adaptersList
 	case singleHyperVAdapterInList:
-		m.adapters = append(adaptersList, mockIPAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))", desc: " Hyper-V Virtual Ethernet Adapter", ip: localIP})
-	case ok:
-		m.adapters = append(adaptersList,
-			mockIPAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (Default Switch)", desc: " Hyper-V Virtual Ethernet Adapter", ip: net.IPv4(172, 27, 48, 1)},
-			mockIPAdapterAddresses{ipconfig: m, name: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))", desc: " Hyper-V Virtual Ethernet Adapter #2", ip: localIP})
+		m.addrs = append(
+			adaptersList,
+			mockIPAddrsTemplate{
+				friendlyName: "Ethernet adapter vEthernet (WSL)",
+				desc:         "Hyper-V Virtual Ethernet Adapter",
+				ip:           localIP,
+			},
+		)
+	case multipleHyperVAdaptersInList:
+		m.addrs = append(
+			adaptersList,
+			mockIPAddrsTemplate{
+				friendlyName: "Ethernet adapter vEthernet (Default Switch)",
+				desc:         "Hyper-V Virtual Ethernet Adapter",
+				ip:           net.IPv4(172, 27, 48, 1),
+			},
+			mockIPAddrsTemplate{
+				friendlyName: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))",
+				desc:         "Hyper-V Virtual Ethernet Adapter #2",
+				ip:           localIP,
+			},
+		)
 	}
 
-	return &m.adapters[0], nil
+	return m
+}
+
+// GetAdaptersAddresses is a mock implementation of the GetAdaptersAddresses Win32 API, based on the state of the mockIPConfig object.
+func (m *mockIPConfig) GetAdaptersAddresses(family uint32, flags uint32, reserved uintptr, adapterAddresses *ipAdapterAddresses, sizePointer *uint32) (errcode error) {
+	testdetection.MustBeTesting()
+
+	switch m.state {
+	case mockError:
+		return errors.New("mock error")
+	case emptyList:
+		return nil
+	default:
+		return fillBufferFromTemplate(adapterAddresses, sizePointer, m.addrs)
+	}
+}
+
+// fillBufferFromTemplate fills a pre-allocated buffer of ipAdapterAddresses with the data from the mockIPAddrsTemplate.
+func fillBufferFromTemplate(adaptersAddresses *ipAdapterAddresses, sizePointer *uint32, mockIPAddrsTemplate []mockIPAddrsTemplate) error {
+	count := uint32(len(mockIPAddrsTemplate))
+	objSize := uint32(unsafe.Sizeof(ipAdapterAddresses{}))
+	bufSizeNeeded := count * objSize
+	if *sizePointer < bufSizeNeeded {
+		return ERROR_BUFFER_OVERFLOW
+	}
+
+	//nolint:gosec // Using unsafe to manipulate pointers mimicking the Win32 API, only used in tests.
+	begin := unsafe.Pointer(adaptersAddresses)
+	for _, addr := range mockIPAddrsTemplate {
+		next := unsafe.Add(begin, int(objSize)) // next = ++begin
+
+		ptr := (*ipAdapterAddresses)(begin)
+		ptr.fillFromTemplate(&addr, (*ipAdapterAddresses)(next))
+
+		begin = next
+	}
+	*sizePointer = bufSizeNeeded
+	return nil
 }
 
 // getLocalPrivateIP returns one non loopback local private IP of the host.
@@ -71,140 +129,15 @@ func getLocalPrivateIP() net.IP {
 	}
 	return nil
 }
-func (m *mockIPAdapterAddresses) Next() ipAdapterAddresses {
-	return m.ipconfig.next()
-}
 
-func (m *mockIPAdapterAddresses) Description() string {
-	return m.desc
-}
-
-func (m *mockIPAdapterAddresses) IP() net.IP {
-	return m.ip
-}
-
-func (m *mockIPAdapterAddresses) FriendlyName() string {
-	return m.name
-}
-
-func (m *mockIPConfig) next() ipAdapterAddresses {
-	if m.current+1 >= len(m.adapters) {
-		return nil
-	}
-	m.current++
-	return &m.adapters[m.current]
-}
-
+// mockIPConfig holds the state to control the mock implementation of the GetAdaptersAddresses Win32 API.
 type mockIPConfig struct {
-	state    mockIPAdaptersState
-	adapters []mockIPAdapterAddresses
-	current  int
-}
-type mockIPAdapterAddresses struct {
-	ipconfig   *mockIPConfig
-	name, desc string
-	ip         net.IP
+	state mockIPAdaptersState
+	addrs []mockIPAddrsTemplate
 }
 
-type mockWslSystem struct {
-	netmode  string
-	extraEnv []string
-	cmdError bool
-}
-
-func newWslSystemMock(netmode string, extraEnv []string, cmdError bool) *mockWslSystem {
-	return &mockWslSystem{netmode: netmode, extraEnv: extraEnv, cmdError: cmdError}
-}
-
-func (m *mockWslSystem) Command(ctx context.Context, name string, args ...string) *exec.Cmd {
-	if !testing.Testing() {
-		panic("mockWslSystem can only be used within a test")
-	}
-
-	goArgs := append([]string{"test", "-run", "^TestWithWslSystemMock$", "--", name}, args...)
-	// Switches
-	env := append(os.Environ(), m.extraEnv...)
-	env = append(env,
-		fmt.Sprintf("%s=1", "UP4W_MOCK_EXECUTABLE"),
-		fmt.Sprintf("%s=%s", "UP4W_MOCK_NETWORKING_MODE", m.netmode),
-	)
-	if m.cmdError {
-		env = append(env, fmt.Sprintf("%s=1", "UP4W_MOCK_NETWORKING_MODE_ERROR"))
-	}
-
-	//nolint: gosec // Subprocess launched with variable (gosec) intentionally so we can mock it.
-	c := exec.CommandContext(ctx, "go", goArgs...)
-	c.Env = env
-	return c
-}
-
-// WslSystemMock mocks commands running inside the WSL system distro.
-// Add it to your package_test with:
-//
-//	func TestWithWslSystemMock(t *testing.T) { daemon.WslSystemMock(t) }
-//
-//nolint:thelper // This is a faux test used to mock commands running via `wsl -- system`
-func WslSystemMock(t *testing.T) {
-	// Setup
-	if t.Name() != "TestWithWslSystemMock" {
-		panic("The WslSystemMock faux test must be named TestWithWslSystemMock")
-	}
-
-	const errorUsage = `
-wslinfo usage:
-	--networking-mode
-		Display current networking mode.
-
-	--msal-proxy-path
-		Display the path to the MSAL proxy application.
-
-	-n
-		Do not print a newline.
-	`
-
-	if os.Getenv("UP4W_MOCK_EXECUTABLE") == "" {
-		t.Skip("Skipped because it is not a real test, but rather a mocked executable")
-	}
-
-	var argv []string
-	begin := slices.Index(os.Args, "--")
-	if begin != -1 {
-		argv = os.Args[begin+1:]
-	}
-
-	// Action
-	exit := func(args []string) int {
-		a := strings.TrimSpace(strings.Join(args, " "))
-		netmode := os.Getenv("UP4W_MOCK_NETWORKING_MODE")
-		if netmode == "" {
-			netmode = "nat"
-		}
-		if os.Getenv("UP4W_MOCK_NETWORKING_MODE_ERROR") != "" {
-			fmt.Fprintln(os.Stderr, "Access denied")
-			return 2
-		}
-		switch a {
-		case "wslinfo --networking-mode -n":
-			fmt.Fprint(os.Stdout, netmode)
-			return 0
-
-		case "wslinfo --networking-mode":
-			fmt.Fprintln(os.Stdout, netmode)
-			return 0
-
-		default:
-			fmt.Fprintf(os.Stderr, "Invalid argument: [%s]\n", a)
-			fmt.Fprintln(os.Stderr, errorUsage)
-			return 1
-		}
-	}(argv)
-
-	// Ensure we clean-exit.
-
-	if exit == 0 {
-		// testing library only prints this line when it fails
-		// Manually printing it means that we can simply remove the last two lines to get the true output
-		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
-	}
-	syscall.Exit(exit)
+// mockIPAddrsTemplate is a template to fill the ipAdapterAddresses struct with mock data.
+type mockIPAddrsTemplate struct {
+	friendlyName, desc string
+	ip                 net.IP
 }
