@@ -2,6 +2,7 @@ package daemon_test
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"net"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontests"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -86,7 +88,7 @@ func TestStartQuit(t *testing.T) {
 					addrContents, err = os.ReadFile(addrPath)
 					require.NoError(t, err, "Address file should be readable")
 					return string(addrContents) != "# Old port file"
-				}, 5000*time.Millisecond, 100*time.Millisecond, "Pre-existing address file should be overwritten after daemon.New()")
+				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
 			} else {
 				requireWaitPathExists(t, addrPath, "Serve should create an address file")
 				addrContents, err = os.ReadFile(addrPath)
@@ -153,20 +155,20 @@ func TestServeWSLIP(t *testing.T) {
 	}
 
 	testcases := map[string]struct {
-		netmode             string
-		denyWslSystemAccess bool
-		withAdapters        daemon.MockIPAdaptersState
+		netmode      string
+		withAdapters daemon.MockIPAdaptersState
 
 		wantErr bool
 	}{
-		"Success":                       {withAdapters: daemon.Ok},
+		"Success":                       {withAdapters: daemon.MultipleHyperVAdaptersInList},
 		"With a single Hyper-V Adapter": {withAdapters: daemon.SingleHyperVAdapterInList},
-		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemon.Ok},
-		"With no access to wsl --system but net mode is the default (NAT)": {denyWslSystemAccess: true, withAdapters: daemon.Ok},
+		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemon.MultipleHyperVAdaptersInList},
+		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemon.MultipleHyperVAdaptersInList},
 
-		"Error when the networking mode is unknown":       {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":        {withAdapters: daemon.EmptyList, wantErr: true},
-		"Error when there is no Hyper-V adapter the list": {withAdapters: daemon.NoHyperVAdapterInList, wantErr: true},
+		"Error when the networking mode is unknown":        {netmode: "unknown", wantErr: true},
+		"Error when the list of adapters is empty":         {withAdapters: daemon.EmptyList, wantErr: true},
+		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemon.NoHyperVAdapterInList, wantErr: true},
+		"Error when retrieving adapters information fails": {withAdapters: daemon.MockError, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -180,12 +182,28 @@ func TestServeWSLIP(t *testing.T) {
 			defer cancel()
 
 			d := daemon.New(ctx, registerer, addrDir)
+			defer d.Quit(ctx, false)
 
-			wsl := daemon.NewWslSystemMock(tc.netmode, nil, tc.denyWslSystemAccess)
-			ipconfig := daemon.NewHostIPConfigMock(tc.withAdapters)
+			if tc.netmode == "" {
+				tc.netmode = "nat"
+			}
+			wslEnv := []string{"GO_WANT_HELPER_PROCESS=1"}
+			wslCmd := []string{
+				os.Args[0],
+				"-test.run",
+				"TestWithWslSystemMock",
+				"--",
+				"wslinfo",
+				"--networking-mode",
+				"-n",
+				tc.netmode,
+			}
+			mock := daemon.NewHostIPConfigMock(tc.withAdapters)
+
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslSystemDistro(wsl), daemon.WithHostIPConfig(&ipconfig))
+				serveErr <- d.Serve(ctx, daemon.WithWslSystemCmd(wslCmd, wslEnv), daemon.WithGetAdaptersAddressesFunction(mock.GetAdaptersAddresses))
+				close(serveErr)
 			}()
 
 			if tc.wantErr {
@@ -201,14 +219,18 @@ func TestServeWSLIP(t *testing.T) {
 			}()
 			<-serverStopped
 
-			require.ErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should not fail when the WSL IP is found")
+			err := <-serveErr
+			if errors.Is(err, grpc.ErrServerStopped) {
+				// A grpc.ErrServerStopped error at this point can only be caused by us.
+				err = nil
+			}
+			require.NoError(t, err, "Serve should return no error when stopped normally")
 
 			select {
 			case <-ctx.Done():
 				// Most likely, Serve did not fail and instead started serving,
-				// only to be stopped by the test timeout. Let's force-quit just in case.
-				d.Quit(context.Background(), true)
-				require.Fail(t, "Serve should have stopped")
+				// only to be stopped by the test timeout.
+				require.Fail(t, "Serve should have failed immediately")
 			default:
 			}
 		})
@@ -328,11 +350,11 @@ func requireWaitPathExists(t *testing.T, path string, msg string) {
 		return false
 	}
 
-	require.Eventually(t, fileExists, 5000*time.Millisecond, 100*time.Millisecond, "%q does not exists: %v", path, msg)
+	require.Eventually(t, fileExists, 5*time.Second, 100*time.Millisecond, "%q does not exists: %v", path, msg)
 
 	// Prevent error when accessing the file right after:
 	// 'The process cannot access the file because it is being used by another process'
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 }
 
 // requireWaitPathDoesNotExist checks periodically for the existence of a path. If the path
@@ -366,4 +388,4 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 	return &grpctestservice.Empty{}, nil
 }
 
-func TestWithWslSystemMock(t *testing.T) { daemon.WslSystemMock(t) }
+func TestWithWslSystemMock(t *testing.T) { daemontests.MockWslSystemCmd(t) }
