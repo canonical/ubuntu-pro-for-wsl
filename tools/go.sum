@@ -100,10 +100,6 @@ github.com/butuzov/ireturn v0.3.0 h1:hTjMqWw3y5JC3kpnC5vXmFJAWI/m31jaCYQqzkS6PL0
 github.com/butuzov/ireturn v0.3.0/go.mod h1:A09nIiwiqzN/IoVo9ogpa0Hzi9fex1kd9PSD6edP5ZA=
 github.com/butuzov/mirror v1.1.0 h1:ZqX54gBVMXu78QLoiqdwpl2mgmoOJTk7s4p4o+0avZI=
 github.com/butuzov/mirror v1.1.0/go.mod h1:8Q0BdQU6rC6WILDiBM60DBfvV78OLJmMmixe7GF45AE=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922 h1:Ww78pNVWaxmaINcUqMH/G15Ov28dj/ZKOcpXb7hmGNE=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240228165919-ed4dcfd85922/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240325143712-cbffffee5665 h1:SKXWPO18KUcB/gJpORCpfylSBkKYmpcSy8414af0MmQ=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240325143712-cbffffee5665/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/landscape-hostagent-api v0.0.0-20240327162205-3c655e2766d2 h1:s0iup+889bWzKBaYcRM36tbA8UOLbR41AxmRcmucrJc=
 github.com/canonical/landscape-hostagent-api v0.0.0-20240327162205-3c655e2766d2/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3 h1:HSc1LV3CyGIXHvIL/VViAf6xixLLFdJGPd4J831HTa4=
@@ -572,8 +568,6 @@ github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
 github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5 h1:qO8m+4mLbo1HRpD5lfhEfr7R1PuqZvbAmjaRzYEy+tM=
 github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
-github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0 h1:GBrsd49DdWFkpmwzGoDBdQKg3Jei8BTaKRp+dRhoveg=
-github.com/ubuntu/gowsl v0.0.0-20240313091109-66e05bce56e0/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b h1:UDf0h0aC4W4OsU7Dy4/68/zR2Vbkg8f7qPABLOOUDu4=
 github.com/ubuntu/gowsl v0.0.0-20240327160148-ae69cac77f2b/go.mod h1:vRsZU/rh424dLup5eIYmLM0xf0EPVeYxFvh47iI5o3s=
 github.com/ultraware/funlen v0.1.0 h1:BuqclbkY6pO+cvxoq7OsktIXZpgBSkYTQtmwhAK81vI=
@@ -961,8 +955,8 @@ google.golang.org/protobuf v1.24.0/go.mod h1:r/3tXBNzIEhYS9I1OUVjXDlt8tc493IdKGj
 google.golang.org/protobuf v1.25.0/go.mod h1:9JNX74DMeImyA3h4bdi1ymwjUzf21/xIlbajtzgsN7c=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
-google.golang.org/protobuf v1.33.0 h1:uNO2rsAINq/JlFpSdYEKIZ0uKD/R9cpdv0T+yoGwGmI=
-google.golang.org/protobuf v1.33.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
+google.golang.org/protobuf v1.34.0 h1:Qo/qEd2RZPCf2nKuorzksSknv0d3ERwp1vFG38gSmH4=
+google.golang.org/protobuf v1.34.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
