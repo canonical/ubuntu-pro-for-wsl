@@ -68,6 +68,16 @@ func installConfigFlag(cmd *cobra.Command) *string {
 	return cmd.PersistentFlags().StringP("config", "c", "", i18n.G("configuration file path"))
 }
 
+// installEventLogEnabledFlag adds the --event-log-enabled flag to allow for disabling event logging.
+func installEventLogEnabledFlag(cmd *cobra.Command) *bool {
+	return cmd.PersistentFlags().BoolP("event-log-enabled", "e", false, i18n.G("whether to enable logging to the Windows event logger"))
+}
+
+// installFileLogEnabledFlag adds the --file-log-enabled flag to allow for enabling file logging.
+func installFileLogEnabledFlag(cmd *cobra.Command) *bool {
+	return cmd.PersistentFlags().BoolP("file-log-enabled", "f", false, i18n.G("whether to enable logging to a log file"))
+}
+
 // SetVerboseMode change ErrorFormat and logs between very, middly and non verbose.
 func setVerboseMode(level int) {
 	var reportCaller bool

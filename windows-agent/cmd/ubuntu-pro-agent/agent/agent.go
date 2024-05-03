@@ -21,6 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/sys/windows/svc/eventlog"
 )
 
 // cmdName is the binary name for the agent.
@@ -44,7 +45,9 @@ type App struct {
 }
 
 type daemonConfig struct {
-	Verbosity int
+	Verbosity       int
+	EventLogEnabled bool
+	FileLogEnabled  bool
 }
 
 type options struct {
@@ -103,6 +106,8 @@ func New(o ...option) *App {
 
 	installVerbosityFlag(&a.rootCmd, a.viper)
 	installConfigFlag(&a.rootCmd)
+	installFileLogEnabledFlag(&a.rootCmd)
+	installEventLogEnabledFlag(&a.rootCmd)
 
 	// subcommands
 	a.installVersion()
@@ -251,18 +256,78 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 		log.Warningf(ctx, "Could not archive previous log file: %v", err)
 	}
 
-	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
-	if err != nil {
-		return noop, fmt.Errorf("could not open log file: %v", err)
+	// Always write to stdout, which is useful for local development.
+	w := io.MultiWriter(os.Stdout)
+
+	var f *os.File
+	if a.config.FileLogEnabled {
+		f, err = os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
+		if err != nil {
+			return noop, fmt.Errorf("could not open log file: %v", err)
+		}
+		w = io.MultiWriter(w, f)
 	}
 
-	// Write both to file and to Stdout. The latter is useful for local development.
-	w := io.MultiWriter(f, os.Stdout)
+	var eventLogger *eventlog.Log
+	if a.config.EventLogEnabled {
+		eventLogger, err = eventlog.Open(cmdName())
+		if err != nil {
+			return noop, err
+		}
+		logrus.AddHook(&eventLogHook{Writer: &EventLogWriter{eventLogger}})
+	}
+
 	logrus.SetOutput(w)
 
 	fmt.Fprintf(f, "\n======= STARTUP =======\n")
 	log.Infof(ctx, "Version: %s", consts.Version)
 	log.Debug(ctx, "Debug mode is enabled")
 
-	return func() { _ = f.Close() }, nil
+	return func() {
+		if f != nil {
+			_ = f.Close()
+		}
+		if eventLogger != nil {
+			_ = eventLogger.Close()
+		}
+	}, nil
+}
+
+type EventLogWriter struct {
+	*eventlog.Log
+}
+
+func (writer *EventLogWriter) Write(p []byte) (n int, err error) {
+	err = writer.Info(0, string(p))
+	if err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
+}
+
+type eventLogHook struct {
+	Writer *EventLogWriter
+}
+
+// Fire sends the log entry to the specified EventLog if the log level matches
+func (hook *eventLogHook) Fire(entry *logrus.Entry) error {
+	switch entry.Level {
+	case logrus.DebugLevel:
+		// EventLogWriter has no Debug function as of now, so use Info instead
+		return hook.Writer.Info(0, entry.Message)
+	case logrus.InfoLevel:
+		return hook.Writer.Info(0, entry.Message)
+	case logrus.WarnLevel:
+		return hook.Writer.Warning(0, entry.Message)
+	case logrus.ErrorLevel:
+		return hook.Writer.Error(0, entry.Message)
+	}
+
+	return fmt.Errorf("invalid log level %v", entry.Level)
+}
+
+// Levels returns the log levels that this hook should be registered with
+func (hook *eventLogHook) Levels() []logrus.Level {
+	return logrus.AllLevels
 }
