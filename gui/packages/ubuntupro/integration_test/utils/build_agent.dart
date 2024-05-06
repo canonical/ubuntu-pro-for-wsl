@@ -22,7 +22,11 @@ Future<void> buildAgentExe(
   await _build(
     buildProgram: 'msbuild',
     targetPath: vcxproj!,
-    arguments: ['/p:Configuration=$config', '/p:Platform=$platform'],
+    arguments: [
+      '/p:Configuration=$config',
+      '/p:Platform=$platform',
+      '/p:GoBuildTags=-tags="gowslmock,integrationtests"',
+    ],
   );
 
   // <...>/msix/agent/x64/Debug/ubuntu-pro-agent.exe
@@ -51,7 +55,10 @@ Future<void> _build({
   stdout.write(result.stdout);
   stdout.write(result.stderr);
 
-  assert(result.exitCode == 0, '$buildProgram failed');
+  assert(
+    result.exitCode == 0,
+    '$buildProgram failed:\n${result.stderr}\n${result.stdout}',
+  );
 }
 
 Future<String?> _findAgentVcxproj() => _findFileUpwards(
