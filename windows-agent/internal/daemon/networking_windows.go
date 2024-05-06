@@ -9,13 +9,6 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func init() {
-	defaultOptions = options{
-		wslSystemCmd:         []string{"wsl.exe", "--system", "wslinfo", "--networking-mode", "-n"},
-		getAdaptersAddresses: getWindowsAdaptersAddresses,
-	}
-}
-
 // getWindowsAdaptersAddresses is a wrapper around windows.GetAdaptersAddresses that accepts our custom ipAdapterAddresses type so we can mock it in tests.
 //
 //nolint:unused // When linting with gowslmock built tag, this is flagged as unused because it's replaced with the mocked version. The rest of the file is still used.

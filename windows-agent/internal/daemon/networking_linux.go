@@ -2,30 +2,10 @@ package daemon
 
 import (
 	"net"
-	"os"
 	"syscall"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 )
-
-func init() {
-	m := newHostIPConfigMock(multipleHyperVAdaptersInList)
-
-	defaultOptions = options{
-		wslSystemCmd: []string{
-			os.Args[0],
-			"-test.run",
-			"TestWithWslSystemMock",
-			"--",
-			"wslinfo",
-			"--networking-mode",
-			"-n",
-			"nat",
-		},
-		wslCmdEnv:            []string{"GO_WANT_HELPER_PROCESS=1"},
-		getAdaptersAddresses: m.GetAdaptersAddresses,
-	}
-}
 
 // ERROR_BUFFER_OVERFLOW is the error returned by GetAdaptersAddresses when the buffer is too small.
 //
