@@ -2,7 +2,6 @@ package daemon_test
 
 import (
 	"context"
-	"errors"
 	"io/fs"
 	"net"
 	"os"
@@ -207,7 +206,7 @@ func TestServeWSLIP(t *testing.T) {
 			}()
 
 			if tc.wantErr {
-				require.NotErrorIs(t, <-serveErr, grpc.ErrServerStopped, "Serve should fail when the WSL IP cannot be found")
+				require.Error(t, <-serveErr, "Serve should fail when the WSL IP cannot be found")
 				return
 			}
 
@@ -219,12 +218,7 @@ func TestServeWSLIP(t *testing.T) {
 			}()
 			<-serverStopped
 
-			err := <-serveErr
-			if errors.Is(err, grpc.ErrServerStopped) {
-				// A grpc.ErrServerStopped error at this point can only be caused by us.
-				err = nil
-			}
-			require.NoError(t, err, "Serve should return no error when stopped normally")
+			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
 
 			select {
 			case <-ctx.Done():
