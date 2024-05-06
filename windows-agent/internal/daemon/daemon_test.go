@@ -12,8 +12,8 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontests"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -388,4 +388,4 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 	return &grpctestservice.Empty{}, nil
 }
 
-func TestWithWslSystemMock(t *testing.T) { daemontests.MockWslSystemCmd(t) }
+func TestWithWslSystemMock(t *testing.T) { testutils.MockWslSystemCmd(t) }

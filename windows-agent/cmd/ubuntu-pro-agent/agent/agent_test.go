@@ -12,7 +12,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontests"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
 	"github.com/stretchr/testify/require"
 )
@@ -511,5 +511,5 @@ func captureStdout(t *testing.T) func() string {
 }
 
 func TestWithWslSystemMock(t *testing.T) {
-	daemontests.MockWslSystemCmd(t)
+	testutils.MockWslSystemCmd(t)
 }

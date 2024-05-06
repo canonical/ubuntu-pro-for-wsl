@@ -1,5 +1,5 @@
-// Package daemontests exports test helpers to be used in other packages that need to change internal behaviors of the daemon.
-package daemontests
+// Package testutils exports test helpers to be used in other packages that need to change internal behaviors of the daemon.
+package testutils
 
 import (
 	"fmt"
