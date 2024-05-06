@@ -26,7 +26,7 @@ class StatusBar extends StatelessWidget {
     return Row(
       children: <Widget>[
         const SizedBox(width: 8.0),
-        Text(
+        SelectableText(
           constants.kVersion,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: YaruColors.warmGrey,
