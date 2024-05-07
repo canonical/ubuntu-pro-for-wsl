@@ -6,7 +6,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
@@ -44,36 +43,27 @@ wslinfo usage:
 	}
 
 	// Action
-	exit := func(args []string) int {
-		// We use the last CLI argument to determine the networking mode behavior.
-		netmode := args[len(args)-1]
-		a := strings.TrimSpace(strings.Join(args[:len(args)-1], " "))
-		if netmode == "error" {
-			fmt.Fprintln(os.Stderr, "Access denied")
-			return 2
-		}
-		switch a {
-		case "wslinfo --networking-mode -n":
-			fmt.Fprint(os.Stdout, netmode)
-			return 0
-
-		case "wslinfo --networking-mode":
-			fmt.Fprintln(os.Stdout, netmode)
-			return 0
-
-		default:
-			fmt.Fprintf(os.Stderr, "Invalid argument: [%s]\n", a)
-			fmt.Fprintln(os.Stderr, errorUsage)
-			return 1
-		}
-	}(argv)
-
-	// Ensure we clean-exit.
-
-	if exit == 0 {
-		// testing library only prints this line when it fails
-		// Manually printing it means that we can simply remove the last two lines to get the true output
-		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
+	// We use the last CLI argument to determine the networking mode behavior.
+	netmode := argv[len(argv)-1]
+	a := strings.TrimSpace(strings.Join(argv[:len(argv)-1], " "))
+	if netmode == "error" {
+		fmt.Fprintln(os.Stderr, "Access denied")
+		os.Exit(2)
 	}
-	syscall.Exit(exit)
+	switch a {
+	case "wslinfo --networking-mode -n":
+		fmt.Fprint(os.Stdout, netmode)
+		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
+		os.Exit(0)
+
+	case "wslinfo --networking-mode":
+		fmt.Fprintln(os.Stdout, netmode)
+		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
+		os.Exit(0)
+
+	default:
+		fmt.Fprintf(os.Stderr, "Invalid argument: [%s]\n", a)
+		fmt.Fprintln(os.Stderr, errorUsage)
+		os.Exit(1)
+	}
 }
