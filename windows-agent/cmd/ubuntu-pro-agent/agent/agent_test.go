@@ -513,3 +513,7 @@ func captureStdout(t *testing.T) func() string {
 func TestWithWslSystemMock(t *testing.T) {
 	testutils.MockWslSystemCmd(t)
 }
+
+func init() {
+	testutils.SetDefaultMockOptions()
+}
