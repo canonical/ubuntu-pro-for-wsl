@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	//nolint:revive,nolintlint // needed for go:linkname, but only used in tests. nolintlint as false positive then.
+	_ "unsafe"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 )
@@ -66,4 +68,38 @@ wslinfo usage:
 		fmt.Fprintln(os.Stderr, errorUsage)
 		os.Exit(1)
 	}
+}
+
+var (
+	//go:linkname defaultOptions github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon.defaultOptions
+	defaultOptions struct {
+		wslSystemCmd         []string
+		wslCmdEnv            []string
+		getAdaptersAddresses func(family uint32, flags uint32, reserved uintptr, adapterAddresses *IPAdapterAddresses, sizePointer *uint32) (errcode error)
+	}
+)
+
+// SetDefaultMockOptions sets the default options for the daemon package with mocks for success of upper level tests.
+func SetDefaultMockOptions() {
+	testdetection.MustBeTesting()
+
+	m := NewHostIPConfigMock(MultipleHyperVAdaptersInList)
+
+	defaultOptions.wslSystemCmd = []string{
+		os.Args[0],
+		"-test.run",
+		"TestWithWslSystemMock",
+		"--",
+		"wslinfo",
+		"--networking-mode",
+		"-n",
+		"nat",
+	}
+	defaultOptions.wslCmdEnv = []string{"GO_WANT_HELPER_PROCESS=1"}
+	defaultOptions.getAdaptersAddresses = m.GetAdaptersAddresses
+}
+
+// TestWithWslSystemMock is a faux test used to mock commands running via `wsl --system`.
+func TestWithWslSystemMock(t *testing.T) {
+	MockWslSystemCmd(t)
 }

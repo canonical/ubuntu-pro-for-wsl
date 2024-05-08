@@ -1,4 +1,4 @@
-package daemon
+package testutils
 
 import (
 	"errors"
@@ -8,23 +8,33 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 )
 
-type mockIPAdaptersState int
+// MockIPAdaptersState is an enumeration of the possible states of the MockIPConfig object which influences the result of the mocked GetAdaptersAddresses implementation.
+type MockIPAdaptersState int
 
 const (
-	mockError mockIPAdaptersState = iota
-	emptyList
-	noHyperVAdapterInList
-	singleHyperVAdapterInList
-	multipleHyperVAdaptersInList
+	// MockError is a state that causes the GetAdaptersAddresses to always return an error.
+	MockError MockIPAdaptersState = iota
+
+	// EmptyList is a state that causes the GetAdaptersAddresses to return an empty list of adapters.
+	EmptyList
+
+	// NoHyperVAdapterInList is a state that causes the GetAdaptersAddresses to return a list without any Hyper-V adapter.
+	NoHyperVAdapterInList
+
+	// SingleHyperVAdapterInList is a state that causes the GetAdaptersAddresses to return a list with a single Hyper-V adapter, which is the WSL one.
+	SingleHyperVAdapterInList
+
+	// MultipleHyperVAdaptersInList is a state that causes the GetAdaptersAddresses to return a list with multiple Hyper-V adapters, one of which is the WSL one.
+	MultipleHyperVAdaptersInList
 )
 
-// newHostIPConfigMock initializes a mockIPConfig object with the state provided so it can be used instead of the real GetAdaptersAddresses Win32 API.
-func newHostIPConfigMock(state mockIPAdaptersState) mockIPConfig {
+// NewHostIPConfigMock initializes a mockIPConfig object with the state provided so it can be used instead of the real GetAdaptersAddresses Win32 API.
+func NewHostIPConfigMock(state MockIPAdaptersState) MockIPConfig {
 	testdetection.MustBeTesting()
 
-	m := mockIPConfig{state: state}
+	m := MockIPConfig{state: state}
 
-	adaptersList := []mockIPAddrsTemplate{
+	adaptersList := []MockIPAddrsTemplate{
 		{
 			friendlyName: "Ethernet adapter Ethernet",
 			desc:         "Realtek(R) PCI(e) Ethernet Controller",
@@ -49,26 +59,26 @@ func newHostIPConfigMock(state mockIPAdaptersState) mockIPConfig {
 	}
 
 	switch m.state {
-	case noHyperVAdapterInList:
+	case NoHyperVAdapterInList:
 		m.addrs = adaptersList
-	case singleHyperVAdapterInList:
+	case SingleHyperVAdapterInList:
 		m.addrs = append(
 			adaptersList,
-			mockIPAddrsTemplate{
+			MockIPAddrsTemplate{
 				friendlyName: "Ethernet adapter vEthernet (WSL)",
 				desc:         "Hyper-V Virtual Ethernet Adapter",
 				ip:           localIP,
 			},
 		)
-	case multipleHyperVAdaptersInList:
+	case MultipleHyperVAdaptersInList:
 		m.addrs = append(
 			adaptersList,
-			mockIPAddrsTemplate{
+			MockIPAddrsTemplate{
 				friendlyName: "Ethernet adapter vEthernet (Default Switch)",
 				desc:         "Hyper-V Virtual Ethernet Adapter",
 				ip:           net.IPv4(172, 27, 48, 1),
 			},
-			mockIPAddrsTemplate{
+			MockIPAddrsTemplate{
 				friendlyName: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))",
 				desc:         "Hyper-V Virtual Ethernet Adapter #2",
 				ip:           localIP,
@@ -80,13 +90,13 @@ func newHostIPConfigMock(state mockIPAdaptersState) mockIPConfig {
 }
 
 // GetAdaptersAddresses is a mock implementation of the GetAdaptersAddresses Win32 API, based on the state of the mockIPConfig object.
-func (m *mockIPConfig) GetAdaptersAddresses(family uint32, flags uint32, reserved uintptr, adapterAddresses *ipAdapterAddresses, sizePointer *uint32) (errcode error) {
+func (m *MockIPConfig) GetAdaptersAddresses(_, _ uint32, _ uintptr, adapterAddresses *IPAdapterAddresses, sizePointer *uint32) (errcode error) {
 	testdetection.MustBeTesting()
 
 	switch m.state {
-	case mockError:
+	case MockError:
 		return errors.New("mock error")
-	case emptyList:
+	case EmptyList:
 		return nil
 	default:
 		return fillBufferFromTemplate(adapterAddresses, sizePointer, m.addrs)
@@ -94,9 +104,9 @@ func (m *mockIPConfig) GetAdaptersAddresses(family uint32, flags uint32, reserve
 }
 
 // fillBufferFromTemplate fills a pre-allocated buffer of ipAdapterAddresses with the data from the mockIPAddrsTemplate.
-func fillBufferFromTemplate(adaptersAddresses *ipAdapterAddresses, sizePointer *uint32, mockIPAddrsTemplate []mockIPAddrsTemplate) error {
+func fillBufferFromTemplate(adaptersAddresses *IPAdapterAddresses, sizePointer *uint32, mockIPAddrsTemplate []MockIPAddrsTemplate) error {
 	count := uint32(len(mockIPAddrsTemplate))
-	objSize := uint32(unsafe.Sizeof(ipAdapterAddresses{}))
+	objSize := uint32(unsafe.Sizeof(IPAdapterAddresses{}))
 	bufSizeNeeded := count * objSize
 	if *sizePointer < bufSizeNeeded {
 		return ERROR_BUFFER_OVERFLOW
@@ -107,8 +117,8 @@ func fillBufferFromTemplate(adaptersAddresses *ipAdapterAddresses, sizePointer *
 	for _, addr := range mockIPAddrsTemplate {
 		next := unsafe.Add(begin, int(objSize)) // next = ++begin
 
-		ptr := (*ipAdapterAddresses)(begin)
-		ptr.fillFromTemplate(&addr, (*ipAdapterAddresses)(next))
+		ptr := (*IPAdapterAddresses)(begin)
+		fillFromTemplate(&addr, ptr, (*IPAdapterAddresses)(next))
 
 		begin = next
 	}
@@ -130,14 +140,14 @@ func getLocalPrivateIP() net.IP {
 	return nil
 }
 
-// mockIPConfig holds the state to control the mock implementation of the GetAdaptersAddresses Win32 API.
-type mockIPConfig struct {
-	state mockIPAdaptersState
-	addrs []mockIPAddrsTemplate
+// MockIPConfig holds the state to control the mock implementation of the GetAdaptersAddresses Win32 API.
+type MockIPConfig struct {
+	state MockIPAdaptersState
+	addrs []MockIPAddrsTemplate
 }
 
-// mockIPAddrsTemplate is a template to fill the ipAdapterAddresses struct with mock data.
-type mockIPAddrsTemplate struct {
+// MockIPAddrsTemplate is a template to fill the ipAdapterAddresses struct with mock data.
+type MockIPAddrsTemplate struct {
 	friendlyName, desc string
 	ip                 net.IP
 }
