@@ -36,6 +36,7 @@ func TestNew(t *testing.T) {
 
 func TestStartQuit(t *testing.T) {
 	t.Parallel()
+	testutils.SetDefaultMockOptions()
 
 	testsCases := map[string]struct {
 		forceQuit           bool
@@ -155,19 +156,19 @@ func TestServeWSLIP(t *testing.T) {
 
 	testcases := map[string]struct {
 		netmode      string
-		withAdapters daemon.MockIPAdaptersState
+		withAdapters testutils.MockIPAdaptersState
 
 		wantErr bool
 	}{
-		"Success":                       {withAdapters: daemon.MultipleHyperVAdaptersInList},
-		"With a single Hyper-V Adapter": {withAdapters: daemon.SingleHyperVAdapterInList},
-		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemon.MultipleHyperVAdaptersInList},
-		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemon.MultipleHyperVAdaptersInList},
+		"Success":                       {withAdapters: testutils.MultipleHyperVAdaptersInList},
+		"With a single Hyper-V Adapter": {withAdapters: testutils.SingleHyperVAdapterInList},
+		"With mirrored networking mode": {netmode: "mirrored", withAdapters: testutils.MultipleHyperVAdaptersInList},
+		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: testutils.MultipleHyperVAdaptersInList},
 
 		"Error when the networking mode is unknown":        {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":         {withAdapters: daemon.EmptyList, wantErr: true},
-		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemon.NoHyperVAdapterInList, wantErr: true},
-		"Error when retrieving adapters information fails": {withAdapters: daemon.MockError, wantErr: true},
+		"Error when the list of adapters is empty":         {withAdapters: testutils.EmptyList, wantErr: true},
+		"Error when there is no Hyper-V adapter the list":  {withAdapters: testutils.NoHyperVAdapterInList, wantErr: true},
+		"Error when retrieving adapters information fails": {withAdapters: testutils.MockError, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -197,11 +198,11 @@ func TestServeWSLIP(t *testing.T) {
 				"-n",
 				tc.netmode,
 			}
-			mock := daemon.NewHostIPConfigMock(tc.withAdapters)
+			mock := testutils.NewHostIPConfigMock(tc.withAdapters)
 
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslSystemCmd(wslCmd, wslEnv), daemon.WithGetAdaptersAddressesFunction(mock.GetAdaptersAddresses))
+				serveErr <- d.Serve(ctx, daemon.WithWslSystemCmd(wslCmd, wslEnv), daemon.WithMockedGetAdapterAddresses(mock))
 				close(serveErr)
 			}()
 
