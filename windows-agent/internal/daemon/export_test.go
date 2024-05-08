@@ -1,17 +1,8 @@
 package daemon
 
-const (
-	MockError                    = mockError
-	EmptyList                    = emptyList
-	NoHyperVAdapterInList        = noHyperVAdapterInList
-	SingleHyperVAdapterInList    = singleHyperVAdapterInList
-	MultipleHyperVAdaptersInList = multipleHyperVAdaptersInList
-)
+import "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testutils"
 
-type MockIPAdaptersState = mockIPAdaptersState
-
-var NewHostIPConfigMock = newHostIPConfigMock
-
+// WithWslSystemCmd sets the command to run to get the WSL networking mode.
 func WithWslSystemCmd(cmd []string, cmdEnv []string) Option {
 	return func(o *options) {
 		o.wslSystemCmd = cmd
@@ -19,8 +10,11 @@ func WithWslSystemCmd(cmd []string, cmdEnv []string) Option {
 	}
 }
 
-func WithGetAdaptersAddressesFunction(getAddr getAdaptersAddressesFunc) Option {
+// WithMockedGetAdapterAddresses sets the function to use to get the adapter addresses from the mock object supplied.
+func WithMockedGetAdapterAddresses(m testutils.MockIPConfig) Option {
 	return func(o *options) {
-		o.getAdaptersAddresses = getAddr
+		o.getAdaptersAddresses = func(family, flags uint32, reserved uintptr, adapterAddresses *ipAdapterAddresses, sizePointer *uint32) (errcode error) {
+			return m.GetAdaptersAddresses(family, flags, reserved, (*testutils.IPAdapterAddresses)(adapterAddresses), sizePointer)
+		}
 	}
 }
