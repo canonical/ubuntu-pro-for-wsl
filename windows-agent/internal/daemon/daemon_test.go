@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -218,7 +219,12 @@ func TestServeWSLIP(t *testing.T) {
 			}()
 			<-serverStopped
 
-			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
+			err := <-serveErr
+			if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+				// We stopped the server manually, so we expect this error, although it's possible that there is not even an error at this point.
+				err = nil
+			}
+			require.NoError(t, err, "Serve should return no error when stopped normally")
 
 			select {
 			case <-ctx.Done():
