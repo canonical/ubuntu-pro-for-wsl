@@ -36,7 +36,6 @@ func TestNew(t *testing.T) {
 
 func TestStartQuit(t *testing.T) {
 	t.Parallel()
-	testutils.SetDefaultMockOptions()
 
 	testsCases := map[string]struct {
 		forceQuit           bool
@@ -384,3 +383,8 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 }
 
 func TestWithWslSystemMock(t *testing.T) { testutils.MockWslSystemCmd(t) }
+
+func init() {
+	// Ensures we use the networking-related mocks in those tests.
+	testutils.SetDefaultMockOptions()
+}
