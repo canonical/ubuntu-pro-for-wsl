@@ -46,6 +46,7 @@ func ipToRawSockaddrAny(ip net.IP) *syscall.RawSockaddrAny {
 	return (*syscall.RawSockaddrAny)(unsafe.Pointer(sa))
 }
 
+// IPAdapterAddresses is a type alias for windows.IpAdapterAddresses.
 type IPAdapterAddresses windows.IpAdapterAddresses
 
 // ERROR_BUFFER_OVERFLOW is defined as a constant here so we can redefine it in tests on Linux.

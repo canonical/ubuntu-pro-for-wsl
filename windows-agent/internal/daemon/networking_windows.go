@@ -7,8 +7,6 @@ import (
 )
 
 // getWindowsAdaptersAddresses is a wrapper around windows.GetAdaptersAddresses that accepts our custom ipAdapterAddresses type so we can mock it in tests.
-//
-//nolint:unused // When linting with gowslmock built tag, this is flagged as unused because it's replaced with the mocked version. The rest of the file is still used.
 func getWindowsAdaptersAddresses(family, flags uint32, reserved uintptr, adapterAddresses *ipAdapterAddresses, sizePointer *uint32) (errcode error) {
 	return windows.GetAdaptersAddresses(family, flags, reserved, (*windows.IpAdapterAddresses)(adapterAddresses), sizePointer)
 }
