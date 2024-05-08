@@ -20,7 +20,10 @@ type options struct {
 	getAdaptersAddresses getAdaptersAddressesFunc
 }
 
-var defaultOptions options
+var defaultOptions = options{
+	wslSystemCmd:         []string{"wsl.exe", "--system", "wslinfo", "--networking-mode", "-n"},
+	getAdaptersAddresses: getWindowsAdaptersAddresses,
+}
 
 // Option represents an optional function to override getWslIP default values.
 type Option func(*options)
