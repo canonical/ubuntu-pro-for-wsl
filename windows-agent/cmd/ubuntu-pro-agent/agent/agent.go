@@ -44,12 +44,6 @@ type App struct {
 	ready chan struct{}
 }
 
-type daemonConfig struct {
-	Verbosity       int
-	EventLogEnabled bool
-	FileLogEnabled  bool
-}
-
 type options struct {
 	// publicDir is the directory where public data goes. Other components need access to it.
 	publicDir string
@@ -106,8 +100,8 @@ func New(o ...option) *App {
 
 	installVerbosityFlag(&a.rootCmd, a.viper)
 	installConfigFlag(&a.rootCmd)
-	installFileLogEnabledFlag(&a.rootCmd)
-	installEventLogEnabledFlag(&a.rootCmd)
+	installFileLogEnabledFlag(&a.rootCmd, a.viper)
+	installEventLogEnabledFlag(&a.rootCmd, a.viper)
 
 	// subcommands
 	a.installVersion()
