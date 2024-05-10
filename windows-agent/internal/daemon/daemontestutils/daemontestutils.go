@@ -14,9 +14,8 @@ import (
 )
 
 // MockWslSystemCmd mocks commands running inside the WSL system distro.
-// Add it to your package_test with:
-//
-//	func TestWithWslSystemMock(t *testing.T) { daemontests.MockWslSystemCmd(t) }
+// To use this in higher level package tests, call `DefaultNetworkDetectionToMock()` in the test package `init` function,
+// or have a `With...()` function changing the options passed to `daemon.Serve()`.
 //
 //nolint:thelper // This is a faux test used to mock commands running via `wsl --system`
 func MockWslSystemCmd(t *testing.T) {
