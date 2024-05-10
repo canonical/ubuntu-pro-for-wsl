@@ -1,6 +1,6 @@
 //go:build integrationtests
 
-package daemon
+package agent
 
 import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
