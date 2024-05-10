@@ -5,7 +5,7 @@ import "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/da
 // WithWslSystemCmd sets the command to run to get the WSL networking mode.
 func WithWslSystemCmd(cmd, cmdEnv []string) Option {
 	return func(o *options) {
-		o.wslSystemCmd = cmd
+		o.wslCmd = cmd
 		o.wslCmdEnv = cmdEnv
 	}
 }

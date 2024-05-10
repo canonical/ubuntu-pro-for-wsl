@@ -193,9 +193,6 @@ func TestServeWSLIP(t *testing.T) {
 				"-test.run",
 				"TestWithWslSystemMock",
 				"--",
-				"wslinfo",
-				"--networking-mode",
-				"-n",
 				tc.netmode,
 			}
 			mock := daemontestutils.NewHostIPConfigMock(tc.withAdapters)

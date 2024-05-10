@@ -15,13 +15,13 @@ import (
 )
 
 type options struct {
-	wslSystemCmd         []string
+	wslCmd               []string
 	wslCmdEnv            []string
 	getAdaptersAddresses getAdaptersAddressesFunc
 }
 
 var defaultOptions = options{
-	wslSystemCmd:         []string{"wsl.exe", "--system", "wslinfo", "--networking-mode", "-n"},
+	wslCmd:               []string{"wsl.exe"},
 	getAdaptersAddresses: getWindowsAdaptersAddresses,
 }
 
@@ -39,7 +39,7 @@ func getWslIP(ctx context.Context, args ...Option) (ip net.IP, err error) {
 		arg(&opts)
 	}
 
-	mode, err := networkingMode(ctx, opts.wslSystemCmd, opts.wslCmdEnv)
+	mode, err := networkingMode(ctx, opts.wslCmd, opts.wslCmdEnv)
 	if err != nil {
 		// NAT is assumed because it's the default networking mode for WSL as of 2024.
 		log.Warningf(ctx, "could not determine if WSL network is mirrored (assuming NAT): %v", err)
@@ -84,11 +84,12 @@ func findWslAdapterIP(opts options) (net.IP, error) {
 }
 
 // networkingMode detects whether the WSL network is mirrored or not.
-func networkingMode(ctx context.Context, wslSystemCmd, cmdEnv []string) (string, error) {
+func networkingMode(ctx context.Context, wslCmd, cmdEnv []string) (string, error) {
 	// It does so by launching the system distribution (wsl --system).
-	name := wslSystemCmd[0]
+	name := wslCmd[0]
+	args := append(wslCmd[1:], "--system", "wslinfo", "--networking-mode", "-n")
 	//nolint:gosec //Subprocess is launched from a variable to be testable.
-	cmd := exec.CommandContext(ctx, name, wslSystemCmd[1:]...)
+	cmd := exec.CommandContext(ctx, name, args...)
 
 	var stdout, stderr bytes.Buffer
 
