@@ -40,25 +40,29 @@ wslinfo usage:
 
 	var argv []string
 	begin := slices.Index(os.Args, "--")
-	if begin != -1 {
-		argv = os.Args[begin+1:]
+	// We expect at least 4 arguments after the "--" (for example: "mirrored --system wslinfo --networking-mode").
+	if begin == -1 || len(os.Args) < begin+4 {
+		fmt.Fprintf(os.Stderr, "Invalid arguments: [%v]\n", os.Args)
+		fmt.Fprintln(os.Stderr, errorUsage)
+		os.Exit(1)
 	}
+	// We use the first CLI argument (after the "--") to determine the networking mode behavior.
+	netmode := os.Args[begin+1]
+	argv = os.Args[begin+2:]
 
 	// Action
-	// We use the last CLI argument to determine the networking mode behavior.
-	netmode := argv[len(argv)-1]
 	a := strings.TrimSpace(strings.Join(argv[:len(argv)-1], " "))
 	if netmode == "error" {
 		fmt.Fprintln(os.Stderr, "Access denied")
 		os.Exit(2)
 	}
 	switch a {
-	case "wslinfo --networking-mode -n":
+	case "--system wslinfo --networking-mode -n":
 		fmt.Fprint(os.Stdout, netmode)
 		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
 		os.Exit(0)
 
-	case "wslinfo --networking-mode":
+	case "--system wslinfo --networking-mode":
 		fmt.Fprintln(os.Stdout, netmode)
 		fmt.Fprintf(os.Stdout, "\nexit status 0\n")
 		os.Exit(0)
@@ -90,9 +94,6 @@ func DefaultNetworkDetectionToMock() {
 		"-test.run",
 		"TestWithWslSystemMock",
 		"--",
-		"wslinfo",
-		"--networking-mode",
-		"-n",
 		"nat",
 	}
 	defaultOptions.wslCmdEnv = []string{"GO_WANT_HELPER_PROCESS=1"}
