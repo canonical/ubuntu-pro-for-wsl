@@ -98,8 +98,3 @@ func DefaultNetworkDetectionToMock() {
 	defaultOptions.wslCmdEnv = []string{"GO_WANT_HELPER_PROCESS=1"}
 	defaultOptions.getAdaptersAddresses = m.GetAdaptersAddresses
 }
-
-// TestWithWslSystemMock is a faux test used to mock commands running via `wsl --system`.
-func TestWithWslSystemMock(t *testing.T) {
-	MockWslSystemCmd(t)
-}
