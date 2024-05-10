@@ -268,7 +268,7 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 		if err != nil {
 			return noop, err
 		}
-		logrus.AddHook(&eventLogHook{Writer: &EventLogWriter{eventLogger}})
+		logrus.AddHook(&eventLogHook{Writer: &eventLogWriter{eventLogger}})
 	}
 
 	logrus.SetOutput(w)
@@ -287,11 +287,11 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	}, nil
 }
 
-type EventLogWriter struct {
+type eventLogWriter struct {
 	*eventlog.Log
 }
 
-func (writer *EventLogWriter) Write(p []byte) (n int, err error) {
+func (writer *eventLogWriter) Write(p []byte) (n int, err error) {
 	err = writer.Info(0, string(p))
 	if err != nil {
 		return 0, err
@@ -301,10 +301,10 @@ func (writer *EventLogWriter) Write(p []byte) (n int, err error) {
 }
 
 type eventLogHook struct {
-	Writer *EventLogWriter
+	Writer *eventLogWriter
 }
 
-// Fire sends the log entry to the specified EventLog if the log level matches
+// Fire sends the log entry to the specified EventLog if the log level matches.
 func (hook *eventLogHook) Fire(entry *logrus.Entry) error {
 	switch entry.Level {
 	case logrus.DebugLevel:
@@ -321,7 +321,7 @@ func (hook *eventLogHook) Fire(entry *logrus.Entry) error {
 	return fmt.Errorf("invalid log level %v", entry.Level)
 }
 
-// Levels returns the log levels that this hook should be registered with
+// Levels returns the log levels that this hook should be registered with.
 func (hook *eventLogHook) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
