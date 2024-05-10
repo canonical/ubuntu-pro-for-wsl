@@ -4,10 +4,10 @@ package daemon
 
 import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 )
 
 func init() {
 	testdetection.MustBeTesting()
-	testutils.DefaultNetworkDetectionToMock()
+	daemontestutils.DefaultNetworkDetectionToMock()
 }

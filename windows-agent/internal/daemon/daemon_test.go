@@ -12,8 +12,8 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -156,19 +156,19 @@ func TestServeWSLIP(t *testing.T) {
 
 	testcases := map[string]struct {
 		netmode      string
-		withAdapters testutils.MockIPAdaptersState
+		withAdapters daemontestutils.MockIPAdaptersState
 
 		wantErr bool
 	}{
-		"Success":                       {withAdapters: testutils.MultipleHyperVAdaptersInList},
-		"With a single Hyper-V Adapter": {withAdapters: testutils.SingleHyperVAdapterInList},
-		"With mirrored networking mode": {netmode: "mirrored", withAdapters: testutils.MultipleHyperVAdaptersInList},
-		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: testutils.MultipleHyperVAdaptersInList},
+		"Success":                       {withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
+		"With a single Hyper-V Adapter": {withAdapters: daemontestutils.SingleHyperVAdapterInList},
+		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
+		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 
 		"Error when the networking mode is unknown":        {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":         {withAdapters: testutils.EmptyList, wantErr: true},
-		"Error when there is no Hyper-V adapter the list":  {withAdapters: testutils.NoHyperVAdapterInList, wantErr: true},
-		"Error when retrieving adapters information fails": {withAdapters: testutils.MockError, wantErr: true},
+		"Error when the list of adapters is empty":         {withAdapters: daemontestutils.EmptyList, wantErr: true},
+		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
+		"Error when retrieving adapters information fails": {withAdapters: daemontestutils.MockError, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -198,7 +198,7 @@ func TestServeWSLIP(t *testing.T) {
 				"-n",
 				tc.netmode,
 			}
-			mock := testutils.NewHostIPConfigMock(tc.withAdapters)
+			mock := daemontestutils.NewHostIPConfigMock(tc.withAdapters)
 
 			serveErr := make(chan error)
 			go func() {
@@ -388,9 +388,9 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 	return &grpctestservice.Empty{}, nil
 }
 
-func TestWithWslSystemMock(t *testing.T) { testutils.MockWslSystemCmd(t) }
+func TestWithWslSystemMock(t *testing.T) { daemontestutils.MockWslSystemCmd(t) }
 
 func init() {
 	// Ensures we use the networking-related mocks in those tests.
-	testutils.DefaultNetworkDetectionToMock()
+	daemontestutils.DefaultNetworkDetectionToMock()
 }

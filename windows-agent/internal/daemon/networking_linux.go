@@ -3,16 +3,16 @@ package daemon
 import (
 	"net"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 )
 
 // ERROR_BUFFER_OVERFLOW is the error returned by GetAdaptersAddresses when the buffer is too small.
 //
 //nolint:revive // Windows API constants are in shout case.
-const ERROR_BUFFER_OVERFLOW = testutils.ERROR_BUFFER_OVERFLOW
+const ERROR_BUFFER_OVERFLOW = daemontestutils.ERROR_BUFFER_OVERFLOW
 
 // ipAdapterAddresses redefines the wrapper type for the IP_ADAPTER_ADDRESSES structure for testing on Linux.
-type ipAdapterAddresses testutils.IPAdapterAddresses
+type ipAdapterAddresses daemontestutils.IPAdapterAddresses
 
 func (a *ipAdapterAddresses) next() *ipAdapterAddresses {
 	return (*ipAdapterAddresses)(a.Next)
