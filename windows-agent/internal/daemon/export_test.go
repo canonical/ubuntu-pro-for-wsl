@@ -1,12 +1,22 @@
 package daemon
 
-import "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
+import (
+	"os"
 
-// WithWslSystemCmd sets the command to run to get the WSL networking mode.
-func WithWslSystemCmd(cmd, cmdEnv []string) Option {
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
+)
+
+// WithWslNetworkingMode sets the output of the mock command to run to get the WSL networking mode.
+func WithWslNetworkingMode(netmode string) Option {
 	return func(o *options) {
-		o.wslCmd = cmd
-		o.wslCmdEnv = cmdEnv
+		o.wslCmd = []string{
+			os.Args[0],
+			"-test.run",
+			"TestWithWslSystemMock",
+			"--",
+			netmode,
+		}
+		o.wslCmdEnv = []string{"GO_WANT_HELPER_PROCESS=1"}
 	}
 }
 

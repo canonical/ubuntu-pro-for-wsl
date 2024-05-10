@@ -187,19 +187,11 @@ func TestServeWSLIP(t *testing.T) {
 			if tc.netmode == "" {
 				tc.netmode = "nat"
 			}
-			wslEnv := []string{"GO_WANT_HELPER_PROCESS=1"}
-			wslCmd := []string{
-				os.Args[0],
-				"-test.run",
-				"TestWithWslSystemMock",
-				"--",
-				tc.netmode,
-			}
 			mock := daemontestutils.NewHostIPConfigMock(tc.withAdapters)
 
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslSystemCmd(wslCmd, wslEnv), daemon.WithMockedGetAdapterAddresses(mock))
+				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock))
 				close(serveErr)
 			}()
 
