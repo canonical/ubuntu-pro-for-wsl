@@ -515,5 +515,5 @@ func TestWithWslSystemMock(t *testing.T) {
 }
 
 func init() {
-	testutils.SetDefaultMockOptions()
+	testutils.DefaultNetworkDetectionToMock()
 }

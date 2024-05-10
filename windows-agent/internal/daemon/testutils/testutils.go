@@ -79,8 +79,8 @@ var (
 	}
 )
 
-// SetDefaultMockOptions sets the default options for the daemon package with mocks for success of upper level tests.
-func SetDefaultMockOptions() {
+// DefaultNetworkDetectionToMock sets the default options for the daemon package with mocks for success of upper level tests.
+func DefaultNetworkDetectionToMock() {
 	testdetection.MustBeTesting()
 
 	m := NewHostIPConfigMock(MultipleHyperVAdaptersInList)

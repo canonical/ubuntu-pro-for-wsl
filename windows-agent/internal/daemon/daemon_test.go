@@ -392,5 +392,5 @@ func TestWithWslSystemMock(t *testing.T) { testutils.MockWslSystemCmd(t) }
 
 func init() {
 	// Ensures we use the networking-related mocks in those tests.
-	testutils.SetDefaultMockOptions()
+	testutils.DefaultNetworkDetectionToMock()
 }

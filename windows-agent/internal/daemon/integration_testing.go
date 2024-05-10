@@ -9,5 +9,5 @@ import (
 
 func init() {
 	testdetection.MustBeTesting()
-	testutils.SetDefaultMockOptions()
+	testutils.DefaultNetworkDetectionToMock()
 }
