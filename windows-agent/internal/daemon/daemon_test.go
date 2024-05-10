@@ -22,6 +22,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func init() {
+	// Ensures we use the networking-related mocks in all daemon tests unless otherwise locally specified.
+	daemontestutils.DefaultNetworkDetectionToMock()
+}
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -378,8 +382,3 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 }
 
 func TestWithWslSystemMock(t *testing.T) { daemontestutils.MockWslSystemCmd(t) }
-
-func init() {
-	// Ensures we use the networking-related mocks in those tests.
-	daemontestutils.DefaultNetworkDetectionToMock()
-}

@@ -17,6 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	// Ensures we use the mock networking detection in the tests to prevent failure in CI where we might not have WSL2 or its network adapter.
+	daemontestutils.DefaultNetworkDetectionToMock()
+}
+
 func TestHelp(t *testing.T) {
 	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("--help")
@@ -512,8 +517,4 @@ func captureStdout(t *testing.T) func() string {
 
 func TestWithWslSystemMock(t *testing.T) {
 	daemontestutils.MockWslSystemCmd(t)
-}
-
-func init() {
-	daemontestutils.DefaultNetworkDetectionToMock()
 }
