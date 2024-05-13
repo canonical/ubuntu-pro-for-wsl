@@ -42,12 +42,12 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 // Before serving, it writes a file on disk on which port it's listening on for client
 // to be able to reach our server.
 // This file is removed once the server stops listening.
-func (d Daemon) Serve(ctx context.Context) (err error) {
+func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
 	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
-	wslIP, err := getWslIP()
+	wslIP, err := getWslIP(ctx, args...)
 	if err != nil {
 		return fmt.Errorf("could not get the WSL adapter IP: %v", err)
 	}

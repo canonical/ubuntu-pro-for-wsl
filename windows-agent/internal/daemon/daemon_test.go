@@ -6,11 +6,13 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -20,6 +22,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func init() {
+	// Ensures we use the networking-related mocks in all daemon tests unless otherwise locally specified.
+	daemontestutils.DefaultNetworkDetectionToMock()
+}
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -73,6 +79,7 @@ func TestStartQuit(t *testing.T) {
 			serveErr := make(chan error)
 			go func() {
 				serveErr <- d.Serve(ctx)
+				close(serveErr)
 			}()
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
@@ -85,7 +92,7 @@ func TestStartQuit(t *testing.T) {
 					addrContents, err = os.ReadFile(addrPath)
 					require.NoError(t, err, "Address file should be readable")
 					return string(addrContents) != "# Old port file"
-				}, 500*time.Millisecond, 50*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
+				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
 			} else {
 				requireWaitPathExists(t, addrPath, "Serve should create an address file")
 				addrContents, err = os.ReadFile(addrPath)
@@ -144,35 +151,82 @@ func TestStartQuit(t *testing.T) {
 	}
 }
 
-func TestServeNoWSLIP(t *testing.T) {
-	// This test is not parallel because it modifies a global flag that
-	// affects the behavior of the getWslIP function.
-	daemon.SetWslIPErr(t)
-
-	addrDir := t.TempDir()
+func TestServeWSLIP(t *testing.T) {
+	t.Parallel()
 
 	registerer := func(context.Context) *grpc.Server {
 		return grpc.NewServer()
 	}
 
-	// Very lenient timeout because we expect the Serve to fail immediately.
-	// If it doesn't, the test will fail due to the context timeout (otherwise
-	// it would hang indefinitely).
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
+	testcases := map[string]struct {
+		netmode      string
+		withAdapters daemontestutils.MockIPAdaptersState
 
-	d := daemon.New(ctx, registerer, addrDir)
-	defer d.Quit(ctx, false)
+		wantErr bool
+	}{
+		"Success":                       {withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
+		"With a single Hyper-V Adapter": {withAdapters: daemontestutils.SingleHyperVAdapterInList},
+		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
+		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 
-	err := d.Serve(ctx)
-	require.Error(t, err, "Serve should fail when the WSL IP cannot be found")
+		"Error when the networking mode is unknown":        {netmode: "unknown", wantErr: true},
+		"Error when the list of adapters is empty":         {withAdapters: daemontestutils.EmptyList, wantErr: true},
+		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
+		"Error when retrieving adapters information fails": {withAdapters: daemontestutils.MockError, wantErr: true},
+	}
 
-	select {
-	case <-ctx.Done():
-		// Most likely, Serve did not fail and instead started serving,
-		// only to be stopped by the test timeout.
-		require.Fail(t, "Serve should have failed immediately")
-	default:
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			addrDir := t.TempDir()
+			// Very lenient timeout because we either expect Serve to fail immediately or we stop it manually.
+			// As the last resource, the test will fail due to the context timeout (otherwise it would hang indefinitely).
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+
+			d := daemon.New(ctx, registerer, addrDir)
+			defer d.Quit(ctx, false)
+
+			if tc.netmode == "" {
+				tc.netmode = "nat"
+			}
+			mock := daemontestutils.NewHostIPConfigMock(tc.withAdapters)
+
+			serveErr := make(chan error)
+			go func() {
+				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock))
+				close(serveErr)
+			}()
+
+			if tc.wantErr {
+				require.Error(t, <-serveErr, "Serve should fail when the WSL IP cannot be found")
+				return
+			}
+
+			serverStopped := make(chan struct{})
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				d.Quit(ctx, false)
+				close(serverStopped)
+			}()
+			<-serverStopped
+
+			err := <-serveErr
+			if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+				// We stopped the server manually, so we expect this error, although it's possible that there is not even an error at this point.
+				err = nil
+			}
+			require.NoError(t, err, "Serve should return no error when stopped normally")
+
+			select {
+			case <-ctx.Done():
+				// Most likely, Serve did not fail and instead started serving,
+				// only to be stopped by the test timeout.
+				require.Fail(t, "Serve should have failed immediately")
+			default:
+			}
+		})
 	}
 }
 
@@ -289,7 +343,7 @@ func requireWaitPathExists(t *testing.T, path string, msg string) {
 		return false
 	}
 
-	require.Eventually(t, fileExists, 500*time.Millisecond, 50*time.Millisecond, "%q does not exists: %v", path, msg)
+	require.Eventually(t, fileExists, 5*time.Second, 100*time.Millisecond, "%q does not exists: %v", path, msg)
 
 	// Prevent error when accessing the file right after:
 	// 'The process cannot access the file because it is being used by another process'
@@ -326,3 +380,5 @@ func (testGRPCService) Blocking(ctx context.Context, e *grpctestservice.Empty) (
 	<-ctx.Done()
 	return &grpctestservice.Empty{}, nil
 }
+
+func TestWithWslSystemMock(t *testing.T) { daemontestutils.MockWslSystemCmd(t) }

@@ -12,9 +12,15 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	// Ensures we use the mock networking detection in the tests to prevent failure in CI where we might not have WSL2 or its network adapter.
+	daemontestutils.DefaultNetworkDetectionToMock()
+}
 
 func TestHelp(t *testing.T) {
 	a := agent.NewForTesting(t, "", "")
@@ -507,4 +513,8 @@ func captureStdout(t *testing.T) func() string {
 
 		return out.String()
 	}
+}
+
+func TestWithWslSystemMock(t *testing.T) {
+	daemontestutils.MockWslSystemCmd(t)
 }
