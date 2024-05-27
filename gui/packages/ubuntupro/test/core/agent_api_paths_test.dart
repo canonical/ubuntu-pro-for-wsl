@@ -1,4 +1,6 @@
 @TestOn('windows')
+library;
+
 import 'dart:io';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter_test/flutter_test.dart';

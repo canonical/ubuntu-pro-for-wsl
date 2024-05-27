@@ -1,4 +1,5 @@
 @TestOn('windows')
+library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/core/agent_api_paths.dart';
