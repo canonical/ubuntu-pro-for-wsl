@@ -1,6 +1,6 @@
 # Ubuntu Pro for WSL (UP4W)
-```{warning}
-This documentation describes a future release of Ubuntu Pro for WSL. Ubuntu Pro for WSL is not yet generally available in the Microsoft Store.
+```{note}
+This documentation describes a future release of UP4W. UP4W is not yet generally available in the Microsoft Store.
 ```
 
 
