@@ -3,18 +3,13 @@
 This documentation describes a future release of UP4W. UP4W is not yet generally available in the Microsoft Store.
 ```
 
+Ubuntu Pro for WSL (UP4W) is a powerful automation tool for managing [WSL](https://ubuntu.com/desktop/wsl) instances from a Windows host. If you are responsible for a fleet of devices, UP4W will supercharge your ability to monitor, customise and secure WSL instances.
 
+UP4W is designed to achieve close integration with applications for customising images, enforcing standards and validating security compliance. WSL instances can be created, removed and monitored with [Landscape](https://ubuntu.com/landscape). Microsoft Defender is WSL-aware, making it easy to confirm if instances are compliant. [Cloud-init](https://cloudinit.readthedocs.io/en/latest/) support is built-in, allowing efficient customisation of standard images.
 
-Ubuntu Pro for WSL (UP4W) is a desktop application that facilitates access to your [Ubuntu Pro]( https://ubuntu.com/pro) subscription benefits in the context of [Ubuntu WSL](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/).
+UP4W can be installed from the [Microsoft Store](https://apps.microsoft.com/home?hl=en-gb&gl=IE) and its setup is highly automated. Once you have an [Ubuntu Pro](https://ubuntu.com/pro) subscription, adding your Pro token to UP4W on the Windows host will add that token to all connected WSL instances with the Ubuntu Pro client installed. When the Landscape client is installed on the host, any connected WSL instances will be auto-enrolled in Landscape. WSL instances can then be created, provisioned and managed from the Windows host.
 
-When you install UP4W on your Windows host:
-
-- If you attach your Ubuntu Pro token to UP4W on the host, UP4W will automatically add it to the Ubuntu Pro client on any Ubuntu WSL instance on the host as well, so that all of your instances are added to your Ubuntu Pro subscription.
-- If you configure the Landscape client component of UP4W on the host, UP4W will automatically configure the Landscape client on any Ubuntu WSL instance on the host as well, so that both your host and the instances on the host are registered with Landscape. You can then use Landscape not just to manage the instances but also to create and provision new instances on the host.
-
-Pro-attaching and Landscape-enrolling an Ubuntu instance is not difficult, but when your Ubuntu instance fleet is large it can get tedious.  UP4W takes advantage of the WSL setting to make it a breeze -- regardless of the size of your fleet.
-
-UP4W is of value to system administrators, corporate security teams, and desktop users.
+WSL is preferred by many organisations as a solution to run a fully-functioning Linux environment on a Windows machine. UP4W empowers system administrators and corporate security teams to manage these WSL instances at scale.
 
 ## Project and community
 
