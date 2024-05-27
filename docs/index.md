@@ -3,7 +3,6 @@
 This documentation describes a future release of Ubuntu Pro for WSL. Ubuntu Pro for WSL is not yet generally available in the Microsoft Store.
 ```
 
-![System Landscape](./assets/up4w-systemlandscape.png)
 
 
 Ubuntu Pro for WSL (UP4W) is a desktop application that facilitates access to your [Ubuntu Pro]( https://ubuntu.com/pro) subscription benefits in the context of [Ubuntu WSL](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/).
