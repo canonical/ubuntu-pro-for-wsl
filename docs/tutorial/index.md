@@ -135,7 +135,7 @@ Landscape servers are usually on external computers. However, for the purpose of
 
 In your Windows PowerShell, `shutdown` WSL, then install the Ubuntu 22.04 LTS instance with the `--root` option.
 
-```powershell
+```text
 # Ensure a clean WSL environment.
 PS C:\Users\me\tutorial> wsl --shutdown
 
@@ -155,7 +155,7 @@ That is because the server is composed of many packages and the
 performance of the installation is affected by the WSL networking, as well as the host machine power.
 ```
 
-```bash
+```text
 PS C:\Users\me\tutorial> ubuntu2204.exe
 Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.146.1-microsoft-standard-WSL2 x86_64)
 
@@ -222,7 +222,7 @@ When the installation  process prompts about  Postfix configuration: Under 'Gene
 That should bring you back to your shell prompt and you should see the installation unfolding. If it completes successfully, the last few log lines should look as below, with the Landscape systemd units appearing as active.
 
 
-```bash
+```text
 
 # The last log lines of the installation process will be similar to this:
   en_ZM.UTF-8... done
@@ -292,7 +292,7 @@ admin account. Enter the following credentials and click the **Sign Up** button:
 Finally, copy the Landscape server certificate into your Windows user profile directory. The Landscape client inside of any WSL
 instance will need that certificate to connect to the server.
 
-```bash
+```text
 root@mib:~# cp /etc/ssl/certs/landscape_server.pem /mnt/c/users/me/
 root@mib:~#
 ```
@@ -341,7 +341,7 @@ Create a new file in your home directory named `landscape.txt` and enter followi
 - `<HOSTNAME>` by the actual host name of your Windows machine and
 - `<YOUR_WINDOWS_USER_NAME>` by the actual user name of your Windows account
 
-```
+```text
 [host]
 url = [::1]:6554
 [client]
@@ -400,7 +400,7 @@ Open the Windows PowerShell and run the following command to create a new Ubuntu
 When prompted create the default user and password. For convenience, we'll set both to `u`.
 When done you'll be logged in to the new instance shell.
 
-```powershell
+```text
 PS C:\Users\me\tutorial> ubuntupreview.exe
 
 Installing, this may take a few minutes...
@@ -426,7 +426,7 @@ UP4W should have already pro-attached this instance. To verify:
 You should see some services enabled (for now, ESM) and the account and subscription information at the bottom of the output:
 
 
-```bash
+```text
 u@mib:~$ pro status
 SERVICE          ENTITLED  STATUS       DESCRIPTION
 esm-apps         yes       enabled      Expanded Security Maintenance for Applications
@@ -449,7 +449,7 @@ u@mib:~$
 
 You should notice in the output that you’re accessing packages from all the enabled services (for now, ESM):
 
-```bash
+```text
 u@mib:~$ sudo apt update
 Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
 Hit:2 http://ppa.launchpad.net/ubuntu-wsl-dev/ppa/ubuntu noble InRelease
@@ -491,7 +491,7 @@ appear showing the progress of the new instance creation.
 
 Your Landscape Server will talk to the Landscape client built into your UP4W and ask UP4W to install the `Ubuntu` application and create an Ubuntu WSL instance for you. In your PowerShell, run `ubuntu.exe` to log in to the new instance.
 
-```powershell
+```text
 PS C:\Users\me\tutorial> ubuntu.exe
 To run a command as administrator (user "root"), use "sudo <command>".
 See "man sudo_root" for details.
@@ -537,7 +537,7 @@ In the "Summary" section in the middle of the page you will see a status message
 When this process has completed, use one of your instance shells to verify that the `python3-opencv` package has been installed.
 For example, in the `Ubuntu` instance it would look as below:
 
-```bash
+```text
 me@mib:~$ apt list --installed | grep opencv
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
@@ -577,7 +577,7 @@ In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right
 
 Additionally remove the `.ubuntupro` directory from your Windows user profile directory.
 
-```powershell
+```text
 PS C:\Users\me\tutorial> Remove-Item -Recurse -Force C:\Users\me\.ubuntupro
 ```
 
@@ -593,7 +593,7 @@ Otherwise, proceed with the commands below.
 
 In PowerShell run the following command to stop WSL:
 
-```powershell
+```text
 PS C:\Users\me\tutorial> wsl --shutdown
 ```
 
