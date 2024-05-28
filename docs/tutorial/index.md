@@ -2,15 +2,11 @@
 
 In this tutorial you will learn all the basic things that you need to know to start taking advantage of your Ubuntu Pro subscription on Ubuntu WSL at scale with Ubuntu Pro for WSL (UP4W).
 
-<br/>
-
 **What you'll need:**
 
 - A Windows 11 machine with access to the Microsoft Store and a minimum of 16GB of RAM and 8-core processor
 
 - Familiarity with the Windows PowerShell
-
-<br/>
 
 **What you'll do:**
 
@@ -20,8 +16,6 @@ In this tutorial you will learn all the basic things that you need to know to st
 
 - Tear things down
 
-<br/>
-
 ```{note}
 Throughout this tutorial we'll present shell commands together with their output:
 
@@ -30,12 +24,10 @@ prompt matching the shell it's launched in.
 
   For example, `PS C:\Users\me\tutorial>` is a PowerShell prompt where the current working directory is `C:\Users\me\tutorial`, thus running on Windows.
 
-
   Similarly, a Linux shell prompt logged in as root with the current working directory as the root home directory will look like `root@hostname:~#`
 
 - The outputs are preserved to give you more context.
 ```
-
 
 ## Set things up
 
@@ -46,17 +38,13 @@ prompt matching the shell it's launched in.
 
 Please reset its configuration to the default settings by (making a backup of your existing `~\.wslconfig` file, then) running:
 
-
     PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
 
 ```
 
-
 See: [Microsoft Store | Windows Subsystem for Linux](https://www.microsoft.com/store/productId/9P9TQF7MRM4R)
 
 All set. From now on you can use it to launch  WSL instances.
-
-<br />
 
 ### Install the Ubuntu 22.04 LTS and Ubuntu (Preview) applications
 
@@ -67,7 +55,6 @@ All set. From now on you can use it to launch  WSL instances.
 Please export them and delete them. Then proceed with the tutorial and install them fresh from the links provided below. At the end of the tutorial you can re-import them to restore your data.
 
  <details><summary> How do I export, delete, and re-import Ubuntu 22.04 LTS? </summary>
-
 
      PS C:\Users\me\tutorial> wsl --export Ubuntu-22.04 .\backup\Ubuntu-22.04.tar.gz
      Export in progress, this may take a few minutes.
@@ -100,8 +87,6 @@ Please export them and delete them. Then proceed with the tutorial and install t
  </details>
 ```
 
-
-
 See: 
 - [Microsoft Store | Ubuntu 22.04 LTS](https://www.microsoft.com/store/productId/9PN20MSR04DW)
 - [Microsoft Store | Ubuntu (Preview)](https://www.microsoft.com/store/productId/9P7BDVKVNXZ6)
@@ -121,7 +106,6 @@ Visit your Ubuntu Pro Dashboard to retrieve your subscription token.
 
 
 All set. From now on you can start adding this token to the Ubuntu Pro client on your WSL instances so you can enjoy Ubuntu Pro benefits on WSL as well. 
-
 
 ### Set up a Landscape server
 
@@ -169,7 +153,6 @@ Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.146.1-microsoft-standard-WSL2 x86_
   Usage of /:   0.1% of 1006.85GB   Users logged in:       1
   Memory usage: 25%                 IPv4 address for eth0: 172.18.68.146
   Swap usage:   4%
-
 
 This message is shown once a day. To disable it please create the
 /root/.hushlogin file.
@@ -220,7 +203,6 @@ When the installation  process prompts about  Postfix configuration: Under 'Gene
 ![Setting no Postfix configuration](./assets/postfix-config.png)
 
 That should bring you back to your shell prompt and you should see the installation unfolding. If it completes successfully, the last few log lines should look as below, with the Landscape systemd units appearing as active.
-
 
 ```text
 
@@ -307,7 +289,6 @@ Keep the current terminal open so the server stays running while you continue on
 Open a new terminal window and run `ubuntu2204.exe`. Landscape server and related components will start automatically.
 ```
 
-
 ### Install UP4W
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
@@ -322,7 +303,6 @@ Time to install UP4W! Click on [this link](https://www.microsoft.com/store/produ
 
 
 Once the installation is complete, you will see a **Start** button. Click it. That will start the UP4W Windows application. We'll use it to configure UP4W at next.
-
 
 ```{note}
 Instead of using the GUI, it's possible to configure UP4W through the Windows registry, which enables you to do things at scale.
@@ -353,7 +333,6 @@ ping_url = https://<HOSTNAME>/ping
 ssl_public_key = C:\Users\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
 ```
 % If really needed we can start without the SSL public key and add it after the Windows host is registered in Landscape.
-
 
 Then load that file using the "Custom Configuration" part of the the screen, as shown below:
 
@@ -391,7 +370,6 @@ At the top of the page, on the right-hand side of the Landscape logo, click on "
 
 All set. From now on you can use your Landscape server not just to manage the Ubuntu WSL instances that UP4W has pro-attached and Landscape-registered on the host, but to tell UP4W to create and provision them on the host too!
 
-
 ## Watch UP4W transform your Ubuntu Pro game on WSL!
 
 ### Create an Ubuntu WSL instance locally and watch it be automatically pro-attached and Landscape-registered
@@ -418,13 +396,11 @@ u@mib:~$
 
 ```
 
-
 UP4W should have already pro-attached this instance. To verify:
 
 - Run `pro status`
 
 You should see some services enabled (for now, ESM) and the account and subscription information at the bottom of the output:
-
 
 ```text
 u@mib:~$ pro status
@@ -442,8 +418,6 @@ Enable services with: pro enable <service>
 Subscription: Ubuntu Pro - free personal subscription
 u@mib:~$
 ```
-
-
 
 - Run `sudo apt update`
 
@@ -472,11 +446,9 @@ UP4W should have also already Landscape-registered this instance:
 
 ![New WSL instance pending approval](./assets/wsl-pending-approval.png)
 
-
 - To accept the registration first click on the instance name and in the pop-up set "Tags" to `wsl-vision` then click **Accept**
 
 ![Accept and tag Ubuntu Preview](./assets/accept-ubuntu-preview-tag.png)
-
 
 ### Use Landscape to create a pro-attached and Landscape-registered Ubuntu WSL instance remotely
 
@@ -487,7 +459,6 @@ appear showing the progress of the new instance creation.
 ![Create instance via Landscape](./assets/create-instance-via-landscape.png)
 
 ![Creation progress](./assets/creation-progress.png)
-
 
 Your Landscape Server will talk to the Landscape client built into your UP4W and ask UP4W to install the `Ubuntu` application and create an Ubuntu WSL instance for you. In your PowerShell, run `ubuntu.exe` to log in to the new instance.
 
@@ -509,7 +480,6 @@ me@mib:~$
 ```
 
 As usual, this instance is pro-attached and Landscape-registered -- run `pro status` to verify the pro-attachment and refresh your Landscape server page to verify and accept the registration (as before, apply the  `wsl-vision` tag and click `Accept`).
-
 
 ### Use Landscape to deploy packages to all of your Ubuntu WSL instances at once
 
@@ -619,6 +589,4 @@ This tutorial has introduced you to all the basic things you can do with UP4W. B
 | “How do I contribute to UP4W?” | Developer docs      |
 
 %| “Why…?”, “So what?”	UP4W Explanation docs 
-
-
 
