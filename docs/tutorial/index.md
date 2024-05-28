@@ -6,9 +6,9 @@ In this tutorial you will learn all the basic things that you need to know to st
 
 **What you'll need:**
 
-- A Windows 11 machine with access to the Microsoft Store and a minimum of 16GB of RAM and 8-core processor.
+- A Windows 11 machine with access to the Microsoft Store and a minimum of 16GB of RAM and 8-core processor
 
-- Familiarity with the Windows PowerShell.
+- Familiarity with the Windows PowerShell
 
 <br/>
 
@@ -16,7 +16,7 @@ In this tutorial you will learn all the basic things that you need to know to st
 
 - Set things up
 
-- Watch UP4W transform your Ubuntu Pro game on WSL!
+- Watch UP4W transform your Ubuntu Pro game on WSL
 
 - Tear things down
 
@@ -339,7 +339,7 @@ Paste your token retrieved from your Ubuntu Pro dashboard during [Setup](tut::en
 Create a new file in your home directory named `landscape.txt` and enter following contents, replacing:
 
 - `<HOSTNAME>` by the actual host name of your Windows machine and
-- `<YOUR_WINDOWS_USER_NAME>` by the actual user name of your Windows account.
+- `<YOUR_WINDOWS_USER_NAME>` by the actual user name of your Windows account
 
 ```
 [host]
@@ -421,7 +421,9 @@ u@mib:~$
 
 UP4W should have already pro-attached this instance. To verify:
 
-- Run `pro status`. You should see some services enabled (for now, ESM) and the account and subscription information at the bottom of the output:
+- Run `pro status`
+
+You should see some services enabled (for now, ESM) and the account and subscription information at the bottom of the output:
 
 
 ```bash
@@ -443,7 +445,9 @@ u@mib:~$
 
 
 
-- Run `sudo apt update`. You should notice in the output that you’re accessing packages from all the enabled services (for now, ESM).
+- Run `sudo apt update`
+
+You should notice in the output that you’re accessing packages from all the enabled services (for now, ESM):
 
 ```bash
 u@mib:~$ sudo apt update
@@ -469,7 +473,7 @@ UP4W should have also already Landscape-registered this instance:
 ![New WSL instance pending approval](./assets/wsl-pending-approval.png)
 
 
-- To accept the registration, click on the instance name; in the pop-up, set "Tags" to  `wsl-vision`; finally, click **Accept**.
+- To accept the registration first click on the instance name and in the pop-up set "Tags" to `wsl-vision` then click **Accept**
 
 ![Accept and tag Ubuntu Preview](./assets/accept-ubuntu-preview-tag.png)
 
