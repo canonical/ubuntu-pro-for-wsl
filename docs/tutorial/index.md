@@ -1,20 +1,10 @@
 # Get started with UP4W
 
-In this tutorial you will learn all the basic things that you need to know to start taking advantage of your Ubuntu Pro subscription on Ubuntu WSL at scale with Ubuntu Pro for WSL (UP4W).
+Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) makes it possible to run Ubuntu — the number 1 open-source operating system — on a Windows machine.
+With Ubuntu Pro for WSL (UP4W) an [Ubuntu Pro](https://ubuntu.com/pro) subscription empowers you to manage Ubuntu WSL instances at scale.
 
-**What you'll need:**
-
-- A Windows 11 machine with access to the Microsoft Store and a minimum of 16GB of RAM and 8-core processor
-
-- Familiarity with the Windows PowerShell
-
-**What you'll do:**
-
-- Set things up
-
-- Watch UP4W transform your Ubuntu Pro game on WSL
-
-- Tear things down
+In this tutorial you will develop an understanding of how UP4W can be installed and deployed for managing multiple WSL instances.
+To complete this tutorial you will need a Windows 11 machine with a minimum of 16GB RAM and a 8-core processor.
 
 ```{note}
 Throughout this tutorial we'll present shell commands together with their output:
