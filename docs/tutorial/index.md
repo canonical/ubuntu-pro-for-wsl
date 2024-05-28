@@ -1,4 +1,4 @@
-# Get Started with UP4W
+# Get started with UP4W
 
 In this tutorial you will learn all the basic things that you need to know to start taking advantage of your Ubuntu Pro subscription on Ubuntu WSL at scale with Ubuntu Pro for WSL (UP4W).
 
