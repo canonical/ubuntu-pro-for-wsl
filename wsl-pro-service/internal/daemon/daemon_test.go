@@ -179,8 +179,7 @@ func TestServe(t *testing.T) {
 					return systemd.gotState.Load() == "STATUS=Connected"
 				}, 30*time.Second, time.Second, "Systemd never switched states to 'Connected'")
 
-				require.Eventually(t, agent.Service.AllConnected,
-					30*time.Second, time.Second, "The daemon should have connected to the Windows Agent")
+				require.Eventually(t, agent.Service.AllConnected, 30*time.Second, time.Second, "The daemon should have connected to the Windows Agent")
 
 				require.Eventually(t, func() bool {
 					conOk := len(agent.Service.Connect.History()) > 0
@@ -293,7 +292,7 @@ func TestServeAndQuit(t *testing.T) {
 
 				require.False(t, systemd.gotUnsetEnvironment.Load(), "Unexpected value sent by Daemon to systemd notifier's unsetEnvironment")
 
-				require.Eventually(t, agent.Service.AllConnected, 10*time.Second, 100*time.Millisecond, "Daemon never connected to agent's service")
+				require.Eventually(t, agent.Service.AllConnected, 10*time.Second, 500*time.Millisecond, "Daemon never connected to agent's service")
 			}
 
 			d.Quit(ctx, tc.quitForcefully)
@@ -372,7 +371,7 @@ func TestReconnection(t *testing.T) {
 					return systemd.gotState.Load() == "STATUS=Connected"
 				}, maxTimeout, time.Second, "Service should have set systemd state to Connected")
 
-				require.Eventually(t, agent.Service.AllConnected, 10*time.Second, 100*time.Millisecond, "Daemon never connected to agent's service")
+				require.Eventually(t, agent.Service.AllConnected, 10*time.Second, 500*time.Millisecond, "Daemon never connected to agent's service")
 
 				if tc.firstConnectionLong {
 					// "Long-lived" means longer than a minute
@@ -389,7 +388,7 @@ func TestReconnection(t *testing.T) {
 			agent = testutils.NewMockWindowsAgent(t, ctx, publicDir)
 			defer agent.Stop()
 
-			require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 100*time.Millisecond, "Daemon never connected to agent's service")
+			require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 500*time.Millisecond, "Daemon never connected to agent's service")
 			require.EqualValues(t, 1, systemd.readyNotifications.Load(), "Service should have notified systemd after connecting to the control stream")
 		})
 	}

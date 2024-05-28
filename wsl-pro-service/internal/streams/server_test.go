@@ -38,9 +38,7 @@ func TestServe(t *testing.T) {
 
 	// Test handshake
 
-	require.Eventually(t, func() bool {
-		return agent.Service.AllConnected()
-	}, 20*time.Second, 100*time.Millisecond, "Setup: Agent service never became ready")
+	require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 500*time.Millisecond, "Setup: Agent service never became ready")
 
 	// Test receiving a pro token and returning success
 	err = agent.Service.ProAttachment.Send(&agentapi.ProAttachCmd{Token: "token345"})
@@ -113,9 +111,7 @@ func TestStop(t *testing.T) {
 		close(errCh)
 	}()
 
-	require.Eventually(t, func() bool {
-		return agent.Service.AllConnected()
-	}, 20*time.Second, 100*time.Millisecond, "Setup: Agent service never became ready")
+	require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 500*time.Millisecond, "Setup: Agent service never became ready")
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
