@@ -38,7 +38,6 @@ func TestServe(t *testing.T) {
 	}()
 
 	// Test handshake
-
 	require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 500*time.Millisecond, "Setup: Agent service never became ready")
 
 	// Test receiving a pro token and returning success
@@ -51,7 +50,6 @@ func TestServe(t *testing.T) {
 	require.Empty(t, agent.Service.ProAttachment.History()[1].GetResult(), "ProAttachment should return a successful result")
 
 	// Test receiving a pro token and returning error
-
 	err = agent.Service.ProAttachment.Send(&agentapi.ProAttachCmd{Token: "HARDCODED_FAILURE"})
 	require.NoError(t, err, "Send should return no error")
 
@@ -61,7 +59,6 @@ func TestServe(t *testing.T) {
 	require.NotEmpty(t, agent.Service.ProAttachment.History()[2].GetResult(), "ProAttachment should return an error result")
 
 	// Test receiving a Landscape config and returning success
-
 	err = agent.Service.LandscapeConfig.Send(&agentapi.LandscapeConfigCmd{Config: "hello=world"})
 	require.NoError(t, err, "Send should return no error")
 
@@ -71,7 +68,6 @@ func TestServe(t *testing.T) {
 	require.Empty(t, agent.Service.LandscapeConfig.History()[1].GetResult(), "LandscapeConfig should return a successful result")
 
 	// Test receiving a Landscape config and returning error
-
 	err = agent.Service.LandscapeConfig.Send(&agentapi.LandscapeConfigCmd{Config: "HARDCODED_FAILURE"})
 	require.NoError(t, err, "Send should return no error")
 
