@@ -498,7 +498,7 @@ func TestWindowsHostAddress(t *testing.T) {
 	// These are the addresses hard-coded on the fixtures labelled as "good"
 	const (
 		localhost   = "127.0.0.1"
-		degaultGway = "172.25.32.1"
+		defaultGway = "172.25.32.1"
 	)
 
 	testCases := map[string]struct {
@@ -511,7 +511,7 @@ func TestWindowsHostAddress(t *testing.T) {
 		wantErr bool
 	}{
 		"Without NAT": {networkNotNAT: true, want: localhost},
-		"With NAT":    {want: degaultGway},
+		"With NAT":    {want: defaultGway},
 
 		// WSL info errors
 		"Error when wslinfo returns an error": {breakWslInfo: true, wantErr: true},
