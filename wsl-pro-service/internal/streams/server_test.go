@@ -3,6 +3,7 @@ package streams_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -138,11 +139,15 @@ func TestStop(t *testing.T) {
 
 type mockService struct {
 	blockingCalls bool
+	mu            sync.RWMutex
 
 	ctx context.Context
 }
 
 func (s *mockService) setBlocking(ctx context.Context) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.blockingCalls = true
 	s.ctx = ctx
 }
@@ -153,6 +158,9 @@ func (s *mockService) ApplyProToken(ctx context.Context, msg *agentapi.ProAttach
 	}
 
 	// Mock a slow task that can be cancelled
+	// Using a mutex because those calls can race with s.setBlocking.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if s.blockingCalls {
 		select {
 		case <-ctx.Done():
@@ -172,6 +180,9 @@ func (s *mockService) ApplyLandscapeConfig(ctx context.Context, msg *agentapi.La
 	}
 
 	// Mock a slow task that can be cancelled
+	// Using a mutex because those calls can race with s.setBlocking.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if s.blockingCalls {
 		select {
 		case <-ctx.Done():
