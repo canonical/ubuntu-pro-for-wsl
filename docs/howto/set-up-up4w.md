@@ -49,10 +49,8 @@ Sure:
 	  wslinfo --networking-mode
 	  ```
         - If it says `mirrored`, the relevant IP is `127.0.0.1`. Take note of this address.
-        - Otherwise, open file `/etc/resolv.conf` in the WSL instance named _Ubuntu-22.04_. Find the line starting with `nameserver` followed by an IP address.
-           - If the IP address does not start with `127`, take note of this address.
-           - Otherwise, run the command `ip route | grep ^default` and take note of the IP address that is printed.
-   3. Set up a Landscape Beta server: 
+	- Otherwise, run the command `ip route | grep ^default` and take note of the IP address that is printed.
+   3. Set up a Landscape Beta server:
       1. Start a shell in your _Ubuntu-22.04_ distro.
       2. Install the Landscape (beta) following the steps in the Landscape Quickstart deployment with the following considerations:
          - Make sure you install the beta version.
@@ -185,9 +183,7 @@ On your Windows host, in the Microsoft Store, search for the `Ubuntu-Preview` or
 <!-- 	  wslinfo --networking-mode -->
 <!-- 	  ``` -->
 <!--         - If it says `mirrored`, the relevant IP is `127.0.0.1`. Take note of this address. -->
-<!--         - Otherwise, open file `/etc/resolv.conf` in the WSL instance named _Ubuntu-22.04_. Find the line starting with `nameserver` followed by an IP address. -->
-<!--            - If the IP address does not start with `127`, take note of this address. -->
-<!--            - Otherwise, run the command `ip route | grep ^default` and take note of the IP address that is printed. -->
+<!--         - Otherwise, run the command `ip route | grep ^default` and take note of the IP address that is printed. -->
 <!--    3. Set up a Landscape Beta server.  -->
 <!--       1. Start a shell in your _Ubuntu-22.04_ distro. -->
 <!--       2. Install the Landscape (beta) following the steps in the Landscape Quickstart deployment with the following considerations: -->
