@@ -39,7 +39,7 @@ prompt matching the shell it's launched in.
 
 ## Set things up
 
-### Install the `Windows Subsystem for Linux` (WSL) application
+### Install the Windows Subsystem for Linux (WSL) application
 
 ```{warning}
 **If you already have it pre-installed:** 
@@ -58,7 +58,7 @@ All set. From now on you can use it to launch  WSL instances.
 
 <br />
 
-### Install the `Ubuntu 22.04 LTS` and `Ubuntu (Preview)` applications
+### Install the Ubuntu 22.04 LTS and Ubuntu (Preview) applications
 
 (ref::backup-warning)=
 ```{warning}
