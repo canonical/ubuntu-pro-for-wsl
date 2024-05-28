@@ -58,9 +58,6 @@ var (
 	//go:embed filesystem_defaults/os-release
 	defaultOsReleaseContents []byte
 
-	//go:embed filesystem_defaults/resolv.conf
-	defaultResolvConfContents []byte
-
 	//go:embed filesystem_defaults/proc.mounts
 	defaultProcMountsContents []byte
 
@@ -654,9 +651,6 @@ func mockFilesystemRoot(t *testing.T) (rootDir string) {
 	// Mock /etc/
 	err := os.MkdirAll(filepath.Join(rootDir, "etc"), 0750)
 	require.NoError(t, err, "Setup: could not create mock /etc/")
-
-	err = os.WriteFile(filepath.Join(rootDir, "etc/resolv.conf"), defaultResolvConfContents, 0600)
-	require.NoError(t, err, "Setup: could not write mock /etc/resolv.conf")
 
 	err = os.WriteFile(filepath.Join(rootDir, "etc/os-release"), defaultOsReleaseContents, 0600)
 	require.NoError(t, err, "Setup: could not write mock /etc/os-release")
