@@ -3,6 +3,7 @@ package streams_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -37,10 +38,7 @@ func TestServe(t *testing.T) {
 	}()
 
 	// Test handshake
-
-	require.Eventually(t, func() bool {
-		return agent.Service.AllConnected()
-	}, 20*time.Second, 100*time.Millisecond, "Setup: Agent service never became ready")
+	require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 500*time.Millisecond, "Setup: Agent service never became ready")
 
 	// Test receiving a pro token and returning success
 	err = agent.Service.ProAttachment.Send(&agentapi.ProAttachCmd{Token: "token345"})
@@ -52,7 +50,6 @@ func TestServe(t *testing.T) {
 	require.Empty(t, agent.Service.ProAttachment.History()[1].GetResult(), "ProAttachment should return a successful result")
 
 	// Test receiving a pro token and returning error
-
 	err = agent.Service.ProAttachment.Send(&agentapi.ProAttachCmd{Token: "HARDCODED_FAILURE"})
 	require.NoError(t, err, "Send should return no error")
 
@@ -62,7 +59,6 @@ func TestServe(t *testing.T) {
 	require.NotEmpty(t, agent.Service.ProAttachment.History()[2].GetResult(), "ProAttachment should return an error result")
 
 	// Test receiving a Landscape config and returning success
-
 	err = agent.Service.LandscapeConfig.Send(&agentapi.LandscapeConfigCmd{Config: "hello=world"})
 	require.NoError(t, err, "Send should return no error")
 
@@ -72,7 +68,6 @@ func TestServe(t *testing.T) {
 	require.Empty(t, agent.Service.LandscapeConfig.History()[1].GetResult(), "LandscapeConfig should return a successful result")
 
 	// Test receiving a Landscape config and returning error
-
 	err = agent.Service.LandscapeConfig.Send(&agentapi.LandscapeConfigCmd{Config: "HARDCODED_FAILURE"})
 	require.NoError(t, err, "Send should return no error")
 
@@ -113,9 +108,7 @@ func TestStop(t *testing.T) {
 		close(errCh)
 	}()
 
-	require.Eventually(t, func() bool {
-		return agent.Service.AllConnected()
-	}, 20*time.Second, 100*time.Millisecond, "Setup: Agent service never became ready")
+	require.Eventually(t, agent.Service.AllConnected, 20*time.Second, 500*time.Millisecond, "Setup: Agent service never became ready")
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -142,11 +135,15 @@ func TestStop(t *testing.T) {
 
 type mockService struct {
 	blockingCalls bool
+	mu            sync.RWMutex
 
 	ctx context.Context
 }
 
 func (s *mockService) setBlocking(ctx context.Context) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.blockingCalls = true
 	s.ctx = ctx
 }
@@ -157,6 +154,9 @@ func (s *mockService) ApplyProToken(ctx context.Context, msg *agentapi.ProAttach
 	}
 
 	// Mock a slow task that can be cancelled
+	// Using a mutex because those calls can race with s.setBlocking.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if s.blockingCalls {
 		select {
 		case <-ctx.Done():
@@ -176,6 +176,9 @@ func (s *mockService) ApplyLandscapeConfig(ctx context.Context, msg *agentapi.La
 	}
 
 	// Mock a slow task that can be cancelled
+	// Using a mutex because those calls can race with s.setBlocking.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if s.blockingCalls {
 		select {
 		case <-ctx.Done():
