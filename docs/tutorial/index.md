@@ -14,7 +14,7 @@ Throughout this tutorial, commands will be prefixed by a prompt that indicates t
 
 - `root@hostname:~#` indicates a Linux shell prompt with login as root in the root home directory `~`.
 
-Output logs are included in this tutorial when instructive but are typically ommitted to save space.
+Output logs are included in this tutorial when instructive but are typically omitted to save space.
 ```
 
 ## Set things up
