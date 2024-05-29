@@ -468,7 +468,6 @@ func TestWindowsHostAddress(t *testing.T) {
 		fileNotExist
 		fileBroken
 		fileIPbroken
-		fileIPisLoopback
 	)
 
 	// copyFile is a helper that copies the appropriate version of a fixture to the desired destination.
@@ -487,8 +486,6 @@ func TestWindowsHostAddress(t *testing.T) {
 			suffix = ".bad"
 		case fileIPbroken:
 			suffix = ".bad-ip"
-		case fileIPisLoopback:
-			suffix = ".loopback"
 		}
 
 		from = from + suffix
@@ -501,36 +498,28 @@ func TestWindowsHostAddress(t *testing.T) {
 	// These are the addresses hard-coded on the fixtures labelled as "good"
 	const (
 		localhost   = "127.0.0.1"
-		nameserver  = "172.22.16.1"
-		degaultGway = "172.25.32.1"
+		defaultGway = "172.25.32.1"
 	)
 
 	testCases := map[string]struct {
 		networkNotNAT bool
 		breakWslInfo  bool
 
-		etcResolv    fileState
 		procNetRoute fileState
 
 		want    string
 		wantErr bool
 	}{
-		"Success without NAT":                          {networkNotNAT: true, want: localhost},
-		"Success with NAT, nameserver is not loopback": {want: nameserver},
-		"Success with NAT, nameserver is loopback":     {etcResolv: fileIPisLoopback, want: degaultGway},
+		"Without NAT": {networkNotNAT: true, want: localhost},
+		"With NAT":    {want: defaultGway},
 
 		// WSL info errors
 		"Error when wslinfo returns an error": {breakWslInfo: true, wantErr: true},
 
-		// NAT errors with broken /etc/resolv.conf
-		"Error with NAT when /etc/resolv.conf does not exist":       {etcResolv: fileNotExist, wantErr: true},
-		"Error with NAT when /etc/resolv.conf is ill-formed":        {etcResolv: fileBroken, wantErr: true},
-		"Error with NAT when /etc/resolv.conf has an ill-formed IP": {etcResolv: fileIPbroken, wantErr: true},
-
 		// NAT errors with loopback nameserver and broken /proc/net/route
-		"Error with NAT when /proc/net/route does not exist":       {etcResolv: fileIPisLoopback, procNetRoute: fileNotExist, wantErr: true},
-		"Error with NAT when /proc/net/route is ill-formed":        {etcResolv: fileIPisLoopback, procNetRoute: fileBroken, wantErr: true},
-		"Error with NAT when /proc/net/route has an ill-formed IP": {etcResolv: fileIPisLoopback, procNetRoute: fileIPbroken, wantErr: true},
+		"Error with NAT when /proc/net/route does not exist":       {procNetRoute: fileNotExist, wantErr: true},
+		"Error with NAT when /proc/net/route is ill-formed":        {procNetRoute: fileBroken, wantErr: true},
+		"Error with NAT when /proc/net/route has an ill-formed IP": {procNetRoute: fileIPbroken, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -547,7 +536,6 @@ func TestWindowsHostAddress(t *testing.T) {
 				mock.SetControlArg(testutils.WslInfoIsNAT)
 			}
 
-			copyFile(t, tc.etcResolv, filepath.Join(commontestutils.TestFamilyPath(t), "etc-resolv.conf"), mock.Path("/etc/resolv.conf"))
 			copyFile(t, tc.procNetRoute, filepath.Join(commontestutils.TestFamilyPath(t), "proc-net-route"), mock.Path("/proc/net/route"))
 
 			got, err := sys.WindowsHostAddress(ctx)
