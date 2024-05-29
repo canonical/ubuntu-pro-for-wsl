@@ -15,12 +15,6 @@ Throughout this tutorial, commands will be prefixed by a prompt that indicates t
 
 - `root@hostname:~#` indicates a Linux shell prompt with login as root in the root home directory `~`.
 ```
-<!-- TODO: continue clean up -->
-<!-- focus on text before command logs -->
-<!-- keep Pro and UP4W together -->
-<!-- keep WSL/Ubuntu/Landscape instructions short -->
-<!-- landscape logs are way too much -->
-<!-- careful with links not rendering -->
 
 ## Set things up
 
