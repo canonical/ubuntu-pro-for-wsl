@@ -285,12 +285,12 @@ All packages are up to date.
 UP4W should have also Landscape-registered this instance.
 To verify, refresh the Landscape server web page and the instance should be listed under "Computers needing authorisation".
 
-![New WSL instance pending approval](./assets/wsl-pending-approval.png)
+<!-- ![New WSL instance pending approval](./assets/wsl-pending-approval.png) -->
 
 To accept the registration click on the instance name, set "Tags" to `wsl-vision` in the pop-up then click **Accept**.
 The `wsl-vision` tag will be used for all the instances accepted into Landscape.
 
-![Accept and tag Ubuntu Preview](./assets/accept-ubuntu-preview-tag.png)
+<!-- ![Accept and tag Ubuntu Preview](./assets/accept-ubuntu-preview-tag.png) -->
 
 ### Create an Ubuntu WSL instance remotely
 
@@ -336,7 +336,7 @@ On the bottom of the "Vision" profile page, in the "Association" section, set th
 
 In the "Summary" section in the middle of the page you will see a status message showing that two computers are `applying the profile`. Click on the `applying the profile` link and then, in the "Activities" list, click on **Apply package profile** to see the progress of the package deployment.
 
-![Progress of the package deployment](./assets/package-deployment-progress.png)
+<!-- ![Progress of the package deployment](./assets/package-deployment-progress.png) -->
 
 When this process has completed, use one of your instance shells to verify that the `python3-opencv` package has been installed.
 For example, in the `Ubuntu` instance the first three packages returned are:
