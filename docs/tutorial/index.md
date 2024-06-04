@@ -123,7 +123,7 @@ root@mib:~# systemctl --state=running --no-legend --no-pager | grep -m 3 landsca
   landscape-async-frontend.service      loaded active running LSB: Enable Landscape async frontend
 ```
 
-Once installed Landscape will be served on `localhost` port 8080. Open your favourite browser on Windows and navigated to `http://127.0.0.1:8080` to access the Landscape global admin account.
+Once installed Landscape will be served on `localhost` port 8080. Open your favourite browser on Windows and navigated to `http://127.0.0.1:8080` to create the Landscape global admin account.
 Enter the following credentials and click the **Sign Up** button:
 
 | Field             | Value           |
