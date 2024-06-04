@@ -35,7 +35,7 @@ for this tutorial.
 
 (ref::backup-warning)=
 ```{warning}
-**If you already have Ubuntu for WSL pre-installed:** 
+**If you already have Ubuntu WSL pre-installed:** 
 
 We recommend that they are exported then deleted.
 You can then install them as described in this tutorial.
