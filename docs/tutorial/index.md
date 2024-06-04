@@ -12,7 +12,7 @@ Throughout this tutorial, commands will be prefixed by a prompt that indicates t
 
 - `PS C:\Users\me\tutorial>` is a PowerShell prompt where the current working directory is `C:\Users\me\tutorial`.
 
-- `root@hostname:~#` indicates a Linux shell prompt with login as root in the root home directory `~`.
+- `ubuntu@wsl:~/tutorial$` indicates a Linux shell prompt login as ubuntu where the current working directory is `/home/ubuntu/tutorial/`
 
 Output logs are included in this tutorial when instructive but are typically omitted to save space.
 ```
