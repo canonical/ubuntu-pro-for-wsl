@@ -4,7 +4,7 @@ Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) makes it pos
 With Ubuntu Pro for WSL (UP4W) an [Ubuntu Pro](https://ubuntu.com/pro) subscription empowers you to manage Ubuntu WSL instances at scale.
 
 In this tutorial you will develop an understanding of how UP4W can be installed and deployed for managing multiple WSL instances.
-To complete this tutorial you will need a Windows 11 machine with a minimum of 16GB RAM and a 8-core processor.
+To complete this tutorial you will need a machine running Windows 10 or 11 with a minimum of 16GB RAM and a 8-core processor.
 
 ```{note}
 WSL enables using a Linux shell and Windows PowerShell side-by-side on the same machine.
