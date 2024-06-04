@@ -30,8 +30,8 @@ PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
 ```
 
 Ubuntu can also be installed from the Microsoft Store.
-Choose [Ubuntu 22.04 LTS](https://www.microsoft.com/store/productId/9PN20MSR04DW) or [Ubuntu (Preview)](https://www.microsoft.com/store/productId/9P7BDVKVNXZ6)
-for this tutorial.
+Both [Ubuntu 24.04 LTS](https://www.microsoft.com/store/productId/9nz3klhxdjp5) and [Ubuntu 22.04 LTS](https://www.microsoft.com/store/productId/9PN20MSR04DW)
+will be used in this tutorial.
 
 (ref::backup-warning)=
 ```{warning}
@@ -241,11 +241,11 @@ Now you can leverage UP4W from your Landscape server to create and provision Ubu
 
 ### Create an Ubuntu WSL instance locally
 
-Open Windows PowerShell and run the following command to create a new Ubuntu-Preview instance.
+Open Windows PowerShell and run the following command to create a new Ubuntu 24.04 instance.
 When prompted create the default user and password. For convenience, we'll set both to `u`.
 
 ```text
-PS C:\Users\me\tutorial> ubuntupreview.exe
+PS C:\Users\me\tutorial> ubuntu2404.exe
 
 Installing, this may take a few minutes...
 Please create a default UNIX user account. The username does not need to match your Windows username.
@@ -406,7 +406,7 @@ PS C:\Users\me\tutorial> wsl --shutdown
 ```
 
 Then, in the Windows Start Menu, locate the "Ubuntu 22.04 LTS" application, right-click on it, and select "Uninstall",
-as done with UP4W. Do the same for the "Ubuntu (Preview)" and "Ubuntu" applications.
+as done with UP4W. Do the same for the "Ubuntu 24.04 LTS" and "Ubuntu" applications.
 
 The instances will be removed automatically.
 
