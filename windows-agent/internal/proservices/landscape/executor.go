@@ -301,6 +301,49 @@ func download(ctx context.Context, f io.Writer, url, checksum string) (err error
 	return nil
 }
 
+// wantRootfsChecksum fetches the checksum from the SHA256SUMS file found alongside the rootfs url matching the rootfs file name.
+//
+// The SHA256SUMS file is expected to contain multiple lines of the format:
+//
+// SHA256 *filename
+//
+// For example:
+//
+// 03c7f7c75fb450c7dd576a0da20986e62e0d72bd2ccee4c01296bab9f415c7ab *jammy-server-cloudimg-amd64-azure.vhd.tar.gz
+// 0dc4d78f08e871ce6325e027e1b8421fd1cde1e76158644e35343a36d8f67bf4 *jammy-server-cloudimg-amd64-root.tar.xz
+// 103ee8b5693bdb7c23a378453c624d8605445eb07e2e550d3fad831da865f5ea *jammy-server-cloudimg-riscv64.release.20240514.20240601.image_changelog.json
+// 1eaa1df5794122e3419c963d88f043121c164936b9b828adac650c9f5e22c3e6 *jammy-server-cloudimg-amd64.img
+// 1fcd2edf4fda78e0a6f3bc0c3684286c29371e4dd7863a59b39d2cfcff79b5e1 *jammy-server-cloudimg-amd64-root.manifest
+// 1fcd2edf4fda78e0a6f3bc0c3684286c29371e4dd7863a59b39d2cfcff79b5e1 *jammy-server-cloudimg-amd64.squashfs.manifest
+// 2646292d657f4c9ef5dfce804a5a1e66d8c1324c74147b8bc9b1bf154d7feaf8 *jammy-server-cloudimg-arm64-root.tar.xz
+//
+// ...
+func wantRootfsChecksum(url string) (string, error) {
+	imageName := filepath.Base(url)
+	checksumsURL := filepath.Dir(url) + "SHA256SUMS"
+
+	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
+	resp, err := http.Get(checksumsURL)
+	if err != nil {
+		return "", fmt.Errorf("could not download checksums file <%s>: %v", checksumsURL, err)
+	}
+	defer resp.Body.Close()
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		if len(fields) != 2 {
+			continue
+		}
+
+		if strings.TrimPrefix(fields[1], "*") == imageName {
+			return fields[0], nil
+		}
+	}
+
+	return "", fmt.Errorf("could not find checksum for %s in %s", imageName, checksumsURL)
+}
+
 func checksumMatches(ctx context.Context, reader io.Reader, wantChecksum string) (match bool, err error) {
 	defer decorate.OnError(&err, "error checking checksum for: %q", reader)
 
