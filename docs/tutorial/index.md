@@ -152,14 +152,14 @@ If you do close the terminal running `ubuntu2204.exe` in a new terminal window w
 (tut::ensure-ubuntu-pro)=
 ### Get an Ubuntu Pro token
 
-An Ubuntu Pro subscription gives you a token that can be added to the Ubuntu Pro client on WSL instances.
+An active Ubuntu Pro subscription provides you with a token that can be added to the Ubuntu Pro client on WSL instances.
 
-Visit the [Ubuntu Pro](https://ubuntu.com/pro/subscribe) page to get a subscription.
+Your subscription token can be retrieved from the [Ubuntu Pro Dashboard](https://ubuntu.com/pro/dashboard).
+
+Visit the [Ubuntu Pro](https://ubuntu.com/pro/subscribe) page if you need a new subscription.
 The `Myself` option for a personal subscription is free for up to 5 machines. 
 
-Your subscription token can then be retrieved from the [Ubuntu Pro Dashboard](https://ubuntu.com/pro/dashboard).
-
-With your token you can now install UP4W.
+Once you have a token you are ready to install UP4W.
 
 ### Install UP4W
 
