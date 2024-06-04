@@ -94,16 +94,16 @@ After successful installation log in to the new instance and add the landscape a
 ```text
 PS C:\Users\me\tutorial> ubuntu2204.exe
 
-root@mib:~# add-apt-repository ppa:landscape/self-hosted-beta -y
+root@mib:~$ add-apt-repository ppa:landscape/self-hosted-beta -y
 
 ```
 
 Update packages and then install the `landscape-server-quickstart` package.
 
 ```text
-root@mib:~# apt update
+root@mib:~$ apt update
 
-root@mib:~# apt install landscape-server-quickstart -y
+root@mib:~$ apt install landscape-server-quickstart -y
 ```
 
 A dialog will appear for 'Postfix configuration'.
@@ -117,7 +117,7 @@ If Landscape has installed successfully, the log will indicate that Landscape sy
 An example log is shown below for the first three units:
 
 ```text
-root@mib:~# systemctl --state=running --no-legend --no-pager | grep -m 3 landscape
+root@mib:~$ systemctl --state=running --no-legend --no-pager | grep -m 3 landscape
   landscape-api.service                 loaded active running LSB: Enable Landscape API
   landscape-appserver.service           loaded active running LSB: Enable Landscape frontend UI
   landscape-async-frontend.service      loaded active running LSB: Enable Landscape async frontend
@@ -140,7 +140,7 @@ The Landscape client inside of any WSL instance will need the Landscape server c
 To achieve this copy the Landscape server certificate into your Windows user profile directory:
 
 ```text
-root@mib:~# cp /etc/ssl/certs/landscape_server.pem /mnt/c/users/me/
+root@mib:~$ cp /etc/ssl/certs/landscape_server.pem /mnt/c/users/me/
 ```
 
 Done -- your self-hosted Landscape server is now up and running! 
