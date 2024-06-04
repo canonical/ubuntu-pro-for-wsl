@@ -175,8 +175,11 @@ To install UP4W go to [this link to the Microsoft Store](https://www.microsoft.c
 
 After installation has finished click **Start** to begin configuring UP4W.
 
-% :NOTE: Instead of the GUI, it's possible to configure UP4W through the Windows registry, which enables you to do things at scale. This should be explained here or elsewhere.
-
+```{note}
+UP4W can be configured through the [Windows registry](windows-registry) instead of the GUI.
+The steps are outlined briefly in [Install and configure UP4W > Using the registry](howto::configure::registry).
+This approach may be more suitable when operating at scale.
+```
 In the UP4W Windows application click the arrow beside "Already have a token?".
 
 Paste your token from the Ubuntu Pro dashboard during [Setup](tut::ensure-ubuntu-pro) and click "Confirm".
