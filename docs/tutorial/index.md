@@ -41,37 +41,18 @@ We recommend that they are exported then deleted.
 You can then install them as described in this tutorial.
 At the end of the tutorial you can re-import and restore your data.
 
- <details><summary> How do I export, delete, and re-import Ubuntu 22.04 LTS? </summary>
+Exporting, deleting and re-importing Ubuntu is achieved with the following commands.
+In each case, `{version}` would need to be replaced with 22.04 or 24.04.
 
-     PS C:\Users\me\tutorial> wsl --export Ubuntu-22.04 .\backup\Ubuntu-22.04.tar.gz
-     Export in progress, this may take a few minutes.
-     The operation completed successfully.
+```
+PS C:\Users\me\tutorial> wsl --export Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
 
-     PS C:\Users\me\tutorial> wsl --unregister Ubuntu-22.04
-     Unregistering..
-     The operation completed successfully.
+PS C:\Users\me\tutorial> wsl --unregister Ubuntu-{version}
 
-     PS C:\Users\me\tutorial> wsl --import Ubuntu-22.04 .\backup\Ubuntu-22.04 .\backup\Ubuntu-22.04.tar.gz
-     Import in progress, this may take a few minutes.
-     The operation completed successfully.
+PS C:\Users\me\tutorial> wsl --import Ubuntu-{version} .\backup\Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
 
- </details>
+```
 
-<details><summary> How do I export, delete, and re-import Ubuntu (Preview)? </summary>
-   
-     PS C:\Users\me\tutorial> wsl --export Ubuntu-Preview .\backup\Ubuntu-Preview.tar.gz
-     Export in progress, this may take a few minutes.
-     The operation completed successfully.
-
-     PS C:\Users\me\tutorial> wsl --unregister Ubuntu-Preview
-     Unregistering...
-     The operation completed successfully.
-	 
-     PS C:\Users\me\tutorial> wsl --import Ubuntu-Preview .\backup\Ubuntu-Preview .\backup\Ubuntu-Preview.tar.gz
-     Import in progress, this may take a few minutes.
-     The operation completed successfully.	 
-
- </details>
 ```
 
 You can now launch WSL instances of Ubuntu on your Windows machine.
