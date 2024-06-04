@@ -218,7 +218,7 @@ This means that all Ubuntu WSL instances will be automatically added to your Ubu
 
 This has also configured the Landscape client built into your UP4W Windows agent to know about your Landscape server; UP4W will forward this configuration to the Landscape client on your Ubuntu WSL instances as well; and all systems where the Landscape client has been configured this way are automatically registered with Landscape.
 
-### UP4W host registration
+### UP4W host registration with Landscape
 
 Go back to your web browser and refresh the Landscape page at `http://127.0.0.1:8080`. On the right-hand side of the
 page you should see a request to approve your Windows host registration ("Computers needing authorisation").
