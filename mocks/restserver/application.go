@@ -178,8 +178,12 @@ The outfile, if provided, will contain the address.`, app.Description),
 			slog.Info(fmt.Sprintf("Serving on address %s", addr))
 
 			// Wait loop
-			for scanned := ""; scanned != "exit"; fmt.Scanf("%s\n", &scanned) {
+			for scanned := ""; scanned != "exit"; {
 				fmt.Println("Write 'exit' to stop serving")
+				if _, err := fmt.Scanf("%s\n", &scanned); err != nil {
+					slog.Error(fmt.Sprintf("Could not scan input: %v", err))
+					os.Exit(1)
+				}
 			}
 		},
 	}
