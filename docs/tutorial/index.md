@@ -44,14 +44,12 @@ At the end of the tutorial you can re-import and restore your data.
 Exporting, deleting and re-importing Ubuntu is achieved with the following commands.
 In each case, `{version}` would need to be replaced with 22.04 or 24.04.
 
-```
-PS C:\Users\me\tutorial> wsl --export Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
+    PS C:\Users\me\tutorial> wsl --export Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
 
-PS C:\Users\me\tutorial> wsl --unregister Ubuntu-{version}
+    PS C:\Users\me\tutorial> wsl --unregister Ubuntu-{version}
 
-PS C:\Users\me\tutorial> wsl --import Ubuntu-{version} .\backup\Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
+    PS C:\Users\me\tutorial> wsl --import Ubuntu-{version} .\backup\Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
 
-```
 
 ```
 
