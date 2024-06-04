@@ -1,6 +1,7 @@
 package landscape
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -152,7 +154,7 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	}()
 
-	if rootfs := cmd.GetRootfs(); rootfs != nil {
+	if rootfs := cmd.GetRootfsURL(); rootfs != "" {
 		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, rootfs); err != nil {
 			return err
 		}
@@ -230,8 +232,8 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err er
 	return nil
 }
 
-func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
-	defer decorate.OnError(&err, "can't install from URL: %q", rootfs.GetUrl())
+func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfsURL string) (err error) {
+	defer decorate.OnError(&err, "can't install from URL: %q", rootfsURL)
 
 	tmpDir := filepath.Join(downloadDir, distro.Name())
 	if err := os.MkdirAll(tmpDir, 0700); err != nil {
@@ -248,7 +250,7 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	}
 	defer f.Close()
 
-	err = download(ctx, f, rootfs.GetUrl(), rootfs.GetSha256Sum())
+	err = download(ctx, f, rootfsURL)
 	if err != nil {
 		return err
 	}
@@ -269,8 +271,15 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	return nil
 }
 
-func download(ctx context.Context, f io.Writer, url, checksum string) (err error) {
+// download downloads the rootfs from the given URL and writes it to the given writer while verifying its checksum.
+// The checksum is read from the SHA256SUMS file found alongside the rootfs URL, as done in cloud-images.ubuntu.com.
+func download(ctx context.Context, f io.Writer, url string) (err error) {
 	defer decorate.OnError(&err, "could not download %q", url)
+
+	checksum, err := wantRootfsChecksum(url)
+	if err != nil {
+		return err
+	}
 
 	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
 	resp, err := http.Get(url)
@@ -336,7 +345,7 @@ func wantRootfsChecksum(url string) (string, error) {
 			continue
 		}
 
-		if strings.TrimPrefix(fields[1], "*") == imageName {
+		if strings.TrimPrefix(fields[1], "*") == imageName && len(fields[0]) > 0 {
 			return fields[0], nil
 		}
 	}
