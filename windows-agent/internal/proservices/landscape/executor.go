@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -155,7 +156,11 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 	}()
 
 	if rootfs := cmd.GetRootfsURL(); rootfs != "" {
-		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, rootfs); err != nil {
+		u, err := url.Parse(rootfs)
+		if err != nil {
+			return err
+		}
+		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, u); err != nil {
 			return err
 		}
 	} else {
@@ -232,7 +237,7 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err er
 	return nil
 }
 
-func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfsURL string) (err error) {
+func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfsURL *url.URL) (err error) {
 	defer decorate.OnError(&err, "can't install from URL: %q", rootfsURL)
 
 	tmpDir := filepath.Join(downloadDir, distro.Name())
@@ -273,16 +278,16 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 
 // download downloads the rootfs from the given URL and writes it to the given writer while verifying its checksum.
 // The checksum is read from the SHA256SUMS file found alongside the rootfs URL, as done in cloud-images.ubuntu.com.
-func download(ctx context.Context, f io.Writer, url string) (err error) {
-	defer decorate.OnError(&err, "could not download %q", url)
+func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
+	defer decorate.OnError(&err, "could not download %q", u)
 
-	checksum, err := wantRootfsChecksum(url)
+	checksum, err := wantRootfsChecksum(u)
 	if err != nil {
 		return err
 	}
 
 	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
-	resp, err := http.Get(url)
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return err
 	}
@@ -299,7 +304,7 @@ func download(ctx context.Context, f io.Writer, url string) (err error) {
 			return err
 		}
 		if !match {
-			return fmt.Errorf("checksum %s for %s does not match", checksum, url)
+			return fmt.Errorf("checksum %s for %s does not match", checksum, u)
 		}
 	} else {
 		if _, err := io.Copy(io.Discard, r); err != nil {
@@ -310,7 +315,7 @@ func download(ctx context.Context, f io.Writer, url string) (err error) {
 	return nil
 }
 
-// wantRootfsChecksum fetches the checksum from the SHA256SUMS file found alongside the rootfs url matching the rootfs file name.
+// wantRootfsChecksum fetches the checksum from the SHA256SUMS file found alongside the rootfs URL matching the rootfs file name.
 //
 // The SHA256SUMS file is expected to contain multiple lines of the format:
 //
@@ -327,12 +332,16 @@ func download(ctx context.Context, f io.Writer, url string) (err error) {
 // 2646292d657f4c9ef5dfce804a5a1e66d8c1324c74147b8bc9b1bf154d7feaf8 *jammy-server-cloudimg-arm64-root.tar.xz
 //
 // ...
-func wantRootfsChecksum(url string) (string, error) {
-	imageName := filepath.Base(url)
-	checksumsURL := filepath.Dir(url) + "SHA256SUMS"
+func wantRootfsChecksum(u *url.URL) (string, error) {
+	imageName := filepath.Base(u.Path)
+	shasRelativeLocation, err := url.Parse("../SHA256SUMS")
+	if err != nil {
+		return "", fmt.Errorf("could not assemble SHA256SUMS location: %v", err)
+	}
+	checksumsURL := u.ResolveReference(shasRelativeLocation)
 
 	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
-	resp, err := http.Get(checksumsURL)
+	resp, err := http.Get(checksumsURL.String())
 	if err != nil {
 		return "", fmt.Errorf("could not download checksums file <%s>: %v", checksumsURL, err)
 	}
