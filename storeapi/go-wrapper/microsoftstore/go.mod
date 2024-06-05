@@ -2,13 +2,13 @@ module github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstor
 
 go 1.22.0
 
-toolchain go1.22.3
+toolchain go1.22.4
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3
 	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5
-	golang.org/x/sys v0.19.0
+	golang.org/x/sys v0.20.0
 )
 
 require (
