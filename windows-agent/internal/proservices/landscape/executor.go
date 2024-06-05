@@ -141,10 +141,6 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return fmt.Errorf("skipped installation: %v", err)
 	}
 
-	if err := gowsl.Install(ctx, distro.Name()); err != nil {
-		return err
-	}
-
 	defer func() {
 		if err == nil {
 			return
