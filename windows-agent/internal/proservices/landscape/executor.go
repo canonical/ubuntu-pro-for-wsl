@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
@@ -160,6 +161,13 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		if err != nil {
 			return err
 		}
+
+		id := distro.Name()
+		reserved := regexp.MustCompile(`Ubuntu-[0-9]{2}\.[0-9]{2}`)
+		if id == "Ubuntu" || id == "Ubuntu-Preview" || reserved.Match([]byte(id)) {
+			return fmt.Errorf("target distro ID %s is reserved for installation from MS Store", id)
+		}
+
 		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, u); err != nil {
 			return err
 		}

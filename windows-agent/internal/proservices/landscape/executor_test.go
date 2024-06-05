@@ -152,7 +152,7 @@ func TestInstall(t *testing.T) {
 		noCloudInit            bool
 		cloudInitWriteErr      bool
 		distroAlreadyInstalled bool
-		emptyDistroName        bool
+		distroName             interface{} // using interface{} to allow nil, modelling an optional value.
 		wslInstallErr          bool
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
@@ -170,12 +170,13 @@ func TestInstall(t *testing.T) {
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
 
-		"Error when the distroname is empty":         {emptyDistroName: true},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
 		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
+		"Error when the distroname is empty":         {distroName: ""},
 
+		"Error when the distro ID is reserved":                          {sendRootfsURL: "goodfile", distroName: "Ubuntu-19.13", wantInstalled: false},
 		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", wantInstalled: false},
 		"Error when the checksum file doesn't exist":                    {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the checksum doesn't match":                         {sendRootfsURL: "badchecksum", wantInstalled: false},
@@ -196,7 +197,13 @@ func TestInstall(t *testing.T) {
 
 			if tc.appxDoesNotExist || tc.sendRootfsURL != "" {
 				// WSLMock Install only accepts ubuntu-22.04
-				settings.name = wsltestutils.RandomDistroName(t)
+				if tc.distroName == nil {
+					settings.name = wsltestutils.RandomDistroName(t)
+				} else {
+					n, ok := tc.distroName.(string)
+					require.True(t, ok, "Setup: tc.distroName should be a string")
+					settings.name = n
+				}
 			}
 
 			if tc.distroAlreadyInstalled {
@@ -233,8 +240,12 @@ func TestInstall(t *testing.T) {
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					var distroName string
-					if !tc.emptyDistroName {
+					if tc.distroName == nil {
 						distroName = testBed.distro.Name()
+					} else {
+						n, ok := tc.distroName.(string)
+						require.True(t, ok, "Setup: tc.distroName should be a string")
+						distroName = n
 					}
 
 					if tc.cloudInitWriteErr {
