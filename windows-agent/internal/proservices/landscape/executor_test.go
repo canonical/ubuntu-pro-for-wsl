@@ -148,15 +148,6 @@ func TestReceiveCommandStartStop(t *testing.T) {
 func TestInstall(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-
-	fileServerAddr := mockRootfsFileServer(t, ctx)
-
-	emptyFileChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	mockErrorChecksum := "afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a"
-	mockMismatchChecksum := "1234"
-
 	testCases := map[string]struct {
 		noCloudInit            bool
 		cloudInitWriteErr      bool
@@ -169,15 +160,14 @@ func TestInstall(t *testing.T) {
 		breakTarFile           bool
 		breakTempDir           bool
 
-		sendRootfsURL      string
-		sendRootfsChecksum string
+		sendRootfsURL    string
+		missingChecksums bool
 
 		wantCouldInitWriteCalled bool
 		wantInstalled            bool
 	}{
 		"From the store":                    {wantInstalled: true, wantCouldInitWriteCalled: true},
-		"From a rootfs URL":                 {sendRootfsURL: "goodfile", wantInstalled: true},
-		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", sendRootfsChecksum: emptyFileChecksum, wantInstalled: true},
+		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
 
 		"Error when the distroname is empty":         {emptyDistroName: true},
@@ -186,8 +176,9 @@ func TestInstall(t *testing.T) {
 		"Error when the distro fails to install":     {wslInstallErr: true},
 		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
 
-		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
-		"Error when the checksum doesn't match":                         {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
+		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", wantInstalled: false},
+		"Error when the checksum file doesn't exist":                    {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: false},
+		"Error when the checksum doesn't match":                         {sendRootfsURL: "badchecksum", wantInstalled: false},
 		"Error when the rootfs doesn't exist":                           {sendRootfsURL: "badresponse", wantInstalled: false},
 		"Error when URL doesn't respond":                                {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
 		"Error when the destination dir for the VHDX cannot be created": {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
@@ -234,6 +225,10 @@ func TestInstall(t *testing.T) {
 				f.Close()
 			}
 
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+			fileServerAddr := mockRootfsFileServer(t, ctx, !tc.missingChecksums)
+
 			testReceiveCommand(t, settings, home, downloadDir,
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
@@ -261,11 +256,6 @@ func TestInstall(t *testing.T) {
 						}
 					}
 
-					var checksum *string
-					if tc.sendRootfsChecksum != "" {
-						checksum = &tc.sendRootfsChecksum
-					}
-
 					url, err := url.JoinPath(fileServerAddr, tc.sendRootfsURL)
 					require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
 
@@ -277,10 +267,7 @@ func TestInstall(t *testing.T) {
 						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{
 							Id:        distroName,
 							Cloudinit: &cloudInit,
-							Rootfs: &landscapeapi.Command_Install_Rootfs{
-								Url:       url,
-								Sha256Sum: checksum,
-							},
+							RootfsURL: &url,
 						}},
 					}
 				},
@@ -313,12 +300,13 @@ func TestInstall(t *testing.T) {
 }
 
 //nolint:revive // Context goes after testing.T
-func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
+func mockRootfsFileServer(t *testing.T, ctx context.Context, enableChecksumsFile bool) string {
 	t.Helper()
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
+	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {})    // Return empty file
+	mux.HandleFunc("GET /badchecksum", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
 	mux.HandleFunc("GET /badfile", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "MOCK_ERROR")
 		if err != nil {
@@ -328,6 +316,17 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 	mux.HandleFunc("GET /badresponse", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
+	if enableChecksumsFile {
+		mux.HandleFunc("GET /SHA256SUMS", func(w http.ResponseWriter, r *http.Request) {
+			_, err := fmt.Fprintf(w, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *goodfile
+		afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a *badfile
+		1234 *badchecksum`,
+			)
+			if err != nil {
+				t.Logf("mockRootfsFileServer: could not write response: %v", err)
+			}
+		})
+	}
 
 	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp", "localhost:")
 	require.NoError(t, err, "Setup: mockRootfsFileServer could not listen")
