@@ -294,7 +294,6 @@ func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
 		return err
 	}
 
-	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return err
@@ -348,7 +347,6 @@ func wantRootfsChecksum(u *url.URL) (string, error) {
 	}
 	checksumsURL := u.ResolveReference(shasRelativeLocation)
 
-	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
 	resp, err := http.Get(checksumsURL.String())
 	if err != nil {
 		return "", fmt.Errorf("could not download checksums file <%s>: %v", checksumsURL, err)
