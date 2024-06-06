@@ -397,7 +397,7 @@ In the Windows Start Menu locate the "WSL" application, right-click on it then s
 
 ## Next steps
 
-This tutorial has introduced you to the amazing things that can be achieved with with UP4W. But there is more to explore:
+This tutorial has introduced you to the amazing things that can be achieved with UP4W.
 
 In the rest of the documentation you can find [how-to guides](../howto/index)
 for completing specific tasks, [reference](../reference/index) material
