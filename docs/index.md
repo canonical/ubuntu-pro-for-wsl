@@ -11,6 +11,37 @@ UP4W can be installed from the [Microsoft Store](https://apps.microsoft.com/home
 
 WSL is preferred by many organisations as a solution to run a fully-functioning Linux environment on a Windows machine. UP4W empowers system administrators and corporate security teams to manage these WSL instances at scale.
 
+## In this documentation
+
+````{grid} 1 1 2 2
+
+```{grid-item-card} [Tutorial](tutorial/index)
+
+**Start here** with a hands-on introduction for new users, guiding you through your first-steps
+```
+
+```{grid-item-card} [How-to guides](howto/index)
+
+**Follow step-by-step** instructions for key operations and common tasks
+```
+
+````
+
+````{grid} 1 1 2 2
+:reverse:
+
+```{grid-item-card} [Reference](reference/index)
+
+**Read technical descriptions** of important factual information relating to UP4W
+```
+
+```{grid-item-card} [UP4W Dev](dev/index)
+
+**Review guides and reference material** aimed at developers
+```
+
+````
+
 ## Project and community
 
 UP4W is a member of the Ubuntu family. It’s an open-source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions and much more!
