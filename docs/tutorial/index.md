@@ -399,11 +399,7 @@ In the Windows Start Menu locate the "WSL" application, right-click on it then s
 
 This tutorial has introduced you to the amazing things that can be achieved with with UP4W. But there is more to explore:
 
-| IF YOU ARE WONDERING…          | VISIT…              |
-| ------------------------------ | ------------------- |
-| “How do I…?”                   | UP4W How-to docs    |
-| “What is…?”                    | UP4W Reference docs |
-| “How do I contribute to UP4W?” | Developer docs      |
-
-%| “Why…?”, “So what?”	UP4W Explanation docs 
-
+In the rest of the documentation you can find [how-to guides](../howto/index)
+for completing specific tasks, [reference](../reference/index) material
+describing key information relating to UP4W and dedicated [documentation for
+developers](../dev/index).
