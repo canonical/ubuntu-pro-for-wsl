@@ -37,7 +37,7 @@ WSL is preferred by many organisations as a solution to run a fully-functioning 
 
 ```{grid-item-card} [UP4W Dev](dev/index)
 
-**Review guides and reference material** aimed at developers
+**Review guides and reference material** aimed at contributors
 ```
 
 ````
