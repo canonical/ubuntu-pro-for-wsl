@@ -172,6 +172,7 @@ func TestInstall(t *testing.T) {
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
 
+		"Error when the distroname is empty":         {distroName: "-"},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
