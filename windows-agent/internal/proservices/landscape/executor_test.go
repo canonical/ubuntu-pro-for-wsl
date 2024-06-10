@@ -153,7 +153,7 @@ func TestInstall(t *testing.T) {
 		noCloudInit            bool
 		cloudInitWriteErr      bool
 		distroAlreadyInstalled bool
-		distroName             interface{} // using interface{} to allow nil, modelling an optional value.
+		distroName             string
 		wslInstallErr          bool
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
@@ -176,14 +176,14 @@ func TestInstall(t *testing.T) {
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
 		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
-		"Error when the distroname is empty":         {distroName: ""},
+		"Error when the distroname is empty":         {distroName: "-"},
 
 		"Error when the distro ID is reserved":                          {sendRootfsURL: "goodfile", distroName: "Ubuntu-19.13", wantInstalled: false},
 		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", wantInstalled: false},
 		"Error when the checksum file doesn't exist":                    {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the checksum doesn't match":                         {sendRootfsURL: "badchecksum", wantInstalled: false},
 		"Error when the rootfs doesn't exist":                           {sendRootfsURL: "badresponse", wantInstalled: false},
-		"Error when the rootfs URL is ill-formed":                       {breakURL: true, wantInstalled: false},
+		"Error when the rootfs URL is ill-formed":                       {breakURL: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when URL doesn't respond":                                {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
 		"Error when the destination dir for the VHDX cannot be created": {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
 		"Error when the rootfs tarball cannot be created":               {sendRootfsURL: "goodfile", breakTarFile: true, wantInstalled: false},
@@ -200,12 +200,13 @@ func TestInstall(t *testing.T) {
 
 			if tc.appxDoesNotExist || tc.sendRootfsURL != "" {
 				// WSLMock Install only accepts ubuntu-22.04
-				if tc.distroName == nil {
+				switch tc.distroName {
+				case "-":
+					settings.name = ""
+				case "":
 					settings.name = wsltestutils.RandomDistroName(t)
-				} else {
-					n, ok := tc.distroName.(string)
-					require.True(t, ok, "Setup: tc.distroName should be a string")
-					settings.name = n
+				default:
+					settings.name = tc.distroName
 				}
 			}
 
@@ -243,14 +244,14 @@ func TestInstall(t *testing.T) {
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					var distroName string
-					if tc.distroName == nil {
+					switch tc.distroName {
+					case "-":
+						distroName = ""
+					case "":
 						distroName = testBed.distro.Name()
-					} else {
-						n, ok := tc.distroName.(string)
-						require.True(t, ok, "Setup: tc.distroName should be a string")
-						distroName = n
+					default:
+						distroName = tc.distroName
 					}
-
 					if tc.cloudInitWriteErr {
 						testBed.cloudInit.writeErr = true
 					}
