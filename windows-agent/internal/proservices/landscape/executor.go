@@ -370,6 +370,10 @@ func wantRootfsChecksum(ctx context.Context, u *url.URL) (string, error) {
 		}
 	}
 
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("failed to parse checksums file, %v", err)
+	}
+
 	// If the checksums file exist, then it must contain the checksum for the rootfs.
 	return "", fmt.Errorf("could not find checksum for %s in %s", imageName, checksumsURL)
 }
