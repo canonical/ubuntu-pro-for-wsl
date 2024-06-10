@@ -341,11 +341,11 @@ func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
 // ...
 func wantRootfsChecksum(u *url.URL) (string, error) {
 	imageName := filepath.Base(u.Path)
-	shasRelativeLocation, err := url.Parse("../SHA256SUMS")
+	shasRelativeURL, err := url.Parse("../SHA256SUMS")
 	if err != nil {
 		return "", fmt.Errorf("could not assemble SHA256SUMS location: %v", err)
 	}
-	checksumsURL := u.ResolveReference(shasRelativeLocation)
+	checksumsURL := u.ResolveReference(shasRelativeURL)
 
 	resp, err := http.Get(checksumsURL.String())
 	if err != nil {
