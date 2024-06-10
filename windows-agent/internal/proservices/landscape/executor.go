@@ -163,8 +163,8 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 
 		id := distro.Name()
-		reserved := regexp.MustCompile(`Ubuntu-[0-9]{2}\.[0-9]{2}`)
-		if id == "Ubuntu" || id == "Ubuntu-Preview" || reserved.Match([]byte(id)) {
+		reserved := regexp.MustCompile(`(?i)Ubuntu-[0-9]{2}\.[0-9]{2}`)
+		if strings.EqualFold(id, "Ubuntu") || strings.EqualFold(id, "Ubuntu-Preview") || reserved.Match([]byte(id)) {
 			return fmt.Errorf("target distro ID %s is reserved for installation from MS Store", id)
 		}
 
