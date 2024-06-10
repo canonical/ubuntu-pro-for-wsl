@@ -289,7 +289,7 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
 	defer decorate.OnError(&err, "could not download %q", u)
 
-	checksum, err := wantRootfsChecksum(u)
+	checksum, err := wantRootfsChecksum(ctx, u)
 	if err != nil {
 		return err
 	}
@@ -322,7 +322,7 @@ func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
 	return nil
 }
 
-// wantRootfsChecksum fetches the checksum from the SHA256SUMS file found alongside the rootfs URL matching the rootfs file name.
+// wantRootfsChecksum fetches the checksum from the SHA256SUMS file if found alongside the rootfs URL matching the rootfs file name.
 //
 // The SHA256SUMS file is expected to contain multiple lines of the format:
 //
@@ -339,7 +339,7 @@ func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
 // 2646292d657f4c9ef5dfce804a5a1e66d8c1324c74147b8bc9b1bf154d7feaf8 *jammy-server-cloudimg-arm64-root.tar.xz
 //
 // ...
-func wantRootfsChecksum(u *url.URL) (string, error) {
+func wantRootfsChecksum(ctx context.Context, u *url.URL) (string, error) {
 	imageName := filepath.Base(u.Path)
 	shasRelativeURL, err := url.Parse("../SHA256SUMS")
 	if err != nil {
@@ -348,8 +348,13 @@ func wantRootfsChecksum(u *url.URL) (string, error) {
 	checksumsURL := u.ResolveReference(shasRelativeURL)
 
 	resp, err := http.Get(checksumsURL.String())
+	// Errors here are protocol errors, not 404s. "A non-2xx response doesn't cause an error".
 	if err != nil {
 		return "", fmt.Errorf("could not download checksums file %q: %v", checksumsURL, err)
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		log.Warningf(ctx, "expected checksums file %q not found", checksumsURL)
+		return "", nil
 	}
 	defer resp.Body.Close()
 
@@ -365,6 +370,7 @@ func wantRootfsChecksum(u *url.URL) (string, error) {
 		}
 	}
 
+	// If the checksums file exist, then it must contain the checksum for the rootfs.
 	return "", fmt.Errorf("could not find checksum for %s in %s", imageName, checksumsURL)
 }
 

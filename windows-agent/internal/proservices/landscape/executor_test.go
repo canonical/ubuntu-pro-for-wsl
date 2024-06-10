@@ -171,6 +171,7 @@ func TestInstall(t *testing.T) {
 		"From the store":                    {wantInstalled: true, wantCouldInitWriteCalled: true},
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
+		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
 
 		"Error when the distroname is empty":         {distroName: "-"},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
@@ -184,8 +185,8 @@ func TestInstall(t *testing.T) {
 		"Error when the distro ID is reserved (release numbers)":          {sendRootfsURL: "goodfile", distroName: "Ubuntu-19.13", wantInstalled: false},
 		"Error when the distro ID is reserved (release numbers and case)": {sendRootfsURL: "goodfile", distroName: "uBuntu-19.13", wantInstalled: false},
 		"Error when the rootfs isn't a valid tarball":                     {sendRootfsURL: "badfile", wantInstalled: false},
-		"Error when the checksum file doesn't exist":                      {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the checksum doesn't match":                           {sendRootfsURL: "badchecksum", wantInstalled: false},
+		"Error when the checksum is missing for the rootfs":               {sendRootfsURL: "rootfswithnochecksum", wantInstalled: false},
 		"Error when the rootfs doesn't exist":                             {sendRootfsURL: "badresponse", wantInstalled: false},
 		"Error when the rootfs URL is ill-formed":                         {breakURL: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when URL doesn't respond":                                  {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
@@ -327,8 +328,9 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context, enableChecksumsFile
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {})    // Return empty file
-	mux.HandleFunc("GET /badchecksum", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
+	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {})             // Return empty file
+	mux.HandleFunc("GET /badchecksum", func(w http.ResponseWriter, r *http.Request) {})          // Return empty file
+	mux.HandleFunc("GET /rootfswithnochecksum", func(w http.ResponseWriter, r *http.Request) {}) // intentionally not in the checksums file
 	mux.HandleFunc("GET /badfile", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "MOCK_ERROR")
 		if err != nil {
