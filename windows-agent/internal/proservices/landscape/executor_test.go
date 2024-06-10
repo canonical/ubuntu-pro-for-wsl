@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -161,6 +162,7 @@ func TestInstall(t *testing.T) {
 		breakTempDir           bool
 
 		sendRootfsURL    string
+		breakURL         bool
 		missingChecksums bool
 
 		wantCouldInitWriteCalled bool
@@ -181,7 +183,7 @@ func TestInstall(t *testing.T) {
 		"Error when the checksum file doesn't exist":                    {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the checksum doesn't match":                         {sendRootfsURL: "badchecksum", wantInstalled: false},
 		"Error when the rootfs doesn't exist":                           {sendRootfsURL: "badresponse", wantInstalled: false},
-		"Error when the rootfs URL is ill-formed":                       {sendRootfsURL: "https://?", wantInstalled: false},
+		"Error when the rootfs URL is ill-formed":                       {breakURL: true, wantInstalled: false},
 		"Error when URL doesn't respond":                                {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
 		"Error when the destination dir for the VHDX cannot be created": {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
 		"Error when the rootfs tarball cannot be created":               {sendRootfsURL: "goodfile", breakTarFile: true, wantInstalled: false},
@@ -270,6 +272,9 @@ func TestInstall(t *testing.T) {
 
 					url, err := url.JoinPath(fileServerAddr, tc.sendRootfsURL)
 					require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
+					if tc.breakURL {
+						url = strings.Replace(url, "http://", "@:?/", 1)
+					}
 
 					if tc.nonResponsiveServer {
 						url = "localhost:9"
