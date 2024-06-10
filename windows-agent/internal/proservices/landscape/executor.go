@@ -349,7 +349,7 @@ func wantRootfsChecksum(u *url.URL) (string, error) {
 
 	resp, err := http.Get(checksumsURL.String())
 	if err != nil {
-		return "", fmt.Errorf("could not download checksums file <%s>: %v", checksumsURL, err)
+		return "", fmt.Errorf("could not download checksums file %q: %v", checksumsURL, err)
 	}
 	defer resp.Body.Close()
 
