@@ -168,9 +168,10 @@ func TestRegisterGRPCServices(t *testing.T) {
 			if !tc.insecureClient {
 				creds = loadClientCertificates(t, filepath.Join(publicDir, common.CertificatesDir))
 			}
-			conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
+			conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 			require.NoError(t, err, "Setup: could not create a client connection")
 			defer conn.Close()
+			conn.Connect()
 			c := agentapi.NewUIClient(conn)
 
 			// Test the client connection.

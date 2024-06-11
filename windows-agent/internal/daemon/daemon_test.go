@@ -318,9 +318,10 @@ func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 	t.Helper()
 
 	// Try to connect. Non-blocking call so no error is wanted.
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoErrorf(t, err, "error dialing GRPC server.\nMessage: %s", msg)
 	defer conn.Close()
+	conn.Connect()
 
 	// Timing out and checking that the connection was never established.
 	time.Sleep(300 * time.Millisecond)
