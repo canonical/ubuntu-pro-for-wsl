@@ -344,7 +344,9 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context, enableChecksumsFile
 		mux.HandleFunc("GET /SHA256SUMS", func(w http.ResponseWriter, r *http.Request) {
 			_, err := fmt.Fprintf(w, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *goodfile
 		afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a *badfile
-		1234 *badchecksum`,
+		1234 *badchecksum
+		5678 *badresponse badresponse
+		5678 *badresponse`,
 			)
 			if err != nil {
 				t.Logf("mockRootfsFileServer: could not write response: %v", err)
