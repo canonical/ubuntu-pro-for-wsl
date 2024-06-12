@@ -353,7 +353,7 @@ func wantRootfsChecksum(ctx context.Context, u *url.URL) (string, error) {
 		return "", fmt.Errorf("could not download checksums file %q: %v", checksumsURL, err)
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		log.Warningf(ctx, "expected checksums file %q not found", checksumsURL)
+		log.Infof(ctx, "checksums file %q not found", checksumsURL)
 		return "", nil
 	}
 	defer resp.Body.Close()
