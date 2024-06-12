@@ -78,8 +78,10 @@ on your command line. Hosted at the specified address.`,
 			}()
 			defer server.Stop()
 
-			fileserverDir := cmd.Flag("fileserver-dir").Value.String()
-			if fileserverDir != "" {
+			fileserverDir, err := os.Getwd()
+			if err != nil {
+				slog.Error(fmt.Sprintf("Skipping fileserver setup: can't get current working directory: %v", err))
+			} else {
 				// implement a file server that serves all files found in the fileserverDir.
 				var cfg net.ListenConfig
 				lis, err := cfg.Listen(ctx, "tcp", "localhost:0")
@@ -112,7 +114,6 @@ on your command line. Hosted at the specified address.`,
 
 	a.rootCmd.PersistentFlags().CountP("verbosity", "v", "WARNING (-v) INFO (-vv), DEBUG (-vvv)")
 	a.rootCmd.Flags().StringP("address", "a", "localhost:8000", "Overrides the address where the server will be hosted")
-	a.rootCmd.Flags().String("fileserver-dir", "", "Enables serving files from the specified directory")
 
 	return &a
 }
