@@ -1,0 +1,23 @@
+name: Update Structurizr Diagrams
+
+on:
+    pull_request:
+        paths:
+        - 'docs/workspace.dsl' # This setting will have the action trigger only if certain file changes. Set the location of your DSL.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+    update-diagrams:
+        runs-on: ubuntu-latest
+        container: ghcr.io/sebastienfi/structurizr-cli-with-bonus:latest
+        permissions: 
+          contents: write # Allow to work with the contents of the repository, including git push.
+        steps:
+        - uses: sebastienfi/structurizr-gen-images@a7b028b8693ea6ea8f3232331ac38320ae5e0b28 # v1
+          with:
+            repo-token: ${{ secrets.GITHUB_TOKEN }} # This token will be used by the action to perform git pull, git push, pr read, pr comment, pr comment edit, pr comment reaction.
+            workspace-path: 'docs/workspace.dsl' # This setting will have the action generate images from this DSL. Set the location of your DSL.
+            output-path: 'docs/diagrams/' # The output folder for generated images.
