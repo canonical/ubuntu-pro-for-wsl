@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
@@ -75,6 +77,33 @@ on your command line. Hosted at the specified address.`,
 				}
 			}()
 			defer server.Stop()
+
+			fileserverDir, err := os.Getwd()
+			if err != nil {
+				slog.Error(fmt.Sprintf("Skipping fileserver setup: can't get current working directory: %v", err))
+			} else {
+				// implement a file server that serves all files found in the fileserverDir.
+				var cfg net.ListenConfig
+				lis, err := cfg.Listen(ctx, "tcp", "localhost:0")
+				if err != nil {
+					slog.Error(fmt.Sprintf("Can't listen: %v", err))
+					return
+				}
+				defer lis.Close()
+
+				fmt.Printf("Serving files from %s on address http://%s\n", fileserverDir, lis.Addr().String())
+				fileserver := &http.Server{
+					Addr:              lis.Addr().String(),
+					Handler:           http.FileServer(http.Dir(fileserverDir)),
+					ReadHeaderTimeout: 3 * time.Second,
+				}
+				go func() {
+					err := fileserver.Serve(lis)
+					if err != nil {
+						slog.Error(fmt.Sprintf("File server exited with an error: %v", err))
+					}
+				}()
+			}
 
 			if err := a.run(ctx, service); err != nil {
 				slog.Error(err.Error())

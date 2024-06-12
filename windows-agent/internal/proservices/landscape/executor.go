@@ -1,15 +1,19 @@
 package landscape
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -141,10 +145,6 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return fmt.Errorf("skipped installation: %v", err)
 	}
 
-	if err := gowsl.Install(ctx, distro.Name()); err != nil {
-		return err
-	}
-
 	defer func() {
 		if err == nil {
 			return
@@ -156,8 +156,19 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	}()
 
-	if rootfs := cmd.GetRootfs(); rootfs != nil {
-		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, rootfs); err != nil {
+	if rootfs := cmd.GetRootfsURL(); rootfs != "" {
+		u, err := url.Parse(rootfs)
+		if err != nil {
+			return err
+		}
+
+		id := distro.Name()
+		reserved := regexp.MustCompile(`(?i)Ubuntu-[0-9]{2}\.[0-9]{2}`)
+		if strings.EqualFold(id, "Ubuntu") || strings.EqualFold(id, "Ubuntu-Preview") || reserved.Match([]byte(id)) {
+			return fmt.Errorf("target distro ID %s is reserved for installation from MS Store", id)
+		}
+
+		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, u); err != nil {
 			return err
 		}
 	} else {
@@ -234,8 +245,8 @@ func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err er
 	return nil
 }
 
-func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfs *landscapeapi.Command_Install_Rootfs) (err error) {
-	defer decorate.OnError(&err, "can't install from URL: %q", rootfs.GetUrl())
+func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfsURL *url.URL) (err error) {
+	defer decorate.OnError(&err, "can't install from URL: %q", rootfsURL)
 
 	tmpDir := filepath.Join(downloadDir, distro.Name())
 	if err := os.MkdirAll(tmpDir, 0700); err != nil {
@@ -252,7 +263,7 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	}
 	defer f.Close()
 
-	err = download(ctx, f, rootfs.GetUrl(), rootfs.GetSha256Sum())
+	err = download(ctx, f, rootfsURL)
 	if err != nil {
 		return err
 	}
@@ -273,11 +284,17 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	return nil
 }
 
-func download(ctx context.Context, f io.Writer, url, checksum string) (err error) {
-	defer decorate.OnError(&err, "could not download %q", url)
+// download downloads the rootfs from the given URL and writes it to the given writer while verifying its checksum.
+// The checksum is read from the SHA256SUMS file found alongside the rootfs URL, as done in cloud-images.ubuntu.com.
+func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
+	defer decorate.OnError(&err, "could not download %q", u)
 
-	//nolint:gosec // ignoring G107 because we are reading URL from Landscape.
-	resp, err := http.Get(url)
+	checksum, err := wantRootfsChecksum(ctx, u)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return err
 	}
@@ -294,7 +311,7 @@ func download(ctx context.Context, f io.Writer, url, checksum string) (err error
 			return err
 		}
 		if !match {
-			return fmt.Errorf("checksum %s for %s does not match", checksum, url)
+			return fmt.Errorf("checksum %s for %s does not match", checksum, u)
 		}
 	} else {
 		if _, err := io.Copy(io.Discard, r); err != nil {
@@ -303,6 +320,62 @@ func download(ctx context.Context, f io.Writer, url, checksum string) (err error
 	}
 
 	return nil
+}
+
+// wantRootfsChecksum fetches the checksum from the SHA256SUMS file if found alongside the rootfs URL matching the rootfs file name.
+//
+// The SHA256SUMS file is expected to contain multiple lines of the format:
+//
+// SHA256 *filename
+//
+// For example:
+//
+// 03c7f7c75fb450c7dd576a0da20986e62e0d72bd2ccee4c01296bab9f415c7ab *jammy-server-cloudimg-amd64-azure.vhd.tar.gz
+// 0dc4d78f08e871ce6325e027e1b8421fd1cde1e76158644e35343a36d8f67bf4 *jammy-server-cloudimg-amd64-root.tar.xz
+// 103ee8b5693bdb7c23a378453c624d8605445eb07e2e550d3fad831da865f5ea *jammy-server-cloudimg-riscv64.release.20240514.20240601.image_changelog.json
+// 1eaa1df5794122e3419c963d88f043121c164936b9b828adac650c9f5e22c3e6 *jammy-server-cloudimg-amd64.img
+// 1fcd2edf4fda78e0a6f3bc0c3684286c29371e4dd7863a59b39d2cfcff79b5e1 *jammy-server-cloudimg-amd64-root.manifest
+// 1fcd2edf4fda78e0a6f3bc0c3684286c29371e4dd7863a59b39d2cfcff79b5e1 *jammy-server-cloudimg-amd64.squashfs.manifest
+// 2646292d657f4c9ef5dfce804a5a1e66d8c1324c74147b8bc9b1bf154d7feaf8 *jammy-server-cloudimg-arm64-root.tar.xz
+//
+// ...
+func wantRootfsChecksum(ctx context.Context, u *url.URL) (string, error) {
+	imageName := filepath.Base(u.Path)
+	shasRelativeURL, err := url.Parse("../SHA256SUMS")
+	if err != nil {
+		return "", fmt.Errorf("could not assemble SHA256SUMS location: %v", err)
+	}
+	checksumsURL := u.ResolveReference(shasRelativeURL)
+
+	resp, err := http.Get(checksumsURL.String())
+	// Errors here are protocol errors, not 404s. "A non-2xx response doesn't cause an error".
+	if err != nil {
+		return "", fmt.Errorf("could not download checksums file %q: %v", checksumsURL, err)
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		log.Infof(ctx, "checksums file %q not found", checksumsURL)
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		if len(fields) != 2 {
+			continue
+		}
+
+		if strings.TrimPrefix(fields[1], "*") == imageName && len(fields[0]) > 0 {
+			return fields[0], nil
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("failed to parse checksums file, %v", err)
+	}
+
+	// If the checksums file exist, then it must contain the checksum for the rootfs.
+	return "", fmt.Errorf("could not find checksum for %s in %s", imageName, checksumsURL)
 }
 
 func checksumMatches(ctx context.Context, reader io.Reader, wantChecksum string) (match bool, err error) {

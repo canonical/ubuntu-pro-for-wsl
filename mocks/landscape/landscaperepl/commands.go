@@ -126,7 +126,8 @@ func populateCommands() {
 		},
 		"install": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {
-				if len(args) != 2 {
+				argc := len(args)
+				if argc != 2 && argc != 3 {
 					return wrongUsageError{}
 				}
 
@@ -135,15 +136,20 @@ func populateCommands() {
 					return err
 				}
 
-				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: args[1]}}})
+				install := &landscapeapi.Command_Install{Id: args[1]}
+				if argc == 3 {
+					install.RootfsURL = &args[2]
+				}
+
+				err = s.SendCommand(ctx, uid, &landscapeapi.Command{Cmd: &landscapeapi.Command_Install_{Install: install}})
 				if err != nil {
 					log.Printf("error: %v\n", err)
 				}
 
 				return nil
 			},
-			usage: "install HOST_UID INSTANCE",
-			help:  "Installs the specified instance at the specified host.",
+			usage: "install HOST_UID INSTANCE [ROOTFSURL]",
+			help:  "Installs the specified instance at the specified host. If ROOTFSURL is provided, INSTANCE must not match the app IDs provided in MS Store.",
 		},
 		"uninstall": {
 			callback: func(ctx context.Context, s *landscapemockservice.Service, args ...string) error {

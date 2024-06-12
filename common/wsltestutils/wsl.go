@@ -34,7 +34,7 @@ func NonRegisteredDistro(t *testing.T) (distroName string, GUID string) {
 	return distroName, GUID
 }
 
-// RandomDistroName generates a distroName that is not registered.
+// RandomDistroName generates a distroName that is not registered guaranteed not to collide with the reserved distro IDs (such as Ubuntu-XX.YY or Ubuntu-Preview).
 func RandomDistroName(t *testing.T) (name string) {
 	t.Helper()
 

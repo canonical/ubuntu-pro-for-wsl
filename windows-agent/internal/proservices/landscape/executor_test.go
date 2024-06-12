@@ -146,22 +146,15 @@ func TestReceiveCommandStartStop(t *testing.T) {
 }
 
 func TestInstall(t *testing.T) {
+	const brokenURL = "@:?/BROKEN_URL"
+
 	t.Parallel()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
-
-	fileServerAddr := mockRootfsFileServer(t, ctx)
-
-	emptyFileChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	mockErrorChecksum := "afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a"
-	mockMismatchChecksum := "1234"
 
 	testCases := map[string]struct {
 		noCloudInit            bool
 		cloudInitWriteErr      bool
 		distroAlreadyInstalled bool
-		emptyDistroName        bool
+		distroName             string
 		wslInstallErr          bool
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
@@ -169,30 +162,37 @@ func TestInstall(t *testing.T) {
 		breakTarFile           bool
 		breakTempDir           bool
 
-		sendRootfsURL      string
-		sendRootfsChecksum string
+		sendRootfsURL    string
+		missingChecksums bool
 
 		wantCouldInitWriteCalled bool
 		wantInstalled            bool
 	}{
 		"From the store":                    {wantInstalled: true, wantCouldInitWriteCalled: true},
-		"From a rootfs URL":                 {sendRootfsURL: "goodfile", wantInstalled: true},
-		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", sendRootfsChecksum: emptyFileChecksum, wantInstalled: true},
+		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
+		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
 
-		"Error when the distroname is empty":         {emptyDistroName: true},
+		"Error when the distroname is empty":         {distroName: "-"},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
 		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
 
-		"Error when the rootfs isn't a valid tarball":                   {sendRootfsURL: "badfile", sendRootfsChecksum: mockErrorChecksum, wantInstalled: false},
-		"Error when the checksum doesn't match":                         {sendRootfsURL: "goodfile", sendRootfsChecksum: mockMismatchChecksum, wantInstalled: false},
-		"Error when the rootfs doesn't exist":                           {sendRootfsURL: "badresponse", wantInstalled: false},
-		"Error when URL doesn't respond":                                {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
-		"Error when the destination dir for the VHDX cannot be created": {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
-		"Error when the rootfs tarball cannot be created":               {sendRootfsURL: "goodfile", breakTarFile: true, wantInstalled: false},
-		"Error when the rootfs temporary dir cannot be created":         {sendRootfsURL: "goodfile", breakTempDir: true, wantInstalled: false},
+		"Error when the distro ID is reserved (Ubuntu)":                   {sendRootfsURL: "goodfile", distroName: "Ubuntu", wantInstalled: false},
+		"Error when the distro ID is reserved (Preview)":                  {sendRootfsURL: "goodfile", distroName: "Ubuntu-Preview", wantInstalled: false},
+		"Error when the distro ID is reserved (case sensitiveness)":       {sendRootfsURL: "goodfile", distroName: "ubuntu-preview", wantInstalled: false},
+		"Error when the distro ID is reserved (release numbers)":          {sendRootfsURL: "goodfile", distroName: "Ubuntu-19.13", wantInstalled: false},
+		"Error when the distro ID is reserved (release numbers and case)": {sendRootfsURL: "goodfile", distroName: "uBuntu-19.13", wantInstalled: false},
+		"Error when the rootfs isn't a valid tarball":                     {sendRootfsURL: "badfile", wantInstalled: false},
+		"Error when the checksum doesn't match":                           {sendRootfsURL: "badchecksum", wantInstalled: false},
+		"Error when the checksum entry is missing for the rootfs":         {sendRootfsURL: "rootfswithnochecksum", wantInstalled: false},
+		"Error when the rootfs doesn't exist":                             {sendRootfsURL: "badresponse", wantInstalled: false},
+		"Error when the rootfs URL is ill-formed":                         {sendRootfsURL: brokenURL, wantInstalled: false},
+		"Error when URL doesn't respond":                                  {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
+		"Error when the destination dir for the VHDX cannot be created":   {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
+		"Error when the rootfs tarball cannot be created":                 {sendRootfsURL: "goodfile", breakTarFile: true, wantInstalled: false},
+		"Error when the rootfs temporary dir cannot be created":           {sendRootfsURL: "goodfile", breakTempDir: true, wantInstalled: false},
 	}
 
 	for name, tc := range testCases {
@@ -205,7 +205,14 @@ func TestInstall(t *testing.T) {
 
 			if tc.appxDoesNotExist || tc.sendRootfsURL != "" {
 				// WSLMock Install only accepts ubuntu-22.04
-				settings.name = wsltestutils.RandomDistroName(t)
+				switch tc.distroName {
+				case "-":
+					settings.name = ""
+				case "":
+					settings.name = wsltestutils.RandomDistroName(t)
+				default:
+					settings.name = tc.distroName
+				}
 			}
 
 			if tc.distroAlreadyInstalled {
@@ -234,14 +241,22 @@ func TestInstall(t *testing.T) {
 				f.Close()
 			}
 
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+			fileServerAddr := mockRootfsFileServer(t, ctx, !tc.missingChecksums)
+
 			testReceiveCommand(t, settings, home, downloadDir,
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
 					var distroName string
-					if !tc.emptyDistroName {
+					switch tc.distroName {
+					case "-":
+						distroName = ""
+					case "":
 						distroName = testBed.distro.Name()
+					default:
+						distroName = tc.distroName
 					}
-
 					if tc.cloudInitWriteErr {
 						testBed.cloudInit.writeErr = true
 					}
@@ -261,26 +276,22 @@ func TestInstall(t *testing.T) {
 						}
 					}
 
-					var checksum *string
-					if tc.sendRootfsChecksum != "" {
-						checksum = &tc.sendRootfsChecksum
+					u := tc.sendRootfsURL
+					var err error
+					if tc.sendRootfsURL != brokenURL {
+						u, err = url.JoinPath(fileServerAddr, tc.sendRootfsURL)
+						require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
 					}
 
-					url, err := url.JoinPath(fileServerAddr, tc.sendRootfsURL)
-					require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
-
 					if tc.nonResponsiveServer {
-						url = "localhost:9"
+						u = "localhost:9"
 					}
 
 					return &landscapeapi.Command{
 						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{
 							Id:        distroName,
 							Cloudinit: &cloudInit,
-							Rootfs: &landscapeapi.Command_Install_Rootfs{
-								Url:       url,
-								Sha256Sum: checksum,
-							},
+							RootfsURL: &u,
 						}},
 					}
 				},
@@ -313,12 +324,14 @@ func TestInstall(t *testing.T) {
 }
 
 //nolint:revive // Context goes after testing.T
-func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
+func mockRootfsFileServer(t *testing.T, ctx context.Context, enableChecksumsFile bool) string {
 	t.Helper()
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {}) // Return empty file
+	mux.HandleFunc("GET /goodfile", func(w http.ResponseWriter, r *http.Request) {})             // Return empty file
+	mux.HandleFunc("GET /badchecksum", func(w http.ResponseWriter, r *http.Request) {})          // Return empty file
+	mux.HandleFunc("GET /rootfswithnochecksum", func(w http.ResponseWriter, r *http.Request) {}) // intentionally not in the checksums file
 	mux.HandleFunc("GET /badfile", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "MOCK_ERROR")
 		if err != nil {
@@ -328,6 +341,19 @@ func mockRootfsFileServer(t *testing.T, ctx context.Context) string {
 	mux.HandleFunc("GET /badresponse", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
+	if enableChecksumsFile {
+		mux.HandleFunc("GET /SHA256SUMS", func(w http.ResponseWriter, r *http.Request) {
+			_, err := fmt.Fprintf(w, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *goodfile
+		afe55cda4210c2439b47c62c01039027522f7ed4abdb113972b3030b3359532a *badfile
+		1234 *badchecksum
+		5678 *badresponse badresponse
+		5678 *badresponse`,
+			)
+			if err != nil {
+				t.Logf("mockRootfsFileServer: could not write response: %v", err)
+			}
+		})
+	}
 
 	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp", "localhost:")
 	require.NoError(t, err, "Setup: mockRootfsFileServer could not listen")
