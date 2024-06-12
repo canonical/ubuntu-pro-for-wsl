@@ -1,0 +1,46 @@
+name: Auto update Structurizr Diagrams
+
+on:
+  pull_request:
+    paths:
+      - 'docs/workspace.dsl' # This setting will have the action trigger only if certain file changes. Set the location of your DSL.
+      - '.github/workflows/autoupdate-structurizr-diagrams.yml' # Useful for testing purposes
+
+jobs:
+  update-diagrams:
+    runs-on: ubuntu-latest
+    container: ghcr.io/sebastienfi/structurizr-cli-with-bonus:latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set up git
+        # This step needs to be done before checkout so that the checkout respects clrf
+        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate Diagram Images
+        shell: bash
+        run: |
+          set -eu
+          echo "Actual folder is"
+          echo ${PWD}
+          /usr/local/structurizr-cli/structurizr.sh export -workspace 'docs/workspace.dsl' -format plantuml -output 'docs/diagrams'
+          cd 'docs/diagrams'
+          echo 'Generating PNGs...'
+          plantuml -tpng *.puml
+          rm *.puml
+      - name: Get output branch for branch name
+        id: get-branch-name
+        shell: bash
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+      - name: Create Pull Request if there is a diff
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Auto update diagrams
+          title: 'docs: Auto update diagram files'
+          labels: docs, automated pr
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/autoupdate-structurizr-diagrams.yml) by GitHub Action"
+          branch: autoupdate-diagrams-${{ steps.get-branch-name.outputs.branch }}
+          base: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          delete-branch: true
