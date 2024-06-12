@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -147,6 +146,8 @@ func TestReceiveCommandStartStop(t *testing.T) {
 }
 
 func TestInstall(t *testing.T) {
+	const brokenURL = "@:?/BROKEN_URL"
+
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -162,7 +163,6 @@ func TestInstall(t *testing.T) {
 		breakTempDir           bool
 
 		sendRootfsURL    string
-		breakURL         bool
 		missingChecksums bool
 
 		wantCouldInitWriteCalled bool
@@ -188,7 +188,7 @@ func TestInstall(t *testing.T) {
 		"Error when the checksum doesn't match":                           {sendRootfsURL: "badchecksum", wantInstalled: false},
 		"Error when the checksum is missing for the rootfs":               {sendRootfsURL: "rootfswithnochecksum", wantInstalled: false},
 		"Error when the rootfs doesn't exist":                             {sendRootfsURL: "badresponse", wantInstalled: false},
-		"Error when the rootfs URL is ill-formed":                         {breakURL: true, sendRootfsURL: "goodfile", wantInstalled: false},
+		"Error when the rootfs URL is ill-formed":                         {sendRootfsURL: brokenURL, wantInstalled: false},
 		"Error when URL doesn't respond":                                  {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
 		"Error when the destination dir for the VHDX cannot be created":   {sendRootfsURL: "goodfile", breakVhdxDir: true, wantInstalled: false},
 		"Error when the rootfs tarball cannot be created":                 {sendRootfsURL: "goodfile", breakTarFile: true, wantInstalled: false},
@@ -276,21 +276,22 @@ func TestInstall(t *testing.T) {
 						}
 					}
 
-					url, err := url.JoinPath(fileServerAddr, tc.sendRootfsURL)
-					require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
-					if tc.breakURL {
-						url = strings.Replace(url, "http://", "@:?/", 1)
+					u := tc.sendRootfsURL
+					var err error
+					if tc.sendRootfsURL != brokenURL {
+						u, err = url.JoinPath(fileServerAddr, tc.sendRootfsURL)
+						require.NoError(t, err, "Setup: could not assemble URL: %s + %s", fileServerAddr, tc.sendRootfsURL)
 					}
 
 					if tc.nonResponsiveServer {
-						url = "localhost:9"
+						u = "localhost:9"
 					}
 
 					return &landscapeapi.Command{
 						Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{
 							Id:        distroName,
 							Cloudinit: &cloudInit,
-							RootfsURL: &url,
+							RootfsURL: &u,
 						}},
 					}
 				},
