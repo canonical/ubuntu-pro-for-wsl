@@ -54,10 +54,10 @@ func TestConnect(t *testing.T) {
 				defer s.Stop()
 			}
 
-			conn, err := grpc.DialContext(ctx, lis.Addr().String(),
+			conn, err := grpc.NewClient(lis.Addr().String(),
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 			)
-			require.NoError(t, err, "Setup: Dial should have succeeded")
+			require.NoError(t, err, "Setup: Creating a client should have succeeded")
 			defer conn.Close()
 
 			client, err := streams.Connect(ctx, conn)
@@ -104,10 +104,10 @@ func TestSendAndRecv(t *testing.T) {
 	}()
 	defer s.Stop()
 
-	conn, err := grpc.DialContext(ctx, lis.Addr().String(),
+	conn, err := grpc.NewClient(lis.Addr().String(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	require.NoError(t, err, "Setup: Dial should have succeeded")
+	require.NoError(t, err, "Setup: Creating a client should have succeeded")
 	defer conn.Close()
 
 	client, err := streams.Connect(ctx, conn)
