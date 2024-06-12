@@ -291,13 +291,13 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.DialContext(ctx, addr,
+	conn, err := grpc.NewClient(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
 			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
 		)), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	if err != nil {
-		return nil, fmt.Errorf("could not dial: %v", err)
+		return nil, fmt.Errorf("could not create a gRPC client: %v", err)
 	}
 
 	defer func(err *error) {
