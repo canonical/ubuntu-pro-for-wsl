@@ -186,7 +186,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distro ID is reserved (release numbers and case)": {sendRootfsURL: "goodfile", distroName: "uBuntu-19.13", wantInstalled: false},
 		"Error when the rootfs isn't a valid tarball":                     {sendRootfsURL: "badfile", wantInstalled: false},
 		"Error when the checksum doesn't match":                           {sendRootfsURL: "badchecksum", wantInstalled: false},
-		"Error when the checksum is missing for the rootfs":               {sendRootfsURL: "rootfswithnochecksum", wantInstalled: false},
+		"Error when the checksum entry is missing for the rootfs":         {sendRootfsURL: "rootfswithnochecksum", wantInstalled: false},
 		"Error when the rootfs doesn't exist":                             {sendRootfsURL: "badresponse", wantInstalled: false},
 		"Error when the rootfs URL is ill-formed":                         {sendRootfsURL: brokenURL, wantInstalled: false},
 		"Error when URL doesn't respond":                                  {sendRootfsURL: "goodfile", nonResponsiveServer: true, wantInstalled: false},
