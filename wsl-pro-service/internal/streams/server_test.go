@@ -23,9 +23,9 @@ func TestServe(t *testing.T) {
 	agent := testutils.NewMockWindowsAgent(t, ctx, t.TempDir())
 	defer agent.Stop()
 
-	conn, err := grpc.DialContext(ctx, agent.Listener.Addr().String(),
+	conn, err := grpc.NewClient(agent.Listener.Addr().String(),
 		grpc.WithTransportCredentials(agent.ClientCredentials))
-	require.NoError(t, err, "Setup: could not Dial the mock windows agent")
+	require.NoError(t, err, "Setup: could not create a client to the mock windows agent")
 	defer conn.Close()
 
 	server := streams.NewServer(ctx, sys, conn)
@@ -94,9 +94,9 @@ func TestStop(t *testing.T) {
 	agent := testutils.NewMockWindowsAgent(t, ctx, t.TempDir())
 	defer agent.Stop()
 
-	conn, err := grpc.DialContext(ctx, agent.Listener.Addr().String(),
+	conn, err := grpc.NewClient(agent.Listener.Addr().String(),
 		grpc.WithTransportCredentials(agent.ClientCredentials))
-	require.NoError(t, err, "Setup: could not Dial the mock windows agent")
+	require.NoError(t, err, "Setup: could not create a client to the mock windows agent")
 	defer conn.Close()
 
 	server := streams.NewServer(ctx, sys, conn)
