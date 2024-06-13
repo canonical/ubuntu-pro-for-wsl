@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/vuln v1.1.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 
