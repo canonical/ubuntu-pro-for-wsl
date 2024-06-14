@@ -30,11 +30,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UIClient interface {
-	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*SubscriptionInfo, error)
-	ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*LandscapeSource, error)
+	ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error)
+	ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*Empty, error)
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
-	GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ConfigSources, error)
-	NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error)
+	GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (UI_GetConfigSourcesClient, error)
+	NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type uIClient struct {
@@ -45,8 +45,8 @@ func NewUIClient(cc grpc.ClientConnInterface) UIClient {
 	return &uIClient{cc}
 }
 
-func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*SubscriptionInfo, error) {
-	out := new(SubscriptionInfo)
+func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, UI_ApplyProToken_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (c *uIClient) ApplyProToken(ctx context.Context, in *ProAttachInfo, opts ..
 	return out, nil
 }
 
-func (c *uIClient) ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*LandscapeSource, error) {
-	out := new(LandscapeSource)
+func (c *uIClient) ApplyLandscapeConfig(ctx context.Context, in *LandscapeConfig, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, UI_ApplyLandscapeConfig_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -72,17 +72,40 @@ func (c *uIClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption)
 	return out, nil
 }
 
-func (c *uIClient) GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ConfigSources, error) {
-	out := new(ConfigSources)
-	err := c.cc.Invoke(ctx, UI_GetConfigSources_FullMethodName, in, out, opts...)
+func (c *uIClient) GetConfigSources(ctx context.Context, in *Empty, opts ...grpc.CallOption) (UI_GetConfigSourcesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UI_ServiceDesc.Streams[0], UI_GetConfigSources_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &uIGetConfigSourcesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-func (c *uIClient) NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionInfo, error) {
-	out := new(SubscriptionInfo)
+type UI_GetConfigSourcesClient interface {
+	Recv() (*ConfigSources, error)
+	grpc.ClientStream
+}
+
+type uIGetConfigSourcesClient struct {
+	grpc.ClientStream
+}
+
+func (x *uIGetConfigSourcesClient) Recv() (*ConfigSources, error) {
+	m := new(ConfigSources)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *uIClient) NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, UI_NotifyPurchase_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -94,11 +117,11 @@ func (c *uIClient) NotifyPurchase(ctx context.Context, in *Empty, opts ...grpc.C
 // All implementations must embed UnimplementedUIServer
 // for forward compatibility
 type UIServer interface {
-	ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error)
-	ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*LandscapeSource, error)
+	ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error)
+	ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*Empty, error)
 	Ping(context.Context, *Empty) (*Empty, error)
-	GetConfigSources(context.Context, *Empty) (*ConfigSources, error)
-	NotifyPurchase(context.Context, *Empty) (*SubscriptionInfo, error)
+	GetConfigSources(*Empty, UI_GetConfigSourcesServer) error
+	NotifyPurchase(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedUIServer()
 }
 
@@ -106,19 +129,19 @@ type UIServer interface {
 type UnimplementedUIServer struct {
 }
 
-func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*SubscriptionInfo, error) {
+func (UnimplementedUIServer) ApplyProToken(context.Context, *ProAttachInfo) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyProToken not implemented")
 }
-func (UnimplementedUIServer) ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*LandscapeSource, error) {
+func (UnimplementedUIServer) ApplyLandscapeConfig(context.Context, *LandscapeConfig) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyLandscapeConfig not implemented")
 }
 func (UnimplementedUIServer) Ping(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedUIServer) GetConfigSources(context.Context, *Empty) (*ConfigSources, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetConfigSources not implemented")
+func (UnimplementedUIServer) GetConfigSources(*Empty, UI_GetConfigSourcesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetConfigSources not implemented")
 }
-func (UnimplementedUIServer) NotifyPurchase(context.Context, *Empty) (*SubscriptionInfo, error) {
+func (UnimplementedUIServer) NotifyPurchase(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NotifyPurchase not implemented")
 }
 func (UnimplementedUIServer) mustEmbedUnimplementedUIServer() {}
@@ -188,22 +211,25 @@ func _UI_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UI_GetConfigSources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
+func _UI_GetConfigSources_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(UIServer).GetConfigSources(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UI_GetConfigSources_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UIServer).GetConfigSources(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(UIServer).GetConfigSources(m, &uIGetConfigSourcesServer{stream})
+}
+
+type UI_GetConfigSourcesServer interface {
+	Send(*ConfigSources) error
+	grpc.ServerStream
+}
+
+type uIGetConfigSourcesServer struct {
+	grpc.ServerStream
+}
+
+func (x *uIGetConfigSourcesServer) Send(m *ConfigSources) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _UI_NotifyPurchase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -244,15 +270,17 @@ var UI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UI_Ping_Handler,
 		},
 		{
-			MethodName: "GetConfigSources",
-			Handler:    _UI_GetConfigSources_Handler,
-		},
-		{
 			MethodName: "NotifyPurchase",
 			Handler:    _UI_NotifyPurchase_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetConfigSources",
+			Handler:       _UI_GetConfigSources_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "agentapi.proto",
 }
 
