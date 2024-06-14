@@ -149,7 +149,7 @@ func (r *Mock) HKCUOpenKey(path string) (Key, error) {
 		return 0, ErrMock
 	}
 
-	return r.openKey(path, true)
+	return r.openKey(path, true), nil
 }
 
 // HKCUCreateKey opens a key in the specified path under the HK_CURRENT_USER registry with write permissions.
@@ -163,7 +163,7 @@ func (r *Mock) HKCUCreateKey(path string) (Key, error) {
 
 	r.keyExists = true
 
-	return r.openKey(path, false)
+	return r.openKey(path, false), nil
 }
 
 var validPaths = []string{
@@ -171,7 +171,7 @@ var validPaths = []string{
 	`Software/Canonical/UbuntuPro`,
 }
 
-func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
+func (r *Mock) openKey(path string, readOnly bool) Key {
 	path = filepath.Clean(path)
 
 	if !slices.Contains(validPaths, path) {
@@ -181,7 +181,7 @@ func (r *Mock) openKey(path string, readOnly bool) (Key, error) {
 	return r.keyHandles.alloc(&keyHandle{
 		key:      &r.ubuntuPro,
 		readOnly: readOnly,
-	}), nil
+	})
 }
 
 // CloseKey mocks releasing a key, triggering any associated events.
