@@ -275,15 +275,11 @@ func TestQuitBeforeServe(t *testing.T) {
 func grpcPersistentCall(t *testing.T, addr string) (drop func() codes.Code) {
 	t.Helper()
 
-	const timeout = 100 * time.Millisecond
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoErrorf(t, err, "Could not dial GRPC server.")
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoErrorf(t, err, "Could not create a GRPC client.")
 
 	c := grpctestservice.NewTestServiceClient(conn)
-	ctx, cancel = context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
 	started := make(chan struct{})
 	errch := make(chan error)
@@ -318,9 +314,10 @@ func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 	t.Helper()
 
 	// Try to connect. Non-blocking call so no error is wanted.
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoErrorf(t, err, "error dialing GRPC server.\nMessage: %s", msg)
 	defer conn.Close()
+	conn.Connect()
 
 	// Timing out and checking that the connection was never established.
 	time.Sleep(300 * time.Millisecond)

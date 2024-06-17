@@ -333,8 +333,8 @@ func newMockWSLProService(t *testing.T, ctx context.Context, opt mockWslProServi
 
 	mock = &mockWSLProService{}
 
-	conn, err := grpc.DialContext(ctx, opt.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err, "wslDistroMock: could not dial control address")
+	conn, err := grpc.NewClient(opt.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err, "wslDistroMock: could not setup a control address client")
 
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)

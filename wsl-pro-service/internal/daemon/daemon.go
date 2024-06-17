@@ -25,7 +25,6 @@ import (
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Daemon is a grpc daemon with systemd support.
@@ -291,20 +290,13 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.DialContext(ctx, addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	conn, err := grpc.NewClient(addr,
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
 			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
 		)), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	if err != nil {
-		return nil, fmt.Errorf("could not dial: %v", err)
+		return nil, fmt.Errorf("could not create a gRPC client: %v", err)
 	}
-
-	defer func(err *error) {
-		if *err != nil {
-			conn.Close()
-		}
-	}(&err)
 
 	return streams.NewServer(ctx, d.system, conn), nil
 }

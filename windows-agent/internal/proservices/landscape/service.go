@@ -19,7 +19,7 @@ import (
 )
 
 // Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
-// It creates the executor and ensures there is always an active connection, creating a new one otherwise.
+// It creates the executor and ensures there is always an active connection, creating a new one if necessary.
 type Service struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
@@ -43,7 +43,7 @@ type Service struct {
 
 	// connRetrier is used in order to ask the keepConnected
 	// function to try again now (instead of waiting for the retrial
-	// time). Do not use directly. Instead use signalRetryConnection().
+	// time). Do not use directly. Instead use reconnect().
 	connRetrier *retryConnection
 
 	cloudinit CloudInit
@@ -358,7 +358,7 @@ func (s *Service) disconnect() {
 
 // The following methods expose some internals for the other components to use.
 
-// signalRetryConnection signals the Landscape client to attempt to connect to Landscape.
+// reconnect signals the Landscape client to attempt to connect to Landscape.
 // It will not block if there is an ative connection. until the reconnect petition
 // has been received.
 func (s *Service) reconnect() {
