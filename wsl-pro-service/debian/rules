@@ -14,6 +14,10 @@ export GOTOOLCHAIN := local
 export GOFLAGS := $(shell ./debian/prepare-source.sh)
 
 %:
+ifeq ($(strip $(GOFLAGS)),)
+	@echo "GOFLAGS is empty, vendoring probably failed"
+	exit 1
+endif
 	@echo "Building with flags $(GOFLAGS)"
 	dh $@ --builddirectory=_build --with=apport
 
