@@ -620,14 +620,10 @@ class ProAttachCmd extends $pb.GeneratedMessage {
 class LandscapeConfigCmd extends $pb.GeneratedMessage {
   factory LandscapeConfigCmd({
     $core.String? config,
-    $core.String? hostagentUid,
   }) {
     final $result = create();
     if (config != null) {
       $result.config = config;
-    }
-    if (hostagentUid != null) {
-      $result.hostagentUid = hostagentUid;
     }
     return $result;
   }
@@ -637,7 +633,6 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LandscapeConfigCmd', package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'config')
-    ..aOS(2, _omitFieldNames ? '' : 'hostagentUid')
     ..hasRequiredFields = false
   ;
 
@@ -670,15 +665,6 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
   $core.bool hasConfig() => $_has(0);
   @$pb.TagNumber(1)
   void clearConfig() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get hostagentUid => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set hostagentUid($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasHostagentUid() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearHostagentUid() => clearField(2);
 }
 
 enum MSG_Data {

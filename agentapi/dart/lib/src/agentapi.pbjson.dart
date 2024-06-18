@@ -141,14 +141,12 @@ const LandscapeConfigCmd$json = {
   '1': 'LandscapeConfigCmd',
   '2': [
     {'1': 'config', '3': 1, '4': 1, '5': 9, '10': 'config'},
-    {'1': 'hostagent_uid', '3': 2, '4': 1, '5': 9, '10': 'hostagentUid'},
   ],
 };
 
 /// Descriptor for `LandscapeConfigCmd`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List landscapeConfigCmdDescriptor = $convert.base64Decode(
-    'ChJMYW5kc2NhcGVDb25maWdDbWQSFgoGY29uZmlnGAEgASgJUgZjb25maWcSIwoNaG9zdGFnZW'
-    '50X3VpZBgCIAEoCVIMaG9zdGFnZW50VWlk');
+    'ChJMYW5kc2NhcGVDb25maWdDbWQSFgoGY29uZmlnGAEgASgJUgZjb25maWc=');
 
 @$core.Deprecated('Use mSGDescriptor instead')
 const MSG$json = {
