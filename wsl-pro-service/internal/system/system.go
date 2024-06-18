@@ -213,6 +213,7 @@ func runCommand(cmd *exec.Cmd) ([]byte, error) {
 
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	cmd.Env = append(cmd.Env, "LC_ALL=C") // Ensure that the output is in English
 
 	err := cmd.Run()
 	out := bytes.TrimSpace(stdout.Bytes())
