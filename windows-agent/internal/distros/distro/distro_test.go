@@ -833,7 +833,7 @@ func (c *mockConnection) SendProAttachment(proToken string) error {
 	return nil
 }
 
-func (c *mockConnection) SendLandscapeConfig(lpeConfig, hostagentUID string) error {
+func (c *mockConnection) SendLandscapeConfig(lpeConfig string) error {
 	return nil
 }
 

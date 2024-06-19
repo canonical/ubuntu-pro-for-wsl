@@ -363,7 +363,7 @@ func TestSetConnectionOnClosedConnection(t *testing.T) {
 	w.SetConnection(conn2)
 
 	// New connection is functional.
-	err = w.Connection().SendLandscapeConfig("123", "abc")
+	err = w.Connection().SendLandscapeConfig("123")
 	require.NoError(t, err, "SendLandscapeConfig should have been done successfully")
 	require.EqualValues(t, 1, conn2.LandscapeConfigCount.Load(), "second service have been used once")
 }
@@ -800,7 +800,7 @@ func (conn *mockConnection) SendProAttachment(proToken string) error {
 	return nil
 }
 
-func (conn *mockConnection) SendLandscapeConfig(lpeConfig, hostagentUID string) error {
+func (conn *mockConnection) SendLandscapeConfig(lpeConfig string) error {
 	conn.LandscapeConfigCount.Add(1)
 	return nil
 }
