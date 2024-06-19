@@ -49,7 +49,7 @@ func (c *client) SetLandscapeConfigStream(stream agentapi.WSLInstance_LandscapeC
 
 // SendLandscapeConfig sends a landscape config to the client.
 // Do not use before the client is ready.
-func (c *client) SendLandscapeConfig(config string, uid string) error {
+func (c *client) SendLandscapeConfig(config string) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -64,8 +64,7 @@ func (c *client) SendLandscapeConfig(config string, uid string) error {
 	}
 
 	err := c.lpeStream.Send(&agentapi.LandscapeConfigCmd{
-		Config:       config,
-		HostagentUid: uid,
+		Config: config,
 	})
 	if err != nil {
 		c.Close()
