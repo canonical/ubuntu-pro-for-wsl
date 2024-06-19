@@ -1,0 +1,70 @@
+@startuml
+set separator none
+title UP4W - Containers
+
+top to bottom direction
+
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
+}
+
+hide stereotype
+
+skinparam rectangle<<LandscapeServer>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4W.UP4WWindowsAgent>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4W.UP4WWindowsGUI>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<WSLProService>> {
+  BackgroundColor #1168bd
+  FontColor #ffffff
+  BorderColor #0b4884
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<Windowsregistry>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4W>> {
+  BorderColor #0b4884
+  FontColor #0b4884
+  shadowing false
+}
+
+rectangle "==Landscape Server" <<LandscapeServer>> as LandscapeServer
+rectangle "==Windows registry" <<Windowsregistry>> as Windowsregistry
+rectangle "==WSL Pro Service" <<WSLProService>> as WSLProService
+
+rectangle "UP4W\n<size:10>[Software System]</size>" <<UP4W>> {
+  rectangle "==UP4W Windows Agent" <<UP4W.UP4WWindowsAgent>> as UP4W.UP4WWindowsAgent
+  rectangle "==UP4W Windows GUI" <<UP4W.UP4WWindowsGUI>> as UP4W.UP4WWindowsGUI
+}
+
+UP4W.UP4WWindowsAgent .[#707070,thickness=2].> Windowsregistry : "<color:#707070>Reads configuration from"
+UP4W.UP4WWindowsAgent .[#707070,thickness=2].> WSLProService : "<color:#707070>Sends configuration to"
+LandscapeServer .[#707070,thickness=2].> UP4W.UP4WWindowsAgent : "<color:#707070>Reads from and sends instructions to"
+UP4W.UP4WWindowsGUI .[#707070,thickness=2].> UP4W.UP4WWindowsAgent : "<color:#707070>Writes configuration to"
+@enduml

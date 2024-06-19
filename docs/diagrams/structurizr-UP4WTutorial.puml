@@ -1,0 +1,155 @@
+@startuml
+set separator none
+title UP4W - Deployment - UP4WTutorial
+
+top to bottom direction
+
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
+}
+
+hide stereotype
+
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.LandscapeClient_1>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.LandscapeClient_1>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS.LandscapeServer_1>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UP4WWindowsGUI_1>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.UbuntuProClient_1>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.UbuntuProClient_1>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS>> {
+  BackgroundColor #ffffff
+  FontColor #000000
+  BorderColor #888888
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally>> {
+  BackgroundColor #ffffff
+  FontColor #000000
+  BorderColor #888888
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer>> {
+  BackgroundColor #ffffff
+  FontColor #000000
+  BorderColor #888888
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.WSLProService_1>> {
+  BackgroundColor #1168bd
+  FontColor #ffffff
+  BorderColor #0b4884
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.WSLProService_1>> {
+  BackgroundColor #1168bd
+  FontColor #ffffff
+  BorderColor #0b4884
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost.Windowsregistry_1>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4WTutorial.YourcomputerWindowshost>> {
+  BackgroundColor #ffffff
+  FontColor #000000
+  BorderColor #888888
+  roundCorner 20
+  shadowing false
+}
+
+rectangle "Your computer = Windows host\n<size:10>[Deployment Node: Windows]</size>" <<UP4WTutorial.YourcomputerWindowshost>> as UP4WTutorial.YourcomputerWindowshost {
+  rectangle "UP4W appx" <<group1>> {
+    skinparam RectangleBorderColor<<group1>> #cccccc
+    skinparam RectangleFontColor<<group1>> #cccccc
+    skinparam RectangleBorderStyle<<group1>> dashed
+
+    rectangle "==UP4W Windows GUI" <<UP4WTutorial.YourcomputerWindowshost.UP4WWindowsGUI_1>> as UP4WTutorial.YourcomputerWindowshost.UP4WWindowsGUI_1
+    rectangle "==UP4W Windows Agent" <<UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1>> as UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1
+  }
+
+  rectangle "==Windows registry" <<UP4WTutorial.YourcomputerWindowshost.Windowsregistry_1>> as UP4WTutorial.YourcomputerWindowshost.Windowsregistry_1
+  rectangle "Ubuntu WSL instance (Ubuntu 22.04 LTS)\n<size:10>[Deployment Node]</size>" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS {
+    rectangle "==Landscape Server" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS.LandscapeServer_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS.LandscapeServer_1
+  }
+
+  rectangle "Ubuntu WSL instance (Ubuntu Preview; created locally)\n<size:10>[Deployment Node]</size>" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally {
+    rectangle "==WSL Pro Service" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.WSLProService_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.WSLProService_1
+    rectangle "==Ubuntu Pro Client" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.UbuntuProClient_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.UbuntuProClient_1
+    rectangle "==Landscape Client" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.LandscapeClient_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.LandscapeClient_1
+  }
+
+  rectangle "Ubuntu WSL instance (Ubuntu; created remotely via Landscape Server)\n<size:10>[Deployment Node]</size>" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer {
+    rectangle "==WSL Pro Service" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.WSLProService_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.WSLProService_1
+    rectangle "==Ubuntu Pro Client" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.UbuntuProClient_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.UbuntuProClient_1
+    rectangle "==Landscape Client" <<UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.LandscapeClient_1>> as UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.LandscapeClient_1
+  }
+
+}
+
+UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.Windowsregistry_1 : "<color:#707070>Reads configuration from"
+UP4WTutorial.YourcomputerWindowshost.UP4WWindowsGUI_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1 : "<color:#707070>Writes configuration to"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS.LandscapeServer_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1 : "<color:#707070>Reads from and sends instructions to"
+UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.WSLProService_1 : "<color:#707070>Sends configuration to"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.WSLProService_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.UbuntuProClient_1 : "<color:#707070>Configures"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.WSLProService_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.LandscapeClient_1 : "<color:#707070>Configures"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS.LandscapeServer_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntuPreviewcreatedlocally.LandscapeClient_1 : "<color:#707070>Reads from and sends instructions to"
+UP4WTutorial.YourcomputerWindowshost.UP4WWindowsAgent_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.WSLProService_1 : "<color:#707070>Sends configuration to"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.WSLProService_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.UbuntuProClient_1 : "<color:#707070>Configures"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntu2204LTS.LandscapeServer_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.LandscapeClient_1 : "<color:#707070>Reads from and sends instructions to"
+UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.WSLProService_1 .[#707070,thickness=2].> UP4WTutorial.YourcomputerWindowshost.UbuntuWSLinstanceUbuntucreatedremotelyviaLandscapeServer.LandscapeClient_1 : "<color:#707070>Configures"
+@enduml

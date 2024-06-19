@@ -1,0 +1,70 @@
+@startuml
+set separator none
+title UP4W - UP4W Windows Agent - Components
+
+top to bottom direction
+
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
+}
+
+hide stereotype
+
+skinparam rectangle<<UP4W.UP4WWindowsAgent.ConfigurationModule>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4W.UP4WWindowsAgent.LandscapeProService>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<LandscapeServer>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<WSLProService>> {
+  BackgroundColor #1168bd
+  FontColor #ffffff
+  BorderColor #0b4884
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<Windowsregistry>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UP4W.UP4WWindowsAgent>> {
+  BorderColor #2e6295
+  FontColor #2e6295
+  shadowing false
+}
+
+rectangle "==Landscape Server" <<LandscapeServer>> as LandscapeServer
+rectangle "==Windows registry" <<Windowsregistry>> as Windowsregistry
+rectangle "==WSL Pro Service" <<WSLProService>> as WSLProService
+
+rectangle "UP4W Windows Agent\n<size:10>[Container]</size>" <<UP4W.UP4WWindowsAgent>> {
+  rectangle "==Configuration Module" <<UP4W.UP4WWindowsAgent.ConfigurationModule>> as UP4W.UP4WWindowsAgent.ConfigurationModule
+  rectangle "==Landscape Pro Service" <<UP4W.UP4WWindowsAgent.LandscapeProService>> as UP4W.UP4WWindowsAgent.LandscapeProService
+}
+
+UP4W.UP4WWindowsAgent.ConfigurationModule .[#707070,thickness=2].> UP4W.UP4WWindowsAgent.LandscapeProService : "<color:#707070>Configures"
+UP4W.UP4WWindowsAgent.ConfigurationModule .[#707070,thickness=2].> Windowsregistry : "<color:#707070>Reads configuration from"
+UP4W.UP4WWindowsAgent.ConfigurationModule .[#707070,thickness=2].> WSLProService : "<color:#707070>Sends configuration to"
+LandscapeServer .[#707070,thickness=2].> UP4W.UP4WWindowsAgent.LandscapeProService : "<color:#707070>Reads from and sends instructions to"
+@enduml

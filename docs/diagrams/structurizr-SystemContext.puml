@@ -1,0 +1,50 @@
+@startuml
+set separator none
+title UP4W - System Context
+
+top to bottom direction
+
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
+}
+
+hide stereotype
+
+skinparam rectangle<<Landscape>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  shadowing false
+}
+skinparam rectangle<<UP4W>> {
+  BackgroundColor #1168bd
+  FontColor #ffffff
+  BorderColor #0b4884
+  roundCorner 20
+  shadowing false
+}
+skinparam rectangle<<UbuntuProsubscription>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  shadowing false
+}
+skinparam person<<User>> {
+  BackgroundColor #08427b
+  FontColor #ffffff
+  BorderColor #052e56
+  shadowing false
+}
+
+rectangle "==UP4W" <<UP4W>> as UP4W
+person "==User" <<User>> as User
+rectangle "==Ubuntu Pro subscription" <<UbuntuProsubscription>> as UbuntuProsubscription
+rectangle "==Landscape\n\nIncluded with your Ubuntu Pro subscription. Automates security patching, auditing, access management and compliance tasks across your Ubuntu estate." <<Landscape>> as Landscape
+
+UP4W .[#707070,thickness=2].> Landscape : "<color:#707070>Registers your Windows host and Ubuntu WSL instances with"
+UP4W .[#707070,thickness=2].> UbuntuProsubscription : "<color:#707070>Adds your Ubuntu WSL instances to your"
+User .[#707070,thickness=2].> UP4W : "<color:#707070>Uses"
+@enduml
