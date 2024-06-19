@@ -17,6 +17,8 @@ macOS
 MSIX
 powershell
 PowerShell
+structurizr
+Structurizr
 systemd
 ubuntu
 UbuntuProForWSL
@@ -48,6 +50,7 @@ HIPAA
 Hostagent
 LTS
 os
+repo
 SLA
 SRU
 tcp
