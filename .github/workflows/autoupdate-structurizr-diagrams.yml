@@ -14,7 +14,7 @@ jobs:
       contents: write # Allow to work with the contents of the repository, including git push.
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  
+        uses: actions/checkout@v4
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
         uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
@@ -49,5 +49,6 @@ jobs:
           labels: docs, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/autoupdate-structurizr-diagrams.yml) by GitHub Action"
           branch: autoupdate-diagrams-${{ steps.get-branch-name.outputs.branch }}
+          base: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           delete-branch: true
