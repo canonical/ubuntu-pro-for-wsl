@@ -48,7 +48,7 @@ jobs:
           title: 'docs: Auto update diagram files'
           labels: docs, automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/autoupdate-structurizr-diagrams.yml) by GitHub Action"
-          branch: autoupdate-diagrams-${{ steps.get-branch-name.outputs.branch }}
+          branch: autoupdate-diagrams-foo
           base: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           delete-branch: true
