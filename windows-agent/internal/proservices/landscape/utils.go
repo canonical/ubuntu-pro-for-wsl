@@ -228,12 +228,11 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	return info, nil
 }
 
-func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf string, hostAgentUID string) {
+func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf string) {
 	var err error
 	for _, distro := range db.GetAll() {
 		t := tasks.LandscapeConfigure{
-			Config:       landscapeConf,
-			HostagentUID: hostAgentUID,
+			Config: landscapeConf,
 		}
 		err = errors.Join(err, distro.SubmitTasks(t))
 	}

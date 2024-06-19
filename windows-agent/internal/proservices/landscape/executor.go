@@ -102,7 +102,7 @@ func (e executor) assignHost(ctx context.Context, cmd *landscapeapi.Command_Assi
 		return err
 	}
 
-	distributeConfig(ctx, e.database(), landscapeConf, uid)
+	distributeConfig(ctx, e.database(), landscapeConf)
 
 	return nil
 }
