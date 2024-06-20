@@ -532,8 +532,8 @@ func TestUpdateRegistryData(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success":                     {},
-		"With overridden user config": {settingsState: userTokenHasValue | userLandscapeConfigHasValue},
+		"Success":                             {},
+		"Registry data overrides user config": {settingsState: userTokenHasValue | userLandscapeConfigHasValue},
 
 		"Error when we cannot load from file": {breakConfigFile: true, wantErr: true},
 	}
