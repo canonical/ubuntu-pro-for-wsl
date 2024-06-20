@@ -79,7 +79,7 @@ url = www.example.com/new/rickroll
 		breakSubscription bool
 		breakLandscape    bool
 
-		// Landcape parsing
+		// Landscape parsing
 		landscapeNoClientSection bool
 		badLandscape             bool
 

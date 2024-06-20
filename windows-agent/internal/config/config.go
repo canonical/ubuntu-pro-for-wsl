@@ -29,7 +29,7 @@ type Config struct {
 	mu *sync.Mutex
 
 	// observers are notified after any configuration changes.
-	notifyLandsape  LandscapeNotifier
+	notifyLandscape LandscapeNotifier
 	notifyUbuntuPro UbuntuProNotifier
 }
 
@@ -55,7 +55,7 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 
 		// No-ops to avoid nil checks
 		notifyUbuntuPro: func(ctx context.Context, token string) {},
-		notifyLandsape:  func(ctx context.Context, config string, uid string) {},
+		notifyLandscape: func(ctx context.Context, config string, uid string) {},
 	}
 
 	return m
@@ -66,7 +66,7 @@ func (c *Config) SetLandscapeNotifier(notify LandscapeNotifier) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.notifyLandsape = notify
+	c.notifyLandscape = notify
 }
 
 // SetUbuntuProNotifier sets the function to be called when the Ubuntu Pro subscription changes.
@@ -162,7 +162,7 @@ func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig str
 	}
 
 	if isNew {
-		c.notifyLandsape(ctx, landscapeConfig, c.Landscape.UID)
+		c.notifyLandscape(ctx, landscapeConfig, c.Landscape.UID)
 	}
 
 	return nil
@@ -224,7 +224,7 @@ func (c *Config) LandscapeAgentUID() (string, error) {
 	// 1. Start connection
 	// 2. Get UID
 	// 3. Notify Landscape
-	// 4. Landcape drops connection, and reconnects
+	// 4. Landscape drops connection, and reconnects
 
 	return s.Landscape.UID, nil
 }
@@ -274,7 +274,7 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 		// We must resolve the landscape config in case a lower priority config becomes active
 		resolv, _ := c.Landscape.resolve()
 		afterUnlock = append(afterUnlock, func() {
-			c.notifyLandsape(ctx, resolv, c.Landscape.UID)
+			c.notifyLandscape(ctx, resolv, c.Landscape.UID)
 		})
 	}
 

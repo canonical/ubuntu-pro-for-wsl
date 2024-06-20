@@ -28,7 +28,7 @@ type executor struct {
 }
 
 func (e executor) exec(ctx context.Context, command *landscapeapi.Command) (err error) {
-	log.Infof(ctx, "Landcape: received command %s", commandString(command))
+	log.Infof(ctx, "Landscape: received command %s", commandString(command))
 	err = func() error {
 		switch cmd := command.GetCmd().(type) {
 		case *landscapeapi.Command_AssignHost_:
@@ -53,7 +53,7 @@ func (e executor) exec(ctx context.Context, command *landscapeapi.Command) (err 
 	if err != nil {
 		return fmt.Errorf("could not execute command %s: %v", commandString(command), err)
 	}
-	log.Infof(ctx, "Landcape: completed command %s", commandString(command))
+	log.Infof(ctx, "Landscape: completed command %s", commandString(command))
 
 	return nil
 }

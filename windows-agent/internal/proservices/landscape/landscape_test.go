@@ -182,7 +182,7 @@ func TestConnect(t *testing.T) {
 			lconf := defaultLandscapeConfig
 			if fixture, err := os.ReadFile(filepath.Join(testutils.TestFixturePath(t), "landscape.conf")); err != nil {
 				require.ErrorIs(t, err, os.ErrNotExist, "Setup: could not load landscape config")
-				// Fixture does not exist: use base Landcape confing
+				// Fixture does not exist: use base Landscape confing
 			} else {
 				// Fixture exists: override the Landscape config
 				lconf = string(fixture)
