@@ -120,7 +120,7 @@ func MockSystem(t *testing.T) (*system.System, *SystemMock) {
 
 	distroHostname := "TEST_DISTRO_HOSTNAME"
 	mock := &SystemMock{
-		FsRoot:                  mockFilesystemRoot(t),
+		FsRoot:                  MockFilesystemRoot(t),
 		WslDistroName:           "TEST_DISTRO",
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
@@ -642,9 +642,9 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 	syscall.Exit(exit)
 }
 
-// mockFilesystemRoot sets up a skelleton filesystem with files used by the wsl-pro-service and returns
+// MockFilesystemRoot sets up a skelleton filesystem with files used by the wsl-pro-service and returns
 // its root dir.
-func mockFilesystemRoot(t *testing.T) (rootDir string) {
+func MockFilesystemRoot(t *testing.T) (rootDir string) {
 	t.Helper()
 
 	rootDir = t.TempDir()
