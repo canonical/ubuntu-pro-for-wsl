@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
@@ -68,12 +69,14 @@ info=this section should have been omitted
 [client]
 info = This is the new configuration
 url = www.example.com/new/rickroll
+hostagent_uid = landscapeUID1234
 `
 
 	testCases := map[string]struct {
 		// Contents
 		skipProToken      bool
 		skipLandscapeConf bool
+		skipHostAgentUID  bool
 
 		// Break marshalling
 		breakSubscription bool
@@ -89,6 +92,7 @@ url = www.example.com/new/rickroll
 		breakFile     bool
 	}{
 		"Success":                            {},
+		"Without hostagent UID":              {skipHostAgentUID: true},
 		"Without pro token":                  {skipProToken: true},
 		"Without Landscape":                  {skipLandscapeConf: true},
 		"Without Landscape [client] section": {landscapeNoClientSection: true},
@@ -140,6 +144,9 @@ url = www.example.com/new/rickroll
 			}
 			if tc.skipLandscapeConf {
 				conf.landscapeConf = ""
+			}
+			if tc.skipHostAgentUID {
+				conf.landscapeConf = strings.Replace(conf.landscapeConf, "hostagent_uid = landscapeUID1234", "", 1)
 			}
 
 			if tc.breakTempFile {
