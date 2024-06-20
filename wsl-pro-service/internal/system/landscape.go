@@ -3,6 +3,7 @@ package system
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,6 +31,22 @@ func (s *System) LandscapeDisable(ctx context.Context) (err error) {
 	}
 
 	return nil
+}
+
+// EnsureValidLandscapeConfig ensures that the Landscape configuration is valid and enabled.
+func (s *System) EnsureValidLandscapeConfig(ctx context.Context) (err error) {
+	defer decorate.OnError(&err, "could not ensure valid Landscape configuration")
+
+	landscapeConfig, err := os.ReadFile(s.Path(landscapeConfigPath))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			log.Debug(ctx, "No Landscape configuration detected: nothing to do")
+			return nil
+		}
+		return err
+	}
+
+	return s.fixAndEnableLandscapeFromConfig(ctx, string(landscapeConfig), false)
 }
 
 func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeConfig string, enableUnconditionally bool) (err error) {
