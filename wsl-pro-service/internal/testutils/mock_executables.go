@@ -143,6 +143,12 @@ func (m *SystemMock) SetControlArg(arg controlArg) {
 
 // Path prepends FsRoot to a path.
 func (m *SystemMock) Path(path ...string) string {
+	// We need to special case our local certificate to not prepend m.FsRoot to it and modify our idempotent path
+	for _, p := range path {
+		if strings.Contains(p, "idempotent") {
+			return filepath.Join(path...)
+		}
+	}
 	path = append([]string{m.FsRoot}, path...)
 	return filepath.Join(path...)
 }
@@ -507,9 +513,10 @@ func WslPathMock(t *testing.T) {
 			}
 
 			stdout, ok := map[string]string{
-				windowsUserProfileDir:           linuxUserProfileDir,
-				`D:\Users\TestUser\certificate`: filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
-				`D:/Users/TestUser/certificate`: filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				windowsUserProfileDir:                   linuxUserProfileDir,
+				`D:\Users\TestUser\certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				`D:/Users/TestUser/certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				`/idempotent/path/to/linux/certificate`: `/idempotent/path/to/linux/certificate`,
 			}[argv[1]]
 
 			if !ok {

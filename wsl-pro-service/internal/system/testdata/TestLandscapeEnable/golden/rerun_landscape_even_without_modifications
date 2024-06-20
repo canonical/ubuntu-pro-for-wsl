@@ -1,4 +1,4 @@
 [client]
 other_field    = other_value
-ssl_public_key = /path/to/linux/certificate
+ssl_public_key = /idempotent/path/to/linux/certificate
 computer_title = TEST_DISTRO
