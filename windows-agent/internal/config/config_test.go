@@ -109,18 +109,17 @@ func TestLandscapeConfig(t *testing.T) {
 		wantSource          config.Source
 		wantError           bool
 	}{
-		"Success":            {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
-		"With hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe\nhostagent_uid=landscapeUID1234\n", wantSource: config.SourceUser},
+		"Retrieves existing config user data":                              {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Retrieves existing config user data containing the hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe\nhostagent_uid=landscapeUID1234\n", wantSource: config.SourceUser},
 
-		"Without registry data and conf file exist": {settingsState: untouched},
+		"Success when there is no registry and user data": {settingsState: untouched, wantSource: config.SourceNone},
 
-		"With an organization conf":                   {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
-		"With an organization conf and hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg\nhostagent_uid=landscapeUID1234\n", wantSource: config.SourceRegistry},
-		"With a user conf":                            {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Retrieves organization data":                     {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
+		"Retrieves org data containing the hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg\nhostagent_uid=landscapeUID1234\n", wantSource: config.SourceRegistry},
 
-		"Success when an organization config shadows a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
+		"Prioritizes organization config over a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 
-		"Error when the file cannot be read from": {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when the file cannot be read": {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
