@@ -19,7 +19,7 @@ const (
 )
 
 // LandscapeEnable registers the current distro to Landscape with the specified config.
-func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string, hostagentUID string) (err error) {
+func (s *System) LandscapeEnable(ctx context.Context, landscapeConfig string) (err error) {
 	return s.fixAndEnableLandscapeFromConfig(ctx, landscapeConfig, true)
 }
 
