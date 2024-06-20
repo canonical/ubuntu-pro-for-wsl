@@ -50,7 +50,7 @@ var (
 
 	// windowsUserProfileDir is the default path used in tests to store the Windows agent address file.
 	windowsUserProfileDir = `D:\Users\TestUser\`
-	linuxUserProfileDir   = "/mnt/d/Users/TestUser/"
+	linuxUserProfileDir   = filepath.Join(defaultWindowsMount, "Users/TestUser/")
 
 	// defaultPublicDir is the default path used in tests to store the address of the Windows Agent service.
 	defaultPublicDir = filepath.Join(linuxUserProfileDir, common.UserProfileDir)
