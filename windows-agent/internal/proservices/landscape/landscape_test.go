@@ -956,7 +956,7 @@ func (m *mockConfig) LandscapeAgentUID() (string, error) {
 	return m.landscapeAgentUID, nil
 }
 
-func (m *mockConfig) SetLandscapeAgentUID(uid string) error {
+func (m *mockConfig) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

@@ -37,6 +37,7 @@ const (
 	storeTokenHasValue          = storeTokenExists | 1<<21          // File exists, microsoft store token exists, and is not empty
 	userLandscapeConfigHasValue = userLandscapeConfigExists | 1<<22 // File exists, landscape client config exists, and is not empty
 	landscapeUIDHasValue        = landscapeUIDExists | 1<<23        // File exists, landscape agent UID exists, and is not empty
+	landscapeIsNotINI           = landscapeUIDExists | 1<<24        // File exists, landscape client config exists, but is not INI syntax
 )
 
 func TestSubscription(t *testing.T) {
@@ -451,20 +452,31 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 
 	testCases := map[string]struct {
 		settingsState   settingsState
-		emptyUID        bool
+		uid             string
 		breakFile       bool
 		cannotWriteFile bool
 
-		want      string
-		wantError bool
+		want       string
+		wantNotify bool
+		wantError  bool
 	}{
-		"Success overriding the UID":                      {settingsState: landscapeUIDHasValue, want: "new_uid"},
-		"Success unsetting the UID":                       {settingsState: landscapeUIDHasValue, emptyUID: true, want: ""},
-		"Success when the file does not exist":            {settingsState: untouched, want: "new_uid"},
+		"Sets the UID without previous client conf":  {settingsState: untouched, want: "new_uid"},
+		"Sets the UID with previous client conf":     {settingsState: userLandscapeConfigHasValue, want: "new_uid", wantNotify: true},
+		"Sets the UID with the same value":           {settingsState: landscapeUIDHasValue, uid: "landscapeUID1234", want: "landscapeUID1234"},
+		"Sets the UID with previous org client conf": {settingsState: orgLandscapeConfigHasValue, want: "new_uid", wantNotify: true},
+
+		"Overrides the UID with no previous client conf": {settingsState: untouched, want: "new_uid"},
+		"Overrides the UID with previous client conf":    {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, want: "new_uid", wantNotify: true},
+
+		"Resets the UID with no previous client conf":  {settingsState: landscapeUIDHasValue, uid: "-", want: ""},
+		"Resets the UID with previous client conf":     {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, uid: "-", want: "", wantNotify: true},
+		"Resets the UID with previous org client conf": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, uid: "-", want: "", wantNotify: true},
+
 		"Success when the pro token field does not exist": {settingsState: fileExists, want: "new_uid"},
 
-		"Error when the file cannot be opened":  {settingsState: landscapeUIDHasValue, breakFile: true, want: "landscapeUID1234", wantError: true},
-		"Error when the file cannot be written": {settingsState: fileExists, cannotWriteFile: true, wantError: true},
+		"Error when the file cannot be read":             {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when the previous client conf is invalid": {settingsState: userLandscapeConfigHasValue | landscapeIsNotINI, wantError: true},
+		"Error when the file cannot be written":          {settingsState: fileExists, cannotWriteFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -482,9 +494,12 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
-			uid := "new_uid"
-			if tc.emptyUID {
-				uid = ""
+			switch tc.uid {
+			case "":
+				tc.uid = "new_uid"
+			case "-":
+				tc.uid = ""
+			default:
 			}
 
 			conf.SetUbuntuProNotifier(func(context.Context, string) {
@@ -492,10 +507,12 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			})
 
 			conf.SetLandscapeNotifier(func(context.Context, string, string) {
-				require.Fail(t, "LandscapeNotifier should not be called")
+				if !tc.wantNotify {
+					require.Fail(t, "LandscapeNotifier should not have been called")
+				}
 			})
 
-			err = conf.SetLandscapeAgentUID(uid)
+			err = conf.SetLandscapeAgentUID(ctx, tc.uid)
 			if tc.wantError {
 				require.Error(t, err, "SetLandscapeAgentUID should return an error")
 				return
@@ -787,6 +804,9 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 	}
 	if state.is(userLandscapeConfigHasValue) {
 		fileData.Landscape["config"] = "[client]\nuser=JohnDoe"
+		if state.is(landscapeIsNotINI) {
+			fileData.Landscape["config"] = "NOT INI SYNTAX"
+		}
 	}
 
 	if state.is(landscapeUIDExists) {

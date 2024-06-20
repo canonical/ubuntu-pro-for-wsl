@@ -93,16 +93,10 @@ func (e executor) assignHost(ctx context.Context, cmd *landscapeapi.Command_Assi
 		return errors.New("UID is empty")
 	}
 
-	if err := conf.SetLandscapeAgentUID(uid); err != nil {
+	// config is responsible for redistributing the new Landscape.
+	if err := conf.SetLandscapeAgentUID(ctx, uid); err != nil {
 		return err
 	}
-
-	landscapeConf, _, err := conf.LandscapeClientConfig()
-	if err != nil {
-		return err
-	}
-
-	distributeConfig(ctx, e.database(), landscapeConf)
 
 	return nil
 }

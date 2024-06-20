@@ -56,7 +56,7 @@ type Config interface {
 	Subscription() (string, config.Source, error)
 
 	LandscapeAgentUID() (string, error)
-	SetLandscapeAgentUID(string) error
+	SetLandscapeAgentUID(context.Context, string) error
 }
 
 // CloudInit is a cloud-init user data writer.
