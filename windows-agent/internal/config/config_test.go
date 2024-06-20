@@ -365,26 +365,25 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		t.Parallel()
 	}
 
+	const landscapeBaseConf = "# Landscape configuration\n[client]\nuser=JohnDoe"
 	testCases := map[string]struct {
 		settingsState   settingsState
 		breakFile       bool
 		landscapeConfig string
 
-		withHostagentUID bool
-		wantError        bool
+		wantError bool
 	}{
-		"Success":                        {settingsState: untouched},
-		"With a hostagent UID":           {settingsState: userLandscapeConfigExists | landscapeUIDHasValue},
-		"With a discarded hostagent UID": {settingsState: userLandscapeConfigExists | landscapeUIDHasValue, withHostagentUID: true},
-		"With new config empty":          {settingsState: userLandscapeConfigHasValue, landscapeConfig: "-"},
+		"Saves the config when there was no previous data":       {settingsState: untouched},
+		"Merges user-submitted data with existing hostagent UID": {settingsState: userLandscapeConfigExists | landscapeUIDHasValue},
+		"Merges user-submitted discarding new hostagent UID":     {settingsState: userLandscapeConfigExists | landscapeUIDHasValue, landscapeConfig: landscapeBaseConf + "\nhostagent_uid=new_and_discarded_hostagent_uid\n"},
+		"Saves empty new user config data":                       {settingsState: userLandscapeConfigHasValue, landscapeConfig: "-"},
 
-		"Error when the configuration sent is not ini":               {settingsState: untouched, landscapeConfig: "NOT INI SYNTAX", wantError: true},
-		"Error when the configuration does not contain [client]":     {settingsState: untouched, landscapeConfig: "[section]\nsomething=else", wantError: true},
-		"Error when an organization landscape config is already set": {settingsState: orgLandscapeConfigHasValue, wantError: true},
-		"Error when an configuration cannot be read":                 {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when the configuration sent is not valid ini syntax":      {settingsState: untouched, landscapeConfig: "NOT INI SYNTAX", wantError: true},
+		"Error when the configuration does not contain [client] section": {settingsState: untouched, landscapeConfig: "[section]\nsomething=else", wantError: true},
+		"Error when an organization landscape config is already set":     {settingsState: orgLandscapeConfigHasValue, wantError: true},
+		"Error when the config file cannot be read":                      {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
-	const landscapeBaseConf = "# Landscape configuration\n[client]\nuser=JohnDoe"
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
@@ -404,9 +403,6 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 			switch tc.landscapeConfig {
 			case "":
 				tc.landscapeConfig = landscapeBaseConf
-				if tc.withHostagentUID {
-					tc.landscapeConfig += "\nhostagent_uid=discard_me\n"
-				}
 			case "-":
 				tc.landscapeConfig = ""
 				wantSource = config.SourceNone
