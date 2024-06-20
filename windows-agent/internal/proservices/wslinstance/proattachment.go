@@ -32,23 +32,10 @@ func (s *Service) ProAttachmentCommands(stream agentapi.WSLInstance_ProAttachmen
 	return nil
 }
 
-// SetProAttachmentStream sets the pro attachment stream for the client.
-// This step is necessary for WaitReady to return.
-func (c *client) SetProAttachmentStream(stream agentapi.WSLInstance_ProAttachmentCommandsServer) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.proStream != nil {
-		return errors.New("stream already connected")
-	}
-
-	c.proStream = stream
-	close(c.proReady)
-	return nil
-}
-
 // SendProAttachment sends a pro attachment token to the client.
 // Do not use before the client is ready.
+//
+//nolint:dupl // The structure of this function is similar, but the contents are not identical, between tasks.
 func (c *client) SendProAttachment(proToken string) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -84,4 +71,19 @@ func (c *client) SendProAttachment(proToken string) error {
 		return fmt.Errorf("did not receive landscape config result: %v", err)
 	}
 	return err
+}
+
+// SetProAttachmentStream sets the pro attachment stream for the client.
+// This step is necessary for WaitReady to return.
+func (c *client) SetProAttachmentStream(stream agentapi.WSLInstance_ProAttachmentCommandsServer) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.proStream != nil {
+		return errors.New("stream already connected")
+	}
+
+	c.proStream = stream
+	close(c.proReady)
+	return nil
 }

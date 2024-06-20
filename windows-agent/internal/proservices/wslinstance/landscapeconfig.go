@@ -49,6 +49,8 @@ func (c *client) SetLandscapeConfigStream(stream agentapi.WSLInstance_LandscapeC
 
 // SendLandscapeConfig sends a Landscape config to the client.
 // Do not use before the client is ready.
+//
+//nolint:dupl // The structure of this function is similar, but the contents are not identical, between tasks.
 func (c *client) SendLandscapeConfig(config string) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
