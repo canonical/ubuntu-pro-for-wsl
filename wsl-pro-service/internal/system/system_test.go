@@ -615,6 +615,120 @@ func TestLandscapeDisable(t *testing.T) {
 	}
 }
 
+func TestEnsureValidLandscapeConfig(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		systemLandscapeConfigFile string
+
+		breakWriteConfig        bool
+		breakLandscapeConfigCmd bool
+		breakWSLPath            bool
+		breakWSLDistroName      bool
+		noLandscapeGroup        bool
+
+		wantNoLandscapeConfig    bool
+		wantNoLandscapeConfigCmd bool
+		wantErr                  bool
+	}{
+		"Appends any required fields - no ssl":                      {systemLandscapeConfigFile: "minimal.conf"},
+		"Transform Windows SSL certificate path":                    {systemLandscapeConfigFile: "windows_ssl_only.conf"},
+		"Transform Windows SSL certificate path with forward slash": {systemLandscapeConfigFile: "windows_ssl_only_forward_slash.conf"},
+		"Refresh computer_title if changed":                         {systemLandscapeConfigFile: "old_computer_title.conf"},
+
+		"Regular with additional keys":            {systemLandscapeConfigFile: "regular.conf"},
+		"Do not modify other sections and keys":   {systemLandscapeConfigFile: "regular_with_extra_keys.conf"},
+		"Reformat Landscape config to proper ini": {systemLandscapeConfigFile: "regular_with_weird_format.conf"},
+
+		"Do not rerun landscape without modifications":                             {systemLandscapeConfigFile: "no_change_needed.conf", wantNoLandscapeConfigCmd: true},
+		"No Landscape configuration means no landscape command nor config created": {systemLandscapeConfigFile: "-", wantNoLandscapeConfigCmd: true, wantNoLandscapeConfig: true},
+
+		"Error when the config file cannot be read":              {breakWriteConfig: true, wantErr: true},
+		"Error when the new config cannot be parsed":             {systemLandscapeConfigFile: "invalid_ini.conf", wantErr: true},
+		"Error when the new config do not have client section":   {systemLandscapeConfigFile: "no_client_section.conf", wantErr: true},
+		"Error when the landscape-config command fails":          {breakLandscapeConfigCmd: true, wantErr: true},
+		"Error when failing to override the SSL certficate path": {breakWSLPath: true, wantErr: true},
+		"Error when the can not get WSL Distro name":             {breakWSLDistroName: true, wantErr: true},
+		"Error when the landscape user does not exist":           {noLandscapeGroup: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			s, mock := testutils.MockSystem(t)
+
+			if tc.systemLandscapeConfigFile == "" {
+				tc.systemLandscapeConfigFile = "regular.conf"
+			}
+
+			if tc.breakLandscapeConfigCmd {
+				mock.SetControlArg(testutils.LandscapeEnableErr)
+			}
+
+			if tc.breakWSLPath {
+				mock.SetControlArg(testutils.WslpathErr)
+			}
+
+			if tc.breakWSLDistroName {
+				mock.SetControlArg(testutils.WslpathErr)
+				mock.WslDistroNameEnvEnabled = false
+			}
+
+			if tc.noLandscapeGroup {
+				mock.LandscapeGroupGID = ""
+			}
+
+			if tc.systemLandscapeConfigFile != "-" {
+				if tc.breakWriteConfig {
+					path := mock.Path(system.LandscapeConfigPath)
+					commontestutils.ReplaceFileWithDir(t, path, "Setup: could not create directory to interfere with config file creation")
+				} else {
+					config, err := os.ReadFile(filepath.Join("testdata", "landscape.conf.d", tc.systemLandscapeConfigFile))
+					require.NoError(t, err, "Setup: could not load fixture")
+					err = os.MkdirAll(filepath.Dir(s.Path(system.LandscapeConfigPath)), 0700)
+					require.NoError(t, err, "Setup: could not create Landscape config dir")
+					err = os.WriteFile(s.Path(system.LandscapeConfigPath), config, 0600)
+					require.NoError(t, err, "Setup: could not write Landscape system config file")
+				}
+			}
+
+			err := s.EnsureValidLandscapeConfig(ctx)
+			if tc.wantErr {
+				require.Error(t, err, "EnsureValidLandscapeConfig should have returned an error")
+				return
+			}
+			require.NoError(t, err, "EnsureValidLandscapeConfig should have succeeded")
+
+			// Landscape --config has been executed
+			exeProof := s.Path("/.landscape-enabled")
+			if tc.wantNoLandscapeConfigCmd {
+				require.NoFileExists(t, exeProof, "Landscape executable should not be ran")
+			} else {
+				require.FileExists(t, exeProof, "Landscape executable never ran")
+			}
+
+			// No Landscape config should be on the system.
+			if tc.wantNoLandscapeConfig {
+				require.NoFileExists(t, s.Path(system.LandscapeConfigPath), "Landscape system config not on disk")
+				return
+			}
+
+			// Landscape config file has been kept or modified
+			configFileContent, err := os.ReadFile(s.Path(system.LandscapeConfigPath))
+			require.NoErrorf(t, err, "could not read config file %q", s.Path(system.LandscapeConfigPath))
+
+			// We mock the filesystem, and the mocked filesystem root is not the same between
+			// runs, so the golden file would never match. This is the solution:
+			got := strings.ReplaceAll(string(configFileContent), mock.FsRoot, "${FILESYSTEM_ROOT}")
+
+			want := commontestutils.LoadWithUpdateFromGolden(t, got)
+			require.Equal(t, want, got, "Landscape executable did not receive the right config")
+		})
+	}
+}
+
 func TestRealBackend(t *testing.T) {
 	t.Parallel()
 
