@@ -745,7 +745,6 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 
 		// Forcing c to load the config file.
 		_, _ = c.LandscapeAgentUID()
-
 	}
 
 	// Mock file config
