@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:dupl // Those tests are very similar because the tasks and their failure modes are, but yet not the same.
 func TestProAttachment(t *testing.T) {
 	testcases := map[string]struct {
 		token string
@@ -50,6 +51,7 @@ func TestProAttachment(t *testing.T) {
 	}
 }
 
+//nolint:dupl // Those tests are very similar because the tasks and their failure modes are, but yet not the same.
 func TestLandscapeConfigure(t *testing.T) {
 	testcases := map[string]struct {
 		config string
