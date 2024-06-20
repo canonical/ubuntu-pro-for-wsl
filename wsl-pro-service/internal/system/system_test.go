@@ -22,6 +22,41 @@ const (
 	mockBadOutput                      // A mock that returns a bad value with no error
 )
 
+func TestNew(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		systemLandscapeConfigFile string
+	}{
+		"Return a new system": {},
+
+		"Only prints a warning when the Landscape config validation failed": {systemLandscapeConfigFile: "invalid_ini.conf"},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			mock := &testutils.SystemMock{
+				FsRoot: testutils.MockFilesystemRoot(t),
+			}
+
+			if tc.systemLandscapeConfigFile != "" {
+				config, err := os.ReadFile(filepath.Join("testdata", "landscape.conf.d", tc.systemLandscapeConfigFile))
+				require.NoError(t, err, "Setup: could not load fixture")
+				err = os.MkdirAll(filepath.Dir(mock.Path(system.LandscapeConfigPath)), 0700)
+				require.NoError(t, err, "Setup: could not create Landscape config dir")
+				err = os.WriteFile(mock.Path(system.LandscapeConfigPath), config, 0600)
+				require.NoError(t, err, "Setup: could not write Landscape system config file")
+			}
+
+			s := system.New(system.WithTestBackend(mock))
+
+			require.NotNil(t, s, "New should return a system object")
+		})
+	}
+}
+
 func TestInfo(t *testing.T) {
 	t.Parallel()
 
