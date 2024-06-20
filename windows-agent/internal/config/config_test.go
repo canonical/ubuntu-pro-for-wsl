@@ -139,14 +139,14 @@ func TestLandscapeConfig(t *testing.T) {
 
 			landscapeConf, source, err := conf.LandscapeClientConfig()
 			if tc.wantError {
-				require.Error(t, err, "ProToken should return an error")
+				require.Error(t, err, "LandscapeClientConfig should return an error")
 				return
 			}
-			require.NoError(t, err, "ProToken should return no error")
+			require.NoError(t, err, "LandscapeClientConfig should return no error")
 
 			// Test values
-			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected token value")
-			require.Equal(t, tc.wantSource, source, "Unexpected token source")
+			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected Landscape config value")
+			require.Equal(t, tc.wantSource, source, "Unexpected Landscape config source")
 		})
 	}
 }
