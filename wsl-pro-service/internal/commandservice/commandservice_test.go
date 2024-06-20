@@ -32,6 +32,7 @@ func TestApplyProToken(t *testing.T) {
 		"Error calling pro attach": {breakProAttach: true, wantErr: true},
 	}
 
+	//nolint:dupl // Those tests are very similar because the tasks and their failure modes are, but yet not the same. That can change at any time.
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -99,6 +100,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 		"Error calling landscape enable":  {breakLandscapeEnable: true, wantErr: true},
 	}
 
+	//nolint:dupl // Those tests are very similar because the tasks and their failure modes are, but yet not the same. That can change at any time.
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
