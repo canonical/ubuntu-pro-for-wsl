@@ -8,7 +8,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240322101935-3e73eb563dc3
 	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240322101935-3e73eb563dc3
 	github.com/golangci/golangci-lint v1.59.1
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/vuln v1.1.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.4.0
@@ -63,7 +63,7 @@ require (
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.1.2 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.13.4 // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
