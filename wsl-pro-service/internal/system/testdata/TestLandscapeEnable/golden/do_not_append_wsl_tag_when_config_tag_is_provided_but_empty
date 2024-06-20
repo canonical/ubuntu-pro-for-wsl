@@ -1,5 +1,0 @@
-[client]
-hello          = world
-tags           = 
-computer_title = TEST_DISTRO
-hostagent_uid  = landscapeUID1234
