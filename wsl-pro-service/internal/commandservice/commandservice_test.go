@@ -103,8 +103,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			uid := "this-is-a-uid"
-			config := "[client]\nhello=world"
+			config := "[client]\nhello=world\nhostagent_uid=this-is-a-uid\n"
 			if tc.emptyConfig {
 				config = ""
 			}
@@ -122,8 +121,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			svc := commandservice.New(sys)
 
 			err := svc.ApplyLandscapeConfig(context.Background(), &agentapi.LandscapeConfigCmd{
-				Config:       config,
-				HostagentUid: uid,
+				Config: config,
 			})
 			if tc.wantErr {
 				require.Error(t, err, "ApplyLandscapeConfig call should return an error")
