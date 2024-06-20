@@ -427,17 +427,19 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 
 			got, src, err := conf.LandscapeClientConfig()
 			require.NoError(t, err, "LandscapeClientConfig should return no errors")
-			require.Equal(t, wantSource, src, "Did not get the same source for landscape config as we set")
+			require.Equal(t, wantSource, src, "Did not get the same source for Landscape config as we set")
 			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier should have been called once")
+
+			if wantSource == config.SourceNone {
+				require.Empty(t, got, "Did not get the same value for Landscape config as we set")
+				return
+			}
 
 			want := landscapeBaseConf
 			if tc.settingsState.is(landscapeUIDHasValue) {
 				want += "\nhostagent_uid=landscapeUID1234\n"
 			}
-			if wantSource == config.SourceNone {
-				want = ""
-			}
-			require.Equal(t, want, got, "Did not get the same value for landscape config as we set")
+			require.Equal(t, want, got, "Did not get the same value for Landscape config as we set")
 		})
 	}
 }
