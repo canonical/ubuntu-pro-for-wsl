@@ -399,13 +399,6 @@ func completeLandscapeConfig(landscapeConf, hostAgentUID string) (string, error)
 	// Write the ini to a string
 	var b strings.Builder
 
-	// We want to preserve the original format to minimize the amount of whitespaces changes.
-	// Unfortunately there is no per-write option to control this, so we need to change the global setting.
-	prettyFormat := ini.PrettyFormat
-	ini.PrettyFormat = false
-	defer func() {
-		ini.PrettyFormat = prettyFormat
-	}()
 	if _, err = conf.WriteTo(&b); err != nil {
 		return "", fmt.Errorf("could not output the modified configuration: %v", err)
 	}

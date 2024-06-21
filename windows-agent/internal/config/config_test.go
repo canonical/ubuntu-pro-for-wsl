@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	config "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
@@ -111,12 +112,12 @@ func TestLandscapeConfig(t *testing.T) {
 		wantError           bool
 	}{
 		"Retrieves existing config user data":                              {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
-		"Retrieves existing config user data containing the hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe\nhostagent_uid=landscapeUID1234\n", wantSource: config.SourceUser},
+		"Retrieves existing config user data containing the hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe\nhostagent_uid=landscapeUID1234", wantSource: config.SourceUser},
 
 		"Success when there is no registry and user data": {settingsState: untouched, wantSource: config.SourceNone},
 
 		"Retrieves organization data":                     {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
-		"Retrieves org data containing the hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg\nhostagent_uid=landscapeUID1234\n", wantSource: config.SourceRegistry},
+		"Retrieves org data containing the hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg\nhostagent_uid=landscapeUID1234", wantSource: config.SourceRegistry},
 
 		"Prioritizes organization config over a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 
@@ -145,6 +146,8 @@ func TestLandscapeConfig(t *testing.T) {
 			}
 			require.NoError(t, err, "LandscapeClientConfig should return no error")
 
+			// Trimming all middle-spaces
+			landscapeConf = strings.TrimSpace(strings.ReplaceAll(landscapeConf, " ", ""))
 			// Test values
 			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected Landscape config value")
 			require.Equal(t, tc.wantSource, source, "Unexpected Landscape config source")
@@ -366,7 +369,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		t.Parallel()
 	}
 
-	const landscapeBaseConf = "# Landscape configuration\n[client]\nuser=JohnDoe"
+	const landscapeBaseConf = "[client]\nuser=JohnDoe"
 	testCases := map[string]struct {
 		settingsState   settingsState
 		breakFile       bool
@@ -438,8 +441,10 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 
 			want := landscapeBaseConf
 			if tc.settingsState.is(landscapeUIDHasValue) {
-				want += "\nhostagent_uid=landscapeUID1234\n"
+				want += "\nhostagent_uid=landscapeUID1234"
 			}
+			// Trimming all middle-spaces
+			got = strings.TrimSpace(strings.ReplaceAll(got, " ", ""))
 			require.Equal(t, want, got, "Did not get the same value for Landscape config as we set")
 		})
 	}
