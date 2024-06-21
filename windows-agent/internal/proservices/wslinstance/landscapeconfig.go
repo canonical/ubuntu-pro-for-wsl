@@ -62,7 +62,7 @@ func (c *client) SendLandscapeConfig(config string) error {
 	}
 
 	if c.lpeStream == nil {
-		return errors.New("no Landscape config stream")
+		return errors.New("no landscape config stream")
 	}
 
 	err := c.lpeStream.Send(&agentapi.LandscapeConfigCmd{
@@ -71,19 +71,19 @@ func (c *client) SendLandscapeConfig(config string) error {
 	if err != nil {
 		c.Close()
 		log.Warningf(c.lpeStream.Context(), "LandscapeConfig stream could not send: %v", err)
-		return errors.New("could not send Landscape config: disconnected")
+		return errors.New("could not send landscape config: disconnected")
 	}
 
 	result, err := recvContext(c.ctx, c.lpeStream.Recv)
 	if err != nil {
 		c.Close()
 		log.Warningf(c.lpeStream.Context(), "LandscapeConfig stream could not receive: %v", err)
-		return errors.New("could not receive Landscape config result: disconnected")
+		return errors.New("could not receive landscape config result: disconnected")
 	}
 
 	ok, err := msgToError(result)
 	if !ok {
-		return fmt.Errorf("did not receive Landscape config result: %v", err)
+		return fmt.Errorf("did not receive landscape config result: %v", err)
 	}
 	return err
 }

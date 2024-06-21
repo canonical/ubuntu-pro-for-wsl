@@ -59,7 +59,7 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 		instanceInfo, err := newInstanceInfo(d)
 
 		if errors.As(err, &newInstanceInfoMinorError{}) {
-			log.Warningf(ctx, "Landscape: skipping distro %q from landscape info: %v", d.Name(), err)
+			log.Warningf(ctx, "Landscape: skipping distro %q from Landscape info: %v", d.Name(), err)
 			continue
 		}
 
