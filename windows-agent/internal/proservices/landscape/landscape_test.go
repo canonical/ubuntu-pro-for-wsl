@@ -25,6 +25,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -815,6 +816,89 @@ func TestReconnect(t *testing.T) {
 
 			require.Eventually(t, service.Connected,
 				maxTimeout, time.Second, "Client should have connected after reconnection")
+		})
+	}
+}
+
+func TestNotifyConfigUpdate(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testcases := map[string]struct {
+		emptyDB   bool
+		conf, uid string
+	}{
+		"Task contains client conf when UID is not empty":                                       {},
+		"Task contains empty client conf":                                                       {conf: "-"},
+		"Task contains empty client conf when UID is empty despite submitted conf is not empty": {uid: "-"},
+		"Task contains empty client conf when both are empty":                                   {conf: "-", uid: "-"},
+
+		"Tasks are skipped when database is empty": {emptyDB: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			switch tc.conf {
+			case "":
+				tc.conf = "[client]hello=world"
+			case "-":
+				tc.conf = ""
+			default:
+			}
+
+			switch tc.uid {
+			case "":
+				tc.uid = "ServerAssignedUID"
+			case "-":
+				tc.uid = ""
+			default:
+			}
+
+			storageDir := t.TempDir()
+			db, err := database.New(ctx, storageDir)
+			require.NoError(t, err, "Setup: database New should not return an error")
+
+			if !tc.emptyDB {
+				distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
+				d, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
+				require.NoError(t, err, "Setup: distro %s GetDistroAndUpdateProperties should return no errors", distroName)
+				defer d.Cleanup(ctx)
+			}
+
+			var cloudInit mockCloudInit
+			service, err := landscape.New(ctx, &mockConfig{}, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
+			require.NoError(t, err, "Setup: New should not return an error")
+
+			service.NotifyConfigUpdate(ctx, tc.conf, tc.uid)
+
+			// There is no direct way to observe the result of that function other than relying on the implementation details of the task database.
+			tasksFiles, err := filepath.Glob(filepath.Join(storageDir, "*.tasks"))
+			require.NoError(t, err, "NotifyConfigUpdate: could not list the tasks files storage dir: %s", storageDir)
+
+			if tc.emptyDB {
+				require.Empty(t, tasksFiles, "NotifyConfigUpdate: should not have created a tasks file when the database is empty")
+				return
+			}
+
+			b, err := os.ReadFile(tasksFiles[0])
+			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")
+			task := string(b)
+			require.NotEmpty(t, task, "NotifyConfigUpdate: tasks file should not be empty")
+			if tc.uid == "" && tc.conf != "" {
+				require.NotContains(t, task, tc.conf, "NotifyConfigUpdate: tasks file should not contain the Landscape client config submitted")
+			} else {
+				require.Contains(t, task, tc.conf, "NotifyConfigUpdate: tasks file should contain the Landscape client config submitted")
+			}
+			require.Contains(t, task, tasks.LandscapeConfigure{}.String(), "NotifyConfigUpdate: tasks file should contain a LandscapeConfigure task")
 		})
 	}
 }
