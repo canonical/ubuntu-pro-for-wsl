@@ -30,7 +30,7 @@ func TestNew(t *testing.T) {
 	}{
 		"Return a new system": {},
 
-		"Only prints a warning when the Landscape config validation failed": {systemLandscapeConfigFile: "invalid_ini.conf"},
+		"Ignore errors when the Landscape config validation failed (only warnings)": {systemLandscapeConfigFile: "invalid_ini.conf"},
 	}
 
 	for name, tc := range testCases {
