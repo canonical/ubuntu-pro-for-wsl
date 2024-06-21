@@ -56,10 +56,8 @@ func (s Service) ApplyLandscapeConfig(ctx context.Context, msg *agentapi.Landsca
 		return nil
 	}
 
-	uid := msg.GetHostagentUid()
-
 	log.Infof(ctx, "ApplyLandscapeConfig: received config: registering")
-	if err := s.system.LandscapeEnable(ctx, conf, uid); err != nil {
+	if err := s.system.LandscapeEnable(ctx, conf); err != nil {
 		return err
 	}
 

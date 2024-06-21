@@ -50,7 +50,7 @@ var (
 
 	// windowsUserProfileDir is the default path used in tests to store the Windows agent address file.
 	windowsUserProfileDir = `D:\Users\TestUser\`
-	linuxUserProfileDir   = "/mnt/d/Users/TestUser/"
+	linuxUserProfileDir   = filepath.Join(defaultWindowsMount, "Users/TestUser/")
 
 	// defaultPublicDir is the default path used in tests to store the address of the Windows Agent service.
 	defaultPublicDir = filepath.Join(linuxUserProfileDir, common.UserProfileDir)
@@ -120,7 +120,7 @@ func MockSystem(t *testing.T) (*system.System, *SystemMock) {
 
 	distroHostname := "TEST_DISTRO_HOSTNAME"
 	mock := &SystemMock{
-		FsRoot:                  mockFilesystemRoot(t),
+		FsRoot:                  MockFilesystemRoot(t),
 		WslDistroName:           "TEST_DISTRO",
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
@@ -143,6 +143,12 @@ func (m *SystemMock) SetControlArg(arg controlArg) {
 
 // Path prepends FsRoot to a path.
 func (m *SystemMock) Path(path ...string) string {
+	// We need to special case our local certificate to not prepend m.FsRoot to it and modify our idempotent path
+	for _, p := range path {
+		if strings.Contains(p, "idempotent") {
+			return filepath.Join(path...)
+		}
+	}
 	path = append([]string{m.FsRoot}, path...)
 	return filepath.Join(path...)
 }
@@ -507,8 +513,10 @@ func WslPathMock(t *testing.T) {
 			}
 
 			stdout, ok := map[string]string{
-				windowsUserProfileDir:           linuxUserProfileDir,
-				`D:\Users\TestUser\certificate`: filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				windowsUserProfileDir:                   linuxUserProfileDir,
+				`D:\Users\TestUser\certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				`D:/Users/TestUser/certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				`/idempotent/path/to/linux/certificate`: `/idempotent/path/to/linux/certificate`,
 			}[argv[1]]
 
 			if !ok {
@@ -641,9 +649,9 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 	syscall.Exit(exit)
 }
 
-// mockFilesystemRoot sets up a skelleton filesystem with files used by the wsl-pro-service and returns
+// MockFilesystemRoot sets up a skelleton filesystem with files used by the wsl-pro-service and returns
 // its root dir.
-func mockFilesystemRoot(t *testing.T) (rootDir string) {
+func MockFilesystemRoot(t *testing.T) (rootDir string) {
 	t.Helper()
 
 	rootDir = t.TempDir()
