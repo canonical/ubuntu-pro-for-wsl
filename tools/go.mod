@@ -50,7 +50,7 @@ require (
 	github.com/butuzov/ireturn v0.3.0 // indirect
 	github.com/butuzov/mirror v1.2.0 // indirect
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240621131638-6643fc94202d // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240322101935-3e73eb563dc3 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3 // indirect

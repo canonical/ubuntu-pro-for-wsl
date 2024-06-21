@@ -6,7 +6,7 @@ toolchain go1.22.4
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240621035556-562445eec451
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240621131638-6643fc94202d
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240506165625-eb341f2dec3e
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240322101935-3e73eb563dc3
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3
