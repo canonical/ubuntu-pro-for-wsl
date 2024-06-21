@@ -8,7 +8,7 @@ require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240322101935-3e73eb563dc3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 	google.golang.org/grpc v1.64.0
 	gopkg.in/yaml.v2 v2.4.0

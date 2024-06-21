@@ -2,8 +2,8 @@ github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
 github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c h1:NxFWYekGaOxzSAHSRzUlZ0J6TA2zFajqHMLpkA4A7rc=
 github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3 h1:HSc1LV3CyGIXHvIL/VViAf6xixLLFdJGPd4J831HTa4=
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240322101935-3e73eb563dc3/go.mod h1:Cud84UloJCb6yTabFFqxXiGEqzVc1g6e7emwPNDKEVM=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240621035556-562445eec451 h1:ue0O6S1X+klMVSYM+hGI8+4oeh8diZzG9UQGPJl3bRw=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240621035556-562445eec451/go.mod h1:iEAtSzIDPpT7ZpnVKz9uMSUtI56xZMjwJWKyZkzPv9k=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240506165625-eb341f2dec3e h1:ZUjBJdJWxk5cM6Nr7vv7oUC1LuzrzMjvVPu8UIPoJ24=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240506165625-eb341f2dec3e/go.mod h1:5NmdfMgqJq+nPpB5tCfe7hgiXSEN7uM1dhGSAkaF6xU=
 github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240322101935-3e73eb563dc3 h1:QJUHhH7n5EFpoKkHA6+CDLQobJ9LDCNVcwdw0lVEWBI=
@@ -12,8 +12,6 @@ github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3
 github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3/go.mod h1:2uxCm4z7LlcGCOsK8GyGPxsKFokYNUkq5gZHmLbji8c=
 github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240322101935-3e73eb563dc3 h1:OkTH6IvjlPB8oLkcf7lsR/2wjx0eBuZyNQZiW0yckXY=
 github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240322101935-3e73eb563dc3/go.mod h1:OQG+nevc326wSYPYVeltIi2UnFsg6LkAnkpH1e/zWlk=
-github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240307105924-373a97d8dd51 h1:NyViAi68vak8VOAtdUTyRp55IWML5k2k25MbM8WWU/Y=
-github.com/canonical/ubuntu-pro-for-wsl/wslserviceapi v0.0.0-20240307105924-373a97d8dd51/go.mod h1:lxWD62Yv2SDsVZyegRiVsvv3CQvdrDVzKIQV71m7jnc=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
