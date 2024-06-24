@@ -390,8 +390,7 @@ func completeLandscapeConfig(landscapeConf, hostAgentUID string) (string, error)
 	if key, err := clientSection.GetKey(keyName); err == nil {
 		key.SetValue(hostAgentUID)
 	} else {
-		_, err = clientSection.NewKey(keyName, hostAgentUID)
-		if err != nil {
+		if _, err = clientSection.NewKey(keyName, hostAgentUID); err != nil {
 			return "", fmt.Errorf("could not add the %s key to the client section: %v", keyName, err)
 		}
 	}
