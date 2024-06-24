@@ -187,13 +187,12 @@ func TestLandscapeAgentUID(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
+			conf := config.New(ctx, dir)
+			setup(t, conf)
 			if tc.breakFileContents {
 				err := os.WriteFile(filepath.Join(dir, "config"), []byte("\tmessage:\n\t\tthis is not YAML!["), 0600)
 				require.NoError(t, err, "Setup: could not re-write config file")
 			}
-
-			conf := config.New(ctx, dir)
-			setup(t, conf)
 
 			v, err := conf.LandscapeAgentUID()
 			if tc.wantError {
@@ -762,8 +761,11 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 			require.NoError(t, c.UpdateRegistryData(ctx, d, db), "Setup: could not set config registry data")
 		}
 
-		// Forcing c to load the config file.
-		_, _ = c.LandscapeAgentUID()
+		if !fileBroken {
+			// Forcing c to load the config file.
+			_, err := c.LandscapeAgentUID()
+			require.NoError(t, err, "Setup: could not load data from mock config file")
+		}
 	}
 
 	// Mock file config
