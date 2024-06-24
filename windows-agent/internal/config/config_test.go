@@ -464,23 +464,22 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 		wantNotify bool
 		wantError  bool
 	}{
-		"Sets the UID without previous client conf":  {settingsState: untouched, want: "new_uid"},
 		"Sets the UID with previous client conf":     {settingsState: userLandscapeConfigHasValue, want: "new_uid", wantNotify: true},
 		"Sets the UID with the same value":           {settingsState: landscapeUIDHasValue, uid: "landscapeUID1234", want: "landscapeUID1234"},
 		"Sets the UID with previous org client conf": {settingsState: orgLandscapeConfigHasValue, want: "new_uid", wantNotify: true},
 
-		"Overrides the UID with no previous client conf": {settingsState: untouched, want: "new_uid"},
-		"Overrides the UID with previous client conf":    {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, want: "new_uid", wantNotify: true},
+		"Overrides the UID with previous client conf": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, want: "new_uid", wantNotify: true},
 
-		"Resets the UID with no previous client conf":  {settingsState: landscapeUIDHasValue, uid: "-", want: ""},
 		"Resets the UID with previous client conf":     {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, uid: "-", want: "", wantNotify: true},
 		"Resets the UID with previous org client conf": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, uid: "-", want: "", wantNotify: true},
 
-		"Success when the pro token field does not exist": {settingsState: fileExists, want: "new_uid"},
+		"Cannot set the UID without previous client conf":      {settingsState: untouched, want: ""},
+		"Cannot reset the UID with no previous client conf":    {settingsState: landscapeUIDHasValue, uid: "-", want: "landscapeUID1234"},
+		"Cannot override the UID with no previous client conf": {settingsState: untouched, want: ""},
 
 		"Error when the file cannot be read":             {settingsState: untouched, breakFile: true, wantError: true},
 		"Error when the previous client conf is invalid": {settingsState: userLandscapeConfigHasValue | landscapeIsNotINI, wantError: true},
-		"Error when the file cannot be written":          {settingsState: fileExists, cannotWriteFile: true, wantError: true},
+		"Error when the file cannot be written":          {settingsState: userLandscapeConfigHasValue, cannotWriteFile: true, want: "", wantError: true},
 	}
 
 	for name, tc := range testCases {

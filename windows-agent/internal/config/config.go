@@ -177,12 +177,12 @@ func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig str
 
 // SetLandscapeAgentUID overrides the Landscape agent UID and notify listeners.
 func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
-	isUpdated, conf, err := c.setAgentUIDAndUpdateClientConf(ctx, uid)
+	conf, err := c.setAgentUIDAndUpdateClientConf(ctx, uid)
 	if err != nil {
 		return err
 	}
 
-	if isUpdated {
+	if conf != "" {
 		log.Debugf(ctx, "config: notifying Landscape config listeners about agent UID change: %s", uid)
 		c.notifyLandscape(ctx, conf, uid)
 	}
@@ -190,52 +190,56 @@ func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 	return nil
 }
 
-// setAgentUIDAndUpdateClientConf sets the agent UID and updates the client configuration, returning the new configuration and the 'true' boolean flag to indicate that the configuration has changed,
-// allowing the caller to trigger notifications, preventing that from happening while we hold a lock.
-func (c *Config) setAgentUIDAndUpdateClientConf(ctx context.Context, uid string) (bool, string, error) {
+// setAgentUIDAndUpdateClientConf sets the agent UID and updates the client configuration, returning the new configuration or empty string if nothing changed,
+// allowing the caller to trigger notifications without holding a lock.
+func (c *Config) setAgentUIDAndUpdateClientConf(ctx context.Context, uid string) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if err := c.load(); err != nil {
-		return false, "", fmt.Errorf("config: could not set Landscape agent UID: %v", err)
+		return "", fmt.Errorf("config: could not set Landscape agent UID: %v", err)
 	}
 
 	if c.Landscape.UID == uid {
 		log.Info(ctx, "config: no changes in the agent UID")
-		return false, "", nil
+		return "", nil
 	}
 
+	landscapeConf, src := c.Landscape.resolve()
+	if src == SourceNone {
+		log.Info(ctx, "config: no client configuration to notify about agent UID change")
+		return "", nil
+	}
+
+	updated, err := completeLandscapeConfig(landscapeConf, uid)
+	if err != nil {
+		return "", fmt.Errorf("config: could not update client conf with agent UID changes: %v", err)
+	}
+
+	switch src {
+	case SourceUser:
+		c.Landscape.UserConfig = updated
+	case SourceRegistry:
+		c.Landscape.OrgConfig = updated
+	default:
+		return "", fmt.Errorf("config: could not update client conf with agent UID changes: unexpected source for client configuration: %v", src)
+	}
+
+	oldUID := c.Landscape.UID
 	c.Landscape.UID = uid
-
-	// From this point on we have something to dump, but since `c.dump()` affects the values returned from this function, let's add yet one more indirection,
-	// setting the values we want to return first, and then deciding based on the result of `c.dump()`
-	mustNotify, updatedConf, err := func() (bool, string, error) {
-		landscapeConf, src := c.Landscape.resolve()
-		if src == SourceNone {
-			log.Info(ctx, "config: no client configuration to notify about agent UID change")
-			return false, "", nil
-		}
-
-		updated, err := completeLandscapeConfig(landscapeConf, uid)
-		if err != nil {
-			return false, "", fmt.Errorf("config: could not update client conf with agent UID changes: %v", err)
-		}
-
+	if e := c.dump(); e != nil {
+		// rollback if we can't dump the config
+		log.Warning(ctx, "Failed to dump config after changing agent UID, rolling back")
+		c.Landscape.UID = oldUID
 		switch src {
 		case SourceUser:
-			c.Landscape.UserConfig = updated
+			c.Landscape.UserConfig = landscapeConf
 		case SourceRegistry:
-			c.Landscape.OrgConfig = updated
-		default:
-			return false, "", fmt.Errorf("config: could not update client conf with agent UID changes: unexpected source for client configuration: %v", src)
+			c.Landscape.OrgConfig = landscapeConf
 		}
-		return true, landscapeConf, nil
-	}()
-
-	if e := c.dump(); e != nil {
-		return false, "", fmt.Errorf("config: could not set Landscape agent UID: %v", e)
+		return "", fmt.Errorf("config: could not set Landscape agent UID: %v", e)
 	}
-	return mustNotify, updatedConf, err
+	return updated, err
 }
 
 func (c *Config) get() (s configState, err error) {
