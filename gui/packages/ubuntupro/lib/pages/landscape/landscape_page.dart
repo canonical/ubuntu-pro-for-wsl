@@ -131,7 +131,7 @@ class LandscapeInput extends StatelessWidget {
           ],
         ),
         const SizedBox(
-          height: 32.0,
+          height: 16.0,
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +314,7 @@ class _FileFormState extends State<_FileForm> {
           style: widget.sectionBodyStyle,
         ),
         const SizedBox(
-          height: 16.0,
+          height: 8.0,
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
