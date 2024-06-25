@@ -266,10 +266,10 @@ func TestSendCommands(t *testing.T) {
 	err = conn.SendProAttachment("MOCK_ERROR")
 	require.Error(t, err, "SendProAttachment should have returned an error")
 
-	err = conn.SendLandscapeConfig("hello=world", "uid1234")
+	err = conn.SendLandscapeConfig("hello=world")
 	require.NoError(t, err, "SendLandscapeConfig should return no error")
 
-	err = conn.SendLandscapeConfig("MOCK_ERROR", "uid5321")
+	err = conn.SendLandscapeConfig("MOCK_ERROR")
 	require.Error(t, err, "SendLandscapeConfig should have returned an error")
 
 	wps.Stop()
@@ -277,7 +277,7 @@ func TestSendCommands(t *testing.T) {
 	err = conn.SendProAttachment("hello123")
 	require.Error(t, err, "SendProAttachment should return an error after disconnecting")
 
-	err = conn.SendLandscapeConfig("hello123", "uid852")
+	err = conn.SendLandscapeConfig("hello123")
 	require.Error(t, err, "SendLandscapeConfig should return an error after disconnecting")
 }
 

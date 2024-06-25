@@ -28,7 +28,7 @@ type distro interface {
 // with the WSL-Pro-Service.
 type Connection interface {
 	SendProAttachment(proToken string) error
-	SendLandscapeConfig(lpeConfig, hostagentUID string) error
+	SendLandscapeConfig(lpeConfig string) error
 	Close()
 }
 

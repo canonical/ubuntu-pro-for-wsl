@@ -32,6 +32,7 @@ func TestApplyProToken(t *testing.T) {
 		"Error calling pro attach": {breakProAttach: true, wantErr: true},
 	}
 
+	//nolint:dupl // Those tests are very similar because the tasks and their failure modes are, but yet not the same. That can change at any time.
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -99,12 +100,12 @@ func TestApplyLandscapeConfig(t *testing.T) {
 		"Error calling landscape enable":  {breakLandscapeEnable: true, wantErr: true},
 	}
 
+	//nolint:dupl // Those tests are very similar because the tasks and their failure modes are, but yet not the same. That can change at any time.
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			uid := "this-is-a-uid"
-			config := "[client]\nhello=world"
+			config := "[client]\nhello=world\nhostagent_uid=this-is-a-uid\n"
 			if tc.emptyConfig {
 				config = ""
 			}
@@ -122,8 +123,7 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			svc := commandservice.New(sys)
 
 			err := svc.ApplyLandscapeConfig(context.Background(), &agentapi.LandscapeConfigCmd{
-				Config:       config,
-				HostagentUid: uid,
+				Config: config,
 			})
 			if tc.wantErr {
 				require.Error(t, err, "ApplyLandscapeConfig call should return an error")

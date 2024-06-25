@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	config "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
@@ -37,6 +38,7 @@ const (
 	storeTokenHasValue          = storeTokenExists | 1<<21          // File exists, microsoft store token exists, and is not empty
 	userLandscapeConfigHasValue = userLandscapeConfigExists | 1<<22 // File exists, landscape client config exists, and is not empty
 	landscapeUIDHasValue        = landscapeUIDExists | 1<<23        // File exists, landscape agent UID exists, and is not empty
+	landscapeIsNotINI           = landscapeUIDExists | 1<<24        // File exists, landscape client config exists, but is not INI syntax
 )
 
 func TestSubscription(t *testing.T) {
@@ -109,16 +111,17 @@ func TestLandscapeConfig(t *testing.T) {
 		wantSource          config.Source
 		wantError           bool
 	}{
-		"Success": {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Retrieves existing config user data":                              {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Retrieves existing config user data containing the hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe\nhostagent_uid=landscapeUID1234", wantSource: config.SourceUser},
 
-		"Success when neither registry data nor conf file exist": {settingsState: untouched},
+		"Success when there is no registry and user data": {settingsState: untouched, wantSource: config.SourceNone},
 
-		"Success when there is an organization conf": {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
-		"Success when there is a user conf":          {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
+		"Retrieves organization data":                     {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
+		"Retrieves org data containing the hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg\nhostagent_uid=landscapeUID1234", wantSource: config.SourceRegistry},
 
-		"Success when an organization config shadows a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
+		"Prioritizes organization config over a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
 
-		"Error when the file cannot be read from": {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when the file cannot be read": {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -138,14 +141,16 @@ func TestLandscapeConfig(t *testing.T) {
 
 			landscapeConf, source, err := conf.LandscapeClientConfig()
 			if tc.wantError {
-				require.Error(t, err, "ProToken should return an error")
+				require.Error(t, err, "LandscapeClientConfig should return an error")
 				return
 			}
-			require.NoError(t, err, "ProToken should return no error")
+			require.NoError(t, err, "LandscapeClientConfig should return no error")
 
+			// Trimming all middle-spaces
+			landscapeConf = strings.TrimSpace(strings.ReplaceAll(landscapeConf, " ", ""))
 			// Test values
-			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected token value")
-			require.Equal(t, tc.wantSource, source, "Unexpected token source")
+			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected Landscape config value")
+			require.Equal(t, tc.wantSource, source, "Unexpected Landscape config source")
 		})
 	}
 }
@@ -182,13 +187,12 @@ func TestLandscapeAgentUID(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create empty database")
 
 			setup, dir := setUpMockSettings(t, ctx, db, tc.settingsState, tc.breakFile, false)
+			conf := config.New(ctx, dir)
+			setup(t, conf)
 			if tc.breakFileContents {
 				err := os.WriteFile(filepath.Join(dir, "config"), []byte("\tmessage:\n\t\tthis is not YAML!["), 0600)
 				require.NoError(t, err, "Setup: could not re-write config file")
 			}
-
-			conf := config.New(ctx, dir)
-			setup(t, conf)
 
 			v, err := conf.LandscapeAgentUID()
 			if tc.wantError {
@@ -364,16 +368,23 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		t.Parallel()
 	}
 
+	const landscapeBaseConf = "[client]\nuser=JohnDoe"
 	testCases := map[string]struct {
-		settingsState settingsState
-		breakFile     bool
+		settingsState   settingsState
+		breakFile       bool
+		landscapeConfig string
 
 		wantError bool
 	}{
-		"Success": {settingsState: untouched},
+		"Saves the config when there was no previous data":       {settingsState: untouched},
+		"Merges user-submitted data with existing hostagent UID": {settingsState: userLandscapeConfigExists | landscapeUIDHasValue},
+		"Merges user-submitted discarding new hostagent UID":     {settingsState: userLandscapeConfigExists | landscapeUIDHasValue, landscapeConfig: landscapeBaseConf + "\nhostagent_uid=new_and_discarded_hostagent_uid\n"},
+		"Saves empty new user config data":                       {settingsState: userLandscapeConfigHasValue, landscapeConfig: "-"},
 
-		"Error when an organization landscape config is already set": {settingsState: orgLandscapeConfigHasValue, wantError: true},
-		"Error when an configuration cannot be read":                 {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when the configuration sent is not valid ini syntax":      {settingsState: untouched, landscapeConfig: "NOT INI SYNTAX", wantError: true},
+		"Error when the configuration does not contain [client] section": {settingsState: untouched, landscapeConfig: "[section]\nsomething=else", wantError: true},
+		"Error when an organization landscape config is already set":     {settingsState: orgLandscapeConfigHasValue, wantError: true},
+		"Error when the config file cannot be read":                      {settingsState: untouched, breakFile: true, wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -391,7 +402,15 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
-			landscapeConfig := "LANDSCAPE CONFIG"
+			wantSource := config.SourceUser
+			switch tc.landscapeConfig {
+			case "":
+				tc.landscapeConfig = landscapeBaseConf
+			case "-":
+				tc.landscapeConfig = ""
+				wantSource = config.SourceNone
+			default:
+			}
 
 			var calledLandscapeNotifier int
 			conf.SetUbuntuProNotifier(func(context.Context, string) {
@@ -402,7 +421,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 				calledLandscapeNotifier++
 			})
 
-			err = conf.SetUserLandscapeConfig(ctx, landscapeConfig)
+			err = conf.SetUserLandscapeConfig(ctx, tc.landscapeConfig)
 			if tc.wantError {
 				require.Error(t, err, "SetUserLandscapeConfig should return an error")
 				return
@@ -411,9 +430,21 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 
 			got, src, err := conf.LandscapeClientConfig()
 			require.NoError(t, err, "LandscapeClientConfig should return no errors")
-			require.Equal(t, landscapeConfig, got, "Did not get the same value for landscape config as we set")
-			require.Equal(t, config.SourceUser, src, "Did not get the same value for landscape config as we set")
+			require.Equal(t, wantSource, src, "Did not get the same source for Landscape config as we set")
 			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier should have been called once")
+
+			if wantSource == config.SourceNone {
+				require.Empty(t, got, "Did not get the same value for Landscape config as we set")
+				return
+			}
+
+			want := landscapeBaseConf
+			if tc.settingsState.is(landscapeUIDHasValue) {
+				want += "\nhostagent_uid=landscapeUID1234"
+			}
+			// Trimming all middle-spaces
+			got = strings.TrimSpace(strings.ReplaceAll(got, " ", ""))
+			require.Equal(t, want, got, "Did not get the same value for Landscape config as we set")
 		})
 	}
 }
@@ -425,20 +456,30 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 
 	testCases := map[string]struct {
 		settingsState   settingsState
-		emptyUID        bool
+		uid             string
 		breakFile       bool
 		cannotWriteFile bool
 
-		want      string
-		wantError bool
+		want       string
+		wantNotify bool
+		wantError  bool
 	}{
-		"Success overriding the UID":                      {settingsState: landscapeUIDHasValue, want: "new_uid"},
-		"Success unsetting the UID":                       {settingsState: landscapeUIDHasValue, emptyUID: true, want: ""},
-		"Success when the file does not exist":            {settingsState: untouched, want: "new_uid"},
-		"Success when the pro token field does not exist": {settingsState: fileExists, want: "new_uid"},
+		"Sets the UID with previous client conf":     {settingsState: userLandscapeConfigHasValue, want: "new_uid", wantNotify: true},
+		"Sets the UID with the same value":           {settingsState: landscapeUIDHasValue, uid: "landscapeUID1234", want: "landscapeUID1234"},
+		"Sets the UID with previous org client conf": {settingsState: orgLandscapeConfigHasValue, want: "new_uid", wantNotify: true},
 
-		"Error when the file cannot be opened":  {settingsState: landscapeUIDHasValue, breakFile: true, want: "landscapeUID1234", wantError: true},
-		"Error when the file cannot be written": {settingsState: fileExists, cannotWriteFile: true, wantError: true},
+		"Overrides the UID with previous client conf": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, want: "new_uid", wantNotify: true},
+
+		"Resets the UID with previous client conf":     {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, uid: "-", want: "", wantNotify: true},
+		"Resets the UID with previous org client conf": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, uid: "-", want: "", wantNotify: true},
+
+		"Cannot set the UID without previous client conf":      {settingsState: untouched, want: ""},
+		"Cannot reset the UID with no previous client conf":    {settingsState: landscapeUIDHasValue, uid: "-", want: "landscapeUID1234"},
+		"Cannot override the UID with no previous client conf": {settingsState: untouched, want: ""},
+
+		"Error when the file cannot be read":             {settingsState: untouched, breakFile: true, wantError: true},
+		"Error when the previous client conf is invalid": {settingsState: userLandscapeConfigHasValue | landscapeIsNotINI, wantError: true},
+		"Error when the file cannot be written":          {settingsState: userLandscapeConfigHasValue, cannotWriteFile: true, want: "", wantError: true},
 	}
 
 	for name, tc := range testCases {
@@ -456,9 +497,12 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			conf := config.New(ctx, dir)
 			setup(t, conf)
 
-			uid := "new_uid"
-			if tc.emptyUID {
-				uid = ""
+			switch tc.uid {
+			case "":
+				tc.uid = "new_uid"
+			case "-":
+				tc.uid = ""
+			default:
 			}
 
 			conf.SetUbuntuProNotifier(func(context.Context, string) {
@@ -466,10 +510,12 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 			})
 
 			conf.SetLandscapeNotifier(func(context.Context, string, string) {
-				require.Fail(t, "LandscapeNotifier should not be called")
+				if !tc.wantNotify {
+					require.Fail(t, "LandscapeNotifier should not have been called")
+				}
 			})
 
-			err = conf.SetLandscapeAgentUID(uid)
+			err = conf.SetLandscapeAgentUID(ctx, tc.uid)
 			if tc.wantError {
 				require.Error(t, err, "SetLandscapeAgentUID should return an error")
 				return
@@ -496,6 +542,8 @@ func TestUpdateRegistryData(t *testing.T) {
 
 		proToken2      = "UBUNTU_PRO_TOKEN_SECOND"
 		landscapeConf2 = "[client]greeting=cheers"
+
+		invalidLandscapeConf = "NOT AN INI SYNTAX"
 	)
 
 	testCases := map[string]struct {
@@ -504,8 +552,8 @@ func TestUpdateRegistryData(t *testing.T) {
 
 		wantErr bool
 	}{
-		"Success":                        {},
-		"Success overriding user config": {settingsState: userTokenHasValue | userLandscapeConfigHasValue},
+		"Success":                             {},
+		"Registry data overrides user config": {settingsState: userTokenHasValue | userLandscapeConfigHasValue},
 
 		"Error when we cannot load from file": {breakConfigFile: true, wantErr: true},
 	}
@@ -641,6 +689,25 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
 			calledUbuntuProNotifier = 0
 			calledLandscapeNotifier = 0
+
+			// Apply invalid Landscape config - should erase the previous one
+			err = c.UpdateRegistryData(ctx, config.RegistryData{
+				UbuntuProToken:  proToken1,
+				LandscapeConfig: invalidLandscapeConf,
+			}, db)
+			require.NoError(t, err, "UpdateRegistryData should not have failed")
+			require.Zero(t, calledUbuntuProNotifier, "UbuntuProNotifier called an unexpected amount of times")
+			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
+
+			lcape, src, err = c.LandscapeClientConfig()
+			require.NoError(t, err, "Subscription should not return any errors")
+
+			if tc.settingsState.is(userLandscapeConfigHasValue) {
+				require.Equal(t, config.SourceUser, src, "Subscription did not come from registry")
+			} else {
+				require.Empty(t, lcape, "Subscription did not return the landscape config we wrote")
+				require.Equal(t, config.SourceNone, src, "Subscription did not come from registry")
+			}
 		})
 	}
 }
@@ -689,12 +756,15 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 			anyData = true
 		}
 
-		if !anyData {
-			return
+		if anyData {
+			require.NoError(t, c.UpdateRegistryData(ctx, d, db), "Setup: could not set config registry data")
 		}
 
-		err := c.UpdateRegistryData(ctx, d, db)
-		require.NoError(t, err, "Setup: could not set config registry data")
+		if !fileBroken {
+			// Forcing c to load the config file.
+			_, err := c.LandscapeAgentUID()
+			require.NoError(t, err, "Setup: could not load data from mock config file")
+		}
 	}
 
 	// Mock file config
@@ -740,6 +810,9 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 	}
 	if state.is(userLandscapeConfigHasValue) {
 		fileData.Landscape["config"] = "[client]\nuser=JohnDoe"
+		if state.is(landscapeIsNotINI) {
+			fileData.Landscape["config"] = "NOT INI SYNTAX"
+		}
 	}
 
 	if state.is(landscapeUIDExists) {
@@ -747,6 +820,9 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 	}
 	if state.is(landscapeUIDHasValue) {
 		fileData.Landscape["uid"] = "landscapeUID1234"
+		if state.is(userLandscapeConfigHasValue) {
+			fileData.Landscape["config"] += "\nhostagent_uid=landscapeUID1234\n"
+		}
 	}
 
 	out, err := yaml.Marshal(fileData)

@@ -175,7 +175,7 @@ func landscapeModule(c Config, out map[string]interface{}) error {
 		return nil
 	}
 
-	var landcapeModule struct {
+	var landscapeModule struct {
 		Client map[string]string `yaml:"client"`
 	}
 
@@ -189,11 +189,11 @@ func landscapeModule(c Config, out map[string]interface{}) error {
 		return nil // Empty section
 	}
 
-	landcapeModule.Client = make(map[string]string)
+	landscapeModule.Client = make(map[string]string)
 	for _, keyName := range section.KeyStrings() {
-		landcapeModule.Client[keyName] = section.Key(keyName).String()
+		landscapeModule.Client[keyName] = section.Key(keyName).String()
 	}
 
-	out["landscape"] = landcapeModule
+	out["landscape"] = landscapeModule
 	return nil
 }

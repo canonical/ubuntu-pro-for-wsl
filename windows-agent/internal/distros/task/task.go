@@ -10,7 +10,7 @@ import (
 // sending commands.
 type Connection interface {
 	SendProAttachment(proToken string) error
-	SendLandscapeConfig(lpeConfig, hostagentUID string) error
+	SendLandscapeConfig(lpeConfig string) error
 }
 
 // Task represents a given task that is ging to be executed by a distro.

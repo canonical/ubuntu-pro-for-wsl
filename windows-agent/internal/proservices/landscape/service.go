@@ -56,7 +56,7 @@ type Config interface {
 	Subscription() (string, config.Source, error)
 
 	LandscapeAgentUID() (string, error)
-	SetLandscapeAgentUID(string) error
+	SetLandscapeAgentUID(context.Context, string) error
 }
 
 // CloudInit is a cloud-init user data writer.
@@ -319,7 +319,11 @@ func (s *Service) NotifyUbuntuProUpdate(ctx context.Context, token string) {
 
 // NotifyConfigUpdate is called when the configuration changes. It will trigger a reconnection if needed.
 func (s *Service) NotifyConfigUpdate(ctx context.Context, landscapeConf, agentUID string) {
-	distributeConfig(ctx, s.db, landscapeConf, agentUID)
+	// We only enable Landscape if there is a UID. Otherwise we disable it (by sending an empty config).
+	if agentUID == "" {
+		landscapeConf = ""
+	}
+	distributeConfig(ctx, s.db, landscapeConf)
 	s.reconnectIfNewSettings(ctx)
 }
 

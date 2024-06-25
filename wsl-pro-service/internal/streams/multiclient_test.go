@@ -128,13 +128,12 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(t, err, "ProAttachStream.Recv should not return error")
 	require.Equal(t, "token123", proMsg.GetToken(), "Mismatch between sent and received Pro token")
 
-	err = service.SendLandscapeConfig("[client]\nhello=world", "uid1234")
+	err = service.SendLandscapeConfig("[client]\nhello=world")
 	require.NoError(t, err, "Sending commands should not fail")
 
 	lpeMsg, err := client.LandscapeConfigStream().Recv()
 	require.NoError(t, err, "LandscapeConfigStream.Recv should not return error")
 	require.Equal(t, "[client]\nhello=world", lpeMsg.GetConfig(), "Mismatch between sent and received Landscape config")
-	require.Equal(t, "uid1234", lpeMsg.GetHostagentUid(), "Mismatch between sent and received Landscape hostagent UID")
 
 	// Test sending messages Client->Server
 	err = client.SendInfo(&agentapi.DistroInfo{})
@@ -242,7 +241,7 @@ func (s *agentAPIServer) SendProAttachmentCmd(token string) error {
 	return stream.(agentapi.WSLInstance_ProAttachmentCommandsServer).Send(&agentapi.ProAttachCmd{Token: token})
 }
 
-func (s *agentAPIServer) SendLandscapeConfig(config, hostagentUID string) error {
+func (s *agentAPIServer) SendLandscapeConfig(config string) error {
 	stream := s.landscapeConfig.stream.Load()
 	if stream == nil {
 		return errors.New("stream not connected")
@@ -250,7 +249,6 @@ func (s *agentAPIServer) SendLandscapeConfig(config, hostagentUID string) error 
 
 	//nolint:forcetypeassert // This value is always this type (or nil, which we checked already)
 	return stream.(agentapi.WSLInstance_LandscapeConfigCommandsServer).Send(&agentapi.LandscapeConfigCmd{
-		Config:       config,
-		HostagentUid: hostagentUID,
+		Config: config,
 	})
 }

@@ -34,7 +34,7 @@ func (t ProAttachment) String() string {
 	return fmt.Sprintf("%T task with token: %s", t, common.Obfuscate(t.Token))
 }
 
-// Is is a custom comparator. All AttachPro tasks are considered equivalent.
+// Is is a custom comparator. All ProAttachment tasks are considered equivalent.
 func (t ProAttachment) Is(other task.Task) bool {
 	_, ok := other.(ProAttachment)
 	return ok

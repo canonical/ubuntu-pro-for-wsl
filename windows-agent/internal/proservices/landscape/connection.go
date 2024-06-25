@@ -150,7 +150,7 @@ func handshake(ctx context.Context, d serviceData, conn *connection) (err error)
 		case <-ctx.Done():
 			conn.disconnect()
 			// Avoid races where the UID arrives just after cancelling the context
-			err := conf.SetLandscapeAgentUID("")
+			err := conf.SetLandscapeAgentUID(ctx, "")
 			return fmt.Errorf("Landscape server did not respond with a client UID: %v", err)
 		case <-ticker.C:
 		}

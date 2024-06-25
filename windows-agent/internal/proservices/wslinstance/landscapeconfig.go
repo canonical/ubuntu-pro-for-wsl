@@ -47,9 +47,11 @@ func (c *client) SetLandscapeConfigStream(stream agentapi.WSLInstance_LandscapeC
 	return nil
 }
 
-// SendLandscapeConfig sends a landscape config to the client.
+// SendLandscapeConfig sends a Landscape config to the client.
 // Do not use before the client is ready.
-func (c *client) SendLandscapeConfig(config string, uid string) error {
+//
+//nolint:dupl // The structure of this function is similar, but the contents are not identical, between tasks.
+func (c *client) SendLandscapeConfig(config string) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -64,8 +66,7 @@ func (c *client) SendLandscapeConfig(config string, uid string) error {
 	}
 
 	err := c.lpeStream.Send(&agentapi.LandscapeConfigCmd{
-		Config:       config,
-		HostagentUid: uid,
+		Config: config,
 	})
 	if err != nil {
 		c.Close()

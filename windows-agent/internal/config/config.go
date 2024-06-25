@@ -9,11 +9,13 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/ubuntu/decorate"
+	"gopkg.in/ini.v1"
 )
 
 // Config manages configuration parameters. It is a wrapper around a dictionary
@@ -29,7 +31,7 @@ type Config struct {
 	mu *sync.Mutex
 
 	// observers are notified after any configuration changes.
-	notifyLandsape  LandscapeNotifier
+	notifyLandscape LandscapeNotifier
 	notifyUbuntuPro UbuntuProNotifier
 }
 
@@ -37,7 +39,7 @@ type Config struct {
 type UbuntuProNotifier func(ctx context.Context, token string)
 
 // LandscapeNotifier is a function that is called when the Landscape configuration changes.
-type LandscapeNotifier func(ctx context.Context, config string, uid string)
+type LandscapeNotifier func(ctx context.Context, config, uid string)
 
 // configState contains the actual configuration data.
 //
@@ -55,7 +57,7 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 
 		// No-ops to avoid nil checks
 		notifyUbuntuPro: func(ctx context.Context, token string) {},
-		notifyLandsape:  func(ctx context.Context, config string, uid string) {},
+		notifyLandscape: func(ctx context.Context, config, uid string) {},
 	}
 
 	return m
@@ -66,7 +68,7 @@ func (c *Config) SetLandscapeNotifier(notify LandscapeNotifier) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.notifyLandsape = notify
+	c.notifyLandscape = notify
 }
 
 // SetUbuntuProNotifier sets the function to be called when the Ubuntu Pro subscription changes.
@@ -88,7 +90,7 @@ func (c *Config) Subscription() (token string, source Source, err error) {
 	return token, source, nil
 }
 
-// LandscapeClientConfig returns the value of the landscape server URL and
+// LandscapeClientConfig returns the complete Landscape client configuration and
 // the method it was acquired with (if any).
 func (c *Config) LandscapeClientConfig() (string, Source, error) {
 	s, err := c.get()
@@ -156,25 +158,88 @@ func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig str
 		return errors.New("attempted to set a user-provided landscape configuration when there already is a higher priority one")
 	}
 
+	landscapeConfig, err := completeLandscapeConfig(landscapeConfig, c.Landscape.UID)
+	if err != nil {
+		return fmt.Errorf("config: could not complete Landscape configuration: %v", err)
+	}
+
 	isNew, err := c.set(&c.Landscape.UserConfig, landscapeConfig)
 	if err != nil {
 		return errors.New("config: could not set Landscape configuration")
 	}
 
 	if isNew {
-		c.notifyLandsape(ctx, landscapeConfig, c.Landscape.UID)
+		c.notifyLandscape(ctx, landscapeConfig, c.Landscape.UID)
 	}
 
 	return nil
 }
 
-// SetLandscapeAgentUID overrides the Landscape agent UID.
-func (c *Config) SetLandscapeAgentUID(uid string) error {
-	if _, err := c.set(&c.Landscape.UID, uid); err != nil {
-		return fmt.Errorf("config: could not set Landscape agent UID: %v", err)
+// SetLandscapeAgentUID overrides the Landscape agent UID and notify listeners.
+func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
+	conf, err := c.setAgentUIDAndUpdateClientConf(ctx, uid)
+	if err != nil {
+		return err
+	}
+
+	if conf != "" {
+		log.Debugf(ctx, "config: notifying Landscape config listeners about agent UID change: %s", uid)
+		c.notifyLandscape(ctx, conf, uid)
 	}
 
 	return nil
+}
+
+// setAgentUIDAndUpdateClientConf sets the agent UID and updates the client configuration, returning the new configuration or empty string if nothing changed,
+// allowing the caller to trigger notifications without holding a lock.
+func (c *Config) setAgentUIDAndUpdateClientConf(ctx context.Context, uid string) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if err := c.load(); err != nil {
+		return "", fmt.Errorf("config: could not set Landscape agent UID: %v", err)
+	}
+
+	if c.Landscape.UID == uid {
+		log.Info(ctx, "config: no changes in the agent UID")
+		return "", nil
+	}
+
+	landscapeConf, src := c.Landscape.resolve()
+	if src == SourceNone {
+		log.Info(ctx, "config: no client configuration to notify about agent UID change")
+		return "", nil
+	}
+
+	updated, err := completeLandscapeConfig(landscapeConf, uid)
+	if err != nil {
+		return "", fmt.Errorf("config: could not update client conf with agent UID changes: %v", err)
+	}
+
+	switch src {
+	case SourceUser:
+		c.Landscape.UserConfig = updated
+	case SourceRegistry:
+		c.Landscape.OrgConfig = updated
+	default:
+		return "", fmt.Errorf("config: could not update client conf with agent UID changes: unexpected source for client configuration: %v", src)
+	}
+
+	oldUID := c.Landscape.UID
+	c.Landscape.UID = uid
+	if e := c.dump(); e != nil {
+		// rollback if we can't dump the config
+		log.Warning(ctx, "Failed to dump config after changing agent UID, rolling back")
+		c.Landscape.UID = oldUID
+		switch src {
+		case SourceUser:
+			c.Landscape.UserConfig = landscapeConf
+		case SourceRegistry:
+			c.Landscape.OrgConfig = landscapeConf
+		}
+		return "", fmt.Errorf("config: could not set Landscape agent UID: %v", e)
+	}
+	return updated, err
 }
 
 func (c *Config) get() (s configState, err error) {
@@ -224,7 +289,7 @@ func (c *Config) LandscapeAgentUID() (string, error) {
 	// 1. Start connection
 	// 2. Get UID
 	// 3. Notify Landscape
-	// 4. Landcape drops connection, and reconnects
+	// 4. Landscape drops connection, and reconnects
 
 	return s.Landscape.UID, nil
 }
@@ -249,7 +314,7 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if err := c.load(); err != nil {
+	if err = c.load(); err != nil {
 		return err
 	}
 
@@ -266,15 +331,18 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 	}
 
 	// Landscape configuration
-	c.Landscape.OrgConfig = data.LandscapeConfig
-	checksumInput := data.LandscapeConfig + c.Landscape.UID
-	if hasChanged(checksumInput, &c.Landscape.Checksum) {
+	conf, err := completeLandscapeConfig(data.LandscapeConfig, c.Landscape.UID)
+	if err != nil {
+		log.Errorf(ctx, "Config: removing Landscape configuration from registry: %v", err)
+	}
+	if hasChanged(conf, &c.Landscape.Checksum) {
 		log.Debug(ctx, "Config: new Landscape configuration received from the registry")
+		c.Landscape.OrgConfig = conf
 
 		// We must resolve the landscape config in case a lower priority config becomes active
 		resolv, _ := c.Landscape.resolve()
 		afterUnlock = append(afterUnlock, func() {
-			c.notifyLandsape(ctx, resolv, c.Landscape.UID)
+			c.notifyLandscape(ctx, resolv, c.Landscape.UID)
 		})
 	}
 
@@ -300,4 +368,43 @@ func hasChanged(newValue string, checksum *string) bool {
 
 	*checksum = newCheckSum
 	return true
+}
+
+// completeLandscapeConfig completes the Landscape configuration by adding the hostagent_uid field to the client section,
+// making it ready for consumption by the Landscape client inside the distro instances.
+func completeLandscapeConfig(landscapeConf, hostAgentUID string) (string, error) {
+	if landscapeConf == "" {
+		return "", nil
+	}
+	conf, err := ini.Load(strings.NewReader(landscapeConf))
+	if err != nil {
+		return "", fmt.Errorf("could not parse Landscape configuration: %v", err)
+	}
+
+	clientSection, err := conf.GetSection("client")
+	if err != nil {
+		return "", fmt.Errorf("could not find the client section in the Landscape configuration: %v", err)
+	}
+
+	if hostAgentUID == "" {
+		return landscapeConf, nil
+	}
+
+	keyName := "hostagent_uid"
+	if key, err := clientSection.GetKey(keyName); err == nil {
+		key.SetValue(hostAgentUID)
+	} else {
+		if _, err = clientSection.NewKey(keyName, hostAgentUID); err != nil {
+			return "", fmt.Errorf("could not add the %s key to the client section: %v", keyName, err)
+		}
+	}
+
+	// Write the ini to a string
+	var b strings.Builder
+
+	if _, err = conf.WriteTo(&b); err != nil {
+		return "", fmt.Errorf("could not output the modified configuration: %v", err)
+	}
+
+	return b.String(), nil
 }
