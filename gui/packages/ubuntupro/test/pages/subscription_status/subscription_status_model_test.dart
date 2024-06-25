@@ -80,7 +80,7 @@ void main() {
 
   group('config Landscape:', () {
     final client = MockAgentApiClient();
-    final susbcriptions = [
+    final subscriptions = [
       SubscriptionInfo()..ensureOrganization(),
       SubscriptionInfo()..ensureMicrosoftStore(),
       SubscriptionInfo()..ensureUser(),
@@ -96,7 +96,7 @@ void main() {
       return 'landscape ${landscape.toString().split(':').first} with pro ${sub.toString().split(':').first} => $want';
     }
 
-    for (final subs in susbcriptions) {
+    for (final subs in subscriptions) {
       for (final landscape in landscapeSources) {
         test(makeSubTestName(landscape, subs), () {
           final want = landscape.hasOrganization() ? isFalse : isTrue;
