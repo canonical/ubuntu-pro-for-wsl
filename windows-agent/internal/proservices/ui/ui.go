@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -72,8 +73,15 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	return subs, nil
 }
 
+const landscapeAllowedEnvVar = "UP4W_ALLOW_LANDSCAPE_INTEGRATION"
+
 // ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.LandscapeSource, error) {
+	isEnabled := os.Getenv(landscapeAllowedEnvVar)
+	if isEnabled == "" {
+		return nil, fmt.Errorf("UI service: Landscape integration is disabled, set %s to enable it", landscapeAllowedEnvVar)
+	}
+
 	c := landscapeConfig.GetConfig()
 
 	err := s.config.SetUserLandscapeConfig(ctx, c)
