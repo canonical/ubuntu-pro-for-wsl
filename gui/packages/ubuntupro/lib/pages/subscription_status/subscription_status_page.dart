@@ -85,8 +85,14 @@ class SubscriptionStatusPage extends StatelessWidget {
   /// Initializes the view-model and inject it in the widget tree so the child page can access it via the BuildContext.
   static Widget create(BuildContext context) {
     final client = getService<AgentApiClient>();
+    final landscapeFeatureIsEnabled =
+        Wizard.of(context).routeData as bool? ?? false;
     return ProxyProvider<ValueNotifier<ConfigSources>, SubscriptionStatusModel>(
-      update: (context, src, _) => SubscriptionStatusModel(src.value, client),
+      update: (context, src, _) => SubscriptionStatusModel(
+        src.value,
+        client,
+        landscapeFeatureIsEnabled: landscapeFeatureIsEnabled,
+      ),
       child: const SubscriptionStatusPage(),
     );
   }
