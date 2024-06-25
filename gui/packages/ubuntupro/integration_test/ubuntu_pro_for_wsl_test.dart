@@ -48,6 +48,7 @@ void main() {
         'USERPROFILE': tmpHome!.path,
         'LOCALAPPDATA': tmpLocalAppData!.path,
         'UP4W_ALLOW_STORE_PURCHASE': '1',
+        kLandscapeAllowedEnvVar: '1',
       },
     );
   });
