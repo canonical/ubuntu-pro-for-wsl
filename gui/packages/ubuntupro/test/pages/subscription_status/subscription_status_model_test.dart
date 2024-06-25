@@ -91,32 +91,44 @@ void main() {
       LandscapeSource()..ensureUser(),
     ];
 
-    String makeSubTestName(LandscapeSource landscape, SubscriptionInfo sub) {
+    String makeSubTestName(
+      LandscapeSource landscape,
+      SubscriptionInfo sub,
+      bool globallyEnabled,
+    ) {
+      if (!globallyEnabled) {
+        return 'landscape ${landscape.toString().split(':').first} with pro ${sub.toString().split(':').first} => disallowed globally';
+      }
+
       final want = landscape.hasOrganization() ? 'disallowed' : 'allowed';
       return 'landscape ${landscape.toString().split(':').first} with pro ${sub.toString().split(':').first} => $want';
     }
 
-    for (final subs in subscriptions) {
-      for (final landscape in landscapeSources) {
-        test(makeSubTestName(landscape, subs), () {
-          final want = landscape.hasOrganization() ? isFalse : isTrue;
+    for (final enabled in [true, false]) {
+      for (final subs in subscriptions) {
+        for (final landscape in landscapeSources) {
+          test(makeSubTestName(landscape, subs, enabled), () {
+            final want =
+                enabled && !landscape.hasOrganization() ? isTrue : isFalse;
 
-          final model = SubscriptionStatusModel(
-            ConfigSources(
-              proSubscription: subs,
-              landscapeSource: landscape,
-            ),
-            client,
-          );
-          expect(model.canConfigureLandscape, want);
-        });
+            final model = SubscriptionStatusModel(
+              ConfigSources(
+                proSubscription: subs,
+                landscapeSource: landscape,
+              ),
+              landscapeFeatureIsEnabled: enabled,
+              client,
+            );
+            expect(model.canConfigureLandscape, want);
+          });
+        }
       }
     }
   });
 
   test('ms account link', () {
     const product = 'id';
-    final model = StoreSubscriptionStatusModel(ConfigSources(), product);
+    final model = StoreSubscriptionStatusModel(ConfigSources(), false, product);
 
     expect(model.uri.pathSegments, contains(product));
   });
@@ -131,7 +143,7 @@ void main() {
       }
       return SubscriptionInfo()..ensureNone();
     });
-    final model = UserSubscriptionStatusModel(ConfigSources(), client);
+    final model = UserSubscriptionStatusModel(ConfigSources(), false, client);
 
     // asserts that detachPro calls applyProToken with an empty String.
     expect(token, isNull);
