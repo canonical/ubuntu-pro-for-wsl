@@ -8,27 +8,37 @@ sealed class SubscriptionStatusModel {
   /// Returns the appropriate view-model subclass based on the subscription source type that was passed.
   factory SubscriptionStatusModel(
     ConfigSources src,
-    AgentApiClient client,
-  ) {
+    AgentApiClient client, {
+    bool canConfigureLandscape = false,
+  }) {
+    // Enforce this business logic here, as defaults may change in the future:
+    //   - Org-managed Landscape configurations don't allow user changes via GUI.
+    if (src.landscapeSource.hasOrganization()) {
+      canConfigureLandscape = false;
+    }
+
     final info = src.proSubscription;
     switch (info.whichSubscriptionType()) {
       case SubscriptionType.organization:
-        return OrgSubscriptionStatusModel(src);
+        return OrgSubscriptionStatusModel()
+          .._canConfigureLandscape = canConfigureLandscape;
       case SubscriptionType.user:
-        return UserSubscriptionStatusModel(src, client);
+        return UserSubscriptionStatusModel(client)
+          .._canConfigureLandscape = canConfigureLandscape;
       case SubscriptionType.microsoftStore:
-        return StoreSubscriptionStatusModel(src, info.productId);
+        return StoreSubscriptionStatusModel(info.productId)
+          .._canConfigureLandscape = canConfigureLandscape;
       case SubscriptionType.none:
       case SubscriptionType.notSet:
         throw UnimplementedError('Unknown subscription type');
     }
   }
 
-  SubscriptionStatusModel._(ConfigSources src)
-      : _canConfigureLandscape = !src.landscapeSource.hasOrganization();
+  SubscriptionStatusModel._();
 
-  final bool _canConfigureLandscape;
+  /// Tells whether we can invoke the Landscape configuration page or not.
   bool get canConfigureLandscape => _canConfigureLandscape;
+  bool _canConfigureLandscape = false;
 }
 
 /// Represents an active subscription through Microsoft Store.
@@ -37,7 +47,7 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
   @visibleForTesting
   final Uri uri;
 
-  StoreSubscriptionStatusModel(super.src, String productID)
+  StoreSubscriptionStatusModel(String productID)
       : uri = Uri.https(
           'account.microsoft.com',
           '/services/${productID.toLowerCase()}/details#billing',
@@ -51,7 +61,7 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
 /// Represents a subscription in which the user manually provided the Pro token.
 /// The only action supported is Pro-detaching all instances.
 class UserSubscriptionStatusModel extends SubscriptionStatusModel {
-  UserSubscriptionStatusModel(super.src, this._client) : super._();
+  UserSubscriptionStatusModel(this._client) : super._();
 
   final AgentApiClient _client;
 
@@ -62,5 +72,5 @@ class UserSubscriptionStatusModel extends SubscriptionStatusModel {
 /// Represents a subscription provided by the user's Organization.
 /// There is no action supported.
 class OrgSubscriptionStatusModel extends SubscriptionStatusModel {
-  OrgSubscriptionStatusModel(super.src) : super._();
+  OrgSubscriptionStatusModel() : super._();
 }
