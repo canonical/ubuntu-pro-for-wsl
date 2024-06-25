@@ -828,13 +828,19 @@ func TestNotifyConfigUpdate(t *testing.T) {
 	testcases := map[string]struct {
 		emptyDB   bool
 		conf, uid string
+
+		want        string
+		wantNoTasks bool
 	}{
 		"Task contains client conf when UID is not empty":                                       {},
 		"Task contains empty client conf":                                                       {conf: "-"},
 		"Task contains empty client conf when UID is empty despite submitted conf is not empty": {uid: "-"},
 		"Task contains empty client conf when both are empty":                                   {conf: "-", uid: "-"},
+		"Task doesn't contain [host] section":                                                   {conf: "[host]\nurl=localhost\n[client]\nurl=another\n", want: "[client]\nurl=another\n"},
 
-		"Tasks are skipped when database is empty": {emptyDB: true},
+		"Tasks are skipped when database is empty":                       {emptyDB: true, wantNoTasks: true},
+		"Tasks are skipped when config is invalid INI syntax":            {conf: "INVALID INI SYNTAX", wantNoTasks: true},
+		"Tasks are skipped when config contains only the [host] section": {conf: "[host]\nurl=localhost", wantNoTasks: true},
 	}
 
 	for name, tc := range testcases {
@@ -849,9 +855,11 @@ func TestNotifyConfigUpdate(t *testing.T) {
 
 			switch tc.conf {
 			case "":
-				tc.conf = "[client]hello=world"
+				tc.conf = "[client]\nhello=world"
+				tc.want = tc.conf
 			case "-":
 				tc.conf = ""
+				tc.want = tc.conf
 			default:
 			}
 
@@ -884,19 +892,19 @@ func TestNotifyConfigUpdate(t *testing.T) {
 			tasksFiles, err := filepath.Glob(filepath.Join(storageDir, "*.tasks"))
 			require.NoError(t, err, "NotifyConfigUpdate: could not list the tasks files storage dir: %s", storageDir)
 
-			if tc.emptyDB {
+			if tc.wantNoTasks {
 				require.Empty(t, tasksFiles, "NotifyConfigUpdate: should not have created a tasks file when the database is empty")
 				return
 			}
 
 			b, err := os.ReadFile(tasksFiles[0])
 			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")
-			task := string(b)
+			task := strings.TrimSpace(strings.ReplaceAll(string(b), " ", ""))
 			require.NotEmpty(t, task, "NotifyConfigUpdate: tasks file should not be empty")
 			if tc.uid == "" && tc.conf != "" {
-				require.NotContains(t, task, tc.conf, "NotifyConfigUpdate: tasks file should not contain the Landscape client config submitted")
+				require.NotContains(t, task, tc.want, "NotifyConfigUpdate: tasks file should not contain the Landscape client config submitted")
 			} else {
-				require.Contains(t, task, tc.conf, "NotifyConfigUpdate: tasks file should contain the Landscape client config submitted")
+				require.Contains(t, task, tc.want, "NotifyConfigUpdate: tasks file should contain the Landscape client config submitted")
 			}
 			require.Contains(t, task, tasks.LandscapeConfigure{}.String(), "NotifyConfigUpdate: tasks file should contain a LandscapeConfigure task")
 		})

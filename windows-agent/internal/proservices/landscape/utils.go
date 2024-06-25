@@ -242,6 +242,30 @@ func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf 
 	}
 }
 
+func filterClientSection(landscapeConf string) (string, error) {
+	f, err := ini.Load(strings.NewReader(landscapeConf))
+	if err != nil {
+		return "", fmt.Errorf("could not load Landscape configuration: %v", err)
+	}
+
+	if !f.HasSection("client") {
+		return "", errors.New("missing [client] section in Landscape configuration")
+	}
+
+	for _, section := range f.Sections() {
+		if section.Name() != "client" {
+			f.DeleteSection(section.Name())
+		}
+	}
+
+	var b strings.Builder
+	if _, err := f.WriteTo(&b); err != nil {
+		return "", fmt.Errorf("could not write filtered configuration: %v", err)
+	}
+
+	return b.String(), nil
+}
+
 type retryConnection struct {
 	once sync.Once
 	ch   chan struct{}
