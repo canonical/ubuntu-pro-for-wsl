@@ -323,6 +323,16 @@ func (s *Service) NotifyConfigUpdate(ctx context.Context, landscapeConf, agentUI
 	if agentUID == "" {
 		landscapeConf = ""
 	}
+
+	if landscapeConf != "" {
+		var err error
+		landscapeConf, err = filterClientSection(landscapeConf)
+		if err != nil {
+			log.Errorf(ctx, "Landscape: could not notify config changes: %v", err)
+			return
+		}
+	}
+
 	distributeConfig(ctx, s.db, landscapeConf)
 	s.reconnectIfNewSettings(ctx)
 }

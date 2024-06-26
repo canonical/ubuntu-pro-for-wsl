@@ -21,6 +21,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
@@ -828,13 +829,19 @@ func TestNotifyConfigUpdate(t *testing.T) {
 	testcases := map[string]struct {
 		emptyDB   bool
 		conf, uid string
+
+		want        string
+		wantNoTasks bool
 	}{
 		"Task contains client conf when UID is not empty":                                       {},
 		"Task contains empty client conf":                                                       {conf: "-"},
 		"Task contains empty client conf when UID is empty despite submitted conf is not empty": {uid: "-"},
 		"Task contains empty client conf when both are empty":                                   {conf: "-", uid: "-"},
+		"Task doesn't contain [host] section":                                                   {conf: "[host]\nurl=localhost\n[client]\nurl=another\n", want: "[client]\nurl=another\n"},
 
-		"Tasks are skipped when database is empty": {emptyDB: true},
+		"Tasks are skipped when database is empty":                       {emptyDB: true, wantNoTasks: true},
+		"Tasks are skipped when config is invalid INI syntax":            {conf: "INVALID INI SYNTAX", wantNoTasks: true},
+		"Tasks are skipped when config contains only the [host] section": {conf: "[host]\nurl=localhost", wantNoTasks: true},
 	}
 
 	for name, tc := range testcases {
@@ -849,9 +856,11 @@ func TestNotifyConfigUpdate(t *testing.T) {
 
 			switch tc.conf {
 			case "":
-				tc.conf = "[client]hello=world"
+				tc.conf = "[client]\nhello=world"
+				tc.want = tc.conf
 			case "-":
 				tc.conf = ""
+				tc.want = tc.conf
 			default:
 			}
 
@@ -884,25 +893,96 @@ func TestNotifyConfigUpdate(t *testing.T) {
 			tasksFiles, err := filepath.Glob(filepath.Join(storageDir, "*.tasks"))
 			require.NoError(t, err, "NotifyConfigUpdate: could not list the tasks files storage dir: %s", storageDir)
 
-			if tc.emptyDB {
+			if tc.wantNoTasks {
 				require.Empty(t, tasksFiles, "NotifyConfigUpdate: should not have created a tasks file when the database is empty")
 				return
 			}
 
 			b, err := os.ReadFile(tasksFiles[0])
 			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")
-			task := string(b)
+			task := strings.TrimSpace(strings.ReplaceAll(string(b), " ", ""))
 			require.NotEmpty(t, task, "NotifyConfigUpdate: tasks file should not be empty")
 			if tc.uid == "" && tc.conf != "" {
-				require.NotContains(t, task, tc.conf, "NotifyConfigUpdate: tasks file should not contain the Landscape client config submitted")
+				require.NotContains(t, task, tc.want, "NotifyConfigUpdate: tasks file should not contain the Landscape client config submitted")
 			} else {
-				require.Contains(t, task, tc.conf, "NotifyConfigUpdate: tasks file should contain the Landscape client config submitted")
+				require.Contains(t, task, tc.want, "NotifyConfigUpdate: tasks file should contain the Landscape client config submitted")
 			}
 			require.Contains(t, task, tasks.LandscapeConfigure{}.String(), "NotifyConfigUpdate: tasks file should contain a LandscapeConfigure task")
 		})
 	}
 }
 
+func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testcases := map[string]struct {
+		conf string
+
+		want               string
+		wantNotInAgentYaml []string
+	}{
+
+		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n", want: "[client]\ncomputer_title=another\n", wantNotInAgentYaml: []string{"host:", "url:"}},
+		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost\n[client]\ncomputer_title=another\n", want: "[client]\ncomputer_title=another\n", wantNotInAgentYaml: []string{"irrelevant:", "nothing:", "host:", "url:"}},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
+			}
+
+			storageDir := t.TempDir()
+			db, err := database.New(ctx, storageDir)
+			require.NoError(t, err, "Setup: database New should not return an error")
+
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
+			d, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
+			require.NoError(t, err, "Setup: distro %s GetDistroAndUpdateProperties should return no errors", distroName)
+			defer d.Cleanup(ctx)
+
+			homedir := t.TempDir()
+			c := config.New(ctx, storageDir)
+			cloudInit, err := cloudinit.New(ctx, c, homedir)
+			require.NoError(t, err, "Setup: cloudinit New should not return an error")
+			service, err := landscape.New(ctx, c, db, &cloudInit, landscape.WithHomeDir(homedir))
+			require.NoError(t, err, "Setup: New should not return an error")
+
+			c.SetLandscapeNotifier(func(ctx context.Context, config, uid string) {
+				service.NotifyConfigUpdate(ctx, config, uid)
+				cloudInit.Update(ctx)
+			})
+
+			// We want to inspect the tasks databases even if those calls fail.
+			_ = c.SetUserLandscapeConfig(ctx, tc.conf)
+			_ = c.SetLandscapeAgentUID(ctx, "landscapeUID")
+
+			// There is no direct way to observe the result of that function other than relying on the implementation details of the task database.
+			tasksFiles, err := filepath.Glob(filepath.Join(storageDir, "*.tasks"))
+			require.NoError(t, err, "NotifyConfigUpdate: could not list the tasks files storage dir: %s", storageDir)
+
+			b, err := os.ReadFile(tasksFiles[0])
+			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")
+			task := strings.TrimSpace(strings.ReplaceAll(string(b), " ", ""))
+			require.NotEmpty(t, task, "NotifyConfigUpdate: tasks file should not be empty")
+
+			agentYaml, err := os.ReadFile(filepath.Join(homedir, ".cloud-init", "agent.yaml"))
+			require.NoError(t, err, "NotifyConfigUpdate: could not read agent.yaml")
+			for _, wantNot := range tc.wantNotInAgentYaml {
+				require.NotContains(t, agentYaml, wantNot, "NotifyConfigUpdate: agent.yaml should be empty")
+			}
+
+			require.Contains(t, task, tasks.LandscapeConfigure{}.String(), "NotifyConfigUpdate: tasks file should contain a LandscapeConfigure task")
+			require.Contains(t, task, tc.want, "NotifyConfigUpdate: tasks file should contain the expected Landscape client config")
+		})
+	}
+}
 func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, url net.Addr) string {
 	t.Helper()
 
