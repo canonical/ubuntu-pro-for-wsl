@@ -240,6 +240,9 @@ func (d *Daemon) systemdNotifyReady(ctx context.Context) error {
 	}
 	if sent {
 		log.Debug(ctx, i18n.G("Ready state sent to systemd"))
+		if err := os.Unsetenv("NOTIFY_SOCKET"); err != nil {
+			log.Warningf(ctx, "couldn't unset NOTIFY_SOCKET for subprocesses: %v", err)
+		}
 	}
 	return nil
 }
