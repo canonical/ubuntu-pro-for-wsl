@@ -5,9 +5,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	config "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/stretchr/testify/assert"
@@ -107,19 +107,18 @@ func TestLandscapeConfig(t *testing.T) {
 		breakFile     bool
 		settingsState settingsState
 
-		wantLandscapeConfig string
-		wantSource          config.Source
-		wantError           bool
+		wantSource config.Source
+		wantError  bool
 	}{
-		"Retrieves existing config user data":                              {settingsState: userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe", wantSource: config.SourceUser},
-		"Retrieves existing config user data containing the hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=JohnDoe\nhostagent_uid=landscapeUID1234", wantSource: config.SourceUser},
+		"Retrieves existing config user data":                              {settingsState: userLandscapeConfigHasValue, wantSource: config.SourceUser},
+		"Retrieves existing config user data containing the hostagent UID": {settingsState: userLandscapeConfigHasValue | landscapeUIDHasValue, wantSource: config.SourceUser},
 
 		"Success when there is no registry and user data": {settingsState: untouched, wantSource: config.SourceNone},
 
-		"Retrieves organization data":                     {settingsState: orgLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
-		"Retrieves org data containing the hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg\nhostagent_uid=landscapeUID1234", wantSource: config.SourceRegistry},
+		"Retrieves organization data":                     {settingsState: orgLandscapeConfigHasValue, wantSource: config.SourceRegistry},
+		"Retrieves org data containing the hostagent UID": {settingsState: orgLandscapeConfigHasValue | landscapeUIDHasValue, wantSource: config.SourceRegistry},
 
-		"Prioritizes organization config over a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantLandscapeConfig: "[client]\nuser=BigOrg", wantSource: config.SourceRegistry},
+		"Prioritizes organization config over a user config": {settingsState: orgLandscapeConfigHasValue | userLandscapeConfigHasValue, wantSource: config.SourceRegistry},
 
 		"Error when the file cannot be read": {settingsState: untouched, breakFile: true, wantError: true},
 	}
@@ -146,10 +145,9 @@ func TestLandscapeConfig(t *testing.T) {
 			}
 			require.NoError(t, err, "LandscapeClientConfig should return no error")
 
-			// Trimming all middle-spaces
-			landscapeConf = strings.TrimSpace(strings.ReplaceAll(landscapeConf, " ", ""))
-			// Test values
-			require.Equal(t, tc.wantLandscapeConfig, landscapeConf, "Unexpected Landscape config value")
+			want := testutils.LoadWithUpdateFromGolden(t, landscapeConf)
+
+			require.Equal(t, want, landscapeConf, "Unexpected Landscape config value")
 			require.Equal(t, tc.wantSource, source, "Unexpected Landscape config source")
 		})
 	}
@@ -438,12 +436,8 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 				return
 			}
 
-			want := landscapeBaseConf
-			if tc.settingsState.is(landscapeUIDHasValue) {
-				want += "\nhostagent_uid=landscapeUID1234"
-			}
-			// Trimming all middle-spaces
-			got = strings.TrimSpace(strings.ReplaceAll(got, " ", ""))
+			want := testutils.LoadWithUpdateFromGolden(t, got)
+
 			require.Equal(t, want, got, "Did not get the same value for Landscape config as we set")
 		})
 	}
@@ -538,10 +532,10 @@ func TestUpdateRegistryData(t *testing.T) {
 	//nolint:gosec // These are not real credentials
 	const (
 		proToken1      = "UBUNTU_PRO_TOKEN_FIRST"
-		landscapeConf1 = "[client]greeting=hello"
+		landscapeConf1 = "[client]\ngreeting=hello"
 
 		proToken2      = "UBUNTU_PRO_TOKEN_SECOND"
-		landscapeConf2 = "[client]greeting=cheers"
+		landscapeConf2 = "[client]\ngreeting=cheers"
 
 		invalidLandscapeConf = "NOT AN INI SYNTAX"
 	)
@@ -608,9 +602,12 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
 			lcape, src, err := c.LandscapeClientConfig()
-			require.NoError(t, err, "Subscription should not return any errors")
-			require.Equal(t, landscapeConf1, lcape, "Subscription did not return the landscape config we wrote")
-			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+			require.NoError(t, err, "LandscapeClientConfig should not return any errors")
+
+			basepath := testutils.TestFixturePath(t)
+			want := testutils.LoadWithUpdateFromGolden(t, lcape, testutils.WithGoldenPath(filepath.Join(basepath, "step1_override_defaults")))
+			require.Equal(t, want, lcape, "LandscapeClientConfig did not return the Landscape config we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Landscape config did not come from registry")
 
 			// Enter a second set of data to override the first one
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
@@ -636,9 +633,11 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
 			lcape, src, err = c.LandscapeClientConfig()
-			require.NoError(t, err, "Subscription should not return any errors")
-			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
-			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+			require.NoError(t, err, "LandscapeClientConfig should not return any errors")
+
+			want = testutils.LoadWithUpdateFromGolden(t, lcape, testutils.WithGoldenPath(filepath.Join(basepath, "step2_override_previous")))
+			require.Equal(t, want, lcape, "LandscapeClientConfig did not return the Landscape config we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Landscape config did not come from registry")
 
 			// Enter the second set of data again
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
@@ -662,9 +661,10 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
 
 			lcape, src, err = c.LandscapeClientConfig()
-			require.NoError(t, err, "Subscription should not return any errors")
-			require.Equal(t, landscapeConf2, lcape, "Subscription did not return the landscape config we wrote")
-			require.Equal(t, config.SourceRegistry, src, "Subscription did not come from registry")
+			require.NoError(t, err, "LandscapeClientConfig should not return any errors")
+			want = testutils.LoadWithUpdateFromGolden(t, lcape, testutils.WithGoldenPath(filepath.Join(basepath, "step3_no_change")))
+			require.Equal(t, want, lcape, "LandscapeClientConfig did not return the landscape config we wrote")
+			require.Equal(t, config.SourceRegistry, src, "Landscape config did not come from registry")
 
 			// Change only the pro token
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
@@ -700,13 +700,13 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, 1, calledLandscapeNotifier, "LandscapeNotifier called an unexpected amount of times")
 
 			lcape, src, err = c.LandscapeClientConfig()
-			require.NoError(t, err, "Subscription should not return any errors")
+			require.NoError(t, err, "LandscapeClientConfig should not return any errors")
 
 			if tc.settingsState.is(userLandscapeConfigHasValue) {
-				require.Equal(t, config.SourceUser, src, "Subscription did not come from registry")
+				require.Equal(t, config.SourceUser, src, "Landscape config should come from user")
 			} else {
-				require.Empty(t, lcape, "Subscription did not return the landscape config we wrote")
-				require.Equal(t, config.SourceNone, src, "Subscription did not come from registry")
+				require.Empty(t, lcape, "LandscapeClientConfig should return empty string")
+				require.Equal(t, config.SourceNone, src, "Landscape config should not exist")
 			}
 		})
 	}
