@@ -1,7 +1,7 @@
 Diagrams in this directory are auto-generated.
 Any PR that makes changes in the `docs/workspace.dsl` file in this repo will
 trigger a GitHub action that updates the diagrams.
-This will add a new commit to the PR.
+This will generate a second PR that can be reviewed before merging with the first PR.
 
 # Contributing
 
