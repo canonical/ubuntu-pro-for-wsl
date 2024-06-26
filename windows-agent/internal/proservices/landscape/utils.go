@@ -242,6 +242,7 @@ func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf 
 	}
 }
 
+// filterClientSection removes all sections from the Landscape configuration except the [client] section.
 func filterClientSection(landscapeConf string) (string, error) {
 	f, err := ini.Load(strings.NewReader(landscapeConf))
 	if err != nil {
