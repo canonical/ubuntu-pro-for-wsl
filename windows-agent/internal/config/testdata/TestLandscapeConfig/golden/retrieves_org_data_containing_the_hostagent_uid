@@ -1,3 +1,4 @@
 [client]
 user          = BigOrg
+tags          = wsl
 hostagent_uid = landscapeUID1234

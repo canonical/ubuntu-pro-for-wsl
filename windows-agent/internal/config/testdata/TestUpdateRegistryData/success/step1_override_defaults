@@ -1,2 +1,3 @@
 [client]
-greeting=hello
+greeting = hello
+tags     = wsl

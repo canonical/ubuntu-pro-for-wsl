@@ -1,2 +1,3 @@
 [client]
-user=JohnDoe
+user = JohnDoe
+tags = wsl

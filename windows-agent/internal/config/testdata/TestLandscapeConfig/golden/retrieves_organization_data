@@ -1,2 +1,3 @@
 [client]
-user=BigOrg
+user = BigOrg
+tags = wsl
