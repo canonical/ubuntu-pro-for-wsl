@@ -1,0 +1,6 @@
+- task:
+    config: |
+        [client]
+        tags          = another
+        hostagent_uid = landscapeUID
+  type: tasks.LandscapeConfigure

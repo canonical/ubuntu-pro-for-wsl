@@ -1,0 +1,7 @@
+- task:
+    config: |
+        [client]
+        computer_title = another
+        tags           = wsl
+        hostagent_uid  = landscapeUID
+  type: tasks.LandscapeConfigure

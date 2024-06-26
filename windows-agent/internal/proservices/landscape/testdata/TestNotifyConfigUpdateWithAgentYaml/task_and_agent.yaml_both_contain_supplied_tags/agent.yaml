@@ -1,0 +1,6 @@
+# cloud-init
+# This file was generated automatically and must not be edited
+landscape:
+    client:
+        hostagent_uid: landscapeUID
+        tags: another
