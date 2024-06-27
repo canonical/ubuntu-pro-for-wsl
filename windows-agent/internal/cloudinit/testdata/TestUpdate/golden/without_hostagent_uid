@@ -1,4 +1,4 @@
-# cloud-init
+#cloud-config
 # This file was generated automatically and must not be edited
 landscape:
     client:
