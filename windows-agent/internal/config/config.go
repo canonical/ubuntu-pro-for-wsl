@@ -386,16 +386,13 @@ func completeLandscapeConfig(landscapeConf, hostAgentUID string) (string, error)
 		return "", fmt.Errorf("could not find the client section in the Landscape configuration: %v", err)
 	}
 
-	if hostAgentUID == "" {
-		return landscapeConf, nil
+	if err = addKeyValuePair(clientSection, "tags", "wsl", false); err != nil {
+		log.Warningf(context.Background(), "could not add the tags key to the client section: %v", err)
 	}
 
-	keyName := "hostagent_uid"
-	if key, err := clientSection.GetKey(keyName); err == nil {
-		key.SetValue(hostAgentUID)
-	} else {
-		if _, err = clientSection.NewKey(keyName, hostAgentUID); err != nil {
-			return "", fmt.Errorf("could not add the %s key to the client section: %v", keyName, err)
+	if hostAgentUID != "" {
+		if err = addKeyValuePair(clientSection, "hostagent_uid", hostAgentUID, true); err != nil {
+			return "", fmt.Errorf("could not add the hostagent_uid key to the client section: %v", err)
 		}
 	}
 
@@ -407,4 +404,19 @@ func completeLandscapeConfig(landscapeConf, hostAgentUID string) (string, error)
 	}
 
 	return b.String(), nil
+}
+
+// addKeyValuePair adds a key-value pair to an ini section. If the key already exists and override is true, the value will be updated.
+func addKeyValuePair(section *ini.Section, key, value string, override bool) error {
+	k, err := section.GetKey(key)
+	if err != nil {
+		_, err = section.NewKey(key, value)
+		return err
+	}
+
+	if override {
+		k.SetValue(value)
+	}
+
+	return nil
 }

@@ -919,13 +919,12 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 
 	testcases := map[string]struct {
 		conf string
-
-		want               string
-		wantNotInAgentYaml []string
 	}{
 
-		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n", want: "[client]\ncomputer_title=another\n", wantNotInAgentYaml: []string{"host:", "url:"}},
-		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost\n[client]\ncomputer_title=another\n", want: "[client]\ncomputer_title=another\n", wantNotInAgentYaml: []string{"irrelevant:", "nothing:", "host:", "url:"}},
+		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml with default tags":               {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml with supplied tags":              {conf: "[host]\nurl=localhost\n[client]\ntags=another\n"},
 	}
 
 	for name, tc := range testcases {
@@ -969,17 +968,20 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 
 			b, err := os.ReadFile(tasksFiles[0])
 			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")
-			task := strings.TrimSpace(strings.ReplaceAll(string(b), " ", ""))
+			task := string(b)
 			require.NotEmpty(t, task, "NotifyConfigUpdate: tasks file should not be empty")
+
+			require.Contains(t, task, tasks.LandscapeConfigure{}.String(), "NotifyConfigUpdate: tasks file should contain a LandscapeConfigure task")
+
+			basepath := testutils.TestFixturePath(t)
+
+			wantTask := testutils.LoadWithUpdateFromGolden(t, task, testutils.WithGoldenPath(filepath.Join(basepath, "golden.tasks")))
+			require.Equal(t, wantTask, task, "NotifyConfigUpdate: tasks file should contain the expected Landscape client config")
 
 			agentYaml, err := os.ReadFile(filepath.Join(homedir, ".cloud-init", "agent.yaml"))
 			require.NoError(t, err, "NotifyConfigUpdate: could not read agent.yaml")
-			for _, wantNot := range tc.wantNotInAgentYaml {
-				require.NotContains(t, agentYaml, wantNot, "NotifyConfigUpdate: agent.yaml should be empty")
-			}
-
-			require.Contains(t, task, tasks.LandscapeConfigure{}.String(), "NotifyConfigUpdate: tasks file should contain a LandscapeConfigure task")
-			require.Contains(t, task, tc.want, "NotifyConfigUpdate: tasks file should contain the expected Landscape client config")
+			wantAgentYaml := testutils.LoadWithUpdateFromGolden(t, string(agentYaml), testutils.WithGoldenPath(filepath.Join(basepath, "agent.yaml")))
+			require.Equal(t, wantAgentYaml, string(agentYaml), "NotifyConfigUpdate: tasks file and agent.yaml don't match")
 		})
 	}
 }
