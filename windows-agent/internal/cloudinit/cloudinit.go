@@ -129,7 +129,7 @@ func marshalConfig(conf Config) ([]byte, error) {
 
 	contents := make(map[string]interface{})
 
-	if err := ubuntuAdvantageModule(conf, contents); err != nil {
+	if err := ubuntuProModule(conf, contents); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +149,7 @@ func marshalConfig(conf Config) ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-func ubuntuAdvantageModule(c Config, out map[string]interface{}) error {
+func ubuntuProModule(c Config, out map[string]interface{}) error {
 	token, src, err := c.Subscription()
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func ubuntuAdvantageModule(c Config, out map[string]interface{}) error {
 		Token string `yaml:"token"`
 	}
 
-	out["ubuntu_advantage"] = uaModule{Token: token}
+	out["ubuntu_pro"] = uaModule{Token: token}
 	return nil
 }
 

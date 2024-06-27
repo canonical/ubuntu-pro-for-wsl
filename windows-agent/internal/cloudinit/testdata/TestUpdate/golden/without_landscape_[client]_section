@@ -1,4 +1,4 @@
 #cloud-config
 # This file was generated automatically and must not be edited
-ubuntu_advantage:
+ubuntu_pro:
     token: NEW_PRO_TOKEN

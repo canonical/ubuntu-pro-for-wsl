@@ -4,5 +4,5 @@ landscape:
     client:
         data: This is an old data field
         info: This is the old configuration
-ubuntu_advantage:
+ubuntu_pro:
     token: OLD_PRO_TOKEN
