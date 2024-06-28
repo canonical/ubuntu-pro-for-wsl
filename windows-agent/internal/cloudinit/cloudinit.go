@@ -123,13 +123,13 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 func marshalConfig(conf Config) ([]byte, error) {
 	w := &bytes.Buffer{}
 
-	if _, err := fmt.Fprintln(w, "# cloud-init\n# This file was generated automatically and must not be edited"); err != nil {
-		return nil, fmt.Errorf("could not write # cloud-init stenza and warning message: %v", err)
+	if _, err := fmt.Fprintln(w, "#cloud-config\n# This file was generated automatically and must not be edited"); err != nil {
+		return nil, fmt.Errorf("could not write #cloud-config stenza and warning message: %v", err)
 	}
 
 	contents := make(map[string]interface{})
 
-	if err := ubuntuAdvantageModule(conf, contents); err != nil {
+	if err := ubuntuProModule(conf, contents); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +149,7 @@ func marshalConfig(conf Config) ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-func ubuntuAdvantageModule(c Config, out map[string]interface{}) error {
+func ubuntuProModule(c Config, out map[string]interface{}) error {
 	token, src, err := c.Subscription()
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func ubuntuAdvantageModule(c Config, out map[string]interface{}) error {
 		Token string `yaml:"token"`
 	}
 
-	out["ubuntu_advantage"] = uaModule{Token: token}
+	out["ubuntu_pro"] = uaModule{Token: token}
 	return nil
 }
 

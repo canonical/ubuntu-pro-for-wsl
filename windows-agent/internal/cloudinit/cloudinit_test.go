@@ -185,14 +185,14 @@ hostagent_uid = landscapeUID1234
 func TestWriteDistroData(t *testing.T) {
 	t.Parallel()
 
-	const oldCloudInit = `# cloud-init
+	const oldCloudInit = `#cloud-config
 # I'm an old piece of user data
 data:
 	is_this_data: Yes, it is
 	new: false
 `
 
-	const newCloudInit = `# cloud-init
+	const newCloudInit = `#cloud-config
 # I'm a shiny new piece of user data
 data:
 	new: true

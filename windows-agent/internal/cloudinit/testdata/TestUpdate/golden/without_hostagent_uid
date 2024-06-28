@@ -1,8 +1,8 @@
-# cloud-init
+#cloud-config
 # This file was generated automatically and must not be edited
 landscape:
     client:
         info: This is the new configuration
         url: www.example.com/new/rickroll
-ubuntu_advantage:
+ubuntu_pro:
     token: NEW_PRO_TOKEN
