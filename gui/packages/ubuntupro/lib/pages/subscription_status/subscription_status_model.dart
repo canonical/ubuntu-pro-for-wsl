@@ -8,24 +8,37 @@ sealed class SubscriptionStatusModel {
   /// Returns the appropriate view-model subclass based on the subscription source type that was passed.
   factory SubscriptionStatusModel(
     ConfigSources src,
-    AgentApiClient client,
-  ) {
+    AgentApiClient client, {
+    bool landscapeFeatureIsEnabled = false,
+  }) {
     final info = src.proSubscription;
     switch (info.whichSubscriptionType()) {
       case SubscriptionType.organization:
-        return OrgSubscriptionStatusModel(src);
+        return OrgSubscriptionStatusModel(
+          src,
+          landscapeFeatureIsEnabled,
+        );
       case SubscriptionType.user:
-        return UserSubscriptionStatusModel(src, client);
+        return UserSubscriptionStatusModel(
+          src,
+          landscapeFeatureIsEnabled,
+          client,
+        );
       case SubscriptionType.microsoftStore:
-        return StoreSubscriptionStatusModel(src, info.productId);
+        return StoreSubscriptionStatusModel(
+          src,
+          landscapeFeatureIsEnabled,
+          info.productId,
+        );
       case SubscriptionType.none:
       case SubscriptionType.notSet:
         throw UnimplementedError('Unknown subscription type');
     }
   }
 
-  SubscriptionStatusModel._(ConfigSources src)
-      : _canConfigureLandscape = !src.landscapeSource.hasOrganization();
+  SubscriptionStatusModel._(ConfigSources src, bool landscapeFeatureIsEnabled)
+      : _canConfigureLandscape =
+            landscapeFeatureIsEnabled && !src.landscapeSource.hasOrganization();
 
   final bool _canConfigureLandscape;
   bool get canConfigureLandscape => _canConfigureLandscape;
@@ -37,8 +50,11 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
   @visibleForTesting
   final Uri uri;
 
-  StoreSubscriptionStatusModel(super.src, String productID)
-      : uri = Uri.https(
+  StoreSubscriptionStatusModel(
+    super.src,
+    super.landscapeFeatureIsEnabled,
+    String productID,
+  )   : uri = Uri.https(
           'account.microsoft.com',
           '/services/${productID.toLowerCase()}/details#billing',
         ),
@@ -51,7 +67,11 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
 /// Represents a subscription in which the user manually provided the Pro token.
 /// The only action supported is Pro-detaching all instances.
 class UserSubscriptionStatusModel extends SubscriptionStatusModel {
-  UserSubscriptionStatusModel(super.src, this._client) : super._();
+  UserSubscriptionStatusModel(
+    super.src,
+    super.landscapeFeatureIsEnabled,
+    this._client,
+  ) : super._();
 
   final AgentApiClient _client;
 
@@ -62,5 +82,6 @@ class UserSubscriptionStatusModel extends SubscriptionStatusModel {
 /// Represents a subscription provided by the user's Organization.
 /// There is no action supported.
 class OrgSubscriptionStatusModel extends SubscriptionStatusModel {
-  OrgSubscriptionStatusModel(super.src) : super._();
+  OrgSubscriptionStatusModel(super.src, super.landscapeFeatureIsEnabled)
+      : super._();
 }

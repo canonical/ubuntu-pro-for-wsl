@@ -6,9 +6,11 @@ import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
+import 'constants.dart';
 import 'core/agent_api_client.dart';
 import 'core/agent_connection.dart';
 import 'core/agent_monitor.dart';
+import 'core/environment.dart';
 import 'pages/landscape/landscape_page.dart';
 import 'pages/startup/startup_page.dart';
 import 'pages/subscribe_now/subscribe_now_page.dart';
@@ -41,6 +43,9 @@ class Pro4WSLApp extends StatelessWidget {
             supportedLocales: AppLocalizations.supportedLocales,
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             builder: (context, child) {
+              final landscapeFeatureIsEnabled =
+                  Environment()[kLandscapeAllowedEnvVar] != null &&
+                      Environment()[kLandscapeAllowedEnvVar] != '';
               return Wizard(
                 routes: {
                   Routes.startup: WizardRoute(
@@ -72,19 +77,29 @@ class Pro4WSLApp extends StatelessWidget {
                       return null;
                     },
                   ),
-                  Routes.configureLandscape:
-                      const WizardRoute(builder: LandscapePage.create),
-                  Routes.subscriptionStatus: WizardRoute(
-                    builder: SubscriptionStatusPage.create,
-                    onReplace: (_) => Routes.subscribeNow,
-                    onBack: (_) => Routes.subscribeNow,
-                  ),
-                  Routes.configureLandscapeLate: WizardRoute(
-                    builder: (context) => LandscapePage.create(
-                      context,
-                      isLate: true,
+                  if (landscapeFeatureIsEnabled) ...{
+                    Routes.configureLandscape:
+                        const WizardRoute(builder: LandscapePage.create),
+                    Routes.subscriptionStatus: WizardRoute(
+                      builder: SubscriptionStatusPage.create,
+                      onReplace: (_) => Routes.subscribeNow,
+                      onBack: (_) => Routes.subscribeNow,
+                      userData: true,
                     ),
-                  ),
+                    Routes.configureLandscapeLate: WizardRoute(
+                      builder: (context) => LandscapePage.create(
+                        context,
+                        isLate: true,
+                      ),
+                    ),
+                  } else ...{
+                    Routes.subscriptionStatus: WizardRoute(
+                      builder: SubscriptionStatusPage.create,
+                      onReplace: (_) => Routes.subscribeNow,
+                      onBack: (_) => Routes.subscribeNow,
+                      userData: false,
+                    ),
+                  },
                 },
               );
             },

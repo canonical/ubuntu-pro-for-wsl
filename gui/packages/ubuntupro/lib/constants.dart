@@ -12,3 +12,6 @@ const kVersion = String.fromEnvironment(
   'UP4W_FULL_VERSION',
   defaultValue: 'Dev',
 );
+
+/// The environment variable users should set to enable integration with Landscape.
+const kLandscapeAllowedEnvVar = 'UP4W_ALLOW_LANDSCAPE_INTEGRATION';

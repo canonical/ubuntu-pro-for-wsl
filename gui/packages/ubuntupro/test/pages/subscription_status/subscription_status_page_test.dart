@@ -100,6 +100,65 @@ void main() {
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
     });
+
+    group('landscape feature disabled:', () {
+      testWidgets('user', (tester) async {
+        final landscape = LandscapeSource()..ensureNone();
+        info.ensureUser();
+        final app = buildApp(
+          info,
+          landscape,
+          client,
+          landscapeFeatureIsEnabled: false,
+        );
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(find.text(lang.detachPro), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsNothing);
+      });
+
+      testWidgets('store', (tester) async {
+        final landscape = LandscapeSource()..ensureUser();
+        info.ensureMicrosoftStore();
+        final app = buildApp(
+          info,
+          landscape,
+          client,
+          landscapeFeatureIsEnabled: false,
+        );
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsNothing);
+      });
+
+      testWidgets('organization', (tester) async {
+        final landscape = LandscapeSource();
+        info.ensureOrganization();
+        final app = buildApp(
+          info,
+          landscape,
+          client,
+          landscapeFeatureIsEnabled: false,
+        );
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.landscapeConfigureButton), findsNothing);
+      });
+    });
   });
   testWidgets('creates a model', (tester) async {
     final app = buildMultiProviderWizardApp(
@@ -211,8 +270,9 @@ void main() {
 Widget buildApp(
   SubscriptionInfo info,
   LandscapeSource landscape,
-  AgentApiClient client,
-) {
+  AgentApiClient client, {
+  bool landscapeFeatureIsEnabled = true,
+}) {
   return buildMultiProviderWizardApp(
     routes: {
       '/': WizardRoute(
@@ -224,6 +284,7 @@ Widget buildApp(
         create: (_) => SubscriptionStatusModel(
           ConfigSources(proSubscription: info, landscapeSource: landscape),
           client,
+          landscapeFeatureIsEnabled: landscapeFeatureIsEnabled,
         ),
       ),
     ],

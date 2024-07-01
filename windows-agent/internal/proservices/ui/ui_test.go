@@ -239,26 +239,31 @@ func TestNotifyPurchase(t *testing.T) {
 }
 
 func TestApplyLandscapeConfig(t *testing.T) {
-	t.Parallel()
-
+	// Tests can no longer be parallel because we rely on environment variables.
 	testCases := map[string]struct {
 		setUserLandscapeConfigErr bool
 		landscapeSource           config.Source
 		returnBadSource           bool
+		disableLandscape          bool
 
 		wantErr bool
 		want    interface{}
 	}{
 		"Success": {want: lsUser},
 
-		"Error when setting the config returns error":  {setUserLandscapeConfigErr: true, wantErr: true},
-		"Error when attempting to override org config": {landscapeSource: config.SourceRegistry, wantErr: true},
-		"Error when Landscape source is incoherent":    {returnBadSource: true, wantErr: true},
+		"When setting the config fails":              {setUserLandscapeConfigErr: true, wantErr: true},
+		"Override org config is not allowed":         {landscapeSource: config.SourceRegistry, wantErr: true},
+		"When Landscape source is incoherent":        {returnBadSource: true, wantErr: true},
+		"When the Landscape integration is disabled": {disableLandscape: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			if tc.disableLandscape {
+				t.Setenv(ui.LandscapeAllowedEnvVar, "")
+			} else {
+				t.Setenv(ui.LandscapeAllowedEnvVar, "1")
+			}
 
 			ctx := context.Background()
 
