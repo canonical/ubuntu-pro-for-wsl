@@ -4,7 +4,17 @@ Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) makes it pos
 With Ubuntu Pro for WSL (UP4W) an [Ubuntu Pro](https://ubuntu.com/pro) subscription empowers you to manage Ubuntu WSL instances at scale.
 
 In this tutorial you will develop an understanding of how UP4W can be installed and deployed for managing multiple WSL instances.
-To complete this tutorial you will need a machine running Windows 10 or 11 with a minimum of 16GB RAM and a 8-core processor.
+
+## What you will do
+
+- Install UP4W from the Microsoft Store
+- Test automatic configuration of WSL instances by UP4W
+- Manage WSL instances from Landscape
+
+## What you need
+
+- A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor to host WSL instances
+- The latest version of Landscape Server set up and configured on a physical or virtual machine
 
 ```{note}
 WSL enables using a Linux shell and Windows PowerShell side-by-side on the same machine.
@@ -23,110 +33,51 @@ Output logs are included in this tutorial when instructive but are typically omi
 
 WSL can be installed directly from the [Microsoft Store](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
 
-If you already have WSL installed you are advised to backup `~\.wslconfig` and remove it before continuing the tutorial:
+If you already have WSL installed, with `~\.wslconfig` on your system, you
+are advised to backup the file and remove it before continuing the tutorial.
+
+To check if the file exists run:
+
+```text
+PS C:\Users\me\tutorial> Test-Path -Path "~\.wslconfig"
+```
+
+If this returns `True` then the file exists and can be removed with:
 
 ```text
 PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
 ```
 
-Ubuntu can also be installed from the Microsoft Store.
-Both [Ubuntu 24.04 LTS](https://www.microsoft.com/store/productId/9nz3klhxdjp5) and [Ubuntu 22.04 LTS](https://www.microsoft.com/store/productId/9PN20MSR04DW)
-will be used in this tutorial.
+Ubuntu 24.04 LTS is recommended for this tutorial and can be installed from the
+Microsoft Store:
+
+- Install [Ubuntu 24.04 LTS](https://www.microsoft.com/store/productId/9nz3klhxdjp5) from the Microsoft Store
 
 (ref::backup-warning)=
 ```{warning}
 **If you already have Ubuntu WSL pre-installed:** 
 
-We recommend that they are exported then deleted.
+We recommend that any Ubuntu WSL installed is exported then deleted.
 You can then install them as described in this tutorial.
 At the end of the tutorial you can re-import and restore your data.
 
-Exporting, deleting and re-importing Ubuntu is achieved with the following commands.
-In each case, `{version}` would need to be replaced with 22.04 or 24.04.
+Exporting, deleting and re-importing Ubuntu is achieved with the following commands:
 
-    PS C:\Users\me\tutorial> wsl --export Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
+    PS C:\Users\me\tutorial> wsl --export Ubuntu-24.04 .\backup\Ubuntu-{version}.tar.gz
 
-    PS C:\Users\me\tutorial> wsl --unregister Ubuntu-{version}
+    PS C:\Users\me\tutorial> wsl --unregister Ubuntu-24.04
 
-    PS C:\Users\me\tutorial> wsl --import Ubuntu-{version} .\backup\Ubuntu-{version} .\backup\Ubuntu-{version}.tar.gz
+    PS C:\Users\me\tutorial> wsl --import Ubuntu-24.04 .\backup\Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
 
 
 ```
 
 You can now launch WSL instances of Ubuntu on your Windows machine.
 
-### Set up Landscape
-
-While a Landscape server typically runs on external computers for this tutorial it will be set up on a WSL instance on your Windows machine.
-
-In PowerShell, `shutdown` WSL then install the Ubuntu 22.04 LTS instance with the `--root` option.
-
-```text
-PS C:\Users\me\tutorial> wsl --shutdown
-
-PS C:\Users\me\tutorial> ubuntu2204.exe install --root
-```
-
-After successful installation log in to the new instance and add the landscape apt repository:
-
-
-```text
-PS C:\Users\me\tutorial> ubuntu2204.exe
-
-root@mib:~$ add-apt-repository ppa:landscape/self-hosted-beta -y
-
-```
-
-Update packages and then install the `landscape-server-quickstart` package.
-
-```text
-root@mib:~$ apt update
-
-root@mib:~$ apt install landscape-server-quickstart -y
-```
-
-A dialog will appear for 'Postfix configuration'.
-For 'General mail configuration type' select **No configuration**.
-Hit **Tab** to highlight the **Ok** button, press **Enter** and
-you will be returned to the shell prompt.
-
-![Setting no Postfix configuration](./assets/postfix-config.png)
-
-If Landscape has installed successfully, the log will indicate that Landscape systemd units are active.
-An example log is shown below for the first three units:
-
-```text
-root@mib:~$ systemctl --state=running --no-legend --no-pager | grep -m 3 landscape
-  landscape-api.service                 loaded active running LSB: Enable Landscape API
-  landscape-appserver.service           loaded active running LSB: Enable Landscape frontend UI
-  landscape-async-frontend.service      loaded active running LSB: Enable Landscape async frontend
-```
-
-Once installed Landscape will be served on `localhost` port 8080. Open your favourite browser on Windows and navigate to `http://127.0.0.1:8080` to create the Landscape global admin account.
-Enter the following credentials and click the **Sign Up** button:
-
-| Field             | Value           |
-| ----------------- | --------------- |
-| Name              | Admin           |
-| E-mail address    | `admin@mib.com` |
-| Passphrase        | 123             |
-| Verify passphrase | 123             |
-
-![New Landscape admin account creation](./assets/new-standalone-user.png)
-
-The Landscape client inside of any WSL instance will need the Landscape server certificate to connect to the server.
-
-To achieve this copy the Landscape server certificate into your Windows user profile directory:
-
-```text
-root@mib:~$ cp /etc/ssl/certs/landscape_server.pem /mnt/c/users/me/
-```
-
-Done -- your self-hosted Landscape server is now up and running! 
-Now if you configure the Landscape client on your Ubuntu WSL instances to detect this server, they will also be registered with the Landscape service included in your Ubuntu Pro subscription.
-
-The server will stay running until you close the terminal, so keep the terminal open for the rest of the tutorial.
-If you do close the terminal running `ubuntu2204.exe` in a new terminal window will start the Landscape server automatically.
+For the remainder of the tutorial you will need to have a Landscape server
+set up and you should be able access your Landscape dashboard in a browser.
+Please refer to the [Landscape documentation](https://ubuntu.com/landscape/docs/install-and-configure-landscape)
+for setup and configuration instructions.
 
 (tut::ensure-ubuntu-pro)=
 ### Get an Ubuntu Pro token
@@ -159,36 +110,54 @@ UP4W can be configured through the [Windows registry](windows-registry) instead 
 The steps are outlined briefly in [Install and configure UP4W > Using the registry](howto::configure::registry).
 This approach may be more suitable when operating at scale.
 ```
+
 In the UP4W Windows application click the arrow beside "Already have a token?".
 
-Paste your token from the Ubuntu Pro dashboard during [Setup](tut::ensure-ubuntu-pro) and click "Confirm".
+Paste your token from the Ubuntu Pro dashboard during [Setup](tut::ensure-ubuntu-pro) and click **Confirm**.
 You will then be shown the Landscape configuration screen.
 
 ![UP4W GUI main screen](./assets/up4w_gui.png)
 
-Create a new file in your home directory named `landscape.txt` and enter following contents, replacing:
+Create a new file in your home directory named `landscape.txt` and enter following contents.
+For the purpose of this tutorial, replace:
 
-- `<HOSTNAME>` by the actual host name of your Windows machine and
-- `<YOUR_WINDOWS_USER_NAME>` by the actual user name of your Windows account
+<!-- QUERY: double check below in relation to landscape docs -->
+
+- `<SERVER_URL>` by the host url (or FQDN) of the machine that runs the Landscape server
+- `<YOUR_WINDOWS_USER_NAME>` by the user name on the same Windows machine
 
 ```text
 [host]
-url = [::1]:6554
+url = <SERVER_URL>:6554
 [client]
 account_name = standalone
 registration_key =
-url = https://<HOSTNAME>/message-system
+url = https://<SERVER_URL>/message-system
 log_level = debug
-ping_url = https://<HOSTNAME>/ping
-ssl_public_key = C:\Users\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
+ping_url = https://<SERVER_URL>/ping
 ```
-% If really needed we can start without the SSL public key and add it after the Windows host is registered in Landscape.
 
-Then load that file using the "Custom Configuration" part of the screen, as shown below:
+```{note}
+If the machine running the server is not trusted on your network you may need to
+explicitly reference a path to the SSL public key on a Windows host machine.
+
+For example, if you followed the [Landscape Quickstart](https://ubuntu.com/landscape/docs/quickstart-deployment)
+installation, the auto-generated self-signed certificate can be found at `/etc/ssl/certs/landscape_server.pem`.
+
+This can be copied to a Windows machine and referenced in `landscape.txt`:
+
+  ssl_public_key = C:\Users\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
+
+If necessary, the SSL public key can be added after the Windows host has first
+been registered in Landscape.
+```
+
+Then input `<SERVER_URL>` in "Quick Setup" in the field labelled "Landscape FQDN".
+Alternatively, provide a path to `landscape.txt` in "Custom Configuration".
 
 ![Loading Landscape custom config](./assets/loading-custom-landscape-config.png)
 
-Click on the "Continue" button and you will see a status screen confirming the configuration is complete.
+Click on the **Continue** button and you will see a status screen confirming the configuration is complete.
 
 ![Configuration is complete](./assets/status-complete.png)
 
@@ -200,9 +169,10 @@ This means that all Ubuntu WSL instances will be automatically added to your Ubu
 
 This has also configured the Landscape client built into your UP4W Windows agent to know about your Landscape server; UP4W will forward this configuration to the Landscape client on your Ubuntu WSL instances as well; and all systems where the Landscape client has been configured this way are automatically registered with Landscape.
 
+<!-- TODO: the section below needs to work without the detail we are removing -->
 ### UP4W host registration with Landscape
 
-Go back to your web browser and refresh the Landscape page at `http://127.0.0.1:8080`. On the right-hand side of the
+Go back to your web browser and refresh the Landscape dashboard. On the right-hand side of the
 page you should see a request to approve your Windows host registration ("Computers needing authorisation").
 Click on the computer name (in this case: `mib`) and when the new page loads click **Accept**.
 
@@ -295,7 +265,7 @@ The `wsl-vision` tag will be used for all the instances accepted into Landscape.
 ### Create an Ubuntu WSL instance remotely
 
 Back on the Landscape page in your web browser, navigate to "Computers" and click on the Windows machine (below: `mib`). You will find "WSL Instances" on the right side of the page.
-Click on the "Install new" link then set "Instance Type" to "Ubuntu" and click "Submit". A status page will
+Click on the "Install new" link then set "Instance Type" to "Ubuntu" and click **Submit**. A status page will
 appear showing the progress of the new instance creation.
 
 ![Create instance via Landscape](./assets/create-instance-via-landscape.png)
@@ -350,15 +320,12 @@ libopencv-core4.5d/jammy,now 4.5.4+dfsg-9ubuntu4 amd64 [installed,automatic]
 ```
 
 You know how to leverage UP4W and Landscape to efficiently manage your Ubuntu WSL instances at scale.
-Below you can see the architecture of what you have built -- congratulations!
-
-![Your Windows host with instances pro-attached and Landscape-registered through UP4W](./assets/up4w-tutorial-deployment.png)
 
 ## Tear things down
 
 ### Uninstall UP4W
 
-In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right-click on it, then select "Uninstall".
+In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right-click on it, then click **Uninstall**.
 
 ![Uninstall Ubuntu Pro for WSL](./assets/start-menu-uninstall.png)
 
@@ -384,8 +351,7 @@ In PowerShell run the following command to stop WSL:
 PS C:\Users\me\tutorial> wsl --shutdown
 ```
 
-Then, in the Windows Start Menu, locate the "Ubuntu 22.04 LTS" application, right-click on it, and select "Uninstall",
-as done with UP4W. Do the same for the "Ubuntu 24.04 LTS" and "Ubuntu" applications.
+Then, in the Windows Start Menu, locate the "Ubuntu 24.04 LTS" application, right-click on it, and select "Uninstall".
 
 The instances will be removed automatically.
 

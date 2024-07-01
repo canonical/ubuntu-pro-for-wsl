@@ -50,11 +50,15 @@ HIPAA
 Hostagent
 LTS
 os
+pem
 repo
 SLA
 SRU
+SSL
+ssl
 tcp
 toolchain
+url
 zshrc
 ESM
 Ok
