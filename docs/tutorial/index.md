@@ -33,11 +33,18 @@ Output logs are included in this tutorial when instructive but are typically omi
 
 WSL can be installed directly from the [Microsoft Store](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
 
-If you already have WSL installed and have `~\.wslconfig` on your system you
-are advised to backup the file and remove it before continuing the tutorial:
+If you already have WSL installed, with `~\.wslconfig` on your system, you
+are advised to backup the file and remove it before continuing the tutorial.
+
+To check if the file exists run:
 
 ```text
 PS C:\Users\me\tutorial> Test-Path -Path "~\.wslconfig"
+```
+
+If this returns `True` then the file exists and can be removed with:
+
+```text
 PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
 ```
 
