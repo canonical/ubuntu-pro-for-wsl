@@ -6,4 +6,4 @@ UP4W's Windows Agent is a Windows application running in the background. It star
 The Windows agent is UP4W's central hub that communicates with all the components to coordinate them.
 
 
-![Diagram displaying the Windows agent communicating with the GUI, the Landscape server and the WSL-Pro-Service. It also reads the registry.](./assets/up4w-c4-windows-agent.png)
+![Diagram displaying the Windows agent communicating with the GUI, the Landscape server and the WSL-Pro-Service. It also reads the registry.](../diagrams/structurizr-SystemContainers.png)

@@ -9,6 +9,6 @@ Some Ubuntu Pro for WSL components run on the Windows host:
 Additionally, Ubuntu Pro for WSL requires a component running inside each of the WSL distros:
 - the [WSL Pro Service](ref::up4w-wsl-pro-service) communicates with the Windows Agent to provide automation services.
 
-Ubuntu Pro for WSL is available through the Microsoft Store.
+A top-level summary of the architecture is shown below:
 
-![System Landscape](../assets/up4w-systemlandscape.png)
+![System Landscape](../diagrams/structurizr-SystemContext.png)

@@ -90,3 +90,9 @@ in your Ubuntu Pro subscription.
 The server will stay running until you close the terminal. If you do close the
 terminal running `ubuntu2404.exe` in a new terminal window will start the
 Landscape server automatically.
+
+Using this server setup when following the [tutorial](../tutorial/index) would
+result in the following architecture:
+
+![text](../diagrams/structurizr-Tutorial.png) 
+
