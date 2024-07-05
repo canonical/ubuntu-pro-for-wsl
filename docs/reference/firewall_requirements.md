@@ -2,9 +2,9 @@
 
 Firewall rules must be configured for Ubuntu Pro for WSL to operate fully.
 
-The following figure shows the possible connections between the different components and their default ports and protocols.
+The following figure shows the possible connections between the different components and their default ports and protocols:
 
-![Firewall considerations.](./assets/firewall_requirements.png)
+![Firewall considerations.](../diagrams/structurizr-Firewall.png)
 
 The following table lists the default ports and protocols used by Ubuntu Pro for WSL:
 
