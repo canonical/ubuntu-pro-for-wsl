@@ -64,6 +64,7 @@ class Pro4WSLApp extends StatelessWidget {
                   ),
                   Routes.subscribeNow: WizardRoute(
                     builder: SubscribeNowPage.create,
+                    userData: settings.isStorePurchaseAllowed,
                     onNext: (_) {
                       final src = context.read<ValueNotifier<ConfigSources>>();
                       final landscape = src.value.landscapeSource;

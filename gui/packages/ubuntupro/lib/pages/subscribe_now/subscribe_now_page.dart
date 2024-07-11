@@ -31,11 +31,10 @@ class SubscribeNowPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Tooltip(
-              message: model.purchaseAllowed()
-                  ? ''
-                  : lang.subscribeNowTooltipDisabled,
+              message:
+                  model.purchaseAllowed ? '' : lang.subscribeNowTooltipDisabled,
               child: ElevatedButton(
-                onPressed: model.purchaseAllowed()
+                onPressed: model.purchaseAllowed
                     ? () async {
                         final subs = await model.purchaseSubscription();
 
@@ -99,8 +98,14 @@ class SubscribeNowPage extends StatelessWidget {
 
   static Widget create(BuildContext context) {
     final client = getService<AgentApiClient>();
+    final storePurchaseIsAllowed =
+        Wizard.of(context).routeData as bool? ?? false;
+
     return Provider<SubscribeNowModel>(
-      create: (context) => SubscribeNowModel(client),
+      create: (context) => SubscribeNowModel(
+        client,
+        isPurchaseAllowed: storePurchaseIsAllowed,
+      ),
       child: SubscribeNowPage(
         onSubscriptionUpdate: (info) {
           final src = context.read<ValueNotifier<ConfigSources>>();
