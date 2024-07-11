@@ -5,10 +5,10 @@ go 1.22.0
 toolchain go1.22.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240705150615-15d23a639880
 	github.com/stretchr/testify v1.9.0
-	github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5
-	golang.org/x/sys v0.21.0
+	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
+	golang.org/x/sys v0.22.0
 )
 
 require (

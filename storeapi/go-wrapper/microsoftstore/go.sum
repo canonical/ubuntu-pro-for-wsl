@@ -1,5 +1,5 @@
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3 h1:sc7pd9vWQeO613dRpQxQ7Xpg1Jg6BGekVLy2x1Nk5CM=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240322101935-3e73eb563dc3/go.mod h1:LN6n7AB95DoWVnT+sMjY5nSgpoFdanCymQh6eiFwFPo=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240705150615-15d23a639880 h1:auvtFfjXUvFqq9goqG15qIxZMLiFqBXHYvYukMy6abk=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240705150615-15d23a639880/go.mod h1:mtBMBKio7uL6Hjh8Vgjf+5ukUu1bm92kQcqdd1obQoI=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -20,11 +20,11 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5 h1:qO8m+4mLbo1HRpD5lfhEfr7R1PuqZvbAmjaRzYEy+tM=
-github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
+github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb h1:8aYaLeK5kwneVflZ50XOnsE2zWnS3HCF58WV8JXge5U=
+github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.21.0 h1:rF+pYz3DAGSQAxAu1CbC7catZg4ebC4UIeIhKxBZvws=
-golang.org/x/sys v0.21.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
+golang.org/x/sys v0.22.0 h1:RI27ohtqKCnwULzJLqkv897zojh5/DwS/ENaMzUOaWI=
+golang.org/x/sys v0.22.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
