@@ -47,7 +47,7 @@ void main() {
       overrides: {
         'USERPROFILE': tmpHome!.path,
         'LOCALAPPDATA': tmpLocalAppData!.path,
-        'UP4W_ALLOW_STORE_PURCHASE': '1',
+        'UP4W_INTEGRATION_TESTING': 'true',
       },
     );
   });
