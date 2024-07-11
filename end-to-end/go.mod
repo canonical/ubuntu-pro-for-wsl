@@ -2,7 +2,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/end-to-end
 
 go 1.22.0
 
-toolchain go1.22.4
+toolchain go1.22.5
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c
