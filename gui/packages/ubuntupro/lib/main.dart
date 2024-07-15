@@ -6,6 +6,8 @@ import 'app.dart';
 import 'constants.dart';
 import 'core/agent_api_client.dart';
 import 'core/agent_monitor.dart';
+import 'core/environment.dart';
+import 'core/settings.dart';
 import 'launch_agent.dart';
 
 Future<void> main() async {
@@ -20,7 +22,12 @@ Future<void> main() async {
     clientFactory: AgentApiClient.new,
     onClient: registerServiceInstance<AgentApiClient>,
   );
-  runApp(Pro4WSLApp(agentMonitor));
+
+  final settings = Environment()['UP4W_INTEGRATION_TESTING'] != null
+      ? Settings.withOptions(Options.withAll)
+      : Settings(SettingsRepository());
+
+  runApp(Pro4WSLApp(agentMonitor, settings));
 }
 
 Future<bool> launch() => launchAgent(kAgentRelativePath);
