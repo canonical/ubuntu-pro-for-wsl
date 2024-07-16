@@ -80,7 +80,7 @@ func findWslAdapterIP(opts options) (net.IP, error) {
 		return node.ip(), nil
 	}
 
-	return nil, fmt.Errorf("could not find WSL adapter")
+	return nil, fmt.Errorf("could not find WSL adapter, check if there exists a WSL instance")
 }
 
 // networkingMode detects whether the WSL network is mirrored or not.
