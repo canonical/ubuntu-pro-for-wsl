@@ -78,7 +78,7 @@ You'll need a Windows Machine with the following applications installed:
 
 To build the project, you can use the following two scripts:
 
-* [Build the Windows Agent](tools/build/build-deb.ps1)
+* [Build the Windows Agent](tools/build/build-deb.sh)
 * [Build the Wsl Pro Service](tools/build/build-appx.ps1)
 
 Note that you'll need to [create a self-signing certificate](https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing) to build the Windows Agent.
