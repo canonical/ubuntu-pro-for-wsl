@@ -76,7 +76,7 @@ You can now launch WSL instances of Ubuntu on your Windows machine.
 
 For the remainder of the tutorial you will need to have a Landscape server
 set up and you should be able access your Landscape dashboard in a browser.
-Please refer to the [Landscape documentation](https://ubuntu.com/landscape/docs/install-and-configure-landscape)
+Please refer to the [Landscape documentation](https://ubuntu.com/landscape/install)
 for setup and configuration instructions.
 
 (tut::ensure-ubuntu-pro)=
