@@ -251,13 +251,7 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 
 	tarball := filepath.Join(tmpDir, distro.Name()+".tar.gz")
 
-	f, err := os.Create(tarball)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	err = download(ctx, f, rootfsURL)
+	err = download(ctx, rootfsURL, tarball)
 	if err != nil {
 		return err
 	}
@@ -278,9 +272,9 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	return nil
 }
 
-// download downloads the rootfs from the given URL and writes it to the given writer while verifying its checksum.
+// download downloads the rootfs from the given URL and writes it to the given destination while verifying its checksum.
 // The checksum is read from the SHA256SUMS file found alongside the rootfs URL, as done in cloud-images.ubuntu.com.
-func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
+func download(ctx context.Context, u *url.URL, destination string) (err error) {
 	defer decorate.OnError(&err, "could not download %q", u)
 
 	checksum, err := wantRootfsChecksum(ctx, u)
@@ -297,6 +291,11 @@ func download(ctx context.Context, f io.Writer, u *url.URL) (err error) {
 		return fmt.Errorf("http request failed with code %d", resp.StatusCode)
 	}
 
+	f, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 	// Verify checksum and write file to disk
 	r := io.TeeReader(resp.Body, f)
 	if checksum != "" {
