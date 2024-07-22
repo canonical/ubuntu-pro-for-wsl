@@ -118,7 +118,7 @@ You will then be shown the Landscape configuration screen.
 
 ![UP4W GUI main screen](./assets/up4w_gui.png)
 
-Create a new file in your home directory named `landscape.txt` and enter following contents.
+Create a new file in your home directory named `landscape.conf` and enter following contents.
 For the purpose of this tutorial, replace:
 
 <!-- QUERY: double check below in relation to landscape docs -->
@@ -144,7 +144,7 @@ explicitly reference a path to the SSL public key on a Windows host machine.
 For example, if you followed the [Landscape Quickstart](https://ubuntu.com/landscape/docs/quickstart-deployment)
 installation, the auto-generated self-signed certificate can be found at `/etc/ssl/certs/landscape_server.pem`.
 
-This can be copied to a Windows machine and referenced in `landscape.txt`:
+This can be copied to a Windows machine and referenced in `landscape.conf`:
 
   ssl_public_key = C:\Users\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
 
@@ -153,7 +153,7 @@ been registered in Landscape.
 ```
 
 Then input `<SERVER_URL>` in "Quick Setup" in the field labelled "Landscape FQDN".
-Alternatively, provide a path to `landscape.txt` in "Custom Configuration".
+Alternatively, provide a path to `landscape.conf` in "Custom Configuration".
 
 ![Loading Landscape custom config](./assets/loading-custom-landscape-config.png)
 

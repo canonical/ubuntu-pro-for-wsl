@@ -15,7 +15,7 @@ The latter offers advantages unique to Ubuntu WSL – the ability to create new 
 (ref::landscape-config)=
 ## Landscape configuration schema
 
-Both Landscape clients are configured via a single `.ini` file. This file is provided to the Windows host.
+Both Landscape clients are configured via a single, plain text configuration file (e.g., `landscape.conf` or `landscape.ini`). This file is provided to the Windows host.
 > See more: [How to configure UP4W for Ubuntu Pro and Landscape](howto::configure-up4w)
 
 The schema for this file is the same as Landscape for Ubuntu desktop or server, with a few additional keys specific to the WSL settings, which can be grouped into keys that affect just the Windows-side client and keys that affect both the Windows-side client and the Ubuntu WSL-side client(s). These additions are documented below.
@@ -23,6 +23,7 @@ The schema for this file is the same as Landscape for Ubuntu desktop or server, 
 > See more: [Landscape | Configure Ubuntu Pro for WSL for Landscape](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape/)
 
 Here is an example of what the configuration looks like:
+
 ```ini
 [host]
 url = landscape-server.domain.com:6554
