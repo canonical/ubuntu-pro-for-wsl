@@ -5,8 +5,10 @@ import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
-import '../widgets/page_widgets.dart';
+
 import '/core/agent_api_client.dart';
+import '/pages/widgets/page_widgets.dart';
+
 import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
 

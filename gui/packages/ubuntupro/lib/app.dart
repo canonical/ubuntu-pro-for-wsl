@@ -110,15 +110,15 @@ class Pro4WSLApp extends StatelessWidget {
 
 ThemeData? customize(ThemeData? theme) {
   if (theme == null) return null;
-  const padding = MaterialStatePropertyAll<EdgeInsetsGeometry>(
+  const padding = WidgetStatePropertyAll<EdgeInsetsGeometry>(
     EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
   );
-  const shape = MaterialStatePropertyAll<RoundedRectangleBorder>(
+  const shape = WidgetStatePropertyAll<RoundedRectangleBorder>(
     RoundedRectangleBorder(
       borderRadius: BorderRadius.zero,
     ),
   );
-  final textStyle = MaterialStatePropertyAll<TextStyle>(
+  final textStyle = WidgetStatePropertyAll<TextStyle>(
     theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
   );
   final filledButtonTheme = FilledButtonThemeData(
