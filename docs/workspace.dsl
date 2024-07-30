@@ -235,6 +235,11 @@ workspace {
                 "structurizr.groups" true
             }            
         }
+
+        # don't add a title to the generated diagrams
+        properties {
+            "plantuml.title" false
+        }
         
         
         theme default
