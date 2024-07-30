@@ -67,130 +67,6 @@ class Pro4WSLPage extends StatelessWidget {
   }
 }
 
-class ColumnLandingPage extends StatelessWidget {
-  const ColumnLandingPage({
-    super.key,
-    required this.leftChildren,
-    required this.children,
-    this.onNext,
-    this.onSkip,
-    this.onBack,
-    this.svgAsset = 'assets/Ubuntu-tag.svg',
-    this.title = 'Landscape',
-  });
-
-  final List<Widget> leftChildren;
-  final List<Widget> children;
-  final String svgAsset;
-  final String title;
-
-  final void Function()? onNext;
-  final void Function()? onSkip;
-  final void Function()? onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    return Pro4WSLPage(
-      body: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IntrinsicHeight(
-              child: Row(
-                children: [
-                  // Left column "header"
-                  Expanded(
-                    flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              WidgetSpan(
-                                child: SvgPicture.asset(
-                                  svgAsset,
-                                  height: 70,
-                                ),
-                              ),
-                              const WidgetSpan(
-                                child: SizedBox(
-                                  width: 8,
-                                ),
-                              ),
-                              TextSpan(
-                                text: title,
-                                style: theme.textTheme.displaySmall
-                                    ?.copyWith(fontWeight: FontWeight.w100),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 24,
-                        ),
-                        ...leftChildren,
-                      ],
-                    ),
-                  ),
-                  // Divider
-                  const Expanded(
-                    flex: 1,
-                    child: VerticalDivider(
-                      thickness: 0.2,
-                      color: Colors.white,
-                    ),
-                  ),
-                  // Right column content
-                  Expanded(
-                    flex: 6,
-                    child: Column(
-                      children: [...children],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 16.0,
-            ),
-            // Navigation buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                OutlinedButton(
-                  onPressed: onBack,
-                  child: Text(lang.buttonBack),
-                ),
-                Row(
-                  children: [
-                    FilledButton(
-                      onPressed: onSkip,
-                      child: Text(lang.buttonSkip),
-                    ),
-                    const SizedBox(
-                      width: 16.0,
-                    ),
-                    ElevatedButton(
-                      onPressed: onNext,
-                      child: Text(lang.buttonNext),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // A more stylized page that mimics the design of the https://ubuntu.com/pro
 // landing page, with a dark background and an [svgAsset] logo followed by
 // a title with some opacity, rendering the [children] in a column layout.
@@ -213,7 +89,7 @@ class LandingPage extends StatelessWidget {
 
     return Pro4WSLPage(
       body: Padding(
-        padding: const EdgeInsets.all(48.0),
+        padding: const EdgeInsets.fromLTRB(32.0, 32.0, 32.0, 8.0),
         child: centered
             ? Center(
                 child: ConstrainedBox(
@@ -284,7 +160,7 @@ class _PageContent extends StatelessWidget {
           ),
         ),
         const SizedBox(
-          height: 24,
+          height: 12,
         ),
         ...children,
       ],

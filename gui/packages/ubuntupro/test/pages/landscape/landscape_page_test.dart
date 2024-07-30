@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grpc/grpc.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +12,7 @@ import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/widgets/page_widgets.dart';
 import 'package:wizard_router/wizard_router.dart';
+import 'package:yaru/yaru.dart';
 import 'package:yaru_test/yaru_test.dart';
 
 import '../../utils/build_multiprovider_app.dart';
@@ -20,10 +20,6 @@ import 'landscape_page_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
 void main() {
-  const tempFileName = 'Pro4WSLLandscapePageTEMP.conf';
-  Directory? tempDir;
-  var tempFilePath = '';
-
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
   // TODO: Sometimes the Column in the LandscapePage extends past the test environment's screen
   // due differences in font size between production and testing environments.
@@ -31,57 +27,40 @@ void main() {
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
 
-  setUpAll(() {
-    tempDir = Directory.systemTemp.createTempSync();
-    tempFilePath = '${tempDir!.path}/$tempFileName';
-  });
-
-  tearDownAll(() {
-    if (tempDir != null && tempDir!.existsSync()) {
-      tempDir?.deleteSync(recursive: true);
-    }
-  });
-
   group('input sections', () {
     testWidgets('default state', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(ColumnLandingPage));
+      final context = tester.element(find.byType(LandingPage));
       final lang = AppLocalizations.of(context);
 
       final continueButton = find.button(lang.buttonNext);
       expect(continueButton, findsOne);
       expect(tester.widget<ElevatedButton>(continueButton).enabled, isFalse);
 
-      final radio1 = find.byWidgetPredicate(
-        (widget) =>
-            widget is Radio && widget.value == LandscapeConfigType.manual,
-      );
-      expect(radio1, findsOne);
-      expect(
-        tester.widget<Radio>(radio1).groupValue == LandscapeConfigType.manual,
-        isTrue,
-      );
-
-      final radio2 = find.byWidgetPredicate(
-        (widget) => widget is Radio && widget.value == LandscapeConfigType.file,
-      );
-      expect(radio2, findsOne);
-      expect(
-        tester.widget<Radio>(radio2).groupValue == LandscapeConfigType.manual,
-        isTrue,
-      );
+      for (final type in LandscapeConfigType.values) {
+        final radio = find.byWidgetPredicate(
+          (widget) => widget is YaruRadio && widget.value == type,
+        );
+        expect(radio, findsOne);
+        expect(
+          tester.widget<YaruRadio>(radio).groupValue ==
+              LandscapeConfigType.selfHosted,
+          isTrue,
+        );
+      }
     });
 
     testWidgets('continue enabled', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
-      model.fqdn = LandscapeModel.landscapeSaas;
+      model.setConfigType(LandscapeConfigType.saas);
+      model.setAccountName('testaccount');
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(ColumnLandingPage));
+      final context = tester.element(find.byType(LandingPage));
       final lang = AppLocalizations.of(context);
 
       final continueButton = find.button(lang.buttonNext);
@@ -90,13 +69,8 @@ void main() {
     });
   });
 
-  group('input', () {
-    setUp(() async {
-      final tempFile = File(tempFilePath);
-      await tempFile.writeAsString('');
-    });
-
-    testWidgets('calls back on success manual', (tester) async {
+  group('calls back on success', () {
+    testWidgets('saas', (tester) async {
       final agent = MockAgentApiClient();
       final model = LandscapeModel(agent);
 
@@ -108,38 +82,37 @@ void main() {
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(ColumnLandingPage));
+      final context = tester.element(find.byType(LandingPage));
       final lang = AppLocalizations.of(context);
 
-      final fqdnInput = find.ancestor(
-        of: find.text(lang.landscapeFQDNLabel),
+      final saasRadio = find.ancestor(
+        of: find.text(lang.landscapeQuickSetupSaas),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(saasRadio);
+      await tester.pump();
+
+      final accountInput = find.ancestor(
+        of: find.text(lang.landscapeAccountNameLabel),
         matching: find.byType(TextField),
       );
       final continueButton = find.button(lang.buttonNext);
 
-      // expect false since when FQDN is landscapeSaas, an account name is required
-      await tester.enterText(fqdnInput, LandscapeModel.landscapeSaas);
+      // expect false since account name cannot be 'standalone' for the saas subform.
+      await tester.enterText(accountInput, standalone);
       await tester.pump();
       await tester.tap(continueButton);
-      expect(model.accountName, isEmpty);
       expect(applied, isFalse);
 
-      // an account name is now provided, so we expect applied
-      final accountNameInput = find.ancestor(
-        of: find.text(lang.landscapeAccountNameLabel),
-        matching: find.byType(TextField),
-      );
-      await tester.enterText(accountNameInput, 'test');
+      await tester.enterText(accountInput, 'testaccount');
       await tester.pump();
       await tester.tap(continueButton);
       await tester.pump();
-      expect(model.accountName, 'test');
       expect(applied, isTrue);
     });
-
-    testWidgets('calls back on success file', (tester) async {
+    testWidgets('self-hosted', (tester) async {
       final agent = MockAgentApiClient();
-      final model = LandscapeModel(MockAgentApiClient());
+      final model = LandscapeModel(agent);
 
       var applied = false;
       when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
@@ -149,8 +122,55 @@ void main() {
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(ColumnLandingPage));
+      final context = tester.element(find.byType(LandingPage));
       final lang = AppLocalizations.of(context);
+
+      final selfHosted = find.ancestor(
+        of: find.text(lang.landscapeQuickSetupSelfHosted),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(selfHosted);
+      await tester.pump();
+      final fqdnInput = find.ancestor(
+        of: find.text(lang.landscapeFQDNLabel),
+        matching: find.byType(TextField),
+      );
+      final continueButton = find.button(lang.buttonNext);
+
+      // expect false since FQDN cannot be landscapeSaas for the self-hosted subform.
+      await tester.enterText(fqdnInput, landscapeSaas);
+      await tester.pump();
+      await tester.tap(continueButton);
+      expect(applied, isFalse);
+
+      await tester.enterText(fqdnInput, 'test.l.com');
+      await tester.pump();
+      await tester.tap(continueButton);
+      await tester.pump();
+      expect(applied, isTrue);
+    });
+
+    testWidgets('custom config', (tester) async {
+      final client = MockAgentApiClient();
+
+      var applied = false;
+      when(client.applyLandscapeConfig(any)).thenAnswer((_) async {
+        applied = true;
+        return LandscapeSource()..ensureUser();
+      });
+
+      final model = LandscapeModel(client);
+      final app = buildApp(model);
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(LandingPage));
+      final lang = AppLocalizations.of(context);
+
+      final customRadio = find.ancestor(
+        of: find.text(lang.landscapeCustomSetup),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(customRadio);
+      await tester.pump();
 
       final fileInput = find.ancestor(
         of: find.text(lang.landscapeFileLabel),
@@ -160,25 +180,61 @@ void main() {
       await tester.tap(fileInput);
       await tester.pump();
 
-      await tester.enterText(fileInput, tempFilePath);
+      await tester.enterText(fileInput, customConf);
       await tester.pump();
 
       final continueButton = find.button(lang.buttonNext);
       expect(tester.widget<ElevatedButton>(continueButton).enabled, isTrue);
       expect(applied, isFalse);
 
-      // Ideally we'd test if `applied` is true after continue is pressed,
-      // however Flutter has issues with reading files asynchronously in this
-      // test environment
+      await tester.tap(continueButton);
+      await tester.pumpAndSettle();
+      expect(applied, isTrue);
     });
+  });
 
-    testWidgets('feedback on manual error', (tester) async {
+  group('feedback on error', () {
+    testWidgets('saas', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(ColumnLandingPage));
+      final context = tester.element(find.byType(LandingPage));
       final lang = AppLocalizations.of(context);
+
+      final saasRadio = find.ancestor(
+        of: find.text(lang.landscapeQuickSetupSaas),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(saasRadio);
+      await tester.pump();
+
+      final accountInput = find.ancestor(
+        of: find.text(lang.landscapeAccountNameLabel),
+        matching: find.byType(TextField),
+      );
+      expect(accountInput, findsOne);
+
+      await tester.enterText(accountInput, standalone);
+      await tester.pump();
+
+      final errorText = find.text(lang.landscapeAccountNameError);
+      expect(errorText, findsOne);
+    });
+    testWidgets('self-hosted', (tester) async {
+      final model = LandscapeModel(MockAgentApiClient());
+
+      final app = buildApp(model);
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(LandingPage));
+      final lang = AppLocalizations.of(context);
+
+      final selfHosted = find.ancestor(
+        of: find.text(lang.landscapeQuickSetupSelfHosted),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(selfHosted);
+      await tester.pump();
 
       final fqdnInput = find.ancestor(
         of: find.text(lang.landscapeFQDNLabel),
@@ -193,14 +249,20 @@ void main() {
       expect(errorText, findsOne);
     });
 
-    testWidgets('feedback on file error', (tester) async {
+    testWidgets('custom config', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(ColumnLandingPage));
+      final context = tester.element(find.byType(LandingPage));
       final lang = AppLocalizations.of(context);
 
+      final customRadio = find.ancestor(
+        of: find.text(lang.landscapeCustomSetup),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(customRadio);
+      await tester.pump();
       final fileInput = find.ancestor(
         of: find.text(lang.landscapeFileLabel),
         matching: find.byType(TextField),
@@ -209,30 +271,77 @@ void main() {
       await tester.tap(fileInput);
       await tester.pump();
 
-      await tester.enterText(fileInput, '${tempDir!.path}/Invalid.conf');
+      await tester.enterText(fileInput, notFoundPath);
       await tester.pump();
 
       final errorText = find.text(lang.landscapeFileNotFound);
       expect(errorText, findsOne);
     });
+
+    testWidgets('on agent error', (tester) async {
+      final client = MockAgentApiClient();
+      const msg = 'agent error message';
+      const err = GrpcError.custom(17, msg);
+      when(client.applyLandscapeConfig(any)).thenThrow(err);
+      final model = LandscapeModel(client);
+
+      final app = buildApp(model);
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(LandingPage));
+      final lang = AppLocalizations.of(context);
+
+      final saasRadio = find.ancestor(
+        of: find.text(lang.landscapeQuickSetupSaas),
+        matching: find.byType(YaruSelectableContainer),
+      );
+      await tester.tap(saasRadio);
+      await tester.pump();
+      final accountInput = find.ancestor(
+        of: find.text(lang.landscapeAccountNameLabel),
+        matching: find.byType(TextField),
+      );
+      expect(accountInput, findsOne);
+      await tester.tap(accountInput);
+      await tester.pump();
+      await tester.enterText(accountInput, 'testaccount');
+      await tester.pump();
+
+      final next = find.button(lang.buttonNext);
+      await tester.tap(next);
+      await tester.pump();
+      final snack = find.descendant(
+        of: find.byType(SnackBar),
+        matching: find.byType(Text),
+      );
+
+      expect(snack, findsOne);
+      expect(tester.widget<Text>(snack).data, contains(msg));
+    });
   });
 
-  testWidgets('creates a model', (tester) async {
+  group('create', () {
     final mockClient = MockAgentApiClient();
     registerServiceInstance<AgentApiClient>(mockClient);
-    final app = buildMultiProviderWizardApp(
-      routes: {
-        '/': const WizardRoute(builder: LandscapePage.create),
-      },
-    );
 
-    await tester.pumpWidget(app);
-    await tester.pumpAndSettle();
+    for (final late in [true, false]) {
+      testWidgets('is late: $late', (tester) async {
+        final app = buildMultiProviderWizardApp(
+          routes: {
+            '/': WizardRoute(
+              builder: (ctx) => LandscapePage.create(ctx, isLate: late),
+            ),
+          },
+        );
 
-    final context = tester.element(find.byType(LandscapePage));
-    final model = Provider.of<LandscapeModel>(context, listen: false);
+        await tester.pumpWidget(app);
+        await tester.pumpAndSettle();
 
-    expect(model, isNotNull);
+        final context = tester.element(find.byType(LandscapePage));
+        final model = Provider.of<LandscapeModel>(context, listen: false);
+
+        expect(model, isNotNull);
+      });
+    }
   });
 }
 
@@ -240,7 +349,14 @@ Widget buildApp(
   LandscapeModel model,
 ) {
   return buildSingleRouteMultiProviderApp(
-    child: LandscapePage(onApplyConfig: () {}),
+    child: LandscapePage(
+      onApplyConfig: () {},
+      onSkip: () {},
+      onBack: () {},
+    ),
     providers: [ChangeNotifierProvider<LandscapeModel>.value(value: model)],
   );
 }
+
+const customConf = './test/testdata/landscape/custom.conf';
+const notFoundPath = './test/testdata/landscape/notfound.txt';
