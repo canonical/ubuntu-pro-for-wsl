@@ -28,7 +28,8 @@ jobs:
           cd 'docs/diagrams'
           echo 'Generating PNGs...'
           plantuml -tpng *.puml
-          rm *.puml
+          # plantuml outputs .puml markup and key images that are not needed 
+          rm *.puml *-key.png
       - name: Get output branch for branch name
         id: get-branch-name
         shell: bash
