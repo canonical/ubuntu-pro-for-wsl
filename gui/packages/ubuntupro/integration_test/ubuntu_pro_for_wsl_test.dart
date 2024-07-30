@@ -12,12 +12,12 @@ import 'package:ubuntupro/constants.dart';
 import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/launch_agent.dart';
 import 'package:ubuntupro/main.dart' as app;
-import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
+import 'package:yaru/widgets.dart';
 import 'package:yaru_test/yaru_test.dart';
 
 import '../test/utils/l10n_tester.dart';
@@ -135,11 +135,13 @@ void main() {
 
         // check that we transitioned to the LandscapePage
         l10n = tester.l10n<LandscapePage>();
-        final radios = find.byType(Radio<LandscapeConfigType>);
-        expect(radios, findsNWidgets(2));
+        final radios = find.byType(YaruSelectableContainer);
+        expect(radios, findsNWidgets(3));
         await tester.tap(radios.at(1));
         await tester.pump();
         await tester.tap(radios.at(0));
+        await tester.pump();
+        await tester.tap(radios.at(2));
         await tester.pump();
         final skip = find.button(l10n.buttonSkip);
         await tester.tap(skip);
@@ -181,16 +183,15 @@ void main() {
 
         // check that we transitioned to the LandscapePage
         l10n = tester.l10n<LandscapePage>();
-        final radios = find.byType(Radio<LandscapeConfigType>);
-        expect(radios, findsNWidgets(2));
-        await tester.tap(radios.at(1));
-        await tester.pump();
-        await tester.tap(radios.at(0));
-        await tester.pump();
-
+        final selfHostedRadio = find.ancestor(
+          of: find.text(l10n.landscapeQuickSetupSelfHosted),
+          matching: find.byType(YaruSelectableContainer),
+        );
         final continueButton = find.button(l10n.buttonNext);
 
         // check that invalid input disables continue
+        await tester.tap(selfHostedRadio);
+        await tester.pump();
         final fqdnInput = find.ancestor(
           of: find.text(l10n.landscapeFQDNLabel),
           matching: find.byType(TextField),
@@ -316,6 +317,33 @@ landscape:
 
           // We should have transitioned straight into the Subscription status page.
           final l10n = tester.l10n<SubscriptionStatusPage>();
+
+          // Reconfigure Landscape
+          final landscapeButton = find.text(l10n.landscapeConfigureButton);
+          expect(landscapeButton, findsOneWidget);
+          await tester.tap(landscapeButton);
+          await tester.pumpAndSettle();
+          final landscapeL10n = tester.l10n<LandscapePage>();
+          final selfHosted = find.ancestor(
+            of: find.text(landscapeL10n.landscapeQuickSetupSelfHosted),
+            matching: find.byType(YaruSelectableContainer),
+          );
+          await tester.tap(selfHosted);
+          final fqdnInput = find.ancestor(
+            of: find.text(landscapeL10n.landscapeFQDNLabel),
+            matching: find.byType(TextField),
+          );
+          await tester.tap(fqdnInput);
+          await tester.enterText(fqdnInput, 'localhost');
+          await tester.pump();
+          final continueButton = find.button(landscapeL10n.buttonNext);
+          await tester.tap(continueButton);
+          await tester.pumpAndSettle();
+
+          final config = File(p.join(configDir!.path, 'config'));
+          final c = await config.readAsString();
+          expect(c, contains('localhost'));
+          expect(c, isNot(contains('landscape.canonical.com')));
 
           // finds and taps the "detach pro" button.
           final detachButton = find.text(l10n.detachPro);
