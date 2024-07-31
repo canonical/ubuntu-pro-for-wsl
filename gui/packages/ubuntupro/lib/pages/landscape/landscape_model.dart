@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show ChangeNotifier;
+import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
 import 'package:grpc/grpc.dart' show GrpcError;
 
 import '/core/agent_api_client.dart';
@@ -32,6 +32,9 @@ class LandscapeModel extends ChangeNotifier {
 
   /// The configuration form data for the SaaS configuration.
   final LandscapeSaasConfig saas = LandscapeSaasConfig();
+
+  // TODO: Remove this condition when Landscape SaaS starts supporting WSL.
+  bool get isSaaSSupported => kDebugMode;
 
   /// The configuration form data for the self-hosted configuration.
   final LandscapeSelfHostedConfig selfHosted = LandscapeSelfHostedConfig();

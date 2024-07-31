@@ -165,7 +165,8 @@ class LandscapeConfigForm extends StatelessWidget {
                         title: lang.landscapeQuickSetupSaas,
                         subtitle: lang.landscapeQuickSetupSaasHint,
                         groupValue: model.configType,
-                        onChanged: model.setConfigType,
+                        onChanged:
+                            model.isSaaSSupported ? model.setConfigType : null,
                       ),
                     ),
                     FocusTraversalOrder(
@@ -287,7 +288,7 @@ class _ConfigTypeRadio extends StatelessWidget {
   });
   final String title, subtitle;
   final LandscapeConfigType value, groupValue;
-  final Function(LandscapeConfigType?) onChanged;
+  final Function(LandscapeConfigType?)? onChanged;
 
   @override
   Widget build(BuildContext context) {
