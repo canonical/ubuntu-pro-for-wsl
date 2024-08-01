@@ -174,16 +174,20 @@ class LandscapeSaasConfig extends LandscapeConfig {
     if (!isComplete) return null;
     final uri = Uri.https(landscapeSaas);
 
+    final registrationKeyLine =
+        registrationKey.isEmpty ? '' : 'registration_key = $registrationKey';
+
     return '''
 [host]
 url = ${uri.replace(port: 6554).authority}
 [client]
 account_name = $accountName
-registration_key = $registrationKey
 url = ${uri.replace(path: '/message-system')}
 ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
-''';
+$registrationKeyLine
+'''
+        .trimRight();
   }
 }
 
@@ -262,18 +266,24 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
   @override
   String? config() {
     if (!isComplete) return null;
+
+    final sslKeyLine = sslKeyPath.isEmpty ? '' : 'ssl_public_key = $sslKeyPath';
+    final registrationKeyLine =
+        registrationKey.isEmpty ? '' : 'registration_key = $registrationKey';
+
     final uri = Uri.parse(_fqdn);
     return '''
 [host]
 url = ${uri.replace(port: 6554).authority}
 [client]
 account_name = $standalone
-registration_key = $registrationKey
 url = ${uri.replace(path: '/message-system')}
 ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
-ssl_public_key = $sslKeyPath
-''';
+$sslKeyLine
+$registrationKeyLine
+'''
+        .trimRight();
   }
 }
 
