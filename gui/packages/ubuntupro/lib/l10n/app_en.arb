@@ -53,7 +53,7 @@
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
-    "landscapeHeading": "You can manage your Ubuntu instances remotely with {landscapeLink}.",
+    "landscapeHeading": "You can manage your Ubuntu instances remotely with {landscapeLink}.\n\nConfigure the connection to Landscape:",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -61,21 +61,33 @@
             }
         }
     },
-    "landscapeQuickSetup": "Quick Setup (Recommended)",
-    "landscapeQuickSetupHint": "Provide your Landscape enrollment information",
+    "landscapeQuickSetupSaas": "Quick Setup (SaaS)",
+    "landscapeQuickSetupSaasHint": "Register with landscape.canonical.com",
+    "landscapeQuickSetupSelfHosted": "Quick Setup (Self-hosted)",
+    "landscapeQuickSetupSelfHostedHint": "Register with your own Landscape server",
     "landscapeFQDNLabel": "Landscape server address",
     "landscapeFQDNError": "Invalid URI. Format should be a hostname or IP address.",
     "landscapeAccountNameLabel": "Landscape Account Name",
     "landscapeAccountNameError": "Invalid account name",
     "landscapeKeyLabel": "Registration Key",
-    "landscapeCustomSetup": "Custom Configuration",
-    "landscapeCustomSetupHint": "Load a custom client configuration file",
+    "landscapeCustomSetup": "Advanced Configuration",
+    "landscapeCustomSetupHint": "Load a custom Landscape client configuration file",
     "landscapeFileLabel": "Config file path",
     "landscapeFileTooLarge": "Configuration file is too large",
-    "landscapeFileEmpty": "A path must be specified",
+    "landscapeFileEmptyPath": "A path must be specified",
+    "landscapeFileEmptyContents": "File must not be empty",
     "landscapeFileNotFound": "File not found",
+    "landscapeFileIsDir": "File cannot be a directory",
     "landscapeFilePicker": "Select file...",
     "landscapeConfigureButton": "Configure Landscape",
+    "landscapeApplyError": "Error when attempting to apply the config:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message" : {
+                "type": "String"
+            }
+        }
+    },
 
     "buttonNext": "Continue",
     "buttonSkip": "Skip",
