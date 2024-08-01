@@ -94,5 +94,5 @@ Landscape server automatically.
 Using this server setup when following the [tutorial](../tutorial/index) would
 result in the following architecture:
 
-![text](../diagrams/structurizr-Tutorial.png) 
+![architecture diagram showing management of WSL instances from a WSL instance on a single machine using Landscape and Ubuntu Pro for WSL](../diagrams/structurizr-Tutorial.png) 
 
