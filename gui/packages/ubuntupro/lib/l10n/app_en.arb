@@ -72,6 +72,7 @@
     "landscapeKeyLabel": "Registration Key",
     "landscapeCustomSetup": "Advanced Configuration",
     "landscapeCustomSetupHint": "Load a custom Landscape client configuration file",
+    "landscapeSSLKeyLabel": "Server SSL public key",
     "landscapeFileLabel": "Config file path",
     "landscapeFileTooLarge": "Configuration file is too large",
     "landscapeFileEmptyPath": "A path must be specified",
