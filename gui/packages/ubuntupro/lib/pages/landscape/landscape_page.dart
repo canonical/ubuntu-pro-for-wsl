@@ -378,7 +378,7 @@ class _SelfHostedForm extends StatelessWidget {
           child: _FilePickerField(
             buttonLabel: lang.landscapeFilePicker,
             errorText: model.selfHosted.fileError.localize(lang),
-            hint: 'C:\\landscape.conf',
+            hint: 'C:\\landscape.pem',
             inputlabel: lang.landscapeSSLKeyLabel,
             onChanged: model.setSslKeyPath,
           ),
