@@ -181,7 +181,7 @@ url = ${uri.replace(port: 6554).authority}
 account_name = $accountName
 registration_key = $registrationKey
 url = ${uri.replace(path: '/message-system')}
-ping_url = ${uri.replace(path: '/ping')}
+ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
 ''';
   }
@@ -270,7 +270,7 @@ url = ${uri.replace(port: 6554).authority}
 account_name = $standalone
 registration_key = $registrationKey
 url = ${uri.replace(path: '/message-system')}
-ping_url = ${uri.replace(path: '/ping')}
+ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
 ssl_public_key = $sslKeyPath
 ''';
