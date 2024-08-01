@@ -34,7 +34,7 @@ void main() {
         final raw = c.config();
         expect(raw, tc.wantConfig);
         if (raw != null) {
-          expectNoEmptyValuesInINI(raw);
+          expectINI(raw);
         }
       });
     }
@@ -122,7 +122,7 @@ void main() {
         final raw = c.config();
         expect(raw, tc.wantConfig);
         if (raw != null) {
-          expectNoEmptyValuesInINI(raw);
+          expectINI(raw);
         }
       });
     }
@@ -186,11 +186,23 @@ void main() {
   });
 }
 
-void expectNoEmptyValuesInINI(String raw) {
+void expectINI(String raw) {
   final config = Config.fromStrings(raw.split('\n'));
+  expectNoEmptyValuesInINI(config);
+  expectUrlSchemes(config);
+}
+
+void expectNoEmptyValuesInINI(Config config) {
   for (final o in config.items('client')!) {
     expect(o[1], isNotEmpty);
   }
+}
+
+void expectUrlSchemes(Config config) {
+  final url = Uri.parse(config.get('client', 'url')!);
+  expect(url.scheme, 'https');
+  final ping = Uri.parse(config.get('client', 'ping_url')!);
+  expect(ping.scheme, 'http');
 }
 
 const saasURL = 'https://landscape.canonical.com';
