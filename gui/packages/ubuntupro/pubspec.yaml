@@ -72,6 +72,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_test:
     sdk: flutter
+  ini: ^2.1.0
   integration_test:
     sdk: flutter
   nested: ^1.0.0

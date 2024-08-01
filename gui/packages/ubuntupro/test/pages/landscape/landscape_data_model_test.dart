@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ini/ini.dart';
 
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 
@@ -30,7 +31,11 @@ void main() {
         c.accountName = tc.account;
         expect(c.accountNameError, tc.wantError);
         expect(c.isComplete, tc.wantComplete);
-        expect(c.config(), tc.wantConfig);
+        final raw = c.config();
+        expect(raw, tc.wantConfig);
+        if (raw != null) {
+          expectNoEmptyValuesInINI(raw);
+        }
       });
     }
   });
@@ -114,7 +119,11 @@ void main() {
         expect(c.fqdnError, tc.wantFqdnError);
         expect(c.fileError, tc.wantFileError);
         expect(c.isComplete, tc.wantComplete);
-        expect(c.config(), tc.wantConfig);
+        final raw = c.config();
+        expect(raw, tc.wantConfig);
+        if (raw != null) {
+          expectNoEmptyValuesInINI(raw);
+        }
       });
     }
   });
@@ -175,6 +184,13 @@ void main() {
       });
     }
   });
+}
+
+void expectNoEmptyValuesInINI(String raw) {
+  final config = Config.fromStrings(raw.split('\n'));
+  for (final o in config.items('client')!) {
+    expect(o[1], isNotEmpty);
+  }
 }
 
 const saasURL = 'https://landscape.canonical.com';
