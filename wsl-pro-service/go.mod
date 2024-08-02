@@ -5,8 +5,8 @@ go 1.22.0
 toolchain go1.22.5
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240729133255-5898930fb913
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240712120708-de2908c337a6
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240802123149-3a85a9fcc9e2
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240802123149-3a85a9fcc9e2
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -41,7 +41,7 @@ require (
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.4.0 // indirect
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
