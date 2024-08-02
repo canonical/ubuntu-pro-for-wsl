@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ini/ini.dart';
 
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 
@@ -30,7 +31,11 @@ void main() {
         c.accountName = tc.account;
         expect(c.accountNameError, tc.wantError);
         expect(c.isComplete, tc.wantComplete);
-        expect(c.config(), tc.wantConfig);
+        final raw = c.config();
+        expect(raw, tc.wantConfig);
+        if (raw != null) {
+          expectINI(raw);
+        }
       });
     }
   });
@@ -114,7 +119,11 @@ void main() {
         expect(c.fqdnError, tc.wantFqdnError);
         expect(c.fileError, tc.wantFileError);
         expect(c.isComplete, tc.wantComplete);
-        expect(c.config(), tc.wantConfig);
+        final raw = c.config();
+        expect(raw, tc.wantConfig);
+        if (raw != null) {
+          expectINI(raw);
+        }
       });
     }
   });
@@ -175,6 +184,25 @@ void main() {
       });
     }
   });
+}
+
+void expectINI(String raw) {
+  final config = Config.fromStrings(raw.split('\n'));
+  expectNoEmptyValuesInINI(config);
+  expectUrlSchemes(config);
+}
+
+void expectNoEmptyValuesInINI(Config config) {
+  for (final o in config.items('client')!) {
+    expect(o[1], isNotEmpty);
+  }
+}
+
+void expectUrlSchemes(Config config) {
+  final url = Uri.parse(config.get('client', 'url')!);
+  expect(url.scheme, 'https');
+  final ping = Uri.parse(config.get('client', 'ping_url')!);
+  expect(ping.scheme, 'http');
 }
 
 const saasURL = 'https://landscape.canonical.com';

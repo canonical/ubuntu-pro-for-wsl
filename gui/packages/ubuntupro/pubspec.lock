@@ -440,6 +440,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.2.0"
+  ini:
+    dependency: "direct dev"
+    description:
+      name: ini
+      sha256: "12a76c53591ffdf86d1265be3f986888a6dfeb34a85957774bc65912d989a173"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   integration_test:
     dependency: "direct dev"
     description: flutter
