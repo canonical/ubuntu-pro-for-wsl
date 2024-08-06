@@ -511,12 +511,18 @@ func WslPathMock(t *testing.T) {
 			if envExists(WslpathErr) {
 				return exitError
 			}
+			// That's what wslpath returns when it's called with -ua followed by an empty string.
+			cwd, err := os.Getwd()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Could not get current working directory: %v", err)
+			}
 
 			stdout, ok := map[string]string{
 				windowsUserProfileDir:                   linuxUserProfileDir,
 				`D:\Users\TestUser\certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
 				`D:/Users/TestUser/certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
 				`/idempotent/path/to/linux/certificate`: `/idempotent/path/to/linux/certificate`,
+				``:                                      cwd,
 			}[argv[1]]
 
 			if !ok {
