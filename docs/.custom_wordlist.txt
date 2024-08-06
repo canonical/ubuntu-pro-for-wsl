@@ -63,7 +63,8 @@ zshrc
 ESM
 Ok
 
-# Registry keys
+# Registry keys and types
+DWORD
 UbuntuPro
 UbuntuProToken
 LandscapeConfig
