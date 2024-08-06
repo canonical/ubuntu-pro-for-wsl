@@ -669,6 +669,7 @@ func TestEnsureValidLandscapeConfig(t *testing.T) {
 		"Appends any required fields - no ssl":                      {systemLandscapeConfigFile: "minimal.conf"},
 		"Transform Windows SSL certificate path":                    {systemLandscapeConfigFile: "windows_ssl_only.conf"},
 		"Transform Windows SSL certificate path with forward slash": {systemLandscapeConfigFile: "windows_ssl_only_forward_slash.conf"},
+		"Do not transform Windows SSL certificate empty path":       {systemLandscapeConfigFile: "windows_ssl_empty.conf", wantNoLandscapeConfigCmd: true},
 		"Refresh computer_title if changed":                         {systemLandscapeConfigFile: "old_computer_title.conf"},
 
 		"Regular with additional keys":            {systemLandscapeConfigFile: "regular.conf"},

@@ -1,0 +1,4 @@
+[client]
+hostagent_uid  = landscapeUID1234
+ssl_public_key = 
+computer_title = TEST_DISTRO
