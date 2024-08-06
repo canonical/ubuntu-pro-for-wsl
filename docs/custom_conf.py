@@ -143,6 +143,8 @@ linkcheck_ignore = [
 
     # Linkcheck does not have access to the repo
     'https://github.com/canonical/ubuntu-pro-for-wsl/*',
+    # This page redirects to SSO login:
+    'https://ubuntu.com/pro/dashboard',
     ]
 
 # Pages on which to ignore anchors
