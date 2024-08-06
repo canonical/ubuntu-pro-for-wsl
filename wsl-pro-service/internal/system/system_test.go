@@ -199,12 +199,13 @@ func TestUserProfileDir(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		cachedCmdExe      bool
-		cmdExeNotExist    bool
-		cmdExeErr         bool
-		wslpathErr        bool
-		wslpathBadOutput  bool
-		overrideProcMount bool
+		cachedCmdExe           bool
+		cmdExeNotExist         bool
+		cmdExeErr              bool
+		emptyUserprofileEnvVar bool
+		wslpathErr             bool
+		wslpathBadOutput       bool
+		overrideProcMount      bool
 
 		wantErr bool
 	}{
@@ -218,6 +219,7 @@ func TestUserProfileDir(t *testing.T) {
 		"Error finding cmd.exe because there is no Windows FS in /proc/mounts": {wantErr: true, overrideProcMount: true},
 		"Error when cmd.exe does not exist":                                    {cmdExeNotExist: true, overrideProcMount: true, wantErr: true},
 		"Error on cmd.exe error":                                               {cmdExeErr: true, wantErr: true},
+		"Error when UserProfile env var is empty":                              {emptyUserprofileEnvVar: true, wantErr: true},
 		"Error on wslpath error":                                               {wslpathErr: true, wantErr: true},
 		"Error when wslpath returns a bad path":                                {wslpathBadOutput: true, wantErr: true},
 	}
@@ -229,6 +231,9 @@ func TestUserProfileDir(t *testing.T) {
 			system, mock := testutils.MockSystem(t)
 			if tc.cmdExeErr {
 				mock.SetControlArg(testutils.CmdExeErr)
+			}
+			if tc.emptyUserprofileEnvVar {
+				mock.SetControlArg(testutils.EmptyUserprofileEnvVar)
 			}
 			if tc.wslpathErr {
 				mock.SetControlArg(testutils.WslpathErr)
@@ -251,7 +256,7 @@ func TestUserProfileDir(t *testing.T) {
 
 			got, err := system.UserProfileDir(context.Background())
 			if tc.wantErr {
-				require.Error(t, err, "Expected UserProfile to return an error")
+				require.Error(t, err, "Expected UserProfile to return an error, but returned %s intead", got)
 				return
 			}
 			require.NoError(t, err, "Expected UserProfile to return no errors")
