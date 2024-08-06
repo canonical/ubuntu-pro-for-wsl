@@ -170,6 +170,11 @@ func overrideSSLCertificate(ctx context.Context, s *System, section *ini.Section
 
 	pathWindows := k.String()
 
+	if len(pathWindows) == 0 {
+		// Empty paths are translated by wslpath as the current working directory, which is not what we want.
+		return nil
+	}
+
 	cmd := s.backend.WslpathExecutable(ctx, "-ua", pathWindows)
 	out, err := runCommand(cmd)
 	if err != nil {
