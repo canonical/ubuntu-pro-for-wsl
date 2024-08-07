@@ -184,16 +184,22 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 		return wslPath, err
 	}
 
-	cmd := s.backend.CmdExe(ctx, cmdExe, "/C", "echo %UserProfile%")
+	// Using the 'echo.' syntax instead of 'echo ' because if %USERPROFILE% was set to empty string it would cause the output to be 'ECHO is on'.
+	// With 'echo.%UserProfile%' it correctly prints empty line in that case.
+	cmd := s.backend.CmdExe(ctx, cmdExe, "/C", "echo.%UserProfile%")
 	winHome, err := runCommand(cmd)
 	if err != nil {
 		return wslPath, err
 	}
 
+	trimmed := strings.TrimSpace(string(winHome))
+	if len(trimmed) == 0 {
+		return wslPath, errors.New("%UserProfile% value is empty")
+	}
 	// We have the path from Windows' perspective ( C:\Users\... )
 	// It must be converted to linux ( /mnt/c/Users/... )
 
-	cmd = s.backend.WslpathExecutable(ctx, "-ua", string(winHome))
+	cmd = s.backend.WslpathExecutable(ctx, "-ua", trimmed)
 	winHomeLinux, err := runCommand(cmd)
 	if err != nil {
 		return wslPath, err

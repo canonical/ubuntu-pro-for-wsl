@@ -86,8 +86,9 @@ const (
 	LandscapeEnableErr  = "UP4W_LANDSCAPE_ENABLE_ERR"
 	LandscapeDisableErr = "UP4W_LANDSCAPE_DISABLE_ERR"
 
-	WslpathErr       = "UP4W_WSLPATH_ERR"
-	WslpathBadOutput = "UP4W_WSLPATH_BAD_OUTPUT"
+	WslpathErr             = "UP4W_WSLPATH_ERR"
+	WslpathBadOutput       = "UP4W_WSLPATH_BAD_OUTPUT"
+	EmptyUserprofileEnvVar = "UP4W_EMPTY_USERPROFILE_ENV_VAR"
 
 	CmdExeErr = "UP4W_CMDEXE_ERR"
 
@@ -511,12 +512,18 @@ func WslPathMock(t *testing.T) {
 			if envExists(WslpathErr) {
 				return exitError
 			}
+			// That's what wslpath returns when it's called with -ua followed by an empty string.
+			cwd, err := os.Getwd()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Could not get current working directory: %v", err)
+			}
 
 			stdout, ok := map[string]string{
 				windowsUserProfileDir:                   linuxUserProfileDir,
 				`D:\Users\TestUser\certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
-				`D:/Users/TestUser/certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
-				`/idempotent/path/to/linux/certificate`: `/idempotent/path/to/linux/certificate`,
+				"D:/Users/TestUser/certificate":         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				"/idempotent/path/to/linux/certificate": "/idempotent/path/to/linux/certificate",
+				"":                                      cwd,
 			}[argv[1]]
 
 			if !ok {
@@ -602,13 +609,17 @@ func CmdExeMock(t *testing.T) {
 			return exitBadUsage
 		}
 
-		if argv[1] != "echo %UserProfile%" {
+		if argv[1] != "echo.%UserProfile%" {
 			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
 
 		if envExists(CmdExeErr) {
 			return exitError
+		}
+		if envExists(EmptyUserprofileEnvVar) {
+			fmt.Print("\r\n")
+			return exitOk
 		}
 
 		fmt.Fprintln(os.Stdout, windowsUserProfileDir)
