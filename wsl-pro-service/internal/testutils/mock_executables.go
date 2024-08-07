@@ -521,9 +521,9 @@ func WslPathMock(t *testing.T) {
 			stdout, ok := map[string]string{
 				windowsUserProfileDir:                   linuxUserProfileDir,
 				`D:\Users\TestUser\certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
-				`D:/Users/TestUser/certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
-				`/idempotent/path/to/linux/certificate`: `/idempotent/path/to/linux/certificate`,
-				``:                                      cwd,
+				"D:/Users/TestUser/certificate":         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
+				"/idempotent/path/to/linux/certificate": "/idempotent/path/to/linux/certificate",
+				"":                                      cwd,
 			}[argv[1]]
 
 			if !ok {
