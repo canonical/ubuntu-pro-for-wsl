@@ -6,7 +6,7 @@ wait for a few seconds and try again. The process should not take longer than a 
 (howto::verify-pro-sub)=
 ## Pro subscription
 
-After installing UP4W and entering your token you should see a confirmation that your Pro subscription is active:
+After installing UP4W on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
 
 ![Confirmation in graphical interface that subscription is active.](../assets/status-complete.png)
 
@@ -15,8 +15,13 @@ Find and run _Ubuntu Pro for WSL_ from the Windows start menu at any time and th
 (howto::verify-pro-attach)=
 ## Pro-attachment
 
+```{note}
+To verify Pro-attachment WSL should be installed on the Windows machine along
+with an Ubuntu distro — Ubuntu 24.04 LTS will be used in this example.
+```
+
 To verify Pro-attachment a new Ubuntu instance needs to be created.
-Running the following command in PowerShell will create a new Ubuntu 24.04 instance
+Running the following command in PowerShell will create a new Ubuntu-24.04 instance
 and prompt you to create a username and password for the machine:
 
 ```text

@@ -2,8 +2,7 @@
 
 To install and configure UP4W you will need:
 
-- A Windows machine
-- WSL with Ubuntu 24.04 LTS installed
+- A Windows 10 or 11 machine
 - An Ubuntu Pro token
 
 You should also verify that the [firewall rules are correctly set up](../reference/firewall_requirements.md).
