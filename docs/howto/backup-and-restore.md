@@ -12,16 +12,21 @@ You may need to backup one of your Ubuntu WSL instances, if you want to:
 (howto::backup)=
 ## Backing up
 
-To backup an Ubuntu-24.04 instance first make a `backup` directory:
+```{note}
+For simplicity, PowerShell commands in this section will all be run from the home
+directory of the user `me`.
+```
+
+To backup an Ubuntu-24.04 instance first make a `backup` folder in your home directory:
 
 ```text
-PS C:\Users\me\howto> mkdir C:\Users\me\howto\backup
+PS C:\Users\me> mkdir backup
 ```
 
 You then need to create a compressed version of the Ubuntu instance in that backup directory:
 
 ```text
-PS C:\Users\me\howto> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
+PS C:\Users\me> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
 ```
 
 (howto::removal)=
@@ -33,7 +38,7 @@ remove it from WSL and delete all associated data.
 This can be achieved with the following command:
 
 ```text
-PS C:\Users\me\howto> wsl --unregister Ubuntu-24.04
+PS C:\Users\me> wsl --unregister Ubuntu-24.04
 ```
 
 (howto::restoring)=
@@ -42,11 +47,26 @@ PS C:\Users\me\howto> wsl --unregister Ubuntu-24.04
 If you want to restore the Ubuntu-24.04 instance that you have previously backed up run:
 
 ```text
-PS C:\Users\me\tutorial> wsl --import Ubuntu-24.04 .\backup\Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
+PS C:\Users\me> wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.tar.gz
 ```
 
 This will import your previous data and if you run `ubuntu2404.exe` an Ubuntu WSL instance
 should be restored with your previous configuration intact.
+
+To login as a user `k`, created with the original instance, run: 
+
+```text
+PS C:\Users\me> wsl -d Ubuntu-24.04 -u k
+```
+
+Alternatively, add the following to `/etc/wsl.conf` in the instance:
+
+```text
+[user]
+default=k
+```
+
+Without specifying a user you will be logged in as the root user.
 
 (howto::duplication)=
 ## Duplication
@@ -56,13 +76,23 @@ Below the restore process is repeated but the new instances are assigned
 different names than the original backup:
 
 ```text
-PS C:\Users\me\howto> wsl --import ubuntu24.04-b .\backup\ .\backup\Ubuntu-24.04.tar.gz
-PS C:\Users\me\howto> wsl --import ubuntu24.04-c .\backup\ .\backup\Ubuntu-24.04.tar.gz
+PS C:\Users\me> wsl --import ubuntu2404b .\backup\Ubuntu2404b\ .\backup\Ubuntu-24.04.tar.gz
+PS C:\Users\me> wsl --import ubuntu2404c .\backup\Ubuntu2404c\ .\backup\Ubuntu-24.04.tar.gz
 ```
 
 This will create two additional instances of Ubuntu 24.04 that can be launched and configured independently.
-For example, launching one of these instances is achieved with the command:
+
+In PowerShell, running `wsl -l -v` will output the new instances in your list of installed distributions:
 
 ```text
-wsl -d ubuntu2404-b
+NAME            STATE         VERSION
+Ubuntu-24.04    Stopped       2
+ubuntu2404b     Stopped       2
+ubuntu2404c     Stopped       2
+```
+
+To launch the first derived instance and login as the user `k` run:
+
+```text
+PS C:\Users\me> wsl -d ubuntu2404b -u k
 ```
