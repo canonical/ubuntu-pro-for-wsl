@@ -40,7 +40,7 @@ If you are using Landscape you can input your configuration in `LandscapeConfig 
 
 ![Windows registry with child window showing Landscape configuration.](./assets/registry-child-window.png) 
 
-Refer to the section on the [configuration schema](howto::config-schema) for an example.
+Refer to the section on [Landscape client configuration](howto::config-landscape-client) for an example.
 
 After you have populated the configuration with data you should be ready to create and manage 
 automatically Pro-attaching WSL instances through Landscape:
@@ -57,7 +57,7 @@ In the UP4W app navigate to the Landscape configuration screen:
 Choose your preferred configuration option and enter the required details.
 
 The "Advanced Configuration" option requires you to specify a `landscape.conf`.
-Refer to the section on the [configuration schema](howto::config-schema) for an example.
+Refer to the section on [Landscape client configuration](howto::config-landscape-client) for an example.
 
 When you continue a status screen will appear confirming that configuration is complete:
 
@@ -83,12 +83,11 @@ been registered in Landscape.
 
 ````
 
-(howto::config-schema)=
-## Configuration schema
+(howto::config-landscape-client)=
+## Configuring the landscape client
 
 Both the `LandscapeConfig` data in the Windows registry and the Advanced Configuration
-option in the graphical Windows application require a configuration schema like the one
-below:
+option in the graphical Windows application can be configured as follows:
 
 
 ```ini
@@ -106,3 +105,5 @@ ssl_public_key = C:\Users\user\Downloads\landscape_server.pem
 ```{warning}
 The `ping_url` must be a `http` address. A `https` address will not work.
 ```
+
+A more comprehensive example of the configuration options is provided [here](https://github.com/canonical/landscape-client/blob/main/example.conf).
