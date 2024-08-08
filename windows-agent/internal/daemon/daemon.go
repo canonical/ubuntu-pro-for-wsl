@@ -49,7 +49,8 @@ func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
 
 	wslIP, err := getWslIP(ctx, args...)
 	if err != nil {
-		return fmt.Errorf("could not get the WSL adapter IP: %v", err)
+		log.Errorf(ctx, "could not get the WSL adapter IP: %v", err)
+		wslIP = net.IPv4(127, 0, 0, 1)
 	}
 
 	var cfg net.ListenConfig

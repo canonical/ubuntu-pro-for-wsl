@@ -168,11 +168,11 @@ func TestServeWSLIP(t *testing.T) {
 		"With a single Hyper-V Adapter": {withAdapters: daemontestutils.SingleHyperVAdapterInList},
 		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
-
-		"Error when the networking mode is unknown":        {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":         {withAdapters: daemontestutils.EmptyList, wantErr: true},
-		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
-		"Error when retrieving adapters information fails": {withAdapters: daemontestutils.MockError, wantErr: true},
+		// With the current patch those tests won't fail anymore.
+		"Error when the networking mode is unknown":        {netmode: "unknown"},
+		"Error when the list of adapters is empty":         {withAdapters: daemontestutils.EmptyList},
+		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemontestutils.NoHyperVAdapterInList},
+		"Error when retrieving adapters information fails": {withAdapters: daemontestutils.MockError},
 	}
 
 	for name, tc := range testcases {
