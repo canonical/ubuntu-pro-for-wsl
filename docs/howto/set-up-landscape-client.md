@@ -1,10 +1,5 @@
 # Configure the Landscape client with UP4W
 
-<!-- TODO: assets need to be moved -->
-<!-- example config file needs to be shown -->
-<!-- some minor reworking of tut and refs -->
-<!-- careful not to duplicate content -->
-
 (howto::config-landscape)=
 ## Choose a configuration method
 

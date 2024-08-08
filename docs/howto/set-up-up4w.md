@@ -1,8 +1,5 @@
 # Install UP4W and add a Pro token
 
-<!-- TODO: UP4W app needs to be installed in either case. -->
-<!-- It's where UP4W is configured that matters. -->
-
 To install and configure UP4W you will need:
 
 - A Windows machine
