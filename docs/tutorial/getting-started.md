@@ -96,7 +96,7 @@ The `Myself` option for a personal subscription is free for up to 5 machines.
 Once you have a token you are ready to install UP4W.
 
 (tut::get-up4w)=
-### Install UP4W
+### Install and configure UP4W
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
 
@@ -127,7 +127,7 @@ UP4W will automatically forward the subscription to the Ubuntu Pro client on you
 All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subscription.
 
 Open Windows PowerShell and run the following command to create a new Ubuntu 24.04 instance,
-creating a user and password when prompted. For quick testing, set both to `u`:
+entering a user and password when prompted. For quick testing, set both to `u`:
 
 ```text
 PS C:\Users\me\tutorial> ubuntu2404.exe
@@ -186,7 +186,7 @@ PS C:\Users\me\tutorial> wsl --install Ubuntu-22.04
 Once you are in the instance shell, enter a username and password then run `pro status`.
 You should again get confirmation of successful Pro-attachment for the new instance.
 
-> If you want to uninstall UP4W after this tutorial refer to [this how-to guide](../howto/uninstalling.md).
+> If you want to uninstall UP4W after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
 
 ## Next steps
 

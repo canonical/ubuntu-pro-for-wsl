@@ -38,7 +38,7 @@ To open the registry type `Win+R` and enter `regedit`:
 
 If you are using Landscape you can input your configuration in `LandscapeConfig > Modify > Write the Landscape config`:
 
-![Windows registry with child window showing Landscape configuration.](./assets/registry-child-window.png) 
+![Windows registry with child window showing Landscape configuration.](./assets/registry-child-window-config.png) 
 
 Refer to the section on [Landscape client configuration](howto::config-landscape-client) for an example.
 
