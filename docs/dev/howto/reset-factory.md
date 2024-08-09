@@ -23,5 +23,5 @@ You can reset Ubuntu Pro for WSL to factory settings following these steps:
    4. Find the `UbuntuPro` key on the left
    5. Right-click on it
    6. Click delete
-5. Install the Windows Agent package again (see the section on [how to install](dev::install::agent)). You do not need to re-install the WSL-Pro-Service.
+5. Install the Windows Agent package again (see the section on [how to install](dev::install-agent)). You do not need to re-install the WSL-Pro-Service.
 6. You're done. Next time you start the GUI it'll be like a fresh install.

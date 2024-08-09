@@ -11,4 +11,4 @@ Additionally, Ubuntu Pro for WSL requires a component running inside each of the
 
 A top-level summary of the architecture is shown below:
 
-![System Landscape](../diagrams/structurizr-SystemContext.png)
+![System Landscape](../diagrams/structurizr-SystemLandscape.png)

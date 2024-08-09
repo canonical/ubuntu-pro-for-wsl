@@ -3,21 +3,23 @@
 This documentation describes a future release of UP4W. UP4W is not yet generally available in the Microsoft Store.
 ```
 
-Ubuntu Pro for WSL (UP4W) is a powerful automation tool for managing [WSL](https://ubuntu.com/desktop/wsl) instances from a Windows host. If you are responsible for a fleet of devices, UP4W will supercharge your ability to monitor, customise and secure WSL instances.
+Ubuntu Pro for WSL (UP4W) is a powerful automation tool for managing [WSL](https://ubuntu.com/desktop/wsl) on Windows. If you are responsible for a fleet of Windows devices, UP4W will enable you to monitor, customise and secure Ubuntu WSL instances at scale.
 
 UP4W is designed to achieve close integration with applications for customising images, enforcing standards and validating security compliance. WSL instances can be created, removed and monitored with [Landscape](https://ubuntu.com/landscape). Microsoft Defender is WSL-aware, making it easy to confirm if instances are compliant. [Cloud-init](https://cloudinit.readthedocs.io/en/latest/) support is built-in, allowing efficient customisation of standard images.
 
-UP4W can be installed from the [Microsoft Store](https://apps.microsoft.com/home?hl=en-gb&gl=IE) and its setup is highly automated. Once you have an [Ubuntu Pro](https://ubuntu.com/pro) subscription, adding your Pro token to UP4W on the Windows host will add that token to all connected WSL instances with the Ubuntu Pro client installed. When the Landscape client is installed on the host, any connected WSL instances will be auto-enrolled in Landscape. WSL instances can then be created, provisioned and managed from the Windows host.
+Once you have an [Ubuntu Pro](https://ubuntu.com/pro) subscription, adding your Pro token to UP4W on a Windows host will add that token to all connected WSL instances with the Ubuntu Pro client installed. When the Landscape client is installed on the host, any connected WSL instances will be auto-enrolled in Landscape. WSL instances can then be remotely created, provisioned and managed from the Windows host.
 
-WSL is preferred by many organisations as a solution to run a fully-functioning Linux environment on a Windows machine. UP4W empowers system administrators and corporate security teams to manage these WSL instances at scale.
+WSL is preferred by many organisations as a solution to run a fully-functioning Linux environment on a Windows machine. UP4W empowers system administrators and corporate security teams to manage large numbers of WSL instances effectively.
+
+Read our [getting started tutorial](tutorial/getting-started) to begin.
 
 ## In this documentation
 
 ````{grid} 1 1 2 2
 
-```{grid-item-card} [Tutorial](tutorial/index)
+```{grid-item-card} [Tutorials](tutorial/index)
 
-**Start here** with a hands-on introduction for new users, guiding you through your first-steps
+**Start here** with hands-on tutorials for new users, guiding you through your first-steps
 ```
 
 ```{grid-item-card} [How-to guides](howto/index)

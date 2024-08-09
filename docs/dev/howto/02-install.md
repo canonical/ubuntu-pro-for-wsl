@@ -23,7 +23,7 @@ This guide will show you how to install UP4W for local development and testing.
 
 Notice that, for the step above, there is also an alternative version of the MSIX bundle enabled for end-to-end testing. Most likely, that's not what you want to download.
 
-(dev::install::agent)=
+(dev::install-agent)=
 ## 2. Install the Windows Agent
 
 This is the Windows-side agent that manages the distros.

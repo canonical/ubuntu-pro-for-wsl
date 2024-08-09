@@ -62,6 +62,7 @@ url
 zshrc
 ESM
 Ok
+scalability
 
 # Registry keys and types
 DWORD
