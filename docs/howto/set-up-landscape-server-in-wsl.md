@@ -1,4 +1,4 @@
-# How to install Landscape server in a WSL instance
+# Install Landscape server in a WSL instance
 
 ## Motivation
 
@@ -6,10 +6,11 @@ While a Landscape server typically runs on external computers, it can also be
 set up on a WSL instance on a Windows machine.
 
 This is especially useful if you want to test UP4W on a single Windows device.
-For example, the [tutorial](../tutorial/index) can be completed with Landscape
-server running in a Ubuntu WSL instance. The Landscape server can then be used
+For example, the [tutorial](../tutorial/index) can be completed with a Landscape
+server running in an Ubuntu WSL instance. The Landscape server can then be used
 to manage other WSL instances running UP4W and the Landscape client.
 
+(howto::config-landscape-server)=
 ## Guide
 
 In PowerShell, `shutdown` WSL then install the Ubuntu 24.04 LTS instance with

@@ -9,8 +9,6 @@ In WSL, there is one Landscape client inside every Ubuntu WSL distro. The Landsc
 
 UP4W will configure all Ubuntu WSL distros for you, so you don't need to configure each WSL instance separately; you specify the configuration once and UP4W will distribute it to every distro.
 
-> See more: [How to install and configure UP4W](howto::configure-up4w)
-
 You can see the status of the Landscape client in any particular Ubuntu WSL instance by starting a shell in that instance and running:
 ```bash
 systemctl status landscape-client.service

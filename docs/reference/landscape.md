@@ -16,7 +16,6 @@ The latter offers advantages unique to Ubuntu WSL – the ability to create new 
 ## Landscape configuration schema
 
 Both Landscape clients are configured via a single, plain text configuration file (e.g., `landscape.conf` or `landscape.ini`). This file is provided to the Windows host.
-> See more: [How to configure UP4W for Ubuntu Pro and Landscape](howto::configure-up4w)
 
 The schema for this file is the same as Landscape for Ubuntu desktop or server, with a few additional keys specific to the WSL settings, which can be grouped into keys that affect just the Windows-side client and keys that affect both the Windows-side client and the Ubuntu WSL-side client(s). These additions are documented below.
 
@@ -30,7 +29,7 @@ url = landscape-server.domain.com:6554
 
 [client]
 url = https://landscape-server.domain.com/message-system
-ping_url  = https://landscape-server.domain.com/ping
+ping_url  = http://landscape-server.domain.com/ping
 account_name = standalone
 log_level = debug
 ssl_public_key = C:\Users\user\Downloads\landscape_server.pem
