@@ -14,7 +14,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var logContextKey = struct{}{}
+// SA1029 warns risk of collision if the logContextKey is of an empty anonymous struct type.
+// TODO: Validate this approach with didrocks.
+type logContextKeyType struct{}
+
+var logContextKey logContextKeyType
 
 type logContext struct {
 	idRequest           string

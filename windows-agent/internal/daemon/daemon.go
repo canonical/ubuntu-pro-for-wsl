@@ -43,6 +43,7 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 // to be able to reach our server.
 // This file is removed once the server stops listening.
 func (d Daemon) Serve(ctx context.Context, args ...Option) (err error) {
+	//nolint:govet // i18n depends on strings being acquired at runtime.
 	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
