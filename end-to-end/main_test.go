@@ -101,7 +101,7 @@ func TestMain(m *testing.M) {
 	defer cleanup()
 	testImagePath = path
 
-	m.Run()
+	exitCode := m.Run()
 
 	if err := cleanupRegistry(); err != nil {
 		log.Printf("Cleanup: registry: %v\n", err)
@@ -111,6 +111,8 @@ func TestMain(m *testing.M) {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
 	}
+
+	os.Exit(exitCode)
 }
 
 func usePrebuiltProject(buildPath string) (err error) {

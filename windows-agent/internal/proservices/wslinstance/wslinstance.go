@@ -192,7 +192,7 @@ func (s *Service) landscapeHostagentSendUpdatedInfo(ctx context.Context) {
 		defer cancel()
 
 		if err := s.landscape.SendUpdatedInfo(ctx); err != nil {
-			log.Warningf(ctx, err.Error())
+			log.Warning(ctx, err.Error())
 		}
 	}()
 }

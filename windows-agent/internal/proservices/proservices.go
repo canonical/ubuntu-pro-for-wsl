@@ -123,7 +123,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	}
 
 	if err := s.landscapeService.Connect(); err != nil {
-		log.Warningf(ctx, err.Error())
+		log.Warning(ctx, err.Error())
 	}
 
 	destDir := filepath.Join(publicDir, common.CertificatesDir)

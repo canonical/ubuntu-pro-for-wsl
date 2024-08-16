@@ -22,7 +22,7 @@ import (
 func TestMain(m *testing.M) {
 	log.SetLevel(log.DebugLevel)
 
-	m.Run()
+	os.Exit(m.Run())
 }
 
 func TestHelp(t *testing.T) {

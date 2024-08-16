@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"os"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
@@ -108,5 +109,5 @@ func TestMain(m *testing.M) {
 		logrus.StandardLogger().SetLevel(logrus.DebugLevel)
 	}
 
-	m.Run()
+	os.Exit(m.Run())
 }
