@@ -1,5 +1,6 @@
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:yaru/yaru.dart';
 import '../../core/either_value_notifier.dart';
@@ -78,6 +79,10 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
           children: [
             Expanded(
               child: TextField(
+                inputFormatters: [
+                  // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
                 autofocus: false,
                 controller: _controller,
                 decoration: InputDecoration(
