@@ -182,7 +182,7 @@ func (h *handlingLoop[Command]) run(s *Server, client *multiClient) error {
 	defer cancel()
 
 	// Use this context to log onto the stream, but cancel with server.GracefulStop
-	gCtx, cancel := cancelWith(ctx, s.gracefulCtx)
+	gCtx, cancel := cancelWith(h.stream.Context(), s.gracefulCtx)
 	defer cancel()
 
 	for {
