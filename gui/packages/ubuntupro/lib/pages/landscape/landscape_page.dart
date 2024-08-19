@@ -158,17 +158,17 @@ class LandscapeConfigForm extends StatelessWidget {
               Flexible(
                 child: Column(
                   children: [
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(0),
-                      child: _ConfigTypeRadio(
-                        value: LandscapeConfigType.saas,
-                        title: lang.landscapeQuickSetupSaas,
-                        subtitle: lang.landscapeQuickSetupSaasHint,
-                        groupValue: model.configType,
-                        onChanged:
-                            model.isSaaSSupported ? model.setConfigType : null,
+                    if (model.isSaaSSupported)
+                      FocusTraversalOrder(
+                        order: const NumericFocusOrder(0),
+                        child: _ConfigTypeRadio(
+                          value: LandscapeConfigType.saas,
+                          title: lang.landscapeQuickSetupSaas,
+                          subtitle: lang.landscapeQuickSetupSaasHint,
+                          groupValue: model.configType,
+                          onChanged: model.setConfigType,
+                        ),
                       ),
-                    ),
                     FocusTraversalOrder(
                       order: const NumericFocusOrder(2),
                       child: _ConfigTypeRadio(
