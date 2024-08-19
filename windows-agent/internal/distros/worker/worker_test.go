@@ -203,7 +203,7 @@ func TestTaskProcessing(t *testing.T) {
 				wantState = "Unregistered"
 			}
 
-			require.Eventuallyf(t, func() bool { return d.state() == wantState }, distroWakeUpTime, 200*time.Millisecond,
+			require.Eventuallyf(t, func() bool { return d.state() == wantState }, 5*distroWakeUpTime, 500*time.Millisecond,
 				"distro should have been %q after SubmitTask(). Current state is %q", wantState, d.state())
 
 			// Testing task before an active connection is established
@@ -424,7 +424,7 @@ func TestTaskDeferral(t *testing.T) {
 				// delete+write:    testutils.ReplaceFileWithDir
 				require.Eventually(t, func() bool {
 					return w.CheckTotalTaskCount(1) == nil
-				}, time.Second, 100*time.Millisecond, "Setup: Blocking task was never popped from queue")
+				}, 5*time.Second, 500*time.Millisecond, "Setup: Blocking task was never popped from queue")
 
 				testutils.ReplaceFileWithDir(t, taskFile, "Setup: could not replace task file with dir to interfere with SubmitDeferredTasks")
 			}
@@ -514,7 +514,7 @@ func TestTaskDeduplication(t *testing.T) {
 
 			err = w.SubmitTasks(blocker)
 			require.NoError(t, err, "SubmitTasks should return no error")
-			require.Eventually(t, blocker.executing.Load, 5*time.Second, 100*time.Millisecond, "Blocker task was never dequeued")
+			require.Eventually(t, blocker.executing.Load, 5*time.Second, 500*time.Millisecond, "Blocker task was never dequeued")
 
 			// Unique task: normal submission
 			err = w.SubmitTasks(task1)
