@@ -880,7 +880,8 @@ func TestNotifyConfigUpdate(t *testing.T) {
 				distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 				d, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 				require.NoError(t, err, "Setup: distro %s GetDistroAndUpdateProperties should return no errors", distroName)
-				defer d.Cleanup(ctx)
+				// Prevents the distro's worker to dequeue tasks, otherwise we race, as we attempt to read pending tasks.
+				d.Cleanup(ctx)
 			}
 
 			var cloudInit mockCloudInit
@@ -944,7 +945,8 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
 			d, err := db.GetDistroAndUpdateProperties(ctx, distroName, distro.Properties{})
 			require.NoError(t, err, "Setup: distro %s GetDistroAndUpdateProperties should return no errors", distroName)
-			defer d.Cleanup(ctx)
+			// Let's stop the distro right away so it's worker don't race with us for the tasks file.
+			d.Cleanup(ctx)
 
 			homedir := t.TempDir()
 			c := config.New(ctx, storageDir)
