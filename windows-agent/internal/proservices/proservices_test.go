@@ -92,11 +92,15 @@ func TestNew(t *testing.T) {
 			}
 			require.NoError(t, err, "New should return no error")
 
-			// Those lines are just to trigger the registry watcher callbacks, they don't write anything to the agent.yaml file by the time we check, that's why goldens are empty.
 			err = reg.WriteValue(k, "LandscapeConfig", "[client]\nuser=JohnDoe", true)
 			require.NoError(t, err, "Setup: could not write LandscapeConfig to the registry mock")
 			err = reg.WriteValue(k, "UbuntuProToken", "test-token", false)
 			require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
+
+			agentYamlPath := filepath.Join(publicDir, ".cloud-init", "agent.yaml")
+
+			// Wait for the agent.yaml to be written
+			require.Eventually(t, checkFileExists(agentYamlPath), 5*time.Second, 200*time.Millisecond, "agent.yaml file should have been created with registry data")
 
 			got, err := os.ReadFile(filepath.Join(publicDir, ".cloud-init", "agent.yaml"))
 			require.NoError(t, err, "Setup: could not read agent.yaml file post test completion")
@@ -104,6 +108,17 @@ func TestNew(t *testing.T) {
 			require.Equal(t, want, string(got), "agent.yaml file should be the same as the golden file")
 		})
 	}
+}
+
+func checkFileExists(path string) func() bool {
+	return func() bool {
+		return fileExists(path)
+	}
+}
+
+func fileExists(path string) bool {
+	s, err := os.Stat(path)
+	return err == nil && !s.IsDir()
 }
 
 func TestRegisterGRPCServices(t *testing.T) {
