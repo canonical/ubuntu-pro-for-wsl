@@ -237,7 +237,7 @@ data:
 			require.NoError(t, err, "Setup: cloud-init New should return no errors")
 
 			if !tc.noOldData {
-				require.NoError(t, os.MkdirAll(filepath.Dir(path), 0600), "Setup: could not write old distro data directory")
+				require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700), "Setup: could not write old distro data directory")
 				require.NoError(t, os.WriteFile(path, []byte(oldCloudInit), 0600), "Setup: could not write old distro data")
 			}
 
