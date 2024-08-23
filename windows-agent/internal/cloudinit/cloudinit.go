@@ -121,12 +121,6 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 }
 
 func marshalConfig(conf Config) ([]byte, error) {
-	w := &bytes.Buffer{}
-
-	if _, err := fmt.Fprintln(w, "#cloud-config\n# This file was generated automatically and must not be edited"); err != nil {
-		return nil, fmt.Errorf("could not write #cloud-config stenza and warning message: %v", err)
-	}
-
 	contents := make(map[string]interface{})
 
 	if err := ubuntuProModule(conf, contents); err != nil {
@@ -137,9 +131,20 @@ func marshalConfig(conf Config) ([]byte, error) {
 		return nil, err
 	}
 
+	// If there is no config to write, then let's not write an empty object with comments to avoid confusing cloud-init.
+	if len(contents) == 0 {
+		return nil, nil
+	}
+
 	out, err := yaml.Marshal(contents)
 	if err != nil {
 		return nil, fmt.Errorf("could not Marshal user data as a YAML: %v", err)
+	}
+
+	w := &bytes.Buffer{}
+
+	if _, err := fmt.Fprintln(w, "#cloud-config\n# This file was generated automatically and must not be edited"); err != nil {
+		return nil, fmt.Errorf("could not write #cloud-config stenza and warning message: %v", err)
 	}
 
 	if _, err := w.Write(out); err != nil {
