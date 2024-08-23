@@ -60,6 +60,11 @@ func (c CloudInit) writeAgentData() (err error) {
 		return err
 	}
 
+	// Nothing to write, we don't want an empty agent.yaml confusing the real cloud-init.
+	if cloudInit == nil {
+		return removeFileInDir(c.dataDir, "agent.yaml")
+	}
+
 	err = writeFileInDir(c.dataDir, "agent.yaml", cloudInit)
 	if err != nil {
 		return err
@@ -76,6 +81,15 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string) error {
 	}
 
 	return nil
+}
+
+// removeFileInDir attempts to remove the file 'dir/file' if it exists. Missing file is not an error.
+func removeFileInDir(dir, file string) error {
+	err := os.Remove(filepath.Join(dir, file))
+	if err == nil || os.IsNotExist(err) {
+		return nil
+	}
+	return err
 }
 
 // writeFileInDir:

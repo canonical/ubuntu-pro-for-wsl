@@ -19,9 +19,11 @@ func TestNew(t *testing.T) {
 
 	testCases := map[string]struct {
 		breakWriteAgentData bool
+		emptyConfig         bool
 		wantErr             bool
 	}{
 		"Success": {},
+		"No file if there is no config to write into":        {emptyConfig: true},
 		"Error when cloud-init agent file cannot be written": {breakWriteAgentData: true, wantErr: true},
 	}
 
@@ -33,7 +35,13 @@ func TestNew(t *testing.T) {
 
 			publicDir := t.TempDir()
 
+			proToken := "test token"
+			if tc.emptyConfig {
+				proToken = ""
+			}
+
 			conf := &mockConfig{
+				proToken:       proToken,
 				subcriptionErr: tc.breakWriteAgentData,
 			}
 
@@ -47,6 +55,10 @@ func TestNew(t *testing.T) {
 
 			// We don't assert on specifics, as they are tested in WriteAgentData tests.
 			path := filepath.Join(publicDir, ".cloud-init", "agent.yaml")
+			if tc.emptyConfig {
+				require.NoFileExists(t, path, "there should be no agent data file if there is no config to write into")
+				return
+			}
 			require.FileExists(t, path, "agent data file was not created when updating the config")
 		})
 	}
@@ -169,6 +181,12 @@ hostagent_uid = landscapeUID1234
 			// Assert that the file was updated (success case) or that the old one remains (error case)
 			if tc.breakFile || tc.breakDir {
 				// Cannot really assert on anything: we removed the old file
+				return
+			}
+
+			if tc.skipProToken && tc.skipLandscapeConf {
+				// empty file should not exist
+				require.NoFileExists(t, path, "There should not be cloud-init agent file without useful contents")
 				return
 			}
 
