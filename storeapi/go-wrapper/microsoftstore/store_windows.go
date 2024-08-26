@@ -2,7 +2,6 @@
 package microsoftstore
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"syscall"
@@ -93,29 +92,7 @@ func call(proc *syscall.LazyProc, args ...uintptr) (int64, error) {
 
 	hresult, _, err := proc.Call(args...)
 	//nolint:gosec // Windows HRESULTS are guaranteed to be 32-bit vlaue, thus they surely fit inside a int64 without overflow.
-	hres := int64(hresult)
-	// From syscall/dll_windows.go (*Proc).Call doc:
-	// > Callers must inspect the primary return value to decide whether an
-	//   error occurred [...] before consulting the error.
-	if err := NewStoreAPIError(hres); err != nil {
-		return hres, fmt.Errorf("storeApi returned error code %d: %w", hres, err)
-	}
-
-	if err == nil {
-		return hres, nil
-	}
-
-	var target syscall.Errno
-	if b := errors.As(err, &target); !b {
-		// Supposedly unrechable: proc.Call must always return a syscall.Errno
-		return hres, err
-	}
-
-	if target != syscall.Errno(0) {
-		return hres, fmt.Errorf("failed syscall to storeApi: %v (syscall errno %d)", target, err)
-	}
-
-	return hres, nil
+	return checkError(int64(hresult), err)
 }
 
 // loadDll finds the dll and ensures it loads.
