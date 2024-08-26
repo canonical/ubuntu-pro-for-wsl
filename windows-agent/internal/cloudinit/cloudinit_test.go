@@ -99,9 +99,10 @@ hostagent_uid = landscapeUID1234
 		badLandscape             bool
 
 		// Break writing to file
-		breakDir      bool
-		breakTempFile bool
-		breakFile     bool
+		breakDir          bool
+		breakTempFile     bool
+		breakFile         bool
+		breakRemovingFile bool
 	}{
 		"Success":                            {},
 		"Without hostagent UID":              {skipHostAgentUID: true},
@@ -110,6 +111,7 @@ hostagent_uid = landscapeUID1234
 		"Without Landscape [client] section": {landscapeNoClientSection: true},
 		"With empty contents":                {skipProToken: true, skipLandscapeConf: true},
 
+		"Error to remove existing agent.yaml":   {skipProToken: true, skipLandscapeConf: true, breakRemovingFile: true},
 		"Error obtaining pro token":             {breakSubscription: true},
 		"Error obtaining Landscape config":      {breakLandscape: true},
 		"Error with erroneous Landscape config": {badLandscape: true},
@@ -176,11 +178,21 @@ hostagent_uid = landscapeUID1234
 				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
 			}
 
+			if tc.breakRemovingFile {
+				_ = os.RemoveAll(path)
+				require.NoError(t, os.MkdirAll(path, 0750), "Creating the directory that breaks removing agent.yaml should not fail")
+				require.NoError(t, os.WriteFile(filepath.Join(path, "child.txt"), nil, 0600), "Setup: could not create file to mess with agent.yaml")
+			}
 			ci.Update(ctx)
 
 			// Assert that the file was updated (success case) or that the old one remains (error case)
 			if tc.breakFile || tc.breakDir {
 				// Cannot really assert on anything: we removed the old file
+				return
+			}
+
+			if tc.breakRemovingFile {
+				require.DirExists(t, path, "There should be a directory instead of agent.yaml")
 				return
 			}
 
