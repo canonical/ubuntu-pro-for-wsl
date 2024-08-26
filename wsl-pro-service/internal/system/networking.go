@@ -101,6 +101,7 @@ func (s *System) defaultGateway() (ip net.IP, err error) {
 	}
 
 	b := make([]byte, 4)
+	//nolint:gosec // Value is guaranteed by strconv.ParseUint to fit in uint32 (due the bitSize argument)
 	binary.LittleEndian.PutUint32(b, uint32(gatewayRaw))
 
 	return net.IP(b), nil
