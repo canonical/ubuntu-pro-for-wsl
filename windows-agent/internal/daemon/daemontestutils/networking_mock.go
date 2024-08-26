@@ -15,6 +15,9 @@ const (
 	// MockError is a state that causes the GetAdaptersAddresses to always return an error.
 	MockError MockIPAdaptersState = iota
 
+	// RequiresTooMuchMem is a state that causes the GetAdaptersAddresses to request allocation of MaxUint32 (over the capacity of the real Win32 API).
+	RequiresTooMuchMem
+
 	// EmptyList is a state that causes the GetAdaptersAddresses to return an empty list of adapters.
 	EmptyList
 
@@ -96,6 +99,9 @@ func (m *MockIPConfig) GetAdaptersAddresses(_, _ uint32, _ uintptr, adapterAddre
 	switch m.state {
 	case MockError:
 		return errors.New("mock error")
+	case RequiresTooMuchMem:
+		*sizePointer = math.MaxUint32
+		return ERROR_BUFFER_OVERFLOW
 	case EmptyList:
 		return nil
 	default:
