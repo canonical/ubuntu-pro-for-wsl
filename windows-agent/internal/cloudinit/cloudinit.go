@@ -37,6 +37,12 @@ func New(ctx context.Context, conf Config, publicDir string) (CloudInit, error) 
 		conf:    conf,
 	}
 
+	// c.writeAgentData() is no longer guaranteed to create the cloud-init directory,
+	// so let's check now if we have permission to do so.
+	if err := os.MkdirAll(c.dataDir, 0700); err != nil {
+		return CloudInit{}, fmt.Errorf("could not create cloud-init directory: %v", err)
+	}
+
 	if err := c.writeAgentData(); err != nil {
 		return CloudInit{}, err
 	}
