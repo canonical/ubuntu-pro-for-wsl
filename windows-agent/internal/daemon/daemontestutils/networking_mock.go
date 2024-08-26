@@ -2,6 +2,7 @@ package daemontestutils
 
 import (
 	"errors"
+	"math"
 	"net"
 	"unsafe"
 
@@ -111,24 +112,29 @@ func (m *MockIPConfig) GetAdaptersAddresses(_, _ uint32, _ uintptr, adapterAddre
 
 // fillBufferFromTemplate fills a pre-allocated buffer of ipAdapterAddresses with the data from the mockIPAddrsTemplate.
 func fillBufferFromTemplate(adaptersAddresses *IPAdapterAddresses, sizePointer *uint32, mockIPAddrsTemplate []MockIPAddrsTemplate) error {
-	count := uint32(len(mockIPAddrsTemplate))
-	objSize := uint32(unsafe.Sizeof(IPAdapterAddresses{}))
+	count := len(mockIPAddrsTemplate)
+	objSize := int(unsafe.Sizeof(IPAdapterAddresses{}))
 	bufSizeNeeded := count * objSize
-	if *sizePointer < bufSizeNeeded {
+	if bufSizeNeeded >= math.MaxUint32 || bufSizeNeeded < 0 {
+		return errors.New("buffer size limit reached")
+	}
+	//nolint:gosec // Value guaranteed to fit inside uint32.
+	bufSz := uint32(bufSizeNeeded)
+	if *sizePointer < bufSz {
 		return ERROR_BUFFER_OVERFLOW
 	}
 
 	//nolint:gosec // Using unsafe to manipulate pointers mimicking the Win32 API, only used in tests.
 	begin := unsafe.Pointer(adaptersAddresses)
 	for _, addr := range mockIPAddrsTemplate {
-		next := unsafe.Add(begin, int(objSize)) // next = ++begin
+		next := unsafe.Add(begin, objSize) // next = ++begin
 
 		ptr := (*IPAdapterAddresses)(begin)
 		fillFromTemplate(&addr, ptr, (*IPAdapterAddresses)(next))
 
 		begin = next
 	}
-	*sizePointer = bufSizeNeeded
+	*sizePointer = bufSz
 	return nil
 }
 
