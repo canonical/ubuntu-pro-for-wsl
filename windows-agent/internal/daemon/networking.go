@@ -140,16 +140,20 @@ func getAddrList(opts options) (head *ipAdapterAddresses, err error) {
 	// the buffer around while we're using it, invalidating the NEXT pointers.
 	var buff buffer[ipAdapterAddresses]
 
-	// Win32 API docs recommend a buff size of 15KB.
-	size := 15 * kilobyte
+	// Win32 API docs recommend a buff size of 15KB to start.
+	size, err := buff.resizeBytes(15 * kilobyte)
+	// This error condition should be impossible.
+	if err != nil {
+		return nil, err
+	}
+
 	for range 10 {
-		size, err = buff.resizeBytes(size)
-		if err != nil {
-			return nil, err
-		}
 		err = opts.getAdaptersAddresses(family, flags, 0, &buff.data[0], &size)
 		if errors.Is(err, ERROR_BUFFER_OVERFLOW) {
 			// Buffer too small, try again with the returned size.
+			if size, err = buff.resizeBytes(size); err != nil {
+				return nil, err
+			}
 			continue
 		}
 		if err != nil {
