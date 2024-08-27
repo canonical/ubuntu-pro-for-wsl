@@ -6,7 +6,7 @@ While a Landscape server typically runs on external computers, it can also be
 set up on a WSL instance on a Windows machine.
 
 This is especially useful if you want to test UP4W on a single Windows device.
-For example, the [tutorial](../tutorial/index) can be completed with a Landscape
+For example, the [deployment tutorial](../tutorial/deployment) can be completed with a Landscape
 server running in an Ubuntu WSL instance. The Landscape server can then be used
 to manage other WSL instances running UP4W and the Landscape client.
 
@@ -92,7 +92,7 @@ The server will stay running until you close the terminal. If you do close the
 terminal running `ubuntu2404.exe` in a new terminal window will start the
 Landscape server automatically.
 
-Using this server setup when following the [tutorial](../tutorial/index) would
+Using this server setup when following the [deployment tutorial](../tutorial/deployment) would
 result in the following architecture:
 
 ![architecture diagram showing management of WSL instances from a WSL instance on a single machine using Landscape and Ubuntu Pro for WSL](../diagrams/structurizr-Tutorial.png) 
