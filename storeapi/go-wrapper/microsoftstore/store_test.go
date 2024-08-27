@@ -95,22 +95,22 @@ func TestErrorVerification(t *testing.T) {
 		hresult int64
 		err     error
 
-		wantError bool
+		wantErr bool
 	}{
 		"Success": {},
 		// If HRESULT is not in the Store API error range and err is not a syscall.Errno then we don't have an error.
-		"With an unknown value (not an error)": {hresult: 1, wantError: false},
+		"With an unknown value (not an error)": {hresult: 1, wantErr: false},
 
-		"Upper bound of the Store API enum range": {hresult: -1, wantError: true},
-		"Lower bound of the Store API enum range": {hresult: int64(microsoftstore.ErrNotSubscribed), wantError: true},
-		"With a system error (errno)":             {hresult: 32 /*garbage*/, err: syscall.Errno(2) /*E_FILE_NOT_FOUND*/, wantError: true},
-		"With a generic (unreachable) error":      {hresult: 1, err: errors.New("test error"), wantError: true},
+		"Upper bound of the Store API enum range": {hresult: -1, wantErr: true},
+		"Lower bound of the Store API enum range": {hresult: int64(microsoftstore.ErrNotSubscribed), wantErr: true},
+		"With a system error (errno)":             {hresult: 32 /*garbage*/, err: syscall.Errno(2) /*E_FILE_NOT_FOUND*/, wantErr: true},
+		"With a generic (unreachable) error":      {hresult: 1, err: errors.New("test error"), wantErr: true},
 	}
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			res, err := microsoftstore.CheckError(tc.hresult, tc.err)
-			if tc.wantError {
+			if tc.wantErr {
 				require.Error(t, err, "CheckError should have returned an error for value: %v, returned value was: %v", tc.hresult, res)
 			} else {
 				require.NoError(t, err, "CheckError should have not returned an error for value: %v, returned value was: %v", tc.hresult, res)
