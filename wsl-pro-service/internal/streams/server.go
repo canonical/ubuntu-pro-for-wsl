@@ -60,7 +60,7 @@ func (err SystemError) Is(e error) bool {
 
 // NewServer creates a new Server.
 func NewServer(ctx context.Context, sys *system.System, conn *grpc.ClientConn) *Server {
-	ctx, cancel := context.WithCancel(ctx)
+	fCtx, cancel := context.WithCancel(ctx)
 	gCtx, gCancel := context.WithCancel(ctx)
 
 	s := &Server{
@@ -68,7 +68,8 @@ func NewServer(ctx context.Context, sys *system.System, conn *grpc.ClientConn) *
 		system: sys,
 		done:   make(chan struct{}),
 
-		ctx:    ctx,
+		// the stream context will be a child of forcequit context and will thus be cancelled with it.
+		ctx:    fCtx,
 		cancel: cancel,
 
 		gracefulCtx:    gCtx,
