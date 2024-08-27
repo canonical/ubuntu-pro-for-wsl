@@ -61,5 +61,7 @@ func checkError(hres int64, err error) (int64, error) {
 		return hres, fmt.Errorf("failed syscall to storeApi: %v (syscall errno %d)", target, err)
 	}
 
+	// A non-error value in hres plus ERROR_SUCCESS in err.
+	// This shouldn't happen in the current store API implementation anyway.
 	return hres, nil
 }

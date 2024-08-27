@@ -112,9 +112,9 @@ func TestErrorVerification(t *testing.T) {
 			res, err := microsoftstore.CheckError(tc.hresult, tc.err)
 			if tc.wantErr {
 				require.Error(t, err, "CheckError should have returned an error for value: %v, returned value was: %v", tc.hresult, res)
-			} else {
-				require.NoError(t, err, "CheckError should have not returned an error for value: %v, returned value was: %v", tc.hresult, res)
+				return
 			}
+			require.NoError(t, err, "CheckError should have not returned an error for value: %v, returned value was: %v", tc.hresult, res)
 		})
 	}
 }
