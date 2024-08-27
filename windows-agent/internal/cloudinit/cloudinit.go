@@ -92,10 +92,10 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string) error {
 // removeFileInDir attempts to remove the file 'dir/file' if it exists. Missing file is not an error.
 func removeFileInDir(dir, file string) error {
 	err := os.Remove(filepath.Join(dir, file))
-	if err == nil || os.IsNotExist(err) {
-		return nil
+	if err != nil && !os.IsNotExist(err) {
+		return err
 	}
-	return err
+	return nil
 }
 
 // writeFileInDir:
