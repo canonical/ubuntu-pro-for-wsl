@@ -44,7 +44,7 @@ func checkError(hres int64, err error) (int64, error) {
 
 	var target syscall.Errno
 	if b := errors.As(err, &target); !b {
-		// Supposedly unrechable: proc.Call must always return a syscall.Errno
+		// Supposedly unreachable: proc.Call must always return a syscall.Errno
 		return hres, err
 	}
 
