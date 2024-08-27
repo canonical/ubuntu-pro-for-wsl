@@ -31,12 +31,6 @@ for setup and configuration instructions.
 (tut::config-landscape-up4w)=
 ### Configure Landscape in the UP4W app
 
-```{tip}
-Landscape configuration in the UP4W application must currently be enabled by setting
-`ShowLandscapeConfig:DWORD=1` at `HKCU:/Software/Canonical/UbuntuPro` in the Windows
-registry.
-```
-
 In the UP4W app, after entering your Pro token, navigate to the Landscape configuration screen:
 
 ![UP4W GUI main screen](../assets/landscape-config-ui.png)
