@@ -20,10 +20,12 @@ func TestNew(t *testing.T) {
 	testCases := map[string]struct {
 		breakWriteAgentData bool
 		emptyConfig         bool
-		wantErr             bool
+
+		wantErr         bool
+		wantNoAgentYaml bool
 	}{
 		"Success": {},
-		"No file if there is no config to write into":        {emptyConfig: true},
+		"No file if there is no config to write into":        {emptyConfig: true, wantNoAgentYaml: true},
 		"Error when cloud-init agent file cannot be written": {breakWriteAgentData: true, wantErr: true},
 	}
 
@@ -55,7 +57,7 @@ func TestNew(t *testing.T) {
 
 			// We don't assert on specifics, as they are tested in WriteAgentData tests.
 			path := filepath.Join(publicDir, ".cloud-init", "agent.yaml")
-			if tc.emptyConfig {
+			if tc.wantNoAgentYaml {
 				require.NoFileExists(t, path, "there should be no agent data file if there is no config to write into")
 				return
 			}
