@@ -105,6 +105,9 @@ func TestErrorVerification(t *testing.T) {
 		"Lower bound of the Store API enum range": {hresult: int64(microsoftstore.ErrNotSubscribed), wantErr: true},
 		"With a system error (errno)":             {hresult: 32 /*garbage*/, err: syscall.Errno(2) /*E_FILE_NOT_FOUND*/, wantErr: true},
 		"With a generic (unreachable) error":      {hresult: 1, err: errors.New("test error"), wantErr: true},
+		// This would mean an API call returning a non-error hresult plus GetLastError() returning ERROR_SUCCESS
+		// This shouldn't happen in the current store API implementation anyway.
+		"With weird successful error": {hresult: 1, err: syscall.Errno(0) /*ERROR_SUCCESS*/},
 	}
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
