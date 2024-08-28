@@ -169,10 +169,11 @@ func TestServeWSLIP(t *testing.T) {
 		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 
-		"Error when the networking mode is unknown":        {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":         {withAdapters: daemontestutils.EmptyList, wantErr: true},
-		"Error when there is no Hyper-V adapter the list":  {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
-		"Error when retrieving adapters information fails": {withAdapters: daemontestutils.MockError, wantErr: true},
+		"Error when the networking mode is unknown":            {netmode: "unknown", wantErr: true},
+		"Error when the list of adapters is empty":             {withAdapters: daemontestutils.EmptyList, wantErr: true},
+		"Error when listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem, wantErr: true},
+		"Error when there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
+		"Error when retrieving adapters information fails":     {withAdapters: daemontestutils.MockError, wantErr: true},
 	}
 
 	for name, tc := range testcases {
