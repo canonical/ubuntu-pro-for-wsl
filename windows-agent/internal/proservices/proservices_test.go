@@ -112,13 +112,9 @@ func TestNew(t *testing.T) {
 
 func checkFileExists(path string) func() bool {
 	return func() bool {
-		return fileExists(path)
+		s, err := os.Stat(path)
+		return err == nil && !s.IsDir()
 	}
-}
-
-func fileExists(path string) bool {
-	s, err := os.Stat(path)
-	return err == nil && !s.IsDir()
 }
 
 func TestRegisterGRPCServices(t *testing.T) {
