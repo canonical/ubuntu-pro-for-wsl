@@ -12,9 +12,9 @@ class Settings {
     final purchase = repository.readInt(kAllowStorePurchase) == 1
         ? Options.withStorePurchase
         : Options.none;
-    final landscape = repository.readInt(kShowLandscapeConfig) == 1
-        ? Options.withLandscapeConfiguration
-        : Options.none;
+    final landscape = repository.readInt(kHideLandscapeConfig) == 1
+        ? Options.none
+        : Options.withLandscapeConfiguration;
 
     repository.close();
 
@@ -25,7 +25,8 @@ class Settings {
   /// Useful for integration testing.
   Settings.withOptions(this._options);
 
-  Options _options = Options.none;
+  /// By default Landscape is enabled and Store purchase is disabled.
+  Options _options = Options.withLandscapeConfiguration;
 
   bool get isLandscapeConfigurationEnabled =>
       _options & Options.withLandscapeConfiguration;
@@ -35,7 +36,7 @@ class Settings {
   @visibleForTesting
   static const kAllowStorePurchase = 'AllowStorePurchase';
   @visibleForTesting
-  static const kShowLandscapeConfig = 'ShowLandscapeConfig';
+  static const kHideLandscapeConfig = 'HideLandscapeConfig';
 }
 
 /// Settings options modelled as an enum with bitwise operations, i.e. flags.
