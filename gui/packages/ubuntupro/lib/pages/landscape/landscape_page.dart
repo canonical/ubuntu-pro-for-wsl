@@ -141,7 +141,7 @@ class LandscapeConfigForm extends StatelessWidget {
     final lang = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2 * _kHeight),
+      padding: const EdgeInsets.symmetric(vertical: _kHeight),
       // The FocusTraversalGroup is necessary to keep the tab navigation order wed expect:
       // We ping-pong between the radio buttons and the form fields that belong to the selected radio button,
       // by assigning odd NumericFocusOrder() values to the radio buttons (on the left) and even values to the form fields,
@@ -158,17 +158,17 @@ class LandscapeConfigForm extends StatelessWidget {
               Flexible(
                 child: Column(
                   children: [
-                    if (model.isSaaSSupported)
-                      FocusTraversalOrder(
-                        order: const NumericFocusOrder(0),
-                        child: _ConfigTypeRadio(
-                          value: LandscapeConfigType.saas,
-                          title: lang.landscapeQuickSetupSaas,
-                          subtitle: lang.landscapeQuickSetupSaasHint,
-                          groupValue: model.configType,
-                          onChanged: model.setConfigType,
-                        ),
+                    FocusTraversalOrder(
+                      order: const NumericFocusOrder(0),
+                      child: _ConfigTypeRadio(
+                        value: LandscapeConfigType.saas,
+                        title: lang.landscapeQuickSetupSaas,
+                        subtitle: lang.landscapeQuickSetupSaasHint,
+                        groupValue: model.configType,
+                        onChanged:
+                            model.isSaaSSupported ? model.setConfigType : null,
                       ),
+                    ),
                     FocusTraversalOrder(
                       order: const NumericFocusOrder(2),
                       child: _ConfigTypeRadio(

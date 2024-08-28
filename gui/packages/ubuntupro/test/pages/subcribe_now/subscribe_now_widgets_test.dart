@@ -141,24 +141,6 @@ void main() {
             tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
         expect(button.enabled, isTrue);
       });
-      testWidgets('good token with spaces', (tester) async {
-        await tester.pumpWidget(theApp);
-        final inputField = find.byType(TextField);
-
-        await tester.enterText(
-          inputField,
-          // good token plus a bunch of types of white spaces.
-          ' ${tks.good} \u{00A0}\u{2000}\u{2002}\u{202F}\u{205F}\u{3000} ',
-        );
-        await tester.pump();
-
-        final input = tester.firstWidget<TextField>(inputField);
-        expect(input.decoration!.errorText, isNull);
-
-        final button =
-            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
-        expect(button.enabled, isTrue);
-      });
     });
     testWidgets('apply', (tester) async {
       var called = false;

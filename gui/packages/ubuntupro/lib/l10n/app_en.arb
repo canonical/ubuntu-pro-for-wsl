@@ -53,7 +53,7 @@
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
-    "landscapeHeading": "Configure the connection to {landscapeLink} to manage your Ubuntu WSL instances remotely.",
+    "landscapeHeading": "You can manage your Ubuntu instances remotely with {landscapeLink}.\n\nConfigure the connection to Landscape:",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -61,9 +61,9 @@
             }
         }
     },
-    "landscapeQuickSetupSaas": "Landscape SaaS configuration",
+    "landscapeQuickSetupSaas": "Quick Setup (SaaS)",
     "landscapeQuickSetupSaasHint": "Register with landscape.canonical.com",
-    "landscapeQuickSetupSelfHosted": "Self-hosted Landscape configuration",
+    "landscapeQuickSetupSelfHosted": "Quick Setup (Self-hosted)",
     "landscapeQuickSetupSelfHostedHint": "Register with your own Landscape server",
     "landscapeFQDNLabel": "Landscape server address",
     "landscapeFQDNError": "Invalid URI. Format should be a hostname or IP address.",

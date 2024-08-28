@@ -37,12 +37,6 @@ func New(ctx context.Context, conf Config, publicDir string) (CloudInit, error) 
 		conf:    conf,
 	}
 
-	// c.writeAgentData() is no longer guaranteed to create the cloud-init directory,
-	// so let's check now if we have permission to do so.
-	if err := os.MkdirAll(c.dataDir, 0700); err != nil {
-		return CloudInit{}, fmt.Errorf("could not create cloud-init directory: %v", err)
-	}
-
 	if err := c.writeAgentData(); err != nil {
 		return CloudInit{}, err
 	}
@@ -66,11 +60,6 @@ func (c CloudInit) writeAgentData() (err error) {
 		return err
 	}
 
-	// Nothing to write, we don't want an empty agent.yaml confusing the real cloud-init.
-	if cloudInit == nil {
-		return removeFileInDir(c.dataDir, "agent.yaml")
-	}
-
 	err = writeFileInDir(c.dataDir, "agent.yaml", cloudInit)
 	if err != nil {
 		return err
@@ -86,15 +75,6 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string) error {
 		return fmt.Errorf("could not create distro-specific cloud-init file: %v", err)
 	}
 
-	return nil
-}
-
-// removeFileInDir attempts to remove the file 'dir/file' if it exists. Missing file is not an error.
-func removeFileInDir(dir, file string) error {
-	err := os.Remove(filepath.Join(dir, file))
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
 	return nil
 }
 
@@ -141,6 +121,12 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 }
 
 func marshalConfig(conf Config) ([]byte, error) {
+	w := &bytes.Buffer{}
+
+	if _, err := fmt.Fprintln(w, "#cloud-config\n# This file was generated automatically and must not be edited"); err != nil {
+		return nil, fmt.Errorf("could not write #cloud-config stenza and warning message: %v", err)
+	}
+
 	contents := make(map[string]interface{})
 
 	if err := ubuntuProModule(conf, contents); err != nil {
@@ -151,20 +137,9 @@ func marshalConfig(conf Config) ([]byte, error) {
 		return nil, err
 	}
 
-	// If there is no config to write, then let's not write an empty object with comments to avoid confusing cloud-init.
-	if len(contents) == 0 {
-		return nil, nil
-	}
-
 	out, err := yaml.Marshal(contents)
 	if err != nil {
 		return nil, fmt.Errorf("could not Marshal user data as a YAML: %v", err)
-	}
-
-	w := &bytes.Buffer{}
-
-	if _, err := fmt.Fprintln(w, "#cloud-config\n# This file was generated automatically and must not be edited"); err != nil {
-		return nil, fmt.Errorf("could not write #cloud-config stenza and warning message: %v", err)
 	}
 
 	if _, err := w.Write(out); err != nil {
