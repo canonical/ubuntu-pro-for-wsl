@@ -8,12 +8,6 @@ The Landscape client can be configured in two ways:
 - Windows registry: easier to automate and deploy at scale 
 - Graphical Windows application: convenient option for individual users
 
-```{tip}
-Landscape configuration in the UP4W application must currently be enabled by setting
-`ShowLandscapeConfig:DWORD=1` at `HKCU:/Software/Canonical/UbuntuPro` in the Windows
-registry.
-```
-
 Click the appropriate tab to read more.
 
 ````{tabs}
