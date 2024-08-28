@@ -105,6 +105,8 @@ hostagent_uid = landscapeUID1234
 		breakTempFile     bool
 		breakFile         bool
 		breakRemovingFile bool
+
+		wantAgentYamlAsDir bool
 	}{
 		"Success":                            {},
 		"Without hostagent UID":              {skipHostAgentUID: true},
@@ -113,7 +115,7 @@ hostagent_uid = landscapeUID1234
 		"Without Landscape [client] section": {landscapeNoClientSection: true},
 		"With empty contents":                {skipProToken: true, skipLandscapeConf: true},
 
-		"Error to remove existing agent.yaml":   {skipProToken: true, skipLandscapeConf: true, breakRemovingFile: true},
+		"Error to remove existing agent.yaml":   {skipProToken: true, skipLandscapeConf: true, breakRemovingFile: true, wantAgentYamlAsDir: true},
 		"Error obtaining pro token":             {breakSubscription: true},
 		"Error obtaining Landscape config":      {breakLandscape: true},
 		"Error with erroneous Landscape config": {badLandscape: true},
@@ -193,17 +195,17 @@ hostagent_uid = landscapeUID1234
 				return
 			}
 
-			if tc.breakRemovingFile {
+			if tc.wantAgentYamlAsDir {
 				require.DirExists(t, path, "There should be a directory instead of agent.yaml")
 				return
 			}
 
-			if tc.skipProToken && tc.skipLandscapeConf {
-				// empty file should not exist
+			golden := testutils.Path(t)
+			if _, err = os.Stat(golden); err != nil && os.IsNotExist(err) {
+				// golden file doesn't exist
 				require.NoFileExists(t, path, "There should not be cloud-init agent file without useful contents")
 				return
 			}
-
 			got, err := os.ReadFile(path)
 			require.NoError(t, err, "There should be no error reading the cloud-init agent file")
 
