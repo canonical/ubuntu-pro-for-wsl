@@ -2,7 +2,6 @@
 package microsoftstore
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"syscall"
@@ -81,7 +80,7 @@ func GetSubscriptionExpirationDate() (tm time.Time, err error) {
 // Use this instead of proc.Call to avoid panics.
 //
 //nolint:unparam // Return value is provided to follow convention.
-func call(proc *syscall.LazyProc, args ...uintptr) (int, error) {
+func call(proc *syscall.LazyProc, args ...uintptr) (int64, error) {
 	if err := loadDll(); err != nil {
 		return 0, err
 	}
@@ -92,29 +91,8 @@ func call(proc *syscall.LazyProc, args ...uintptr) (int, error) {
 	}
 
 	hresult, _, err := proc.Call(args...)
-
-	// From syscall/dll_windows.go (*Proc).Call doc:
-	// > Callers must inspect the primary return value to decide whether an
-	//   error occurred [...] before consulting the error.
-	if err := NewStoreAPIError(hresult); err != nil {
-		return int(hresult), fmt.Errorf("storeApi returned error code %d: %w", int(hresult), err)
-	}
-
-	if err == nil {
-		return int(hresult), nil
-	}
-
-	var target syscall.Errno
-	if b := errors.As(err, &target); !b {
-		// Supposedly unrechable: proc.Call must always return a syscall.Errno
-		return int(hresult), err
-	}
-
-	if target != syscall.Errno(0) {
-		return int(hresult), fmt.Errorf("failed syscall to storeApi: %v (syscall errno %d)", target, err)
-	}
-
-	return int(hresult), nil
+	//nolint:gosec // Windows HRESULTS are guaranteed to be 32-bit vlaue, thus they surely fit inside a int64 without overflow.
+	return checkError(int64(hresult), err)
 }
 
 // loadDll finds the dll and ensures it loads.

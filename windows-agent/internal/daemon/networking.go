@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"os/exec"
 	"reflect"
@@ -139,15 +140,20 @@ func getAddrList(opts options) (head *ipAdapterAddresses, err error) {
 	// the buffer around while we're using it, invalidating the NEXT pointers.
 	var buff buffer[ipAdapterAddresses]
 
-	// Win32 API docs recommend a buff size of 15KB.
-	buff.resizeBytes(15 * kilobyte)
+	// Win32 API docs recommend a buff size of 15KB to start.
+	size, err := buff.resizeBytes(15 * kilobyte)
+	// This error condition should be impossible.
+	if err != nil {
+		return nil, err
+	}
 
 	for range 10 {
-		size := buff.byteCount()
-		err := opts.getAdaptersAddresses(family, flags, 0, &buff.data[0], &size)
+		err = opts.getAdaptersAddresses(family, flags, 0, &buff.data[0], &size)
 		if errors.Is(err, ERROR_BUFFER_OVERFLOW) {
 			// Buffer too small, try again with the returned size.
-			buff.resizeBytes(size)
+			if size, err = buff.resizeBytes(size); err != nil {
+				return nil, err
+			}
 			continue
 		}
 		if err != nil {
@@ -171,27 +177,31 @@ type buffer[T any] struct {
 	data []T
 }
 
-// byteCount returns the number of bytes in the buffer.
-func (b buffer[T]) byteCount() uint32 {
-	var t T
-	sizeOf := uint32(reflect.TypeOf(t).Size())
-	n := uint32(len(b.data))
-	return n * sizeOf
-}
-
 // ResizeBytes resizes the buffer to the given number of bytes, rounded UP to fit an integer element size.
-func (b *buffer[T]) resizeBytes(n uint32) {
+func (b *buffer[T]) resizeBytes(n uint32) (uint32, error) {
 	var t T
-	sizeOf := uint32(reflect.TypeOf(t).Size())
+	n64 := uint64(n)
+	sizeOf := uint64(reflect.TypeOf(t).Size())
 
-	newLen := int(n / sizeOf)
-	if n%sizeOf != 0 {
+	newLen := n64 / sizeOf
+	if n64%sizeOf != 0 {
 		newLen++
 	}
 
-	if newLen > len(b.data) {
-		b.data = make([]T, newLen)
+	// the sizes the Win32 API GetAdaptersAddresses works with are uint32, thus we cannot allocate
+	// more than MaxUint32 bytes after all.
+	newSize := newLen * sizeOf
+	if newSize >= math.MaxUint32 {
+		return 0, errors.New("buffer allocated size limit reached")
 	}
+
+	if newLen > uint64(len(b.data)) {
+		b.data = make([]T, newLen)
+		// Since make() guarantees len(b.data) == newLen, there is no need to recompute it.
+	}
+
+	//nolint:gosec //uint64 -> uint32 conversion is safe because we checked that newSize < MaxUint32.
+	return uint32(newSize), nil
 }
 
 // ptr returns a pointer to the start of the buffer.

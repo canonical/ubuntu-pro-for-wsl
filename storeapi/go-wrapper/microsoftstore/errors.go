@@ -2,7 +2,7 @@
 package microsoftstore
 
 // StoreAPIError are the error constants in the store api.
-type StoreAPIError int
+type StoreAPIError int64
 
 // Keep up-to-date with `storeapi\base\Exception.hpp`.
 const (
@@ -26,7 +26,7 @@ const (
 )
 
 // NewStoreAPIError creates StoreAPIError from the result of a call to the storeAPI DLL.
-func NewStoreAPIError(hresult uintptr) error {
+func NewStoreAPIError(hresult int64) error {
 	if err := StoreAPIError(hresult); err < ErrSuccess {
 		return err
 	}

@@ -69,6 +69,7 @@ func CreateUser(ctx context.Context, d gowsl.Distro, userName string, userFullNa
 		return 0, fmt.Errorf("could not parse uid %q: %v", string(out), err)
 	}
 
+	//nolint:gosec // strconv.ParseUint with bitSize 32 ensures the value of id64 fits inside uint32.
 	return uint32(id64), nil
 }
 
