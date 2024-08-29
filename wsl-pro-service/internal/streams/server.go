@@ -30,9 +30,11 @@ type Server struct {
 
 	done chan struct{}
 
+	// This context will be the parent of the streams's context
 	ctx    context.Context
 	cancel context.CancelFunc
 
+	// This context will be used for graceful stopping the server, i.e. waiting the streams to finish their current activities.
 	gracefulCtx    context.Context
 	gracefulCancel context.CancelFunc
 }
@@ -60,7 +62,7 @@ func (err SystemError) Is(e error) bool {
 
 // NewServer creates a new Server.
 func NewServer(ctx context.Context, sys *system.System, conn *grpc.ClientConn) *Server {
-	ctx, cancel := context.WithCancel(ctx)
+	fCtx, cancel := context.WithCancel(ctx)
 	gCtx, gCancel := context.WithCancel(ctx)
 
 	s := &Server{
@@ -68,7 +70,8 @@ func NewServer(ctx context.Context, sys *system.System, conn *grpc.ClientConn) *
 		system: sys,
 		done:   make(chan struct{}),
 
-		ctx:    ctx,
+		// the stream context will be a child of forcequit context and will thus be cancelled with it.
+		ctx:    fCtx,
 		cancel: cancel,
 
 		gracefulCtx:    gCtx,
@@ -81,6 +84,7 @@ func NewServer(ctx context.Context, sys *system.System, conn *grpc.ClientConn) *
 // Stop stops the server and the underlying connection immediately.
 // It blocks until the server finishes its teardown.
 func (s *Server) Stop() {
+	// Since this cancellation also cancels the streams's context, this should be an immediate stop.
 	s.cancel()
 	<-s.done
 }
@@ -88,6 +92,7 @@ func (s *Server) Stop() {
 // GracefulStop stops the server as soon as all active unary calls finish.
 // It blocks until the server finishes its teardown.
 func (s *Server) GracefulStop() {
+	// Since this cancellation won't affect the streams directly, it allows the streams to finish their current activities before stopping the server loop.
 	s.gracefulCancel()
 	<-s.done
 }
@@ -177,26 +182,21 @@ type handlingLoop[Command any] struct {
 }
 
 func (h *handlingLoop[Command]) run(s *Server, client *multiClient) error {
-	// Use this context to log onto the stream, and to cancel with server.Stop
-	ctx, cancel := cancelWith(h.stream.Context(), s.ctx)
-	defer cancel()
-
-	// Use this context to log onto the stream, but cancel with server.GracefulStop
-	gCtx, cancel := cancelWith(ctx, s.gracefulCtx)
-	defer cancel()
-
+	// We deliberately use the stream's context for logging, running the handler callback and acquiring system info.
+	ctx := h.stream.Context()
 	for {
 		// Graceful stop
 		select {
-		case <-gCtx.Done():
+		case <-s.gracefulCtx.Done():
+			log.Debugf(ctx, "Stopping serving %s requests", reflect.TypeFor[Command]())
 			return nil
 		default:
 		}
 
 		log.Debugf(ctx, "Started serving %s requests", reflect.TypeFor[Command]())
 
-		// Handle a single command
-		msg, ok, err := receiveWithContext(gCtx, h.stream.Recv)
+		// Handle a single command responsive to the cancellation of s.gracefulCtx.
+		msg, ok, err := receiveWithContext(s.gracefulCtx, h.stream.Recv)
 		if err != nil {
 			return fmt.Errorf("could not receive ProAttachCmd: %w", err)
 		} else if !ok {
@@ -217,16 +217,9 @@ func (h *handlingLoop[Command]) run(s *Server, client *multiClient) error {
 		}
 
 		if err = client.SendInfo(info); err != nil {
-			log.Warningf(ctx, "Streamserver: could not stream back info after command completion")
+			log.Warningf(ctx, "Streamserver: could not stream back info after command completion: %v", err)
 		}
 	}
-}
-
-// cancelWith creates a child context that is cancelled when with is done.
-func cancelWith(ctx, with context.Context) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(ctx)
-	context.AfterFunc(with, cancel)
-	return ctx, cancel
 }
 
 // Receive with context calls the recv receiver asyncronously.

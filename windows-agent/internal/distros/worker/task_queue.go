@@ -21,10 +21,17 @@ type taskQueue struct {
 	data []task.Task
 }
 
+// newWaitChannel creates a channel to notify waiters of new tasks.
+func newWaitChannel() chan struct{} {
+	// Tests has shown that's possible to have writers reaching the channel before any reader, thus the notification may never arrive.
+	// The amount of writers is a best-guess at this moment and may be adjusted.
+	return make(chan struct{}, 4)
+}
+
 func newTaskQueue() *taskQueue {
 	return &taskQueue{
 		mu:   sync.RWMutex{},
-		wait: make(chan struct{}),
+		wait: newWaitChannel(),
 		data: make([]task.Task, 0),
 	}
 }
@@ -35,7 +42,7 @@ func (q *taskQueue) Load(newData []task.Task) {
 	defer q.mu.Unlock()
 
 	close(q.wait)
-	q.wait = make(chan struct{})
+	q.wait = newWaitChannel()
 
 	q.data = newData
 }
@@ -51,11 +58,11 @@ func (q *taskQueue) Absorb(other *taskQueue) {
 	transferedData := other.data
 
 	close(other.wait)
-	other.wait = make(chan struct{})
+	other.wait = newWaitChannel()
 	other.data = make([]task.Task, 0)
 
 	close(q.wait)
-	q.wait = make(chan struct{})
+	q.wait = newWaitChannel()
 	q.data = append(q.data, transferedData...)
 }
 
