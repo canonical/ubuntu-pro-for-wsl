@@ -14,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
 	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
