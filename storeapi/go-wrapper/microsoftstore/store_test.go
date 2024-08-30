@@ -33,8 +33,7 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	exit := m.Run()
-	defer os.Exit(exit)
+	m.Run()
 }
 
 func TestGenerateUserJWT(t *testing.T) {

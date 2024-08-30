@@ -40,8 +40,7 @@ import (
 func TestMain(m *testing.M) {
 	log.SetLevel(log.DebugLevel)
 
-	exit := m.Run()
-	defer os.Exit(exit)
+	m.Run()
 }
 
 const defaultLandscapeConfig = `

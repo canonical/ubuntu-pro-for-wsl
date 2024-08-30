@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -30,8 +29,7 @@ func TestMain(m *testing.M) {
 
 	task.Register[testTask]()
 
-	exit := m.Run()
-	defer os.Exit(exit)
+	m.Run()
 }
 
 func TestServe(t *testing.T) {
