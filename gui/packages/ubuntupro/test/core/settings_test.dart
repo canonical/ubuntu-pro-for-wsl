@@ -38,7 +38,8 @@ void main() {
     test('all', () {
       final repository = MockSettingsRepository();
       when(repository.load()).thenReturn(true);
-      when(repository.readInt(Settings.kHideLandscapeConfig)).thenReturn(null);
+      when(repository.readInt(Settings.kLandscapeConfigVisibility))
+          .thenReturn(null);
       when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(1);
 
       final settings = Settings(repository);
@@ -49,7 +50,8 @@ void main() {
     test('Landscape', () {
       final repository = MockSettingsRepository();
       when(repository.load()).thenReturn(true);
-      when(repository.readInt(Settings.kHideLandscapeConfig)).thenReturn(null);
+      when(repository.readInt(Settings.kLandscapeConfigVisibility))
+          .thenReturn(null);
       when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(0);
 
       final settings = Settings(repository);
@@ -60,7 +62,8 @@ void main() {
     test('purchase', () {
       final repository = MockSettingsRepository();
       when(repository.load()).thenReturn(true);
-      when(repository.readInt(Settings.kHideLandscapeConfig)).thenReturn(1);
+      when(repository.readInt(Settings.kLandscapeConfigVisibility))
+          .thenReturn(0);
       when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(1);
 
       final settings = Settings(repository);
@@ -71,7 +74,8 @@ void main() {
     test('none', () {
       final repository = MockSettingsRepository();
       when(repository.load()).thenReturn(true);
-      when(repository.readInt(Settings.kHideLandscapeConfig)).thenReturn(1);
+      when(repository.readInt(Settings.kLandscapeConfigVisibility))
+          .thenReturn(0);
       when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(null);
 
       final settings = Settings(repository);
@@ -79,7 +83,7 @@ void main() {
       expect(settings.isLandscapeConfigurationEnabled, isFalse);
       expect(settings.isStorePurchaseAllowed, isFalse);
     });
-    test('unset', () {
+    test('unset (defaults)', () {
       final repository = MockSettingsRepository();
       when(repository.load()).thenReturn(false);
 

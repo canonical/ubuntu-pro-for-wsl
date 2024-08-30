@@ -9,10 +9,13 @@ class Settings {
   Settings(SettingsRepository repository) {
     if (!repository.load()) return;
 
+    // Enable store purchase if the registry value is 1.
     final purchase = repository.readInt(kAllowStorePurchase) == 1
         ? Options.withStorePurchase
         : Options.none;
-    final landscape = repository.readInt(kHideLandscapeConfig) == 1
+
+    // Hide Landscape UI if the registry value is 0.
+    final landscape = repository.readInt(kLandscapeConfigVisibility) == 0
         ? Options.none
         : Options.withLandscapeConfiguration;
 
@@ -36,7 +39,7 @@ class Settings {
   @visibleForTesting
   static const kAllowStorePurchase = 'AllowStorePurchase';
   @visibleForTesting
-  static const kHideLandscapeConfig = 'HideLandscapeConfig';
+  static const kLandscapeConfigVisibility = 'LandscapeConfigVisibility';
 }
 
 /// Settings options modelled as an enum with bitwise operations, i.e. flags.

@@ -24,10 +24,10 @@ Landscape configuration page and related buttons are enabled by default, but can
 
 1. Open the Windows registry editor: press `Win + R`, type `regedit` and press `Enter`.
 1. Navigate to the following key: `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro\`.
-1. Create a new DWORD value named `HideLandscapeConfig` and set it to `1`.
+1. Create a new DWORD value named `LandscapeConfigVisibility` and set it to `0`.
 
 The next time you open the GUI, you'll find that the Landscape configuration
 page can be shown via the set up wizard or by clicking on the 'Configure
 Landscape' button.
-If that value is not present or set to anything other than `1`, Landscape configuration page
+If that value is not present or set to anything other than `0`, Landscape configuration page
 and related buttons will be visible.
