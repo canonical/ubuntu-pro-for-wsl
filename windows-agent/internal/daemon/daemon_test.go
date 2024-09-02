@@ -135,7 +135,7 @@ func TestStartQuit(t *testing.T) {
 				require.Equal(t, codes.Unavailable, code, "GRPC call should return an error of type %q, instead got %q", codes.Unavailable, code)
 			} else {
 				// We have an hanging connection which should make us time out
-				require.False(t, immediateQuit, "Quit should wait for exisiting connections to close before quitting")
+				require.False(t, immediateQuit, "Quit should wait for existing connections to close before quitting")
 				requireCannotDialGRPC(t, address, "No new connection should be allowed after calling Quit")
 
 				// release hanging connection and wait for Quit to exit.
