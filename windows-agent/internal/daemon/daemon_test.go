@@ -146,7 +146,7 @@ func TestStartQuit(t *testing.T) {
 
 			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
 			requireCannotDialGRPC(t, address, "No new connection should be allowed when the server is no longer running")
-			requireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after quitting the server")
+			requireWaitPathDoesNotExist(t, addrPath, "Address file should have been removed after quitting the server")
 		})
 	}
 }
