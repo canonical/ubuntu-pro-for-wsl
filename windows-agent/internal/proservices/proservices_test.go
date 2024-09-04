@@ -142,7 +142,7 @@ func TestRegisterGRPCServices(t *testing.T) {
 			require.NoError(t, err, "Setup: New should return no error")
 			defer s.Stop(ctx)
 
-			server := s.RegisterGRPCServices(context.Background())
+			server := s.RegisterGRPCServices(context.Background(), true)
 			info := server.GetServiceInfo()
 
 			_, ok := info["agentapi.UI"]

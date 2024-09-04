@@ -17,7 +17,7 @@ import (
 )
 
 // GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
-type GRPCServiceRegisterer func(ctx context.Context) *grpc.Server
+type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) *grpc.Server
 
 // Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
@@ -170,9 +170,12 @@ func (d *Daemon) serve(ctx context.Context, args ...Option) (err error) {
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
+	wslNetAvailable := true
 	wslIP, err := getWslIP(ctx, args...)
 	if err != nil {
-		return fmt.Errorf("could not get the WSL adapter IP: %v", err)
+		log.Warningf(ctx, "could not get the WSL adapter IP: %v", err)
+		wslNetAvailable = false
+		wslIP = net.IPv4(127, 0, 0, 1)
 	}
 
 	var cfg net.ListenConfig
@@ -192,7 +195,7 @@ func (d *Daemon) serve(ctx context.Context, args ...Option) (err error) {
 	log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
 	log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 
-	d.grpcServer = d.registerer(ctx)
+	d.grpcServer = d.registerer(ctx, wslNetAvailable)
 
 	go func() {
 		err := d.grpcServer.Serve(lis)

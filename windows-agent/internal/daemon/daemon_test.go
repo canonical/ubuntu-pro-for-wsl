@@ -30,13 +30,13 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	var regCount int
-	countRegistrations := func(context.Context) *grpc.Server {
+	countRegistrations := func(context.Context, bool) *grpc.Server {
 		regCount++
 		return nil
 	}
 
 	_ = daemon.New(context.Background(), countRegistrations, t.TempDir())
-	require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
+	require.Equal(t, 0, regCount, "daemon should not register GRPC services before serving")
 }
 
 func TestStartQuit(t *testing.T) {
@@ -70,7 +70,7 @@ func TestStartQuit(t *testing.T) {
 				require.NoError(t, err, "Setup: failed to create pre-existing port file")
 			}
 
-			registerer := func(context.Context) *grpc.Server {
+			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
 				var service testGRPCService
 				grpctestservice.RegisterTestServiceServer(server, service)
@@ -161,7 +161,7 @@ func TestStartQuit(t *testing.T) {
 func TestServeWSLIP(t *testing.T) {
 	t.Parallel()
 
-	registerer := func(context.Context) *grpc.Server {
+	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
@@ -176,11 +176,11 @@ func TestServeWSLIP(t *testing.T) {
 		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 
-		"Error when the networking mode is unknown":            {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":             {withAdapters: daemontestutils.EmptyList, wantErr: true},
-		"Error when listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem, wantErr: true},
-		"Error when there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
-		"Error when retrieving adapters information fails":     {withAdapters: daemontestutils.MockError, wantErr: true},
+		"When the networking mode is unknown":            {netmode: "unknown"},
+		"Wwhen the list of adapters is empty":            {withAdapters: daemontestutils.EmptyList},
+		"When listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem},
+		"When there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList},
+		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
 	}
 
 	for name, tc := range testcases {
@@ -244,7 +244,7 @@ func TestServeError(t *testing.T) {
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context) *grpc.Server {
+	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
@@ -264,15 +264,23 @@ func TestQuitBeforeServe(t *testing.T) {
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context) *grpc.Server {
+	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
 	d := daemon.New(ctx, registerer, addrDir)
 	d.Quit(ctx, false)
 
-	err := d.Serve(ctx)
-	require.Error(t, err, "Calling Serve() after Quit() should result in an error")
+	serverErr := make(chan error)
+	go func() {
+		defer close(serverErr)
+		serverErr <- d.Serve(ctx)
+	}()
+
+	<-time.After(100 * time.Millisecond)
+	d.Quit(ctx, false)
+
+	require.NoError(t, <-serverErr, "Calling Serve() after Quit() should not result in an error")
 
 	requireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }

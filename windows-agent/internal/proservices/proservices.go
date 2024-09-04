@@ -158,17 +158,21 @@ func (m Manager) Stop(ctx context.Context) {
 
 // RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.
 // It also gets the correct middlewares hooked in.
-func (m Manager) RegisterGRPCServices(ctx context.Context) *grpc.Server {
+// If WSL network is not available, the WSLInstance service is not registered.
+func (m Manager) RegisterGRPCServices(ctx context.Context, isWslNetAvailable bool) *grpc.Server {
 	log.Debug(ctx, "Registering GRPC services")
 
+	// This is never nil because grpc.NewServer() never returns nil.
 	grpcServer := grpc.NewServer(grpc.StreamInterceptor(
 		interceptorschain.StreamServer(
 			log.StreamServerInterceptor(logrus.StandardLogger()),
 			logconnections.StreamServerInterceptor(),
 		)), grpc.Creds(m.creds))
 	agent_api.RegisterUIServer(grpcServer, &m.uiService)
-	agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
 
+	if isWslNetAvailable {
+		agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
+	}
 	return grpcServer
 }
 
