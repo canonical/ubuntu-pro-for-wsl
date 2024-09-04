@@ -7,7 +7,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-
 	//nolint:revive,nolintlint // needed for go:linkname, but only used in tests. nolintlint as false positive then.
 	_ "unsafe"
 
