@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 )
@@ -57,6 +58,22 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 	}
 }
 
+type options struct {
+	wslCmd                []string
+	wslCmdEnv             []string
+	getAdaptersAddresses  getAdaptersAddressesFunc
+	netMonitoringProvider netmonitoring.DevicesAPIProvider
+}
+
+var defaultOptions = options{
+	wslCmd:                []string{"wsl.exe"},
+	getAdaptersAddresses:  getWindowsAdaptersAddresses,
+	netMonitoringProvider: netmonitoring.DefaultAPIProvider,
+}
+
+// Option represents an optional function to override getWslIP default values.
+type Option func(*options)
+
 // Serve listens on a tcp socket and starts serving GRPC requests on it.
 // Before serving, it writes a file on disk on which port it's listening on for client
 // to be able to reach our server.
@@ -70,8 +87,13 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 	// let the world know we were requested to serve.
 	close(d.serving)
 
+	opts := defaultOptions
+	for _, opt := range args {
+		opt(&opts)
+	}
+
 	for {
-		retry, err := d.tryServingOnce(ctx, args...)
+		retry, err := d.tryServingOnce(ctx, &opts)
 		if retry {
 			continue
 		}
@@ -81,7 +103,7 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 
 // Calls d.serve once and handles the possible outcomes of it, returning the error sent via the d.err channel
 // plus a true value if it should be restarted. When this function returns, the daemon is no longer serving.
-func (d *Daemon) tryServingOnce(ctx context.Context, args ...Option) (bool, error) {
+func (d *Daemon) tryServingOnce(ctx context.Context, opts *options) (bool, error) {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
 		_ = os.Remove(d.listeningPortFilePath)
@@ -89,7 +111,7 @@ func (d *Daemon) tryServingOnce(ctx context.Context, args ...Option) (bool, erro
 	}()
 
 	// Try to start serving.
-	if err := d.serve(ctx, args...); err != nil {
+	if err := d.serve(ctx, opts); err != nil {
 		return false, err
 	}
 
@@ -194,14 +216,14 @@ const (
 // on a new goroutine that reports its running status and errors via the daemon channels:
 // - d.stopped to let callers of Quit() remain blocked until it exits and
 // - d.err to let the caller of Serve() know if it exited with an error.
-func (d *Daemon) serve(ctx context.Context, args ...Option) (err error) {
+func (d *Daemon) serve(ctx context.Context, opts *options) (err error) {
 	//nolint:govet // i18n depends on strings being acquired at runtime.
 	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
 	wslNetAvailable := true
-	wslIP, err := getWslIP(ctx, args...)
+	wslIP, err := getWslIP(ctx, *opts)
 	if err != nil {
 		log.Warningf(ctx, "could not get the WSL adapter IP: %v", err)
 		wslNetAvailable = false

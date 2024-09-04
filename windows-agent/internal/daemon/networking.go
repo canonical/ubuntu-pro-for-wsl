@@ -15,30 +15,11 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
-type options struct {
-	wslCmd               []string
-	wslCmdEnv            []string
-	getAdaptersAddresses getAdaptersAddressesFunc
-}
-
-var defaultOptions = options{
-	wslCmd:               []string{"wsl.exe"},
-	getAdaptersAddresses: getWindowsAdaptersAddresses,
-}
-
-// Option represents an optional function to override getWslIP default values.
-type Option func(*options)
-
 type getAdaptersAddressesFunc func(family uint32, flags uint32, reserved uintptr, adapterAddresses *ipAdapterAddresses, sizePointer *uint32) (errcode error)
 
 // getWslIP returns the loopback address if the networking mode is mirrored or iterates over the network adapters to find the IP address of the WSL one.
-func getWslIP(ctx context.Context, args ...Option) (ip net.IP, err error) {
+func getWslIP(ctx context.Context, opts options) (ip net.IP, err error) {
 	defer decorate.OnError(&err, "could not determine WSL IP address: ")
-
-	opts := defaultOptions
-	for _, arg := range args {
-		arg(&opts)
-	}
 
 	mode, err := networkingMode(ctx, opts.wslCmd, opts.wslCmdEnv)
 	if err != nil {
