@@ -2,6 +2,7 @@ package daemon_test
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"net"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -275,6 +277,7 @@ func TestServeWSLIP(t *testing.T) {
 	testcases := map[string]struct {
 		netmode      string
 		withAdapters daemontestutils.MockIPAdaptersState
+		subscribeErr error
 
 		wantErr bool
 	}{
@@ -288,6 +291,9 @@ func TestServeWSLIP(t *testing.T) {
 		"When listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem},
 		"When there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList},
 		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
+
+		// Should wantErr?
+		"When the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error")},
 	}
 
 	for name, tc := range testcases {
@@ -310,7 +316,15 @@ func TestServeWSLIP(t *testing.T) {
 
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock))
+				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock),
+					daemon.WithNetDevicesAPIProvider(
+						func() (netmonitoring.DevicesAPI, error) {
+							if tc.subscribeErr != nil {
+								return nil, tc.subscribeErr
+							}
+							return &daemontestutils.NetMonitoringMockAPI{}, nil
+						},
+					))
 				close(serveErr)
 			}()
 
@@ -343,6 +357,61 @@ func TestServeWSLIP(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestAddingWSLAdapterRestarts simulates the appearance of the WSL adapter after the daemon is running.
+func TestAddingWSLAdapterRestarts(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	addrDir := t.TempDir()
+
+	registerer := func(context.Context, bool) *grpc.Server {
+		server := grpc.NewServer()
+		var service testGRPCService
+		grpctestservice.RegisterTestServiceServer(server, service)
+		return server
+	}
+
+	d := daemon.New(ctx, registerer, addrDir)
+
+	systemNotification := make(chan error)
+	defer close(systemNotification)
+
+	mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
+
+	serveErr := make(chan error, 1)
+	go func() {
+		serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
+			daemon.WithNetDevicesAPIProvider(daemontestutils.NetDevicesMockAPIWithAddedWSL(systemNotification)),
+		)
+		close(serveErr)
+	}()
+
+	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+
+	var err error
+	requireWaitPathExists(t, addrPath, "Serve should create an address file")
+	addrSt, err := os.Stat(addrPath)
+	require.NoError(t, err, "Address file should be readable")
+
+	// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
+	systemNotification <- nil
+
+	// d.Serve() shouldn't have exitted with an error yet at this point.
+	select {
+	case err := <-serveErr:
+		require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
+	case <-time.After(200 * time.Millisecond):
+		// proceed.
+	}
+
+	requireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
+	// Contents could be the same without our control, thus best to check the file time.
+	newAddrSt, err := os.Stat(addrPath)
+	require.NoError(t, err, "Address file should be readable")
+	require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
 }
 
 func TestServeError(t *testing.T) {

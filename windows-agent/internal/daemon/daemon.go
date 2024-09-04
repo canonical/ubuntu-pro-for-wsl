@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -39,6 +40,8 @@ type Daemon struct {
 
 	registerer GRPCServiceRegisterer
 	grpcServer *grpc.Server
+
+	netSubs *NetWatcher
 }
 
 // New returns an new, initialized daemon server that is ready to register GRPC services.
@@ -154,6 +157,15 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts *options) (bool, error
 func (d *Daemon) cleanup() {
 	defer close(d.stopped)
 	d.grpcServer = nil
+
+	if d.netSubs == nil {
+		return
+	}
+	err := d.netSubs.Stop()
+	if err != nil {
+		log.Errorf(context.Background(), "Daemon: stopping network watcher: %v", err)
+	}
+	d.netSubs = nil
 }
 
 // Quit gracefully quits listening loop and stops the grpc server.
@@ -225,9 +237,29 @@ func (d *Daemon) serve(ctx context.Context, opts *options) (err error) {
 	wslNetAvailable := true
 	wslIP, err := getWslIP(ctx, *opts)
 	if err != nil {
-		log.Warningf(ctx, "could not get the WSL adapter IP: %v", err)
 		wslNetAvailable = false
 		wslIP = net.IPv4(127, 0, 0, 1)
+
+		log.Warningf(ctx, "Daemon: could not get the WSL adapter IP: %v. Starting network monitoring", err)
+		n, err := subscribe(ctx, func(added []string) bool {
+			for _, adapter := range added {
+				if strings.Contains(adapter, "(WSL") {
+					log.Warningf(ctx, "Daemon: new adapter detected: %s", adapter)
+					d.restart(ctx)
+					return false
+				}
+			}
+
+			// Not found yet, let's keep monitoring.
+			return true
+		}, opts)
+
+		if err != nil {
+			log.Errorf(ctx, "Daemon: could not start network monitoring: %v", err)
+			// should we return (and not proceed with serving) instead?
+		} else {
+			d.netSubs = n
+		}
 	}
 
 	var cfg net.ListenConfig
