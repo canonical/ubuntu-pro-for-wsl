@@ -45,19 +45,22 @@ func TestStartQuit(t *testing.T) {
 	testsCases := map[string]struct {
 		forceQuit           bool
 		preexistingPortFile bool
+		cancelEarly         bool
 
 		wantConnectionsDropped bool
 	}{
-		"Graceful quit":                      {},
-		"Graceful quit, overwrite port file": {preexistingPortFile: true},
-		"Forceful quit":                      {forceQuit: true, wantConnectionsDropped: true},
+		"Graceful quit":                              {},
+		"Graceful quit, overwrite port file":         {preexistingPortFile: true},
+		"Forceful quit":                              {forceQuit: true, wantConnectionsDropped: true},
+		"Does nothing when the context is cancelled": {cancelEarly: true, wantConnectionsDropped: true},
 	}
 
 	for name, tc := range testsCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			addrDir := t.TempDir()
 
 			if tc.preexistingPortFile {
@@ -114,6 +117,10 @@ func TestStartQuit(t *testing.T) {
 
 			// Now we know the GRPC server has started serving.
 
+			if tc.cancelEarly {
+				cancel()
+				require.Error(t, <-serveErr, "Serve should return with error when stopped by the context")
+			}
 			// Handle Quit firing
 			serverStopped := make(chan struct{})
 			go func() {
