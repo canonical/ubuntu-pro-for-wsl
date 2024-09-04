@@ -115,8 +115,16 @@ func (d *Daemon) tryServingOnce(ctx context.Context, args ...Option) (bool, erro
 	case quitForce:
 		d.stop(ctx, true)
 		return false, <-d.err
+
+	case restart:
+		log.Warning(ctx, "Daemon: Restarting.")
+		d.stop(ctx, false)
+		// Prevents silently dropping unrelated errors that may have ended the serving goroutine while we handle restarting.
+		if err := <-d.err; err != nil {
+			log.Debugf(ctx, "Daemon: %v", err)
+		}
 	}
-	// Should restart => for now unreachable. Fix coming soon.
+	// Should restart.
 	return true, nil
 }
 
@@ -153,11 +161,33 @@ func (d *Daemon) Quit(ctx context.Context, force bool) {
 	}
 }
 
+// restart requests the running daemon to restart after completing the RPCs in flight.
+// This method returns as soon as the daemon stops serving.
+func (d *Daemon) restart(ctx context.Context) {
+	select {
+	case <-d.serving:
+		// proceeds.
+	default:
+		log.Warning(ctx, "Restart called before Serve.")
+		return
+	}
+
+	select {
+	case <-ctx.Done():
+		log.Warning(ctx, "Restart daemon requested meanwhile context was canceled.")
+		return
+
+	case d.quit <- restart:
+		<-d.stopped
+	}
+}
+
 type quitRequest int
 
 const (
 	quitGraceful quitRequest = iota
 	quitForce
+	restart
 )
 
 // serve implements the actual serving of the daemon, creating a new gRPC server and listening

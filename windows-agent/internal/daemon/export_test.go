@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"os"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
@@ -27,4 +28,9 @@ func WithMockedGetAdapterAddresses(m daemontestutils.MockIPConfig) Option {
 			return m.GetAdaptersAddresses(family, flags, reserved, (*daemontestutils.IPAdapterAddresses)(adapterAddresses), sizePointer)
 		}
 	}
+}
+
+// Restart exposes the private restart method for testing purposes.
+func (d *Daemon) Restart(ctx context.Context) {
+	d.restart(ctx)
 }
