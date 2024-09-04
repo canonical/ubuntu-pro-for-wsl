@@ -7,10 +7,14 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
 	//nolint:revive,nolintlint // needed for go:linkname, but only used in tests. nolintlint as false positive then.
 	_ "unsafe"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
+	"github.com/google/uuid"
+	"golang.org/x/exp/maps"
 )
 
 // MockWslSystemCmd mocks commands running inside the WSL system distro.
@@ -76,9 +80,10 @@ wslinfo usage:
 var (
 	//go:linkname defaultOptions github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon.defaultOptions
 	defaultOptions struct {
-		wslSystemCmd         []string
-		wslCmdEnv            []string
-		getAdaptersAddresses func(family uint32, flags uint32, reserved uintptr, adapterAddresses *IPAdapterAddresses, sizePointer *uint32) (errcode error)
+		wslSystemCmd          []string
+		wslCmdEnv             []string
+		getAdaptersAddresses  func(family uint32, flags uint32, reserved uintptr, adapterAddresses *IPAdapterAddresses, sizePointer *uint32) (errcode error)
+		netMonitoringProvider func() (netmonitoring.DevicesAPI, error)
 	}
 )
 
@@ -97,4 +102,37 @@ func DefaultNetworkDetectionToMock() {
 	}
 	defaultOptions.wslCmdEnv = []string{"GO_WANT_HELPER_PROCESS=1"}
 	defaultOptions.getAdaptersAddresses = m.GetAdaptersAddresses
+	defaultOptions.netMonitoringProvider = func() (netmonitoring.DevicesAPI, error) {
+		return &NetMonitoringMockAPI{}, nil
+	}
+}
+
+// NetDevicesMockAPIWithAddedWSL returns a NetAdaptersAPIProvider fuinction with a new WSL adapter added to the future list of adapters.
+// The returnAfter channel is used to introduce asynchrony to the test and may be used to send errors to the waiting goroutine.
+func NetDevicesMockAPIWithAddedWSL(returnAfter <-chan error) netmonitoring.DevicesAPIProvider {
+	return func() (netmonitoring.DevicesAPI, error) {
+		before := map[string]string{
+			uuid.New().String(): "Wireless LAN adapter Wi-Fi",
+			uuid.New().String(): "Ethernet adapter Ethernet",
+		}
+
+		after := map[string]string{
+			uuid.New().String(): "Ethernet adapter vEthernet (WSL (Hyper-V firewall))",
+			uuid.New().String(): "vSwitch (WSL (Hyper-V firewall))",
+			"Descriptions":      "yet_another_new",
+		}
+		maps.Copy(after, before)
+
+		return &NetMonitoringMockAPI{
+			Before: before,
+			After:  after,
+			WaitForDeviceChangesImpl: func() error {
+				// Introduces some asynchrony to the test.
+				if returnAfter != nil {
+					return <-returnAfter
+				}
+				return nil
+			},
+		}, nil
+	}
 }
