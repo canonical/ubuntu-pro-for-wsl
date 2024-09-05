@@ -109,7 +109,9 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 func (d *Daemon) tryServingOnce(ctx context.Context, opts options) (bool, error) {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
-		_ = os.Remove(d.listeningPortFilePath)
+		if err := os.Remove(d.listeningPortFilePath); err != nil {
+			log.Warningf(ctx, "Daemon: could not remove address file: %v", err)
+		}
 		d.stopped <- struct{}{}
 	}()
 
