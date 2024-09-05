@@ -43,21 +43,21 @@ func TestSubscribe(t *testing.T) {
 		startWithNoAdapters bool
 		devicesUnchanged    bool
 
-		wantErr        bool
-		wantNoCallback bool
 		wantName       string
+		wantNoCallback bool
+		wantErr        bool
 	}{
 		"Success": {},
 		"When the system starts with no adapters": {startWithNoAdapters: true, wantName: "conn0"},
-
-		"Cannot subscribe when initializing the API fails":    {initError: mockError, wantErr: true},
-		"Cannot subscribe when listing devices fails":         {listDevicesError: mockError, wantErr: true},
-		"Cannot subscribe when getting connection name fails": {getConnNameError: mockError, wantErr: true},
 
 		"Cannot notify when waiting for changes fails":                         {waitError: mockError, wantNoCallback: true},
 		"Cannot notify when the context is cancelled while waiting":            {ctxCancel: true, wantNoCallback: true},
 		"Cannot notify when OS triggers a notification without device changes": {devicesUnchanged: true, wantNoCallback: true},
 		"Cannot notify when listing devices on notification fails":             {listDevicesAfterError: mockError, wantNoCallback: true},
+
+		"Error to subscribe when initializing the API fails":    {initError: mockError, wantErr: true},
+		"Error to subscribe when listing devices fails":         {listDevicesError: mockError, wantErr: true},
+		"Error to subscribe when getting connection name fails": {getConnNameError: mockError, wantErr: true},
 	}
 
 	for name, tc := range testcases {
