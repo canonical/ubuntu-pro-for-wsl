@@ -35,7 +35,6 @@ type Daemon struct {
 	stopped chan struct{}
 
 	registerer GRPCServiceRegisterer
-	grpcServer *grpc.Server
 
 	netSubs *NetWatcher
 }
@@ -113,7 +112,7 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	}()
 
 	// Try to start serving. This is non-blocking and always returns a readable channel.
-	errCh := d.serve(ctx, opts)
+	errCh, stop := d.serve(ctx, opts)
 
 	// We now have one serving goroutine.
 	// All code paths below must join on errCh to ensure the serving goroutine won't be left detached.
@@ -121,7 +120,7 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	select {
 	case <-ctx.Done():
 		// Forceful stop to ensure the goroutine won't leak.
-		d.stop(context.Background(), true)
+		stop(context.Background(), true)
 		return errors.Join(ctx.Err(), <-errCh)
 	case err := <-errCh:
 		return err
@@ -131,16 +130,16 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 
 	switch quitReq {
 	case quitGraceful:
-		d.stop(ctx, false)
+		stop(ctx, false)
 		return <-errCh
 
 	case quitForce:
-		d.stop(ctx, true)
+		stop(ctx, true)
 		return <-errCh
 
 	case restart:
 		log.Warning(ctx, "Daemon: Restarting.")
-		d.stop(ctx, false)
+		stop(ctx, false)
 		// Prevents silently dropping unrelated errors that may have ended the serving goroutine while we handle restarting.
 		if err := <-errCh; err != nil {
 			log.Debugf(ctx, "Daemon: %v", err)
@@ -153,7 +152,6 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 // cleanup releases all resources held by the daemon, rendering it unusable.
 func (d *Daemon) cleanup() {
 	defer close(d.stopped)
-	d.grpcServer = nil
 
 	if d.netSubs == nil {
 		return
@@ -223,7 +221,8 @@ const (
 
 // serve implements the actual serving of the daemon, creating a new gRPC server and listening
 // on a new goroutine that reports its running status via the returned error channel.
-func (d *Daemon) serve(ctx context.Context, opts options) <-chan error {
+// Call the returned stopCallback to stop the server either gracefully or forcefully.
+func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFunc) {
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
 	var lis net.Listener
@@ -287,15 +286,16 @@ func (d *Daemon) serve(ctx context.Context, opts options) <-chan error {
 		errCh <- err
 		// Since the channel is buffered, readers will find the written error.
 		close(errCh)
-		return errCh
+		// There is no gRPC Server to stop, thus return a no-op stopFunc.
+		return errCh, func(ctx context.Context, force bool) {}
 	}
 
-	d.grpcServer = d.registerer(ctx, wslNetAvailable)
+	grpcServer := d.registerer(ctx, wslNetAvailable)
 
 	go func() {
 		// If we get here, we're the only writer to this channel, thus we are responsible for closing it.
 		defer close(errCh)
-		err := d.grpcServer.Serve(lis)
+		err := grpcServer.Serve(lis)
 		if err != nil {
 			err = fmt.Errorf("gRPC serve error: %v", err)
 		}
@@ -303,21 +303,24 @@ func (d *Daemon) serve(ctx context.Context, opts options) <-chan error {
 		errCh <- err
 	}()
 
-	return errCh
+	return errCh, newStopFunc(grpcServer)
 }
 
-// Handles stopping the daemon's gRPC server.
-// This must be called by the same goroutine that started the server.
-func (d *Daemon) stop(ctx context.Context, force bool) {
-	// ... thus no need to check d.grpcServer for nil.
-	log.Info(ctx, "Stopping daemon requested.")
+type stopFunc func(ctx context.Context, force bool)
 
-	if force {
-		d.grpcServer.Stop()
-		return
+// Returns a closure capable of stopping the gRPCServer gracefully or forcefully.
+// It must be called from the same goroutine that started the server.
+func newStopFunc(grpcServer *grpc.Server) stopFunc {
+	return func(ctx context.Context, force bool) {
+		log.Info(ctx, "Stopping daemon requested.")
+
+		if force {
+			grpcServer.Stop()
+			return
+		}
+
+		log.Info(ctx, i18n.G("Daemon: waiting for active requests to close."))
+		grpcServer.GracefulStop()
+		log.Debug(ctx, i18n.G("Daemon: all connections have now ended."))
 	}
-
-	log.Info(ctx, i18n.G("Daemon: waiting for active requests to close."))
-	d.grpcServer.GracefulStop()
-	log.Debug(ctx, i18n.G("Daemon: all connections have now ended."))
 }
