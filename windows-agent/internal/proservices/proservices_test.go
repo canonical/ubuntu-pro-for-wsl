@@ -119,12 +119,17 @@ func checkFileExists(path string) func() bool {
 func TestRegisterGRPCServices(t *testing.T) {
 	t.Parallel()
 
+	defaultServices := []string{"agentapi.UI", "agentapi.WSLInstance"}
+
 	testCases := map[string]struct {
 		insecureClient bool
+		withoutWSLNet  bool
 
-		wantErr bool
+		wantServices []string
+		wantErr      bool
 	}{
-		"Success": {},
+		"Success with WSL net adapter":    {},
+		"Success without WSL net adapter": {withoutWSLNet: true, wantServices: []string{"agentapi.UI"}},
 
 		"Error with insecure requests": {insecureClient: true, wantErr: true},
 	}
@@ -132,6 +137,10 @@ func TestRegisterGRPCServices(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			if tc.wantServices == nil {
+				tc.wantServices = defaultServices
+			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
@@ -142,16 +151,15 @@ func TestRegisterGRPCServices(t *testing.T) {
 			require.NoError(t, err, "Setup: New should return no error")
 			defer s.Stop(ctx)
 
-			server := s.RegisterGRPCServices(context.Background(), true)
+			server := s.RegisterGRPCServices(context.Background(), !tc.withoutWSLNet)
 			info := server.GetServiceInfo()
 
-			_, ok := info["agentapi.UI"]
-			require.True(t, ok, "UI service should be registered after calling RegisterGRPCServices")
+			for _, service := range tc.wantServices {
+				_, ok := info[service]
+				require.True(t, ok, "%s service should be registered after calling RegisterGRPCServices", service)
+			}
 
-			_, ok = info["agentapi.WSLInstance"]
-			require.True(t, ok, "WSLInstance service should be registered after calling RegisterGRPCServices")
-
-			require.Lenf(t, info, 2, "Info should contain exactly two elements")
+			require.Lenf(t, info, len(tc.wantServices), "Info should contain exactly two elements")
 
 			// Run the server configured by RegisterGRPCServices.
 			var cfg net.ListenConfig
