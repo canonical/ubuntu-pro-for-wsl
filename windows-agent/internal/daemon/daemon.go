@@ -34,10 +34,6 @@ type Daemon struct {
 	// stopped lets the Quit() method block the caller until the daemon has stopped serving.
 	stopped chan struct{}
 
-	// err is channel through which the current serving goroutine will deliver its exit error, if any.
-	// It's intentionally never closed because a writer cannot know up-front it will be the last one.
-	err chan error
-
 	registerer GRPCServiceRegisterer
 	grpcServer *grpc.Server
 
@@ -54,7 +50,6 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 	return &Daemon{
 		listeningPortFilePath: listeningPortFilePath,
 		registerer:            registerGRPCServices,
-		err:                   make(chan error, 1),
 		quit:                  make(chan quitRequest, 1),
 		serving:               make(chan struct{}),
 		stopped:               make(chan struct{}, 1),
@@ -96,17 +91,19 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 	}
 
 	for {
-		retry, err := d.tryServingOnce(ctx, opts)
-		if retry {
+		err := d.tryServingOnce(ctx, opts)
+		if errors.Is(err, errRestartDaemon) {
 			continue
 		}
 		return err
 	}
 }
 
+var errRestartDaemon = errors.New("Daemon: Restart requested")
+
 // Calls d.serve once and handles the possible outcomes of it, returning the error sent via the d.err channel
 // plus a true value if it should be restarted. When this function returns, the daemon is no longer serving.
-func (d *Daemon) tryServingOnce(ctx context.Context, opts options) (bool, error) {
+func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
 		if err := os.Remove(d.listeningPortFilePath); err != nil {
@@ -115,21 +112,19 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) (bool, error)
 		d.stopped <- struct{}{}
 	}()
 
-	// Try to start serving.
-	if err := d.serve(ctx, opts); err != nil {
-		return false, err
-	}
+	// Try to start serving. This is non-blocking and always returns a readable channel.
+	errCh := d.serve(ctx, opts)
 
 	// We now have one serving goroutine.
-	// All code paths below must join on d.err to ensure the serving goroutine won't be left detached.
+	// All code paths below must join on errCh to ensure the serving goroutine won't be left detached.
 	var quitReq quitRequest
 	select {
 	case <-ctx.Done():
 		// Forceful stop to ensure the goroutine won't leak.
 		d.stop(context.Background(), true)
-		return false, errors.Join(ctx.Err(), <-d.err)
-	case err := <-d.err:
-		return false, err
+		return errors.Join(ctx.Err(), <-errCh)
+	case err := <-errCh:
+		return err
 	case quitReq = <-d.quit:
 		// proceed.
 	}
@@ -137,22 +132,22 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) (bool, error)
 	switch quitReq {
 	case quitGraceful:
 		d.stop(ctx, false)
-		return false, <-d.err
+		return <-errCh
 
 	case quitForce:
 		d.stop(ctx, true)
-		return false, <-d.err
+		return <-errCh
 
 	case restart:
 		log.Warning(ctx, "Daemon: Restarting.")
 		d.stop(ctx, false)
 		// Prevents silently dropping unrelated errors that may have ended the serving goroutine while we handle restarting.
-		if err := <-d.err; err != nil {
+		if err := <-errCh; err != nil {
 			log.Debugf(ctx, "Daemon: %v", err)
 		}
 	}
 	// Should restart.
-	return true, nil
+	return errRestartDaemon
 }
 
 // cleanup releases all resources held by the daemon, rendering it unusable.
@@ -227,72 +222,88 @@ const (
 )
 
 // serve implements the actual serving of the daemon, creating a new gRPC server and listening
-// on a new goroutine that reports its running status and errors via the daemon channels:
-// - d.stopped to let callers of Quit() remain blocked until it exits and
-// - d.err to let the caller of Serve() know if it exited with an error.
-func (d *Daemon) serve(ctx context.Context, opts options) (err error) {
-	//nolint:govet // i18n depends on strings being acquired at runtime.
-	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
-
+// on a new goroutine that reports its running status via the returned error channel.
+func (d *Daemon) serve(ctx context.Context, opts options) <-chan error {
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
+	var lis net.Listener
 	wslNetAvailable := true
-	wslIP, err := getWslIP(ctx, *opts)
-	if err != nil {
-		wslNetAvailable = false
-		wslIP = net.IPv4(127, 0, 0, 1)
 
-		log.Warningf(ctx, "Daemon: could not get the WSL adapter IP: %v. Starting network monitoring", err)
-		n, err := subscribe(ctx, func(added []string) bool {
-			for _, adapter := range added {
-				if strings.Contains(adapter, "(WSL") {
-					log.Warningf(ctx, "Daemon: new adapter detected: %s", adapter)
-					d.restart(ctx)
-					return false
-				}
-			}
+	// Setting up the listener.
+	err := func() (err error) {
+		//nolint:govet // i18n depends on strings being acquired at runtime.
+		defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
-			// Not found yet, let's keep monitoring.
-			return true
-		}, opts)
-
+		wslNetAvailable = true
+		wslIP, err := getWslIP(ctx, opts)
 		if err != nil {
-			log.Errorf(ctx, "Daemon: could not start network monitoring: %v", err)
-			// should we return (and not proceed with serving) instead?
-		} else {
-			d.netSubs = n
+			wslNetAvailable = false
+			wslIP = net.IPv4(127, 0, 0, 1)
+
+			log.Warningf(ctx, "Daemon: could not get the WSL adapter IP: %v. Starting network monitoring", err)
+			n, err := subscribe(ctx, func(added []string) bool {
+				for _, adapter := range added {
+					if strings.Contains(adapter, "(WSL") {
+						log.Warningf(ctx, "Daemon: new adapter detected: %s", adapter)
+						d.restart(ctx)
+						return false
+					}
+				}
+
+				// Not found yet, let's keep monitoring.
+				return true
+			}, opts)
+
+			if err != nil {
+				log.Errorf(ctx, "Daemon: could not start network monitoring: %v", err)
+				// should we return (and not proceed with serving) instead?
+			} else {
+				d.netSubs = n
+			}
 		}
-	}
 
-	var cfg net.ListenConfig
-	lis, err := cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
+		var cfg net.ListenConfig
+		lis, err = cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
+		if err != nil {
+			return fmt.Errorf("can't listen: %v", err)
+		}
+
+		addr := lis.Addr().String()
+
+		// Write a file on disk to signal selected ports to clients.
+		// We write it here to signal error when calling service.Start().
+		if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
+			return err
+		}
+
+		log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
+		log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
+		return nil
+	}()
+
+	// We may need to write to the channel before readers know about it.
+	errCh := make(chan error, 1)
 	if err != nil {
-		return fmt.Errorf("can't listen: %v", err)
+		errCh <- err
+		// Since the channel is buffered, readers will find the written error.
+		close(errCh)
+		return errCh
 	}
-
-	addr := lis.Addr().String()
-
-	// Write a file on disk to signal selected ports to clients.
-	// We write it here to signal error when calling service.Start().
-	if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
-		return err
-	}
-
-	log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
-	log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 
 	d.grpcServer = d.registerer(ctx, wslNetAvailable)
 
 	go func() {
+		// If we get here, we're the only writer to this channel, thus we are responsible for closing it.
+		defer close(errCh)
 		err := d.grpcServer.Serve(lis)
 		if err != nil {
 			err = fmt.Errorf("gRPC serve error: %v", err)
 		}
-		// This is the only place where we write into d.err so it can report this goroutine being done.
-		d.err <- err
+
+		errCh <- err
 	}()
 
-	return nil
+	return errCh
 }
 
 // Handles stopping the daemon's gRPC server.
