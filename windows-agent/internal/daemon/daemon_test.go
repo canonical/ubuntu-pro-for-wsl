@@ -267,6 +267,69 @@ func TestRestart(t *testing.T) {
 	}
 }
 
+func TestCanServeOnlyOnce(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		serveAgainWhileServing bool
+		serveAgainAfterStopped bool
+	}{
+		"Success when called only once": {},
+
+		"Error to serve again while serving": {serveAgainWhileServing: true},
+		"Error to serve again after stopped": {serveAgainAfterStopped: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			addrDir := t.TempDir()
+
+			registerer := func(context.Context, bool) *grpc.Server {
+				server := grpc.NewServer()
+				var service testGRPCService
+				grpctestservice.RegisterTestServiceServer(server, service)
+				return server
+			}
+
+			d := daemon.New(ctx, registerer, addrDir)
+			firstServeErr := make(chan error)
+			go func() {
+				firstServeErr <- d.Serve(ctx)
+				close(firstServeErr)
+			}()
+			// Give the serving goroutine some unconditional slack of time to start.
+			<-time.After(1 * time.Second)
+
+			if tc.serveAgainWhileServing {
+				secondServeErr := make(chan error)
+				go func() {
+					secondServeErr <- d.Serve(ctx)
+					close(secondServeErr)
+				}()
+				require.Error(t, <-secondServeErr, "Calling Serve while already serving should fail")
+				return
+			}
+
+			d.Quit(ctx, false)
+			<-firstServeErr
+
+			if tc.serveAgainAfterStopped {
+				secondServeErr := make(chan error)
+				go func() {
+					secondServeErr <- d.Serve(ctx)
+					close(secondServeErr)
+				}()
+				require.Error(t, <-secondServeErr, "Calling Serve after stopped should fail")
+				return
+			}
+		})
+	}
+}
+
 func TestServeWSLIP(t *testing.T) {
 	t.Parallel()
 

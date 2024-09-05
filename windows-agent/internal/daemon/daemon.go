@@ -78,6 +78,14 @@ type Option func(*options)
 // The server is automatically restarted if it was stopped by a concurrent call to Restart().
 // This method is designed to be called just and only once, when it returns the daemon is no longer useful.
 func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
+	select {
+	case <-d.serving:
+		return errors.New("Serve called more than once")
+	case <-d.stopped:
+		return errors.New("Serve called after Quit")
+	default:
+		// Proceeds.
+	}
 	// Once this method leaves the daemon is done forever.
 	defer d.cleanup()
 
