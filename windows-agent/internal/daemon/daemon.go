@@ -283,19 +283,14 @@ func (d *Daemon) serve(ctx context.Context, opts *options) (err error) {
 
 	go func() {
 		err := d.grpcServer.Serve(lis)
+		if err != nil {
+			err = fmt.Errorf("gRPC serve error: %v", err)
+		}
 		// This is the only place where we write into d.err so it can report this goroutine being done.
-		d.err <- wrapf("gRPC serve error: %v", err)
+		d.err <- err
 	}()
 
 	return nil
-}
-
-// wrapf wraps an error with fmt.Errorf(), returning nil if err is nil.
-func wrapf(format string, err error, a ...interface{}) error {
-	if err == nil {
-		return nil
-	}
-	return fmt.Errorf(format, append(a, err)...)
 }
 
 // Handles stopping the daemon's gRPC server.
