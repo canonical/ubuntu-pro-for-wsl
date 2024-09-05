@@ -292,8 +292,7 @@ func TestServeWSLIP(t *testing.T) {
 		"When there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList},
 		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
 
-		// Should wantErr?
-		"When the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error")},
+		"Error when the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error"), wantErr: true},
 	}
 
 	for name, tc := range testcases {

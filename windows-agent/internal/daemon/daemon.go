@@ -254,11 +254,9 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 			}, opts)
 
 			if err != nil {
-				log.Errorf(ctx, "Daemon: could not start network monitoring: %v", err)
-				// should we return (and not proceed with serving) instead?
-			} else {
-				d.netSubs = n
+				return fmt.Errorf("Daemon: could not start network monitoring: %v", err)
 			}
+			d.netSubs = n
 		}
 
 		var cfg net.ListenConfig
