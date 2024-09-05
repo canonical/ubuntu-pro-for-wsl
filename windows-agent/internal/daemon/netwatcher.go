@@ -50,7 +50,7 @@ func subscribe(ctx context.Context, callback NewAdapterCallback, opts options) (
 		ctx:      nctx,
 		cancel:   cancel,
 		callback: callback,
-		err:      make(chan error, 1),
+		err:      make(chan error),
 		cache:    current,
 	}
 
@@ -58,8 +58,8 @@ func subscribe(ctx context.Context, callback NewAdapterCallback, opts options) (
 		defer close(n.err)
 
 		err := n.start()
-		n.err <- err
 		log.Debugf(context.Background(), "stopped monitoring network adapters: %v", err)
+		n.err <- err
 	}()
 	return n, nil
 }
