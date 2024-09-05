@@ -3,16 +3,19 @@ package daemontestutils
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 	//nolint:revive,nolintlint // needed for go:linkname, but only used in tests. nolintlint as false positive then.
 	_ "unsafe"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 )
 
@@ -134,4 +137,47 @@ func NetDevicesMockAPIWithAddedWSL(returnAfter <-chan error) netmonitoring.Devic
 			},
 		}, nil
 	}
+}
+
+// RequireWaitPathExists checks periodically for the existence of a path. If the path
+// does not exist after waiting for the specified timeout, the test fails. This function
+// is blocking.
+func RequireWaitPathExists(t *testing.T, path string, msg string) {
+	t.Helper()
+
+	fileExists := func() bool {
+		_, err := os.Lstat(path)
+		if err == nil {
+			return true
+		}
+		require.ErrorIsf(t, err, fs.ErrNotExist, "could not stat path %q. Message: %s", path, msg)
+		return false
+	}
+
+	require.Eventually(t, fileExists, 5*time.Second, 100*time.Millisecond, "%q does not exists: %v", path, msg)
+
+	// Prevent error when accessing the file right after:
+	// 'The process cannot access the file because it is being used by another process'
+	time.Sleep(10 * time.Millisecond)
+}
+
+// RequireWaitPathDoesNotExist checks periodically for the existence of a path. If the path
+// does not exist after waiting for the specified timeout, the test fails. This function
+// is blocking.athDoesNotExist checks periodiclly for the existence of a path. If the path
+// does not exist after waiting for the specified timeout, the test fails. This function
+// is blocking.
+func RequireWaitPathDoesNotExist(t *testing.T, path string, msg string) {
+	t.Helper()
+
+	var err error
+	fileDoesNotExist := func() bool {
+		_, err = os.Lstat(path)
+		if err == nil {
+			return false
+		}
+		require.ErrorIsf(t, err, fs.ErrNotExist, "could not stat path %q. Message: %s", path, msg)
+		return true
+	}
+
+	require.Eventually(t, fileDoesNotExist, 100*time.Millisecond, time.Millisecond, "%q still exists: %v", path, msg)
 }

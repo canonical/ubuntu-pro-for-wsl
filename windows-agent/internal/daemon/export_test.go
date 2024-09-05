@@ -31,11 +31,6 @@ func WithMockedGetAdapterAddresses(m daemontestutils.MockIPConfig) Option {
 	}
 }
 
-// Restart exposes the private restart method for testing purposes.
-func (d *Daemon) Restart(ctx context.Context) {
-	d.restart(ctx)
-}
-
 // WithNetDevicesAPIProvider sets the NetAdaptersAPIProvider to be used by the netWatcher.Subscribe().
 func WithNetDevicesAPIProvider(p netmonitoring.DevicesAPIProvider) Option {
 	return func(o *options) {
