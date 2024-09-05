@@ -390,7 +390,6 @@ func TestAddingWSLAdapterRestarts(t *testing.T) {
 
 	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
 
-	var err error
 	requireWaitPathExists(t, addrPath, "Serve should create an address file")
 	addrSt, err := os.Stat(addrPath)
 	require.NoError(t, err, "Address file should be readable")
