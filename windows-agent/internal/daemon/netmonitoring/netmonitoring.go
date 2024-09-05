@@ -13,7 +13,7 @@ type DevicesAPI interface {
 	// GetDeviceConnectionName returns the connection name of the network adapter with the given GUID.
 	GetDeviceConnectionName(guid string) (string, error)
 
-	// WaitForChanges blocks the caller until the system triggers a notification of changes to the network adapters.
+	// WaitForDeviceChanges blocks the caller until the system triggers a notification of changes to the network adapters.
 	// It returns nil if the notification is triggered or an error if the context is cancelled or an error occurs.
 	// The wait is cancellable by calling Close().
 	WaitForDeviceChanges() error
