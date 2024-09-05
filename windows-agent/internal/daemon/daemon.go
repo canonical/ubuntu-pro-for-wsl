@@ -156,8 +156,7 @@ func (d *Daemon) cleanup() {
 	if d.netSubs == nil {
 		return
 	}
-	err := d.netSubs.Stop()
-	if err != nil {
+	if err := d.netSubs.Stop(); err != nil {
 		log.Errorf(context.Background(), "Daemon: stopping network watcher: %v", err)
 	}
 	d.netSubs = nil
