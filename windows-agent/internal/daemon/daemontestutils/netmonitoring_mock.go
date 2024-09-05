@@ -12,9 +12,9 @@ import (
 type NetMonitoringMockAPI struct {
 	Before, After map[string]string
 	// m.ListDevices() will always fail.
-	ListDevicesError error
+	ErrorOnListDevices error
 	// m.ListDevices() will fail only after the first call.
-	ListDevicesAfterError error
+	ErrorOnListDevicesAfterFirstCall error
 
 	GetDeviceConnectionNameError error
 	WaitForDeviceChangesImpl     func() error
@@ -27,16 +27,16 @@ func (m *NetMonitoringMockAPI) Close() {}
 
 // ListDevices returns the GUIDs of the network adapters on the host.
 func (m *NetMonitoringMockAPI) ListDevices() ([]string, error) {
-	if m.ListDevicesError != nil {
-		return nil, m.ListDevicesError
+	if m.ErrorOnListDevices != nil {
+		return nil, m.ErrorOnListDevices
 	}
 	if !m.listDevicesCalledFirstTime.Load() {
 		m.listDevicesCalledFirstTime.Store(true)
 		return maps.Keys(m.Before), nil
 	}
 	// After the first call only.
-	if m.ListDevicesAfterError != nil {
-		return nil, m.ListDevicesAfterError
+	if m.ErrorOnListDevicesAfterFirstCall != nil {
+		return nil, m.ErrorOnListDevicesAfterFirstCall
 	}
 	return maps.Keys(m.After), nil
 }

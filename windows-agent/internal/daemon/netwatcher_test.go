@@ -87,11 +87,11 @@ func TestSubscribe(t *testing.T) {
 					a = before
 				}
 				return &daemontestutils.NetMonitoringMockAPI{
-					Before:                       b,
-					After:                        a,
-					ListDevicesError:             tc.listDevicesError,
-					ListDevicesAfterError:        tc.listDevicesAfterError,
-					GetDeviceConnectionNameError: tc.getConnNameError,
+					Before:                           b,
+					After:                            a,
+					ErrorOnListDevices:               tc.listDevicesError,
+					ErrorOnListDevicesAfterFirstCall: tc.listDevicesAfterError,
+					GetDeviceConnectionNameError:     tc.getConnNameError,
 					WaitForDeviceChangesImpl: func() error {
 						if tc.ctxCancel {
 							cancel()
