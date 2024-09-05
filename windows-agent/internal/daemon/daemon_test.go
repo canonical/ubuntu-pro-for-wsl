@@ -514,11 +514,13 @@ func TestQuitBeforeServe(t *testing.T) {
 		serverErr <- d.Serve(ctx)
 	}()
 
-	<-time.After(100 * time.Millisecond)
+	select {
+	case err := <-serverErr:
+		require.Fail(t, "Calling Quit() before Serve() on a fresh daemon should not result in an error", err)
+	case <-time.After(1 * time.Second):
+	}
+
 	d.Quit(ctx, false)
-
-	require.NoError(t, <-serverErr, "Calling Serve() after Quit() should not result in an error")
-
 	requireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }
 
