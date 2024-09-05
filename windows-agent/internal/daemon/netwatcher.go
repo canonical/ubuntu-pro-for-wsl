@@ -31,7 +31,7 @@ type NetWatcher struct {
 
 // subscribe subscribes to the addition of network adapters on the host, calling the provided callback
 // with a slice of new adapter names discovered by the time the OS triggers the notification.
-func subscribe(ctx context.Context, callback NewAdapterCallback, opts *options) (*NetWatcher, error) {
+func subscribe(ctx context.Context, callback NewAdapterCallback, opts options) (*NetWatcher, error) {
 	api, err := opts.netMonitoringProvider()
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize the network adapter API: %v", err)

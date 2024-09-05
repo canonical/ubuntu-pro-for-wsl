@@ -96,7 +96,7 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 	}
 
 	for {
-		retry, err := d.tryServingOnce(ctx, &opts)
+		retry, err := d.tryServingOnce(ctx, opts)
 		if retry {
 			continue
 		}
@@ -106,7 +106,7 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 
 // Calls d.serve once and handles the possible outcomes of it, returning the error sent via the d.err channel
 // plus a true value if it should be restarted. When this function returns, the daemon is no longer serving.
-func (d *Daemon) tryServingOnce(ctx context.Context, opts *options) (bool, error) {
+func (d *Daemon) tryServingOnce(ctx context.Context, opts options) (bool, error) {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
 		_ = os.Remove(d.listeningPortFilePath)
@@ -228,7 +228,7 @@ const (
 // on a new goroutine that reports its running status and errors via the daemon channels:
 // - d.stopped to let callers of Quit() remain blocked until it exits and
 // - d.err to let the caller of Serve() know if it exited with an error.
-func (d *Daemon) serve(ctx context.Context, opts *options) (err error) {
+func (d *Daemon) serve(ctx context.Context, opts options) (err error) {
 	//nolint:govet // i18n depends on strings being acquired at runtime.
 	defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 

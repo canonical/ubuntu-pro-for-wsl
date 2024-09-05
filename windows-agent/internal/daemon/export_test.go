@@ -51,5 +51,5 @@ func Subscribe(ctx context.Context, f NewAdapterCallback, args ...Option) (*NetW
 	for _, o := range args {
 		o(&opt)
 	}
-	return subscribe(ctx, f, &opt)
+	return subscribe(ctx, f, opt)
 }
