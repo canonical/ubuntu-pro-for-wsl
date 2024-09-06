@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -202,7 +203,12 @@ func (e newInstanceInfoMinorError) Error() string {
 func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_InstanceInfo, err error) {
 	state, err := d.State()
 	if err != nil {
-		return info, err
+		// Try again
+		<-time.After(1 * time.Second)
+		state, err = d.State()
+		if err != nil {
+			return info, fmt.Errorf("WSL internal error after retry: %v", err)
+		}
 	}
 
 	var instanceState landscapeapi.InstanceState
