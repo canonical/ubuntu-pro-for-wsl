@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -32,7 +33,7 @@ func initViperConfig(name string, cmd *cobra.Command, vip *viper.Viper) (err err
 		vip.SetConfigName(name)
 		vip.AddConfigPath("./")
 		vip.AddConfigPath("$HOME")
-		vip.AddConfigPath(fmt.Sprintf("$HOME/%s", common.UserProfileDir))
+		vip.AddConfigPath(filepath.Join("$HOME", common.UserProfileDir))
 	}
 
 	// Load the config
