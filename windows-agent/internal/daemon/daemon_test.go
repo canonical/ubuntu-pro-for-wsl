@@ -73,8 +73,7 @@ func TestStartQuit(t *testing.T) {
 
 			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
-				var service testGRPCService
-				grpctestservice.RegisterTestServiceServer(server, service)
+				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
 				return server
 			}
 
@@ -182,8 +181,7 @@ func TestCanServeOnlyOnce(t *testing.T) {
 
 			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
-				var service testGRPCService
-				grpctestservice.RegisterTestServiceServer(server, service)
+				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
 				return server
 			}
 
@@ -323,8 +321,7 @@ func TestAddingWSLAdapterRestarts(t *testing.T) {
 
 	registerer := func(context.Context, bool) *grpc.Server {
 		server := grpc.NewServer()
-		var service testGRPCService
-		grpctestservice.RegisterTestServiceServer(server, service)
+		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
 		return server
 	}
 
