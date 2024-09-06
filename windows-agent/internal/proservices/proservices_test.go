@@ -128,19 +128,15 @@ func TestRegisterGRPCServices(t *testing.T) {
 		wantServices []string
 		wantErr      bool
 	}{
-		"Success with WSL net adapter":    {},
+		"Success with WSL net adapter":    {wantServices: defaultServices},
 		"Success without WSL net adapter": {withoutWSLNet: true, wantServices: []string{"agentapi.UI"}},
 
-		"Error with insecure requests": {insecureClient: true, wantErr: true},
+		"Error with insecure requests": {insecureClient: true, wantServices: defaultServices, wantErr: true},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
-			if tc.wantServices == nil {
-				tc.wantServices = defaultServices
-			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
