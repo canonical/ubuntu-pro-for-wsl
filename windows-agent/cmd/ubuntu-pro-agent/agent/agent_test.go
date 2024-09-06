@@ -2,6 +2,7 @@ package agent_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -121,19 +122,52 @@ func TestConfigArg(t *testing.T) {
 
 func TestConfigAutoDetect(t *testing.T) {
 	getStdout := captureStdout(t)
-
-	a := agent.New()
-	a.SetArgs("version")
-
 	filename := "ubuntu-pro-agent.yaml"
-	configPath := filepath.Join(".", filename)
-	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
-	defer os.Remove(configPath)
 
-	err := a.Run()
-	out := getStdout()
-	require.NoError(t, err, "Run should not return an error, stdout: %v", out)
-	require.Equal(t, 3, a.Config().Verbosity)
+	testcases := map[string]struct {
+		configInHomeDir   bool
+		configInPublicDir bool
+		verbosity         int
+	}{
+		"Success when the config is in current directory": {verbosity: 3},
+		"When the config is in user's HOME directory":     {configInHomeDir: true, verbosity: 2},
+		"When the config is in user's public directory":   {configInPublicDir: true, verbosity: 1},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			home := t.TempDir()
+			if runtime.GOOS == "windows" {
+				homedrive := filepath.VolumeName(home)
+				homepath := strings.TrimPrefix(home, homedrive)
+				t.Setenv("UserProfile", home)
+				t.Setenv("HOMEDRIVE", homedrive)
+				t.Setenv("HOMEPATH", homepath)
+			} else {
+				t.Setenv("HOME", home)
+			}
+
+			configDir := "."
+			if tc.configInHomeDir {
+				configDir = home
+			} else if tc.configInPublicDir {
+				configDir = filepath.Join(home, common.UserProfileDir)
+				require.NoError(t, os.MkdirAll(configDir, 0700), "Setup: couldn't create public directory")
+			}
+
+			a := agent.New()
+			a.SetArgs("version")
+
+			configPath := filepath.Join(configDir, filename)
+			require.NoError(t, os.WriteFile(configPath, []byte(fmt.Sprintf("verbosity: %d", tc.verbosity)), 0600), "Setup: couldn't write config file")
+			t.Cleanup(func() { os.Remove(configPath) })
+
+			err := a.Run()
+			out := getStdout()
+			require.NoError(t, err, "Run should not return an error, stdout: %v", out)
+			require.Equal(t, tc.verbosity, a.Config().Verbosity)
+		})
+	}
 }
 
 func TestCanQuitWhenExecute(t *testing.T) {
