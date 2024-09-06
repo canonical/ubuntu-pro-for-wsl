@@ -70,7 +70,6 @@ func TestRestart(t *testing.T) {
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
 
-			var err error
 			daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should have created a .address file")
 			addrSt, err := os.Stat(addrPath)
 			require.NoError(t, err, "Address file should be readable")
@@ -80,6 +79,11 @@ func TestRestart(t *testing.T) {
 			}
 			if tc.cancelEarly {
 				cancel()
+				<-ctx.Done()
+				// When calling d.restart with a context cancelled, sometimes the select statement still prefers the alternative path to the <- ctx.Done().
+				// To ensure the <- ctx.Done() case will be preferred in this test we need to send something via d.quit, so another send will block.
+				// While strange, the test becomes predictable.
+				d.restart(ctx)
 			}
 			// Now we know the GRPC server has started serving.
 			d.restart(ctx)
