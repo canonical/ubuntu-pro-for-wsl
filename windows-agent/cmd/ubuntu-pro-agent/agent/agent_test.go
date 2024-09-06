@@ -350,7 +350,7 @@ func TestLogs(t *testing.T) {
 			select {
 			case <-time.After(20 * time.Second):
 				require.Fail(t, "Run should have exited")
-			default:
+			case <-ch:
 			}
 
 			// Don't check for log files if the directory was not writable

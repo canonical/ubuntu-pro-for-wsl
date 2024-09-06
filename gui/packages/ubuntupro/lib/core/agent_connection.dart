@@ -41,7 +41,7 @@ class AgentConnection extends ChangeNotifier {
     await _connectivitySubscription?.cancel();
     _state = AgentConnectionState.connecting;
     notifyListeners();
-    await monitor.reset();
+
     final monitorEvent = await monitor.start().last;
     if (monitorEvent != AgentState.ok) {
       _state = AgentConnectionState.disconnected;

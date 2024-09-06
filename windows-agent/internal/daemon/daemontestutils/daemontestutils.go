@@ -3,14 +3,20 @@ package daemontestutils
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 	//nolint:revive,nolintlint // needed for go:linkname, but only used in tests. nolintlint as false positive then.
 	_ "unsafe"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/maps"
 )
 
 // MockWslSystemCmd mocks commands running inside the WSL system distro.
@@ -76,9 +82,10 @@ wslinfo usage:
 var (
 	//go:linkname defaultOptions github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon.defaultOptions
 	defaultOptions struct {
-		wslSystemCmd         []string
-		wslCmdEnv            []string
-		getAdaptersAddresses func(family uint32, flags uint32, reserved uintptr, adapterAddresses *IPAdapterAddresses, sizePointer *uint32) (errcode error)
+		wslSystemCmd          []string
+		wslCmdEnv             []string
+		getAdaptersAddresses  func(family uint32, flags uint32, reserved uintptr, adapterAddresses *IPAdapterAddresses, sizePointer *uint32) (errcode error)
+		netMonitoringProvider func() (netmonitoring.DevicesAPI, error)
 	}
 )
 
@@ -97,4 +104,80 @@ func DefaultNetworkDetectionToMock() {
 	}
 	defaultOptions.wslCmdEnv = []string{"GO_WANT_HELPER_PROCESS=1"}
 	defaultOptions.getAdaptersAddresses = m.GetAdaptersAddresses
+	defaultOptions.netMonitoringProvider = func() (netmonitoring.DevicesAPI, error) {
+		return &NetMonitoringMockAPI{}, nil
+	}
+}
+
+// NetDevicesMockAPIWithAddedWSL returns a NetAdaptersAPIProvider fuinction with a new WSL adapter added to the future list of adapters.
+// The returnAfter channel is used to introduce asynchrony to the test and may be used to send errors to the waiting goroutine.
+func NetDevicesMockAPIWithAddedWSL(returnAfter <-chan error) netmonitoring.DevicesAPIProvider {
+	return func() (netmonitoring.DevicesAPI, error) {
+		before := map[string]string{
+			uuid.New().String(): "Wireless LAN adapter Wi-Fi",
+			uuid.New().String(): "Ethernet adapter Ethernet",
+		}
+
+		after := map[string]string{
+			uuid.New().String(): "Ethernet adapter vEthernet (WSL (Hyper-V firewall))",
+			uuid.New().String(): "vSwitch (WSL (Hyper-V firewall))",
+			"Descriptions":      "yet_another_new",
+		}
+		maps.Copy(after, before)
+
+		return &NetMonitoringMockAPI{
+			Before: before,
+			After:  after,
+			WaitForDeviceChangesImpl: func() error {
+				// Introduces some asynchrony to the test.
+				if returnAfter != nil {
+					return <-returnAfter
+				}
+				return nil
+			},
+		}, nil
+	}
+}
+
+// RequireWaitPathExists checks periodically for the existence of a path. If the path
+// does not exist after waiting for the specified timeout, the test fails. This function
+// is blocking.
+func RequireWaitPathExists(t *testing.T, path string, msg string) {
+	t.Helper()
+
+	fileExists := func() bool {
+		_, err := os.Lstat(path)
+		if err == nil {
+			return true
+		}
+		require.ErrorIsf(t, err, fs.ErrNotExist, "could not stat path %q. Message: %s", path, msg)
+		return false
+	}
+
+	require.Eventually(t, fileExists, 5*time.Second, 100*time.Millisecond, "%q does not exists: %v", path, msg)
+
+	// Prevent error when accessing the file right after:
+	// 'The process cannot access the file because it is being used by another process'
+	time.Sleep(10 * time.Millisecond)
+}
+
+// RequireWaitPathDoesNotExist checks periodically for the existence of a path. If the path
+// does not exist after waiting for the specified timeout, the test fails. This function
+// is blocking.athDoesNotExist checks periodiclly for the existence of a path. If the path
+// does not exist after waiting for the specified timeout, the test fails. This function
+// is blocking.
+func RequireWaitPathDoesNotExist(t *testing.T, path string, msg string) {
+	t.Helper()
+
+	var err error
+	fileDoesNotExist := func() bool {
+		_, err = os.Lstat(path)
+		if err == nil {
+			return false
+		}
+		require.ErrorIsf(t, err, fs.ErrNotExist, "could not stat path %q. Message: %s", path, msg)
+		return true
+	}
+
+	require.Eventually(t, fileDoesNotExist, 100*time.Millisecond, time.Millisecond, "%q still exists: %v", path, msg)
 }

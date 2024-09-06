@@ -1,9 +1,11 @@
 package daemon
 
 import (
+	"context"
 	"os"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 )
 
 // WithWslNetworkingMode sets the output of the mock command to run to get the WSL networking mode.
@@ -27,4 +29,22 @@ func WithMockedGetAdapterAddresses(m daemontestutils.MockIPConfig) Option {
 			return m.GetAdaptersAddresses(family, flags, reserved, (*daemontestutils.IPAdapterAddresses)(adapterAddresses), sizePointer)
 		}
 	}
+}
+
+// WithNetDevicesAPIProvider sets the NetAdaptersAPIProvider to be used by the netWatcher.Subscribe().
+func WithNetDevicesAPIProvider(p netmonitoring.DevicesAPIProvider) Option {
+	return func(o *options) {
+		o.netMonitoringProvider = p
+	}
+}
+
+// Subscribe subscribes to the addition of network adapters on the host, calling the provided callback.
+// It's a wrapper around the private subscribe function for testing.
+// To ease direct calls, it accepts the variadic Option set instead of the precomputed options.
+func Subscribe(ctx context.Context, f NewAdapterCallback, args ...Option) (*NetWatcher, error) {
+	opt := defaultOptions
+	for _, o := range args {
+		o(&opt)
+	}
+	return subscribe(ctx, f, opt)
 }

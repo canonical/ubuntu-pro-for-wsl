@@ -2,7 +2,7 @@ package daemon_test
 
 import (
 	"context"
-	"io/fs"
+	"errors"
 	"net"
 	"os"
 	"path/filepath"
@@ -13,6 +13,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -30,13 +31,13 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	var regCount int
-	countRegistrations := func(context.Context) *grpc.Server {
+	countRegistrations := func(context.Context, bool) *grpc.Server {
 		regCount++
 		return nil
 	}
 
 	_ = daemon.New(context.Background(), countRegistrations, t.TempDir())
-	require.Equal(t, 1, regCount, "daemon should register GRPC services only once")
+	require.Equal(t, 0, regCount, "daemon should not register GRPC services before serving")
 }
 
 func TestStartQuit(t *testing.T) {
@@ -45,19 +46,22 @@ func TestStartQuit(t *testing.T) {
 	testsCases := map[string]struct {
 		forceQuit           bool
 		preexistingPortFile bool
+		cancelEarly         bool
 
 		wantConnectionsDropped bool
 	}{
-		"Graceful quit":                      {},
-		"Graceful quit, overwrite port file": {preexistingPortFile: true},
-		"Forceful quit":                      {forceQuit: true, wantConnectionsDropped: true},
+		"Graceful quit":                              {},
+		"Graceful quit, overwrite port file":         {preexistingPortFile: true},
+		"Forceful quit":                              {forceQuit: true, wantConnectionsDropped: true},
+		"Does nothing when the context is cancelled": {cancelEarly: true, wantConnectionsDropped: true},
 	}
 
 	for name, tc := range testsCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			addrDir := t.TempDir()
 
 			if tc.preexistingPortFile {
@@ -67,10 +71,9 @@ func TestStartQuit(t *testing.T) {
 				require.NoError(t, err, "Setup: failed to create pre-existing port file")
 			}
 
-			registerer := func(context.Context) *grpc.Server {
+			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
-				var service testGRPCService
-				grpctestservice.RegisterTestServiceServer(server, service)
+				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
 				return server
 			}
 
@@ -94,7 +97,7 @@ func TestStartQuit(t *testing.T) {
 					return string(addrContents) != "# Old port file"
 				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
 			} else {
-				requireWaitPathExists(t, addrPath, "Serve should create an address file")
+				daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
 				addrContents, err = os.ReadFile(addrPath)
 				require.NoError(t, err, "Address file should be readable")
 			}
@@ -114,6 +117,10 @@ func TestStartQuit(t *testing.T) {
 
 			// Now we know the GRPC server has started serving.
 
+			if tc.cancelEarly {
+				cancel()
+				require.Error(t, <-serveErr, "Serve should return with error when stopped by the context")
+			}
 			// Handle Quit firing
 			serverStopped := make(chan struct{})
 			go func() {
@@ -135,7 +142,7 @@ func TestStartQuit(t *testing.T) {
 				require.Equal(t, codes.Unavailable, code, "GRPC call should return an error of type %q, instead got %q", codes.Unavailable, code)
 			} else {
 				// We have an hanging connection which should make us time out
-				require.False(t, immediateQuit, "Quit should wait for exisiting connections to close before quitting")
+				require.False(t, immediateQuit, "Quit should wait for existing connections to close before quitting")
 				requireCannotDialGRPC(t, address, "No new connection should be allowed after calling Quit")
 
 				// release hanging connection and wait for Quit to exit.
@@ -146,7 +153,69 @@ func TestStartQuit(t *testing.T) {
 
 			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
 			requireCannotDialGRPC(t, address, "No new connection should be allowed when the server is no longer running")
-			requireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after quitting the server")
+			daemontestutils.RequireWaitPathDoesNotExist(t, addrPath, "Address file should have been removed after quitting the server")
+		})
+	}
+}
+
+func TestCanServeOnlyOnce(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		serveAgainWhileServing bool
+		serveAgainAfterStopped bool
+	}{
+		"Success when called only once": {},
+
+		"Error to serve again while serving": {serveAgainWhileServing: true},
+		"Error to serve again after stopped": {serveAgainAfterStopped: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			addrDir := t.TempDir()
+
+			registerer := func(context.Context, bool) *grpc.Server {
+				server := grpc.NewServer()
+				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
+				return server
+			}
+
+			d := daemon.New(ctx, registerer, addrDir)
+			firstServeErr := make(chan error)
+			go func() {
+				firstServeErr <- d.Serve(ctx)
+				close(firstServeErr)
+			}()
+			// Give the serving goroutine some unconditional slack of time to start.
+			<-time.After(1 * time.Second)
+
+			if tc.serveAgainWhileServing {
+				secondServeErr := make(chan error)
+				go func() {
+					secondServeErr <- d.Serve(ctx)
+					close(secondServeErr)
+				}()
+				require.Error(t, <-secondServeErr, "Calling Serve while already serving should fail")
+				return
+			}
+
+			d.Quit(ctx, false)
+			<-firstServeErr
+
+			if tc.serveAgainAfterStopped {
+				secondServeErr := make(chan error)
+				go func() {
+					secondServeErr <- d.Serve(ctx)
+					close(secondServeErr)
+				}()
+				require.Error(t, <-secondServeErr, "Calling Serve after stopped should fail")
+				return
+			}
 		})
 	}
 }
@@ -154,13 +223,14 @@ func TestStartQuit(t *testing.T) {
 func TestServeWSLIP(t *testing.T) {
 	t.Parallel()
 
-	registerer := func(context.Context) *grpc.Server {
+	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
 	testcases := map[string]struct {
 		netmode      string
 		withAdapters daemontestutils.MockIPAdaptersState
+		subscribeErr error
 
 		wantErr bool
 	}{
@@ -169,11 +239,13 @@ func TestServeWSLIP(t *testing.T) {
 		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
 
-		"Error when the networking mode is unknown":            {netmode: "unknown", wantErr: true},
-		"Error when the list of adapters is empty":             {withAdapters: daemontestutils.EmptyList, wantErr: true},
-		"Error when listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem, wantErr: true},
-		"Error when there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList, wantErr: true},
-		"Error when retrieving adapters information fails":     {withAdapters: daemontestutils.MockError, wantErr: true},
+		"When the networking mode is unknown":            {netmode: "unknown"},
+		"Wwhen the list of adapters is empty":            {withAdapters: daemontestutils.EmptyList},
+		"When listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem},
+		"When there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList},
+		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
+
+		"Error when the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error"), wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -196,7 +268,15 @@ func TestServeWSLIP(t *testing.T) {
 
 			serveErr := make(chan error)
 			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock))
+				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock),
+					daemon.WithNetDevicesAPIProvider(
+						func() (netmonitoring.DevicesAPI, error) {
+							if tc.subscribeErr != nil {
+								return nil, tc.subscribeErr
+							}
+							return &daemontestutils.NetMonitoringMockAPI{}, nil
+						},
+					))
 				close(serveErr)
 			}()
 
@@ -231,13 +311,66 @@ func TestServeWSLIP(t *testing.T) {
 	}
 }
 
+// TestAddingWSLAdapterRestarts simulates the appearance of the WSL adapter after the daemon is running.
+func TestAddingWSLAdapterRestarts(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	addrDir := t.TempDir()
+
+	registerer := func(context.Context, bool) *grpc.Server {
+		server := grpc.NewServer()
+		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
+		return server
+	}
+
+	d := daemon.New(ctx, registerer, addrDir)
+
+	systemNotification := make(chan error)
+	defer close(systemNotification)
+
+	mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
+
+	serveErr := make(chan error, 1)
+	go func() {
+		serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
+			daemon.WithNetDevicesAPIProvider(daemontestutils.NetDevicesMockAPIWithAddedWSL(systemNotification)),
+		)
+		close(serveErr)
+	}()
+
+	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+
+	daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
+	addrSt, err := os.Stat(addrPath)
+	require.NoError(t, err, "Address file should be readable")
+
+	// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
+	systemNotification <- nil
+
+	// d.Serve() shouldn't have exitted with an error yet at this point.
+	select {
+	case err := <-serveErr:
+		require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
+	case <-time.After(200 * time.Millisecond):
+		// proceed.
+	}
+
+	daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
+	// Contents could be the same without our control, thus best to check the file time.
+	newAddrSt, err := os.Stat(addrPath)
+	require.NoError(t, err, "Address file should be readable")
+	require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
+}
+
 func TestServeError(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context) *grpc.Server {
+	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
@@ -257,17 +390,27 @@ func TestQuitBeforeServe(t *testing.T) {
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context) *grpc.Server {
+	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
 	d := daemon.New(ctx, registerer, addrDir)
 	d.Quit(ctx, false)
 
-	err := d.Serve(ctx)
-	require.Error(t, err, "Calling Serve() after Quit() should result in an error")
+	serverErr := make(chan error)
+	go func() {
+		defer close(serverErr)
+		serverErr <- d.Serve(ctx)
+	}()
 
-	requireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
+	select {
+	case err := <-serverErr:
+		require.Fail(t, "Calling Quit() before Serve() on a fresh daemon should not result in an error", err)
+	case <-time.After(1 * time.Second):
+	}
+
+	d.Quit(ctx, false)
+	daemontestutils.RequireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }
 
 // grpcPersistentCall will create a persistent GRPC connection to the server.
@@ -324,49 +467,6 @@ func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 	time.Sleep(300 * time.Millisecond)
 	validStates := []connectivity.State{connectivity.Connecting, connectivity.TransientFailure}
 	require.Contains(t, validStates, conn.GetState(), "unexpected state after dialing. Expected any of %q but got %q", validStates, conn.GetState())
-}
-
-// requireWaitPathExists checks periodically for the existence of a path. If the path
-// does not exist after waiting for the specified timeout, the test fails. This function
-// is blocking.
-func requireWaitPathExists(t *testing.T, path string, msg string) {
-	t.Helper()
-
-	fileExists := func() bool {
-		_, err := os.Lstat(path)
-		if err == nil {
-			return true
-		}
-		require.ErrorIsf(t, err, fs.ErrNotExist, "could not stat path %q. Message: %s", path, msg)
-		return false
-	}
-
-	require.Eventually(t, fileExists, 5*time.Second, 100*time.Millisecond, "%q does not exists: %v", path, msg)
-
-	// Prevent error when accessing the file right after:
-	// 'The process cannot access the file because it is being used by another process'
-	time.Sleep(10 * time.Millisecond)
-}
-
-// requireWaitPathDoesNotExist checks periodically for the existence of a path. If the path
-// does not exist after waiting for the specified timeout, the test fails. This function
-// is blocking.athDoesNotExist checks periodiclly for the existence of a path. If the path
-// does not exist after waiting for the specified timeout, the test fails. This function
-// is blocking.
-func requireWaitPathDoesNotExist(t *testing.T, path string, msg string) {
-	t.Helper()
-
-	var err error
-	fileDoesNotExist := func() bool {
-		_, err = os.Lstat(path)
-		if err == nil {
-			return false
-		}
-		require.ErrorIsf(t, err, fs.ErrNotExist, "could not stat path %q. Message: %s", path, msg)
-		return true
-	}
-
-	require.Eventually(t, fileDoesNotExist, 100*time.Millisecond, time.Millisecond, "%q still exists: %v", path, msg)
 }
 
 // Our mock GRPC service.
