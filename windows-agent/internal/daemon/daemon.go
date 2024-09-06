@@ -108,7 +108,7 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 
 var errRestartDaemon = errors.New("Daemon: Restart requested")
 
-// Calls d.serve once and handles the possible outcomes of it, returning the error sent via the d.err channel
+// tryServingOnce calls d.serve once and handles the possible outcomes of it, returning the error sent via the d.err channel
 // plus a true value if it should be restarted. When this function returns, the daemon is no longer serving.
 func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	defer func() {
@@ -314,7 +314,7 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 
 type stopFunc func(ctx context.Context, force bool)
 
-// Returns a closure capable of stopping the gRPCServer gracefully or forcefully.
+// newStopFunc returns a closure capable of stopping the gRPCServer gracefully or forcefully.
 // It must be called from the same goroutine that started the server.
 func newStopFunc(grpcServer *grpc.Server) stopFunc {
 	return func(ctx context.Context, force bool) {
