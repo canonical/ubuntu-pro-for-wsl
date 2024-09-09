@@ -1,16 +1,14 @@
 module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 
-go 1.22.0
-
-toolchain go1.22.5
+go 1.23.0
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240705150615-15d23a639880
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240705150615-15d23a639880
-	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240705150615-15d23a639880
-	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240322101935-3e73eb563dc3
-	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240705150615-15d23a639880
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909072650-75a32126b04f
+	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f
+	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240909072650-75a32126b04f
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -18,7 +16,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
 	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53
-	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/sys v0.25.0
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
@@ -45,9 +43,9 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.4.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf // indirect
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

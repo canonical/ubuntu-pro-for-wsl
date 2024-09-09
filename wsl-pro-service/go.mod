@@ -1,19 +1,17 @@
 module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 
-go 1.22.0
-
-toolchain go1.22.5
+go 1.23.0
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240830145854-fc45e52d33df
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240830145854-fc45e52d33df
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909070948-cee447de36ba
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909070948-cee447de36ba
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
-	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	google.golang.org/grpc v1.66.0
 	gopkg.in/ini.v1 v1.67.0
 )
@@ -37,10 +35,10 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
