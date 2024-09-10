@@ -1,4 +1,4 @@
-wsl-pro-service (0.1.5) UNRELEASED; urgency=medium
+wsl-pro-service (0.1.5) oracular; urgency=medium
 
   * Fix UserProfileDir when %USERPROFILE% is empty
   * Fix for empty field for landscape SSL public key
