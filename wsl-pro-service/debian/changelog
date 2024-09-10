@@ -1,3 +1,23 @@
+wsl-pro-service (0.1.5) UNRELEASED; urgency=medium
+
+  * Fix UserProfileDir when %USERPROFILE% is empty
+  * Fix for empty field for landscape SSL public key
+  * Prevent subprocesses to sent notification to systemd
+  * Workaround livepatch disable failure
+  * Remove now unused hostagent UID and move it to our GRPc part
+    in landscape protocole
+  * Force all subcommands to run with LC_ALL=C
+  * Removes dependency on /etc/resolv.conf
+  * Fix logging level in config
+  * Upgrade to Go 1.23
+  * Annotate assertion on int conversion check with bitSize 32
+  * Add some more tests and enhanced/cleanup existing ones, including mocks
+  * Fix some flaky tests
+  * Update some vendored dependencies
+  * Fix some vendoring scripts
+
+ -- Didier Roche-Tolomelli <didrocks@ubuntu.com>  Tue, 10 Sep 2024 13:24:08 +0200
+
 wsl-pro-service (0.1.4) noble; urgency=medium
 
   * Vendor manually on the host as the go mod vendoring when using
