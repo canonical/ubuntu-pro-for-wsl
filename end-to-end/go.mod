@@ -10,7 +10,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/sys v0.25.0
-	google.golang.org/grpc v1.66.0
+	google.golang.org/grpc v1.66.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 
