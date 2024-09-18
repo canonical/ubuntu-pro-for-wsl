@@ -181,7 +181,6 @@ func (b *buffer[T]) resizeBytes(n uint32) (uint32, error) {
 		// Since make() guarantees len(b.data) == newLen, there is no need to recompute it.
 	}
 
-	//nolint:gosec //uint64 -> uint32 conversion is safe because we checked that newSize < MaxUint32.
 	return uint32(newSize), nil
 }
 

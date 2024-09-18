@@ -118,7 +118,6 @@ func fillBufferFromTemplate(adaptersAddresses *IPAdapterAddresses, sizePointer *
 	if bufSizeNeeded >= math.MaxUint32 || bufSizeNeeded < 0 {
 		return errors.New("buffer size limit reached")
 	}
-	//nolint:gosec // Value guaranteed to fit inside uint32.
 	bufSz := uint32(bufSizeNeeded)
 	if *sizePointer < bufSz {
 		return ERROR_BUFFER_OVERFLOW
