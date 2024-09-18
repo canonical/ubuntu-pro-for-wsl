@@ -91,7 +91,6 @@ func call(proc *syscall.LazyProc, args ...uintptr) (int64, error) {
 	}
 
 	hresult, _, err := proc.Call(args...)
-	//nolint:gosec // Windows HRESULTS are guaranteed to be 32-bit vlaue, thus they surely fit inside a int64 without overflow.
 	return checkError(int64(hresult), err)
 }
 
