@@ -178,8 +178,8 @@ require (
 	github.com/timonwong/loggercheck v0.9.4 // indirect
 	github.com/tomarrell/wrapcheck/v2 v2.9.0 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
-	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb // indirect
-	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53 // indirect
+	github.com/ubuntu/decorate v0.0.0-20240820145549-b76bb81d1209 // indirect
+	github.com/ubuntu/gowsl v0.0.0-20240906163211-049fd49bd93b // indirect
 	github.com/ultraware/funlen v0.1.0 // indirect
 	github.com/ultraware/whitespace v0.1.1 // indirect
 	github.com/uudashr/gocognit v1.1.3 // indirect
