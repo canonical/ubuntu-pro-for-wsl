@@ -79,10 +79,10 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
-github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb h1:8aYaLeK5kwneVflZ50XOnsE2zWnS3HCF58WV8JXge5U=
-github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
-github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53 h1:oP5UldDfHJsg8tJuYqWzEfGTmOqsb5gtLEisUYaIoB4=
-github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53/go.mod h1:h7p0dcWeNrhTV3bM+fdVSAfpWepPOqZk4bX5YdmIhRc=
+github.com/ubuntu/decorate v0.0.0-20240820145549-b76bb81d1209 h1:paNkjGGwB/Ypory/EPTwVR5uX94TDgrH4PGSaCNAvhE=
+github.com/ubuntu/decorate v0.0.0-20240820145549-b76bb81d1209/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
+github.com/ubuntu/gowsl v0.0.0-20240906163211-049fd49bd93b h1:wFBKF5k5xbJQU8bYgcSoQ/ScvmYyq6KHUabAuVUjOWM=
+github.com/ubuntu/gowsl v0.0.0-20240906163211-049fd49bd93b/go.mod h1:N1CYNinssZru+ikvYTgVbVeSi21thHUTCoJ9xMvWe+s=
 go.uber.org/multierr v1.11.0 h1:blXXJkSxSSfBVBlC76pxqeO+LN3aDfLQo+309xJstO0=
 go.uber.org/multierr v1.11.0/go.mod h1:20+QtiLqy0Nd6FdQB9TLXag12DsQkrbs3htMFfDN80Y=
 golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 h1:2dVuKD2vS7b0QIHQbpyTISPd0LeHDbnYEryqj5Q1ug8=

@@ -14,8 +14,8 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
-	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
-	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53
+	github.com/ubuntu/decorate v0.0.0-20240820145549-b76bb81d1209
+	github.com/ubuntu/gowsl v0.0.0-20240906163211-049fd49bd93b
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/sys v0.25.0
 	google.golang.org/grpc v1.66.2
