@@ -269,6 +269,13 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 		}
 		return err
 	}
+	// If import was successful, let's launch cloud-init:
+	cmd := distro.Command(ctx, "cloud-init status --wait")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.Infof(ctx, "failed to run cloud-init: %v\n%s", err, string(out))
+	}
+	_ = distro.Terminate()
+	log.Debugf(ctx, "Distro %s installed successfully", distro.Name())
 	return nil
 }
 
