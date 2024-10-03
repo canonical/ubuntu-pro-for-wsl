@@ -48,12 +48,10 @@ fpath
 FQDN
 HIPAA
 Hostagent
-JWT
 LTS
 os
 pem
 repo
-rootfs
 SLA
 SRU
 SSL
