@@ -27,16 +27,16 @@ export LANDSCAPE_USER_EMAIL=admin@mib.com
 export LANDSCAPE_USER_PASSWORD=mib
 export LANDSCAPE_URL=https://landscape.mib.com
 
-# The URL of the custom rootfs to be deployed:
+# The URL of the custom rootfs to be deployed
 export ROOTFS_URL="http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz"
 
-# The list of IDs of the different Windows machines on which we are going to deploy WSL instances:
+# The list of IDs of the different Windows machines on which we are going to deploy WSL instances
 export PARENT_COMPUTER_IDS=(26 30 31)
 
-# The name of the WSL instance to be created:
+# The name of the WSL instance to be created
 export COMPUTER_NAME=Carbonizer
 
-# Path to the cloud-config file whose contents will be used to initialize the WSL instances:
+# Path to the cloud-config file whose contents will be used to initialize the WSL instances
 export CLOUD_INIT_FILE="~/Downloads/init.yaml"
 ```
 
@@ -49,16 +49,16 @@ $LANDSCAPE_USER_EMAIL="admin@mib.com"
 $LANDSCAPE_USER_PASSWORD="mib"
 $LANDSCAPE_URL="https://landscape.mib.com"
 
-# The URL of the custom rootfs to be deployed:
+# The URL of the custom rootfs to be deployed
 $ROOTFS_URL="http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz"
 
-# The list of IDs of the different Windows machines on which we are going to deploy WSL instances:
+# The list of IDs of the different Windows machines on which we are going to deploy WSL instances
 $PARENT_COMPUTER_IDS=@(26, 30, 31)
 
-# The name of the WSL instance to be created:
+# The name of the WSL instance to be created
 $COMPUTER_NAME="Carbonizer"
 
-# Path to the cloud-config file whose contents will be used to initialize the WSL instances:
+# Path to the cloud-config file whose contents will be used to initialize the WSL instances
 $CLOUD_INIT_FILE="~\Downloads\init.yaml"
 ```
 
@@ -248,7 +248,7 @@ WSL_JSON=$( jq -n                           \
     --arg b64 "$BASE64_ENCODED_CLOUD_INIT"  \
     '{rootfs_url: $rf, computer_name: $cn, cloud_init: $b64}' )
 
-# Issue the command for each Windows machine:
+# Issue the command for each Windows machine
 for COMPUTER_ID in "${PARENT_COMPUTER_IDS[@]}"; do
     API_RESPONSE=$( curl -s -X POST                             \
         "$LANDSCAPE_URL/api/v2/computers/$COMPUTER_ID/children" \
@@ -292,7 +292,7 @@ $WSL_JSON = @{
  cloud_init = "$BASE64_ENCODED_CLOUD_INIT"
 } | ConvertTo-Json
 
-# Issue the command for each Windows machine:
+# Issue the command for each Windows machine
 foreach ($COMPUTER_ID in $PARENT_COMPUTER_IDS) {
     $API_RESPONSE = Invoke-WebRequest -Method POST -Body "$WSL_JSON" `
         -Uri "$LANDSCAPE_URL/api/v2/computers/$COMPUTER_ID/children" `
