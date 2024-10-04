@@ -58,7 +58,7 @@ $PARENT_COMPUTER_IDS=@(26, 30, 31)
 $COMPUTER_NAME="Carbonizer"
 
 # Path to the cloud-config file whose contents will be used to initialize the WSL instances:
-$CLOUD_INIT_FILE="~/Downloads/init.yaml"
+$CLOUD_INIT_FILE="~\Downloads\init.yaml"
 ```
 
 ````
