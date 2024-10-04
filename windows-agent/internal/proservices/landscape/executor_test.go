@@ -165,19 +165,19 @@ func TestInstall(t *testing.T) {
 		sendRootfsURL    string
 		missingChecksums bool
 
-		wantCouldInitWriteCalled bool
+		wantCloudInitWriteCalled bool
 		wantInstalled            bool
 	}{
-		"From the store":                    {wantInstalled: true, wantCouldInitWriteCalled: true},
+		"From the store":                    {wantInstalled: true, wantCloudInitWriteCalled: true},
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
-		"With no cloud-init":                {noCloudInit: true, wantCouldInitWriteCalled: true, wantInstalled: true},
+		"With no cloud-init":                {noCloudInit: true, wantCloudInitWriteCalled: true, wantInstalled: true},
 		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
 
 		"Error when the distroname is empty":         {distroName: "-"},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
 		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":     {wslInstallErr: true},
-		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCouldInitWriteCalled: true},
+		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
 
 		"Error when the distro ID is reserved (Ubuntu)":                   {sendRootfsURL: "goodfile", distroName: "Ubuntu", wantInstalled: false},
 		"Error when the distro ID is reserved (Preview)":                  {sendRootfsURL: "goodfile", distroName: "Ubuntu-Preview", wantInstalled: false},
@@ -315,7 +315,7 @@ func TestInstall(t *testing.T) {
 						require.False(t, distroExists, "Distro should not have been registered")
 					}
 
-					if tc.wantCouldInitWriteCalled {
+					if tc.wantCloudInitWriteCalled {
 						require.True(t, testBed.cloudInit.writeCalled.Load(), "Cloud-init should have been called to write the user data file")
 					}
 				})
