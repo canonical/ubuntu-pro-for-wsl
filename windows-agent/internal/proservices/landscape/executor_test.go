@@ -161,6 +161,7 @@ func TestInstall(t *testing.T) {
 		breakVhdxDir           bool
 		breakTarFile           bool
 		breakTempDir           bool
+		cloudInitExecFailure   bool
 
 		sendRootfsURL    string
 		missingChecksums bool
@@ -172,6 +173,7 @@ func TestInstall(t *testing.T) {
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCloudInitWriteCalled: true, wantInstalled: true},
 		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
+		"With cloud-init failure":           {sendRootfsURL: "goodfile", cloudInitExecFailure: true, wantInstalled: true},
 
 		"Error when the distroname is empty":         {distroName: "-"},
 		"Error when the Appx does not exist":         {appxDoesNotExist: true},
@@ -263,6 +265,10 @@ func TestInstall(t *testing.T) {
 
 					if tc.wslInstallErr {
 						testBed.wslMock.InstallError = true
+					}
+
+					if tc.cloudInitExecFailure {
+						testBed.wslMock.WslLaunchInteractiveError = true
 					}
 
 					var cloudInit string
