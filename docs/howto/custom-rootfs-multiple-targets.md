@@ -144,8 +144,11 @@ $JWT = ConvertTo-SecureString -AsPlainText -Force $( $LOGIN_RESPONSE.Content | C
 
 ## Send the Install request
 
-Build the payload with information about the WSL instance to be deployed. In this case it would look like
-`{"rootfs_url": "http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz", "computer_name": "Carbonizer", "cloud_init": <base64 encoded material>}`.
+Build the payload with information about the WSL instance to be deployed. In this case it would look like:
+
+```json
+{"rootfs_url": "http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz", "computer_name": "Carbonizer", "cloud_init": "<base64 encoded material>"}
+```
 
 `````{tabs}
 
