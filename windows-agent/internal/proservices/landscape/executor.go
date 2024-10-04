@@ -17,6 +17,7 @@ import (
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro/touchdistro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/ubuntu/decorate"
 	"github.com/ubuntu/gowsl"
@@ -269,10 +270,9 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 		}
 		return err
 	}
-	// If import was successful, let's launch cloud-init:
-	cmd := distro.Command(ctx, "cloud-init status --wait")
-	if out, err := cmd.CombinedOutput(); err != nil {
-		log.Infof(ctx, "failed to run cloud-init: %v\n%s", err, string(out))
+	// If import was successful, let's launch cloud-init and wait for it to finish:
+	if err := touchdistro.WaitForCloudInit(ctx, distro.Name()); err != nil {
+		log.Infof(ctx, "failed to run cloud-init: %v", err)
 	}
 	_ = distro.Terminate()
 	log.Debugf(ctx, "Distro %s installed successfully", distro.Name())
