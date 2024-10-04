@@ -16,7 +16,7 @@ To follow the steps outlined in this guide you can use either:
 
 ## Prepare the environment
 
-To ease the subsequent commands, adjust and export the following environment variables:
+For convenience when writing subsequent commands, first export the following environment variables, modifying the values that are assigned as needed:
 
 `````{tabs}
 
