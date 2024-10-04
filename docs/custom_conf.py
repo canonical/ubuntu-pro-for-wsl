@@ -140,12 +140,13 @@ redirects = {}
 # Links to ignore when checking links
 linkcheck_ignore = [
     'http://127.0.0.1:8000',
-
     # Linkcheck does not have access to the repo
     'https://github.com/canonical/ubuntu-pro-for-wsl/*',
     # This page redirects to SSO login:
     'https://ubuntu.com/pro/dashboard',
-    ]
+    # Only users logged in to MS Store with their account registered for beta can access this link
+    'https://apps.microsoft.com/detail/9PD1WZNBDXKZ',
+]
 
 # Pages on which to ignore anchors
 # (This list will be appended to linkcheck_anchors_ignore_for_url)

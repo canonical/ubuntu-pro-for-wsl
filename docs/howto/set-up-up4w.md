@@ -16,7 +16,7 @@ You should also verify that the [firewall rules are correctly set up](../referen
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 
-You can install UP4W [on this page of the Microsoft Store](https://www.microsoft.com/store/productId/9PD1WZNBDXKZ):
+You can install UP4W [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
 
 ![Install Ubuntu Pro for WSL from the Store](./assets/store.png)
 

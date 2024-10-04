@@ -13,4 +13,5 @@ Back up and restore Ubuntu WSL instances <backup-and-restore>
 Uninstalling UP4W, Ubuntu WSL apps and WSL <uninstalling>
 Configure the Landscape client with UP4W  <set-up-landscape-client>
 Set up a Landscape server within WSL <set-up-landscape-server-in-wsl>
+Create WSL instances on multiple Windows machines with the Landscape API <custom-rootfs-multiple-targets>
 ```

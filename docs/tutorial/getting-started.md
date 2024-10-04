@@ -44,7 +44,7 @@ Output logs are included in this tutorial when instructive but are sometimes omi
 (tut::get-wsl)=
 ### Install WSL
 
-WSL can be installed directly from the [Microsoft Store](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
+WSL can be installed directly from the [Microsoft Store](https://apps.microsoft.com/detail/9P9TQF7MRM4R).
 
 If you already have WSL installed, with `~\.wslconfig` on your system, you
 are advised to backup the file then remove it before continuing the tutorial.
@@ -67,7 +67,7 @@ PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
 Ubuntu 24.04 LTS is recommended for this tutorial and can be installed from the
 Microsoft Store:
 
-> Install [Ubuntu 24.04 LTS](https://www.microsoft.com/store/productId/9nz3klhxdjp5) from the Microsoft Store
+> Install [Ubuntu 24.04 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) from the Microsoft Store
 
 For other installation options refer to our [install Ubuntu on WSL2 guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
@@ -104,7 +104,7 @@ Once you have a token you are ready to install UP4W.
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 
-UP4W can be installed from [this link to the Microsoft Store](https://www.microsoft.com/store/productId/9PD1WZNBDXKZ).
+UP4W can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
 
 Open the application and paste the token you copied from the Ubuntu Pro dashboard:
 
