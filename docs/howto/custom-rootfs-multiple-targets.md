@@ -115,7 +115,7 @@ $LOGIN_JSON = @{
 ````
 `````
 
-Issue an authenticate request and retrieve the JWT to be used in the subsequent API requests.
+Issue an authenticate request and retrieve the JSON web token (JWT) to be used in the subsequent API requests.
 
 `````{tabs}
 
