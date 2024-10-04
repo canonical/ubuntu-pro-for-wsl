@@ -1,10 +1,11 @@
-# How-to deploy a custom rootfs across multiple Windows machines with Landscape API
+# How-to deploy a custom rootfs across multiple Windows machines with the Landscape API
 
-This guide shows how to use the Landscape API to deploy a custom rootfs
-with some cloud-config user data for further initialisation of the distro
-instances via cloud-init across multiple Windows machines already registered
-with Landscape via Ubuntu Pro for WSL.
-It can be followed either on Windows (using PowerShell) or Linux (using bash).
+This guide shows how to use the Landscape API to automate the deployment of a custom rootfs across multiple Windows machines.
+Scaled deployment is enabled by Ubuntu Pro for WSL, which ensures that Ubuntu WSL instances on Windows machines are automatically registered with Landscape.
+Cloud-init is used for initialisation and final configuration of the instances.
+To follow the steps outlined in this guide you can use either:
+- Bash scripting on Linux, or
+- PowerShell scripting on Windows
 
 ## Prerequisites
 
