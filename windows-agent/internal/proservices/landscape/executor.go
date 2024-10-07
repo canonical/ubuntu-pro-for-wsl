@@ -270,9 +270,9 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 		}
 		return err
 	}
-	// If import was successful, let's launch cloud-init and wait for it to finish:
+	// If import was successful, let's wait for cloud-init to finish:
 	if err := touchdistro.WaitForCloudInit(ctx, distro.Name()); err != nil {
-		log.Infof(ctx, "failed to run cloud-init: %v", err)
+		log.Infof(ctx, "cloud-init failed: %v", err)
 	}
 	_ = distro.Terminate()
 	log.Debugf(ctx, "Distro %s installed successfully", distro.Name())
