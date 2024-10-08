@@ -1,0 +1,74 @@
+name: Build UP4W MSIX
+description: Build UP4W MSIX for testing and publication
+
+inputs:
+  mode:
+    required: true
+    description: "Configure mode publication. Should be either production or end_to_end_tests"
+    default: "production"
+  certificate:
+    required: true
+    description: "certificate to pass to sign the msix"
+  certificate_password:
+    required: true
+    description: "certificate_password to pass to sign the msix"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.work
+    - name: Read flutter version
+      id: flutter-version
+      uses: ./.github/actions/read-file
+      with:
+        path: tools/flutter-version
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: ${{ steps.flutter-version.outputs.contents }}
+    - name: Setup MSBuild (PATH)
+      uses: microsoft/setup-msbuild@v2
+    - name: Install certificate
+      shell: powershell
+      run: |
+        New-Item -ItemType directory -Path certificate
+        Set-Content -Path certificate\certificate.txt -Value '${{ inputs.certificate }}'
+        certutil -decode certificate\certificate.txt certificate\certificate.pfx
+
+        $pwd = ConvertTo-SecureString '${{ inputs.certificate_password }}' -AsPlainText -Force
+        Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
+        Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
+    - name: Build Bundle
+      shell: powershell
+      run: |
+        # Set up the full version (displayed in logs)
+        $env:UP4W_FULL_VERSION=$(go run .\tools\build\compute_version.go)
+
+        # Set up the numeric version (used in the AppxManifest)
+        $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
+        [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
+        $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
+        $doc = [System.Xml.Linq.XDocument]::Load($path)
+        $xName = [System.Xml.Linq.XName]::Get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Identity")
+        $doc.Root.Element($xName).Attribute("Version").Value = "$UP4W_VERSION.0";
+        $doc.Save($path)
+
+        # Set up the mock
+        $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ inputs.mode == 'end_to_end_tests' && '1' || '$null'}}
+
+        # Build
+        msbuild                                                                             `
+          .\msix\msix.sln                                                                   `
+          -target:Build                                                                     `
+          -maxCpuCount                                                                      `
+          -nodeReuse:false                                                                  `
+          -property:Configuration=${{ inputs.mode == 'production' && 'Release' || 'Debug'}} `
+          -property:AppxBundle=Always                                                       `
+          -property:AppxBundlePlatforms=x64                                                 `
+          -property:UapAppxPackageBuildMode=SideloadOnly                                    `
+          -property:Version=0.0.1+${{ github.sha }}                                         `
+          -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `
+          -nologo                                                                           `
+          -verbosity:normal
