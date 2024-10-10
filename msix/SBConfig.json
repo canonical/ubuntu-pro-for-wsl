@@ -1,0 +1,50 @@
+﻿{
+  "packageParameters": {
+    "PDPRootPath": "",
+    "Release": "",
+    "PDPInclude": [],
+    "PDPExclude": [],
+    "LanguageExclude": [
+      "default"
+    ],
+    "ImagesRootPath": "",
+    "MediaFallbackLanguage": "",
+    "AppxPath": "./msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*.msixupload",
+    "OutPath": "out",
+    "OutName": "appstore-submission",
+    "DisableAutoPackageNameFormatting": false
+  },
+  "appSubmission": {
+    "appId": "9PD1WZNBDXKZ",
+    "targetPublishMode": "Manual",
+    "visibility": "Private",
+    "pricing": {
+      "priceId": "Free",
+      "trialPeriod": "NoFreeTrial",
+      "marketSpecificPricings": {
+        "EH": "NotAvailable"
+      },
+      "sales": []
+    },
+    "allowTargetFutureDeviceFamilies": {
+      "Xbox": false,
+      "Team": false,
+      "Holographic": false,
+      "Desktop": true,
+      "Mobile": false
+    },
+    "allowMicrosoftDecideAppAvailabilityToFutureDeviceFamilies": true,
+    "enterpriseLicensing": "OnlineAndOffline",
+    "applicationCategory": "DeveloperTools",
+    "hardwarePreferences": "Keyboard",
+    "hasExternalInAppProducts": false,
+    "meetAccessibilityGuidelines": false,
+    "canInstallOnRemovableMedia": true,
+    "automaticBackupEnabled": true,
+    "isGameDvrEnabled": false,
+    "gamingOptions": [
+      {}
+    ],
+    "notesForCertification": "- Removed obsolete packages\n\n---\nThis is still for internal testing."
+  }
+}

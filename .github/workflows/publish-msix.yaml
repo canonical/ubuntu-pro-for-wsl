@@ -1,0 +1,44 @@
+name: Publish MSIX app to the Microsoft Store
+concurrency: publish-msix
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  publish-msix:
+    name: Publish MSIX app to the Microsoft Store
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - name: Build MSIX app
+        uses: ./.github/actions/build-msix
+        with:
+          certificate: ${{ secrets.CERTIFICATE }}
+          certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
+
+      - name: Install Store Broker
+        shell: powershell
+        run: |
+          Install-Module -Name StoreBroker -AcceptLicense -Force -Scope CurrentUser -Verbose
+      - name: Submit to Microsoft Store
+        shell: powershell
+        run: |
+          New-Item -ItemType directory -Path store -Force
+
+          # Authenticate against the store
+          $pass = ConvertTo-SecureString -String '${{ secrets.PRO_APP_PUBLICATION_APPKEY }}' -AsPlainText -Force
+          $cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ${{ secrets.AZUREAD_APPID }},$pass
+          Set-StoreBrokerAuthentication -TenantId '${{ secrets.AZUREAD_TENANTID }}' -Credential $cred
+
+          # Set store app ID for AppID
+          $appid = "9PD1WZNBDXKZ"
+
+          # Prepare and submit to the Store
+          New-SubmissionPackage -ConfigPath .\msix\SBConfig.json
+          Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "out\appstore-submission.json" -PackagePath "out\appstore-submission.zip" -Force -Autocommit -ReplacePackages
