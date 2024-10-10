@@ -6,6 +6,10 @@ inputs:
     required: true
     description: "Configure mode publication. Should be either production or end_to_end_tests"
     default: "production"
+  package-mode:
+    required: true
+    description: "Configure package mode. Should be either 'StoreUpload' or 'SideloadOnly'"
+    default: "SideloadOnly"
   certificate:
     required: true
     description: "certificate to pass to sign the msix"
@@ -67,8 +71,7 @@ runs:
           -property:Configuration=${{ inputs.mode == 'production' && 'Release' || 'Debug'}} `
           -property:AppxBundle=Always                                                       `
           -property:AppxBundlePlatforms=x64                                                 `
-          -property:UapAppxPackageBuildMode=SideloadOnly                                    `
-          -property:Version=0.0.1+${{ github.sha }}                                         `
+          -property:UapAppxPackageBuildMode=${{ inputs.package-mode }}                      `
           -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `
           -nologo                                                                           `
           -verbosity:normal
