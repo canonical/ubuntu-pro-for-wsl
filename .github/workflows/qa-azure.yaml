@@ -7,7 +7,7 @@ on:
   pull_request:
     paths-ignore:
       - docs/**
-      - '*.md'
+      - "*.md"
   workflow_dispatch:
   push:
     branches: [main]
@@ -42,70 +42,17 @@ jobs:
     name: Build Windows Agent Appx
     runs-on: windows-latest
     steps:
-      - name: Set up git
-        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check out repository
+      - name: Check out repository for internal GH action
         uses: actions/checkout@v4
         with:
           fetch-tags: true
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+      - name: Build MSIX app
+        uses: ./.github/actions/build-msix
         with:
-          go-version-file: go.work
-      - name: Read flutter version
-        id: flutter-version
-        uses: ./.github/actions/read-file
-        with:
-          path: tools/flutter-version
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: ${{ steps.flutter-version.outputs.contents }}
-      - name: Setup MSBuild (PATH)
-        uses: microsoft/setup-msbuild@v2
-      - name: Install certificate
-        shell: powershell
-        run: |
-          New-Item -ItemType directory -Path certificate
-          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
-          certutil -decode certificate\certificate.txt certificate\certificate.pfx
-
-          $pwd = ConvertTo-SecureString '${{ secrets.CERTIFICATE_PASSWORD }}' -AsPlainText -Force
-          Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
-          Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
-      - name: Build Bundle
-        run: |
-          # Set up the full version (displayed in logs)
-          $env:UP4W_FULL_VERSION=$(go run .\tools\build\compute_version.go)
-          
-          # Set up the numeric version (used in the AppxManifest)
-          $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
-          [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
-          $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
-          $doc = [System.Xml.Linq.XDocument]::Load($path)
-          $xName = [System.Xml.Linq.XName]::Get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Identity")
-          $doc.Root.Element($xName).Attribute("Version").Value = "$UP4W_VERSION.0";
-          $doc.Save($path)
-          
-          # Set up the mock
-          $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ matrix.mode == 'end_to_end_tests' && '1' || '$null'}}
-
-          # Build
-          msbuild                                                                             `
-            .\msix\msix.sln                                                                   `
-            -target:Build                                                                     `
-            -maxCpuCount                                                                      `
-            -nodeReuse:false                                                                  `
-            -property:Configuration=${{ matrix.mode == 'production' && 'Release' || 'Debug'}} `
-            -property:AppxBundle=Always                                                       `
-            -property:AppxBundlePlatforms=x64                                                 `
-            -property:UapAppxPackageBuildMode=SideloadOnly                                    `
-            -property:Version=0.0.1+${{ github.sha }}                                         `
-            -property:UP4W_END_TO_END=${{ matrix.mode == 'end_to_end_tests' }}                `
-            -nologo                                                                           `
-            -verbosity:normal
+          mode: ${{ matrix.mode }}
+          certificate: ${{ secrets.CERTIFICATE }}
+          certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
 
       - name: Upload sideload artifact
         uses: actions/upload-artifact@v4
