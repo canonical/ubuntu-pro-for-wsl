@@ -55,7 +55,7 @@ dependencies:
   path: ^1.8.0
   provider: ^6.1.2
   ubuntu_service: ^0.3.2
-  url_launcher: ^6.3.0
+  url_launcher: ^6.3.1
   win32: ^5.5.4
   win32_registry: ^1.1.4
   windows_single_instance: ^1.0.1
