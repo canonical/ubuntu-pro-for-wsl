@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -86,9 +87,18 @@ func New(o ...option) *App {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cleanup, err := a.ensureSingleInstance(o...)
+			if err != nil {
+				// We won't serve(), so let's close the ready channel right now.
+				// Otherwise callers of WaitReady will block forever.
+				close(a.ready)
+				return err
+			}
+			defer cleanup()
+
 			ctx := context.Background()
 
-			cleanup, err := a.setUpLogger(ctx)
+			cleanup, err = a.setUpLogger(ctx)
 			if err != nil {
 				log.Warningf(ctx, "could not set logger output: %v", err)
 			}
@@ -265,4 +275,30 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	log.Debug(ctx, "Debug mode is enabled")
 
 	return func() { _ = f.Close() }, nil
+}
+
+func (a *App) ensureSingleInstance(args ...option) (cleanup func(), err error) {
+	var opt options
+	for _, f := range args {
+		f(&opt)
+	}
+
+	priv, err := a.privateDir(opt)
+	if err != nil {
+		return nil, fmt.Errorf("could not access the agent's private dir: %v", err)
+	}
+
+	path := filepath.Join(priv, "ubuntu-pro-agent.lock")
+	f, err := createLockFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := f.WriteString(strconv.Itoa(os.Getpid())); err != nil {
+		return nil, fmt.Errorf("could not write PID to lock file %s: %v", path, errors.Join(err, f.Close()))
+	}
+
+	return func() {
+		log.Warningf(context.Background(), "when releasing the lock file: %v", f.Close())
+	}, nil
 }
