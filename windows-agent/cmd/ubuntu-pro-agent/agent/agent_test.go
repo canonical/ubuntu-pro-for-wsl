@@ -23,6 +23,52 @@ func init() {
 	daemontestutils.DefaultNetworkDetectionToMock()
 }
 
+func TestSingleInstance(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		args                   string
+		anotherInstanceRunning bool
+
+		wantError bool
+	}{
+		"Success": {args: "version"},
+
+		// Testing the 'clean' verb cannot run in parallel because it tries to delete files still opened by other test cases.
+		"Completion succeeds with another instance running": {args: "completion", anotherInstanceRunning: true},
+		"Help succeeds with another instance running":       {args: "help", anotherInstanceRunning: true},
+		"Version succeeds with another instance running":    {args: "version", anotherInstanceRunning: true},
+
+		"Default (serve) fails with another instance running": {anotherInstanceRunning: true, wantError: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			private := t.TempDir()
+			if tc.anotherInstanceRunning {
+				path := filepath.Join(private, "ubuntu-pro-agent.lock")
+
+				f, err := agent.CreateLockFile(path)
+				require.NoError(t, err, "Setup: couldn't create lock file")
+
+				defer f.Close()
+			}
+
+			a := agent.NewForTesting(t, "", private)
+			a.SetArgs(tc.args)
+
+			err := a.Run()
+			if tc.wantError {
+				require.Error(t, err, "Run should not return an error")
+			} else {
+				require.NoError(t, err, "Run should return an error")
+			}
+		})
+	}
+}
+
 func TestHelp(t *testing.T) {
 	a := agent.NewForTesting(t, "", "")
 	a.SetArgs("--help")
@@ -248,11 +294,11 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 				privateDir = badDir
 			}
 
-			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
-			a.SetArgs()
-
 			err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
 			require.NoError(t, err, "Failed to write file")
+
+			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
+			a.SetArgs("")
 
 			err = a.Run()
 			require.Error(t, err, "Run should exit with an error")
