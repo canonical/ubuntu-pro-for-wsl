@@ -218,8 +218,8 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		invalidLocalAppData bool
 		invalidUserProfile  bool
 	}{
-		"Invalid private directory": {invalidPublicDir: true},
-		"Invalid public directory":  {invalidPrivateDir: true},
+		"Invalid private directory": {invalidPrivateDir: true},
+		"Invalid public directory":  {invalidPublicDir: true},
 		"Invalid LocalAppData":      {invalidLocalAppData: true},
 		"Invalid UserProfile":       {invalidUserProfile: true},
 	}
