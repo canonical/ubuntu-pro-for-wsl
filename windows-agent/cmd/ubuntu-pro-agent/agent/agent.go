@@ -87,7 +87,12 @@ func New(o ...option) *App {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cleanup, err := a.ensureSingleInstance(o...)
+			var opt options
+			for _, f := range o {
+				f(&opt)
+			}
+
+			cleanup, err := a.ensureSingleInstance(opt)
 			if err != nil {
 				// We won't serve(), so let's close the ready channel right now.
 				// Otherwise callers of WaitReady will block forever.
@@ -104,7 +109,7 @@ func New(o ...option) *App {
 			}
 			defer cleanup()
 
-			return a.serve(ctx, o...)
+			return a.serve(ctx, opt)
 		},
 		// We display usage error ourselves
 		SilenceErrors: true,
@@ -122,12 +127,7 @@ func New(o ...option) *App {
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve(ctx context.Context, args ...option) error {
-	var opt options
-	for _, f := range args {
-		f(&opt)
-	}
-
+func (a *App) serve(ctx context.Context, opt options) error {
 	publicDir, err := a.publicDir(opt)
 	if err != nil {
 		close(a.ready)
@@ -277,12 +277,7 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	return func() { _ = f.Close() }, nil
 }
 
-func (a *App) ensureSingleInstance(args ...option) (cleanup func(), err error) {
-	var opt options
-	for _, f := range args {
-		f(&opt)
-	}
-
+func (a *App) ensureSingleInstance(opt options) (cleanup func(), err error) {
 	priv, err := a.privateDir(opt)
 	if err != nil {
 		return nil, fmt.Errorf("could not access the agent's private dir: %v", err)
@@ -294,7 +289,8 @@ func (a *App) ensureSingleInstance(args ...option) (cleanup func(), err error) {
 		return nil, err
 	}
 
-	if _, err := f.WriteString(strconv.Itoa(os.Getpid())); err != nil {
+	pid := strconv.Itoa(os.Getpid())
+	if _, err := f.WriteString(pid); err != nil {
 		return nil, fmt.Errorf("could not write PID to lock file %s: %v", path, errors.Join(err, f.Close()))
 	}
 
