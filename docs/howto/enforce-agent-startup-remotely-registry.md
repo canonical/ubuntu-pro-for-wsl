@@ -31,6 +31,7 @@ remote management solution capable of deploying MS Store (or MSIX-packaged) appl
 5. Windows remote management solutions can monitor that registry key value and proactively fix it, thus enforcing the
    UP4W startup task to be always enabled.
 
+(howto::enforce-with-intune)=
 ## Using Intune Remediations
 
 Remediations are script packages that can detect and fix common issues on a user's device before they even realise
