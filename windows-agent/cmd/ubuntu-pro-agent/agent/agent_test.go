@@ -431,6 +431,8 @@ func TestLogs(t *testing.T) {
 			}()
 
 			a.WaitReady()
+			// TODO: Implement the real fix for WaitReady() per UDENG-4900
+			<-time.After(1 * time.Second)
 
 			select {
 			case <-ch:
