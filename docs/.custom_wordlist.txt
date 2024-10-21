@@ -3,6 +3,8 @@ artifact
 artifacts
 autocompletion
 enablement
+Remediations
+remediations
 
 # Tools and brands
 apport
@@ -13,6 +15,7 @@ Codecov
 distro
 distros
 ESM
+Intune
 macOS
 MSIX
 powershell
@@ -65,9 +68,11 @@ zshrc
 ESM
 Ok
 scalability
+UTF
 
 # Registry keys and types
 DWORD
 UbuntuPro
+UbuntuProAutoStart
 UbuntuProToken
 LandscapeConfig

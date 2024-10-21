@@ -31,7 +31,7 @@
       </uap:VisualElements>
       <Extensions>
         <uap5:Extension Category="windows.startupTask" Executable="agent\ubuntu-pro-agent-launcher.exe" EntryPoint="Windows.FullTrustApplication">
-          <uap5:StartupTask TaskId="UbuntuPro" Enabled="true" DisplayName="Ubuntu Pro for WSL background agent" />
+          <uap5:StartupTask TaskId="UbuntuProAutoStart" Enabled="true" DisplayName="Ubuntu Pro for WSL background agent" />
         </uap5:Extension>
         <uap3:Extension Category="windows.appExecutionAlias" Executable="agent\ubuntu-pro-agent.exe" EntryPoint="Windows.FullTrustApplication">
           <uap3:AppExecutionAlias>
