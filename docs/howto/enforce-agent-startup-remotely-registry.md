@@ -18,7 +18,7 @@ remote management solution capable of deploying MS Store (or MSIX-packaged) appl
 - A Windows remote management solution.
 - If using Intune, an Enterprise E3 or E5 or Education A3 or A5 licenses.
 
-## Key takeaways
+## Overview
 
 1. The registry path `"HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc"`
    holds configuration information specific about UP4W and is created or overwritten when the MSIX package is

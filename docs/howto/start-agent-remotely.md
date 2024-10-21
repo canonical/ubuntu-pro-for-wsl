@@ -19,7 +19,7 @@ choice, as long as the said solution can run scripts with current user's credent
 - At least one managed Windows device.
 - A Windows remote management solution.
 
-## Key takeaways
+## Overview
 
 1. Running a script as user to start the UP4W background agent makes it immediately available.
 2. Remote management solutions can be used to start the agent.
