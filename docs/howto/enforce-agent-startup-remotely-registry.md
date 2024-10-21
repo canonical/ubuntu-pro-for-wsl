@@ -1,8 +1,8 @@
 # How to enforce the UP4W background agent startup remotely using the Windows Registry
 
-Ubuntu Pro for WSL, being a Microsoft Store application, cannot ship user services as of the time of this writing (late
-2024), but can deploy startup tasks instead, programs that run with user permissions when the said user logs on the
-Windows device. The UP4W background agent runs as a startup task. By design a startup task is only enabled by the
+Ubuntu Pro for WSL, being a Microsoft Store application, cannot ship user services as of the time of writing (late
+2024), but can deploy startup tasks instead, programs that run with user permissions when the user logs into the
+Windows device. The UP4W background agent runs as a startup task, which is only enabled by the
 operating system when the user interacts with the application for the first time. While this behaviour is a feature for
 end-users it presents a source of friction for deployments at scale, when system administrators expect zero-touch
 deployment of UP4W to just work.
