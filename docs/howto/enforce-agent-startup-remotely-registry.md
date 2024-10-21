@@ -4,11 +4,11 @@ Ubuntu Pro for WSL, being a Microsoft Store application, cannot ship user servic
 2024), but can deploy startup tasks instead, programs that run with user permissions when the said user logs on the
 Windows device. The UP4W background agent runs as a startup task. By design a startup task is only enabled by the
 operating system when the user interacts with the application for the first time. While this behaviour is a feature for
-end users it presents a source of friction for deployments at scale, when system administrators expect zero-touch
+end-users it presents a source of friction for deployments at scale, when system administrators expect zero-touch
 deployment of UP4W to just work.
 
 This guide shows how sysadmins can use the Windows Registry to enforce the enablement of the UP4W background agent
-startup task without depending on the end user interaction. While this guide uses
+startup task without depending on end-user interaction. While this guide uses
 [Intune](https://learn.microsoft.com/en-us/mem/intune/fundamentals/what-is-intune), it should be reproducible with any
 remote management solution capable of deploying MS Store (or MSIX-packaged) applications and registry keys.
 
