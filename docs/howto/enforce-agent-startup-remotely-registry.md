@@ -21,24 +21,23 @@ remote management solution capable of deploying MS Store (or MSIX-packaged) appl
 ## Key takeaways
 
 1. The registry path `"HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc"`
-   holds configuration information specific about UP4W and it's created (and overwritten if it already exists) when the
-   MSIX package is installed.
-2. Under that, a sub-key named `UbuntuProAutoStart` governs the startup task state.
+   holds configuration information specific about UP4W and is created or overwritten when the MSIX package is
+   installed.
+2. A sub-key named `UbuntuProAutoStart` governs the startup task state.
 3. Setting the DWORD value named `State` to `4` makes the operating system interpret it as
    ["Enabled by Policy"](https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.startuptaskstate).
-4. The next time the user logs on the Windows device, the OS will execute the UP4W startup task (whether had the user
-   interacted with the application or not).
-5. Windows remote management solutions can monitor that registry key value and proactively fix it, thus enforcing the
+4. When the user logs in, Windows executes the UP4W startup task, even if the user has not interacted with the application.
+5. A Windows remote management solution can monitor that registry key value and proactively fix it, thus enforcing the
    UP4W startup task to be always enabled.
 
 (howto::enforce-with-intune)=
 ## Using Intune Remediations
 
-Remediations are script packages that can detect and fix common issues on a user's device before they even realise
+Remediations are script packages that can detect and fix common issues on a user's device before they realise
 there's a problem. Each script package consists of a detection script, a remediation script, and metadata. Through
-Intune, you can deploy these script packages and see reports on their effectiveness.
+Intune, you can deploy these script packages and monitor reports of their effectiveness.
 [Visit the Microsoft Intune documentation](https://learn.microsoft.com/en-us/mem/intune/fundamentals/remediations)
-to learn more about it. Those scripts run on a predefined schedule and if the detection script reports a failure (by
+to learn more. Those scripts run on a predefined schedule and if the detection script reports a failure (by
 `exit 1`) then the remediation script will run. That allows system administrators to watch for the specific Registry
 key value that represents the enablement of the UP4W background agent startup task. The contents of both scripts are
 presented below. **Make sure to save them encoded in UTF-8**, as required by Intune.
@@ -88,30 +87,30 @@ try{
 Access your organisation's [Intune Admin Center](https://intune.microsoft.com) and when logged in go to **Devices > Monitor > Manage Devices > Scripts and remediations**.
 ![Scripts and remediations option revealed in the Intune portal](./assets/intune-remediations.png).
 
-Click on the "Create" button to create a new script package. Fill in the **Basics** step form with name, description and other details and proceed to **Settings**.
-On that step upload the scripts in the correct boxes and finish the options on that step with:
+Click on the "Create" button to create a new script package. Fill in the **Basics** form with name, description and other details and proceed to **Settings**.
+During that step, upload the scripts in the correct boxes and use the following options:
 
 - Run this script using the logged-on credentials (important because the script refers to a registry path under `HKCU`
   a.k.a `HKEY_CURRENT_USER`)
 - Enforce script signature check: No (unless otherwise required by your company's policies)
 - Run script in 64-bit PowerShell: No
 
-Finally select "Next" and assign "Scope tags" (if used in your company and/or use case) and in the "Assignments" select
-the device or user groups as required to reach the intended audience.
+Finally, select "Next" and assign "Scope tags" (if relevant) and in the "Assignments" select
+the device or user groups that are required.
 
 Follow [this guide](https://learn.microsoft.com/en-us/mem/intune/fundamentals/remediations#deploy-the-script-packages)
-if you need more detailed views of the steps outlined above.
+if you need more detail on the steps outlined above.
 
-At next logon users covered by the assignment will have Intune executing the detection script and the remediation one
-if the device is found non-compliant.
+When users covered by the assignment next log in, Intune executes the detection script and then runs the remediation
+script if the device is found to be non-compliant.
 
 ## Remarks
 
-Careful readers would notice that there is an inherent race condition between setting the registry value and installing
-the MSIX (if remotely deployed): when the MSIX is installed the referred registry sub-key is recreated, overwriting any
-previous value the remote management solution would have deployed if that happened before the package installation.
+Careful readers may notice that there is an inherent race condition between setting the registry value and installing
+the MSIX (if remotely deployed): when the MSIX is installed the registry sub-key that is referenced is recreated, overwriting any
+previous value that the remote management solution would have deployed if that happened before the package installation.
 
-One advantage of Intune Remediation scripts in this scenario is that eventually Intune would find the non-compliant
-state and fix it automatically. One disadvantage of that scenario is that the fix doesn't start the UP4W background
-agent, i.e. it only enables the startup task, the agent will start at next logon.
+An advantage of Intune Remediation scripts in this scenario is that eventually Intune finds the non-compliant
+state and fixes it automatically. A potential disadvantage is that the fix doesn't start the UP4W background
+agent, The fix enables the startup task and the agent will start at next user login.
 
