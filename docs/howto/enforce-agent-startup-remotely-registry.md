@@ -42,7 +42,7 @@ to learn more. Those scripts run on a predefined schedule and if the detection s
 key value that represents the enablement of the UP4W background agent startup task. The contents of both scripts are
 presented below. **Make sure to save them encoded in UTF-8**, as required by Intune.
 
-Detection script:
+### Detection script
 
 ```powershell
 $Path = "HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc\UbuntuProAutoStart"
@@ -64,7 +64,7 @@ Catch {
 }
 ```
 
-Remediation script:
+### Remediation script
 
 ```powershell
 $Path = "HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc\UbuntuProAutoStart"
@@ -83,6 +83,8 @@ try{
 }
 
 ```
+
+### Running the scripts with Intune
 
 Access your organisation's [Intune Admin Center](https://intune.microsoft.com) and when logged in go to **Devices > Monitor > Manage Devices > Scripts and remediations**.
 ![Scripts and remediations option revealed in the Intune portal](./assets/intune-remediations.png).
