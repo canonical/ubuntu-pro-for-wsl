@@ -70,4 +70,3 @@ solution is required if that scenario is possible, like looping in the script or
 
 [This guide](howto::enforce-with-intune) shows how to use that tool to enforce the UP4W startup task state.
 
-[modeline]: # ( vim: set tw=119: )

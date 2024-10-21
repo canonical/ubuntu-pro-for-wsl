@@ -115,4 +115,3 @@ One advantage of Intune Remediation scripts in this scenario is that eventually 
 state and fix it automatically. One disadvantage of that scenario is that the fix doesn't start the UP4W background
 agent, i.e. it only enables the startup task, the agent will start at next logon.
 
-[modeline]: # ( vim: set tw=119: )
