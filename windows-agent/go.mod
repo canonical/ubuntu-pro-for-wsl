@@ -3,7 +3,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 go 1.23.0
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c
+	github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909072650-75a32126b04f
@@ -43,9 +43,9 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
+	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
