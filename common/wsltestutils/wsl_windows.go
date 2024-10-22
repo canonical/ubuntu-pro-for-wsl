@@ -65,7 +65,7 @@ func powershellOutputf(t *testing.T, command string, args ...any) string {
 	cmd := fmt.Sprintf(command, args...)
 
 	//nolint:gosec // This function is only used in tests so no arbitrary code execution here
-	out, err := exec.Command("powershell", "-Command", cmd).CombinedOutput()
+	out, err := exec.Command("powershell", "-NoProfile", "-Command", cmd).CombinedOutput()
 	require.NoError(t, err, "Non-zero return code for command:\n%s\nOutput:%s", cmd, out)
 
 	// Convert to string and get rid of trailing endline
