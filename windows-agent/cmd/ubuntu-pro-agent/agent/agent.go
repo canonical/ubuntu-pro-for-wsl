@@ -277,12 +277,16 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	return func() { _ = f.Close() }, nil
 }
 
+// ensureSingleInstance creates a lock file to ensure that only one instance of the agent is running.
+// It returns a cleanup function to release that file or an error if the lock file could not be flushed to disk.
 func (a *App) ensureSingleInstance(opt options) (cleanup func(), err error) {
 	priv, err := a.privateDir(opt)
 	if err != nil {
 		return nil, fmt.Errorf("could not access the agent's private dir: %v", err)
 	}
 
+	// We deliberately create a new file instead of reusing the address file, for example, because that file has many other reasons for being recreated.
+	// No other file the agent creates match the semantics of exclusive ownership needed here.
 	path := filepath.Join(priv, "ubuntu-pro-agent.lock")
 	f, err := createLockFile(path)
 	if err != nil {
