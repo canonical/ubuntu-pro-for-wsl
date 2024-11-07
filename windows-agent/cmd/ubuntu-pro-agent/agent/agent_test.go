@@ -75,9 +75,9 @@ func TestSingleInstance(t *testing.T) {
 			err := a.Run()
 			if tc.wantError {
 				require.Error(t, err, "Run should return an error")
-			} else {
-				require.NoError(t, err, "Run should not return an error")
+				return
 			}
+			require.NoError(t, err, "Run should not return an error")
 		})
 	}
 }
