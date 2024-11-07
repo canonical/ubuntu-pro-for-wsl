@@ -381,7 +381,7 @@ class _SelfHostedForm extends StatelessWidget {
             hint: 'C:\\landscape.pem',
             inputlabel: lang.landscapeSSLKeyLabel,
             onChanged: model.setSslKeyPath,
-            allowedExtensions: ['cer', 'crt', 'der', 'pem'],
+            allowedExtensions: const ['cer', 'crt', 'der', 'pem'],
           ),
         ),
       ],
