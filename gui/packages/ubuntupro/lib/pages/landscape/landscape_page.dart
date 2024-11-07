@@ -381,6 +381,7 @@ class _SelfHostedForm extends StatelessWidget {
             hint: 'C:\\landscape.pem',
             inputlabel: lang.landscapeSSLKeyLabel,
             onChanged: model.setSslKeyPath,
+            allowedExtensions: ['cer', 'crt', 'der', 'pem'],
           ),
         ),
       ],
@@ -417,11 +418,13 @@ class _FilePickerField extends StatefulWidget {
     required this.hint,
     required this.inputlabel,
     required this.onChanged,
+    this.allowedExtensions,
   });
 
   final String buttonLabel, inputlabel;
   final String? errorText, hint;
   final Function(String?) onChanged;
+  final List<String>? allowedExtensions;
 
   @override
   State<_FilePickerField> createState() => _FilePickerFieldState();
@@ -462,7 +465,12 @@ class _FilePickerFieldState extends State<_FilePickerField> {
         ),
         FilledButton(
           onPressed: () async {
-            final result = await FilePicker.platform.pickFiles();
+            final result = await FilePicker.platform.pickFiles(
+              allowedExtensions: widget.allowedExtensions,
+              type: widget.allowedExtensions == null
+                  ? FileType.any
+                  : FileType.custom,
+            );
             if (result != null) {
               final file = File(result.files.single.path!);
               txt.text = file.path;
