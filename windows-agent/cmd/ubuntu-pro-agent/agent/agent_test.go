@@ -468,12 +468,14 @@ func TestClean(t *testing.T) {
 	// Not parallel because we modify the environment
 
 	testCases := map[string]struct {
-		emptyUserProfile bool
-		emptyLocalAppDir bool
+		emptyUserProfile       bool
+		emptyLocalAppDir       bool
+		anotherInstanceRunning bool
 
 		wantErr bool
 	}{
-		"Success": {},
+		"Success":                               {},
+		"Success with another instance running": {anotherInstanceRunning: true},
 
 		"Error when %UserProfile% is empty":  {emptyUserProfile: true, wantErr: true},
 		"Error when %LocalAppData% is empty": {emptyLocalAppDir: true, wantErr: true},
@@ -516,6 +518,17 @@ func TestClean(t *testing.T) {
 
 				err = os.WriteFile(filepath.Join(appData, ".unrelated"), []byte("test file"), 0600)
 				require.NoError(t, err, "Setup: could not write file outside the private directory")
+			}
+
+			if tc.anotherInstanceRunning {
+				path := filepath.Join(appData, common.LocalAppDataDir, "ubuntu-pro-agent.lock")
+
+				f, err := agent.CreateLockFile(path)
+				require.NoError(t, err, "Setup: couldn't create lock file")
+				// Since the 'clean' verb kills all other agent processes, by the time the agent attempts to clean the private directory the lock file would have been released.
+				// So for this test case the only thing that matters is whether the agent proceeds with cleaning (as it should) or not.
+				// We don't want the test to fail because the file is still open.
+				require.NoError(t, f.Close(), "Setup: couldn't close the fake lock file")
 			}
 
 			a := agent.New(agent.WithRegistry(registry.NewMock()))
