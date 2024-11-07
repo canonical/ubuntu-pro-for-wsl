@@ -293,6 +293,9 @@ func (a *App) ensureSingleInstance(opt options) (cleanup func(), err error) {
 	if _, err := f.WriteString(pid); err != nil {
 		return nil, fmt.Errorf("could not write PID to lock file %s: %v", path, errors.Join(err, f.Close()))
 	}
+	if err := f.Sync(); err != nil {
+		return nil, fmt.Errorf("could not flush lock file %s: %v", path, errors.Join(err, f.Close()))
+	}
 
 	return func() {
 		log.Warningf(context.Background(), "when releasing the lock file: %v", f.Close())
