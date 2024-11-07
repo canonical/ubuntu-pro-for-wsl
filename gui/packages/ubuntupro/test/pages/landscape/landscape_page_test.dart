@@ -145,6 +145,17 @@ void main() {
 
       await tester.enterText(fqdnInput, 'test.l.com');
       await tester.pump();
+
+      final fileInput = find.ancestor(
+        of: find.text(lang.landscapeSSLKeyLabel),
+        matching: find.byType(TextField),
+      );
+      await tester.tap(fileInput);
+      await tester.pump();
+
+      await tester.enterText(fileInput, cert);
+      await tester.pump();
+
       await tester.tap(continueButton);
       await tester.pump();
       expect(applied, isTrue);
@@ -245,8 +256,21 @@ void main() {
       await tester.enterText(fqdnInput, '::');
       await tester.pump();
 
-      final errorText = find.text(lang.landscapeFQDNError);
-      expect(errorText, findsOne);
+      final fqdnErrorText = find.text(lang.landscapeFQDNError);
+      expect(fqdnErrorText, findsOne);
+
+      final fileInput = find.ancestor(
+        of: find.text(lang.landscapeSSLKeyLabel),
+        matching: find.byType(TextField),
+      );
+      await tester.tap(fileInput);
+      await tester.pump();
+
+      await tester.enterText(fileInput, notFoundPath);
+      await tester.pump();
+
+      final fileErrorText = find.text(lang.landscapeFileNotFound);
+      expect(fileErrorText, findsOne);
     });
 
     testWidgets('custom config', (tester) async {
@@ -360,3 +384,4 @@ Widget buildApp(
 
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
+const cert = './test/testdata/certs/ca_cert.pem';
