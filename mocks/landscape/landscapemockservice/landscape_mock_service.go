@@ -36,6 +36,14 @@ type HostInfo struct {
 	DefaultInstanceID string
 }
 
+// CmdStatusMsg is the same as landscapeapi.CommandStatus, but without the mutexes and
+// all grpc implementation details (so it can be safely copied).
+type CmdStatusMsg struct {
+	RequestID    string
+	CommandState landscapeapi.CommandState
+	Error        string
+}
+
 // receiveHostInfo receives a landscapeapi.HostAgentInfo and converts it to a HostInfo.
 func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (HostInfo, error) {
 	msg, err := stream.Recv()
@@ -88,6 +96,9 @@ type Service struct {
 
 	// recvLog is a log of all received messages
 	recvLog []HostInfo
+
+	// statusLog is a log of all command status messages
+	statusLog []CmdStatusMsg
 
 	logger *slog.Logger
 }
@@ -300,7 +311,7 @@ func (s *Service) SendCommand(ctx context.Context, uid string, command *landscap
 		return fmt.Errorf("UID %q not connected", uid)
 	}
 
-	s.logger.Info(fmt.Sprintf("Landscape: %s: sending command %T: %v", conn.info.Hostname, command.GetCmd(), command.GetCmd()))
+	s.logger.Info(fmt.Sprintf("Landscape: %s: sending command request ID %s, %T: %v", conn.info.Hostname, command.GetRequestId(), command.GetCmd(), command.GetCmd()))
 
 	return conn.send(command)
 }
@@ -340,4 +351,30 @@ func (s *Service) Disconnect(uid string) error {
 	s.logger.Info(fmt.Sprintf("Landscape: %s: requested disconnection", host.info.Hostname))
 	host.stop()
 	return nil
+}
+
+// SendCommandStatus handles receiving a CommandStatus message from the client.
+func (s *Service) SendCommandStatus(ctx context.Context, msg *landscapeapi.CommandStatus) (*landscapeapi.Empty, error) {
+	st := CmdStatusMsg{
+		RequestID:    msg.GetRequestId(),
+		CommandState: msg.GetCommandState(),
+		Error:        msg.GetError(),
+	}
+
+	s.logger.Info(fmt.Sprintf("Landscape: Received command status: %+v", st))
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.statusLog = append(s.statusLog, st)
+
+	return &landscapeapi.Empty{}, nil
+}
+
+// CommandStatusLog returns a copy of the log of all command status messages received by the server.
+func (s *Service) CommandStatusLog() []CmdStatusMsg {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return append([]CmdStatusMsg{}, s.statusLog...)
 }
