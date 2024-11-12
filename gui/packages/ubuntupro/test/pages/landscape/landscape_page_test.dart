@@ -148,11 +148,7 @@ void main() {
       await tester.enterText(fqdnInput, 'test.l.com');
       await tester.pump();
 
-      final chooseFileButton = find.ancestor(
-        of: find.text(lang.landscapeFilePicker),
-        matching: find.byType(FilledButton),
-      );
-      await tester.tap(chooseFileButton);
+      await tester.tap(find.text(lang.landscapeFilePicker));
       await tester.pumpAndSettle();
 
       final fileInput = find.ancestor(
@@ -270,11 +266,7 @@ void main() {
       final fqdnErrorText = find.text(lang.landscapeFQDNError);
       expect(fqdnErrorText, findsOne);
 
-      final chooseFileButton = find.ancestor(
-        of: find.text(lang.landscapeFilePicker),
-        matching: find.byType(FilledButton),
-      );
-      await tester.tap(chooseFileButton);
+      await tester.tap(find.text(lang.landscapeFilePicker));
       await tester.pumpAndSettle();
 
       final fileInput = find.ancestor(
@@ -427,11 +419,8 @@ class FakeFilePicker extends FilePicker {
     bool withReadStream = false,
     bool lockParentWindow = false,
     bool readSequential = false,
-  }) {
-    return Future(
-      () async => FilePickerResult(
+  }) async =>
+      FilePickerResult(
         paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
-      ),
-    );
-  }
+      );
 }
