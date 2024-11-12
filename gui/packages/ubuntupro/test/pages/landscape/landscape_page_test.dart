@@ -27,7 +27,7 @@ void main() {
   // This should be resolved so that we don't have to specify a manual text scale factor.
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
-  FilePicker.platform = FakeFilePicker([ca_cert]);
+  FilePicker.platform = FakeFilePicker([caCert]);
 
   group('input sections', () {
     testWidgets('default state', (tester) async {
@@ -156,7 +156,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final fileInput = find.ancestor(
-        of: find.text(ca_cert),
+        of: find.text(caCert),
         matching: find.byType(TextField),
       );
       expect(fileInput, findsOne);
@@ -164,7 +164,7 @@ void main() {
       await tester.tap(fileInput);
       await tester.pump();
 
-      await tester.enterText(fileInput, client_cert);
+      await tester.enterText(fileInput, clientCert);
       await tester.pump();
 
       await tester.tap(continueButton);
@@ -278,7 +278,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final fileInput = find.ancestor(
-        of: find.text(ca_cert),
+        of: find.text(caCert),
         matching: find.byType(TextField),
       );
       expect(fileInput, findsOne);
@@ -404,8 +404,8 @@ Widget buildApp(
 
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
-const ca_cert = './test/testdata/certs/ca_cert.pem';
-const client_cert = './test/testdata/certs/client_cert.pem';
+const caCert = './test/testdata/certs/ca_cert.pem';
+const clientCert = './test/testdata/certs/client_cert.pem';
 
 class FakeFilePicker extends FilePicker {
   /// Fake [FilePicker] that always returns the given `paths`.
