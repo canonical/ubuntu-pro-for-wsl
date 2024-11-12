@@ -141,7 +141,6 @@ func (e executor) assignHost(ctx context.Context, cmd *landscapeapi.Command_Assi
 	return nil
 }
 
-//nolint:unparam // Unused context so that all commands have the same signature.
 func (e executor) start(ctx context.Context, cmd *landscapeapi.Command_Start, requestID string) (err error) {
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
@@ -152,7 +151,6 @@ func (e executor) start(ctx context.Context, cmd *landscapeapi.Command_Start, re
 	return d.LockAwake()
 }
 
-//nolint:unparam // Unused context so that all commands have the same signature.
 func (e executor) stop(ctx context.Context, cmd *landscapeapi.Command_Stop, requestID string) (err error) {
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
