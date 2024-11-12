@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 
@@ -323,6 +324,131 @@ func TestInstall(t *testing.T) {
 
 					if tc.wantCloudInitWriteCalled {
 						require.True(t, testBed.cloudInit.writeCalled.Load(), "Cloud-init should have been called to write the user data file")
+					}
+				})
+		})
+	}
+}
+
+type cmdType int
+
+const (
+	assignHost cmdType = iota
+	install
+	start
+	stop
+	uninstall
+	setDefault
+	shutdownHost
+	unknown
+)
+
+func TestSendStatusComplete(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		requestID        string
+		preinstallDistro bool
+		cmdType          any
+
+		wantNoCommandStatus bool
+		wantErr             bool
+	}{
+		"AssignHost sends no status message":   {cmdType: assignHost, wantNoCommandStatus: true},
+		"Success starting an installed distro": {cmdType: start, requestID: "123abc", preinstallDistro: true},
+		"Success setting default distro":       {cmdType: setDefault, requestID: "456def", preinstallDistro: true},
+
+		"Complete Start command with error when distro is not installed":     {cmdType: start, requestID: "start_err", wantErr: true},
+		"Complete Stop command with error when distro is not installed":      {cmdType: stop, requestID: "stop_err", wantErr: true},
+		"Complete Install command with error when download fails":            {cmdType: install, requestID: "install_err", wantErr: true},
+		"Complete Uninstall command with error when distro is not installed": {cmdType: uninstall, requestID: "uninstall_err", wantErr: true},
+		"Complete Unknown command with error":                                {cmdType: unknown, requestID: "unknown_err", wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			testReceiveCommand(t, distroSettings{install: tc.preinstallDistro}, t.TempDir(), t.TempDir(),
+				// Test setup
+				func(testBed *commandTestBed) *landscapeapi.Command {
+					switch tc.cmdType {
+					case assignHost:
+						return &landscapeapi.Command{
+							Cmd: &landscapeapi.Command_AssignHost_{AssignHost: &landscapeapi.Command_AssignHost{Uid: "HostUID123"}},
+						}
+					case install:
+						u := "localhost:9"
+						return &landscapeapi.Command{
+							Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{
+								Id:        "distroName",
+								RootfsURL: &u,
+							}},
+							RequestId: tc.requestID,
+						}
+					case start:
+						return &landscapeapi.Command{
+							Cmd:       &landscapeapi.Command_Start_{Start: &landscapeapi.Command_Start{Id: testBed.distro.Name()}},
+							RequestId: tc.requestID,
+						}
+					case stop:
+						return &landscapeapi.Command{
+							Cmd:       &landscapeapi.Command_Stop_{Stop: &landscapeapi.Command_Stop{Id: testBed.distro.Name()}},
+							RequestId: tc.requestID,
+						}
+					case uninstall:
+						return &landscapeapi.Command{
+							Cmd:       &landscapeapi.Command_Uninstall_{Uninstall: &landscapeapi.Command_Uninstall{Id: testBed.distro.Name()}},
+							RequestId: tc.requestID,
+						}
+					case setDefault:
+						return &landscapeapi.Command{
+							Cmd:       &landscapeapi.Command_SetDefault_{SetDefault: &landscapeapi.Command_SetDefault{Id: testBed.distro.Name()}},
+							RequestId: tc.requestID,
+						}
+					default:
+						return &landscapeapi.Command{RequestId: tc.requestID}
+					}
+				},
+				// Test assertions
+				func(testBed *commandTestBed) {
+					const maxTimeout = 5 * time.Second
+					const tickRate = 100 * time.Millisecond
+
+					// Add some wait time to ensure all status messages were received by the mock server.
+					timer := time.NewTimer(maxTimeout)
+					defer timer.Stop()
+
+					ticker := time.NewTicker(tickRate)
+					defer ticker.Stop()
+
+					var statusLogs []landscapemockservice.CmdStatusMsg
+					for {
+						select {
+						case <-timer.C:
+							if tc.wantNoCommandStatus {
+								require.Empty(t, statusLogs, "No CommandStatus messages should have been sent")
+								return
+							}
+
+							// Failure path: let's log the status messages to help debugging.
+							t.Logf("CommandStatus log: %v", statusLogs)
+							wantErr := "no"
+							if tc.wantErr {
+								wantErr = "an"
+							}
+							require.Failf(t, "CommandStatus log does not contain a matching message", "Request ID %q with state Complete and %s error.", tc.requestID, wantErr)
+						case <-ticker.C:
+							// Tick: let's see if the message we're looking for arrived.
+							statusLogs = testBed.serverService.CommandStatusLog()
+
+							if slices.ContainsFunc(statusLogs, func(msg landscapemockservice.CmdStatusMsg) bool {
+								hasError := msg.Error != ""
+								return msg.RequestID == tc.requestID && hasError == tc.wantErr && msg.CommandState == landscapeapi.CommandState_Completed
+							}) {
+								return
+							} // else try again at next tick.
+						}
 					}
 				})
 		})
@@ -734,3 +860,22 @@ func checkEventuallyState(t *testing.T, d interface{ State() (wsl.State, error) 
 		}
 	}
 }
+
+// func checkEventuallyCommandStatus(t *testing.T, s []landscapemockservice.CmdStatusMsg, condition func([]landscapemockservice.CmdStatusMsg) bool, waitFor, tick time.Duration) bool {
+// 	t.Helper()
+
+// 	timer := time.NewTimer(waitFor)
+// 	defer timer.Stop()
+
+// 	ticker := time.NewTicker(tick)
+// 	defer ticker.Stop()
+
+// 	for {
+// 		select {
+// 		case <-timer.C:
+// 			return false
+// 		case <-ticker.C:
+// 			return condition(s)
+// 		}
+// 	}
+// }
