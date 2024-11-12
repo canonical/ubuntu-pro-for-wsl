@@ -1,4 +1,5 @@
 import 'package:agentapi/agentapi.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,7 @@ void main() {
   // This should be resolved so that we don't have to specify a manual text scale factor.
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
+  FilePicker.platform = FakeFilePicker([ca_cert]);
 
   group('input sections', () {
     testWidgets('default state', (tester) async {
@@ -146,14 +148,23 @@ void main() {
       await tester.enterText(fqdnInput, 'test.l.com');
       await tester.pump();
 
+      final chooseFileButton = find.ancestor(
+        of: find.text(lang.landscapeFilePicker),
+        matching: find.byType(FilledButton),
+      );
+      await tester.tap(chooseFileButton);
+      await tester.pumpAndSettle();
+
       final fileInput = find.ancestor(
-        of: find.text(lang.landscapeSSLKeyLabel),
+        of: find.text(ca_cert),
         matching: find.byType(TextField),
       );
+      expect(fileInput, findsOne);
+
       await tester.tap(fileInput);
       await tester.pump();
 
-      await tester.enterText(fileInput, cert);
+      await tester.enterText(fileInput, client_cert);
       await tester.pump();
 
       await tester.tap(continueButton);
@@ -259,10 +270,19 @@ void main() {
       final fqdnErrorText = find.text(lang.landscapeFQDNError);
       expect(fqdnErrorText, findsOne);
 
+      final chooseFileButton = find.ancestor(
+        of: find.text(lang.landscapeFilePicker),
+        matching: find.byType(FilledButton),
+      );
+      await tester.tap(chooseFileButton);
+      await tester.pumpAndSettle();
+
       final fileInput = find.ancestor(
-        of: find.text(lang.landscapeSSLKeyLabel),
+        of: find.text(ca_cert),
         matching: find.byType(TextField),
       );
+      expect(fileInput, findsOne);
+
       await tester.tap(fileInput);
       await tester.pump();
 
@@ -384,4 +404,34 @@ Widget buildApp(
 
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
-const cert = './test/testdata/certs/ca_cert.pem';
+const ca_cert = './test/testdata/certs/ca_cert.pem';
+const client_cert = './test/testdata/certs/client_cert.pem';
+
+class FakeFilePicker extends FilePicker {
+  /// Fake [FilePicker] that always returns the given `paths`.
+  FakeFilePicker(this.paths);
+
+  final List<String> paths;
+
+  @override
+  Future<FilePickerResult?> pickFiles({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    Function(FilePickerStatus p1)? onFileLoading,
+    bool allowCompression = true,
+    int compressionQuality = 30,
+    bool allowMultiple = false,
+    bool withData = false,
+    bool withReadStream = false,
+    bool lockParentWindow = false,
+    bool readSequential = false,
+  }) {
+    return Future(
+      () async => FilePickerResult(
+        paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
+      ),
+    );
+  }
+}
