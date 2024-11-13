@@ -38,7 +38,7 @@ func (e executor) sendStatusMsg(ctx context.Context, state landscapeapi.CommandS
 	}
 
 	if _, err := e.sendCommandStatus(ctx, status); err != nil {
-		log.Errorf(ctx, "Landscape: failed to send status message to the server: %v", err)
+		log.Warningf(ctx, "Landscape: failed to send status message to the server: %v", err)
 	}
 }
 
@@ -94,7 +94,7 @@ func (e executor) exec(ctx context.Context, command *landscapeapi.Command) {
 		Error:        msg,
 	}
 	if _, err := e.sendCommandStatus(ctx, status); err != nil {
-		log.Errorf(ctx, "Landscape: failed to send status message to the server: %v", err)
+		log.Warningf(ctx, "Landscape: failed to send status message to the server: %v", err)
 	}
 }
 
