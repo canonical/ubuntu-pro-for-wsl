@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -86,15 +87,29 @@ func New(o ...option) *App {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var opt options
+			for _, f := range o {
+				f(&opt)
+			}
+
+			cleanup, err := a.ensureSingleInstance(opt)
+			if err != nil {
+				// We won't serve(), so let's close the ready channel right now.
+				// Otherwise callers of WaitReady will block forever.
+				close(a.ready)
+				return err
+			}
+			defer cleanup()
+
 			ctx := context.Background()
 
-			cleanup, err := a.setUpLogger(ctx)
+			cleanup, err = a.setUpLogger(ctx)
 			if err != nil {
 				log.Warningf(ctx, "could not set logger output: %v", err)
 			}
 			defer cleanup()
 
-			return a.serve(ctx, o...)
+			return a.serve(ctx, opt)
 		},
 		// We display usage error ourselves
 		SilenceErrors: true,
@@ -112,12 +127,7 @@ func New(o ...option) *App {
 }
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
-func (a *App) serve(ctx context.Context, args ...option) error {
-	var opt options
-	for _, f := range args {
-		f(&opt)
-	}
-
+func (a *App) serve(ctx context.Context, opt options) error {
 	publicDir, err := a.publicDir(opt)
 	if err != nil {
 		close(a.ready)
@@ -265,4 +275,33 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	log.Debug(ctx, "Debug mode is enabled")
 
 	return func() { _ = f.Close() }, nil
+}
+
+// ensureSingleInstance creates a lock file to ensure that only one instance of the agent is running.
+// It returns a cleanup function to release that file or an error if the lock file could not be flushed to disk.
+func (a *App) ensureSingleInstance(opt options) (cleanup func(), err error) {
+	priv, err := a.privateDir(opt)
+	if err != nil {
+		return nil, fmt.Errorf("could not access the agent's private dir: %v", err)
+	}
+
+	// We deliberately create a new file instead of reusing the address file, for example, because that file has many other reasons for being recreated.
+	// No other file the agent creates match the semantics of exclusive ownership needed here.
+	path := filepath.Join(priv, "ubuntu-pro-agent.lock")
+	f, err := createLockFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	pid := strconv.Itoa(os.Getpid())
+	if _, err := f.WriteString(pid); err != nil {
+		return nil, fmt.Errorf("could not write PID to lock file %s: %v", path, errors.Join(err, f.Close()))
+	}
+	if err := f.Sync(); err != nil {
+		return nil, fmt.Errorf("could not flush lock file %s: %v", path, errors.Join(err, f.Close()))
+	}
+
+	return func() {
+		log.Warningf(context.Background(), "when releasing the lock file: %v", f.Close())
+	}, nil
 }

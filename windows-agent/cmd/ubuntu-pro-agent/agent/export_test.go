@@ -46,3 +46,6 @@ func NewForTesting(t *testing.T, publicDir, privateDir string) *App {
 func (a App) Config() daemonConfig {
 	return a.config
 }
+
+// CreateLockFile tries to create or open an empty file with given name with exclusive access.
+var CreateLockFile = createLockFile

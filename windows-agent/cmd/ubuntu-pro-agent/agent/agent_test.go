@@ -2,6 +2,7 @@ package agent_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,6 +22,64 @@ import (
 func init() {
 	// Ensures we use the mock networking detection in the tests to prevent failure in CI where we might not have WSL2 or its network adapter.
 	daemontestutils.DefaultNetworkDetectionToMock()
+}
+
+func TestSingleInstance(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		args                   []string
+		anotherInstanceRunning bool
+		breakLockFile          bool
+
+		wantError bool
+	}{
+		"Success when single instance": {args: []string{"version"}},
+
+		// Testing the 'clean' verb cannot run in parallel because it tries to delete files still opened by other test cases.
+		"Completion succeeds with another instance running": {args: []string{"completion", "bash"}, anotherInstanceRunning: true},
+		"Completion succeeds with broken lock file":         {args: []string{"completion", "bash"}, breakLockFile: true},
+		"Help succeeds with another instance running":       {args: []string{"help"}, anotherInstanceRunning: true},
+		"Help succeeds with broken lock file":               {args: []string{"help"}, breakLockFile: true},
+		"Version succeeds with another instance running":    {args: []string{"version"}, anotherInstanceRunning: true},
+		"Version succeeds with broken lock file":            {args: []string{"version"}, breakLockFile: true},
+
+		"Default (serve) fails with another instance running": {anotherInstanceRunning: true, wantError: true},
+		"Default (serve) fails with broken lock file":         {breakLockFile: true, wantError: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			private := t.TempDir()
+			if tc.anotherInstanceRunning {
+				path := filepath.Join(private, "ubuntu-pro-agent.lock")
+
+				f, err := agent.CreateLockFile(path)
+				require.NoError(t, err, "Setup: couldn't create lock file")
+
+				defer f.Close()
+			}
+
+			if tc.breakLockFile {
+				path := filepath.Join(private, "ubuntu-pro-agent.lock")
+				err := os.MkdirAll(path, 0700)
+				err2 := os.WriteFile(filepath.Join(path, "breaking-lock.txt"), []byte{}, 0600)
+				require.NoError(t, errors.Join(err, err2), "Setup: couldn't break the lock file")
+			}
+
+			a := agent.NewForTesting(t, "", private)
+			a.SetArgs(tc.args...)
+
+			err := a.Run()
+			if tc.wantError {
+				require.Error(t, err, "Run should return an error")
+				return
+			}
+			require.NoError(t, err, "Run should not return an error")
+		})
+	}
 }
 
 func TestHelp(t *testing.T) {
@@ -218,8 +277,8 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		invalidLocalAppData bool
 		invalidUserProfile  bool
 	}{
-		"Invalid private directory": {invalidPublicDir: true},
-		"Invalid public directory":  {invalidPrivateDir: true},
+		"Invalid private directory": {invalidPrivateDir: true},
+		"Invalid public directory":  {invalidPublicDir: true},
 		"Invalid LocalAppData":      {invalidLocalAppData: true},
 		"Invalid UserProfile":       {invalidUserProfile: true},
 	}
@@ -248,11 +307,11 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 				privateDir = badDir
 			}
 
-			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
-			a.SetArgs()
-
 			err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
 			require.NoError(t, err, "Failed to write file")
+
+			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
+			a.SetArgs("")
 
 			err = a.Run()
 			require.Error(t, err, "Run should exit with an error")
@@ -372,6 +431,8 @@ func TestLogs(t *testing.T) {
 			}()
 
 			a.WaitReady()
+			// TODO: Implement the real fix for WaitReady() per UDENG-4900
+			<-time.After(1 * time.Second)
 
 			select {
 			case <-ch:
@@ -407,12 +468,14 @@ func TestClean(t *testing.T) {
 	// Not parallel because we modify the environment
 
 	testCases := map[string]struct {
-		emptyUserProfile bool
-		emptyLocalAppDir bool
+		emptyUserProfile       bool
+		emptyLocalAppDir       bool
+		anotherInstanceRunning bool
 
 		wantErr bool
 	}{
-		"Success": {},
+		"Success":                               {},
+		"Success with another instance running": {anotherInstanceRunning: true},
 
 		"Error when %UserProfile% is empty":  {emptyUserProfile: true, wantErr: true},
 		"Error when %LocalAppData% is empty": {emptyLocalAppDir: true, wantErr: true},
@@ -455,6 +518,17 @@ func TestClean(t *testing.T) {
 
 				err = os.WriteFile(filepath.Join(appData, ".unrelated"), []byte("test file"), 0600)
 				require.NoError(t, err, "Setup: could not write file outside the private directory")
+			}
+
+			if tc.anotherInstanceRunning {
+				path := filepath.Join(appData, common.LocalAppDataDir, "ubuntu-pro-agent.lock")
+
+				f, err := agent.CreateLockFile(path)
+				require.NoError(t, err, "Setup: couldn't create lock file")
+				// Since the 'clean' verb kills all other agent processes, by the time the agent attempts to clean the private directory the lock file would have been released.
+				// So for this test case the only thing that matters is whether the agent proceeds with cleaning (as it should) or not.
+				// We don't want the test to fail because the file is still open.
+				require.NoError(t, f.Close(), "Setup: couldn't close the fake lock file")
 			}
 
 			a := agent.New(agent.WithRegistry(registry.NewMock()))
