@@ -46,6 +46,7 @@ func (e executor) sendProgressStatusMsg(ctx context.Context, state landscapeapi.
 func (e executor) exec(ctx context.Context, command *landscapeapi.Command) {
 	requestID := command.GetRequestId()
 	log.Infof(ctx, "Landscape: received command %s, request: %s", commandString(command), requestID)
+	// For backwards compatibility, as well as for the AssignHost command, which does not have a requestID.
 	if requestID != "" {
 		// Ack the server
 		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_Queued, requestID)
