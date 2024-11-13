@@ -276,9 +276,6 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
   }
 
   set sslKeyPath(String value) {
-    if (_sslKeyPath == value) {
-      return;
-    }
     if (_validatePath(value)) {
       _sslKeyPath = value;
     }
