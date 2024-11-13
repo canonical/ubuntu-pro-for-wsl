@@ -860,22 +860,3 @@ func checkEventuallyState(t *testing.T, d interface{ State() (wsl.State, error) 
 		}
 	}
 }
-
-// func checkEventuallyCommandStatus(t *testing.T, s []landscapemockservice.CmdStatusMsg, condition func([]landscapemockservice.CmdStatusMsg) bool, waitFor, tick time.Duration) bool {
-// 	t.Helper()
-
-// 	timer := time.NewTimer(waitFor)
-// 	defer timer.Stop()
-
-// 	ticker := time.NewTicker(tick)
-// 	defer ticker.Stop()
-
-// 	for {
-// 		select {
-// 		case <-timer.C:
-// 			return false
-// 		case <-ticker.C:
-// 			return condition(s)
-// 		}
-// 	}
-// }
