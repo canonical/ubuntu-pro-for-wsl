@@ -127,7 +127,15 @@ class LandscapeModel extends ChangeNotifier {
 enum LandscapeConfigType { saas, selfHosted, custom }
 
 /// The alternative errors we could encounter when validating file paths submitted as part of any subform data.
-enum FileError { notFound, tooLarge, emptyPath, dir, emptyFile, none }
+enum FileError {
+  notFound,
+  tooLarge,
+  emptyPath,
+  dir,
+  emptyFile,
+  none,
+  invalidFormat,
+}
 
 const landscapeSaas = 'landscape.canonical.com';
 const standalone = 'standalone';
@@ -191,6 +199,8 @@ $registrationKeyLine
   }
 }
 
+const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
+
 /// The self-hosted configuration form data: only the FQDN is mandatory and must not be the SaaS URL.
 class LandscapeSelfHostedConfig extends LandscapeConfig {
   String registrationKey = '';
@@ -236,15 +246,30 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
       return true;
     }
 
-    final fileStat = File(path).statSync();
+    final file = File(path);
+    final fileStat = file.statSync();
+
     if (fileStat.type == FileSystemEntityType.notFound) {
       _fileError = FileError.notFound;
     } else if (fileStat.type == FileSystemEntityType.directory) {
       _fileError = FileError.dir;
     } else if (fileStat.size == 0) {
       _fileError = FileError.emptyFile;
+    } else if (validCertExtensions.every((e) => !file.path.endsWith(e))) {
+      _fileError = FileError.invalidFormat;
     } else {
-      _fileError = FileError.none;
+      try {
+        final content = file.readAsStringSync().trim();
+        if (!content.startsWith('-----BEGIN CERTIFICATE-----') ||
+            !content.endsWith('-----END CERTIFICATE-----')) {
+          _fileError = FileError.invalidFormat;
+        } else {
+          _fileError = FileError.none;
+        }
+      } on FileSystemException catch (_) {
+        // File isn't a text file, so we can't validate the certificate content
+        _fileError = FileError.none;
+      }
     }
 
     return _fileError == FileError.none;

@@ -381,7 +381,7 @@ class _SelfHostedForm extends StatelessWidget {
             hint: 'C:\\landscape.pem',
             inputlabel: lang.landscapeSSLKeyLabel,
             onChanged: model.setSslKeyPath,
-            allowedExtensions: const ['cer', 'crt', 'der', 'pem'],
+            allowedExtensions: validCertExtensions,
           ),
         ),
       ],
@@ -498,6 +498,8 @@ extension FileErrorl10n on FileError {
         return lang.landscapeFileTooLarge;
       case FileError.dir:
         return lang.landscapeFileIsDir;
+      case FileError.invalidFormat:
+        return lang.landscapeFileInvalidFormat;
       case FileError.none:
         return null;
     }
