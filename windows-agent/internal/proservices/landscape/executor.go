@@ -30,13 +30,28 @@ type executor struct {
 	sendCommandStatus func(ctx context.Context, in *landscapeapi.CommandStatus, opts ...grpc.CallOption) (*landscapeapi.Empty, error)
 }
 
+type requestIDKeyT struct{}
+
+var requestIDKey = requestIDKeyT{}
+
 // sendProgressStatusMsg sends a message to the Landscape server to report the status of the command identified by requestID.
-func (e executor) sendProgressStatusMsg(ctx context.Context, state landscapeapi.CommandState, requestID string) {
+func (e executor) sendProgressStatusMsg(ctx context.Context, state landscapeapi.CommandState) {
+	r := ctx.Value(requestIDKey)
+	if r == nil || r == "" {
+		log.Infof(ctx, "Landscape: context doesn't have a requestID")
+		return
+	}
+
+	requestID, ok := r.(string)
+	if !ok {
+		log.Warningf(ctx, "Landscape: context's requestID is not a string: %v", r)
+		return
+	}
+
 	status := &landscapeapi.CommandStatus{
 		CommandState: state,
 		RequestId:    requestID,
 	}
-
 	if _, err := e.sendCommandStatus(ctx, status); err != nil {
 		log.Warningf(ctx, "Landscape: failed to send status message to the server: %v", err)
 	}
@@ -48,8 +63,10 @@ func (e executor) exec(ctx context.Context, command *landscapeapi.Command) {
 	log.Infof(ctx, "Landscape: received command %s, request: %s", commandString(command), requestID)
 	// For backwards compatibility, as well as for the AssignHost command, which does not have a requestID.
 	if requestID != "" {
+		// Replace the context with a new one that has the requestID.
+		ctx = context.WithValue(ctx, requestIDKey, requestID)
 		// Ack the server
-		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_Queued, requestID)
+		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_Queued)
 	}
 
 	err := func() error {
@@ -59,17 +76,17 @@ func (e executor) exec(ctx context.Context, command *landscapeapi.Command) {
 			// and the Landscape server expects no feedback.
 			return e.assignHost(ctx, cmd.AssignHost)
 		case *landscapeapi.Command_Start_:
-			return e.start(ctx, cmd.Start, requestID)
+			return e.start(ctx, cmd.Start)
 		case *landscapeapi.Command_Stop_:
-			return e.stop(ctx, cmd.Stop, requestID)
+			return e.stop(ctx, cmd.Stop)
 		case *landscapeapi.Command_Install_:
-			return e.install(ctx, cmd.Install, requestID)
+			return e.install(ctx, cmd.Install)
 		case *landscapeapi.Command_Uninstall_:
-			return e.uninstall(ctx, cmd.Uninstall, requestID)
+			return e.uninstall(ctx, cmd.Uninstall)
 		case *landscapeapi.Command_SetDefault_:
-			return e.setDefault(ctx, cmd.SetDefault, requestID)
+			return e.setDefault(ctx, cmd.SetDefault)
 		case *landscapeapi.Command_ShutdownHost_:
-			return e.shutdownHost(ctx, cmd.ShutdownHost, requestID)
+			return e.shutdownHost(ctx, cmd.ShutdownHost)
 		default:
 			return fmt.Errorf("unknown command type %T: %v, request: %s", command.GetCmd(), command.GetCmd(), requestID)
 		}
@@ -142,27 +159,27 @@ func (e executor) assignHost(ctx context.Context, cmd *landscapeapi.Command_Assi
 	return nil
 }
 
-func (e executor) start(ctx context.Context, cmd *landscapeapi.Command_Start, requestID string) (err error) {
+func (e executor) start(ctx context.Context, cmd *landscapeapi.Command_Start) (err error) {
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
 	}
 
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 	return d.LockAwake()
 }
 
-func (e executor) stop(ctx context.Context, cmd *landscapeapi.Command_Stop, requestID string) (err error) {
+func (e executor) stop(ctx context.Context, cmd *landscapeapi.Command_Stop) (err error) {
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
 		return fmt.Errorf("distro %q not in database", cmd.GetId())
 	}
 
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 	return d.ReleaseAwake()
 }
 
-func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install, requestID string) (err error) {
+func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install) (err error) {
 	log.Debugf(ctx, "Landscape: received command Install. Target: %s", cmd.GetId())
 
 	if cmd.GetId() == "" {
@@ -203,12 +220,12 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 			return fmt.Errorf("target distro ID %s is reserved for installation from MS Store", id)
 		}
 
-		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 		if err = installFromURL(ctx, e.homeDir(), e.downloadDir(), distro, u); err != nil {
 			return err
 		}
 	} else {
-		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 		if err = installFromMicrosoftStore(ctx, distro); err != nil {
 			return err
 		}
@@ -241,13 +258,13 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 	return nil
 }
 
-func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall, requestID string) (err error) {
+func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
 	d, ok := e.database().Get(cmd.GetId())
 	if !ok {
 		return errors.New("distro not in database")
 	}
 
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 	if err := d.Uninstall(ctx); err != nil {
 		return err
 	}
@@ -259,16 +276,16 @@ func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Unins
 	return nil
 }
 
-func (e executor) setDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault, requestID string) error {
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+func (e executor) setDefault(ctx context.Context, cmd *landscapeapi.Command_SetDefault) error {
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 
 	d := gowsl.NewDistro(ctx, cmd.GetId())
 	return d.SetAsDefault()
 }
 
 //nolint:unparam // cmd is not used, but kep here for consistency with other commands.
-func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost, requestID string) error {
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress, requestID)
+func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_ShutdownHost) error {
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 
 	return gowsl.Shutdown(ctx)
 }
