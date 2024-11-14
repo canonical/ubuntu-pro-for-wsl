@@ -270,7 +270,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final fileInput = find.ancestor(
-        of: find.text(caCert),
+        of: find.text(lang.landscapeSSLKeyLabel),
         matching: find.byType(TextField),
       );
       expect(fileInput, findsOne);
@@ -283,6 +283,18 @@ void main() {
 
       final fileErrorText = find.text(lang.landscapeFileNotFound);
       expect(fileErrorText, findsOne);
+
+      await tester.enterText(fileInput, clientKey);
+      await tester.pump();
+      expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
+
+      await tester.enterText(fileInput, notACert);
+      await tester.pump();
+      expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
+
+      await tester.enterText(fileInput, binaryCert);
+      await tester.pump();
+      expect(find.text(lang.landscapeFileInvalidFormat), findsNothing);
     });
 
     testWidgets('custom config', (tester) async {
@@ -398,6 +410,9 @@ const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
 const caCert = './test/testdata/certs/ca_cert.pem';
 const clientCert = './test/testdata/certs/client_cert.pem';
+const clientKey = './test/testdata/certs/client_key.pem';
+const binaryCert = './test/testdata/certs/binary_cert.der';
+const notACert = './test/testdata/certs/not_a_cert.pem';
 
 class FakeFilePicker extends FilePicker {
   /// Fake [FilePicker] that always returns the given `paths`.
