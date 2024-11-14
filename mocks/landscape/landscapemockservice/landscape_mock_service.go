@@ -100,6 +100,9 @@ type Service struct {
 	// statusLog is a log of all command status messages
 	statusLog []CmdStatusMsg
 
+	// SendCmdStatusError, if set, will cause SendCommandStatus to return an error
+	SendCmdStatusError error
+
 	logger *slog.Logger
 }
 
@@ -368,7 +371,7 @@ func (s *Service) SendCommandStatus(ctx context.Context, msg *landscapeapi.Comma
 
 	s.statusLog = append(s.statusLog, st)
 
-	return &landscapeapi.Empty{}, nil
+	return &landscapeapi.Empty{}, s.SendCmdStatusError
 }
 
 // CommandStatusLog returns a copy of the log of all command status messages received by the server.

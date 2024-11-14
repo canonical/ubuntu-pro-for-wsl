@@ -2,6 +2,7 @@ package landscape_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -347,15 +348,17 @@ func TestSendStatusComplete(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		requestID        string
-		preinstallDistro bool
-		cmdType          any
+		requestID               string
+		preinstallDistro        bool
+		cmdType                 any
+		serverErrorOnSendStatus bool
 
 		wantNoCommandStatus bool
 		wantErr             bool
 	}{
 		"AssignHost sends no status message":   {cmdType: assignHost, wantNoCommandStatus: true},
 		"Success starting an installed distro": {cmdType: start, requestID: "123abc", preinstallDistro: true},
+		"Success while failing to send status": {cmdType: uninstall, requestID: "123abc", preinstallDistro: true, serverErrorOnSendStatus: true},
 		"Success setting default distro":       {cmdType: setDefault, requestID: "456def", preinstallDistro: true},
 
 		"Complete Start command with error when distro is not installed":     {cmdType: start, requestID: "start_err", wantErr: true},
@@ -372,6 +375,10 @@ func TestSendStatusComplete(t *testing.T) {
 			testReceiveCommand(t, distroSettings{install: tc.preinstallDistro}, t.TempDir(), t.TempDir(),
 				// Test setup
 				func(testBed *commandTestBed) *landscapeapi.Command {
+					if tc.serverErrorOnSendStatus {
+						testBed.serverService.SendCmdStatusError = errors.New("Mock error")
+					}
+
 					switch tc.cmdType {
 					case assignHost:
 						return &landscapeapi.Command{
