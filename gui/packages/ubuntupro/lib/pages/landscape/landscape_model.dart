@@ -264,7 +264,8 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
       try {
         X509.fromDer(content);
         _fileError = FileError.none;
-        // ignore: avoid_catches_without_on_clauses since various errors or exceptions can occur here
+        // Various exception or errors can occur here when attempting a parse
+        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         try {
           X509.fromPem(utf8.decode(content));
