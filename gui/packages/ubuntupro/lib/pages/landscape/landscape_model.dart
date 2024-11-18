@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
 import 'package:grpc/grpc.dart' show GrpcError;
+import 'package:pkcs7/pkcs7.dart';
 
 import '/core/agent_api_client.dart';
 
@@ -258,17 +260,18 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
     } else if (validCertExtensions.every((e) => !file.path.endsWith(e))) {
       _fileError = FileError.invalidFormat;
     } else {
+      final content = file.readAsBytesSync();
       try {
-        final content = file.readAsStringSync().trim();
-        if (!content.startsWith('-----BEGIN CERTIFICATE-----') ||
-            !content.endsWith('-----END CERTIFICATE-----')) {
-          _fileError = FileError.invalidFormat;
-        } else {
-          _fileError = FileError.none;
-        }
-      } on FileSystemException catch (_) {
-        // File isn't a text file, so we can't validate the certificate content
+        X509.fromDer(content);
         _fileError = FileError.none;
+        // ignore: avoid_catches_without_on_clauses since various errors or exceptions can occur here
+      } catch (_) {
+        try {
+          X509.fromPem(utf8.decode(content));
+          _fileError = FileError.none;
+        } on Exception catch (_) {
+          _fileError = FileError.invalidFormat;
+        }
       }
     }
 

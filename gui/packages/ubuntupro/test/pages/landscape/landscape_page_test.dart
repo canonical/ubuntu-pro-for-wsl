@@ -288,7 +288,11 @@ void main() {
       await tester.pump();
       expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
 
-      await tester.enterText(fileInput, notACert);
+      await tester.enterText(fileInput, notATextCert);
+      await tester.pump();
+      expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
+
+      await tester.enterText(fileInput, notABinCert);
       await tester.pump();
       expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
 
@@ -412,7 +416,8 @@ const caCert = './test/testdata/certs/ca_cert.pem';
 const clientCert = './test/testdata/certs/client_cert.pem';
 const clientKey = './test/testdata/certs/client_key.pem';
 const binaryCert = './test/testdata/certs/binary_cert.der';
-const notACert = './test/testdata/certs/not_a_cert.pem';
+const notATextCert = './test/testdata/certs/not_a_cert.pem';
+const notABinCert = './test/testdata/certs/not_a_cert.der';
 
 class FakeFilePicker extends FilePicker {
   /// Fake [FilePicker] that always returns the given `paths`.
