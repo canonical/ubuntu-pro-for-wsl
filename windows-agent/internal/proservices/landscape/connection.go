@@ -91,7 +91,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		defer conn.disconnect()
 		defer conn.receivingCommands.Done()
 
-		if err := conn.receiveCommands(executor{d}); err != nil {
+		if err := conn.receiveCommands(executor{d, cl.SendCommandStatus}); err != nil {
 			log.Warningf(ctx, "Landscape: stopped listening for commands: %v", err)
 		} else {
 			log.Info(ctx, "Landscape: finished listening for commands.")
@@ -218,9 +218,7 @@ func (conn *connection) receiveCommands(e executor) error {
 		// Removing the cancel context so that the command is executed even if the connection is lost.
 		ctx := context.WithoutCancel(conn.ctx)
 
-		if err := e.exec(ctx, command); err != nil {
-			log.Errorf(conn.ctx, "Landscape: %v", err)
-		}
+		e.exec(ctx, command)
 
 		// Ping back the server with the updated info
 		info, err := newHostAgentInfo(conn.ctx, e.serviceData)
