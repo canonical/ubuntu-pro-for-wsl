@@ -11,11 +11,9 @@ import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
-import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
 import 'package:wizard_router/wizard_router.dart';
 import '../../utils/build_multiprovider_app.dart';
 import 'subscribe_now_page_test.mocks.dart';
-import 'token_samples.dart' as tks;
 
 @GenerateMocks([SubscribeNowModel])
 void main() {
