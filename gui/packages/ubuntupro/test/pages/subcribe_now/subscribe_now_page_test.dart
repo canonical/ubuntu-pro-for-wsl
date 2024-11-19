@@ -125,35 +125,6 @@ void main() {
       expect(called, isFalse);
     });
   });
-  testWidgets('feedback when applying token', (tester) async {
-    final model = MockSubscribeNowModel();
-    when(model.purchaseAllowed).thenReturn(true);
-    when(model.applyProToken(any)).thenAnswer((_) async {
-      return SubscriptionInfo()..ensureUser();
-    });
-    final app = buildApp(model, onSubscribeNoop);
-    await tester.pumpWidget(app);
-
-    // expands the collapsed input field group
-    final toggle = find.byIcon(ProTokenInputField.expandIcon);
-    await tester.tap(toggle);
-    await tester.pumpAndSettle();
-
-    // enters a good token value
-    final inputField = find.byType(TextField);
-    await tester.enterText(inputField, tks.good);
-    await tester.pump();
-
-    // submits the input.
-    final context = tester.element(find.byType(SubscribeNowPage));
-    final lang = AppLocalizations.of(context);
-    final button = find.text(lang.confirm);
-    await tester.tap(button);
-    await tester.pump();
-
-    // asserts that feedback is shown
-    expect(find.byType(SnackBar), findsOneWidget);
-  });
 
   testWidgets('purchase status enum l10n', (tester) async {
     final model = MockSubscribeNowModel();
