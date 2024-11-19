@@ -5,7 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   gtk
   p4w_ms_store
-  screen_retriever
+  screen_retriever_linux
   url_launcher_linux
   window_manager
   yaru_window_linux

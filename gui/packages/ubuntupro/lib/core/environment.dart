@@ -27,8 +27,8 @@ class Environment {
   /// Checks first in the overrides map and the falls back to
   /// Platform.environment map.
   String? operator [](String key) {
-    if (_overrides != null && _overrides!.containsKey(key)) {
-      return _overrides![key];
+    if (_overrides != null && _overrides.containsKey(key)) {
+      return _overrides[key];
     }
 
     return Platform.environment[key];

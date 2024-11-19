@@ -154,7 +154,7 @@ class AgentStartupMonitor {
             await File(_addrFilePath!).parent.create(recursive: true);
         final watch = agentDir.watch(events: FileSystemEvent.create).firstWhere(
               (event) =>
-                  p.canonicalize(event.path) == p.canonicalize(_addrFilePath!),
+                  p.canonicalize(event.path) == p.canonicalize(_addrFilePath),
             );
         if (!await agentLauncher()) {
           // Terminal state, cannot recover nor retry.
@@ -197,7 +197,7 @@ class AgentStartupMonitor {
   Future<void> reset() async {
     if (_addrFilePath != null) {
       try {
-        await File(_addrFilePath!).delete();
+        await File(_addrFilePath).delete();
       } on PathNotFoundException {
         // TODO: Log
         // ignore: avoid_print
