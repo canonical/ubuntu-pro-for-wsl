@@ -298,6 +298,7 @@ class _ConfigTypeRadio extends StatelessWidget {
       selectionColor: Theme.of(context).colorScheme.tertiaryContainer,
       child: YaruRadioListTile(
         contentPadding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
         dense: true,
         title: Text(title),
         subtitle: Text(subtitle),
