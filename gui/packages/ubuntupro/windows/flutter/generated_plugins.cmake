@@ -4,7 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   p4w_ms_store
-  screen_retriever
+  screen_retriever_windows
   url_launcher_windows
   window_manager
   windows_single_instance
