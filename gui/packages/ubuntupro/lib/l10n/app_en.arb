@@ -79,6 +79,7 @@
     "landscapeFileEmptyContents": "File must not be empty",
     "landscapeFileNotFound": "File not found",
     "landscapeFileIsDir": "File cannot be a directory",
+    "landscapeFileInvalidFormat": "File is in an incorrect format",
     "landscapeFilePicker": "Select file...",
     "landscapeConfigureButton": "Configure Landscape",
     "landscapeApplyError": "Error when attempting to apply the config:\n\t{message}",

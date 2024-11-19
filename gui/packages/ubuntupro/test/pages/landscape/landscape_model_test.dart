@@ -91,6 +91,7 @@ void main() {
       expect(() => model.setCustomConfigPath(customConf), throwsAssertionError);
 
       model.setConfigType(LandscapeConfigType.custom);
+      expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
       expect(() => model.setAccountName('testuser'), throwsAssertionError);
       expect(() => model.setSaasRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setFqdn(testFqdn), throwsAssertionError);
@@ -148,6 +149,10 @@ void main() {
       model.setFqdn(testFqdn);
       err = await model.applyConfig();
       expect(err, isNull);
+
+      model.setSslKeyPath(caCert);
+      err = await model.applyConfig();
+      expect(err, isNull);
     });
     test('custom', () async {
       final client = MockAgentApiClient();
@@ -177,3 +182,4 @@ void main() {
 const customConf = './test/testdata/landscape/custom.conf';
 const saasURL = 'https://landscape.canonical.com';
 const testFqdn = 'test.landscape.company.com';
+const caCert = './test/testdata/certs/ca_cert.pem';
