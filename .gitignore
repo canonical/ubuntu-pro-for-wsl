@@ -33,3 +33,6 @@ wsl-pro-service/debian/wsl-pro-service
 # Visual Studio and CMake
 .vs/
 out/
+
+# Visual Studio Code
+.vscode/
