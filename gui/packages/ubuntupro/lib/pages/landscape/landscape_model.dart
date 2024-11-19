@@ -259,24 +259,31 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
       _fileError = FileError.emptyFile;
     } else if (validCertExtensions.every((e) => !file.path.endsWith(e))) {
       _fileError = FileError.invalidFormat;
+    } else if (!_validateCertificate(file)) {
+      _fileError = FileError.invalidFormat;
     } else {
-      final content = file.readAsBytesSync();
-      try {
-        X509.fromDer(content);
-        _fileError = FileError.none;
-        // Various exception or errors can occur here when attempting a parse
-        // ignore: avoid_catches_without_on_clauses
-      } catch (_) {
-        try {
-          X509.fromPem(utf8.decode(content));
-          _fileError = FileError.none;
-        } on Exception catch (_) {
-          _fileError = FileError.invalidFormat;
-        }
-      }
+      _fileError = FileError.none;
     }
 
     return _fileError == FileError.none;
+  }
+
+  bool _validateCertificate(File file) {
+    final content = file.readAsBytesSync();
+
+    try {
+      X509.fromDer(content);
+      return true;
+      // Various Exception or Errors can occur here when attempting a parse
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      try {
+        X509.fromPem(utf8.decode(content));
+        return true;
+      } on Exception catch (_) {
+        return false;
+      }
+    }
   }
 
   set sslKeyPath(String value) {
