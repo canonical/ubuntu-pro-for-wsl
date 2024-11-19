@@ -982,7 +982,7 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			agentYaml, err := os.ReadFile(filepath.Join(homedir, ".cloud-init", "agent.yaml"))
 			require.NoError(t, err, "NotifyConfigUpdate: could not read agent.yaml")
 			wantAgentYaml := testutils.LoadWithUpdateFromGolden(t, string(agentYaml), testutils.WithGoldenPath(filepath.Join(basepath, "agent.yaml")))
-			require.Equal(t, wantAgentYaml, string(agentYaml), "NotifyConfigUpdate: tasks file and agent.yaml don't match")
+			require.YAMLEq(t, wantAgentYaml, string(agentYaml), "NotifyConfigUpdate: tasks file and agent.yaml don't match")
 		})
 	}
 }
