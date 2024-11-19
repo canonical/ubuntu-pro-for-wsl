@@ -177,20 +177,20 @@ func compileMoFiles(t *testing.T, localeDir string) {
 	}
 }
 
-// renameElem rename old file to new.
+// renameElem rename orig file to target.
 // The rename is reverted when the test ends.
-func renameElem(t *testing.T, old, new string) {
+func renameElem(t *testing.T, orig, target string) {
 	t.Helper()
 
-	if err := os.MkdirAll(filepath.Dir(new), 0750); err != nil {
-		t.Fatalf("couldn't create parent directory %q to be renamed: %v", new, err)
+	if err := os.MkdirAll(filepath.Dir(target), 0750); err != nil {
+		t.Fatalf("couldn't create parent directory %q to be renamed: %v", target, err)
 	}
-	if err := os.Rename(old, new); err != nil {
-		t.Fatalf("couldn't rename %q to %q: %v", old, new, err)
+	if err := os.Rename(orig, target); err != nil {
+		t.Fatalf("couldn't rename %q to %q: %v", orig, target, err)
 	}
 	t.Cleanup(func() {
-		if err := os.Rename(new, old); err != nil {
-			t.Fatalf("couldn't restore %q to %q: %v", new, old, err)
+		if err := os.Rename(target, orig); err != nil {
+			t.Fatalf("couldn't restore %q to %q: %v", target, orig, err)
 		}
 	})
 }
