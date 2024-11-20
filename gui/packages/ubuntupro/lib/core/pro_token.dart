@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'base58_check.dart';
 
 /// The possible errors when parsing a candidate Pro token string.
-enum TokenError { empty, tooShort, tooLong, invalidPrefix, invalidEncoding }
+enum TokenError { empty, invalid }
 
 final _b58 = Base58();
 
@@ -12,18 +12,12 @@ TokenError? _validate(String? value) {
   if (value == null || value.isEmpty) {
     return TokenError.empty;
   }
-  if (value.length < ProToken.minLength) {
-    return TokenError.tooShort;
-  }
-  if (value.length > ProToken.maxLength) {
-    return TokenError.tooLong;
-  }
-  // For now only Contract tokens are expected.
-  if (value[0] != 'C') {
-    return TokenError.invalidPrefix;
-  }
-  if (_b58.checkDecode(value.substring(1, value.length)) != null) {
-    return TokenError.invalidEncoding;
+
+  if (value.length < ProToken.minLength ||
+      value.length > ProToken.maxLength ||
+      value[0] != 'C' ||
+      _b58.checkDecode(value.substring(1, value.length)) != null) {
+    return TokenError.invalid;
   }
 
   return null;

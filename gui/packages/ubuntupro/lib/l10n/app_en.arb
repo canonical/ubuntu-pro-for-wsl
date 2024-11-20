@@ -1,10 +1,7 @@
 {
     "appTitle": "Ubuntu Pro for WSL",
     "tokenErrorEmpty": "Token cannot be empty",
-    "tokenErrorTooShort": "Token is too short",
-    "tokenErrorTooLong": "Token is too long",
-    "tokenErrorInvalidPrefix": "Token prefix is invalid",
-    "tokenErrorInvalidEncoding": "Token is corrupted",
+    "tokenErrorInvalid": "Token invalid",
     "tokenInputTitle": "Already have a token?",
     "tokenInputHint": "Paste your Ubuntu Pro token here",
     "confirm": "Confirm",
