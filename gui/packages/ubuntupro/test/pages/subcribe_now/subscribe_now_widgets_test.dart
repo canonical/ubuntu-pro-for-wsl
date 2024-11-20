@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/core/pro_token.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
-import 'token_samples.dart' as tks;
+import '../../utils/token_samples.dart' as tks;
 
 void main() {
   group('pro token value', () {
@@ -11,24 +11,12 @@ void main() {
       final value = ProTokenValue();
 
       value.update('');
-
       expect(value.errorOrNull, TokenError.empty);
 
-      value.update(tks.tooShort);
-
-      expect(value.errorOrNull, TokenError.tooShort);
-
-      value.update(tks.tooLong);
-
-      expect(value.errorOrNull, TokenError.tooLong);
-
-      value.update(tks.invalidPrefix);
-
-      expect(value.errorOrNull, TokenError.invalidPrefix);
-
-      value.update(tks.invalidEncoding);
-
-      expect(value.errorOrNull, TokenError.invalidEncoding);
+      for (final token in tks.invalidTokens) {
+        value.update(token);
+        expect(value.errorOrNull, TokenError.invalid);
+      }
     });
     test('accessors on success', () {
       final value = ProTokenValue();
@@ -95,35 +83,47 @@ void main() {
         expect(button.enabled, isFalse);
       });
 
-      testWidgets('too short token', (tester) async {
+      testWidgets('invalid non-empty tokens', (tester) async {
         await tester.pumpWidget(theApp);
         final inputField = find.byType(TextField);
+        final context = tester.element(inputField);
+        final lang = AppLocalizations.of(context);
 
-        await tester.enterText(inputField, tks.tooShort);
+        for (final token in tks.invalidTokens) {
+          await tester.enterText(inputField, token);
+          await tester.pump();
+
+          final input = tester.firstWidget<TextField>(inputField);
+          expect(input.decoration!.errorText, equals(lang.tokenErrorInvalid));
+
+          final button =
+              tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
+          expect(button.enabled, isFalse);
+        }
+      });
+
+      testWidgets('empty token', (tester) async {
+        // same as above test...
+        await tester.pumpWidget(theApp);
+        final inputField = find.byType(TextField);
+        final context = tester.element(inputField);
+        final lang = AppLocalizations.of(context);
+
+        await tester.enterText(inputField, tks.invalidTokens[0]);
         await tester.pump();
 
-        final input = tester.firstWidget<TextField>(inputField);
-        expect(input.decoration!.errorText, isNotNull);
-        expect(input.decoration!.errorText, contains('too short'));
+        var input = tester.firstWidget<TextField>(inputField);
+        expect(input.decoration!.errorText, equals(lang.tokenErrorInvalid));
 
         final button =
             tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
         expect(button.enabled, isFalse);
-      });
 
-      testWidgets('too long token', (tester) async {
-        await tester.pumpWidget(theApp);
-        final inputField = find.byType(TextField);
-
-        await tester.enterText(inputField, tks.tooLong);
+        // ...except when we delete the content we should have no more errors
+        await tester.enterText(inputField, '');
         await tester.pump();
-
-        final input = tester.firstWidget<TextField>(inputField);
-        expect(input.decoration!.errorText, isNotNull);
-        expect(input.decoration!.errorText, contains('too long'));
-
-        final button =
-            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
+        input = tester.firstWidget<TextField>(inputField);
+        expect(input.decoration!.errorText, isNull);
         expect(button.enabled, isFalse);
       });
 
