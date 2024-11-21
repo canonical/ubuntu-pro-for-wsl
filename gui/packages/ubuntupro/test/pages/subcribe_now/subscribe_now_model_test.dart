@@ -11,8 +11,8 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/pro_token.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 
+import '../../utils/token_samples.dart' as tks;
 import 'subscribe_now_model_test.mocks.dart';
-import 'token_samples.dart' as tks;
 
 @GenerateMocks([AgentApiClient])
 void main() {

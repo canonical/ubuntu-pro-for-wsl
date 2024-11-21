@@ -129,20 +129,14 @@ class ProTokenValue extends EitherValueNotifier<TokenError, ProToken?> {
 
 extension TokenErrorl10n on TokenError {
   /// Allows representing the [TokenError] enum as a String.
-  String localize(AppLocalizations lang) {
+  String? localize(AppLocalizations lang) {
     switch (this) {
       case TokenError.empty:
-        return lang.tokenErrorEmpty;
-      case TokenError.tooShort:
-        return lang.tokenErrorTooShort;
-      case TokenError.tooLong:
-        return lang.tokenErrorTooLong;
-      case TokenError.invalidPrefix:
-        return lang.tokenErrorInvalidPrefix;
-      case TokenError.invalidEncoding:
-        return lang.tokenErrorInvalidEncoding;
-      default:
-        throw UnimplementedError(toString());
+        // empty cannot be submitted, but we don't need to display an error to
+        // the user, just return to original state
+        return null;
+      case TokenError.invalid:
+        return lang.tokenErrorInvalid;
     }
   }
 }
