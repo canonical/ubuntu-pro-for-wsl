@@ -919,10 +919,10 @@ packages:
     dependency: "direct main"
     description:
       name: ubuntu_service
-      sha256: b9845f972bcc919df79381b0eb42cceee1834b3232b3f444c0e4943d66d01901
+      sha256: af850c8927c97ba49749c262654fe84833c8f1d80b641016c8f72a18d2191379
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.2"
+    version: "0.4.0"
   url_launcher:
     dependency: "direct main"
     description:
