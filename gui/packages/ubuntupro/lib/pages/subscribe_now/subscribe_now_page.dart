@@ -83,15 +83,6 @@ class SubscribeNowPage extends StatelessWidget {
         ProTokenInputField(
           onApply: (token) {
             model.applyProToken(token).then(onSubscriptionUpdate);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                width: 400.0,
-                behavior: SnackBarBehavior.floating,
-                content: Text(
-                  lang.applyingProToken(token.value),
-                ),
-              ),
-            );
           },
         ),
       ],
