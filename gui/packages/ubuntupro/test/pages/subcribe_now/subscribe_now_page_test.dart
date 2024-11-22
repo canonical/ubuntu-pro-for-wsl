@@ -54,11 +54,10 @@ void main() {
 
       // check that's the right button
       final button = find.ancestor(
-        of: find.text(lang.subscribeNow),
+        of: find.text(lang.getUbuntuPro),
         matching: find.byType(ElevatedButton),
       );
-      expect(button, findsOneWidget);
-      expect(tester.widget<ElevatedButton>(button).enabled, isFalse);
+      expect(button, findsNothing);
     });
     testWidgets('enabled', (tester) async {
       final model = MockSubscribeNowModel();
@@ -70,7 +69,7 @@ void main() {
 
       // check that's the right button
       final button = find.ancestor(
-        of: find.text(lang.subscribeNow),
+        of: find.text(lang.getUbuntuPro),
         matching: find.byType(ElevatedButton),
       );
       expect(button, findsOneWidget);
@@ -94,7 +93,7 @@ void main() {
       final lang = AppLocalizations.of(context);
 
       expect(called, isFalse);
-      final button = find.text(lang.subscribeNow);
+      final button = find.text(lang.getUbuntuPro);
       await tester.tap(button);
       await tester.pump();
       expect(called, isTrue);
@@ -116,7 +115,7 @@ void main() {
       final lang = AppLocalizations.of(context);
 
       expect(called, isFalse);
-      final button = find.text(lang.subscribeNow);
+      final button = find.text(lang.getUbuntuPro);
       await tester.tap(button);
       await tester.pump();
       expect(find.byType(SnackBar), findsWidgets);
