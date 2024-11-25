@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// The name of the file where the Agent's drop its service connection information.
 const kAddrFileName = '.ubuntupro/.address';
 
@@ -12,3 +14,5 @@ const kVersion = String.fromEnvironment(
   'UP4W_FULL_VERSION',
   defaultValue: 'Dev',
 );
+
+const kConfirmColor = Color(0xFF0E8420);

@@ -129,7 +129,7 @@ void main() {
         await tester.pump();
 
         // submits the input.
-        final button = find.text(l10n.confirm);
+        final button = find.text(l10n.attach);
         await tester.tap(button);
         await tester.pumpAndSettle();
 
@@ -177,7 +177,7 @@ void main() {
         await tester.pump();
 
         // submits the input.
-        final button = find.text(l10n.confirm);
+        final button = find.text(l10n.attach);
         await tester.tap(button);
         await tester.pumpAndSettle();
 

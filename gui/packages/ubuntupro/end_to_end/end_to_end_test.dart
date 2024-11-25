@@ -82,7 +82,7 @@ Future<void> testManualTokenInput(WidgetTester tester) async {
   await tester.pumpAndSettle();
 
   // submits the input.
-  final button = find.text(l10n.confirm);
+  final button = find.text(l10n.attach);
   await tester.tap(button);
   await tester.pumpAndSettle();
 
