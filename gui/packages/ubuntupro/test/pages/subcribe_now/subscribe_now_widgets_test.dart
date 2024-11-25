@@ -46,25 +46,6 @@ void main() {
   });
 
   group('pro token input', () {
-    testWidgets('collapsed by default', (tester) async {
-      final app = MaterialApp(
-        home: Scaffold(
-          body: ProTokenInputField(
-            onApply: (_) {},
-          ),
-        ),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-      );
-
-      await tester.pumpWidget(app);
-      expect(find.byType(TextField).hitTestable(), findsNothing);
-
-      final toggle = find.byType(IconButton);
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
-      expect(find.byType(TextField).hitTestable(), findsOneWidget);
-    });
-
     group('basic flow', () {
       final theApp = buildApp(onApply: (_) {}, isExpanded: true);
       testWidgets('starts with no error', (tester) async {
@@ -93,8 +74,11 @@ void main() {
           await tester.enterText(inputField, token);
           await tester.pump();
 
-          final input = tester.firstWidget<TextField>(inputField);
-          expect(input.decoration!.errorText, equals(lang.tokenErrorInvalid));
+          final errorText = find.descendant(
+            of: inputField,
+            matching: find.text(lang.tokenErrorInvalid),
+          );
+          expect(errorText, findsOne);
 
           final button =
               tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
@@ -112,8 +96,11 @@ void main() {
         await tester.enterText(inputField, tks.invalidTokens[0]);
         await tester.pump();
 
-        var input = tester.firstWidget<TextField>(inputField);
-        expect(input.decoration!.errorText, equals(lang.tokenErrorInvalid));
+        final errorText = find.descendant(
+          of: inputField,
+          matching: find.text(lang.tokenErrorInvalid),
+        );
+        expect(errorText, findsOne);
 
         final button =
             tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
@@ -122,20 +109,27 @@ void main() {
         // ...except when we delete the content we should have no more errors
         await tester.enterText(inputField, '');
         await tester.pump();
-        input = tester.firstWidget<TextField>(inputField);
-        expect(input.decoration!.errorText, isNull);
+        final input = tester.firstWidget<TextField>(inputField);
+        expect(input.decoration!.error, isNull);
         expect(button.enabled, isFalse);
       });
 
       testWidgets('good token', (tester) async {
         await tester.pumpWidget(theApp);
         final inputField = find.byType(TextField);
+        final context = tester.element(inputField);
+        final lang = AppLocalizations.of(context);
 
         await tester.enterText(inputField, tks.good);
         await tester.pump();
 
         final input = tester.firstWidget<TextField>(inputField);
-        expect(input.decoration!.errorText, isNull);
+        expect(input.decoration!.error, isNull);
+        final validText = find.descendant(
+          of: inputField,
+          matching: find.text(lang.tokenValid),
+        );
+        expect(validText, findsOne);
 
         final button =
             tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
