@@ -1,4 +1,4 @@
-# Deployment with UP4W and Landscape
+# Deploy WSL instances with UP4W and Landscape
 
 With Ubuntu Pro for WSL (UP4W) an [Ubuntu Pro](https://ubuntu.com/pro) subscription empowers you to manage Ubuntu WSL instances at scale.
 
@@ -138,7 +138,6 @@ You know how to leverage UP4W and Landscape to efficiently manage your Ubuntu WS
 
 ## Next steps
 
-In the rest of the documentation you can find [how-to guides](../howto/index)
-for completing specific tasks, [reference](../reference/index) material
-describing key information relating to UP4W and dedicated [documentation for
-developers](../dev/index).
+Our documentation includes several [how-to guides](../howto/index)
+for completing specific tasks and [reference](../reference/index) material
+describing key information relating to UP4W.
