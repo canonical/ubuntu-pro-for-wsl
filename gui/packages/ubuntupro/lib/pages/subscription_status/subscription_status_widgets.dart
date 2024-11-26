@@ -47,8 +47,10 @@ class SubscriptionStatus extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            border: Border.all(color: theme.colorScheme.success, width: 1.0),
-            color: theme.colorScheme.success
+            border:
+                Border.all(color: YaruColors.of(context).success, width: 1.0),
+            color: YaruColors.of(context)
+                .success
                 .copyWith(lightness: 0.94, saturation: 0.56),
             borderRadius: const BorderRadius.all(Radius.circular(4.0)),
           ),
@@ -58,7 +60,7 @@ class SubscriptionStatus extends StatelessWidget {
             children: [
               Icon(
                 Icons.check_circle_outline_outlined,
-                color: theme.colorScheme.success,
+                color: YaruColors.of(context).success,
                 size: 24.0,
               ),
               const SizedBox(width: 8.0),
