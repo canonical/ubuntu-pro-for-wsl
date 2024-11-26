@@ -2,7 +2,7 @@
 
 # Reference
 
-This section contains concise references relating to how how UP4W is designed,
+This section contains concise references relating to how UP4W is designed,
 configured and developed:
 
 Descriptions of key UP4W components can be found here:
