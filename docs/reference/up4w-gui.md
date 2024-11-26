@@ -1,5 +1,5 @@
 (ref::up4w-gui)=
-# UP4W - Graphical User Interface (GUI)
+# Application GUI
 
 UP4W has a small GUI to help users with:
 - Providing or acquiring an [Ubuntu Pro token](ref::ubuntu-pro-token).

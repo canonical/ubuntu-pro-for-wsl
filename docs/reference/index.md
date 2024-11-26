@@ -1,21 +1,32 @@
+(reference)=
+
 # Reference
 
-Our reference section contains more detailed information about the several
-pieces that make up the Ubuntu Pro for WSL tool and the value it provides.
+This section contains concise references relating to how how UP4W is designed,
+configured and developed:
+
+Descriptions of key UP4W components can be found here:
 
 ```{toctree}
 :titlesonly:
 
-firewall_requirements
-landscape
-landscape_client
-ubuntu_pro
-ubuntu_pro_client
-ubuntu_wsl
-UP4W <up4w>
-UP4W - GUI <up4w-gui>
-up4w-windows_agent
-up4w-wsl_pro_service
-windows_registry
-WSL <wsl>
+index_up4w_components
+```
+
+Details on firewall configuration, Landscape setup and using the Windows
+registry can be found here:
+
+```{toctree}
+:titlesonly:
+
+index_system_configuration
+```
+
+Information for contributors that is helpful for debugging code and ensuring
+code quality is outlined below:
+
+```{toctree}
+:titlesonly:
+
+index_up4w_development
 ```
