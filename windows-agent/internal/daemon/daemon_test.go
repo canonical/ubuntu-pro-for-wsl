@@ -413,6 +413,65 @@ func TestQuitBeforeServe(t *testing.T) {
 	daemontestutils.RequireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }
 
+func TestWaitReady(t *testing.T) {
+	t.Parallel()
+
+	registerer := func(context.Context, bool) *grpc.Server {
+		return grpc.NewServer()
+	}
+
+	testcases := map[string]struct {
+		skipServe bool
+
+		wantBlock bool
+	}{
+		"Success when serving": {},
+
+		"Block when not serving": {skipServe: true, wantBlock: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			addrDir := t.TempDir()
+
+			d := daemon.New(ctx, registerer, addrDir)
+			serverErr := make(chan error)
+			if !tc.skipServe {
+				go func() {
+					defer close(serverErr)
+					serverErr <- d.Serve(ctx)
+				}()
+			}
+
+			ready := make(chan struct{})
+			go func() {
+				// This would block until the server is ready, potentially "forever" if the server never starts.
+				d.WaitReady()
+				close(ready)
+			}()
+
+			select {
+			case err := <-serverErr:
+				require.Fail(t, "Serve error", err)
+			case <-ctx.Done():
+				require.Fail(t, "Context should not be cancelled yet")
+			case <-ready:
+				if tc.wantBlock {
+					require.Fail(t, "WaitReady should not return as the server should not ready")
+				}
+			case <-time.After(1 * time.Second):
+				if !tc.wantBlock {
+					require.Fail(t, "WaitReady should block forever in this case")
+				}
+			}
+		})
+	}
+}
+
 // grpcPersistentCall will create a persistent GRPC connection to the server.
 // It will return immediately. drop() should be called to ends the connection from
 // the client side. It returns the GRPC error code if any.
