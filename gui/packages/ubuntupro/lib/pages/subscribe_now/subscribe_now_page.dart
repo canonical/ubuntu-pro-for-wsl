@@ -32,10 +32,8 @@ class SubscribeNowPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Tooltip(
-              message:
-                  model.purchaseAllowed ? '' : lang.subscribeNowTooltipDisabled,
-              child: ElevatedButton(
+            if (model.purchaseAllowed) ...[
+              ElevatedButton(
                 onPressed: model.purchaseAllowed
                     ? () async {
                         final subs = await model.purchaseSubscription();
@@ -66,10 +64,10 @@ class SubscribeNowPage extends StatelessWidget {
                         );
                       }
                     : null,
-                child: Text(lang.subscribeNow),
+                child: Text(lang.getUbuntuPro),
               ),
-            ),
-            const SizedBox(width: 8.0),
+              const SizedBox(width: 8.0),
+            ],
             OutlinedButton(
               onPressed: model.launchProWebPage,
               child: Text(lang.about),

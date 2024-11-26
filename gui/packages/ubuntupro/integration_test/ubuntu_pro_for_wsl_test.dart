@@ -240,7 +240,7 @@ void main() {
 
           // The "subscribe now page" is only shown if the GUI communicates with the background agent.
           final l10n = tester.l10n<SubscribeNowPage>();
-          final button = find.text(l10n.subscribeNow);
+          final button = find.text(l10n.getUbuntuPro);
           expect(button, findsOneWidget);
 
           await tester.tap(button);
@@ -266,7 +266,7 @@ void main() {
 
           // The "subscribe now page" is only shown if the GUI communicates with the background agent.
           final l10n = tester.l10n<SubscribeNowPage>();
-          final button = find.text(l10n.subscribeNow);
+          final button = find.text(l10n.getUbuntuPro);
           expect(button, findsOneWidget);
 
           await tester.tap(button);
