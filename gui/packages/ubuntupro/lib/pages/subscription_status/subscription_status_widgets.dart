@@ -3,7 +3,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:yaru/yaru.dart';
-import '../../constants.dart';
 import '../widgets/page_widgets.dart';
 
 /// A page content widget built on top of the Dark styled landing page showing the current user active subscription
@@ -48,17 +47,18 @@ class SubscriptionStatus extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            border: Border.all(color: kConfirmColor, width: 1.0),
-            color: const Color(0xFFE6F8E8),
+            border: Border.all(color: theme.colorScheme.success, width: 1.0),
+            color: theme.colorScheme.success
+                .copyWith(lightness: 0.94, saturation: 0.56),
             borderRadius: const BorderRadius.all(Radius.circular(4.0)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.check_circle_outline_outlined,
-                color: kConfirmColor,
+                color: theme.colorScheme.success,
                 size: 24.0,
               ),
               const SizedBox(width: 8.0),

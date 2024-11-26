@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:yaru/yaru.dart';
-import '../../constants.dart';
 import '../../core/either_value_notifier.dart';
 import '../../core/pro_token.dart';
 
@@ -93,16 +92,17 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
                             padding: const EdgeInsets.only(top: 4),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.cancel,
-                                  color: Colors.red,
+                                  color: YaruColors.of(context).error,
                                   size: 16.0,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   _token.errorOrNull!.localize(lang)!,
-                                  style: theme.textTheme.bodySmall!
-                                      .copyWith(color: Colors.redAccent),
+                                  style: theme.textTheme.bodySmall!.copyWith(
+                                    color: YaruColors.of(context).error,
+                                  ),
                                 ),
                               ],
                             ),
@@ -113,16 +113,17 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
                             padding: const EdgeInsets.only(top: 4),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.check_circle,
-                                  color: kConfirmColor,
+                                  color: YaruColors.of(context).success,
                                   size: 16.0,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   lang.tokenValid,
-                                  style: theme.textTheme.bodySmall!
-                                      .copyWith(color: Colors.green),
+                                  style: theme.textTheme.bodySmall!.copyWith(
+                                    color: YaruColors.of(context).success,
+                                  ),
                                 ),
                               ],
                             ),
