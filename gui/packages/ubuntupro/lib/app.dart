@@ -36,8 +36,8 @@ class Pro4WSLApp extends StatelessWidget {
           ],
           child: MaterialApp(
             title: 'Ubuntu Pro',
-            theme: customize(yaru.theme),
-            darkTheme: customize(yaru.darkTheme),
+            theme: yaru.theme,
+            darkTheme: yaru.darkTheme,
             debugShowCheckedModeBanner: false,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -106,51 +106,4 @@ class Pro4WSLApp extends StatelessWidget {
       },
     );
   }
-}
-
-ThemeData? customize(ThemeData? theme) {
-  if (theme == null) return null;
-  const padding = WidgetStatePropertyAll<EdgeInsetsGeometry>(
-    EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-  );
-  const shape = WidgetStatePropertyAll<RoundedRectangleBorder>(
-    RoundedRectangleBorder(
-      borderRadius: BorderRadius.zero,
-    ),
-  );
-  final textStyle = WidgetStatePropertyAll<TextStyle>(
-    theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
-  );
-  final filledButtonTheme = FilledButtonThemeData(
-    style: theme.filledButtonTheme.style?.copyWith(
-      shape: shape,
-      padding: padding,
-      textStyle: textStyle,
-    ),
-  );
-  final elevatedButtonTheme = ElevatedButtonThemeData(
-    style: theme.elevatedButtonTheme.style?.copyWith(
-      shape: shape,
-      padding: padding,
-      textStyle: textStyle,
-    ),
-  );
-  final outlinedButtonTheme = OutlinedButtonThemeData(
-    style: theme.outlinedButtonTheme.style?.copyWith(
-      shape: shape,
-      padding: padding,
-      textStyle: textStyle,
-    ),
-  );
-  final buttonTheme = theme.buttonTheme.copyWith(
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.zero,
-    ),
-  );
-  return theme.copyWith(
-    buttonTheme: buttonTheme,
-    filledButtonTheme: filledButtonTheme,
-    elevatedButtonTheme: elevatedButtonTheme,
-    outlinedButtonTheme: outlinedButtonTheme,
-  );
 }
