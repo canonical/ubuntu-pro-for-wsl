@@ -2,7 +2,6 @@ import 'package:agentapi/agentapi.dart';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter/foundation.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '/core/agent_api_client.dart';
 import '/core/pro_token.dart';
 
@@ -14,10 +13,6 @@ class SubscribeNowModel {
 
   Future<SubscriptionInfo> applyProToken(ProToken token) {
     return client.applyProToken(token.value);
-  }
-
-  void launchProWebPage() {
-    launchUrl(Uri.https('ubuntu.com/pro'));
   }
 
   /// Triggers a purchase transaction via MS Store.

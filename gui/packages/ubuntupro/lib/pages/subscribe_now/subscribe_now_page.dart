@@ -1,9 +1,11 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
@@ -21,12 +23,24 @@ class SubscribeNowPage extends StatelessWidget {
     final model = context.watch<SubscribeNowModel>();
     final lang = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final linkStyle = MarkdownStyleSheet.fromTheme(
+      theme.copyWith(
+        textTheme: theme.textTheme.copyWith(
+          bodyMedium: theme.textTheme.bodyLarge,
+        ),
+      ),
+    );
+
     return LandingPage(
       children: [
-        Text(
-          lang.proHeading,
-          style:
-              theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w100),
+        SizedBox(
+          width: 400,
+          child: MarkdownBody(
+            data:
+                lang.proHeading('[${lang.learnMore}](https://ubuntu.com/pro)'),
+            onTapLink: (_, href, __) => launchUrlString(href!),
+            styleSheet: linkStyle,
+          ),
         ),
         const SizedBox(height: 16),
         Row(
@@ -68,10 +82,6 @@ class SubscribeNowPage extends StatelessWidget {
               ),
               const SizedBox(width: 8.0),
             ],
-            OutlinedButton(
-              onPressed: model.launchProWebPage,
-              child: Text(lang.about),
-            ),
           ],
         ),
         const Padding(
