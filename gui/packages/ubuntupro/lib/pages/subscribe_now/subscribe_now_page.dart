@@ -36,7 +36,8 @@ class SubscribeNowPage extends StatelessWidget {
         SizedBox(
           width: 400,
           child: MarkdownBody(
-            data: lang.proHeading('[Learn more](https://ubuntu.com/pro)'),
+            data:
+                lang.proHeading('[${lang.learnMore}](https://ubuntu.com/pro)'),
             onTapLink: (_, href, __) => launchUrlString(href!),
             styleSheet: linkStyle,
           ),
