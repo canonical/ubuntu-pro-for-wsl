@@ -5,7 +5,7 @@
 The guides in this section will help you quickly
 complete specific tasks with UP4W.
 
-Install and set up of UP4W is with the aid of these guides:
+Install and set up of UP4W with the aid of these guides:
 
 ```{toctree}
 :titlesonly:
