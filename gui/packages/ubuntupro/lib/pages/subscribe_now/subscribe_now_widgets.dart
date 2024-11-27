@@ -61,58 +61,97 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
     final lang = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return YaruExpandable(
-      header: Text(
-        lang.tokenInputTitle,
-        style:
-            theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w100),
-      ),
-      expandIcon: Icon(
-        ProTokenInputField.expandIcon,
-        color: theme.textTheme.bodyMedium!.color,
-      ),
-      isExpanded: widget.isExpanded,
-      child: ValueListenableBuilder(
-        valueListenable: _token,
-        builder: (context, _, __) => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: TextField(
-                inputFormatters: [
-                  // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
-                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                ],
-                autofocus: false,
-                controller: _controller,
-                decoration: InputDecoration(
-                  hintText: lang.tokenInputHint,
-                  errorText: _token.errorOrNull?.localize(lang),
-                  counterText: '',
-                ),
-                onChanged: _token.update,
-                onSubmitted: _onSubmitted,
-              ),
-            ),
-            const SizedBox(
-              width: 8.0,
-            ),
-            ElevatedButton(
-              onPressed: canSubmit ? _handleApplyButton : null,
-              child: Text(lang.confirm),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          lang.tokenInputTitle,
+          style:
+              theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w100),
         ),
-      ),
+        const SizedBox(
+          height: 8,
+        ),
+        ValueListenableBuilder(
+          valueListenable: _token,
+          builder: (context, _, __) => Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextField(
+                  inputFormatters: [
+                    // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
+                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  ],
+                  autofocus: false,
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    hintText: lang.tokenInputHint,
+                    error: _token.errorOrNull?.localize(lang) != null
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.cancel,
+                                  color: YaruColors.of(context).error,
+                                  size: 16.0,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _token.errorOrNull!.localize(lang)!,
+                                  style: theme.textTheme.bodySmall!.copyWith(
+                                    color: YaruColors.of(context).error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : null,
+                    helper: _token.valueOrNull != null
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: YaruColors.of(context).success,
+                                  size: 16.0,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  lang.tokenValid,
+                                  style: theme.textTheme.bodySmall!.copyWith(
+                                    color: YaruColors.of(context).success,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : null,
+                  ),
+                  onChanged: _token.update,
+                  onSubmitted: _onSubmitted,
+                ),
+              ),
+              const SizedBox(
+                width: 8.0,
+              ),
+              ElevatedButton(
+                onPressed: canSubmit ? _handleApplyButton : null,
+                child: Text(lang.attach),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 /// A value-notifier for the [ProToken] with validation.
-/// Since we don't want to start the UI with an error due the text field being
-/// empty, this stores a nullable [ProToken] object
 class ProTokenValue extends EitherValueNotifier<TokenError, ProToken?> {
-  ProTokenValue() : super.ok(null);
+  ProTokenValue() : super.err(TokenError.empty);
 
   String? get token => valueOrNull?.value;
 

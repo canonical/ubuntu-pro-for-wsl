@@ -47,17 +47,20 @@ class SubscriptionStatus extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFF0E8420), width: 1.0),
-            color: const Color(0xFFE6F8E8),
+            border:
+                Border.all(color: YaruColors.of(context).success, width: 1.0),
+            color: YaruColors.of(context)
+                .success
+                .copyWith(lightness: 0.94, saturation: 0.56),
             borderRadius: const BorderRadius.all(Radius.circular(4.0)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.check_circle_outline_outlined,
-                color: Color(0xFF0E8420),
+                color: YaruColors.of(context).success,
                 size: 24.0,
               ),
               const SizedBox(width: 8.0),

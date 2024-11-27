@@ -7,7 +7,6 @@ import 'package:stack_trace/stack_trace.dart' as stack_trace;
 import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/main.dart' as app;
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
-import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 
 import '../test/utils/l10n_tester.dart';
@@ -63,11 +62,6 @@ Future<void> testManualTokenInput(WidgetTester tester) async {
   // The "subscribe now page" is only shown if the GUI communicates with the background agent.
   var l10n = tester.l10n<SubscribeNowPage>();
 
-  // expands the collapsed input field group
-  final toggle = find.byIcon(ProTokenInputField.expandIcon);
-  await tester.tap(toggle);
-  await tester.pumpAndSettle();
-
   // finds the pro token from the environment
   final goodToken = Environment()[proTokenEnv];
   expect(
@@ -82,7 +76,7 @@ Future<void> testManualTokenInput(WidgetTester tester) async {
   await tester.pumpAndSettle();
 
   // submits the input.
-  final button = find.text(l10n.confirm);
+  final button = find.text(l10n.attach);
   await tester.tap(button);
   await tester.pumpAndSettle();
 

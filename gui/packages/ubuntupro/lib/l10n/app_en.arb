@@ -1,10 +1,11 @@
 {
     "appTitle": "Ubuntu Pro for WSL",
     "tokenErrorEmpty": "Token cannot be empty",
-    "tokenErrorInvalid": "Token invalid",
+    "tokenErrorInvalid": "Invalid token",
+    "tokenValid": "Valid token",
     "tokenInputTitle": "Already have a token?",
     "tokenInputHint": "Paste your Ubuntu Pro token here",
-    "confirm": "Confirm",
+    "attach": "Attach",
     "applyProToken": "Apply Pro Token",
     "applyingProToken": "Applying token {token}",
     "@applyingProToken": {
