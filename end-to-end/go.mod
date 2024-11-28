@@ -6,7 +6,7 @@ require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/sys v0.27.0
