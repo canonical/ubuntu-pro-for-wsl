@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/snapcore/go-gettext v0.0.0-20230721153050-9082cdc2db05
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
 	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53
 	google.golang.org/grpc v1.68.0
