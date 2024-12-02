@@ -100,17 +100,39 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 	return info, nil
 }
 
+type transportCredentialsType struct{}
+
+// InsecureCredentials is the key used in tests for insecure credentials.
+var InsecureCredentials = transportCredentialsType{}
+
 // transportCredentials reads the Landscape client config to check if a SSL public key is specified.
 //
-// If this credential is not specified, an insecure credential is returned.
-// If the credential is specified but erroneous, an error is returned.
-func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCredentials, err error) {
+// If this credential is not specified, credentials based on the system's certificate pool is returned.
+// If the SSL public key is specified but invalid, an error is returned.
+// If the context has the "InsecureCredentials" key set to "true", insecure credentials are returned (for testing purposes).
+func transportCredentials(ctx context.Context, sslPublicKeyPath string) (cred credentials.TransportCredentials, err error) {
 	defer decorate.OnError(&err, "Landscape credentials")
 
-	if sslPublicKeyPath == "" {
+	isInsecure := ctx.Value(InsecureCredentials)
+	// ctx.Value() returns 'any', thus this comparison is cleaner than a type assertion.
+	if isInsecure == true {
+		log.Warningf(ctx, "Landscape: context requires insecure credentials, ignoring server's public key %s", sslPublicKeyPath)
 		return insecure.NewCredentials(), nil
 	}
 
+	if sslPublicKeyPath == "" {
+		certPool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, fmt.Errorf("could not load system certificates: %v", err)
+		}
+
+		return credentials.NewTLS(&tls.Config{
+			RootCAs:    certPool,
+			MinVersion: tls.VersionTLS12,
+		}), nil
+	}
+
+	log.Infof(ctx, "Landscape: loading server's SSL public key %s", sslPublicKeyPath)
 	cert, err := os.ReadFile(sslPublicKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
@@ -118,9 +140,10 @@ func transportCredentials(sslPublicKeyPath string) (cred credentials.TransportCr
 
 	certPool := x509.NewCertPool()
 	if ok := certPool.AppendCertsFromPEM(cert); !ok {
-		return nil, fmt.Errorf("failed to add server CA's certificate: %v", err)
+		return nil, fmt.Errorf("failed to add server's certificate to the trust pool: %v", err)
 	}
 
+	log.Infof(ctx, "Landscape: using server's SSL public key %s instead of system's certificate pool", sslPublicKeyPath)
 	return credentials.NewTLS(&tls.Config{
 		RootCAs:    certPool,
 		MinVersion: tls.VersionTLS12,
