@@ -60,7 +60,7 @@ dependencies:
   win32: ^5.8.0
   win32_registry: ^1.1.5
   windows_single_instance: ^1.0.1
-  wizard_router: ^1.2.0
+  wizard_router: ^1.4.0
   yaru: ^5.3.2
 
 dev_dependencies:
