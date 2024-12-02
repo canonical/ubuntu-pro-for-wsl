@@ -7,7 +7,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240909080904-bec1abeb3a37
 	github.com/golangci/golangci-lint v1.62.0
 	github.com/spf13/cobra v1.8.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/vuln v1.1.3
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1
 	google.golang.org/protobuf v1.35.2
