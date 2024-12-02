@@ -110,7 +110,8 @@ func TestConnect(t *testing.T) {
 		emptyToken bool
 		tokenErr   bool
 
-		requireCertificate         bool
+		clientUsesTLS              bool
+		serverUsesTLS              bool
 		breakLandscapeClientConfig bool
 
 		breakUIDFile bool
@@ -123,7 +124,7 @@ func TestConnect(t *testing.T) {
 	}{
 		"Success":                         {},
 		"Success in non-first contact":    {uid: "123", wantSingleMessage: true},
-		"Success with an SSL certificate": {requireCertificate: true},
+		"Success with an SSL certificate": {clientUsesTLS: true, serverUsesTLS: true},
 
 		// These tests are for the error cases when the error is logged but not returned
 		"Silent error when the config is empty":                   {wantNotConnected: true},
@@ -138,8 +139,9 @@ func TestConnect(t *testing.T) {
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
 		"Error when the config cannot be parsed":               {wantErr: true},
-		"Error when the SSL certificate cannot be read":        {requireCertificate: true, wantErr: true},
-		"Error when the SSL certificate is not valid":          {requireCertificate: true, wantErr: true},
+		"Error when the SSL certificate cannot be read":        {clientUsesTLS: true, serverUsesTLS: true, wantErr: true},
+		"Error when the SSL certificate is not valid":          {clientUsesTLS: true, serverUsesTLS: true, wantErr: true},
+		"Error when the SSL certificate is not trusted":        {clientUsesTLS: true, serverUsesTLS: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -147,11 +149,13 @@ func TestConnect(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			p := ""
-			if tc.requireCertificate {
-				p = certPath
-			} else {
+			if !tc.clientUsesTLS {
 				ctx = context.WithValue(ctx, landscape.InsecureCredentials, true)
+			}
+
+			p := ""
+			if tc.serverUsesTLS {
+				p = certPath
 			}
 
 			if wsl.MockAvailable() {
