@@ -15,31 +15,32 @@ Read our [getting started tutorial](tutorial/getting-started) to begin.
 
 ## In this documentation
 
-````{grid} 1 1 2 2
+````{grid} 1 1 1 1
 
 ```{grid-item-card} [Tutorials](tutorial/index)
+:link: tutorial/index
+:link-type: doc
 
 **Start here** with hands-on tutorials for new users, guiding you through your first-steps
-```
-
-```{grid-item-card} [How-to guides](howto/index)
-
-**Follow step-by-step** instructions for key operations and common tasks
 ```
 
 ````
 
 ````{grid} 1 1 2 2
-:reverse:
 
-```{grid-item-card} [Reference](reference/index)
+```{grid-item-card} [How-to guides](howto/index)
+:link: howto/index
+:link-type: doc
 
-**Read technical descriptions** of important factual information relating to UP4W
+**Follow step-by-step** instructions for key operations and common tasks
 ```
 
-```{grid-item-card} [UP4W Dev](dev/index)
 
-**Review guides and reference material** aimed at contributors
+```{grid-item-card} [Reference](reference/index)
+:link: reference/index
+:link-type: doc
+
+**Read technical descriptions** of important factual information relating to UP4W
 ```
 
 ````
@@ -58,5 +59,4 @@ UP4W <self>
 Tutorial </tutorial/index>
 How-to guides </howto/index>
 Reference </reference/index>
-UP4W Dev </dev/index>
 ```

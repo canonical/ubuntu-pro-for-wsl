@@ -1,12 +1,12 @@
-(reference)=
+(debugging-and-testing)=
 
-# Reference
+# Debugging and testing
 
-The reference material in this section provides technical descriptions of Ubuntu Pro for WSL.
+The reference material in this section is helpful for contributors when debugging the application
+and contributing code.
 
 ```{toctree}
 :titlesonly:
-
 
 Windows Agent CLI <07-windows-agent-command-line-reference>
 WSL Pro Service CLI <08-wsl-pro-service-command-line-reference>

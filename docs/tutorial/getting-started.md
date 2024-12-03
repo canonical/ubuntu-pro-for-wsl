@@ -208,5 +208,4 @@ with your Landscape server:
 
 Our documentation includes several other [how-to guides](../howto/index)
 for completing specific tasks, [reference](../reference/index) material
-describing key information relating to UP4W and dedicated [documentation for
-developers](../dev/index).
+describing key information relating to UP4W.

@@ -2,18 +2,34 @@
 
 # How-to guides
 
-These how-to guides cover key operations and processes in UP4W.
+The guides in this section will help you quickly
+complete specific tasks with UP4W.
+
+Install and set up of UP4W with the aid of these guides:
 
 ```{toctree}
 :titlesonly:
 
-Install UP4W and add a Pro token <set-up-up4w>
-Verify Pro subscription and attachment <verify-subscribe-attach>
-Back up and restore Ubuntu WSL instances <backup-and-restore>
-Uninstalling UP4W, Ubuntu WSL apps and WSL <uninstalling>
-Configure the Landscape client with UP4W  <set-up-landscape-client>
-Set up a Landscape server within WSL <set-up-landscape-server-in-wsl>
-Create WSL instances on multiple Windows machines with the Landscape API <custom-rootfs-multiple-targets>
-Enforce the UP4W background agent startup remotely using the Windows Registry <enforce-agent-startup-remotely-registry>
-Start the UP4W background agent remotely <start-agent-remotely>
+index-setup
+
+```
+
+When remotely deploying and managing Ubuntu WSL instances, the following guides
+are helpful:
+
+```{toctree}
+:titlesonly:
+
+index-remote-deployment
+
+```
+
+If you are interested in contributing to UP4W as a developer, consult the
+guides below:
+
+```{toctree}
+:titlesonly:
+
+index-contributing
+
 ```

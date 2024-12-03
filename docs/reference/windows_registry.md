@@ -5,7 +5,7 @@ The Windows registry is a database provided by Windows where programs can read a
 > See more:
 [Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
 
-In UP4W, you can use the Windows registry to supply the configuration for [Ubuntu Pro](ref::ubuntu-pro) and [Landscape](ref::landscape) to the [Windows Agent](ref::up4w-windows-agent).
+In UP4W, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the [Windows Agent](ref::up4w-windows-agent).
 
 > See more: [install UP4W and add a Pro token](howto::config-up4w)
 
