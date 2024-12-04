@@ -59,6 +59,7 @@ class Pro4WSLPage extends StatelessWidget {
       appBar: showTitleBar
           ? YaruWindowTitleBar(
               title: Text(lang.appTitle),
+              buttonPadding: EdgeInsets.zero,
             )
           : null,
       body: body,
