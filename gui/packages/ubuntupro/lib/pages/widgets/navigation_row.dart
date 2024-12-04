@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class NavigationRow extends StatelessWidget {
   const NavigationRow({
@@ -16,11 +17,19 @@ class NavigationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        OutlinedButton(onPressed: onBack, child: Text(backText ?? 'Back')),
-        FilledButton(onPressed: onNext, child: Text(nextText ?? 'Next')),
+        OutlinedButton(
+          onPressed: onBack,
+          child: Text(backText ?? lang.buttonBack),
+        ),
+        FilledButton(
+          onPressed: onNext,
+          child: Text(nextText ?? lang.buttonNext),
+        ),
       ],
     );
   }
