@@ -68,6 +68,11 @@ var defaultOptions = options{
 	netMonitoringProvider: netmonitoring.DefaultAPIProvider,
 }
 
+// WaitReady blocks until the daemon is ready to serve, i.e. until Serve has been called.
+func (d *Daemon) WaitReady() {
+	<-d.serving
+}
+
 // Option represents an optional function to override getWslIP default values.
 type Option func(*options)
 
@@ -89,13 +94,13 @@ func (d *Daemon) Serve(ctx context.Context, args ...Option) error {
 	// Once this method leaves the daemon is done forever.
 	defer d.cleanup()
 
-	// let the world know we were requested to serve.
-	close(d.serving)
-
 	opts := defaultOptions
 	for _, opt := range args {
 		opt(&opts)
 	}
+
+	// let the world know we were requested to serve.
+	close(d.serving)
 
 	for {
 		err := d.tryServingOnce(ctx, opts)

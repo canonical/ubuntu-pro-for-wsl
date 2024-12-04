@@ -186,6 +186,10 @@ func (a *App) Quit() {
 // Note: we need to use a pointer to not copy the App object before the daemon is ready, and thus, creates a data race.
 func (a *App) WaitReady() {
 	<-a.ready
+	if a.daemon == nil {
+		return
+	}
+	a.daemon.WaitReady()
 }
 
 // RootCmd returns a copy of the root command for the app. Shouldn't be in general necessary apart when running generators.
