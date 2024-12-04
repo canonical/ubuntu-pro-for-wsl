@@ -403,7 +403,6 @@ Widget buildApp(
   return buildSingleRouteMultiProviderApp(
     child: LandscapePage(
       onApplyConfig: () {},
-      onSkip: () {},
       onBack: () {},
     ),
     providers: [ChangeNotifierProvider<LandscapeModel>.value(value: model)],
