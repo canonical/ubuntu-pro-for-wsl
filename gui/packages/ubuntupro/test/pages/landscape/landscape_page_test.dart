@@ -12,11 +12,13 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/widgets/page_widgets.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 import 'package:yaru_test/yaru_test.dart';
 
 import '../../utils/build_multiprovider_app.dart';
+import '../../utils/url_launcher_mock.dart';
 import 'landscape_page_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
@@ -28,6 +30,22 @@ void main() {
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
   FilePicker.platform = FakeFilePicker([caCert]);
+
+  final launcher = FakeUrlLauncher();
+  UrlLauncherPlatform.instance = launcher;
+
+  testWidgets('launch web page', (tester) async {
+    final model = LandscapeModel(MockAgentApiClient());
+    final app = buildApp(model);
+    await tester.pumpWidget(app);
+    final context = tester.element(find.byType(LandscapePage));
+    final lang = AppLocalizations.of(context);
+
+    expect(launcher.launched, isFalse);
+    await tester.tapOnText(find.textRange.ofSubstring(lang.learnMore));
+    await tester.pump();
+    expect(launcher.launched, isTrue);
+  });
 
   group('input sections', () {
     testWidgets('default state', (tester) async {
