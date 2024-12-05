@@ -13,6 +13,7 @@ import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/launch_agent.dart';
 import 'package:ubuntupro/main.dart' as app;
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
+import 'package:ubuntupro/pages/landscape_skip/landscape_skip_page.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
@@ -128,18 +129,15 @@ void main() {
         await tester.tap(button);
         await tester.pumpAndSettle();
 
-        // check that we transitioned to the LandscapePage
-        l10n = tester.l10n<LandscapePage>();
+        // check we transition to skip page
+        l10n = tester.l10n<LandscapeSkipPage>();
         final radios = find.byType(YaruSelectableContainer);
-        expect(radios, findsNWidgets(3));
-        await tester.tap(radios.at(1));
-        await tester.pump();
-        await tester.tap(radios.at(0));
-        await tester.pump();
-        await tester.tap(radios.at(2));
-        await tester.pump();
-        final skip = find.button(l10n.buttonSkip);
+        expect(radios, findsNWidgets(2));
+        final skip = find.text(l10n.landscapeSkip);
         await tester.tap(skip);
+        await tester.pump();
+        final next = find.button(l10n.buttonNext);
+        await tester.tap(next);
         await tester.pumpAndSettle();
 
         // checks that we transitioned to the SubscriptionStatusPage
@@ -170,6 +168,17 @@ void main() {
         // submits the input.
         final button = find.text(l10n.attach);
         await tester.tap(button);
+        await tester.pumpAndSettle();
+
+        // check we transition to skip page
+        l10n = tester.l10n<LandscapeSkipPage>();
+        final radios = find.byType(YaruSelectableContainer);
+        expect(radios, findsNWidgets(2));
+        final register = find.text(l10n.landscapeSkipRegister);
+        await tester.tap(register);
+        await tester.pump();
+        final next = find.button(l10n.buttonNext);
+        await tester.tap(next);
         await tester.pumpAndSettle();
 
         // check that we transitioned to the LandscapePage
