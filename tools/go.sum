@@ -580,6 +580,8 @@ github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb h1:8aYaLeK5kwneVfl
 github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
 github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53 h1:oP5UldDfHJsg8tJuYqWzEfGTmOqsb5gtLEisUYaIoB4=
 github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53/go.mod h1:h7p0dcWeNrhTV3bM+fdVSAfpWepPOqZk4bX5YdmIhRc=
+github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452 h1:Fr0hzjkQNxXR1/9qqOcqFEa9OYnux1+MuaAgf44QxYc=
+github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452/go.mod h1:+iFGK9K9rSCgPevBqlGVIudoaVuTd0Djg6w9ZinDPrE=
 github.com/ultraware/funlen v0.1.0 h1:BuqclbkY6pO+cvxoq7OsktIXZpgBSkYTQtmwhAK81vI=
 github.com/ultraware/funlen v0.1.0/go.mod h1:XJqmOQja6DpxarLj6Jj1U7JuoS8PvL4nEqDaQhy22p4=
 github.com/ultraware/whitespace v0.1.1 h1:bTPOGejYFulW3PkcrqkeQwOd6NKOOXvmGD9bo/Gk8VQ=
@@ -795,6 +797,8 @@ golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.27.0 h1:wBqf8DvsY9Y/2P8gAfPDEYNuS30J4lPHJxXSb/nJZ+s=
 golang.org/x/sys v0.27.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
+golang.org/x/sys v0.28.0 h1:Fksou7UEQUWlKvIdsqzJmUmCX3cZuD2+P3XyyzwMhlA=
+golang.org/x/sys v0.28.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/telemetry v0.0.0-20240522233618-39ace7a40ae7 h1:FemxDzfMUcK2f3YY4H+05K9CDzbSVr2+q/JKN45pey0=
 golang.org/x/telemetry v0.0.0-20240522233618-39ace7a40ae7/go.mod h1:pRgIJT+bRLFKnoM1ldnzKoxTIn14Yxz928LQRYYgIN0=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
