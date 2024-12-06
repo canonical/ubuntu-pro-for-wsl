@@ -201,14 +201,9 @@ func (e newInstanceInfoMinorError) Error() string {
 
 // newInstanceInfo initializes a Instances_InstanceInfo from a distro.
 func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_InstanceInfo, err error) {
-	state, err := d.State()
+	state, err := tryDistroState(d, 1*time.Second, 5*time.Second)
 	if err != nil {
-		// Try again
-		<-time.After(1 * time.Second)
-		state, err = d.State()
-		if err != nil {
-			return info, fmt.Errorf("WSL internal error after retry: %v", err)
-		}
+		return info, err
 	}
 
 	var instanceState landscapeapi.InstanceState
@@ -232,6 +227,25 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	}
 
 	return info, nil
+}
+
+// tryDistroState attempts to get the state of a distro, retrying every interval until timeout.
+func tryDistroState(d *distro.Distro, interval, timeout time.Duration) (state gowsl.State, err error) {
+	// set the timeout timer
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	state, err = d.State()
+	for err != nil {
+		select {
+		case <-time.After(interval):
+			state, err = d.State()
+		case <-timer.C:
+			return state, fmt.Errorf("WSL internal error after retry: %v", err)
+		}
+	}
+
+	return state, nil
 }
 
 func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf string) {
