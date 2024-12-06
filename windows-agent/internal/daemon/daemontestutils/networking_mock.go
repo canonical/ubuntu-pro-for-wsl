@@ -144,7 +144,7 @@ func getLocalPrivateIP() net.IP {
 		return nil
 	}
 	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.IsPrivate() {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.IsPrivate() && ipnet.IP.To4() != nil {
 			return ipnet.IP
 		}
 	}
