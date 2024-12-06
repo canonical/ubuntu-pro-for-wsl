@@ -110,7 +110,8 @@ func TestConnect(t *testing.T) {
 		emptyToken bool
 		tokenErr   bool
 
-		requireCertificate         bool
+		clientUsesTLS              bool
+		serverUsesTLS              bool
 		breakLandscapeClientConfig bool
 
 		breakUIDFile bool
@@ -123,7 +124,7 @@ func TestConnect(t *testing.T) {
 	}{
 		"Success":                         {},
 		"Success in non-first contact":    {uid: "123", wantSingleMessage: true},
-		"Success with an SSL certificate": {requireCertificate: true},
+		"Success with an SSL certificate": {clientUsesTLS: true, serverUsesTLS: true},
 
 		// These tests are for the error cases when the error is logged but not returned
 		"Silent error when the config is empty":                   {wantNotConnected: true},
@@ -138,8 +139,9 @@ func TestConnect(t *testing.T) {
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
 		"Error when the config cannot be parsed":               {wantErr: true},
-		"Error when the SSL certificate cannot be read":        {wantErr: true},
-		"Error when the SSL certificate is not valid":          {wantErr: true},
+		"Error when the SSL certificate cannot be read":        {clientUsesTLS: true, serverUsesTLS: true, wantErr: true},
+		"Error when the SSL certificate is not valid":          {clientUsesTLS: true, serverUsesTLS: true, wantErr: true},
+		"Error when the SSL certificate is not trusted":        {clientUsesTLS: true, serverUsesTLS: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -147,14 +149,18 @@ func TestConnect(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			if wsl.MockAvailable() {
-				t.Parallel()
-				ctx = wsl.WithMock(ctx, wslmock.New())
+			if !tc.clientUsesTLS {
+				ctx = context.WithValue(ctx, landscape.InsecureCredentials, true)
 			}
 
 			p := ""
-			if tc.requireCertificate {
+			if tc.serverUsesTLS {
 				p = certPath
+			}
+
+			if wsl.MockAvailable() {
+				t.Parallel()
+				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p)
@@ -305,7 +311,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := context.WithValue(context.Background(), landscape.InsecureCredentials, true)
 			if wsl.MockAvailable() {
 				t.Parallel()
 				mock := wslmock.New()
@@ -519,7 +525,7 @@ func TestAutoReconnection(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.WithValue(context.Background(), landscape.InsecureCredentials, true))
 			defer cancel()
 
 			if wsl.MockAvailable() {
@@ -760,6 +766,8 @@ func TestReconnect(t *testing.T) {
 				certPath = t.TempDir()
 				testutils.GenerateTempCertificate(t, certPath)
 				lcapeConfig = fmt.Sprintf("%s\nssl_public_key = {{ .CertPath }}/cert.pem", defaultLandscapeConfig)
+			} else {
+				ctx = context.WithValue(ctx, landscape.InsecureCredentials, true)
 			}
 
 			lis, server, mockServerService := setUpLandscapeMock(t, ctx, "localhost:", certPath)
