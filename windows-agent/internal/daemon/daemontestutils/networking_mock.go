@@ -57,7 +57,7 @@ func NewHostIPConfigMock(state MockIPAdaptersState) MockIPConfig {
 	}
 
 	// prefer not to listen on public interfaces if possible.
-	localIP := getLocalPrivateIP()
+	localIP := getLocalPrivateIPv4()
 	if localIP == nil {
 		localIP = net.IPv4(0, 0, 0, 0)
 	}
@@ -137,14 +137,14 @@ func fillBufferFromTemplate(adaptersAddresses *IPAdapterAddresses, sizePointer *
 	return nil
 }
 
-// getLocalPrivateIP returns one non loopback local private IP of the host.
-func getLocalPrivateIP() net.IP {
+// getLocalPrivateIPv4 returns one non loopback local private IPv4 of the host.
+func getLocalPrivateIPv4() net.IP {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return nil
 	}
 	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.IsPrivate() {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.IsPrivate() && ipnet.IP.To4() != nil {
 			return ipnet.IP
 		}
 	}
