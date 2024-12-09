@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wizard_router/wizard_router.dart';
 
+import '../../constants.dart';
 import '../../routes.dart';
 import '../landscape/landscape_model.dart';
 import '../widgets/navigation_row.dart';
@@ -32,7 +33,7 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
 
     return ColumnPage(
       svgAsset: 'assets/Landscape-tag.svg',
-      title: lang.landscapeTitle,
+      title: kLandscapeTitle,
       left: [
         MarkdownBody(
           data: lang.landscapeHeading(

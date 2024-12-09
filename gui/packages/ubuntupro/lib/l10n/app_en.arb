@@ -58,10 +58,9 @@
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
     "landscapeSkip": "Skip for now",
-    "landscapeSkipDescription": "You can always configure Landscape later",
+    "landscapeSkipDescription": "You can always configure Landscape later in this app",
     "landscapeSkipRegister": "Register with Landscape",
 
-    "landscapeTitle": "Landscape",
     "landscapeHeading": "Configure the connection to Landscape to manage your Ubuntu WSL instances remotely. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {

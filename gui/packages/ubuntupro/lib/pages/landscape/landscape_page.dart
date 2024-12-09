@@ -14,6 +14,7 @@ import 'package:yaru/yaru.dart';
 
 import '/core/agent_api_client.dart';
 import '/pages/widgets/page_widgets.dart';
+import '../../constants.dart';
 import 'landscape_model.dart';
 
 const _kHeight = 8.0;
@@ -49,7 +50,7 @@ class LandscapePage extends StatelessWidget {
 
     return LandingPage(
       svgAsset: 'assets/Landscape-tag.svg',
-      title: lang.landscapeTitle,
+      title: kLandscapeTitle,
       children: [
         // Only rebuilds if the value of model.landscapeURI changes (never in production)
         Selector<LandscapeModel, Uri>(
