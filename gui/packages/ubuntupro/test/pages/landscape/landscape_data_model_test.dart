@@ -27,7 +27,7 @@ void main() {
     };
     for (final MapEntry(key: name, value: tc) in testcases.entries) {
       test(name, () {
-        final c = LandscapeSaasConfig();
+        final c = LandscapeManualConfig();
         c.accountName = tc.account;
         expect(c.accountNameError, tc.wantError);
         expect(c.isComplete, tc.wantComplete);
