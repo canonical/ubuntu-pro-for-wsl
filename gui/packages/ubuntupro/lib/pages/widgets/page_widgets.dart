@@ -196,7 +196,7 @@ class ColumnPage extends StatelessWidget {
 
     return Pro4WSLPage(
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(32.0, 32.0, 32.0, 32.0),
+        padding: const EdgeInsets.fromLTRB(32.0, 24.0, 32.0, 24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

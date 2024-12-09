@@ -15,9 +15,8 @@ import 'package:yaru/yaru.dart';
 import '/constants.dart';
 import '/core/agent_api_client.dart';
 import '/pages/widgets/page_widgets.dart';
+import '../widgets/navigation_row.dart';
 import 'landscape_model.dart';
-
-const _kHeight = 8.0;
 
 /// Defines the overall structure of the Landscape configuration page and seggregates
 /// the portions of the page that must rebuild at the relevant state changes.
@@ -38,6 +37,7 @@ class LandscapePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final model = context.watch<LandscapeModel>();
     final linkStyle = MarkdownStyleSheet.fromTheme(
       Theme.of(context).copyWith(
         textTheme: theme.textTheme.copyWith(
@@ -48,34 +48,26 @@ class LandscapePage extends StatelessWidget {
       ),
     );
 
-    return LandingPage(
+    return ColumnPage(
       svgAsset: 'assets/Landscape-tag.svg',
       title: kLandscapeTitle,
-      children: [
-        // Only rebuilds if the value of model.landscapeURI changes (never in production)
-        Selector<LandscapeModel, Uri>(
-          selector: (_, model) => LandscapeModel.landscapeURI,
-          builder: (context, uri, _) => MarkdownBody(
-            data: lang.landscapeHeading('[${lang.learnMore}]($uri)'),
-            onTapLink: (_, href, __) => launchUrl(uri),
-            styleSheet: linkStyle,
+      left: [
+        MarkdownBody(
+          data: lang.landscapeHeading(
+            '[${lang.learnMore}](${LandscapeModel.landscapeURI})',
           ),
-        ),
-
-        // Main content: will rebuild whenever model notifies listeners, no filtering.
-        Consumer<LandscapeModel>(
-          builder: (context, model, _) => LandscapeConfigForm(model),
-        ),
-        const Spacer(),
-        // Navigation buttons: only rebuild when the value of model.isComplete changes.
-        Selector<LandscapeModel, bool>(
-          selector: (_, model) => model.isComplete,
-          builder: (context, isComplete, _) => _NavigationButtonRow(
-            onBack: onBack,
-            onNext: isComplete ? () => _tryApplyConfig(context) : null,
-          ),
+          onTapLink: (_, href, __) => launchUrl(LandscapeModel.landscapeURI),
+          styleSheet: linkStyle,
         ),
       ],
+      right: [
+        LandscapeConfigForm(model),
+      ],
+      navigationRow: NavigationRow(
+        onBack: onBack,
+        onNext: model.isComplete ? () => _tryApplyConfig(context) : null,
+        nextText: lang.landscapeRegister,
+      ),
     );
   }
 
@@ -130,205 +122,37 @@ class LandscapeConfigForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2 * _kHeight),
-      // The FocusTraversalGroup is necessary to keep the tab navigation order wed expect:
-      // We ping-pong between the radio buttons and the form fields that belong to the selected radio button,
-      // by assigning odd NumericFocusOrder() values to the radio buttons (on the left) and even values to the form fields,
-      // while still skipping the invisible form fields.
-      child: FocusTraversalGroup(
-        policy: OrderedTraversalPolicy(),
-        // Although IntrinsicHeight is an expensive widget, it is necessary to make the Row find a height constraint.
-        // Otherwise the VerticalDivider will not be drawn.
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Flexible(
-                child: Column(
-                  children: [
-                    if (model.isSaaSSupported)
-                      FocusTraversalOrder(
-                        order: const NumericFocusOrder(0),
-                        child: _ConfigTypeRadio(
-                          value: LandscapeConfigType.saas,
-                          title: lang.landscapeQuickSetupSaas,
-                          subtitle: lang.landscapeQuickSetupSaasHint,
-                          groupValue: model.configType,
-                          onChanged: model.setConfigType,
-                        ),
-                      ),
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(2),
-                      child: _ConfigTypeRadio(
-                        value: LandscapeConfigType.selfHosted,
-                        title: lang.landscapeQuickSetupSelfHosted,
-                        subtitle: lang.landscapeQuickSetupSelfHostedHint,
-                        groupValue: model.configType,
-                        onChanged: model.setConfigType,
-                      ),
-                    ),
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(4),
-                      child: _ConfigTypeRadio(
-                        value: LandscapeConfigType.custom,
-                        title: lang.landscapeCustomSetup,
-                        subtitle: lang.landscapeCustomSetupHint,
-                        groupValue: model.configType,
-                        onChanged: model.setConfigType,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const VerticalDivider(
-                thickness: 2.0,
-                width: 16.0,
-              ),
-              Flexible(
-                // Thanks to IndexedStack, all three subforms exist, which prevents dismissing their states when the user
-                // transitions between the config type options, but only one is shown at time.
-                // We disable focusability for the invisible forms to prevent tabbing into them.
-                child: IndexedStack(
-                  index: model.configType.index,
-                  children: [
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(1),
-                      child: FocusTraversalGroup(
-                        descendantsAreFocusable:
-                            model.configType == LandscapeConfigType.saas,
-                        child: _SaasForm(model),
-                      ),
-                    ),
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(3),
-                      child: FocusTraversalGroup(
-                        descendantsAreFocusable:
-                            model.configType == LandscapeConfigType.selfHosted,
-                        child: _SelfHostedForm(model),
-                      ),
-                    ),
-                    FocusTraversalOrder(
-                      order: const NumericFocusOrder(5),
-                      child: FocusTraversalGroup(
-                        descendantsAreFocusable:
-                            model.configType == LandscapeConfigType.custom,
-                        child: _CustomFileForm(model),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A classical Back/Skip/Next button row, with the necessary callbacks.
-class _NavigationButtonRow extends StatelessWidget {
-  const _NavigationButtonRow({
-    this.onBack,
-    this.onNext,
-  });
-
-  final void Function()? onBack;
-  final void Function()? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = AppLocalizations.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
-        OutlinedButton(
-          onPressed: onBack,
-          child: Text(lang.buttonBack),
+        YaruRadioListTile(
+          value: LandscapeConfigType.saas,
+          groupValue: model.configType,
+          contentPadding: EdgeInsets.zero,
+          onChanged: model.setConfigType,
+          title: Text(lang.landscapeSetupManual),
+          subtitle: Text(lang.landscapeSetupManualHint),
         ),
-        const Spacer(),
-        ElevatedButton(
-          onPressed: onNext,
-          child: Text(lang.buttonNext),
+        const SizedBox(height: 8),
+        _ManualForm(model),
+        const SizedBox(height: 24),
+        YaruRadioListTile(
+          value: LandscapeConfigType.custom,
+          groupValue: model.configType,
+          contentPadding: EdgeInsets.zero,
+          onChanged: model.setConfigType,
+          title: Text(lang.landscapeSetupCustom),
+          subtitle: Text(lang.landscapeSetupCustomHint),
         ),
+        const SizedBox(height: 8),
+        _CustomFileForm(model),
       ],
-    );
-  }
-}
-
-/// A selectable list tile containing a radio button, with a title and a subtitle.
-class _ConfigTypeRadio extends StatelessWidget {
-  const _ConfigTypeRadio({
-    required this.value,
-    required this.title,
-    required this.subtitle,
-    required this.groupValue,
-    required this.onChanged,
-  });
-  final String title, subtitle;
-  final LandscapeConfigType value, groupValue;
-  final Function(LandscapeConfigType?)? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    // Adds a nice visual clue that the tile is selected.
-    return YaruSelectableContainer(
-      selected: groupValue == value,
-      selectionColor: Theme.of(context).colorScheme.tertiaryContainer,
-      child: YaruRadioListTile(
-        contentPadding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
-        dense: true,
-        title: Text(title),
-        subtitle: Text(subtitle),
-        value: value,
-        groupValue: groupValue,
-        onChanged: onChanged,
-      ),
     );
   }
 }
 
 /// The subform for quick-configuring Landscape SaaS.
-class _SaasForm extends StatelessWidget {
-  const _SaasForm(this.model);
-  final LandscapeModel model;
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = AppLocalizations.of(context);
-
-    return Column(
-      children: [
-        TextField(
-          decoration: InputDecoration(
-            label: Text(lang.landscapeAccountNameLabel),
-            errorText: model.saas.accountNameError
-                ? lang.landscapeAccountNameError
-                : null,
-          ),
-          onChanged: model.setAccountName,
-        ),
-        const SizedBox(
-          height: 8,
-        ),
-        TextField(
-          decoration: InputDecoration(
-            label: Text(lang.landscapeKeyLabel),
-            hintText: '163456',
-          ),
-          onChanged: model.setSaasRegistrationKey,
-        ),
-      ],
-    );
-  }
-}
-
-/// The subform for quick-configuring Landscape Self-Hosted.
-class _SelfHostedForm extends StatelessWidget {
-  const _SelfHostedForm(this.model);
+class _ManualForm extends StatelessWidget {
+  const _ManualForm(this.model);
   final LandscapeModel model;
 
   @override
@@ -340,31 +164,29 @@ class _SelfHostedForm extends StatelessWidget {
         TextField(
           decoration: InputDecoration(
             label: Text(lang.landscapeFQDNLabel),
-            errorText:
-                model.selfHosted.fqdnError ? lang.landscapeFQDNError : null,
+            errorText: model.saas.fqdnError ? lang.landscapeFQDNError : null,
           ),
           onChanged: model.setFqdn,
+          enabled: model.configType == LandscapeConfigType.saas,
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: _kHeight),
-          child: TextField(
-            decoration: InputDecoration(
-              label: Text(lang.landscapeKeyLabel),
-              hintText: '163456',
-            ),
-            onChanged: model.setSelfHostedRegistrationKey,
+        const SizedBox(height: 8),
+        TextField(
+          decoration: InputDecoration(
+            label: Text(lang.landscapeKeyLabel),
+            hintText: '163456',
           ),
+          onChanged: model.setSaasRegistrationKey,
+          enabled: model.configType == LandscapeConfigType.saas,
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: _kHeight),
-          child: _FilePickerField(
-            buttonLabel: lang.landscapeFilePicker,
-            errorText: model.selfHosted.fileError.localize(lang),
-            hint: 'C:\\landscape.pem',
-            inputlabel: lang.landscapeSSLKeyLabel,
-            onChanged: model.setSslKeyPath,
-            allowedExtensions: validCertExtensions,
-          ),
+        const SizedBox(height: 8),
+        _FilePickerField(
+          buttonLabel: lang.landscapeFilePicker,
+          errorText: model.saas.fileError.localize(lang),
+          hint: 'C:\\landscape.pem',
+          inputlabel: lang.landscapeSSLKeyLabel,
+          onChanged: model.setSslKeyPath,
+          allowedExtensions: validCertExtensions,
+          enabled: model.configType == LandscapeConfigType.saas,
         ),
       ],
     );
@@ -388,6 +210,7 @@ class _CustomFileForm extends StatelessWidget {
       hint: 'C:\\landscape.conf',
       inputlabel: lang.landscapeFileLabel,
       onChanged: model.setCustomConfigPath,
+      enabled: model.configType == LandscapeConfigType.custom,
     );
   }
 }
@@ -400,6 +223,7 @@ class _FilePickerField extends StatefulWidget {
     required this.hint,
     required this.inputlabel,
     required this.onChanged,
+    this.enabled = true,
     this.allowedExtensions,
   });
 
@@ -407,6 +231,7 @@ class _FilePickerField extends StatefulWidget {
   final String? errorText, hint;
   final Function(String?) onChanged;
   final List<String>? allowedExtensions;
+  final bool enabled;
 
   @override
   State<_FilePickerField> createState() => _FilePickerFieldState();
@@ -440,25 +265,28 @@ class _FilePickerFieldState extends State<_FilePickerField> {
             ),
             controller: txt,
             onChanged: widget.onChanged,
+            enabled: widget.enabled,
           ),
         ),
         const SizedBox(
           width: 8.0,
         ),
         FilledButton(
-          onPressed: () async {
-            final result = await FilePicker.platform.pickFiles(
-              allowedExtensions: widget.allowedExtensions,
-              type: widget.allowedExtensions == null
-                  ? FileType.any
-                  : FileType.custom,
-            );
-            if (result != null) {
-              final file = File(result.files.single.path!);
-              txt.text = file.path;
-              widget.onChanged(file.path);
-            }
-          },
+          onPressed: widget.enabled
+              ? () async {
+                  final result = await FilePicker.platform.pickFiles(
+                    allowedExtensions: widget.allowedExtensions,
+                    type: widget.allowedExtensions == null
+                        ? FileType.any
+                        : FileType.custom,
+                  );
+                  if (result != null) {
+                    final file = File(result.files.single.path!);
+                    txt.text = file.path;
+                    widget.onChanged(file.path);
+                  }
+                }
+              : null,
           child: Text(widget.buttonLabel),
         ),
       ],

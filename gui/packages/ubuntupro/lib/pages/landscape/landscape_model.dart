@@ -26,20 +26,17 @@ class LandscapeModel extends ChangeNotifier {
 
   /// The current configuration type, allowing the UI to show the correct form.
   LandscapeConfigType get configType => _current;
-  LandscapeConfigType _current = LandscapeConfigType.selfHosted;
+  LandscapeConfigType _current = LandscapeConfigType.saas;
 
   // The active configuration form data, a shortcut to reduce some switch statements
   // and avoid relying on ducktyping when serializing the config or checking for completeness.
-  late LandscapeConfig _active = selfHosted;
+  late LandscapeConfig _active = saas;
 
   /// The configuration form data for the SaaS configuration.
   final LandscapeSaasConfig saas = LandscapeSaasConfig();
 
   // TODO: Remove this condition when Landscape SaaS starts supporting WSL.
   bool get isSaaSSupported => kDebugMode;
-
-  /// The configuration form data for the self-hosted configuration.
-  final LandscapeSelfHostedConfig selfHosted = LandscapeSelfHostedConfig();
 
   /// The configuration form data for the custom configuration.
   final LandscapeCustomConfig custom = LandscapeCustomConfig();
@@ -51,23 +48,10 @@ class LandscapeModel extends ChangeNotifier {
     switch (configType) {
       case LandscapeConfigType.saas:
         _active = saas;
-      case LandscapeConfigType.selfHosted:
-        _active = selfHosted;
       case LandscapeConfigType.custom:
         _active = custom;
     }
-    notifyListeners();
-  }
 
-  /// Sets (and validates) the account name for the SaaS configuration.
-  void setAccountName(String? accountName) {
-    // While calling this method when the active configuration is not the SaaS is harmless,
-    // allowing it could hide a bug in the UI logic, thus a debug time assertion.
-    assert(_active is LandscapeSaasConfig);
-    if (accountName == null) return;
-    saas.accountName = accountName;
-
-    // A relevant piece of state changed: notify the UI.
     notifyListeners();
   }
 
@@ -79,27 +63,19 @@ class LandscapeModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sets the registration key for the self-hosted configuration.
-  void setSelfHostedRegistrationKey(String? registrationKey) {
-    assert(_active is LandscapeSelfHostedConfig);
-    if (registrationKey == null) return;
-    selfHosted.registrationKey = registrationKey;
-    notifyListeners();
-  }
-
   /// Sets (and validates) the FQDN for the self-hosted configuration.
   void setFqdn(String? fqdn) {
-    assert(_active is LandscapeSelfHostedConfig);
+    assert(_active is LandscapeSaasConfig);
     if (fqdn == null) return;
-    selfHosted.fqdn = fqdn;
+    saas.fqdn = fqdn;
     notifyListeners();
   }
 
   /// Sets (and validates) the SSL key path for the self-hosted configuration.
   void setSslKeyPath(String? sslKeyPath) {
-    assert(_active is LandscapeSelfHostedConfig);
+    assert(_active is LandscapeSaasConfig);
     if (sslKeyPath == null) return;
-    selfHosted.sslKeyPath = sslKeyPath;
+    saas.sslKeyPath = sslKeyPath;
     notifyListeners();
   }
 
@@ -126,7 +102,7 @@ class LandscapeModel extends ChangeNotifier {
 }
 
 /// The different types of Landscape configurations, modelled as an enum to make it easy on the UI side to switch between them.
-enum LandscapeConfigType { saas, selfHosted, custom }
+enum LandscapeConfigType { saas, custom }
 
 /// The alternative errors we could encounter when validating file paths submitted as part of any subform data.
 enum FileError {
@@ -140,7 +116,7 @@ enum FileError {
 }
 
 const landscapeSaas = 'landscape.canonical.com';
-const standalone = 'standalone';
+const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
 
 /// The base class for the closed set of Landscape configuration form types.
 sealed class LandscapeConfig {
@@ -151,73 +127,25 @@ sealed class LandscapeConfig {
   String? config();
 }
 
-/// The SaaS configuration form data: only the account name is mandatory and must not be 'standalone'.
+/// The SaaS configuration form data: only the FQDN is mandatory.
 class LandscapeSaasConfig extends LandscapeConfig {
-  String registrationKey = '';
-
-  bool _accountNameError = false;
-  bool get accountNameError => _accountNameError;
-  String _accountName = '';
-  String get accountName => _accountName;
-
-  /// Account name can't be standalone for the SaaS.
-  bool _validateAccountName(String value) {
-    _accountNameError = value == standalone;
-    return !_accountNameError;
-  }
-
-  set accountName(String value) {
-    if (value == _accountName) {
-      return;
-    }
-    if (_validateAccountName(value)) {
-      _accountName = value;
-    }
-  }
-
-// Avoid spamming the user with 'account name cannot be empty' messages.
-  @override
-  bool get isComplete => !accountNameError && accountName.isNotEmpty;
-
-  @override
-  String? config() {
-    if (!isComplete) return null;
-    final uri = Uri.https(landscapeSaas);
-
-    final registrationKeyLine =
-        registrationKey.isEmpty ? '' : 'registration_key = $registrationKey';
-
-    return '''
-[host]
-url = ${uri.replace(port: 6554).authority}
-[client]
-account_name = $accountName
-url = ${uri.replace(path: '/message-system')}
-ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
-log_level = info
-$registrationKeyLine
-'''
-        .trimRight();
-  }
-}
-
-const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
-
-/// The self-hosted configuration form data: only the FQDN is mandatory and must not be the SaaS URL.
-class LandscapeSelfHostedConfig extends LandscapeConfig {
-  String registrationKey = '';
-
   String _fqdn = '';
   String get fqdn => _fqdn;
   bool _fqdnError = false;
   bool get fqdnError => _fqdnError;
+
+  String registrationKey = '';
+
+  String _sslKeyPath = '';
+  String get sslKeyPath => _sslKeyPath;
+
+  FileError _fileError = FileError.none;
+  FileError get fileError => _fileError;
+
   // FQDN must be a valid URL (without an explicit port) and must not be the Landscape SaaS URL.
   bool _validateFQDN(String value) {
     final uri = Uri.tryParse(value);
-    _fqdnError = value.isEmpty ||
-        uri == null ||
-        uri.hasPort ||
-        value.endsWith(landscapeSaas);
+    _fqdnError = value.isEmpty || uri == null || uri.hasPort;
 
     return !_fqdnError;
   }
@@ -234,11 +162,6 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
       _fqdn = value;
     }
   }
-
-  String _sslKeyPath = '';
-  String get sslKeyPath => _sslKeyPath;
-  FileError _fileError = FileError.none;
-  FileError get fileError => _fileError;
 
   // If a path is provided, then it must exist and be a non-empty file.
   bool _validatePath(String path) {
@@ -294,22 +217,20 @@ class LandscapeSelfHostedConfig extends LandscapeConfig {
 
   @override
   bool get isComplete =>
-      !fqdnError && fileError == FileError.none && fqdn.isNotEmpty;
+      !fqdnError && fqdn.isNotEmpty && fileError == FileError.none;
 
   @override
   String? config() {
     if (!isComplete) return null;
-
+    final uri = Uri.parse(_fqdn);
     final sslKeyLine = sslKeyPath.isEmpty ? '' : 'ssl_public_key = $sslKeyPath';
     final registrationKeyLine =
         registrationKey.isEmpty ? '' : 'registration_key = $registrationKey';
 
-    final uri = Uri.parse(_fqdn);
     return '''
 [host]
 url = ${uri.replace(port: 6554).authority}
 [client]
-account_name = $standalone
 url = ${uri.replace(path: '/message-system')}
 ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
