@@ -125,7 +125,7 @@ class LandscapeConfigForm extends StatelessWidget {
     return Column(
       children: [
         YaruRadioListTile(
-          value: LandscapeConfigType.saas,
+          value: LandscapeConfigType.manual,
           groupValue: model.configType,
           contentPadding: EdgeInsets.zero,
           onChanged: model.setConfigType,
@@ -150,7 +150,7 @@ class LandscapeConfigForm extends StatelessWidget {
   }
 }
 
-/// The subform for quick-configuring Landscape SaaS.
+/// The subform for quick-configuring Landscape Manual.
 class _ManualForm extends StatelessWidget {
   const _ManualForm(this.model);
   final LandscapeModel model;
@@ -164,10 +164,10 @@ class _ManualForm extends StatelessWidget {
         TextField(
           decoration: InputDecoration(
             label: Text(lang.landscapeFQDNLabel),
-            errorText: model.saas.fqdnError ? lang.landscapeFQDNError : null,
+            errorText: model.manual.fqdnError ? lang.landscapeFQDNError : null,
           ),
           onChanged: model.setFqdn,
-          enabled: model.configType == LandscapeConfigType.saas,
+          enabled: model.configType == LandscapeConfigType.manual,
         ),
         const SizedBox(height: 8),
         TextField(
@@ -175,18 +175,18 @@ class _ManualForm extends StatelessWidget {
             label: Text(lang.landscapeKeyLabel),
             hintText: '163456',
           ),
-          onChanged: model.setSaasRegistrationKey,
-          enabled: model.configType == LandscapeConfigType.saas,
+          onChanged: model.setManualRegistrationKey,
+          enabled: model.configType == LandscapeConfigType.manual,
         ),
         const SizedBox(height: 8),
         _FilePickerField(
           buttonLabel: lang.landscapeFilePicker,
-          errorText: model.saas.fileError.localize(lang),
+          errorText: model.manual.fileError.localize(lang),
           hint: 'C:\\landscape.pem',
           inputlabel: lang.landscapeSSLKeyLabel,
           onChanged: model.setSslKeyPath,
           allowedExtensions: validCertExtensions,
-          enabled: model.configType == LandscapeConfigType.saas,
+          enabled: model.configType == LandscapeConfigType.manual,
         ),
       ],
     );

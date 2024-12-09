@@ -75,7 +75,7 @@ void main() {
 
     testWidgets('continue enabled', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
-      model.setConfigType(LandscapeConfigType.saas);
+      model.setConfigType(LandscapeConfigType.manual);
       model.setAccountName('testaccount');
 
       final app = buildApp(model);

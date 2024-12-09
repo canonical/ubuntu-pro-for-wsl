@@ -39,7 +39,7 @@ void main() {
       expect(notified, isTrue);
       notified = false;
 
-      model.setConfigType(LandscapeConfigType.saas);
+      model.setConfigType(LandscapeConfigType.manual);
       expect(notified, isTrue);
       notified = false;
 
@@ -47,7 +47,7 @@ void main() {
       expect(notified, isTrue);
       notified = false;
 
-      model.setSaasRegistrationKey('123');
+      model.setManualRegistrationKey('123');
       expect(notified, isTrue);
       notified = false;
 
@@ -73,7 +73,7 @@ void main() {
 
       final model = LandscapeModel(client);
 
-      model.setConfigType(LandscapeConfigType.saas);
+      model.setConfigType(LandscapeConfigType.manual);
       // Those assertions exist because the methods are not relevant for the current config type.
       // Allowing those conditions to proceed could contribute to hide logic errors.
       expect(() => model.setCustomConfigPath(customConf), throwsAssertionError);
@@ -87,13 +87,13 @@ void main() {
 
       model.setConfigType(LandscapeConfigType.selfHosted);
       expect(() => model.setAccountName('testuser'), throwsAssertionError);
-      expect(() => model.setSaasRegistrationKey('123'), throwsAssertionError);
+      expect(() => model.setManualRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setCustomConfigPath(customConf), throwsAssertionError);
 
       model.setConfigType(LandscapeConfigType.custom);
       expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
       expect(() => model.setAccountName('testuser'), throwsAssertionError);
-      expect(() => model.setSaasRegistrationKey('123'), throwsAssertionError);
+      expect(() => model.setManualRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setFqdn(testFqdn), throwsAssertionError);
       expect(
         () => model.setSelfHostedRegistrationKey('123'),
@@ -113,7 +113,7 @@ void main() {
       );
       final model = LandscapeModel(client);
 
-      model.setConfigType(LandscapeConfigType.saas);
+      model.setConfigType(LandscapeConfigType.manual);
       expect(model.applyConfig, throwsAssertionError);
 
       model.setAccountName('testaccount');

@@ -26,17 +26,17 @@ class LandscapeModel extends ChangeNotifier {
 
   /// The current configuration type, allowing the UI to show the correct form.
   LandscapeConfigType get configType => _current;
-  LandscapeConfigType _current = LandscapeConfigType.saas;
+  LandscapeConfigType _current = LandscapeConfigType.manual;
 
   // The active configuration form data, a shortcut to reduce some switch statements
   // and avoid relying on ducktyping when serializing the config or checking for completeness.
-  late LandscapeConfig _active = saas;
+  late LandscapeConfig _active = manual;
 
-  /// The configuration form data for the SaaS configuration.
-  final LandscapeSaasConfig saas = LandscapeSaasConfig();
+  /// The configuration form data for the manual configuration.
+  final LandscapeManualConfig manual = LandscapeManualConfig();
 
-  // TODO: Remove this condition when Landscape SaaS starts supporting WSL.
-  bool get isSaaSSupported => kDebugMode;
+  // TODO: Remove this condition when Landscape manual/SaaS starts supporting WSL.
+  bool get isManualSupported => kDebugMode;
 
   /// The configuration form data for the custom configuration.
   final LandscapeCustomConfig custom = LandscapeCustomConfig();
@@ -46,8 +46,8 @@ class LandscapeModel extends ChangeNotifier {
     if (value == null) return;
     _current = value;
     switch (configType) {
-      case LandscapeConfigType.saas:
-        _active = saas;
+      case LandscapeConfigType.manual:
+        _active = manual;
       case LandscapeConfigType.custom:
         _active = custom;
     }
@@ -55,27 +55,27 @@ class LandscapeModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sets the registration key for the SaaS configurations.
-  void setSaasRegistrationKey(String? registrationKey) {
-    assert(_active is LandscapeSaasConfig);
+  /// Sets the registration key for the manual configurations.
+  void setManualRegistrationKey(String? registrationKey) {
+    assert(_active is LandscapeManualConfig);
     if (registrationKey == null) return;
-    saas.registrationKey = registrationKey;
+    manual.registrationKey = registrationKey;
     notifyListeners();
   }
 
   /// Sets (and validates) the FQDN for the self-hosted configuration.
   void setFqdn(String? fqdn) {
-    assert(_active is LandscapeSaasConfig);
+    assert(_active is LandscapeManualConfig);
     if (fqdn == null) return;
-    saas.fqdn = fqdn;
+    manual.fqdn = fqdn;
     notifyListeners();
   }
 
   /// Sets (and validates) the SSL key path for the self-hosted configuration.
   void setSslKeyPath(String? sslKeyPath) {
-    assert(_active is LandscapeSaasConfig);
+    assert(_active is LandscapeManualConfig);
     if (sslKeyPath == null) return;
-    saas.sslKeyPath = sslKeyPath;
+    manual.sslKeyPath = sslKeyPath;
     notifyListeners();
   }
 
@@ -102,7 +102,7 @@ class LandscapeModel extends ChangeNotifier {
 }
 
 /// The different types of Landscape configurations, modelled as an enum to make it easy on the UI side to switch between them.
-enum LandscapeConfigType { saas, custom }
+enum LandscapeConfigType { manual, custom }
 
 /// The alternative errors we could encounter when validating file paths submitted as part of any subform data.
 enum FileError {
@@ -115,7 +115,6 @@ enum FileError {
   invalidFormat,
 }
 
-const landscapeSaas = 'landscape.canonical.com';
 const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
 
 /// The base class for the closed set of Landscape configuration form types.
@@ -128,7 +127,7 @@ sealed class LandscapeConfig {
 }
 
 /// The SaaS configuration form data: only the FQDN is mandatory.
-class LandscapeSaasConfig extends LandscapeConfig {
+class LandscapeManualConfig extends LandscapeConfig {
   String _fqdn = '';
   String get fqdn => _fqdn;
   bool _fqdnError = false;
@@ -142,7 +141,7 @@ class LandscapeSaasConfig extends LandscapeConfig {
   FileError _fileError = FileError.none;
   FileError get fileError => _fileError;
 
-  // FQDN must be a valid URL (without an explicit port) and must not be the Landscape SaaS URL.
+  // FQDN must be a valid URL (without an explicit port) and must not be the Landscape URL.
   bool _validateFQDN(String value) {
     final uri = Uri.tryParse(value);
     _fqdnError = value.isEmpty || uri == null || uri.hasPort;
