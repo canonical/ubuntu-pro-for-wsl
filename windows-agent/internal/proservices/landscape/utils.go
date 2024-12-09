@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -200,7 +201,7 @@ func (e newInstanceInfoMinorError) Error() string {
 
 // newInstanceInfo initializes a Instances_InstanceInfo from a distro.
 func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_InstanceInfo, err error) {
-	state, err := d.State()
+	state, err := tryDistroState(d, 1*time.Second, 5*time.Second)
 	if err != nil {
 		return info, err
 	}
@@ -226,6 +227,25 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	}
 
 	return info, nil
+}
+
+// tryDistroState attempts to get the state of a distro, retrying every interval until timeout.
+func tryDistroState(d *distro.Distro, interval, timeout time.Duration) (state gowsl.State, err error) {
+	// set the timeout timer
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	state, err = d.State()
+	for err != nil {
+		select {
+		case <-time.After(interval):
+			state, err = d.State()
+		case <-timer.C:
+			return state, fmt.Errorf("WSL internal error after retry: %v", err)
+		}
+	}
+
+	return state, nil
 }
 
 func distributeConfig(ctx context.Context, db *database.DistroDB, landscapeConf string) {

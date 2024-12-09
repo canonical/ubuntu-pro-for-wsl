@@ -43,8 +43,8 @@ github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOf
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb h1:8aYaLeK5kwneVflZ50XOnsE2zWnS3HCF58WV8JXge5U=
 github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
-github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53 h1:oP5UldDfHJsg8tJuYqWzEfGTmOqsb5gtLEisUYaIoB4=
-github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53/go.mod h1:h7p0dcWeNrhTV3bM+fdVSAfpWepPOqZk4bX5YdmIhRc=
+github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452 h1:Fr0hzjkQNxXR1/9qqOcqFEa9OYnux1+MuaAgf44QxYc=
+github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452/go.mod h1:+iFGK9K9rSCgPevBqlGVIudoaVuTd0Djg6w9ZinDPrE=
 golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 h1:2dVuKD2vS7b0QIHQbpyTISPd0LeHDbnYEryqj5Q1ug8=
 golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56/go.mod h1:M4RDyNAINzryxdtnbRXRL/OHtkFuWGRjvuhBJpk2IlY=
 golang.org/x/net v0.30.0 h1:AcW1SDZMkb8IpzCdQUaIq2sP4sZ4zw+55h6ynffypl4=
