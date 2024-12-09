@@ -77,8 +77,17 @@ class Pro4WSLApp extends StatelessWidget {
                     },
                   ),
                   if (settings.isLandscapeConfigurationEnabled) ...{
-                    Routes.skipLandscape:
-                        WizardRoute(builder: (_) => const LandscapeSkipPage()),
+                    Routes.skipLandscape: WizardRoute(
+                      builder: (_) => const LandscapeSkipPage(),
+                      onNext: (settings) {
+                        switch (settings.arguments as SkipEnum) {
+                          case SkipEnum.skip:
+                            return Routes.subscriptionStatus;
+                          default:
+                            return null;
+                        }
+                      },
+                    ),
                     Routes.configureLandscape:
                         const WizardRoute(builder: LandscapePage.create),
                     Routes.subscriptionStatus: WizardRoute(

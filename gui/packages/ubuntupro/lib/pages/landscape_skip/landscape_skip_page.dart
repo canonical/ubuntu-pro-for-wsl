@@ -5,13 +5,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '../../constants.dart';
-import '../../routes.dart';
 import '../landscape/landscape_model.dart';
 import '../widgets/navigation_row.dart';
 import '../widgets/page_widgets.dart';
 import '../widgets/radio_tile.dart';
 
-enum _SkipEnum {
+enum SkipEnum {
   skip,
   register,
 }
@@ -24,7 +23,7 @@ class LandscapeSkipPage extends StatefulWidget {
 }
 
 class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
-  _SkipEnum groupValue = _SkipEnum.skip;
+  SkipEnum groupValue = SkipEnum.skip;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +43,7 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
       ],
       right: [
         RadioTile(
-          value: _SkipEnum.skip,
+          value: SkipEnum.skip,
           title: lang.landscapeSkip,
           subtitle: lang.landscapeSkipDescription,
           groupValue: groupValue,
@@ -53,7 +52,7 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
           }),
         ),
         RadioTile(
-          value: _SkipEnum.register,
+          value: SkipEnum.register,
           title: lang.landscapeSkipRegister,
           groupValue: groupValue,
           onChanged: (v) => setState(() {
@@ -63,14 +62,7 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
       ],
       navigationRow: NavigationRow(
         onBack: wizard.back,
-        onNext: () {
-          switch (groupValue) {
-            case _SkipEnum.skip:
-              wizard.jump(Routes.subscriptionStatus);
-            case _SkipEnum.register:
-              wizard.next();
-          }
-        },
+        onNext: () => wizard.next(arguments: groupValue),
       ),
     );
   }
