@@ -57,7 +57,11 @@
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
-    "landscapeHeading": "Configure the connection to {landscapeLink} to manage your Ubuntu WSL instances remotely.",
+    "landscapeSkip": "Skip for now",
+    "landscapeSkipDescription": "You can always configure Landscape later in this app",
+    "landscapeSkipRegister": "Register with Landscape",
+
+    "landscapeHeading": "Configure the connection to Landscape to manage your Ubuntu WSL instances remotely. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -95,7 +99,7 @@
         }
     },
 
-    "buttonNext": "Continue",
+    "buttonNext": "Next",
     "buttonSkip": "Skip",
     "buttonBack": "Back",
     
