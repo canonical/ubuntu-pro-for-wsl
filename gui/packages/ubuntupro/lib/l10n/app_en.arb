@@ -57,7 +57,11 @@
     "purchaseStatusServer":"Something went wrong with Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
-    "landscapeHeading": "Configure the connection to {landscapeLink} to manage your Ubuntu WSL instances remotely.",
+    "landscapeSkip": "Skip for now",
+    "landscapeSkipDescription": "You can always configure Landscape later in this app",
+    "landscapeSkipRegister": "Register with Landscape",
+
+    "landscapeHeading": "Configure the connection to Landscape to manage your Ubuntu WSL instances remotely. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -65,18 +69,14 @@
             }
         }
     },
-    "landscapeQuickSetupSaas": "Landscape SaaS configuration",
-    "landscapeQuickSetupSaasHint": "Register with landscape.canonical.com",
-    "landscapeQuickSetupSelfHosted": "Self-hosted Landscape configuration",
-    "landscapeQuickSetupSelfHostedHint": "Register with your own Landscape server",
-    "landscapeFQDNLabel": "Landscape server address",
+    "landscapeSetupManual": "Manual configuration",
+    "landscapeSetupManualHint": "Register with your own Landscape server",
+    "landscapeSetupCustom": "Advanced Configuration",
+    "landscapeSetupCustomHint": "Load a custom Landscape client configuration file",
+    "landscapeFQDNLabel": "Landscape FQDN",
     "landscapeFQDNError": "Invalid URI. Format should be a hostname or IP address.",
-    "landscapeAccountNameLabel": "Landscape Account Name",
-    "landscapeAccountNameError": "Invalid account name",
-    "landscapeKeyLabel": "Registration Key",
-    "landscapeCustomSetup": "Advanced Configuration",
-    "landscapeCustomSetupHint": "Load a custom Landscape client configuration file",
-    "landscapeSSLKeyLabel": "Server SSL public key",
+    "landscapeKeyLabel": "Registration Key (optional)",
+    "landscapeSSLKeyLabel": "Server SSL public key (optional)",
     "landscapeFileLabel": "Config file path",
     "landscapeFileTooLarge": "Configuration file is too large",
     "landscapeFileEmptyPath": "A path must be specified",
@@ -94,8 +94,9 @@
             }
         }
     },
+    "landscapeRegister": "Register",
 
-    "buttonNext": "Continue",
+    "buttonNext": "Next",
     "buttonSkip": "Skip",
     "buttonBack": "Back",
     
