@@ -51,6 +51,7 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
             groupValue = v!;
           }),
         ),
+        const SizedBox(height: 16),
         RadioTile(
           value: SkipEnum.register,
           title: lang.landscapeSkipRegister,
