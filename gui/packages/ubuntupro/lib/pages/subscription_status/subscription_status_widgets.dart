@@ -34,8 +34,9 @@ class SubscriptionStatus extends StatelessWidget {
         ),
       ),
     ).copyWith(
-      a: const TextStyle(
+      a: TextStyle(
         decoration: TextDecoration.underline,
+        color: theme.colorScheme.onSurface,
       ),
     );
 
