@@ -53,12 +53,12 @@ void main() {
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final continueButton = find.button(lang.buttonNext);
+      final continueButton = find.button(lang.landscapeRegister);
       expect(continueButton, findsOne);
-      expect(tester.widget<ElevatedButton>(continueButton).enabled, isFalse);
+      expect(tester.widget<ButtonStyleButton>(continueButton).enabled, isFalse);
 
       for (final type in LandscapeConfigType.values) {
         final radio = find.byWidgetPredicate(
@@ -67,7 +67,7 @@ void main() {
         expect(radio, findsOne);
         expect(
           tester.widget<YaruRadio>(radio).groupValue ==
-              LandscapeConfigType.selfHosted,
+              LandscapeConfigType.manual,
           isTrue,
         );
       }
@@ -76,21 +76,21 @@ void main() {
     testWidgets('continue enabled', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
       model.setConfigType(LandscapeConfigType.manual);
-      model.setAccountName('testaccount');
+      model.setFqdn('landscape.canonical.com');
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final continueButton = find.button(lang.buttonNext);
+      final continueButton = find.button(lang.landscapeRegister);
       expect(continueButton, findsOne);
-      expect(tester.widget<ElevatedButton>(continueButton).enabled, isTrue);
+      expect(tester.widget<ButtonStyleButton>(continueButton).enabled, isTrue);
     });
   });
 
   group('calls back on success', () {
-    testWidgets('saas', (tester) async {
+    testWidgets('manual', (tester) async {
       final agent = MockAgentApiClient();
       final model = LandscapeModel(agent);
 
@@ -102,89 +102,85 @@ void main() {
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final saasRadio = find.ancestor(
-        of: find.text(lang.landscapeQuickSetupSaas),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(saasRadio);
+      await tester.tap(find.text(lang.landscapeSetupManual));
       await tester.pump();
 
-      final accountInput = find.ancestor(
-        of: find.text(lang.landscapeAccountNameLabel),
-        matching: find.byType(TextField),
-      );
-      final continueButton = find.button(lang.buttonNext);
-
-      // expect false since account name cannot be 'standalone' for the saas subform.
-      await tester.enterText(accountInput, standalone);
-      await tester.pump();
-      await tester.tap(continueButton);
-      expect(applied, isFalse);
-
-      await tester.enterText(accountInput, 'testaccount');
-      await tester.pump();
-      await tester.tap(continueButton);
-      await tester.pump();
-      expect(applied, isTrue);
-    });
-    testWidgets('self-hosted', (tester) async {
-      final agent = MockAgentApiClient();
-      final model = LandscapeModel(agent);
-
-      var applied = false;
-      when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
-        applied = true;
-        return LandscapeSource()..ensureUser();
-      });
-
-      final app = buildApp(model);
-      await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
-      final lang = AppLocalizations.of(context);
-
-      final selfHosted = find.ancestor(
-        of: find.text(lang.landscapeQuickSetupSelfHosted),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(selfHosted);
-      await tester.pump();
       final fqdnInput = find.ancestor(
         of: find.text(lang.landscapeFQDNLabel),
         matching: find.byType(TextField),
       );
-      final continueButton = find.button(lang.buttonNext);
+      final continueButton = find.button(lang.landscapeRegister);
 
-      // expect false since FQDN cannot be landscapeSaas for the self-hosted subform.
-      await tester.enterText(fqdnInput, landscapeSaas);
+      await tester.enterText(fqdnInput, '::');
       await tester.pump();
       await tester.tap(continueButton);
       expect(applied, isFalse);
 
-      await tester.enterText(fqdnInput, 'test.l.com');
+      await tester.enterText(fqdnInput, 'landscape.canonical.com');
       await tester.pump();
-
-      await tester.tap(find.text(lang.landscapeFilePicker));
-      await tester.pumpAndSettle();
-
-      final fileInput = find.ancestor(
-        of: find.text(caCert),
-        matching: find.byType(TextField),
-      );
-      expect(fileInput, findsOne);
-
-      await tester.tap(fileInput);
-      await tester.pump();
-
-      await tester.enterText(fileInput, clientCert);
-      await tester.pump();
-
       await tester.tap(continueButton);
       await tester.pump();
       expect(applied, isTrue);
     });
+
+    // testWidgets('self-hosted', (tester) async {
+    //   final agent = MockAgentApiClient();
+    //   final model = LandscapeModel(agent);
+
+    //   var applied = false;
+    //   when(agent.applyLandscapeConfig(any)).thenAnswer((_) async {
+    //     applied = true;
+    //     return LandscapeSource()..ensureUser();
+    //   });
+
+    //   final app = buildApp(model);
+    //   await tester.pumpWidget(app);
+    //   final context = tester.element(find.byType(LandingPage));
+    //   final lang = AppLocalizations.of(context);
+
+    //   final selfHosted = find.ancestor(
+    //     of: find.text(lang.landscapeQuickSetupSelfHosted),
+    //     matching: find.byType(YaruSelectableContainer),
+    //   );
+    //   await tester.tap(selfHosted);
+    //   await tester.pump();
+    //   final fqdnInput = find.ancestor(
+    //     of: find.text(lang.landscapeFQDNLabel),
+    //     matching: find.byType(TextField),
+    //   );
+    //   final continueButton = find.button(lang.buttonNext);
+
+    //   // expect false since FQDN cannot be landscapeSaas for the self-hosted subform.
+    //   await tester.enterText(fqdnInput, landscapeSaas);
+    //   await tester.pump();
+    //   await tester.tap(continueButton);
+    //   expect(applied, isFalse);
+
+    //   await tester.enterText(fqdnInput, 'test.l.com');
+    //   await tester.pump();
+
+    //   await tester.tap(find.text(lang.landscapeFilePicker));
+    //   await tester.pumpAndSettle();
+
+    //   final fileInput = find.ancestor(
+    //     of: find.text(caCert),
+    //     matching: find.byType(TextField),
+    //   );
+    //   expect(fileInput, findsOne);
+
+    //   await tester.tap(fileInput);
+    //   await tester.pump();
+
+    //   await tester.enterText(fileInput, clientCert);
+    //   await tester.pump();
+
+    //   await tester.tap(continueButton);
+    //   await tester.pump();
+    //   expect(applied, isTrue);
+    // });
 
     testWidgets('custom config', (tester) async {
       final client = MockAgentApiClient();
@@ -198,14 +194,10 @@ void main() {
       final model = LandscapeModel(client);
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final customRadio = find.ancestor(
-        of: find.text(lang.landscapeCustomSetup),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(customRadio);
+      await tester.tap(find.text(lang.landscapeSetupCustom));
       await tester.pump();
 
       final fileInput = find.ancestor(
@@ -219,8 +211,8 @@ void main() {
       await tester.enterText(fileInput, customConf);
       await tester.pump();
 
-      final continueButton = find.button(lang.buttonNext);
-      expect(tester.widget<ElevatedButton>(continueButton).enabled, isTrue);
+      final continueButton = find.button(lang.landscapeRegister);
+      expect(tester.widget<ButtonStyleButton>(continueButton).enabled, isTrue);
       expect(applied, isFalse);
 
       await tester.tap(continueButton);
@@ -230,46 +222,15 @@ void main() {
   });
 
   group('feedback on error', () {
-    testWidgets('saas', (tester) async {
+    testWidgets('manual', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final saasRadio = find.ancestor(
-        of: find.text(lang.landscapeQuickSetupSaas),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(saasRadio);
-      await tester.pump();
-
-      final accountInput = find.ancestor(
-        of: find.text(lang.landscapeAccountNameLabel),
-        matching: find.byType(TextField),
-      );
-      expect(accountInput, findsOne);
-
-      await tester.enterText(accountInput, standalone);
-      await tester.pump();
-
-      final errorText = find.text(lang.landscapeAccountNameError);
-      expect(errorText, findsOne);
-    });
-    testWidgets('self-hosted', (tester) async {
-      final model = LandscapeModel(MockAgentApiClient());
-
-      final app = buildApp(model);
-      await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
-      final lang = AppLocalizations.of(context);
-
-      final selfHosted = find.ancestor(
-        of: find.text(lang.landscapeQuickSetupSelfHosted),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(selfHosted);
+      await tester.tap(find.text(lang.landscapeSetupManual));
       await tester.pump();
 
       final fqdnInput = find.ancestor(
@@ -281,57 +242,81 @@ void main() {
       await tester.enterText(fqdnInput, '::');
       await tester.pump();
 
-      final fqdnErrorText = find.text(lang.landscapeFQDNError);
-      expect(fqdnErrorText, findsOne);
-
-      await tester.tap(find.text(lang.landscapeFilePicker));
-      await tester.pumpAndSettle();
-
-      final fileInput = find.ancestor(
-        of: find.text(lang.landscapeSSLKeyLabel),
-        matching: find.byType(TextField),
-      );
-      expect(fileInput, findsOne);
-
-      await tester.tap(fileInput);
-      await tester.pump();
-
-      await tester.enterText(fileInput, notFoundPath);
-      await tester.pump();
-
-      final fileErrorText = find.text(lang.landscapeFileNotFound);
-      expect(fileErrorText, findsOne);
-
-      await tester.enterText(fileInput, clientKey);
-      await tester.pump();
-      expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
-
-      await tester.enterText(fileInput, notATextCert);
-      await tester.pump();
-      expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
-
-      await tester.enterText(fileInput, notABinCert);
-      await tester.pump();
-      expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
-
-      await tester.enterText(fileInput, binaryCert);
-      await tester.pump();
-      expect(find.text(lang.landscapeFileInvalidFormat), findsNothing);
+      final errorText = find.text(lang.landscapeFQDNError);
+      expect(errorText, findsOne);
     });
+
+    // testWidgets('self-hosted', (tester) async {
+    //   final model = LandscapeModel(MockAgentApiClient());
+
+    //   final app = buildApp(model);
+    //   await tester.pumpWidget(app);
+    //   final context = tester.element(find.byType(LandingPage));
+    //   final lang = AppLocalizations.of(context);
+
+    //   final selfHosted = find.ancestor(
+    //     of: find.text(lang.landscapeQuickSetupSelfHosted),
+    //     matching: find.byType(YaruSelectableContainer),
+    //   );
+    //   await tester.tap(selfHosted);
+    //   await tester.pump();
+
+    //   final fqdnInput = find.ancestor(
+    //     of: find.text(lang.landscapeFQDNLabel),
+    //     matching: find.byType(TextField),
+    //   );
+    //   expect(fqdnInput, findsOne);
+
+    //   await tester.enterText(fqdnInput, '::');
+    //   await tester.pump();
+
+    //   final fqdnErrorText = find.text(lang.landscapeFQDNError);
+    //   expect(fqdnErrorText, findsOne);
+
+    //   await tester.tap(find.text(lang.landscapeFilePicker));
+    //   await tester.pumpAndSettle();
+
+    //   final fileInput = find.ancestor(
+    //     of: find.text(lang.landscapeSSLKeyLabel),
+    //     matching: find.byType(TextField),
+    //   );
+    //   expect(fileInput, findsOne);
+
+    //   await tester.tap(fileInput);
+    //   await tester.pump();
+
+    //   await tester.enterText(fileInput, notFoundPath);
+    //   await tester.pump();
+
+    //   final fileErrorText = find.text(lang.landscapeFileNotFound);
+    //   expect(fileErrorText, findsOne);
+
+    //   await tester.enterText(fileInput, clientKey);
+    //   await tester.pump();
+    //   expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
+
+    //   await tester.enterText(fileInput, notATextCert);
+    //   await tester.pump();
+    //   expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
+
+    //   await tester.enterText(fileInput, notABinCert);
+    //   await tester.pump();
+    //   expect(find.text(lang.landscapeFileInvalidFormat), findsOne);
+
+    //   await tester.enterText(fileInput, binaryCert);
+    //   await tester.pump();
+    //   expect(find.text(lang.landscapeFileInvalidFormat), findsNothing);
+    // });
 
     testWidgets('custom config', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final customRadio = find.ancestor(
-        of: find.text(lang.landscapeCustomSetup),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(customRadio);
+      await tester.tap(find.text(lang.landscapeSetupCustom));
       await tester.pump();
       final fileInput = find.ancestor(
         of: find.text(lang.landscapeFileLabel),
@@ -357,26 +342,22 @@ void main() {
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
-      final context = tester.element(find.byType(LandingPage));
+      final context = tester.element(find.byType(ColumnPage));
       final lang = AppLocalizations.of(context);
 
-      final saasRadio = find.ancestor(
-        of: find.text(lang.landscapeQuickSetupSaas),
-        matching: find.byType(YaruSelectableContainer),
-      );
-      await tester.tap(saasRadio);
+      await tester.tap(find.text(lang.landscapeSetupManual));
       await tester.pump();
-      final accountInput = find.ancestor(
-        of: find.text(lang.landscapeAccountNameLabel),
+      final fqdnInput = find.ancestor(
+        of: find.text(lang.landscapeFQDNLabel),
         matching: find.byType(TextField),
       );
-      expect(accountInput, findsOne);
-      await tester.tap(accountInput);
+      expect(fqdnInput, findsOne);
+      await tester.tap(fqdnInput);
       await tester.pump();
-      await tester.enterText(accountInput, 'testaccount');
+      await tester.enterText(fqdnInput, 'landscape.canonical.com');
       await tester.pump();
 
-      final next = find.button(lang.buttonNext);
+      final next = find.button(lang.landscapeRegister);
       await tester.tap(next);
       await tester.pump();
       final snack = find.descendant(

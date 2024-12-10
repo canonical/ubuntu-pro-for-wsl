@@ -14,7 +14,7 @@ void main() {
     final client = MockAgentApiClient();
     test('active', () {
       final model = LandscapeModel(client);
-      expect(model.configType, LandscapeConfigType.selfHosted);
+      expect(model.configType, LandscapeConfigType.manual);
 
       for (final type in LandscapeConfigType.values) {
         model.setConfigType(type);
@@ -43,60 +43,35 @@ void main() {
       expect(notified, isTrue);
       notified = false;
 
-      model.setAccountName('testuser');
-      expect(notified, isTrue);
-      notified = false;
-
       model.setManualRegistrationKey('123');
       expect(notified, isTrue);
       notified = false;
 
-      model.setConfigType(LandscapeConfigType.selfHosted);
+      model.setFqdn('https://example.com');
       expect(notified, isTrue);
       notified = false;
 
-      model.setFqdn(testFqdn);
-      expect(notified, isTrue);
-      notified = false;
-
-      model.setSelfHostedRegistrationKey('123');
-      expect(notified, isTrue);
-      notified = false;
-
-      model.setSslKeyPath(customConf);
+      model.setSslKeyPath('/some/path');
       expect(notified, isTrue);
       notified = false;
     });
 
     test('assertions', () {
       // Verifies that methods throw assertions when called under non-relevant scenarios.
+      // Those assertions exist because the methods are not relevant for the current config type.
+      // Allowing those conditions to proceed could contribute to hide logic errors.
 
       final model = LandscapeModel(client);
 
       model.setConfigType(LandscapeConfigType.manual);
-      // Those assertions exist because the methods are not relevant for the current config type.
-      // Allowing those conditions to proceed could contribute to hide logic errors.
-      expect(() => model.setCustomConfigPath(customConf), throwsAssertionError);
-      expect(() => model.setFqdn(testFqdn), throwsAssertionError);
-      expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
-      expect(
-        () => model.setSelfHostedRegistrationKey('123'),
-        throwsAssertionError,
-      );
-      expect(() => model.setCustomConfigPath(customConf), throwsAssertionError);
-
-      model.setConfigType(LandscapeConfigType.selfHosted);
-      expect(() => model.setAccountName('testuser'), throwsAssertionError);
-      expect(() => model.setManualRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setCustomConfigPath(customConf), throwsAssertionError);
 
       model.setConfigType(LandscapeConfigType.custom);
       expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
-      expect(() => model.setAccountName('testuser'), throwsAssertionError);
       expect(() => model.setManualRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setFqdn(testFqdn), throwsAssertionError);
       expect(
-        () => model.setSelfHostedRegistrationKey('123'),
+        () => model.setManualRegistrationKey('123'),
         throwsAssertionError,
       );
       expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
@@ -106,7 +81,7 @@ void main() {
   group('apply config', () {
     const msg = 'test message';
     const error = GrpcError.custom(StatusCode.unavailable, msg);
-    test('saas', () async {
+    test('manual', () async {
       final client = MockAgentApiClient();
       when(client.applyLandscapeConfig(any)).thenAnswer(
         (_) async => throw error,
@@ -116,7 +91,7 @@ void main() {
       model.setConfigType(LandscapeConfigType.manual);
       expect(model.applyConfig, throwsAssertionError);
 
-      model.setAccountName('testaccount');
+      model.setFqdn('landscape.canonical.com');
       var err = await model.applyConfig();
       expect(err, msg);
 
@@ -124,36 +99,19 @@ void main() {
         (_) async => LandscapeSource()..ensureUser(),
       );
 
-      model.setAccountName('testaccount');
-      err = await model.applyConfig();
-      expect(err, isNull);
-    });
-    test('self-hosted', () async {
-      final client = MockAgentApiClient();
-      when(client.applyLandscapeConfig(any)).thenAnswer(
-        (_) async => throw error,
-      );
-      final model = LandscapeModel(client);
-
-      model.setConfigType(LandscapeConfigType.selfHosted);
-      expect(model.applyConfig, throwsAssertionError);
-
-      model.setFqdn(testFqdn);
-      var err = await model.applyConfig();
-      expect(err, msg);
-
-      when(client.applyLandscapeConfig(any)).thenAnswer(
-        (_) async => LandscapeSource()..ensureUser(),
-      );
-
-      model.setFqdn(testFqdn);
+      model.setFqdn('landscape.canonical.com');
       err = await model.applyConfig();
       expect(err, isNull);
 
       model.setSslKeyPath(caCert);
       err = await model.applyConfig();
       expect(err, isNull);
+
+      model.setManualRegistrationKey('abc');
+      err = await model.applyConfig();
+      expect(err, isNull);
     });
+
     test('custom', () async {
       final client = MockAgentApiClient();
       when(client.applyLandscapeConfig(any)).thenAnswer(
