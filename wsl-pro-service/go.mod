@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20241206203953-3564f35181e3
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20241206203953-3564f35181e3
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20241210164509-dad318dc0c01
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -36,7 +36,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
