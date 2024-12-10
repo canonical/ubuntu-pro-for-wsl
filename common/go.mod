@@ -11,7 +11,7 @@ require (
 	github.com/snapcore/go-gettext v0.0.0-20230721153050-9082cdc2db05
 	github.com/stretchr/testify v1.10.0
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
-	github.com/ubuntu/gowsl v0.0.0-20240709100851-bc766d3dbd53
+	github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452
 	google.golang.org/grpc v1.68.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1
 	google.golang.org/protobuf v1.35.2
@@ -24,7 +24,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
