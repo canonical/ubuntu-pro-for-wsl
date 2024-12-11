@@ -12,9 +12,9 @@ import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/widgets.dart';
 import 'package:yaru/yaru.dart';
 
+import '/constants.dart';
 import '/core/agent_api_client.dart';
 import '/pages/widgets/page_widgets.dart';
-import '../../constants.dart';
 import 'landscape_model.dart';
 
 const _kHeight = 8.0;
