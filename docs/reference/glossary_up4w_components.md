@@ -5,3 +5,8 @@ Stop-Process ubuntu-pro-agent-launcher.exe
 ```
 
 You can then launch the GUI to complete the restart.
+UP4W's Windows agent is a Windows application running in the background. It starts automatically when the user logs in to Windows. If it stops for any reason, it can be started by launching the UP4W GUI or running the executable from the terminal, optionally with `-vvv` for verbose logging:
+
+```text
+ubuntu-pro-agent.exe -vvv
+```
