@@ -10,7 +10,7 @@ import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
 import '/pages/widgets/page_widgets.dart';
-
+import '../widgets/navigation_row.dart';
 import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
 
@@ -26,74 +26,72 @@ class SubscribeNowPage extends StatelessWidget {
     final linkStyle = MarkdownStyleSheet.fromTheme(
       theme.copyWith(
         textTheme: theme.textTheme.copyWith(
-          bodyMedium: theme.textTheme.bodyLarge,
+          bodyMedium: theme.textTheme.bodyMedium,
         ),
       ),
     );
 
-    return LandingPage(
-      children: [
-        SizedBox(
-          width: 400,
-          child: MarkdownBody(
-            data:
-                lang.proHeading('[${lang.learnMore}](https://ubuntu.com/pro)'),
-            onTapLink: (_, href, __) => launchUrlString(href!),
-            styleSheet: linkStyle,
-          ),
+    return ColumnPage(
+      left: [
+        MarkdownBody(
+          data: lang.proHeading('[${lang.learnMore}](https://ubuntu.com/pro)'),
+          onTapLink: (_, href, __) => launchUrlString(href!),
+          styleSheet: linkStyle,
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            if (model.purchaseAllowed) ...[
-              ElevatedButton(
-                onPressed: model.purchaseAllowed
-                    ? () async {
-                        final subs = await model.purchaseSubscription();
+        if (model.purchaseAllowed) ...[
+          const SizedBox(height: 16.0),
+          OutlinedButton(
+            onPressed: model.purchaseAllowed
+                ? () async {
+                    final subs = await model.purchaseSubscription();
 
-                        // Using anything attached to the BuildContext after a suspension point might be tricky.
-                        // Better check if it's still mounted in the widget tree.
-                        if (!context.mounted) return;
+                    // Using anything attached to the BuildContext after a suspension point might be tricky.
+                    // Better check if it's still mounted in the widget tree.
+                    if (!context.mounted) return;
 
-                        subs.fold(
-                          ifLeft: (status) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                width: 200.0,
-                                behavior: SnackBarBehavior.floating,
-                                content: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 2.0,
-                                      horizontal: 16.0,
-                                    ),
-                                    child: Text(status.localize(lang)),
-                                  ),
+                    subs.fold(
+                      ifLeft: (status) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            width: 200.0,
+                            behavior: SnackBarBehavior.floating,
+                            content: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2.0,
+                                  horizontal: 16.0,
                                 ),
+                                child: Text(status.localize(lang)),
                               ),
-                            );
-                          },
-                          ifRight: onSubscriptionUpdate,
+                            ),
+                          ),
                         );
-                      }
-                    : null,
-                child: Text(lang.getUbuntuPro),
-              ),
-              const SizedBox(width: 8.0),
-            ],
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.only(top: 16.0, bottom: 24.0),
-          child: Divider(thickness: 0.2),
-        ),
-        ProTokenInputField(
-          onApply: (token) {
-            model.applyProToken(token).then(onSubscriptionUpdate);
-          },
-        ),
+                      },
+                      ifRight: onSubscriptionUpdate,
+                    );
+                  }
+                : null,
+            child: Text(lang.getUbuntuPro),
+          ),
+        ],
       ],
+      right: [
+        const ProTokenInputField(),
+      ],
+      navigationRow: NavigationRow(
+        showBack: false,
+        onBack: null,
+        onNext: model.canSubmit
+            ? () async {
+                final info = await model.submit();
+                if (info == null) return;
+                final src = context.read<ValueNotifier<ConfigSources>>();
+                src.value.proSubscription = info;
+                await Wizard.of(context).next();
+              }
+            : null,
+        nextText: lang.attach,
+      ),
     );
   }
 
@@ -102,7 +100,7 @@ class SubscribeNowPage extends StatelessWidget {
     final storePurchaseIsAllowed =
         Wizard.of(context).routeData as bool? ?? false;
 
-    return Provider<SubscribeNowModel>(
+    return ChangeNotifierProvider<SubscribeNowModel>(
       create: (context) => SubscribeNowModel(
         client,
         isPurchaseAllowed: storePurchaseIsAllowed,

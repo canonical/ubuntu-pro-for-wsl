@@ -3,8 +3,16 @@
     "tokenErrorEmpty": "Token cannot be empty",
     "tokenErrorInvalid": "Invalid token",
     "tokenValid": "Valid token",
-    "tokenInputTitle": "Already have a token?",
-    "tokenInputHint": "Paste your Ubuntu Pro token here",
+    "tokenInputTitle": "Attach this machine",
+    "tokenInputDescription": "Enter a token from {proLink} or your system administrator",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Token",
     "attach": "Attach",
     "applyProToken": "Apply Pro Token",
     "applyingProToken": "Applying token {token}",

@@ -2,17 +2,36 @@ import 'package:agentapi/agentapi.dart';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter/foundation.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
+
 import '/core/agent_api_client.dart';
+import '/core/either_value_notifier.dart';
 import '/core/pro_token.dart';
 
-class SubscribeNowModel {
+class SubscribeNowModel extends ChangeNotifier {
   final AgentApiClient client;
+
+  final _token = ProTokenValue();
+  ProTokenValue get token => _token;
+  bool get canSubmit => token.valueOrNull != null;
+
+  /// Returns true if the environment variable 'UP4W_ALLOW_STORE_PURCHASE' has been set.
+  /// Since this reading won't change during the app lifetime, even if the user changes
+  /// it's value from outside, the value is cached so we don't check the environment more than once.
+  bool get purchaseAllowed => _isPurchaseAllowed;
   final bool _isPurchaseAllowed;
+
   SubscribeNowModel(this.client, {bool isPurchaseAllowed = false})
-      : _isPurchaseAllowed = isPurchaseAllowed;
+      : _isPurchaseAllowed = isPurchaseAllowed,
+        super();
 
   Future<SubscriptionInfo> applyProToken(ProToken token) {
     return client.applyProToken(token.value);
+  }
+
+  Future<SubscriptionInfo?> submit() async {
+    if (!canSubmit) return null;
+
+    return applyProToken(token.valueOrNull!);
   }
 
   /// Triggers a purchase transaction via MS Store.
@@ -35,8 +54,25 @@ class SubscribeNowModel {
     }
   }
 
-  /// Returns true if the environment variable 'UP4W_ALLOW_STORE_PURCHASE' has been set.
-  /// Since this reading won't change during the app lifetime, even if the user changes
-  /// it's value from outside, the value is cached so we don't check the environment more than once.
-  bool get purchaseAllowed => _isPurchaseAllowed;
+  void tokenUpdate(String token) async {
+    _token.update(token);
+    notifyListeners();
+  }
+}
+
+/// A value-notifier for the [ProToken] with validation.
+class ProTokenValue extends EitherValueNotifier<TokenError, ProToken?> {
+  ProTokenValue() : super.err(TokenError.empty);
+
+  String? get token => valueOrNull?.value;
+
+  bool get hasError => value.isLeft;
+
+  void update(String token) {
+    value = ProToken.create(token);
+  }
+
+  void clear() {
+    value = const Right<TokenError, ProToken?>(null);
+  }
 }
