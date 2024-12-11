@@ -746,6 +746,8 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
+	ctx = context.WithValue(ctx, landscape.InsecureCredentials, true)
+
 	tb.wslMock = wslmock.New()
 	ctx = wsl.WithMock(ctx, tb.wslMock)
 

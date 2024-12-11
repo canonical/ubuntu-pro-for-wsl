@@ -65,7 +65,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		cancel:   cancel,
 	}
 
-	creds, err := transportCredentials(conn.settings.certificatePath)
+	creds, err := transportCredentials(ctx, conn.settings.certificatePath)
 	if err != nil {
 		return nil, err
 	}
