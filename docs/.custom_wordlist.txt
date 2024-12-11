@@ -15,6 +15,7 @@ Codecov
 distro
 distros
 ESM
+gRPC
 Intune
 macOS
 MSIX
