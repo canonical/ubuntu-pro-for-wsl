@@ -12,3 +12,5 @@ const kVersion = String.fromEnvironment(
   'UP4W_FULL_VERSION',
   defaultValue: 'Dev',
 );
+
+const kLandscapeTitle = 'Landscape';

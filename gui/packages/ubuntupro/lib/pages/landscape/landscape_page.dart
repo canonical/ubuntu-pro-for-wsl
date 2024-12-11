@@ -12,6 +12,7 @@ import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/widgets.dart';
 import 'package:yaru/yaru.dart';
 
+import '/constants.dart';
 import '/core/agent_api_client.dart';
 import '/pages/widgets/page_widgets.dart';
 import 'landscape_model.dart';
@@ -25,7 +26,6 @@ class LandscapePage extends StatelessWidget {
     super.key,
     required this.onApplyConfig,
     required this.onBack,
-    required this.onSkip,
   });
 
   /// Callable invoked when this page successfully applies the configuration.
@@ -33,9 +33,6 @@ class LandscapePage extends StatelessWidget {
 
   /// Callable invoked when the user navigates back.
   final void Function() onBack;
-
-  /// Callable invoked when the user skips this page.
-  final void Function() onSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -49,21 +46,17 @@ class LandscapePage extends StatelessWidget {
           ),
         ),
       ),
-    ).copyWith(
-      a: const TextStyle(
-        decoration: TextDecoration.underline,
-      ),
     );
 
     return LandingPage(
       svgAsset: 'assets/Landscape-tag.svg',
-      title: 'Landscape',
+      title: kLandscapeTitle,
       children: [
         // Only rebuilds if the value of model.landscapeURI changes (never in production)
         Selector<LandscapeModel, Uri>(
-          selector: (_, model) => model.landscapeURI,
+          selector: (_, model) => LandscapeModel.landscapeURI,
           builder: (context, uri, _) => MarkdownBody(
-            data: lang.landscapeHeading('[Landscape]($uri)'),
+            data: lang.landscapeHeading('[${lang.learnMore}]($uri)'),
             onTapLink: (_, href, __) => launchUrl(uri),
             styleSheet: linkStyle,
           ),
@@ -79,7 +72,6 @@ class LandscapePage extends StatelessWidget {
           selector: (_, model) => model.isComplete,
           builder: (context, isComplete, _) => _NavigationButtonRow(
             onBack: onBack,
-            onSkip: onSkip,
             onNext: isComplete ? () => _tryApplyConfig(context) : null,
           ),
         ),
@@ -114,13 +106,11 @@ class LandscapePage extends StatelessWidget {
       landscapePage = LandscapePage(
         onApplyConfig: Wizard.of(context).back,
         onBack: Wizard.of(context).back,
-        onSkip: Wizard.of(context).back,
       );
     } else {
       landscapePage = LandscapePage(
         onApplyConfig: Wizard.of(context).next,
         onBack: Wizard.of(context).back,
-        onSkip: Wizard.of(context).next,
       );
     }
 
@@ -242,12 +232,10 @@ class LandscapeConfigForm extends StatelessWidget {
 class _NavigationButtonRow extends StatelessWidget {
   const _NavigationButtonRow({
     this.onBack,
-    this.onSkip,
     this.onNext,
   });
 
   final void Function()? onBack;
-  final void Function()? onSkip;
   final void Function()? onNext;
 
   @override
@@ -261,13 +249,6 @@ class _NavigationButtonRow extends StatelessWidget {
           child: Text(lang.buttonBack),
         ),
         const Spacer(),
-        FilledButton(
-          onPressed: onSkip,
-          child: Text(lang.buttonSkip),
-        ),
-        const SizedBox(
-          width: 16.0,
-        ),
         ElevatedButton(
           onPressed: onNext,
           child: Text(lang.buttonNext),

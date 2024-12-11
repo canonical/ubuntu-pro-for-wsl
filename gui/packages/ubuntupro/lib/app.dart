@@ -11,6 +11,7 @@ import 'core/agent_connection.dart';
 import 'core/agent_monitor.dart';
 import 'core/settings.dart';
 import 'pages/landscape/landscape_page.dart';
+import 'pages/landscape_skip/landscape_skip_page.dart';
 import 'pages/startup/startup_page.dart';
 import 'pages/subscribe_now/subscribe_now_page.dart';
 import 'pages/subscription_status/subscription_status_page.dart';
@@ -76,6 +77,17 @@ class Pro4WSLApp extends StatelessWidget {
                     },
                   ),
                   if (settings.isLandscapeConfigurationEnabled) ...{
+                    Routes.skipLandscape: WizardRoute(
+                      builder: (_) => const LandscapeSkipPage(),
+                      onNext: (settings) {
+                        switch (settings.arguments as SkipEnum) {
+                          case SkipEnum.skip:
+                            return Routes.subscriptionStatus;
+                          default:
+                            return null;
+                        }
+                      },
+                    ),
                     Routes.configureLandscape:
                         const WizardRoute(builder: LandscapePage.create),
                     Routes.subscriptionStatus: WizardRoute(
