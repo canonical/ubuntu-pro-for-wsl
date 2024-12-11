@@ -15,6 +15,6 @@ In UP4W, you can use the Windows registry to supply the configuration for Ubuntu
 
 The Windows agent will read the following values from the key at `HK_CURRENT_USER\Software\Canonical\UbuntuPro`:
 
-- Value `UbuntuProToken` (type `String`) expects the [Ubuntu Pro token](ref::ubuntu-pro-token) for the user.
+- Value `UbuntuProToken` (type `String`) expects the [Ubuntu Pro token](https://ubuntu.com/pro/subscribe) for the user.
 
 - Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the [Landscape configuration](ref::landscape-config).
