@@ -19,7 +19,7 @@ class LandscapeModel extends ChangeNotifier {
   LandscapeModel(this.client);
 
   /// The URL to be shown in the UI.
-  final landscapeURI = Uri.https('ubuntu.com', '/landscape');
+  static final landscapeURI = Uri.https('ubuntu.com', '/landscape');
 
   /// Whether the current form is complete (ready to be submitted).
   bool get isComplete => _active.isComplete;

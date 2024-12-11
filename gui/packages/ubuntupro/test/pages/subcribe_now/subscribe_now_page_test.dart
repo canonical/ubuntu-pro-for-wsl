@@ -11,11 +11,11 @@ import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
-import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '../../utils/build_multiprovider_app.dart';
+import '../../utils/url_launcher_mock.dart';
 import 'subscribe_now_page_test.mocks.dart';
 
 @GenerateMocks([SubscribeNowModel])
@@ -36,9 +36,11 @@ void main() {
 
     final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
+    final context = tester.element(find.byType(SubscribeNowPage));
+    final lang = AppLocalizations.of(context);
 
     expect(launcher.launched, isFalse);
-    await tester.tapOnText(find.textRange.ofSubstring('Learn more'));
+    await tester.tapOnText(find.textRange.ofSubstring(lang.learnMore));
     await tester.pump();
     expect(launcher.launched, isTrue);
   });
@@ -177,49 +179,3 @@ Widget buildApp(
 void onSubscribeNoop(SubscriptionInfo _) {}
 
 class FakeAgentApiClient extends Fake implements AgentApiClient {}
-
-class FakeUrlLauncher extends UrlLauncherPlatform {
-  bool launched = false;
-
-  @override
-  Future<bool> canLaunch(String url) async {
-    return true;
-  }
-
-  @override
-  Future<void> closeWebView() async {}
-
-  @override
-  Future<bool> launchUrl(String url, LaunchOptions options) async {
-    launched = true;
-    return true;
-  }
-
-  @override
-  Future<bool> supportsCloseForMode(PreferredLaunchMode mode) async {
-    return true;
-  }
-
-  @override
-  Future<bool> supportsMode(PreferredLaunchMode mode) async {
-    return true;
-  }
-
-  @override
-  Future<bool> launch(
-    String url, {
-    required bool useSafariVC,
-    required bool useWebView,
-    required bool enableJavaScript,
-    required bool enableDomStorage,
-    required bool universalLinksOnly,
-    required Map<String, String> headers,
-    String? webOnlyWindowName,
-  }) async {
-    launched = true;
-    return true;
-  }
-
-  @override
-  LinkDelegate? get linkDelegate => null;
-}
