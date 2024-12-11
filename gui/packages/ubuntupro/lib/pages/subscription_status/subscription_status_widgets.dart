@@ -30,62 +30,28 @@ class SubscriptionStatus extends StatelessWidget {
         textTheme: theme.textTheme.copyWith(
           bodyMedium: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w100,
-            color: YaruColors.jet,
           ),
         ),
       ),
     ).copyWith(
-      a: const TextStyle(
+      a: TextStyle(
         decoration: TextDecoration.underline,
-        color: YaruColors.jet,
+        color: theme.colorScheme.onSurface,
       ),
     );
 
     return LandingPage(
       centered: true,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            border:
-                Border.all(color: YaruColors.of(context).success, width: 1.0),
-            color: YaruColors.of(context)
-                .success
-                .copyWith(lightness: 0.94, saturation: 0.56),
-            borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+        const SizedBox(height: 16.0),
+        YaruInfoBox(
+          title: Text(lang.subscriptionIsActive),
+          subtitle: MarkdownBody(
+            data: caption,
+            onTapLink: (_, href, __) => launchUrlString(href!),
+            styleSheet: linkStyle,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.check_circle_outline_outlined,
-                color: YaruColors.of(context).success,
-                size: 24.0,
-              ),
-              const SizedBox(width: 8.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lang.subscriptionIsActive,
-                      style: theme.textTheme.bodyLarge!.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: YaruColors.darkJet,
-                      ),
-                    ),
-                    const SizedBox(height: 4.0),
-                    MarkdownBody(
-                      data: caption,
-                      onTapLink: (_, href, __) => launchUrlString(href!),
-                      styleSheet: linkStyle,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          yaruInfoType: YaruInfoType.success,
         ),
         if (actionButtons != null)
           Center(
