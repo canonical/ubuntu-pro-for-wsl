@@ -3,14 +3,14 @@
 # Reference
 
 This section contains concise references relating to how UP4W is designed,
-configured and developed:
+configured and developed.
 
-Descriptions of key UP4W components can be found here:
+A glossary of key UP4W system components can be found here:
 
 ```{toctree}
 :titlesonly:
 
-index_up4w_components
+glossary_up4w_components
 ```
 
 Details on firewall configuration, Landscape setup and using the Windows
