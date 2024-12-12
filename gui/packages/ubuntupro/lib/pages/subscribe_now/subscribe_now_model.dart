@@ -28,12 +28,6 @@ class SubscribeNowModel extends ChangeNotifier {
     return client.applyProToken(token.value);
   }
 
-  Future<SubscriptionInfo?> submit() async {
-    if (!canSubmit) return null;
-
-    return applyProToken(token.valueOrNull!);
-  }
-
   /// Triggers a purchase transaction via MS Store.
   /// If the purchase succeeds, this notifies the background agent and returns its [SubscriptionInfo] reply.
   /// Otherwise the purchase status is returned so the UI can give the user some feedback.

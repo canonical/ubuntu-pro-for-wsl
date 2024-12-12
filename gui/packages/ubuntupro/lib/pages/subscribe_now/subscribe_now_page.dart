@@ -15,8 +15,11 @@ import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
 
 class SubscribeNowPage extends StatelessWidget {
-  const SubscribeNowPage({super.key, required this.onSubscriptionUpdate});
+  SubscribeNowPage({super.key, required this.onSubscriptionUpdate});
+
   final void Function(SubscriptionInfo) onSubscriptionUpdate;
+
+  final controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -76,23 +79,24 @@ class SubscribeNowPage extends StatelessWidget {
         ],
       ],
       right: [
-        const ProTokenInputField(),
+        ProTokenInputField(
+          onSubmit: model.canSubmit ? () => trySubmit(model) : null,
+          controller: controller,
+        ),
       ],
       navigationRow: NavigationRow(
         showBack: false,
         onBack: null,
-        onNext: model.canSubmit
-            ? () async {
-                final info = await model.submit();
-                if (info == null) return;
-                final src = context.read<ValueNotifier<ConfigSources>>();
-                src.value.proSubscription = info;
-                await Wizard.of(context).next();
-              }
-            : null,
+        onNext: model.canSubmit ? () => trySubmit(model) : null,
         nextText: lang.attach,
       ),
     );
+  }
+
+  void trySubmit(SubscribeNowModel model) {
+    model.applyProToken(model.token.valueOrNull!).then(onSubscriptionUpdate);
+    model.token.clear();
+    controller.clear();
   }
 
   static Widget create(BuildContext context) {

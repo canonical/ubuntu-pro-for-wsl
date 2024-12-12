@@ -13,11 +13,15 @@ import 'subscribe_now_model.dart';
 class ProTokenInputField extends StatefulWidget {
   const ProTokenInputField({
     super.key,
+    required this.onSubmit,
+    this.controller,
     this.isExpanded = false,
   });
 
   /// Whether the field should be shown expanded or collapsed by default.
   final bool isExpanded;
+  final void Function()? onSubmit;
+  final TextEditingController? controller;
 
   /// The icon to be used for the expandable widget, mainly visible for stable tests.
   static const expandIcon = YaruIcons.pan_end;
@@ -27,15 +31,6 @@ class ProTokenInputField extends StatefulWidget {
 }
 
 class _ProTokenInputFieldState extends State<ProTokenInputField> {
-  // Only used to clear the text field after submission.
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
@@ -77,7 +72,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
                     FilteringTextInputFormatter.deny(RegExp(r'\s')),
                   ],
                   autofocus: false,
-                  controller: _controller,
+                  controller: widget.controller,
                   decoration: InputDecoration(
                     label: Text(lang.tokenInputHint),
                     error: model.token.errorOrNull?.localize(lang) != null
@@ -93,7 +88,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
                         : null,
                   ),
                   onChanged: model.tokenUpdate,
-                  // onSubmitted: () => model.submit(),
+                  onSubmitted: (_) => widget.onSubmit?.call(),
                 ),
               ),
             ],
