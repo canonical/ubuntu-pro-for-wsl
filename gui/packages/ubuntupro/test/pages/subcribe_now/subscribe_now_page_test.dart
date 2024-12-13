@@ -31,7 +31,6 @@ void main() {
   UrlLauncherPlatform.instance = launcher;
 
   testWidgets('launch web page', (tester) async {
-    // final model = MockSubscribeNowModel();
     final model = SubscribeNowModel(
       MockAgentApiClient(),
       isPurchaseAllowed: true,

@@ -7,12 +7,28 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/pro_token.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import '../../utils/build_multiprovider_app.dart';
 import '../../utils/token_samples.dart' as tks;
+import '../../utils/url_launcher_mock.dart';
 import 'subscribe_now_widgets_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
 void main() {
+  final launcher = FakeUrlLauncher();
+  UrlLauncherPlatform.instance = launcher;
+
+  testWidgets('launch web page', (tester) async {
+    final theApp = buildApp(onApply: () {}, isExpanded: true);
+    await tester.pumpWidget(theApp);
+
+    expect(launcher.launched, isFalse);
+    await tester
+        .tapOnText(find.textRange.ofSubstring('ubuntu.com/pro/dashboard'));
+    await tester.pump();
+    expect(launcher.launched, isTrue);
+  });
+
   group('pro token value', () {
     test('errors', () async {
       final value = ProTokenValue();
