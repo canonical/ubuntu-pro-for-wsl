@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:provider/provider.dart';
+import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/pro_token.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
+import '../../utils/build_multiprovider_app.dart';
 import '../../utils/token_samples.dart' as tks;
+import 'subscribe_now_widgets_test.mocks.dart';
 
+@GenerateMocks([AgentApiClient])
 void main() {
   group('pro token value', () {
     test('errors', () async {
@@ -47,21 +54,13 @@ void main() {
 
   group('pro token input', () {
     group('basic flow', () {
-      final theApp = buildApp(onApply: (_) {}, isExpanded: true);
+      final theApp = buildApp(onApply: () {}, isExpanded: true);
       testWidgets('starts with no error', (tester) async {
         await tester.pumpWidget(theApp);
 
         final input = tester.firstWidget<TextField>(find.byType(TextField));
 
         expect(input.decoration!.errorText, isNull);
-      });
-      testWidgets('starts with button disabled', (tester) async {
-        await tester.pumpWidget(theApp);
-
-        final button =
-            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
-
-        expect(button.enabled, isFalse);
       });
 
       testWidgets('invalid non-empty tokens', (tester) async {
@@ -79,10 +78,6 @@ void main() {
             matching: find.text(lang.tokenErrorInvalid),
           );
           expect(errorText, findsOne);
-
-          final button =
-              tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
-          expect(button.enabled, isFalse);
         }
       });
 
@@ -102,16 +97,11 @@ void main() {
         );
         expect(errorText, findsOne);
 
-        final button =
-            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
-        expect(button.enabled, isFalse);
-
         // ...except when we delete the content we should have no more errors
         await tester.enterText(inputField, '');
         await tester.pump();
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.error, isNull);
-        expect(button.enabled, isFalse);
       });
 
       testWidgets('good token', (tester) async {
@@ -125,19 +115,18 @@ void main() {
 
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.error, isNull);
-        final validText = find.descendant(
+        final errorText = find.descendant(
           of: inputField,
-          matching: find.text(lang.tokenValid),
+          matching: find.text(lang.tokenErrorInvalid),
         );
-        expect(validText, findsOne);
-
-        final button =
-            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
-        expect(button.enabled, isTrue);
+        expect(errorText, findsNothing);
       });
+
       testWidgets('good token with spaces', (tester) async {
         await tester.pumpWidget(theApp);
         final inputField = find.byType(TextField);
+        final context = tester.element(inputField);
+        final lang = AppLocalizations.of(context);
 
         await tester.enterText(
           inputField,
@@ -149,14 +138,17 @@ void main() {
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.errorText, isNull);
 
-        final button =
-            tester.firstWidget<ElevatedButton>(find.byType(ElevatedButton));
-        expect(button.enabled, isTrue);
+        final errorText = find.descendant(
+          of: inputField,
+          matching: find.text(lang.tokenErrorInvalid),
+        );
+        expect(errorText, findsNothing);
       });
     });
+
     testWidgets('apply', (tester) async {
       var called = false;
-      final theApp = buildApp(isExpanded: true, onApply: (_) => called = true);
+      final theApp = buildApp(isExpanded: true, onApply: () => called = true);
       await tester.pumpWidget(theApp);
 
       final inputField = find.byType(TextField);
@@ -165,15 +157,15 @@ void main() {
       await tester.pump();
 
       expect(called, isFalse);
-      final button = find.byType(ElevatedButton);
-      await tester.tap(button);
+      // simulate an enter key/submission of the text field
+      await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
       expect(called, isTrue);
     });
 
     testWidgets('apply on submit', (tester) async {
       var called = false;
-      final theApp = buildApp(isExpanded: true, onApply: (_) => called = true);
+      final theApp = buildApp(isExpanded: true, onApply: () => called = true);
       await tester.pumpWidget(theApp);
 
       final textFieldFinder = find.byType(TextField);
@@ -187,7 +179,7 @@ void main() {
   });
 
   testWidgets('token error enum l10n', (tester) async {
-    final theApp = buildApp(isExpanded: true, onApply: (_) {});
+    final theApp = buildApp(isExpanded: true, onApply: () {});
     await tester.pumpWidget(theApp);
     final context = tester.element(find.byType(ProTokenInputField));
     final lang = AppLocalizations.of(context);
@@ -198,17 +190,21 @@ void main() {
   });
 }
 
-MaterialApp buildApp({
-  required void Function(ProToken) onApply,
+Widget buildApp({
+  required void Function() onApply,
   bool isExpanded = false,
 }) {
-  return MaterialApp(
-    home: Scaffold(
+  return buildSingleRouteMultiProviderApp(
+    child: Scaffold(
       body: ProTokenInputField(
-        onApply: onApply,
+        onSubmit: onApply,
         isExpanded: isExpanded,
       ),
     ),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    providers: [
+      ChangeNotifierProvider.value(
+        value: SubscribeNowModel(MockAgentApiClient()),
+      ),
+    ],
   );
 }
