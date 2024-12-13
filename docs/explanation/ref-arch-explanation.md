@@ -28,7 +28,7 @@ follow system administration policies.
 ### How does Ubuntu Pro for WSL solve this problem?
 
 Ubuntu Pro for WSL (UP4W) helps automate the management of Ubuntu WSL.
-For each new instance that is created, UP4W will automatically:
+For each new instance that is discovered or created, UP4W will automatically:
 
 * Attach them to your Ubuntu Pro subscription
 * Enrol them with your Landscape server
@@ -74,14 +74,13 @@ on the Windows host consists of a GUI front end and an agent that runs in the
 background.
 
 A user enters a Pro token and Landscape configuration using the GUI. When the
-GUI is launched it starts the Windows Agent. The agent runs in the background
+GUI is launched it starts the Windows Agent, if it's not already running. The agent runs in the background
 on the Windows host and manages communication with other components, including
 the remote Landscape server and the Pro service running within each instance of
 Ubuntu WSL. The agent is responsible for managing the state of instances and
 acts as a bridge between those instances and Landscape. If the configuration
 details are valid, all new instances will have Ubuntu Pro enabled and will be
-able to communicate with the Landscape server. If they are invalid then the GUI
-will prompt for valid details to be supplied.
+able to communicate with the Landscape server.
 
 ```{figure} ../diagrams/structurizr-SystemContainers.png
 :name: top-level-arch
@@ -108,7 +107,7 @@ If not, Ubuntu Pro is disabled on the instances.
 
 Pre-installed on each instance of Ubuntu WSL is an Ubuntu Pro client
 and a Landscape client.
-After a Pro token is provided through the GUI, the Windows agent can send a
+After a Pro token is provided, the Windows agent can send a
 command to the Ubuntu Pro client to execute pro-attach on active instances.
 Similarly, when a Landscape configuration is provided, the Windows agent
 can send a command to configure the Landscape client in each instance.
@@ -126,7 +125,7 @@ Ubuntu WSL instances that are deployed at scale can be extensively customised.
 The Landscape API can be used to automate the deployment of a custom rootfs. As
 of Ubuntu 24.04 LTS, cloud-init is pre-installed on Ubuntu WSL instances, which
 makes it possible to automate the configuration of instances created from that
-custom rootfs.
+release.
 
 ### Source code
 
@@ -135,6 +134,6 @@ repo](https://github.com/canonical/ubuntu-pro-for-wsl).
 
 The following technologies are used to build UP4W:
 
-* **Go**: background agent
+* **Go**: Windows agent and WSL Pro service
 * **Flutter**: GUI front end
 * **gRPC**: communication between back end and front end
