@@ -18,7 +18,7 @@ import '../../utils/build_multiprovider_app.dart';
 import '../../utils/url_launcher_mock.dart';
 import 'subscribe_now_page_test.mocks.dart';
 
-@GenerateMocks([SubscribeNowModel])
+@GenerateMocks([AgentApiClient, P4wMsStore])
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
   // TODO: Sometimes the Column in the LandscapePage extends past the test environment's screen
@@ -31,8 +31,11 @@ void main() {
   UrlLauncherPlatform.instance = launcher;
 
   testWidgets('launch web page', (tester) async {
-    final model = MockSubscribeNowModel();
-    when(model.purchaseAllowed).thenReturn(true);
+    // final model = MockSubscribeNowModel();
+    final model = SubscribeNowModel(
+      MockAgentApiClient(),
+      isPurchaseAllowed: true,
+    );
 
     final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
@@ -47,8 +50,11 @@ void main() {
 
   group('purchase button enabled by model', () {
     testWidgets('disabled', (tester) async {
-      final model = MockSubscribeNowModel();
-      when(model.purchaseAllowed).thenReturn(false);
+      final model = SubscribeNowModel(
+        MockAgentApiClient(),
+        isPurchaseAllowed: false,
+      );
+      // when(model.purchaseAllowed).thenReturn(false);
       final app = buildApp(model, (_) {});
       await tester.pumpWidget(app);
       final context = tester.element(find.byType(SubscribeNowPage));
@@ -61,9 +67,12 @@ void main() {
       );
       expect(button, findsNothing);
     });
+
     testWidgets('enabled', (tester) async {
-      final model = MockSubscribeNowModel();
-      when(model.purchaseAllowed).thenReturn(true);
+      final model = SubscribeNowModel(
+        MockAgentApiClient(),
+        isPurchaseAllowed: true,
+      );
       final app = buildApp(model, (_) {});
       await tester.pumpWidget(app);
       final context = tester.element(find.byType(SubscribeNowPage));
@@ -72,20 +81,28 @@ void main() {
       // check that's the right button
       final button = find.ancestor(
         of: find.text(lang.getUbuntuPro),
-        matching: find.byType(ElevatedButton),
+        matching: find.byType(OutlinedButton),
       );
       expect(button, findsOneWidget);
-      expect(tester.widget<ElevatedButton>(button).enabled, isTrue);
+      expect(tester.widget<OutlinedButton>(button).enabled, isTrue);
     });
   });
+
   group('subscribe', () {
     testWidgets('calls back on success', (tester) async {
-      final model = MockSubscribeNowModel();
-      when(model.purchaseAllowed).thenReturn(true);
+      final store = MockP4wMsStore();
+      final client = MockAgentApiClient();
+      final model = SubscribeNowModel(
+        client,
+        isPurchaseAllowed: true,
+        store: store,
+      );
       var called = false;
-      when(model.purchaseSubscription()).thenAnswer((_) async {
-        final info = SubscriptionInfo()..ensureMicrosoftStore();
-        return info.right();
+      when(client.notifyPurchase()).thenAnswer((_) async {
+        return SubscriptionInfo()..ensureMicrosoftStore().left();
+      });
+      when(store.purchaseSubscription(any)).thenAnswer((_) async {
+        return PurchaseStatus.succeeded;
       });
       final app = buildApp(model, (_) {
         called = true;
@@ -103,11 +120,16 @@ void main() {
 
     testWidgets('feedback on error', (tester) async {
       const purchaseError = PurchaseStatus.networkError;
-      final model = MockSubscribeNowModel();
-      when(model.purchaseAllowed).thenReturn(true);
+      final store = MockP4wMsStore();
+      final client = MockAgentApiClient();
+      final model = SubscribeNowModel(
+        client,
+        isPurchaseAllowed: true,
+        store: store,
+      );
       var called = false;
-      when(model.purchaseSubscription()).thenAnswer((_) async {
-        return purchaseError.left();
+      when(store.purchaseSubscription(any)).thenAnswer((_) async {
+        return purchaseError;
       });
       final app = buildApp(model, (_) {
         called = true;
@@ -127,8 +149,10 @@ void main() {
   });
 
   testWidgets('purchase status enum l10n', (tester) async {
-    final model = MockSubscribeNowModel();
-    when(model.purchaseAllowed).thenReturn(true);
+    final model = SubscribeNowModel(
+      MockAgentApiClient(),
+      isPurchaseAllowed: true,
+    );
     final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
     final context = tester.element(find.byType(SubscribeNowPage));
@@ -171,7 +195,7 @@ Widget buildApp(
       onSubscriptionUpdate: onSubs,
     ),
     providers: [
-      Provider.value(value: model),
+      ChangeNotifierProvider.value(value: model),
     ],
   );
 }

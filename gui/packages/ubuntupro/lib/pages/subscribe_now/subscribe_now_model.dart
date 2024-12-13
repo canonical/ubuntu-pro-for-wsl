@@ -9,6 +9,7 @@ import '/core/pro_token.dart';
 
 class SubscribeNowModel extends ChangeNotifier {
   final AgentApiClient client;
+  P4wMsStore store;
 
   final _token = ProTokenValue();
   ProTokenValue get token => _token;
@@ -20,8 +21,12 @@ class SubscribeNowModel extends ChangeNotifier {
   bool get purchaseAllowed => _isPurchaseAllowed;
   final bool _isPurchaseAllowed;
 
-  SubscribeNowModel(this.client, {bool isPurchaseAllowed = false})
-      : _isPurchaseAllowed = isPurchaseAllowed,
+  SubscribeNowModel(
+    this.client, {
+    bool isPurchaseAllowed = false,
+    P4wMsStore? store,
+  })  : _isPurchaseAllowed = isPurchaseAllowed,
+        store = store ?? P4wMsStore(),
         super();
 
   Future<SubscriptionInfo> applyProToken(ProToken token) {
@@ -34,7 +39,7 @@ class SubscribeNowModel extends ChangeNotifier {
   Future<Either<PurchaseStatus, SubscriptionInfo>>
       purchaseSubscription() async {
     try {
-      final status = await P4wMsStore().purchaseSubscription(
+      final status = await store.purchaseSubscription(
         '9P25B50XMKXT',
       );
       if (status == PurchaseStatus.succeeded) {

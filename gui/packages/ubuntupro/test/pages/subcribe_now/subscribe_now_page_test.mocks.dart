@@ -3,15 +3,15 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i6;
+import 'dart:async' as _i5;
+import 'dart:io' as _i6;
 
-import 'package:agentapi/agentapi.dart' as _i3;
-import 'package:dart_either/dart_either.dart' as _i4;
+import 'package:agentapi/agentapi.dart' as _i2;
+import 'package:grpc/grpc.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:p4w_ms_store/p4w_ms_store.dart' as _i8;
-import 'package:ubuntupro/core/agent_api_client.dart' as _i2;
-import 'package:ubuntupro/core/pro_token.dart' as _i7;
-import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart' as _i5;
+import 'package:p4w_ms_store/p4w_ms_store.dart' as _i7;
+import 'package:p4w_ms_store/p4w_ms_store_platform_interface.dart' as _i8;
+import 'package:ubuntupro/core/agent_api_client.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -26,9 +26,8 @@ import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart' as _i5;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeAgentApiClient_0 extends _i1.SmartFake
-    implements _i2.AgentApiClient {
-  _FakeAgentApiClient_0(
+class _FakeUIClient_0 extends _i1.SmartFake implements _i2.UIClient {
+  _FakeUIClient_0(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -38,7 +37,7 @@ class _FakeAgentApiClient_0 extends _i1.SmartFake
 }
 
 class _FakeSubscriptionInfo_1 extends _i1.SmartFake
-    implements _i3.SubscriptionInfo {
+    implements _i2.SubscriptionInfo {
   _FakeSubscriptionInfo_1(
     Object parent,
     Invocation parentInvocation,
@@ -48,8 +47,9 @@ class _FakeSubscriptionInfo_1 extends _i1.SmartFake
         );
 }
 
-class _FakeEither_2<L, R> extends _i1.SmartFake implements _i4.Either<L, R> {
-  _FakeEither_2(
+class _FakeLandscapeSource_2 extends _i1.SmartFake
+    implements _i2.LandscapeSource {
+  _FakeLandscapeSource_2(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -58,62 +58,150 @@ class _FakeEither_2<L, R> extends _i1.SmartFake implements _i4.Either<L, R> {
         );
 }
 
-/// A class which mocks [SubscribeNowModel].
+class _FakeConfigSources_3 extends _i1.SmartFake implements _i2.ConfigSources {
+  _FakeConfigSources_3(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+/// A class which mocks [AgentApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSubscribeNowModel extends _i1.Mock implements _i5.SubscribeNowModel {
-  MockSubscribeNowModel() {
+class MockAgentApiClient extends _i1.Mock implements _i3.AgentApiClient {
+  MockAgentApiClient() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i2.AgentApiClient get client => (super.noSuchMethod(
-        Invocation.getter(#client),
-        returnValue: _FakeAgentApiClient_0(
+  _i2.UIClient Function(_i4.ClientChannel) get stubFactory =>
+      (super.noSuchMethod(
+        Invocation.getter(#stubFactory),
+        returnValue: (_i4.ClientChannel __p0) => _FakeUIClient_0(
           this,
-          Invocation.getter(#client),
+          Invocation.getter(#stubFactory),
         ),
-      ) as _i2.AgentApiClient);
+      ) as _i2.UIClient Function(_i4.ClientChannel));
 
   @override
-  bool get purchaseAllowed => (super.noSuchMethod(
-        Invocation.getter(#purchaseAllowed),
-        returnValue: false,
-      ) as bool);
+  _i5.Stream<_i3.ConnectionEvent> get onConnectionChanged =>
+      (super.noSuchMethod(
+        Invocation.getter(#onConnectionChanged),
+        returnValue: _i5.Stream<_i3.ConnectionEvent>.empty(),
+      ) as _i5.Stream<_i3.ConnectionEvent>);
 
   @override
-  _i6.Future<_i3.SubscriptionInfo> applyProToken(_i7.ProToken? token) =>
+  _i5.Future<bool> connectTo(
+    String? host,
+    int? port,
+    _i6.Directory? certsDir,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #connectTo,
+          [
+            host,
+            port,
+            certsDir,
+          ],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<_i2.SubscriptionInfo> applyProToken(String? token) =>
       (super.noSuchMethod(
         Invocation.method(
           #applyProToken,
           [token],
         ),
         returnValue:
-            _i6.Future<_i3.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+            _i5.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
           this,
           Invocation.method(
             #applyProToken,
             [token],
           ),
         )),
-      ) as _i6.Future<_i3.SubscriptionInfo>);
+      ) as _i5.Future<_i2.SubscriptionInfo>);
 
   @override
-  _i6.Future<_i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>
-      purchaseSubscription() => (super.noSuchMethod(
-            Invocation.method(
-              #purchaseSubscription,
-              [],
-            ),
-            returnValue: _i6.Future<
-                    _i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>.value(
-                _FakeEither_2<_i8.PurchaseStatus, _i3.SubscriptionInfo>(
-              this,
-              Invocation.method(
-                #purchaseSubscription,
-                [],
-              ),
-            )),
-          ) as _i6
-              .Future<_i4.Either<_i8.PurchaseStatus, _i3.SubscriptionInfo>>);
+  _i5.Future<_i2.LandscapeSource> applyLandscapeConfig(String? config) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #applyLandscapeConfig,
+          [config],
+        ),
+        returnValue:
+            _i5.Future<_i2.LandscapeSource>.value(_FakeLandscapeSource_2(
+          this,
+          Invocation.method(
+            #applyLandscapeConfig,
+            [config],
+          ),
+        )),
+      ) as _i5.Future<_i2.LandscapeSource>);
+
+  @override
+  _i5.Future<bool> ping() => (super.noSuchMethod(
+        Invocation.method(
+          #ping,
+          [],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
+
+  @override
+  _i5.Future<_i2.ConfigSources> configSources() => (super.noSuchMethod(
+        Invocation.method(
+          #configSources,
+          [],
+        ),
+        returnValue: _i5.Future<_i2.ConfigSources>.value(_FakeConfigSources_3(
+          this,
+          Invocation.method(
+            #configSources,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.ConfigSources>);
+
+  @override
+  _i5.Future<_i2.SubscriptionInfo> notifyPurchase() => (super.noSuchMethod(
+        Invocation.method(
+          #notifyPurchase,
+          [],
+        ),
+        returnValue:
+            _i5.Future<_i2.SubscriptionInfo>.value(_FakeSubscriptionInfo_1(
+          this,
+          Invocation.method(
+            #notifyPurchase,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.SubscriptionInfo>);
+}
+
+/// A class which mocks [P4wMsStore].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockP4wMsStore extends _i1.Mock implements _i7.P4wMsStore {
+  MockP4wMsStore() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<_i8.PurchaseStatus> purchaseSubscription(String? productId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #purchaseSubscription,
+          [productId],
+        ),
+        returnValue:
+            _i5.Future<_i8.PurchaseStatus>.value(_i8.PurchaseStatus.succeeded),
+      ) as _i5.Future<_i8.PurchaseStatus>);
 }
