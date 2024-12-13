@@ -91,7 +91,7 @@ void main() {
       model.setConfigType(LandscapeConfigType.manual);
       expect(model.applyConfig, throwsAssertionError);
 
-      model.setFqdn('landscape.canonical.com');
+      model.setFqdn('landscape.example.com');
       var err = await model.applyConfig();
       expect(err, msg);
 
@@ -99,7 +99,7 @@ void main() {
         (_) async => LandscapeSource()..ensureUser(),
       );
 
-      model.setFqdn('landscape.canonical.com');
+      model.setFqdn('landscape.example.com');
       err = await model.applyConfig();
       expect(err, isNull);
 
