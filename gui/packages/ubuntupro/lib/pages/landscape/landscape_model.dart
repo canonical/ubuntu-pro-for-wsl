@@ -35,9 +35,6 @@ class LandscapeModel extends ChangeNotifier {
   /// The configuration form data for the manual configuration.
   final LandscapeManualConfig manual = LandscapeManualConfig();
 
-  // TODO: Remove this condition when Landscape manual/SaaS starts supporting WSL.
-  bool get isManualSupported => kDebugMode;
-
   /// The configuration form data for the custom configuration.
   final LandscapeCustomConfig custom = LandscapeCustomConfig();
 
@@ -63,7 +60,7 @@ class LandscapeModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sets (and validates) the FQDN for the self-hosted configuration.
+  /// Sets (and validates) the FQDN for the manual configuration.
   void setFqdn(String? fqdn) {
     assert(_active is LandscapeManualConfig);
     if (fqdn == null) return;
@@ -71,7 +68,7 @@ class LandscapeModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sets (and validates) the SSL key path for the self-hosted configuration.
+  /// Sets (and validates) the SSL key path for the manual configuration.
   void setSslKeyPath(String? sslKeyPath) {
     assert(_active is LandscapeManualConfig);
     if (sslKeyPath == null) return;
@@ -126,7 +123,7 @@ sealed class LandscapeConfig {
   String? config();
 }
 
-/// The SaaS configuration form data: only the FQDN is mandatory.
+/// The manual configuration form data: only the FQDN is mandatory.
 class LandscapeManualConfig extends LandscapeConfig {
   String _fqdn = '';
   String get fqdn => _fqdn;
