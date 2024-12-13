@@ -9,6 +9,7 @@ import 'package:pkcs7/pkcs7.dart';
 import '/core/agent_api_client.dart';
 
 const landscapeSaasUri = 'landscape.canonical.com';
+const standaloneAN = 'standalone';
 
 /// The view model for the Landscape configuration page.
 /// This class is responsible for managing the state of the Landscape configuration form, including its subforms
@@ -232,6 +233,7 @@ class LandscapeManualConfig extends LandscapeConfig {
 [host]
 url = ${uri.replace(port: 6554).authority}
 [client]
+account_name = $standaloneAN
 url = ${uri.replace(path: '/message-system')}
 ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
