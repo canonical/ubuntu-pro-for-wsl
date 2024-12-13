@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show ChangeNotifier, kDebugMode;
+import 'package:flutter/foundation.dart' show ChangeNotifier;
 import 'package:grpc/grpc.dart' show GrpcError;
 import 'package:pkcs7/pkcs7.dart';
 
 import '/core/agent_api_client.dart';
+
+const landscapeSaasUri = 'landscape.canonical.com';
 
 /// The view model for the Landscape configuration page.
 /// This class is responsible for managing the state of the Landscape configuration form, including its subforms
@@ -138,10 +140,13 @@ class LandscapeManualConfig extends LandscapeConfig {
   FileError _fileError = FileError.none;
   FileError get fileError => _fileError;
 
-  // FQDN must be a valid URL (without an explicit port) and must not be the Landscape URL.
+  // FQDN must be a valid URL (without an explicit port) and must not be the Landscape SaaS URL.
   bool _validateFQDN(String value) {
     final uri = Uri.tryParse(value);
-    _fqdnError = value.isEmpty || uri == null || uri.hasPort;
+    _fqdnError = value.isEmpty ||
+        uri == null ||
+        uri.hasPort ||
+        value.endsWith(landscapeSaasUri);
 
     return !_fqdnError;
   }

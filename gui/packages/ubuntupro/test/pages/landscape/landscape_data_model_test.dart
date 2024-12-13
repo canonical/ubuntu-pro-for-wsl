@@ -7,49 +7,58 @@ void main() {
   group('manual data model', () {
     final testcases = {
       'success': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: '',
         registrationKey: '',
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.canonical.com')
+        wantConfig: contains('landscape.example.com')
       ),
       'success with registration key': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: '',
         registrationKey: 'abc',
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.canonical.com')
+        wantConfig: contains('landscape.example.com')
       ),
       'success with valid cert': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: validCert,
         registrationKey: '',
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.canonical.com')
+        wantConfig: contains('landscape.example.com')
       ),
       'success with valid cert and key': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: validCert,
         registrationKey: 'abc',
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.canonical.com')
+        wantConfig: contains('landscape.example.com')
       ),
       'success changing cert into empty path': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: '-',
         registrationKey: 'abc',
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.canonical.com')
+        wantConfig: contains('landscape.example.com')
+      ),
+      'error with SaaS landscape': (
+        fqdn: saasURL,
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: isTrue,
+        wantFileError: FileError.none,
+        wantComplete: isFalse,
+        wantConfig: isNull
       ),
       'error with invalid fqdn': (
         fqdn: '::',
@@ -61,7 +70,7 @@ void main() {
         wantConfig: isNull
       ),
       'error with not found cert': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: notFoundPath,
         registrationKey: 'abc',
         wantFQDNError: isFalse,
@@ -70,7 +79,7 @@ void main() {
         wantConfig: isNull
       ),
       'error with invalid cert': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: invalidCert,
         registrationKey: 'abc',
         wantFQDNError: isFalse,
@@ -79,7 +88,7 @@ void main() {
         wantConfig: isNull
       ),
       'error with cert path as a dir': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: './test',
         registrationKey: 'abc',
         wantFQDNError: isFalse,
@@ -88,7 +97,7 @@ void main() {
         wantConfig: isNull
       ),
       'error with empty cert': (
-        fqdn: saasURL,
+        fqdn: selfHostedURL,
         certPath: emptyFile,
         registrationKey: 'abc',
         wantFQDNError: isFalse,
@@ -202,6 +211,7 @@ void expectUrlSchemes(Config config) {
 }
 
 const saasURL = 'https://landscape.canonical.com';
+const selfHostedURL = 'https://landscape.example.com';
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
 const validCert = './test/testdata/certs/client_cert.pem';
