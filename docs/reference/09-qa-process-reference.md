@@ -2,6 +2,12 @@
 
 ## Generalities
 
+```{note}
+We always use the latest Go version available. Information about specific Go
+versions on this page may be outdated, as the version used is periodically
+updated.
+```
+
 `wsl-pro-service` is seeded only on WSL images.
 
 ```
