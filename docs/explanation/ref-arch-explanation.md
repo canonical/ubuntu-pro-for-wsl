@@ -5,20 +5,20 @@ together to form the software architecture.
 
 ## Background
 
-### What is Ubuntu on WSL?
+### What is Ubuntu WSL?
 
 With the Windows Subsystem for Linux (WSL), Linux distributions can be run on
-Windows with minimal overhead. Ubuntu on WSL is an image that is optimised for
-running Ubuntu on WSL. A user can create an Ubuntu WSL instance on a Windows
+Windows with minimal overhead. Ubuntu WSL is an image that is optimised for
+running Ubuntu WSL. A user can create an Ubuntu WSL instance on a Windows
 machine and use that instance as a production-ready development environment.
-Ubuntu on WSL also benefits from tight integration with Ubuntu Pro and
+Ubuntu WSL also benefits from tight integration with Ubuntu Pro and
 Landscape, which makes it easier to secure Ubuntu WSL instances and manage them
 at scale.
 
 ### Why is managing WSL instances at scale difficult?
 
 An individual user can create and configure multiple, independent instances of
-Ubuntu on WSL on their machine. For a system administrator, who is managing
+Ubuntu WSL on their machine. For a system administrator, who is managing
 fleets of Windows machines with multiple users, the potential number of Ubuntu
 WSL instances increases dramatically. While the system administrator has tools
 for managing Windows machines, WSL instances can be a black box that cannot be
@@ -27,7 +27,7 @@ follow system administration policies.
 
 ### How does Ubuntu Pro for WSL solve this problem?
 
-Ubuntu Pro for WSL (UP4W) helps automate the management of Ubuntu on WSL.
+Ubuntu Pro for WSL (UP4W) helps automate the management of Ubuntu WSL.
 For each new instance that is created, UP4W will automatically:
 
 * Attach them to your Ubuntu Pro subscription
@@ -51,10 +51,10 @@ A good overview of WSL architecture is provided in [this blog from Microsoft](ht
 ### Overview
 
 UP4W consists of some components that run on a Windows host
-and others that run within instances of Ubuntu on WSL.
+and others that run within instances of Ubuntu  WSL.
 
 A user interacts with the UP4W application. UP4W then automatically
-pro-attaches and Landscape-enrols each new instance of Ubuntu on WSL that is
+pro-attaches and Landscape-enrols each new instance of Ubuntu WSL that is
 created on the Windows host.
 
 In an organisation, multiple users of Windows machines can create Ubuntu WSL
@@ -77,7 +77,7 @@ A user enters a Pro token and Landscape configuration using the GUI. When the
 GUI is launched it starts the Windows Agent. The agent runs in the background
 on the Windows host and manages communication with other components, including
 the remote Landscape server and the Pro service running within each instance of
-Ubuntu on WSL. The agent is responsible for managing the state of instances and
+Ubuntu WSL. The agent is responsible for managing the state of instances and
 acts as a bridge between those instances and Landscape. If the configuration
 details are valid, all new instances will have Ubuntu Pro enabled and will be
 able to communicate with the Landscape server. If they are invalid then the GUI
@@ -97,7 +97,7 @@ management solution like Intune to configure the registry on fleets of devices.
 
 ### Components on Ubuntu WSL instances
 
-The WSL Pro service runs in each instance of Ubuntu on WSL. From the host, the
+The WSL Pro service runs in each instance of Ubuntu WSL. From the host, the
 Windows agent communicates with this service. This allows commands to be sent
 from the host, which are then executed by the Pro service on each instance.
 When an Ubuntu WSL instance is started, the WSL Pro service runs and queries
@@ -106,7 +106,7 @@ If the Pro token is valid, it is retrieved from the Windows agent and
 passed to the Pro service running on Ubuntu WSL instances.
 If not, Ubuntu Pro is disabled on the instances.
 
-Pre-installed on each instance of Ubuntu on WSL is an Ubuntu Pro client
+Pre-installed on each instance of Ubuntu WSL is an Ubuntu Pro client
 and a Landscape client.
 After a Pro token is provided through the GUI, the Windows agent can send a
 command to the Ubuntu Pro client to execute pro-attach on active instances.
