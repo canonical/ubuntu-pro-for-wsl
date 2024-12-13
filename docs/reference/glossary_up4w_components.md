@@ -13,7 +13,7 @@ UP4W has a small GUI that helps users provide an Ubuntu Pro token and
 When the GUI starts, it attempts to establish a connection to the [UP4W Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. For troubleshooting purposes, you can restart the agent by first stopping the Windows process `ubuntu-pro-agent-launcher.exe` in Windows Task Manger or by issuing the following command in a PowerShell terminal:
 
 ```text
-Stop-Process ubuntu-pro-agent-launcher.exe
+Stop-Process -Name ubuntu-pro-agent.exe
 ```
 
 You can then launch the GUI to complete the restart.
@@ -21,7 +21,7 @@ You can then launch the GUI to complete the restart.
 (ref::landscape-client)=
 ## Landscape client
 
-The Landscape client is a `systemd` unit running on inside every Ubuntu WSL instance. It sends information about the system to the Landscape server. The server, in turn, sends instructions that the client executes.
+The Landscape client is a `systemd` unit running inside every Ubuntu WSL instance. It sends information about the system to the Landscape server. The server, in turn, sends instructions that the client executes.
 
 The Landscape client comes pre-installed in your distro as part of the package `landscape-client`.
 
