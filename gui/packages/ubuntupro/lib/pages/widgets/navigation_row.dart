@@ -32,7 +32,7 @@ class NavigationRow extends StatelessWidget {
           ),
         if (showNext) ...[
           const Spacer(),
-          FilledButton(
+          ElevatedButton(
             onPressed: onNext,
             child: Text(nextText ?? lang.buttonNext),
           ),
