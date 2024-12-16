@@ -8,7 +8,7 @@ import 'package:pkcs7/pkcs7.dart';
 
 import '/core/agent_api_client.dart';
 
-const landscapeSaasUri = 'landscape.canonical.com';
+const landscapeSaasFQDN = 'landscape.canonical.com';
 const standaloneAN = 'standalone';
 
 /// The view model for the Landscape configuration page.
@@ -126,7 +126,8 @@ sealed class LandscapeConfig {
   String? config();
 }
 
-/// The manual configuration form data: only the FQDN is mandatory.
+/// The manual configuration form data: only the FQDN is mandatory, and must not
+/// match landscape.canonical.com.
 class LandscapeManualConfig extends LandscapeConfig {
   String _fqdn = '';
   String get fqdn => _fqdn;
@@ -147,7 +148,7 @@ class LandscapeManualConfig extends LandscapeConfig {
     _fqdnError = value.isEmpty ||
         uri == null ||
         uri.hasPort ||
-        value.endsWith(landscapeSaasUri);
+        value.endsWith(landscapeSaasFQDN);
 
     return !_fqdnError;
   }
