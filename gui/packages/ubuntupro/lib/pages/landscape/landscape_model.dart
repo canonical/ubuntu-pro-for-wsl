@@ -115,6 +115,12 @@ enum FileError {
   invalidFormat,
 }
 
+enum FqdnError {
+  invalid,
+  none,
+  saas,
+}
+
 const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
 
 /// The base class for the closed set of Landscape configuration form types.
@@ -131,8 +137,8 @@ sealed class LandscapeConfig {
 class LandscapeManualConfig extends LandscapeConfig {
   String _fqdn = '';
   String get fqdn => _fqdn;
-  bool _fqdnError = false;
-  bool get fqdnError => _fqdnError;
+  FqdnError _fqdnError = FqdnError.none;
+  FqdnError get fqdnError => _fqdnError;
 
   String registrationKey = '';
 
@@ -145,12 +151,16 @@ class LandscapeManualConfig extends LandscapeConfig {
   // FQDN must be a valid URL (without an explicit port) and must not be the Landscape SaaS URL.
   bool _validateFQDN(String value) {
     final uri = Uri.tryParse(value);
-    _fqdnError = value.isEmpty ||
-        uri == null ||
-        uri.hasPort ||
-        value.endsWith(landscapeSaasFQDN);
 
-    return !_fqdnError;
+    if (uri != null && uri.host.endsWith(landscapeSaasFQDN)) {
+      _fqdnError = FqdnError.saas;
+    } else if (value.isEmpty || uri == null || uri.hasPort) {
+      _fqdnError = FqdnError.invalid;
+    } else {
+      _fqdnError = FqdnError.none;
+    }
+
+    return fqdnError == FqdnError.none;
   }
 
   /// Ensure the FQDN is a valid URL, enforcing https without requiring the user to type it.
@@ -220,7 +230,9 @@ class LandscapeManualConfig extends LandscapeConfig {
 
   @override
   bool get isComplete =>
-      !fqdnError && fqdn.isNotEmpty && fileError == FileError.none;
+      fqdnError == FqdnError.none &&
+      fqdn.isNotEmpty &&
+      fileError == FileError.none;
 
   @override
   String? config() {

@@ -164,7 +164,7 @@ class _ManualForm extends StatelessWidget {
         TextField(
           decoration: InputDecoration(
             label: Text(lang.landscapeFQDNLabel),
-            errorText: model.manual.fqdnError ? lang.landscapeFQDNError : null,
+            errorText: model.manual.fqdnError.localize(lang),
           ),
           onChanged: model.setFqdn,
           enabled: model.configType == LandscapeConfigType.manual,
@@ -295,7 +295,7 @@ class _FilePickerFieldState extends State<_FilePickerField> {
 }
 
 /// A helper extension to localize strings matching the FileError enum.
-extension FileErrorl10n on FileError {
+extension FileErrorL10n on FileError {
   String? localize(AppLocalizations lang) {
     switch (this) {
       case FileError.emptyPath:
@@ -312,6 +312,20 @@ extension FileErrorl10n on FileError {
         return lang.landscapeFileInvalidFormat;
       case FileError.none:
         return null;
+    }
+  }
+}
+
+/// Helper to localize FQDN error strings.
+extension FQDNErrorL10n on FqdnError {
+  String? localize(AppLocalizations lang) {
+    switch (this) {
+      case FqdnError.invalid:
+        return lang.landscapeFQDNError;
+      case FqdnError.none:
+        return null;
+      case FqdnError.saas:
+        return lang.landscapeFQDNSaaSError;
     }
   }
 }

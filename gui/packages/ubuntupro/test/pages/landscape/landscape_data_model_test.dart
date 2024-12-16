@@ -12,7 +12,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: '',
         registrationKey: '',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN)
@@ -21,7 +21,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: '',
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN)
@@ -30,7 +30,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: validCert,
         registrationKey: '',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN)
@@ -39,7 +39,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: validCert,
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN)
@@ -48,7 +48,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: '-',
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN)
@@ -57,7 +57,7 @@ void main() {
         fqdn: saasURL,
         certPath: '',
         registrationKey: '',
-        wantFQDNError: isTrue,
+        wantFQDNError: FqdnError.saas,
         wantFileError: FileError.none,
         wantComplete: isFalse,
         wantConfig: isNull
@@ -66,7 +66,7 @@ void main() {
         fqdn: '::',
         certPath: validCert,
         registrationKey: 'abc',
-        wantFQDNError: isTrue,
+        wantFQDNError: FqdnError.invalid,
         wantFileError: FileError.none,
         wantComplete: isFalse,
         wantConfig: isNull
@@ -75,7 +75,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: notFoundPath,
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.notFound,
         wantComplete: isFalse,
         wantConfig: isNull
@@ -84,7 +84,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: invalidCert,
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.invalidFormat,
         wantComplete: isFalse,
         wantConfig: isNull
@@ -93,7 +93,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: './test',
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.dir,
         wantComplete: isFalse,
         wantConfig: isNull
@@ -102,7 +102,7 @@ void main() {
         fqdn: selfHostedURL,
         certPath: emptyFile,
         registrationKey: 'abc',
-        wantFQDNError: isFalse,
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.emptyFile,
         wantComplete: isFalse,
         wantConfig: isNull
