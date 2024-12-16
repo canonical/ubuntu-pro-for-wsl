@@ -168,9 +168,6 @@ class LandscapeManualConfig extends LandscapeConfig {
     if (value.isNotEmpty && !value.startsWith('https://')) {
       value = 'https://$value';
     }
-    if (value == _fqdn) {
-      return;
-    }
     if (_validateFQDN(value)) {
       _fqdn = value;
     }
