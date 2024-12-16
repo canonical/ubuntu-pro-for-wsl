@@ -3,6 +3,8 @@ import 'package:ini/ini.dart';
 
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 
+import 'constants.dart';
+
 void main() {
   group('manual data model', () {
     final testcases = {
@@ -13,7 +15,7 @@ void main() {
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.example.com')
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
       'success with registration key': (
         fqdn: selfHostedURL,
@@ -22,7 +24,7 @@ void main() {
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.example.com')
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
       'success with valid cert': (
         fqdn: selfHostedURL,
@@ -31,7 +33,7 @@ void main() {
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.example.com')
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
       'success with valid cert and key': (
         fqdn: selfHostedURL,
@@ -40,7 +42,7 @@ void main() {
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.example.com')
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
       'success changing cert into empty path': (
         fqdn: selfHostedURL,
@@ -49,7 +51,7 @@ void main() {
         wantFQDNError: isFalse,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains('landscape.example.com')
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
       'error with SaaS landscape': (
         fqdn: saasURL,
@@ -211,7 +213,7 @@ void expectUrlSchemes(Config config) {
 }
 
 const saasURL = 'https://landscape.canonical.com';
-const selfHostedURL = 'https://landscape.example.com';
+const selfHostedURL = 'https://$kExampleLandscapeFQDN';
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
 const validCert = './test/testdata/certs/client_cert.pem';

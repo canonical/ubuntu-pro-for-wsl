@@ -6,6 +6,7 @@ import 'package:mockito/mockito.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 
+import 'constants.dart';
 import 'landscape_model_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
@@ -91,7 +92,7 @@ void main() {
       model.setConfigType(LandscapeConfigType.manual);
       expect(model.applyConfig, throwsAssertionError);
 
-      model.setFqdn('landscape.example.com');
+      model.setFqdn(kExampleLandscapeFQDN);
       var err = await model.applyConfig();
       expect(err, msg);
 
@@ -99,7 +100,7 @@ void main() {
         (_) async => LandscapeSource()..ensureUser(),
       );
 
-      model.setFqdn('landscape.example.com');
+      model.setFqdn(kExampleLandscapeFQDN);
       err = await model.applyConfig();
       expect(err, isNull);
 

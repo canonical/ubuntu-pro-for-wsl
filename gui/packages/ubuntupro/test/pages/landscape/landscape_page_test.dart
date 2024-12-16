@@ -19,6 +19,7 @@ import 'package:yaru_test/yaru_test.dart';
 
 import '../../utils/build_multiprovider_app.dart';
 import '../../utils/url_launcher_mock.dart';
+import 'constants.dart';
 import 'landscape_page_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
@@ -76,7 +77,7 @@ void main() {
     testWidgets('continue enabled', (tester) async {
       final model = LandscapeModel(MockAgentApiClient());
       model.setConfigType(LandscapeConfigType.manual);
-      model.setFqdn('landscape.example.com');
+      model.setFqdn(kExampleLandscapeFQDN);
 
       final app = buildApp(model);
       await tester.pumpWidget(app);
@@ -119,7 +120,7 @@ void main() {
       await tester.tap(continueButton);
       expect(applied, isFalse);
 
-      await tester.enterText(fqdnInput, 'landscape.example.com');
+      await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
       await tester.pump();
       await tester.tap(continueButton);
       await tester.pump();
@@ -236,7 +237,7 @@ void main() {
       expect(fqdnInput, findsOne);
       await tester.tap(fqdnInput);
       await tester.pump();
-      await tester.enterText(fqdnInput, 'landscape.example.com');
+      await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
       await tester.pump();
 
       final next = find.button(lang.landscapeRegister);
