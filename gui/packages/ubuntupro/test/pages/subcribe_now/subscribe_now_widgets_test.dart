@@ -34,11 +34,11 @@ void main() {
       final value = ProTokenValue();
 
       value.update('');
-      expect(value.errorOrNull, TokenError.empty);
+      expect(value.error, TokenError.empty);
 
       for (final token in tks.invalidTokens) {
         value.update(token);
-        expect(value.errorOrNull, TokenError.invalid);
+        expect(value.error, TokenError.invalid);
       }
     });
     test('accessors on success', () {
@@ -48,23 +48,11 @@ void main() {
       value.update(tks.good);
 
       expect(value.hasError, isFalse);
-      expect(value.errorOrNull, isNull);
-      expect(value.token, tks.good);
-      expect(value.valueOrNull!.value, tks.good);
-      expect(value.valueOrNull, tokenInstance);
-      expect(value.value, equals(ProToken.create(tks.good)));
-    });
-
-    test('notify listeners', () {
-      final value = ProTokenValue();
-      var notified = false;
-      value.addListener(() {
-        notified = true;
-      });
-
-      value.update(tks.good);
-
-      expect(notified, isTrue);
+      expect(value.error, isNull);
+      expect(value.value, tks.good);
+      expect(value.value, tks.good);
+      expect(value.token, tokenInstance);
+      expect(value.either, equals(ProToken.create(tks.good)));
     });
   });
 

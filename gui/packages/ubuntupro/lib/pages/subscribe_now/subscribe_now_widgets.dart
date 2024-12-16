@@ -60,39 +60,29 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
           styleSheet: linkStyle,
         ),
         const SizedBox(height: 8),
-        ValueListenableBuilder(
-          valueListenable: model.token,
-          builder: (context, _, __) => Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextField(
-                  inputFormatters: [
-                    // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
-                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                  ],
-                  autofocus: false,
-                  controller: widget.controller,
-                  decoration: InputDecoration(
-                    label: Text(lang.tokenInputHint),
-                    error: model.token.errorOrNull?.localize(lang) != null
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              model.token.errorOrNull!.localize(lang)!,
-                              style: theme.textTheme.bodySmall!.copyWith(
-                                color: YaruColors.of(context).error,
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                  onChanged: model.tokenUpdate,
-                  onSubmitted: (_) => widget.onSubmit?.call(),
-                ),
-              ),
-            ],
+        TextField(
+          inputFormatters: [
+            // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
+            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+          ],
+          autofocus: false,
+          controller: widget.controller,
+          decoration: InputDecoration(
+            label: Text(lang.tokenInputHint),
+            error: model.token.error?.localize(lang) != null
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      model.token.error!.localize(lang)!,
+                      style: theme.textTheme.bodySmall!.copyWith(
+                        color: YaruColors.of(context).error,
+                      ),
+                    ),
+                  )
+                : null,
           ),
+          onChanged: model.tokenUpdate,
+          onSubmitted: (_) => widget.onSubmit?.call(),
         ),
       ],
     );

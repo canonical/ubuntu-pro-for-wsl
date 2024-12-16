@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 
 import '/core/agent_api_client.dart';
-import '/core/either_value_notifier.dart';
 import '/core/pro_token.dart';
 
 class SubscribeNowModel extends ChangeNotifier {
@@ -13,7 +12,7 @@ class SubscribeNowModel extends ChangeNotifier {
 
   final _token = ProTokenValue();
   ProTokenValue get token => _token;
-  bool get canSubmit => token.valueOrNull != null;
+  bool get canSubmit => token.token != null;
 
   /// Returns true if the environment variable 'UP4W_ALLOW_STORE_PURCHASE' has been set.
   /// Since this reading won't change during the app lifetime, even if the user changes
@@ -59,19 +58,23 @@ class SubscribeNowModel extends ChangeNotifier {
   }
 }
 
-/// A value-notifier for the [ProToken] with validation.
-class ProTokenValue extends EitherValueNotifier<TokenError, ProToken?> {
-  ProTokenValue() : super.err(TokenError.empty);
+/// A [ProToken] with validation.
+///
+/// Similar to a [EitherValueNotifier], without the [ValueNotifier].
+class ProTokenValue {
+  ProTokenValue() : either = const Either.left(TokenError.empty);
 
-  String? get token => valueOrNull?.value;
-
-  bool get hasError => value.isLeft;
+  Either<TokenError, ProToken?> either;
+  ProToken? get token => either.orNull();
+  String? get value => either.orNull()?.value;
+  TokenError? get error => either.fold(ifLeft: (e) => e, ifRight: (_) => null);
+  bool get hasError => either.isLeft;
 
   void update(String token) {
-    value = ProToken.create(token);
+    either = ProToken.create(token);
   }
 
   void clear() {
-    value = const Right<TokenError, ProToken?>(null);
+    either = const Either.right(null);
   }
 }
