@@ -13,8 +13,10 @@ import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:wizard_router/wizard_router.dart';
+import 'package:yaru_test/yaru_test.dart';
 
 import '../../utils/build_multiprovider_app.dart';
+import '../../utils/token_samples.dart';
 import '../../utils/url_launcher_mock.dart';
 import 'subscribe_now_page_test.mocks.dart';
 
@@ -144,6 +146,76 @@ void main() {
       expect(find.byType(SnackBar), findsWidgets);
       expect(find.text(purchaseError.localize(lang)), findsWidgets);
       expect(called, isFalse);
+    });
+  });
+
+  group('attach', () {
+    testWidgets('submit on attach', (tester) async {
+      var applied = false;
+      final store = MockP4wMsStore();
+      final client = MockAgentApiClient();
+      final model = SubscribeNowModel(
+        client,
+        isPurchaseAllowed: true,
+        store: store,
+      );
+      final app = buildApp(model, (_) {});
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(SubscribeNowPage));
+      final lang = AppLocalizations.of(context);
+
+      when(client.applyProToken(good)).thenAnswer((_) async {
+        applied = true;
+        return SubscriptionInfo();
+      });
+
+      final attach = find.button(lang.attach);
+      expect(tester.firstWidget<ButtonStyleButton>(attach).enabled, isFalse);
+
+      final input = find.textField(lang.tokenInputHint);
+      await tester.enterText(input, good);
+      await tester.pump();
+
+      expect(tester.firstWidget<ButtonStyleButton>(attach).enabled, isTrue);
+
+      expect(applied, isFalse);
+      await tester.tap(attach);
+      await tester.pump();
+      expect(applied, isTrue);
+    });
+
+    testWidgets('no submit with error', (tester) async {
+      var applied = false;
+      final store = MockP4wMsStore();
+      final client = MockAgentApiClient();
+      final model = SubscribeNowModel(
+        client,
+        isPurchaseAllowed: true,
+        store: store,
+      );
+      final app = buildApp(model, (_) {});
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(SubscribeNowPage));
+      final lang = AppLocalizations.of(context);
+
+      when(client.applyProToken(invalidTokens[0])).thenAnswer((_) async {
+        applied = true;
+        return SubscriptionInfo();
+      });
+
+      final attach = find.button(lang.attach);
+      expect(tester.firstWidget<ButtonStyleButton>(attach).enabled, isFalse);
+
+      final input = find.textField(lang.tokenInputHint);
+      await tester.enterText(input, invalidTokens[0]);
+      await tester.pump();
+
+      expect(tester.firstWidget<ButtonStyleButton>(attach).enabled, isFalse);
+
+      expect(applied, isFalse);
+      await tester.tap(attach);
+      await tester.pump();
+      expect(applied, isFalse);
     });
   });
 
