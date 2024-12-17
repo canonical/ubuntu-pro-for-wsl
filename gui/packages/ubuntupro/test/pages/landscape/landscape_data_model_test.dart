@@ -3,120 +3,126 @@ import 'package:ini/ini.dart';
 
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 
+import 'constants.dart';
+
 void main() {
-  group('saas data model', () {
+  group('manual data model', () {
     final testcases = {
       'success': (
-        account: 'test',
-        wantError: isFalse,
-        wantComplete: isTrue,
-        wantConfig: contains('landscape.canonical.com')
-      ),
-      'with empty account': (
-        account: '',
-        wantError: isFalse,
-        wantComplete: isFalse,
-        wantConfig: isNull
-      ),
-      'with account standalone': (
-        account: 'standalone',
-        wantError: isTrue,
-        wantComplete: isFalse,
-        wantConfig: isNull
-      ),
-    };
-    for (final MapEntry(key: name, value: tc) in testcases.entries) {
-      test(name, () {
-        final c = LandscapeSaasConfig();
-        c.accountName = tc.account;
-        expect(c.accountNameError, tc.wantError);
-        expect(c.isComplete, tc.wantComplete);
-        final raw = c.config();
-        expect(raw, tc.wantConfig);
-        if (raw != null) {
-          expectINI(raw);
-        }
-      });
-    }
-  });
-  group('self-hosted data model', () {
-    const testUrl = 'test.landscape.company.com';
-    final testcases = {
-      'success': (
-        url: testUrl,
+        fqdn: selfHostedURL,
         certPath: '',
-        wantFqdnError: isFalse,
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(testUrl)
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
-      'with SaaS URL': (
-        url: saasURL,
+      'success with registration key': (
+        fqdn: selfHostedURL,
         certPath: '',
-        wantFqdnError: isTrue,
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
-        wantComplete: isFalse,
-        wantConfig: isNull
+        wantComplete: isTrue,
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
-      'with SaaS hostname': (
-        url: Uri.parse(saasURL).host,
-        certPath: '',
-        wantFqdnError: isTrue,
+      'success with valid cert': (
+        fqdn: selfHostedURL,
+        certPath: validCert,
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
-        wantComplete: isFalse,
-        wantConfig: isNull
+        wantComplete: isTrue,
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
-      'with ssl key path as dir': (
-        url: testUrl,
-        // the directory that contains the test sources.
-        certPath: './test',
-        wantFqdnError: isFalse,
-        wantFileError: FileError.dir,
-        wantComplete: isFalse,
-        wantConfig: isNull
+      'success with valid cert and key': (
+        fqdn: selfHostedURL,
+        certPath: validCert,
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
-      'with ssl key changing into empty path': (
-        url: testUrl,
-        // Magic value to make the test case apply a good path first, then an empty path.
+      'success changing cert into empty path': (
+        fqdn: selfHostedURL,
         certPath: '-',
-        wantFqdnError: isFalse,
-        // SSL key path is an optional entry.
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(testUrl),
+        wantConfig: contains(kExampleLandscapeFQDN)
       ),
-      'with ssl key file empty': (
-        url: testUrl,
-        certPath: './test/testdata/landscape/empty.txt',
-        wantFqdnError: isFalse,
-        wantFileError: FileError.emptyFile,
+      'error with SaaS landscape': (
+        fqdn: saasURL,
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.saas,
+        wantFileError: FileError.none,
         wantComplete: isFalse,
         wantConfig: isNull
       ),
-      'with ssl key not found': (
-        url: testUrl,
+      'error with invalid fqdn': (
+        fqdn: '::',
+        certPath: validCert,
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.invalid,
+        wantFileError: FileError.none,
+        wantComplete: isFalse,
+        wantConfig: isNull
+      ),
+      'error with not found cert': (
+        fqdn: selfHostedURL,
         certPath: notFoundPath,
-        wantFqdnError: isFalse,
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
         wantFileError: FileError.notFound,
         wantComplete: isFalse,
         wantConfig: isNull
       ),
+      'error with invalid cert': (
+        fqdn: selfHostedURL,
+        certPath: invalidCert,
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.invalidFormat,
+        wantComplete: isFalse,
+        wantConfig: isNull
+      ),
+      'error with cert path as a dir': (
+        fqdn: selfHostedURL,
+        certPath: './test',
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.dir,
+        wantComplete: isFalse,
+        wantConfig: isNull
+      ),
+      'error with empty cert': (
+        fqdn: selfHostedURL,
+        certPath: emptyFile,
+        registrationKey: 'abc',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.emptyFile,
+        wantComplete: isFalse,
+        wantConfig: isNull
+      ),
     };
     for (final MapEntry(key: name, value: tc) in testcases.entries) {
       test(name, () {
-        final c = LandscapeSelfHostedConfig();
-        c.fqdn = tc.url;
+        final c = LandscapeManualConfig();
+        c.fqdn = tc.fqdn;
+        c.registrationKey = tc.registrationKey;
 
-        // Dart records can't be modified, so we need a proxy variable.
         var path = tc.certPath;
         if (tc.certPath == '-') {
           // Apply a good path first.
-          c.sslKeyPath = customConf;
+          c.sslKeyPath = validCert;
           path = '';
         }
         c.sslKeyPath = path;
 
-        expect(c.fqdnError, tc.wantFqdnError);
+        expect(c.fqdnError, tc.wantFQDNError);
         expect(c.fileError, tc.wantFileError);
         expect(c.isComplete, tc.wantComplete);
         final raw = c.config();
@@ -127,6 +133,7 @@ void main() {
       });
     }
   });
+
   group('custom data model', () {
     final testcases = {
       'success': (
@@ -148,7 +155,7 @@ void main() {
         wantConfig: isNull
       ),
       'with empty config file': (
-        path: './test/testdata/landscape/empty.txt',
+        path: emptyFile,
         wantFileError: FileError.emptyFile,
         wantComplete: isFalse,
         wantConfig: isNull
@@ -206,5 +213,9 @@ void expectUrlSchemes(Config config) {
 }
 
 const saasURL = 'https://landscape.canonical.com';
+const selfHostedURL = 'https://$kExampleLandscapeFQDN';
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
+const validCert = './test/testdata/certs/client_cert.pem';
+const invalidCert = './test/testdata/certs/not_a_cert.pem';
+const emptyFile = './test/testdata/landscape/empty.txt';

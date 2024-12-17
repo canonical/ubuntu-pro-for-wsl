@@ -69,18 +69,15 @@
             }
         }
     },
-    "landscapeQuickSetupSaas": "Landscape SaaS configuration",
-    "landscapeQuickSetupSaasHint": "Register with landscape.canonical.com",
-    "landscapeQuickSetupSelfHosted": "Self-hosted Landscape configuration",
-    "landscapeQuickSetupSelfHostedHint": "Register with your own Landscape server",
-    "landscapeFQDNLabel": "Landscape server address",
-    "landscapeFQDNError": "Invalid URI. Format should be a hostname or IP address.",
-    "landscapeAccountNameLabel": "Landscape Account Name",
-    "landscapeAccountNameError": "Invalid account name",
-    "landscapeKeyLabel": "Registration Key",
-    "landscapeCustomSetup": "Advanced Configuration",
-    "landscapeCustomSetupHint": "Load a custom Landscape client configuration file",
-    "landscapeSSLKeyLabel": "Server SSL public key",
+    "landscapeSetupManual": "Manual configuration",
+    "landscapeSetupManualHint": "Register with your own Landscape server",
+    "landscapeSetupCustom": "Advanced Configuration",
+    "landscapeSetupCustomHint": "Load a custom Landscape client configuration file",
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "landscapeFQDNError": "Invalid FQDN. Format should be a hostname or IP address.",
+    "landscapeFQDNSaaSError": "FQDN shouldn't be landscape.canonical.com.",
+    "landscapeKeyLabel": "Registration Key (optional)",
+    "landscapeSSLKeyLabel": "Server SSL public key (optional)",
     "landscapeFileLabel": "Config file path",
     "landscapeFileTooLarge": "Configuration file is too large",
     "landscapeFileEmptyPath": "A path must be specified",
@@ -98,6 +95,7 @@
             }
         }
     },
+    "landscapeRegister": "Register",
 
     "buttonNext": "Next",
     "buttonSkip": "Skip",
