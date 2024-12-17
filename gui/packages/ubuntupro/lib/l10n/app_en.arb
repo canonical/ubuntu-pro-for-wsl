@@ -43,18 +43,9 @@
     "getUbuntuPro": "Get Ubuntu Pro",
     "learnMore": "Learn more",
 
-    "subscriptionIsActive": "Your subscription is active!",
-    "storeManaged": "This subscription is managed through Microsoft Store.",
-    "manageSubscription": "Manage your subscription",
-    "orgManaged": "This subscription is owned and managed by your organization.",
-    "manuallyManaged": "Visit {proDashboardLink} to manage your subscription.",
-    "@manuallyManaged": {
-        "placeholders": {
-            "proDashboardLink": {
-                "type": "String"
-            }
-        }
-    },
+    "ubuntuProEnabled": "Ubuntu Pro is enabled on this machine.",
+    "ubuntuProEnabledInfo": "All Ubuntu WSL instances have access to Ubuntu Pro security features.",
+    "ubuntuProManage": "Manage Ubuntu Pro subscription",
     "detachPro": "Detach Ubuntu Pro",
 
     "updatingSubscriptionInfo": "Updating the subscription information.",

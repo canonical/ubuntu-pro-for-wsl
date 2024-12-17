@@ -170,6 +170,76 @@ class _PageContent extends StatelessWidget {
   }
 }
 
+class CenteredPage extends StatelessWidget {
+  const CenteredPage({
+    super.key,
+    required this.children,
+    this.svgAsset = 'assets/Ubuntu-tag.svg',
+    this.title = 'Ubuntu Pro',
+    this.footer,
+  });
+
+  final List<Widget> children;
+  final Widget? footer;
+  final String svgAsset;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Pro4WSLPage(
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(32.0, 24.0, 32.0, 32.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 540.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              WidgetSpan(
+                                child: SvgPicture.asset(
+                                  svgAsset,
+                                  height: 70,
+                                ),
+                              ),
+                              const WidgetSpan(
+                                child: SizedBox(
+                                  width: 8,
+                                ),
+                              ),
+                              TextSpan(
+                                text: title,
+                                style: theme.textTheme.displaySmall
+                                    ?.copyWith(fontWeight: FontWeight.w100),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ...children,
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (footer != null) footer!,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Two-column, vertically centered page. The left column always contains the
 /// svg image and title, with the left children below it. Both columns are equal
 /// in width. Optionally, a [NavigationRow] may be provided that will span the
