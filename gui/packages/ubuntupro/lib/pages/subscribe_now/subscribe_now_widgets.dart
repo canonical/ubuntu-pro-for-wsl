@@ -10,7 +10,7 @@ import 'subscribe_now_model.dart';
 
 /// A validated text field with a submit button that calls the supplied [onApply]
 /// callback with the validated Pro Token when the submit button is clicked.
-class ProTokenInputField extends StatefulWidget {
+class ProTokenInputField extends StatelessWidget {
   const ProTokenInputField({
     super.key,
     required this.onSubmit,
@@ -18,16 +18,10 @@ class ProTokenInputField extends StatefulWidget {
     this.isExpanded = false,
   });
 
-  /// Whether the field should be shown expanded or collapsed by default.
   final bool isExpanded;
   final void Function()? onSubmit;
   final TextEditingController? controller;
 
-  @override
-  State<ProTokenInputField> createState() => _ProTokenInputFieldState();
-}
-
-class _ProTokenInputFieldState extends State<ProTokenInputField> {
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
@@ -63,7 +57,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
             FilteringTextInputFormatter.deny(RegExp(r'\s')),
           ],
           autofocus: false,
-          controller: widget.controller,
+          controller: controller,
           decoration: InputDecoration(
             label: Text(lang.tokenInputHint),
             error: model.token.error?.localize(lang) != null
@@ -79,7 +73,7 @@ class _ProTokenInputFieldState extends State<ProTokenInputField> {
                 : null,
           ),
           onChanged: model.tokenUpdate,
-          onSubmitted: (_) => widget.onSubmit?.call(),
+          onSubmitted: (_) => onSubmit?.call(),
         ),
       ],
     );
