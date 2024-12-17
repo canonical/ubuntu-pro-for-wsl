@@ -14,12 +14,43 @@ import '/pages/widgets/page_widgets.dart';
 import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
 
-class SubscribeNowPage extends StatelessWidget {
-  SubscribeNowPage({super.key, required this.onSubscriptionUpdate});
+class SubscribeNowPage extends StatefulWidget {
+  const SubscribeNowPage({super.key, required this.onSubscriptionUpdate});
 
   final void Function(SubscriptionInfo) onSubscriptionUpdate;
 
+  @override
+  State<SubscribeNowPage> createState() => _SubscribeNowPageState();
+
+  static Widget create(BuildContext context) {
+    final client = getService<AgentApiClient>();
+    final storePurchaseIsAllowed =
+        Wizard.of(context).routeData as bool? ?? false;
+
+    return ChangeNotifierProvider<SubscribeNowModel>(
+      create: (context) => SubscribeNowModel(
+        client,
+        isPurchaseAllowed: storePurchaseIsAllowed,
+      ),
+      child: SubscribeNowPage(
+        onSubscriptionUpdate: (info) {
+          final src = context.read<ValueNotifier<ConfigSources>>();
+          src.value.proSubscription = info;
+          Wizard.of(context).next();
+        },
+      ),
+    );
+  }
+}
+
+class _SubscribeNowPageState extends State<SubscribeNowPage> {
   final controller = TextEditingController();
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +101,7 @@ class SubscribeNowPage extends StatelessWidget {
                         ),
                       );
                     },
-                    ifRight: onSubscriptionUpdate,
+                    ifRight: widget.onSubscriptionUpdate,
                   );
                 },
           child: Text(lang.getUbuntuPro),
@@ -92,29 +123,9 @@ class SubscribeNowPage extends StatelessWidget {
   }
 
   void trySubmit(SubscribeNowModel model) {
-    model.applyProToken(model.token!).then(onSubscriptionUpdate);
+    model.applyProToken(model.token!).then(widget.onSubscriptionUpdate);
     model.clearToken();
     controller.clear();
-  }
-
-  static Widget create(BuildContext context) {
-    final client = getService<AgentApiClient>();
-    final storePurchaseIsAllowed =
-        Wizard.of(context).routeData as bool? ?? false;
-
-    return ChangeNotifierProvider<SubscribeNowModel>(
-      create: (context) => SubscribeNowModel(
-        client,
-        isPurchaseAllowed: storePurchaseIsAllowed,
-      ),
-      child: SubscribeNowPage(
-        onSubscriptionUpdate: (info) {
-          final src = context.read<ValueNotifier<ConfigSources>>();
-          src.value.proSubscription = info;
-          Wizard.of(context).next();
-        },
-      ),
-    );
   }
 }
 
