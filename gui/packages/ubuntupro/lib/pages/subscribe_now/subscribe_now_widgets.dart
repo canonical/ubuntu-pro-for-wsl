@@ -60,11 +60,11 @@ class ProTokenInputField extends StatelessWidget {
           controller: controller,
           decoration: InputDecoration(
             label: Text(lang.tokenInputHint),
-            error: model.token.error?.localize(lang) != null
+            error: model.tokenError?.localize(lang) != null
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      model.token.error!.localize(lang)!,
+                      model.tokenError!.localize(lang)!,
                       style: theme.textTheme.bodySmall!.copyWith(
                         color: YaruColors.of(context).error,
                       ),
@@ -72,7 +72,7 @@ class ProTokenInputField extends StatelessWidget {
                   )
                 : null,
           ),
-          onChanged: model.tokenUpdate,
+          onChanged: model.updateToken,
           onSubmitted: (_) => onSubmit?.call(),
         ),
       ],

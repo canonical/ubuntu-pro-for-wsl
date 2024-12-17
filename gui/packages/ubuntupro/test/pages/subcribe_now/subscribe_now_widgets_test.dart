@@ -29,33 +29,6 @@ void main() {
     expect(launcher.launched, isTrue);
   });
 
-  group('pro token value', () {
-    test('errors', () async {
-      final value = ProTokenValue();
-
-      value.update('');
-      expect(value.error, TokenError.empty);
-
-      for (final token in tks.invalidTokens) {
-        value.update(token);
-        expect(value.error, TokenError.invalid);
-      }
-    });
-    test('accessors on success', () {
-      final value = ProTokenValue();
-      final tokenInstance = ProToken.create(tks.good).orNull();
-
-      value.update(tks.good);
-
-      expect(value.hasError, isFalse);
-      expect(value.error, isNull);
-      expect(value.value, tks.good);
-      expect(value.value, tks.good);
-      expect(value.token, tokenInstance);
-      expect(value.either, equals(ProToken.create(tks.good)));
-    });
-  });
-
   group('pro token input', () {
     group('basic flow', () {
       final theApp = buildApp(onApply: () {}, isExpanded: true);

@@ -10,9 +10,11 @@ class SubscribeNowModel extends ChangeNotifier {
   final AgentApiClient client;
   P4wMsStore store;
 
-  final _token = ProTokenValue();
-  ProTokenValue get token => _token;
-  bool get canSubmit => token.token != null;
+  Either<TokenError, ProToken?> _token = const Either.left(TokenError.empty);
+  ProToken? get token => _token.orNull();
+  TokenError? get tokenError =>
+      _token.fold(ifLeft: (e) => e, ifRight: (_) => null);
+  bool get canSubmit => token != null;
 
   /// Returns true if the environment variable 'UP4W_ALLOW_STORE_PURCHASE' has been set.
   /// Since this reading won't change during the app lifetime, even if the user changes
@@ -52,29 +54,13 @@ class SubscribeNowModel extends ChangeNotifier {
     }
   }
 
-  void tokenUpdate(String token) async {
-    _token.update(token);
+  void updateToken(String raw) {
+    _token = ProToken.create(raw);
     notifyListeners();
   }
-}
 
-/// A [ProToken] with validation.
-///
-/// Similar to a [EitherValueNotifier], without the [ValueNotifier].
-class ProTokenValue {
-  ProTokenValue() : either = const Either.left(TokenError.empty);
-
-  Either<TokenError, ProToken?> either;
-  ProToken? get token => either.orNull();
-  String? get value => either.orNull()?.value;
-  TokenError? get error => either.fold(ifLeft: (e) => e, ifRight: (_) => null);
-  bool get hasError => either.isLeft;
-
-  void update(String token) {
-    either = ProToken.create(token);
-  }
-
-  void clear() {
-    either = const Either.right(null);
+  void clearToken() {
+    _token = const Either.right(null);
+    notifyListeners();
   }
 }

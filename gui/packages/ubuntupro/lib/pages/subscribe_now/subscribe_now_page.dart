@@ -94,8 +94,8 @@ class SubscribeNowPage extends StatelessWidget {
   }
 
   void trySubmit(SubscribeNowModel model) {
-    model.applyProToken(model.token.token!).then(onSubscriptionUpdate);
-    model.token.clear();
+    model.applyProToken(model.token!).then(onSubscriptionUpdate);
+    model.clearToken();
     controller.clear();
   }
 
