@@ -33,4 +33,13 @@ This section contains settings used by both clients. Most keys in this section b
 - `computer_title`: This key will be ignored. Instead, each WSL instance will use its Distro name as computer title.
 - `hostagent_uid`: This key will be ignored.
 
+```{warning}
+The certificate referred to by the `ssl_public_key` key is used for both the
+Landscape client inside the WSL instances as well as the Windows background agent.
+Until version 0.1.15 of Ubuntu Pro for WSL, the app explicitly requires referencing a path
+to the SSL certificate on a Windows host machine.
+Newer versions completely follow the Windows OS certificate stores, only requiring reference
+to that certificate if the machine running the Landscape server is not trusted on your network.
+```
+
 > See more: [GitHub | Landscape client configuration schema](https://github.com/canonical/landscape-client/blob/master/example.conf)

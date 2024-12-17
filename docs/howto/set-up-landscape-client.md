@@ -57,25 +57,25 @@ When you continue a status screen will appear confirming that configuration is c
 
 ![Configuration is complete](../assets/status-complete.png)
 
-### Note on SSL public key
+```
 
-If the machine running the server is not trusted on your network you may need to
-explicitly reference a path to the SSL public key on a Windows host machine.
+````
+
+```{warning}
+Until version 0.1.15 of Ubuntu Pro for WSL, the app explicitly requires referencing a path
+to the SSL certificate on a Windows host machine.
+Newer versions completely follow the Windows OS certificate stores, only requiring reference
+to that certificate if the machine running the Landscape server is not trusted on your network.
 
 For example, if you followed the [Landscape Quickstart](https://ubuntu.com/landscape/docs/quickstart-deployment)
 installation, the auto-generated self-signed certificate can be found at `/etc/ssl/certs/landscape_server.pem`.
 
 This can be copied to a Windows machine:
 
-  C:\Users\\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
+>  C:\Users\\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
 
 The path can then be referenced during Landscape configuration in the UP4W Windows app.
-If necessary, the SSL public key can be added after the Windows host has first
-been registered in Landscape.
-
 ```
-
-````
 
 (howto::config-landscape-client)=
 ## Configuring the landscape client
