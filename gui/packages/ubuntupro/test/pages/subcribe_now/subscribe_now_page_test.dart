@@ -29,10 +29,9 @@ void main() {
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
 
-  final launcher = FakeUrlLauncher();
-  UrlLauncherPlatform.instance = launcher;
-
   testWidgets('launch web page', (tester) async {
+    final launcher = FakeUrlLauncher();
+    UrlLauncherPlatform.instance = launcher;
     final model = SubscribeNowModel(
       MockAgentApiClient(),
       isPurchaseAllowed: true,
@@ -49,44 +48,23 @@ void main() {
     expect(launcher.launched, isTrue);
   });
 
-  group('purchase button enabled by model', () {
-    testWidgets('disabled', (tester) async {
-      final model = SubscribeNowModel(
-        MockAgentApiClient(),
-        isPurchaseAllowed: false,
-      );
-      // when(model.purchaseAllowed).thenReturn(false);
-      final app = buildApp(model, (_) {});
-      await tester.pumpWidget(app);
-      final context = tester.element(find.byType(SubscribeNowPage));
-      final lang = AppLocalizations.of(context);
+  testWidgets('launch subscribe page', (tester) async {
+    final launcher = FakeUrlLauncher();
+    UrlLauncherPlatform.instance = launcher;
+    final model = SubscribeNowModel(
+      MockAgentApiClient(),
+      isPurchaseAllowed: false,
+    );
 
-      // check that's the right button
-      final button = find.ancestor(
-        of: find.text(lang.getUbuntuPro),
-        matching: find.byType(ElevatedButton),
-      );
-      expect(button, findsNothing);
-    });
+    final app = buildApp(model, onSubscribeNoop);
+    await tester.pumpWidget(app);
+    final context = tester.element(find.byType(SubscribeNowPage));
+    final lang = AppLocalizations.of(context);
 
-    testWidgets('enabled', (tester) async {
-      final model = SubscribeNowModel(
-        MockAgentApiClient(),
-        isPurchaseAllowed: true,
-      );
-      final app = buildApp(model, (_) {});
-      await tester.pumpWidget(app);
-      final context = tester.element(find.byType(SubscribeNowPage));
-      final lang = AppLocalizations.of(context);
-
-      // check that's the right button
-      final button = find.ancestor(
-        of: find.text(lang.getUbuntuPro),
-        matching: find.byType(OutlinedButton),
-      );
-      expect(button, findsOneWidget);
-      expect(tester.widget<OutlinedButton>(button).enabled, isTrue);
-    });
+    expect(launcher.launched, isFalse);
+    await tester.tap(find.button(lang.getUbuntuPro));
+    await tester.pumpAndSettle();
+    expect(launcher.launched, isTrue);
   });
 
   group('subscribe', () {

@@ -41,42 +41,40 @@ class SubscribeNowPage extends StatelessWidget {
           onTapLink: (_, href, __) => launchUrlString(href!),
           styleSheet: linkStyle,
         ),
-        if (model.purchaseAllowed) ...[
-          const SizedBox(height: 16.0),
-          OutlinedButton(
-            onPressed: model.purchaseAllowed
-                ? () async {
-                    final subs = await model.purchaseSubscription();
+        const SizedBox(height: 16.0),
+        OutlinedButton(
+          onPressed: model.purchaseAllowed
+              ? () async {
+                  final subs = await model.purchaseSubscription();
 
-                    // Using anything attached to the BuildContext after a suspension point might be tricky.
-                    // Better check if it's still mounted in the widget tree.
-                    if (!context.mounted) return;
+                  // Using anything attached to the BuildContext after a suspension point might be tricky.
+                  // Better check if it's still mounted in the widget tree.
+                  if (!context.mounted) return;
 
-                    subs.fold(
-                      ifLeft: (status) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            width: 200.0,
-                            behavior: SnackBarBehavior.floating,
-                            content: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2.0,
-                                  horizontal: 16.0,
-                                ),
-                                child: Text(status.localize(lang)),
+                  subs.fold(
+                    ifLeft: (status) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          width: 200.0,
+                          behavior: SnackBarBehavior.floating,
+                          content: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 2.0,
+                                horizontal: 16.0,
                               ),
+                              child: Text(status.localize(lang)),
                             ),
                           ),
-                        );
-                      },
-                      ifRight: onSubscriptionUpdate,
-                    );
-                  }
-                : null,
-            child: Text(lang.getUbuntuPro),
-          ),
-        ],
+                        ),
+                      );
+                    },
+                    ifRight: onSubscriptionUpdate,
+                  );
+                }
+              : () => launchUrlString('https://ubuntu.com/pro/subscribe'),
+          child: Text(lang.getUbuntuPro),
+        ),
       ],
       right: [
         ProTokenInputField(
