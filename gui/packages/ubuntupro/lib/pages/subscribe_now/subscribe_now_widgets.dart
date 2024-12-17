@@ -23,9 +23,6 @@ class ProTokenInputField extends StatefulWidget {
   final void Function()? onSubmit;
   final TextEditingController? controller;
 
-  /// The icon to be used for the expandable widget, mainly visible for stable tests.
-  static const expandIcon = YaruIcons.pan_end;
-
   @override
   State<ProTokenInputField> createState() => _ProTokenInputFieldState();
 }
