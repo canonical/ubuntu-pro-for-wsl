@@ -43,8 +43,9 @@ class SubscribeNowPage extends StatelessWidget {
         ),
         const SizedBox(height: 16.0),
         OutlinedButton(
-          onPressed: model.purchaseAllowed
-              ? () async {
+          onPressed: !model.purchaseAllowed
+              ? () => launchUrlString('https://ubuntu.com/pro/subscribe')
+              : () async {
                   final subs = await model.purchaseSubscription();
 
                   // Using anything attached to the BuildContext after a suspension point might be tricky.
@@ -71,8 +72,7 @@ class SubscribeNowPage extends StatelessWidget {
                     },
                     ifRight: onSubscriptionUpdate,
                   );
-                }
-              : () => launchUrlString('https://ubuntu.com/pro/subscribe'),
+                },
           child: Text(lang.getUbuntuPro),
         ),
       ],
