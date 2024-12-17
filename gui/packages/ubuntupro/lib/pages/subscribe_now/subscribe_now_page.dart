@@ -9,8 +9,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
+import '/pages/widgets/navigation_row.dart';
 import '/pages/widgets/page_widgets.dart';
-import '../widgets/navigation_row.dart';
 import 'subscribe_now_model.dart';
 import 'subscribe_now_widgets.dart';
 
