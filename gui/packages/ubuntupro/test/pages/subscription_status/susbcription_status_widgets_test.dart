@@ -1,22 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_widgets.dart';
+import 'package:yaru_test/yaru_test.dart';
 
 import '../../utils/build_multiprovider_app.dart';
 
 void main() {
   group('subscription status', () {
-    const caption = 'my caption';
-    const buttonName = 'my button';
+    const footerText = 'my footer';
+    const buttonText = 'my button';
 
-    testWidgets('caption', (tester) async {
+    testWidgets('footer', (tester) async {
+      var clicked = false;
       await tester.pumpWidget(
         buildSingleRouteMultiProviderApp(
-          child: const SubscriptionStatus(caption: caption),
+          child: SubscriptionStatus(
+            footerLinks: [
+              TextButton(
+                onPressed: () => clicked = true,
+                child: const Text(footerText),
+              ),
+            ],
+          ),
         ),
       );
 
-      expect(find.text(caption), findsOneWidget);
+      final button = find.button(footerText);
+      expect(button, findsOneWidget);
+
+      expect(clicked, isFalse);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(clicked, isTrue);
     });
 
     testWidgets('action button', (tester) async {
@@ -24,11 +39,10 @@ void main() {
       await tester.pumpWidget(
         buildSingleRouteMultiProviderApp(
           child: SubscriptionStatus(
-            caption: caption,
             actionButtons: [
               TextButton(
                 onPressed: () => clicked = true,
-                child: const Text(buttonName),
+                child: const Text(buttonText),
               ),
             ],
           ),

@@ -40,7 +40,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.ubuntuProManage), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
 
@@ -53,10 +53,11 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.ubuntuProManage), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
     });
+
     group('landscape:', () {
       testWidgets('user', (tester) async {
         final landscape = LandscapeSource()..ensureNone();
@@ -82,7 +83,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.ubuntuProManage), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
 
@@ -96,7 +97,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.ubuntuProManage), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
     });
@@ -136,7 +137,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.ubuntuProManage), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
 
@@ -155,7 +156,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.ubuntuProManage), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
     });
