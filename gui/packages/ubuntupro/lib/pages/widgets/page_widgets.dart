@@ -194,42 +194,39 @@ class CenteredPage extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 540.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              WidgetSpan(
-                                child: SvgPicture.asset(
-                                  svgAsset,
-                                  height: 70,
-                                ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 540.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            WidgetSpan(
+                              child: SvgPicture.asset(
+                                svgAsset,
+                                height: 70,
                               ),
-                              const WidgetSpan(
-                                child: SizedBox(
-                                  width: 8,
-                                ),
+                            ),
+                            const WidgetSpan(
+                              child: SizedBox(
+                                width: 8,
                               ),
-                              TextSpan(
-                                text: title,
-                                style: theme.textTheme.displaySmall
-                                    ?.copyWith(fontWeight: FontWeight.w100),
-                              ),
-                            ],
-                          ),
+                            ),
+                            TextSpan(
+                              text: title,
+                              style: theme.textTheme.displaySmall
+                                  ?.copyWith(fontWeight: FontWeight.w100),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        ...children,
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 16),
+                      ...children,
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             if (footer != null) footer!,
