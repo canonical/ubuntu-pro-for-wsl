@@ -35,7 +35,7 @@ void main() {
 
         expect(launcher.launched, isFalse);
         await tester
-            .tapOnText(find.textRange.ofSubstring(lang.ubuntuProManage));
+            .tapOnText(find.textRange.ofSubstring(lang.manageUbuntuPro));
         await tester.pump();
         expect(launcher.launched, isTrue);
       });
@@ -54,7 +54,7 @@ void main() {
 
         expect(launcher.launched, isFalse);
         await tester
-            .tapOnText(find.textRange.ofSubstring(lang.ubuntuProManage));
+            .tapOnText(find.textRange.ofSubstring(lang.manageUbuntuPro));
         await tester.pump();
         expect(launcher.launched, isTrue);
       });
@@ -71,7 +71,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.detachPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
@@ -85,7 +85,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
 
@@ -98,7 +98,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsNothing);
+        expect(find.text(lang.manageUbuntuPro), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
     });
@@ -114,7 +114,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.detachPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
@@ -129,7 +129,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
 
@@ -143,7 +143,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsNothing);
+        expect(find.text(lang.manageUbuntuPro), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
     });
@@ -164,7 +164,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.detachPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
@@ -184,7 +184,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
 
@@ -203,7 +203,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.ubuntuProManage), findsNothing);
+        expect(find.text(lang.manageUbuntuPro), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
     });

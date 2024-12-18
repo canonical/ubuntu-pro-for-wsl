@@ -52,7 +52,7 @@ Future<void> testOrganizationProvidedToken(WidgetTester tester) async {
 
   // asserts that we transitioned to the organization-managed status page.
   final l10n = tester.l10n<SubscriptionStatusPage>();
-  expect(find.text(l10n.ubuntuProManage), findsNothing);
+  expect(find.text(l10n.manageUbuntuPro), findsNothing);
 }
 
 Future<void> testManualTokenInput(WidgetTester tester) async {
@@ -99,5 +99,5 @@ Future<void> testPurchase(WidgetTester tester) async {
 
   // asserts that we transitioned to the store-managed status page.
   l10n = tester.l10n<SubscriptionStatusPage>();
-  expect(find.text(l10n.ubuntuProManage), findsOneWidget);
+  expect(find.text(l10n.manageUbuntuPro), findsOneWidget);
 }

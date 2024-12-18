@@ -31,7 +31,7 @@ class SubscriptionStatusPage extends StatelessWidget {
             ],
             footerLinks: [
               MarkdownBody(
-                data: '[${lang.ubuntuProManage}]()',
+                data: '[${lang.manageUbuntuPro}]()',
                 onTapLink: (_, href, __) => model.launchManagementWebPage(),
               ),
             ],
@@ -61,7 +61,7 @@ class SubscriptionStatusPage extends StatelessWidget {
             ],
             footerLinks: [
               MarkdownBody(
-                data: '[${lang.ubuntuProManage}]()',
+                data: '[${lang.manageUbuntuPro}]()',
                 onTapLink: (_, href, __) =>
                     launchUrlString('https://ubuntu.com/pro/dashboard'),
               ),
