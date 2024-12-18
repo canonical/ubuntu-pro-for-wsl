@@ -1,56 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'package:yaru/yaru.dart';
-import '../widgets/page_widgets.dart';
+import '/pages/widgets/page_widgets.dart';
 
 /// A page content widget built on top of the Dark styled landing page showing the current user active subscription
 /// feedback and an optional action button in a column layout.
 class SubscriptionStatus extends StatelessWidget {
   const SubscriptionStatus({
     super.key,
-    required this.caption,
     this.actionButtons,
+    this.footerLinks,
   });
-
-  /// The caption to render below the active subscription subtitle.
-  final String caption;
 
   /// The optional action button matching the capabilities of the current subscription type.
   final List<Widget>? actionButtons;
+
+  final List<Widget>? footerLinks;
 
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
 
-    final theme = Theme.of(context);
-    final linkStyle = MarkdownStyleSheet.fromTheme(
-      theme.copyWith(
-        textTheme: theme.textTheme.copyWith(
-          bodyMedium: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w100,
-          ),
-        ),
-      ),
-    ).copyWith(
-      a: TextStyle(
-        decoration: TextDecoration.underline,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-
-    return LandingPage(
-      centered: true,
+    return CenteredPage(
+      footer: footerLinks != null
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: footerLinks!,
+            )
+          : null,
       children: [
         const SizedBox(height: 16.0),
         YaruInfoBox(
-          title: Text(lang.subscriptionIsActive),
-          subtitle: MarkdownBody(
-            data: caption,
-            onTapLink: (_, href, __) => launchUrlString(href!),
-            styleSheet: linkStyle,
-          ),
+          title: Text(lang.ubuntuProEnabled),
+          subtitle: Text(lang.ubuntuProEnabledInfo),
           yaruInfoType: YaruInfoType.success,
         ),
         if (actionButtons != null)

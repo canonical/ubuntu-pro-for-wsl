@@ -7,15 +7,59 @@ import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '../../utils/build_multiprovider_app.dart';
+import '../../utils/url_launcher_mock.dart';
 
 void main() {
   group('subscription info:', () {
     final client = FakeAgentApiClient();
     registerServiceInstance<AgentApiClient>(client);
     final info = SubscriptionInfo();
+
+    group('footer links:', () {
+      final landscape = LandscapeSource()..ensureOrganization();
+      testWidgets('user', (tester) async {
+        final launcher = FakeUrlLauncher();
+        UrlLauncherPlatform.instance = launcher;
+
+        info.ensureUser();
+        final app = buildApp(info, landscape, client);
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(launcher.launched, isFalse);
+        await tester
+            .tapOnText(find.textRange.ofSubstring(lang.manageUbuntuPro));
+        await tester.pump();
+        expect(launcher.launched, isTrue);
+      });
+
+      testWidgets('store', (tester) async {
+        final launcher = FakeUrlLauncher();
+        UrlLauncherPlatform.instance = launcher;
+
+        info.ensureMicrosoftStore();
+        final app = buildApp(info, landscape, client);
+
+        await tester.pumpWidget(app);
+
+        final context = tester.element(find.byType(SubscriptionStatusPage));
+        final lang = AppLocalizations.of(context);
+
+        expect(launcher.launched, isFalse);
+        await tester
+            .tapOnText(find.textRange.ofSubstring(lang.manageUbuntuPro));
+        await tester.pump();
+        expect(launcher.launched, isTrue);
+      });
+    });
+
     group('org landscape:', () {
       final landscape = LandscapeSource()..ensureOrganization();
       testWidgets('user', (tester) async {
@@ -27,6 +71,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.detachPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
@@ -40,7 +85,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
 
@@ -53,10 +98,11 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
     });
+
     group('landscape:', () {
       testWidgets('user', (tester) async {
         final landscape = LandscapeSource()..ensureNone();
@@ -68,6 +114,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.detachPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
@@ -82,7 +129,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
 
@@ -96,7 +143,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsOneWidget);
       });
     });
@@ -117,6 +164,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.detachPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
@@ -136,7 +184,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.manageSubscription), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsOneWidget);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
 
@@ -155,7 +203,7 @@ void main() {
         final context = tester.element(find.byType(SubscriptionStatusPage));
         final lang = AppLocalizations.of(context);
 
-        expect(find.text(lang.orgManaged), findsOneWidget);
+        expect(find.text(lang.manageUbuntuPro), findsNothing);
         expect(find.text(lang.landscapeConfigureButton), findsNothing);
       });
     });

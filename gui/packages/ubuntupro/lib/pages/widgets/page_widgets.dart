@@ -69,21 +69,19 @@ class Pro4WSLPage extends StatelessWidget {
   }
 }
 
-// A more stylized page that mimics the design of the https://ubuntu.com/pro
-// landing page, with a dark background and an [svgAsset] logo followed by
-// a title with some opacity, rendering the [children] in a column layout.
-class LandingPage extends StatelessWidget {
-  const LandingPage({
+class CenteredPage extends StatelessWidget {
+  const CenteredPage({
     super.key,
     required this.children,
     this.svgAsset = 'assets/Ubuntu-tag.svg',
     this.title = 'Ubuntu Pro',
-    this.centered = false,
+    this.footer,
   });
+
   final List<Widget> children;
+  final Widget? footer;
   final String svgAsset;
   final String title;
-  final bool centered;
 
   @override
   Widget build(BuildContext context) {
@@ -91,81 +89,49 @@ class LandingPage extends StatelessWidget {
 
     return Pro4WSLPage(
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(32.0, 32.0, 32.0, 8.0),
-        child: centered
-            ? Center(
+        padding: const EdgeInsets.fromLTRB(32.0, 24.0, 32.0, 32.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480.0),
-                  child: _PageContent(
-                    svgAsset: svgAsset,
-                    title: title,
-                    data: theme,
-                    centered: true,
-                    children: children,
+                  constraints: const BoxConstraints(maxWidth: 540.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            WidgetSpan(
+                              child: SvgPicture.asset(
+                                svgAsset,
+                                height: 70,
+                              ),
+                            ),
+                            const WidgetSpan(
+                              child: SizedBox(
+                                width: 8,
+                              ),
+                            ),
+                            TextSpan(
+                              text: title,
+                              style: theme.textTheme.displaySmall
+                                  ?.copyWith(fontWeight: FontWeight.w100),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ...children,
+                    ],
                   ),
                 ),
-              )
-            : _PageContent(
-                svgAsset: svgAsset,
-                title: title,
-                data: theme,
-                children: children,
               ),
+            ),
+            if (footer != null) footer!,
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class _PageContent extends StatelessWidget {
-  const _PageContent({
-    required this.svgAsset,
-    required this.title,
-    required ThemeData data,
-    required this.children,
-    this.centered = false,
-  }) : _data = data;
-
-  final String svgAsset;
-  final String title;
-  final ThemeData _data;
-  final List<Widget> children;
-  final bool centered;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment:
-          centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-      mainAxisAlignment:
-          centered ? MainAxisAlignment.center : MainAxisAlignment.start,
-      children: [
-        RichText(
-          text: TextSpan(
-            children: [
-              WidgetSpan(
-                child: SvgPicture.asset(
-                  svgAsset,
-                  height: 70,
-                ),
-              ),
-              const WidgetSpan(
-                child: SizedBox(
-                  width: 8,
-                ),
-              ),
-              TextSpan(
-                text: title,
-                style: _data.textTheme.displaySmall
-                    ?.copyWith(fontWeight: FontWeight.w100),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(
-          height: 12,
-        ),
-        ...children,
-      ],
     );
   }
 }
