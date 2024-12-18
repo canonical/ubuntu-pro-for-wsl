@@ -16,6 +16,37 @@ import 'subscribe_now_model_test.mocks.dart';
 
 @GenerateMocks([AgentApiClient])
 void main() {
+  group('token', () {
+    final client = MockAgentApiClient();
+
+    test('errors', () async {
+      final model = SubscribeNowModel(client);
+      expect(model.canSubmit, isFalse);
+
+      model.updateToken('');
+      expect(model.token, isNull);
+      expect(model.tokenError, TokenError.empty);
+      expect(model.canSubmit, isFalse);
+
+      for (final badToken in tks.invalidTokens) {
+        model.updateToken(badToken);
+        expect(model.token, isNull);
+        expect(model.tokenError, TokenError.invalid);
+        expect(model.canSubmit, isFalse);
+      }
+    });
+
+    test('valid', () async {
+      final model = SubscribeNowModel(client);
+      expect(model.canSubmit, isFalse);
+
+      model.updateToken(tks.good);
+      expect(model.token, isNotNull);
+      expect(model.tokenError, isNull);
+      expect(model.canSubmit, isTrue);
+    });
+  });
+
   group('purchase', () {
     const pluginChannel = MethodChannelP4wMsStore.methodChannel;
     final pluginMessenger =
