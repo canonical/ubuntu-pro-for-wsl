@@ -136,7 +136,7 @@ jobs:
 
           mkdir -p ./coverage/codecov
           echo "${{ steps.flutter-qa.outputs.coverage-info }}" >> ./coverage/codecov/flutter-coverage.codecov
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           directory: ./coverage/codecov/
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -256,7 +256,7 @@ jobs:
         run: |
           go test -shuffle=on ./... -race -tags=gowslmock
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           directory: ${{ matrix.subproject }}/coverage/codecov
           token: ${{ secrets.CODECOV_TOKEN }}
