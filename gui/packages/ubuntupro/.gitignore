@@ -1,3 +1,4 @@
 # Applications should include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
 !pubspec.lock
 devtools_options.yaml
+*.mocks.dart
