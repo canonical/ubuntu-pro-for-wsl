@@ -14,7 +14,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452
 	google.golang.org/grpc v1.68.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
