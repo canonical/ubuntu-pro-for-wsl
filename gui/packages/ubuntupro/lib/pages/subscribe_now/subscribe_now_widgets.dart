@@ -5,7 +5,9 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:yaru/yaru.dart';
-import '../../core/pro_token.dart';
+
+import '/core/pro_token.dart';
+import '/pages/widgets/delayed_text_field.dart';
 import 'subscribe_now_model.dart';
 
 /// A validated text field with a submit button that calls the supplied [onApply]
@@ -51,27 +53,25 @@ class ProTokenInputField extends StatelessWidget {
           styleSheet: linkStyle,
         ),
         const SizedBox(height: 8),
-        TextField(
+        DelayedTextField(
           inputFormatters: [
             // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
             FilteringTextInputFormatter.deny(RegExp(r'\s')),
           ],
           autofocus: false,
           controller: controller,
-          decoration: InputDecoration(
-            label: Text(lang.tokenInputHint),
-            error: model.tokenError?.localize(lang) != null
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      model.tokenError!.localize(lang)!,
-                      style: theme.textTheme.bodySmall!.copyWith(
-                        color: YaruColors.of(context).error,
-                      ),
+          label: Text(lang.tokenInputHint),
+          error: model.tokenError?.localize(lang) != null
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    model.tokenError!.localize(lang)!,
+                    style: theme.textTheme.bodySmall!.copyWith(
+                      color: YaruColors.of(context).error,
                     ),
-                  )
-                : null,
-          ),
+                  ),
+                )
+              : null,
           onChanged: model.updateToken,
           onSubmitted: (_) => onSubmit?.call(),
         ),

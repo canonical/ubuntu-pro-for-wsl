@@ -14,8 +14,9 @@ import 'package:yaru/yaru.dart';
 
 import '/constants.dart';
 import '/core/agent_api_client.dart';
+import '/pages/widgets/delayed_text_field.dart';
+import '/pages/widgets/navigation_row.dart';
 import '/pages/widgets/page_widgets.dart';
-import '../widgets/navigation_row.dart';
 import 'landscape_model.dart';
 
 /// Defines the overall structure of the Landscape configuration page and seggregates
@@ -161,20 +162,16 @@ class _ManualForm extends StatelessWidget {
 
     return Column(
       children: [
-        TextField(
-          decoration: InputDecoration(
-            label: Text(lang.landscapeFQDNLabel),
-            errorText: model.manual.fqdnError.localize(lang),
-          ),
+        DelayedTextField(
+          label: Text(lang.landscapeFQDNLabel),
+          errorText: model.manual.fqdnError.localize(lang),
           onChanged: model.setFqdn,
           enabled: model.configType == LandscapeConfigType.manual,
         ),
         const SizedBox(height: 8),
-        TextField(
-          decoration: InputDecoration(
-            label: Text(lang.landscapeKeyLabel),
-            hintText: '163456',
-          ),
+        DelayedTextField(
+          label: Text(lang.landscapeKeyLabel),
+          hintText: '163456',
           onChanged: model.setManualRegistrationKey,
           enabled: model.configType == LandscapeConfigType.manual,
         ),
@@ -257,12 +254,10 @@ class _FilePickerFieldState extends State<_FilePickerField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              label: Text(widget.inputlabel),
-              hintText: widget.hint,
-              errorText: widget.errorText,
-            ),
+          child: DelayedTextField(
+            label: Text(widget.inputlabel),
+            hintText: widget.hint,
+            errorText: widget.errorText,
             controller: txt,
             onChanged: widget.onChanged,
             enabled: widget.enabled,
