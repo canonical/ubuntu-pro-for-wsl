@@ -1,6 +1,12 @@
 /// The name of the file where the Agent's drop its service connection information.
 const kAddrFileName = '.ubuntupro/.address';
 
+/// Default window width.
+const kWindowWidth = 900.0;
+
+/// Default window height.
+const kWindowHeight = 550.0;
+
 /// The default border margin.
 const kDefaultMargin = 32.0;
 

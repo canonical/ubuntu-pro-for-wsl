@@ -27,6 +27,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yaru/yaru.dart';
 
+import '/constants.dart';
 import 'navigation_row.dart';
 import 'status_bar.dart';
 
@@ -167,53 +168,57 @@ class ColumnPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Left column
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              WidgetSpan(
-                                child: SvgPicture.asset(
-                                  svgAsset,
-                                  height: 70,
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(maxWidth: kWindowWidth - 64.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left column
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                WidgetSpan(
+                                  child: SvgPicture.asset(
+                                    svgAsset,
+                                    height: 70,
+                                  ),
                                 ),
-                              ),
-                              const WidgetSpan(
-                                child: SizedBox(
-                                  width: 8,
+                                const WidgetSpan(
+                                  child: SizedBox(
+                                    width: 8,
+                                  ),
                                 ),
-                              ),
-                              TextSpan(
-                                text: title,
-                                style: theme.textTheme.displaySmall
-                                    ?.copyWith(fontWeight: FontWeight.w100),
-                              ),
-                            ],
+                                TextSpan(
+                                  text: title,
+                                  style: theme.textTheme.displaySmall
+                                      ?.copyWith(fontWeight: FontWeight.w100),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        ...left,
-                      ],
+                          const SizedBox(height: 24),
+                          ...left,
+                        ],
+                      ),
                     ),
-                  ),
-                  // Spacer
-                  const SizedBox(width: 32),
-                  // Right column
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: right,
+                    // Spacer
+                    const SizedBox(width: 32),
+                    // Right column
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: right,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             if (navigationRow != null) navigationRow!,

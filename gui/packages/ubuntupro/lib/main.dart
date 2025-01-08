@@ -33,8 +33,8 @@ Future<void> main() async {
       : Settings(SettingsRepository());
 
   final windowOptions = const WindowOptions(
-    size: Size(900, 550),
-    minimumSize: Size(900, 550),
+    size: Size(kWindowWidth, kWindowHeight),
+    minimumSize: Size(kWindowWidth, kWindowHeight),
     center: true,
   );
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
