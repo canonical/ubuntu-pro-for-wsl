@@ -120,7 +120,25 @@ slug = ""
 # (see https://docs.readthedocs.io/en/stable/guides/redirects.html).
 # NOTE: If this variable is not defined, set to None, or the dictionary is empty,
 # the sphinx_reredirects extension will be disabled.
-redirects = {}
+
+# NOTE: content from these tutorials will be reworked for inclusion in other tutorials
+# for now we can link to the versions available on the original GitHub repo
+redirects = {
+    # deprecated tutorials that will be reworked into new content
+    "tutorials/dotnet-systemd": "https://github.com/ubuntu/WSL/blob/main/docs/tutorials/dotnet-systemd.md",
+    "tutorials/interop": "https://github.com/ubuntu/WSL/blob/main/docs/tutorials/interop.md",
+    # tutorials that have since been converted to howto guides
+    "tutorials/cloud-init": "../../howto/cloud-init",
+    "tutorials/data-science-and-engineering": "../../howto/data-science-and-engineering",
+    "tutorials/gpu-cuda": "../../howto/gpu-cuda",
+    "tutorials/vscode": "../../tutorial/develop-with-ubuntu-wsl",
+    # the term "guides" was used in the original repo
+    "guides/contributing": "../../howto/contributing",
+    "guides/install-ubuntu-wsl2": "../../howto/install-ubuntu-wsl2",
+    "guides/run-workflows-azure": "../../howto/run-workflows-azure",
+    # redundant after merge
+    "explanations/up4w": "../../",
+}
 
 ############################################################
 ### Link checker exceptions
