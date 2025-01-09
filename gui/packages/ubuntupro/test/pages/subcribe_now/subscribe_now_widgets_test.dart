@@ -48,7 +48,7 @@ void main() {
 
         for (final token in tks.invalidTokens) {
           await tester.enterText(inputField, token);
-          await tester.pump();
+          await tester.pumpAndSettle();
 
           final errorText = find.descendant(
             of: inputField,
@@ -66,7 +66,7 @@ void main() {
         final lang = AppLocalizations.of(context);
 
         await tester.enterText(inputField, tks.invalidTokens[0]);
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         final errorText = find.descendant(
           of: inputField,
@@ -76,7 +76,7 @@ void main() {
 
         // ...except when we delete the content we should have no more errors
         await tester.enterText(inputField, '');
-        await tester.pump();
+        await tester.pumpAndSettle();
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.error, isNull);
       });
@@ -88,7 +88,7 @@ void main() {
         final lang = AppLocalizations.of(context);
 
         await tester.enterText(inputField, tks.good);
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.error, isNull);
@@ -110,7 +110,7 @@ void main() {
           // good token plus a bunch of types of white spaces.
           ' ${tks.good} \u{00A0}\u{2000}\u{2002}\u{202F}\u{205F}\u{3000} ',
         );
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         final input = tester.firstWidget<TextField>(inputField);
         expect(input.decoration!.errorText, isNull);
@@ -131,7 +131,7 @@ void main() {
       final inputField = find.byType(TextField);
 
       await tester.enterText(inputField, tks.good);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(called, isFalse);
       // simulate an enter key/submission of the text field

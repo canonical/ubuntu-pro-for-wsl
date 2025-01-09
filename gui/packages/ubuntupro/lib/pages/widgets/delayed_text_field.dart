@@ -1,12 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 /// A [TextField] that displays error messages on a delay instead of
 /// immediately.
 class DelayedTextField extends StatefulWidget {
-  DelayedTextField({
+  const DelayedTextField({
     this.autofocus = false,
     this.enabled = true,
     this.controller,
@@ -35,48 +34,96 @@ class DelayedTextField extends StatefulWidget {
   State<DelayedTextField> createState() => _DelayedTextField();
 }
 
-class _DelayedTextField extends State<DelayedTextField> {
-  Timer? debounce;
+class _DelayedTextField extends State<DelayedTextField>
+    with SingleTickerProviderStateMixin {
+  late TimerNotifier debouncer;
 
   bool showError = false;
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    debounce?.cancel();
-    super.dispose();
-  }
-
-  void onTextChanged() {
-    if (debounce?.isActive == true) debounce?.cancel();
-
-    debounce = Timer(Durations.medium4, () {
-      setState(() {
-        showError = widget.error != null || widget.errorText != null;
-      });
+    debouncer = TimerNotifier(vsync: this, duration: Durations.medium4);
+    debouncer.addListener(() {
+      showError = mounted && widget.error != null || widget.errorText != null;
     });
   }
 
   @override
+  void dispose() {
+    debouncer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller,
-      autofocus: widget.autofocus,
-      inputFormatters: widget.inputFormatters,
-      onChanged: (value) {
-        widget.onChanged?.call(value);
-        onTextChanged();
+    return ListenableBuilder(
+      listenable: debouncer,
+      builder: (context, _) {
+        return TextField(
+          controller: widget.controller,
+          autofocus: widget.autofocus,
+          inputFormatters: widget.inputFormatters,
+          onChanged: (value) {
+            widget.onChanged?.call(value);
+            debouncer.stop();
+            debouncer.resume();
+          },
+          onSubmitted: widget.onSubmitted,
+          decoration: InputDecoration(
+            error: showError ? widget.error : null,
+            errorText: showError ? widget.errorText : null,
+            label: widget.label,
+          ),
+        );
       },
-      onSubmitted: widget.onSubmitted,
-      decoration: InputDecoration(
-        error: showError ? widget.error : null,
-        errorText: showError ? widget.errorText : null,
-        label: widget.label,
-      ),
     );
+  }
+}
+
+/// A [ChangeNotifier] that notifies when the provided duration elapses.
+class TimerNotifier extends ChangeNotifier {
+  TimerNotifier({required this.duration, required this.vsync})
+      : assert(duration > Duration.zero, 'Duration must be greater than zero') {
+    _ticker = vsync.createTicker(_onTick);
+  }
+
+  final TickerProvider vsync;
+  final Duration duration;
+
+  Ticker? _ticker;
+  Duration _elapsedTime = Duration.zero;
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    super.dispose();
+  }
+
+  /// Starts the timer.
+  void start() {
+    _elapsedTime = Duration.zero;
+    _ticker?.start();
+  }
+
+  /// Stops the timer.
+  void stop() {
+    _ticker?.stop();
+    _elapsedTime = Duration.zero;
+  }
+
+  /// Resumes the timer from the last elapsed time.
+  void resume() {
+    _ticker?.start();
+  }
+
+  /// Callback executed on each tick.
+  void _onTick(Duration elapsed) {
+    _elapsedTime = elapsed;
+
+    if (_elapsedTime >= duration) {
+      _ticker?.stop();
+      notifyListeners();
+    }
   }
 }

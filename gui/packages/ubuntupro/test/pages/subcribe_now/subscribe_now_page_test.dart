@@ -152,7 +152,7 @@ void main() {
 
       final input = find.textField(lang.tokenInputHint);
       await tester.enterText(input, good);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(tester.firstWidget<ButtonStyleButton>(attach).enabled, isTrue);
 
@@ -186,7 +186,7 @@ void main() {
 
       final input = find.textField(lang.tokenInputHint);
       await tester.enterText(input, invalidTokens[0]);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(tester.firstWidget<ButtonStyleButton>(attach).enabled, isFalse);
 

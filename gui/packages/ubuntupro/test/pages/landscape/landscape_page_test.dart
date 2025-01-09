@@ -116,12 +116,12 @@ void main() {
       final continueButton = find.button(lang.landscapeRegister);
 
       await tester.enterText(fqdnInput, '::');
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(continueButton);
       expect(applied, isFalse);
 
       await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(continueButton);
       await tester.pump();
       expect(applied, isTrue);
@@ -154,7 +154,7 @@ void main() {
       await tester.pump();
 
       await tester.enterText(fileInput, customConf);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       final continueButton = find.button(lang.landscapeRegister);
       expect(tester.widget<ButtonStyleButton>(continueButton).enabled, isTrue);
@@ -185,7 +185,7 @@ void main() {
       expect(fqdnInput, findsOne);
 
       await tester.enterText(fqdnInput, '::');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       final errorText = find.text(lang.landscapeFQDNError);
       expect(errorText, findsOne);
@@ -210,7 +210,7 @@ void main() {
       await tester.pump();
 
       await tester.enterText(fileInput, notFoundPath);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       final errorText = find.text(lang.landscapeFileNotFound);
       expect(errorText, findsOne);
@@ -238,7 +238,7 @@ void main() {
       await tester.tap(fqdnInput);
       await tester.pump();
       await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       final next = find.button(lang.landscapeRegister);
       await tester.tap(next);
