@@ -16,7 +16,7 @@ of Ubuntu on WSL. If you are responsible for a fleet of Windows devices, UP4W
 will enable you to monitor, customise and secure Ubuntu WSL instances at scale.
 
 To start, read our guide on [quickly setting up an Ubuntu development
-environment on WSL](tutorial/getting-started-wsl). If you are interested in
+environment on WSL](tutorial/develop-with-ubuntu-wsl). If you are interested in
 automatically Pro-attaching instances of Ubuntu on WSL, read the guide on
 [installing and configuring UP4W](tutorial/getting-started).
 

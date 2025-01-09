@@ -10,7 +10,7 @@ First, learn how set up Ubuntu on WSL from scratch, integrate it with a Windows-
 ```{toctree}
 :titlesonly:
 
-Develop with Ubuntu on WSL <getting-started-wsl>
+Develop with Ubuntu on WSL <develop-with-ubuntu-wsl>
 ```
 
 Then learn how to install UP4W then automatically Pro-attach your Ubuntu WSL
@@ -30,3 +30,4 @@ instances at scale:
 
 Deploy WSL instances with UP4W and Landscape <deployment>
 ```
+
