@@ -1,5 +1,10 @@
 # Get started with UP4W
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) makes it possible to run Ubuntu on a Windows machine.
 Ubuntu Pro for WSL (UP4W) ensures that each new Ubuntu WSL instance that you create will automatically attach to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
 

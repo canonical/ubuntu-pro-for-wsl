@@ -1,5 +1,10 @@
 # Install UP4W and add a Pro token
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 To install and configure UP4W you will need:
 
 - A Windows 10 or 11 machine

@@ -1,5 +1,10 @@
 # Verify active Pro subscription and Pro attachment
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 If you have just installed and configured UP4W and a verification step is failing,
 wait for a few seconds and try again. The process should not take longer than a minute.
 

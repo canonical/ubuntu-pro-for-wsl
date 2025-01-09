@@ -1,5 +1,10 @@
 # Firewall requirements
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 Firewall rules must be configured for Ubuntu Pro for WSL to operate fully.
 
 The following figure shows the possible connections between the different components and their default ports and protocols:

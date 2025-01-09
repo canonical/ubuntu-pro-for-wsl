@@ -1,5 +1,10 @@
 # How to start the agent remotely
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 Ubuntu Pro for WSL, being a Microsoft Store application, cannot ship user services as of the time of writing (late
 2024), but can deploy startup tasks instead, programs that run with user permissions when the user logs into the
 Windows device. The UP4W background agent runs as a startup task, which is only enabled by the

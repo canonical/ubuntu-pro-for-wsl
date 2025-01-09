@@ -1,6 +1,6 @@
 (index-contributing)=
 
-# Contributing to UP4W
+# Contributing
 
 These how-to guides help you complete tasks when developing for UP4W.
 
@@ -8,10 +8,11 @@ These how-to guides help you complete tasks when developing for UP4W.
 :titlesonly:
 :maxdepth: 1
 
+General contribution guidelines <contributing>
 Install UP4W <02-install>
 Restart UP4W <03-restart>
 Access UP4W logs <06-access-the-logs>
-Enable opt-in features <07-toggle-features>
+Enable opt-in features for UP4W <07-toggle-features>
 Reset UP4W <reset-factory>
 ```
 

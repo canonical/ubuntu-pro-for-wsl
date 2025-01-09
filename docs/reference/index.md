@@ -2,8 +2,24 @@
 
 # Reference
 
-This section contains concise references relating to how UP4W is designed,
+This section contains concise references relating to how Ubuntu on WSL is designed,
 configured and developed.
+
+For information on the Ubuntu distros that are available and supported for WSL, read here: 
+
+```{toctree}
+:titlesonly:
+
+Ubuntu distributions <distributions>
+```
+
+If you are interested in automated testing of applications in Ubuntu WSL, read:
+
+```{toctree}
+:titlesonly:
+
+GitHub actions for Ubuntu WSL <actions>
+```
 
 A glossary of key UP4W system components can be found here:
 

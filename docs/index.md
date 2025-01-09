@@ -1,17 +1,24 @@
-# Ubuntu Pro for WSL (UP4W)
+# Ubuntu on WSL
+
 ```{note}
-This documentation describes a future release of UP4W. UP4W is not yet generally available in the Microsoft Store.
+This documentation includes reference to a future release of UP4W. UP4W is not yet generally available in the Microsoft Store.
 ```
 
-Ubuntu Pro for WSL (UP4W) is a powerful automation tool for managing [WSL](https://ubuntu.com/desktop/wsl) on Windows. If you are responsible for a fleet of Windows devices, UP4W will enable you to monitor, customise and secure Ubuntu WSL instances at scale.
+Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) enables
+developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
+for WSL is tightly integrated with the Windows OS, supporting features
+including remote development with popular IDEs and cross-OS file management.
+Ubuntu on WSL provides a productive terminal environment that can also be used
+to launch Linux-native graphical applications.
 
-UP4W is designed to achieve close integration with applications for customising images, enforcing standards and validating security compliance. WSL instances can be created, removed and monitored with [Landscape](https://ubuntu.com/landscape). Microsoft Defender is WSL-aware, making it easy to confirm if instances are compliant. [Cloud-init](https://cloudinit.readthedocs.io/en/latest/) support is built-in, allowing efficient customisation of standard images.
+Ubuntu Pro for WSL (UP4W) is a powerful automation tool for managing instances
+of Ubuntu on WSL. If you are responsible for a fleet of Windows devices, UP4W
+will enable you to monitor, customise and secure Ubuntu WSL instances at scale.
 
-Once you have an [Ubuntu Pro](https://ubuntu.com/pro) subscription, adding your Pro token to UP4W on a Windows host will add that token to all connected WSL instances with the Ubuntu Pro client installed. When the Landscape client is installed on the host, any connected WSL instances will be auto-enrolled in Landscape. WSL instances can then be remotely created, provisioned and managed from the Windows host.
-
-WSL is preferred by many organisations as a solution to run a fully-functioning Linux environment on a Windows machine. UP4W empowers system administrators and corporate security teams to manage large numbers of WSL instances effectively.
-
-Read our [getting started tutorial](tutorial/getting-started) to begin.
+To start, read our guide on [quickly setting up an Ubuntu development
+environment on WSL](tutorial/getting-started-wsl). If you are interested in
+automatically Pro-attaching instances of Ubuntu on WSL, read the guide on
+[installing and configuring UP4W](tutorial/getting-started).
 
 ## In this documentation
 
@@ -39,21 +46,22 @@ Read our [getting started tutorial](tutorial/getting-started) to begin.
 :link: reference/index
 :link-type: doc
 
-**Read technical descriptions** of important factual information relating to UP4W
+**Read technical descriptions** of important factual information
 ```
 
 ```{grid-item-card} [Explanation](explanation/index)
 :link: explanation/index
 :link-type: doc
 
-**Read an explanation** of UP4W's system architecture
+**Read an explanation** of UP4W's system architecture and how it relates to
+Ubuntu on WSL
 ```
 
 ````
 
 ## Project and community
 
-UP4W is a member of the Ubuntu family. It’s an open-source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions and much more!
+Ubuntu on WSL is a member of the Ubuntu family. It’s an open-source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions and much more!
 
 Thinking about using UP4W for your next project? Get in touch!
 
@@ -61,7 +69,7 @@ Thinking about using UP4W for your next project? Get in touch!
 :hidden:
 :titlesonly:
 
-UP4W <self>
+Ubuntu on WSL <self>
 Tutorial </tutorial/index>
 How-to guides </howto/index>
 Reference </reference/index>
