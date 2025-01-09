@@ -13,6 +13,8 @@ class DelayedTextField extends StatefulWidget {
     this.controller,
     this.error,
     this.errorText,
+    this.helper,
+    this.helperText,
     this.hintText,
     this.inputFormatters,
     this.label,
@@ -26,6 +28,8 @@ class DelayedTextField extends StatefulWidget {
   final bool enabled;
   final Widget? error;
   final String? errorText;
+  final Widget? helper;
+  final String? helperText;
   final String? hintText;
   final List<TextInputFormatter>? inputFormatters;
   final Widget? label;
@@ -76,6 +80,9 @@ class _DelayedTextField extends State<DelayedTextField>
             error: showError ? widget.error : null,
             errorText: showError ? widget.errorText : null,
             label: widget.label,
+            helper: widget.helper ?? const SizedBox(height: 16),
+            helperText: widget.helperText,
+            hintText: widget.hintText,
           ),
         );
       },

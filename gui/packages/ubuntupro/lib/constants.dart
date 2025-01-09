@@ -5,7 +5,7 @@ const kAddrFileName = '.ubuntupro/.address';
 const kWindowWidth = 900.0;
 
 /// Default window height.
-const kWindowHeight = 550.0;
+const kWindowHeight = 600.0;
 
 /// The default border margin.
 const kDefaultMargin = 32.0;
