@@ -63,6 +63,7 @@ class _DelayedTextField extends State<DelayedTextField>
       listenable: debouncer,
       builder: (context, _) {
         return TextField(
+          enabled: widget.enabled,
           controller: widget.controller,
           autofocus: widget.autofocus,
           inputFormatters: widget.inputFormatters,
