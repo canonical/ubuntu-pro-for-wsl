@@ -159,31 +159,32 @@ class _ManualForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
+    final enabled = model.configType == LandscapeConfigType.manual;
 
     return Column(
       children: [
         DelayedTextField(
           label: Text(lang.landscapeFQDNLabel),
-          errorText: model.manual.fqdnError.localize(lang),
+          errorText: enabled ? model.manual.fqdnError.localize(lang) : null,
           onChanged: model.setFqdn,
-          enabled: model.configType == LandscapeConfigType.manual,
+          enabled: enabled,
         ),
         const SizedBox(height: 8),
         DelayedTextField(
           label: Text(lang.landscapeKeyLabel),
           hintText: '163456',
           onChanged: model.setManualRegistrationKey,
-          enabled: model.configType == LandscapeConfigType.manual,
+          enabled: enabled,
         ),
         const SizedBox(height: 8),
         _FilePickerField(
           buttonLabel: lang.landscapeFilePicker,
-          errorText: model.manual.fileError.localize(lang),
+          errorText: enabled ? model.manual.fileError.localize(lang) : null,
           hint: 'C:\\landscape.pem',
           inputlabel: lang.landscapeSSLKeyLabel,
           onChanged: model.setSslKeyPath,
           allowedExtensions: validCertExtensions,
-          enabled: model.configType == LandscapeConfigType.manual,
+          enabled: enabled,
         ),
       ],
     );
@@ -200,14 +201,15 @@ class _CustomFileForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = context.watch<LandscapeModel>();
     final lang = AppLocalizations.of(context);
+    final enabled = model.configType == LandscapeConfigType.custom;
 
     return _FilePickerField(
       buttonLabel: lang.landscapeFilePicker,
-      errorText: model.custom.fileError.localize(lang),
+      errorText: enabled ? model.custom.fileError.localize(lang) : null,
       hint: 'C:\\landscape.conf',
       inputlabel: lang.landscapeFileLabel,
       onChanged: model.setCustomConfigPath,
-      enabled: model.configType == LandscapeConfigType.custom,
+      enabled: enabled,
     );
   }
 }
