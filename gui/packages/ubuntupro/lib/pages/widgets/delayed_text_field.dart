@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -92,7 +94,6 @@ class TimerNotifier extends ChangeNotifier {
   final Duration duration;
 
   Ticker? _ticker;
-  Duration _elapsedTime = Duration.zero;
 
   @override
   void dispose() {
@@ -102,14 +103,12 @@ class TimerNotifier extends ChangeNotifier {
 
   /// Starts the timer.
   void start() {
-    _elapsedTime = Duration.zero;
     _ticker?.start();
   }
 
   /// Stops the timer.
   void stop() {
     _ticker?.stop();
-    _elapsedTime = Duration.zero;
   }
 
   /// Resumes the timer from the last elapsed time.
@@ -119,11 +118,9 @@ class TimerNotifier extends ChangeNotifier {
 
   /// Callback executed on each tick.
   void _onTick(Duration elapsed) {
-    _elapsedTime = elapsed;
-
-    if (_elapsedTime >= duration) {
+    if (elapsed >= duration) {
       _ticker?.stop();
-      notifyListeners();
+      scheduleMicrotask(notifyListeners);
     }
   }
 }
