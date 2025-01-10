@@ -101,11 +101,6 @@ class TimerNotifier extends ChangeNotifier {
     super.dispose();
   }
 
-  /// Starts the timer.
-  void start() {
-    _ticker?.start();
-  }
-
   /// Stops the timer.
   void stop() {
     _ticker?.stop();
