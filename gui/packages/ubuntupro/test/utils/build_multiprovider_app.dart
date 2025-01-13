@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_connection.dart';
 import 'package:ubuntupro/core/agent_monitor.dart';
 import 'package:wizard_router/wizard_router.dart';
+import 'package:yaru/yaru.dart';
 
 /// Simplifies creating app widgets which don't care about the behavior of status bar (majority of test cases).
 Widget buildMultiProviderWizardApp({
@@ -19,11 +20,15 @@ Widget buildMultiProviderWizardApp({
             create: (_) => _MockAgentConnection(),
           ),
         ],
-    child: MaterialApp(
-      home: Wizard(
-        routes: routes,
+    child: YaruTheme(
+      builder: (_, yaru, __) => MaterialApp(
+        theme: yaru.theme,
+        darkTheme: yaru.darkTheme,
+        home: Wizard(
+          routes: routes,
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
       ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
     ),
   );
 }
@@ -39,9 +44,13 @@ Widget buildSingleRouteMultiProviderApp({
             create: (_) => _MockAgentConnection(),
           ),
         ],
-    child: MaterialApp(
-      home: child,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+    child: YaruTheme(
+      builder: (_, yaru, __) => MaterialApp(
+        theme: yaru.theme,
+        darkTheme: yaru.darkTheme,
+        home: child,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+      ),
     ),
   );
 }

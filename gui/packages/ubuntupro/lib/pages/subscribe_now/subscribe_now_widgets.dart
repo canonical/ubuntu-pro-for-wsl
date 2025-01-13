@@ -4,7 +4,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:yaru/yaru.dart';
 
 import '/core/pro_token.dart';
 import '/pages/widgets/delayed_text_field.dart';
@@ -61,17 +60,7 @@ class ProTokenInputField extends StatelessWidget {
           autofocus: false,
           controller: controller,
           label: Text(lang.tokenInputHint),
-          error: model.tokenError?.localize(lang) != null
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    model.tokenError!.localize(lang)!,
-                    style: theme.textTheme.bodySmall!.copyWith(
-                      color: YaruColors.of(context).error,
-                    ),
-                  ),
-                )
-              : null,
+          errorText: model.tokenError?.localize(lang),
           onChanged: model.updateToken,
           onSubmitted: (_) => onSubmit?.call(),
         ),
