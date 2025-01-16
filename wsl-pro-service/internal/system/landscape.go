@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+	"unicode"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
@@ -65,7 +67,7 @@ func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeC
 	}
 
 	// No change to do, do not rewrite config
-	if !enableUnconditionally && modifiedLandscapeConfig == landscapeConfig {
+	if !enableUnconditionally && areConfigsEqual(modifiedLandscapeConfig, landscapeConfig) {
 		log.Debug(ctx, "Landscape configuration is already valid")
 		return nil
 	}
@@ -81,6 +83,16 @@ func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeC
 	}
 
 	return nil
+}
+
+func areConfigsEqual(a, b string) bool {
+	fieldsFunc := func(r rune) bool {
+		return unicode.IsSpace(r) || r == '='
+	}
+	// Reduces a and b to slices of strings not containing spaces nor '='.
+	aFields := strings.FieldsFunc(a, fieldsFunc)
+	bFields := strings.FieldsFunc(b, fieldsFunc)
+	return slices.Equal(aFields, bFields)
 }
 
 func (s *System) writeConfig(landscapeConfig string) (err error) {
