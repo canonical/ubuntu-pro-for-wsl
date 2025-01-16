@@ -682,6 +682,7 @@ func TestEnsureValidLandscapeConfig(t *testing.T) {
 		"Reformat Landscape config to proper ini": {systemLandscapeConfigFile: "regular_with_weird_format.conf"},
 
 		"Do not rerun landscape without modifications":                             {systemLandscapeConfigFile: "no_change_needed.conf", wantNoLandscapeConfigCmd: true},
+		"Do not rerun landscape due whitespace changes":                            {systemLandscapeConfigFile: "no_change_due_spaces.conf", wantNoLandscapeConfigCmd: true},
 		"No Landscape configuration means no landscape command nor config created": {systemLandscapeConfigFile: "-", wantNoLandscapeConfigCmd: true, wantNoLandscapeConfig: true},
 
 		"Error when the config file cannot be read":              {breakWriteConfig: true, wantErr: true},
