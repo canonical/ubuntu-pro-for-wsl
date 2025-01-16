@@ -77,7 +77,7 @@ func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeC
 	}
 
 	// TODO: check foreground/background
-	cmd := s.backend.LandscapeConfigExecutable(ctx, "--config", landscapeConfigPath, "--silent")
+	cmd := s.backend.LandscapeConfigExecutable(ctx, "--config", landscapeConfigPath, "--silent", "--register-if-needed")
 	if _, err := runCommand(cmd); err != nil {
 		return fmt.Errorf("could not enable Landscape: %v", err)
 	}
