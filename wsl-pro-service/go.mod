@@ -3,8 +3,8 @@ module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 go 1.23.0
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250114181524-67d65bdf5edb
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250114181524-67d65bdf5edb
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250117142117-fddba9b894ad
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250117142117-fddba9b894ad
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -40,6 +40,6 @@ require (
 	golang.org/x/text v0.19.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
-	google.golang.org/protobuf v1.36.2 // indirect
+	google.golang.org/protobuf v1.36.3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
