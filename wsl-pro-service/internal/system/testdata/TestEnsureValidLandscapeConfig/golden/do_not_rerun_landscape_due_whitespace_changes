@@ -1,0 +1,4 @@
+[client]
+extra_spaces         = no_problem
+ssl_public_key = /idempotent/path/to/linux/certificate
+computer_title = TEST_DISTRO

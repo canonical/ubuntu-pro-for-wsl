@@ -404,8 +404,8 @@ func LandscapeConfigMock(t *testing.T) {
 			}
 
 			return exitOk
-		case 3:
-			// landscape-config [--config|-c] FILENAME --silent
+		case 4:
+			// landscape-config [--config|-c] FILENAME --silent --register-if-needeed
 			if argv[0] != "-c" && argv[0] != "--config" {
 				fmt.Fprintf(os.Stderr, "Mock not implemented for arg %q\n", argv[0])
 				return exitBadUsage
@@ -413,6 +413,11 @@ func LandscapeConfigMock(t *testing.T) {
 
 			if argv[2] != "--silent" {
 				fmt.Fprintf(os.Stderr, "Mock not implemented for arg %q\n", argv[2])
+				return exitBadUsage
+			}
+
+			if argv[3] != "--register-if-needed" {
+				fmt.Fprintf(os.Stderr, "Mock not implemented for arg %q\n", argv[3])
 				return exitBadUsage
 			}
 

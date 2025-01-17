@@ -59,13 +59,13 @@ func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeC
 		return fmt.Errorf("could not parse config: %v", err)
 	}
 
-	modifiedLandscapeConfig, err := normalizeLandscapeConfig(ctx, s, iniFile)
+	modifiedLandscapeConfig, didChange, err := normalizeLandscapeConfig(ctx, s, iniFile)
 	if err != nil {
 		return err
 	}
 
 	// No change to do, do not rewrite config
-	if !enableUnconditionally && modifiedLandscapeConfig == landscapeConfig {
+	if !enableUnconditionally && !didChange {
 		log.Debug(ctx, "Landscape configuration is already valid")
 		return nil
 	}
@@ -75,7 +75,7 @@ func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeC
 	}
 
 	// TODO: check foreground/background
-	cmd := s.backend.LandscapeConfigExecutable(ctx, "--config", landscapeConfigPath, "--silent")
+	cmd := s.backend.LandscapeConfigExecutable(ctx, "--config", landscapeConfigPath, "--silent", "--register-if-needed")
 	if _, err := runCommand(cmd); err != nil {
 		return fmt.Errorf("could not enable Landscape: %v", err)
 	}
@@ -123,65 +123,71 @@ func (s *System) writeConfig(landscapeConfig string) (err error) {
 
 // normalizeLandscapeConfig ensures that the landscape config has the expected computer_title and SSL certificate path
 // transformed in a Linux path.
-func normalizeLandscapeConfig(ctx context.Context, s *System, iniFile *ini.File) (modifiedLandscapeConfig string, err error) {
+func normalizeLandscapeConfig(ctx context.Context, s *System, iniFile *ini.File) (modifiedLandscapeConfig string, didChange bool, err error) {
 	clientSection, err := iniFile.GetSection("client")
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	// Add or refresh computer title
 	distroName, err := s.WslDistroName(ctx)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
+	titleChanged := false
 	oldComputerTitle, err := clientSection.GetKey("computer_title")
 	if err != nil {
 		if _, err = clientSection.NewKey("computer_title", distroName); err != nil {
-			return "", err
+			return "", false, err
 		}
+		titleChanged = true
 	} else if oldComputerTitle.String() != distroName {
 		oldComputerTitle.SetValue(distroName)
+		titleChanged = true
 	}
 
 	// Refresh SSL certificate path if any
-	if err := overrideSSLCertificate(ctx, s, clientSection); err != nil {
-		return "", fmt.Errorf("could not override SSL certificate path: %v", err)
+	certChanged, err := overrideSSLCertificate(ctx, s, clientSection)
+	if err != nil {
+		return "", false, fmt.Errorf("could not override SSL certificate path: %v", err)
 	}
 
 	// Return the modified config as a string.
 	w := &bytes.Buffer{}
 	if _, err := iniFile.WriteTo(w); err != nil {
-		return "", fmt.Errorf("could not regenerate modified config: %v", err)
+		return "", false, fmt.Errorf("could not regenerate modified config: %v", err)
 	}
 
-	return w.String(), nil
+	didChange = titleChanged || certChanged
+	return w.String(), didChange, nil
 }
 
 // overrideComputerTitle converts the ssl_public_key field in the Landscape config
-// from a Windows path to a Linux path.
-func overrideSSLCertificate(ctx context.Context, s *System, section *ini.Section) error {
+// from a Windows path to a Linux path. Returns true if the value was changed.
+func overrideSSLCertificate(ctx context.Context, s *System, section *ini.Section) (bool, error) {
 	const key = "ssl_public_key"
 
 	k, err := section.GetKey(key)
 	if err != nil {
 		// No certificate: nothing to transform
-		return nil
+		return false, nil
 	}
 
 	pathWindows := k.String()
 
 	if len(pathWindows) == 0 {
 		// Empty paths are translated by wslpath as the current working directory, which is not what we want.
-		return nil
+		return false, nil
 	}
 
 	cmd := s.backend.WslpathExecutable(ctx, "-ua", pathWindows)
 	out, err := runCommand(cmd)
 	if err != nil {
-		return fmt.Errorf("could not translate SSL certificate path %q to a WSL path: %v", pathWindows, err)
+		return false, fmt.Errorf("could not translate SSL certificate path %q to a WSL path: %v", pathWindows, err)
 	}
 
 	pathLinux := s.Path(strings.TrimSpace(string(out)))
 	k.SetValue(pathLinux)
-	return nil
+
+	return pathWindows != pathLinux, nil
 }
