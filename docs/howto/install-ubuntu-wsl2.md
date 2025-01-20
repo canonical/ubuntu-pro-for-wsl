@@ -123,7 +123,7 @@ $ sudo apt full-upgrade -y
 
 In this guide, we’ve shown you how to install Ubuntu WSL on Windows 10 or 11.
 
-We hope you enjoy working with Ubuntu in WSL. Don’t for to check out [our blog](https://ubuntu.com/blog) for the latest news on all things Ubuntu.
+We hope you enjoy working with Ubuntu in WSL. Don’t forget to check out [our blog](https://ubuntu.com/blog) for the latest news on all things Ubuntu.
 
 ### Further Reading
 
