@@ -1,0 +1,7 @@
+<!-- Include start pro -->
+```{admonition} Pro feature
+:class: seealso
+This page refers to features that require an [Ubuntu Pro
+subscription](https://ubuntu.com/pro/subscribe).
+```
+<!-- Include end pro -->

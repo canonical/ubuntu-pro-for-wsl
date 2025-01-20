@@ -1,5 +1,10 @@
 # Configure the Landscape client with UP4W
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 (howto::config-landscape)=
 ## Choose a configuration method
 

@@ -1,6 +1,11 @@
 (windows-registry)=
 # Windows registry
 
+```{include} ../pro_content_notice.txt
+    :start-after: <!-- Include start pro -->
+    :end-before: <!-- Include end pro -->
+```
+
 The Windows registry is a database provided by Windows where programs can read and write information. UP4W uses it as a read-only source of configuration.
 > See more:
 [Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
