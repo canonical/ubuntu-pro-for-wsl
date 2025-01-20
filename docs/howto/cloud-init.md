@@ -5,7 +5,7 @@ Ubuntu WSL users can now leverage it to perform an automatic setup to get a work
 
 > See more:  [cloud-init official documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
 
-The latest release of Ubuntu 24.04 LTS (Noble Numbat) comes with cloud-init already preinstalled, so you'll need that specific application to follow this tutorial. Ubuntu 24.04 LTS can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9nz3klhxdjp5?hl=en-us&gl=US). A previous version of this tutorial used Ubuntu (Preview), because that comes with the latest in-development features. You can still use it to follow the instructions below, if you prefer. This feature is now available in the default Ubuntu application as well as Ubuntu 22.04 LTS.
+The latest release of Ubuntu 24.04 LTS (Noble Numbat) comes with cloud-init already preinstalled, so you'll need that specific application to follow this guide. Ubuntu 24.04 LTS can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9nz3klhxdjp5?hl=en-us&gl=US). A previous version of this guide used Ubuntu (Preview), because that comes with the latest in-development features. You can still use it to follow the instructions below, if you prefer. This feature is now available in the default Ubuntu application as well as Ubuntu 22.04 LTS.
 
 ## What you will learn
 
@@ -59,7 +59,7 @@ Save it and close it.
 
 > That example will create a user named `jdoe` and set it as default via `/etc/wsl.conf`, install the packages
 > `ginac-tools` and `octave` and install `vcpkg` from the git repository, since there is no deb or snap of that
-> application (hence the reason for being included in this tutorial - it requires an unusual setup).
+> application (hence the reason for being included in this guide - it requires an unusual setup).
 
 
 > See more: [WSL data source reference](https://cloudinit.readthedocs.io/en/latest/reference/datasources/wsl.html).
@@ -204,7 +204,7 @@ See LICENSE.txt for license information.
 
 ## Enjoy!
 
-That’s all folks! In this tutorial, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL 2 with minimal touch.
+That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL 2 with minimal touch.
 
 This workflow will guarantee a solid foundation for your next Ubuntu WSL project.
 
