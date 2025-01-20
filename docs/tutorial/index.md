@@ -19,7 +19,7 @@ instances:
 ```{toctree}
 :titlesonly:
 
-Get the benefits of Ubuntu Pro on WSL <getting-started>
+Get started with Ubuntu Pro for WSL <getting-started-with-up4w>
 ```
 
 Next, learn how UP4W's Landscape integration can be used to deploy Ubuntu WSL

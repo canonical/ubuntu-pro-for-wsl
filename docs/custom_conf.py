@@ -136,6 +136,8 @@ redirects = {
     "guides/contributing": "../../howto/contributing",
     "guides/install-ubuntu-wsl2": "../../howto/install-ubuntu-wsl2",
     "guides/run-workflows-azure": "../../howto/run-workflows-azure",
+    # improved url
+    "tutorial/getting-started": "../../tutorial/getting-started-with-up4w",
     # redundant after merge
     "explanations/up4w": "../../",
 }
