@@ -111,7 +111,7 @@ Once installed we can test it out by creating an example local web server with N
 
 ## Install Node.js and create a new project
 
-Open your WSL Ubuntu terminal and ensure everything is up to date by typing:
+Open your Ubuntu WSL terminal and ensure everything is up to date by typing:
 
 ```{code-block} text
 $ sudo apt update
