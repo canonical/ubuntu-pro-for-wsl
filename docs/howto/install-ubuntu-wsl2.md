@@ -94,12 +94,12 @@ Appx and MSIX packages for a given distro can also be downloaded and installed.
 Please refer to Microsoft's documentation for more detailed information on these installation methods:
 
 - [Importing Linux distributions](https://learn.microsoft.com/en-us/windows/wsl/use-custom-distro)
-- [Installing distributions without the Microsoft Store](https://learn.microsoft.com/en-us/windows/wsl/install-manual#downloading-distributions) 
+- [Installing distributions without the Microsoft Store](https://learn.microsoft.com/en-us/windows/wsl/install-manual#downloading-distributions)
 
 ```{warning}
 You should always try to use the latest LTS release of Ubuntu, as it offers the best security, reliability and support when using Ubuntu WSL.
 
-Currently we do not have a recommended store for downloading tar and Appx/MSIX files for Ubuntu distros. 
+Currently we do not have a recommended location from which to download tar and Appx/MSIX files for Ubuntu distros.
 ```
 
 ## Run and configure Ubuntu
