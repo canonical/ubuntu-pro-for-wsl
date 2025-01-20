@@ -120,10 +120,10 @@ $ sudo apt update
 Then:
 
 ```{code-block} text
-$ sudo apt upgrade
+$ sudo apt upgrade -y
 ```
 
-Entering your password and pressing `Y` when prompted.
+Entering your password when prompted.
 
 Next, install Node.js and npm:
 
