@@ -72,7 +72,7 @@ html_context = {
     # For example: "ubuntu.com/lxd" or "microcloud.is"
     # If there is no product website, edit the header template to remove the
     # link (see the readme for instructions).
-    "product_page": "documentation.ubuntu.com",
+    "product_page": "ubuntu.com/wsl",
     # Add your product tag (the orange part of your logo, will be used in the
     # header) to ".sphinx/_static" and change the path here (start with "_static")
     # (default is the circle of friends)
@@ -88,7 +88,7 @@ html_context = {
     "github_url": "https://github.com/canonical/ubuntu-pro-for-wsl",
     # Change to the Matrix channel you want to link to
     # (use an empty value if you don't want to link)
-    # 'matrix': 'https://matrix.to/#/#documentation:ubuntu.com',
+    "matrix": "https://matrix.to/#/#ubuntu-wsl:ubuntu.com",
     # Change to the branch for this version of the documentation
     "github_version": "main",
     # Change to the folder that contains the documentation
