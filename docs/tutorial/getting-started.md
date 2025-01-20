@@ -5,8 +5,9 @@
     :end-before: <!-- Include end pro -->
 ```
 
-Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) makes it possible to run Ubuntu on a Windows machine.
-Ubuntu Pro for WSL (UP4W) ensures that each new Ubuntu WSL instance that you create will automatically attach to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
+Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) is an easy and fast way to run Ubuntu on a Windows machine.
+Ubuntu Pro for WSL (UP4W) automatically attaches Ubuntu WSL instances to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
+Developers get to use Ubuntu WSL while benefiting from the stability, security and compliance offered by Ubuntu Pro.
 
 In this tutorial you will learn how to install UP4W on Windows and verify that Ubuntu WSL instances are Pro-attaching.
 You should then be ready for more advanced usage scenarios.
