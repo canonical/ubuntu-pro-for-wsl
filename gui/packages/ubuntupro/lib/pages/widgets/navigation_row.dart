@@ -9,6 +9,7 @@ class NavigationRow extends StatelessWidget {
     this.nextText,
     this.showBack = true,
     this.showNext = true,
+    this.nextIsAction = true,
     super.key,
   });
 
@@ -18,6 +19,7 @@ class NavigationRow extends StatelessWidget {
   final void Function()? onNext;
   final String? nextText;
   final bool showNext;
+  final bool nextIsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +34,15 @@ class NavigationRow extends StatelessWidget {
           ),
         if (showNext) ...[
           const Spacer(),
-          ElevatedButton(
-            onPressed: onNext,
-            child: Text(nextText ?? lang.buttonNext),
-          ),
+          nextIsAction
+              ? ElevatedButton(
+                  onPressed: onNext,
+                  child: Text(nextText ?? lang.buttonNext),
+                )
+              : OutlinedButton(
+                  onPressed: onNext,
+                  child: Text(nextText ?? lang.buttonNext),
+                ),
         ],
       ],
     );

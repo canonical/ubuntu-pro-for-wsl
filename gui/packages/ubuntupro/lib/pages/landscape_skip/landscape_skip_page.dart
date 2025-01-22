@@ -64,6 +64,7 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
       navigationRow: NavigationRow(
         onBack: wizard.back,
         onNext: () => wizard.next(arguments: groupValue),
+        nextIsAction: false,
       ),
     );
   }
