@@ -51,7 +51,7 @@ class ProTokenInputField extends StatelessWidget {
           onTapLink: (_, href, __) => launchUrlString(href!),
           styleSheet: linkStyle,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         DelayedTextField(
           inputFormatters: [
             // This ignores all sorts of (Unicode) whitespaces (not only at the ends).
