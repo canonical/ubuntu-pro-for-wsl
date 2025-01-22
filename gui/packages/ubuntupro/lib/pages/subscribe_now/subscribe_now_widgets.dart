@@ -63,6 +63,7 @@ class ProTokenInputField extends StatelessWidget {
           errorText: model.tokenError?.localize(lang),
           onChanged: model.updateToken,
           onSubmitted: (_) => onSubmit?.call(),
+          helper: const SizedBox(height: 16),
         ),
       ],
     );

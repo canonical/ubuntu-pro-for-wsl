@@ -148,6 +148,7 @@ class ColumnPage extends StatelessWidget {
     this.svgAsset = 'assets/Ubuntu-tag.svg',
     this.title = 'Ubuntu Pro',
     this.navigationRow,
+    this.rightIsCentered = true,
     super.key,
   });
 
@@ -156,6 +157,7 @@ class ColumnPage extends StatelessWidget {
   final String svgAsset;
   final String title;
   final NavigationRow? navigationRow;
+  final bool rightIsCentered;
 
   @override
   Widget build(BuildContext context) {
@@ -168,56 +170,62 @@ class ColumnPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
-              child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: kWindowWidth - 64.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left column
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                WidgetSpan(
-                                  child: SvgPicture.asset(
-                                    svgAsset,
-                                    height: 70,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: kWindowWidth - 64.0,
+                    maxHeight: kWindowHeight - 196.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left column
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  WidgetSpan(
+                                    child: SvgPicture.asset(
+                                      svgAsset,
+                                      height: 70,
+                                    ),
                                   ),
-                                ),
-                                const WidgetSpan(
-                                  child: SizedBox(
-                                    width: 8,
+                                  const WidgetSpan(
+                                    child: SizedBox(
+                                      width: 8,
+                                    ),
                                   ),
-                                ),
-                                TextSpan(
-                                  text: title,
-                                  style: theme.textTheme.displaySmall
-                                      ?.copyWith(fontWeight: FontWeight.w100),
-                                ),
-                              ],
+                                  TextSpan(
+                                    text: title,
+                                    style: theme.textTheme.displaySmall
+                                        ?.copyWith(fontWeight: FontWeight.w100),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          ...left,
-                        ],
+                            const SizedBox(height: 24),
+                            ...left,
+                          ],
+                        ),
                       ),
-                    ),
-                    // Spacer
-                    const SizedBox(width: 32),
-                    // Right column
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: right,
+                      // Spacer
+                      const SizedBox(width: 32),
+                      // Right column
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: rightIsCentered
+                              ? MainAxisAlignment.center
+                              : MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: right,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
