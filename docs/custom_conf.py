@@ -138,7 +138,10 @@ redirects = {
     "guides/run-workflows-azure": "../../howto/run-workflows-azure",
     # improved url
     "tutorials/getting-started": "../../tutorials/getting-started-with-up4w",
-    "tutorials/getting-started": "../../tutorials/getting-started-with-up4w",
+    # account for old use of "tutorial/"
+    "tutorial/": "../../tutorials/",
+    "tutorial/getting-started": "../../tutorials/getting-started-with-up4w",
+    "tutorial/deployment": "../../tutorials/deployment",
     # redundant after merge
     "explanations/up4w": "../../",
 }
