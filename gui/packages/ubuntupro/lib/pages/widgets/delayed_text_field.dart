@@ -81,7 +81,7 @@ class _DelayedTextField extends State<DelayedTextField>
             error: showError ? widget.error : null,
             errorText: showError ? widget.errorText : null,
             label: widget.label,
-            helper: widget.helper ?? const SizedBox(height: 16),
+            helper: widget.helper,
             helperText: widget.helperText,
             hintText: widget.hintText,
           ),

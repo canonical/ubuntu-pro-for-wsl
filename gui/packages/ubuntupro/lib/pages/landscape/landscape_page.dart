@@ -52,6 +52,7 @@ class LandscapePage extends StatelessWidget {
     return ColumnPage(
       svgAsset: 'assets/Landscape-tag.svg',
       title: kLandscapeTitle,
+      rightIsCentered: false,
       left: [
         MarkdownBody(
           data: lang.landscapeHeading(
@@ -62,6 +63,7 @@ class LandscapePage extends StatelessWidget {
         ),
       ],
       right: [
+        const SizedBox(height: 24),
         LandscapeConfigForm(model),
       ],
       navigationRow: NavigationRow(
