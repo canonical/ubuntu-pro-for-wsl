@@ -131,13 +131,17 @@ redirects = {
     "tutorials/cloud-init": "../../howto/cloud-init",
     "tutorials/data-science-and-engineering": "../../howto/data-science-and-engineering",
     "tutorials/gpu-cuda": "../../howto/gpu-cuda",
-    "tutorials/vscode": "../../tutorial/develop-with-ubuntu-wsl",
+    "tutorials/vscode": "../../tutorials/develop-with-ubuntu-wsl",
     # the term "guides" was used in the original repo
     "guides/contributing": "../../howto/contributing",
     "guides/install-ubuntu-wsl2": "../../howto/install-ubuntu-wsl2",
     "guides/run-workflows-azure": "../../howto/run-workflows-azure",
     # improved url
-    "tutorial/getting-started": "../../tutorial/getting-started-with-up4w",
+    "tutorials/getting-started": "../../tutorials/getting-started-with-up4w",
+    # account for old use of "tutorial/"
+    "tutorial/": "../../tutorials/",
+    "tutorial/getting-started": "../../tutorials/getting-started-with-up4w",
+    "tutorial/deployment": "../../tutorials/deployment",
     # redundant after merge
     "explanations/up4w": "../../",
 }

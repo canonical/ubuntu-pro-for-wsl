@@ -1,7 +1,8 @@
 # Ubuntu on WSL
 
 ```{note}
-This documentation includes reference to a future release of UP4W. UP4W is not yet generally available in the Microsoft Store.
+This documentation includes reference to a future release of Ubuntu Pro for WSL (UP4W).
+UP4W is not yet generally available in the Microsoft Store.
 ```
 
 Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) enables
@@ -15,17 +16,17 @@ Ubuntu Pro for WSL (UP4W) is a powerful automation tool for managing instances
 of Ubuntu on WSL. If you are responsible for a fleet of Windows devices, UP4W
 will enable you to monitor, customise and secure Ubuntu WSL instances at scale.
 
-To start, read our guide on [quickly setting up an Ubuntu development
-environment on WSL](tutorial/develop-with-ubuntu-wsl). If you are interested in
-automatically Pro-attaching instances of Ubuntu on WSL, read the guide on
-[installing and configuring UP4W](tutorial/getting-started-with-up4w).
+To start, read our tutorial on [quickly setting up an Ubuntu development
+environment on WSL](tutorials/develop-with-ubuntu-wsl). If you are interested in
+automatically Pro-attaching instances of Ubuntu on WSL, read the tutorial on
+[installing and configuring UP4W](tutorials/getting-started-with-up4w).
 
 ## In this documentation
 
 ````{grid} 1 1 2 2
 
-```{grid-item-card} [Tutorials](tutorial/index)
-:link: tutorial/index
+```{grid-item-card} [Tutorials](tutorials/index)
+:link: tutorials/index
 :link-type: doc
 
 **Start here** with hands-on tutorials for new users, guiding you through your first-steps
@@ -61,16 +62,21 @@ Ubuntu on WSL
 
 ## Project and community
 
-Ubuntu on WSL is a member of the Ubuntu family. It’s an open-source project that warmly welcomes community contributions, suggestions, fixes and constructive feedback. Check out our [contribution page](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/CONTRIBUTING.md) on GitHub in order to bring ideas, report bugs, participate in discussions and much more!
+Ubuntu on WSL is a member of the Ubuntu family. It’s an open-source project
+that warmly welcomes community contributions, suggestions, fixes and
+constructive feedback. Check out our [contribution
+guidelines](/howto/contributing)
+on GitHub in order to bring ideas, report bugs, participate in discussions and
+much more!
 
-Thinking about using UP4W for your next project? Get in touch!
+Thinking about using Ubuntu on WSL for your next project? Get in touch!
 
 ```{toctree}
 :hidden:
 :titlesonly:
 
 Ubuntu on WSL <self>
-Tutorial </tutorial/index>
+Tutorials </tutorials/index>
 How-to guides </howto/index>
 Reference </reference/index>
 Explanation </explanation/index>
