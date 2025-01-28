@@ -22,5 +22,5 @@ To access the logs for the Windows Agent:
    - Open the file explorer
    - Write `%USERPROFILE%` at the address
 2. In the home directory, find the `.ubuntupro` directory and double-click on it.
-2. In the `.ubuntupto` folder, find file `log` and open it with any text editor.
+2. In the `.ubuntupro` folder, find file `log` and open it with any text editor.
    - This file contains the logs sorted with the oldest entries at the top and the newest at the bottom.
