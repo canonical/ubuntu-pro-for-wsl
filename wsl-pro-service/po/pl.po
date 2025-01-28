@@ -37,7 +37,7 @@ msgstr "Wszystkie połączenia zostały zakończone."
 #: internal/grpc/logstreamer/server.go:43
 #, c-format
 msgid "Connecting as [[%s]]"
-msgstr ""
+msgstr "Podłączanie jako [[%s]]"
 
 #: internal/grpc/grpcerror/grpcerror.go:29
 msgid "Couldn't connect to %s daemon: %v"
