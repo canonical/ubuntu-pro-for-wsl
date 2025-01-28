@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:MI+"
 "ZONE\n"
-"PO-Revision-Date: 2025-01-28 09:55+0000\n"
+"PO-Revision-Date: 2025-01-28 15:44+0000\n"
 "Last-Translator: Matthaiks <kitynska@gmail.com>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/"
 "ubuntu-desktop-translations/ubuntu-pro-for-wsl/pl/>\n"
@@ -37,92 +37,94 @@ msgstr "Wszystkie połączenia zostały zakończone."
 #: internal/grpc/logstreamer/server.go:43
 #, c-format
 msgid "Connecting as [[%s]]"
-msgstr "Podłączanie jako [[%s]]"
+msgstr "Łączenie jako [[%s]]"
 
 #: internal/grpc/grpcerror/grpcerror.go:29
 msgid "Couldn't connect to %s daemon: %v"
-msgstr ""
+msgstr "Nie można połączyć się z demonem %s: %v"
 
 #: internal/grpc/logstreamer/server.go:44
 msgid "Couldn't send initial connection log to client"
-msgstr ""
+msgstr "Nie można wysłać początkowego dziennika połączenia do klienta"
 
 #: internal/grpc/grpcerror/grpcerror.go:38
 msgid "Error %s from server: %v"
-msgstr ""
+msgstr "Błąd %s z serwera: %v"
 
 #: internal/grpc/grpcerror/grpcerror.go:35
 msgid "Error from server: %v"
-msgstr ""
+msgstr "Błąd z serwera: %v"
 
 #: internal/grpc/logstreamer/server.go:46
 #, c-format
 msgid "New connection from client [[%s]]"
-msgstr ""
+msgstr "Nowe połączenie od klienta [[%s]]"
 
 #: internal/daemon/daemon.go:98
 msgid "Ready state sent to systemd"
-msgstr ""
+msgstr "Stan gotowości został wysłany do systemd"
 
 #: cmd/wsl-pro-service/service/version.go:14
 msgid "Returns version of agent and exits"
-msgstr ""
+msgstr "Zwraca wersję agenta i wychodzi"
 
 #: internal/grpc/grpcerror/grpcerror.go:32
 msgid "Service took too long to respond. Disconnecting client."
-msgstr ""
+msgstr "Usługa zbyt długo odpowiadała. Rozłączanie klienta."
 
 #: cmd/wsl-pro-service/service/service.go:52
 msgid "WSL Pro Service"
-msgstr ""
+msgstr "Usługa WSL Pro"
 
 #: cmd/wsl-pro-service/service/service.go:53
 msgid "WSL Pro Service connects Ubuntu Pro for WSL agent to your distro."
-msgstr ""
+msgstr "Usługa WSL Pro łączy agenta Ubuntu Pro dla WSL z Twoją dystrybucją."
 
 #: internal/daemon/daemon.go:116
 msgid "Wait for active requests to close."
-msgstr ""
+msgstr "Poczekaj na zamknięcie aktywnych żądań."
 
 #: internal/daemon/daemon.go:47
 msgid "can't create daemon"
-msgstr ""
+msgstr "nie można utworzyć demona"
 
 #: internal/grpc/logstreamer/log.go:184
 msgid "can't send logs to client: %v"
-msgstr ""
+msgstr "nie można wysłać dzienników do klienta: %v"
 
 #: internal/grpc/logstreamer/log.go:176
 msgid "couldn't send logs to client"
-msgstr ""
+msgstr "nie można wysłać dzienników do klienta"
 
 #: internal/daemon/daemon.go:96
 msgid "couldn't send ready notification to systemd: %v"
-msgstr ""
+msgstr "nie można wysłać powiadomienia o gotowości do systemd: %v"
 
 #: internal/daemon/daemon.go:82
 msgid "error while serving"
-msgstr ""
+msgstr "błąd podczas wykonywania usługi"
 
 #: internal/grpc/logstreamer/server.go:119
 msgid "invalid metadata %s for incoming request: %q"
-msgstr ""
+msgstr "nieprawidłowe metadane %s dla żądania przychodzącego: %q"
 
 #: internal/grpc/logstreamer/server.go:88
 msgid ""
 "invalid metdata from client: %v\n"
 ". Please use the StreamClientInterceptor: %v"
 msgstr ""
+"nieprawidłowe metadane od klienta: %v\n"
+". Użyj StreamClientInterceptor: %v"
 
 #: cmd/wsl-pro-service/service/service.go:128
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
-msgstr ""
+msgstr "wydaj INFO (-v), DEBUG (-vv) lub DEBUG z wyjściem wywołującego (-vvv)"
 
 #: internal/grpc/logstreamer/server.go:95
 msgid "missing client metadata"
-msgstr ""
+msgstr "brak metadanych klienta"
 
 #: internal/grpc/logstreamer/server.go:116
 #, c-format
 msgid "missing metadata %s for incoming request"
-msgstr ""
+msgstr "brak metadanych %s dla żądania przychodzącego"
