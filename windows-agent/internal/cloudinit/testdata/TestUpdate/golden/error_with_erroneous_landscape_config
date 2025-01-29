@@ -2,7 +2,10 @@
 # This file was generated automatically and must not be edited
 landscape:
     client:
+        computer_title: wsl
         data: This is an old data field
         info: This is the old configuration
+        no_start: ""
+        skip_registration: ""
 ubuntu_pro:
     token: OLD_PRO_TOKEN
