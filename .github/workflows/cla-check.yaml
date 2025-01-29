@@ -5,6 +5,7 @@ on:
 jobs:
   cla-check:
     name: Check if CLA is signed
+    if: contains(fromJson('["weblate"]'), github.event.pull_request.user.login) == false
     runs-on: ubuntu-latest
     steps:
       - name: Check if CLA signed
