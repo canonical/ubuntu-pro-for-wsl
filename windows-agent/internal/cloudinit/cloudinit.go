@@ -219,11 +219,11 @@ func landscapeModule(c Config, out map[string]interface{}) error {
 		landscapeModule.Client[keyName] = section.Key(keyName).String()
 	}
 
-	// Enforcing a deferred registration with Landscape.
+	// Enforce a deferred registration with Landscape.
 	landscapeModule.Client["no_start"] = ""
 	landscapeModule.Client["skip_registration"] = ""
 
-	// Adding a placeholder computer title to prevent cloud-init schema warnings.
+	// Add a placeholder computer title to prevent cloud-init schema warnings.
 	landscapeModule.Client["computer_title"] = "wsl"
 
 	out["landscape"] = landscapeModule
