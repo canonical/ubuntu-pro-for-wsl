@@ -2,8 +2,11 @@
 # This file was generated automatically and must not be edited
 landscape:
     client:
+        computer_title: wsl
         hostagent_uid: landscapeUID1234
         info: This is the new configuration
+        no_start: ""
+        skip_registration: ""
         url: www.example.com/new/rickroll
 ubuntu_pro:
     token: NEW_PRO_TOKEN

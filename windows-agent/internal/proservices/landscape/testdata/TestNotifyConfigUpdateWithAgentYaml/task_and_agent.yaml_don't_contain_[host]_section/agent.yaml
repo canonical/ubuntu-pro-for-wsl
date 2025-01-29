@@ -2,6 +2,8 @@
 # This file was generated automatically and must not be edited
 landscape:
     client:
-        computer_title: another
+        computer_title: wsl
         hostagent_uid: landscapeUID
+        no_start: ""
+        skip_registration: ""
         tags: wsl

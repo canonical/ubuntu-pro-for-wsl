@@ -2,6 +2,9 @@
 # This file was generated automatically and must not be edited
 landscape:
     client:
+        computer_title: wsl
+        no_start: ""
+        skip_registration: ""
         tags: wsl
         user: JohnDoe
 ubuntu_pro:
