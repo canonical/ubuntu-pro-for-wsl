@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
-	google.golang.org/grpc v1.69.4
+	google.golang.org/grpc v1.70.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
@@ -38,7 +38,7 @@ require (
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	google.golang.org/protobuf v1.36.3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
