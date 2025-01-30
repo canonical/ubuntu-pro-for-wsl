@@ -1,1 +1,8 @@
-{}
+{
+  "tokenErrorEmpty": "Token não pode ser vazio",
+  "@tokenErrorEmpty": {},
+  "tokenErrorInvalid": "Token inválido",
+  "@tokenErrorInvalid": {},
+  "tokenValid": "Token válido",
+  "@tokenValid": {}
+}
