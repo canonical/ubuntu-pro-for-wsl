@@ -4,5 +4,141 @@
   "tokenErrorInvalid": "Token inválido",
   "@tokenErrorInvalid": {},
   "tokenValid": "Token válido",
-  "@tokenValid": {}
+  "@tokenValid": {},
+  "applyProToken": "",
+  "@applyProToken": {},
+  "applyingProToken": "",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "ubuntuProEnabledInfo": "",
+  "@ubuntuProEnabledInfo": {},
+  "detachPro": "",
+  "@detachPro": {},
+  "landscapeSkip": "",
+  "@landscapeSkip": {},
+  "purchaseStatusServer": "",
+  "@purchaseStatusServer": {},
+  "landscapeSkipDescription": "",
+  "@landscapeSkipDescription": {},
+  "landscapeFQDNLabel": "",
+  "@landscapeFQDNLabel": {},
+  "landscapeFQDNSaaSError": "",
+  "@landscapeFQDNSaaSError": {},
+  "landscapeSSLKeyLabel": "",
+  "@landscapeSSLKeyLabel": {},
+  "landscapeFileEmptyPath": "",
+  "@landscapeFileEmptyPath": {},
+  "landscapeFilePicker": "",
+  "@landscapeFilePicker": {},
+  "landscapeFileInvalidFormat": "",
+  "@landscapeFileInvalidFormat": {},
+  "landscapeApplyError": "",
+  "@landscapeApplyError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "landscapeRegister": "",
+  "@landscapeRegister": {},
+  "statusBarAgentConnectingTooltip": "",
+  "@statusBarAgentConnectingTooltip": {},
+  "agentStateQuerying": "",
+  "@agentStateQuerying": {},
+  "agentStateUnknownEnv": "",
+  "@agentStateUnknownEnv": {},
+  "landscapeSetupCustomHint": "",
+  "@landscapeSetupCustomHint": {},
+  "learnMore": "",
+  "@learnMore": {},
+  "ubuntuProEnabled": "",
+  "@ubuntuProEnabled": {},
+  "buttonBack": "",
+  "@buttonBack": {},
+  "landscapeSetupManualHint": "",
+  "@landscapeSetupManualHint": {},
+  "landscapeSetupCustom": "",
+  "@landscapeSetupCustom": {},
+  "landscapeHeading": "",
+  "@landscapeHeading": {
+    "placeholders": {
+      "landscapeLink": {
+        "type": "String"
+      }
+    }
+  },
+  "agentStatePingNonResponsive": "",
+  "@agentStatePingNonResponsive": {},
+  "landscapeSkipRegister": "",
+  "@landscapeSkipRegister": {},
+  "landscapeFileIsDir": "",
+  "@landscapeFileIsDir": {},
+  "statusBarAgentRunningTooltip": "",
+  "@statusBarAgentRunningTooltip": {},
+  "landscapeSetupManual": "",
+  "@landscapeSetupManual": {},
+  "purchaseStatusAlreadyPurchased": "",
+  "@purchaseStatusAlreadyPurchased": {},
+  "landscapeFileTooLarge": "",
+  "@landscapeFileTooLarge": {},
+  "landscapeFileEmptyContents": "",
+  "@landscapeFileEmptyContents": {},
+  "proHeading": "",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "statusBarAgentDownTooltip": "",
+  "@statusBarAgentDownTooltip": {},
+  "agentStateUnreachable": "",
+  "@agentStateUnreachable": {},
+  "manageUbuntuPro": "",
+  "@manageUbuntuPro": {},
+  "statusBarReportBugTooltip": "",
+  "@statusBarReportBugTooltip": {},
+  "agentStateCannotStart": "",
+  "@agentStateCannotStart": {},
+  "purchaseStatusUserGaveUp": "",
+  "@purchaseStatusUserGaveUp": {},
+  "agentStateInvalid": "",
+  "@agentStateInvalid": {},
+  "buttonSkip": "",
+  "@buttonSkip": {},
+  "landscapeKeyLabel": "",
+  "@landscapeKeyLabel": {},
+  "landscapeFileLabel": "",
+  "@landscapeFileLabel": {},
+  "landscapeFQDNError": "",
+  "@landscapeFQDNError": {},
+  "landscapeConfigureButton": "",
+  "@landscapeConfigureButton": {},
+  "buttonNext": "",
+  "@buttonNext": {},
+  "agentStateStarting": "",
+  "@agentStateStarting": {},
+  "agent": "",
+  "@agent": {},
+  "purchaseStatusNetwork": "",
+  "@purchaseStatusNetwork": {},
+  "purchaseStatusUnknown": "",
+  "@purchaseStatusUnknown": {},
+  "landscapeFileNotFound": "",
+  "@landscapeFileNotFound": {},
+  "updatingSubscriptionInfo": "",
+  "@updatingSubscriptionInfo": {},
+  "purchaseStatusSuccess": "",
+  "@purchaseStatusSuccess": {},
+  "appTitle": "",
+  "@appTitle": {},
+  "getUbuntuPro": "",
+  "@getUbuntuPro": {}
 }
