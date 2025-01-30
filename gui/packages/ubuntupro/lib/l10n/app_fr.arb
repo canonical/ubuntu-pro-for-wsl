@@ -1,1 +1,158 @@
-{}
+{
+  "attach": "",
+  "@attach": {},
+  "landscapeSkipRegister": "",
+  "@landscapeSkipRegister": {},
+  "landscapeSkip": "",
+  "@landscapeSkip": {},
+  "statusBarAgentRunningTooltip": "",
+  "@statusBarAgentRunningTooltip": {},
+  "buttonBack": "",
+  "@buttonBack": {},
+  "buttonSkip": "",
+  "@buttonSkip": {},
+  "statusBarAgentConnectingTooltip": "",
+  "@statusBarAgentConnectingTooltip": {},
+  "statusBarReportBugTooltip": "",
+  "@statusBarReportBugTooltip": {},
+  "statusBarAgentDownTooltip": "",
+  "@statusBarAgentDownTooltip": {},
+  "buttonNext": "",
+  "@buttonNext": {},
+  "landscapeRegister": "",
+  "@landscapeRegister": {},
+  "ubuntuProEnabled": "",
+  "@ubuntuProEnabled": {},
+  "landscapeSetupManual": "",
+  "@landscapeSetupManual": {},
+  "updatingSubscriptionInfo": "",
+  "@updatingSubscriptionInfo": {},
+  "agentStateCannotStart": "",
+  "@agentStateCannotStart": {},
+  "tokenInputDescription": "",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "landscapeFileTooLarge": "",
+  "@landscapeFileTooLarge": {},
+  "landscapeFileLabel": "",
+  "@landscapeFileLabel": {},
+  "agentStatePingNonResponsive": "",
+  "@agentStatePingNonResponsive": {},
+  "tokenErrorInvalid": "",
+  "@tokenErrorInvalid": {},
+  "agentStateQuerying": "",
+  "@agentStateQuerying": {},
+  "landscapeFileNotFound": "",
+  "@landscapeFileNotFound": {},
+  "landscapeKeyLabel": "",
+  "@landscapeKeyLabel": {},
+  "agentStateUnreachable": "",
+  "@agentStateUnreachable": {},
+  "landscapeFQDNError": "",
+  "@landscapeFQDNError": {},
+  "landscapeFQDNLabel": "",
+  "@landscapeFQDNLabel": {},
+  "landscapeSkipDescription": "",
+  "@landscapeSkipDescription": {},
+  "agentStateInvalid": "",
+  "@agentStateInvalid": {},
+  "landscapeFQDNSaaSError": "",
+  "@landscapeFQDNSaaSError": {},
+  "manageUbuntuPro": "",
+  "@manageUbuntuPro": {},
+  "agentStateStarting": "",
+  "@agentStateStarting": {},
+  "applyingProToken": "",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseStatusSuccess": "",
+  "@purchaseStatusSuccess": {},
+  "purchaseStatusServer": "",
+  "@purchaseStatusServer": {},
+  "ubuntuProEnabledInfo": "",
+  "@ubuntuProEnabledInfo": {},
+  "tokenInputHint": "",
+  "@tokenInputHint": {},
+  "tokenErrorEmpty": "",
+  "@tokenErrorEmpty": {},
+  "landscapeFileEmptyPath": "",
+  "@landscapeFileEmptyPath": {},
+  "tokenInputTitle": "",
+  "@tokenInputTitle": {},
+  "landscapeSSLKeyLabel": "",
+  "@landscapeSSLKeyLabel": {},
+  "landscapeFilePicker": "",
+  "@landscapeFilePicker": {},
+  "learnMore": "",
+  "@learnMore": {},
+  "landscapeSetupManualHint": "",
+  "@landscapeSetupManualHint": {},
+  "agent": "",
+  "@agent": {},
+  "tokenValid": "",
+  "@tokenValid": {},
+  "agentStateUnknownEnv": "",
+  "@agentStateUnknownEnv": {},
+  "purchaseStatusAlreadyPurchased": "",
+  "@purchaseStatusAlreadyPurchased": {},
+  "purchaseStatusUnknown": "",
+  "@purchaseStatusUnknown": {},
+  "landscapeFileEmptyContents": "",
+  "@landscapeFileEmptyContents": {},
+  "getUbuntuPro": "",
+  "@getUbuntuPro": {},
+  "landscapeApplyError": "",
+  "@landscapeApplyError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseStatusNetwork": "",
+  "@purchaseStatusNetwork": {},
+  "landscapeSetupCustomHint": "",
+  "@landscapeSetupCustomHint": {},
+  "proHeading": "",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "detachPro": "",
+  "@detachPro": {},
+  "landscapeSetupCustom": "",
+  "@landscapeSetupCustom": {},
+  "landscapeFileIsDir": "",
+  "@landscapeFileIsDir": {},
+  "landscapeConfigureButton": "",
+  "@landscapeConfigureButton": {},
+  "landscapeFileInvalidFormat": "",
+  "@landscapeFileInvalidFormat": {},
+  "applyProToken": "",
+  "@applyProToken": {},
+  "appTitle": "",
+  "@appTitle": {},
+  "landscapeHeading": "",
+  "@landscapeHeading": {
+    "placeholders": {
+      "landscapeLink": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseStatusUserGaveUp": "",
+  "@purchaseStatusUserGaveUp": {}
+}
