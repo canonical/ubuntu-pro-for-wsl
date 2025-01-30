@@ -791,7 +791,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	require.NoError(t, err, "Setup: Connect should return no errors")
 
 	tb.clientService = clientService
-	context.AfterFunc(ctx, func() { tb.clientService.Stop(ctx) })
+	t.Cleanup(func() { tb.clientService.Stop(ctx) })
 
 	require.Eventually(t, func() bool {
 		return clientService.Connected() && tb.conf.landscapeAgentUID != "" && service.IsConnected(tb.conf.landscapeAgentUID)
