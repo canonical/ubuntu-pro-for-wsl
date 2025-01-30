@@ -158,6 +158,7 @@ func TestInstall(t *testing.T) {
 		distroAlreadyInstalled bool
 		distroName             string
 		wslInstallErr          bool
+		wslLaunchErr           bool
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
 		breakVhdxDir           bool
@@ -183,6 +184,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distro fails to install":     {wslInstallErr: true},
 		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
 
+		"Error when launching the new distro fails":                       {wslLaunchErr: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the distro ID is reserved (Ubuntu)":                   {sendRootfsURL: "goodfile", distroName: "Ubuntu", wantInstalled: false},
 		"Error when the distro ID is reserved (Preview)":                  {sendRootfsURL: "goodfile", distroName: "Ubuntu-Preview", wantInstalled: false},
 		"Error when the distro ID is reserved (case sensitiveness)":       {sendRootfsURL: "goodfile", distroName: "ubuntu-preview", wantInstalled: false},
@@ -267,6 +269,11 @@ func TestInstall(t *testing.T) {
 
 					if tc.wslInstallErr {
 						testBed.wslMock.InstallError = true
+					}
+
+					if tc.wslLaunchErr {
+						testBed.wslMock.WslLaunchInteractiveError = true
+						testBed.wslMock.WslLaunchError = true
 					}
 
 					if tc.cloudInitExecFailure {
@@ -791,7 +798,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	require.NoError(t, err, "Setup: Connect should return no errors")
 
 	tb.clientService = clientService
-	context.AfterFunc(ctx, func() { tb.clientService.Stop(ctx) })
+	t.Cleanup(func() { tb.clientService.Stop(ctx) })
 
 	require.Eventually(t, func() bool {
 		return clientService.Connected() && tb.conf.landscapeAgentUID != "" && service.IsConnected(tb.conf.landscapeAgentUID)
