@@ -140,5 +140,19 @@
   "appTitle": "",
   "@appTitle": {},
   "getUbuntuPro": "",
-  "@getUbuntuPro": {}
+  "@getUbuntuPro": {},
+  "tokenInputTitle": "Vincular esta máquina",
+  "@tokenInputTitle": {},
+  "tokenInputHint": "Token",
+  "@tokenInputHint": {},
+  "attach": "Vincular",
+  "@attach": {},
+  "tokenInputDescription": "Insira um token de {proLink} ou do seu administrador de sistemas",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  }
 }
