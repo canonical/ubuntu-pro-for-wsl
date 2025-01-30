@@ -231,6 +231,11 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	}
 
+	sleep := distro.Command(ctx, "sleep 5")
+	if err := sleep.Run(); err != nil {
+		return fmt.Errorf("could not wait for distro to start: %v", err)
+	}
+
 	if cmd.GetCloudinit() != "" {
 		return nil
 	}
