@@ -8,6 +8,7 @@ on:
     paths-ignore:
       - docs/**
       - "*.md"
+      - "gui/packages/ubuntupro/lib/l10n/app_*.arb"
   workflow_dispatch:
   push:
     branches: [main]
