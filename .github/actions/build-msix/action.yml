@@ -44,6 +44,8 @@ runs:
         $pwd = ConvertTo-SecureString '${{ inputs.certificate_password }}' -AsPlainText -Force
         Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:LocalMachine\Trust -FilePath certificate\certificate.pfx
         Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
+
+        Remove-Item certificate\ -Recurse
     - name: Build Bundle
       shell: powershell
       run: |
