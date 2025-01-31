@@ -41,7 +41,7 @@
   "@agent": {},
   "agentStateStarting": "Uruchamia się agent w tle Ubuntu Pro.",
   "@agentStateStarting": {},
-  "agentStateInvalid": "Oczekiwanie na inicjalizację agenta w tle Ubuntu Pro .",
+  "agentStateInvalid": "Oczekiwanie na inicjalizację agenta w tle Ubuntu Pro.",
   "@agentStateInvalid": {},
   "agentStateCannotStart": "Nie można uruchomić agenta w tle Ubuntu Pro.",
   "@agentStateCannotStart": {},
