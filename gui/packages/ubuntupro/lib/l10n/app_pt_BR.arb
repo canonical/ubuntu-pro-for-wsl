@@ -1,0 +1,55 @@
+{
+  "tokenErrorEmpty": "Token não pode ser vazio",
+  "tokenErrorInvalid": "Token inválido",
+  "tokenValid": "Token válido",
+  "applyProToken": "Aplicar o token do Ubuntu Pro",
+  "applyingProToken": "Aplicando o token {token}",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "ubuntuProEnabledInfo": "Todas as instâncias Ubuntu WSL tem acesso aos recursos de segurança do Ubuntu Pro.",
+  "detachPro": "Desvincular Ubuntu Pro",
+  "purchaseStatusServer": "Erro inesperado na Microsoft Store. Por favor tente novamente mais tarde.",
+  "agentStateQuerying": "Verificando o estado do agente de fundo do Ubuntu Pro.",
+  "agentStateUnknownEnv": "O estado do agente de fundo do Ubuntu Pro não pode ser verificado. Verifique as suas configurações de ambiente.",
+  "learnMore": "Saiba mais",
+  "ubuntuProEnabled": "O Ubuntu Pro está habilitado nessa máquina",
+  "agentStatePingNonResponsive": "O agente de fundo do Ubuntu Pro não está respondendo.",
+  "purchaseStatusAlreadyPurchased": "Você já é assinante do Ubuntu Pro.",
+  "proHeading": "Segurança de software de código aberto pelos editores do Ubuntu, agora disponível no Windows. {aboutLink}",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "agentStateUnreachable": "Tentando recuperar o agente de fundo do Ubuntu Pro.",
+  "manageUbuntuPro": "Gerencie a assinatura do Ubuntu Pro",
+  "agentStateCannotStart": "O agente de fundo do Ubuntu Pro não pode ser iniciado.",
+  "purchaseStatusUserGaveUp": "A tentativa de compra foi cancelada.",
+  "agentStateInvalid": "Esperando a inicialização do agente de fundo do Ubuntu Pro.",
+  "agentStateStarting": "O agente de fundo do Ubuntu Pro está iniciando.",
+  "agent": "Agente de fundo do Ubuntu Pro",
+  "purchaseStatusNetwork": "Um problema de rede impediu a realização da compra. Por favor tente novamente quando estiver conectado.",
+  "purchaseStatusUnknown": "Um erro inesperado ao tentar comprar a assinatura. Considere reiniciar esse aplicativo.",
+  "updatingSubscriptionInfo": "Atualizando as informações da assinatura.",
+  "purchaseStatusSuccess": "Obrigado por assinar o Ubuntu Pro.",
+  "appTitle": "Ubuntu Pro for WSL",
+  "getUbuntuPro": "Adquira o Ubuntu Pro",
+  "tokenInputTitle": "Vincular essa máquina",
+  "tokenInputHint": "Token",
+  "attach": "Vincular",
+  "tokenInputDescription": "Insira um token de {proLink} ou do seu administrador de sistemas",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  }
+}
