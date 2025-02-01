@@ -1,1 +1,48 @@
-{}
+{
+  "appTitle": "Ubuntu Pro untuk WSL",
+  "@appTitle": {},
+  "tokenErrorInvalid": "Token tidak valid",
+  "@tokenErrorInvalid": {},
+  "tokenInputHint": "Token",
+  "@tokenInputHint": {},
+  "agentStateUnknownEnv": "Status agen latar Ubuntu Pro tidak dapat diverifikasi. Periksa pengaturan lingkungan Anda.",
+  "@agentStateUnknownEnv": {},
+  "applyingProToken": "Menerapkan token {token}",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "attach": "Cantolkan",
+  "@attach": {},
+  "tokenErrorEmpty": "Token tidak boleh kosong",
+  "@tokenErrorEmpty": {},
+  "tokenValid": "Token valid",
+  "@tokenValid": {},
+  "tokenInputTitle": "Cantolkan mesin ini",
+  "@tokenInputTitle": {},
+  "tokenInputDescription": "Masukkan token dari {proLink} atau administrator sistem Anda",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "applyProToken": "Terapkan Token Pro",
+  "@applyProToken": {},
+  "agent": "Agen latar Ubuntu Pro",
+  "@agent": {},
+  "agentStateStarting": "Agen latar Ubuntu Pro sedang memulai.",
+  "@agentStateStarting": {},
+  "agentStatePingNonResponsive": "Agen latar Ubuntu Pro tidak merespon.",
+  "@agentStatePingNonResponsive": {},
+  "agentStateInvalid": "Menunggu inisialisasi agen latar Ubuntu Pro.",
+  "@agentStateInvalid": {},
+  "agentStateCannotStart": "Agen latar Ubuntu Pro tidak bisa dimulai.",
+  "@agentStateCannotStart": {},
+  "agentStateQuerying": "Memeriksa status agen latar Ubuntu Linux Pro.",
+  "@agentStateQuerying": {}
+}
