@@ -44,5 +44,43 @@
   "agentStateCannotStart": "Agen latar Ubuntu Pro tidak bisa dimulai.",
   "@agentStateCannotStart": {},
   "agentStateQuerying": "Memeriksa status agen latar Ubuntu Linux Pro.",
-  "@agentStateQuerying": {}
+  "@agentStateQuerying": {},
+  "agentStateUnreachable": "Mencoba memulihkan agen latar Ubuntu Pro.",
+  "@agentStateUnreachable": {},
+  "proHeading": "Keamanan perangkat lunak open source oleh penerbit Ubuntu, sekarang tersedia di Windows. {aboutLink}",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "getUbuntuPro": "Dapatkan Ubuntu Pro",
+  "@getUbuntuPro": {},
+  "learnMore": "Pelajari lebih lanjut",
+  "@learnMore": {},
+  "ubuntuProEnabled": "Ubuntu Pro diaktifkan pada mesin ini",
+  "@ubuntuProEnabled": {},
+  "ubuntuProEnabledInfo": "Semua instansi Ubuntu WSL memiliki akses ke fitur keamanan Ubuntu Pro.",
+  "@ubuntuProEnabledInfo": {},
+  "manageUbuntuPro": "Kelola langganan Ubuntu Pro",
+  "@manageUbuntuPro": {},
+  "detachPro": "Lepaskan Ubuntu Pro",
+  "@detachPro": {},
+  "updatingSubscriptionInfo": "Memperbarui informasi berlangganan.",
+  "@updatingSubscriptionInfo": {},
+  "purchaseStatusSuccess": "Terima kasih untuk berlangganan Ubuntu Pro.",
+  "@purchaseStatusSuccess": {},
+  "purchaseStatusAlreadyPurchased": "Anda sudah berlangganan Pro.",
+  "@purchaseStatusAlreadyPurchased": {},
+  "purchaseStatusUserGaveUp": "Upaya pembelian dibatalkan.",
+  "@purchaseStatusUserGaveUp": {},
+  "purchaseStatusNetwork": "Masalah jaringan mencegah pembelian berlanjut. Silakan coba lagi setelah terhubung.",
+  "@purchaseStatusNetwork": {},
+  "purchaseStatusServer": "Ada yang salah dengan Microsoft Store. Silakan coba lagi nanti.",
+  "@purchaseStatusServer": {},
+  "purchaseStatusUnknown": "Kesalahan yang tidak diketahui saat mencoba membeli langganan. Pertimbangkan restart aplikasi ini.",
+  "@purchaseStatusUnknown": {},
+  "landscapeSkip": "Lewati dulu",
+  "@landscapeSkip": {}
 }
