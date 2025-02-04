@@ -118,5 +118,39 @@
   "agentStateUnreachable": "Tentative de récupération de l'agent d'arrière-plan de Ubuntu Pro.",
   "@agentStateUnreachable": {},
   "manageUbuntuPro": "Gérer l’abonnement Ubuntu Pro",
-  "@manageUbuntuPro": {}
+  "@manageUbuntuPro": {},
+  "buttonSkip": "Sauter",
+  "@buttonSkip": {},
+  "tokenErrorEmpty": "Le jeton ne peut pas être vide",
+  "@tokenErrorEmpty": {},
+  "tokenValid": "Jeton valide",
+  "@tokenValid": {},
+  "tokenErrorInvalid": "Jeton non valide",
+  "@tokenErrorInvalid": {},
+  "tokenInputTitle": "Raccorder cette machine",
+  "@tokenInputTitle": {},
+  "tokenInputDescription": "Entrez un jeton de {proLink} ou de votre administrateur système",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenInputHint": "Jeton",
+  "@tokenInputHint": {},
+  "attach": "Rejoindre",
+  "@attach": {},
+  "applyProToken": "Appliquer jeton Pro",
+  "@applyProToken": {},
+  "applyingProToken": "Application du jeton {token}",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "landscapeSkip": "Sauter pour l’instant",
+  "@landscapeSkip": {}
 }
