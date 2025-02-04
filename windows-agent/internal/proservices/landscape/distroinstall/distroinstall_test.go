@@ -170,16 +170,19 @@ func TestInstallFromExecutable(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		distroName string
-		mockErr    bool
+		distroName  string
+		mockErr     bool
+		skipInstall bool
 
-		wantErr bool
+		wantErr          bool
+		wantExecNotFound bool
 	}{
 		"Success": {distroName: "Ubuntu-22.04"},
 
 		// We have nothing against debian, this simply fails the injection safety check without failing wsl --install
 		"Error when the distro has not a valid name": {distroName: "Debian", wantErr: true},
 		"Error when the distro registration fails":   {distroName: "Ubuntu-22.04", mockErr: true, wantErr: true},
+		"Error when the executable is not found":     {distroName: "Ubuntu-04.04" /*404 :)*/, skipInstall: true, wantErr: true, wantExecNotFound: true},
 	}
 
 	for name, tc := range testCases {
@@ -197,15 +200,21 @@ func TestInstallFromExecutable(t *testing.T) {
 				t.Skip("This test is only available with the mock enabled")
 			}
 
-			err := wsl.Install(ctx, tc.distroName)
-			require.NoError(t, err, "Setup: Install should return no errors")
+			if !tc.skipInstall {
+				err := wsl.Install(ctx, tc.distroName)
+				require.NoError(t, err, "Setup: Install should return no errors")
+			}
 
 			d := wsl.NewDistro(ctx, tc.distroName)
 			defer d.Uninstall(ctx) //nolint:errcheck // We don't care
 
-			err = distroinstall.InstallFromExecutable(ctx, d)
+			err := distroinstall.InstallFromExecutable(ctx, d)
 			if tc.wantErr {
 				require.Error(t, err, "InstallFromExecutable should return an error")
+				if tc.wantExecNotFound {
+					var target *distroinstall.CommandNotFoundError
+					require.ErrorAs(t, err, &target, "InstallFromExecutable should return a CommandNotFoundError")
+				}
 				return
 			}
 			require.NoError(t, err, "InstallFromExecutable should return no errors")

@@ -12,6 +12,10 @@ import (
 
 // executableInstallCommand mocks running the command '$executable install --root --ui=none'.
 func executableInstallCommand(ctx context.Context, executable string) ([]byte, error) {
+	if executable == "ubuntu0404.exe" {
+		return []byte("mocking executable not found\n  + FullyQualifiedErrorId : CommandNotFoundException"), fmt.Errorf("exit status 1")
+	}
+
 	if executable != "ubuntu2204.exe" {
 		return []byte("mock supports only ubuntu2204.exe"), fmt.Errorf("exit status 1")
 	}
