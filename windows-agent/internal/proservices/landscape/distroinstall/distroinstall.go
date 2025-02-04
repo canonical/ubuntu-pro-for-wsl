@@ -16,6 +16,15 @@ import (
 	"github.com/ubuntu/gowsl"
 )
 
+// CommandNotFoundError is the error reported when a command is not found.
+type CommandNotFoundError struct {
+	errMsg string
+}
+
+func (e *CommandNotFoundError) Error() string {
+	return e.errMsg
+}
+
 // InstallFromExecutable finds the executable associated with the specified distro and installs it.
 func InstallFromExecutable(ctx context.Context, d gowsl.Distro) error {
 	executable, err := common.WSLLauncher(d.Name())
@@ -24,7 +33,13 @@ func InstallFromExecutable(ctx context.Context, d gowsl.Distro) error {
 	}
 
 	if out, err := executableInstallCommand(ctx, executable); err != nil {
-		return fmt.Errorf("could not run launcher: %v. %s", err, out)
+		// executableInstallCommand returns a generic error if the command is not found (because it relies on powershell under the hood).
+		// We need to look inside the output to determine if the command was not found.
+		msg := string(out)
+		if strings.Contains(msg, "CommandNotFoundException") {
+			return &CommandNotFoundError{errMsg: fmt.Sprintf("could not find command %q: %s", executable, msg)}
+		}
+		return fmt.Errorf("could not run launcher: %v. %s", err, msg)
 	}
 
 	return err
