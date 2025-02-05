@@ -226,7 +226,7 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	} else {
 		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
-		if err = installFromMicrosoftStore(ctx, distro); err != nil {
+		if err = installFromWSLOnlineDistros(ctx, distro); err != nil {
 			return err
 		}
 	}
@@ -295,18 +295,35 @@ func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_Sh
 	return gowsl.Shutdown(ctx)
 }
 
-func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err error) {
+// installFromWSLOnlineDistros installs a distro by means of `wsl --install`, which can be either an appx from MS Store or a modern distro from anywhere else.
+func installFromWSLOnlineDistros(ctx context.Context, distro gowsl.Distro) (err error) {
 	defer decorate.OnError(&err, "can't install from Microsoft Store")
 
 	if err := gowsl.Install(ctx, distro.Name()); err != nil {
 		return err
 	}
 
+	// Prioritize the old distro installation method: via the appx distro launcher.
 	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
+		var cmdErr *distroinstall.CommandNotFoundError
+		if errors.As(err, &cmdErr) {
+			// If gowsl.Install succeeded but the distro launcher is not found, this is likely a "modern distro".
+			log.Debugf(ctx, "Distro launcher not found, trying as tar-based distro: %s", cmdErr)
+			return installModernDistro(ctx, distro)
+		}
 		return err
 	}
 
 	return nil
+}
+
+// installModernDistro finishes setting up a modern distro by waiting for cloud-init to finish.
+func installModernDistro(ctx context.Context, distro gowsl.Distro) (err error) {
+	defer decorate.OnError(&err, "can't install modern distro")
+
+	err = touchdistro.WaitForCloudInit(ctx, distro.Name())
+
+	return err
 }
 
 func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfsURL *url.URL) (err error) {
