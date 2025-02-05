@@ -240,27 +240,14 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return nil
 	}
 
-	// TODO: The rest of this function will need to be rethought once cloud-init support exists.
-	windowsUser, err := user.Current()
-	if err != nil {
-		return err
+	if c, err := distro.GetConfiguration(); err != nil {
+		return fmt.Errorf("could not verify distro configuration after set up: %v", err)
+	} else if c.DefaultUID != 0 {
+		// Distro is fully initialized by other means.
+		return nil
 	}
 
-	userName := windowsUser.Username
-	if !distroinstall.UsernameIsValid(userName) {
-		userName = "ubuntu"
-	}
-
-	uid, err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name)
-	if err != nil {
-		return err
-	}
-
-	if err := distro.DefaultUID(uid); err != nil {
-		return fmt.Errorf("could not set user as default: %v", err)
-	}
-
-	return nil
+	return createDefaultUser(ctx, distro)
 }
 
 func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
@@ -323,6 +310,31 @@ func installModernDistro(ctx context.Context, distro gowsl.Distro) (err error) {
 	err = touchdistro.WaitForCloudInit(ctx, distro.Name())
 
 	return err
+}
+
+// createDefaultUser creates a default user whose name is derived from the current Windows user.
+func createDefaultUser(ctx context.Context, distro gowsl.Distro) (err error) {
+	windowsUser, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	userFields := strings.Split(windowsUser.Username, "\\") // Typically "hostname\\username"
+	userName := userFields[len(userFields)-1]
+	if !distroinstall.UsernameIsValid(userName) {
+		userName = "ubuntu"
+	}
+
+	uid, err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name)
+	if err != nil {
+		return err
+	}
+
+	if err := distro.DefaultUID(uid); err != nil {
+		return fmt.Errorf("could not set user as default: %v", err)
+	}
+
+	return nil
 }
 
 func installFromURL(ctx context.Context, homeDir string, downloadDir string, distro gowsl.Distro, rootfsURL *url.URL) (err error) {
