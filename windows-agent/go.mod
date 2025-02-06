@@ -17,7 +17,7 @@ require (
 	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
 	github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
-	golang.org/x/sys v0.29.0
+	golang.org/x/sys v0.30.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
 	gopkg.in/ini.v1 v1.67.0
