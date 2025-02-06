@@ -317,10 +317,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_markdown
-      sha256: e37f4c69a07b07bb92622ef6b131a53c9aae48f64b176340af9e8e5238718487
+      sha256: b3ff1ef5fb3924ee02b4d38b974ffae3969d50603e68787684ee9dd45f6f144a
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.5"
+    version: "0.7.6+1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
