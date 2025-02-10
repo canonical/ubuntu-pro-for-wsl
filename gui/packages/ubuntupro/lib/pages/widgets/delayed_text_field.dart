@@ -63,6 +63,8 @@ class _DelayedTextField extends State<DelayedTextField>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return ListenableBuilder(
       listenable: debouncer,
       builder: (context, _) {
@@ -84,6 +86,12 @@ class _DelayedTextField extends State<DelayedTextField>
             helper: widget.helper,
             helperText: widget.helperText,
             hintText: widget.hintText,
+            hintMaxLines: 3,
+            errorMaxLines: 3,
+            helperMaxLines: 3,
+            labelStyle: theme.inputDecorationTheme.labelStyle?.copyWith(
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         );
       },
