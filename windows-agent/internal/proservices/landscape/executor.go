@@ -343,7 +343,6 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	if err := touchdistro.WaitForCloudInit(ctx, distro.Name()); err != nil {
 		log.Infof(ctx, "cloud-init failed: %v", err)
 	}
-	_ = distro.Terminate()
 	log.Debugf(ctx, "Distro %s installed successfully", distro.Name())
 	return nil
 }
