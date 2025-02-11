@@ -22,14 +22,16 @@ Interim releases of Ubuntu are currently not supported on WSL.
 (naming)=
 ## Naming
 
-Due to different limitations in different contexts, these applications will have different names in different contexts. Here is a table matching them.
+Depending on context, releases of Ubuntu are referred to by different names: 
 
-1. App name is the name you'll see in the Microsoft Store and Winget.
-2. AppxPackage is the name you'll see in `Get-AppxPackage`.
-3. Distro name is the name you'll see when doing `wsl -l -v` or `wsl -l --online`.
-4. Executable is the program you need to run to start the distro.
+1. **App name** is the name of the application for a specific Ubuntu release that you will see in the Microsoft Store.
+2. **AppxPackage name** is the name that can be passed to `Get-AppxPackage -Name` in PowerShell to get information about an installed package.
+3. **Distro name** is the name logged when you invoke `wsl -l -v` to list installed releases of Ubuntu.
+4. **Executable name** is the program you need to run to start the Ubuntu distro.
 
-| App name             | AppxPackage name                       | Distro name      | Executable          |
+These naming conventions are summarised in the table below:
+
+| App name             | AppxPackage name                       | Distro name      | Executable name     |
 | -------------------- | -------------------------------------- | ---------------- | ------------------- |
 | `Ubuntu`             | `CanonicalGroupLimited.Ubuntu`         | `Ubuntu`         | `ubuntu.exe`        |
 | `Ubuntu (Preview)`   | `CanonicalGroupLimited.UbuntuPreview`  | `Ubuntu-Preview` | `ubuntupreview.exe` |
