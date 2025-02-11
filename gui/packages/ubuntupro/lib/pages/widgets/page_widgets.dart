@@ -95,41 +95,47 @@ class CenteredPage extends StatelessWidget {
           children: [
             Expanded(
               child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 540.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            WidgetSpan(
-                              child: SvgPicture.asset(
-                                svgAsset,
-                                height: 70,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 540.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              WidgetSpan(
+                                child: SvgPicture.asset(
+                                  svgAsset,
+                                  height: 70,
+                                ),
                               ),
-                            ),
-                            const WidgetSpan(
-                              child: SizedBox(
-                                width: 8,
+                              const WidgetSpan(
+                                child: SizedBox(
+                                  width: 8,
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: title,
-                              style: theme.textTheme.displaySmall
-                                  ?.copyWith(fontWeight: FontWeight.w100),
-                            ),
-                          ],
+                              TextSpan(
+                                text: title,
+                                style: theme.textTheme.displaySmall
+                                    ?.copyWith(fontWeight: FontWeight.w100),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      ...children,
-                    ],
+                        const SizedBox(height: 16),
+                        ...children,
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            if (footer != null) footer!,
+            if (footer != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: footer!,
+              ),
           ],
         ),
       ),
@@ -181,47 +187,53 @@ class ColumnPage extends StatelessWidget {
                     children: [
                       // Left column
                       Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  WidgetSpan(
-                                    child: SvgPicture.asset(
-                                      svgAsset,
-                                      height: 70,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    WidgetSpan(
+                                      child: SvgPicture.asset(
+                                        svgAsset,
+                                        height: 70,
+                                      ),
                                     ),
-                                  ),
-                                  const WidgetSpan(
-                                    child: SizedBox(
-                                      width: 8,
+                                    const WidgetSpan(
+                                      child: SizedBox(
+                                        width: 8,
+                                      ),
                                     ),
-                                  ),
-                                  TextSpan(
-                                    text: title,
-                                    style: theme.textTheme.displaySmall
-                                        ?.copyWith(fontWeight: FontWeight.w100),
-                                  ),
-                                ],
+                                    TextSpan(
+                                      text: title,
+                                      style: theme.textTheme.displaySmall
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w100,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 24),
-                            ...left,
-                          ],
+                              const SizedBox(height: 24),
+                              ...left,
+                            ],
+                          ),
                         ),
                       ),
                       // Spacer
                       const SizedBox(width: 32),
                       // Right column
                       Expanded(
-                        child: Column(
-                          mainAxisAlignment: rightIsCentered
-                              ? MainAxisAlignment.center
-                              : MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: right,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: rightIsCentered
+                                ? MainAxisAlignment.center
+                                : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: right,
+                          ),
                         ),
                       ),
                     ],
