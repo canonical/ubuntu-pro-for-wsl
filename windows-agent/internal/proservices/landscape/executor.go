@@ -308,6 +308,8 @@ func installModernDistro(ctx context.Context, distro gowsl.Distro) (err error) {
 	defer decorate.OnError(&err, "can't install modern distro")
 
 	err = touchdistro.WaitForCloudInit(ctx, distro.Name())
+	cmd := distro.Command(ctx, "touch /etc/cloud/cloud-init.disabled")
+	_ = cmd.Run()
 
 	return err
 }
