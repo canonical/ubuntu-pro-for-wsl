@@ -42,5 +42,37 @@
   "detachPro": "ניתוק Ubuntu Pro",
   "@detachPro": {},
   "purchaseStatusAlreadyPurchased": "כבר נרשמת ל־Pro.",
-  "@purchaseStatusAlreadyPurchased": {}
+  "@purchaseStatusAlreadyPurchased": {},
+  "tokenInputDescription": "נא למלא אסימון מ־{proLink} או מהנהלת המערכת שלך",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "agentStateStarting": "סוכן הרקע של Ubuntu Pro עולה.",
+  "@agentStateStarting": {},
+  "agentStatePingNonResponsive": "סוכן הרקע של Ubuntu Pro אינו מגיב.",
+  "@agentStatePingNonResponsive": {},
+  "agentStateInvalid": "בהמתנה לטעינת סוכן הרקע של Ubuntu Pro.",
+  "@agentStateInvalid": {},
+  "agentStateCannotStart": "לא ניתן להפעיל את סוכן הרקע של Ubuntu Pro.",
+  "@agentStateCannotStart": {},
+  "ubuntuProEnabled": "Ubuntu Pro פעיל במכונה הזאת",
+  "@ubuntuProEnabled": {},
+  "learnMore": "מידע נוסף",
+  "@learnMore": {},
+  "getUbuntuPro": "קבלת Ubuntu Pro",
+  "@getUbuntuPro": {},
+  "proHeading": "אבטחת תוכנה בקוד פתוח על ידי המפיצים של אובונטו, זמינה מעתה על Windows.‏ {aboutLink}",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "ubuntuProEnabledInfo": "כל המופעים של אובונטו WSL יש גישה ליכולות האבטחה של Ubuntu Pro.",
+  "@ubuntuProEnabledInfo": {}
 }
