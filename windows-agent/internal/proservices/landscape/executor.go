@@ -17,6 +17,7 @@ import (
 
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
+	d "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro/touchdistro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/ubuntu/decorate"
@@ -229,6 +230,10 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		if err = installFromWSLOnlineDistros(ctx, distro); err != nil {
 			return err
 		}
+	}
+
+	if _, err = e.database().GetDistroAndUpdateProperties(ctx, distro.Name(), d.Properties{}); err != nil {
+		return fmt.Errorf("could not initialize the distro properties in the database: %v", err)
 	}
 
 	sleep := distro.Command(ctx, "sleep 5")
