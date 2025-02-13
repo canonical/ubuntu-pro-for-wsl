@@ -32,8 +32,10 @@ class RadioTile<T> extends StatelessWidget {
           : null,
       child: YaruSelectableContainer(
         selected: groupValue == value,
-        selectionColor:
-            Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.8),
+        selectionColor: Theme.of(context)
+            .colorScheme
+            .tertiaryContainer
+            .withValues(alpha: 0.8),
         padding: EdgeInsets.zero,
         child: YaruRadioListTile(
           contentPadding: const EdgeInsets.all(6),
