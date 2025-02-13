@@ -33,7 +33,7 @@ dependencies:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-wsl
       path: agentapi/dart
-  async: ^2.11.0
+  async: ^2.12.0
   base_x: ^2.0.1
   crypto: ^3.0.6
   dart_either: ^2.0.0
