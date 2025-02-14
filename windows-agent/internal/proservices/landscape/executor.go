@@ -226,7 +226,7 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	} else {
 		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
-		if err = installFromMicrosoftStore(ctx, distro); err != nil {
+		if err = installFromWSLOnlineDistros(ctx, distro); err != nil {
 			return err
 		}
 	}
@@ -240,27 +240,14 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return nil
 	}
 
-	// TODO: The rest of this function will need to be rethought once cloud-init support exists.
-	windowsUser, err := user.Current()
-	if err != nil {
-		return err
+	if c, err := distro.GetConfiguration(); err != nil {
+		return fmt.Errorf("could not verify distro configuration after set up: %v", err)
+	} else if c.DefaultUID != 0 {
+		// Distro is fully initialized by other means.
+		return nil
 	}
 
-	userName := windowsUser.Username
-	if !distroinstall.UsernameIsValid(userName) {
-		userName = "ubuntu"
-	}
-
-	uid, err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name)
-	if err != nil {
-		return err
-	}
-
-	if err := distro.DefaultUID(uid); err != nil {
-		return fmt.Errorf("could not set user as default: %v", err)
-	}
-
-	return nil
+	return createDefaultUser(ctx, distro)
 }
 
 func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
@@ -295,15 +282,58 @@ func (e executor) shutdownHost(ctx context.Context, cmd *landscapeapi.Command_Sh
 	return gowsl.Shutdown(ctx)
 }
 
-func installFromMicrosoftStore(ctx context.Context, distro gowsl.Distro) (err error) {
+// installFromWSLOnlineDistros installs a distro by means of `wsl --install`, which can be either an appx from MS Store or a modern distro from anywhere else.
+func installFromWSLOnlineDistros(ctx context.Context, distro gowsl.Distro) (err error) {
 	defer decorate.OnError(&err, "can't install from Microsoft Store")
 
 	if err := gowsl.Install(ctx, distro.Name()); err != nil {
 		return err
 	}
 
+	// Prioritize the old distro installation method: via the appx distro launcher.
 	if err := distroinstall.InstallFromExecutable(ctx, distro); err != nil {
+		var cmdErr *distroinstall.CommandNotFoundError
+		if errors.As(err, &cmdErr) {
+			// If gowsl.Install succeeded but the distro launcher is not found, this is likely a "modern distro".
+			return installModernDistro(ctx, distro)
+		}
 		return err
+	}
+
+	return nil
+}
+
+// installModernDistro finishes setting up a modern distro by waiting for cloud-init to finish.
+func installModernDistro(ctx context.Context, distro gowsl.Distro) (err error) {
+	defer decorate.OnError(&err, "can't install modern distro")
+
+	err = touchdistro.WaitForCloudInit(ctx, distro.Name())
+	cmd := distro.Command(ctx, "touch /etc/cloud/cloud-init.disabled")
+	_ = cmd.Run()
+
+	return err
+}
+
+// createDefaultUser creates a default user whose name is derived from the current Windows user.
+func createDefaultUser(ctx context.Context, distro gowsl.Distro) (err error) {
+	windowsUser, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	userFields := strings.Split(windowsUser.Username, "\\") // Typically "hostname\\username"
+	userName := userFields[len(userFields)-1]
+	if !distroinstall.UsernameIsValid(userName) {
+		userName = "ubuntu"
+	}
+
+	uid, err := distroinstall.CreateUser(ctx, distro, userName, windowsUser.Name)
+	if err != nil {
+		return err
+	}
+
+	if err := distro.DefaultUID(uid); err != nil {
+		return fmt.Errorf("could not set user as default: %v", err)
 	}
 
 	return nil
@@ -343,7 +373,7 @@ func installFromURL(ctx context.Context, homeDir string, downloadDir string, dis
 	if err := touchdistro.WaitForCloudInit(ctx, distro.Name()); err != nil {
 		log.Infof(ctx, "cloud-init failed: %v", err)
 	}
-	_ = distro.Terminate()
+
 	log.Debugf(ctx, "Distro %s installed successfully", distro.Name())
 	return nil
 }
