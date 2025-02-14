@@ -14,7 +14,7 @@ on:
     branches: [main]
 
 env:
-  az_name: wsl-ci-3
+  az_name: wsl-ci-2
   az_resource_group: wsl
 
 jobs:
