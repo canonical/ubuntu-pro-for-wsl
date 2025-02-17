@@ -26,8 +26,6 @@ type Worker = workerInterface
 type Identity = identity
 
 // GetIdentity returns a reference to the distro's identity.
-//
-//nolint:revive // False positive, Identity is exported.
 func (d *Distro) GetIdentity() *Identity {
 	return &d.identity
 }
