@@ -12,8 +12,6 @@ import (
 type MultiClient = multiClient
 
 // connect connects to the three streams. Call Close to release resources.
-//
-//nolint:revive //False positive: MultiClient is public
 func Connect(ctx context.Context, conn *grpc.ClientConn) (c *MultiClient, err error) {
 	return connect(ctx, conn)
 }

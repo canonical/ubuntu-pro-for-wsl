@@ -57,11 +57,6 @@ issues:
     # Outdated warining, it only applies to Go < 1.22
     # G601: Implicit memory aliasing in for loop.
     - G601
-
-nolintlint:
-  require-explanation: true
-  require-specific: true
-
 linters-settings:
    # Forbid the usage of deprecated ioutil and debug prints
   forbidigo:

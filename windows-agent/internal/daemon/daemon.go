@@ -243,7 +243,6 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 
 	// Setting up the listener.
 	err := func() (err error) {
-		//nolint:govet // i18n depends on strings being acquired at runtime.
 		defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
 		wslNetAvailable = true
