@@ -165,6 +165,7 @@ func TestInstall(t *testing.T) {
 		breakTarFile           bool
 		breakTempDir           bool
 		cloudInitExecFailure   bool
+		isTarBased             bool
 
 		sendRootfsURL    string
 		missingChecksums bool
@@ -173,6 +174,7 @@ func TestInstall(t *testing.T) {
 		wantInstalled            bool
 	}{
 		"From the store":                    {wantInstalled: true, wantCloudInitWriteCalled: true},
+		"From a tar-based distro":           {isTarBased: true, wantInstalled: true, wantCloudInitWriteCalled: true},
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCloudInitWriteCalled: true, wantInstalled: true},
 		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
@@ -210,7 +212,6 @@ func TestInstall(t *testing.T) {
 			}
 
 			if tc.appxDoesNotExist || tc.sendRootfsURL != "" {
-				// WSLMock Install only accepts ubuntu-22.04
 				switch tc.distroName {
 				case "-":
 					settings.name = ""
@@ -219,6 +220,10 @@ func TestInstall(t *testing.T) {
 				default:
 					settings.name = tc.distroName
 				}
+			}
+
+			if tc.isTarBased {
+				settings.name = "Ubuntu-24.04"
 			}
 
 			if tc.distroAlreadyInstalled {

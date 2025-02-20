@@ -11,21 +11,26 @@ import (
 )
 
 // executableInstallCommand mocks running the command '$executable install --root --ui=none'.
+// It intentionally fails for ubuntu0404.exe and ubuntu2404.exe, but it registers the latest, emulating the behaviour of a "modern" distro.
 func executableInstallCommand(ctx context.Context, executable string) ([]byte, error) {
-	if executable == "ubuntu0404.exe" {
-		return []byte("mocking executable not found\n  + FullyQualifiedErrorId : CommandNotFoundException"), fmt.Errorf("exit status 1")
+	switch executable {
+	case "ubuntu0404.exe":
+		return []byte("404: mock executable not found\n  + FullyQualifiedErrorId : CommandNotFoundException"), fmt.Errorf("exit status 1")
+	case "ubuntu2204.exe":
+		d := wsl.NewDistro(ctx, "Ubuntu-22.04")
+		if err := d.Register("."); err != nil {
+			return []byte(err.Error()), fmt.Errorf("exit status 1")
+		}
+		return []byte{}, nil
+	case "ubuntu2404.exe":
+		d := wsl.NewDistro(ctx, "Ubuntu-24.04")
+		if err := d.Register("."); err != nil {
+			return []byte(err.Error()), fmt.Errorf("exit status 1")
+		}
+		return []byte("mock executable not found: this is a tar-based distro\n  + FullyQualifiedErrorId : CommandNotFoundException"), fmt.Errorf("exit status 1")
+	default:
+		return []byte("mock supports only ubuntu2204.exe and ubuntu2404.exe"), fmt.Errorf("exit status 1")
 	}
-
-	if executable != "ubuntu2204.exe" {
-		return []byte("mock supports only ubuntu2204.exe"), fmt.Errorf("exit status 1")
-	}
-
-	d := wsl.NewDistro(ctx, "Ubuntu-22.04")
-	if err := d.Register("."); err != nil {
-		return []byte(err.Error()), fmt.Errorf("exit status 1")
-	}
-
-	return []byte{}, nil
 }
 
 func addUserCommand(ctx context.Context, distro wsl.Distro, userName, userFullName string) (out []byte, err error) {
