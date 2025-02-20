@@ -16,6 +16,7 @@ import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
@@ -155,6 +156,7 @@ func TestInstall(t *testing.T) {
 	testCases := map[string]struct {
 		noCloudInit            bool
 		cloudInitWriteErr      bool
+		corruptDb              bool
 		distroAlreadyInstalled bool
 		distroName             string
 		wslInstallErr          bool
@@ -189,6 +191,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distro fails to install":      {wslInstallErr: true},
 		"Error when cannot write cloud-init file":     {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
 		"Error when registration fails":               {isTarBased: true, wslRegisterErr: true, wantInstalled: false},
+		"Error when the distro db is corrupted":       {isTarBased: true, corruptDb: true, wantInstalled: false},
 		"Error when default user cannot be retrieved": {isTarBased: true, getDefaultUserErr: true, wantInstalled: false},
 		"Error when default user cannot be set":       {isTarBased: true, setDefaultUserErr: true, wantInstalled: false},
 
@@ -301,6 +304,11 @@ func TestInstall(t *testing.T) {
 
 					if tc.setDefaultUserErr {
 						testBed.wslMock.WslConfigureDistributionError = true
+					}
+
+					if tc.corruptDb {
+						require.NoError(t, os.RemoveAll(filepath.Join(home, consts.DatabaseFileName)), "Setup: removing the database file should not fail")
+						require.NoError(t, os.MkdirAll(filepath.Join(home, consts.DatabaseFileName), 0750), "Setup: breaking the database file should not fail")
 					}
 
 					var cloudInit string
@@ -801,16 +809,16 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 		}
 	}
 
-	db, err := database.New(ctx, t.TempDir())
+	if homedir == "" {
+		homedir = t.TempDir()
+	}
+	db, err := database.New(ctx, homedir)
 	require.NoError(t, err, "Setup: database New should not return an error")
 
 	tb.db = db
 	tb.cloudInit = &mockCloudInit{}
 
 	// Set up Landscape client
-	if homedir == "" {
-		homedir = t.TempDir()
-	}
 	if downloaddir == "" {
 		downloaddir = t.TempDir()
 	}
