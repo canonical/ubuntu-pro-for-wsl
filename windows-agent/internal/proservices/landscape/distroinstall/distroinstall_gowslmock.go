@@ -42,8 +42,7 @@ func addUserCommand(ctx context.Context, distro wsl.Distro, userName, userFullNa
 		return []byte("adduser: The user already exists."), errors.New("exit status 1")
 	}
 
-	markUserAsCreated(distro)
-	return []byte{}, nil
+	return []byte{}, markUserAsCreated(distro)
 }
 
 func addUserToGroupsCommand(ctx context.Context, distro wsl.Distro, userName string) ([]byte, error) {
@@ -89,11 +88,8 @@ func getUserIDCommand(ctx context.Context, distro wsl.Distro, userName string) (
 // markUserAsCreated is an ugly trick to store some persistent information.
 // It highjacks the DriveMountingEnabled Configuration to signal
 // userWasCreated whether it should return true or false.
-func markUserAsCreated(d wsl.Distro) {
-	err := d.DriveMountingEnabled(false)
-	if err != nil {
-		panic(err.Error())
-	}
+func markUserAsCreated(d wsl.Distro) error {
+	return d.DriveMountingEnabled(false)
 }
 
 // userWasCreated indicates wether the markUserAsCreated function was called.

@@ -166,6 +166,8 @@ func TestInstall(t *testing.T) {
 		breakTempDir           bool
 		cloudInitExecFailure   bool
 		isTarBased             bool
+		setDefaultUserErr      bool
+		getDefaultUserErr      bool
 
 		sendRootfsURL    string
 		missingChecksums bool
@@ -180,11 +182,13 @@ func TestInstall(t *testing.T) {
 		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
 		"With cloud-init failure":           {sendRootfsURL: "goodfile", cloudInitExecFailure: true, wantInstalled: true},
 
-		"Error when the distroname is empty":         {distroName: "-"},
-		"Error when the Appx does not exist":         {appxDoesNotExist: true},
-		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
-		"Error when the distro fails to install":     {wslInstallErr: true},
-		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
+		"Error when the distroname is empty":          {distroName: "-"},
+		"Error when the Appx does not exist":          {appxDoesNotExist: true},
+		"Error when the distro is already installed":  {distroAlreadyInstalled: true, wantInstalled: true},
+		"Error when the distro fails to install":      {wslInstallErr: true},
+		"Error when cannot write cloud-init file":     {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
+		"Error when default user cannot be retrieved": {isTarBased: true, getDefaultUserErr: true, wantInstalled: false},
+		"Error when default user cannot be set":       {isTarBased: true, setDefaultUserErr: true, wantInstalled: false},
 
 		"Error when launching the new distro fails":                       {wslLaunchErr: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the distro ID is reserved (Ubuntu)":                   {sendRootfsURL: "goodfile", distroName: "Ubuntu", wantInstalled: false},
@@ -283,6 +287,14 @@ func TestInstall(t *testing.T) {
 
 					if tc.cloudInitExecFailure {
 						testBed.wslMock.WslLaunchInteractiveError = true
+					}
+
+					if tc.getDefaultUserErr {
+						testBed.wslMock.WslGetDistributionConfigurationError = true
+					}
+
+					if tc.setDefaultUserErr {
+						testBed.wslMock.WslConfigureDistributionError = true
 					}
 
 					var cloudInit string
