@@ -158,6 +158,7 @@ func TestInstall(t *testing.T) {
 		distroAlreadyInstalled bool
 		distroName             string
 		wslInstallErr          bool
+		wslRegisterErr         bool
 		wslLaunchErr           bool
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
@@ -187,6 +188,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distro is already installed":  {distroAlreadyInstalled: true, wantInstalled: true},
 		"Error when the distro fails to install":      {wslInstallErr: true},
 		"Error when cannot write cloud-init file":     {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
+		"Error when registration fails":               {isTarBased: true, wslRegisterErr: true, wantInstalled: false},
 		"Error when default user cannot be retrieved": {isTarBased: true, getDefaultUserErr: true, wantInstalled: false},
 		"Error when default user cannot be set":       {isTarBased: true, setDefaultUserErr: true, wantInstalled: false},
 
@@ -278,6 +280,10 @@ func TestInstall(t *testing.T) {
 
 					if tc.wslInstallErr {
 						testBed.wslMock.InstallError = true
+					}
+
+					if tc.wslRegisterErr {
+						testBed.wslMock.WslRegisterDistributionError = true
 					}
 
 					if tc.wslLaunchErr {
