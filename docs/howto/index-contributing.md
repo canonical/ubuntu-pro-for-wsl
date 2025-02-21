@@ -2,17 +2,31 @@
 
 # Contributing
 
-These how-to guides help you complete tasks when developing for UP4W.
+These how-to guides help you contribute to Ubuntu on WSL.
+
+## General guidelines for contributors
+
+If you are interested in contributing to code or docs, please read our
+guidelines.
 
 ```{toctree}
 :titlesonly:
 :maxdepth: 1
 
 General contribution guidelines <contributing>
-Install UP4W <02-install>
-Restart UP4W <03-restart>
-Access UP4W logs <06-access-the-logs>
-Enable opt-in features for UP4W <07-toggle-features>
-Reset UP4W <reset-factory>
 ```
 
+## Guides for developing Ubuntu Pro for WSL
+
+Useful guides when developing and testing Ubuntu Pro for WSL.
+
+```{toctree}
+:titlesonly:
+:maxdepth: 1
+
+Install UP4W for development <02-install>
+Restart UP4W for development <03-restart>
+Access UP4W logs for development <06-access-the-logs>
+Enable features for development <07-toggle-features>
+Reset UP4W <reset-factory>
+```

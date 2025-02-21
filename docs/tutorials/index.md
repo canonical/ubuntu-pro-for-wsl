@@ -2,11 +2,13 @@
 
 # Tutorials
 
-These tutorials guide you through setting up Ubuntu on WSL, using the Ubuntu Pro
-for WSL (UP4W) application and deploying Ubuntu WSL instances remotely with UP4W.
+These tutorials guide you through setting up Ubuntu on WSL and using the Ubuntu
+Pro for WSL (UP4W) application.
 
-First, learn how set up Ubuntu on WSL from scratch, integrate it with a
-Windows-based IDE and serve files to localhost:
+## The Ubuntu distribution on WSL
+
+Start by learning to set up a development environment with Ubuntu on WSL by
+building and testing a small web project.
 
 ```{toctree}
 :titlesonly:
@@ -14,8 +16,10 @@ Windows-based IDE and serve files to localhost:
 Develop with Ubuntu on WSL <develop-with-ubuntu-wsl>
 ```
 
-Then learn how to install UP4W and automatically Pro-attach your Ubuntu WSL
-instances:
+## Ubuntu Pro for WSL
+
+Then learn to automatically Pro-attach your Ubuntu WSL instances with the
+Ubuntu Pro for WSL application.
 
 ```{toctree}
 :titlesonly:
@@ -23,8 +27,8 @@ instances:
 Get started with Ubuntu Pro for WSL <getting-started-with-up4w>
 ```
 
-Next, learn how UP4W's Landscape integration can be used to deploy Ubuntu WSL
-instances remotely:
+If you are interested in remote management of WSL instances, you can also learn
+how UP4W's Landscape integration can be used to deploy Ubuntu WSL instances.
 
 ```{toctree}
 :titlesonly:
