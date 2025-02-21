@@ -2,10 +2,12 @@
 
 # Reference
 
-This section contains concise references relating to how Ubuntu on WSL is designed,
-configured and developed.
+This section contains concise references relating to how Ubuntu on WSL is
+designed, configured and developed.
 
-For information on the Ubuntu distros that are available and supported for WSL, read here: 
+## The Ubuntu distribution on WSL
+
+Information on the Ubuntu distros that are available and supported on WSL.
 
 ```{toctree}
 :titlesonly:
@@ -21,7 +23,9 @@ If you are interested in automated testing of applications in Ubuntu WSL, read:
 GitHub actions for Ubuntu WSL <actions>
 ```
 
-A glossary of key UP4W system components can be found here:
+## Ubuntu Pro for WSL
+
+A glossary of key UP4W system components.
 
 ```{toctree}
 :titlesonly:
@@ -30,7 +34,7 @@ glossary_up4w_components
 ```
 
 Details on firewall configuration, Landscape setup and using the Windows
-registry can be found here:
+registry.
 
 ```{toctree}
 :titlesonly:
@@ -38,8 +42,7 @@ registry can be found here:
 index_system_configuration
 ```
 
-Information for contributors that is helpful for debugging code and ensuring
-code quality is outlined below:
+Information helpful for developers working on Ubuntu Pro for WSL.
 
 ```{toctree}
 :titlesonly:
