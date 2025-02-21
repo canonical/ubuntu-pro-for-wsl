@@ -40,10 +40,11 @@ func NewForTesting(t *testing.T, publicDir, privateDir string) *App {
 	return New(WithPrivateDir(privateDir), WithPublicDir(publicDir), WithRegistry(registry.NewMock()))
 }
 
+// DaemonConfig exports the internal daemonConfig struct for test purposes.
+type DaemonConfig = daemonConfig
+
 // Config returns the DaemonConfig for test purposes.
-//
-//nolint:revive
-func (a App) Config() daemonConfig {
+func (a App) Config() DaemonConfig {
 	return a.config
 }
 

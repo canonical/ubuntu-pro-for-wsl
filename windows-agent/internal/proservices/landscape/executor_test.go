@@ -16,6 +16,7 @@ import (
 	landscapeapi "github.com/canonical/landscape-hostagent-api"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/landscape/landscapemockservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
@@ -155,9 +156,11 @@ func TestInstall(t *testing.T) {
 	testCases := map[string]struct {
 		noCloudInit            bool
 		cloudInitWriteErr      bool
+		corruptDb              bool
 		distroAlreadyInstalled bool
 		distroName             string
 		wslInstallErr          bool
+		wslRegisterErr         bool
 		wslLaunchErr           bool
 		appxDoesNotExist       bool
 		nonResponsiveServer    bool
@@ -165,6 +168,9 @@ func TestInstall(t *testing.T) {
 		breakTarFile           bool
 		breakTempDir           bool
 		cloudInitExecFailure   bool
+		isTarBased             bool
+		setDefaultUserErr      bool
+		getDefaultUserErr      bool
 
 		sendRootfsURL    string
 		missingChecksums bool
@@ -173,16 +179,21 @@ func TestInstall(t *testing.T) {
 		wantInstalled            bool
 	}{
 		"From the store":                    {wantInstalled: true, wantCloudInitWriteCalled: true},
+		"From a tar-based distro":           {isTarBased: true, wantInstalled: true, wantCloudInitWriteCalled: true},
 		"From a rootfs URL with a checksum": {sendRootfsURL: "goodfile", wantInstalled: true},
 		"With no cloud-init":                {noCloudInit: true, wantCloudInitWriteCalled: true, wantInstalled: true},
 		"With no checksum file":             {missingChecksums: true, sendRootfsURL: "goodfile", wantInstalled: true},
 		"With cloud-init failure":           {sendRootfsURL: "goodfile", cloudInitExecFailure: true, wantInstalled: true},
 
-		"Error when the distroname is empty":         {distroName: "-"},
-		"Error when the Appx does not exist":         {appxDoesNotExist: true},
-		"Error when the distro is already installed": {distroAlreadyInstalled: true, wantInstalled: true},
-		"Error when the distro fails to install":     {wslInstallErr: true},
-		"Error when cannot write cloud-init file":    {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
+		"Error when the distroname is empty":          {distroName: "-"},
+		"Error when the Appx does not exist":          {appxDoesNotExist: true},
+		"Error when the distro is already installed":  {distroAlreadyInstalled: true, wantInstalled: true},
+		"Error when the distro fails to install":      {wslInstallErr: true},
+		"Error when cannot write cloud-init file":     {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
+		"Error when registration fails":               {isTarBased: true, wslRegisterErr: true, wantInstalled: false},
+		"Error when the distro db is corrupted":       {isTarBased: true, corruptDb: true, wantInstalled: false},
+		"Error when default user cannot be retrieved": {isTarBased: true, getDefaultUserErr: true, wantInstalled: false},
+		"Error when default user cannot be set":       {isTarBased: true, setDefaultUserErr: true, wantInstalled: false},
 
 		"Error when launching the new distro fails":                       {wslLaunchErr: true, sendRootfsURL: "goodfile", wantInstalled: false},
 		"Error when the distro ID is reserved (Ubuntu)":                   {sendRootfsURL: "goodfile", distroName: "Ubuntu", wantInstalled: false},
@@ -210,7 +221,6 @@ func TestInstall(t *testing.T) {
 			}
 
 			if tc.appxDoesNotExist || tc.sendRootfsURL != "" {
-				// WSLMock Install only accepts ubuntu-22.04
 				switch tc.distroName {
 				case "-":
 					settings.name = ""
@@ -219,6 +229,10 @@ func TestInstall(t *testing.T) {
 				default:
 					settings.name = tc.distroName
 				}
+			}
+
+			if tc.isTarBased {
+				settings.name = "Ubuntu-24.04"
 			}
 
 			if tc.distroAlreadyInstalled {
@@ -271,6 +285,10 @@ func TestInstall(t *testing.T) {
 						testBed.wslMock.InstallError = true
 					}
 
+					if tc.wslRegisterErr {
+						testBed.wslMock.WslRegisterDistributionError = true
+					}
+
 					if tc.wslLaunchErr {
 						testBed.wslMock.WslLaunchInteractiveError = true
 						testBed.wslMock.WslLaunchError = true
@@ -278,6 +296,19 @@ func TestInstall(t *testing.T) {
 
 					if tc.cloudInitExecFailure {
 						testBed.wslMock.WslLaunchInteractiveError = true
+					}
+
+					if tc.getDefaultUserErr {
+						testBed.wslMock.WslGetDistributionConfigurationError = true
+					}
+
+					if tc.setDefaultUserErr {
+						testBed.wslMock.WslConfigureDistributionError = true
+					}
+
+					if tc.corruptDb {
+						require.NoError(t, os.RemoveAll(filepath.Join(home, consts.DatabaseFileName)), "Setup: removing the database file should not fail")
+						require.NoError(t, os.MkdirAll(filepath.Join(home, consts.DatabaseFileName), 0750), "Setup: breaking the database file should not fail")
 					}
 
 					var cloudInit string
@@ -778,16 +809,16 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 		}
 	}
 
-	db, err := database.New(ctx, t.TempDir())
+	if homedir == "" {
+		homedir = t.TempDir()
+	}
+	db, err := database.New(ctx, homedir)
 	require.NoError(t, err, "Setup: database New should not return an error")
 
 	tb.db = db
 	tb.cloudInit = &mockCloudInit{}
 
 	// Set up Landscape client
-	if homedir == "" {
-		homedir = t.TempDir()
-	}
 	if downloaddir == "" {
 		downloaddir = t.TempDir()
 	}

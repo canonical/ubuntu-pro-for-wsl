@@ -24,7 +24,12 @@ func Touch(ctx context.Context, distroName string) error {
 
 // WaitForCloudInit blocks the caller until cloud-init has finished initialising the distro.
 func WaitForCloudInit(ctx context.Context, distroName string) error {
-	cmd := wslCmd(ctx, distroName, "cloud-init", "status", "--wait")
+	// Wait for cloud-init to finish if systemd and its service is enabled.
+	script := `
+if status=$(LANG=C systemctl is-system-running 2>/dev/null) || [ "${status}" != "offline" ] && systemctl is-enabled --quiet cloud-init.service 2>/dev/null; then
+  cloud-init status --wait > /dev/null 2>&1 || true
+fi`
+	cmd := wslCmd(ctx, distroName, "/bin/bash", "-ec", script)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("could not run 'cloud-init': %v. Output: %s", err, out)
 	}
