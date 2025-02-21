@@ -1,10 +1,5 @@
 # Ubuntu on WSL
 
-```{note}
-This documentation includes reference to a future release of Ubuntu Pro for WSL (UP4W).
-UP4W is not yet generally available in the Microsoft Store.
-```
-
 Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) enables
 developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
