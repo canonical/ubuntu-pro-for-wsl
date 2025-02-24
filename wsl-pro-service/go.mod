@@ -4,13 +4,13 @@ go 1.23.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250219173616-cc61d7f53b95
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250219173616-cc61d7f53b95
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250224161850-0f048a330575
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
+	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	google.golang.org/grpc v1.70.0
 	gopkg.in/ini.v1 v1.67.0
