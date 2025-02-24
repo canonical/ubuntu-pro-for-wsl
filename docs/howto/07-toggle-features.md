@@ -23,7 +23,7 @@ The next time you open the GUI you'll find the button to subscribe to Ubuntu
 Pro via the Microsoft Store.
 
 ```{warning}
-Beware that can incur in real charges if you proceed with the purchase.
+This can incur real charges if you proceed with the purchase.
 ```
 
 ## Disable Landscape configuration in the GUI

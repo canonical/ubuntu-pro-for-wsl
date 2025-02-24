@@ -12,7 +12,7 @@ While WSL's default setup allows you to develop cross-platform applications with
 ## What you will learn
 
 * How to install a Windows graphical device driver compatible with WSL2
-* How to install the NVIDIA CUDA toolkit for WSL 2 on Ubuntu
+* How to install the NVIDIA CUDA toolkit for WSL2 on Ubuntu
 * How to compile and run a sample CUDA application on Ubuntu on WSL2
 
 ## What you will need
