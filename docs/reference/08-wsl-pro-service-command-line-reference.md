@@ -7,6 +7,11 @@ myst:
 
 # WSL Pro Service CLI
 
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
+
 > See first: [UP4W - WSL Pro Service](ref::up4w-wsl-pro-service)
 
 ## Usage

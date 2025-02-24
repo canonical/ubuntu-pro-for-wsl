@@ -7,6 +7,10 @@ myst:
 
 # Enable opt-in features of Ubuntu Pro for WSL during development
 
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 Some features in UP4W are opt-in or can be toggled on and off via the Windows Registry.
 While the code is arranged such that CI always tests with those features enabled,

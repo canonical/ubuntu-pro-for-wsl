@@ -7,6 +7,10 @@ myst:
 
 # Restart Ubuntu Pro for WSL during development
 
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 Some configuration changes only apply when you restart UP4W. Here is a guide on how to restart it. There are two options.
 

@@ -7,6 +7,11 @@ myst:
 
 # Windows Agent CLI
 
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
+
 > See first: [UP4W - Windows Agent](ref::up4w-windows-agent)
 
 

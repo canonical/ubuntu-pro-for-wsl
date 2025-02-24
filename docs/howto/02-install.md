@@ -7,6 +7,10 @@ myst:
 
 # Install individual components of Ubuntu Pro for WSL for development
 
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 This guide will show you how to install UP4W for local development and testing.
 

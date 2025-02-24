@@ -7,6 +7,10 @@ myst:
 
 # How to reset Ubuntu Pro for WSL back to factory settings
 
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 You can reset Ubuntu Pro for WSL to factory settings following these steps:
 
