@@ -1,4 +1,16 @@
-# How to install UP4W
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# Install individual components of Ubuntu Pro for WSL for development
+
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 This guide will show you how to install UP4W for local development and testing.
 
@@ -12,7 +24,7 @@ This guide will show you how to install UP4W for local development and testing.
   - Either Ubuntu, Ubuntu 22.04, or Ubuntu (Preview)
 - The Windows Subsystem for Windows optional feature enabled
 
-## 1. Download the Windows Agent and the  WSL Pro Service
+## 1. Download the Windows Agent and the WSL Pro Service
 <!-- TODO: Update when we change were artifacts are hosted -->
 1. Go to the [repository actions page](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa-azure.yaml?query=branch%3Amain+).
 2. Click the latest successful workflow run.

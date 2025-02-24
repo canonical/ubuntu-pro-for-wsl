@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Create backups of Ubuntu WSL instances that can be restored later or duplicated into unique instances."
+---
+
 # Back up, restore and duplicate Ubuntu WSL instances
 
 ## Motivation

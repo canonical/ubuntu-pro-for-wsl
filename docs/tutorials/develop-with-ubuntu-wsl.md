@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Set up an Ubuntu development environment on Windows using WSL, with Visual Studio Code for remote development and local testing in the browser."
+---
+
 # Develop with Ubuntu on WSL
 
 The easiest way to access your Ubuntu development environment in WSL is by using Visual Studio Code via the built-in `Remote` extension.

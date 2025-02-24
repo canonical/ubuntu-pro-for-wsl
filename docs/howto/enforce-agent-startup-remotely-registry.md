@@ -1,4 +1,11 @@
-# How to enforce the UP4W background agent startup remotely using the Windows Registry
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Use Landscape to enforce startup of the Ubuntu Pro for WSL background agent to support zero-touch deployment at scale."
+---
+
+# Remotely enforce startup of the Ubuntu Pro for WSL background agent using the Windows Registry
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

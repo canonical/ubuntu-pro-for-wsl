@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Install the latest version of Ubuntu on WSL using different methods."
+---
+
 # Install Ubuntu on WSL2
 
 ## What you will learn

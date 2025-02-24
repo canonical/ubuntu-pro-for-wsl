@@ -1,4 +1,11 @@
-# Configure the Landscape client with UP4W
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "The Landscape client in Ubuntu on WSL instances can be configured with Ubuntu Pro for WSL to support remote management and deployment."
+---
+
+# Configure the Landscape client with Ubuntu Pro for WSL
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

@@ -1,4 +1,11 @@
-# General contribution guidelines
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "General guidelines for contributing to the development of Ubuntu on WSL."
+---
+
+# Contributing to Ubuntu on WSL
 
 % Include content from [../CONTRIBUTING.md](../CONTRIBUTING.md)
 ```{include} ../../CONTRIBUTING.md

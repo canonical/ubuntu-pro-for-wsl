@@ -1,4 +1,11 @@
-# Get started with UP4W
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Ubuntu Pro for WSL is a Windows application that automatically attaches your Ubuntu Pro subscription to every Ubuntu instance created on WSL."
+---
+
+# Get started with Ubuntu Pro for WSL
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

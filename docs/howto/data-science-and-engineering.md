@@ -1,4 +1,11 @@
-# Use WSL for data science and engineering
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Do data science on Ubuntu on WSL with a graphical application and visualise the results."
+---
+
+# Use Ubuntu on WSL for data science and engineering
 
 WSL is an ideal platform to run your Linux workflows while using your Windows machines. Here we show an example of how to set up GNU octave and run a toy program.
 

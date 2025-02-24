@@ -1,4 +1,11 @@
-# Automatic setup with cloud-init
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Preconfigure Ubuntu on WSL using cloud-init to automate the creation of custom instances."
+---
+
+# Automatic setup of Ubuntu on WSL with cloud-init
 
 Cloud-init is an industry-standard multi-distribution method for cross-platform cloud instance initialisation.
 Ubuntu WSL users can now leverage it to perform an automatic setup to get a working instance with minimal touch.

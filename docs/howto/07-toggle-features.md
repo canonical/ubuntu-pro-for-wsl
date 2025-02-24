@@ -1,4 +1,16 @@
-# How to enable opt-in features
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# Enable opt-in features of Ubuntu Pro for WSL during development
+
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 Some features in UP4W are opt-in or can be toggled on and off via the Windows Registry.
 While the code is arranged such that CI always tests with those features enabled,
@@ -15,7 +27,7 @@ The next time you open the GUI you'll find the button to subscribe to Ubuntu
 Pro via the Microsoft Store.
 
 ```{warning}
-Beware that can incur in real charges if you proceed with the purchase.
+This can incur real charges if you proceed with the purchase.
 ```
 
 ## Disable Landscape configuration in the GUI

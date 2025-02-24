@@ -1,11 +1,18 @@
-# Enabling GPU acceleration with the NVIDIA CUDA Platform
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Enable GPU acceleration with NVIDIA CUDA for Ubuntu on WSL, to support AI, ML and other computationally-intensive projects."
+---
+
+# Enable GPU acceleration for Ubuntu on WSL with the NVIDIA CUDA Platform
 
 While WSL's default setup allows you to develop cross-platform applications without leaving Windows, enabling GPU acceleration inside WSL provides users with direct access to the hardware. This provides support for GPU-accelerated AI/ML training and the ability to develop and test applications built on top of technologies, such as OpenVINO, OpenGL, and CUDA that target Ubuntu while staying on Windows.
 
 ## What you will learn
 
 * How to install a Windows graphical device driver compatible with WSL2
-* How to install the NVIDIA CUDA toolkit for WSL 2 on Ubuntu
+* How to install the NVIDIA CUDA toolkit for WSL2 on Ubuntu
 * How to compile and run a sample CUDA application on Ubuntu on WSL2
 
 ## What you will need

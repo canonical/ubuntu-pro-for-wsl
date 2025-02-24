@@ -1,4 +1,11 @@
-# Deploy WSL instances with UP4W and Landscape
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Use the Ubuntu Pro for WSL application to deploy Ubuntu on WSL to remote Windows machines from a Landscape server."
+---
+
+# Deploy WSL instances remotely with Ubuntu Pro for WSL and Landscape
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

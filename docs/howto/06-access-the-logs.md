@@ -1,4 +1,16 @@
-# How to access UP4W logs
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# Access Ubuntu Pro for WSL logs for debugging
+
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 At some point you may want to read the UP4W logs, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
 

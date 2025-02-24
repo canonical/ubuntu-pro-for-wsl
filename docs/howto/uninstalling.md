@@ -1,4 +1,11 @@
-# Uninstall UP4W, Ubuntu WSL and WSL
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Follow the steps to uninstall the Ubuntu Pro for WSL Windows application, Ubuntu on WSL instances and WSL itself."
+---
+
+# Uninstall Ubuntu Pro for WSL, Ubuntu on WSL and WSL
 
 Uninstalling UP4W, Ubuntu WSL apps and WSL generally only requires finding
 the relevant application in the Windows Start Menu and clicking **Uninstall**,

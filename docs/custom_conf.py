@@ -128,8 +128,6 @@ slug = ""
 # NOTE: If this variable is not defined, set to None, or the dictionary is empty,
 # the sphinx_reredirects extension will be disabled.
 
-# NOTE: content from these tutorials will be reworked for inclusion in other tutorials
-# for now we can link to the versions available on the original GitHub repo
 redirects = {
     # deprecated tutorials that will be reworked into new content
     "tutorials/dotnet-systemd": "https://github.com/ubuntu/WSL/blob/main/docs/tutorials/dotnet-systemd.md",
@@ -139,18 +137,26 @@ redirects = {
     "tutorials/data-science-and-engineering": "../../howto/data-science-and-engineering",
     "tutorials/gpu-cuda": "../../howto/gpu-cuda",
     "tutorials/vscode": "../../tutorials/develop-with-ubuntu-wsl",
-    # the term "guides" was used in the original repo
+    # change in diataxis names
+    "guides/": "../../howto/",
     "guides/contributing": "../../howto/contributing",
     "guides/install-ubuntu-wsl2": "../../howto/install-ubuntu-wsl2",
     "guides/run-workflows-azure": "../../howto/run-workflows-azure",
-    # improved url
+    "explanations/": "../../explanation/",
+    "explanations/ref-arch-explanation": "../../explanation/ref-arch-explanation",
+    # improved url to account for merging of distro and UP4W app docs
     "tutorials/getting-started": "../../tutorials/getting-started-with-up4w",
     # account for old use of "tutorial/"
     "tutorial/": "../../tutorials/",
     "tutorial/getting-started": "../../tutorials/getting-started-with-up4w",
     "tutorial/deployment": "../../tutorials/deployment",
-    # redundant after merge
-    "explanations/up4w": "../../",
+    # ... even for URLs that never existed
+    "tutorial/getting-started-with-up4w": "../../tutorials/getting-started-with-up4w",
+    "tutorial/develop-with-ubuntu-wsl": "../../tutorials/develop-with-ubuntu-wsl",
+    # old UP4W explainer is redundant so redirect to arch explanation
+    "explanations/up4w": "../../explanation/ref-arch-explanation",
+    # deprecated feature so point users to relevant doc
+    "guides/autoinstall": "../../howto/cloud-init",
 }
 
 ############################################################

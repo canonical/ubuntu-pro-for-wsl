@@ -1,4 +1,16 @@
-# How to reset UP4W back to factory settings
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# How to reset Ubuntu Pro for WSL back to factory settings
+
+```{include} ../dev_docs_notice.txt
+    :start-after: <!-- Include start dev -->
+    :end-before: <!-- Include end dev -->
+```
 
 You can reset Ubuntu Pro for WSL to factory settings following these steps:
 

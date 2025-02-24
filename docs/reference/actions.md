@@ -1,5 +1,12 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Reference information on GitHub actions available for Ubuntu on WSL."
+---
+
 (reference::actions)=
-# GitHub actions
+# GitHub actions for Ubuntu on WSL
 
 (reference::actions::download-rootfs)=
 ## Download rootfs

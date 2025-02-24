@@ -1,4 +1,11 @@
-# Verify active Pro subscription and Pro attachment
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Ubuntu Pro for WSL automatically attaches your Pro subscription to instances of Ubuntu on WSL. It's easy to confirm that your subscription is active and that instances are Pro-attaching."
+---
+
+# Verify active Pro subscription and automatic Pro attachment with Ubuntu Pro for WSL
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->
