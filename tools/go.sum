@@ -588,10 +588,10 @@ github.com/tomarrell/wrapcheck/v2 v2.10.0 h1:SzRCryzy4IrAH7bVGG4cK40tNUhmVmMDuJu
 github.com/tomarrell/wrapcheck/v2 v2.10.0/go.mod h1:g9vNIyhb5/9TQgumxQyOEqDHsmGYcGsVMOx/xGkqdMo=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+yU8u1Zw=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
-github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb h1:8aYaLeK5kwneVflZ50XOnsE2zWnS3HCF58WV8JXge5U=
-github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
-github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452 h1:Fr0hzjkQNxXR1/9qqOcqFEa9OYnux1+MuaAgf44QxYc=
-github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452/go.mod h1:+iFGK9K9rSCgPevBqlGVIudoaVuTd0Djg6w9ZinDPrE=
+github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19 h1:IP8p46//e//o0KPZdAzl+WF1DdRKHXfkbB+sQDCAlkw=
+github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
+github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b h1:LnvVFBFZ8F9NCqr+oS+LMHBIWZyOcLoL4JidRnGuh8A=
+github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b/go.mod h1:e1N5AoWkQv9ralO2G80XkLGPlAlCtT8ibOh2ZBEZYIg=
 github.com/ultraware/funlen v0.2.0 h1:gCHmCn+d2/1SemTdYMiKLAHFYxTYz7z9VIDRaTGyLkI=
 github.com/ultraware/funlen v0.2.0/go.mod h1:ZE0q4TsJ8T1SQcjmkhN/w+MceuatI6pBFSxxyteHIJA=
 github.com/ultraware/whitespace v0.2.0 h1:TYowo2m9Nfj1baEQBjuHzvMRbp19i+RCcRYrSWoFa+g=

@@ -7,7 +7,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f
 	github.com/stretchr/testify v1.10.0
-	github.com/ubuntu/gowsl v0.0.0-20241205225428-1dae59a1a452
+	github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/sys v0.30.0
 	google.golang.org/grpc v1.70.0
@@ -24,7 +24,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb // indirect
+	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
