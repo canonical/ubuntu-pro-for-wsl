@@ -1,4 +1,12 @@
-# How to enable opt-in features
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# Enable opt-in features of Ubuntu Pro for WSL during development
+
 
 Some features in UP4W are opt-in or can be toggled on and off via the Windows Registry.
 While the code is arranged such that CI always tests with those features enabled,

@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "A complete Ubuntu environment on Windows using WSL, with enhanced security and remote management provided by Ubuntu Pro for WSL."
+---
+
 # Ubuntu on WSL
 
 Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) enables

@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Command line reference for Ubuntu Pro for WSL's Windows agent."
+---
+
 # Windows Agent CLI
 
 > See first: [UP4W - Windows Agent](ref::up4w-windows-agent)

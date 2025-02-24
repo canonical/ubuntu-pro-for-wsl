@@ -1,4 +1,12 @@
-# How to restart UP4W
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# Restart Ubuntu Pro for WSL during development
+
 
 Some configuration changes only apply when you restart UP4W. Here is a guide on how to restart it. There are two options.
 

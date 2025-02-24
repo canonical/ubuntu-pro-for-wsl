@@ -1,4 +1,11 @@
-# How-to deploy a custom rootfs across multiple Windows machines with the Landscape API
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Scale up your deployment of a custom rootfs using Ubuntu Pro for WSL's Landscape integration."
+---
+
+# Deploy a custom rootfs to multiple Windows machines with Ubuntu Pro for WSL and the Landscape API
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

@@ -1,4 +1,11 @@
-# Firewall requirements
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Reference information on firewall rules required for the operation of Ubuntu Pro for WSL."
+---
+
+# Firewall requirements for Ubuntu on WSL
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

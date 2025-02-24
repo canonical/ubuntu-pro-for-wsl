@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Reference information on the QA process used in the development of Ubuntu pro for WSL."
+---
+
 # QA Process
 
 ## Generalities

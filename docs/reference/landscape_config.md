@@ -1,5 +1,12 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Reference information for configuring the Landscape client for Ubuntu on WSL."
+---
+
 (ref::landscape-config)=
-# Landscape configuration schema
+# Landscape configuration schema for Ubuntu on WSL
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

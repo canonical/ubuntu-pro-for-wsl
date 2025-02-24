@@ -1,4 +1,11 @@
-# Install UP4W and add a Pro token
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Ubuntu Pro for WSL is a Windows application that automatically attaches your Ubuntu Pro subscription to instances of Ubuntu on WSL."
+---
+
+# Install Ubuntu Pro for WSL and add a Pro token
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

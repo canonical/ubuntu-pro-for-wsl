@@ -1,4 +1,12 @@
-# How to install UP4W
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "For developers who are testing, debugging or developing the application."
+---
+
+# Install individual components of Ubuntu Pro for WSL for development
+
 
 This guide will show you how to install UP4W for local development and testing.
 

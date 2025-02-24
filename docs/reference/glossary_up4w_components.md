@@ -1,5 +1,12 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "The Ubuntu Pro for WSL applications consists of multiple components: a GUI front end, Landscape client, Ubuntu Pro client, Windows agent, and WSL Pro service."
+---
+
 (ref::glossary-up4w-components)=
-# Glossary of UP4W components
+# Glossary of Ubuntu Pro for WSL components
 
 The architecture of UP4W and how its components integrate together is covered in our detailed [explanation article](../explanation/ref-arch-explanation.md).
 This glossary includes concise descriptions of the components for reference.

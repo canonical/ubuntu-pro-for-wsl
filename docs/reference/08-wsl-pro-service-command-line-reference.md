@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Command line reference for Ubuntu Pro for WSL's WSL Pro Service."
+---
+
 # WSL Pro Service CLI
 
 > See first: [UP4W - WSL Pro Service](ref::up4w-wsl-pro-service)

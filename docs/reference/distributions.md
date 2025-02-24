@@ -1,5 +1,12 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Multiple distributions of Ubuntu are available for WSL, including the latest Ubuntu LTS release and the latest development version which previews new features."
+---
+
 (reference::distros)=
-# Distributions
+# Distributions of Ubuntu on WSL
 
 Our flagship distribution (distro) is Ubuntu. It is the default option when you install WSL for the first time. Several releases of the Ubuntu distro are available for WSL.
 

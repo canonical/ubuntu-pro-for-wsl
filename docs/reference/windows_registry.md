@@ -1,5 +1,12 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "The Windows registry can be used in combination with Ubuntu Pro for WSL when remotely managing Ubuntu on WSL instances."
+---
+
 (windows-registry)=
-# Windows registry
+# The Windows registry and Ubuntu Pro for WSL
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->

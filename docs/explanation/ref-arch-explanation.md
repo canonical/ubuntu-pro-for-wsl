@@ -1,4 +1,11 @@
-# UP4W architecture
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "The different components of Ubuntu Pro for WSL work together to support automatic securing of WSL instances and integration with remote management tools."
+---
+
+# Architecture of Ubuntu Pro for WSL
 
 This page describes the different components of UP4W and how they integrate
 together to form the software architecture.

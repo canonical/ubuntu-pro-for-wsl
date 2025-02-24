@@ -1,4 +1,11 @@
-# How to start the agent remotely
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Use Intune to enforce startup of the Ubuntu Pro for WSL background agent to support zero-touch deployment at scale."
+---
+
+# Start the Ubuntu Pro for WSL background agent remotely with Intune
 
 ```{include} ../pro_content_notice.txt
     :start-after: <!-- Include start pro -->
