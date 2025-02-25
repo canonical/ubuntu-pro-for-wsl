@@ -174,6 +174,7 @@ At the top of each page in the documentation, you will find a **feedback** butto
 Clicking this button will open an Issue submission page in the GitHub repo.
 A template will automatically be loaded that you can modify before submitting the Issue.
 
+For minor changes, such as fixing a single typo, you can click the **pencil** icon at the top of any page. This will open up the source file in GitHub so that you can make changes before committing them and submitting a PR.
 
 For more significant changes to the content or organisation of the documentation, it is better to create your own fork of the repository to make the changes before then generating a PR.
 
@@ -190,9 +191,21 @@ Some common contributions to documentation are:
 
 ### Working on the documentation
 
+If making significant changes to the documentation you should work on your own fork.
+After cloning the fork, change into the `/docs/` directory.
 
+A makefile is used to preview and test the documentation locally.
+To view all the possible commands, run:
 
+```text
+make
+```
 
+The command `make run` will serve the documentation to port `8000` on `localhost`.
+You can then preview the documentation in your browser and any changes that you save
+will automatically be reflected in the preview.
+
+To clean the build environment, run `make clean`.
 
 When you submit a PR, there are automated checks for typos and broke links.
 Please run the local tests before submitting the PR to save yourself and your reviewers time.
@@ -208,6 +221,10 @@ Before submitting a PR, you can check for issues locally:
 Doing these checks locally is good practice. You are less likely to run into
 failed CI checks after your PR is submitted and the reviewer of your PR can
 more quickly focus on the contribution you have made.
+
+Your PR will generate a preview build of the documentation on Read the Docs.
+This preview appears as a check in the CI.
+Click on the check to open the preview.
 
 ### Note on using code blocks
 
