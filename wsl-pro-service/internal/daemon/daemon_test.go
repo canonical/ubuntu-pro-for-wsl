@@ -69,6 +69,7 @@ func TestServe(t *testing.T) {
 		dontServe               bool
 		missingCertsDir         bool
 		missingCaCert           bool
+		breakLandscapeConf      bool
 
 		// Break the port file in various ways
 		breakPortFile         bool
@@ -87,6 +88,7 @@ func TestServe(t *testing.T) {
 	}{
 		"Success": {wantConnected: true},
 		"Success with systemd notifier returning true": {notifierReturn: true, wantConnected: true},
+		"Success with a broken Landscape config":       {breakLandscapeConf: true, wantConnected: true},
 
 		// No connection:
 		// These problems do not cause the agent to return error because it
@@ -131,6 +133,11 @@ func TestServe(t *testing.T) {
 
 			if tc.breakPortFile {
 				require.NoError(t, os.RemoveAll(publicDir), "Setup: could not remove port file")
+			}
+
+			if tc.breakLandscapeConf {
+				require.NoError(t, os.RemoveAll(system.Path("/etc/landscape/client.conf")), "Setup: couldn't remove Landscape client conf to break tests")
+				require.NoError(t, os.MkdirAll(system.Path("/etc/landscape/client.conf"), 0750), "Setup: couldn't create a directory to break Landscape client conf for tests")
 			}
 
 			if tc.breakWindowsHostAddress {
