@@ -19,14 +19,12 @@ propose changes to this document in a pull request.
 
 ## Quicklinks
 
-* [Code of conduct](#code-of-conduct)
-* [Getting started](#getting-started)
-* [Issues](#issues)
-* [Pull requests](#pull-requests)
-* [Contributing to the code](#contributing-to-the-code)
-* [Contributing to the docs](#contributing-to-the-docs)
-* [Contributor License Agreement](#contributor-license-agreement)
-* [Getting kelp](#getting-help)
+- [Prerequisites](#prerequisites)
+- [Where to find the code and the documentation](#where-to-find-the-code-and-the-documentation)
+- [Creating Issues and Pull Requests](#creating-issues-and-pull-requests)
+- [Contributing to the code](#contributing-to-the-code)
+- [Contributing to the documentation](#contributing-to-the-documentation)
+- [Getting Help](#getting-help)
 
 <!-- Include start contributing main -->
 
