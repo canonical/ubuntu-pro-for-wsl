@@ -3,8 +3,8 @@ module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 go 1.23.0
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250219173616-cc61d7f53b95
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250224161850-0f048a330575
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250225183626-ed0c5f8c85d2
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250225183626-ed0c5f8c85d2
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
@@ -34,8 +34,8 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	go.opentelemetry.io/otel v1.34.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
+	go.opentelemetry.io/otel/metric v1.34.0 // indirect
+	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
