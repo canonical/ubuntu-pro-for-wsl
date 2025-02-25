@@ -90,7 +90,9 @@ jobs:
       - name: Set up Ubuntu
         uses: Ubuntu/WSL/.github/actions/wsl-install@main
         with:
+          # TODO: Migrate this to the tar-based 24.04
           distro: "Ubuntu-Preview"
+          useStore: true
       - name: Set up Go
         # actions/setup-go is broken
         shell: powershell
