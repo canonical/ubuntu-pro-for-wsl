@@ -15,7 +15,12 @@ It contains the set of applications to manage Ubuntu WSL instances that allows y
 
 ### Documentation
 
-You can read all about Ubuntu Pro for WSL on [Read the docs](https://canonical-ubuntu-pro-for-wsl.readthedocs-hosted.com).
+The documentation in this repository includes information on both:
+
+* The Ubuntu on WSL distribution
+* THe Ubuntu Pro for WSL application
+
+You can read all about both on our [official documentation](https://documentation.ubuntu.com/wsl/en/latest/).
 
 ### System Components
 
