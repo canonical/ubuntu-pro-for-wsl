@@ -63,15 +63,31 @@ machine with WSL installed.
 It is possible to run Ubuntu on WSL in a VM with nested visualisation but we do
 not recommend this as a testing environment.
 
+## Where to find the code and the documentation
+
+Currently, there are two repositories maintained by Canonical that relate to Ubuntu on WSL.
+Microsoft maintains a separate repository for the WSL technology itself.
+
+### Code for the distro and the app are in different repositories
+
+The source code for the Ubuntu on WSL **distribution** and the Ubuntu Pro for WSL **Windows application** can be found on GitHub:
+
+- Distribution: [Ubuntu on WSL repo](https://github.com/ubuntu/WSL)
+- Windows application: [Ubuntu Pro for WSL repo](https://github.com/canonical/ubuntu-pro-for-wsl)
+
+### Issues with WSL itself should be directed to Microsoft
 
 We accept any contributions relating to Ubuntu WSL and Ubuntu Pro for WSL.
 However, we do not directly maintain WSL itself, which is a Microsoft product.
 If you have identified a problem or bug in WSL then file an issue in
 [Microsoft's WSL project repository](https://github.com/microsoft/WSL/issues/).
 
-If you are unsure whether your problem relates to an Ubuntu project or the Microsoft project then familiarise yourself with their documentation.
+For example, the kernel used for Linux distributions -- including Ubuntu -- that run on WSL is maintained by Microsoft.
+If you have an issue relating to the WSL kernel then you should direct your communication to Microsoft.
 
-- [Ubuntu WSL docs](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/)
+If you are unsure whether your problem relates to an Ubuntu project or the Microsoft project then familiarise yourself with their respective documentation.
+
+- [Ubuntu on WSL docs](https://documentation.ubuntu.com/wsl/en/latest/)
 - [Microsoft WSL docs](https://learn.microsoft.com/en-us/windows/wsl/)
 
 At this point, if you are still not sure, try to contact a maintainer of one of the projects, who will advise you where best to submit your Issue.
@@ -150,6 +166,7 @@ Note that you'll need to [create a self-signing certificate](https://learn.micro
 
 ## Contributing to the documentation
 
+The documentation for the Ubuntu WSL distro and Ubuntu Pro for WSL is maintained [here](https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/docs).
 
 You can contribute to the documentation in various different ways. If you are not a developer but want to help make the product better then helping us to improve the documentation is a way to achieve that.
 
