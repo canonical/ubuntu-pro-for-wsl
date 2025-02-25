@@ -228,7 +228,7 @@ wsl-pro-service completion zsh [flags]
 
 #### wsl-pro-service version
 
-Returns version of agent and exits
+Returns version of wsl-pro-service and exits
 
 ```
 wsl-pro-service version [flags]
