@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909070948-cee447de36ba
 	github.com/stretchr/testify v1.10.0
-	github.com/ubuntu/decorate v0.0.0-20240425133904-a085253511fb
+	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	golang.org/x/sys v0.30.0
 )
 
