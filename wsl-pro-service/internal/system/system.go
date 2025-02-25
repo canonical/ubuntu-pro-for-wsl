@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
-	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"gopkg.in/ini.v1"
 )
@@ -73,10 +72,6 @@ func New(args ...Option) *System {
 
 	s := &System{
 		backend: opts.backend,
-	}
-
-	if err := s.EnsureValidLandscapeConfig(context.Background()); err != nil {
-		log.Warningf(context.Background(), "Could not ensure valid Landscape configuration: %v", err)
 	}
 
 	return s
