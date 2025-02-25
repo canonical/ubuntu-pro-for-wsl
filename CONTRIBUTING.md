@@ -1,8 +1,8 @@
 # Contributing
 
-<!-- Include start contributing intro -->
+## Ubuntu on WSL and Ubuntu Pro for WSL
 
-## Ubuntu WSL and Ubuntu Pro for WSL
+<!-- Include start contributing intro -->
 
 To ensure that making a contribution is a positive experience for both
 contributor and reviewer we ask that you read and follow these community
