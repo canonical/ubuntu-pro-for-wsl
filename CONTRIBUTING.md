@@ -255,6 +255,12 @@ within the code block:
 
 Note: a code-block must be labelled with the [code-block directive](https://mystmd.org/guide/directives#directive-code) for this to work.
 
+### The Open Documentation Academy
+
+Ubuntu on WSL is a proud member of the [Canonical Open Documentation Academy](https://github.com/canonical/open-documentation-academy) (CODA). If you are a newcomer to making open source contributions, or new to technical writing and want to boost your skills – or both! – we will be glad to help.
+
+Check out the CODA repository for guidance and useful resources on getting started.
+
 ## Getting Help
 
 Join us in the [Ubuntu Community](https://discourse.ubuntu.com/c/wsl/27) and post your question there with a descriptive tag.
