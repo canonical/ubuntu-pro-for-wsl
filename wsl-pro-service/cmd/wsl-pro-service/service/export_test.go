@@ -8,9 +8,10 @@ func WithSystem(s *system.System) func(*options) {
 	}
 }
 
+// DaemonConfig is the configuration for the daemon exported for testing purposes only.
+type DaemonConfig = daemonConfig
+
 // Config returns the daemonConfig for test purposes.
-//
-//nolint:revive
-func (a App) Config() daemonConfig {
+func (a App) Config() DaemonConfig {
 	return a.config
 }
