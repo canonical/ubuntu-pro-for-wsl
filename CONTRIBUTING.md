@@ -178,7 +178,7 @@ For minor changes, such as fixing a single typo, you can click the **pencil** ic
 
 For more significant changes to the content or organisation of the documentation, it is better to create your own fork of the repository to make the changes before then generating a PR.
 
-Lastly, at the bottom of each page you will find various links, including a link to the Discourse forum for Ubuntu WSL, where you can ask questions and participate in discussions.
+Lastly, at the bottom of each page you will find various links, including a link to the Discourse forum for Ubuntu on WSL, where you can ask questions and participate in discussions.
 
 ### Types of contribution
 
