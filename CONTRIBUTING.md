@@ -1,8 +1,8 @@
 # Contributing
 
-<!-- Include start contributing intro -->
+## Ubuntu on WSL and Ubuntu Pro for WSL
 
-## Ubuntu WSL and Ubuntu Pro for WSL
+<!-- Include start contributing intro -->
 
 To ensure that making a contribution is a positive experience for both
 contributor and reviewer we ask that you read and follow these community
@@ -19,47 +19,82 @@ propose changes to this document in a pull request.
 
 ## Quicklinks
 
-* [Code of conduct](#code-of-conduct)
-* [Getting started](#getting-started)
-* [Issues](#issues)
-* [Pull requests](#pull-requests)
-* [Contributing to the code](#contributing-to-the-code)
-* [Contributing to the docs](#contributing-to-the-docs)
-* [Contributor License Agreement](#contributor-license-agreement)
-* [Getting kelp](#getting-help)
+- [Prerequisites](#prerequisites)
+- [Where to find the code and the documentation](#where-to-find-the-code-and-the-documentation)
+- [Creating Issues and Pull Requests](#creating-issues-and-pull-requests)
+- [Contributing to the code](#contributing-to-the-code)
+- [Contributing to the documentation](#contributing-to-the-documentation)
+- [Getting Help](#getting-help)
 
 <!-- Include start contributing main -->
 
-## Code of conduct
+## Prerequisites
+
+### Code of conduct
 
 We take our community seriously and hold ourselves and other contributors to high standards of communication. By participating and contributing, you agree to uphold the Ubuntu Community [Code of Conduct](https://ubuntu.com/community/ethos/code-of-conduct).
 
-## Getting started
+### GitHub
 
-The source code for Ubuntu WSL and Ubuntu Pro for WSL can be found on GitHub:
+You need a GitHub account to create issues, comment, reply or submit contributions.
 
-- [Ubuntu WSL repo](https://github.com/ubuntu/WSL) 
-- [Ubuntu Pro for WSL repo](https://github.com/canonical/ubuntu-pro-for-wsl) 
+You don’t need to know git before you start, and you definitely don’t need to work on the command line if you don’t want to. Many documentation tasks can be done using GitHub’s web interface. On the command line, we use the standard “[fork and pull](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)” process.
 
-### Issues with WSL should be directed to Microsoft's WSL project
+### Contributor License Agreement
 
-<!-- TODO: a breakdown of responsibilities or example issues (Ubuntu/Microsft) could be helpful here -->
+You need to sign the [Contributor License
+Agreement](https://ubuntu.com/legal/contributors) to contribute.
+You only need to sign this once and if you have previously signed the
+agreement when contributing to other Canonical projects you will not need to
+sign it again.
+
+An automated test is executed on PRs to check if it has been accepted.
+
+Please refer to the licences for Ubuntu WSL and Ubuntu Pro for WSL below.
+
+- [Ubuntu WSL](https://github.com/ubuntu/WSL/blob/main/LICENSE)
+- [Ubuntu Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/LICENSE)
+
+### A Windows machine
+
+To test and debug Ubuntu on WSL and Ubuntu Pro for WSL you will need a Windows
+machine with WSL installed.
+
+It is possible to run Ubuntu on WSL in a VM with nested visualisation but we do
+not recommend this as a testing environment.
+
+## Where to find the code and the documentation
+
+Currently, there are two repositories maintained by Canonical that relate to Ubuntu on WSL.
+Microsoft maintains a separate repository for the WSL technology itself.
+
+### Code for the distro and the app are in different repositories
+
+The source code for the Ubuntu on WSL **distribution** and the Ubuntu Pro for WSL **Windows application** can be found on GitHub:
+
+- Distribution: [Ubuntu on WSL repo](https://github.com/ubuntu/WSL)
+- Windows application: [Ubuntu Pro for WSL repo](https://github.com/canonical/ubuntu-pro-for-wsl)
+
+### Issues with WSL itself should be directed to Microsoft
 
 We accept any contributions relating to Ubuntu WSL and Ubuntu Pro for WSL.
 However, we do not directly maintain WSL itself, which is a Microsoft product.
 If you have identified a problem or bug in WSL then file an issue in
 [Microsoft's WSL project repository](https://github.com/microsoft/WSL/issues/).
 
-If you are unsure whether your problem relates to an Ubuntu project or the Microsoft project then familiarise yourself with their documentation.
+For example, the kernel used for Linux distributions -- including Ubuntu -- that run on WSL is maintained by Microsoft.
+If you have an issue relating to the WSL kernel then you should direct your communication to Microsoft.
 
-- [Ubuntu WSL docs](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/)
+If you are unsure whether your problem relates to an Ubuntu project or the Microsoft project then familiarise yourself with their respective documentation.
+
+- [Ubuntu on WSL docs](https://documentation.ubuntu.com/wsl/en/latest/)
 - [Microsoft WSL docs](https://learn.microsoft.com/en-us/windows/wsl/)
 
-At this point, if you are still not sure, try to contact a maintainer of one of the projects who will advise you where best to submit your Issue.
+At this point, if you are still not sure, try to contact a maintainer of one of the projects, who will advise you where best to submit your Issue.
 
-### How to contribute
+## Creating Issues and Pull Requests
 
-Contributions are made via Issues and Pull Requests (PRs). A few general guidelines that cover both:
+Contributions are made via Issues and Pull Requests (PRs).
 
 * Use the advisories page of the repository and not a public bug report to
 report security vulnerabilities. 
@@ -71,9 +106,9 @@ report security vulnerabilities.
 
 Issues should be used to report problems with the software, request a new feature or to discuss potential changes before a PR is created. When you create a new Issue, a template will be loaded that will guide you through collecting and providing the information that we need to investigate.
 
-If you find an Issue that addresses the problem you're having, please add your own reproduction information to the existing issue rather than creating a new one. Adding a [reaction](https://github.blog/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) can also help be indicating to our maintainers that a particular problem is affecting more than just the reporter.
+If you find an Issue that addresses the problem you're having, please add your own reproduction information to the existing issue rather than creating a new one. Adding a [reaction](https://github.blog/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) can also help by indicating to our maintainers that a particular problem is affecting more than just the reporter.
 
-### Pull requests
+### Pull Requests
 
 PRs are always welcome and can be a quick way to get your fix or improvement slated for the next release. In general, PRs should:
 
@@ -101,10 +136,10 @@ Once merged to the main branch, `po` files will be automatically updated and are
 
 ## Contributing to the code
 
-For testing and debugging Ubuntu WSL or Ubuntu Pro for WSL you will need a
-Windows Machine with WSL installed.
+Currently, we anticipate that most contributions will be for the Ubuntu Pro for WSL application.
+Information helpful for the development of this application is included below.
 
-### About the test suite
+### The test suite for Ubuntu Pro for WSL
 
 The source code includes a comprehensive test suite made of unit and integration tests. All the tests must pass with and without the race detector.
 
@@ -112,80 +147,84 @@ Each module has its own package tests and you can also find the integration test
 
 The test suite must pass before merging the PR to our main branch. Any new feature, change or fix must be covered by corresponding tests.
 
-### Additional dependencies for UP4W
+### Additional dependencies for Ubuntu Pro for WSL
 
-* Ubuntu-24.04
+* Ubuntu 24.04 LTS
 * Visual Studio Community 2019 or above
 * Go
 * Flutter
 * An Ubuntu Pro token
 
-### Building and running the binaries for UP4W
+### Building and running the binaries for Ubuntu Pro for WSL
 
 For building, you can use the following two scripts:
 
-* [Build the Windows Agent](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/tools/build/build-deb.sh)
-* [Build the Wsl Pro Service](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/tools/build/build-appx.ps1)
+* [Build the WSL Pro Service](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/tools/build/build-deb.sh)
+* [Build the Windows Agent](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/tools/build/build-appx.ps1)
 
 Note that you'll need to [create a self-signing certificate](https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing) to build the Windows Agent.
 
-## Contributor License Agreement
+## Contributing to the documentation
 
-It is requirement that you sign the [Contributor License
-Agreement](https://ubuntu.com/legal/contributors) in order to contribute.
-You only need to sign this once and if you have previously signed the
-agreement when contributing to other Canonical projects you will not need to
-sign it again.
-
-An automated test is executed on PRs to check if it has been accepted.
-
-Please refer to the licences for Ubuntu WSL and Ubuntu Pro for WSL below:
-
-<!-- TODO: confirm license situation for both -->
-- [Ubuntu WSL](https://github.com/ubuntu/WSL/blob/main/LICENSE).
-- [Ubuntu Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/LICENSE).
-
-## Contributing to the docs
-
-The documentation for Ubuntu WSL and Ubuntu Pro for WSL is maintained [here](https://github.com/ubuntu/WSL/tree/main/docs).
-
-Our goal is to provide documentation that gives users the information that they need to get what they need from Ubuntu WSL.
+The documentation for the Ubuntu WSL distro and Ubuntu Pro for WSL is maintained [here](https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/docs).
 
 You can contribute to the documentation in various different ways. If you are not a developer but want to help make the product better then helping us to improve the documentation is a way to achieve that.
 
-At the top of each page in the documentation, you will find a feedback button.
-Clicking this button will open an Issue submission page in the Ubuntu WSL GitHub repo.
+At the top of each page in the documentation, you will find a **feedback** button.
+Clicking this button will open an Issue submission page in the GitHub repo.
 A template will automatically be loaded that you can modify before submitting the Issue.
 
-You can also find a pencil icon for editing the page on GitHub, which will open up the source file in GitHub so that you can make changes before committing them and submitting a PR.
-This can be a good option if you want to make a small change, e.g., fixing a single typo.
+For minor changes, such as fixing a single typo, you can click the **pencil** icon at the top of any page. This will open up the source file in GitHub so that you can make changes before committing them and submitting a PR.
 
-Lastly, at the bottom of the page you will find various links, including a link to the Discourse forum for Ubuntu WSL, where you can ask questions and participate in discussions.
+For more significant changes to the content or organisation of the documentation, it is better to create your own fork of the repository to make the changes before then generating a PR.
+
+Lastly, at the bottom of each page you will find various links, including a link to the Discourse forum for Ubuntu on WSL, where you can ask questions and participate in discussions.
 
 ### Types of contribution
-
-<!-- TODO: if PR title conventions are in place these should be specified here -->
 
 Some common contributions to documentation are:
 
 - Add or update documentation for new features or feature improvements by submitting a PR
 - Add or update documentation that clarifies any doubts you had when working with the product by submitting a PR
-- Request a fix to the documentation, by opening an issue on GitHub.
-- Post a question or suggestion on the forum.
+- Request a fix to the documentation, by opening an issue on GitHub
+- Post a question or suggestion on the forum
+
+### Working on the documentation
+
+If making significant changes to the documentation you should work on your own fork.
+After cloning the fork, change into the `/docs/` directory.
+
+A makefile is used to preview and test the documentation locally.
+To view all the possible commands, run:
+
+```text
+make
+```
+
+The command `make run` will serve the documentation to port `8000` on `localhost`.
+You can then preview the documentation in your browser and any changes that you save
+will automatically be reflected in the preview.
+
+To clean the build environment, run `make clean`.
+
+When you submit a PR, there are automated checks for typos and broken links.
+Please run the local tests before submitting the PR to save yourself and your reviewers time.
 
 ### Automatic documentation checks
 
-Automatic checks will be run on any PR relating to documentation to verify the spelling, the validity of links, correct formatting of the Markdown files and the use of inclusive language.
-
-You should run these tests locally before submitting a PR by running the following commands:
+Automatic checks will be run on any PR relating to documentation to verify spelling and the validity of links.
+Before submitting a PR, you can check for issues locally:
 
 - Check the spelling: `make spelling`
 - Check the validity of links: `make linkcheck`
-- Check for inclusive language: `make woke`
 
 Doing these checks locally is good practice. You are less likely to run into
 failed CI checks after your PR is submitted and the reviewer of your PR can
 more quickly focus on the contribution you have made.
+
+Your PR will generate a preview build of the documentation on Read the Docs.
+This preview appears as a check in the CI.
+Click on the check to open the preview.
 
 ### Note on using code blocks
 
@@ -249,6 +288,12 @@ within the code block:
 ```
 
 Note: a code-block must be labelled with the [code-block directive](https://mystmd.org/guide/directives#directive-code) for this to work.
+
+### The Open Documentation Academy
+
+Ubuntu on WSL is a proud member of the [Canonical Open Documentation Academy](https://github.com/canonical/open-documentation-academy) (CODA). If you are a newcomer to making open source contributions, or new to technical writing and want to boost your skills – or both! – we will be glad to help.
+
+Check out the CODA repository for guidance and useful resources on getting started.
 
 ## Getting Help
 
