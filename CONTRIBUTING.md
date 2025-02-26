@@ -207,7 +207,7 @@ will automatically be reflected in the preview.
 
 To clean the build environment, run `make clean`.
 
-When you submit a PR, there are automated checks for typos and broke links.
+When you submit a PR, there are automated checks for typos and broken links.
 Please run the local tests before submitting the PR to save yourself and your reviewers time.
 
 ### Automatic documentation checks
