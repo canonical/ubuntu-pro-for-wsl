@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -37,6 +38,7 @@ func (s *System) LandscapeDisable(ctx context.Context) (err error) {
 func (s *System) EnsureValidLandscapeConfig(ctx context.Context) (err error) {
 	defer decorate.OnError(&err, "could not ensure valid Landscape configuration")
 
+	s.syncWithCloudInit()
 	landscapeConfig, err := os.ReadFile(s.Path(landscapeConfigPath))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -47,6 +49,12 @@ func (s *System) EnsureValidLandscapeConfig(ctx context.Context) (err error) {
 	}
 
 	return s.fixAndEnableLandscapeFromConfig(ctx, string(landscapeConfig), false)
+}
+
+func (s *System) syncWithCloudInit() {
+	log.Debug(context.Background(), "Checking cloud-init status")
+	cmd := exec.Command("bash", "-ec", "systemctl is-enabled --quiet cloud-init.service && cloud-init status --wait")
+	_ = cmd.Run()
 }
 
 func (s *System) fixAndEnableLandscapeFromConfig(ctx context.Context, landscapeConfig string, enableUnconditionally bool) (err error) {

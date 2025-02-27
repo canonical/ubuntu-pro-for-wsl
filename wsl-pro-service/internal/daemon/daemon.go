@@ -137,6 +137,12 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 		return fmt.Errorf("could not notify systemd: %v", err)
 	}
 
+	// Since this function syncs with cloud-init and may take too long to run, let's do it after notifying
+	// systemd about our readiness to prevent delaying boot.
+	if err := d.system.EnsureValidLandscapeConfig(context.Background()); err != nil {
+		log.Warningf(context.Background(), "Could not ensure valid Landscape configuration: %v", err)
+	}
+
 	for {
 		select {
 		case <-d.gracefulCtx.Done():
@@ -149,7 +155,7 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 			ctx, cancel := context.WithCancel(d.ctx)
 			defer cancel()
 
-			log.Info(ctx, "Daemon: connecting to Windows Agent")
+			log.Infof(ctx, "Daemon: connecting to Windows Agent from PID %d", os.Getpid())
 			d.systemdNotifyStatus(ctx, serviceStatusConnecting)
 
 			server, err := d.connect(ctx)
