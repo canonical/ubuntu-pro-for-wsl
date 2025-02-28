@@ -1065,7 +1065,7 @@ type mockCloudInit struct {
 	removeErr bool
 }
 
-func (c *mockCloudInit) WriteDistroData(distroName string, cloudInit string) error {
+func (c *mockCloudInit) WriteDistroData(distroName string, cloudInit string, requestID string) error {
 	c.writeCalled.Store(true)
 
 	if c.writeErr {

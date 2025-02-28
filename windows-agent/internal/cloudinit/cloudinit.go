@@ -79,11 +79,28 @@ func (c CloudInit) writeAgentData() (err error) {
 	return nil
 }
 
+// metadata is a struct that serializes the instance ID as yaml.
+type metadata struct {
+	InstanceID string `yaml:"instance-id"`
+}
+
 // WriteDistroData writes cloud-init user data to be used for a distro in particular.
-func (c CloudInit) WriteDistroData(distroName string, cloudInit string) error {
+func (c CloudInit) WriteDistroData(distroName string, cloudInit string, instanceID string) error {
 	err := writeFileInDir(c.dataDir, distroName+".user-data", []byte(cloudInit))
 	if err != nil {
 		return fmt.Errorf("could not create distro-specific cloud-init file: %v", err)
+	}
+
+	if instanceID == "" {
+		return nil
+	}
+	md, err := yaml.Marshal(metadata{InstanceID: instanceID})
+	if err != nil {
+		return fmt.Errorf("could not marshal metadata: %v", err)
+	}
+	err = writeFileInDir(c.dataDir, distroName+".meta-data", md)
+	if err != nil {
+		return fmt.Errorf("could not create instance specific metadata file: %v", err)
 	}
 
 	return nil

@@ -61,7 +61,7 @@ type Config interface {
 
 // CloudInit is a cloud-init user data writer.
 type CloudInit interface {
-	WriteDistroData(distroName string, cloudInit string) error
+	WriteDistroData(distroName string, cloudInit string, instanceID string) error
 	RemoveDistroData(distroName string) error
 }
 

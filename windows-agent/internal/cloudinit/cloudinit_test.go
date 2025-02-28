@@ -290,7 +290,7 @@ data:
 				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
 			}
 
-			err = ci.WriteDistroData(distroName, tc.want)
+			err = ci.WriteDistroData(distroName, tc.want, "")
 			if tc.wantErr {
 				require.Error(t, err, "WriteDistroData should have returned an error")
 			} else {
