@@ -1,5 +1,5 @@
 {
-  "landscapeFilePicker": "Vybrať súbor...",
+  "landscapeFilePicker": "Vybrať súbor…",
   "@landscapeFilePicker": {},
   "ubuntuProEnabledInfo": "Všetky Ubuntu WSL inštancie majú prístup k bezpečnostným funkciám Ubuntu Pro.",
   "@ubuntuProEnabledInfo": {},
@@ -7,7 +7,7 @@
   "@purchaseStatusNetwork": {},
   "landscapeSkipDescription": "Landscape môžete vždy nakonfigurovať neskôr v tejto aplikácii",
   "@landscapeSkipDescription": {},
-  "statusBarAgentConnectingTooltip": "Pripojovanie k Ubuntu Pro agentovi...",
+  "statusBarAgentConnectingTooltip": "Pripojovanie k Ubuntu Pro agentovi…",
   "@statusBarAgentConnectingTooltip": {},
   "agentStateUnknownEnv": "Stav Ubuntu Pro background agenta sa nedá overiť. Skontrolujte nastavenia prostredia.",
   "@agentStateUnknownEnv": {},
