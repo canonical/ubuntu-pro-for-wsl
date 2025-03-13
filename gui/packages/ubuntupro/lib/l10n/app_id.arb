@@ -82,5 +82,77 @@
   "purchaseStatusUnknown": "Kesalahan yang tidak diketahui saat mencoba membeli langganan. Pertimbangkan restart aplikasi ini.",
   "@purchaseStatusUnknown": {},
   "landscapeSkip": "Lewati dulu",
-  "@landscapeSkip": {}
+  "@landscapeSkip": {},
+  "landscapeRegister": "Mendaftar",
+  "@landscapeRegister": {},
+  "landscapeFileInvalidFormat": "Berkas dalam format yang salah",
+  "@landscapeFileInvalidFormat": {},
+  "statusBarReportBugTooltip": "Laporkan kutu",
+  "@statusBarReportBugTooltip": {},
+  "landscapeFilePicker": "Pilih berkas...",
+  "@landscapeFilePicker": {},
+  "landscapeSkipDescription": "Anda selalu dapat mengonfigurasi Landscape nanti di aplikasi ini",
+  "@landscapeSkipDescription": {},
+  "landscapeSkipRegister": "Mendaftar dengan Landscape",
+  "@landscapeSkipRegister": {},
+  "landscapeHeading": "Konfigurasikan koneksi ke Landscape untuk mengelola instansi Ubuntu WSL Anda dari jarak jauh. {landscapeLink}",
+  "@landscapeHeading": {
+    "placeholders": {
+      "landscapeLink": {
+        "type": "String"
+      }
+    }
+  },
+  "landscapeSetupManual": "Konfigurasi manual",
+  "@landscapeSetupManual": {},
+  "landscapeSetupManualHint": "Mendaftar dengan server Landscape Anda sendiri",
+  "@landscapeSetupManualHint": {},
+  "landscapeSetupCustom": "Konfigurasi tingkat lanjut",
+  "@landscapeSetupCustom": {},
+  "landscapeSetupCustomHint": "Muat berkas konfigurasi klien Landscape ubahan",
+  "@landscapeSetupCustomHint": {},
+  "landscapeFQDNLabel": "FQDN Landscape",
+  "@landscapeFQDNLabel": {},
+  "landscapeFQDNError": "FQDN tidak valid. Format harus berupa nama host atau alamat IP.",
+  "@landscapeFQDNError": {},
+  "landscapeFQDNSaaSError": "FQDN tidak boleh landscape.canonical.com.",
+  "@landscapeFQDNSaaSError": {},
+  "landscapeKeyLabel": "Kunci pendaftaran (opsional)",
+  "@landscapeKeyLabel": {},
+  "landscapeSSLKeyLabel": "Kunci publik server SSL (opsional)",
+  "@landscapeSSLKeyLabel": {},
+  "landscapeFileLabel": "Path berkas konfig",
+  "@landscapeFileLabel": {},
+  "landscapeFileTooLarge": "Berkas konfigurasi terlalu besar",
+  "@landscapeFileTooLarge": {},
+  "landscapeFileEmptyPath": "Suatu path mesti dinyatakan",
+  "@landscapeFileEmptyPath": {},
+  "landscapeFileEmptyContents": "Berkas tidak boleh kosong",
+  "@landscapeFileEmptyContents": {},
+  "landscapeFileNotFound": "Berkas tidak ditemukan",
+  "@landscapeFileNotFound": {},
+  "landscapeFileIsDir": "Berkas tidak boleh berupa direktori",
+  "@landscapeFileIsDir": {},
+  "landscapeConfigureButton": "Konfigurasikan Landscape",
+  "@landscapeConfigureButton": {},
+  "landscapeApplyError": "Kesalahan ketika mencoba menerapkan konfigurasi:\n\t{message}",
+  "@landscapeApplyError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "buttonNext": "Selanjutnya",
+  "@buttonNext": {},
+  "buttonSkip": "Lewati",
+  "@buttonSkip": {},
+  "buttonBack": "Mundur",
+  "@buttonBack": {},
+  "statusBarAgentRunningTooltip": "Agen Ubuntu Pro sedang berjalan",
+  "@statusBarAgentRunningTooltip": {},
+  "statusBarAgentConnectingTooltip": "Menyambung ke agen Ubuntu Pro...",
+  "@statusBarAgentConnectingTooltip": {},
+  "statusBarAgentDownTooltip": "Agen Ubuntu Pro terputus. Tekan untuk memulai agen.",
+  "@statusBarAgentDownTooltip": {}
 }
