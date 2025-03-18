@@ -22,6 +22,7 @@ IDEs
 js
 Intune
 macOS
+makefile
 MSIX
 npm
 OpenGL
