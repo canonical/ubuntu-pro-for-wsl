@@ -501,7 +501,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			databaseFromTemplate(t, dbDir, distros...)
 
 			cleanupCalled := false
-			var cleanupFunc func(string) = nil
+			var cleanupFunc func(string)
 			if tc.cleanupFunc {
 				cleanupFunc = func(d string) {
 					require.True(t, strings.EqualFold(tc.markDistroUnreachable, d), "Unexpected cleaned up distro name")
