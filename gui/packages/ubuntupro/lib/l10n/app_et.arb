@@ -1,1 +1,42 @@
-{}
+{
+  "attach": "Seo",
+  "@attach": {},
+  "ubuntuProEnabled": "Ubuntu Pro on nüüd selles masinas kasutusel",
+  "@ubuntuProEnabled": {},
+  "tokenInputDescription": "Sisesta tunnusluba, milles oled saanud {proLink} lehelt või oma süsteemihaldajalt",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "learnMore": "Lisateave",
+  "@learnMore": {},
+  "statusBarReportBugTooltip": "Teata veast",
+  "@statusBarReportBugTooltip": {},
+  "getUbuntuPro": "Telli Ubuntu Pro teenus",
+  "@getUbuntuPro": {},
+  "applyingProToken": "Pro teenuse tunnusluba {token} on rakendamisel",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "appTitle": "Ubuntu Pro WSLi jaoks",
+  "@appTitle": {},
+  "tokenErrorEmpty": "Tunnusluba ei tohi jääda tühjaks",
+  "@tokenErrorEmpty": {},
+  "tokenErrorInvalid": "Vigane tunnusluba",
+  "@tokenErrorInvalid": {},
+  "tokenValid": "Kehtiv tunnusluba",
+  "@tokenValid": {},
+  "tokenInputTitle": "Lisa see masin",
+  "@tokenInputTitle": {},
+  "tokenInputHint": "Tunnusluba",
+  "@tokenInputHint": {},
+  "applyProToken": "Rakenda Pro teenuse tunnusluba",
+  "@applyProToken": {}
+}
