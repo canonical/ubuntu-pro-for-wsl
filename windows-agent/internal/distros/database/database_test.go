@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"text/template"
 	"time"
@@ -500,12 +501,12 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			databaseFromTemplate(t, dbDir, distros...)
 
-			cleanupCalled := false
+			var cleanupCalled atomic.Bool
 			var cleanupFunc func(string)
 			if tc.cleanupFunc {
 				cleanupFunc = func(d string) {
 					require.True(t, strings.EqualFold(tc.markDistroUnreachable, d), "Unexpected cleaned up distro name")
-					cleanupCalled = true
+					cleanupCalled.Store(true)
 				}
 			}
 
@@ -547,7 +548,7 @@ func TestDatabaseCleanup(t *testing.T) {
 				require.False(t, fileUpdated(), "Database file should not be refreshed by a cleanup when no distro has been cleaned up")
 			}
 
-			require.Equal(t, tc.wantCleanup, cleanupCalled, "Cleanup callback state mismatch")
+			require.Equal(t, tc.wantCleanup, cleanupCalled.Load(), "Cleanup callback state mismatch")
 
 			require.ElementsMatch(t, tc.wantDistros, db.DistroNames(), "Database contents after cleanup do not match expectations")
 
