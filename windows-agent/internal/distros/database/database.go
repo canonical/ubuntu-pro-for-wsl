@@ -43,6 +43,8 @@ type DistroDB struct {
 	// Multiple distros starting at the same time can cause WSL (and the whole machine) to freeze up.
 	// This mutex is used to block multiple distros from starting at the same time.
 	distroStartMu sync.Mutex
+
+	onCleanup func(string)
 }
 
 // New creates a database and populates it with data in the file located
@@ -56,7 +58,7 @@ type DistroDB struct {
 // Every certain amount of times, the database wil purge all distros that
 // are no longer registered or that have been marked as unreachable. This
 // cleanup can be triggered on demmand with TriggerCleanup.
-func New(ctx context.Context, storageDir string) (db *DistroDB, err error) {
+func New(ctx context.Context, storageDir string, onCleanup func(string)) (db *DistroDB, err error) {
 	defer decorate.OnError(&err, "could not initialize database")
 
 	select {
@@ -72,6 +74,7 @@ func New(ctx context.Context, storageDir string) (db *DistroDB, err error) {
 		scheduleTrigger: make(chan struct{}),
 		ctx:             ctx,
 		cancelCtx:       cancel,
+		onCleanup:       onCleanup,
 	}
 
 	if err := db.load(ctx); err != nil {
@@ -220,6 +223,9 @@ func (db *DistroDB) cleanup(ctx context.Context) error {
 		}
 
 		log.Infof(ctx, "Database: distro %q became invalid, cleaning up.", d.Name())
+		if db.onCleanup != nil {
+			db.onCleanup(name)
+		}
 		go d.Cleanup(ctx)
 		delete(db.distros, name)
 		needsDBDump = true
