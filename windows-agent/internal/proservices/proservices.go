@@ -85,7 +85,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		return s, err
 	}
 
-	db, err := database.New(ctx, privateDir, func(d string) { cloudInit.RemoveDistroData(d) })
+	db, err := database.New(ctx, privateDir, func(d string) { _ = cloudInit.RemoveDistroData(d) })
 	if err != nil {
 		return s, err
 	}
