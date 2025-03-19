@@ -9,4 +9,5 @@ understanding of how Ubuntu Pro for WSL is designed.
 :titlesonly:
 
 ref-arch-explanation
+binfmt
 ```
