@@ -175,8 +175,9 @@ func TestInstall(t *testing.T) {
 		sendRootfsURL    string
 		missingChecksums bool
 
-		wantCloudInitWriteCalled bool
-		wantInstalled            bool
+		wantCloudInitWriteCalled  bool
+		wantCloudInitRemoveCalled bool
+		wantInstalled             bool
 	}{
 		"From the store":                    {wantInstalled: true, wantCloudInitWriteCalled: true},
 		"From a tar-based distro":           {isTarBased: true, wantInstalled: true, wantCloudInitWriteCalled: true},
@@ -188,7 +189,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distroname is empty":          {distroName: "-"},
 		"Error when the Appx does not exist":          {appxDoesNotExist: true},
 		"Error when the distro is already installed":  {distroAlreadyInstalled: true, wantInstalled: true},
-		"Error when the distro fails to install":      {wslInstallErr: true},
+		"Error when the distro fails to install":      {wslInstallErr: true, wantCloudInitRemoveCalled: true},
 		"Error when cannot write cloud-init file":     {cloudInitWriteErr: true, wantCloudInitWriteCalled: true},
 		"Error when registration fails":               {isTarBased: true, wslRegisterErr: true, wantInstalled: false},
 		"Error when the distro db is corrupted":       {isTarBased: true, corruptDb: true, wantInstalled: false},
@@ -363,6 +364,10 @@ func TestInstall(t *testing.T) {
 
 					if tc.wantCloudInitWriteCalled {
 						require.True(t, testBed.cloudInit.writeCalled.Load(), "Cloud-init should have been called to write the user data file")
+					}
+
+					if tc.wantCloudInitRemoveCalled {
+						require.True(t, testBed.cloudInit.removeCalled.Load(), "Cloud-init should have been called to remove the user data file")
 					}
 				})
 		})
