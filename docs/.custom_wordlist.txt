@@ -5,6 +5,7 @@ autocompletion
 enablement
 Remediations
 remediations
+unregistering
 
 # Tools and brands
 apport
