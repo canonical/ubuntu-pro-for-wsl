@@ -5,6 +5,7 @@ myst:
       "Preconfigure Ubuntu on WSL using cloud-init to automate the creation of custom instances."
 ---
 
+(howto::cloud-init)=
 # Automatic setup of Ubuntu on WSL with cloud-init
 
 Cloud-init is an industry-standard multi-distribution method for cross-platform cloud instance initialisation.
