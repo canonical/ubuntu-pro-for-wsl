@@ -7,10 +7,12 @@ Remediations
 remediations
 
 # Tools and brands
+AppArmor
 apport
 appx
 AppxPackage
 Center
+checksums
 CIS
 Codecov
 cuda
@@ -21,6 +23,7 @@ gRPC
 IDEs
 js
 Intune
+livepatch
 macOS
 makefile
 MSIX
@@ -29,6 +32,7 @@ OpenGL
 OpenVINO
 powershell
 PowerShell
+SHA
 structurizr
 Structurizr
 systemd
@@ -78,6 +82,7 @@ SRU
 SSL
 ssl
 tcp
+TLS
 toolchain
 url
 vGPU
@@ -88,6 +93,7 @@ zshrc
 ESM
 Ok
 scalability
+Snapcraft
 UTF
 
 # Registry keys and types
