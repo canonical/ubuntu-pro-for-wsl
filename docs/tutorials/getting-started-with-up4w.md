@@ -5,6 +5,7 @@ myst:
       "Ubuntu Pro for WSL is a Windows application that automatically attaches your Ubuntu Pro subscription to every Ubuntu instance created on WSL."
 ---
 
+(howto::up4w)=
 # Get started with Ubuntu Pro for WSL
 
 ```{include} ../pro_content_notice.txt
