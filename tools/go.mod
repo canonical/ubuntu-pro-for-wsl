@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240626165418-426bf0d3695a
 	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20240909080904-bec1abeb3a37
-	github.com/golangci/golangci-lint v1.64.7
+	github.com/golangci/golangci-lint v1.64.8
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/vuln v1.1.4
