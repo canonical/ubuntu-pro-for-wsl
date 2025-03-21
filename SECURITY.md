@@ -2,7 +2,7 @@
 
 ## Note about the general availability of Ubuntu Pro for WSL
 
-Ubuntu Pro for WSL is not yet generaly available. It's currently under active development and testing.
+Ubuntu Pro for WSL is not yet generally available. It's currently under active development and testing.
 
 ## Supported versions
 
@@ -38,7 +38,7 @@ The most straightforward way to report a security vulnerability is through
 instructions, please review the
 [Privately reporting a security vulnerability](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
 documentation. This method enables you to communicate vulnerabilities directly
-and confidentially with the `Ubuntu Por for WSL` maintainers.
+and confidentially with the `Ubuntu Pro for WSL` maintainers.
 
 The project's admins will be notified of the issue and will work with you to
 determine whether the issue qualifies as a security issue and, if so, in which
