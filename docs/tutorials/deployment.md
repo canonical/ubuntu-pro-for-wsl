@@ -5,6 +5,7 @@ myst:
       "Use the Ubuntu Pro for WSL application to deploy Ubuntu on WSL to remote Windows machines from a Landscape server."
 ---
 
+(tut::deploy)=
 # Deploy WSL instances remotely with Ubuntu Pro for WSL and Landscape
 
 ```{include} ../pro_content_notice.txt
