@@ -127,7 +127,7 @@
       }
     }
   },
-  "landscapeRegister": "பதிவு செய்யுங்கள்",
+  "landscapeRegister": "பதிவு செய்",
   "@landscapeRegister": {},
   "buttonNext": "அடுத்தது",
   "@buttonNext": {},
@@ -135,7 +135,7 @@
   "@buttonSkip": {},
   "buttonBack": "பின்",
   "@buttonBack": {},
-  "statusBarReportBugTooltip": "ஒரு பிழையைப் புகாரளிக்கவும்",
+  "statusBarReportBugTooltip": "ஒரு பிழையைப் புகாரளி",
   "@statusBarReportBugTooltip": {},
   "statusBarAgentRunningTooltip": "உபுண்டு புரோ முகவர் இயங்குகிறது",
   "@statusBarAgentRunningTooltip": {},
