@@ -41,6 +41,8 @@ interoperability at boot time.
 file formats. That can easily happen without the user being aware, such as when installing emulators or other
 packages that rely on `binfmt_misc`.
 
+## Current limitations of binfmt registration protection implemented by WSL
+
 The scenarios above were reported in previous versions of WSL. Upstream implemented numerous improvements
 about that topic. As of version 2.5.1, WSL is capable of restoring its binfmt registration at startup and when
 that service is restarted. Yet, the solution is not complete enough to ensure most WSL users won't be affected
