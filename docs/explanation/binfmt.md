@@ -43,17 +43,17 @@ packages that rely on `binfmt_misc`.
 
 ## Current limitations of binfmt registration protection implemented by WSL
 
-The scenarios above were reported in previous versions of WSL. Upstream implemented numerous improvements
-about that topic. As of version 2.5.1, WSL is capable of restoring its binfmt registration at startup and when
-that service is restarted. Yet, the solution is not complete enough to ensure most WSL users won't be affected
-by Windows interoperability breaks from time to time. For example, while `systemctl restart
-systemd-binfmt.service` by itself won't cause any issues, if that command runs after `systemctl daemon-reload`
-then the Windows executable format registration will be gone. It seems an edge case, but there is a
-non-trivial amount of combinations of packages that, when installed or uninstalled together, lead to such
-behaviour. Consider for instance, installing both `qemu-user-static` and `binfmt-support` (used in combination
-for example to allow ARM devices to execute x86_64 binaries). The latest needs to run `systemctl daemon-reload`
-in its post installation script and the first restarts the binfmt service. That happens exactly in the order
-that breaks Windows binary interoperability!
+The scenarios above were reported by users in previous versions of WSL. The WSL developers have since
+implemented numerous improvements. As of version 2.5.1, WSL is capable of restoring its binfmt registration at
+startup and when that service is restarted. Yet, the current solution does not guarantee that WSL users won't
+be affected by occasional breakage in Windows interoperability. For example, while `systemctl restart
+systemd-binfmt.service` by itself won't cause any problems, if that command runs after `systemctl
+daemon-reload` then the Windows executable format registration will be gone. This seems an edge case, but
+there is a non-trivial number of combinations of packages that, when installed or uninstalled together, lead
+to such behaviour. Consider for instance, installing both `qemu-user-static` and `binfmt-support` (used in
+combination for example to allow ARM devices to execute x86_64 binaries). The latter needs to run `systemctl
+daemon-reload` in its post installation script and the former restarts the binfmt service, which is exactly
+the order that breaks Windows binary interoperability!
 
 ```{warning} If you really want to understand why that happens
 
