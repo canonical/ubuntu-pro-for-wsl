@@ -19,7 +19,7 @@ to pass that along to Windows (check `/proc/sys/fs/binfmt_misc/WSLInterop*` in a
 For reasons better explained in the rest of this page, we consider `systemd-binfmt.service` as a potential
 issue for most WSL users, thus that service **is intentionally disabled for Ubuntu on WSL**. Most users should
 not notice or care about that service, as, by default, it does not affect the user's ability to run Windows
-executables. But those relying on emulators or interpreters may find this behaviour particularly annoying. If
+binaries. But those relying on emulators or interpreters may find this behaviour particularly annoying. If
 you are one of those users this page is for you.
 
 ## The systemd-binfmt.service and Windows binary interoperability
@@ -29,7 +29,7 @@ directories and registers additional executable formats with the kernel. All reg
 the service stops. If that service is not aware of the WSL registration mechanism, Windows binary
 interoperability can break due to different factors, including:
 
-- `binfmt_misc` mountpoint being shared by multiple distro instances cause interoperability to be broken for
+- `binfmt_misc` mount point being shared by multiple distro instances cause interoperability to be broken for
 multiple instances when one is shutdown. Since the WSL distro instances are effectively containers sharing the
 same kernel, when a distro instance stops and `systemd-binfmt.service` quits, it can break the registration
 for other instances.
