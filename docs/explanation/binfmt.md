@@ -25,16 +25,17 @@ you are one of those users this page is for you.
 ## The systemd-binfmt.service and Windows binary interoperability
 
 With systemd enabled, `systemd-binfmt.service` runs during boot, reads configuration files from specific
-directories and registers additional executable formats with the kernel. All registrations are removed when it
-stops. If that service is not aware of the WSL registration mechanism it can break Windows binary
-interoperability in different ways, such as:
+directories and registers additional executable formats with the kernel. All registrations are removed when
+the service stops. If that service is not aware of the WSL registration mechanism, Windows binary
+interoperability can break due to different factors, including:
 
-- Multiple running distro instances being affected when one stops. Since the WSL distro instances are effectively
-containers sharing the same kernel and the `binfmt_misc` file system interface is a shared mount point, when a
-distro instance stops and `systemd-binfmt.service` quits, it can break the registration for other instances.
+- `binfmt_misc` mountpoint being shared by multiple distro instances cause interoperability to be broken for
+multiple instances when one is shutdown. Since the WSL distro instances are effectively containers sharing the
+same kernel, when a distro instance stops and `systemd-binfmt.service` quits, it can break the registration
+for other instances.
 
 - Startup ordering. If WSL didn't order its own registration after that service, the service would break WSL
-interoperability.
+interoperability at boot time.
 
 - Service restart. Restarting `systemd-binfmt.service` implies unregistering and re-registering executable
 file formats. That can easily happen without the user being aware, such as when installing emulators or other
