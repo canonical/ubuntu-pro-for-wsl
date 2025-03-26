@@ -49,7 +49,7 @@ Store your passwords securely and only share them with administrators.
 Once logged into a Windows host machine, the user can create WSL
 instances without elevated privileges.
 
-When first opening an Ubuntu on WSL terminal with `ubuntu.exe`, the user is
+When first opening an Ubuntu on WSL terminal with `wsl.exe -d ubuntu`, the user is
 prompted for a username and password.
 
 Even if a password is set, it can be changed by the root user; however, the
