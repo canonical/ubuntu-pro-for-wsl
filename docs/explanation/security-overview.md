@@ -271,22 +271,53 @@ Provisioning of WSL instances can be automated with cloud-init.
 
 > [Read about automatic setup of Ubuntu on WSL with cloud-init](howto::cloud-init)
 
-Cloud-init can be used to secure your instances before first login:
+Cloud-init can be used to secure your instances before first login.
+
+Below are some snippets that can help you automate hardening.
+
+#### Update and upgrade packages
+
+Add this line to the start of the config file to update and upgrade packages on boot:
 
 ```ini
-#cloud-config
-
+package_reboot_if_required: true
 package_update: true
+package_upgrade: true
+```
 
+#### Disable root login
+
+Add the following to automatically run a `sed` command to modify the `/etc/passwd` file:
+
+```ini
+runcmd:
+- sed -i 's/^root.*$/root:x:0:0:root:\/root:\/usr\/sbin\/nologin/' /etc/passwd
+```
+
+This replaces substitutes `root:x:0:0:root:/root:/usr/sbin/nologin` for the
+line beginning with `root`.
+
+#### Make SSH more secure
+
+For the user `u`, grant user permissions, define the default shell and adds
+an authorised public SSH key:
+
+```ini
 users:
 - name: u
-  groups: users,sudo,netdev,audio
+  groups: users,sudo
   sudo: ALL=(ALL) NOPASSWD:ALL
   shell: /bin/bash
   ssh-authorized-keys:
     - ssh-rsa ...
   lock_passwd: true
+```
 
+Make `u` the default user and grant them SSH access, then define paths for SSH
+configuration and host key. In addition, prevent logins as root and with empty
+passwords, and limit the number of unsuccessful attempts to 3.
+
+```ini
 write_files:
 - path: /etc/wsl.conf
   append: true
@@ -300,20 +331,17 @@ write_files:
       PermitRootLogin no
       PermitEmptyPasswords no
       AllowUsers u
+```
+(exp::disable-interoperability)=
+#### Disable interoperability
+
+Run a command that adds a line to disable interoperability to `/etc/wsl.conf`:
+
+```ini
 runcmd:
   - echo "[interop]" | sudo tee -a /etc/wsl.conf
   - echo "enabled = false" | sudo tee -a /etc/wsl.conf
 ```
-
-This configuration achieves some of the following security hardening tasks:
-
-* Updates packages
-* Defines a default user and grants permissions
-* Adds an authorised public SSH key
-* Require key authentication for SSH login
-* Disables root login by SSH
-* Restricts SSH access to a user
-* Disables WSL interoperability
 
 ```{note}
 It is expected that most users will SSH from WSL rather than SSH into WSL.
