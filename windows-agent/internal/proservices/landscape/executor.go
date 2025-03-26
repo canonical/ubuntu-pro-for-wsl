@@ -203,14 +203,9 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 			return
 		}
 		// Avoid error states by cleaning up on error
-		err := distro.Uninstall(ctx)
+		err := errors.Join(distro.Uninstall(ctx), e.cloudInit().RemoveDistroData(distro.Name()))
 		if err != nil {
 			log.Warningf(ctx, "Landscape Install: failed to clean up %q after failed Install: %v", distro.Name(), err)
-		}
-
-		err = e.cloudInit().RemoveDistroData(distro.Name())
-		if err != nil {
-			log.Warningf(ctx, "Landscape install: failed to clean up %q cloud-init data after failed install: %v", distro.Name(), err)
 		}
 	}()
 
