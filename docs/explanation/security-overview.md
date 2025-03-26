@@ -341,7 +341,8 @@ Details on the security updates that we provide and the responsible disclosure
 of security vulnerabilities for the Ubuntu distribution on WSL can be found
 below:
 
-> [Security policy for the Ubuntu on WSL](https://github.com/ubuntu/WSL/blob/main/SECURITY.md)
+* [Security policy for the Ubuntu Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
+* [Security policy for the Ubuntu distro on WSL](https://github.com/ubuntu/WSL/blob/main/SECURITY.md)
 
 ## Resources
 
