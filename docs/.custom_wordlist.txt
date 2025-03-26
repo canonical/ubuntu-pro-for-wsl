@@ -5,6 +5,7 @@ autocompletion
 enablement
 Remediations
 remediations
+unregistering
 
 # Tools and brands
 apport
@@ -49,6 +50,7 @@ autoload
 autopkgtest
 autopkgtests
 backporting
+binfmt
 changelog
 compinit
 config
