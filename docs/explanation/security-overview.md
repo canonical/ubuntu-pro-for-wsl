@@ -113,20 +113,11 @@ This is because `unattended-upgrades` are enabled by default.
 AppArmor is a Linux Security Module implementation that controls the
 capabilities and permissions of applications.
 
-By default, AppArmor is installed in Ubuntu on WSL but not enabled.
+By default, AppArmor is installed in Ubuntu on WSL but not yet enabled, as it
+requires certain features and patches not currently available in the WSL
+kernel.
 
-To enable AppArmor, add the following lines to `.wslconfig`:
-
-```ini
-[wsl2]
-kernelCommandLine=apparmor=1 security=apparmor lsm=apparmor
-```
-
-When inside an instance, check that AppArmor is loaded and active with:
-
-```text
-aa-status
-```
+As such, snaps cannot be full confined on WSL.
 
 > [To learn more about how AppArmor contributes to Snap security, read the Snapcraft documentation](https://snapcraft.io/docs/security-policies)
 
