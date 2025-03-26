@@ -16,22 +16,37 @@ This page assumes a WSL version of 2.4.10 or later.
 
 ## Download and installation
 
-When an Ubuntu image is installed using `wsl --install ubuntu`, the SHA-256
-checksum is automatically verified to ensure that it is secure.
+Always use a [supported LTS version](reference::distros) of Ubuntu on WSL to
+ensure that you receive regular updates and bug fixes.
 
-After downloading an image as a tarball with `.wsl` extension from an online
-archive, it can then be installed by double-clicking or running:
+### Verifying the download (automatic)
 
-```text
-wsl --install --from-file ubuntu.tar.wsl
+When installing an Ubuntu image directly from the terminal using `wsl --install
+<ubuntu distro>`, the SHA-256 checksum is automatically verified to ensure that it is
+secure.
+
+### Verifying the download (manual)
+
+If you download an Ubuntu image from an online archive before installation, we
+recommend that you manually verify the checksum.
+
+Before Ubuntu is installed on WSL, you can verify the checksum of the download
+in PowerShell, like this:
+
+```powershell
+Get-FileHash C:\Users\<username>\downloads\ubuntu-<version number>-wsl-amd64.wsl -A SHA256
 ```
 
-If installing a custom tarball, it is recommended that you manually verify the
-checksums file, which is included with images on the
-[releases.ubuntu.com](https://releases.ubuntu.com) page.
+You can then cross-reference the output against the checksum on the
+[releases.ubuntu.com](https://releases.ubuntu.com) page before installing the
+verified download:
 
-> [Read more about verifying an Ubuntu download](https://ubuntu.com/tutorials/how-to-verify-ubuntu#1-overview)
+```powershell
+wsl --install --from-file ubuntu-<version number>-wsl.amd64.wsl
+```
 
+* [Read more about verifying an Ubuntu download](https://ubuntu.com/tutorials/how-to-verify-ubuntu#1-overview)
+* [Read Microsoft's about testing custom Linux distros for WSL ](https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro#test-the-distribution-locally)
 
 ## Login
 
