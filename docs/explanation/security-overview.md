@@ -2,16 +2,16 @@
 myst:
   html_meta:
     "description lang=en":
-      "TODO — update me"
+      "Read about security considerations when using Ubuntu on WSL."
 ---
 
 # Security overview for Ubuntu on WSL
 
-```{note}
-We refer to the default "Ubuntu" distro and not any numbered versions when
-discussing the installation and creation of instances on this page.
+This page includes explanations of security considerations when using Ubuntu on WSL.
+It also includes example commands and configurations to help improve security.
 
-We also assume version 2.4.10 of WSL or later.
+```{note}
+This page assumes a WSL version of 2.4.10 or later.
 ```
 
 ## Download and installation
