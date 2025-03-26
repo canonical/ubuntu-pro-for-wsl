@@ -274,7 +274,8 @@ Provisioning of WSL instances can be automated with cloud-init.
 
 > [Read about automatic setup of Ubuntu on WSL with cloud-init](howto::cloud-init)
 
-Cloud-init can be used to secure your instances before first login.
+Cloud-init can be used to initialise your instances in a more secure way
+(depending on your needs) before first login.
 
 Below are some snippets that can help you automate hardening.
 
