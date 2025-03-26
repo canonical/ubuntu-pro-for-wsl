@@ -19,6 +19,9 @@ This page assumes a WSL version of 2.4.10 or later.
 Always use a [supported LTS version](reference::distros) of Ubuntu on WSL to
 ensure that you receive regular updates and bug fixes.
 
+> For our latest installation instructions, read the [install Ubuntu on
+WSL](howto::install-ubuntu-wsl) guide.
+
 ### Verifying the download (automatic)
 
 When installing an Ubuntu image directly from the terminal using `wsl --install

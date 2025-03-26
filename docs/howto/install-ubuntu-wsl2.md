@@ -5,6 +5,7 @@ myst:
       "Install the latest version of Ubuntu on WSL using different methods."
 ---
 
+(howto::install-ubuntu-wsl)=
 # Install Ubuntu on WSL2
 
 ## What you will learn
