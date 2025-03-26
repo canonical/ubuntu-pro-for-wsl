@@ -8,9 +8,10 @@ myst:
 # Security overview for Ubuntu on WSL
 
 ```{note}
-For simplicity, we refer on this page to the default "Ubuntu" distro and not
-any numbered versions when discussing the installation and creation of
-instances.
+We refer to the default "Ubuntu" distro and not any numbered versions when
+discussing the installation and creation of instances on this page.
+
+We also assume version 2.4.10 of WSL or later.
 ```
 
 ## Download and installation
