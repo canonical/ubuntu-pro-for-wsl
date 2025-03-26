@@ -105,6 +105,9 @@ Ubuntu on WSL also supports the installation of `snaps`, which are a more secure
 
 > [Read more about third-party packages in the Ubuntu Server documentation](https://documentation.ubuntu.com/server/explanation/software/third-party-repository-usage/)
 
+If an instance is running, security updates are installated automatically.
+This is because `unattended-upgrades` are enabled by default.
+
 ### AppArmor
 
 AppArmor is a Linux Security Module implementation that controls the
