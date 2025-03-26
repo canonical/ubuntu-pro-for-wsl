@@ -50,22 +50,23 @@ wsl --install --from-file ubuntu-<version number>-wsl.amd64.wsl
 
 ## Login
 
-### Host
+### Windows host
 
 Any WSL instance is only as secure as its Windows host.
 
 The Windows user should be protected by a strong password, which will — by
 extension — help secure instances of Ubuntu on WSL on the host machine.
 
-Store your passwords securely and only share them with administrators.
+Store your passwords securely and only share them with administrators when/if
+necessary.
 
-### Instance
+### WSL instance
 
 Once logged into a Windows host machine, the user can create WSL
 instances without elevated privileges.
 
 When first opening an Ubuntu on WSL terminal with `wsl.exe -d ubuntu`, the user is
-prompted for a username and password.
+prompted for a username and password to create the default user account on Ubuntu.
 
 Even if a password is set, it can be changed by the root user; however, the
 permissions of the Windows user supersede that of the Ubuntu user.
@@ -75,12 +76,12 @@ permissions of the Windows user supersede that of the Ubuntu user.
 Access to a WSL instance as the root user is possible:
 
 ```text
-wsl -d Ubuntu -u root
+wsl -d <ubuntu distro> -u root
 ```
 
 After accessing an instance as a regular (non-root) user, a password is still expected for
-commands requiring `sudo` within the instance.
-The standard Linux user account controls still apply here.
+commands requiring `sudo` within the instance:
+the standard Linux user account controls apply.
 
 Interacting with an instance using root access has no effect on the permissions
 of the Windows' user, which continues to take precedence.
@@ -137,7 +138,7 @@ apply when operating from within a WSL instance.
 The instance is therefore as secure as any arbitrary program running on the user
 account of the Windows' host.
 
-If you are concerned about the security implications of interoperability, it [can
+If you remain concerned about the security implications of interoperability, it [can
 be disabled](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#interop-settings) in `/etc/wsl.conf`:
 
 ```ini
@@ -149,7 +150,7 @@ enabled=false
 Interoperability is necessary for certain processes, including provisioning
 with cloud-init.
 
-[One approach](exp::automate-hardening) is to first provision an instance and
+[One approach](exp::disable-interoperability) is to first provision an instance and
 then subsequently disable the feature.
 ```
 
@@ -160,7 +161,8 @@ distributions. For Ubuntu on WSL, the Pro client is pre-installed.
 
 ### Manual Pro-attachment
 
-To manually attach a Pro subscription to a new instance, log in and run:
+To manually attach a Pro subscription to a new instance, run this
+command from inside the instance:
 
 ```text
 sudo pro attach
@@ -249,7 +251,7 @@ To set it:
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion -Value 2
 ```
 
-Intune also supports policies for WSL, which include toggling the availability of WSL1:
+Intune also supports policies for WSL, which include toggling the availability of WSL1 on client machines:
 
 > [Intune configuration options for WSL](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations)
 
@@ -257,15 +259,15 @@ Intune also supports policies for WSL, which include toggling the availability o
 
 ### Configuring WSL features
 
-WSL features can be toggled if they present a security concern.
+WSL features can be controlled if they present a security concern.
 
 For example, root login can be disabled, WSL1 availability toggled and network
 access configured.
 
 There are various options to configure WSL instances, including:
 
-* The `.wslconfig` file for [global settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig)
-* [WSL policies with Intune](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations)
+* The `.wslconfig` file can be edited to configure [global settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig) for instances
+* [WSL policies for Intune](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations) enable remote management of WSL features
 * Registry entries for features like [WSL1 availability](exp::wsl1-incompatibility) can be changed in the registry editor or with PowerShell scripts 
 
 (exp::automate-hardening)=
