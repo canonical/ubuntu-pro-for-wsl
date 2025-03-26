@@ -68,7 +68,7 @@ necessary.
 Once logged into a Windows host machine, the user can create WSL
 instances without elevated privileges.
 
-When first opening an Ubuntu on WSL terminal with `wsl.exe -d ubuntu`, the user is
+When first opening an Ubuntu on WSL terminal with `wsl.exe -d <ubuntu distro>`, the user is
 prompted for a username and password to create the default user account on Ubuntu.
 
 Even if a password is set, it can be changed by the root user; however, the
