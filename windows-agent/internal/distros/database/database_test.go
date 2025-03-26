@@ -505,8 +505,7 @@ func TestDatabaseCleanup(t *testing.T) {
 			var cleanupFunc func(string)
 			if tc.cleanupFunc {
 				cleanupFunc = func(d string) {
-					require.True(t, strings.EqualFold(tc.markDistroUnreachable, d), "Unexpected cleaned up distro name")
-					cleanupCalled.Store(true)
+					cleanupCalled.Store(strings.EqualFold(tc.markDistroUnreachable, d))
 				}
 			}
 
