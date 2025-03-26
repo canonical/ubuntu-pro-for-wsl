@@ -63,11 +63,14 @@ Access to a WSL instance as the root user is possible:
 wsl -d Ubuntu -u root
 ```
 
-After accessing an instance as a root user, a password is still expected for
+After accessing an instance as a regular (non-root) user, a password is still expected for
 commands requiring `sudo` within the instance.
+The standard Linux user account controls still apply here.
 
 Interacting with an instance using root access has no effect on the permissions
-of the Windows' user, which still take precedence.
+of the Windows' user, which continues to take precedence.
+Running Windows binaries as root inside WSL won't make them elevated on the
+Windows side; they run with the Windows user permissions only.
 
 ## Package management
 
