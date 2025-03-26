@@ -85,7 +85,15 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		return s, err
 	}
 
-	db, err := database.New(ctx, privateDir, func(d string) { _ = cloudInit.RemoveDistroData(d) })
+	db, err := database.New(
+		ctx, privateDir,
+		func(d string) {
+			err = cloudInit.RemoveDistroData(d)
+			if err != nil {
+				log.Warningf(ctx, "Could not remove leftover distro data: %v", err)
+			}
+		},
+	)
 	if err != nil {
 		return s, err
 	}
