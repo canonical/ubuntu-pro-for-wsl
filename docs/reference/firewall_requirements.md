@@ -5,6 +5,7 @@ myst:
       "Reference information on firewall rules required for the operation of Ubuntu Pro for WSL."
 ---
 
+(ref::firewall)=
 # Firewall requirements for Ubuntu on WSL
 
 ```{include} ../pro_content_notice.txt

@@ -1,4 +1,4 @@
-(index-remote-deployment)=
+(howto::index-remote-deployment)=
 
 # Remote deployment
 
