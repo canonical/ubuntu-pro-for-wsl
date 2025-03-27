@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b
