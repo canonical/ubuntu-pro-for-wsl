@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"text/template"
 	"time"
@@ -468,13 +469,16 @@ func TestDatabaseCleanup(t *testing.T) {
 		reregisterDistro      bool
 		markDistroUnreachable string
 		breakDbDump           bool
+		cleanupFunc           bool
 
 		wantDistros       []string
 		wantDumpRefreshed bool
+		wantCleanup       bool
 	}{
-		"Success with no changes":    {wantDistros: []string{distro1, distro2}},
-		"Remove unregistered distro": {reregisterDistro: true, wantDumpRefreshed: true, wantDistros: []string{distro1, distro2}},
-		"Remove unreachable distro":  {markDistroUnreachable: distro2, wantDumpRefreshed: true, wantDistros: []string{distro1}},
+		"Success with no changes":     {wantDistros: []string{distro1, distro2}},
+		"Remove unregistered distro":  {reregisterDistro: true, wantDumpRefreshed: true, wantDistros: []string{distro1, distro2}},
+		"Remove unreachable distro":   {markDistroUnreachable: distro2, wantDumpRefreshed: true, wantDistros: []string{distro1}},
+		"Cleanup using callback func": {cleanupFunc: true, markDistroUnreachable: distro2, wantDistros: []string{distro1}, wantDumpRefreshed: true, wantCleanup: true},
 
 		"Error on unwritable db file after removing an unregistered distro": {markDistroUnreachable: distro2, breakDbDump: true, wantDumpRefreshed: false, wantDistros: []string{distro1}},
 	}
@@ -497,7 +501,15 @@ func TestDatabaseCleanup(t *testing.T) {
 
 			databaseFromTemplate(t, dbDir, distros...)
 
-			db, err := database.New(ctx, dbDir)
+			var cleanupCalled atomic.Bool
+			var cleanupFunc func(string)
+			if tc.cleanupFunc {
+				cleanupFunc = func(d string) {
+					cleanupCalled.Store(strings.EqualFold(tc.markDistroUnreachable, d))
+				}
+			}
+
+			db, err := database.New(ctx, dbDir, cleanupFunc)
 			require.NoError(t, err, "Setup: New() should have returned no error")
 			defer db.Close(ctx)
 
@@ -534,6 +546,8 @@ func TestDatabaseCleanup(t *testing.T) {
 				time.Sleep(delay)
 				require.False(t, fileUpdated(), "Database file should not be refreshed by a cleanup when no distro has been cleaned up")
 			}
+
+			require.Equal(t, tc.wantCleanup, cleanupCalled.Load(), "Cleanup callback state mismatch")
 
 			require.ElementsMatch(t, tc.wantDistros, db.DistroNames(), "Database contents after cleanup do not match expectations")
 
