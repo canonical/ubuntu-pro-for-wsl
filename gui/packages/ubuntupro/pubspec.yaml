@@ -54,7 +54,7 @@ dependencies:
       path: gui/packages/p4w_ms_store
   path: ^1.8.0
   pkcs7: ^1.0.5
-  provider: ^6.1.2
+  provider: ^6.1.4
   ubuntu_service: ^0.4.0
   url_launcher: ^6.3.1
   win32: ^5.10.1
