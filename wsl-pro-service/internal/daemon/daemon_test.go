@@ -333,6 +333,63 @@ func TestServeAndQuit(t *testing.T) {
 	}
 }
 
+func TestRetryLogic(t *testing.T) {
+	t.Parallel()
+	testCases := map[string]struct {
+		succeedWithoutRetries  bool
+		actionError            error
+		precancelled           bool
+		cancelledBeforeMaxWait bool
+
+		wantNoRetries       bool
+		wantTooManyAttempts bool
+		wantErr             bool
+	}{
+		"Without retries":                          {succeedWithoutRetries: true, wantNoRetries: true},
+		"With the context pre-cancelled":           {precancelled: true},
+		"With the context cancelled while waiting": {precancelled: true},
+		"When max attempts are exhausted":          {wantTooManyAttempts: true},
+
+		"Error only when action errors": {actionError: errors.New("wanted error"), wantNoRetries: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			minWait := 50 * time.Millisecond
+			maxWait := 5 * minWait
+			var maxRetries uint8 = 7
+
+			ctxTimeout := 10 * minWait
+			if tc.cancelledBeforeMaxWait {
+				ctxTimeout = 3 * minWait
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
+			if tc.precancelled {
+				cancel()
+			} else {
+				defer cancel()
+			}
+
+			rc := daemon.NewRetryConfig(minWait, maxWait, maxRetries)
+			err := rc.Run(ctx, func() (bool, error) {
+				return tc.succeedWithoutRetries, tc.actionError
+			}, func(wait time.Duration) {
+				if tc.wantNoRetries {
+					require.Fail(t, "Unexpected Retry attempt")
+				}
+			}, func() {
+				if !tc.wantTooManyAttempts {
+					require.Fail(t, "Unexpected too many retry attemtps")
+				}
+			})
+			if tc.wantErr {
+				require.Error(t, err, "rc.Run() should fail with the supplied arguments")
+			}
+		})
+	}
+}
+
 func TestReconnection(t *testing.T) {
 	t.Parallel()
 

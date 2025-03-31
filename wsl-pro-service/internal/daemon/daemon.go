@@ -396,3 +396,60 @@ func splitPort(addr string) (p int, err error) {
 
 	return p, nil
 }
+
+// Type retryConfig holds the exponential back-off state so that logic can be tested independently of the
+// daemon.Serve() functionality.
+type retryConfig struct {
+	minWait    time.Duration
+	maxWait    time.Duration
+	maxRetries uint8
+}
+
+// Run runs "action" multiple times if it doesn't return success nor an error, until the context is cancelled
+// or the maximum number of retry attempts is exausted, for which case "onTooManyAttempts" is invoked.
+// "onWait" is unconditionally invoked before every new retry. This function only returns an error if the
+// invoked actions does so. None of the callbacks can be nil.
+func (r retryConfig) Run(ctx context.Context, action actionFn, onWait waitFn, onTooManyAttempts tooManyAttemptsFn) error {
+	var retryCount uint8 = 0
+	wait := 0 * time.Second
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(wait):
+		}
+
+		success, err := action()
+		if err != nil {
+			return err
+		}
+
+		if retryCount >= r.maxRetries {
+			onTooManyAttempts()
+			return nil
+		}
+
+		if success {
+			retryCount = 0
+			wait = 0 * time.Second
+			continue
+		}
+
+		retryCount += 1
+		wait = clamp(r.minWait, 2*wait, r.maxWait)
+		onWait(wait)
+	}
+}
+
+// Type actionFn is the function we need to retry if it doesn't return a success (true) nor an error.
+type actionFn = func() (bool, error)
+
+// Type waitFn is a callback invoked before waiting for a new retry.
+type waitFn = func(wait time.Duration)
+
+// Type tooManyAttemptsFn is a callback invoked by run when it exhausts its maximum retry attempts.
+type tooManyAttemptsFn = func()
+
+func clamp(minimum, value, maximum time.Duration) time.Duration {
+	return max(minimum, min(value, maximum))
+}
