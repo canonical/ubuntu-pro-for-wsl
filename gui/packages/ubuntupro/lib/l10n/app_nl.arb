@@ -138,5 +138,21 @@
         "type": "String"
       }
     }
-  }
+  },
+  "landscapeRegister": "Registreren",
+  "@landscapeRegister": {},
+  "buttonNext": "Volgende",
+  "@buttonNext": {},
+  "buttonSkip": "Overslaan",
+  "@buttonSkip": {},
+  "buttonBack": "Terug",
+  "@buttonBack": {},
+  "statusBarReportBugTooltip": "Een fout melden",
+  "@statusBarReportBugTooltip": {},
+  "statusBarAgentRunningTooltip": "Ubuntu Pro-agent is actief",
+  "@statusBarAgentRunningTooltip": {},
+  "statusBarAgentConnectingTooltip": "Verbinding maken met Ubuntu Pro-agent…",
+  "@statusBarAgentConnectingTooltip": {},
+  "statusBarAgentDownTooltip": "Ubuntu Pro-agent is niet verbonden. Klik om de agent te starten.",
+  "@statusBarAgentDownTooltip": {}
 }
