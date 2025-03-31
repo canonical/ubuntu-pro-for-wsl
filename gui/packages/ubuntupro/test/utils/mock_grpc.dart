@@ -2,8 +2,6 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:async/async.dart';
 import 'package:grpc/grpc.dart';
-// Required to enable updating the gRPC message types so the mock can store some state.
-import 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class MockedResponse<R> extends DelegatingFuture<R>
     implements ResponseFuture<R> {

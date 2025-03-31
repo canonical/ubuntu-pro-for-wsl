@@ -2,7 +2,7 @@
 //  Generated code. Do not modify.
 //  source: agentapi.proto
 //
-// @dart = 2.12
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
@@ -111,24 +111,24 @@ abstract class UIServiceBase extends $grpc.Service {
         ($0.SubscriptionInfo value) => value.writeToBuffer()));
   }
 
-  $async.Future<$0.SubscriptionInfo> applyProToken_Pre($grpc.ServiceCall call, $async.Future<$0.ProAttachInfo> request) async {
-    return applyProToken(call, await request);
+  $async.Future<$0.SubscriptionInfo> applyProToken_Pre($grpc.ServiceCall $call, $async.Future<$0.ProAttachInfo> $request) async {
+    return applyProToken($call, await $request);
   }
 
-  $async.Future<$0.LandscapeSource> applyLandscapeConfig_Pre($grpc.ServiceCall call, $async.Future<$0.LandscapeConfig> request) async {
-    return applyLandscapeConfig(call, await request);
+  $async.Future<$0.LandscapeSource> applyLandscapeConfig_Pre($grpc.ServiceCall $call, $async.Future<$0.LandscapeConfig> $request) async {
+    return applyLandscapeConfig($call, await $request);
   }
 
-  $async.Future<$0.Empty> ping_Pre($grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
-    return ping(call, await request);
+  $async.Future<$0.Empty> ping_Pre($grpc.ServiceCall $call, $async.Future<$0.Empty> $request) async {
+    return ping($call, await $request);
   }
 
-  $async.Future<$0.ConfigSources> getConfigSources_Pre($grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
-    return getConfigSources(call, await request);
+  $async.Future<$0.ConfigSources> getConfigSources_Pre($grpc.ServiceCall $call, $async.Future<$0.Empty> $request) async {
+    return getConfigSources($call, await $request);
   }
 
-  $async.Future<$0.SubscriptionInfo> notifyPurchase_Pre($grpc.ServiceCall call, $async.Future<$0.Empty> request) async {
-    return notifyPurchase(call, await request);
+  $async.Future<$0.SubscriptionInfo> notifyPurchase_Pre($grpc.ServiceCall $call, $async.Future<$0.Empty> $request) async {
+    return notifyPurchase($call, await $request);
   }
 
   $async.Future<$0.SubscriptionInfo> applyProToken($grpc.ServiceCall call, $0.ProAttachInfo request);

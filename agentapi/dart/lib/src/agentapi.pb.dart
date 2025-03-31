@@ -2,7 +2,7 @@
 //  Generated code. Do not modify.
 //  source: agentapi.proto
 //
-// @dart = 2.12
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
@@ -12,6 +12,8 @@
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
+
+export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class Empty extends $pb.GeneratedMessage {
   factory Empty() => create();
@@ -92,7 +94,7 @@ class ProAttachInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearToken() => clearField(1);
+  void clearToken() => $_clearField(1);
 }
 
 class LandscapeConfig extends $pb.GeneratedMessage {
@@ -142,7 +144,7 @@ class LandscapeConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasConfig() => $_has(0);
   @$pb.TagNumber(1)
-  void clearConfig() => clearField(1);
+  void clearConfig() => $_clearField(1);
 }
 
 enum SubscriptionInfo_SubscriptionType {
@@ -222,7 +224,7 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   static SubscriptionInfo? _defaultInstance;
 
   SubscriptionInfo_SubscriptionType whichSubscriptionType() => _SubscriptionInfo_SubscriptionTypeByTag[$_whichOneof(0)]!;
-  void clearSubscriptionType() => clearField($_whichOneof(0));
+  void clearSubscriptionType() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get productId => $_getSZ(0);
@@ -231,49 +233,49 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasProductId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearProductId() => clearField(1);
+  void clearProductId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   Empty get none => $_getN(1);
   @$pb.TagNumber(2)
-  set none(Empty v) { setField(2, v); }
+  set none(Empty v) { $_setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasNone() => $_has(1);
   @$pb.TagNumber(2)
-  void clearNone() => clearField(2);
+  void clearNone() => $_clearField(2);
   @$pb.TagNumber(2)
   Empty ensureNone() => $_ensure(1);
 
   @$pb.TagNumber(3)
   Empty get user => $_getN(2);
   @$pb.TagNumber(3)
-  set user(Empty v) { setField(3, v); }
+  set user(Empty v) { $_setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasUser() => $_has(2);
   @$pb.TagNumber(3)
-  void clearUser() => clearField(3);
+  void clearUser() => $_clearField(3);
   @$pb.TagNumber(3)
   Empty ensureUser() => $_ensure(2);
 
   @$pb.TagNumber(4)
   Empty get organization => $_getN(3);
   @$pb.TagNumber(4)
-  set organization(Empty v) { setField(4, v); }
+  set organization(Empty v) { $_setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasOrganization() => $_has(3);
   @$pb.TagNumber(4)
-  void clearOrganization() => clearField(4);
+  void clearOrganization() => $_clearField(4);
   @$pb.TagNumber(4)
   Empty ensureOrganization() => $_ensure(3);
 
   @$pb.TagNumber(5)
   Empty get microsoftStore => $_getN(4);
   @$pb.TagNumber(5)
-  set microsoftStore(Empty v) { setField(5, v); }
+  set microsoftStore(Empty v) { $_setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasMicrosoftStore() => $_has(4);
   @$pb.TagNumber(5)
-  void clearMicrosoftStore() => clearField(5);
+  void clearMicrosoftStore() => $_clearField(5);
   @$pb.TagNumber(5)
   Empty ensureMicrosoftStore() => $_ensure(4);
 }
@@ -343,38 +345,38 @@ class LandscapeSource extends $pb.GeneratedMessage {
   static LandscapeSource? _defaultInstance;
 
   LandscapeSource_LandscapeSourceType whichLandscapeSourceType() => _LandscapeSource_LandscapeSourceTypeByTag[$_whichOneof(0)]!;
-  void clearLandscapeSourceType() => clearField($_whichOneof(0));
+  void clearLandscapeSourceType() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   Empty get none => $_getN(0);
   @$pb.TagNumber(1)
-  set none(Empty v) { setField(1, v); }
+  set none(Empty v) { $_setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasNone() => $_has(0);
   @$pb.TagNumber(1)
-  void clearNone() => clearField(1);
+  void clearNone() => $_clearField(1);
   @$pb.TagNumber(1)
   Empty ensureNone() => $_ensure(0);
 
   @$pb.TagNumber(2)
   Empty get user => $_getN(1);
   @$pb.TagNumber(2)
-  set user(Empty v) { setField(2, v); }
+  set user(Empty v) { $_setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasUser() => $_has(1);
   @$pb.TagNumber(2)
-  void clearUser() => clearField(2);
+  void clearUser() => $_clearField(2);
   @$pb.TagNumber(2)
   Empty ensureUser() => $_ensure(1);
 
   @$pb.TagNumber(3)
   Empty get organization => $_getN(2);
   @$pb.TagNumber(3)
-  set organization(Empty v) { setField(3, v); }
+  set organization(Empty v) { $_setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasOrganization() => $_has(2);
   @$pb.TagNumber(3)
-  void clearOrganization() => clearField(3);
+  void clearOrganization() => $_clearField(3);
   @$pb.TagNumber(3)
   Empty ensureOrganization() => $_ensure(2);
 }
@@ -427,22 +429,22 @@ class ConfigSources extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   SubscriptionInfo get proSubscription => $_getN(0);
   @$pb.TagNumber(1)
-  set proSubscription(SubscriptionInfo v) { setField(1, v); }
+  set proSubscription(SubscriptionInfo v) { $_setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasProSubscription() => $_has(0);
   @$pb.TagNumber(1)
-  void clearProSubscription() => clearField(1);
+  void clearProSubscription() => $_clearField(1);
   @$pb.TagNumber(1)
   SubscriptionInfo ensureProSubscription() => $_ensure(0);
 
   @$pb.TagNumber(2)
   LandscapeSource get landscapeSource => $_getN(1);
   @$pb.TagNumber(2)
-  set landscapeSource(LandscapeSource v) { setField(2, v); }
+  set landscapeSource(LandscapeSource v) { $_setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasLandscapeSource() => $_has(1);
   @$pb.TagNumber(2)
-  void clearLandscapeSource() => clearField(2);
+  void clearLandscapeSource() => $_clearField(2);
   @$pb.TagNumber(2)
   LandscapeSource ensureLandscapeSource() => $_ensure(1);
 }
@@ -519,7 +521,7 @@ class DistroInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasWslName() => $_has(0);
   @$pb.TagNumber(1)
-  void clearWslName() => clearField(1);
+  void clearWslName() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get id => $_getSZ(1);
@@ -528,7 +530,7 @@ class DistroInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearId() => clearField(2);
+  void clearId() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $core.String get versionId => $_getSZ(2);
@@ -537,7 +539,7 @@ class DistroInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasVersionId() => $_has(2);
   @$pb.TagNumber(3)
-  void clearVersionId() => clearField(3);
+  void clearVersionId() => $_clearField(3);
 
   @$pb.TagNumber(4)
   $core.String get prettyName => $_getSZ(3);
@@ -546,7 +548,7 @@ class DistroInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasPrettyName() => $_has(3);
   @$pb.TagNumber(4)
-  void clearPrettyName() => clearField(4);
+  void clearPrettyName() => $_clearField(4);
 
   @$pb.TagNumber(5)
   $core.bool get proAttached => $_getBF(4);
@@ -555,7 +557,7 @@ class DistroInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasProAttached() => $_has(4);
   @$pb.TagNumber(5)
-  void clearProAttached() => clearField(5);
+  void clearProAttached() => $_clearField(5);
 
   @$pb.TagNumber(6)
   $core.String get hostname => $_getSZ(5);
@@ -564,7 +566,7 @@ class DistroInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.bool hasHostname() => $_has(5);
   @$pb.TagNumber(6)
-  void clearHostname() => clearField(6);
+  void clearHostname() => $_clearField(6);
 }
 
 class ProAttachCmd extends $pb.GeneratedMessage {
@@ -614,7 +616,7 @@ class ProAttachCmd extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearToken() => clearField(1);
+  void clearToken() => $_clearField(1);
 }
 
 class LandscapeConfigCmd extends $pb.GeneratedMessage {
@@ -664,7 +666,7 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasConfig() => $_has(0);
   @$pb.TagNumber(1)
-  void clearConfig() => clearField(1);
+  void clearConfig() => $_clearField(1);
 }
 
 enum MSG_Data {
@@ -725,7 +727,7 @@ class MSG extends $pb.GeneratedMessage {
   static MSG? _defaultInstance;
 
   MSG_Data whichData() => _MSG_DataByTag[$_whichOneof(0)]!;
-  void clearData() => clearField($_whichOneof(0));
+  void clearData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get wslName => $_getSZ(0);
@@ -734,7 +736,7 @@ class MSG extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasWslName() => $_has(0);
   @$pb.TagNumber(1)
-  void clearWslName() => clearField(1);
+  void clearWslName() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get result => $_getSZ(1);
@@ -743,7 +745,7 @@ class MSG extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasResult() => $_has(1);
   @$pb.TagNumber(2)
-  void clearResult() => clearField(2);
+  void clearResult() => $_clearField(2);
 }
 
 
