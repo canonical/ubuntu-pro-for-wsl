@@ -122,15 +122,6 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 	default:
 	}
 
-	// Exponential back-off
-	const (
-		minWait      = time.Second
-		maxWait      = time.Minute
-		growthFactor = 2
-	)
-	retries := 0
-	wait := 0 * time.Second
-
 	// Signal systemd before dialing for the first time
 	// We don't want to delay startup due to a timeout
 	err := d.systemdNotifyReady(d.ctx)
@@ -140,90 +131,78 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 
 	// Since this function syncs with cloud-init and may take too long to run, let's do it after notifying
 	// systemd about our readiness to prevent delaying boot.
-	if err := d.system.EnsureValidLandscapeConfig(context.Background()); err != nil {
+	if err = d.system.EnsureValidLandscapeConfig(context.Background()); err != nil {
 		log.Warningf(context.Background(), "Could not ensure valid Landscape configuration: %v", err)
 	}
+	// From 0 to 1min wait times in the exponential backoff requires 8 attempts (~2min).
+	// We try another 8 times (8 more minutes) until give up on connecting to the agent.
+	rc := retryConfig{minWait: time.Second, maxWait: time.Minute, maxRetries: 16}
+	// Runs d.serveOnce() multiple times, per the configuration above.
+	err = rc.Run(d.gracefulCtx,
+		func() (bool, error) { return d.serveOnce(service) },
+		func(wait time.Duration) {
+			log.Infof(d.ctx, "Reconnecting to Windows host in %d seconds", int(wait/time.Second))
+			d.systemdNotifyStatus(d.ctx, serviceStatusWaiting)
+		},
+		func() {
+			log.Warningf(d.ctx, "Exiting after %v: check if the Windows agent is installed and running.", err)
+		})
 
-	for {
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Daemon) serveOnce(service streams.CommandService) (success bool, err error) {
+	// ctx handles force-quit
+	ctx, cancel := context.WithCancel(d.ctx)
+	defer cancel()
+
+	log.Infof(ctx, "Daemon: connecting to Windows Agent from PID %d", os.Getpid())
+	d.systemdNotifyStatus(ctx, serviceStatusConnecting)
+
+	server, err := d.connect(ctx)
+	if errors.Is(err, streams.SystemError{}) {
+		return false, err
+	} else if err != nil {
+		log.Warningf(ctx, "Daemon: %v", err)
+		return false, nil
+	}
+
+	go func() {
+		// Handle graceful quit.
 		select {
 		case <-d.gracefulCtx.Done():
-			return nil
-		case <-time.After(wait):
+		case <-ctx.Done():
 		}
+		server.GracefulStop()
+	}()
 
-		success, err := func() (success bool, err error) {
-			// ctx handles force-quit
-			ctx, cancel := context.WithCancel(d.ctx)
-			defer cancel()
+	log.Info(ctx, "Daemon: completed connection to Windows Agent")
+	d.systemdNotifyStatus(ctx, serviceStatusConnected)
 
-			log.Infof(ctx, "Daemon: connecting to Windows Agent from PID %d", os.Getpid())
-			d.systemdNotifyStatus(ctx, serviceStatusConnecting)
+	t := time.NewTimer(time.Minute)
+	defer t.Stop()
 
-			server, err := d.connect(ctx)
-			if errors.Is(err, streams.SystemError{}) {
-				return false, err
-			} else if err != nil {
-				log.Warningf(ctx, "Daemon: %v", err)
-				return false, nil
-			}
+	err = server.Serve(service)
 
-			go func() {
-				// Handle graceful quit.
-				select {
-				case <-d.gracefulCtx.Done():
-				case <-ctx.Done():
-				}
-				server.GracefulStop()
-			}()
+	if errors.Is(err, streams.SystemError{}) {
+		return false, err
+	} else if err != nil {
+		log.Warningf(ctx, "Daemon: disconnected from Windows host: %v", err)
+	} else {
+		log.Warning(ctx, "Daemon: disconnected from Windows host")
+	}
 
-			log.Info(ctx, "Daemon: completed connection to Windows Agent")
-			d.systemdNotifyStatus(ctx, serviceStatusConnected)
-
-			t := time.NewTimer(time.Minute)
-			defer t.Stop()
-
-			err = server.Serve(service)
-
-			if errors.Is(err, streams.SystemError{}) {
-				return false, err
-			} else if err != nil {
-				log.Warningf(ctx, "Daemon: disconnected from Windows host: %v", err)
-			} else {
-				log.Warning(ctx, "Daemon: disconnected from Windows host")
-			}
-
-			select {
-			case <-t.C:
-				// Long-lived connection is not a failure
-				return true, nil
-			default:
-				// Connection was short-lived: consider it a failure
-				return false, nil
-			}
-		}()
-
-		if err != nil {
-			return err
-		}
-
-		// From 0 to 1min wait times in the exponential backoff requires 8 attempts (~2min).
-		// We try another 8 times (8 more minutes) until give up on connecting to the agent.
-		// From systemd's point of view that's not a failure.
-		if retries >= 16 {
-			log.Warning(d.ctx, "Exiting after too many connection attempts to the Windows host. Check if Ubuntu Pro for WSL app is installed.")
-			return nil
-		}
-
-		if success {
-			wait *= 0
-			retries = 0
-			continue
-		}
-
-		wait = clamp(minWait, wait*growthFactor, maxWait)
-		retries = retries + 1
-		log.Infof(d.ctx, "Reconnecting to Windows host in %d seconds", int(wait/time.Second))
-		d.systemdNotifyStatus(d.ctx, serviceStatusWaiting)
+	select {
+	case <-t.C:
+		// Long-lived connection is not a failure
+		return true, nil
+	default:
+		// Connection was short-lived: consider it a failure
+		return false, nil
 	}
 }
 
@@ -282,10 +261,6 @@ func (d *Daemon) systemdNotifyStatus(ctx context.Context, status string) {
 	if sent {
 		log.Debugf(ctx, "Updated systemd status to %q", status)
 	}
-}
-
-func clamp(minimum, value, maximum time.Duration) time.Duration {
-	return max(minimum, min(value, maximum))
 }
 
 // connect connects to the Windows Agent and returns a reverse server.
@@ -410,7 +385,7 @@ type retryConfig struct {
 // "onWait" is unconditionally invoked before every new retry. This function only returns an error if the
 // invoked actions does so. None of the callbacks can be nil.
 func (r retryConfig) Run(ctx context.Context, action actionFn, onWait waitFn, onTooManyAttempts tooManyAttemptsFn) error {
-	var retryCount uint8 = 0
+	var retryCount uint8
 	wait := 0 * time.Second
 	for {
 		select {
@@ -435,7 +410,7 @@ func (r retryConfig) Run(ctx context.Context, action actionFn, onWait waitFn, on
 			continue
 		}
 
-		retryCount += 1
+		retryCount++
 		wait = clamp(r.minWait, 2*wait, r.maxWait)
 		onWait(wait)
 	}

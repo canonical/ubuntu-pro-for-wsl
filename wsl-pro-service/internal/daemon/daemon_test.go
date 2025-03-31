@@ -347,7 +347,7 @@ func TestRetryLogic(t *testing.T) {
 	}{
 		"Without retries":                          {succeedWithoutRetries: true, wantNoRetries: true},
 		"With the context pre-cancelled":           {precancelled: true},
-		"With the context cancelled while waiting": {precancelled: true},
+		"With the context cancelled while waiting": {cancelledBeforeMaxWait: true},
 		"When max attempts are exhausted":          {wantTooManyAttempts: true},
 
 		"Error only when action errors": {actionError: errors.New("wanted error"), wantNoRetries: true, wantErr: true},
@@ -356,11 +356,11 @@ func TestRetryLogic(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			minWait := 50 * time.Millisecond
-			maxWait := 5 * minWait
-			var maxRetries uint8 = 7
+			minWait := 10 * time.Millisecond
+			maxWait := 7 * minWait
+			var maxRetries uint8 = 8
 
-			ctxTimeout := 10 * minWait
+			ctxTimeout := 10 * maxWait
 			if tc.cancelledBeforeMaxWait {
 				ctxTimeout = 3 * minWait
 			}
@@ -370,7 +370,8 @@ func TestRetryLogic(t *testing.T) {
 			} else {
 				defer cancel()
 			}
-
+			retryCalled := false
+			tooManyAttempts := false
 			rc := daemon.NewRetryConfig(minWait, maxWait, maxRetries)
 			err := rc.Run(ctx, func() (bool, error) {
 				return tc.succeedWithoutRetries, tc.actionError
@@ -378,14 +379,18 @@ func TestRetryLogic(t *testing.T) {
 				if tc.wantNoRetries {
 					require.Fail(t, "Unexpected Retry attempt")
 				}
+				retryCalled = true
 			}, func() {
 				if !tc.wantTooManyAttempts {
-					require.Fail(t, "Unexpected too many retry attemtps")
+					require.Fail(t, "Unexpected too many retry attempts")
 				}
+				tooManyAttempts = true
 			})
 			if tc.wantErr {
 				require.Error(t, err, "rc.Run() should fail with the supplied arguments")
 			}
+			require.Equal(t, tc.wantNoRetries, !retryCalled, "Mismatched expectation about calling the retry callback")
+			require.Equal(t, tc.wantTooManyAttempts, tooManyAttempts, "Mismatched expectation about calling the too many attempts callback")
 		})
 	}
 }
