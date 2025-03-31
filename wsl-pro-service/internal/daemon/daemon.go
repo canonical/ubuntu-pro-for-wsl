@@ -128,6 +128,7 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 		maxWait      = time.Minute
 		growthFactor = 2
 	)
+	retries := 0
 	wait := 0 * time.Second
 
 	// Signal systemd before dialing for the first time
@@ -205,12 +206,22 @@ func (d *Daemon) Serve(service streams.CommandService) error {
 			return err
 		}
 
+		// From 0 to 1min wait times in the exponential backoff requires 8 attempts (~2min).
+		// We try another 8 times (8 more minutes) until give up on connecting to the agent.
+		// From systemd's point of view that's not a failure.
+		if retries >= 16 {
+			log.Warning(d.ctx, "Exiting after too many connection attempts to the Windows host. Check if Ubuntu Pro for WSL app is installed.")
+			return nil
+		}
+
 		if success {
 			wait *= 0
+			retries = 0
 			continue
 		}
 
 		wait = clamp(minWait, wait*growthFactor, maxWait)
+		retries = retries + 1
 		log.Infof(d.ctx, "Reconnecting to Windows host in %d seconds", int(wait/time.Second))
 		d.systemdNotifyStatus(d.ctx, serviceStatusWaiting)
 	}
