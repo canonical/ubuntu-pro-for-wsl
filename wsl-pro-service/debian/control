@@ -25,7 +25,7 @@ Architecture: any
 Built-Using: ${misc:Built-Using},
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         ubuntu-pro-client (>= 35),
+         ubuntu-pro-client,
 Recommends: landscape-client,
 Description: ${source:Synopsis} - WSL service
  ${source:Extended-Description}

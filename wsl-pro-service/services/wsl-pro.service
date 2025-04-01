@@ -22,13 +22,13 @@ ProtectHostname=yes
 ProtectKernelLogs=yes
 ProtectKernelModules=yes
 ProtectKernelTunables=yes
-RestrictNamespaces=yes
+RestrictNamespaces=mnt
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
 
 # Only permit system calls used by common system services, excluding any special purpose calls
-SystemCallFilter=@system-service
+SystemCallFilter=@system-service @sandbox
 
 [Install]
 WantedBy=multi-user.target
