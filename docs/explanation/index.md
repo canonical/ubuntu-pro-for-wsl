@@ -8,25 +8,25 @@ applications are designed and secured.
 
 ## Ubuntu Pro for WSL
 
-Understand Ubuntu Pro for WSL, it's components, and how they work together.
+Understand Ubuntu Pro for WSL, its components, and how they work together.
 
 ```{toctree}
 :titlesonly:
 ref-arch-explanation
 ```
 
-## Interoperability on Ubuntu WSL
+## Interoperability of Ubuntu on WSL
 
-Understand how Ubuntu WSL supports interoperability using `binfmt_misc` and its common limitations.
+Learn more about Ubuntu on WSL's interoperability with Windows, including how support for miscellaneous binary formats is handled.
 
 ```{toctree}
 :titlesonly:
 binfmt
 ```
 
-## Security Considerations for Ubuntu WSL
+## Security considerations for Ubuntu on WSL
 
-Explore some security considerations for using Ubuntu WSL safely and securely.
+Explore how Ubuntu on WSL can be used safely and securely.
 
 ```{toctree}
 :titlesonly:
