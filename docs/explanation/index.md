@@ -4,7 +4,7 @@
 
 This section contains explanations that will help you develop a deeper
 understanding of how the Ubuntu distro on WSL and the Ubuntu Pro for WSL
-applications are designed and secured.
+application are designed and secured.
 
 ## Ubuntu Pro for WSL
 
