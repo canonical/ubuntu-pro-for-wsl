@@ -1,1 +1,152 @@
-{}
+{
+  "landscapeKeyLabel": "Clave del registro (opcional)",
+  "@landscapeKeyLabel": {},
+  "agentStateInvalid": "Esperando inicialización del agente en segundo plano de Ubuntu Pro.",
+  "@agentStateInvalid": {},
+  "agentStateQuerying": "Comprobando estado del agente de segundo plano de Ubuntu Pro.",
+  "@agentStateQuerying": {},
+  "learnMore": "Aprender más",
+  "@learnMore": {},
+  "landscapeFileIsDir": "Archivo no puede ser una carpeta",
+  "@landscapeFileIsDir": {},
+  "agentStateCannotStart": "El agente de fondo Ubuntu Pro no puede ser arrancado.",
+  "@agentStateCannotStart": {},
+  "landscapeFileNotFound": "Archivo no encontrado",
+  "@landscapeFileNotFound": {},
+  "purchaseStatusNetwork": "Un problema de red impidió que se proceda la compra. Intente de nuevo una vez esté conectado.",
+  "@purchaseStatusNetwork": {},
+  "landscapeSkip": "Descartar por ahora",
+  "@landscapeSkip": {},
+  "getUbuntuPro": "Obtener Ubuntu Pro",
+  "@getUbuntuPro": {},
+  "appTitle": "Ubuntu Pro para WSL",
+  "@appTitle": {},
+  "tokenErrorEmpty": "El vale no puede estar vacío",
+  "@tokenErrorEmpty": {},
+  "tokenErrorInvalid": "Vale no válido",
+  "@tokenErrorInvalid": {},
+  "tokenValid": "Vale válido",
+  "@tokenValid": {},
+  "tokenInputTitle": "Adjuntar a esta máquina",
+  "@tokenInputTitle": {},
+  "tokenInputDescription": "Introduzca un vale desde {proLink} o su administrador del sistema",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenInputHint": "Vale",
+  "@tokenInputHint": {},
+  "attach": "Adjuntar",
+  "@attach": {},
+  "applyProToken": "Aplicar Vale Pro",
+  "@applyProToken": {},
+  "applyingProToken": "Aplicando vale {token}",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "agent": "Agente en segundo plano de Ubuntu Pro",
+  "@agent": {},
+  "agentStateStarting": "Agente de fondo de Ubuntu Pro está arrancando.",
+  "@agentStateStarting": {},
+  "agentStatePingNonResponsive": "El agente de fondo de Ubuntu Pro no está respondiendo.",
+  "@agentStatePingNonResponsive": {},
+  "agentStateUnknownEnv": "El fondo del agente de Ubuntu Pro no puede ser verificado. Compruebe sus selecciones del entorno.",
+  "@agentStateUnknownEnv": {},
+  "agentStateUnreachable": "Intente recuperar el agente del fondo de Ubuntu Pro.",
+  "@agentStateUnreachable": {},
+  "proHeading": "Abra la garantía de la fuente del software por los publicadores de Ubuntu, disponible ahora en Windows. {aboutLink}",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "ubuntuProEnabled": "Ubuntu Pro está activado en esta máquina",
+  "@ubuntuProEnabled": {},
+  "ubuntuProEnabledInfo": "Todas las instancias WSL de Ubuntu tienen acceso a características de seguridad de Ubuntu Pro.",
+  "@ubuntuProEnabledInfo": {},
+  "manageUbuntuPro": "Gestiona suscripciones de Ubuntu Pro",
+  "@manageUbuntuPro": {},
+  "detachPro": "Desacoplar Ubuntu Pro",
+  "@detachPro": {},
+  "updatingSubscriptionInfo": "Actualizando la información de suscripción.",
+  "@updatingSubscriptionInfo": {},
+  "purchaseStatusSuccess": "Gracias por suscribirse a Ubuntu Pro.",
+  "@purchaseStatusSuccess": {},
+  "purchaseStatusAlreadyPurchased": "Ya está suscrito a Ubuntu Pro.",
+  "@purchaseStatusAlreadyPurchased": {},
+  "purchaseStatusUserGaveUp": "El intento de compra fue cancelado.",
+  "@purchaseStatusUserGaveUp": {},
+  "purchaseStatusServer": "Algo ha ido mal con Microsoft Store. Intente más tarde.",
+  "@purchaseStatusServer": {},
+  "purchaseStatusUnknown": "Error desconocido cuando intenta comprar la suscripción. Considere reiniciar esta app.",
+  "@purchaseStatusUnknown": {},
+  "landscapeSkipDescription": "Siempre puede configurar Landscape más tarde en esta app",
+  "@landscapeSkipDescription": {},
+  "landscapeSkipRegister": "Registrar con Landscape",
+  "@landscapeSkipRegister": {},
+  "landscapeHeading": "Configure la conexión a Landscape para gestionar sus instancias de Ubuntu WSL remotamente. {landscapeLink}",
+  "@landscapeHeading": {
+    "placeholders": {
+      "landscapeLink": {
+        "type": "String"
+      }
+    }
+  },
+  "landscapeSetupManualHint": "Registrar con su propio servidor Landscape",
+  "@landscapeSetupManualHint": {},
+  "landscapeSetupCustom": "Configuración avanzada",
+  "@landscapeSetupCustom": {},
+  "landscapeSetupCustomHint": "Carga un archivo de configuración cliente de Landscape",
+  "@landscapeSetupCustomHint": {},
+  "landscapeSSLKeyLabel": "Llave pública de servidor SSL (opcional)",
+  "@landscapeSSLKeyLabel": {},
+  "landscapeFileLabel": "Ruta de archivo de configuración",
+  "@landscapeFileLabel": {},
+  "landscapeFileTooLarge": "Archivo de configuración es muy grande",
+  "@landscapeFileTooLarge": {},
+  "landscapeFileEmptyPath": "Debe ser especificada una ruta",
+  "@landscapeFileEmptyPath": {},
+  "landscapeFileEmptyContents": "El archivo no está vacío",
+  "@landscapeFileEmptyContents": {},
+  "landscapeFileInvalidFormat": "Archivo está en un formato incorrecto",
+  "@landscapeFileInvalidFormat": {},
+  "landscapeFilePicker": "Seleccione archivo…",
+  "@landscapeFilePicker": {},
+  "landscapeConfigureButton": "Configurar Landscape",
+  "@landscapeConfigureButton": {},
+  "landscapeApplyError": "Error al intentar aplicar la configuración:\n\t{message}",
+  "@landscapeApplyError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "landscapeRegister": "Registro",
+  "@landscapeRegister": {},
+  "buttonNext": "Siguiente",
+  "@buttonNext": {},
+  "buttonSkip": "Omitir",
+  "@buttonSkip": {},
+  "buttonBack": "Atrás",
+  "@buttonBack": {},
+  "statusBarReportBugTooltip": "Informar de un defecto",
+  "@statusBarReportBugTooltip": {},
+  "statusBarAgentRunningTooltip": "Agente Ubuntu Pro está en ejecución",
+  "@statusBarAgentRunningTooltip": {},
+  "statusBarAgentConnectingTooltip": "Conectando al agente Ubuntu Pro…",
+  "@statusBarAgentConnectingTooltip": {},
+  "statusBarAgentDownTooltip": "Agente Ubuntu Pro está desconectado. Presione para iniciar el agente.",
+  "@statusBarAgentDownTooltip": {},
+  "landscapeSetupManual": "Configuración manual",
+  "@landscapeSetupManual": {}
+}
