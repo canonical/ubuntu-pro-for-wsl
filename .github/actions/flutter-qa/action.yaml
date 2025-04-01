@@ -43,6 +43,10 @@ runs:
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
       run: flutter analyze
+    - name: Install coverage dependencies
+      shell: bash
+      run: |
+        dart pub global activate cobertura
     - name: Test
       id: flutter-test-cov
       shell: bash
@@ -53,9 +57,15 @@ runs:
         if [ -n "$(which lcov 2>/dev/null)" ]; then
           lcov --remove coverage/lcov.info "**/*.g.dart" "**/*.freezed.dart" "**/*.pb*.dart" "**/*.mocks.dart" "**/l10n/*.dart" -o coverage/lcov.info --ignore-errors unused,unused
         fi
-        {
-          echo "flutter-test-cov<<EOF"
-          cat coverage/lcov.info
-          echo EOF
-        } >> "$GITHUB_OUTPUT"
-        rm -rf coverage/
+
+        cobertura convert
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.package }}-${{ matrix.os }}
+        path: ${{ inputs.package-dir }}/coverage/cobertura.xml
+    - name: Cleanup
+      shell: bash
+      working-directory: "${{ inputs.package-dir }}"
+      run: |
+        rm -rf ./coverage
