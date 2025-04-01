@@ -10,7 +10,7 @@ inputs:
     description: "The root directory of the package to lint."
   run-build-runner:
     default: 'false'
-    description: "Whether we must run build-runner for this package."    
+    description: "Whether we must run build-runner for this package."
 
 outputs:
   coverage-info:
@@ -43,10 +43,6 @@ runs:
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
       run: flutter analyze
-    - name: Install coverage dependencies
-      shell: bash
-      run: |
-        dart pub global activate cobertura
     - name: Test
       id: flutter-test-cov
       shell: bash
@@ -58,7 +54,8 @@ runs:
           lcov --remove coverage/lcov.info "**/*.g.dart" "**/*.freezed.dart" "**/*.pb*.dart" "**/*.mocks.dart" "**/l10n/*.dart" -o coverage/lcov.info --ignore-errors unused,unused
         fi
 
-        cobertura convert
+        dart pub global activate cobertura
+        dart pub global run cobertura convert
     - name: Upload coverage artifacts
       uses: actions/upload-artifact@v4
       with:
