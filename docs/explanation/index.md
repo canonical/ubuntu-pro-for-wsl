@@ -25,7 +25,9 @@ binfmt
 ```
 
 ## Security Considerations for Ubuntu WSL
+
 Explore some security considerations for using Ubuntu WSL safely and securely.
+
 ```{toctree}
 :titlesonly:
 
