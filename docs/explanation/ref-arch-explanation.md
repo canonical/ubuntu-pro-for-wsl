@@ -7,7 +7,7 @@ myst:
 
 # Architecture of Ubuntu Pro for WSL
 
-This page describes the different components of UP4W and how they integrate
+This page describes the different components of Ubuntu Pro for WSL (UP4W) and how they integrate
 together to form the software architecture.
 
 ## Background
