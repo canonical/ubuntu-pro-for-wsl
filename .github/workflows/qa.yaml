@@ -128,18 +128,6 @@ jobs:
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
           package-dir: gui/packages/${{ matrix.package }}
           run-build-runner: ${{ matrix.package ==  'ubuntupro' }}
-      - name: Report coverage
-        if: ${{ matrix.os == 'ubuntu' }}
-        shell: bash
-        run: |
-          set -eu
-
-          mkdir -p ./coverage/codecov
-          echo "${{ steps.flutter-qa.outputs.coverage-info }}" >> ./coverage/codecov/flutter-coverage.codecov
-      - uses: codecov/codecov-action@v5
-        with:
-          directory: ./coverage/codecov/
-          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Ensure module files are up to date
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
@@ -237,6 +225,11 @@ jobs:
 
           sudo DEBIAN_FRONTEND=noninteractive apt update
           sudo DEBIAN_FRONTEND=noninteractive apt install -y gettext
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          go install github.com/AlekSi/gocov-xml@latest
+          go install github.com/axw/gocov/gocov@latest
       - name: Run tests
         shell: bash
         if: always() && !cancelled()
@@ -248,6 +241,15 @@ jobs:
           mkdir -p ${cov_dir}/codecov ${cov_dir}/raw
           go test -shuffle=on -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./... -tags=gowslmock
           grep -hv -e "testutils" -e "pb.go:" ${cov_dir}/raw/coverage.out > ${cov_dir}/codecov/coverage.out.codecov
+          gocov convert ${cov_dir}/codecov/coverage.out.codecov | gocov-xml > ${cov_dir}/coverage.xml
+
+          SAFE_ID=$(echo "${{ matrix.subproject }}-${{ matrix.os }}" | tr '/' '_')
+          echo "SAFE_ID=$SAFE_ID" >> $GITHUB_ENV
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ env.SAFE_ID }}
+          path: ${{ matrix.subproject }}/coverage/coverage.xml
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
@@ -260,3 +262,29 @@ jobs:
         with:
           directory: ${{ matrix.subproject }}/coverage/codecov
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  codecoverage:
+    name: "Collect and upload code coverage"
+    runs-on: ubuntu-latest
+    needs:
+      - quality-flutter
+      - tests-go-with-mocks
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+      - name: Down coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts/
+      - name: Combine coverage reports
+        shell: bash
+        run: |
+          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/Cobertura.xml
+          disable_search: true

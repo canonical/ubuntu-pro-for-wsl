@@ -10,7 +10,7 @@ inputs:
     description: "The root directory of the package to lint."
   run-build-runner:
     default: 'false'
-    description: "Whether we must run build-runner for this package."    
+    description: "Whether we must run build-runner for this package."
 
 outputs:
   coverage-info:
@@ -53,9 +53,16 @@ runs:
         if [ -n "$(which lcov 2>/dev/null)" ]; then
           lcov --remove coverage/lcov.info "**/*.g.dart" "**/*.freezed.dart" "**/*.pb*.dart" "**/*.mocks.dart" "**/l10n/*.dart" -o coverage/lcov.info --ignore-errors unused,unused
         fi
-        {
-          echo "flutter-test-cov<<EOF"
-          cat coverage/lcov.info
-          echo EOF
-        } >> "$GITHUB_OUTPUT"
-        rm -rf coverage/
+
+        dart pub global activate cobertura
+        dart pub global run cobertura convert
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.package }}-${{ matrix.os }}
+        path: ${{ inputs.package-dir }}/coverage/cobertura.xml
+    - name: Cleanup
+      shell: bash
+      working-directory: "${{ inputs.package-dir }}"
+      run: |
+        rm -rf ./coverage
