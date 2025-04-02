@@ -266,7 +266,6 @@ jobs:
   codecoverage:
     name: "Collect and upload code coverage"
     runs-on: ubuntu-latest
-    if: ${{ always() }}
     needs:
       - quality-flutter
       - tests-go-with-mocks
@@ -286,5 +285,6 @@ jobs:
           reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
       - uses: codecov/codecov-action@v5
         with:
-          files: ./coverage/Cobertura.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/Cobertura.xml
+          disable_search: true
