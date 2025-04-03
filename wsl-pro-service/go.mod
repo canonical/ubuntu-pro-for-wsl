@@ -2,6 +2,8 @@ module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250331205030-802caeef441c
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250331205030-802caeef441c
@@ -12,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	gopkg.in/ini.v1 v1.67.0
 )
 
