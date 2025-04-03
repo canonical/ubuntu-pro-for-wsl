@@ -2,6 +2,8 @@ module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f
@@ -18,7 +20,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/sys v0.31.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
