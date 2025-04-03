@@ -333,6 +333,68 @@ func TestServeAndQuit(t *testing.T) {
 	}
 }
 
+func TestRetryLogic(t *testing.T) {
+	t.Parallel()
+	testCases := map[string]struct {
+		succeedWithoutRetries  bool
+		actionError            error
+		precancelled           bool
+		cancelledBeforeMaxWait bool
+
+		wantNoRetries       bool
+		wantTooManyAttempts bool
+		wantErr             bool
+	}{
+		"Without retries":                          {succeedWithoutRetries: true, wantNoRetries: true},
+		"With the context pre-cancelled":           {precancelled: true},
+		"With the context cancelled while waiting": {cancelledBeforeMaxWait: true},
+		"When max attempts are exhausted":          {wantTooManyAttempts: true},
+
+		"Error only when action errors": {actionError: errors.New("wanted error"), wantNoRetries: true, wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			minWait := 10 * time.Millisecond
+			maxWait := 7 * minWait
+			var maxRetries uint8 = 8
+
+			ctxTimeout := 10 * maxWait
+			if tc.cancelledBeforeMaxWait {
+				ctxTimeout = 3 * minWait
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
+			if tc.precancelled {
+				cancel()
+			} else {
+				defer cancel()
+			}
+			retryCalled := false
+			tooManyAttempts := false
+			rc := daemon.NewRetryConfig(minWait, maxWait, maxRetries)
+			err := rc.Run(ctx, func() (bool, error) {
+				return tc.succeedWithoutRetries, tc.actionError
+			}, func(wait time.Duration) {
+				if tc.wantNoRetries {
+					require.Fail(t, "Unexpected Retry attempt")
+				}
+				retryCalled = true
+			}, func() {
+				if !tc.wantTooManyAttempts {
+					require.Fail(t, "Unexpected too many retry attempts")
+				}
+				tooManyAttempts = true
+			})
+			if tc.wantErr {
+				require.Error(t, err, "rc.Run() should fail with the supplied arguments")
+			}
+			require.Equal(t, tc.wantNoRetries, !retryCalled, "Mismatched expectation about calling the retry callback")
+			require.Equal(t, tc.wantTooManyAttempts, tooManyAttempts, "Mismatched expectation about calling the too many attempts callback")
+		})
+	}
+}
+
 func TestReconnection(t *testing.T) {
 	t.Parallel()
 

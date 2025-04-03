@@ -7,7 +7,7 @@ Type=notify
 NotifyAccess=all
 ExecStart=/usr/libexec/wsl-pro-service
 Restart=always
-RestartSec=2s
+RestartSec=20min
 
 # Some daemon restrictions
 LockPersonality=yes
