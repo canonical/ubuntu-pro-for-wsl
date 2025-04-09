@@ -152,5 +152,7 @@
     }
   },
   "landscapeSkip": "Sauter pour l’instant",
-  "@landscapeSkip": {}
+  "@landscapeSkip": {},
+  "landscapeFQDNLabel": "FQDN Landscape",
+  "@landscapeFQDNLabel": {}
 }
