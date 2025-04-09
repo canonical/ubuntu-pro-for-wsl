@@ -18,12 +18,12 @@ class AgentApiClient {
     Directory certsDir, [
     this.stubFactory = UIClient.new,
   ]) : _channel = ClientChannel(
-          host,
-          port: port,
-          options: ChannelOptions(
-            credentials: credentialsfromDirectory(certsDir),
-          ),
-        ) {
+         host,
+         port: port,
+         options: ChannelOptions(
+           credentials: credentialsfromDirectory(certsDir),
+         ),
+       ) {
     _client = stubFactory.call(_channel);
   }
 
@@ -37,18 +37,12 @@ class AgentApiClient {
   ClientChannel _channel;
 
   /// Changes the endpoint this API client is connected to.
-  Future<bool> connectTo(
-    String host,
-    int port,
-    Directory certsDir,
-  ) {
+  Future<bool> connectTo(String host, int port, Directory certsDir) {
     _channel.shutdown();
     _channel = ClientChannel(
       host,
       port: port,
-      options: ChannelOptions(
-        credentials: credentialsfromDirectory(certsDir),
-      ),
+      options: ChannelOptions(credentials: credentialsfromDirectory(certsDir)),
     );
     _client = stubFactory.call(_channel);
     return ping();
@@ -85,10 +79,7 @@ class AgentApiClient {
       mapGRPCConnectionEvents(_channel.onConnectionStateChanged);
 }
 
-enum ConnectionEvent {
-  dropped,
-  connected,
-}
+enum ConnectionEvent { dropped, connected }
 
 /// Maps gRPC connection events to a stream of [ConnectionEvent] enum values.
 Stream<ConnectionEvent> mapGRPCConnectionEvents(
@@ -117,9 +108,7 @@ class AgentApiChannelCredentials extends ChannelCredentials {
     this.privateKey,
     super.authority,
     super.onBadCertificate,
-  }) : super.secure(
-          certificates: trustedRoots,
-        );
+  }) : super.secure(certificates: trustedRoots);
 
   @override
   SecurityContext? get securityContext {

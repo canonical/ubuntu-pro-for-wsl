@@ -15,7 +15,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(kExampleLandscapeFQDN)
+        wantConfig: contains(kExampleLandscapeFQDN),
       ),
       'success with registration key': (
         fqdn: selfHostedURL,
@@ -24,7 +24,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(kExampleLandscapeFQDN)
+        wantConfig: contains(kExampleLandscapeFQDN),
       ),
       'success with valid cert': (
         fqdn: selfHostedURL,
@@ -33,7 +33,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(kExampleLandscapeFQDN)
+        wantConfig: contains(kExampleLandscapeFQDN),
       ),
       'success with valid cert and key': (
         fqdn: selfHostedURL,
@@ -42,7 +42,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(kExampleLandscapeFQDN)
+        wantConfig: contains(kExampleLandscapeFQDN),
       ),
       'success changing cert into empty path': (
         fqdn: selfHostedURL,
@@ -51,7 +51,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.none,
         wantComplete: isTrue,
-        wantConfig: contains(kExampleLandscapeFQDN)
+        wantConfig: contains(kExampleLandscapeFQDN),
       ),
       'error with SaaS landscape': (
         fqdn: saasURL,
@@ -60,7 +60,7 @@ void main() {
         wantFQDNError: FqdnError.saas,
         wantFileError: FileError.none,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'error with invalid fqdn': (
         fqdn: '::',
@@ -69,7 +69,7 @@ void main() {
         wantFQDNError: FqdnError.invalid,
         wantFileError: FileError.none,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'error with not found cert': (
         fqdn: selfHostedURL,
@@ -78,7 +78,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.notFound,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'error with invalid cert': (
         fqdn: selfHostedURL,
@@ -87,7 +87,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.invalidFormat,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'error with cert path as a dir': (
         fqdn: selfHostedURL,
@@ -96,7 +96,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.dir,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'error with empty cert': (
         fqdn: selfHostedURL,
@@ -105,7 +105,7 @@ void main() {
         wantFQDNError: FqdnError.none,
         wantFileError: FileError.emptyFile,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
     };
     for (final MapEntry(key: name, value: tc) in testcases.entries) {
@@ -146,33 +146,33 @@ void main() {
         path: notFoundPath,
         wantFileError: FileError.notFound,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'with empty path': (
         path: '',
         wantFileError: FileError.emptyPath,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'with empty config file': (
         path: emptyFile,
         wantFileError: FileError.emptyFile,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'with config file too large': (
         // a big file (1.5 MB) always present when running tests.
         path: './build/unit_test_assets/fonts/MaterialIcons-Regular.otf',
         wantFileError: FileError.tooLarge,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
       'with config file as dir': (
         // a big file (1.5 MB) always present when running tests.
         path: './test/',
         wantFileError: FileError.dir,
         wantComplete: isFalse,
-        wantConfig: isNull
+        wantConfig: isNull,
       ),
     };
 

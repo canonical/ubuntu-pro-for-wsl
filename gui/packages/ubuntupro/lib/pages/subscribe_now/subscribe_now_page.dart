@@ -28,10 +28,11 @@ class SubscribeNowPage extends StatefulWidget {
         Wizard.of(context).routeData as bool? ?? false;
 
     return ChangeNotifierProvider<SubscribeNowModel>(
-      create: (context) => SubscribeNowModel(
-        client,
-        isPurchaseAllowed: storePurchaseIsAllowed,
-      ),
+      create:
+          (context) => SubscribeNowModel(
+            client,
+            isPurchaseAllowed: storePurchaseIsAllowed,
+          ),
       child: SubscribeNowPage(
         onSubscriptionUpdate: (info) {
           final src = context.read<ValueNotifier<ConfigSources>>();
@@ -74,36 +75,37 @@ class _SubscribeNowPageState extends State<SubscribeNowPage> {
         ),
         const SizedBox(height: 16.0),
         OutlinedButton(
-          onPressed: !model.purchaseAllowed
-              ? () => launchUrlString('https://ubuntu.com/pro/subscribe')
-              : () async {
-                  final subs = await model.purchaseSubscription();
+          onPressed:
+              !model.purchaseAllowed
+                  ? () => launchUrlString('https://ubuntu.com/pro/subscribe')
+                  : () async {
+                    final subs = await model.purchaseSubscription();
 
-                  // Using anything attached to the BuildContext after a suspension point might be tricky.
-                  // Better check if it's still mounted in the widget tree.
-                  if (!context.mounted) return;
+                    // Using anything attached to the BuildContext after a suspension point might be tricky.
+                    // Better check if it's still mounted in the widget tree.
+                    if (!context.mounted) return;
 
-                  subs.fold(
-                    ifLeft: (status) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          width: 200.0,
-                          behavior: SnackBarBehavior.floating,
-                          content: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 2.0,
-                                horizontal: 16.0,
+                    subs.fold(
+                      ifLeft: (status) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            width: 200.0,
+                            behavior: SnackBarBehavior.floating,
+                            content: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2.0,
+                                  horizontal: 16.0,
+                                ),
+                                child: Text(status.localize(lang)),
                               ),
-                              child: Text(status.localize(lang)),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                    ifRight: widget.onSubscriptionUpdate,
-                  );
-                },
+                        );
+                      },
+                      ifRight: widget.onSubscriptionUpdate,
+                    );
+                  },
           child: Text(lang.getUbuntuPro),
         ),
       ],

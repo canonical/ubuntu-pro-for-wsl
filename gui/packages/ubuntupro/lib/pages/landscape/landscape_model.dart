@@ -115,11 +115,7 @@ enum FileError {
   invalidFormat,
 }
 
-enum FqdnError {
-  invalid,
-  none,
-  saas,
-}
+enum FqdnError { invalid, none, saas }
 
 const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
 
@@ -249,8 +245,7 @@ ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
 $sslKeyLine
 $registrationKeyLine
-'''
-        .trimRight();
+'''.trimRight();
   }
 }
 

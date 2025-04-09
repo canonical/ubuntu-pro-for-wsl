@@ -23,8 +23,9 @@ void main() {
     await tester.pumpWidget(theApp);
 
     expect(launcher.launched, isFalse);
-    await tester
-        .tapOnText(find.textRange.ofSubstring('ubuntu.com/pro/dashboard'));
+    await tester.tapOnText(
+      find.textRange.ofSubstring('ubuntu.com/pro/dashboard'),
+    );
     await tester.pump();
     expect(launcher.launched, isTrue);
   });
@@ -167,16 +168,10 @@ void main() {
   });
 }
 
-Widget buildApp({
-  required void Function() onApply,
-  bool isExpanded = false,
-}) {
+Widget buildApp({required void Function() onApply, bool isExpanded = false}) {
   return buildSingleRouteMultiProviderApp(
     child: Scaffold(
-      body: ProTokenInputField(
-        onSubmit: onApply,
-        isExpanded: isExpanded,
-      ),
+      body: ProTokenInputField(onSubmit: onApply, isExpanded: isExpanded),
     ),
     providers: [
       ChangeNotifierProvider.value(

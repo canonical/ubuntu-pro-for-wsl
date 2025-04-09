@@ -36,13 +36,13 @@ class NavigationRow extends StatelessWidget {
           const Spacer(),
           nextIsAction
               ? ElevatedButton(
-                  onPressed: onNext,
-                  child: Text(nextText ?? lang.buttonNext),
-                )
+                onPressed: onNext,
+                child: Text(nextText ?? lang.buttonNext),
+              )
               : OutlinedButton(
-                  onPressed: onNext,
-                  child: Text(nextText ?? lang.buttonNext),
-                ),
+                onPressed: onNext,
+                child: Text(nextText ?? lang.buttonNext),
+              ),
         ],
       ],
     );

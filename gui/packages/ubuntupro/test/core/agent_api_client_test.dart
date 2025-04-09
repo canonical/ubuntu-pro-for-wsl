@@ -140,8 +140,11 @@ void main() {
     expect(
       () => credentialsfromDirectory(dir),
       throwsA(
-        const TypeMatcher<PathNotFoundException>()
-            .having((e) => e.path, 'path', contains(caCert)),
+        const TypeMatcher<PathNotFoundException>().having(
+          (e) => e.path,
+          'path',
+          contains(caCert),
+        ),
       ),
     );
   });

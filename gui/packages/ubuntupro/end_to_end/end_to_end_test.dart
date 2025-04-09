@@ -39,11 +39,7 @@ void main(List<String> args) {
 
   // For a single run of the end-to-end tests we can only have one active GUI test scenario,
   // what implies that we must define a single 'testWidgets'. The actual function body will be determined at runtime.
-  testWidgets(
-    scenario,
-    testCases[scenario]!,
-    skip: !Platform.isWindows,
-  );
+  testWidgets(scenario, testCases[scenario]!, skip: !Platform.isWindows);
 }
 
 Future<void> testOrganizationProvidedToken(WidgetTester tester) async {

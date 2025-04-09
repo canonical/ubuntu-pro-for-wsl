@@ -26,9 +26,9 @@ class SubscribeNowModel extends ChangeNotifier {
     this.client, {
     bool isPurchaseAllowed = false,
     P4wMsStore? store,
-  })  : _isPurchaseAllowed = isPurchaseAllowed,
-        store = store ?? P4wMsStore(),
-        super();
+  }) : _isPurchaseAllowed = isPurchaseAllowed,
+       store = store ?? P4wMsStore(),
+       super();
 
   Future<SubscriptionInfo> applyProToken(ProToken token) {
     return client.applyProToken(token.value);
@@ -38,11 +38,9 @@ class SubscribeNowModel extends ChangeNotifier {
   /// If the purchase succeeds, this notifies the background agent and returns its [SubscriptionInfo] reply.
   /// Otherwise the purchase status is returned so the UI can give the user some feedback.
   Future<Either<PurchaseStatus, SubscriptionInfo>>
-      purchaseSubscription() async {
+  purchaseSubscription() async {
     try {
-      final status = await store.purchaseSubscription(
-        '9P25B50XMKXT',
-      );
+      final status = await store.purchaseSubscription('9P25B50XMKXT');
       if (status == PurchaseStatus.succeeded) {
         final newInfo = await client.notifyPurchase();
         return newInfo.right();

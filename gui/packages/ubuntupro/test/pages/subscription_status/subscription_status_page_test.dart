@@ -34,8 +34,9 @@ void main() {
         final lang = AppLocalizations.of(context);
 
         expect(launcher.launched, isFalse);
-        await tester
-            .tapOnText(find.textRange.ofSubstring(lang.manageUbuntuPro));
+        await tester.tapOnText(
+          find.textRange.ofSubstring(lang.manageUbuntuPro),
+        );
         await tester.pump();
         expect(launcher.launched, isTrue);
       });
@@ -53,8 +54,9 @@ void main() {
         final lang = AppLocalizations.of(context);
 
         expect(launcher.launched, isFalse);
-        await tester
-            .tapOnText(find.textRange.ofSubstring(lang.manageUbuntuPro));
+        await tester.tapOnText(
+          find.textRange.ofSubstring(lang.manageUbuntuPro),
+        );
         await tester.pump();
         expect(launcher.launched, isTrue);
       });
@@ -213,9 +215,12 @@ void main() {
       routes: {'/': const WizardRoute(builder: SubscriptionStatusPage.create)},
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ValueNotifier(
-            ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
-          ),
+          create:
+              (_) => ValueNotifier(
+                ConfigSources(
+                  proSubscription: SubscriptionInfo()..ensureUser(),
+                ),
+              ),
         ),
       ],
     );
@@ -245,9 +250,7 @@ void main() {
             return null;
           },
         ),
-        '/second': WizardRoute(
-          builder: (_) => const Placeholder(),
-        ),
+        '/second': WizardRoute(builder: (_) => const Placeholder()),
       });
 
       await tester.pumpWidget(app);
@@ -272,14 +275,15 @@ void main() {
 
       final app = buildWizardApp({
         '/': WizardRoute(
-          builder: (context) => Center(
-            child: FilledButton(
-              onPressed: () {
-                Wizard.of(context).next();
-              },
-              child: const Text(clickMe),
-            ),
-          ),
+          builder:
+              (context) => Center(
+                child: FilledButton(
+                  onPressed: () {
+                    Wizard.of(context).next();
+                  },
+                  child: const Text(clickMe),
+                ),
+              ),
         ),
         '/second': WizardRoute(
           builder: SubscriptionStatusPage.create,
@@ -322,18 +326,15 @@ Widget buildApp(
   bool landscapeFeatureIsEnabled = true,
 }) {
   return buildMultiProviderWizardApp(
-    routes: {
-      '/': WizardRoute(
-        builder: (_) => const SubscriptionStatusPage(),
-      ),
-    },
+    routes: {'/': WizardRoute(builder: (_) => const SubscriptionStatusPage())},
     providers: [
       Provider(
-        create: (_) => SubscriptionStatusModel(
-          ConfigSources(proSubscription: info, landscapeSource: landscape),
-          client,
-          canConfigureLandscape: landscapeFeatureIsEnabled,
-        ),
+        create:
+            (_) => SubscriptionStatusModel(
+              ConfigSources(proSubscription: info, landscapeSource: landscape),
+              client,
+              canConfigureLandscape: landscapeFeatureIsEnabled,
+            ),
       ),
     ],
   );
@@ -344,9 +345,10 @@ Widget buildWizardApp(Map<String, WizardRoute> routes) {
     routes: routes,
     providers: [
       ChangeNotifierProvider(
-        create: (_) => ValueNotifier(
-          ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
-        ),
+        create:
+            (_) => ValueNotifier(
+              ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
+            ),
       ),
     ],
   );

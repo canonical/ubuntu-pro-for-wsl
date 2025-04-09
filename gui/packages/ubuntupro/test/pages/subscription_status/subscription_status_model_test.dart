@@ -16,36 +16,24 @@ void main() {
 
     test('no subscription throws', () async {
       info.ensureNone();
-      expect(
-        () {
-          SubscriptionStatusModel(
-            ConfigSources(
-              proSubscription: info,
-              landscapeSource: landscape,
-            ),
-            client,
-          );
-        },
-        throwsUnimplementedError,
-      );
+      expect(() {
+        SubscriptionStatusModel(
+          ConfigSources(proSubscription: info, landscapeSource: landscape),
+          client,
+        );
+      }, throwsUnimplementedError);
     });
 
     test('unset throws', () async {
-      expect(
-        () {
-          SubscriptionStatusModel(ConfigSources(), client);
-        },
-        throwsUnimplementedError,
-      );
+      expect(() {
+        SubscriptionStatusModel(ConfigSources(), client);
+      }, throwsUnimplementedError);
     });
     test('store', () async {
       info.ensureMicrosoftStore();
 
       final model = SubscriptionStatusModel(
-        ConfigSources(
-          proSubscription: info,
-          landscapeSource: landscape,
-        ),
+        ConfigSources(proSubscription: info, landscapeSource: landscape),
         client,
       );
       expect(model.runtimeType, StoreSubscriptionStatusModel);
@@ -55,10 +43,7 @@ void main() {
       info.ensureUser();
 
       final model = SubscriptionStatusModel(
-        ConfigSources(
-          proSubscription: info,
-          landscapeSource: landscape,
-        ),
+        ConfigSources(proSubscription: info, landscapeSource: landscape),
         client,
       );
       expect(model.runtimeType, UserSubscriptionStatusModel);
@@ -68,10 +53,7 @@ void main() {
       info.ensureOrganization();
 
       final model = SubscriptionStatusModel(
-        ConfigSources(
-          proSubscription: info,
-          landscapeSource: landscape,
-        ),
+        ConfigSources(proSubscription: info, landscapeSource: landscape),
         client,
       );
       expect(model.runtimeType, OrgSubscriptionStatusModel);
@@ -112,10 +94,7 @@ void main() {
                 enabled && !landscape.hasOrganization() ? isTrue : isFalse;
 
             final model = SubscriptionStatusModel(
-              ConfigSources(
-                proSubscription: subs,
-                landscapeSource: landscape,
-              ),
+              ConfigSources(proSubscription: subs, landscapeSource: landscape),
               client,
               canConfigureLandscape: enabled,
             );

@@ -23,13 +23,15 @@ class MockedResponse<R> extends DelegatingFuture<R>
 
 /// A stateful mock of the UIClient gRPC service.
 class MockUIClient extends UIClient {
-  SubscriptionInfo subs = SubscriptionInfo()
-    ..ensureNone()
-    ..freeze();
+  SubscriptionInfo subs =
+      SubscriptionInfo()
+        ..ensureNone()
+        ..freeze();
 
-  LandscapeSource landscape = LandscapeSource()
-    ..ensureNone()
-    ..freeze();
+  LandscapeSource landscape =
+      LandscapeSource()
+        ..ensureNone()
+        ..freeze();
 
   MockUIClient(super.channel);
 
@@ -73,10 +75,7 @@ class MockUIClient extends UIClient {
     CallOptions? options,
   }) {
     return MockedResponse(
-      ConfigSources(
-        landscapeSource: landscape,
-        proSubscription: subs,
-      ),
+      ConfigSources(landscapeSource: landscape, proSubscription: subs),
     );
   }
 

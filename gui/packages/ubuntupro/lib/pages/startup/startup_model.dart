@@ -4,12 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '/core/agent_monitor.dart';
 
-enum ViewState {
-  inProgress,
-  ok,
-  retry,
-  crash,
-}
+enum ViewState { inProgress, ok, retry, crash }
 
 extension ViewStateX on AgentState {
   ViewState toViewState() {
@@ -51,14 +46,11 @@ class StartupModel extends ChangeNotifier {
   Future<void> init() {
     final completer = Completer<void>();
     final stream = monitor.start();
-    _subs = stream.listen(
-      (state) {
-        _agentState = state;
-        _view = state.toViewState();
-        notifyListeners();
-      },
-      onDone: completer.complete,
-    );
+    _subs = stream.listen((state) {
+      _agentState = state;
+      _view = state.toViewState();
+      notifyListeners();
+    }, onDone: completer.complete);
     return completer.future;
   }
 

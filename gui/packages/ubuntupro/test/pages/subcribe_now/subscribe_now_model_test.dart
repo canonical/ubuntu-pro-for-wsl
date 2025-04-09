@@ -86,9 +86,9 @@ void main() {
       pluginMessenger.setMockMethodCallHandler(pluginChannel, (_) async {
         return PurchaseStatus.succeeded.index;
       });
-      when(client.notifyPurchase()).thenThrow(
-        const GrpcError.custom(42, 'surprise'),
-      );
+      when(
+        client.notifyPurchase(),
+      ).thenThrow(const GrpcError.custom(42, 'surprise'));
       final model = SubscribeNowModel(client);
       final result = await model.purchaseSubscription();
       expect(result, expectedError);
@@ -99,9 +99,7 @@ void main() {
         return PurchaseStatus.succeeded.index;
       });
       final client_ = MockAgentApiClient();
-      when(client_.notifyPurchase()).thenAnswer(
-        (_) async => expectedValue,
-      );
+      when(client_.notifyPurchase()).thenAnswer((_) async => expectedValue);
       final model = SubscribeNowModel(client_);
       final result = await model.purchaseSubscription();
       expect(result.isRight, isTrue);
@@ -112,9 +110,7 @@ void main() {
   test('apply pro token', () async {
     final info = SubscriptionInfo()..ensureUser();
     final client = MockAgentApiClient();
-    when(client.applyProToken(any)).thenAnswer(
-      (_) async => info,
-    );
+    when(client.applyProToken(any)).thenAnswer((_) async => info);
     final token = ProToken.create(tks.good).getOrThrow();
     final model = SubscribeNowModel(client);
 

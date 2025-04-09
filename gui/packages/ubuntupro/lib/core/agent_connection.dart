@@ -25,15 +25,17 @@ class AgentConnection extends ChangeNotifier {
     _connectivitySubscription = client?.onConnectionChanged
         .map((event) => event == ConnectionEvent.connected)
         .listen((state) {
-      _state = state
-          ? AgentConnectionState.connected
-          : AgentConnectionState.disconnected;
-      notifyListeners();
-    });
+          _state =
+              state
+                  ? AgentConnectionState.connected
+                  : AgentConnectionState.disconnected;
+          notifyListeners();
+        });
     // If we got a stream subscription we have an active connection.
-    _state = _connectivitySubscription != null
-        ? AgentConnectionState.connected
-        : AgentConnectionState.disconnected;
+    _state =
+        _connectivitySubscription != null
+            ? AgentConnectionState.connected
+            : AgentConnectionState.disconnected;
     notifyListeners();
   }
 
@@ -60,8 +62,4 @@ class AgentConnection extends ChangeNotifier {
   }
 }
 
-enum AgentConnectionState {
-  connected,
-  connecting,
-  disconnected,
-}
+enum AgentConnectionState { connected, connecting, disconnected }

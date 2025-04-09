@@ -25,11 +25,7 @@ void main() {
     // Returns the mocked USERPROFILE value for later deletion.
     final tmpHome = await Directory.current.createTemp();
 
-    final _ = Environment(
-      overrides: {
-        'USERPROFILE': tmpHome.path,
-      },
-    );
+    final _ = Environment(overrides: {'USERPROFILE': tmpHome.path});
 
     homeDir = tmpHome;
   });
@@ -50,11 +46,7 @@ void main() {
 
     expect(
       monitor.start(interval: kInterval, timeout: kTimeout),
-      emitsInOrder([
-        AgentState.querying,
-        AgentState.cannotStart,
-        emitsDone,
-      ]),
+      emitsInOrder([AgentState.querying, AgentState.cannotStart, emitsDone]),
     );
 
     verifyNever(mockClient.ping());
@@ -120,20 +112,13 @@ void main() {
       onClient: (_) {},
     );
 
-    await IOOverrides.runZoned(
-      () async {
-        expect(
-          monitor.start(interval: kInterval, timeout: kTimeout),
-          emitsInOrder([
-            AgentState.querying,
-            AgentState.unknownEnv,
-            emitsDone,
-          ]),
-        );
-        verifyNever(mockClient.ping());
-      },
-      createFile: (_) => throw const FileSystemException('access denied'),
-    );
+    await IOOverrides.runZoned(() async {
+      expect(
+        monitor.start(interval: kInterval, timeout: kTimeout),
+        emitsInOrder([AgentState.querying, AgentState.unknownEnv, emitsDone]),
+      );
+      verifyNever(mockClient.ping());
+    }, createFile: (_) => throw const FileSystemException('access denied'));
   });
 
   test('already running with mocks', () async {
@@ -152,11 +137,7 @@ void main() {
 
     await expectLater(
       monitor.start(interval: kInterval, timeout: kTimeout),
-      emitsInOrder([
-        AgentState.querying,
-        AgentState.ok,
-        emitsDone,
-      ]),
+      emitsInOrder([AgentState.querying, AgentState.ok, emitsDone]),
     );
     verify(mockClient.ping()).called(1);
   });
@@ -252,13 +233,7 @@ void main() {
 
     // Now the async onClient is allowed to return and the stream should output the final states.
     completeMe.complete();
-    await expectLater(
-      stream,
-      emitsInOrder([
-        AgentState.ok,
-        emitsDone,
-      ]),
-    );
+    await expectLater(stream, emitsInOrder([AgentState.ok, emitsDone]));
   });
 
   test('reconnect preserves client instance', () async {

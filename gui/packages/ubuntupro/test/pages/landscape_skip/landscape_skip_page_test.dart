@@ -102,8 +102,6 @@ void main() {
 
 Widget buildApp() {
   return buildMultiProviderWizardApp(
-    routes: {
-      '/': WizardRoute(builder: (_) => const LandscapeSkipPage()),
-    },
+    routes: {'/': WizardRoute(builder: (_) => const LandscapeSkipPage())},
   );
 }

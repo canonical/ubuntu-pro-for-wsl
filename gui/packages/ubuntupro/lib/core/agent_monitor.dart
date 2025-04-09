@@ -40,11 +40,8 @@ enum AgentState {
 }
 
 /// A Function that knows how to create an AgentApiClient from a host and a port.
-typedef ApiClientFactory = AgentApiClient Function(
-  String host,
-  int port,
-  Directory certsDir,
-);
+typedef ApiClientFactory =
+    AgentApiClient Function(String host, int port, Directory certsDir);
 
 /// A Function that knows how to launch the agent and report success.
 typedef AgentLauncher = Future<bool> Function();
@@ -132,17 +129,12 @@ class AgentStartupMonitor {
     // calls.
     for (var st = AgentState.querying; !st.isTerminal();) {
       final portResult = await readAgentPortFromFile(_addrFilePath!);
-      st = await portResult.fold(
-        ifLeft: _onAddrError,
-        ifRight: _onAddress,
-      );
+      st = await portResult.fold(ifLeft: _onAddrError, ifRight: _onAddress);
       yield st;
     }
   }
 
-  Future<AgentState> _onAddrError(
-    AgentAddrFileError error,
-  ) async {
+  Future<AgentState> _onAddrError(AgentAddrFileError error) async {
     switch (error) {
       case AgentAddrFileError.accessDenied:
         // The system pointed to a location where we cannot read.
@@ -150,9 +142,12 @@ class AgentStartupMonitor {
         return AgentState.unknownEnv;
       case AgentAddrFileError.nonexistent:
         // The directory must exist so we can watch for changes. This won't fail if the directory already exists.
-        final agentDir =
-            await File(_addrFilePath!).parent.create(recursive: true);
-        final watch = agentDir.watch(events: FileSystemEvent.create).firstWhere(
+        final agentDir = await File(
+          _addrFilePath!,
+        ).parent.create(recursive: true);
+        final watch = agentDir
+            .watch(events: FileSystemEvent.create)
+            .firstWhere(
               (event) =>
                   p.canonicalize(event.path) == p.canonicalize(_addrFilePath),
             );

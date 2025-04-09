@@ -28,9 +28,10 @@ Future<void> main() async {
     onClient: registerServiceInstance<AgentApiClient>,
   );
 
-  final settings = Environment()['UP4W_INTEGRATION_TESTING'] != null
-      ? Settings.withOptions(Options.withAll)
-      : Settings(SettingsRepository());
+  final settings =
+      Environment()['UP4W_INTEGRATION_TESTING'] != null
+          ? Settings.withOptions(Options.withAll)
+          : Settings(SettingsRepository());
 
   final windowOptions = const WindowOptions(
     size: Size(kWindowWidth, kWindowHeight),
