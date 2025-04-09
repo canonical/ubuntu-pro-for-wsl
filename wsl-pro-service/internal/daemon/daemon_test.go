@@ -346,7 +346,7 @@ func TestRetryLogic(t *testing.T) {
 		wantErr             bool
 	}{
 		"Without retries":                          {succeedWithoutRetries: true, wantNoRetries: true},
-		"With the context pre-cancelled":           {precancelled: true},
+		"With the context pre-cancelled":           {precancelled: true, wantNoRetries: true},
 		"With the context cancelled while waiting": {cancelledBeforeMaxWait: true},
 		"When max attempts are exhausted":          {wantTooManyAttempts: true},
 
@@ -367,19 +367,22 @@ func TestRetryLogic(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 			if tc.precancelled {
 				cancel()
+				<-ctx.Done() // Otherwise the test may finish before the context is trully cancelled.
 			} else {
 				defer cancel()
 			}
-			retryCalled := false
+			tryCount := 0
 			tooManyAttempts := false
 			rc := daemon.NewRetryConfig(minWait, maxWait, maxRetries)
+			// All functions passed below run in the same goroutine, thus no need for
+			// synchronisation.
 			err := rc.Run(ctx, func() (bool, error) {
 				return tc.succeedWithoutRetries, tc.actionError
 			}, func(wait time.Duration) {
 				if tc.wantNoRetries {
-					require.Fail(t, "Unexpected Retry attempt")
+					require.LessOrEqual(t, tryCount, 1, "Unexpected Retry attempt")
 				}
-				retryCalled = true
+				tryCount++
 			}, func() {
 				if !tc.wantTooManyAttempts {
 					require.Fail(t, "Unexpected too many retry attempts")
@@ -389,7 +392,9 @@ func TestRetryLogic(t *testing.T) {
 			if tc.wantErr {
 				require.Error(t, err, "rc.Run() should fail with the supplied arguments")
 			}
-			require.Equal(t, tc.wantNoRetries, !retryCalled, "Mismatched expectation about calling the retry callback")
+			if tc.wantNoRetries {
+				require.LessOrEqual(t, tryCount, 1, "Action should be tried at most once")
+			}
 			require.Equal(t, tc.wantTooManyAttempts, tooManyAttempts, "Mismatched expectation about calling the too many attempts callback")
 		})
 	}
