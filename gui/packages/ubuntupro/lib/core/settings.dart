@@ -10,14 +10,16 @@ class Settings {
     if (!repository.load()) return;
 
     // Enable store purchase if the registry value is 1.
-    final purchase = repository.readInt(kAllowStorePurchase) == 1
-        ? Options.withStorePurchase
-        : Options.none;
+    final purchase =
+        repository.readInt(kAllowStorePurchase) == 1
+            ? Options.withStorePurchase
+            : Options.none;
 
     // Hide Landscape UI if the registry value is 0.
-    final landscape = repository.readInt(kLandscapeConfigVisibility) == 0
-        ? Options.none
-        : Options.withLandscapeConfiguration;
+    final landscape =
+        repository.readInt(kLandscapeConfigVisibility) == 0
+            ? Options.none
+            : Options.withLandscapeConfiguration;
 
     repository.close();
 
@@ -35,7 +37,7 @@ class Settings {
       _options & Options.withLandscapeConfiguration;
   bool get isStorePurchaseAllowed => _options & Options.withStorePurchase;
 
-// constants for the key names only exposed for testing.
+  // constants for the key names only exposed for testing.
   @visibleForTesting
   static const kAllowStorePurchase = 'AllowStorePurchase';
   @visibleForTesting

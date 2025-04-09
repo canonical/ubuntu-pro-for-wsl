@@ -15,8 +15,9 @@ void main() {
   });
 
   test('purchaseSubscription success', () async {
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
-        (methodCall) async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      methodCall,
+    ) async {
       return PurchaseStatus.succeeded.index;
     });
     expect(
@@ -25,8 +26,9 @@ void main() {
     );
   });
   test('purchaseSubscription throws on invalid response', () async {
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
-        (methodCall) async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      methodCall,
+    ) async {
       return -10;
     });
     await expectLater(
@@ -36,8 +38,9 @@ void main() {
   });
 
   test('purchaseSubscription throws on null response', () async {
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
-        (methodCall) async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      methodCall,
+    ) async {
       return null;
     });
     await expectLater(
@@ -47,8 +50,9 @@ void main() {
   });
 
   test('purchaseSubscription throws out of sync response', () async {
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
-        (methodCall) async {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      methodCall,
+    ) async {
       return PurchaseStatus.values.length;
     });
     await expectLater(

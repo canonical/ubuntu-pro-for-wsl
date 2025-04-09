@@ -46,11 +46,10 @@ Future<void> _build({
   required String targetPath,
   String? workingDir,
 }) async {
-  final result = await Process.run(
-    buildProgram,
-    [...?arguments, targetPath],
-    workingDirectory: workingDir,
-  );
+  final result = await Process.run(buildProgram, [
+    ...?arguments,
+    targetPath,
+  ], workingDirectory: workingDir);
 
   stdout.write(result.stdout);
   stdout.write(result.stderr);
@@ -62,9 +61,9 @@ Future<void> _build({
 }
 
 Future<String?> _findAgentVcxproj() => _findFileUpwards(
-      startDir: Directory.current,
-      name: 'msix/agent/agent.vcxproj',
-    );
+  startDir: Directory.current,
+  name: 'msix/agent/agent.vcxproj',
+);
 
 /// Iterates upwards from [startDir] looking for a file matching the join "[startDir]/[name]".
 Future<String?> _findFileUpwards({

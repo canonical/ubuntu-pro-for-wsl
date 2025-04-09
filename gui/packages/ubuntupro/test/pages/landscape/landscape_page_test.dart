@@ -279,14 +279,9 @@ void main() {
   });
 }
 
-Widget buildApp(
-  LandscapeModel model,
-) {
+Widget buildApp(LandscapeModel model) {
   return buildSingleRouteMultiProviderApp(
-    child: LandscapePage(
-      onApplyConfig: () {},
-      onBack: () {},
-    ),
+    child: LandscapePage(onApplyConfig: () {}, onBack: () {}),
     providers: [ChangeNotifierProvider<LandscapeModel>.value(value: model)],
   );
 }
@@ -320,8 +315,7 @@ class FakeFilePicker extends FilePicker {
     bool withReadStream = false,
     bool lockParentWindow = false,
     bool readSequential = false,
-  }) async =>
-      FilePickerResult(
-        paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
-      );
+  }) async => FilePickerResult(
+    paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
+  );
 }

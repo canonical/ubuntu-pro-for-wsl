@@ -17,13 +17,9 @@ import 'startup_page_test.mocks.dart';
 void main() {
   testWidgets('starts in progres', (tester) async {
     final monitor = MockAgentStartupMonitor();
-    when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-        ],
-      ),
-    );
+    when(
+      monitor.start(),
+    ).thenAnswer((_) => Stream.fromIterable([AgentState.querying]));
     final model = StartupModel(monitor);
     await tester.pumpWidget(buildApp(model));
 
@@ -32,13 +28,9 @@ void main() {
 
   testWidgets('agent state enum l10n', (tester) async {
     final monitor = MockAgentStartupMonitor();
-    when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-        ],
-      ),
-    );
+    when(
+      monitor.start(),
+    ).thenAnswer((_) => Stream.fromIterable([AgentState.querying]));
     final model = StartupModel(monitor);
     await tester.pumpWidget(buildApp(model));
     final context = tester.element(find.byType(StartupAnimatedChild));
@@ -52,12 +44,7 @@ void main() {
   testWidgets('navigates when model is ok', (tester) async {
     final monitor = MockAgentStartupMonitor();
     when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-          AgentState.ok,
-        ],
-      ),
+      (_) => Stream.fromIterable([AgentState.querying, AgentState.ok]),
     );
     final model = StartupModel(monitor);
     await tester.pumpWidget(buildApp(model));
@@ -71,13 +58,11 @@ void main() {
   testWidgets('terminal error no button', (tester) async {
     final monitor = MockAgentStartupMonitor();
     when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-          AgentState.starting,
-          AgentState.cannotStart,
-        ],
-      ),
+      (_) => Stream.fromIterable([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.cannotStart,
+      ]),
     );
     final model = StartupModel(monitor);
     await tester.pumpWidget(buildApp(model));
@@ -102,19 +87,18 @@ void main() {
     final app = buildMultiProviderWizardApp(
       providers: [
         Provider<AgentStartupMonitor>(
-          create: (context) => AgentStartupMonitor(
-            addrFileName: 'anywhere',
-            agentLauncher: () async => true,
-            clientFactory: AgentApiClient.new,
-            onClient: (_) {},
-          ),
+          create:
+              (context) => AgentStartupMonitor(
+                addrFileName: 'anywhere',
+                agentLauncher: () async => true,
+                clientFactory: AgentApiClient.new,
+                onClient: (_) {},
+              ),
         ),
       ],
       routes: {
         '/': WizardRoute(builder: (_) => const StartupPage()),
-        '/next': WizardRoute(
-          builder: (_) => const Text(lastText),
-        ),
+        '/next': WizardRoute(builder: (_) => const Text(lastText)),
       },
     );
 
@@ -129,11 +113,9 @@ void main() {
 
 const lastText = 'LAST TEXT';
 Widget buildApp(StartupModel model) => buildMultiProviderWizardApp(
-      providers: [
-        ChangeNotifierProvider.value(value: model),
-      ],
-      routes: {
-        '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
-        '/next': WizardRoute(builder: (_) => const Text(lastText)),
-      },
-    );
+  providers: [ChangeNotifierProvider.value(value: model)],
+  routes: {
+    '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
+    '/next': WizardRoute(builder: (_) => const Text(lastText)),
+  },
+);

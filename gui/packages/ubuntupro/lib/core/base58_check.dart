@@ -2,14 +2,12 @@ import 'package:base_x/base_x.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
-enum B58Error {
-  invalidChecksum,
-  invalidFormat,
-}
+enum B58Error { invalidChecksum, invalidFormat }
 
 class Base58 {
-  final BaseXCodec _codec =
-      BaseXCodec('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
+  final BaseXCodec _codec = BaseXCodec(
+    '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
+  );
 
   Uint8List _checksum(Uint8List input) {
     final h = sha256.convert(input.toList());

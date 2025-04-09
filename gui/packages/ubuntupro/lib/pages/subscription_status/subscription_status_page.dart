@@ -26,52 +26,50 @@ class SubscriptionStatusPage extends StatelessWidget {
       duration: const Duration(milliseconds: 700),
       child: switch (model) {
         StoreSubscriptionStatusModel() => SubscriptionStatus(
-            actionButtons: [
-              if (model.canConfigureLandscape) _landscapeButton(context),
-            ],
-            footerLinks: [
-              MarkdownBody(
-                data: '[${lang.manageUbuntuPro}]()',
-                onTapLink: (_, href, __) => model.launchManagementWebPage(),
-              ),
-            ],
-          ),
+          actionButtons: [
+            if (model.canConfigureLandscape) _landscapeButton(context),
+          ],
+          footerLinks: [
+            MarkdownBody(
+              data: '[${lang.manageUbuntuPro}]()',
+              onTapLink: (_, href, __) => model.launchManagementWebPage(),
+            ),
+          ],
+        ),
         UserSubscriptionStatusModel() => SubscriptionStatus(
-            actionButtons: [
-              if (model.canConfigureLandscape) _landscapeButton(context),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: YaruColors.red,
-                ),
-                onPressed: () async {
-                  await model.detachPro();
-                  if (context.mounted) {
-                    final wizard = Wizard.of(context);
-                    // If more than just this one, we can go back.
-                    if (wizard.hasPrevious) {
-                      Wizard.of(context).back();
-                    } else {
-                      // otherwise we need .replace() or .jump(). [small detail of the wizard_router package]
-                      await Wizard.of(context).replace();
-                    }
+          actionButtons: [
+            if (model.canConfigureLandscape) _landscapeButton(context),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: YaruColors.red),
+              onPressed: () async {
+                await model.detachPro();
+                if (context.mounted) {
+                  final wizard = Wizard.of(context);
+                  // If more than just this one, we can go back.
+                  if (wizard.hasPrevious) {
+                    Wizard.of(context).back();
+                  } else {
+                    // otherwise we need .replace() or .jump(). [small detail of the wizard_router package]
+                    await Wizard.of(context).replace();
                   }
-                },
-                child: Text(lang.detachPro),
-              ),
-            ],
-            footerLinks: [
-              MarkdownBody(
-                data: '[${lang.manageUbuntuPro}]()',
-                onTapLink: (_, href, __) =>
-                    launchUrlString('https://ubuntu.com/pro/dashboard'),
-              ),
-            ],
-          ),
+                }
+              },
+              child: Text(lang.detachPro),
+            ),
+          ],
+          footerLinks: [
+            MarkdownBody(
+              data: '[${lang.manageUbuntuPro}]()',
+              onTapLink:
+                  (_, href, __) =>
+                      launchUrlString('https://ubuntu.com/pro/dashboard'),
+            ),
+          ],
+        ),
         OrgSubscriptionStatusModel() => SubscriptionStatus(
-            actionButtons: model.canConfigureLandscape
-                ? [_landscapeButton(context)]
-                : null,
-          ),
+          actionButtons:
+              model.canConfigureLandscape ? [_landscapeButton(context)] : null,
+        ),
       },
     );
   }
@@ -94,11 +92,12 @@ class SubscriptionStatusPage extends StatelessWidget {
     final landscapeFeatureIsEnabled =
         Wizard.of(context).routeData as bool? ?? false;
     return ProxyProvider<ValueNotifier<ConfigSources>, SubscriptionStatusModel>(
-      update: (context, src, _) => SubscriptionStatusModel(
-        src.value,
-        client,
-        canConfigureLandscape: landscapeFeatureIsEnabled,
-      ),
+      update:
+          (context, src, _) => SubscriptionStatusModel(
+            src.value,
+            client,
+            canConfigureLandscape: landscapeFeatureIsEnabled,
+          ),
       child: const SubscriptionStatusPage(),
     );
   }

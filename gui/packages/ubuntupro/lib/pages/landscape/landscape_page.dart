@@ -62,10 +62,7 @@ class LandscapePage extends StatelessWidget {
           styleSheet: linkStyle,
         ),
       ],
-      right: [
-        const SizedBox(height: 24),
-        LandscapeConfigForm(model),
-      ],
+      right: [const SizedBox(height: 24), LandscapeConfigForm(model)],
       navigationRow: NavigationRow(
         onBack: onBack,
         onNext: model.isComplete ? () => _tryApplyConfig(context) : null,
@@ -267,25 +264,25 @@ class _FilePickerFieldState extends State<_FilePickerField> {
             enabled: widget.enabled,
           ),
         ),
-        const SizedBox(
-          width: 8.0,
-        ),
+        const SizedBox(width: 8.0),
         FilledButton(
-          onPressed: widget.enabled
-              ? () async {
-                  final result = await FilePicker.platform.pickFiles(
-                    allowedExtensions: widget.allowedExtensions,
-                    type: widget.allowedExtensions == null
-                        ? FileType.any
-                        : FileType.custom,
-                  );
-                  if (result != null) {
-                    final file = File(result.files.single.path!);
-                    txt.text = file.path;
-                    widget.onChanged(file.path);
+          onPressed:
+              widget.enabled
+                  ? () async {
+                    final result = await FilePicker.platform.pickFiles(
+                      allowedExtensions: widget.allowedExtensions,
+                      type:
+                          widget.allowedExtensions == null
+                              ? FileType.any
+                              : FileType.custom,
+                    );
+                    if (result != null) {
+                      final file = File(result.files.single.path!);
+                      txt.text = file.path;
+                      widget.onChanged(file.path);
+                    }
                   }
-                }
-              : null,
+                  : null,
           child: Text(widget.buttonLabel),
         ),
       ],

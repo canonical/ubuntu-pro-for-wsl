@@ -11,9 +11,9 @@ void main() {
   group('crash cannot retry', () {
     test('bad env', () async {
       final monitor = MockAgentStartupMonitor();
-      when(monitor.start()).thenAnswer(
-        (_) => Stream.fromIterable([AgentState.unknownEnv]),
-      );
+      when(
+        monitor.start(),
+      ).thenAnswer((_) => Stream.fromIterable([AgentState.unknownEnv]));
 
       final model = StartupModel(monitor);
       addTearDown(model.dispose);
@@ -26,12 +26,8 @@ void main() {
     test('start failure', () async {
       final monitor = MockAgentStartupMonitor();
       when(monitor.start()).thenAnswer(
-        (_) => Stream.fromIterable(
-          [
-            AgentState.querying,
-            AgentState.cannotStart,
-          ],
-        ),
+        (_) =>
+            Stream.fromIterable([AgentState.querying, AgentState.cannotStart]),
       );
 
       final model = StartupModel(monitor);
@@ -47,14 +43,12 @@ void main() {
   test('reset', () async {
     final monitor = MockAgentStartupMonitor();
     when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-          AgentState.starting,
-          AgentState.invalid,
-          AgentState.unreachable,
-        ],
-      ),
+      (_) => Stream.fromIterable([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.invalid,
+        AgentState.unreachable,
+      ]),
     );
 
     final model = StartupModel(monitor);
@@ -64,17 +58,13 @@ void main() {
 
     expect(model.view, ViewState.retry);
 
-    when(monitor.reset()).thenAnswer(
-      (realInvocation) async {},
-    );
+    when(monitor.reset()).thenAnswer((realInvocation) async {});
     when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-          AgentState.starting,
-          AgentState.ok,
-        ],
-      ),
+      (_) => Stream.fromIterable([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.ok,
+      ]),
     );
 
     await model.resetAgent();
@@ -85,13 +75,11 @@ void main() {
   test('notify listeners', () async {
     final monitor = MockAgentStartupMonitor();
     when(monitor.start()).thenAnswer(
-      (_) => Stream.fromIterable(
-        [
-          AgentState.querying,
-          AgentState.starting,
-          AgentState.ok,
-        ],
-      ),
+      (_) => Stream.fromIterable([
+        AgentState.querying,
+        AgentState.starting,
+        AgentState.ok,
+      ]),
     );
 
     final model = StartupModel(monitor);

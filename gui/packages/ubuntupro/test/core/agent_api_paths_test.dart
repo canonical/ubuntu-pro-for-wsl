@@ -109,15 +109,12 @@ void main() {
     final addr = File(filePath);
     addr.writeAsStringSync('');
 
-    await IOOverrides.runZoned(
-      () async {
-        // Exercises the expected usage: reading from a file
-        final res = await readAgentPortFromFile(filePath);
+    await IOOverrides.runZoned(() async {
+      // Exercises the expected usage: reading from a file
+      final res = await readAgentPortFromFile(filePath);
 
-        expect(res, const Left(AgentAddrFileError.accessDenied));
-      },
-      createFile: (_) => throw const FileSystemException('access denied'),
-    );
+      expect(res, const Left(AgentAddrFileError.accessDenied));
+    }, createFile: (_) => throw const FileSystemException('access denied'));
   });
 
   test('bad format', () async {

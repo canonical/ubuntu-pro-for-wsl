@@ -58,12 +58,13 @@ class Pro4WSLPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
     return Scaffold(
-      appBar: showTitleBar
-          ? YaruWindowTitleBar(
-              title: Text(lang.appTitle),
-              buttonPadding: EdgeInsets.zero,
-            )
-          : null,
+      appBar:
+          showTitleBar
+              ? YaruWindowTitleBar(
+                title: Text(lang.appTitle),
+                buttonPadding: EdgeInsets.zero,
+              )
+              : null,
       body: body,
       persistentFooterButtons: <Widget>[statusBar ?? const StatusBar()],
     );
@@ -105,20 +106,14 @@ class CenteredPage extends StatelessWidget {
                           text: TextSpan(
                             children: [
                               WidgetSpan(
-                                child: SvgPicture.asset(
-                                  svgAsset,
-                                  height: 70,
-                                ),
+                                child: SvgPicture.asset(svgAsset, height: 70),
                               ),
-                              const WidgetSpan(
-                                child: SizedBox(
-                                  width: 8,
-                                ),
-                              ),
+                              const WidgetSpan(child: SizedBox(width: 8)),
                               TextSpan(
                                 text: title,
-                                style: theme.textTheme.displaySmall
-                                    ?.copyWith(fontWeight: FontWeight.w100),
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w100,
+                                ),
                               ),
                             ],
                           ),
@@ -201,17 +196,13 @@ class ColumnPage extends StatelessWidget {
                                         height: 70,
                                       ),
                                     ),
-                                    const WidgetSpan(
-                                      child: SizedBox(
-                                        width: 8,
-                                      ),
-                                    ),
+                                    const WidgetSpan(child: SizedBox(width: 8)),
                                     TextSpan(
                                       text: title,
                                       style: theme.textTheme.displaySmall
                                           ?.copyWith(
-                                        fontWeight: FontWeight.w100,
-                                      ),
+                                            fontWeight: FontWeight.w100,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -228,9 +219,10 @@ class ColumnPage extends StatelessWidget {
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
-                            mainAxisAlignment: rightIsCentered
-                                ? MainAxisAlignment.center
-                                : MainAxisAlignment.start,
+                            mainAxisAlignment:
+                                rightIsCentered
+                                    ? MainAxisAlignment.center
+                                    : MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: right,
                           ),

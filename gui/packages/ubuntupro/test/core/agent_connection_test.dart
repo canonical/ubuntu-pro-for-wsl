@@ -26,13 +26,12 @@ void main() {
     });
 
     test('detects changes', () async {
-      final events = Stream.fromIterable(
-        [ConnectionEvent.dropped, ConnectionEvent.connected],
-      );
+      final events = Stream.fromIterable([
+        ConnectionEvent.dropped,
+        ConnectionEvent.connected,
+      ]);
       final client = MockAgentApiClient();
-      when(client.onConnectionChanged).thenAnswer(
-        (_) => events,
-      );
+      when(client.onConnectionChanged).thenAnswer((_) => events);
       when(monitor.agentApiClient).thenReturn(client);
 
       final conn = AgentConnection(monitor);

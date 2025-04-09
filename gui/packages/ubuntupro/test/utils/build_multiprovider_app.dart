@@ -14,21 +14,21 @@ Widget buildMultiProviderWizardApp({
   required Map<String, WizardRoute> routes,
 }) {
   return MultiProvider(
-    providers: providers +
+    providers:
+        providers +
         [
           ChangeNotifierProvider<AgentConnection>(
             create: (_) => _MockAgentConnection(),
           ),
         ],
     child: YaruTheme(
-      builder: (_, yaru, __) => MaterialApp(
-        theme: yaru.theme,
-        darkTheme: yaru.darkTheme,
-        home: Wizard(
-          routes: routes,
-        ),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-      ),
+      builder:
+          (_, yaru, __) => MaterialApp(
+            theme: yaru.theme,
+            darkTheme: yaru.darkTheme,
+            home: Wizard(routes: routes),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+          ),
     ),
   );
 }
@@ -38,19 +38,21 @@ Widget buildSingleRouteMultiProviderApp({
   required Widget child,
 }) {
   return MultiProvider(
-    providers: providers +
+    providers:
+        providers +
         [
           ChangeNotifierProvider<AgentConnection>(
             create: (_) => _MockAgentConnection(),
           ),
         ],
     child: YaruTheme(
-      builder: (_, yaru, __) => MaterialApp(
-        theme: yaru.theme,
-        darkTheme: yaru.darkTheme,
-        home: child,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-      ),
+      builder:
+          (_, yaru, __) => MaterialApp(
+            theme: yaru.theme,
+            darkTheme: yaru.darkTheme,
+            home: child,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+          ),
     ),
   );
 }

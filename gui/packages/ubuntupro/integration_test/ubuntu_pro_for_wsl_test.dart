@@ -55,17 +55,14 @@ void main() {
   tearDownAll(() => tmpHome?.delete(recursive: true));
   group('no agent build', () {
     // Verifies that a proper message is displayed when the agent cannot be run.
-    testWidgets(
-      'cannot run agent',
-      (tester) async {
-        await app.main();
-        await tester.pumpAndSettle();
+    testWidgets('cannot run agent', (tester) async {
+      await app.main();
+      await tester.pumpAndSettle();
 
-        final l10n = tester.l10n<StartupPage>();
-        final message = find.text(l10n.agentStateCannotStart);
-        expect(message, findsOneWidget);
-      },
-    );
+      final l10n = tester.l10n<StartupPage>();
+      final message = find.text(l10n.agentStateCannotStart);
+      expect(message, findsOneWidget);
+    });
   });
 
   group(
@@ -87,10 +84,9 @@ void main() {
           // taskkill is not immediate
           await Future.delayed(const Duration(seconds: 1));
         } else {
-          await Process.run(
-            'killall',
-            [p.basenameWithoutExtension(agentImageName)],
-          );
+          await Process.run('killall', [
+            p.basenameWithoutExtension(agentImageName),
+          ]);
         }
         File(p.join(tmpHome!.path, '.ubuntupro/.address')).deleteSync();
       });
@@ -106,8 +102,10 @@ void main() {
       tearDown(() {
         // Restores the plugin method call handler after each test, i.e. removes
         // any mocks previously installed by any test case.
-        binding.defaultBinaryMessenger
-            .setMockMethodCallHandler(proChannel, null);
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          proChannel,
+          null,
+        );
         resetAllServices();
       });
 
@@ -225,59 +223,55 @@ void main() {
       // Tests the user journey that starts with the agent down.
       // The GUI should start the agent, check that there is no active subscription
       // and trigger a subscription purchase transaction.
-      testWidgets(
-        'startup to purchase',
-        (tester) async {
-          // For this test case the purchase operation must always succeed.
-          binding.defaultBinaryMessenger.setMockMethodCallHandler(proChannel,
-              (call) async {
-            // The exact delay duration doesn't matter. Still good to have some delay
-            // to ensure the client code won't expect things will respond instantly.
-            await Future.delayed(const Duration(milliseconds: 20));
-            return PurchaseStatus.succeeded.index;
-          });
+      testWidgets('startup to purchase', (tester) async {
+        // For this test case the purchase operation must always succeed.
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(proChannel, (
+          call,
+        ) async {
+          // The exact delay duration doesn't matter. Still good to have some delay
+          // to ensure the client code won't expect things will respond instantly.
+          await Future.delayed(const Duration(milliseconds: 20));
+          return PurchaseStatus.succeeded.index;
+        });
 
-          await app.main();
-          await tester.pumpAndSettle();
+        await app.main();
+        await tester.pumpAndSettle();
 
-          // The "subscribe now page" is only shown if the GUI communicates with the background agent.
-          final l10n = tester.l10n<SubscribeNowPage>();
-          final button = find.text(l10n.getUbuntuPro);
-          expect(button, findsOneWidget);
+        // The "subscribe now page" is only shown if the GUI communicates with the background agent.
+        final l10n = tester.l10n<SubscribeNowPage>();
+        final button = find.text(l10n.getUbuntuPro);
+        expect(button, findsOneWidget);
 
-          await tester.tap(button);
-          await tester.pumpAndSettle();
+        await tester.tap(button);
+        await tester.pumpAndSettle();
 
-          // TODO: Update the expectation when the agent becomes able to reply the notification without crashing.
-          // Most likely when the MS Store mock becomes available.
-          expect(find.byType(SubscribeNowPage), findsOneWidget);
-        },
-      );
-      testWidgets(
-        'purchase failure',
-        (tester) async {
-          // For this test case the purchase operation must always fail.
-          binding.defaultBinaryMessenger.setMockMethodCallHandler(proChannel,
-              (call) async {
-            await Future.delayed(const Duration(milliseconds: 20));
-            return PurchaseStatus.serverError.index;
-          });
+        // TODO: Update the expectation when the agent becomes able to reply the notification without crashing.
+        // Most likely when the MS Store mock becomes available.
+        expect(find.byType(SubscribeNowPage), findsOneWidget);
+      });
+      testWidgets('purchase failure', (tester) async {
+        // For this test case the purchase operation must always fail.
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(proChannel, (
+          call,
+        ) async {
+          await Future.delayed(const Duration(milliseconds: 20));
+          return PurchaseStatus.serverError.index;
+        });
 
-          await app.main();
-          await tester.pumpAndSettle();
+        await app.main();
+        await tester.pumpAndSettle();
 
-          // The "subscribe now page" is only shown if the GUI communicates with the background agent.
-          final l10n = tester.l10n<SubscribeNowPage>();
-          final button = find.text(l10n.getUbuntuPro);
-          expect(button, findsOneWidget);
+        // The "subscribe now page" is only shown if the GUI communicates with the background agent.
+        final l10n = tester.l10n<SubscribeNowPage>();
+        final button = find.text(l10n.getUbuntuPro);
+        expect(button, findsOneWidget);
 
-          await tester.tap(button);
-          await tester.pumpAndSettle();
+        await tester.tap(button);
+        await tester.pumpAndSettle();
 
-          expect(find.byType(SubscribeNowPage), findsOneWidget);
-          expect(find.byType(SnackBar), findsOneWidget);
-        },
-      );
+        expect(find.byType(SubscribeNowPage), findsOneWidget);
+        expect(find.byType(SnackBar), findsOneWidget);
+      });
       // Tests the journey in which the user is already subscribed.
       group('already subscribed', () {
         // config created by the agent.
@@ -302,9 +296,9 @@ landscape:
         Directory? configDir;
         setUpAll(() async {
           // seed a pre-existing configuration.
-          configDir =
-              await Directory(p.join(tmpLocalAppData!.path, 'Ubuntu Pro'))
-                  .create(recursive: true);
+          configDir = await Directory(
+            p.join(tmpLocalAppData!.path, 'Ubuntu Pro'),
+          ).create(recursive: true);
           final config = File(p.join(configDir!.path, 'config'));
           await config.writeAsString(configContents);
         });

@@ -39,10 +39,7 @@ class ProTokenInputField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          lang.tokenInputTitle,
-          style: theme.textTheme.titleLarge!,
-        ),
+        Text(lang.tokenInputTitle, style: theme.textTheme.titleLarge!),
         const SizedBox(height: 8),
         MarkdownBody(
           data: lang.tokenInputDescription(

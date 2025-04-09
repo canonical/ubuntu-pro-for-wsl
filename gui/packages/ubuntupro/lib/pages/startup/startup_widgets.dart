@@ -7,12 +7,7 @@ import '../widgets/status_bar.dart';
 /// Builds a centered-column containg [bottom] and a [Text] widget containing
 /// [message] or an empty string.
 class StatusColumn extends StatelessWidget {
-  const StatusColumn({
-    super.key,
-    this.top,
-    this.message,
-    this.bottom,
-  });
+  const StatusColumn({super.key, this.top, this.message, this.bottom});
   final String? message;
   final Widget? top, bottom;
 

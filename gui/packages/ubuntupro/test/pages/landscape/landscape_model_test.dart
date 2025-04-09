@@ -71,10 +71,7 @@ void main() {
       expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
       expect(() => model.setManualRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setFqdn(testFqdn), throwsAssertionError);
-      expect(
-        () => model.setManualRegistrationKey('123'),
-        throwsAssertionError,
-      );
+      expect(() => model.setManualRegistrationKey('123'), throwsAssertionError);
       expect(() => model.setSslKeyPath(customConf), throwsAssertionError);
     });
   });
@@ -84,9 +81,9 @@ void main() {
     const error = GrpcError.custom(StatusCode.unavailable, msg);
     test('manual', () async {
       final client = MockAgentApiClient();
-      when(client.applyLandscapeConfig(any)).thenAnswer(
-        (_) async => throw error,
-      );
+      when(
+        client.applyLandscapeConfig(any),
+      ).thenAnswer((_) async => throw error);
       final model = LandscapeModel(client);
 
       model.setConfigType(LandscapeConfigType.manual);
@@ -96,9 +93,9 @@ void main() {
       var err = await model.applyConfig();
       expect(err, msg);
 
-      when(client.applyLandscapeConfig(any)).thenAnswer(
-        (_) async => LandscapeSource()..ensureUser(),
-      );
+      when(
+        client.applyLandscapeConfig(any),
+      ).thenAnswer((_) async => LandscapeSource()..ensureUser());
 
       model.setFqdn(kExampleLandscapeFQDN);
       err = await model.applyConfig();
@@ -115,9 +112,9 @@ void main() {
 
     test('custom', () async {
       final client = MockAgentApiClient();
-      when(client.applyLandscapeConfig(any)).thenAnswer(
-        (_) async => throw error,
-      );
+      when(
+        client.applyLandscapeConfig(any),
+      ).thenAnswer((_) async => throw error);
       final model = LandscapeModel(client);
 
       model.setConfigType(LandscapeConfigType.custom);
@@ -127,9 +124,9 @@ void main() {
       var err = await model.applyConfig();
       expect(err, msg);
 
-      when(client.applyLandscapeConfig(any)).thenAnswer(
-        (_) async => LandscapeSource()..ensureUser(),
-      );
+      when(
+        client.applyLandscapeConfig(any),
+      ).thenAnswer((_) async => LandscapeSource()..ensureUser());
 
       model.setCustomConfigPath(customConf);
       err = await model.applyConfig();

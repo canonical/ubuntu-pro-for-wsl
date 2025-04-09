@@ -12,9 +12,7 @@ import 'startup_widgets.dart';
 /// consumer [StartupAnimatedChild] while offering the caller the [onClient] callback to
 /// be executed when/if the [AgentApiClient] is made available by the view-model.
 class StartupPage extends StatelessWidget {
-  const StartupPage({
-    super.key,
-  });
+  const StartupPage({super.key});
 
   @override
   Widget build(BuildContext context) {

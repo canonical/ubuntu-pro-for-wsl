@@ -1,5 +1,4 @@
 include: package:flutter_lints/flutter.yaml
-
 analyzer:
   exclude:
     - "**/*.freezed.dart"
@@ -8,10 +7,8 @@ analyzer:
     - "**/l10n/*.dart"
   errors:
     invalid_annotation_target: ignore
-
   strong-mode:
     implicit-casts: false
-
 linter:
   rules:
     always_declare_return_types: true
@@ -31,7 +28,6 @@ linter:
     prefer_null_aware_operators: true
     prefer_relative_imports: true
     prefer_single_quotes: true
-    require_trailing_commas: true
     sized_box_shrink_expand: true
     sized_box_for_whitespace: true
     sort_unnamed_constructors_first: true

@@ -28,9 +28,9 @@ class StatusBar extends StatelessWidget {
         const SizedBox(width: 8.0),
         SelectableText(
           constants.kVersion,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: YaruColors.warmGrey,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: YaruColors.warmGrey),
         ),
         const Spacer(),
         IconButton(
@@ -44,25 +44,23 @@ class StatusBar extends StatelessWidget {
               ),
             );
           }, // open link to new issue in GH
-          icon: const Icon(
-            bugIcon,
-            color: YaruColors.warmGrey,
-            size: 14.0,
-          ),
+          icon: const Icon(bugIcon, color: YaruColors.warmGrey, size: 14.0),
         ),
         if (showAgentStatus)
           Consumer<AgentConnection>(
-            builder: (context, conn, _) => IconButton(
-              tooltip: conn.state.localize(lang),
-              icon: Icon(
-                size: 14.0,
-                agentConnIcon,
-                color: conn.state.toColor(context),
-              ),
-              onPressed: conn.state == AgentConnectionState.disconnected
-                  ? conn.restartAgent
-                  : null,
-            ),
+            builder:
+                (context, conn, _) => IconButton(
+                  tooltip: conn.state.localize(lang),
+                  icon: Icon(
+                    size: 14.0,
+                    agentConnIcon,
+                    color: conn.state.toColor(context),
+                  ),
+                  onPressed:
+                      conn.state == AgentConnectionState.disconnected
+                          ? conn.restartAgent
+                          : null,
+                ),
           ),
       ],
     );
