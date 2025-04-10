@@ -1,3 +1,18 @@
+wsl-pro-service (0.1.18) plucky; urgency=medium
+
+  * Pin Go toolchain to 1.23.8 to fix the following security vulnerabilities:
+    - GO-2025-3563, GO-2025-3447 and GO-2025-3373 (LP: #2106757)
+  * Allows the service to quit for longer period of time if the Windows agent
+    is not reachable.
+      - resulting in less logging to system journal.
+  * Removes workaround for livepatch no longer needed since pro-client v35
+      - systemd service is more confined again.
+  * Prevents unnecessary re-registration with Landscape
+      - by passing the CLI flag --register-if-needed to landscape-config.
+  * Upgrades various golang dependencies.
+
+ -- Carlos Nihelton <cnihelton@ubuntu.com>  Thu, 10 Apr 2025 13:50:32 -0300
+
 wsl-pro-service (0.1.5) oracular; urgency=medium
 
   * Fix UserProfileDir when %USERPROFILE% is empty
