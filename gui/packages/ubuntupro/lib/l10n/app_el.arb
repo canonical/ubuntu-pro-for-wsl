@@ -1,1 +1,52 @@
-{}
+{
+  "updatingSubscriptionInfo": "Ενημέρωση πληροφοριών συνδρομητή.",
+  "@updatingSubscriptionInfo": {},
+  "appTitle": "Ubuntu Pro για WSL",
+  "@appTitle": {},
+  "proHeading": "Το open source λογισμικό ασφαλείας από τους εκδότες του Ubuntu,τώρα και στα Windows.{aboutLink}",
+  "@proHeading": {
+    "placeholders": {
+      "aboutLink": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseStatusAlreadyPurchased": "Είσαστε ήδη συνδρομητής στο Ubuntu Pro.",
+  "@purchaseStatusAlreadyPurchased": {},
+  "getUbuntuPro": "Λήψη Ubuntu Pro",
+  "@getUbuntuPro": {},
+  "learnMore": "Μάθετε περισσότερα",
+  "@learnMore": {},
+  "ubuntuProEnabled": "Ubuntu Pro είναι ενεργοποιημένο σε αυτό το μηχάνημα",
+  "@ubuntuProEnabled": {},
+  "manageUbuntuPro": "Διαχείριση Ubuntu Pro συνδρομής",
+  "@manageUbuntuPro": {},
+  "purchaseStatusSuccess": "Ευχαριστούμε για την εγγραφής σας στο Ubuntu Pro.",
+  "@purchaseStatusSuccess": {},
+  "purchaseStatusUserGaveUp": "Η αγορά σας ακυρώθηκε.",
+  "@purchaseStatusUserGaveUp": {},
+  "purchaseStatusServer": "Κάτι πήγε στραβά με το Microsoft Store.Παρακαλώ προσπαθήστε αργότερα.",
+  "@purchaseStatusServer": {},
+  "landscapeSetupCustom": "Προχωρημένη διαχείριση",
+  "@landscapeSetupCustom": {},
+  "landscapeKeyLabel": "Κλειδί εγγραφής (προαιρετικό)",
+  "@landscapeKeyLabel": {},
+  "landscapeFileEmptyContents": "Το αρχείο δεν πρέπει να είναι άδειο",
+  "@landscapeFileEmptyContents": {},
+  "landscapeFileNotFound": "Το αρχείο δεν βρέθηκε",
+  "@landscapeFileNotFound": {},
+  "landscapeFileInvalidFormat": "Το αρχείο είναι σε λανθασμένη μορφή",
+  "@landscapeFileInvalidFormat": {},
+  "landscapeFilePicker": "Επιλέξτε αρχείο...",
+  "@landscapeFilePicker": {},
+  "landscapeRegister": "Εγγραφή",
+  "@landscapeRegister": {},
+  "buttonNext": "Επόμενο",
+  "@buttonNext": {},
+  "statusBarReportBugTooltip": "Αναφέρετε ένα λάθος",
+  "@statusBarReportBugTooltip": {},
+  "statusBarAgentRunningTooltip": "Ο Ubuntu Pro πράκτορας είναι ενεργός",
+  "@statusBarAgentRunningTooltip": {},
+  "statusBarAgentConnectingTooltip": "Σύνδεση στο Ubuntu Pro πράκτορα...",
+  "@statusBarAgentConnectingTooltip": {}
+}
