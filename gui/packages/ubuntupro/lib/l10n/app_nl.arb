@@ -3,7 +3,7 @@
   "@purchaseStatusNetwork": {},
   "purchaseStatusUserGaveUp": "Aankooppoging is geannuleerd.",
   "@purchaseStatusUserGaveUp": {},
-  "landscapeHeading": "Configureer de verbinding met Landscape om jouw Ubuntu WSL-exemplaren op afstand te beheren. {landscapeLink}",
+  "landscapeHeading": "Configureer de verbinding met Landscape om uw Ubuntu WSL-exemplaren op afstand te beheren. {landscapeLink}",
   "@landscapeHeading": {
     "placeholders": {
       "landscapeLink": {
@@ -27,7 +27,7 @@
   "@tokenValid": {},
   "tokenInputTitle": "Deze machine koppelen",
   "@tokenInputTitle": {},
-  "tokenInputDescription": "Voer een token in van {proLink} of je systeembeheerder",
+  "tokenInputDescription": "Voer een token in van {proLink} of uw systeembeheerder",
   "@tokenInputDescription": {
     "placeholders": {
       "proLink": {
@@ -59,7 +59,7 @@
   "@agentStateInvalid": {},
   "agentStateCannotStart": "Ubuntu Pro background agent kan niet worden gestart.",
   "@agentStateCannotStart": {},
-  "agentStateUnknownEnv": "De status van de Ubuntu Pro-achtergrondagent kan niet worden geverifieerd. Controleer je omgevingsinstellingen.",
+  "agentStateUnknownEnv": "De status van de Ubuntu Pro-achtergrondagent kan niet worden geverifieerd. Controleer de omgevingsinstellingen.",
   "@agentStateUnknownEnv": {},
   "agentStateQuerying": "De status van de Ubuntu Pro-achtergrondagent controleren.",
   "@agentStateQuerying": {},
@@ -101,7 +101,7 @@
   "@landscapeSkipRegister": {},
   "landscapeSetupManual": "Handmatige configuratie",
   "@landscapeSetupManual": {},
-  "landscapeSetupManualHint": "Registreer je bij je eigen Landscape-server",
+  "landscapeSetupManualHint": "Registreer met uw eigen Landscape-server",
   "@landscapeSetupManualHint": {},
   "landscapeSetupCustom": "Geavanceerde configuratie",
   "@landscapeSetupCustom": {},
