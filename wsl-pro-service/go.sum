@@ -1,7 +1,7 @@
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250409172814-8160c46e4643 h1:UXIv7RbreW7cx+MWwVkisKfpSPfWqmXLZ6kJj7MgJ5g=
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250409172814-8160c46e4643/go.mod h1:Z666Df+QPVQJAkhMYTxrjyZKL7DDMOL4IuK+I6MnQIs=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250409172814-8160c46e4643 h1:Wa4omJqysEjCH+iONCzCv1hKKJloa88RowwzNLx+oRM=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250409172814-8160c46e4643/go.mod h1:znZuQjDjeyaWWXLE0H65hVB/JkqUF15FltEGHFl9aow=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250429201538-f9cc5fd0c498 h1:06KjpglCXfuuITj5+gVZAQLQO0Atgj7blic8gDM1FD0=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20250429201538-f9cc5fd0c498/go.mod h1:nutkwWlJ+fmMxlwnue5g62LYAGD4alREo3MXePKlLIA=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250429201538-f9cc5fd0c498 h1:PhUOuzKcZvXI8v9oRHcMYAfR/cWoiEB5akEXV05EmI8=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20250429201538-f9cc5fd0c498/go.mod h1:/IqiSoZ3hfvlHUUpxKW0qCHBbI0M+6C2ZOBLVSnilTA=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
