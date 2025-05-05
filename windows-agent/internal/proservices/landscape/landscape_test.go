@@ -1058,8 +1058,9 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 }
 
 type mockCloudInit struct {
-	writeCalled  atomic.Bool
-	removeCalled atomic.Bool
+	writeCalled   atomic.Bool
+	removeCalled  atomic.Bool
+	instanceIDSet atomic.Bool
 
 	writeErr  bool
 	removeErr bool
@@ -1067,6 +1068,7 @@ type mockCloudInit struct {
 
 func (c *mockCloudInit) WriteDistroData(distroName string, cloudInit string, requestID string) error {
 	c.writeCalled.Store(true)
+	c.instanceIDSet.Store(requestID != "")
 
 	if c.writeErr {
 		return errors.New("could not write distro cloud-init data: mock error")
