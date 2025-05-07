@@ -79,10 +79,28 @@ func (c CloudInit) writeAgentData() (err error) {
 	return nil
 }
 
-// WriteDistroData writes cloud-init user data to be used for a distro in particular.
-func (c CloudInit) WriteDistroData(distroName string, cloudInit string) error {
-	err := writeFileInDir(c.dataDir, distroName+".user-data", []byte(cloudInit))
-	if err != nil {
+// metadata is a struct that serializes the instance ID as yaml.
+type metadata struct {
+	InstanceID string `yaml:"instance-id"`
+}
+
+// WriteDistroData writes cloud-init data to be used for a particular distro instance.
+func (c CloudInit) WriteDistroData(distroName string, cloudInit string, instanceID string) error {
+	// Handle the metadata first. It would be otherwise annoying if this data would be supposed
+	// to initialize a new instance per Landscape request and everything else worked but the
+	// request ID didn't come through, the server would never tie the new instance to the
+	// installation activity.
+	if instanceID != "" {
+		md, err := yaml.Marshal(metadata{InstanceID: instanceID})
+		if err != nil {
+			return fmt.Errorf("could not marshal metadata: %v", err)
+		}
+		if err = writeFileInDir(c.dataDir, distroName+".meta-data", md); err != nil {
+			return fmt.Errorf("could not create instance metadata file: %v", err)
+		}
+	}
+
+	if err := writeFileInDir(c.dataDir, distroName+".user-data", []byte(cloudInit)); err != nil {
 		return fmt.Errorf("could not create distro-specific cloud-init file: %v", err)
 	}
 

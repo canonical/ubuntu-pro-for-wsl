@@ -12,6 +12,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestNew(t *testing.T) {
@@ -216,6 +217,10 @@ hostagent_uid = landscapeUID1234
 	}
 }
 
+type metadata struct {
+	InstanceID string `yaml:"instance-id"`
+}
+
 func TestWriteDistroData(t *testing.T) {
 	t.Parallel()
 
@@ -233,24 +238,29 @@ data:
 `
 
 	testCases := map[string]struct {
+		instanceID string
 		// Break marshalling
 		noOldData bool
 
 		// Break writing to file
-		breakDir      bool
-		breakTempFile bool
-		breakFile     bool
+		breakDir          bool
+		breakTempFile     bool
+		breakFile         bool
+		breakMetadataFile bool
 
-		want    string
-		wantErr bool
+		want         string
+		wantErr      bool
+		wantMetadata *metadata
 	}{
 		"Success":             {},
 		"With no old data":    {want: newCloudInit, noOldData: true},
 		"With new valid data": {want: newCloudInit},
+		"With metadata":       {instanceID: "1234", wantMetadata: &metadata{InstanceID: "1234"}},
 
-		"Error when the datadir cannot be created":   {breakDir: true, want: oldCloudInit, wantErr: true},
-		"Error when the temp file cannot be written": {breakTempFile: true, want: oldCloudInit, wantErr: true},
-		"Error when the temp file cannot be renamed": {breakFile: true, want: oldCloudInit, wantErr: true},
+		"Error when the datadir cannot be created":       {breakDir: true, want: oldCloudInit, wantErr: true},
+		"Error when the temp file cannot be written":     {breakTempFile: true, want: oldCloudInit, wantErr: true},
+		"Error when the temp file cannot be renamed":     {breakFile: true, want: oldCloudInit, wantErr: true},
+		"Error when the metadata file cannot be renamed": {breakMetadataFile: true, instanceID: "uid123", want: oldCloudInit, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -263,6 +273,7 @@ data:
 			publicDir := t.TempDir()
 			dir := filepath.Join(publicDir, ".cloud-init")
 			path := filepath.Join(dir, distroName+".user-data")
+			metadataPath := filepath.Join(dir, distroName+".meta-data")
 
 			conf := &mockConfig{}
 
@@ -285,12 +296,17 @@ data:
 				require.NoError(t, os.MkdirAll(path, 0600), "Setup: could not create directory to mess with cloud-init")
 			}
 
+			if tc.breakMetadataFile {
+				require.NoError(t, os.RemoveAll(metadataPath), "Setup: Distro cloud-init file should not fail to delete")
+				require.NoError(t, os.MkdirAll(metadataPath, 0600), "Setup: could not create directory to mess with cloud-init")
+			}
+
 			if tc.breakDir {
 				require.NoError(t, os.RemoveAll(dir), "Setup: Distro cloud-init file should not fail to delete")
 				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
 			}
 
-			err = ci.WriteDistroData(distroName, tc.want)
+			err = ci.WriteDistroData(distroName, tc.want, tc.instanceID)
 			if tc.wantErr {
 				require.Error(t, err, "WriteDistroData should have returned an error")
 			} else {
@@ -306,6 +322,17 @@ data:
 			got, err := os.ReadFile(path)
 			require.NoError(t, err, "There should be no error reading the distro's cloud-init file")
 			require.Equal(t, tc.want, string(got), "Agent cloud-init file does not match the golden file")
+
+			got, err = os.ReadFile(metadataPath)
+			if tc.wantMetadata == nil {
+				require.Error(t, err, "Metadata file should not exist when instanceID is not supplied")
+				return
+			}
+			require.NoError(t, err, "There should be no error reading the distro's cloud-init metadata file")
+			require.NotEmpty(t, string(got), "Bazinga")
+			var data metadata
+			require.NoError(t, yaml.Unmarshal(got, &data), "Could not unmarshall test metadata")
+			require.Equal(t, *tc.wantMetadata, data, "cloud-init metadata does not match the golden file")
 		})
 	}
 }

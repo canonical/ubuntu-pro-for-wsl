@@ -173,6 +173,7 @@ func TestInstall(t *testing.T) {
 		getDefaultUserErr      bool
 
 		sendRootfsURL    string
+		requestID        string
 		missingChecksums bool
 
 		wantCloudInitWriteCalled  bool
@@ -319,7 +320,8 @@ func TestInstall(t *testing.T) {
 
 					if tc.sendRootfsURL == "" {
 						return &landscapeapi.Command{
-							Cmd: &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName}},
+							Cmd:       &landscapeapi.Command_Install_{Install: &landscapeapi.Command_Install{Id: distroName}},
+							RequestId: tc.requestID,
 						}
 					}
 
@@ -340,6 +342,7 @@ func TestInstall(t *testing.T) {
 							Cloudinit: &cloudInit,
 							RootfsURL: &u,
 						}},
+						RequestId: tc.requestID,
 					}
 				},
 				// Test assertions
@@ -364,6 +367,10 @@ func TestInstall(t *testing.T) {
 
 					if tc.wantCloudInitWriteCalled {
 						require.True(t, testBed.cloudInit.writeCalled.Load(), "Cloud-init should have been called to write the user data file")
+					}
+
+					if tc.requestID != "" {
+						require.True(t, testBed.cloudInit.instanceIDSet.Load(), "Cloud-init should have set the metadata instance ID")
 					}
 
 					if tc.wantCloudInitRemoveCalled {
