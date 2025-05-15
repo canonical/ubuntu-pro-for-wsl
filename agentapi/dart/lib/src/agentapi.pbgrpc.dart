@@ -42,11 +42,7 @@ class UIClient extends $grpc.Client {
       ($0.Empty value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.SubscriptionInfo.fromBuffer(value));
 
-  UIClient($grpc.ClientChannel channel,
-      {$grpc.CallOptions? options,
-      $core.Iterable<$grpc.ClientInterceptor>? interceptors})
-      : super(channel, options: options,
-        interceptors: interceptors);
+  UIClient(super.channel, {super.options, super.interceptors});
 
   $grpc.ResponseFuture<$0.SubscriptionInfo> applyProToken($0.ProAttachInfo request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$applyProToken, request, options: options);
@@ -152,11 +148,7 @@ class WSLInstanceClient extends $grpc.Client {
       ($0.MSG value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.LandscapeConfigCmd.fromBuffer(value));
 
-  WSLInstanceClient($grpc.ClientChannel channel,
-      {$grpc.CallOptions? options,
-      $core.Iterable<$grpc.ClientInterceptor>? interceptors})
-      : super(channel, options: options,
-        interceptors: interceptors);
+  WSLInstanceClient(super.channel, {super.options, super.interceptors});
 
   $grpc.ResponseFuture<$0.Empty> connected($async.Stream<$0.DistroInfo> request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$connected, request, options: options).single;
