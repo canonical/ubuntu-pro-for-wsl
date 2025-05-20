@@ -1,1 +1,12 @@
-{}
+{
+  "tokenInputHint": "Token",
+  "@tokenInputHint": {},
+  "appTitle": "WSL için Ubuntu Pro",
+  "@appTitle": {},
+  "tokenErrorEmpty": "Token boş olamaz",
+  "@tokenErrorEmpty": {},
+  "tokenErrorInvalid": "Geçersiz token",
+  "@tokenErrorInvalid": {},
+  "tokenValid": "Geçerli token",
+  "@tokenValid": {}
+}
