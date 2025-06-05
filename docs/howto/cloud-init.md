@@ -8,12 +8,10 @@ myst:
 (howto::cloud-init)=
 # Automatic setup of Ubuntu on WSL with cloud-init
 
-Cloud-init is an industry-standard multi-distribution method for cross-platform cloud instance initialisation.
-Ubuntu WSL users can now leverage it to perform an automatic setup to get a working instance with minimal touch.
+Cloud-init is a cross-platform tool for provisioning cloud instances.
+It is an industry standard and can now also be used to automatically setup instances of Ubuntu on WSL.
 
 > See more:  [cloud-init official documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
-
-The latest release of Ubuntu 24.04 LTS (Noble Numbat) comes with cloud-init already preinstalled, so you'll need that specific application to follow this guide. Ubuntu 24.04 LTS can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9nz3klhxdjp5?hl=en-us&gl=US). A previous version of this guide used Ubuntu (Preview), because that comes with the latest in-development features. You can still use it to follow the instructions below, if you prefer. This feature is now available in the default Ubuntu application as well as Ubuntu 22.04 LTS.
 
 ## What you will learn
 
@@ -23,18 +21,36 @@ The latest release of Ubuntu 24.04 LTS (Noble Numbat) comes with cloud-init alre
 
 ## What you will need
 
-- Windows 11 with WSL 2 already enabled
-- The latest Ubuntu 24.04 LTS application from the Microsoft Store
+- Windows 11 with WSL2 already enabled
+
+The guide assumes that you are using Ubuntu 24.04,
+but Ubuntu 22.04 can also be used.
+
+In the latest versions of WSL, installing a distro also launches the instance
+and prompts the user through setup. Cloud-init will not provision an instance
+that has already been set up in this way.
+
+If you want to provision with cloud-init after a distro is installed, first
+install the distro with the `--no-launch` flag. Alternatively, set up cloud-init
+before you install the distro.
 
 ## Write the cloud-config file
 
-Locate your Windows user home directory. It typically is `C:\Users\<YOUR_USER_NAME>`.
+Locate your Windows user home directory, which is typically `C:\Users\<YOUR_USER_NAME>`.
 
-> You can be sure about that path by running `echo $env:USERPROFILE` in PowerShell.
+````{tip}
+If you want to find your home directory, run the following in PowerShell:
 
-Inside your Windows user home directory, create a new folder named `.cloud-init` (notice the `.` à la Linux
-configuration directories), and inside the new directory, create an empty file named `Ubuntu-24.04.user-data`. That file name must
-match the name of the distro instance that will be created in the next step.
+```text
+echo $env:USERPROFILE` in PowerShell
+```
+````
+
+Inside your Windows user home directory, create a new folder named
+`.cloud-init`, ensuring there is `.` at the start of the directory name. Inside
+the new directory, create an empty file named `Ubuntu-24.04.user-data`. The
+name of this file name has to match the name of the distro instance that will
+be created in the next step.
 
 Open that file with your text editor of choice (`notepad.exe` is just fine) and paste in the following contents:
 
@@ -63,29 +79,28 @@ runcmd:
    - /opt/vcpkg/bootstrap-vcpkg.sh
 ```
 
-Save it and close it.
+Save the file and close it.
 
-> That example will create a user named `jdoe` and set it as default via `/etc/wsl.conf`, install the packages
-> `ginac-tools` and `octave` and install `vcpkg` from the git repository, since there is no deb or snap of that
-> application (hence the reason for being included in this guide - it requires an unusual setup).
-
+```{note}
+The cloud-config will create a user named `jdoe` and set it as default via
+`/etc/wsl.conf`, install the packages `ginac-tools` and `octave`. It will also
+install `vcpkg` from a git repository, since there is no deb or snap of that
+application.
+```
 
 > See more: [WSL data source reference](https://cloudinit.readthedocs.io/en/latest/reference/datasources/wsl.html).
 
-## Register a new Ubuntu-24.04 instance
+## Install and launch a new Ubuntu-24.04 instance
 
 In PowerShell, run:
 
 ```{code-block} text
-> ubuntu2404.exe
+> wsl --install Ubuntu-24.04
 ```
 
-This command will register a new Ubuntu-24.04 instance that will be configured automatically by cloud-init.
+This command installs and launches an Ubuntu-24.04 instance.
+This instance will then be configured automatically by cloud-init.
 The process can take several minutes, depending on your computer and network speeds.
-
-> If you want to be sure that there is now an Ubuntu-24.04 instance, run `wsl -l -v`.
-> Notice that the application is named `Ubuntu24.04LTS` but the WSL instance created is named `Ubuntu-24.04`.
-> See more about that naming convention in [our reference documentation](naming).
 
 ## Verify automatic configuration by cloud-init
 
@@ -120,13 +135,13 @@ jdoe@mib01:~$
 
 Once logged into the new distro instance's shell, verify that:
 
-1. The default user matches what was configured in the user data file (in our case `jdoe`).
+1. The default user matches what was configured:
 
 ```{code-block} text
 jdoe@mib:~$ whoami
 ```
 
-This should be verified with the output message:
+This should be verified with the output:
 
 ```{code-block} text
 :class: no-copy
@@ -174,7 +189,7 @@ LC_ALL=
 
 ```
 
-4. The packages were installed and the commands they provide are available.
+4. The packages were installed and the commands that they provide are available.
 
 ```{code-block} text
 jdoe@mib:~$ apt list --installed | egrep 'ginac|octave'
@@ -195,13 +210,13 @@ octave/noble,now 8.4.0-1 amd64 [installed]
 ```
 
 5. Lastly, verify that the commands requested were also run. In this case we set up `vcpkg` from git, as recommended by its
-   documentation (there is no deb or snap available for that program).
+   documentation (there is no deb or snap available for that program):
 
 ```{code-block} text
 jdoe@mib:~$ /opt/vcpkg/vcpkg version
 ```
 
-This should also be verified with:
+This should be verified with:
 
 ```{code-block} text
 :class: no-copy
@@ -212,7 +227,7 @@ See LICENSE.txt for license information.
 
 ## Enjoy!
 
-That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL 2 with minimal touch.
+That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL2 with minimal touch.
 
 This workflow will guarantee a solid foundation for your next Ubuntu WSL project.
 

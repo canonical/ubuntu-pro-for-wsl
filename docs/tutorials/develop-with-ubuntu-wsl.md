@@ -7,20 +7,21 @@ myst:
 
 # Develop with Ubuntu on WSL
 
-The easiest way to access your Ubuntu development environment in WSL is by using Visual Studio Code via the built-in `Remote` extension.
+Ubuntu on WSL can be used as a powerful development environment on Windows and
+offers excellent integration with developer tools like Visual Studio Code.
 
 ## What you will learn
 
-* How to install WSL and Ubuntu on WSL from the terminal
-* How to set up Visual Studio Code for remote development with Ubuntu on WSL
-* How to create a basic Node.js webserver on Ubuntu using Visual Studio Code
-* How to preview HTML served from an Ubuntu WSL instance in a native browser on Windows
+* Installing WSL and Ubuntu on WSL from the terminal
+* Setting up Visual Studio Code for remote development with Ubuntu on WSL
+* Creating a basic Node.js webserver on Ubuntu using Visual Studio Code
+* Previewing HTML served from an Ubuntu WSL instance in a native browser on Windows
 
 ## What you will need
 
-* A PC with Windows 10 or 11
+* A machine running Windows 10 or 11
 
-## Install Ubuntu on WSL2
+## Install Ubuntu on WSL
 
 ### Install WSL
 
@@ -30,43 +31,46 @@ Open a PowerShell prompt as an Administrator and run:
 > wsl --install
 ```
 
-This command will enable the features necessary to run WSL and also install the latest Ubuntu distribution available for WSL. It is recommended to reboot your machine after this initial installation to complete the setup.
+This command will enable the features necessary to run WSL and installs the
+latest Ubuntu distribution available for WSL.
 
-### Install Ubuntu on WSL
+As this step creates an Ubuntu instance, you will be prompted to create a username
+and password. An Ubuntu terminal will then open automatically.
 
-WSL supports a variety of Ubuntu releases. Check our [reference on the distributions](../reference/distributions.md) for more information.
+Changing from PowerShell to Ubuntu is indicated by a change in the terminal prompt.
 
-There are multiple ways of installing Ubuntu on WSL, here we focus on using the terminal.
-For other installation methods, refer to your dedicated guide:
-
-* [Install Ubuntu on WSL2](../howto/install-ubuntu-wsl2.md)
-
-In a PowerShell terminal, run `wsl --list --online` to see all available distros and versions:
+**PowerShell prompt**:
 
 ```{code-block} text
 :class: no-copy
-The following is a list of valid distributions that can be installed.
-The default distribution is denoted by '*'.
-Install using 'wsl --install -d <Distro>'.
+PS C:\Users\username>
+```
 
-  NAME                                   FRIENDLY NAME
-* Ubuntu                                 Ubuntu
-  Debian                                 Debian GNU/Linux
-  kali-linux                             Kali Linux Rolling
-  Ubuntu-18.04                           Ubuntu 18.04 LTS
-  Ubuntu-20.04                           Ubuntu 20.04 LTS
-  Ubuntu-22.04                           Ubuntu 22.04 LTS
-  Ubuntu-24.04                           Ubuntu 24.04 LTS
-...
-
-``` 
-
-Your list may be different once new distributions become available.  
-
-You can install a version using a NAME from the output, for example:
+**Ubuntu prompt**:
 
 ```{code-block} text
-> wsl --install -d Ubuntu-24.04
+:class: no-copy
+username@pc:~$
+```
+
+To exit the Ubuntu terminal, type the `exit` command and execute it by pressing
+<kbd>enter</kbd>, which will return you to the PowerShell prompt.
+
+```{tip}
+It is recommended to reboot your machine after this initial installation to
+complete the setup.
+```
+
+### Install a specific version of Ubuntu on WSL
+
+There are multiple ways of installing Ubuntu on WSL, here we focus on using the
+terminal. For more detail on installation methods for Ubuntu on WSL, refer to
+our [dedicated installation guide](../howto/install-ubuntu-wsl2.md).
+
+To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
+
+```{code-block} text
+> wsl --install Ubuntu-24.04
 ```
 
 You'll see an indicator of the installation progress in the terminal:
@@ -77,26 +81,45 @@ Installing: Ubuntu 24.04 LTS
 [==========================72,0%==========                 ]
 ```
 
-Use `wsl -l -v` to see all your currently installed distros and the version of WSL they are using:
+```{note}
+WSL supports a variety of Ubuntu releases. Read our [reference on distributions
+of Ubuntu on WSL](../reference/distributions.md) for more information.
+```
+
+### Run a specific Ubuntu version
+
+Use `wsl -l -v` to list all your installed distros and the version of WSL that they are using:
 
 ```{code-block} text
 :class: no-copy
   NAME            STATE           VERSION
-  Ubuntu-20.04    Stopped         2
+  Ubuntu          Stopped         2
 * Ubuntu-24.04    Stopped         2
 ```
 
+Two instances of Ubuntu are installed:
+
+1. The default Ubuntu version that was installed automatically when you installed WSL
+2. The numbered Ubuntu version that you installed manually
+
+You can open a specific instance from PowerShell using its NAME:
+
+```{code-block} text
+> wsl ~ -d Ubuntu-24.04
+```
+
+The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory,
+the `-d` flag is added before specifying a distro.
+
 ## Install Visual Studio Code on Windows
 
-One of the advantages of WSL is that it can interact with the native Windows version of Visual Studio Code using its remote development extension.
+One of the advantages of WSL is its integration with native Windows applications, such as Visual Studio Code.
 
-To install Visual Studio Code, visit the Microsoft Store and search for Visual Studio Code.
-
-Then click **Install**.
+Search for "Visual Studio Code" in the Microsoft Store and install it.
 
 ![Installation page for Visual Studio Code on the Microsoft Store.](assets/vscode/msstore.png)
 
-Alternatively, you can install Visual Studio Code from the web link [here](https://code.visualstudio.com/Download).
+Alternatively, you can install Visual Studio Code from the [web link](https://code.visualstudio.com/Download).
 
 ![Visual Studio Code download page showing download options for Windows, Linux, and Mac.](assets/vscode/download-vs-code.png)
 
@@ -114,23 +137,17 @@ This is an extension pack that allows you to open any folder in a container, rem
 
 ![Installation page for the Remote Development Visual Studio Code extension.](assets/vscode/remote-extension.png)
 
-Once installed we can test it out by creating an example local web server with Node.js
+Once installed you can test the development environment by creating an example local web server with Node.js
 
 ## Install Node.js and create a new project
 
-Open your Ubuntu WSL terminal and ensure everything is up to date by typing:
+Open an Ubuntu terminal using the `wsl ~ -d Ubuntu24.04` command.
+
+Ensure the packages in Ubuntu are up-to-date with the following command:
 
 ```{code-block} text
-$ sudo apt update
+$ sudo apt update && sudo apt upgrade -y
 ```
-
-Then:
-
-```{code-block} text
-$ sudo apt upgrade -y
-```
-
-Entering your password when prompted.
 
 Next, install Node.js and npm:
 
@@ -139,27 +156,25 @@ $ sudo apt-get install nodejs
 $ sudo apt install npm
 ```
 
-Press `Y` when prompted.
-
-Now, create a new folder for our server.
+Create a directory for your server.
 
 ```{code-block} text
 $ mkdir serverexample/
 ```
 
-Then navigate into it:
+Change into that directory:
 
 ```{code-block} text
 $ cd serverexample/
 ```
 
-Now, open up your folder in Visual Studio Code, with the following command:
+Then open the directory in Visual Studio Code:
 
 ```{code-block} text
 $ code .
 ```
 
-The first time you do this, it will trigger a download for the necessary dependencies:
+The first time you do run `code` from Ubuntu, it will trigger a download of the necessary dependencies:
 
 ![Bash snippet showing the installation of Visual Studio Code Server's required dependencies.](assets/vscode/downloading-vscode-server.png)
 
@@ -167,7 +182,7 @@ Once complete, your native version of Visual Studio Code will open the folder.
 
 ## Creating a basic web server
 
-In Visual Studio Code, create a new `package.json` file and add the following text ([original example](https://learn.microsoft.com/en-gb/archive/blogs/cdndevs/visual-studio-code-and-local-web-server#3-add-a-packagejson-file-to-the-project-folder))
+In Visual Studio Code, create a new `package.json` file and add the following text:
 
 ```{code-block} json
 {
@@ -186,7 +201,7 @@ In Visual Studio Code, create a new `package.json` file and add the following te
 }
 ```
 
-Save the file and then, in the same folder, create a new one called `index.html`
+Save the file and then --- in the same folder --- create a new one called `index.html`
 
 Add the following text, then save and close:
 
@@ -206,7 +221,7 @@ Finally, type the following to launch the web server:
 $ npm start
 ```
 
-You can now navigate to `localhost:10001` in your native Windows web browser by using `CTRL+LeftClick` on the terminal links.
+You can now navigate to `localhost:10001` in your native Windows web browser by using <kbd>CTRL</kbd>+<kbd>LeftClick</kbd> on the terminal links.
 
 ![Windows desktop showing a web server being run from a terminal with "npm start", A Visual Studio Code project with a "hello world" html file, and a web browser showing the "hello world" page being served on local host.](assets/vscode/hello-world.png)
 

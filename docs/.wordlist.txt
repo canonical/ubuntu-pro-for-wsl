@@ -7,6 +7,7 @@ APIs
 balancer
 Charmhub
 CLI
+CTRL
 DCO
 Diátaxis
 Dqlite
@@ -26,6 +27,7 @@ Juju
 Kubeflow
 Kubernetes
 Launchpad
+LeftClick
 linter
 LTS
 LXD
