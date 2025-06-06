@@ -8,5 +8,49 @@
   "tokenValid": "Geton valid",
   "@tokenValid": {},
   "tokenInputTitle": "Ligar aquesta maquina",
-  "@tokenInputTitle": {}
+  "@tokenInputTitle": {},
+  "applyingProToken": "Aplicacion del geton {token}",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenInputDescription": "Picatz un geton de {proLink} o de l’administrator sistèma",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "applyProToken": "Aplicar geton Pro",
+  "@applyProToken": {},
+  "tokenInputHint": "Geton",
+  "@tokenInputHint": {},
+  "landscapeSetupManual": "Configuracion manuala",
+  "@landscapeSetupManual": {},
+  "landscapeSetupCustom": "Configuracion avançada",
+  "@landscapeSetupCustom": {},
+  "attach": "Associar",
+  "@attach": {},
+  "agent": "Agent Ubuntu Pro de rèireplan",
+  "@agent": {},
+  "agentStateStarting": "L’agent Ubuntu Pro de rèireplan es a amodar.",
+  "@agentStateStarting": {},
+  "agentStatePingNonResponsive": "L’agent Ubuntu Pro de rèireplan respond pas.",
+  "@agentStatePingNonResponsive": {},
+  "agentStateInvalid": "En espèra ’inicializacion de l’agent Ubuntu Pro de rèireplan.",
+  "@agentStateInvalid": {},
+  "agentStateCannotStart": "Se pòt pas amodar l’agent Ubuntu Pro de rèireplan.",
+  "@agentStateCannotStart": {},
+  "landscapeSkip": "Ignorar pel moment",
+  "@landscapeSkip": {},
+  "buttonNext": "Seguent",
+  "@buttonNext": {},
+  "buttonSkip": "Sautar",
+  "@buttonSkip": {},
+  "buttonBack": "Retorn",
+  "@buttonBack": {}
 }
