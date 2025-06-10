@@ -57,7 +57,7 @@ If you want to restore the Ubuntu-24.04 instance that you have previously backed
 PS C:\Users\me> wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.tar.gz
 ```
 
-This will import your previous data and if you run `ubuntu2404.exe` an Ubuntu WSL instance
+This will import your previous data and if you run `wsl -d Ubuntu-24.04`, an Ubuntu WSL instance
 should be restored with your previous configuration intact.
 
 To login as a user `k`, created with the original instance, run: 

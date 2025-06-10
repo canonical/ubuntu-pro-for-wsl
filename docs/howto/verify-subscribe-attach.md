@@ -36,14 +36,14 @@ To verify Pro-attachment a new Ubuntu instance needs to be created.
 Running the following command in PowerShell will create a new Ubuntu-24.04 instance
 and prompt you to create a username and password for the machine:
 
-```text
-PS C:\Users\me\up4wInstall> ubuntu2404.exe
+```{code-block} text
+PS C:\Users\me\up4wInstall> wsl ~ -d Ubuntu-24.04
 ```
 
 You will now be logged in to the new instance shell and can
 check that UP4W has Pro-attached this instance with:
 
-```text
+```{code-block} text
 u@mib:~$ pro status
 ```
 
@@ -54,7 +54,8 @@ The output will confirm the following:
 - Verification of Pro-attachment
 
 
-```text
+```{code-block} text
+:class: no-copy
 SERVICE          ENTITLED  STATUS       DESCRIPTION
 esm-apps         yes       enabled      Expanded Security Maintenance for Applications
 esm-infra        yes       enabled      Expanded Security Maintenance for Infrastructure
@@ -73,7 +74,7 @@ Each new Ubuntu WSL instance that is created should automatically now be Pro-att
 
 To find other useful Ubuntu pro commands run:
 
-```text
+```{code-block} text
 u@mib:~$ pro status
 ```
 

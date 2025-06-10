@@ -10,131 +10,164 @@ myst:
 
 ## What you will learn
 
-* How to enable and install WSL on Windows 10 and Windows 11
-* How to install `Ubuntu 24.04 LTS` using the Microsoft Store or WSL commands in the terminal
+* How to enable and install WSL on Windows
+* How to install Ubuntu 24.04 LTS using the Microsoft Store or WSL commands in the terminal
+* How to start Ubuntu instances
 
 ## What you will need
 
 * Windows 10 or 11 running on either a physical device or virtual machine 
 * All of the latest Windows updates installed
 
-## Install WSL
+## Install WSL and run the default Ubuntu distro
 
-You can install WSL from the command line. Open a PowerShell prompt as an Administrator (we recommend using [Windows Terminal](https://github.com/microsoft/terminal?tab=readme-ov-file#installing-and-running-windows-terminal)) and run:
-
+To install WSL, open PowerShell as an Administrator and run:
 
 ```{code-block} text
 > wsl --install
 ```
 
-It is recommended to reboot your machine after this initial installation to complete the setup.
+This installs both WSL and the default distro for WSL, which is the latest LTS version of Ubuntu.
 
-## Install Ubuntu WSL
+## Install specific versions of Ubuntu on WSL
 
-There are multiple ways of installing distros on WSL, here we focus on two: the Microsoft Store application and WSL commands run in the terminal. The result is the same regardless of the method.
+There are multiple ways of installing Ubuntu distros on WSL.
+The best method depends on your specific requirements.
 
-### Method 1: Microsoft Store application
+### Method 1: Install Ubuntu from the terminal
 
-Find the distribution you prefer on the Microsoft Store and then click **Get**. 
-
-![Installation page for Ubuntu 24.04 LTS in the Microsoft store.](assets/install-ubuntu-wsl2/choose-distribution.png)
-
-Ubuntu will then be installed on your machine. Once installed, you can either launch the application directly from the Microsoft Store or search for Ubuntu in your Windows search bar.
-
-![Search results for Ubuntu 24.04 LTS in Windows search bar.](assets/install-ubuntu-wsl2/search-ubuntu-windows.png)
-
-### Method 2: WSL commands in the terminal
-
-In a PowerShell terminal, you can run `wsl --list --online` to see an output with all available distros and versions:
+In a PowerShell terminal, run `wsl --list --online` to see a list of all available distros and versions:
 
 ```{code-block} text
 :class: no-copy
 The following is a list of valid distributions that can be installed.
-The default distribution is denoted by '*'.
-Install using 'wsl --install -d <Distro>'.
+Install using 'wsl --install <Distro>'.
 
   NAME                                   FRIENDLY NAME
-* Ubuntu                                 Ubuntu
-  Debian                                 Debian GNU/Linux
+  AlmaLinux-8                            AlmaLinux OS 8
+  ...                                    ...
+  Ubuntu                                 Ubuntu
+  Ubuntu-24.04                           Ubuntu 24.04 LTS
+  archlinux                              Arch Linux
   kali-linux                             Kali Linux Rolling
+  ...                                    ...
   Ubuntu-18.04                           Ubuntu 18.04 LTS
   Ubuntu-20.04                           Ubuntu 20.04 LTS
   Ubuntu-22.04                           Ubuntu 22.04 LTS
-  Ubuntu-24.04                           Ubuntu 24.04 LTS
 ...
 
-``` 
-
-Your list may be different once new distributions become available.  
-
-You can install a version using a NAME from the output:
-
-```{code-block} text
-> wsl --install -d Ubuntu-24.04
 ```
 
-You'll see an indicator of the installation progress in the terminal:
+Install a specific Ubuntu distro using a NAME from the output:
+
+```{code-block} text
+> wsl --install Ubuntu-24.04
+```
+
+```{important}
+At time of writing, Ubuntu 24.04 LTS and later versions are download in [WSL's
+new tar-based format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available).
+Earlier Ubuntu versions are currently downloaded in the old format. The new format
+requires WSL 2.4.10 or higher.
+```
+
+### Method 2: Download and install from the Ubuntu archive
+
+Ubuntu images for WSL can be downloaded directly from [ubuntu.com/wsl](https://ubuntu.com/desktop/wsl).
+
+The image has a `.wsl` extension and can be installed in two ways:
+
+1. Double-clicking the downloaded file
+2. Running `wsl --install --from-file <image>.wsl` in the download directory
+
+This method has advantages in some contexts:
+
+* Access to the Microsoft Store is not required
+* Images can be self-hosted on an internal network
+* Custom installations can be created by modifying the image
+
+> Read our [blog post](https://ubuntu.com/blog/ubuntu-wsl-new-format-available)
+about the new format and [Microsoft's guide on building custom WSL
+distros](https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro).
+
+
+### Method 3: Install from the Microsoft Store
+
+Find the Ubuntu distribution that you want in the Microsoft Store and click **Get**.
+
+![Installation page for Ubuntu 24.04 LTS in the Microsoft store.](assets/install-ubuntu-wsl2/choose-distribution.png)
+
+Once installed, you can either launch Ubuntu 24.04 LTS directly from the Microsoft Store or search for Ubuntu in your Windows search bar.
+
+![Search results for Ubuntu 24.04 LTS in Windows search bar.](assets/install-ubuntu-wsl2/search-ubuntu-windows.png)
+
+## Starting an Ubuntu instance
+
+During installation of an Ubuntu distro, you are asked to create a username and password specific to that instance.
+This also starts an Ubuntu session and logs you in.
+
+After installation, you can open Ubuntu instances by:
+
+* Searching for them in the Window's search bar
+* Opening the dropdown in [Windows Terminal](https://github.com/microsoft/terminal?tab=readme-ov-file#installing-and-running-windows-terminal)
+* Running the `wsl -d <Distro>` command in PowerShell
+
+At any point, you can list the Ubuntu distros that you can start with `wsl -l -v`.
+
+## Starting an instance in the right directory
+
+By default, if you open Ubuntu using the Windows search bar or the Windows Terminal dropdown,
+the instance starts in the Ubuntu home directory.
+
+When starting an instance from the terminal, the command run determines the starting directory.
+
+### Start Ubuntu in the current Windows directory from the terminal
+
+When you open PowerShell, the working Windows directory is `C:\Users\username`.
+
+Run `wsl -d <Distro>` to start an Ubuntu session in that directory. The prompt
+will indicate that the Windows `C:` drive is mounted to Ubuntu and that you are
+in the Windows home directory:
 
 ```{code-block} text
 :class: no-copy
-Installing: Ubuntu 24.04 LTS
-[==========================72,0%==========                 ]
+username@pc:/mnt/c/Users/username$
 ```
 
-Use `wsl -l -v` to see all your currently installed distros and the version of WSL that they are using:
+### Start Ubuntu in the Ubuntu home directory from the terminal
+
+When in a directory in the mounted `C:` drive, you can change to the Ubuntu
+home directory with:
 
 ```{code-block} text
-:class: no-copy
-  NAME            STATE           VERSION
-  Ubuntu-20.04    Stopped         2
-* Ubuntu-24.04    Stopped         2
+username@pc:/mnt/c/Users/username$ cd ~
 ```
 
-## Note on installing images without the Microsoft Store
-
-If you do not have access to the Microsoft Store or need to install
-a custom image it is possible to import a distribution as a tar file:
+To skip this step, and start an instance from PowerShell with Ubuntu home as
+the working directory, run:
 
 ```{code-block} text
-> wsl --import <DistroName> <InstallLocation> <InstallTarFile>
-```
-Appx and MSIX packages for a given distro can also be downloaded and installed.
-Please refer to Microsoft's documentation for more detailed information on these installation methods:
-
-- [Importing Linux distributions](https://learn.microsoft.com/en-us/windows/wsl/use-custom-distro)
-- [Installing distributions without the Microsoft Store](https://learn.microsoft.com/en-us/windows/wsl/install-manual#downloading-distributions)
-
-```{warning}
-You should always try to use the latest LTS release of Ubuntu, as it offers the best security, reliability and support when using Ubuntu WSL.
-
-Currently we do not have a recommended location from which to download tar and Appx/MSIX files for Ubuntu distros.
+> wsl ~ -d Ubuntu
 ```
 
-## Run and configure Ubuntu
-
-To open an Ubuntu 24.04 terminal run the following command in PowerShell:
+````{tip}
+For the **default Ubuntu distro only**, this command can be shortened further to:
 
 ```{code-block} text
-> ubuntu2404.exe 
+> wsl ~
 ```
 
-Once it has finished its initial setup, you will be prompted to create a username and password. They don't need to match your Windows user credentials.
-
-Finally, it’s always good practice to install the latest updates by running the following commands within the Ubuntu terminal, entering your password when prompted:
-
-```{code-block} text
-$ sudo apt update
-$ sudo apt full-upgrade -y
-```
+````
 
 ## Enjoy Ubuntu on WSL
 
-In this guide, we’ve shown you how to install Ubuntu WSL on Windows 10 or 11.
+In this guide, we’ve shown you how to install Ubuntu WSL using different methods.
 
 We hope you enjoy working with Ubuntu in WSL. Don’t forget to check out [our blog](https://ubuntu.com/blog) for the latest news on all things Ubuntu.
 
-### Further Reading
+## Further Reading
 
+* [Read a detailed reference on WSL terminal commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands)
 * [Setting up WSL for Data Science](https://ubuntu.com/blog/upgrade-data-science-workflows-ubuntu-wsl)
 * [Whitepaper: Ubuntu WSL for Data Scientists](https://ubuntu.com/engage/ubuntu-wsl-for-data-scientists)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
