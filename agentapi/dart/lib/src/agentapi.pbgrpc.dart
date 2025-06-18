@@ -5,9 +5,10 @@
 // @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names
 
 import 'dart:async' as $async;
 import 'dart:core' as $core;
@@ -21,6 +22,14 @@ export 'agentapi.pb.dart';
 
 @$pb.GrpcServiceName('agentapi.UI')
 class UIClient extends $grpc.Client {
+  /// The hostname for this service.
+  static const $core.String defaultHost = '';
+
+  /// OAuth scopes needed for the client.
+  static const $core.List<$core.String> oauthScopes = [
+    '',
+  ];
+
   static final _$applyProToken = $grpc.ClientMethod<$0.ProAttachInfo, $0.SubscriptionInfo>(
       '/agentapi.UI/ApplyProToken',
       ($0.ProAttachInfo value) => value.writeToBuffer(),
@@ -135,6 +144,14 @@ abstract class UIServiceBase extends $grpc.Service {
 }
 @$pb.GrpcServiceName('agentapi.WSLInstance')
 class WSLInstanceClient extends $grpc.Client {
+  /// The hostname for this service.
+  static const $core.String defaultHost = '';
+
+  /// OAuth scopes needed for the client.
+  static const $core.List<$core.String> oauthScopes = [
+    '',
+  ];
+
   static final _$connected = $grpc.ClientMethod<$0.DistroInfo, $0.Empty>(
       '/agentapi.WSLInstance/Connected',
       ($0.DistroInfo value) => value.writeToBuffer(),
@@ -154,6 +171,7 @@ class WSLInstanceClient extends $grpc.Client {
     return $createStreamingCall(_$connected, request, options: options).single;
   }
 
+  /// Reverse unary calls
   $grpc.ResponseStream<$0.ProAttachCmd> proAttachmentCommands($async.Stream<$0.MSG> request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$proAttachmentCommands, request, options: options);
   }
