@@ -2,5 +2,7 @@
   "appTitle": "Ubuntu Pro para WSL",
   "@appTitle": {},
   "tokenErrorEmpty": "O token não pode estar vazio",
-  "@tokenErrorEmpty": {}
+  "@tokenErrorEmpty": {},
+  "buttonNext": "Próximo",
+  "@buttonNext": {}
 }
