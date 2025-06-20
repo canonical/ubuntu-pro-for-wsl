@@ -41,7 +41,7 @@
   },
   "purchaseStatusAlreadyPurchased": "Již jste přihlášeni k Pro.",
   "@purchaseStatusAlreadyPurchased": {},
-  "tokenErrorEmpty": "Token nemůže být prázdný",
+  "tokenErrorEmpty": "Token je třeba vyplnit",
   "@tokenErrorEmpty": {},
   "tokenErrorInvalid": "Neplatný token",
   "@tokenErrorInvalid": {},
@@ -63,9 +63,9 @@
       }
     }
   },
-  "agent": "Agent na pozadí Ubuntu Pro",
+  "agent": "Agent pro Ubuntu Pro (na pozadí)",
   "@agent": {},
-  "agentStateStarting": "Agent na pozadí Ubuntu Pro se spouští.",
+  "agentStateStarting": "Agent Ubuntu Pro se spouští (na pozadí).",
   "@agentStateStarting": {},
   "agentStatePingNonResponsive": "Agent na pozadí Ubuntu Pro neodpovídá.",
   "@agentStatePingNonResponsive": {},
