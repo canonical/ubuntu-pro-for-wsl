@@ -19,7 +19,7 @@ ifeq ($(strip $(GOFLAGS)),)
 	exit 1
 endif
 	@echo "Building with flags $(GOFLAGS)"
-	dh $@ --builddirectory=_build --with=apport
+	dh $@ --builddirectory=_build --with=apport,golang
 
 override_dh_auto_install:
 	dh_auto_install -- --no-source
