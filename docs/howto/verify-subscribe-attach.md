@@ -82,4 +82,4 @@ u@mib:~$ pro status
 ## Landscape
 
 For verification and troubleshooting of Landscape server and client configuration please refer to
-[Landscape | View WSL host machines and child computers](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape/#heading--view-wsl-host-machines-and-child-computers).
+[Landscape | View WSL host machines and child computers](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape/#view-wsl-host-machines-and-child-computers).

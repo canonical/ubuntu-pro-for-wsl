@@ -20,6 +20,7 @@ cuda
 distro
 distros
 ESM
+grayscale
 gRPC
 IDEs
 js
@@ -29,6 +30,7 @@ macOS
 makefile
 MSIX
 npm
+OOBE
 OpenGL
 OpenVINO
 powershell
