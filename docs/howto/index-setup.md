@@ -16,6 +16,7 @@ Run a full Ubuntu development environment on Windows.
 Install Ubuntu on WSL <install-ubuntu-wsl2>
 Back up and restore Ubuntu WSL instances <backup-and-restore>
 Automatic setup of Ubuntu on WSL with cloud-init <cloud-init>
+Customise an Ubuntu distro for WSL <custom-ubuntu-distro.md>
 ```
 
 ## The Ubuntu Pro for WSL application
