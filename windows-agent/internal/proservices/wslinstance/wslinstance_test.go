@@ -172,12 +172,13 @@ func TestServe(t *testing.T) {
 			}, timeout, time.Second, "Distro never got assigned a connection")
 
 			wps.sendInfo(t, &agentapi.DistroInfo{
-				WslName:     distroName,
-				Id:          "TEST_ID",
-				VersionId:   "TEST_VERSION_ID",
-				PrettyName:  "TEST_PRETTY_NAME",
-				ProAttached: true,
-				Hostname:    "TEST_HOSTNAME",
+				WslName:            distroName,
+				Id:                 "TEST_ID",
+				VersionId:          "TEST_VERSION_ID",
+				PrettyName:         "TEST_PRETTY_NAME",
+				ProAttached:        true,
+				Hostname:           "TEST_HOSTNAME",
+				CreatedByLandscape: true,
 			})
 
 			require.Eventually(t, func() bool {

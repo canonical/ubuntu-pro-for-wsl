@@ -237,7 +237,10 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 	}
 
-	if _, err = e.database().GetDistroAndUpdateProperties(ctx, distro.Name(), d.Properties{}); err != nil {
+	_, err = e.database().GetDistroAndUpdateProperties(ctx, distro.Name(), d.Properties{
+		CreatedByLandscape: true,
+	})
+	if err != nil {
 		return fmt.Errorf("could not initialize the distro properties in the database: %v", err)
 	}
 

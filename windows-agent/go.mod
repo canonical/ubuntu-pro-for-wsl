@@ -3,7 +3,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/windows-agent
 go 1.23.0
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f
+	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909072650-75a32126b04f

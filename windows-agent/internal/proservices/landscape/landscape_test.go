@@ -296,6 +296,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 		disconnectBeforeSend bool
 		distroIsRunning      bool
 		distroIsUnregistered bool
+		createdByLandscape   bool
 
 		wantErr           bool
 		wantDistroSkipped bool
@@ -304,6 +305,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 		"Success with a running distro":                       {distroIsRunning: true},
 		"Success when the distro State cannot be retreived":   {stateErr: true, wantDistroSkipped: true},
 		"Success when the default distro cannot be retreived": {breakWSLRegistry: true, dontRegisterDistro: true, wantDistroSkipped: true},
+		"Success with a Landscape-created instance":           {createdByLandscape: true},
 
 		"Error when the token cannot be retreived":                           {tokenErr: true, wantErr: true},
 		"Error when attempting to SendUpdatedInfo after having disconnected": {disconnectBeforeSend: true, wantErr: true},
@@ -343,14 +345,16 @@ func TestSendUpdatedInfo(t *testing.T) {
 			if !tc.dontRegisterDistro {
 				distroName, _ = wsltestutils.RegisterDistro(t, ctx, true)
 				props = distro.Properties{
-					DistroID:    "Cool Ubuntu",
-					VersionID:   "NewerThanYours",
-					PrettyName:  "😎 Cool guy 🎸",
-					Hostname:    "CoolMachine",
-					ProAttached: true,
+					DistroID:           "Cool Ubuntu",
+					VersionID:          "NewerThanYours",
+					PrettyName:         "😎 Cool guy 🎸",
+					Hostname:           "CoolMachine",
+					ProAttached:        true,
+					CreatedByLandscape: tc.createdByLandscape,
 				}
 
 				d, err = db.GetDistroAndUpdateProperties(ctx, distroName, props)
+				t.Logf("d.createdByLandscape: %t", d.Properties().CreatedByLandscape)
 				require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 			}
 
@@ -392,6 +396,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			if tc.distroIsRunning {
 				wantDistroState = landscapeapi.InstanceState_Running
 			}
+			wantCreatedByLandscape := props.CreatedByLandscape
 
 			// Asserting on the first-contact SendUpdatedInfo
 			require.Eventually(t, func() bool {
@@ -426,6 +431,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				assert.Equal(t, wantDistroName, got.Name, "Mismatch between local distro Name and that received by the server")
 				assert.Equal(t, wantDistroVersionID, got.VersionID, "Mismatch between local distro VersionId and that received by the server")
 				assert.Equal(t, wantDistroState, got.InstanceState, "Mismatch between local distro InstanceState and that received by the server")
+				assert.Equal(t, wantCreatedByLandscape, got.CreatedByLandscape, "Mismatch between local distro CreatedByLandscape and that received by the server")
 			}
 
 			// Exiting if previous assert battery failed

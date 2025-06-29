@@ -61,6 +61,7 @@ message DistroInfo {
     string pretty_name = 4;
     bool pro_attached = 5;
     string hostname = 6;
+    bool created_by_landscape = 7;
 }
 
 message ProAttachCmd {

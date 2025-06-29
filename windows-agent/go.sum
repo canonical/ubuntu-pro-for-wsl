@@ -1,7 +1,7 @@
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
-github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f h1:98VdOj+VrXa3esA66XX0rM0IiJSe0M+6lCGztGdttP4=
-github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c h1:NxFWYekGaOxzSAHSRzUlZ0J6TA2zFajqHMLpkA4A7rc=
+github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f h1:NiCanRAKQannR6M4uB1YB/s3ZB+aIEIESclRlcrIKic=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f/go.mod h1:xssoyTYh2NqXuj0sG6m7HsLTwI4HXPESweUjbh2WUQs=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f h1:dRvnh9c8Su1KB9CoOTwj6hYi8AgwF6i6EvifCvBsaQU=

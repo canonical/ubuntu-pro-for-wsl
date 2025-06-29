@@ -69,12 +69,15 @@ func TestNew(t *testing.T) {
 		withGUID               string
 		preventWorkDirCreation bool
 		nilMutex               bool
+		createdByLandscape     bool
 
 		wantErr     bool
 		wantErrType error
 	}{
 		"Success with a registered distro":              {distro: registeredDistro},
 		"Success with a registered distro and its GUID": {distro: registeredDistro, withGUID: registeredGUID},
+		"Success with createdByLandscape being true":    {distro: registeredDistro, createdByLandscape: true},
+		"Success with createdByLandscape being false":   {distro: registeredDistro, createdByLandscape: false},
 
 		// Error cases
 		"Error when a constructing a distro with another distro's GUID": {distro: nonRegisteredDistro, withGUID: anotherRegisteredGUID, wantErr: true, wantErrType: &distro.NotValidError{}},
@@ -110,6 +113,8 @@ func TestNew(t *testing.T) {
 				mu = nil
 			}
 
+			props.CreatedByLandscape = tc.createdByLandscape
+
 			d, err = distro.New(ctx, tc.distro, props, t.TempDir(), mu, args...)
 			defer d.Cleanup(context.Background())
 
@@ -125,6 +130,13 @@ func TestNew(t *testing.T) {
 			require.Equal(t, tc.distro, d.Name(), "distro.Name should match the one it was constructed with")
 			require.Equal(t, registeredGUID, d.GUID(), "distro.GUID should match the one it was constructed with")
 			require.Equal(t, props, d.Properties(), "distro.Properties should match the one it was constructed with because they were never directly modified")
+
+			if tc.createdByLandscape {
+				require.True(t, d.Properties().CreatedByLandscape)
+			} else {
+				require.False(t, d.Properties().CreatedByLandscape)
+			}
+
 		})
 	}
 }
@@ -211,10 +223,11 @@ func TestSetProperties(t *testing.T) {
 	}
 
 	props2 := distro.Properties{
-		DistroID:    "ubuntu",
-		VersionID:   "200.04",
-		PrettyName:  "Ubuntu 200.04.0 LTS",
-		ProAttached: false,
+		DistroID:           "ubuntu",
+		VersionID:          "200.04",
+		PrettyName:         "Ubuntu 200.04.0 LTS",
+		ProAttached:        false,
+		CreatedByLandscape: true,
 	}
 
 	testCases := map[string]struct {

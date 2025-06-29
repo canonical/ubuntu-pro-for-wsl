@@ -30,6 +30,10 @@ type Properties struct {
 
 	// Ubuntu Pro
 	ProAttached bool
+
+	// This instance was created through
+	// an install command from Landscape
+	CreatedByLandscape bool
 }
 
 // isValid checks that the properties against the registry.

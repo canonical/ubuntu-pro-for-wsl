@@ -171,6 +171,7 @@ func TestInstall(t *testing.T) {
 		isTarBased             bool
 		setDefaultUserErr      bool
 		getDefaultUserErr      bool
+		createdByLandscape     bool
 
 		sendRootfsURL    string
 		requestID        string
@@ -357,6 +358,11 @@ func TestInstall(t *testing.T) {
 							}
 							return registered
 						}, timeout, 100*time.Millisecond, "Distro should have been registered")
+
+						if tc.createdByLandscape {
+							dbDistro, _ := testBed.db.Get(testBed.distro.Name())
+							require.True(t, dbDistro.Properties().CreatedByLandscape, "CreatedByLandscape should be true!")
+						}
 					} else {
 						time.Sleep(timeout)
 
@@ -866,7 +872,9 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 		err = d.Register(fakeRootFS(t))
 		require.NoError(t, err) // Error messsage is explanatory enough
 
-		dbDistro, err := db.GetDistroAndUpdateProperties(ctx, d.Name(), distro.Properties{})
+		dbDistro, err := db.GetDistroAndUpdateProperties(ctx, d.Name(), distro.Properties{
+			CreatedByLandscape: true,
+		})
 		require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 		context.AfterFunc(ctx, func() { dbDistro.Cleanup(ctx) })
 	} else {

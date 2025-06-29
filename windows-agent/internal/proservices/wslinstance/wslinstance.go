@@ -117,11 +117,12 @@ func propsFromInfo(info *agentapi.DistroInfo) (props distro.Properties, err erro
 	}
 
 	return distro.Properties{
-		DistroID:    info.GetId(),
-		VersionID:   info.GetVersionId(),
-		PrettyName:  info.GetPrettyName(),
-		ProAttached: info.GetProAttached(),
-		Hostname:    info.GetHostname(),
+		DistroID:           info.GetId(),
+		VersionID:          info.GetVersionId(),
+		PrettyName:         info.GetPrettyName(),
+		ProAttached:        info.GetProAttached(),
+		Hostname:           info.GetHostname(),
+		CreatedByLandscape: info.GetCreatedByLandscape(),
 	}, nil
 }
 

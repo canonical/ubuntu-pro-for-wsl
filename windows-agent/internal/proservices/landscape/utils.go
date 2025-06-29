@@ -243,10 +243,11 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 
 	properties := d.Properties()
 	info = &landscapeapi.HostAgentInfo_InstanceInfo{
-		Id:            d.Name(),
-		Name:          properties.Hostname,
-		VersionId:     properties.VersionID,
-		InstanceState: instanceState,
+		Id:                 d.Name(),
+		Name:               properties.Hostname,
+		VersionId:          properties.VersionID,
+		InstanceState:      instanceState,
+		CreatedByLandscape: properties.CreatedByLandscape,
 	}
 
 	return info, nil

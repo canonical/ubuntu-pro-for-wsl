@@ -16,10 +16,11 @@ import (
 // InstanceInfo is the same as landscapeapi.InstanceInfo, but without the mutexes and
 // all grpc implementation details (so it can be safely copied).
 type InstanceInfo struct {
-	ID            string
-	Name          string
-	VersionID     string
-	InstanceState landscapeapi.InstanceState
+	ID                 string
+	Name               string
+	VersionID          string
+	InstanceState      landscapeapi.InstanceState
+	CreatedByLandscape bool
 }
 
 // HostInfo is the same as landscapeapi.HostAgentInfo, but without the mutexes and
@@ -67,10 +68,11 @@ func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (Host
 
 	for _, inst := range msg.GetInstances() {
 		h.Instances = append(h.Instances, InstanceInfo{
-			ID:            inst.GetId(),
-			Name:          inst.GetName(),
-			VersionID:     inst.GetVersionId(),
-			InstanceState: inst.GetInstanceState(),
+			ID:                 inst.GetId(),
+			Name:               inst.GetName(),
+			VersionID:          inst.GetVersionId(),
+			InstanceState:      inst.GetInstanceState(),
+			CreatedByLandscape: inst.GetCreatedByLandscape(),
 		})
 	}
 
