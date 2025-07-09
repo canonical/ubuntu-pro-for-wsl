@@ -1,8 +1,32 @@
 {
   "appTitle": "Ubuntu Pro para WSL",
   "@appTitle": {},
-  "tokenErrorEmpty": "O token não pode estar vazio",
+  "tokenErrorEmpty": "O código não pode estar vazio",
   "@tokenErrorEmpty": {},
-  "buttonNext": "Próximo",
-  "@buttonNext": {}
+  "buttonNext": "Seguinte",
+  "@buttonNext": {},
+  "tokenErrorInvalid": "Código inválido",
+  "@tokenErrorInvalid": {},
+  "tokenValid": "Código válido",
+  "@tokenValid": {},
+  "tokenInputHint": "Código",
+  "@tokenInputHint": {},
+  "tokenInputDescription": "Insira um código de {proLink} ou o seu administrador do sistema",
+  "@tokenInputDescription": {
+    "placeholders": {
+      "proLink": {
+        "type": "String"
+      }
+    }
+  },
+  "applyProToken": "Aplicar Código Profissional",
+  "@applyProToken": {},
+  "applyingProToken": "A aplicação código {token}",
+  "@applyingProToken": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  }
 }
