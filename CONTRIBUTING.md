@@ -291,11 +291,27 @@ Note: a code-block must be labelled with the [code-block directive](https://myst
 
 ### The Open Documentation Academy
 
-Ubuntu on WSL is a proud member of the [Canonical Open Documentation Academy](https://github.com/canonical/open-documentation-academy) (CODA). If you are a newcomer to making open source contributions, or new to technical writing and want to boost your skills – or both! – we will be glad to help.
+Ubuntu on WSL is a proud member of the [Canonical Open Documentation Academy](https://github.com/canonical/open-documentation-academy) (CODA).
 
-Check out the CODA repository for guidance and useful resources on getting started.
+CODA is an initiative to encourage open source contributions from the community, and to provide help, advice and mentorship to people making their first contributions.
 
-## Getting Help
+A key aim of the initiative is to lower the barrier to successful open-source software contributions by making documentation into the gateway, and it’s a great way to make your first open source contributions to projects like Ubuntu on WSL.
+
+The best way to get started is to take a look at our [project-related documentation tasks](https://github.com/canonical/open-documentation-academy/issues) and read our [Getting started guide](https://discourse.ubuntu.com/t/getting-started/42769). Tasks typically include testing and fixing documentation pages, updating outdated content, and restructuring large documents. We'll help you see those tasks through to completion.
+
+For tasks related to Ubuntu on WSL:
+
+* View [open issues that have yet to be assigned](https://github.com/canonical/open-documentation-academy/issues?q=is%3Aissue%20state%3Aopen%20label%3Awsl%20no%3Aassignee)
+* View [closed issues for examples of previous contributions](https://github.com/canonical/open-documentation-academy/issues?q=is%3Aissue%20state%3Aclosed%20label%3Awsl)
+* Create a [new issue for Ubuntu on WSL in the CODA repository](https://github.com/canonical/open-documentation-academy/issues/new)
+
+You can get involved the with the CODA community through:
+
+* The [discussion forum](https://discourse.ubuntu.com/c/community/open-documentation-academy/166) on the Ubuntu Community Hub
+* The [Matrix channel](https://matrix.to/#/#documentation:ubuntu.com) for interactive chat
+* [Fosstodon](https://fosstodon.org/@CanonicalDocumentation) for the latest updates and events
+
+## Getting help
 
 Join us in the [Ubuntu Community](https://discourse.ubuntu.com/c/wsl/27) and post your question there with a descriptive tag.
 

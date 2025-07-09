@@ -255,6 +255,8 @@ linkcheck_ignore = [
     "https://ubuntu.com/pro/dashboard",
     # Only users logged in to MS Store with their account registered for beta can access this link
     "https://apps.microsoft.com/detail/9PD1WZNBDXKZ",
+    # Linkcheck struggles with hashes in URLs
+    "https://matrix.to/#/#documentation:ubuntu.com",
 ]
 
 

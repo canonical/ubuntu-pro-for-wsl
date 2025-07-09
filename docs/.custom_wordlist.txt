@@ -68,6 +68,7 @@ https
 init
 filesystem
 FIPS
+Fosstodon
 fpath
 FQDN
 HIPAA
