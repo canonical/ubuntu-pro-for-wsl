@@ -57,6 +57,16 @@
   "@landscapeFileNotFound": {},
   "landscapeFileIsDir": "Ficheiro não pode ser uma diretoria",
   "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "O ficheiro está num formato errado",
-  "@landscapeFileInvalidFormat": {}
+  "landscapeFileInvalidFormat": "O ficheiro está num formato incorreto",
+  "@landscapeFileInvalidFormat": {},
+  "landscapeFilePicker": "Selecionar ficheiro...",
+  "@landscapeFilePicker": {},
+  "landscapeRegister": "Registar",
+  "@landscapeRegister": {},
+  "buttonSkip": "Ignorar",
+  "@buttonSkip": {},
+  "buttonBack": "Anterior",
+  "@buttonBack": {},
+  "statusBarReportBugTooltip": "Reportar um erro",
+  "@statusBarReportBugTooltip": {}
 }
