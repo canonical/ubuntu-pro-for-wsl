@@ -21,12 +21,42 @@
   },
   "applyProToken": "Aplicar Código Profissional",
   "@applyProToken": {},
-  "applyingProToken": "A aplicação código {token}",
+  "applyingProToken": "A aplicar código {token}",
   "@applyingProToken": {
     "placeholders": {
       "token": {
         "type": "String"
       }
     }
-  }
+  },
+  "getUbuntuPro": "Obter Ubuntu Pro",
+  "@getUbuntuPro": {},
+  "learnMore": "Saber mais",
+  "@learnMore": {},
+  "ubuntuProEnabled": "O Ubuntu Pro está ativado nesta máquina",
+  "@ubuntuProEnabled": {},
+  "manageUbuntuPro": "Gerir subscrição do Ubuntu Pro",
+  "@manageUbuntuPro": {},
+  "updatingSubscriptionInfo": "A atualizar a informação da subscrição.",
+  "@updatingSubscriptionInfo": {},
+  "purchaseStatusSuccess": "Obrigado por subscrever o Ubuntu Pro.",
+  "@purchaseStatusSuccess": {},
+  "purchaseStatusAlreadyPurchased": "Já subscreveu a versão Profissional.",
+  "@purchaseStatusAlreadyPurchased": {},
+  "purchaseStatusUserGaveUp": "Tentativa de compra foi cancelada.",
+  "@purchaseStatusUserGaveUp": {},
+  "landscapeSkip": "Ignorar por agora",
+  "@landscapeSkip": {},
+  "landscapeSetupManual": "Configuração manual",
+  "@landscapeSetupManual": {},
+  "landscapeSetupCustom": "Configuração avançada",
+  "@landscapeSetupCustom": {},
+  "landscapeKeyLabel": "Código de registo (opcional)",
+  "@landscapeKeyLabel": {},
+  "landscapeFileNotFound": "Ficheiro não encontrado",
+  "@landscapeFileNotFound": {},
+  "landscapeFileIsDir": "Ficheiro não pode ser uma diretoria",
+  "@landscapeFileIsDir": {},
+  "landscapeFileInvalidFormat": "O ficheiro está num formato errado",
+  "@landscapeFileInvalidFormat": {}
 }
