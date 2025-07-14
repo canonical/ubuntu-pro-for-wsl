@@ -19,7 +19,7 @@
       }
     }
   },
-  "applyProToken": "Aplicar Código Profissional",
+  "applyProToken": "Aplicar Código Pro",
   "@applyProToken": {},
   "applyingProToken": "A aplicar código {token}",
   "@applyingProToken": {
@@ -55,7 +55,7 @@
   "@landscapeKeyLabel": {},
   "landscapeFileNotFound": "Ficheiro não encontrado",
   "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "Ficheiro não pode ser uma diretoria",
+  "landscapeFileIsDir": "Ficheiro não pode ser um diretório",
   "@landscapeFileIsDir": {},
   "landscapeFileInvalidFormat": "O ficheiro está num formato incorreto",
   "@landscapeFileInvalidFormat": {},
