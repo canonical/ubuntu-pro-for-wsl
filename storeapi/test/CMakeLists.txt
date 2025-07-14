@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Latest Windows SDK for Windows 10/11
-set(CMAKE_SYSTEM_VERSION 10.0)
+set(CMAKE_SYSTEM_VERSION 10.0.22621.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
