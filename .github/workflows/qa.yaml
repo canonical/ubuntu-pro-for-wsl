@@ -18,6 +18,8 @@ jobs:
   quality-go:
     name: "Go Quality checks"
     strategy:
+      # Attempt to prevent reaching arduino/setup-protoc API rate limit.
+      max-parallel: 7
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
