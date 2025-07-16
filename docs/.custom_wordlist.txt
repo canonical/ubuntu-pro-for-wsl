@@ -33,8 +33,11 @@ npm
 OOBE
 OpenGL
 OpenVINO
+passwordless
 powershell
 PowerShell
+rootfs
+rootFS
 SHA
 structurizr
 Structurizr
