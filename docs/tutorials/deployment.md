@@ -192,14 +192,14 @@ The output should now confirm that Ubuntu-24.04 is "installing" or "running".
 Installing the CUDA toolkit can take some time. After a few minutes you should
 be able to list the distros again and confirm that Ubuntu-24.04 is "stopped".
 
-When the Ubuntu-24.04 instance has launched, you can confirm that the correct default user "u" has been set from the prompt:
+When the Ubuntu-24.04 instance has launched, confirm that the correct default user "u" has been set from the prompt:
 
 ```{code-block} text
 :class: no-copy
 u@<your-machine>:~$
 ```
 
-Next confirm that CUDA has been installed successfully:
+Next, confirm that CUDA has been installed successfully:
 
 ```text
 $ apt policy cuda-toolkit-12-6
@@ -229,7 +229,7 @@ $ nvidia-smi
 +---------------------------------------------------------------------------+
 ```
 
-Finally, you can run `pro status`, to confirm that UP4W has automatically Pro-attached the Ubuntu instance.
+Finally, run `pro status`, to confirm that UP4W has automatically Pro-attached the Ubuntu instance.
 
 ````{dropdown} Deleting the deployed instance and restoring any backups
 Terminate the new instance and uninstall it from PowerShell:
