@@ -1,5 +1,4 @@
 name: QA
-
 on:
   pull_request:
     paths-ignore:
@@ -17,6 +16,7 @@ concurrency:
 jobs:
   quality-go:
     name: "Go Quality checks"
+    permissions: {}
     strategy:
       fail-fast: false
       matrix:
@@ -68,8 +68,9 @@ jobs:
         run: |
           dart pub global activate protoc_plugin
       - name: Quality check
-        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@setup-protoc-token
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           working-directory: ${{ matrix.subproject }}
           go-tags: gowslmock
           tools-directory: ${{ github.workspace }}/tools
