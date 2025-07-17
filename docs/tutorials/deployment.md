@@ -153,8 +153,8 @@ write_files:
 - path: /etc/wsl.conf
   append: true
   content: |
-  [user]
-  default=u
+    [user]
+    default=u
 
 runcmd:
   - cd /tmp
