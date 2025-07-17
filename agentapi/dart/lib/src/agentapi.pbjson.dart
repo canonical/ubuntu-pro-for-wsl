@@ -20,8 +20,8 @@ const Empty$json = {
 };
 
 /// Descriptor for `Empty`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List emptyDescriptor = $convert.base64Decode(
-    'CgVFbXB0eQ==');
+final $typed_data.Uint8List emptyDescriptor =
+    $convert.base64Decode('CgVFbXB0eQ==');
 
 @$core.Deprecated('Use proAttachInfoDescriptor instead')
 const ProAttachInfo$json = {
@@ -32,8 +32,8 @@ const ProAttachInfo$json = {
 };
 
 /// Descriptor for `ProAttachInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List proAttachInfoDescriptor = $convert.base64Decode(
-    'Cg1Qcm9BdHRhY2hJbmZvEhQKBXRva2VuGAEgASgJUgV0b2tlbg==');
+final $typed_data.Uint8List proAttachInfoDescriptor = $convert
+    .base64Decode('Cg1Qcm9BdHRhY2hJbmZvEhQKBXRva2VuGAEgASgJUgV0b2tlbg==');
 
 @$core.Deprecated('Use landscapeConfigDescriptor instead')
 const LandscapeConfig$json = {
@@ -44,18 +44,50 @@ const LandscapeConfig$json = {
 };
 
 /// Descriptor for `LandscapeConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List landscapeConfigDescriptor = $convert.base64Decode(
-    'Cg9MYW5kc2NhcGVDb25maWcSFgoGY29uZmlnGAEgASgJUgZjb25maWc=');
+final $typed_data.Uint8List landscapeConfigDescriptor = $convert
+    .base64Decode('Cg9MYW5kc2NhcGVDb25maWcSFgoGY29uZmlnGAEgASgJUgZjb25maWc=');
 
 @$core.Deprecated('Use subscriptionInfoDescriptor instead')
 const SubscriptionInfo$json = {
   '1': 'SubscriptionInfo',
   '2': [
     {'1': 'productId', '3': 1, '4': 1, '5': 9, '10': 'productId'},
-    {'1': 'none', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
-    {'1': 'user', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'user'},
-    {'1': 'organization', '3': 4, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
-    {'1': 'microsoftStore', '3': 5, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'microsoftStore'},
+    {
+      '1': 'none',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'none'
+    },
+    {
+      '1': 'user',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'user'
+    },
+    {
+      '1': 'organization',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'organization'
+    },
+    {
+      '1': 'microsoftStore',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'microsoftStore'
+    },
   ],
   '8': [
     {'1': 'subscriptionType'},
@@ -74,9 +106,33 @@ final $typed_data.Uint8List subscriptionInfoDescriptor = $convert.base64Decode(
 const LandscapeSource$json = {
   '1': 'LandscapeSource',
   '2': [
-    {'1': 'none', '3': 1, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'none'},
-    {'1': 'user', '3': 2, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'user'},
-    {'1': 'organization', '3': 3, '4': 1, '5': 11, '6': '.agentapi.Empty', '9': 0, '10': 'organization'},
+    {
+      '1': 'none',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'none'
+    },
+    {
+      '1': 'user',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'user'
+    },
+    {
+      '1': 'organization',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.Empty',
+      '9': 0,
+      '10': 'organization'
+    },
   ],
   '8': [
     {'1': 'landscapeSourceType'},
@@ -94,8 +150,22 @@ final $typed_data.Uint8List landscapeSourceDescriptor = $convert.base64Decode(
 const ConfigSources$json = {
   '1': 'ConfigSources',
   '2': [
-    {'1': 'proSubscription', '3': 1, '4': 1, '5': 11, '6': '.agentapi.SubscriptionInfo', '10': 'proSubscription'},
-    {'1': 'landscapeSource', '3': 2, '4': 1, '5': 11, '6': '.agentapi.LandscapeSource', '10': 'landscapeSource'},
+    {
+      '1': 'proSubscription',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.SubscriptionInfo',
+      '10': 'proSubscription'
+    },
+    {
+      '1': 'landscapeSource',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.agentapi.LandscapeSource',
+      '10': 'landscapeSource'
+    },
   ],
 };
 
@@ -134,8 +204,8 @@ const ProAttachCmd$json = {
 };
 
 /// Descriptor for `ProAttachCmd`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List proAttachCmdDescriptor = $convert.base64Decode(
-    'CgxQcm9BdHRhY2hDbWQSFAoFdG9rZW4YASABKAlSBXRva2Vu');
+final $typed_data.Uint8List proAttachCmdDescriptor =
+    $convert.base64Decode('CgxQcm9BdHRhY2hDbWQSFAoFdG9rZW4YASABKAlSBXRva2Vu');
 
 @$core.Deprecated('Use landscapeConfigCmdDescriptor instead')
 const LandscapeConfigCmd$json = {
@@ -146,8 +216,9 @@ const LandscapeConfigCmd$json = {
 };
 
 /// Descriptor for `LandscapeConfigCmd`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List landscapeConfigCmdDescriptor = $convert.base64Decode(
-    'ChJMYW5kc2NhcGVDb25maWdDbWQSFgoGY29uZmlnGAEgASgJUgZjb25maWc=');
+final $typed_data.Uint8List landscapeConfigCmdDescriptor =
+    $convert.base64Decode(
+        'ChJMYW5kc2NhcGVDb25maWdDbWQSFgoGY29uZmlnGAEgASgJUgZjb25maWc=');
 
 @$core.Deprecated('Use mSGDescriptor instead')
 const MSG$json = {
@@ -165,4 +236,3 @@ const MSG$json = {
 final $typed_data.Uint8List mSGDescriptor = $convert.base64Decode(
     'CgNNU0cSGwoId3NsX25hbWUYASABKAlIAFIHd3NsTmFtZRIYCgZyZXN1bHQYAiABKAlIAFIGcm'
     'VzdWx0QgYKBGRhdGE=');
-
