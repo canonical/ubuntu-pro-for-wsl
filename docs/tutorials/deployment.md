@@ -72,11 +72,8 @@ If you have an existing Ubuntu-24.04 instance, run the following commands:
 This stops any running instance of Ubuntu-24.04, creates a backup folder,
 generates a compressed backup of the distro, and uninstalls the instance.
 
-Later, you can restore the
+Instructions for restoring the backup can be found at the end of the tutorial.
 
-```{code-block} text
-wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.tar.gz
-```
 ````
 
 ### Landscape server must be installed and accessible
