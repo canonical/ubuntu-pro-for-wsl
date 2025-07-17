@@ -13,139 +13,243 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-In this tutorial you will develop an understanding of how UP4W can help you deploy and manage Ubuntu WSL instance using Landscape.
+In this tutorial you will learn how Ubuntu Pro for WSL (UP4W) can help you
+deploy Ubuntu to remote Windows machines using Landscape.
 
 ## What you will do
 
-- Deploy an Ubuntu WSL instance locally
-- Deploy an Ubuntu WSL instance remotely
-- Test automatic configuration of WSL instances by UP4W
+- Register a Windows host instance with Landscape
+- Create a WSL profile on Landscape
+- Deploy Ubuntu to a remote Windows machine
 
 ## What you need
 
 - A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
 - The latest version of Landscape Server set up and configured on a physical or virtual machine
-- WSL and Ubuntu 24.04 installed on Windows
-- An UP4W installation configured with a Pro token
+- WSL installed and configured on Windows
+- The UP4W app installed and configured with a Pro token
 
-Before following this tutorial it is recommended that you complete the
-[getting started](./getting-started-with-up4w.md) tutorial to familiarise yourself
-with UP4W installation and configuration.
+```{tip}
+It is recommended that you complete the [getting
+started](./getting-started-with-up4w.md) tutorial to familiarise yourself with
+installation and configuration of the UP4W app.
+```
 
-## Set things up
+### WSL must be installed and configured
 
-To complete this tutorial you will need to have a Landscape server
-set up and you should be able access your Landscape dashboard in a browser.
-Please refer to the [Landscape documentation](https://ubuntu.com/landscape/install)
-for setup and configuration instructions.
+You need WSL installed and configured to follow this tutorial.
+
+Installation instructions are provided in the [official Microsoft
+documentation](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+### Any existing instance of Ubuntu-24.04 should be removed
+
+You will be remotely deploying Ubuntu-24.04 on a Windows machine using Landscape.
+
+Uninstall any pre-existing instance of Ubuntu-24.04 on the machine before you
+start the tutorial.
+
+To check if an Ubuntu-24.04 instance exists, run the following in PowerShell:
+
+```text
+> wsl -l -v
+```
+
+Confirm that there is no Ubuntu-24.04 instance before continuing.
+If one does exist, back it up and uninstall it.
+
+````{dropdown} Backing up and uninstalling an existing Ubuntu-24.04 instance
+If you have an existing Ubuntu-24.04 instance, run the following commands:
+
+```{code-block} text
+> wsl --terminate Ubuntu-24.04
+> mkdir backup
+> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
+> wsl --unregister Ubuntu-24.04
+
+```
+
+This stops any running instance of Ubuntu-24.04, creates a backup folder,
+generates a compressed backup of the distro, and uninstalls the instance.
+
+Instructions for restoring the backup can be found at the end of the tutorial.
+
+````
+
+### Landscape server must be installed and accessible
+
+You need a Landscape server set up and you should be
+able access the Landscape dashboard in a browser.
+
+Please refer to the [Landscape
+documentation](https://ubuntu.com/landscape/install) for detailed setup and
+configuration instructions.
 
 (tut::config-landscape-up4w)=
-### Configure Landscape in the UP4W app
+## Configure Landscape in the UP4W app
 
-In the UP4W app, after entering your Pro token, navigate to the Landscape configuration screen:
-
-![UP4W GUI main screen](../assets/landscape-config-ui.png)
+Open the UP4W app, enter your Pro token and continue to the Landscape configuration screen.
 
 Choose your preferred configuration option and enter the required details.
+If you choose Manual configuration, you only require the FQDN of your Landscape server.
 
-When you continue a status screen will appear confirming that configuration is complete:
-
-![Configuration is complete](../assets/status-complete.png)
-
-As well as your Ubuntu Pro subscription being attached to UP4W on the Windows host,
-this has also configured the Landscape client built into your UP4W Windows agent to know about your Landscape server.
-UP4W will forward this configuration to the Landscape client on your Ubuntu WSL instances as well, 
-and all systems where the Landscape client has been configured this way are automatically registered with Landscape.
+When you continue, a status screen will confirm that your configuration is complete.
 
 > A dedicated how-to guide on configuring Landscape with UP4W can be found [here](../howto/set-up-landscape-client).
 
-(tut::create-instance-local)=
-### Create an Ubuntu WSL instance locally
+## Register the Windows host instance with Landscape
 
-Open Windows PowerShell and run the following command to create a new Ubuntu 24.04 instance,
-creating a user and password when prompted. For quick testing, set both to `u`:
+```{admonition} Usage of the term "instance"
+:class: note
+In the Landscape dashboard, an "instance" refers to the Windows host running WSL.
 
-```text
-PS C:\Users\me\tutorial> ubuntu2404.exe
+On the Windows machine itself, an "instance" refers to an installed WSL distro.
 ```
 
-Verify Pro-attachment with:
+Refresh the Landscape dashboard.
 
-```text
-u@mib:~$ pro status
-```
+Go to **Instances**, and review the pending instances.
 
-UP4W should have also Landscape-registered this instance.
+Check the box for your Windows host instance and approve it, leaving the access
+group as "Global access".
 
-To verify, refresh the Landscape server web page and the instance should be listed under "Computers needing authorisation".
+Refresh the page and the Windows host will be listed under **Instances**.
 
-![New WSL instance pending approval](./assets/wsl-pending-approval.png)
+Select the Windows host and assign it the tag "wsl-target".
 
-To accept the registration click on the instance name, set "Tags" to `wsl-vision` in the pop-up then click **Accept**.
-The `wsl-vision` tag will be used for all the instances accepted into Landscape.
+## Create a WSL profile and deploy an Ubuntu instance
 
-![Accept and tag Ubuntu Preview](./assets/accept-ubuntu-preview-tag.png)
+WSL profiles on Landscape enable the deployment of custom Ubuntu instances to
+your Windows machine.
 
-(tut::create-instance-remote)=
-### Create an Ubuntu WSL instance remotely
+Go to **Profiles > WSL profiles** in the dashboard and add a WSL profile.
 
-Back on the Landscape page in your web browser, navigate to "Computers" and click on the Windows machine (below: `mib`). You will find "WSL Instances" on the right side of the page.
-Click on the "Install new" link then set "Instance Type" to "Ubuntu" and click **Submit**. A status page will
-appear showing the progress of the new instance creation.
-
-![Create instance via Landscape](./assets/create-instance-via-landscape.png)
-
-![Creation progress](./assets/creation-progress.png)
-
-The Landscape server will talk to the Landscape client built into your UP4W.
-UP4W will then install the `Ubuntu` application and create an Ubuntu WSL instance automatically.
-In PowerShell, run `ubuntu.exe` to log in to the new instance.
-
-```text
-PS C:\Users\me\tutorial> ubuntu.exe
-
-u@mib:~$
-```
-
-You can run `pro status` to verify pro-attachment and refresh your Landscape server page to verify and accept the registration.
-As before, apply the `wsl-vision` tag and click `Accept`.
-
-(tut::deploy-packages-remote)=
-### Deploy packages to all Ubuntu WSL instances
-
-On your Landscape server page, navigate to `Organization` > `Profiles`, click on
-`Package Profiles` then `Add package profile`. Fill in the form with the following values and click "Save".
+Complete the fields as follows:
 
 | Field               | Value                                  |
 | ------------------- | -------------------------------------- |
-| Title               | Vision                                 |
-| Description         | Computer Vision work                   |
-| Access group        | Global                                 |
-| Package constraints | Manually add constraints               |
-|                     | Depends on `python3-opencv` `>=` `4.0` |
+| Name                | WSL-CUDA                               |
+| Description         | CUDA-enabled WSL instances             |
+| Access group        | Global access                          |
+| RootFS image        | Ubuntu 24.04 LTS                       |
+| Cloud-init          | Plain text                             |
 
-![Create package profile](./assets/create-package-profile.png)
+Copy and paste this cloud-init configuration:
 
-On the bottom of the "Vision" profile page, in the "Association" section, set the "New tags" field to `wsl-vision` and click **Change**.
+```yaml
+#cloud-config
+locale: en_GB.UTF-8
+users:
+- name: u
+  gecos: Ubuntu
+  groups: [adm,dialout,cdrom,floppy,sudo,audio,dip,video,plugdev,netdev]
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  shell: /bin/bash
 
-![Applying the profile to the WSL instances](./assets/applying-profile.png)
+write_files:
+- path: /etc/wsl.conf
+  append: true
+  content: |
+    [user]
+    default=u
 
-In the "Summary" section in the middle of the page you will see a status message showing that two computers are `applying the profile`. Click on the `applying the profile` link and then, in the "Activities" list, click on **Apply package profile** to see the progress of the package deployment.
-
-![Progress of the package deployment](./assets/package-deployment-progress.png)
-
-When this process has completed, use one of your instance shells to verify that the `python3-opencv` package has been installed.
-For example, in the `Ubuntu` instance the first three packages returned are:
-
-```text
-u@mib:~$ apt list --installed | grep -m 3 opencv
-
-libopencv-calib3d4.5d/jammy,now 4.5.4+dfsg-9ubuntu4 amd64 [installed,automatic]
-libopencv-contrib4.5d/jammy,now 4.5.4+dfsg-9ubuntu4 amd64 [installed,automatic]
-libopencv-core4.5d/jammy,now 4.5.4+dfsg-9ubuntu4 amd64 [installed,automatic]
+runcmd:
+  - cd /tmp
+  - wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+  - dpkg -i cuda-keyring_1.1-1_all.deb
+  - apt-get update
+  - apt-get -y install cuda-toolkit-12-6
 ```
 
-You know how to leverage UP4W and Landscape to efficiently manage your Ubuntu WSL instances at scale.
+```{admonition} What this config file does
+:class: tip
+* Sets a default user "u"
+* Assigns the user to groups and grants permissions
+* Gives the user passwordless `sudo` rights
+* Specifies the login shell for the user
+* Downloads and installs the CUDA toolkit
+```
+
+Search for the "wsl-target" tag and select it, then confirm that you want to
+add the WSL profile.
+
+Go to **Activities** and confirm that the "Create instance Ubuntu-24.04" activity is queued.
+
+This means that an instance of Ubuntu is in the process of being deployed to
+the Windows host.
+
+<!-- (tut::create-instance-remote)= -->
+## Test the deployed instance
+
+On the Windows host machine, list the installed WSL distros:
+
+```text
+> wsl -l -v
+```
+
+The output should now confirm that Ubuntu-24.04 is "installing" or "running".
+
+Installing the CUDA toolkit can take some time. After a few minutes you should
+be able to list the distros again and confirm that Ubuntu-24.04 is "stopped".
+
+When the Ubuntu-24.04 instance has launched, confirm that the correct default user "u" has been set from the prompt:
+
+```{code-block} text
+:class: no-copy
+u@<your-machine>:~$
+```
+
+Next, confirm that CUDA has been installed successfully:
+
+```text
+$ apt policy cuda-toolkit-12-6
+```
+
+```{code-block} text
+:class: no-copy
+cuda-toolkit-12-6
+  Installed: 12.6.3-1
+  Candidate: 12.6.3-1
+...
+...
+```
+
+Then confirm that your GPU is being detected correctly:
+
+```text
+$ nvidia-smi
+```
+
+```{code-block} text
+:class: no-copy
++---------------------------------------------------------------------------+
+| NVIDIA-SMI 535.157        Driver Version 538.18       CUDA Version: 12.2  |
+|...                                                                        |
+|...                                                                        |
++---------------------------------------------------------------------------+
+```
+
+Finally, run `pro status`, to confirm that UP4W has automatically Pro-attached the Ubuntu instance.
+
+````{dropdown} Deleting the deployed instance and restoring any backups
+Terminate the new instance and uninstall it from PowerShell:
+
+```{code-block} text
+> wsl --terminate Ubuntu-24.04
+> wsl --unregister Ubuntu-24.04
+```
+
+Restore the backup:
+
+```{code-block} text
+> wsl --import Ubuntu-24.04 <directory-to-install-filesystem> .\backup\Ubuntu-24.04.tar.gz
+```
+
+This will restore your data and install the filesystem to the path you specify.
+
+You can then launch the distro as before.
+
+````
 
 ## Next steps
 
