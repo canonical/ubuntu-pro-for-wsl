@@ -189,8 +189,8 @@ On the Windows host machine, list the installed WSL distros:
 
 The output should now confirm that Ubuntu-24.04 is "installing" or "running".
 
-Wait a few seconds and list the distros again, until you can confirm that
-Ubuntu-24.04 is "stopped".
+Installing the CUDA toolkit can take some time. After a few minutes you should
+be able to list the distros again and confirm that Ubuntu-24.04 is "stopped".
 
 When the Ubuntu-24.04 instance has launched, you can confirm that the correct default user "u" has been set from the prompt:
 
