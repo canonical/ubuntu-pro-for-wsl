@@ -18,13 +18,12 @@ class SubscriptionStatus extends StatelessWidget {
     final lang = AppLocalizations.of(context);
 
     return CenteredPage(
-      footer:
-          footerLinks != null
-              ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: footerLinks!,
-              )
-              : null,
+      footer: footerLinks != null
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: footerLinks!,
+            )
+          : null,
       children: [
         const SizedBox(height: 16.0),
         YaruInfoBox(

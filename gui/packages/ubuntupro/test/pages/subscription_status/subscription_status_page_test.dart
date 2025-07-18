@@ -215,12 +215,11 @@ void main() {
       routes: {'/': const WizardRoute(builder: SubscriptionStatusPage.create)},
       providers: [
         ChangeNotifierProvider(
-          create:
-              (_) => ValueNotifier(
-                ConfigSources(
-                  proSubscription: SubscriptionInfo()..ensureUser(),
-                ),
-              ),
+          create: (_) => ValueNotifier(
+            ConfigSources(
+              proSubscription: SubscriptionInfo()..ensureUser(),
+            ),
+          ),
         ),
       ],
     );
@@ -275,15 +274,14 @@ void main() {
 
       final app = buildWizardApp({
         '/': WizardRoute(
-          builder:
-              (context) => Center(
-                child: FilledButton(
-                  onPressed: () {
-                    Wizard.of(context).next();
-                  },
-                  child: const Text(clickMe),
-                ),
-              ),
+          builder: (context) => Center(
+            child: FilledButton(
+              onPressed: () {
+                Wizard.of(context).next();
+              },
+              child: const Text(clickMe),
+            ),
+          ),
         ),
         '/second': WizardRoute(
           builder: SubscriptionStatusPage.create,
@@ -329,12 +327,11 @@ Widget buildApp(
     routes: {'/': WizardRoute(builder: (_) => const SubscriptionStatusPage())},
     providers: [
       Provider(
-        create:
-            (_) => SubscriptionStatusModel(
-              ConfigSources(proSubscription: info, landscapeSource: landscape),
-              client,
-              canConfigureLandscape: landscapeFeatureIsEnabled,
-            ),
+        create: (_) => SubscriptionStatusModel(
+          ConfigSources(proSubscription: info, landscapeSource: landscape),
+          client,
+          canConfigureLandscape: landscapeFeatureIsEnabled,
+        ),
       ),
     ],
   );
@@ -345,10 +342,9 @@ Widget buildWizardApp(Map<String, WizardRoute> routes) {
     routes: routes,
     providers: [
       ChangeNotifierProvider(
-        create:
-            (_) => ValueNotifier(
-              ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
-            ),
+        create: (_) => ValueNotifier(
+          ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
+        ),
       ),
     ],
   );

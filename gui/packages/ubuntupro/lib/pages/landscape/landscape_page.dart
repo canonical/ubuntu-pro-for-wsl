@@ -266,23 +266,21 @@ class _FilePickerFieldState extends State<_FilePickerField> {
         ),
         const SizedBox(width: 8.0),
         FilledButton(
-          onPressed:
-              widget.enabled
-                  ? () async {
-                    final result = await FilePicker.platform.pickFiles(
-                      allowedExtensions: widget.allowedExtensions,
-                      type:
-                          widget.allowedExtensions == null
-                              ? FileType.any
-                              : FileType.custom,
-                    );
-                    if (result != null) {
-                      final file = File(result.files.single.path!);
-                      txt.text = file.path;
-                      widget.onChanged(file.path);
-                    }
+          onPressed: widget.enabled
+              ? () async {
+                  final result = await FilePicker.platform.pickFiles(
+                    allowedExtensions: widget.allowedExtensions,
+                    type: widget.allowedExtensions == null
+                        ? FileType.any
+                        : FileType.custom,
+                  );
+                  if (result != null) {
+                    final file = File(result.files.single.path!);
+                    txt.text = file.path;
+                    widget.onChanged(file.path);
                   }
-                  : null,
+                }
+              : null,
           child: Text(widget.buttonLabel),
         ),
       ],

@@ -87,13 +87,12 @@ void main() {
     final app = buildMultiProviderWizardApp(
       providers: [
         Provider<AgentStartupMonitor>(
-          create:
-              (context) => AgentStartupMonitor(
-                addrFileName: 'anywhere',
-                agentLauncher: () async => true,
-                clientFactory: AgentApiClient.new,
-                onClient: (_) {},
-              ),
+          create: (context) => AgentStartupMonitor(
+            addrFileName: 'anywhere',
+            agentLauncher: () async => true,
+            clientFactory: AgentApiClient.new,
+            onClient: (_) {},
+          ),
         ),
       ],
       routes: {
@@ -113,9 +112,9 @@ void main() {
 
 const lastText = 'LAST TEXT';
 Widget buildApp(StartupModel model) => buildMultiProviderWizardApp(
-  providers: [ChangeNotifierProvider.value(value: model)],
-  routes: {
-    '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
-    '/next': WizardRoute(builder: (_) => const Text(lastText)),
-  },
-);
+      providers: [ChangeNotifierProvider.value(value: model)],
+      routes: {
+        '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
+        '/next': WizardRoute(builder: (_) => const Text(lastText)),
+      },
+    );

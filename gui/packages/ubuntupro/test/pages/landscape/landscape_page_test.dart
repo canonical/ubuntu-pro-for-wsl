@@ -315,7 +315,8 @@ class FakeFilePicker extends FilePicker {
     bool withReadStream = false,
     bool lockParentWindow = false,
     bool readSequential = false,
-  }) async => FilePickerResult(
-    paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
-  );
+  }) async =>
+      FilePickerResult(
+        paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
+      );
 }

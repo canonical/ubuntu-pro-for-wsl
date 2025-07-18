@@ -47,11 +47,10 @@ class Pro4WSLApp extends StatelessWidget {
               return Wizard(
                 routes: {
                   Routes.startup: WizardRoute(
-                    builder:
-                        (context) => Provider.value(
-                          value: agentMonitor,
-                          child: const StartupPage(),
-                        ),
+                    builder: (context) => Provider.value(
+                      value: agentMonitor,
+                      child: const StartupPage(),
+                    ),
                     onReplace: (_) async {
                       final src = context.read<ValueNotifier<ConfigSources>>();
                       final client = getService<AgentApiClient>();
@@ -99,9 +98,8 @@ class Pro4WSLApp extends StatelessWidget {
                       userData: true,
                     ),
                     Routes.configureLandscapeLate: WizardRoute(
-                      builder:
-                          (context) =>
-                              LandscapePage.create(context, isLate: true),
+                      builder: (context) =>
+                          LandscapePage.create(context, isLate: true),
                     ),
                   } else ...{
                     Routes.subscriptionStatus: WizardRoute(

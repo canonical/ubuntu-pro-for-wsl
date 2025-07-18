@@ -218,12 +218,11 @@ void main() {
       routes: {'/': const WizardRoute(builder: SubscribeNowPage.create)},
       providers: [
         ChangeNotifierProvider(
-          create:
-              (_) => ValueNotifier(
-                ConfigSources(
-                  proSubscription: SubscriptionInfo()..ensureUser(),
-                ),
-              ),
+          create: (_) => ValueNotifier(
+            ConfigSources(
+              proSubscription: SubscriptionInfo()..ensureUser(),
+            ),
+          ),
         ),
       ],
     );

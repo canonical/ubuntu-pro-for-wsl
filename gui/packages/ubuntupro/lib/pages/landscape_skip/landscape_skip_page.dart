@@ -44,20 +44,18 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
           title: lang.landscapeSkip,
           subtitle: lang.landscapeSkipDescription,
           groupValue: groupValue,
-          onChanged:
-              (v) => setState(() {
-                groupValue = v!;
-              }),
+          onChanged: (v) => setState(() {
+            groupValue = v!;
+          }),
         ),
         const SizedBox(height: 16),
         RadioTile(
           value: SkipEnum.register,
           title: lang.landscapeSkipRegister,
           groupValue: groupValue,
-          onChanged:
-              (v) => setState(() {
-                groupValue = v!;
-              }),
+          onChanged: (v) => setState(() {
+            groupValue = v!;
+          }),
         ),
       ],
       navigationRow: NavigationRow(

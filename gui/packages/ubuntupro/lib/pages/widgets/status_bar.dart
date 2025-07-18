@@ -48,19 +48,17 @@ class StatusBar extends StatelessWidget {
         ),
         if (showAgentStatus)
           Consumer<AgentConnection>(
-            builder:
-                (context, conn, _) => IconButton(
-                  tooltip: conn.state.localize(lang),
-                  icon: Icon(
-                    size: 14.0,
-                    agentConnIcon,
-                    color: conn.state.toColor(context),
-                  ),
-                  onPressed:
-                      conn.state == AgentConnectionState.disconnected
-                          ? conn.restartAgent
-                          : null,
-                ),
+            builder: (context, conn, _) => IconButton(
+              tooltip: conn.state.localize(lang),
+              icon: Icon(
+                size: 14.0,
+                agentConnIcon,
+                color: conn.state.toColor(context),
+              ),
+              onPressed: conn.state == AgentConnectionState.disconnected
+                  ? conn.restartAgent
+                  : null,
+            ),
           ),
       ],
     );
