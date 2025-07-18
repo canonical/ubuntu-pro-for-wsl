@@ -24,6 +24,11 @@ runs:
       with:
         channel: 'stable'
         flutter-version: '${{ inputs.flutter-version }}'
+    - name: Dart Codegen
+      if: ${{ inputs.run-build-runner == 'true' }}
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      run: flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs
     - name: Format
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
@@ -34,11 +39,6 @@ runs:
           ! -path '*/l10n/*' \
           ! -path "*/.*/*" \
           | xargs dart format --set-exit-if-changed
-    - name: Dart Codegen
-      if: ${{ inputs.run-build-runner == 'true' }}
-      shell: bash
-      working-directory: '${{ inputs.package-dir }}'
-      run: flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs
     - name: Analyze
       shell: bash
       working-directory: '${{ inputs.package-dir }}'

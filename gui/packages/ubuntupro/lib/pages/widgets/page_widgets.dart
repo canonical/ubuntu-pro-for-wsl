@@ -23,11 +23,11 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yaru/yaru.dart';
 
 import '/constants.dart';
+import '/l10n/app_localizations.dart';
 import 'navigation_row.dart';
 import 'status_bar.dart';
 
@@ -58,13 +58,12 @@ class Pro4WSLPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
     return Scaffold(
-      appBar:
-          showTitleBar
-              ? YaruWindowTitleBar(
-                title: Text(lang.appTitle),
-                buttonPadding: EdgeInsets.zero,
-              )
-              : null,
+      appBar: showTitleBar
+          ? YaruWindowTitleBar(
+              title: Text(lang.appTitle),
+              buttonPadding: EdgeInsets.zero,
+            )
+          : null,
       body: body,
       persistentFooterButtons: <Widget>[statusBar ?? const StatusBar()],
     );
@@ -201,8 +200,8 @@ class ColumnPage extends StatelessWidget {
                                       text: title,
                                       style: theme.textTheme.displaySmall
                                           ?.copyWith(
-                                            fontWeight: FontWeight.w100,
-                                          ),
+                                        fontWeight: FontWeight.w100,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -219,10 +218,9 @@ class ColumnPage extends StatelessWidget {
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
-                            mainAxisAlignment:
-                                rightIsCentered
-                                    ? MainAxisAlignment.center
-                                    : MainAxisAlignment.start,
+                            mainAxisAlignment: rightIsCentered
+                                ? MainAxisAlignment.center
+                                : MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: right,
                           ),

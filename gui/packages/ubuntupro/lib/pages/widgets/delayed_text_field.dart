@@ -102,7 +102,7 @@ class _DelayedTextField extends State<DelayedTextField>
 /// A [ChangeNotifier] that notifies when the provided duration elapses.
 class TimerNotifier extends ChangeNotifier {
   TimerNotifier({required this.duration, required this.vsync})
-    : assert(duration > Duration.zero, 'Duration must be greater than zero') {
+      : assert(duration > Duration.zero, 'Duration must be greater than zero') {
     _ticker = vsync.createTicker(_onTick);
   }
 

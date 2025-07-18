@@ -52,3 +52,6 @@ pubspec.lock
 
 # The icon is overriden by the build system
 packages/ubuntupro/windows/runner/resources/app_icon.ico
+
+# Generated sources for translations
+/packages/*/lib/l10n/*.dart

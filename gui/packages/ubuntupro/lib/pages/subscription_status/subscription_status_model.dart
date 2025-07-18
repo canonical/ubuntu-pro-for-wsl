@@ -48,11 +48,11 @@ class StoreSubscriptionStatusModel extends SubscriptionStatusModel {
   final Uri uri;
 
   StoreSubscriptionStatusModel(String productID)
-    : uri = Uri.https(
-        'account.microsoft.com',
-        '/services/${productID.toLowerCase()}/details#billing',
-      ),
-      super._();
+      : uri = Uri.https(
+          'account.microsoft.com',
+          '/services/${productID.toLowerCase()}/details#billing',
+        ),
+        super._();
 
   /// Launches the MS account web page where the user can manage the subscription.
   Future<void> launchManagementWebPage() => launchUrl(uri);

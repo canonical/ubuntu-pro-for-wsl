@@ -1,10 +1,10 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_model.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
@@ -215,12 +215,11 @@ void main() {
       routes: {'/': const WizardRoute(builder: SubscriptionStatusPage.create)},
       providers: [
         ChangeNotifierProvider(
-          create:
-              (_) => ValueNotifier(
-                ConfigSources(
-                  proSubscription: SubscriptionInfo()..ensureUser(),
-                ),
-              ),
+          create: (_) => ValueNotifier(
+            ConfigSources(
+              proSubscription: SubscriptionInfo()..ensureUser(),
+            ),
+          ),
         ),
       ],
     );
@@ -275,15 +274,14 @@ void main() {
 
       final app = buildWizardApp({
         '/': WizardRoute(
-          builder:
-              (context) => Center(
-                child: FilledButton(
-                  onPressed: () {
-                    Wizard.of(context).next();
-                  },
-                  child: const Text(clickMe),
-                ),
-              ),
+          builder: (context) => Center(
+            child: FilledButton(
+              onPressed: () {
+                Wizard.of(context).next();
+              },
+              child: const Text(clickMe),
+            ),
+          ),
         ),
         '/second': WizardRoute(
           builder: SubscriptionStatusPage.create,
@@ -329,12 +327,11 @@ Widget buildApp(
     routes: {'/': WizardRoute(builder: (_) => const SubscriptionStatusPage())},
     providers: [
       Provider(
-        create:
-            (_) => SubscriptionStatusModel(
-              ConfigSources(proSubscription: info, landscapeSource: landscape),
-              client,
-              canConfigureLandscape: landscapeFeatureIsEnabled,
-            ),
+        create: (_) => SubscriptionStatusModel(
+          ConfigSources(proSubscription: info, landscapeSource: landscape),
+          client,
+          canConfigureLandscape: landscapeFeatureIsEnabled,
+        ),
       ),
     ],
   );
@@ -345,10 +342,9 @@ Widget buildWizardApp(Map<String, WizardRoute> routes) {
     routes: routes,
     providers: [
       ChangeNotifierProvider(
-        create:
-            (_) => ValueNotifier(
-              ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
-            ),
+        create: (_) => ValueNotifier(
+          ConfigSources(proSubscription: SubscriptionInfo()..ensureUser()),
+        ),
       ),
     ],
   );
