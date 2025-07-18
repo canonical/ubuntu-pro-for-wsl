@@ -1,7 +1,7 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:mockito/annotations.dart';
