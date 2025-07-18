@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wizard_router/wizard_router.dart';
 
-import '../../constants.dart';
+import '/constants.dart';
+import '/l10n/app_localizations.dart';
 import '../landscape/landscape_model.dart';
 import '../widgets/navigation_row.dart';
 import '../widgets/page_widgets.dart';
 import '../widgets/radio_tile.dart';
 
-enum SkipEnum { skip, register }
+enum SkipEnum {
+  skip,
+  register,
+}
 
 class LandscapeSkipPage extends StatefulWidget {
   const LandscapeSkipPage({super.key});

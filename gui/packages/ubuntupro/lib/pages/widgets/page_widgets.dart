@@ -23,11 +23,11 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yaru/yaru.dart';
 
 import '/constants.dart';
+import '/l10n/app_localizations.dart';
 import 'navigation_row.dart';
 import 'status_bar.dart';
 

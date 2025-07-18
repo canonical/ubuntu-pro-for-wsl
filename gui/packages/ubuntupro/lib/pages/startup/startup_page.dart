@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
 import '/core/agent_monitor.dart';
+import '/l10n/app_localizations.dart';
 import 'startup_model.dart';
 import 'startup_widgets.dart';
 

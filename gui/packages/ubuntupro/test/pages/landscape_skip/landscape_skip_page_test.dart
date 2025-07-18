@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:ubuntupro/pages/landscape_skip/landscape_skip_page.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:wizard_router/wizard_router.dart';

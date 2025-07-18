@@ -67,7 +67,7 @@ class SettingsRepository {
   void close() => _key?.close();
   int? readInt(String name) {
     if (_key == null) return null;
-    return _key!.getValueAsInt(name);
+    return _key!.getIntValue(name);
   }
 
   bool load() {

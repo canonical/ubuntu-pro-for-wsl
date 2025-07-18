@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
@@ -14,6 +13,7 @@ import 'package:yaru/yaru.dart';
 
 import '/constants.dart';
 import '/core/agent_api_client.dart';
+import '/l10n/app_localizations.dart';
 import '/pages/widgets/delayed_text_field.dart';
 import '/pages/widgets/navigation_row.dart';
 import '/pages/widgets/page_widgets.dart';

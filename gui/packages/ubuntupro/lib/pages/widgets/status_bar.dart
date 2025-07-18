@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yaru/yaru.dart';
 
 import '/constants.dart' as constants;
 import '/core/agent_connection.dart';
+import '/l10n/app_localizations.dart';
 
 class StatusBar extends StatelessWidget {
   const StatusBar({

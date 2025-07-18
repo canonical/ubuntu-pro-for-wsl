@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_connection.dart';
 import 'package:ubuntupro/core/agent_monitor.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 

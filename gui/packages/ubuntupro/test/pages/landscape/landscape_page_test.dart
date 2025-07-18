@@ -1,7 +1,6 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:mockito/annotations.dart';
@@ -9,6 +8,7 @@ import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:ubuntupro/pages/landscape/landscape_model.dart';
 import 'package:ubuntupro/pages/landscape/landscape_page.dart';
 import 'package:ubuntupro/pages/widgets/page_widgets.dart';

@@ -1,6 +1,5 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
@@ -10,6 +9,7 @@ import 'core/agent_api_client.dart';
 import 'core/agent_connection.dart';
 import 'core/agent_monitor.dart';
 import 'core/settings.dart';
+import 'l10n/app_localizations.dart';
 import 'pages/landscape/landscape_page.dart';
 import 'pages/landscape_skip/landscape_skip_page.dart';
 import 'pages/startup/startup_page.dart';

@@ -1,6 +1,5 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
@@ -9,6 +8,7 @@ import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
 import '/core/agent_api_client.dart';
+import '/l10n/app_localizations.dart';
 import 'subscription_status_model.dart';
 import 'subscription_status_widgets.dart';
 

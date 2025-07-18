@@ -1,5 +1,5 @@
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 
 extension L10nTester on WidgetTester {
   /// Returns the AppLocalizations object associated with the [BuildContext] of

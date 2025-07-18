@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:yaru/yaru.dart';
+
+import '/l10n/app_localizations.dart';
 import '/pages/widgets/page_widgets.dart';
 
 /// A page content widget built on top of the Dark styled landing page showing the current user active subscription
