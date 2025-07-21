@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppInstaller
+	xmlns="http://schemas.microsoft.com/appx/appinstaller/2017/2"
+	Uri="https://github.com/canonical/ubuntu-pro-for-wsl/releases/latest/download/UbuntuProForWSL.appinstaller"
+	Version="1.0.0.0">
+	<MainBundle
+		Name="UbuntuProForWSL"
+		Version="0.0.0.0"
+		Publisher="CN=23596F84-C3EA-4CD8-A7DF-550DCE37BCD0"
+		Uri="https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/0.0.0/UbuntuProForWSL_0.0.0.msixbundle" />
+	<Dependencies>
+		<Package
+		  Name="Microsoft.VCLibs.140.00.UWPDesktop"
+		  Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+		  Version="14.0.24217.0"
+	  ProcessorArchitecture="x64"
+		  Uri="https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" />
+		<Package
+		  Name="Microsoft.VCLibs.140.00.UWPDesktop"
+		  Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+		  Version="14.0.24217.0"
+	  ProcessorArchitecture="arm"
+		  Uri="https://aka.ms/Microsoft.VCLibs.arm64.14.00.Desktop.appx" />
+	</Dependencies>
+	<UpdateSettings>
+		<OnLaunch HoursBetweenUpdateChecks="0" />
+		<AutomaticBackgroundTask />
+	</UpdateSettings>
+</AppInstaller>
