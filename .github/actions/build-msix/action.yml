@@ -17,6 +17,11 @@ inputs:
     required: true
     description: "certificate_password to pass to sign the msix"
 
+outputs:
+  msix-version:
+    description: "The version of the built MSIX bundle"
+    value: ${{ steps.build.outputs.UP4W_VERSION }}
+
 runs:
   using: "composite"
   steps:
@@ -58,8 +63,24 @@ runs:
         $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
         $doc = [System.Xml.Linq.XDocument]::Load($path)
         $xName = [System.Xml.Linq.XName]::Get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Identity")
-        $doc.Root.Element($xName).Attribute("Version").Value = "$UP4W_VERSION.0";
+        $doc.Root.Element($xName).Attribute("Version").Value = "${UP4W_VERSION}.0";
         $doc.Save($path)
+
+        # Do the same with the app installer file
+        # with both the app installer file and main bundle versions the same as $UP4W_VERSION.
+        $path = "$PWD/Msix/UbuntuProForWSL/UbuntuProForWSL.appinstaller"
+        $doc = [System.Xml.Linq.XDocument]::Load($path)
+        $ns = $doc.Root.Name.Namespace
+        $doc.Root.SetAttributeValue("Version", "${UP4W_VERSION}.0")
+        $mainBundle = $doc.Root.Element($ns + "MainBundle")
+        if ($mainBundle) {
+          $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
+          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${UP4W_VERSION}/UbuntuProForWSL_${UP4W_VERSION}.msixbundle")
+        }
+        $doc.Save($path)
+
+        # Outputs the version for the next steps
+        "UP4W_VERSION=${UP4W_VERSION}.0" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
         # Set up the mock
         $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ inputs.mode == 'end_to_end_tests' && '1' || '$null'}}
