@@ -124,6 +124,7 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
+// WithConnectError allows injecting a gRPC error into the mock server.
 func WithConnectError(err error) Option {
 	return func(o *opts) {
 		o.connectError = err
