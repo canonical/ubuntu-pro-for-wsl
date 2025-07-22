@@ -85,20 +85,34 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	}
 	conn.grpcClient = client
 
+	// Buffered to allow the goroutine to send errors even when there is no receiver.
+	errChan := make(chan error, 1)
 	// Get ready to receive commands
 	conn.receivingCommands.Add(1)
 	go func() {
 		defer conn.disconnect()
 		defer conn.receivingCommands.Done()
+		defer close(errChan)
 
 		if err := conn.receiveCommands(executor{d, cl.SendCommandStatus}); err != nil {
 			log.Warningf(ctx, "Landscape: stopped listening for commands: %v", err)
+			errChan <- err
 		} else {
 			log.Info(ctx, "Landscape: finished listening for commands.")
 		}
 	}()
 
-	if err := handshake(ctx, d, conn); err != nil {
+	// handshake() and the goroutine running receiveCommands() can both fail
+	// differently for potentially the same root cause, so let's make sure
+	// we don't lose information.
+	err = handshake(ctx, d, conn)
+	select {
+	case recErr := <-errChan:
+		err = errors.Join(err, recErr)
+	default:
+	}
+
+	if err != nil {
 		conn.disconnect()
 		return nil, err
 	}
@@ -212,7 +226,7 @@ func (conn *connection) receiveCommands(e executor) error {
 			return errors.New("stream closed by server")
 		}
 		if err != nil {
-			return fmt.Errorf("could not receive commands: %v", err)
+			return fmt.Errorf("could not receive commands: %w", err)
 		}
 
 		// Removing the cancel context so that the command is executed even if the connection is lost.
