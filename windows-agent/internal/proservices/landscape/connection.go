@@ -156,15 +156,15 @@ func handshake(ctx context.Context, d serviceData, conn *connection) (err error)
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	ctx, cancel := context.WithTimeout(conn.ctx, time.Minute)
+	timedCtx, cancel := context.WithTimeout(conn.ctx, time.Minute)
 	defer cancel()
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-timedCtx.Done():
 			conn.disconnect()
 			// Avoid races where the UID arrives just after cancelling the context
-			err := conf.SetLandscapeAgentUID(ctx, "")
+			err := conf.SetLandscapeAgentUID(timedCtx, "")
 			return fmt.Errorf("Landscape server did not respond with a client UID: %v", err)
 		case <-ticker.C:
 		}
