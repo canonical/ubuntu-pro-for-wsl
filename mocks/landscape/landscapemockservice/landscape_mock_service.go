@@ -103,11 +103,15 @@ type Service struct {
 	// SendCmdStatusError, if set, will cause SendCommandStatus to return an error
 	SendCmdStatusError error
 
+	// connectError, if set, will cause Connect to return an error
+	connectError error
+
 	logger *slog.Logger
 }
 
 type opts struct {
-	logger *slog.Logger
+	logger       *slog.Logger
+	connectError error
 }
 
 // Option is an optional argument for New.
@@ -117,6 +121,12 @@ type Option func(*opts)
 func WithLogger(logger *slog.Logger) Option {
 	return func(o *opts) {
 		o.logger = logger
+	}
+}
+
+func WithConnectError(err error) Option {
+	return func(o *opts) {
+		o.connectError = err
 	}
 }
 
@@ -131,9 +141,10 @@ func New(args ...Option) *Service {
 	}
 
 	return &Service{
-		mu:     &sync.RWMutex{},
-		hosts:  make(map[string]host),
-		logger: options.logger,
+		mu:           &sync.RWMutex{},
+		hosts:        make(map[string]host),
+		logger:       options.logger,
+		connectError: options.connectError,
 	}
 }
 
@@ -161,7 +172,7 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 
 		if msg.err != nil {
 			s.logger.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, msg.err))
-			return err
+			return msg.err
 		}
 		hostInfo = msg.info
 
@@ -225,6 +236,11 @@ func asyncRecv(ctx context.Context, stream landscapeapi.LandscapeHostAgent_Conne
 func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
 	if s.isConnected(hostInfo.UID) {
 		return "", nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
+	}
+
+	if s.connectError != nil {
+		s.logger.Info(fmt.Sprintf("Landscape: %s: Connect error: %v", hostInfo.Hostname, s.connectError))
+		return "", nil, s.connectError
 	}
 
 	// Register the connection so commands can be sent
