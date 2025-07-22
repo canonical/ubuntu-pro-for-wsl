@@ -15,7 +15,9 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/ubuntu/decorate"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/status"
 )
 
 // Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
@@ -236,6 +238,17 @@ func (s *Service) keepConnected() error {
 				log.Infof(s.ctx, "Landscape: service disabled: %v", target)
 				s.disabled.Store(true)
 				continue
+			}
+
+			// Let's check if this error is gRPC Permission Denied:
+			if status.Code(err) == codes.PermissionDenied {
+				if s.disabled.Load() {
+					// "Landscape: service disabled" already logged.
+					continue
+				}
+				// We only log this once.
+				log.Warningf(s.ctx, "Landscape: service disabled: %v", err)
+				s.disabled.Store(true)
 			}
 
 			if err != nil {
