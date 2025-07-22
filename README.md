@@ -18,7 +18,7 @@ It contains the set of applications to manage Ubuntu WSL instances that allows y
 The documentation in this repository includes information on both:
 
 * The Ubuntu on WSL distribution
-* THe Ubuntu Pro for WSL application
+* The Ubuntu Pro for WSL application
 
 You can read all about both on our [official documentation](https://documentation.ubuntu.com/wsl/en/latest/).
 
