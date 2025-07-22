@@ -133,7 +133,7 @@ func (s *Service) Connect() (err error) {
 	if err := s.keepConnected(); errors.Is(err, noConfigError{}) {
 		return nil
 	} else if err != nil {
-		return err
+		return fmt.Errorf("could not connect to Landscape server: %v", err)
 	}
 
 	return nil
