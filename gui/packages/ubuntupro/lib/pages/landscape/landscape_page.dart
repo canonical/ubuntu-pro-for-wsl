@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
@@ -14,6 +13,7 @@ import 'package:yaru/yaru.dart';
 
 import '/constants.dart';
 import '/core/agent_api_client.dart';
+import '/l10n/app_localizations.dart';
 import '/pages/widgets/delayed_text_field.dart';
 import '/pages/widgets/navigation_row.dart';
 import '/pages/widgets/page_widgets.dart';
@@ -266,23 +266,21 @@ class _FilePickerFieldState extends State<_FilePickerField> {
         ),
         const SizedBox(width: 8.0),
         FilledButton(
-          onPressed:
-              widget.enabled
-                  ? () async {
-                    final result = await FilePicker.platform.pickFiles(
-                      allowedExtensions: widget.allowedExtensions,
-                      type:
-                          widget.allowedExtensions == null
-                              ? FileType.any
-                              : FileType.custom,
-                    );
-                    if (result != null) {
-                      final file = File(result.files.single.path!);
-                      txt.text = file.path;
-                      widget.onChanged(file.path);
-                    }
+          onPressed: widget.enabled
+              ? () async {
+                  final result = await FilePicker.platform.pickFiles(
+                    allowedExtensions: widget.allowedExtensions,
+                    type: widget.allowedExtensions == null
+                        ? FileType.any
+                        : FileType.custom,
+                  );
+                  if (result != null) {
+                    final file = File(result.files.single.path!);
+                    txt.text = file.path;
+                    widget.onChanged(file.path);
                   }
-                  : null,
+                }
+              : null,
           child: Text(widget.buttonLabel),
         ),
       ],

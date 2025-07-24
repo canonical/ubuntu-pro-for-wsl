@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/pro_token.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
+
 import '../../utils/build_multiprovider_app.dart';
 import '../../utils/token_samples.dart' as tks;
 import '../../utils/url_launcher_mock.dart';

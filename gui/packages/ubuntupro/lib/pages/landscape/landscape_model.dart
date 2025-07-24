@@ -245,7 +245,8 @@ ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
 $sslKeyLine
 $registrationKeyLine
-'''.trimRight();
+'''
+        .trimRight();
   }
 }
 

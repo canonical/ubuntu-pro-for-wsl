@@ -1,6 +1,5 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +8,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wizard_router/wizard_router.dart';
 
 import '/core/agent_api_client.dart';
+import '/l10n/app_localizations.dart';
 import '/pages/widgets/navigation_row.dart';
 import '/pages/widgets/page_widgets.dart';
 import 'subscribe_now_model.dart';
@@ -28,11 +28,10 @@ class SubscribeNowPage extends StatefulWidget {
         Wizard.of(context).routeData as bool? ?? false;
 
     return ChangeNotifierProvider<SubscribeNowModel>(
-      create:
-          (context) => SubscribeNowModel(
-            client,
-            isPurchaseAllowed: storePurchaseIsAllowed,
-          ),
+      create: (context) => SubscribeNowModel(
+        client,
+        isPurchaseAllowed: storePurchaseIsAllowed,
+      ),
       child: SubscribeNowPage(
         onSubscriptionUpdate: (info) {
           final src = context.read<ValueNotifier<ConfigSources>>();
@@ -75,37 +74,36 @@ class _SubscribeNowPageState extends State<SubscribeNowPage> {
         ),
         const SizedBox(height: 16.0),
         OutlinedButton(
-          onPressed:
-              !model.purchaseAllowed
-                  ? () => launchUrlString('https://ubuntu.com/pro/subscribe')
-                  : () async {
-                    final subs = await model.purchaseSubscription();
+          onPressed: !model.purchaseAllowed
+              ? () => launchUrlString('https://ubuntu.com/pro/subscribe')
+              : () async {
+                  final subs = await model.purchaseSubscription();
 
-                    // Using anything attached to the BuildContext after a suspension point might be tricky.
-                    // Better check if it's still mounted in the widget tree.
-                    if (!context.mounted) return;
+                  // Using anything attached to the BuildContext after a suspension point might be tricky.
+                  // Better check if it's still mounted in the widget tree.
+                  if (!context.mounted) return;
 
-                    subs.fold(
-                      ifLeft: (status) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            width: 200.0,
-                            behavior: SnackBarBehavior.floating,
-                            content: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2.0,
-                                  horizontal: 16.0,
-                                ),
-                                child: Text(status.localize(lang)),
+                  subs.fold(
+                    ifLeft: (status) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          width: 200.0,
+                          behavior: SnackBarBehavior.floating,
+                          content: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 2.0,
+                                horizontal: 16.0,
                               ),
+                              child: Text(status.localize(lang)),
                             ),
                           ),
-                        );
-                      },
-                      ifRight: widget.onSubscriptionUpdate,
-                    );
-                  },
+                        ),
+                      );
+                    },
+                    ifRight: widget.onSubscriptionUpdate,
+                  );
+                },
           child: Text(lang.getUbuntuPro),
         ),
       ],

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wizard_router/wizard_router.dart';
 
-import '../../constants.dart';
+import '/constants.dart';
+import '/l10n/app_localizations.dart';
 import '../landscape/landscape_model.dart';
 import '../widgets/navigation_row.dart';
 import '../widgets/page_widgets.dart';
 import '../widgets/radio_tile.dart';
 
-enum SkipEnum { skip, register }
+enum SkipEnum {
+  skip,
+  register,
+}
 
 class LandscapeSkipPage extends StatefulWidget {
   const LandscapeSkipPage({super.key});
@@ -44,20 +47,18 @@ class _LandscapeSkipPageState extends State<LandscapeSkipPage> {
           title: lang.landscapeSkip,
           subtitle: lang.landscapeSkipDescription,
           groupValue: groupValue,
-          onChanged:
-              (v) => setState(() {
-                groupValue = v!;
-              }),
+          onChanged: (v) => setState(() {
+            groupValue = v!;
+          }),
         ),
         const SizedBox(height: 16),
         RadioTile(
           value: SkipEnum.register,
           title: lang.landscapeSkipRegister,
           groupValue: groupValue,
-          onChanged:
-              (v) => setState(() {
-                groupValue = v!;
-              }),
+          onChanged: (v) => setState(() {
+            groupValue = v!;
+          }),
         ),
       ],
       navigationRow: NavigationRow(

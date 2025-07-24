@@ -1,6 +1,5 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
@@ -10,6 +9,7 @@ import 'core/agent_api_client.dart';
 import 'core/agent_connection.dart';
 import 'core/agent_monitor.dart';
 import 'core/settings.dart';
+import 'l10n/app_localizations.dart';
 import 'pages/landscape/landscape_page.dart';
 import 'pages/landscape_skip/landscape_skip_page.dart';
 import 'pages/startup/startup_page.dart';
@@ -47,11 +47,10 @@ class Pro4WSLApp extends StatelessWidget {
               return Wizard(
                 routes: {
                   Routes.startup: WizardRoute(
-                    builder:
-                        (context) => Provider.value(
-                          value: agentMonitor,
-                          child: const StartupPage(),
-                        ),
+                    builder: (context) => Provider.value(
+                      value: agentMonitor,
+                      child: const StartupPage(),
+                    ),
                     onReplace: (_) async {
                       final src = context.read<ValueNotifier<ConfigSources>>();
                       final client = getService<AgentApiClient>();
@@ -99,9 +98,8 @@ class Pro4WSLApp extends StatelessWidget {
                       userData: true,
                     ),
                     Routes.configureLandscapeLate: WizardRoute(
-                      builder:
-                          (context) =>
-                              LandscapePage.create(context, isLate: true),
+                      builder: (context) =>
+                          LandscapePage.create(context, isLate: true),
                     ),
                   } else ...{
                     Routes.subscriptionStatus: WizardRoute(

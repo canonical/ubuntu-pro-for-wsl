@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yaru/yaru.dart';
 
 import '/constants.dart' as constants;
 import '/core/agent_connection.dart';
+import '/l10n/app_localizations.dart';
 
 class StatusBar extends StatelessWidget {
   const StatusBar({
@@ -48,19 +48,17 @@ class StatusBar extends StatelessWidget {
         ),
         if (showAgentStatus)
           Consumer<AgentConnection>(
-            builder:
-                (context, conn, _) => IconButton(
-                  tooltip: conn.state.localize(lang),
-                  icon: Icon(
-                    size: 14.0,
-                    agentConnIcon,
-                    color: conn.state.toColor(context),
-                  ),
-                  onPressed:
-                      conn.state == AgentConnectionState.disconnected
-                          ? conn.restartAgent
-                          : null,
-                ),
+            builder: (context, conn, _) => IconButton(
+              tooltip: conn.state.localize(lang),
+              icon: Icon(
+                size: 14.0,
+                agentConnIcon,
+                color: conn.state.toColor(context),
+              ),
+              onPressed: conn.state == AgentConnectionState.disconnected
+                  ? conn.restartAgent
+                  : null,
+            ),
           ),
       ],
     );

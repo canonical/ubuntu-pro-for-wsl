@@ -20,16 +20,14 @@ class RadioTile<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     // Adds a nice visual clue that the tile is selected.
     return YaruBorderContainer(
-      border:
-          groupValue == value
-              ? Border.all(color: Theme.of(context).colorScheme.primary)
-              : null,
+      border: groupValue == value
+          ? Border.all(color: Theme.of(context).colorScheme.primary)
+          : null,
       // we specify this here since [YaruSelectableContainer] doesn't support a
       // non-selected color
-      color:
-          groupValue != value
-              ? Theme.of(context).colorScheme.onInverseSurface
-              : null,
+      color: groupValue != value
+          ? Theme.of(context).colorScheme.onInverseSurface
+          : null,
       child: YaruSelectableContainer(
         selected: groupValue == value,
         selectionColor: Theme.of(

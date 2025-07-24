@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import '/l10n/app_localizations.dart';
 
 class NavigationRow extends StatelessWidget {
   const NavigationRow({
@@ -36,13 +37,13 @@ class NavigationRow extends StatelessWidget {
           const Spacer(),
           nextIsAction
               ? ElevatedButton(
-                onPressed: onNext,
-                child: Text(nextText ?? lang.buttonNext),
-              )
+                  onPressed: onNext,
+                  child: Text(nextText ?? lang.buttonNext),
+                )
               : OutlinedButton(
-                onPressed: onNext,
-                child: Text(nextText ?? lang.buttonNext),
-              ),
+                  onPressed: onNext,
+                  child: Text(nextText ?? lang.buttonNext),
+                ),
         ],
       ],
     );

@@ -18,12 +18,12 @@ class AgentApiClient {
     Directory certsDir, [
     this.stubFactory = UIClient.new,
   ]) : _channel = ClientChannel(
-         host,
-         port: port,
-         options: ChannelOptions(
-           credentials: credentialsfromDirectory(certsDir),
-         ),
-       ) {
+          host,
+          port: port,
+          options: ChannelOptions(
+            credentials: credentialsfromDirectory(certsDir),
+          ),
+        ) {
     _client = stubFactory.call(_channel);
   }
 

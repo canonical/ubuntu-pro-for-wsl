@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/core/agent_monitor.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:ubuntupro/pages/startup/startup_model.dart';
 import 'package:ubuntupro/pages/startup/startup_page.dart';
 import 'package:wizard_router/wizard_router.dart';
@@ -87,13 +87,12 @@ void main() {
     final app = buildMultiProviderWizardApp(
       providers: [
         Provider<AgentStartupMonitor>(
-          create:
-              (context) => AgentStartupMonitor(
-                addrFileName: 'anywhere',
-                agentLauncher: () async => true,
-                clientFactory: AgentApiClient.new,
-                onClient: (_) {},
-              ),
+          create: (context) => AgentStartupMonitor(
+            addrFileName: 'anywhere',
+            agentLauncher: () async => true,
+            clientFactory: AgentApiClient.new,
+            onClient: (_) {},
+          ),
         ),
       ],
       routes: {
@@ -113,9 +112,9 @@ void main() {
 
 const lastText = 'LAST TEXT';
 Widget buildApp(StartupModel model) => buildMultiProviderWizardApp(
-  providers: [ChangeNotifierProvider.value(value: model)],
-  routes: {
-    '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
-    '/next': WizardRoute(builder: (_) => const Text(lastText)),
-  },
-);
+      providers: [ChangeNotifierProvider.value(value: model)],
+      routes: {
+        '/': WizardRoute(builder: (_) => const StartupAnimatedChild()),
+        '/next': WizardRoute(builder: (_) => const Text(lastText)),
+      },
+    );

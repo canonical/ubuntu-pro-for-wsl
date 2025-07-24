@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntupro/core/agent_connection.dart';
 import 'package:ubuntupro/core/agent_monitor.dart';
+import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
 
@@ -14,21 +14,19 @@ Widget buildMultiProviderWizardApp({
   required Map<String, WizardRoute> routes,
 }) {
   return MultiProvider(
-    providers:
-        providers +
+    providers: providers +
         [
           ChangeNotifierProvider<AgentConnection>(
             create: (_) => _MockAgentConnection(),
           ),
         ],
     child: YaruTheme(
-      builder:
-          (_, yaru, __) => MaterialApp(
-            theme: yaru.theme,
-            darkTheme: yaru.darkTheme,
-            home: Wizard(routes: routes),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-          ),
+      builder: (_, yaru, __) => MaterialApp(
+        theme: yaru.theme,
+        darkTheme: yaru.darkTheme,
+        home: Wizard(routes: routes),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+      ),
     ),
   );
 }
@@ -38,21 +36,19 @@ Widget buildSingleRouteMultiProviderApp({
   required Widget child,
 }) {
   return MultiProvider(
-    providers:
-        providers +
+    providers: providers +
         [
           ChangeNotifierProvider<AgentConnection>(
             create: (_) => _MockAgentConnection(),
           ),
         ],
     child: YaruTheme(
-      builder:
-          (_, yaru, __) => MaterialApp(
-            theme: yaru.theme,
-            darkTheme: yaru.darkTheme,
-            home: child,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-          ),
+      builder: (_, yaru, __) => MaterialApp(
+        theme: yaru.theme,
+        darkTheme: yaru.darkTheme,
+        home: child,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+      ),
     ),
   );
 }
