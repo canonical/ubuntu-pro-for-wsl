@@ -103,9 +103,9 @@ func TestConnect(t *testing.T) {
 	require.NoError(t, err, "Setup: could not create bad certificate")
 
 	testCases := map[string]struct {
-		precancelContext       bool
-		serverNotAvailable     bool
-		serverPermissionDenied bool
+		precancelContext   bool
+		serverNotAvailable bool
+		serverErrorCode    codes.Code // 0. codes.OK by default.
 
 		landscapeUIDReadErr  bool
 		landscapeUIDWriteErr bool
@@ -139,7 +139,8 @@ func TestConnect(t *testing.T) {
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
-		"Error when the server returns permission denied":      {serverPermissionDenied: true, wantErr: true},
+		"Error when the server returns permission denied":      {serverErrorCode: codes.PermissionDenied, wantErr: true},
+		"Error when the server returns invalid argument":       {serverErrorCode: codes.InvalidArgument, wantErr: true},
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
 		"Error when the config cannot be parsed":               {wantErr: true},
@@ -168,8 +169,8 @@ func TestConnect(t *testing.T) {
 			}
 
 			var connErr error
-			if tc.serverPermissionDenied {
-				connErr = status.Error(codes.PermissionDenied, "Mock: Permission denied")
+			if tc.serverErrorCode != codes.OK {
+				connErr = status.Error(tc.serverErrorCode, "Mock error")
 			}
 
 			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p, connErr)

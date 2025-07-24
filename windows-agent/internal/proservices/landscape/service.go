@@ -241,7 +241,7 @@ func (s *Service) keepConnected() error {
 			}
 
 			// Let's check if this error is gRPC Permission Denied:
-			if status.Code(err) == codes.PermissionDenied {
+			if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
 				if s.disabled.Load() {
 					// "Landscape: service disabled" already logged.
 					continue
