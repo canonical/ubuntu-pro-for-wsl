@@ -17,6 +17,7 @@ concurrency:
 jobs:
   quality-go:
     name: "Go Quality checks"
+    permissions: {}
     strategy:
       fail-fast: false
       matrix:
@@ -70,6 +71,7 @@ jobs:
       - name: Quality check
         uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           working-directory: ${{ matrix.subproject }}
           go-tags: gowslmock
           tools-directory: ${{ github.workspace }}/tools
