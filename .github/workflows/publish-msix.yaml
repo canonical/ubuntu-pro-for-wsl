@@ -8,6 +8,8 @@ on:
 
 jobs:
   publish-msix:
+    permissions:
+      contents: write
     name: Publish MSIX app to the Microsoft Store
     runs-on: windows-latest
     steps:
@@ -16,8 +18,9 @@ jobs:
         with:
           fetch-tags: true
           fetch-depth: 0
-      - name: Build MSIX app
+      - name: Build MSIX Bundle
         uses: ./.github/actions/build-msix
+        id: build-msix
         with:
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
@@ -43,3 +46,16 @@ jobs:
           # Prepare and submit to the Store
           New-SubmissionPackage -ConfigPath .\msix\SBConfig.json
           Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "out\appstore-submission.json" -PackagePath "out\appstore-submission.zip" -Force -Autocommit -ReplacePackages
+
+      - name: Create the GH Release
+        shell: powershell
+        needs: build-msix
+        id: create-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.build-msix.outputs.msix-version }}
+        run: |
+           # Intentionally not copying the msixbundle, as it is already uploaded to the store
+           # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
+           # and draft, so it doesn't appear as a published release.
+           gh release create "${env:tag}" --draft --latest=false --title="${env:tag}" --fail-on-no-commits --generate-notes "msix\UbuntuProForWSL.appinstaller"
