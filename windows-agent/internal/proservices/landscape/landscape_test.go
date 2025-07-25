@@ -34,7 +34,9 @@ import (
 	wslmock "github.com/ubuntu/gowsl/mock"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 func TestMain(m *testing.M) {
@@ -103,6 +105,7 @@ func TestConnect(t *testing.T) {
 	testCases := map[string]struct {
 		precancelContext   bool
 		serverNotAvailable bool
+		serverErrorCode    codes.Code // 0. codes.OK by default.
 
 		landscapeUIDReadErr  bool
 		landscapeUIDWriteErr bool
@@ -136,6 +139,8 @@ func TestConnect(t *testing.T) {
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
+		"Error when the server returns permission denied":      {serverErrorCode: codes.PermissionDenied, wantErr: true},
+		"Error when the server returns invalid argument":       {serverErrorCode: codes.InvalidArgument, wantErr: true},
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
 		"Error when the config cannot be accessed":             {breakLandscapeClientConfig: true, wantErr: true},
 		"Error when the config cannot be parsed":               {wantErr: true},
@@ -163,7 +168,12 @@ func TestConnect(t *testing.T) {
 				ctx = wsl.WithMock(ctx, wslmock.New())
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p)
+			var connErr error
+			if tc.serverErrorCode != codes.OK {
+				connErr = status.Error(tc.serverErrorCode, "Mock error")
+			}
+
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", p, connErr)
 			defer lis.Close()
 
 			conf := &mockConfig{
@@ -322,7 +332,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 				t.Skip("This test is skipped because it necessitates the GoWSL mock")
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "", nil)
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
@@ -534,7 +544,7 @@ func TestAutoReconnection(t *testing.T) {
 				ctx = wsl.WithMock(ctx, mock)
 			}
 
-			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "")
+			lis, server, mockService := setUpLandscapeMock(t, ctx, "localhost:", "", nil)
 			defer lis.Close()
 			defer server.Stop()
 
@@ -620,7 +630,7 @@ func TestAutoReconnection(t *testing.T) {
 			require.True(t, ok, "Client should have disconnected after stopping the server")
 
 			// Restart server at the same address
-			lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), "")
+			lis, server, _ = setUpLandscapeMock(t, ctx, lis.Addr().String(), "", nil)
 			defer lis.Close()
 
 			//nolint:errcheck // We don't care
@@ -770,7 +780,7 @@ func TestReconnect(t *testing.T) {
 				ctx = context.WithValue(ctx, landscape.InsecureCredentials, true)
 			}
 
-			lis, server, mockServerService := setUpLandscapeMock(t, ctx, "localhost:", certPath)
+			lis, server, mockServerService := setUpLandscapeMock(t, ctx, "localhost:", certPath, nil)
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
@@ -1014,7 +1024,7 @@ func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, ur
 }
 
 //nolint:revive // Context goes after testing.T
-func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath string) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
+func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath string, grpcErr error) (lis net.Listener, server *grpc.Server, service *landscapemockservice.Service) {
 	t.Helper()
 
 	var cfg net.ListenConfig
@@ -1040,7 +1050,7 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 
 	var logs bytes.Buffer
 	h := slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug})
-	service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)))
+	service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)), landscapemockservice.WithConnectError(grpcErr))
 
 	t.Cleanup(func() {
 		if !t.Failed() {

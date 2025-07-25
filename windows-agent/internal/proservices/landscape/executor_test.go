@@ -804,7 +804,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	tb.ctx = ctx
 
 	// Set up Landscape server
-	lis, server, service := setUpLandscapeMock(t, ctx, "localhost:", "")
+	lis, server, service := setUpLandscapeMock(t, ctx, "localhost:", "", nil)
 	context.AfterFunc(ctx, func() { _ = lis.Close() })
 
 	tb.serverService = service
