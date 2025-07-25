@@ -41,7 +41,7 @@
   "@updatingSubscriptionInfo": {},
   "purchaseStatusSuccess": "Obrigado por subscrever o Ubuntu Pro.",
   "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "Já subscreveu a versão Profissional.",
+  "purchaseStatusAlreadyPurchased": "Já subscreveu ao Pro.",
   "@purchaseStatusAlreadyPurchased": {},
   "purchaseStatusUserGaveUp": "Tentativa de compra foi cancelada.",
   "@purchaseStatusUserGaveUp": {},
