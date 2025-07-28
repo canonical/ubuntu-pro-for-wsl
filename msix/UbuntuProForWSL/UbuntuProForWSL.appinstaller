@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This URI must remain stable and always point to the most up-to-date version of the AppInstaller file. -->
+<!-- AppInstaller and MSIX Bundle versions herein referred are just placeholders modified by CI.
+See https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/.github/actions/build-msix/action.yml -->
 <AppInstaller
 	xmlns="http://schemas.microsoft.com/appx/appinstaller/2017/2"
 	Uri="https://github.com/canonical/ubuntu-pro-for-wsl/releases/latest/download/UbuntuProForWSL.appinstaller"
@@ -22,6 +25,10 @@
 	  ProcessorArchitecture="arm"
 		  Uri="https://aka.ms/Microsoft.VCLibs.arm64.14.00.Desktop.appx" />
 	</Dependencies>
+	<!-- We don't expect users to interact with the GUI often, thus checking for updates on launch should be fine,
+	as the default behaviour is not to block the app launch. -->
+	<!-- Due the AutomaticBackgroundTask option the OS will check in the background for updates every 8h (in practice that means once a day for most people),
+	independent of whether the user has ineracted with the app on that particular day (but it must have done so at least once in life). -->
 	<UpdateSettings>
 		<OnLaunch HoursBetweenUpdateChecks="0" />
 		<AutomaticBackgroundTask />
