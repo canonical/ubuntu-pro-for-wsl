@@ -103,7 +103,7 @@
   "@landscapeSetupCustom": {},
   "landscapeSetupCustomHint": "載入自訂的 Landscape 用戶端設定檔",
   "@landscapeSetupCustomHint": {},
-  "landscapeFQDNLabel": "Landscape FQDN",
+  "landscapeFQDNLabel": "Landscape 完整網域名稱",
   "@landscapeFQDNLabel": {},
   "landscapeFQDNError": "無效的 FQDN。格式應為主機名稱或 IP 位址。",
   "@landscapeFQDNError": {},
