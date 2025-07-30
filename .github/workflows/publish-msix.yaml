@@ -49,11 +49,10 @@ jobs:
 
       - name: Create the GH Release
         shell: powershell
-        needs: build-msix
         id: create-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ needs.build-msix.outputs.msix-version }}
+          tag: ${{ steps.build-msix.outputs.msix-version }}
         run: |
            # Intentionally not copying the msixbundle, as it is already uploaded to the store
            # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
