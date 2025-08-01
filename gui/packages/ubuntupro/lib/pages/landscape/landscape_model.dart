@@ -131,8 +131,8 @@ sealed class LandscapeConfig {
 /// The manual configuration form data: only the FQDN is mandatory, and must not
 /// match landscape.canonical.com.
 class LandscapeManualConfig extends LandscapeConfig {
-  String _fqdn = '';
-  String get fqdn => _fqdn;
+  Uri? _fqdn;
+  String get fqdn => _fqdn?.toString() ?? '';
   FqdnError _fqdnError = FqdnError.none;
   FqdnError get fqdnError => _fqdnError;
 
@@ -145,27 +145,37 @@ class LandscapeManualConfig extends LandscapeConfig {
   FileError get fileError => _fileError;
 
   // FQDN must be a valid URL (without an explicit port) and must not be the Landscape SaaS URL.
-  bool _validateFQDN(String value) {
-    final uri = Uri.tryParse(value);
+  bool _validateFQDN(Uri? uri) {
+    _fqdnError = FqdnError.none;
 
-    if (uri != null && uri.host.endsWith(landscapeSaasFQDN)) {
-      _fqdnError = FqdnError.saas;
-    } else if (value.isEmpty || uri == null || uri.hasPort) {
+    if (uri == null || uri.host.isEmpty) {
       _fqdnError = FqdnError.invalid;
-    } else {
-      _fqdnError = FqdnError.none;
+    } else if (uri.host.endsWith(landscapeSaasFQDN)) {
+      _fqdnError = FqdnError.saas;
     }
-
-    return fqdnError == FqdnError.none;
+    return _fqdnError == FqdnError.none;
   }
 
   /// Ensure the FQDN is a valid URL, enforcing https without requiring the user to type it.
   set fqdn(String value) {
-    if (value.isNotEmpty && !value.startsWith('https://')) {
-      value = 'https://$value';
+    // Landscape documentation advertises the [host].url configuration field to be like `host:port`.
+    // That would be parsed by URL libraries as `scheme:path`, so we need to ensure that's the case and
+    // fix the URL before further processing.
+    var url = Uri.tryParse(value);
+    if (url != null && url.host.isEmpty) {
+      final port = int.tryParse(url.path);
+      if (port != null) {
+        url = url.replace(
+          host: url.scheme,
+          port: port,
+          path: '',
+          scheme: 'https',
+        );
+      }
     }
-    if (_validateFQDN(value)) {
-      _fqdn = value;
+
+    if (_validateFQDN(url)) {
+      _fqdn = url;
     }
   }
 
@@ -230,18 +240,32 @@ class LandscapeManualConfig extends LandscapeConfig {
   @override
   String? config() {
     if (!isComplete) return null;
-    final uri = Uri.parse(_fqdn);
+    assert(_fqdn != null, 'FQDN should not be null at this point');
+    // Silly reference to please the analyzer about null checks.
+    var fqdn = _fqdn;
+    if (fqdn == null) return null;
+
     final sslKeyLine = sslKeyPath.isEmpty ? '' : 'ssl_public_key = $sslKeyPath';
     final registrationKeyLine =
         registrationKey.isEmpty ? '' : 'registration_key = $registrationKey';
 
+    if (!fqdn.hasPort) {
+      // Default documented Landscape hostagent service port is 6554.
+      fqdn = fqdn.replace(port: 6554);
+    }
+
+    if (!fqdn.hasScheme) {
+      // Default documented Landscape hostagent service scheme is https.
+      fqdn = fqdn.replace(scheme: 'https');
+    }
+
     return '''
 [host]
-url = ${uri.replace(port: 6554).authority}
+url = ${fqdn.host}:${fqdn.port}
 [client]
 account_name = $standaloneAN
-url = ${uri.replace(path: '/message-system')}
-ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
+url = ${fqdn.replace(path: '/message-system')}
+ping_url = ${fqdn.replace(scheme: 'http').replace(path: '/ping')}
 log_level = info
 $sslKeyLine
 $registrationKeyLine
