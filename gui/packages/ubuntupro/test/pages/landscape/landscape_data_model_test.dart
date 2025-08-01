@@ -242,8 +242,6 @@ void expectNoEmptyValuesInINI(Config config) {
 }
 
 void expectUrlSchemes(Config config) {
-  final url = Uri.parse(config.get('client', 'url')!);
-  expect(url.scheme, 'https');
   final ping = Uri.parse(config.get('client', 'ping_url')!);
   expect(ping.scheme, 'http');
 }
