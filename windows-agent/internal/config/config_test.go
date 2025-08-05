@@ -366,7 +366,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		t.Parallel()
 	}
 
-	const landscapeBaseConf = "[client]\nuser=JohnDoe"
+	const landscapeBaseConf = "[host]\nurl=127.0.0.1:8080\n[client]\nuser=JohnDoe"
 	testCases := map[string]struct {
 		settingsState   settingsState
 		breakFile       bool
@@ -532,10 +532,10 @@ func TestUpdateRegistryData(t *testing.T) {
 	//nolint:gosec // These are not real credentials
 	const (
 		proToken1      = "UBUNTU_PRO_TOKEN_FIRST"
-		landscapeConf1 = "[client]\ngreeting=hello"
+		landscapeConf1 = "[host]\nurl=127.0.0.1:8080\n[client]\ngreeting=hello"
 
 		proToken2      = "UBUNTU_PRO_TOKEN_SECOND"
-		landscapeConf2 = "[client]\ngreeting=cheers"
+		landscapeConf2 = "[host]\nurl=127.0.0.1:8080\n[client]\ngreeting=cheers"
 
 		invalidLandscapeConf = "NOT AN INI SYNTAX"
 	)
@@ -752,7 +752,7 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 		}
 
 		if state.is(orgLandscapeConfigHasValue) {
-			d.LandscapeConfig = "[client]\nuser=BigOrg"
+			d.LandscapeConfig = "[host]\nurl=landscape.bigorg.com:6554\n[client]\nuser=BigOrg"
 			anyData = true
 		}
 
