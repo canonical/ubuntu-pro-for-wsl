@@ -158,18 +158,40 @@ class LandscapeManualConfig extends LandscapeConfig {
 
   /// Ensure the FQDN is a valid URL, enforcing https without requiring the user to type it.
   set fqdn(String value) {
-    // If the user types just 'localhost', we assume they want to connect to the local Landscape server.
-    if (value == 'localhost') {
-      value = 'localhost:6554';
+    final url = _sanitizeFqdn(value);
+
+    if (_validateFQDN(url)) {
+      _fqdn = url;
     }
-    // Landscape documentation advertises the [host].url configuration field to be like `host:port`.
-    // That would be parsed by URL libraries as `scheme:path`, so we need to ensure that's the case and
-    // fix the URL before further processing.
-    var url = Uri.tryParse(value);
-    if (url != null && url.host.isEmpty) {
+  }
+
+  Uri? _sanitizeFqdn(String value) {
+    final url = Uri.tryParse(value);
+    if (url == null) {
+      return null;
+    }
+    // URL being parsed with a single segment, no authority (user@host:port), no queries might be a special case:
+    if (url.pathSegments.length == 1 &&
+        url.authority.isEmpty &&
+        !url.hasFragment &&
+        !url.hasQuery) {
+      // A single string is parsed as a single segment path, but the user wanted it to be the FQDN instead,
+      // so let's ensure the defaults.
+      if (!url.hasScheme) {
+        return url.replace(
+          host: url.path,
+          port: 6554,
+          scheme: 'https',
+          path: '',
+        );
+      }
+      // If we have scheme it might be because the user followed Landscape documentation that advertises
+      // the [host].url configuration field to be like `host:port`.
+      // That would be parsed by URL libraries as `scheme:path`, so we need to ensure that's the case and
+      // fix the URL before further processing.
       final port = int.tryParse(url.path);
-      if (port != null) {
-        url = url.replace(
+      if (port != null && port > 0 && port < 65536) {
+        return url.replace(
           host: url.scheme,
           port: port,
           path: '',
@@ -177,10 +199,7 @@ class LandscapeManualConfig extends LandscapeConfig {
         );
       }
     }
-
-    if (_validateFQDN(url)) {
-      _fqdn = url;
-    }
+    return url;
   }
 
   // If a path is provided, then it must exist and be a non-empty file.
