@@ -8,7 +8,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -379,6 +381,24 @@ func completeLandscapeConfig(landscapeConf, hostAgentUID string) (string, error)
 	conf, err := ini.Load(strings.NewReader(landscapeConf))
 	if err != nil {
 		return "", fmt.Errorf("could not parse Landscape configuration: %v", err)
+	}
+
+	/// validate that url is not a true URL but really HOST:PORT
+	hostSection, err := conf.GetSection("host")
+	if err != nil {
+		return "", fmt.Errorf("could not find the host section in the Landscape configuration: %v", err)
+	}
+	url, err := hostSection.GetKey("url")
+	if err != nil {
+		return "", fmt.Errorf("could not find the host URL in the Landscape configuration: %v", err)
+	}
+
+	host, port, err := net.SplitHostPort(url.String())
+	if err != nil || host == "" || port == "" {
+		return "", fmt.Errorf("host.url is not valid 'host:port' combination: %s", url.String())
+	}
+	if uPort, err := strconv.ParseUint(port, 10, 32); err != nil || uPort == 0 {
+		return "", fmt.Errorf("host.url port is not a valid integer: %s", port)
 	}
 
 	clientSection, err := conf.GetSection("client")
