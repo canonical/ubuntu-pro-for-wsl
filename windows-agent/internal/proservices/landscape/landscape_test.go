@@ -939,10 +939,10 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 		conf string
 	}{
 
-		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
-		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
-		"Task and agent.yaml with default tags":               {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
-		"Task and agent.yaml with supplied tags":              {conf: "[host]\nurl=localhost\n[client]\ntags=another\n"},
+		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost:1234\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost:1234\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml with default tags":               {conf: "[host]\nurl=localhost:1234\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml with supplied tags":              {conf: "[host]\nurl=localhost:1234\n[client]\ntags=another\n"},
 	}
 
 	for name, tc := range testcases {
