@@ -984,6 +984,7 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			// There is no direct way to observe the result of that function other than relying on the implementation details of the task database.
 			tasksFiles, err := filepath.Glob(filepath.Join(storageDir, "*.tasks"))
 			require.NoError(t, err, "NotifyConfigUpdate: could not list the tasks files storage dir: %s", storageDir)
+			require.NotEmpty(t, tasksFiles, "NotifyConfigUpdate: should have created a tasks file")
 
 			b, err := os.ReadFile(tasksFiles[0])
 			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")
