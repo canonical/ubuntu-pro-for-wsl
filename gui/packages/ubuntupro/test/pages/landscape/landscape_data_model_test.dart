@@ -72,7 +72,7 @@ void main() {
         wantConfig: contains(kExampleLandscapeFQDN),
       ),
       'success with Landscape docs': (
-        fqdn: 'landscape-server.domain.com:6555', 
+        fqdn: 'landscape-server.domain.com:6555',
         certPath: '',
         registrationKey: '',
         wantFQDNError: FqdnError.none,
@@ -81,7 +81,8 @@ void main() {
         wantConfig: contains('6555'),
       ),
       'error with unintended URIs': (
-        fqdn: 'landscape-server.domain.com:6555/', // This looks like 'host:port' but it's `scheme:path` and we cannot fix it because the path is not an integer.
+        // This looks like 'host:port' but it's `scheme:path` and we cannot fix it because the path is not an integer.
+        fqdn: 'landscape-server.domain.com:6555/',
         certPath: '',
         registrationKey: '',
         wantFQDNError: FqdnError.invalid,
