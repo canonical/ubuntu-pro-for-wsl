@@ -17,6 +17,15 @@ void main() {
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN),
       ),
+      'success with localhost': (
+        fqdn: 'localhost',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('localhost:6554'),
+      ),
       'success with other schemes': (
         fqdn: 'magnet://$kExampleLandscapeFQDN',
         certPath: '',

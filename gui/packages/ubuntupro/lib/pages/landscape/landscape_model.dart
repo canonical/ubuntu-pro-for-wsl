@@ -158,6 +158,10 @@ class LandscapeManualConfig extends LandscapeConfig {
 
   /// Ensure the FQDN is a valid URL, enforcing https without requiring the user to type it.
   set fqdn(String value) {
+    // If the user types just 'localhost', we assume they want to connect to the local Landscape server.
+    if (value == 'localhost') {
+      value = 'localhost:6554';
+    }
     // Landscape documentation advertises the [host].url configuration field to be like `host:port`.
     // That would be parsed by URL libraries as `scheme:path`, so we need to ensure that's the case and
     // fix the URL before further processing.
