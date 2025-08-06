@@ -91,7 +91,7 @@ func TestNew(t *testing.T) {
 			}
 			require.NoError(t, err, "New should return no error")
 
-			err = reg.WriteValue(k, "LandscapeConfig", "[client]\nuser=JohnDoe", true)
+			err = reg.WriteValue(k, "LandscapeConfig", "[host]\nurl=lds.company.com:6554\n[client]\nuser=JohnDoe", true)
 			require.NoError(t, err, "Setup: could not write LandscapeConfig to the registry mock")
 			err = reg.WriteValue(k, "UbuntuProToken", "test-token", false)
 			require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")

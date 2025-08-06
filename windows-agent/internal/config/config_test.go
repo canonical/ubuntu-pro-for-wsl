@@ -817,7 +817,7 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 		fileData.Landscape["config"] = ""
 	}
 	if state.is(userLandscapeConfigHasValue) {
-		fileData.Landscape["config"] = "[client]\nuser=JohnDoe"
+		fileData.Landscape["config"] = "[host]\nurl=landscape.canonical.com:6554\n[client]\nuser=JohnDoe"
 		if state.is(landscapeIsNotINI) {
 			fileData.Landscape["config"] = "NOT INI SYNTAX"
 		}

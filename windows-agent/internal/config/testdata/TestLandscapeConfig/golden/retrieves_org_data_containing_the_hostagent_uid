@@ -1,3 +1,6 @@
+[host]
+url = landscape.bigorg.com:6554
+
 [client]
 user          = BigOrg
 tags          = wsl

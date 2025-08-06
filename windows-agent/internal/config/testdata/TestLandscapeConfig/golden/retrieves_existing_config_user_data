@@ -1,2 +1,4 @@
+[host]
+url=landscape.canonical.com:6554
 [client]
 user=JohnDoe
