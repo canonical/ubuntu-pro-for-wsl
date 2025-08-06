@@ -343,8 +343,9 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 
 		// We must resolve the landscape config in case a lower priority config becomes active
 		resolv, _ := c.Landscape.resolve()
+		uid := c.Landscape.UID
 		afterUnlock = append(afterUnlock, func() {
-			c.notifyLandscape(ctx, resolv, c.Landscape.UID)
+			c.notifyLandscape(ctx, resolv, uid)
 		})
 	}
 
