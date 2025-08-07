@@ -366,7 +366,7 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		t.Parallel()
 	}
 
-	const landscapeBaseConf = "[client]\nuser=JohnDoe"
+	const landscapeBaseConf = "[host]\nurl=127.0.0.1:8080\n[client]\nuser=JohnDoe"
 	testCases := map[string]struct {
 		settingsState   settingsState
 		breakFile       bool
@@ -375,12 +375,20 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 		wantError bool
 	}{
 		"Saves the config when there was no previous data":       {settingsState: untouched},
+		"Accepts IPv6 in the [host].url key":                     {settingsState: untouched, landscapeConfig: "[host]\nurl=[2001:db8::1]:6554\n[client]\nsomething=else"},
 		"Merges user-submitted data with existing hostagent UID": {settingsState: userLandscapeConfigExists | landscapeUIDHasValue},
 		"Merges user-submitted discarding new hostagent UID":     {settingsState: userLandscapeConfigExists | landscapeUIDHasValue, landscapeConfig: landscapeBaseConf + "\nhostagent_uid=new_and_discarded_hostagent_uid\n"},
 		"Saves empty new user config data":                       {settingsState: userLandscapeConfigHasValue, landscapeConfig: "-"},
 
 		"Error when the configuration sent is not valid ini syntax":      {settingsState: untouched, landscapeConfig: "NOT INI SYNTAX", wantError: true},
-		"Error when the configuration does not contain [client] section": {settingsState: untouched, landscapeConfig: "[section]\nsomething=else", wantError: true},
+		"Error when the configuration does not contain [client] section": {settingsState: untouched, landscapeConfig: "[host]\nurl=127.0.0.1:8080", wantError: true},
+		"Error when the configuration does not contain [host] section":   {settingsState: untouched, landscapeConfig: "[client]\nsomething=else", wantError: true},
+		"Error when the configuration does not contain [host].url key":   {settingsState: untouched, landscapeConfig: "[host]\nvalue=127.0.0.1:8080\n[client]\nsomething=else", wantError: true},
+		"Error when the [host].url has scheme":                           {settingsState: untouched, landscapeConfig: "[host]\nurl=http://127.0.0.1:8080\n[client]\nsomething=else", wantError: true},
+		"Error when the [host].url host is missing":                      {settingsState: untouched, landscapeConfig: "[host]\nurl=:8080\n[client]\nsomething=else", wantError: true},
+		"Error when the [host].url port is missing":                      {settingsState: untouched, landscapeConfig: "[host]\nurl=127.0.0.1\n[client]\nsomething=else", wantError: true},
+		"Error when the [host].url port value is invalid":                {settingsState: untouched, landscapeConfig: "[host]\nurl=127.0.0.1:-35\n[client]\nsomething=else", wantError: true},
+		"Error when the [host].url port is 0":                            {settingsState: untouched, landscapeConfig: "[host]\nurl=127.0.0.1:0\n[client]\nsomething=else", wantError: true},
 		"Error when an organization landscape config is already set":     {settingsState: orgLandscapeConfigHasValue, wantError: true},
 		"Error when the config file cannot be read":                      {settingsState: untouched, breakFile: true, wantError: true},
 	}
@@ -532,10 +540,10 @@ func TestUpdateRegistryData(t *testing.T) {
 	//nolint:gosec // These are not real credentials
 	const (
 		proToken1      = "UBUNTU_PRO_TOKEN_FIRST"
-		landscapeConf1 = "[client]\ngreeting=hello"
+		landscapeConf1 = "[host]\nurl=127.0.0.1:8080\n[client]\ngreeting=hello"
 
 		proToken2      = "UBUNTU_PRO_TOKEN_SECOND"
-		landscapeConf2 = "[client]\ngreeting=cheers"
+		landscapeConf2 = "[host]\nurl=127.0.0.1:8080\n[client]\ngreeting=cheers"
 
 		invalidLandscapeConf = "NOT AN INI SYNTAX"
 	)
@@ -752,7 +760,7 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 		}
 
 		if state.is(orgLandscapeConfigHasValue) {
-			d.LandscapeConfig = "[client]\nuser=BigOrg"
+			d.LandscapeConfig = "[host]\nurl=landscape.bigorg.com:6554\n[client]\nuser=BigOrg"
 			anyData = true
 		}
 
@@ -809,7 +817,7 @@ func setUpMockSettings(t *testing.T, ctx context.Context, db *database.DistroDB,
 		fileData.Landscape["config"] = ""
 	}
 	if state.is(userLandscapeConfigHasValue) {
-		fileData.Landscape["config"] = "[client]\nuser=JohnDoe"
+		fileData.Landscape["config"] = "[host]\nurl=landscape.canonical.com:6554\n[client]\nuser=JohnDoe"
 		if state.is(landscapeIsNotINI) {
 			fileData.Landscape["config"] = "NOT INI SYNTAX"
 		}

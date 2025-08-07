@@ -115,7 +115,7 @@ void main() {
       );
       final continueButton = find.button(lang.landscapeRegister);
 
-      await tester.enterText(fqdnInput, '::');
+      await tester.enterText(fqdnInput, ':::');
       await tester.pumpAndSettle();
       await tester.tap(continueButton);
       expect(applied, isFalse);
@@ -184,7 +184,7 @@ void main() {
       );
       expect(fqdnInput, findsOne);
 
-      await tester.enterText(fqdnInput, '::');
+      await tester.enterText(fqdnInput, ':::');
       await tester.pumpAndSettle();
 
       final errorText = find.text(lang.landscapeFQDNError);

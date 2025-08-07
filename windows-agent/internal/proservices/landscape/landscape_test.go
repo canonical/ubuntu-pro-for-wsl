@@ -939,10 +939,10 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 		conf string
 	}{
 
-		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
-		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
-		"Task and agent.yaml with default tags":               {conf: "[host]\nurl=localhost\n[client]\ncomputer_title=another\n"},
-		"Task and agent.yaml with supplied tags":              {conf: "[host]\nurl=localhost\n[client]\ntags=another\n"},
+		"Task and agent.yaml don't contain [host] section":    {conf: "[host]\nurl=localhost:1234\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml only contains [client] section)": {conf: "[irrelevant]\nnothing=important\n[host]\nurl=localhost:1234\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml with default tags":               {conf: "[host]\nurl=localhost:1234\n[client]\ncomputer_title=another\n"},
+		"Task and agent.yaml with supplied tags":              {conf: "[host]\nurl=localhost:1234\n[client]\ntags=another\n"},
 	}
 
 	for name, tc := range testcases {
@@ -984,6 +984,7 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			// There is no direct way to observe the result of that function other than relying on the implementation details of the task database.
 			tasksFiles, err := filepath.Glob(filepath.Join(storageDir, "*.tasks"))
 			require.NoError(t, err, "NotifyConfigUpdate: could not list the tasks files storage dir: %s", storageDir)
+			require.NotEmpty(t, tasksFiles, "NotifyConfigUpdate: should have created a tasks file")
 
 			b, err := os.ReadFile(tasksFiles[0])
 			require.NoError(t, err, "NotifyConfigUpdate: should have caused creation of a tasks file")

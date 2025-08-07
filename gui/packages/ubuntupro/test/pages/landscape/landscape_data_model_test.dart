@@ -17,6 +17,69 @@ void main() {
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN),
       ),
+      'success with localhost': (
+        fqdn: 'localhost',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('localhost:6554'),
+      ),
+      'success with other schemes': (
+        fqdn: 'magnet://$kExampleLandscapeFQDN',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('magnet://$kExampleLandscapeFQDN'),
+      ),
+      'success with raw ipv4': (
+        fqdn: '192.168.15.13',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('https://192.168.15.13/message-system'),
+      ),
+      'success with raw ipv6': (
+        fqdn: '2001:db8::1',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('https://[2001:db8::1]/message-system'),
+      ),
+      'ping_url remains http': (
+        fqdn: 'magnet://$kExampleLandscapeFQDN',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('http://$kExampleLandscapeFQDN/ping'),
+      ),
+      'client url remains as input': (
+        fqdn: 'magnet://$kExampleLandscapeFQDN',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('magnet://$kExampleLandscapeFQDN/message-system'),
+      ),
+      'success with full URL': (
+        fqdn: 'http://$kExampleLandscapeFQDN:8080',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('$kExampleLandscapeFQDN:8080'),
+      ),
       'success with registration key': (
         fqdn: selfHostedURL,
         certPath: '',
@@ -53,6 +116,25 @@ void main() {
         wantComplete: isTrue,
         wantConfig: contains(kExampleLandscapeFQDN),
       ),
+      'success with Landscape docs': (
+        fqdn: 'landscape-server.domain.com:6555',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.none,
+        wantFileError: FileError.none,
+        wantComplete: isTrue,
+        wantConfig: contains('6555'),
+      ),
+      'error with unintended URIs': (
+        // This looks like 'host:port' but it's `scheme:path` and we cannot fix it because the path is not an integer.
+        fqdn: 'landscape-server.domain.com:6555/',
+        certPath: '',
+        registrationKey: '',
+        wantFQDNError: FqdnError.invalid,
+        wantFileError: FileError.none,
+        wantComplete: isFalse,
+        wantConfig: isNull,
+      ),
       'error with SaaS landscape': (
         fqdn: saasURL,
         certPath: '',
@@ -63,9 +145,18 @@ void main() {
         wantConfig: isNull,
       ),
       'error with invalid fqdn': (
-        fqdn: '::',
+        fqdn: ':::',
         certPath: validCert,
         registrationKey: 'abc',
+        wantFQDNError: FqdnError.invalid,
+        wantFileError: FileError.none,
+        wantComplete: isFalse,
+        wantConfig: isNull,
+      ),
+      'error due numbers only not being a valid URI': (
+        fqdn: '12345:6789',
+        certPath: '',
+        registrationKey: '',
         wantFQDNError: FqdnError.invalid,
         wantFileError: FileError.none,
         wantComplete: isFalse,
@@ -206,8 +297,6 @@ void expectNoEmptyValuesInINI(Config config) {
 }
 
 void expectUrlSchemes(Config config) {
-  final url = Uri.parse(config.get('client', 'url')!);
-  expect(url.scheme, 'https');
   final ping = Uri.parse(config.get('client', 'ping_url')!);
   expect(ping.scheme, 'http');
 }

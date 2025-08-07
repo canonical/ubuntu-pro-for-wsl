@@ -70,7 +70,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		return nil, err
 	}
 
-	log.Info(ctx, "Landscape: connecting")
+	log.Infof(ctx, "Landscape: connecting to %s", conn.settings.url)
 
 	grpcConn, err := grpc.NewClient(conn.settings.url, grpc.WithTransportCredentials(creds))
 	if err != nil {
