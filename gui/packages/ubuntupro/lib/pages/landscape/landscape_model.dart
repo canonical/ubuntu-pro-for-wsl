@@ -285,13 +285,27 @@ class LandscapeManualConfig extends LandscapeConfig {
       fqdn = fqdn.replace(scheme: 'https');
     }
 
+    // Port should be defined by the scheme, the FQDN one is dedicated to the host agent.
+    final clientUrl = Uri(
+      scheme: fqdn.scheme,
+      host: fqdn.host,
+      path: '/message-system',
+    );
+
+    // The ping URL is always HTTP.
+    final pingUrl = Uri(
+      scheme: 'http',
+      host: fqdn.host,
+      path: '/ping',
+    );
+
     return '''
 [host]
 url = ${fqdn.host}:${fqdn.port}
 [client]
 account_name = $standaloneAN
-url = ${fqdn.replace(path: '/message-system')}
-ping_url = ${fqdn.replace(scheme: 'http').replace(path: '/ping')}
+url = $clientUrl
+ping_url = $pingUrl
 log_level = info
 $sslKeyLine
 $registrationKeyLine
