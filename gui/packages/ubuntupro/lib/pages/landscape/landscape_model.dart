@@ -166,6 +166,11 @@ class LandscapeManualConfig extends LandscapeConfig {
   }
 
   Uri? _sanitizeFqdn(String value) {
+    // If the value is a valid IP address, we can return it as is.
+    final addr = InternetAddress.tryParse(value);
+    if (addr != null) {
+      return Uri(host: addr.host);
+    }
     final url = Uri.tryParse(value);
     if (url == null) {
       return null;
@@ -176,12 +181,10 @@ class LandscapeManualConfig extends LandscapeConfig {
         !url.hasFragment &&
         !url.hasQuery) {
       // A single string is parsed as a single segment path, but the user wanted it to be the FQDN instead,
-      // so let's ensure the defaults.
+      // so let's move the value to the right field.
       if (!url.hasScheme) {
         return url.replace(
           host: url.path,
-          port: 6554,
-          scheme: 'https',
           path: '',
         );
       }
@@ -195,7 +198,7 @@ class LandscapeManualConfig extends LandscapeConfig {
           host: url.scheme,
           port: port,
           path: '',
-          scheme: 'https',
+          scheme: '',
         );
       }
     }
