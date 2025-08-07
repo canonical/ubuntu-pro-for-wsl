@@ -105,7 +105,7 @@ jobs:
           # We can check that Go works, though.
           go version
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           # name: is left blank so that all artifacts are downloaded
           path: ci-artifacts
