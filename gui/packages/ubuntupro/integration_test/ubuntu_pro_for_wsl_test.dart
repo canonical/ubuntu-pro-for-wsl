@@ -190,7 +190,7 @@ void main() {
           of: find.text(l10n.landscapeFQDNLabel),
           matching: find.byType(TextField),
         );
-        await tester.enterText(fqdnInput, '::');
+        await tester.enterText(fqdnInput, ':::');
         await tester.pump();
         expect(
           tester.widget<ButtonStyleButton>(continueButton).enabled,
