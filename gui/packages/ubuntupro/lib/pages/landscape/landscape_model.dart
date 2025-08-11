@@ -131,8 +131,8 @@ sealed class LandscapeConfig {
 /// The manual configuration form data: only the FQDN is mandatory, and must not
 /// match landscape.canonical.com.
 class LandscapeManualConfig extends LandscapeConfig {
-  String _fqdn = '';
-  String get fqdn => _fqdn;
+  Uri? _fqdn;
+  String get fqdn => _fqdn?.toString() ?? '';
   FqdnError _fqdnError = FqdnError.none;
   FqdnError get fqdnError => _fqdnError;
 
@@ -145,28 +145,64 @@ class LandscapeManualConfig extends LandscapeConfig {
   FileError get fileError => _fileError;
 
   // FQDN must be a valid URL (without an explicit port) and must not be the Landscape SaaS URL.
-  bool _validateFQDN(String value) {
-    final uri = Uri.tryParse(value);
+  bool _validateFQDN(Uri? uri) {
+    _fqdnError = FqdnError.none;
 
-    if (uri != null && uri.host.endsWith(landscapeSaasFQDN)) {
-      _fqdnError = FqdnError.saas;
-    } else if (value.isEmpty || uri == null || uri.hasPort) {
+    if (uri == null || uri.host.isEmpty) {
       _fqdnError = FqdnError.invalid;
-    } else {
-      _fqdnError = FqdnError.none;
+    } else if (uri.host.endsWith(landscapeSaasFQDN)) {
+      _fqdnError = FqdnError.saas;
     }
-
-    return fqdnError == FqdnError.none;
+    return _fqdnError == FqdnError.none;
   }
 
   /// Ensure the FQDN is a valid URL, enforcing https without requiring the user to type it.
   set fqdn(String value) {
-    if (value.isNotEmpty && !value.startsWith('https://')) {
-      value = 'https://$value';
+    final url = _sanitizeFqdn(value);
+
+    if (_validateFQDN(url)) {
+      _fqdn = url;
     }
-    if (_validateFQDN(value)) {
-      _fqdn = value;
+  }
+
+  Uri? _sanitizeFqdn(String value) {
+    // If the value is a valid IP address, we can return it as is.
+    final addr = InternetAddress.tryParse(value);
+    if (addr != null) {
+      return Uri(host: addr.host);
     }
+    final url = Uri.tryParse(value);
+    if (url == null) {
+      return null;
+    }
+    // URL being parsed with a single segment, no authority (user@host:port), no queries might be a special case:
+    if (url.pathSegments.length == 1 &&
+        url.authority.isEmpty &&
+        !url.hasFragment &&
+        !url.hasQuery) {
+      // A single string is parsed as a single segment path, but the user wanted it to be the FQDN instead,
+      // so let's move the value to the right field.
+      if (!url.hasScheme) {
+        return url.replace(
+          host: url.path,
+          path: '',
+        );
+      }
+      // If we have scheme it might be because the user followed Landscape documentation that advertises
+      // the [host].url configuration field to be like `host:port`.
+      // That would be parsed by URL libraries as `scheme:path`, so we need to ensure that's the case and
+      // fix the URL before further processing.
+      final port = int.tryParse(url.path);
+      if (port != null && port > 0 && port < 65536) {
+        return url.replace(
+          host: url.scheme,
+          port: port,
+          path: '',
+          scheme: '',
+        );
+      }
+    }
+    return url;
   }
 
   // If a path is provided, then it must exist and be a non-empty file.
@@ -230,18 +266,46 @@ class LandscapeManualConfig extends LandscapeConfig {
   @override
   String? config() {
     if (!isComplete) return null;
-    final uri = Uri.parse(_fqdn);
+    assert(_fqdn != null, 'FQDN should not be null at this point');
+    // Silly reference to please the analyzer about null checks.
+    var fqdn = _fqdn;
+    if (fqdn == null) return null;
+
     final sslKeyLine = sslKeyPath.isEmpty ? '' : 'ssl_public_key = $sslKeyPath';
     final registrationKeyLine =
         registrationKey.isEmpty ? '' : 'registration_key = $registrationKey';
 
+    if (!fqdn.hasPort) {
+      // Default documented Landscape hostagent service port is 6554.
+      fqdn = fqdn.replace(port: 6554);
+    }
+
+    if (!fqdn.hasScheme) {
+      // Default documented Landscape hostagent service scheme is https.
+      fqdn = fqdn.replace(scheme: 'https');
+    }
+
+    // Port should be defined by the scheme, the FQDN one is dedicated to the host agent.
+    final clientUrl = Uri(
+      scheme: fqdn.scheme,
+      host: fqdn.host,
+      path: '/message-system',
+    );
+
+    // The ping URL is always HTTP.
+    final pingUrl = Uri(
+      scheme: 'http',
+      host: fqdn.host,
+      path: '/ping',
+    );
+
     return '''
 [host]
-url = ${uri.replace(port: 6554).authority}
+url = ${fqdn.host}:${fqdn.port}
 [client]
 account_name = $standaloneAN
-url = ${uri.replace(path: '/message-system')}
-ping_url = ${uri.replace(scheme: 'http').replace(path: '/ping')}
+url = $clientUrl
+ping_url = $pingUrl
 log_level = info
 $sslKeyLine
 $registrationKeyLine

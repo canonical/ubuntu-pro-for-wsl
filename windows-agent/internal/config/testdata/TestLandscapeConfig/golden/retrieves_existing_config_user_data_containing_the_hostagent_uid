@@ -1,3 +1,5 @@
+[host]
+url=landscape.canonical.com:6554
 [client]
 user=JohnDoe
 hostagent_uid=landscapeUID1234
