@@ -68,5 +68,7 @@
   "buttonBack": "Anterior",
   "@buttonBack": {},
   "statusBarReportBugTooltip": "Reportar um erro",
-  "@statusBarReportBugTooltip": {}
+  "@statusBarReportBugTooltip": {},
+  "landscapeFileEmptyContents": "Ficheiro não pode estar vazio",
+  "@landscapeFileEmptyContents": {}
 }
