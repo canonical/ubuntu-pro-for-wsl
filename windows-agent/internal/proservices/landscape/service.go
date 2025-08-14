@@ -208,15 +208,18 @@ func (s *Service) keepConnected() error {
 					return s.ctx.Err()
 				case <-s.connRetrier.Await():
 					log.Info(s.ctx, "Landscape: reconnection requested")
+					// this also causes the loop to break because the next iteration will fall into one of the other cases.
 					s.disconnect()
-				case <-connectionDone:
+				case err := <-connectionDone:
 					select {
 					case <-waitCh:
 						// Connection was dropped so fast we'll consider it a failure.
 						return errors.New("connection dropped unexpectedly")
 					default:
 					}
-					log.Warningf(s.ctx, "Landscape: connection dropped unexpectedly")
+
+					log.Warningf(s.ctx, "Landscape: connection dropped unexpectedly: %v", err)
+					return err
 				}
 
 				return nil
@@ -270,7 +273,7 @@ func (s *Service) keepConnected() error {
 	}
 }
 
-func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
+func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 	s.connMu.Lock()
 	defer s.connMu.Unlock()
 
@@ -284,7 +287,11 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 		return nil, err
 	}
 
-	connectionDone := make(chan struct{})
+	// If we reached this point, the handshake() with the Landscape server completed
+	// successfully, we have a hostagent UID and we are listening for commands, unless
+	// a failure happened and the connection was terminated. The following monitoring will
+	// tell us if everything is fine or if we have a major problem.
+	connectionDone := make(chan error, 1)
 	go func() {
 		defer close(connectionDone)
 
@@ -294,7 +301,9 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan struct{}, error) {
 			status = conn.grpcConn.GetState()
 
 			if status == connectivity.Shutdown {
-				// Connection was closed.
+				// Connection was closed, we most likely have an error.
+				err := <-conn.commandErrs
+				connectionDone <- err
 				break
 			}
 		}

@@ -30,6 +30,7 @@ type connection struct {
 	once       sync.Once
 
 	receivingCommands sync.WaitGroup
+	commandErrs       chan error
 }
 
 // connectionSettings contains data that is immutable for a connection.
@@ -85,18 +86,18 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	}
 	conn.grpcClient = client
 
-	// Buffered to allow the goroutine to send errors even when there is no receiver.
-	errChan := make(chan error, 1)
+	// Buffered to allow the goroutine to send errors even when there is no receiver yet.
+	conn.commandErrs = make(chan error, 1)
 	// Get ready to receive commands
 	conn.receivingCommands.Add(1)
 	go func() {
 		defer conn.disconnect()
 		defer conn.receivingCommands.Done()
-		defer close(errChan)
+		defer close(conn.commandErrs)
 
 		if err := conn.receiveCommands(executor{d, cl.SendCommandStatus}); err != nil {
 			log.Warningf(ctx, "Landscape: stopped listening for commands: %v", err)
-			errChan <- err
+			conn.commandErrs <- err
 		} else {
 			log.Info(ctx, "Landscape: finished listening for commands.")
 		}
@@ -105,15 +106,9 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	// handshake() and the goroutine running receiveCommands() can both fail
 	// differently for potentially the same root cause, so let's make sure
 	// we don't lose information.
-	err = handshake(ctx, d, conn)
-	select {
-	case recErr := <-errChan:
-		err = errors.Join(err, recErr)
-	default:
-	}
-
-	if err != nil {
+	if err := handshake(ctx, d, conn); err != nil {
 		conn.disconnect()
+		err = errors.Join(err, <-conn.commandErrs)
 		return nil, err
 	}
 
