@@ -972,9 +972,10 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			service, err := landscape.New(ctx, c, db, &cloudInit, landscape.WithHomeDir(homedir))
 			require.NoError(t, err, "Setup: New should not return an error")
 
-			c.SetLandscapeNotifier(func(ctx context.Context, config, uid string) {
+			c.SetLandscapeNotifier(func(ctx context.Context, config, uid string) error {
 				service.NotifyConfigUpdate(ctx, config, uid)
 				cloudInit.Update(ctx)
+				return nil
 			})
 
 			// We want to inspect the tasks databases even if those calls fail.

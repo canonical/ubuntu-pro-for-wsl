@@ -41,7 +41,7 @@ type Config struct {
 type UbuntuProNotifier func(ctx context.Context, token string)
 
 // LandscapeNotifier is a function that is called when the Landscape configuration changes.
-type LandscapeNotifier func(ctx context.Context, config, uid string)
+type LandscapeNotifier func(ctx context.Context, config, uid string) error
 
 // configState contains the actual configuration data.
 //
@@ -59,7 +59,7 @@ func New(ctx context.Context, cachePath string) (m *Config) {
 
 		// No-ops to avoid nil checks
 		notifyUbuntuPro: func(ctx context.Context, token string) {},
-		notifyLandscape: func(ctx context.Context, config, uid string) {},
+		notifyLandscape: func(ctx context.Context, config, uid string) error { return nil },
 	}
 
 	return m
@@ -171,7 +171,7 @@ func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig str
 	}
 
 	if isNew {
-		c.notifyLandscape(ctx, landscapeConfig, c.Landscape.UID)
+		return c.notifyLandscape(ctx, landscapeConfig, c.Landscape.UID)
 	}
 
 	return nil
@@ -186,7 +186,7 @@ func (c *Config) SetLandscapeAgentUID(ctx context.Context, uid string) error {
 
 	if conf != "" {
 		log.Debugf(ctx, "config: notifying Landscape config listeners about agent UID change: %s", uid)
-		c.notifyLandscape(ctx, conf, uid)
+		return c.notifyLandscape(ctx, conf, uid)
 	}
 
 	return nil
@@ -345,7 +345,9 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 		resolv, _ := c.Landscape.resolve()
 		uid := c.Landscape.UID
 		afterUnlock = append(afterUnlock, func() {
-			c.notifyLandscape(ctx, resolv, uid)
+			if err := c.notifyLandscape(ctx, resolv, uid); err != nil {
+				log.Warningf(ctx, "Config: when notifying Landscape from registry: %v", err)
+			}
 		})
 	}
 
