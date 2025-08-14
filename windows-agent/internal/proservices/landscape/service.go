@@ -294,15 +294,26 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 	go func() {
 		defer close(connectionDone)
 
-		status := connectivity.Ready // Don't do GetState() just in case we already failed.
+		status := connectivity.Connecting // Don't do GetState() just in case we already failed.
 		for {
 			conn.grpcConn.WaitForStateChange(ctx, status)
 			status = conn.grpcConn.GetState()
+
+			if status == connectivity.Idle || status == connectivity.Ready {
+				// We have a long standing and healthy connection, possibly doing
+				// nothing at this moment, a good signal. Attempting to read from
+				// the commandErrs channel would block until an error happened.
+				// Let's tell other parties that the connection is fine.
+				// TODO: Add here a notification for the UI service to listen s.uistream <- nil
+				continue
+			}
 
 			if status == connectivity.Shutdown {
 				// Connection was closed, we most likely have an error.
 				err := <-conn.commandErrs
 				connectionDone <- err
+				// TODO: Add here a notification for the UI service to list
+				// s.uistream <- err
 				break
 			}
 		}
