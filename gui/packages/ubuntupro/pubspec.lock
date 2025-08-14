@@ -722,10 +722,10 @@ packages:
     dependency: "direct dev"
     description:
       name: protobuf
-      sha256: "6153efcc92a06910918f3db8231fd2cf828ac81e50ebd87adc8f8a8cb3caff0e"
+      sha256: de9c9eb2c33f8e933a42932fe1dc504800ca45ebc3d673e6ed7f39754ee4053e
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.1"
+    version: "4.2.0"
   provider:
     dependency: "direct main"
     description:
