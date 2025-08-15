@@ -637,13 +637,11 @@ func TestAutoReconnection(t *testing.T) {
 			go server.Serve(lis)
 			defer server.Stop()
 
+			// This will remain blocked until the gRPC connectivity changes state:
+			// hopefully back into connected.
 			require.Eventually(t, func() bool {
-				return service.Connected()
+				return nil == service.ConnectionStatus(ctx) && service.Connected()
 			}, 60*time.Second, 500*time.Millisecond, "Client should have reconnected after restarting the server")
-			// Seems a bit long of a timeout, but the wait-time doubles after each failed attempt,
-			// so after 6 failed attempts, we're waiting for 64 seconds.
-			//
-			// In local testing I have not seen it go beyond 16 seconds, but I'd rather avoid flaky tests.
 		})
 	}
 }
@@ -972,9 +970,10 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			service, err := landscape.New(ctx, c, db, &cloudInit, landscape.WithHomeDir(homedir))
 			require.NoError(t, err, "Setup: New should not return an error")
 
-			c.SetLandscapeNotifier(func(ctx context.Context, config, uid string) {
+			c.SetLandscapeNotifier(func(ctx context.Context, config, uid string) error {
 				service.NotifyConfigUpdate(ctx, config, uid)
 				cloudInit.Update(ctx)
+				return nil
 			})
 
 			// We want to inspect the tasks databases even if those calls fail.

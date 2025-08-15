@@ -23,9 +23,11 @@ import (
 // Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
 // It creates the executor and ensures there is always an active connection, creating a new one if necessary.
 type Service struct {
-	ctx     context.Context
-	cancel  context.CancelFunc
-	running chan struct{}
+	ctx      context.Context
+	cancel   context.CancelFunc
+	running  chan struct{}
+	connErrs chan error
+	// connWatchers sync.WaitGroup
 
 	disabled atomic.Bool
 
@@ -113,6 +115,7 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit Clou
 		cancel:      cancel,
 		conf:        conf,
 		db:          db,
+		connErrs:    make(chan error, 1),
 		hostName:    opts.hostname,
 		homedir:     opts.homedir,
 		downloaddir: opts.downloaddir,
@@ -294,15 +297,25 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 	go func() {
 		defer close(connectionDone)
 
-		status := connectivity.Ready // Don't do GetState() just in case we already failed.
+		status := connectivity.Connecting // Don't do GetState() just in case we already failed.
 		for {
 			conn.grpcConn.WaitForStateChange(ctx, status)
 			status = conn.grpcConn.GetState()
+
+			if status == connectivity.Idle || status == connectivity.Ready {
+				// We have a long standing and healthy connection, possibly doing
+				// nothing at this moment, a good signal. Attempting to read from
+				// the commandErrs channel would block until an error happened.
+				// Let's tell other parties that the connection is fine.
+				s.connErrs <- nil
+				continue
+			}
 
 			if status == connectivity.Shutdown {
 				// Connection was closed, we most likely have an error.
 				err := <-conn.commandErrs
 				connectionDone <- err
+				s.connErrs <- err
 				break
 			}
 		}
@@ -312,7 +325,23 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 	return connectionDone, nil
 }
 
+// ConnectionStatus blocks the caller until the supplied context is cancelled or a signal is emitted
+// about this service connectivity to a Landscape server, being the signal either an error or nil if
+// the connection is up and running.
+func (s *Service) ConnectionStatus(ctx context.Context) error {
+	// s.connMu.RLock()
+	// defer s.connMu.RUnlock()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-s.connErrs:
+		return err
+	}
+}
+
 // Stop terminates the connection and deallocates resources.
+// It blocks until the connection is terminated.
 func (s *Service) Stop(ctx context.Context) {
 	log.Infof(ctx, "Landscape: stopping")
 
@@ -323,6 +352,15 @@ func (s *Service) Stop(ctx context.Context) {
 	case <-s.running:
 	case <-ctx.Done():
 	}
+
+	// s.connMu.Lock()
+	// defer s.connMu.Unlock()
+	//
+	// if s.connErrs != nil {
+	// 	s.connWatchers.Wait()
+	// 	close(s.connErrs)
+	// 	s.connErrs = nil
+	// }
 }
 
 // Controller creates a controler for this service.

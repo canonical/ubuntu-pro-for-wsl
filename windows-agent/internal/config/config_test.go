@@ -259,8 +259,9 @@ func TestSetUserSubscription(t *testing.T) {
 				calledProNotifier++
 			})
 
-			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+			conf.SetLandscapeNotifier(func(context.Context, string, string) error {
 				require.Fail(t, "LandscapeNotifier should not be called")
+				return nil
 			})
 
 			err = conf.SetUserSubscription(ctx, token)
@@ -334,8 +335,9 @@ func TestSetStoreSubscription(t *testing.T) {
 				calledProNotifier++
 			})
 
-			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+			conf.SetLandscapeNotifier(func(context.Context, string, string) error {
 				require.Fail(t, "LandscapeNotifier should not be called")
+				return nil
 			})
 
 			err = conf.SetStoreSubscription(ctx, token)
@@ -423,8 +425,9 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 				require.Fail(t, "UbuntuPro should not be called")
 			})
 
-			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+			conf.SetLandscapeNotifier(func(context.Context, string, string) error {
 				calledLandscapeNotifier++
+				return nil
 			})
 
 			err = conf.SetUserLandscapeConfig(ctx, tc.landscapeConfig)
@@ -511,10 +514,11 @@ func TestSetLandscapeAgentUID(t *testing.T) {
 				require.Fail(t, "UbuntuProNotifier should not be called")
 			})
 
-			conf.SetLandscapeNotifier(func(context.Context, string, string) {
+			conf.SetLandscapeNotifier(func(context.Context, string, string) error {
 				if !tc.wantNotify {
 					require.Fail(t, "LandscapeNotifier should not have been called")
 				}
+				return nil
 			})
 
 			err = conf.SetLandscapeAgentUID(ctx, tc.uid)
@@ -580,8 +584,9 @@ func TestUpdateRegistryData(t *testing.T) {
 			})
 
 			var calledLandscapeNotifier int
-			c.SetLandscapeNotifier(func(context.Context, string, string) {
+			c.SetLandscapeNotifier(func(context.Context, string, string) error {
 				calledLandscapeNotifier++
+				return nil
 			})
 
 			// Enter a first set of data to override the defaults

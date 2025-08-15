@@ -118,9 +118,11 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		cloudInit.Update(ctx)
 	})
 
-	conf.SetLandscapeNotifier(func(ctx context.Context, conf, uid string) {
+	conf.SetLandscapeNotifier(func(ctx context.Context, conf, uid string) error {
 		landscape.NotifyConfigUpdate(ctx, conf, uid)
 		cloudInit.Update(ctx)
+		// Wait until the Landscape server connection fails or reports being good.
+		return landscape.ConnectionStatus(ctx)
 	})
 
 	// All notifications have been set up: starting the registry watcher before any services.

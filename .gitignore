@@ -36,3 +36,6 @@ out/
 
 # Visual Studio Code
 .vscode/
+
+# Unnecessary lock files
+/go.work.sum
