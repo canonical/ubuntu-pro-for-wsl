@@ -218,7 +218,6 @@ func (s *Service) keepConnected() error {
 					default:
 					}
 
-					log.Warningf(s.ctx, "Landscape: connection dropped unexpectedly: %v", err)
 					return err
 				}
 
