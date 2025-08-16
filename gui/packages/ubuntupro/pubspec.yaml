@@ -37,7 +37,7 @@ dependencies:
   base_x: ^2.0.1
   crypto: ^3.0.6
   dart_either: ^2.0.0
-  file_picker: ^10.2.1
+  file_picker: ^10.3.1
   flutter:
     sdk: flutter
   flutter_localizations:
