@@ -21,6 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestNew(t *testing.T) {
@@ -238,22 +240,91 @@ func TestNotifyPurchase(t *testing.T) {
 	}
 }
 
+func TestLandscapeConnectionListener(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		errs    []error
+		lastErr error
+	}{
+		"Never blocks a notification": {},
+		"Never blocks with many notifications": {
+			errs: []error{
+				status.Error(codes.Internal, "mock: internal error"),
+				status.Error(codes.NotFound, "mock: not found"),
+				status.Error(codes.PermissionDenied, "mock: permission denied"),
+			},
+			lastErr: status.Error(codes.AlreadyExists, "mock: already exists"),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			dir := t.TempDir()
+			db, err := database.New(ctx, dir)
+			require.NoError(t, err, "Setup: empty database New() should return no error")
+			defer db.Close(ctx)
+
+			conf := &mockConfig{}
+			service := ui.New(ctx, conf, db)
+
+			if tc.lastErr == nil {
+				tc.lastErr = errors.New("mock: last error")
+			}
+
+			done := make(chan struct{})
+			go func() {
+				defer close(done)
+				for _, err := range tc.errs {
+					service.LandscapeConnectionListener(ctx, err)
+				}
+				service.LandscapeConnectionListener(ctx, tc.lastErr)
+			}()
+
+			select {
+			case <-done:
+			case <-time.After(1 * time.Second):
+				require.Fail(t, "Notifying Landscape connection listener should have completed without blocking")
+			}
+
+			select {
+			case err := <-service.LandscapeListener():
+				require.ErrorIs(t, err, tc.lastErr, "Landscape connection listener read only the last value published")
+
+			default:
+				require.Fail(t, "Landscape connection listener should be able to read the last published value without blocking")
+			}
+		})
+	}
+}
+
 func TestApplyLandscapeConfig(t *testing.T) {
 	t.Parallel()
+
+	const landscapeConfig string = "look at me! I am a Landscape config"
 
 	testCases := map[string]struct {
 		setUserLandscapeConfigErr bool
 		landscapeSource           config.Source
 		returnBadSource           bool
+		existingConfig            string
+		landscapeConnErr          error
+		withPreviousNotifications bool
 
 		wantErr bool
 		want    interface{}
 	}{
 		"Success": {want: lsUser},
 
-		"Error when setting the config returns error":  {setUserLandscapeConfigErr: true, wantErr: true},
-		"Error when attempting to override org config": {landscapeSource: config.SourceRegistry, wantErr: true},
-		"Error when Landscape source is incoherent":    {returnBadSource: true, wantErr: true},
+		"Error when setting the config returns error":              {setUserLandscapeConfigErr: true, wantErr: true},
+		"Error when attempting to override org config":             {landscapeSource: config.SourceRegistry, wantErr: true},
+		"Error when Landscape source is incoherent":                {returnBadSource: true, wantErr: true},
+		"Error when submitting the same config":                    {existingConfig: landscapeConfig, wantErr: true},
+		"Error when the connecting to Landscape fails":             {landscapeConnErr: status.Error(codes.PermissionDenied, "mock: permission denied"), wantErr: true},
+		"The correct error when the connecting to Landscape fails": {withPreviousNotifications: true, landscapeConnErr: status.Error(codes.PermissionDenied, "mock: permission denied"), wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -261,8 +332,6 @@ func TestApplyLandscapeConfig(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-
-			landscapeConfig := "look at me! I am a Landscape config"
 
 			dir := t.TempDir()
 			db, err := database.New(ctx, dir)
@@ -273,17 +342,32 @@ func TestApplyLandscapeConfig(t *testing.T) {
 				setUserLandscapeConfigErr: tc.setUserLandscapeConfigErr,
 				landscapeSource:           tc.landscapeSource,
 				returnBadSource:           tc.returnBadSource,
+				gotLandscapeConfig:        tc.existingConfig,
 			}
 
 			uiService := ui.New(context.Background(), conf, db)
+			// The mock will send a Landscape connectivity notification as if it was sent by the actual Landscape service.
+			conf.landscapeListener = func() {
+				uiService.LandscapeConnectionListener(ctx, tc.landscapeConnErr)
+			}
+
+			if tc.withPreviousNotifications {
+				uiService.LandscapeConnectionListener(ctx, status.Error(codes.Internal, "mock: unrelated error"))
+			}
 
 			msg := &agentapi.LandscapeConfig{
 				Config: landscapeConfig,
 			}
 
+			// This blocks until the notification arrives, but because the notifier is the mockConfig, called synchronously,
+			// then the test won't block.
 			got, err := uiService.ApplyLandscapeConfig(ctx, msg)
+
 			if tc.wantErr {
 				require.Error(t, err, "ApplyLandscapeConfig should return an error")
+				if tc.landscapeConnErr != nil {
+					require.ErrorIs(t, err, tc.landscapeConnErr, "ApplyLandscapeConfig should return the expected Landscape connection error")
+				}
 				return
 			}
 			require.NoError(t, err, "ApplyLandscapeConfig should return no errors")
@@ -303,6 +387,8 @@ type mockConfig struct {
 	token           string        // stores the configured Pro token
 	proSource       config.Source // stores the configured subscription source.
 	landscapeSource config.Source // stores the configured landscape source.
+
+	landscapeListener func() // stores the function that will be called as a Landscape connection notification.
 
 	returnBadSource    bool
 	gotLandscapeConfig string
@@ -332,8 +418,17 @@ func (m *mockConfig) SetUserLandscapeConfig(ctx context.Context, landscapeConfig
 		return errors.New("mock error cannot overwrite organization's configuration data")
 	}
 
+	// This is how the config reacts.
+	if m.gotLandscapeConfig == landscapeConfig {
+		return config.ErrUserConfigIsNotNew
+	}
+
 	m.gotLandscapeConfig = landscapeConfig
 	m.landscapeSource = config.SourceUser
+
+	if m.landscapeListener != nil {
+		m.landscapeListener()
+	}
 
 	return nil
 }

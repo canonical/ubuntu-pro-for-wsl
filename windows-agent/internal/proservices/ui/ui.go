@@ -14,6 +14,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro/contracts"
 	"github.com/ubuntu/decorate"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Config is a provider for the subscription configuration.
@@ -27,8 +29,9 @@ type Config interface {
 
 // Service it the UI GRPC service implementation.
 type Service struct {
-	db     *database.DistroDB
-	config Config
+	db                *database.DistroDB
+	config            Config
+	landscapeListener chan error
 
 	// contractsArgs allows for overriding the contract server's behaviour.
 	contractsArgs []contracts.Option
@@ -37,13 +40,59 @@ type Service struct {
 }
 
 // New returns a new service handling the UI API.
-func New(ctx context.Context, config Config, db *database.DistroDB, args ...contracts.Option) (s Service) {
+func New(ctx context.Context, config Config, db *database.DistroDB, args ...contracts.Option) (s *Service) {
 	log.Debug(ctx, "Building gRPC UI service")
 
-	return Service{
-		db:            db,
-		config:        config,
-		contractsArgs: args,
+	return &Service{
+		db:                db,
+		config:            config,
+		contractsArgs:     args,
+		landscapeListener: make(chan error, 1),
+	}
+}
+
+// Stop deallocates the resources.
+func (s *Service) Stop() {
+	if s.landscapeListener != nil {
+		close(s.landscapeListener)
+		s.landscapeListener = nil
+	}
+}
+
+// drainLandscapeListener drains the landscapeListener channel, dropping any previously unread notifications.
+// It returns false if the channel is already closed or and the context is cancelled.
+func (s *Service) drainLandscapeListener(ctx context.Context) bool {
+	for {
+		select {
+		case <-ctx.Done():
+			return false
+		case err, ok := <-s.landscapeListener:
+			if !ok {
+				log.Debug(ctx, "UI service: landscapeListener channel already closed")
+				return false
+			}
+			log.Debugf(ctx, "UI service: dropping unread notification: %v", err)
+		default:
+			return true
+		}
+	}
+}
+
+// LandscapeConnectionListener is a callback passed to the Landscape service that allows the UI to be notified of
+// connection errors.
+// This ensures delivery of the last notification from the Landscape service connectivity state, we need that
+// because the Landscape service may send events not caused (thus not expected) by the UI service and the contract
+// expects this to be a non-blocking callback.
+func (s *Service) LandscapeConnectionListener(ctx context.Context, err error) {
+	// Drain the channel to prevent blocking on write.
+	if !s.drainLandscapeListener(ctx) {
+		return
+	}
+
+	select {
+	case s.landscapeListener <- err:
+	case ctxErr := <-ctx.Done():
+		log.Warningf(ctx, "UI service: When notifying about Landscape connection: %v", ctxErr)
 	}
 }
 
@@ -76,8 +125,21 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.LandscapeSource, error) {
 	c := landscapeConfig.GetConfig()
 
+	// Make sure to drain the channel to prevent notifications unrelated to this request.
+	s.drainLandscapeListener(ctx)
+
 	err := s.config.SetUserLandscapeConfig(ctx, c)
-	if err != nil {
+	if errors.Is(err, config.ErrUserConfigIsNotNew) {
+		// The GUI uses gRPC status codes to present meaningful localized error messages.
+		return nil, status.Error(codes.AlreadyExists, "user config is not new")
+	} else if err != nil {
+		return nil, err
+	}
+
+	// Blocks until the Landscape service receives an interesting response from the server,
+	// thus preventing premature response to the UI and properly propagates any errors.
+	if err = <-s.landscapeListener; err != nil {
+		log.Warningf(ctx, "UI service: ApplyLandscapeConfig: %v", err)
 		return nil, err
 	}
 
