@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
@@ -91,7 +93,7 @@ void main() {
 
       model.setFqdn(kExampleLandscapeFQDN);
       var err = await model.applyConfig();
-      expect(err, msg);
+      expect(err.message, msg);
 
       when(
         client.applyLandscapeConfig(any),
@@ -99,15 +101,15 @@ void main() {
 
       model.setFqdn(kExampleLandscapeFQDN);
       err = await model.applyConfig();
-      expect(err, isNull);
+      expect(err.message, isNull);
 
       model.setSslKeyPath(caCert);
       err = await model.applyConfig();
-      expect(err, isNull);
+      expect(err.message, isNull);
 
       model.setManualRegistrationKey('abc');
       err = await model.applyConfig();
-      expect(err, isNull);
+      expect(err.message, isNull);
     });
 
     test('custom', () async {
@@ -122,7 +124,7 @@ void main() {
 
       model.setCustomConfigPath(customConf);
       var err = await model.applyConfig();
-      expect(err, msg);
+      expect(err.message, msg);
 
       when(
         client.applyLandscapeConfig(any),
@@ -130,8 +132,51 @@ void main() {
 
       model.setCustomConfigPath(customConf);
       err = await model.applyConfig();
-      expect(err, isNull);
+      expect(err.message, isNull);
     });
+  });
+
+  test('apply config errors', () async {
+    const msg = 'test message';
+    const errors = <Exception>[
+      // The ones we do something about
+      GrpcError.alreadyExists(msg),
+      GrpcError.invalidArgument(msg),
+      GrpcError.permissionDenied(msg),
+      GrpcError.unavailable(msg),
+
+      /// Some we don't
+      GrpcError.deadlineExceeded(msg),
+      GrpcError.unknown(msg),
+
+      /// And finally some non-gRPC related error:
+      FileSystemException(msg),
+    ];
+
+    const expectedCodes = [
+      StatusCode.alreadyExists,
+      StatusCode.invalidArgument,
+      StatusCode.permissionDenied,
+      StatusCode.unavailable,
+      StatusCode.deadlineExceeded,
+      StatusCode.unknown,
+      StatusCode.unknown,
+    ];
+
+    final client = MockAgentApiClient();
+    final model = LandscapeModel(client);
+
+    model.setConfigType(LandscapeConfigType.manual);
+    model.setFqdn(kExampleLandscapeFQDN);
+
+    for (var i = 0; i < errors.length; i++) {
+      when(
+        client.applyLandscapeConfig(any),
+      ).thenAnswer((_) async => throw errors[i]);
+
+      final got = await model.applyConfig();
+      expect(got.code, expectedCodes[i]);
+    }
   });
 }
 
