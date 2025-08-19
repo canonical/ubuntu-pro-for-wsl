@@ -75,7 +75,7 @@ Each new Ubuntu WSL instance that is created should automatically now be Pro-att
 To find other useful Ubuntu pro commands run:
 
 ```{code-block} text
-u@mib:~$ pro status
+u@mib:~$ pro --help
 ```
 
 (howto::verify-landscape)=
