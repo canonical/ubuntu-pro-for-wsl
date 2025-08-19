@@ -60,7 +60,7 @@ func TestAttachPro(t *testing.T) {
 
 		wantErr bool
 	}{
-		"No panic due empty token":          {token: ""},
+		"No panic due empty token":          {token: "", wantErr: true},
 		"Success with an empty database":    {token: "funny_token"},
 		"Success with a non-empty database": {token: "whatever_token", distros: []string{distro1, distro2}},
 
