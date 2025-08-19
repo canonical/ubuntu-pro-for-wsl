@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:grpc/grpc.dart' show StatusCode;
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wizard_router/wizard_router.dart';
-import 'package:yaru/widgets.dart';
 import 'package:yaru/yaru.dart';
 
 import '/constants.dart';
@@ -65,7 +65,9 @@ class LandscapePage extends StatelessWidget {
       right: [const SizedBox(height: 24), LandscapeConfigForm(model)],
       navigationRow: NavigationRow(
         onBack: onBack,
-        onNext: model.isComplete ? () => _tryApplyConfig(context) : null,
+        onNext: model.isComplete && !model.isWaiting
+            ? () => _tryApplyConfig(context)
+            : null,
         nextText: lang.landscapeRegister,
       ),
     );
@@ -79,15 +81,64 @@ class LandscapePage extends StatelessWidget {
     if (!context.mounted) {
       return;
     }
-    if (err != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).landscapeApplyError(err)),
-        ),
-      );
-    } else {
-      onApplyConfig();
+
+    final lang = AppLocalizations.of(context);
+    final actions = [
+      FilledButton(
+        onPressed: Navigator.of(context).pop,
+        child: Text(lang.landscapeEditYourConfig),
+      ),
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: YaruColors.red),
+        onPressed: onApplyConfig,
+        child: Text(lang.landscapeProceedAnyway),
+      ),
+    ];
+
+    var title = '';
+    var content = '';
+    switch (err.code) {
+      case StatusCode.ok:
+        onApplyConfig();
+        return;
+      case StatusCode.permissionDenied:
+        title = lang.landscapeWSLUnavailable;
+        content = lang.landscapeWSLUnavailableContent;
+        break;
+      case StatusCode.unavailable:
+        title = lang.landscapeUnreachable;
+        content = lang.landscapeUnreachableContent;
+        break;
+      case StatusCode.invalidArgument:
+        title = lang.landscapeInvalidConfig;
+        content = lang.landscapeInvalidConfigContent;
+        break;
+      case StatusCode.alreadyExists:
+        title = lang.landscapeUnchangedConfig;
+        content = lang.landscapeUnchangedConfigContent;
+        break;
+      case StatusCode.unknown:
+        title = lang.landscapeUnknownError;
+        content = lang.landscapeUnknownErrorContent;
+        break;
+      default:
+        title = lang.landscapeUnknownError;
+        content = lang.landscapeUnknownErrorContent;
+        break;
     }
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return LandscapeErrorDialog(
+          title: title,
+          content: content,
+          details: err.message ?? '',
+          actions: actions,
+        );
+      },
+    );
   }
 
   /// Creates a new Landscape page with its associated model connected to the Wizard
@@ -109,6 +160,56 @@ class LandscapePage extends StatelessWidget {
     return ChangeNotifierProvider<LandscapeModel>(
       create: (context) => LandscapeModel(client),
       child: landscapePage,
+    );
+  }
+}
+
+class LandscapeErrorDialog extends StatelessWidget {
+  const LandscapeErrorDialog({
+    super.key,
+    required this.title,
+    required this.content,
+    required this.details,
+    required this.actions,
+  });
+
+  final String title;
+  final String content;
+  final String details;
+  final List<ButtonStyleButton> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(title),
+      content: SizedBox(
+        width: 640,
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(content),
+              const SizedBox(height: 8),
+              YaruExpandable(
+                expandButtonPosition: YaruExpandableButtonPosition.start,
+                header: Text(lang.landscapeDetails),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(details),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                lang.landscapeProceedAnywayHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ]),
+      ),
+      actions: actions,
     );
   }
 }

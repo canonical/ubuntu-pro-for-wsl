@@ -207,6 +207,11 @@ void main() {
         await tester.tap(continueButton);
         await tester.pumpAndSettle();
 
+        final proceedAnyway = find.button(l10n.landscapeProceedAnyway);
+        expect(proceedAnyway, findsOneWidget);
+        await tester.tap(proceedAnyway);
+        await tester.pumpAndSettle();
+
         // checks that we transitioned to the SubscriptionStatusPage
         l10n = tester.l10n<SubscriptionStatusPage>();
 
@@ -330,6 +335,11 @@ landscape:
           await tester.pump();
           final continueButton = find.button(landscapeL10n.landscapeRegister);
           await tester.tap(continueButton);
+          await tester.pumpAndSettle();
+
+          final proceedAnyway = find.button(l10n.landscapeProceedAnyway);
+          expect(proceedAnyway, findsOneWidget);
+          await tester.tap(proceedAnyway);
           await tester.pumpAndSettle();
 
           final config = File(p.join(configDir!.path, 'config'));
