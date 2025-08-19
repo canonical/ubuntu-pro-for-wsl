@@ -834,7 +834,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	if downloaddir == "" {
 		downloaddir = t.TempDir()
 	}
-	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(homedir), landscape.WithDownloadDir(downloaddir))
+	clientService, err := landscape.New(ctx, tb.conf, tb.db, tb.cloudInit, nil, landscape.WithHostname("HOSTNAME"), landscape.WithHomeDir(homedir), landscape.WithDownloadDir(downloaddir))
 	require.NoError(t, err, "Landscape NewClient should not return an error")
 
 	err = clientService.Connect()
