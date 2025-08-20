@@ -260,7 +260,7 @@ Then compress the rootfs, outputting the tarball to the parent directory:
 
 ```{code-block} text
 :caption: /home/\<username>/myNewUbuntu
-$ sudo tar -czvf --numeric-owner --absolute-names ../myNewUbuntu.tar .
+$ sudo tar -czvf ../myNewUbuntu.tar --numeric-owner --absolute-names .
 ```
 
 Then `cd` into the home directory and change the file extension of the distro
