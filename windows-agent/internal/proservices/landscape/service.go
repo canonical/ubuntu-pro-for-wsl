@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -242,26 +243,13 @@ func (s *Service) keepConnected() error {
 			default:
 			}
 
-			if target := (noConfigError{}); errors.As(err, &target) {
-				if s.disabled.Load() {
-					// "Landscape: service disabled" already logged.
-					continue
+			if checkErr := mustDisableService(err); checkErr != nil {
+				if !s.disabled.Load() {
+					// "Landscape: service disabled" not already logged.
+					log.Warningf(s.ctx, "Landscape: %v", checkErr)
+					s.disabled.Store(true)
 				}
-				// We only log this once.
-				log.Infof(s.ctx, "Landscape: service disabled: %v", target)
-				s.disabled.Store(true)
 				continue
-			}
-
-			// Let's check if this error is gRPC Permission Denied:
-			if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
-				if s.disabled.Load() {
-					// "Landscape: service disabled" already logged.
-					continue
-				}
-				// We only log this once.
-				log.Warningf(s.ctx, "Landscape: service disabled: %v", err)
-				s.disabled.Store(true)
 			}
 
 			if err != nil {
@@ -281,6 +269,27 @@ func (s *Service) keepConnected() error {
 	case err := <-started:
 		return err
 	}
+}
+
+// mustDisableService returns an error that wraps err if it requires disabling the service, otherwise it returns nil.
+func mustDisableService(err error) error {
+	// Service must remain disabled if we don't have a Landscape config.
+	if target := (noConfigError{}); errors.As(err, &target) {
+		return fmt.Errorf("service disabled: %w", target)
+	}
+	// Or if the server rejects our request.
+	if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
+		return fmt.Errorf("service disabled: %w", err)
+	}
+	// Or if the DNS server doesn't find the host.
+	if status.Code(err) == codes.Unavailable {
+		// I wish there was an idiomatic way in gRPC to check if calling a DNS server succeeded but it server couldn't find the host.
+		if strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host") {
+			return fmt.Errorf("service disabled: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
