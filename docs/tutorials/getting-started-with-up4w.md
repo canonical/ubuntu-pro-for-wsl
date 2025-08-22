@@ -74,14 +74,14 @@ are advised to backup the file then remove it before continuing the tutorial.
 
 To check if the file exists run:
 
-```text
-PS C:\Users\me\tutorial> Test-Path -Path "~\.wslconfig"
+```{code-block} text
+> Test-Path -Path "~\.wslconfig"
 ```
 
 If this returns `True` then the file exists and can be removed with:
 
-```text
-PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
+```{code-block} text
+> Remove-Item ~\.wslconfig
 ```
 
 (tut::get-ubuntu)=
@@ -154,19 +154,20 @@ All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subs
 Open Windows PowerShell and run the following command to create a new Ubuntu 24.04 instance,
 entering a user and password when prompted. For quick testing, set both to `u`:
 
-```text
-PS C:\Users\me\tutorial> ubuntu2404.exe
+```{code-block} text
+> wsl ~ -d Ubuntu-24.04
 ```
 
 You will now be logged in to the new instance shell and can check that UP4W has Pro-attached this instance with:
 
-```text
-u@mib:~$ pro status
+```{code-block} text
+$ pro status
 ```
 
 The output should indicate that services like ESM are enabled, with account and subscription information also shown:
 
-```text
+```{code-block} text
+:class: no-copy
 SERVICE          ENTITLED  STATUS       DESCRIPTION
 esm-apps         yes       enabled      Expanded Security Maintenance for Applications
 esm-infra        yes       enabled      Expanded Security Maintenance for Infrastructure
@@ -184,7 +185,8 @@ Subscription: Ubuntu Pro - free personal subscription
 Packages can also be accessed from all the enabled services.
 Running `sudo apt update` will produce output like the following:
 
-```text
+```{code-block} text
+:class: no-copy
 Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
 Hit:2 http://ppa.launchpad.net/ubuntu-wsl-dev/ppa/ubuntu noble InRelease
 Hit:3 http://security.ubuntu.com/ubuntu noble-security InRelease
@@ -204,8 +206,8 @@ Now let's check that another Ubuntu instance will also Pro-attach.
 
 Install Ubuntu 22.04 LTS directly from PowerShell:
 
-```text
-PS C:\Users\me\tutorial> wsl --install Ubuntu-22.04
+```{code-block} text
+> wsl --install Ubuntu-22.04
 ```
 
 Once you are in the instance shell, enter a username and password then run `pro status`.
