@@ -2,34 +2,39 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 func main() {
 	var numeric bool
+	var isStable bool
 	flag.BoolVar(&numeric, "numeric", false, "Print a numeric version")
+	flag.BoolVar(&isStable, "is-stable", false, "Print whether the version is a stable release or pre-release")
 	flag.Parse()
 
+	tag := getTag()
+
 	if numeric {
-		fmt.Println(computeNumericVersion())
+		fmt.Println(computeNumericVersion(tag))
 		return
 	}
 
-	fmt.Println(computeFullVersion())
-}
-
-func computeFullVersion() string {
-	tag, err := getTag()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	if isStable {
+		fmt.Println("pre-release")
+		return
 	}
 
+	fmt.Println(computeFullVersion(tag))
+}
+
+func computeFullVersion(tag string) string {
 	if dirty, err := isDirty(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -40,13 +45,7 @@ func computeFullVersion() string {
 	return tag
 }
 
-func computeNumericVersion() string {
-	tag, err := getTag()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-
+func computeNumericVersion(tag string) string {
 	expr := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
 	matches := expr.FindStringSubmatch(tag)
 	if len(matches) != 2 {
@@ -57,14 +56,15 @@ func computeNumericVersion() string {
 	return matches[1]
 }
 
-func getTag() (string, error) {
+func getTag() string {
 	// Note: we cannot use --dirty because it does not detect untracked files.
 	out, err := exec.Command("git", "describe", "--tags", "HEAD").CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("git describe: %v. %s", err, out)
+		fmt.Fprintf(os.Stderr, "Error: git describe: %v. %s\n", err, out)
+		os.Exit(1)
 	}
 
-	return strings.TrimSpace(string(out)), nil
+	return strings.TrimSpace(string(out))
 }
 
 func isDirty() (bool, error) {
