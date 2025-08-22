@@ -49,7 +49,6 @@ We use the following prompt symbols in this tutorial:
 * `>`: runs in PowerShell
 * `$`: runs in Ubuntu
 
-## Set up Ubuntu WSL
 Clicking the copy button will only copy the executable command.
 
 (tut::get-wsl)=
@@ -199,15 +198,16 @@ Reading state information... Done
 All packages are up to date.
 ```
 
-Now let's check that another Ubuntu instance will also Pro-attach.
+Now let's check that a different version of Ubuntu will also Pro-attach automatically.
 
-Install Ubuntu 22.04 LTS directly from PowerShell:
+Install an older LTS release --- Ubuntu 22.04 --- from PowerShell:
 
 ```{code-block} text
 > wsl --install Ubuntu-22.04
 ```
 
-Once you are in the instance shell, enter a username and password then run `pro status`.
+After this instanced has installed and launched, enter a username and password, then run `pro status`.
+
 You should again get confirmation of successful Pro-attachment for the new instance.
 
 > If you want to uninstall UP4W after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
