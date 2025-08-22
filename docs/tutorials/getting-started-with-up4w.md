@@ -42,18 +42,14 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 - A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
 - Some familiarity with commands for the Linux shell and PowerShell
 
-```{note}
-WSL enables using a Linux shell and Windows PowerShell side-by-side on the same machine.
-In this tutorial, commands will be prefixed by a prompt that indicates the shell being used, for example:
 
-- `PS C:\Users\me\tutorial>` is a PowerShell prompt where the current working directory is `C:\Users\me\tutorial`.
+We use the following prompt symbols in this tutorial:
 
-- `u@mib:~/tutorial$` indicates a Linux shell prompt login as user "u" where the current working directory is `/home/ubuntu/tutorial/`
-
-Output logs are included in this tutorial when instructive but are sometimes omitted to save space.
-```
+* `>`: runs in PowerShell
+* `$`: runs in Ubuntu
 
 ## Set up Ubuntu WSL
+Clicking the copy button will only copy the executable command.
 
 (tut::get-wsl)=
 ### Install WSL
