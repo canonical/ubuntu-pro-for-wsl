@@ -25,17 +25,29 @@ offers excellent integration with developer tools like Visual Studio Code.
 
 ### Install WSL
 
+You need to install and enable WSL before you can start using Ubuntu on WSL.
+
 Open a PowerShell prompt as an Administrator and run:
 
 ```{code-block} text
 > wsl --install
 ```
 
-This command will enable the features necessary to run WSL and installs the
-latest Ubuntu distribution available for WSL.
+This command will install and enable the features necessary to run WSL.
 
 As this step creates an Ubuntu instance, you will be prompted to create a username
 and password. An Ubuntu terminal will then open automatically.
+**After running this command, you need to reboot your machine.**
+
+```{admonition} What if WSL is already installed and enabled?
+:class: important
+If WSL is already set up on your machine, running `wsl --install` will install
+the default WSL distro, which is the latest version of Ubuntu.
+
+If an instance named Ubuntu already exists, an installation of Ubuntu will be
+initiated but it will fail.
+```
+
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal prompt.
 
