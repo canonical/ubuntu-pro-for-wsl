@@ -232,6 +232,7 @@ Once complete, your native version of Visual Studio Code will open the folder.
 In Visual Studio Code, create a new `package.json` file and add the following text:
 
 ```{code-block} json
+:caption: serverexample/package.json
 {
     "name": "Demo",
     "version": "1.0.0",
@@ -253,6 +254,7 @@ Save the file and then --- in the same folder --- create a new one called `index
 Add the following text, then save and close:
 
 ```{code-block} html
+:caption: serverexample/index.html
 <h1>Hello World</h1>
 ```
 
