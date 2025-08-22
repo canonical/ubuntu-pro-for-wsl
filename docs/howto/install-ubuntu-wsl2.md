@@ -10,24 +10,36 @@ myst:
 
 ## What you will learn
 
-* How to enable and install WSL on Windows
-* How to install Ubuntu 24.04 LTS using the Microsoft Store or WSL commands in the terminal
-* How to start Ubuntu instances
+* How to install and enable WSL on Windows
+* How to install Ubuntu 24.04 LTS using the terminal or the Microsoft Store
+* How to start Ubuntu instances after they have been installed
 
 ## What you will need
 
-* Windows 10 or 11 running on either a physical device or virtual machine 
+* Windows 10 or 11 running on a Windows machine
 * All of the latest Windows updates installed
 
-## Install WSL and run the default Ubuntu distro
+## Install and enable WSL
 
-To install WSL, open PowerShell as an Administrator and run:
+To install Ubuntu using any method, you first need to install and enable WSL on
+your Windows machine.
+
+Open PowerShell as an Administrator and run:
 
 ```{code-block} text
 > wsl --install
 ```
 
-This installs both WSL and the default distro for WSL, which is the latest LTS version of Ubuntu.
+You then need to reboot your machine before installing and running any Ubuntu distro.
+
+```{admonition} What if WSL is already installed and enabled?
+:class: tip
+When WSL is already installed and enabled, running `wsl --install` will install
+Ubuntu, unless there is a pre-existing instance named Ubuntu on the machine.
+```
+
+> Read Microsoft's documentation for more information on [installing
+> WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 ## Install specific versions of Ubuntu on WSL
 
@@ -65,7 +77,7 @@ Install a specific Ubuntu distro using a NAME from the output:
 ```
 
 ```{important}
-At time of writing, Ubuntu 24.04 LTS and later versions are download in [WSL's
+At time of writing, Ubuntu 24.04 LTS and later versions are downloaded in [WSL's
 new tar-based format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available).
 Earlier Ubuntu versions are currently downloaded in the old format. The new format
 requires WSL 2.4.10 or higher.
@@ -80,11 +92,11 @@ The image has a `.wsl` extension and can be installed in two ways:
 1. Double-clicking the downloaded file
 2. Running `wsl --install --from-file <image>.wsl` in the download directory
 
-This method has advantages in some contexts:
+You do not need access to the Microsoft Store to use this installation method
+and the images can be self-hosted on an internal network.
 
-* Access to the Microsoft Store is not required
-* Images can be self-hosted on an internal network
-* Custom installations can be created by modifying the image
+The downloaded image can also be customised, as described in our [image
+customisation guide](custom-ubuntu-distro.md).
 
 > Read our [blog post](https://ubuntu.com/blog/ubuntu-wsl-new-format-available)
 about the new format and [Microsoft's guide on building custom WSL
@@ -93,24 +105,23 @@ distros](https://learn.microsoft.com/en-us/windows/wsl/build-custom-distro).
 
 ### Method 3: Install from the Microsoft Store
 
-Find the Ubuntu distribution that you want in the Microsoft Store and click **Get**.
+If you prefer a graphical method of installation, open the Microsoft Store on
+your Windows machine and search for "Ubuntu".
 
-![Installation page for Ubuntu 24.04 LTS in the Microsoft store.](assets/install-ubuntu-wsl2/choose-distribution.png)
-
-Once installed, you can either launch Ubuntu 24.04 LTS directly from the Microsoft Store or search for Ubuntu in your Windows search bar.
-
-![Search results for Ubuntu 24.04 LTS in Windows search bar.](assets/install-ubuntu-wsl2/search-ubuntu-windows.png)
+Go to the page of an available Ubuntu distribution and click {guilabel}`Get` to
+start the installation.
 
 ## Starting an Ubuntu instance
 
-During installation of an Ubuntu distro, you are asked to create a username and password specific to that instance.
+During installation of an Ubuntu distro on WSL, you are asked to create a
+username and password specific to that instance.
 This also starts an Ubuntu session and logs you in.
 
 After installation, you can open Ubuntu instances by:
 
-* Searching for them in the Window's search bar
-* Opening the dropdown in [Windows Terminal](https://github.com/microsoft/terminal?tab=readme-ov-file#installing-and-running-windows-terminal)
 * Running the `wsl -d <Distro>` command in PowerShell
+* Opening the dropdown in [Windows Terminal](https://github.com/microsoft/terminal?tab=readme-ov-file#installing-and-running-windows-terminal)
+* Searching for them in the Window's search bar
 
 At any point, you can list the Ubuntu distros that you can start with `wsl -l -v`.
 
@@ -119,9 +130,15 @@ At any point, you can list the Ubuntu distros that you can start with `wsl -l -v
 By default, if you open Ubuntu using the Windows search bar or the Windows Terminal dropdown,
 the instance starts in the Ubuntu home directory.
 
-When starting an instance from the terminal, the command run determines the starting directory.
+When starting an instance from the terminal, the specific command that you run
+determines the starting directory.
 
 ### Start Ubuntu in the current Windows directory from the terminal
+
+```{note}
+For simplicity, we use `username` for the user and `pc` for the machine name in
+this section.
+```
 
 When you open PowerShell, the working Windows directory is `C:\Users\username`.
 
@@ -151,11 +168,14 @@ the working directory, run:
 ```
 
 ````{tip}
-For the **default Ubuntu distro only**, this command can be shortened further to:
+For the **default WSL distro**, this command can be shortened further to:
 
 ```{code-block} text
 > wsl ~
 ```
+
+The default distro for WSL is Ubuntu, although [this can be
+configured](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#set-default-linux-distribution).
 
 ````
 
