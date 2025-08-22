@@ -27,8 +27,8 @@ You should then be ready for more advanced usage scenarios.
 - Test automatic Pro-attachment of WSL instances
 
 (ref::backup-warning)=
-```{warning}
-**If you already have Ubuntu WSL pre-installed:** 
+```{admonition} If you already have Ubuntu WSL pre-installed
+:class: warning
 
 We recommend that any Ubuntu WSL installed is exported then deleted.
 You can then install it as described in this tutorial.
@@ -72,7 +72,7 @@ unless a distro with the name "Ubuntu" is already installed.
 If you already have WSL installed, with `~\.wslconfig` on your system, you
 are advised to backup the file then remove it before continuing the tutorial.
 
-To check if the file exists run:
+To check if the file exists run the following in PowerShell:
 
 ```{code-block} text
 > Test-Path -Path "~\.wslconfig"
@@ -96,11 +96,8 @@ with the following command in PowerShell:
 
 For other installation options refer to our [install Ubuntu on WSL2 guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
-At this point, running `ubuntu2404.exe` in PowerShell will launch an Ubuntu WSL instance
-and log in to its shell.
-
-To manually associate that Ubuntu instance with a Pro subscription you could
-run the `sudo pro attach` command from within the Ubuntu instance.
+To manually associate this Ubuntu instance with a Pro subscription, you could
+launch the instance and run the `pro attach` command.
 
 This, however, would need to be repeated manually for each new instance.
 UP4W solves this scalability problem by automating Pro-attachment.
@@ -151,14 +148,14 @@ UP4W will automatically forward the subscription to the Ubuntu Pro client on you
 
 All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subscription.
 
-Open Windows PowerShell and run the following command to create a new Ubuntu 24.04 instance,
-entering a user and password when prompted. For quick testing, set both to `u`:
+In PowerShell, run the following command to launch the Ubuntu-24.04 instance
+you installed previously, entering a username and password when prompted.
 
 ```{code-block} text
 > wsl ~ -d Ubuntu-24.04
 ```
 
-You will now be logged in to the new instance shell and can check that UP4W has Pro-attached this instance with:
+You will now be logged in to the Ubuntu instance and can check that UP4W has Pro-attached this instance with:
 
 ```{code-block} text
 $ pro status
