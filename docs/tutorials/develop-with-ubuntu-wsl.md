@@ -166,7 +166,7 @@ Once installed, you can test the development environment by creating an example 
 
 ## Install Node.js and create a new project
 
-Open an Ubuntu terminal using the `wsl ~ -d Ubuntu24.04` command.
+Open an Ubuntu terminal using the `wsl ~ -d Ubuntu-24.04` command.
 
 Ensure the packages in Ubuntu are up-to-date with the following command:
 
