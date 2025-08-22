@@ -233,7 +233,6 @@ func TestSetUserSubscription(t *testing.T) {
 		"Error when the file cannot be written":    {settingsState: fileExists, cannotWriteFile: true, wantError: true},
 	}
 
-	//nolint:dupl // This is mostly duplicate with TestSetStoreConfig but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
@@ -280,7 +279,7 @@ func TestSetUserSubscription(t *testing.T) {
 			// Set the same token again
 			calledProNotifier = 0
 			err = conf.SetUserSubscription(ctx, token)
-			require.NoError(t, err, "SetUserSubscription should return no error")
+			require.ErrorIs(t, err, config.ErrUserConfigIsNotNew, "SetUserSubscription should return an error")
 			require.Zero(t, calledProNotifier, "ProNotifier should not have been called again")
 		})
 	}
@@ -308,7 +307,6 @@ func TestSetStoreSubscription(t *testing.T) {
 		"Error when the file cannot be written": {settingsState: fileExists, cannotWriteFile: true, wantError: true},
 	}
 
-	//nolint:dupl // This is mostly duplicate with TestSetUserConfig but de-duplicating with a meta-test worsens readability
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
@@ -447,6 +445,9 @@ func TestSetUserLandscapeConfig(t *testing.T) {
 			want := testutils.LoadWithUpdateFromGolden(t, got)
 
 			require.Equal(t, want, got, "Did not get the same value for Landscape config as we set")
+
+			err = conf.SetUserLandscapeConfig(ctx, got)
+			require.ErrorIs(t, err, config.ErrUserConfigIsNotNew, "SetUserLandscapeConfig should return an error when re-submitting the same config")
 		})
 	}
 }

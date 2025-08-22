@@ -117,7 +117,7 @@ class _SubscribeNowPageState extends State<SubscribeNowPage> {
         showBack: false,
         onBack: null,
         onNext: model.canSubmit ? () => trySubmit(model) : null,
-        nextText: lang.attach,
+        next: Text(lang.attach),
       ),
     );
   }
