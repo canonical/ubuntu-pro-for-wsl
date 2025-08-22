@@ -42,6 +42,7 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 - A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
 - Some familiarity with commands for the Linux shell and PowerShell
 
+## Set up Ubuntu on WSL
 
 We use the following prompt symbols in this tutorial:
 
@@ -54,7 +55,19 @@ Clicking the copy button will only copy the executable command.
 (tut::get-wsl)=
 ### Install WSL
 
-WSL can be installed directly from the [Microsoft Store](https://apps.microsoft.com/detail/9P9TQF7MRM4R).
+To install and enable WSL on Windows, run the following command in PowerShell:
+
+```{code-block} text
+> wsl --install
+```
+
+**You need to reboot the Windows machine after WSL installation**.
+
+```{admonition} What if WSL is already installed and enabled?
+:class: important
+The `wsl --install` command will download and install the latest Ubuntu distro,
+unless a distro with the name "Ubuntu" is already installed.
+```
 
 If you already have WSL installed, with `~\.wslconfig` on your system, you
 are advised to backup the file then remove it before continuing the tutorial.
@@ -74,10 +87,12 @@ PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
 (tut::get-ubuntu)=
 ### Install Ubuntu
 
-Ubuntu 24.04 LTS is recommended for this tutorial and can be installed from the
-Microsoft Store:
+Ubuntu 24.04 LTS is recommended for this tutorial and can be installed 
+with the following command in PowerShell:
 
-> Install [Ubuntu 24.04 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) from the Microsoft Store
+```{code-block} text
+> wsl --install Ubuntu-24.04
+```
 
 For other installation options refer to our [install Ubuntu on WSL2 guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
