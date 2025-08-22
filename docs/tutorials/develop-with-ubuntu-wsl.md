@@ -79,40 +79,22 @@ PS C:\Users\username>
 username@pc:~$
 ```
 
-To exit the Ubuntu terminal, type the `exit` command and execute it by pressing
-<kbd>enter</kbd>, which will return you to the PowerShell prompt.
+To exit the Ubuntu terminal at any time, type the `exit` command and execute it
+by pressing <kbd>enter</kbd>, which will return you to the PowerShell prompt.
 
-```{tip}
-It is recommended to reboot your machine after this initial installation to
-complete the setup.
-```
 
-### Install a specific version of Ubuntu on WSL
-
+```{admonition} Different methods to install Ubuntu on WSL
+:class: tip
 There are multiple ways of installing Ubuntu on WSL, here we focus on using the
 terminal. For more detail on installation methods for Ubuntu on WSL, refer to
 our [dedicated installation guide](../howto/install-ubuntu-wsl2.md).
-
-To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
-
-```{code-block} text
-> wsl --install Ubuntu-24.04
 ```
 
-You'll see an indicator of the installation progress in the terminal:
 ### Running multiple versions of Ubuntu
 
-```{code-block} text
-:class: no-copy
-Installing: Ubuntu 24.04 LTS
-[==========================72,0%==========                 ]
-```
 You can install multiple versions of Ubuntu on WSL. Each Ubuntu instance can
 then be used as a separate, self-contained development environment.
 
-```{note}
-WSL supports a variety of Ubuntu releases. Read our [reference on distributions
-of Ubuntu on WSL](../reference/distributions.md) for more information.
 ```{code-block} text
 > wsl --install Ubuntu-22.04
 ```
@@ -138,7 +120,7 @@ You can open a specific instance from PowerShell using its NAME:
 > wsl ~ -d Ubuntu-22.04
 ```
 
-The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory,
+The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory and
 the `-d` flag is added before specifying a distro.
 
 ```{admonition} Windows terminal integration
@@ -274,15 +256,9 @@ You can now navigate to `localhost:10001` in your native Windows web browser by 
 
 ![Windows desktop showing a web server being run from a terminal with "npm start", A Visual Studio Code project with a "hello world" html file, and a web browser showing the "hello world" page being served on local host.](assets/vscode/hello-world.png)
 
-That’s it!
-
-By using Ubuntu on WSL you’re able to take advantage of the latest Node.js packages available on Linux as well as the more streamlined command line tools.
-
 ## Enjoy Ubuntu on WSL!
 
-In this tutorial, we’ve shown you how to connect the Windows version of Visual Studio Code to your Ubuntu on WSL filesystem and launch a basic Node.js webserver.
-
-We hope you enjoy using Ubuntu inside WSL. Don’t forget to check out our other tutorials for tips on how to optimise your WSL setup for Data Science.
+In this tutorial, we’ve shown you how to set up a development environment with Ubuntu on WSL and Visual Studio Code to create a basic Node.js webserver.
 
 ### Further Reading
 
