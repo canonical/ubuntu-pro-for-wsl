@@ -68,7 +68,22 @@ class LandscapePage extends StatelessWidget {
         onNext: model.isComplete && !model.isWaiting
             ? () => _tryApplyConfig(context)
             : null,
-        nextText: lang.landscapeRegister,
+        // Overlaying the spinner on top of the hidden text preserves the button size.
+        next: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: model.isWaiting ? 0 : 1.0,
+              child: Text(lang.landscapeRegister),
+            ),
+            if (model.isWaiting)
+              const SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(),
+              )
+          ],
+        ),
       ),
     );
   }
