@@ -141,31 +141,30 @@ You can open a specific instance from PowerShell using its NAME:
 The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory,
 the `-d` flag is added before specifying a distro.
 
-## Install Visual Studio Code on Windows
 ```{admonition} Windows terminal integration
 :class: tip
 Each time you install a version of Ubuntu, it appears in the dropdown list of
 command line applications in Windows terminal.
 
-One of the advantages of WSL is its integration with native Windows applications, such as Visual Studio Code.
 If you have one version of Ubuntu running in a tab, you can open another in a
 separate tab by selecting it from the menu.
 ```
 
-Search for "Visual Studio Code" in the Microsoft Store and install it.
 We only need an Ubuntu-24.04 instance for this tutorial.
 
-![Installation page for Visual Studio Code on the Microsoft Store.](assets/vscode/msstore.png)
 To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 
-Alternatively, you can install Visual Studio Code from the [web link](https://code.visualstudio.com/Download).
 ```{code-block} text
 > wsl --unregister Ubuntu-22.04
 ```
 
-![Visual Studio Code download page showing download options for Windows, Linux, and Mac.](assets/vscode/download-vs-code.png)
+## Install Visual Studio Code on Windows
 
-During installation, under the 'Additional Tasks' step, ensure the `Add to PATH` option is checked.
+One of the advantages of WSL is its integration with native Windows applications, such as Visual Studio Code.
+
+Open Microsoft Store on your Windows machine, search for "Visual Studio Code" and install the application.
+
+When selecting additional tasks during setup, ensure the {guilabel}`Add to PATH` option is checked.
 
 ![Visual Studio Code's "Additional Tasks" setup dialog with the "Add to Path" and "Register Code as an editor for supported file types" options checked.](assets/vscode/aditional-tasks.png)
 
@@ -173,13 +172,15 @@ Once the installation is complete, open Visual Studio Code.
 
 ## Install the Remote Development Extension
 
-Navigate to the `Extensions` menu in the sidebar and search for `Remote Development`.
+Navigate to the {guilabel}`Extensions` menu in the sidebar and search for "Remote Development".
 
-This is an extension pack that allows you to open any folder in a container, remote machine, or in WSL. Alternatively, you can just install `Remote - WSL`.
+**Remote Development** is an extension pack that allows you to open any folder in a container, remote machine, or WSL.
+
+If you only want the features that support WSL, install the **Remote - WSL** extension instead.
 
 ![Installation page for the Remote Development Visual Studio Code extension.](assets/vscode/remote-extension.png)
 
-Once installed you can test the development environment by creating an example local web server with Node.js
+Once installed, you can test the development environment by creating an example local web server with Node.js
 
 ## Install Node.js and create a new project
 
@@ -216,9 +217,13 @@ Then open the directory in Visual Studio Code:
 $ code .
 ```
 
-The first time you do run `code` from Ubuntu, it will trigger a download of the necessary dependencies:
+The first time you run `code` from Ubuntu, it will trigger a download of the necessary dependencies:
 
-![Bash snippet showing the installation of Visual Studio Code Server's required dependencies.](assets/vscode/downloading-vscode-server.png)
+```{code-block} text
+:class: no-copy
+Installing VS Code Server for x64...
+Downloading:
+```
 
 Once complete, your native version of Visual Studio Code will open the folder.
 
@@ -251,19 +256,19 @@ Add the following text, then save and close:
 <h1>Hello World</h1>
 ```
 
-Now return to your Ubuntu terminal (or use the Visual Studio Code terminal window) and type the following to install a server defined by the above specifications detailed in `package.json`:
+Return to your Ubuntu terminal (or use Visual Studio Code's integrated terminal) and type the following to install a server defined by the specification detailed in `package.json`:
 
 ```{code-block} text
 $ npm install
 ```
 
-Finally, type the following to launch the web server:
+Finally, start the web server:
 
 ```{code-block} text
 $ npm start
 ```
 
-You can now navigate to `localhost:10001` in your native Windows web browser by using <kbd>CTRL</kbd>+<kbd>LeftClick</kbd> on the terminal links.
+You can now navigate to `localhost:10001` in your native Windows web browser by using <kbd>CTRL</kbd>+<kbd>LeftClick</kbd> on the link in the terminal.
 
 ![Windows desktop showing a web server being run from a terminal with "npm start", A Visual Studio Code project with a "hello world" html file, and a web browser showing the "hello world" page being served on local host.](assets/vscode/hello-world.png)
 
