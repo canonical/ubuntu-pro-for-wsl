@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "*"
-
+      - '*'
 jobs:
   publish-msix:
     permissions:
@@ -25,13 +24,14 @@ jobs:
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
           package-mode: StoreUpload
-
       - name: Install Store Broker
         shell: powershell
         run: |
           Install-Module -Name StoreBroker -AcceptLicense -Force -Scope CurrentUser -Verbose
       - name: Submit to Microsoft Store
         shell: powershell
+        env:
+          pre_release: ${{ steps.build-msix.outputs.is-pre-release }}
         run: |
           New-Item -ItemType directory -Path store -Force
 
@@ -44,17 +44,59 @@ jobs:
           $appid = "9PD1WZNBDXKZ"
 
           # Prepare and submit to the Store
-          New-SubmissionPackage -ConfigPath .\msix\SBConfig.json
-          Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "out\appstore-submission.json" -PackagePath "out\appstore-submission.zip" -Force -Autocommit -ReplacePackages
-
+          New-SubmissionPackage -ConfigPath .\msix\SBConfig.json -Verbose
+          $subFileStem="out\appstore-submission"
+          Get-Content "$subFileStem.json"
+          if ($env:pre_release -eq "pre-release") {
+            # The existing package flight for beta testers.
+            $flightId="876dc297-0b4d-4a74-94ef-720279050fc4"
+            Write-Output "Starting a new submission under package flight $flightId from:"
+            Get-ChildItem ./msix/UbuntuProForWSL/AppPackages/
+            $sub, $url = Update-ApplicationFlightSubmission -AppId $appid -FlightId $flightId -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -AddPackages -Verbose
+            Write-Output "Remember to update submission $sub with the MSIX package downloaded from:"
+            Write-Output $url
+            Write-Output "Access the submission via the link below:"
+            Write-Output "https://partner.microsoft.com/en-us/dashboard/products/$appid/submissions/$sub/"
+          } else {
+            Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -ReplacePackages -AutoCommit -Verbose
+          }
       - name: Create the GH Release
         shell: powershell
         id: create-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.build-msix.outputs.msix-version }}
+          version: ${{ steps.build-msix.outputs.msix-version }}
+          pre_release: ${{ steps.build-msix.outputs.is-pre-release }}
+          tag: ${{ github.ref_name }}
         run: |
-           # Intentionally not copying the msixbundle, as it is already uploaded to the store
-           # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
-           # and draft, so it doesn't appear as a published release.
-           gh release create "${env:tag}" --draft --latest=false --title="${env:tag}" --fail-on-no-commits --generate-notes "msix\UbuntuProForWSL.appinstaller"
+          # Intentionally not copying the msixbundle, as it is already uploaded to the store
+          # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
+          # and draft, so it doesn't appear as a published release.
+          if ($env:pre_release -eq "pre-release") {
+            Write-output "Creating a new pre-release draft"
+            # TODO: Once we have a real first release, place back the `--generate-notes` option.
+            gh release create "${env:tag}" --draft --prerelease --latest=false --title "${env:version}" --verify-tag
+          } else {
+            $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
+            gh release create "${env:tag}" --draft --latest --title "${env:version}" --verify-tag -- "${appinstallerFile}"
+          }
+          Write-Output "This is a draft release. Once the submission is completed in MS Partner Center, the MSIX package must be downloaded and included as a release asset."
+      - name: Check out the repository wiki
+        uses: actions/checkout@v4
+        with:
+          repository: canonical/ubuntu-pro-for-wsl.wiki
+          path: wiki
+      - name: Store the App Installer File for the pre-release audience
+        shell: powershell
+        working-directory: './wiki'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $folder = ".\pre-release\"
+          New-Item -Path "$folder" -ItemType Directory -Force
+          Copy-Item ..\msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller "$folder"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$folder"
+          git commit -m "Auto-update pre-release assets"
+          git push origin master
