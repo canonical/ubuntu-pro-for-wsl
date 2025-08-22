@@ -35,8 +35,6 @@ Open a PowerShell prompt as an Administrator and run:
 
 This command will install and enable the features necessary to run WSL.
 
-As this step creates an Ubuntu instance, you will be prompted to create a username
-and password. An Ubuntu terminal will then open automatically.
 **After running this command, you need to reboot your machine.**
 
 ```{admonition} What if WSL is already installed and enabled?
@@ -48,6 +46,22 @@ If an instance named Ubuntu already exists, an installation of Ubuntu will be
 initiated but it will fail.
 ```
 
+### Install Ubuntu on WSL
+
+For a list of distributions that you can install on WSL, run:
+
+```{code-block} text
+> wsl --list --online
+```
+
+To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
+
+```{code-block} text
+> wsl --install Ubuntu-24.04
+```
+
+After an Ubuntu distribution is installed, you are prompted to create a
+username and password. An Ubuntu terminal will then open automatically.
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal prompt.
 
