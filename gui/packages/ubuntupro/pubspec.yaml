@@ -59,7 +59,7 @@ dependencies:
   url_launcher: ^6.3.1
   win32: ^5.10.1
   win32_registry: ^2.1.0
-  window_manager: ^0.4.3
+  window_manager: ^0.5.1
   windows_single_instance: ^1.0.1
   wizard_router: ^1.4.0
   yaru: ^8.1.0
