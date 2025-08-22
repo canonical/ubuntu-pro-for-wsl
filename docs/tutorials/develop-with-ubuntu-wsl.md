@@ -100,52 +100,68 @@ To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
 ```
 
 You'll see an indicator of the installation progress in the terminal:
+### Running multiple versions of Ubuntu
 
 ```{code-block} text
 :class: no-copy
 Installing: Ubuntu 24.04 LTS
 [==========================72,0%==========                 ]
 ```
+You can install multiple versions of Ubuntu on WSL. Each Ubuntu instance can
+then be used as a separate, self-contained development environment.
 
 ```{note}
 WSL supports a variety of Ubuntu releases. Read our [reference on distributions
 of Ubuntu on WSL](../reference/distributions.md) for more information.
+```{code-block} text
+> wsl --install Ubuntu-22.04
 ```
 
-### Run a specific Ubuntu version
-
-Use `wsl -l -v` to list all your installed distros and the version of WSL that they are using:
+Use `wsl -l -v` to list all of your installed distros.
 
 ```{code-block} text
 :class: no-copy
   NAME            STATE           VERSION
-  Ubuntu          Stopped         2
+  Ubuntu-22.04    Stopped         2
 * Ubuntu-24.04    Stopped         2
 ```
 
-Two instances of Ubuntu are installed:
-
-1. The default Ubuntu version that was installed automatically when you installed WSL
-2. The numbered Ubuntu version that you installed manually
+```{admonition} What is version 2?
+:class: note
+This means that you are using WSL2, rather than WSL1.
+WSL2 is the default WSL on recent versions of Windows.
+```
 
 You can open a specific instance from PowerShell using its NAME:
 
 ```{code-block} text
-> wsl ~ -d Ubuntu-24.04
+> wsl ~ -d Ubuntu-22.04
 ```
 
 The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory,
 the `-d` flag is added before specifying a distro.
 
 ## Install Visual Studio Code on Windows
+```{admonition} Windows terminal integration
+:class: tip
+Each time you install a version of Ubuntu, it appears in the dropdown list of
+command line applications in Windows terminal.
 
 One of the advantages of WSL is its integration with native Windows applications, such as Visual Studio Code.
+If you have one version of Ubuntu running in a tab, you can open another in a
+separate tab by selecting it from the menu.
+```
 
 Search for "Visual Studio Code" in the Microsoft Store and install it.
+We only need an Ubuntu-24.04 instance for this tutorial.
 
 ![Installation page for Visual Studio Code on the Microsoft Store.](assets/vscode/msstore.png)
+To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 
 Alternatively, you can install Visual Studio Code from the [web link](https://code.visualstudio.com/Download).
+```{code-block} text
+> wsl --unregister Ubuntu-22.04
+```
 
 ![Visual Studio Code download page showing download options for Windows, Linux, and Mac.](assets/vscode/download-vs-code.png)
 
