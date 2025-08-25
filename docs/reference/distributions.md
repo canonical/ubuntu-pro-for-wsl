@@ -22,7 +22,7 @@ Interim releases of Ubuntu are currently not supported on WSL.
 These are the releases of Ubuntu that we support for WSL and that are available on the Microsoft Store:
 
 - [Ubuntu](https://apps.microsoft.com/detail/9PDXGNCFSCZV?hl=en-us&gl=US) ships the latest stable LTS (Long Term Support) release of Ubuntu. When new LTS versions are released, this release of Ubuntu can be upgraded once the first point release is available.
-- Numbered releases --- for example, [Ubuntu 22.04 LTS](https://apps.microsoft.com/detail/9PN20MSR04DW?hl=en-us&gl=US) --- refer to specific Long Term Stability (LTS) releases that receive standard support for five years. For more information on LTS releases, support and timelines, visit the [Ubuntu releases page](https://wiki.ubuntu.com/Releases). Numbered releases of Ubuntu on WSL will not be upgraded unless configured to upgrade in `etc/update-manager/release-upgrades`.
+- Numbered releases --- for example, [Ubuntu 22.04 LTS](https://apps.microsoft.com/detail/9PN20MSR04DW?hl=en-us&gl=US) --- refer to specific LTS releases that receive standard support for five years. For more information on LTS releases, support and timelines, visit the [Ubuntu releases page](https://wiki.ubuntu.com/Releases). Numbered releases of Ubuntu on WSL will not be upgraded unless configured to upgrade in `etc/update-manager/release-upgrades`.
 - [Ubuntu (Preview)](https://apps.microsoft.com/detail/9P7BDVKVNXZ6?hl=en-us&gl=US) is a daily build of the latest development version of Ubuntu, which previews new features as they are developed. It does not receive the same level of QA as stable releases and should not be used for production workloads.
 
 ```{tip}
