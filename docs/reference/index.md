@@ -49,3 +49,13 @@ Information helpful for developers working on Ubuntu Pro for WSL.
 
 index_up4w_development
 ```
+
+## Release notes
+
+Highlights from the latest releases of Ubuntu on WSL and Ubuntu Pro for WSL:
+
+```{toctree}
+:titlesonly:
+
+Release notes <release_notes>
+```

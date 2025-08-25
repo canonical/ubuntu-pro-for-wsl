@@ -55,6 +55,7 @@ production in an enterprise environment.
 **Find technical information**, including:
 
 * [Ubuntu distributions available for WSL](/reference/distributions.md)
+* [Release notes for Ubuntu on WSL](/reference/release_notes.md)
 ```
 
 ```{grid-item-card} [Explanation](explanation/index)
@@ -63,6 +64,7 @@ production in an enterprise environment.
 **Build an understanding** of:
 
 * [The architecture of Ubuntu Pro for WSL](/explanation/ref-arch-explanation.md)
+* [Security overview for Ubuntu on WSL](/explanation/security-overview.md)
 ```
 
 ````
