@@ -36,6 +36,8 @@ OpenVINO
 passwordless
 powershell
 PowerShell
+Quokka
+reproducibly
 rootfs
 rootFS
 SHA
@@ -60,10 +62,12 @@ autopkgtest
 autopkgtests
 backporting
 binfmt
+cdimage
 changelog
 compinit
 config
 dev
+exe
 gapped
 gpg
 grpc
@@ -79,6 +83,7 @@ Hostagent
 JWT
 localhost
 LTS
+MotD
 Numbat
 os
 pem
@@ -92,6 +97,7 @@ ssl
 tcp
 TLS
 toolchain
+upgrader
 url
 vGPU
 webserver
@@ -100,6 +106,7 @@ whitespace
 zshrc
 ESM
 Ok
+ppid
 scalability
 Snapcraft
 UTF
