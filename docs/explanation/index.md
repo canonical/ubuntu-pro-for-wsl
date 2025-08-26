@@ -33,3 +33,12 @@ Explore how Ubuntu on WSL can be used safely and securely.
 
 security-overview
 ```
+
+## Comparing WSL versions for Ubuntu on WSL
+
+Read about the differences between major versions of WSL, such as WSL 1 and WSL 2, and how it affects Ubuntu on WSL.
+
+```{toctree}
+:titlesonly:
+compare-wsl-versions
+```
