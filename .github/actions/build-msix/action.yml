@@ -84,7 +84,7 @@ runs:
         }
         if ($stable -eq "pre-release") {
           # Point the App Installer file to the repo wiki instead of the latest stable release.
-          $doc.Root.SetAttributeValue("URI", "https://raw.githubusercontent.com/wiki/canonical/ubuntu-pro-for-wsl/pre-release/UbuntuProForWSL.appinstaller")
+          $doc.Root.SetAttributeValue("Uri", "https://raw.githubusercontent.com/wiki/canonical/ubuntu-pro-for-wsl/pre-release/UbuntuProForWSL.appinstaller")
         }
         $doc.Save($path)
 
