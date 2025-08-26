@@ -48,7 +48,7 @@ The differences between WSL 1 and WSL 2 and how it affects Ubuntu can be summari
 
 The differences between WSL 1 and WSL 2 have notable consequences for Ubuntu on WSL, largely due to the lack of systemd support on WSL 1. Systemd is a system and service management suite that Ubuntu and many applications for Ubuntu depend on. Most notably, [Snaps](https://snapcraft.io/) and [cloud-init](https://cloud-init.io/) do not work on WSL 1 due to the lack of support for systemd. There is also a lack of support for graphical applications on WSL 1.
 
-While Ubuntu for WSL will still work on WSL 1, the experience may be degraded. Thus, we generally recommend sticking to WSL 2 unless your use case has specific requirements that make WSL 1 a better fit.
+While Ubuntu works on WSL 1, the experience may be degraded relative to WSL 2. Thus, we generally recommend using WSL 2 unless you have specific requirements. For example, if you make extensive use of file interoperability between WSL and Windows, you may benefit from the better performance of WSL 1 in that specific area.
 
 ### How this affects Ubuntu Pro for WSL
 
