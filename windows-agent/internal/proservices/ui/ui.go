@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -32,6 +33,7 @@ type Service struct {
 	db                *database.DistroDB
 	config            Config
 	landscapeListener chan error
+	listenerMux       sync.RWMutex
 
 	// contractsArgs allows for overriding the contract server's behaviour.
 	contractsArgs []contracts.Option
@@ -48,11 +50,15 @@ func New(ctx context.Context, config Config, db *database.DistroDB, args ...cont
 		config:            config,
 		contractsArgs:     args,
 		landscapeListener: make(chan error, 1),
+		listenerMux:       sync.RWMutex{},
 	}
 }
 
 // Stop deallocates the resources.
 func (s *Service) Stop() {
+	s.listenerMux.Lock()
+	defer s.listenerMux.Unlock()
+
 	if s.landscapeListener != nil {
 		close(s.landscapeListener)
 		s.landscapeListener = nil
@@ -84,6 +90,9 @@ func (s *Service) drainLandscapeListener(ctx context.Context) bool {
 // because the Landscape service may send events not caused (thus not expected) by the UI service and the contract
 // expects this to be a non-blocking callback.
 func (s *Service) LandscapeConnectionListener(ctx context.Context, err error) {
+	s.listenerMux.RLock()
+	defer s.listenerMux.RUnlock()
+
 	// Drain the channel to prevent blocking on write.
 	if !s.drainLandscapeListener(ctx) {
 		return
@@ -123,7 +132,8 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 
 // ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.LandscapeSource, error) {
-	c := landscapeConfig.GetConfig()
+	s.listenerMux.RLock()
+	defer s.listenerMux.RUnlock()
 
 	// Make sure to drain the channel to prevent notifications unrelated to this request.
 	if !s.drainLandscapeListener(ctx) {
@@ -132,6 +142,7 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *age
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
+	c := landscapeConfig.GetConfig()
 	err := s.config.SetUserLandscapeConfig(ctx, c)
 	if errors.Is(err, config.ErrUserConfigIsNotNew) {
 		// The GUI uses gRPC status codes to present meaningful localized error messages.
