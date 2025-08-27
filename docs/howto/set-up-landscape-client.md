@@ -62,12 +62,27 @@ In the UP4W app navigate to the Landscape configuration screen:
 
 Choose your preferred configuration option and enter the required details.
 
-The "Advanced Configuration" option requires you to specify a `landscape.conf`.
+The "Manual configuration" is easier if the server was configured with the
+default options, only the "Landscape FQDN" field is trully required.
+Importantly, that field cannot have a complete URL, but rather the server's
+fully qualified domain name only. For user's commodity the field accepts
+a URL like `https://landscape-server.domain.com` but the `https://` part is
+removed from the address, resulting in the FQDN only. That's for allowing
+users to copy and paste the server address from a web browser address bar, for
+example.
+More complex URLs will be rejected and an error message will be shown.
+
+The "Advanced configuration" option requires you to specify a `landscape.conf`.
 Refer to the section on [Landscape client configuration](howto::config-landscape-client) for an example.
 
 When you continue a status screen will appear confirming that configuration is complete:
 
 ![Configuration is complete](../assets/status-complete.png)
+
+The application waits a fraction of second to confirm that the configuration
+data supplied resulted in a successful connection to the Landscape server. In
+case of errors a dialog presents the error details and lets you decide to edit
+the configuration and try again or simply proceed.
 
 ```
 
@@ -109,6 +124,12 @@ ssl_public_key = C:\Users\user\Downloads\landscape_server.pem
 ```
 
 ```{warning}
+The `url` field in the `[host]` section cannot be a true URL, but rather a fully
+qualified domain name (or IP address if your server was configured in that way)
+suffixed by a port (6554 by default) separated by a colon (`:`),
+as shown in the example above `landscape-server.domain.com:6554`. No scheme or
+other URL components are applicable.
+
 The `ping_url` must be a `http` address. A `https` address will not work.
 ```
 
