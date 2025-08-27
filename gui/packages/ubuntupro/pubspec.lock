@@ -1087,10 +1087,10 @@ packages:
     dependency: "direct main"
     description:
       name: window_manager
-      sha256: "732896e1416297c63c9e3fb95aea72d0355f61390263982a47fd519169dc5059"
+      sha256: "7eb6d6c4164ec08e1bf978d6e733f3cebe792e2a23fb07cbca25c2872bfdbdcd"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.3"
+    version: "0.5.1"
   windows_single_instance:
     dependency: "direct main"
     description:
@@ -1167,18 +1167,18 @@ packages:
     dependency: transitive
     description:
       name: yaru_window_manager
-      sha256: b36c909fa082a7cb6e2f259d4357e16f08d3d8ab086685b81d1916e457100d1e
+      sha256: "6288fd6ccd8bb9d5be56073c6f277e2da08dd38e346507bf88bc9332b08dd180"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.2+1"
+    version: "0.1.3"
   yaru_window_platform_interface:
     dependency: transitive
     description:
       name: yaru_window_platform_interface
-      sha256: "93493d7e17a9e887ffa94c518bc5a4b3eb5425c009446e3294c689cb1a87b7e1"
+      sha256: d514387cc96750112ecf1933b6f12a1912beca199178d00052c0e87a94e232fa
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.2+1"
+    version: "0.1.3"
   yaru_window_web:
     dependency: transitive
     description:
