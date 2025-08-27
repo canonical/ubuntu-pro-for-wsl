@@ -227,7 +227,6 @@ class LandscapeErrorDialog extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 lang.landscapeProceedAnywayHint,
-                style: Theme.of(context).textTheme.bodySmall,
               ),
             ]),
       ),
