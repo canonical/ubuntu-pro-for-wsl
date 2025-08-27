@@ -27,8 +27,8 @@ You should then be ready for more advanced usage scenarios.
 - Test automatic Pro-attachment of WSL instances
 
 (ref::backup-warning)=
-```{warning}
-**If you already have Ubuntu WSL pre-installed:** 
+```{admonition} If you already have Ubuntu WSL pre-installed
+:class: warning
 
 We recommend that any Ubuntu WSL installed is exported then deleted.
 You can then install it as described in this tutorial.
@@ -42,54 +42,61 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 - A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
 - Some familiarity with commands for the Linux shell and PowerShell
 
-```{note}
-WSL enables using a Linux shell and Windows PowerShell side-by-side on the same machine.
-In this tutorial, commands will be prefixed by a prompt that indicates the shell being used, for example:
+## Set up Ubuntu on WSL
 
-- `PS C:\Users\me\tutorial>` is a PowerShell prompt where the current working directory is `C:\Users\me\tutorial`.
+We use the following prompt symbols in this tutorial:
 
-- `u@mib:~/tutorial$` indicates a Linux shell prompt login as user "u" where the current working directory is `/home/ubuntu/tutorial/`
+* `>`: runs in PowerShell
+* `$`: runs in Ubuntu
 
-Output logs are included in this tutorial when instructive but are sometimes omitted to save space.
-```
-
-## Set up Ubuntu WSL
+Clicking the copy button will only copy the executable command.
 
 (tut::get-wsl)=
 ### Install WSL
 
-WSL can be installed directly from the [Microsoft Store](https://apps.microsoft.com/detail/9P9TQF7MRM4R).
+To install and enable WSL on Windows, run the following command in PowerShell:
+
+```{code-block} text
+> wsl --install
+```
+
+**You need to reboot the Windows machine after WSL installation**.
+
+```{admonition} What if WSL is already installed and enabled?
+:class: important
+The `wsl --install` command will download and install the latest Ubuntu distro,
+unless a distro with the name "Ubuntu" is already installed.
+```
 
 If you already have WSL installed, with `~\.wslconfig` on your system, you
 are advised to backup the file then remove it before continuing the tutorial.
 
-To check if the file exists run:
+To check if the file exists run the following in PowerShell:
 
-```text
-PS C:\Users\me\tutorial> Test-Path -Path "~\.wslconfig"
+```{code-block} text
+> Test-Path -Path "~\.wslconfig"
 ```
 
 If this returns `True` then the file exists and can be removed with:
 
-```text
-PS C:\Users\me\tutorial> Remove-Item ~\.wslconfig
+```{code-block} text
+> Remove-Item ~\.wslconfig
 ```
 
 (tut::get-ubuntu)=
 ### Install Ubuntu
 
-Ubuntu 24.04 LTS is recommended for this tutorial and can be installed from the
-Microsoft Store:
+Ubuntu 24.04 LTS is recommended for this tutorial and can be installed 
+with the following command in PowerShell:
 
-> Install [Ubuntu 24.04 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) from the Microsoft Store
+```{code-block} text
+> wsl --install Ubuntu-24.04
+```
 
 For other installation options refer to our [install Ubuntu on WSL2 guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
-At this point, running `ubuntu2404.exe` in PowerShell will launch an Ubuntu WSL instance
-and log in to its shell.
-
-To manually associate that Ubuntu instance with a Pro subscription you could
-run the `sudo pro attach` command from within the Ubuntu instance.
+To manually associate this Ubuntu instance with a Pro subscription, you could
+launch the instance and run the `pro attach` command.
 
 This, however, would need to be repeated manually for each new instance.
 UP4W solves this scalability problem by automating Pro-attachment.
@@ -140,22 +147,23 @@ UP4W will automatically forward the subscription to the Ubuntu Pro client on you
 
 All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subscription.
 
-Open Windows PowerShell and run the following command to create a new Ubuntu 24.04 instance,
-entering a user and password when prompted. For quick testing, set both to `u`:
+In PowerShell, run the following command to launch the Ubuntu-24.04 instance
+you installed previously, entering a username and password when prompted.
 
-```text
-PS C:\Users\me\tutorial> ubuntu2404.exe
+```{code-block} text
+> wsl ~ -d Ubuntu-24.04
 ```
 
-You will now be logged in to the new instance shell and can check that UP4W has Pro-attached this instance with:
+You will now be logged in to the Ubuntu instance and can check that UP4W has Pro-attached this instance with:
 
-```text
-u@mib:~$ pro status
+```{code-block} text
+$ pro status
 ```
 
 The output should indicate that services like ESM are enabled, with account and subscription information also shown:
 
-```text
+```{code-block} text
+:class: no-copy
 SERVICE          ENTITLED  STATUS       DESCRIPTION
 esm-apps         yes       enabled      Expanded Security Maintenance for Applications
 esm-infra        yes       enabled      Expanded Security Maintenance for Infrastructure
@@ -173,7 +181,8 @@ Subscription: Ubuntu Pro - free personal subscription
 Packages can also be accessed from all the enabled services.
 Running `sudo apt update` will produce output like the following:
 
-```text
+```{code-block} text
+:class: no-copy
 Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
 Hit:2 http://ppa.launchpad.net/ubuntu-wsl-dev/ppa/ubuntu noble InRelease
 Hit:3 http://security.ubuntu.com/ubuntu noble-security InRelease
@@ -189,15 +198,16 @@ Reading state information... Done
 All packages are up to date.
 ```
 
-Now let's check that another Ubuntu instance will also Pro-attach.
+Now let's check that a different version of Ubuntu will also Pro-attach automatically.
 
-Install Ubuntu 22.04 LTS directly from PowerShell:
+Install an older LTS release --- Ubuntu 22.04 --- from PowerShell:
 
-```text
-PS C:\Users\me\tutorial> wsl --install Ubuntu-22.04
+```{code-block} text
+> wsl --install Ubuntu-22.04
 ```
 
-Once you are in the instance shell, enter a username and password then run `pro status`.
+After this instanced has installed and launched, enter a username and password, then run `pro status`.
+
 You should again get confirmation of successful Pro-attachment for the new instance.
 
 > If you want to uninstall UP4W after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
