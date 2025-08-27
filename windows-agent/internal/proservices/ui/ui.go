@@ -126,7 +126,11 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *age
 	c := landscapeConfig.GetConfig()
 
 	// Make sure to drain the channel to prevent notifications unrelated to this request.
-	s.drainLandscapeListener(ctx)
+	if !s.drainLandscapeListener(ctx) {
+		err := errors.Join(errors.New("failed to drain Landscape listener channel"), ctx.Err())
+		log.Errorf(ctx, "UI service: ApplyLandscapeConfig: %v", err)
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 
 	err := s.config.SetUserLandscapeConfig(ctx, c)
 	if errors.Is(err, config.ErrUserConfigIsNotNew) {
@@ -136,6 +140,7 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *age
 		return nil, err
 	}
 
+	log.Debug(ctx, "UI service: ApplyLandscapeConfig: Waiting for a notification from Landscape.")
 	// Blocks until the Landscape service receives an interesting response from the server,
 	// thus preventing premature response to the UI and properly propagates any errors.
 	if err = <-s.landscapeListener; err != nil {
