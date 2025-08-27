@@ -784,6 +784,8 @@ type distroSettings struct {
 //   - Send the command
 //
 // Then, testAssertions is called.
+//
+//lint:ignore SA4009 - homedir and downloaddir are only reassigned if empty.
 func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir string, downloaddir string, testSetup func(*commandTestBed) *landscapeapi.Command, testAssertions func(*commandTestBed)) {
 	t.Helper()
 	var tb commandTestBed
