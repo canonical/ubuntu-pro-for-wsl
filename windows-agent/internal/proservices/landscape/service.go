@@ -308,8 +308,8 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 
 	conn, err := newConnection(ctx, s)
 	if err != nil {
-		// No config error is not interesting for listeners.
-		if target := (noConfigError{}); !errors.As(err, &target) {
+		// No config error is not interesting for listeners, it's just an implementation detail.
+		if !errors.Is(err, &noConfigError{}) {
 			s.notifyConnectionState(ctx, err)
 		}
 		return nil, err
