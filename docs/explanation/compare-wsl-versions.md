@@ -26,23 +26,23 @@ In most cases, applications that are entirely contained in WSL will be faster on
 
 The differences between WSL 1 and WSL 2 and how it affects Ubuntu can be summarised with the table below:
 
-| Feature                                                               | WSL 1 | WSL 2 |
-| --------------------------------------------------------------------- | ----- | ----- |
-| Integration between Windows and Linux                                 | ✅    | ✅    |
-| Fast boot times                                                       | ✅    | ✅    |
-| Small resource footprint compared to traditional Virtual Machines     | ✅    | ✅    |
-| Managed VM                                                            | ⛔    | ✅    |
-| Full Linux Kernel                                                     | ⛔    | ✅    |
-| Full system call compatibility                                        | ⛔    | ✅    |
-| High performance across OS file systems                               | ✅    | ⛔    |
-| systemd support                                                       | ⛔    | ✅    |
-| IPv6 support                                                          | ✅    | ✅    |
-| Graphical application support                                         | ⛔    | ✅    |
-| [Snap](https://snapcraft.io/) support                                 | ⛔    | ✅    |
-| [cloud-init](https://cloud-init.io/) support                          | ⛔    | ✅    |
-| [Ubuntu Pro for WSL](../tutorials/getting-started-with-up4w/) support | ⛔    | ✅    |
-| [Landscape](ref::landscape-client) support                            | ⛔    | ✅    |
-| [Ubuntu Pro Client](ref::ubuntu-pro-client) support                   | ⚠️    | ✅    |
+| Feature                                                               |         WSL 1          |       WSL 2        |
+| --------------------------------------------------------------------- | :--------------------: | :----------------: |
+| Integration between Windows and Linux                                 |   {bdg-success}`Yes`   | {bdg-success}`Yes` |
+| Fast boot times                                                       |   {bdg-success}`Yes`   | {bdg-success}`Yes` |
+| Small resource footprint compared to traditional Virtual Machines     |   {bdg-success}`Yes`   | {bdg-success}`Yes` |
+| Managed VM                                                            |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| Full Linux Kernel                                                     |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| Full system call compatibility                                        |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| High performance across OS file systems                               |   {bdg-success}`Yes`   |  {bdg-danger}`No`  |
+| systemd support                                                       |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| IPv6 support                                                          |   {bdg-success}`Yes`   | {bdg-success}`Yes` |
+| Graphical application support                                         |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [Snap](https://snapcraft.io/) support                                 |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [cloud-init](https://cloud-init.io/) support                          |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [Ubuntu Pro for WSL](../tutorials/getting-started-with-up4w/) support |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [Landscape](ref::landscape-client) support                            |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [Ubuntu Pro Client](ref::ubuntu-pro-client) support                   | {bdg-warning}`Partial` | {bdg-success}`Yes` |
 
 ### How this affects Ubuntu for WSL
 
