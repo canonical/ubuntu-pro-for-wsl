@@ -209,12 +209,11 @@ class LandscapeErrorDialog extends StatelessWidget {
               YaruExpandable(
                 expandButtonPosition: YaruExpandableButtonPosition.start,
                 header: Text(lang.landscapeDetails),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SelectableText(details),
-                    ),
-                  ],
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: SingleChildScrollView(
+                    child: SelectableText(details),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
