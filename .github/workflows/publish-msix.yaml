@@ -44,6 +44,8 @@ jobs:
           $appid = "9PD1WZNBDXKZ"
 
           # Prepare and submit to the Store
+          $sub = ""
+          $url = ""
           New-SubmissionPackage -ConfigPath .\msix\SBConfig.json -Verbose
           $subFileStem="out\appstore-submission"
           Get-Content "$subFileStem.json"
@@ -52,14 +54,14 @@ jobs:
             $flightId="876dc297-0b4d-4a74-94ef-720279050fc4"
             Write-Output "Starting a new submission under package flight $flightId from:"
             Get-ChildItem ./msix/UbuntuProForWSL/AppPackages/
-            $sub, $url = Update-ApplicationFlightSubmission -AppId $appid -FlightId $flightId -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -AddPackages -Verbose
-            Write-Output "Remember to update submission $sub with the MSIX package downloaded from:"
-            Write-Output $url
-            Write-Output "Access the submission via the link below:"
-            Write-Output "https://partner.microsoft.com/en-us/dashboard/products/$appid/submissions/$sub/"
+            $sub, $url = Update-ApplicationFlightSubmission -AppId $appid -FlightId $flightId -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -AutoCommit -ReplacePackages -Verbose
           } else {
-            Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -ReplacePackages -AutoCommit -Verbose
+            $sub, $url = Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -ReplacePackages -AutoCommit -Verbose
           }
+          Write-Output "If needed the packge built by this run can be downloaded from:"
+          Write-Output $url
+          Write-Output "Access the submission via the link below:"
+          Write-Output "https://partner.microsoft.com/en-us/dashboard/products/$appid/submissions/$sub/"
       - name: Create the GH Release
         shell: powershell
         id: create-release
