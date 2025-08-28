@@ -68,8 +68,11 @@ The `wsl --install` command will download and install the latest Ubuntu distro,
 unless a distro with the name "Ubuntu" is already installed.
 ```
 
-If you already have WSL installed, with `~\.wslconfig` on your system, you
-are advised to backup the file then remove it before continuing the tutorial.
+Global configuration settings for WSL may block the communication between the Ubuntu
+Pro for WSL application and instances of Ubuntu on WSL. If you already have WSL
+installed, with `~\.wslconfig` on your system, we recommend that you back up the
+file, then remove it, before continuing the tutorial.
+For more information about `.wslconfig`, refer to the [WSL documentation from Microsoft](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig).
 
 To check if the file exists run the following in PowerShell:
 
