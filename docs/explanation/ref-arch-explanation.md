@@ -144,3 +144,27 @@ The following technologies are used to build UP4W:
 * **Go**: Windows agent and WSL Pro service
 * **Flutter**: GUI front end
 * **gRPC**: communication between back end and front end
+
+### Deployment and updates
+
+The WSL Pro service, a component that runs inside instances of Ubuntu on WSL, is
+distributed as a Debian package from the Ubuntu archive. It receives
+automatic updates and upgrades that are typical for Ubuntu packages.
+The Pro service comes pre-installed on the most recent LTS releases of Ubuntu on WSL.
+
+The Windows components of Ubuntu Pro for WSL are distributed in a single
+[MSIX](https://learn.microsoft.com/en-us/windows/msix/overview) package.
+The package is available through the Microsoft Store, our download page, and as GitHub
+Release assets. Together with the MSIX package, we also publish an
+[`AppInstaller` file](https://learn.microsoft.com/en-us/windows/msix/app-installer/app-installer-file-overview)
+that Windows treats as an installable file. The file is later used to track and
+fetch updates for the Ubuntu Pro for WSL app, if it has not been installed from
+the Microsoft Store. This a common scenario in many corporate environments,
+where access to the Microsoft Store may be restricted.
+
+On Windows 11, packages installed by any of these methods will receive automatic
+updates, which is guaranteed by the operating system. In comparison, Windows 10
+has limited support for automatic updates of MSIX packages that have been
+installed directly. To ensure automatic updates on Windows 10, it is preferable
+to install the Ubuntu Pro for WSL application through the Microsoft Store or
+using the `AppInstaller` file that accompanies the MSIX package.
