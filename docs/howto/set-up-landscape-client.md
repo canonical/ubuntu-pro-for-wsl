@@ -63,15 +63,16 @@ In the UP4W app navigate to the Landscape configuration screen:
 Choose your preferred configuration option and enter the required details.
 
 The "Manual configuration" is easier if the server was configured with the
-default options (you should double check with system administrator on that), for
+default options (if in doubt, check this with your system administrator), in
 which case only the "Landscape FQDN" field is truly required. This field does
 not accept a complete URL for the server (with paths and queries, for example),
 and a FQDN should always be used. The field accepts URLs like
-`https://landscape-server.domain.com` (with just scheme and host name) but the
-`https://` part (the scheme) is removed from the address, resulting in the FQDN
-only. This is for user convenience, as it allows you to copy and paste server
-addresses from a web browser address bar, for example. Richer URLs with queries,
-paths and fragments will rejected and an error message will be shown.
+`https://landscape-server.domain.com` (with a just scheme and a host name) but
+the `https://` part (the scheme) is removed from the address, resulting in the
+FQDN only. This is for user convenience, as it allows you to copy an address for
+a server from a web browser address bar, for example, and paste it into the
+field. Richer URLs with queries, paths and fragments will be rejected and an
+error message will be shown.
 
 The "Advanced configuration" option requires you to specify a `landscape.conf`.
 Refer to the section on [Landscape client configuration](howto::config-landscape-client) for an example.
