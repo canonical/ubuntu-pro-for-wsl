@@ -79,7 +79,7 @@ func TestNew(t *testing.T) {
 		}
 
 		var cloudInit mockCloudInit
-		inst, err := landscape.New(ctx, conf, db, &cloudInit)
+		inst, err := landscape.New(ctx, conf, db, &cloudInit, nil)
 
 		if tc.wantError {
 			require.Error(t, err, "Creating a new Landscape instance should fail")
@@ -221,7 +221,7 @@ func TestConnect(t *testing.T) {
 			require.NoError(t, err, "Setup: GetDistroAndUpdateProperties should return no errors")
 
 			var cloudInit mockCloudInit
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, nil, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: NewClient should return no errors")
 
 			if tc.precancelContext {
@@ -367,7 +367,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 			const hostname = "HOSTNAME"
 
 			var cloudInit mockCloudInit
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, nil, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 
 			ctl := service.Controller()
@@ -559,7 +559,7 @@ func TestAutoReconnection(t *testing.T) {
 			const hostname = "HOSTNAME"
 
 			var cloudInit mockCloudInit
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, nil, landscape.WithHostname(hostname), landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Landscape NewClient should not return an error")
 			defer service.Stop(ctx)
 
@@ -795,7 +795,7 @@ func TestReconnect(t *testing.T) {
 			require.NoError(t, err, "Setup: database New should not return an error")
 
 			var cloudInit mockCloudInit
-			service, err := landscape.New(ctx, conf, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, nil, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()
@@ -902,7 +902,7 @@ func TestNotifyConfigUpdate(t *testing.T) {
 			}
 
 			var cloudInit mockCloudInit
-			service, err := landscape.New(ctx, &mockConfig{}, db, &cloudInit, landscape.WithHomeDir(t.TempDir()))
+			service, err := landscape.New(ctx, &mockConfig{}, db, &cloudInit, nil, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			service.NotifyConfigUpdate(ctx, tc.conf, tc.uid)
@@ -969,7 +969,7 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 			c := config.New(ctx, storageDir)
 			cloudInit, err := cloudinit.New(ctx, c, homedir)
 			require.NoError(t, err, "Setup: cloudinit New should not return an error")
-			service, err := landscape.New(ctx, c, db, &cloudInit, landscape.WithHomeDir(homedir))
+			service, err := landscape.New(ctx, c, db, &cloudInit, nil, landscape.WithHomeDir(homedir))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			c.SetLandscapeNotifier(func(ctx context.Context, config, uid string) {

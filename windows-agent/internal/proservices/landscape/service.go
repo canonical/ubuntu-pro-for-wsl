@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -49,7 +50,13 @@ type Service struct {
 	connRetrier *retryConnection
 
 	cloudinit CloudInit
+
+	notifyConnectionState ConnStateListener
 }
+
+// ConnStateListener is a non-blocking callback that will be invoked for any interesting connectivity events,
+// such as terminal errors due invalid configuration or `nil` for successful connections.
+type ConnStateListener func(context.Context, error)
 
 // Config is a configuration provider for ProToken and the Landscape URL.
 type Config interface {
@@ -77,7 +84,7 @@ type options struct {
 type Option = func(*options)
 
 // New creates a new Landscape service object.
-func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit CloudInit, args ...Option) (s *Service, err error) {
+func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit CloudInit, notifyConnectionState ConnStateListener, args ...Option) (s *Service, err error) {
 	defer decorate.OnError(&err, "could not initizalize Landscape service")
 	var opts options
 
@@ -108,16 +115,21 @@ func New(ctx context.Context, conf Config, db *database.DistroDB, cloudInit Clou
 
 	ctx, cancel := context.WithCancel(ctx)
 
+	if notifyConnectionState == nil {
+		notifyConnectionState = func(context.Context, error) {}
+	}
+
 	s = &Service{
-		ctx:         ctx,
-		cancel:      cancel,
-		conf:        conf,
-		db:          db,
-		hostName:    opts.hostname,
-		homedir:     opts.homedir,
-		downloaddir: opts.downloaddir,
-		connRetrier: newRetryConnection(),
-		cloudinit:   cloudInit,
+		ctx:                   ctx,
+		cancel:                cancel,
+		conf:                  conf,
+		db:                    db,
+		hostName:              opts.hostname,
+		homedir:               opts.homedir,
+		downloaddir:           opts.downloaddir,
+		connRetrier:           newRetryConnection(),
+		cloudinit:             cloudInit,
+		notifyConnectionState: notifyConnectionState,
 	}
 
 	return s, nil
@@ -231,26 +243,13 @@ func (s *Service) keepConnected() error {
 			default:
 			}
 
-			if target := (noConfigError{}); errors.As(err, &target) {
-				if s.disabled.Load() {
-					// "Landscape: service disabled" already logged.
-					continue
+			if checkErr := mustDisableService(err); checkErr != nil {
+				if !s.disabled.Load() {
+					// "Landscape: service disabled" not already logged.
+					log.Warningf(s.ctx, "Landscape: %v", checkErr)
+					s.disabled.Store(true)
 				}
-				// We only log this once.
-				log.Infof(s.ctx, "Landscape: service disabled: %v", target)
-				s.disabled.Store(true)
 				continue
-			}
-
-			// Let's check if this error is gRPC Permission Denied:
-			if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
-				if s.disabled.Load() {
-					// "Landscape: service disabled" already logged.
-					continue
-				}
-				// We only log this once.
-				log.Warningf(s.ctx, "Landscape: service disabled: %v", err)
-				s.disabled.Store(true)
 			}
 
 			if err != nil {
@@ -272,6 +271,27 @@ func (s *Service) keepConnected() error {
 	}
 }
 
+// mustDisableService returns an error that wraps err if it requires disabling the service, otherwise it returns nil.
+func mustDisableService(err error) error {
+	// Service must remain disabled if we don't have a Landscape config.
+	if target := (noConfigError{}); errors.As(err, &target) {
+		return fmt.Errorf("service disabled: %w", target)
+	}
+	// Or if the server rejects our request.
+	if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
+		return fmt.Errorf("service disabled: %w", err)
+	}
+	// Or if the DNS server doesn't find the host.
+	if status.Code(err) == codes.Unavailable {
+		// I wish there was an idiomatic way in gRPC to check if calling a DNS server succeeded but it server couldn't find the host.
+		if strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host") {
+			return fmt.Errorf("service disabled: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 	s.connMu.Lock()
 	defer s.connMu.Unlock()
@@ -281,29 +301,76 @@ func (s *Service) connectOnce(ctx context.Context) (<-chan error, error) {
 		s.conn = nil
 	}
 
-	conn, err := newConnection(ctx, s)
+	previousUID, err := s.conf.LandscapeAgentUID()
 	if err != nil {
 		return nil, err
 	}
 
+	conn, err := newConnection(ctx, s)
+	if err != nil {
+		// No config error is not interesting for listeners, it's just an implementation detail.
+		if !errors.Is(err, &noConfigError{}) {
+			s.notifyConnectionState(ctx, err)
+		}
+		return nil, err
+	}
+
+	// Cancelled errors are expected when the hostagent UID changes.
+	// On reconnection a new handshake() happens but the UID remains the same.
+	// To detect meaningful errors that need to be broadcasted, we check if the UID has changed
+	// to a non-empty value.
+	newUID, err := s.conf.LandscapeAgentUID()
+	if err != nil {
+		return nil, err
+	}
+	unchangedUID := newUID == previousUID && newUID != ""
+
 	// If we reached this point, the handshake() with the Landscape server completed
-	// successfully, we have a hostagent UID and we are listening for commands, unless
-	// a failure happened and the connection was terminated. The following monitoring will
-	// tell us if everything is fine or if we have a major problem.
+	// successfully, we have a hostagent UID and we are listening for commands. But failures can happen
+	// at any point in time and the connection be terminated. The following monitoring will
+	// tell us if everything is fine or if we have a problem.
+	// This goroutine assumes the Cancelled status code is only used for the `Reconnect with uid set` message.
 	connectionDone := make(chan error, 1)
 	go func() {
 		defer close(connectionDone)
 
-		status := connectivity.Ready // Don't do GetState() just in case we already failed.
+		connStatus := connectivity.Connecting // Don't do GetState() just in case we already failed.
 		for {
-			conn.grpcConn.WaitForStateChange(ctx, status)
-			status = conn.grpcConn.GetState()
+			conn.grpcConn.WaitForStateChange(ctx, connStatus)
+			connStatus = conn.grpcConn.GetState()
 
-			if status == connectivity.Shutdown {
-				// Connection was closed, we most likely have an error.
+			// Ideally if we passed through the handshake() successfully, the gRPC stream should be guaranteed to be good.
+			// But as of now the server performs config validation at a later point, so we may have received a hostagent UID
+			// and be surprised with a Recv failure right after processing the initial commands.
+			// To avoid this, let's give some time waiting for errors to come from the commandErrs channel.
+			// TODO: simplify this once LDENG-3037 lands in the server (hopefully without the time based programming).
+			if unchangedUID && (connStatus == connectivity.Idle || connStatus == connectivity.Ready) {
+				select {
+				case <-time.After(500 * time.Millisecond):
+					// Stream is up and running, let's notify listeners of this success.
+					s.notifyConnectionState(ctx, nil)
+					continue
+				case err := <-conn.commandErrs:
+					// We got an error, this connection is done.
+					if status.Code(err) != codes.Canceled {
+						s.notifyConnectionState(ctx, err)
+					}
+					connectionDone <- err
+					return
+				}
+			}
+
+			// Otherwise we already received a terminal error. Let's bail out and notify listeners
+			// in case it's not a `code=Cancelled desc=Reconnect with uid set`.
+			if connStatus == connectivity.Shutdown {
+				// We got an error, this connection is done.
 				err := <-conn.commandErrs
 				connectionDone <- err
-				break
+				// As before, listeners won't care about the Cancelled status nor errors caused by UID changes.
+				if unchangedUID || status.Code(err) != codes.Canceled {
+					s.notifyConnectionState(ctx, err)
+				}
+				return
 			}
 		}
 	}()

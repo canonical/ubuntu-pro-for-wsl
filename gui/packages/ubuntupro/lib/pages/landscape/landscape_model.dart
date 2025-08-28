@@ -27,6 +27,10 @@ class LandscapeModel extends ChangeNotifier {
   /// Whether the current form is complete (ready to be submitted).
   bool get isComplete => _active.isComplete;
 
+  /// Whether we are waiting on agent's response after submitting a configuration
+  bool _waiting = false;
+  bool get isWaiting => _waiting;
+
   /// The current configuration type, allowing the UI to show the correct form.
   LandscapeConfigType get configType => _current;
   LandscapeConfigType _current = LandscapeConfigType.manual;
@@ -88,16 +92,24 @@ class LandscapeModel extends ChangeNotifier {
   }
 
   /// Translates and submits the active configuration data to the background agent, returning an error message if any.
-  Future<String?> applyConfig() async {
+  Future<GrpcError> applyConfig() async {
     assert(_active.isComplete);
     final config = _active.config();
     assert(config != null);
+    var err = const GrpcError.ok();
+
     try {
+      _waiting = true;
+      notifyListeners();
       await client.applyLandscapeConfig(config!);
-      return null;
     } on GrpcError catch (e) {
-      return e.message;
+      err = e;
+    } on Exception catch (e) {
+      err = GrpcError.unknown(e.toString());
     }
+    _waiting = false;
+    notifyListeners();
+    return err;
   }
 }
 
