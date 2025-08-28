@@ -1,6 +1,5 @@
 name: Build UP4W MSIX
 description: Build UP4W MSIX for testing and publication
-
 inputs:
   mode:
     required: true
@@ -16,12 +15,13 @@ inputs:
   certificate_password:
     required: true
     description: "certificate_password to pass to sign the msix"
-
 outputs:
   msix-version:
     description: "The version of the built MSIX bundle"
     value: ${{ steps.build.outputs.UP4W_VERSION }}
-
+  is-pre-release:
+    description: "Whether the version is a pre-release or stable release"
+    value: ${{ steps.build.outputs.STABLE_OR }}
 runs:
   using: "composite"
   steps:
@@ -52,6 +52,7 @@ runs:
 
         Remove-Item certificate\ -Recurse
     - name: Build Bundle
+      id: build
       shell: powershell
       run: |
         # Set up the full version (displayed in logs)
@@ -59,6 +60,10 @@ runs:
 
         # Set up the numeric version (used in the AppxManifest)
         $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
+
+        # Whether this is a 'stable' or 'pre-release'
+        $stable=$(go run .\tools\build\compute_version.go --is-stable)
+
         [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
         $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
         $doc = [System.Xml.Linq.XDocument]::Load($path)
@@ -77,10 +82,15 @@ runs:
           $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
           $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${UP4W_VERSION}/UbuntuProForWSL_${UP4W_VERSION}.msixbundle")
         }
+        if ($stable -eq "pre-release") {
+          # Point the App Installer file to the repo wiki instead of the latest stable release.
+          $doc.Root.SetAttributeValue("Uri", "https://raw.githubusercontent.com/wiki/canonical/ubuntu-pro-for-wsl/pre-release/UbuntuProForWSL.appinstaller")
+        }
         $doc.Save($path)
 
-        # Outputs the version for the next steps
+        # Outputs for the next steps
         "UP4W_VERSION=${UP4W_VERSION}.0" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        "STABLE_OR=${stable}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
         # Set up the mock
         $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ inputs.mode == 'end_to_end_tests' && '1' || '$null'}}
