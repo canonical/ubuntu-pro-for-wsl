@@ -21,8 +21,11 @@ While WSL's default setup allows you to develop cross-platform applications with
 * Ubuntu on WSL2 previously installed
 * Familiarity with Linux command line utilities and interacting with Ubuntu on WSL2
 
-> ⓘ Note: If you need more introductory topics, such as how to install Ubuntu on WSL, refer to previous tutorials that can be found [here](../howto/install-ubuntu-wsl2.md).
 
+```{note}
+If you need more introductory topics, such as how to install Ubuntu on WSL, refer to previous tutorials that can be found [here](../howto/install-ubuntu-wsl2.md).
+
+```
 
 ## Prerequisites
 
@@ -37,13 +40,24 @@ Make sure the following prerequisites are met before moving forward:
 
 ## Install the appropriate Windows vGPU driver for WSL
 
-> ⓘ Specific drivers are needed to enable use of a virtual GPU, which is how Ubuntu applications are able to access your GPU hardware, so you’ll need to follow this step even if your system drivers are up-to-date.
+
+```{note}
+ Specific drivers are needed to enable use of a virtual GPU, which is how Ubuntu applications are able to 
+ 
+ access your GPU hardware, so you’ll need to follow this step even if your system drivers are up-to-date.
+
+```
 
 Please refer to the official [WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) for up-to-date links matching your specific GPU vendor. You can find these in `Install support for Linux GUI apps > Prerequisites` . For this example, we will download the `NVIDIA GPU Driver for WSL`.
 
 ![Install support for Linux GUI apps page on Microsoft WSL documentation.](assets/gpu-cuda/install-drivers.png)
 
-> ⓘ **Note:** This is the only device driver you’ll need to install. Do not install any display driver on Ubuntu.
+
+```{note}
+
+This is the only device driver you’ll need to install. Do not install any display driver on Ubuntu.
+
+```
 
 Once downloaded, double-click on the executable file and click `Yes` to allow the program to make changes to your computer.
 
@@ -75,7 +89,12 @@ This step ends with a screen similar to the image below.
 
 ## Install NVIDIA CUDA on Ubuntu
 
-> ⓘ Normally, CUDA toolkit for Linux will have the device driver for the GPU packaged with it. On WSL 2, the CUDA driver used is part of the Windows driver installed on the system, and, therefore, care must be taken `not` to install this Linux driver as previously mentioned.
+
+```{note}
+
+Normally, CUDA toolkit for Linux will have the device driver for the GPU packaged with it. On WSL 2, the CUDA driver used is part of the Windows driver installed on the system, and, therefore, care must be taken `not` to install this Linux driver as previously mentioned.
+
+```
 
 The following commands will install the WSL-specific CUDA toolkit version 11.6 on Ubuntu 22.04 AMD64 architecture. Be aware that older versions of CUDA (<=10) don’t support WSL 2. Also notice that attempting to install the CUDA toolkit packages straight from the Ubuntu repository (`cuda`, `cuda-11-0`, or `cuda-drivers`) will attempt to install the Linux NVIDIA graphics driver, which is not what you want on WSL 2. So, first remove the old GPG key:
 
