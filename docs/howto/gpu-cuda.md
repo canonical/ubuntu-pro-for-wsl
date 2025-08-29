@@ -150,6 +150,12 @@ You should see a similar output to the following detailing the functionality of 
 
 ![Terminal output showing the results of running the device query sample application.](assets/gpu-cuda/device-query.png)
 
+
+## WSL is also supported by some AMD GPUs.
+For more information on AMD, [this might be an appropriate link to look into.](https://rocm.docs.amd.com/projects/radeon/en/latest/docs/install/wsl/howto_wsl.html)
+
+
+
 ## Enjoy Ubuntu on WSL!
 
 That’s all folks! In this tutorial, we’ve shown you how to enable GPU acceleration on Ubuntu on WSL 2 and demonstrated its functionality with the NVIDIA CUDA toolkit, from installation through to compiling and running a sample application.
@@ -160,7 +166,8 @@ We hope you enjoy using Ubuntu inside WSL for your Data Science projects. Don’
 
 * [Setting up WSL for Data Science](https://ubuntu.com/blog/wsl-for-data-scientist)
 * [Ubuntu WSL for Data Scientists Whitepaper](https://ubuntu.com/engage/ubuntu-wsl-for-data-scientists)
-* [NVIDIA's CUDA Post Installation Actions](gpu-cuda.md)
+* [NVIDIA's CUDA Post Installation Actions](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
 * [Install Ubuntu on WSL2](../howto/install-ubuntu-wsl2.md)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
+* [CUDA on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)
 * [Ask Ubuntu](https://askubuntu.com/)
