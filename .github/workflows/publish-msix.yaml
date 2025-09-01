@@ -58,7 +58,7 @@ jobs:
           } else {
             $sub, $url = Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -ReplacePackages -AutoCommit -Verbose
           }
-          Write-Output "If needed the packge built by this run can be downloaded from:"
+          Write-Output "If needed the package built by this run can be downloaded from:"
           Write-Output $url
           Write-Output "Access the submission via the link below:"
           Write-Output "https://partner.microsoft.com/en-us/dashboard/products/$appid/submissions/$sub/"
