@@ -27,8 +27,8 @@ Make sure the following prerequisites are met before moving forward:
 * Familiarity with Linux command line utilities and interacting with Ubuntu on WSL2
 * Broadband internet connection able to download a few GB of data
 
-```{note}
-If you need more introductory topics, such as how to install Ubuntu on WSL, refer to previous tutorials that can be found [here](../howto/install-ubuntu-wsl2.md).
+```{tip}
+For information on how to install Ubuntu on WSL, refer to our [installation guide](howto::install-ubuntu-wsl).
 
 ```
 
