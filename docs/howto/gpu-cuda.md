@@ -48,7 +48,6 @@ Please refer to the official [WSL documentation](https://learn.microsoft.com/en-
 
 
 ```{note}
-
 This is the only device driver you’ll need to install. Do not install any display driver on Ubuntu.
 
 ```
