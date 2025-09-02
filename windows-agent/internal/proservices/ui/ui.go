@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -33,7 +32,8 @@ type Service struct {
 	db                *database.DistroDB
 	config            Config
 	landscapeListener chan error
-	listenerMux       sync.RWMutex
+	ctx               context.Context
+	stop              func()
 
 	// contractsArgs allows for overriding the contract server's behaviour.
 	contractsArgs []contracts.Option
@@ -45,24 +45,22 @@ type Service struct {
 func New(ctx context.Context, config Config, db *database.DistroDB, args ...contracts.Option) (s *Service) {
 	log.Debug(ctx, "Building gRPC UI service")
 
-	return &Service{
+	c, stop := context.WithCancel(ctx)
+	s = &Service{
 		db:                db,
 		config:            config,
 		contractsArgs:     args,
 		landscapeListener: make(chan error, 1),
-		listenerMux:       sync.RWMutex{},
+		ctx:               c,
+		stop:              stop,
 	}
+	context.AfterFunc(c, func() { close(s.landscapeListener) })
+	return s
 }
 
 // Stop deallocates the resources.
 func (s *Service) Stop() {
-	s.listenerMux.Lock()
-	defer s.listenerMux.Unlock()
-
-	if s.landscapeListener != nil {
-		close(s.landscapeListener)
-		s.landscapeListener = nil
-	}
+	s.stop()
 }
 
 // drainLandscapeListener drains the landscapeListener channel, dropping any previously unread notifications.
@@ -71,6 +69,9 @@ func (s *Service) drainLandscapeListener(ctx context.Context) bool {
 	for {
 		select {
 		case <-ctx.Done():
+			return false
+		case <-s.ctx.Done():
+			log.Debug(ctx, "UI service: drainLandscapeListener() called when service was already stopped")
 			return false
 		case err, ok := <-s.landscapeListener:
 			if !ok {
@@ -90,9 +91,6 @@ func (s *Service) drainLandscapeListener(ctx context.Context) bool {
 // because the Landscape service may send events not caused (thus not expected) by the UI service and the contract
 // expects this to be a non-blocking callback.
 func (s *Service) LandscapeConnectionListener(ctx context.Context, err error) {
-	s.listenerMux.RLock()
-	defer s.listenerMux.RUnlock()
-
 	// Drain the channel to prevent blocking on write.
 	if !s.drainLandscapeListener(ctx) {
 		return
@@ -100,8 +98,8 @@ func (s *Service) LandscapeConnectionListener(ctx context.Context, err error) {
 
 	select {
 	case s.landscapeListener <- err:
-	case ctxErr := <-ctx.Done():
-		log.Warningf(ctx, "UI service: When notifying about Landscape connection: %v", ctxErr)
+	default:
+		log.Warningf(ctx, "UI service: Couldn't notify on: %v", err)
 	}
 }
 
@@ -113,7 +111,7 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 	token := info.GetToken()
 	log.Infof(ctx, "UI service: received token %s", common.Obfuscate(token))
 
-	if err := s.config.SetUserSubscription(ctx, token); err != nil {
+	if err = s.config.SetUserSubscription(ctx, token); err != nil {
 		return nil, err
 	}
 
@@ -132,9 +130,6 @@ func (s *Service) ApplyProToken(ctx context.Context, info *agentapi.ProAttachInf
 
 // ApplyLandscapeConfig handles the gRPC call to set landscape configuration.
 func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *agentapi.LandscapeConfig) (*agentapi.LandscapeSource, error) {
-	s.listenerMux.RLock()
-	defer s.listenerMux.RUnlock()
-
 	// Make sure to drain the channel to prevent notifications unrelated to this request.
 	if !s.drainLandscapeListener(ctx) {
 		err := errors.Join(errors.New("failed to drain Landscape listener channel"), ctx.Err())
@@ -154,9 +149,16 @@ func (s *Service) ApplyLandscapeConfig(ctx context.Context, landscapeConfig *age
 	log.Debug(ctx, "UI service: ApplyLandscapeConfig: Waiting for a notification from Landscape.")
 	// Blocks until the Landscape service receives an interesting response from the server,
 	// thus preventing premature response to the UI and properly propagates any errors.
-	if err = <-s.landscapeListener; err != nil {
-		log.Warningf(ctx, "UI service: ApplyLandscapeConfig: %v", err)
-		return nil, err
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-s.ctx.Done():
+		return nil, status.Error(codes.Canceled, "UI service already stopped")
+	case err = <-s.landscapeListener:
+		if err != nil {
+			log.Warningf(ctx, "UI service: ApplyLandscapeConfig: %v", err)
+			return nil, err
+		}
 	}
 
 	landscape, err := s.getLandscapeConfigSource()
