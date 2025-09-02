@@ -10,8 +10,11 @@ export DH_GOLANG_INSTALL_ALL=1
 # as long as it matches the go.mod go stenza which is the language requirement.
 export GOTOOLCHAIN := local
 
+# Run with Go 1.23
+export PATH := /usr/lib/go-1.23/bin/:$(PATH)
+
 # Computes the version ID and updates vendoring
-export GOFLAGS := $(shell ./debian/prepare-source.sh)
+export GOFLAGS := $(shell PATH='$(PATH)' ./debian/prepare-source.sh)
 
 %:
 ifeq ($(strip $(GOFLAGS)),)

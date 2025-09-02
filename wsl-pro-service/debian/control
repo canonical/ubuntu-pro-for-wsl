@@ -6,7 +6,7 @@ Rules-Requires-Root: binary-targets
 Build-Depends: debhelper-compat (= 13),
                dh-apport,
                dh-golang,
-               golang-go (>= 2:1.23~),
+               golang-1.23-go,
 Standards-Version: 4.6.2
 XS-Go-Import-Path: github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 Homepage: https://github.com/canonical/ubuntu-pro-for-wsl
