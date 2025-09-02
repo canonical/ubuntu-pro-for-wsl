@@ -83,9 +83,7 @@ This step ends with a screen similar to the image below.
 
 
 ```{note}
-
-Normally, CUDA toolkit for Linux will have the device driver for the GPU packaged with it. On WSL 2, the CUDA driver used is part of the Windows driver installed on the system, and, therefore, care must be taken `not` to install this Linux driver as previously mentioned.
-
+Normally, the CUDA toolkit for Linux comes packaged with the device driver for the GPU. On WSL 2, the CUDA driver used is part of the Windows driver installed on the system, and, therefore, care must be taken **not** to install this Linux driver.
 ```
 
 The following commands will install the WSL-specific CUDA toolkit version 11.6 on Ubuntu 22.04 AMD64 architecture. Be aware that older versions of CUDA (<=10) don’t support WSL 2. Also notice that attempting to install the CUDA toolkit packages straight from the Ubuntu repository (`cuda`, `cuda-11-0`, or `cuda-drivers`) will attempt to install the Linux NVIDIA graphics driver, which is not what you want on WSL 2. So, first remove the old GPG key:
