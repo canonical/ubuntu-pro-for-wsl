@@ -24,21 +24,17 @@ Make sure the following prerequisites are met before moving forward:
 
 * A Windows 10 version 21H2 or newer physical machine equipped with an NVIDIA graphics card and administrative permission to be able to install device drivers
 * Ubuntu 20.04 or higher installed on WSL 2
-* Familiarity with Linux command line utilities and interacting with Ubuntu on WSL2
+* Familiarity with Linux command line utilities and interacting with Ubuntu on WSL 2
 * Broadband internet connection able to download a few GB of data
 
-```{note}
-If you need more introductory topics, such as how to install Ubuntu on WSL, refer to previous tutorials that can be found [here](../howto/install-ubuntu-wsl2.md).
-
-```
+```{tip}
+For information on how to install Ubuntu on WSL, refer to our [installation guide](howto::install-ubuntu-wsl).
 
 ## Install the appropriate Windows vGPU driver for WSL
 
 
 ```{note}
- Specific drivers are needed to enable use of a virtual GPU, which is how Ubuntu applications are able to 
- 
- access your GPU hardware, so you’ll need to follow this step even if your system drivers are up-to-date.
+Specific drivers are needed to enable use of a virtual GPU, which is how Ubuntu applications are able to access your GPU hardware, so you’ll need to follow this step even if your system drivers are up-to-date.
 
 ```
 
@@ -151,9 +147,10 @@ You should see a similar output to the following detailing the functionality of 
 ![Terminal output showing the results of running the device query sample application.](assets/gpu-cuda/device-query.png)
 
 
-## WSL is also supported by some AMD GPUs.
-For more information on AMD, [this might be an appropriate link to look into.](https://rocm.docs.amd.com/projects/radeon/en/latest/docs/install/wsl/howto_wsl.html)
-
+## AMD support for WSL
+While this guide focuses on NVIDIA, WSL is also supported by some AMD GPUs.
+If you need to use WSL with an AMD GPU, refer to the official AMD documentation.
+The documentation includes a dedicated [guide for using AMD Radeon GPUs with Ubuntu on WSL](https://rocm.docs.amd.com/projects/radeon/en/latest/docs/install/wsl/howto_wsl.html).
 
 
 ## Enjoy Ubuntu on WSL!
@@ -167,7 +164,7 @@ We hope you enjoy using Ubuntu inside WSL for your Data Science projects. Don’
 * [Setting up WSL for Data Science](https://ubuntu.com/blog/wsl-for-data-scientist)
 * [Ubuntu WSL for Data Scientists Whitepaper](https://ubuntu.com/engage/ubuntu-wsl-for-data-scientists)
 * [NVIDIA's CUDA Post Installation Actions](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
-* [Install Ubuntu on WSL2](../howto/install-ubuntu-wsl2.md)
+* [Install Ubuntu on WSL 2](../howto/install-ubuntu-wsl2.md)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
 * [CUDA on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)
 * [Ask Ubuntu](https://askubuntu.com/)

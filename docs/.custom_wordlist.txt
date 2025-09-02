@@ -54,6 +54,7 @@ WSL's
 zsh
 Postfix
 Quickstart
+GPUs
 
 # Other jargon
 adapter
