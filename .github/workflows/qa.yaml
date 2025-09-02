@@ -69,7 +69,7 @@ jobs:
         run: |
           dart pub global activate protoc_plugin
       - name: Quality check
-        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@main
+        uses: canonical/desktop-engineering/gh-actions/go/code-sanity@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           working-directory: ${{ matrix.subproject }}
