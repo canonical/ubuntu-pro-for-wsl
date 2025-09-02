@@ -147,10 +147,13 @@ You should see a similar output to the following detailing the functionality of 
 ![Terminal output showing the results of running the device query sample application.](assets/gpu-cuda/device-query.png)
 
 
-## WSL is also supported by some AMD GPUs.
-For more information on AMD, [this might be an appropriate link to look into.](https://rocm.docs.amd.com/projects/radeon/en/latest/docs/install/wsl/howto_wsl.html)
+## AMD support for WSL
 
+While this guide focuses on NVIDIA, WSL is also supported by some AMD GPUs.
 
+If you need to use WSL with an AMD GPU, refer to the official AMD documentation.
+
+The documentation includes a dedicated [guide for using AMD Radeon GPUs with Ubuntu on WSL](https://rocm.docs.amd.com/projects/radeon/en/latest/docs/install/wsl/howto_wsl.html).
 
 ## Enjoy Ubuntu on WSL!
 
