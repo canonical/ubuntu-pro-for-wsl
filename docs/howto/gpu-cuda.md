@@ -42,7 +42,7 @@ For information on how to install Ubuntu on WSL, refer to our [installation guid
 
 ```
 
-Please refer to the official [WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) for up-to-date links matching your specific GPU vendor. You can find these in `Install support for Linux GUI apps > Prerequisites` . For this example, we will download the `NVIDIA GPU Driver for WSL`.
+Please refer to the official [WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) for up-to-date [links for specific GPU vendors](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps#prerequisites).
 
 ![Install support for Linux GUI apps page on Microsoft WSL documentation.](assets/gpu-cuda/install-drivers.png)
 
