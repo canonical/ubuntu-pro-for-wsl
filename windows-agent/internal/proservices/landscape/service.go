@@ -426,14 +426,14 @@ func (s *Service) NotifyConfigUpdate(ctx context.Context, landscapeConf, agentUI
 }
 
 func (s *Service) reconnectIfNewSettings(ctx context.Context) {
-	oldSettings := func() connectionSettings {
+	oldSettings := func() landscapeHostConf {
 		s.connMu.RLock()
 		defer s.connMu.RUnlock()
 
 		if s.conn != nil {
 			return s.conn.settings
 		}
-		return connectionSettings{}
+		return landscapeHostConf{}
 	}()
 
 	hostagentConf, err := newLandscapeHostConf(s.conf)
@@ -442,8 +442,8 @@ func (s *Service) reconnectIfNewSettings(ctx context.Context) {
 		return
 	}
 
-	newSett := newConnectionSettings(hostagentConf)
-	if newSett == oldSettings {
+	// This check is still useful for changes in fields like `[client].log_level`, only meaningful for the WSL instances, not for the agent.
+	if hostagentConf == oldSettings {
 		return
 	}
 
