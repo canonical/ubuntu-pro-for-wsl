@@ -255,7 +255,6 @@ void main() {
       const msg = 'agent error message';
       final errors = <Exception>[
         // The ones we do something about
-        const GrpcError.alreadyExists(msg),
         const GrpcError.invalidArgument(msg),
         const GrpcError.permissionDenied(msg),
         const GrpcError.unavailable(msg),
@@ -277,7 +276,6 @@ void main() {
       final lang = AppLocalizations.of(context);
 
       final expectedTitles = [
-        lang.landscapeUnchangedConfig,
         lang.landscapeInvalidConfig,
         lang.landscapeWSLUnavailable,
         lang.landscapeUnreachable,
@@ -287,7 +285,6 @@ void main() {
       ];
 
       final expectedContents = <String>[
-        lang.landscapeUnchangedConfigContent,
         lang.landscapeInvalidConfigContent,
         lang.landscapeWSLUnavailableContent,
         lang.landscapeUnreachableContent,

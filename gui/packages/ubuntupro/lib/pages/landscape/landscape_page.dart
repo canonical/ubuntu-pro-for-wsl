@@ -130,7 +130,6 @@ class LandscapePage extends StatelessWidget {
         break;
       case StatusCode.alreadyExists:
         title = lang.landscapeUnchangedConfig;
-        content = lang.landscapeUnchangedConfigContent;
         break;
       case StatusCode.unknown:
         title = lang.landscapeUnknownError;
@@ -204,7 +203,7 @@ class LandscapeErrorDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(content),
+              if (content.isNotEmpty) Text(content),
               const SizedBox(height: 8),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 200),
