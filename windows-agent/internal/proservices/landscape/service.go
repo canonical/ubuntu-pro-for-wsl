@@ -444,6 +444,9 @@ func (s *Service) reconnectIfNewSettings(ctx context.Context) {
 
 	// This check is still useful for changes in fields like `[client].log_level`, only meaningful for the WSL instances, not for the agent.
 	if hostagentConf == oldSettings {
+		// Prevents the UI from being stuck in the rare cases when we have a good connection and receive a config change
+		// that only affects the landscape-client inside the WSL instances.
+		s.notifyConnectionState(ctx, status.Error(codes.AlreadyExists, "Landscape: already connected with the same settings"))
 		return
 	}
 
