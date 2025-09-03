@@ -290,6 +290,7 @@ class _ManualForm extends StatelessWidget {
         DelayedTextField(
           label: Text(lang.landscapeFQDNLabel),
           errorText: enabled ? model.manual.fqdnError.localize(lang) : null,
+          hintText: 'landscape.example.com',
           onChanged: model.setFqdn,
           enabled: enabled,
         ),
