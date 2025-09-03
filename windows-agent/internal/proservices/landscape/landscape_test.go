@@ -52,6 +52,7 @@ url = "{{ .HostURL }}"
 [client]
 account_name = testuser
 registration_key = password1
+log_level = info
 `
 
 func TestNew(t *testing.T) {
@@ -725,6 +726,22 @@ func TestReconnect(t *testing.T) {
 		s.NotifyUbuntuProUpdate(ctx, c.proToken)
 	}
 
+	changeRegistrationKey := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		c.mu.Lock()
+		c.landscapeClientConfig = strings.Replace(c.landscapeClientConfig, "registration_key = password1", "registration_key = password2", 1)
+		c.mu.Unlock()
+
+		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
+	}
+
+	changeLogLevel := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
+		c.mu.Lock()
+		c.landscapeClientConfig = strings.Replace(c.landscapeClientConfig, "log_level = info", "log_level = debug", 1)
+		c.mu.Unlock()
+
+		s.NotifyConfigUpdate(ctx, c.landscapeClientConfig, c.landscapeAgentUID)
+	}
+
 	changeIrrelevant := func(ctx context.Context, s *landscape.Service, c *mockConfig) {
 		c.mu.Lock()
 		c.landscapeClientConfig = c.landscapeClientConfig + "\n[exta]\ninfo=this section does not matter"
@@ -752,8 +769,10 @@ func TestReconnect(t *testing.T) {
 		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateReconnect: true},
 		"Reconnect when changing the URL":                     {trigger: changeAddress},
 		"Reconnect when changing the certificate path":        {trigger: changeCertificate, useCertificate: true},
+		"Reconnect when changing the registration key":        {trigger: changeRegistrationKey},
 
 		"Don't disconnect when changing irrelevant config": {trigger: changeIrrelevant, wantNoDisconnect: true},
+		"Don't disconnect when changing client log level":  {trigger: changeLogLevel, wantNoDisconnect: true},
 
 		"Don't reconnect when removing the Ubuntu Pro token": {trigger: changeProToken, wantNoReconnect: true},
 		"Don't reconnect when missing configuration":         {trigger: changeRemoveConfig, wantNoReconnect: true},
