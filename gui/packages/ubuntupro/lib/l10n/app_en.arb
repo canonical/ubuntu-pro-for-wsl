@@ -73,7 +73,7 @@
     "landscapeSetupCustom": "Advanced configuration",
     "landscapeSetupCustomHint": "Load a custom Landscape client configuration file",
     "landscapeFQDNLabel": "Landscape FQDN",
-    "landscapeFQDNError": "Invalid FQDN. Format should be a hostname or IP address.",
+    "landscapeFQDNError": "Invalid FQDN. Expected a fully qualified domain name or IP address.",
     "landscapeFQDNSaaSError": "FQDN shouldn't be landscape.canonical.com.",
     "landscapeKeyLabel": "Registration key (optional)",
     "landscapeSSLKeyLabel": "Server SSL public key (optional)",
