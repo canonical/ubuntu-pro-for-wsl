@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
+// Service orchestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
 // It creates the executor and ensures there is always an active connection, creating a new one if necessary.
 type Service struct {
 	ctx     context.Context
