@@ -765,6 +765,7 @@ func TestReconnect(t *testing.T) {
 		wantNoDisconnect       bool
 		wantNoReconnect        bool
 		wantImmediateReconnect bool
+		wantNotificationCode   codes.Code
 	}{
 		"Reconnect when explicitly requesting a reconnection": {trigger: requestReconnect, wantImmediateReconnect: true},
 		"Reconnect when changing the URL":                     {trigger: changeAddress},
@@ -772,7 +773,7 @@ func TestReconnect(t *testing.T) {
 		"Reconnect when changing the registration key":        {trigger: changeRegistrationKey},
 
 		"Don't disconnect when changing irrelevant config": {trigger: changeIrrelevant, wantNoDisconnect: true},
-		"Don't disconnect when changing client log level":  {trigger: changeLogLevel, wantNoDisconnect: true},
+		"Don't disconnect when changing client log level":  {trigger: changeLogLevel, wantNoDisconnect: true, wantNotificationCode: codes.AlreadyExists},
 
 		"Don't reconnect when removing the Ubuntu Pro token": {trigger: changeProToken, wantNoReconnect: true},
 		"Don't reconnect when missing configuration":         {trigger: changeRemoveConfig, wantNoReconnect: true},
@@ -813,12 +814,21 @@ func TestReconnect(t *testing.T) {
 			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
 
+			gotCode := make(chan codes.Code, 1)
+			context.AfterFunc(ctx, func() { close(gotCode) })
+			notifier := func(ctx context.Context, err error) {
+				if err != nil {
+					gotCode <- status.Code(err)
+				}
+			}
+
 			var cloudInit mockCloudInit
-			service, err := landscape.New(ctx, conf, db, &cloudInit, nil, landscape.WithHomeDir(t.TempDir()))
+			service, err := landscape.New(ctx, conf, db, &cloudInit, notifier, landscape.WithHomeDir(t.TempDir()))
 			require.NoError(t, err, "Setup: New should not return an error")
 
 			err = service.Connect()
 			require.NoError(t, err, "Setup: Connect should not return an error")
+			defer service.Stop(ctx)
 
 			require.Eventually(t, func() bool {
 				return service.Connected()
@@ -832,6 +842,10 @@ func TestReconnect(t *testing.T) {
 				tc.trigger(ctx, service, conf)
 				return nil
 			})
+
+			if tc.wantNotificationCode != codes.OK {
+				require.Equal(t, tc.wantNotificationCode, <-gotCode, "Notification error codes don't match")
+			}
 
 			if tc.wantNoDisconnect {
 				require.False(t, ok, "Client should not have disconnected")
