@@ -52,8 +52,8 @@
     "purchaseStatusSuccess": "Thank you for subscribing to Ubuntu Pro.",
     "purchaseStatusAlreadyPurchased": "You are already subscribed to Pro.",
     "purchaseStatusUserGaveUp": "Purchase attempt was canceled.",
-    "purchaseStatusNetwork": "A network issue prevented the purchase to proceed. Please try again once connected.",
-    "purchaseStatusServer": "Something went wrong with Microsoft Store. Please try again later.",
+    "purchaseStatusNetwork": "A network issue prevented the purchase from proceeding. Please try again once connected.",
+    "purchaseStatusServer": "Something went wrong with the Microsoft Store. Please try again later.",
     "purchaseStatusUnknown": "Unknown error when trying to purchase the subscription. Consider restarting this app.",
 
     "landscapeSkip": "Skip for now",
