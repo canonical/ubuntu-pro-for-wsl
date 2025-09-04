@@ -55,7 +55,7 @@ func FuzzObfuscate(f *testing.F) {
 
 		switch len(input) {
 		case 0:
-			require.Equal(t, "", got, "Obfuscate should return an empty string when the input is empty")
+			require.Empty(t, got, "Obfuscate should return an empty string when the input is empty")
 			return
 		case 1:
 			require.Equal(t, "*", got, "Obfuscate should reveal no characters when the input is a single character")
