@@ -24,7 +24,7 @@ jobs:
         name: Check out repo
         with:
           ref: main
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: common/go.mod
       - name: Set up git
@@ -82,7 +82,7 @@ jobs:
         uses: ./.github/actions/setup-git
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         name: Set up Go
         with:
           go-version-file: go.work
@@ -131,7 +131,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.work
       - name: Set up private repo
