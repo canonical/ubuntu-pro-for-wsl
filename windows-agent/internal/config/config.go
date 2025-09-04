@@ -122,12 +122,16 @@ func (c *Config) SetUserSubscription(ctx context.Context, proToken string) (err 
 		return err
 	}
 
-	if isNew {
-		c.notifyUbuntuPro(ctx, proToken)
+	if !isNew {
+		return ErrUserConfigIsNotNew
 	}
 
+	c.notifyUbuntuPro(ctx, proToken)
 	return nil
 }
+
+// ErrUserConfigIsNotNew is returned when the user submits a configuration that is not new.
+var ErrUserConfigIsNotNew = errors.New("config: data submitted is not new")
 
 // SetStoreSubscription overwrites the value of the store-provided Ubuntu Pro token.
 func (c *Config) SetStoreSubscription(ctx context.Context, proToken string) (err error) {
@@ -170,9 +174,11 @@ func (c *Config) SetUserLandscapeConfig(ctx context.Context, landscapeConfig str
 		return errors.New("config: could not set Landscape configuration")
 	}
 
-	if isNew {
-		c.notifyLandscape(ctx, landscapeConfig, c.Landscape.UID)
+	if !isNew {
+		return ErrUserConfigIsNotNew
 	}
+
+	c.notifyLandscape(ctx, landscapeConfig, c.Landscape.UID)
 
 	return nil
 }

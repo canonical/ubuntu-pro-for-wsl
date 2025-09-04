@@ -28,7 +28,7 @@ import (
 
 // Manager is the orchestrator of GRPC API services and business logic.
 type Manager struct {
-	uiService          ui.Service
+	uiService          *ui.Service
 	wslInstanceService *wslinstance.Service
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
@@ -104,7 +104,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	s.uiService = ui.New(ctx, conf, s.db)
 
-	landscape, err := landscape.New(ctx, conf, s.db, cloudInit)
+	landscape, err := landscape.New(ctx, conf, s.db, cloudInit, s.uiService.LandscapeConnectionListener)
 	if err != nil {
 		return s, err
 	}
@@ -155,6 +155,10 @@ func (m Manager) Stop(ctx context.Context) {
 		m.landscapeService.Stop(ctx)
 	}
 
+	if m.uiService != nil {
+		m.uiService.Stop()
+	}
+
 	if m.registryWatcher != nil {
 		m.registryWatcher.Stop()
 	}
@@ -176,7 +180,7 @@ func (m Manager) RegisterGRPCServices(ctx context.Context, isWslNetAvailable boo
 			log.StreamServerInterceptor(logrus.StandardLogger()),
 			logconnections.StreamServerInterceptor(),
 		)), grpc.Creds(m.creds))
-	agent_api.RegisterUIServer(grpcServer, &m.uiService)
+	agent_api.RegisterUIServer(grpcServer, m.uiService)
 
 	if isWslNetAvailable {
 		agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)

@@ -243,13 +243,104 @@ void main() {
       final next = find.button(lang.landscapeRegister);
       await tester.tap(next);
       await tester.pump();
-      final snack = find.descendant(
-        of: find.byType(SnackBar),
-        matching: find.byType(Text),
+      final alert = find.descendant(
+        of: find.byType(LandscapeErrorDialog),
+        matching: find.text(msg),
       );
 
-      expect(snack, findsOne);
-      expect(tester.widget<Text>(snack).data, contains(msg));
+      expect(alert, findsOne);
+    });
+
+    testWidgets('specific errors', (tester) async {
+      const msg = 'agent error message';
+      final errors = <Exception>[
+        // The ones we do something about
+        const GrpcError.invalidArgument(msg),
+        const GrpcError.permissionDenied(msg),
+        const GrpcError.unavailable(msg),
+
+        /// Some we don't
+        const GrpcError.deadlineExceeded(msg),
+        const GrpcError.unknown(msg),
+
+        /// And finally some non-gRPC related error:
+        Exception(msg),
+      ];
+
+      final client = MockAgentApiClient();
+      final model = LandscapeModel(client);
+
+      final app = buildApp(model);
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(ColumnPage));
+      final lang = AppLocalizations.of(context);
+
+      final expectedTitles = [
+        lang.landscapeInvalidConfig,
+        lang.landscapeWSLUnavailable,
+        lang.landscapeUnreachable,
+        lang.landscapeUnknownError,
+        lang.landscapeUnknownError,
+        lang.landscapeUnknownError,
+      ];
+
+      final expectedContents = <String>[
+        lang.landscapeInvalidConfigContent,
+        lang.landscapeWSLUnavailableContent,
+        lang.landscapeUnreachableContent,
+        lang.landscapeUnknownErrorContent,
+        lang.landscapeUnknownErrorContent,
+        lang.landscapeUnknownErrorContent,
+      ];
+
+      for (var i = 0; i < errors.length; i++) {
+        when(client.applyLandscapeConfig(any)).thenThrow(errors[i]);
+
+        await tester.tap(find.text(lang.landscapeSetupManual));
+        await tester.pump();
+        final fqdnInput = find.ancestor(
+          of: find.text(lang.landscapeFQDNLabel),
+          matching: find.byType(TextField),
+        );
+        expect(fqdnInput, findsOne);
+        await tester.tap(fqdnInput);
+        await tester.pump();
+        await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
+        await tester.pumpAndSettle();
+
+        final next = find.button(lang.landscapeRegister);
+        await tester.tap(next);
+        await tester.pump();
+
+        final alert = find.byType(LandscapeErrorDialog);
+
+        expect(
+          find.descendant(
+            of: alert,
+            matching: find.text(expectedTitles[i]),
+          ),
+          findsOne,
+        );
+
+        expect(
+          find.descendant(
+            of: alert,
+            matching: find.text(expectedContents[i]),
+          ),
+          findsOne,
+        );
+
+        final button = find.descendant(
+          of: alert,
+          matching: find.button(
+            lang.landscapeEditYourConfig,
+          ),
+        );
+        expect(button, findsOne);
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(alert, findsNothing);
+      }
     });
   });
 
