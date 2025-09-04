@@ -10,7 +10,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape/distroinstall"
 	"github.com/stretchr/testify/require"
-	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
 )
@@ -107,7 +106,7 @@ func TestCreateUser(t *testing.T) {
 			} else {
 				distroName, _ = wsltestutils.RegisterDistro(t, ctx, true)
 			}
-			d := gowsl.NewDistro(ctx, distroName)
+			d := wsl.NewDistro(ctx, distroName)
 
 			username := "johndoe"
 			if tc.invalidUserName {
