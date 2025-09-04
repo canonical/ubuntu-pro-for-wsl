@@ -112,9 +112,10 @@ func TestTranslations(t *testing.T) {
 			if tc.localeDir == "" {
 				tc.localeDir = defaultLocaleDir
 			}
-			if tc.lcmessages == "" {
+			switch tc.lcmessages {
+			case "":
 				tc.lcmessages = "FR_fr"
-			} else if tc.lcmessages == "-" {
+			case "-":
 				tc.lcmessages = ""
 			}
 			t.Setenv("LC_MESSAGES", tc.lcmessages)
