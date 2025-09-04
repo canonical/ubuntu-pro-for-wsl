@@ -123,9 +123,10 @@ func TestTranslations(t *testing.T) {
 				tc.lang = "FR_fr"
 			}
 			t.Setenv("LANG", tc.lang)
-			if tc.loc == "" {
+			switch tc.loc {
+			case "":
 				tc.loc = defaultLoc
-			} else if tc.loc == "-" {
+			case "-":
 				tc.loc = ""
 			}
 			if tc.domain == "" {
