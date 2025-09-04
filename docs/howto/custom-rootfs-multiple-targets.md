@@ -26,6 +26,11 @@ To follow the steps outlined in this guide you can use either:
 - Make sure you have installed `curl` and `jq`, if you're following this guide using Bash.
 - Familiarity with Bash and/or PowerShell.
 
+```{note}
+You need PowerShell 7.0 or later to follow this guide. Some commands will fail on PowerShell 5.
+You can check your PowerShell version by running the command `$PSVersionTable`.
+```
+
 ## Prepare the environment
 
 For convenience when writing subsequent commands, first export the following environment variables, modifying the values that are assigned as needed:
