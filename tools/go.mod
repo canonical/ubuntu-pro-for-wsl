@@ -1,6 +1,8 @@
 module github.com/canonical/ubuntu-pro-for-wsl/tools
 
-go 1.23.0
+go 1.24.0
+
+toolchain go1.24.4
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240626165418-426bf0d3695a
