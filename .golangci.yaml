@@ -64,6 +64,9 @@ linters:
       # G601: Implicit memory aliasing in for loop.
       - path: (.+)\.go$
         text: G601
+      # We don't want to rename this package at this point
+      - path: common/(.+)\.go$
+        text: "var-naming: avoid meaningless package names"
     paths:
       - third_party$
       - builtin$
