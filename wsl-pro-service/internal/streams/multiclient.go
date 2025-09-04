@@ -88,7 +88,7 @@ func (s stream[Command]) SendResult(err error) error {
 		errMsg = err.Error()
 	}
 
-	return s.grpcStream.Send(&agentapi.MSG{
+	return s.Send(&agentapi.MSG{
 		Data: &agentapi.MSG_Result{
 			Result: errMsg,
 		},
@@ -96,7 +96,7 @@ func (s stream[Command]) SendResult(err error) error {
 }
 
 func (s stream[Command]) SendWslName(wslName string) error {
-	return s.grpcStream.Send(&agentapi.MSG{
+	return s.Send(&agentapi.MSG{
 		Data: &agentapi.MSG_WslName{
 			WslName: wslName,
 		},
