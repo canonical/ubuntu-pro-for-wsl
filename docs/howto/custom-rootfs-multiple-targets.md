@@ -27,7 +27,7 @@ To follow the steps outlined in this guide you can use either:
 - Familiarity with Bash and/or PowerShell.
 
 ```{note}
-Throughout this guide we assume PowerShell 7.0 or later. Some commands will fail on PowerShell 5.
+You need PowerShell 7.0 or later to follow this guide. Some commands will fail on PowerShell 5.
 You can check your PowerShell version by running the command `$PSVersionTable`.
 ```
 
