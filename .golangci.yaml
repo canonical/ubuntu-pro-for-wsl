@@ -67,6 +67,9 @@ linters:
       # We don't want to rename this package at this point
       - path: common/(.+)\.go$
         text: "var-naming: avoid meaningless package names"
+       # SA4009 (argument homedir is overwritten before first use) gives false positives
+      - path: (.+)\.go$
+        text: SA4009
     paths:
       - third_party$
       - builtin$
