@@ -65,7 +65,7 @@ dependencies:
   yaru: ^8.2.0
 
 dev_dependencies:
-  build_runner: ^2.7.0
+  build_runner: ^2.8.0
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
