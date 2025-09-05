@@ -20,7 +20,7 @@ import (
 // a new connection needs to be constructed. Holds no data, but has the methods to send info to
 // Landscape, and redirects the received commands to the executor.
 type connection struct {
-	settings landscapeHostConf
+	hostConf landscapeHostConf
 
 	ctx    context.Context
 	cancel func()
@@ -47,19 +47,19 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	ctx, cancel := context.WithCancel(ctx)
 
 	conn = &connection{
-		settings: conf,
+		hostConf: conf,
 		ctx:      ctx,
 		cancel:   cancel,
 	}
 
-	creds, err := transportCredentials(ctx, conn.settings.sslPublicKey)
+	creds, err := transportCredentials(ctx, conn.hostConf.sslPublicKey)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Infof(ctx, "Landscape: connecting to %s", conn.settings.hostagentURL)
+	log.Infof(ctx, "Landscape: connecting to %s", conn.hostConf.hostagentURL)
 
-	grpcConn, err := grpc.NewClient(conn.settings.hostagentURL, grpc.WithTransportCredentials(creds))
+	grpcConn, err := grpc.NewClient(conn.hostConf.hostagentURL, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}

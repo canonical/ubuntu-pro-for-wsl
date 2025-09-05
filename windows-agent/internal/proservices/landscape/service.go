@@ -431,7 +431,7 @@ func (s *Service) reconnectIfNewSettings(ctx context.Context) {
 		defer s.connMu.RUnlock()
 
 		if s.conn != nil {
-			return s.conn.settings
+			return s.conn.hostConf
 		}
 		return landscapeHostConf{}
 	}()
