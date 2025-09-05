@@ -20,7 +20,7 @@ import (
 // a new connection needs to be constructed. Holds no data, but has the methods to send info to
 // Landscape, and redirects the received commands to the executor.
 type connection struct {
-	settings connectionSettings
+	hostConf landscapeHostConf
 
 	ctx    context.Context
 	cancel func()
@@ -31,20 +31,6 @@ type connection struct {
 
 	receivingCommands sync.WaitGroup
 	commandErrs       chan error
-}
-
-// connectionSettings contains data that is immutable for a connection.
-// A change of these settings requires a reconnect.
-type connectionSettings struct {
-	url             string
-	certificatePath string
-}
-
-func newConnectionSettings(c landscapeHostConf) connectionSettings {
-	return connectionSettings{
-		url:             c.hostagentURL,
-		certificatePath: c.sslPublicKey,
-	}
 }
 
 // newConnection attempts to connect to the Landscape server, and blocks until the first
@@ -61,19 +47,19 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	ctx, cancel := context.WithCancel(ctx)
 
 	conn = &connection{
-		settings: newConnectionSettings(conf),
+		hostConf: conf,
 		ctx:      ctx,
 		cancel:   cancel,
 	}
 
-	creds, err := transportCredentials(ctx, conn.settings.certificatePath)
+	creds, err := transportCredentials(ctx, conn.hostConf.sslPublicKey)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Infof(ctx, "Landscape: connecting to %s", conn.settings.url)
+	log.Infof(ctx, "Landscape: connecting to %s", conn.hostConf.hostagentURL)
 
-	grpcConn, err := grpc.NewClient(conn.settings.url, grpc.WithTransportCredentials(creds))
+	grpcConn, err := grpc.NewClient(conn.hostConf.hostagentURL, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}

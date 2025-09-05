@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Service orquestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
+// Service orchestrates the Landscape hostagent connection. It lasts for the entire lifetime of the program.
 // It creates the executor and ensures there is always an active connection, creating a new one if necessary.
 type Service struct {
 	ctx     context.Context
@@ -426,14 +426,14 @@ func (s *Service) NotifyConfigUpdate(ctx context.Context, landscapeConf, agentUI
 }
 
 func (s *Service) reconnectIfNewSettings(ctx context.Context) {
-	oldSettings := func() connectionSettings {
+	oldSettings := func() landscapeHostConf {
 		s.connMu.RLock()
 		defer s.connMu.RUnlock()
 
 		if s.conn != nil {
-			return s.conn.settings
+			return s.conn.hostConf
 		}
-		return connectionSettings{}
+		return landscapeHostConf{}
 	}()
 
 	hostagentConf, err := newLandscapeHostConf(s.conf)
@@ -442,8 +442,11 @@ func (s *Service) reconnectIfNewSettings(ctx context.Context) {
 		return
 	}
 
-	newSett := newConnectionSettings(hostagentConf)
-	if newSett == oldSettings {
+	// This check is still useful for changes in fields like `[client].log_level`, only meaningful for the WSL instances, not for the agent.
+	if hostagentConf == oldSettings {
+		// Prevents the UI from being stuck in the rare cases when we have a good connection and receive a config change
+		// that only affects the landscape-client inside the WSL instances.
+		s.notifyConnectionState(ctx, status.Error(codes.AlreadyExists, "Landscape: already connected with the same settings"))
 		return
 	}
 
