@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
-	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows/registry"
 )
@@ -352,7 +351,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 		}
 	}
 
-	d := gowsl.NewDistro(ctx, sourceDistro)
+	d := wsl.NewDistro(ctx, sourceDistro)
 	if err := assertDistroUnregistered(d); err != nil {
 		cleanup()
 		return "", nil, err
@@ -406,7 +405,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	return path, cleanup, nil
 }
 
-func assertDistroUnregistered(d gowsl.Distro) error {
+func assertDistroUnregistered(d wsl.Distro) error {
 	registered, err := d.IsRegistered()
 	if err != nil {
 		return fmt.Errorf("ubuntu-preview: %v", err)
