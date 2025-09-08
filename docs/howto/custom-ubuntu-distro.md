@@ -34,9 +34,9 @@ WSL will be used to extract the rootfs, edit the configuration files and manage 
 
 ## Download an Ubuntu release for WSL
 
-First, download the latest release of Ubuntu on WSL:
-
-> [Download Ubuntu on WSL](https://ubuntu.com/desktop/wsl)
+First, get Ubuntu 24.04 LTS (Noble Numbat) by visiting
+[releases.ubuntu.com/noble](https://releases.ubuntu.com/noble) and downloading
+the WSL image.
 
 The downloaded file should have a `.wsl` extension.
 

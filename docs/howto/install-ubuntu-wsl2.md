@@ -85,7 +85,12 @@ requires WSL 2.4.10 or higher.
 
 ### Method 2: Download and install from the Ubuntu archive
 
-Ubuntu images for WSL can be downloaded directly from [ubuntu.com/wsl](https://ubuntu.com/desktop/wsl).
+Ubuntu images for WSL can be downloaded directly from
+[releases.ubuntu.com](https://releases.ubuntu.com).
+
+To download Ubuntu 24.04 LTS (Noble Numbat), go to
+[releases.ubuntu.com/noble](https://releases.ubuntu.com/noble) and select the WSL
+image.
 
 The image has a `.wsl` extension and can be installed in two ways:
 
