@@ -32,7 +32,7 @@ This table lists the default ports and protocols used by Ubuntu Pro for WSL:
 
 If the client system is behind a proxy, ensure that the proxy is configured to allow the required connections.
 
-[^1]: [Access to the Microsoft Store](https://learn.microsoft.com/en-us/windows/privacy/manage-windows-11-endpoints) is required for the online installation of WSL instances. Without it Ubuntu Pro for WSL will still be functional but it will only be possible to install WSL instances centrally from Landscape from custom tarballs, not using the official Ubuntu releases.
+[^1]: [Access to the Microsoft Store](https://learn.microsoft.com/en-us/windows/privacy/manage-windows-11-endpoints) is only required for online installations of Ubuntu that use the Microsoft Store. Without the Microsoft Store, Ubuntu Pro for WSL will still be functional. Installing the latest releases of Ubuntu from the terminal does not depend on the Microsoft Store. It is also possible to install official instances of Ubuntu from [releases.ubuntu.com](https://releases.ubuntu.com) or centrally from Landscape using [custom tarballs](howto::custom-distro).
 
 [^2]: Access to the contract server and Landscape server is required for proper operation of Ubuntu Pro for WSL.
 
