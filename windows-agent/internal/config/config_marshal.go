@@ -28,12 +28,12 @@ func (c *Config) load() (err error) {
 
 	// Registry data must not be overridden
 	tokenOrg := c.configState.Subscription.Organization
-	landscapeOrg := c.configState.Landscape.OrgConfig
+	landscapeOrg := c.Landscape.OrgConfig
 
 	c.configState = s
 
 	c.configState.Subscription.Organization = tokenOrg
-	c.configState.Landscape.OrgConfig = landscapeOrg
+	c.Landscape.OrgConfig = landscapeOrg
 
 	return nil
 }
