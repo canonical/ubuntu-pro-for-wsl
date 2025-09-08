@@ -582,7 +582,7 @@ func TestAutoReconnection(t *testing.T) {
 			select {
 			case <-ch:
 				require.Fail(t, "SendUpdatedInfo should not have returned because there is no connection")
-			case <-time.After(20 * time.Second):
+			case <-time.After(10 * time.Second):
 			}
 
 			if tc.stopEarly {
