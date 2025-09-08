@@ -34,9 +34,9 @@ WSL will be used to extract the rootfs, edit the configuration files and manage 
 
 ## Download an Ubuntu release for WSL
 
-First, download the latest release of Ubuntu on WSL:
-
-> [Download Ubuntu on WSL](https://ubuntu.com/desktop/wsl)
+First, get Ubuntu 24.04 LTS (Noble Numbat) by visiting
+[releases.ubuntu.com/noble](https://releases.ubuntu.com/noble) and downloading
+the WSL image.
 
 The downloaded file should have a `.wsl` extension.
 
@@ -56,7 +56,12 @@ into the Ubuntu instance, and change the extension from `.wsl` to `.tar`, using
 this command:
 
 ```{code-block} text
-$ mv /mnt/c/Users/<yourusername>/Downloads/ubuntu-24.04.2-wsl-amd64.wsl ./ubuntu-24.04.2-wsl-amd64.tar
+$ mv /mnt/c/Users/<yourusername>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
+```
+
+```{tip}
+If you downloaded a different version of Ubuntu 24.04 LTS, adjust the filename
+in the command to use the correct name.
 ```
 
 Create a directory to store the rootfs of your custom distro:
@@ -68,7 +73,7 @@ $ mkdir myNewUbuntu
 Extract the rootfs into that directory:
 
 ```{code-block} text
-$ sudo tar -xpf ubuntu-24.04.2-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
+$ sudo tar -xpf ubuntu-24.04.3-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
 ```
 
 ```{tip}
