@@ -56,7 +56,12 @@ into the Ubuntu instance, and change the extension from `.wsl` to `.tar`, using
 this command:
 
 ```{code-block} text
-$ mv /mnt/c/Users/<yourusername>/Downloads/ubuntu-24.04.2-wsl-amd64.wsl ./ubuntu-24.04.2-wsl-amd64.tar
+$ mv /mnt/c/Users/<yourusername>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
+```
+
+```{tip}
+If you downloaded a different version of Ubuntu 24.04 LTS, adjust the filename
+in the command to use the correct name.
 ```
 
 Create a directory to store the rootfs of your custom distro:
@@ -68,7 +73,7 @@ $ mkdir myNewUbuntu
 Extract the rootfs into that directory:
 
 ```{code-block} text
-$ sudo tar -xpf ubuntu-24.04.2-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
+$ sudo tar -xpf ubuntu-24.04.3-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
 ```
 
 ```{tip}
