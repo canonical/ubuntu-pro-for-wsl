@@ -48,5 +48,15 @@
   "statusBarAgentRunningTooltip": "Ο Ubuntu Pro πράκτορας είναι ενεργός",
   "@statusBarAgentRunningTooltip": {},
   "statusBarAgentConnectingTooltip": "Σύνδεση στο Ubuntu Pro πράκτορα...",
-  "@statusBarAgentConnectingTooltip": {}
+  "@statusBarAgentConnectingTooltip": {},
+  "tokenErrorInvalid": "Μη έγκυρο token",
+  "@tokenErrorInvalid": {},
+  "tokenValid": "Έγκυρο Token",
+  "@tokenValid": {},
+  "tokenInputHint": "Token",
+  "@tokenInputHint": {},
+  "attach": "Επισύναψη",
+  "@attach": {},
+  "applyProToken": "Εφαρμογή Pro Token",
+  "@applyProToken": {}
 }
