@@ -10,6 +10,9 @@ jobs:
   update-diagrams:
     runs-on: ubuntu-latest
     container: ghcr.io/sebastienfi/structurizr-cli-with-bonus:latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
