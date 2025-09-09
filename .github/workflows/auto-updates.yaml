@@ -16,6 +16,7 @@ jobs:
     env:
       subprojects: windows-agent wsl-pro-service
     steps:
+      - uses: canonical/desktop-engineering/gh-actions/common/dpkg-install-speedup@main
       - name: Install dependencies
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt update
@@ -70,6 +71,7 @@ jobs:
     env:
       subprojects: windows-agent wsl-pro-service
     steps:
+      - uses: canonical/desktop-engineering/gh-actions/common/dpkg-install-speedup@main
       - name: Install dependencies
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt update

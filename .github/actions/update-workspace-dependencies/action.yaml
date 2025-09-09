@@ -9,6 +9,7 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: canonical/desktop-engineering/gh-actions/common/dpkg-install-speedup@main
     - name: Install dependencies
       shell: bash
       run: |
