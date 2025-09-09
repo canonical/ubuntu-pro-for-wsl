@@ -614,9 +614,11 @@ func TestAutoReconnection(t *testing.T) {
 			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
 			uid := maps.Keys(hosts)[0]
 
-			ok := monitorDisconnection(t, mockService, uid, func() error {
+			require.True(t, mockService.IsConnected(uid), "Client should still be connected before disconnection starts")
+			ok, err := monitorDisconnection(mockService, uid, func() error {
 				return mockService.Disconnect(uid)
 			})
+			require.NoError(t, err, "Disconnecting the client shouldn't return an error")
 			require.True(t, ok, "Client should have disconnected after terminating the connection from the server")
 
 			// Detecting reconnection
@@ -625,7 +627,8 @@ func TestAutoReconnection(t *testing.T) {
 				return mockService.IsConnected(uid)
 			}, 10*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
 
-			ok = monitorDisconnection(t, mockService, uid, func() error {
+			require.True(t, mockService.IsConnected(uid), "Client should still be connected before stopping the server")
+			ok, _ = monitorDisconnection(mockService, uid, func() error {
 				server.Stop()
 				return nil
 			})
@@ -650,10 +653,10 @@ func TestAutoReconnection(t *testing.T) {
 	}
 }
 
-func monitorDisconnection(t *testing.T, landscapeService *landscapemockservice.Service, uid string, trigger func() error) bool {
-	t.Helper()
-
-	require.True(t, landscapeService.IsConnected(uid), "Client should be connected before disconnection")
+func monitorDisconnection(landscapeService *landscapemockservice.Service, uid string, trigger func() error) (bool, error) {
+	if !landscapeService.IsConnected(uid) {
+		panic("Client should be connected before disconnection")
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -679,14 +682,16 @@ func monitorDisconnection(t *testing.T, landscapeService *landscapemockservice.S
 	<-wait
 	time.Sleep(time.Second)
 
-	require.NoErrorf(t, trigger(), "Failed to trigger disconnection")
+	if err := trigger(); err != nil {
+		return false, fmt.Errorf("Failed to trigger disconnection: %v", err)
+	}
 
 	// Wait for disconnection
 	select {
 	case <-wait:
-		return true
+		return true, nil
 	case <-time.After(30 * time.Second):
-		return false
+		return false, nil
 	}
 }
 
@@ -839,7 +844,8 @@ func TestReconnect(t *testing.T) {
 			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
 			uid := maps.Keys(hosts)[0]
 
-			ok := monitorDisconnection(t, mockServerService, uid, func() error {
+			require.True(t, mockServerService.IsConnected(uid), "Client should still be connected before starting the disconnection trigger")
+			ok, _ := monitorDisconnection(mockServerService, uid, func() error {
 				tc.trigger(ctx, service, conf)
 				return nil
 			})
