@@ -117,7 +117,7 @@ jobs:
       - name: Set up Go
         # We need to set up Go so that the agent can be built for the end-to-end tests
         if: matrix.package == 'ubuntupro'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: windows-agent/go.mod
       - name: Read flutter version
@@ -210,7 +210,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: ${{ matrix.subproject }}/go.mod
       - name: Set up git
