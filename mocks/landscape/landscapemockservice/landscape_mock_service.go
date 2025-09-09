@@ -185,13 +185,12 @@ func (s *Service) Connect(stream landscapeapi.LandscapeHostAgent_ConnectServer) 
 			s.logger.Info(fmt.Sprintf("Landscape: %s: New connection", hostInfo.Hostname))
 
 			firstContact = false
-			uid, onDisconnect, err := s.firstContact(ctx, cancel, hostInfo, stream)
+			uid, err := s.firstContact(ctx, cancel, hostInfo, stream)
 			if err != nil {
 				s.mu.Unlock()
 				s.logger.Info(fmt.Sprintf("Landscape: %s: terminated connection: %v", hostInfo.Hostname, err))
 				return err
 			}
-			defer onDisconnect()
 			hostInfo.UID = uid
 		} else {
 			s.logger.Info(fmt.Sprintf("Landscape: %s: Received update: %+v", hostInfo.Hostname, hostInfo))
@@ -234,14 +233,14 @@ func asyncRecv(ctx context.Context, stream landscapeapi.LandscapeHostAgent_Conne
 	return ch
 }
 
-func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, onDisconect func(), err error) {
+func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo HostInfo, stream landscapeapi.LandscapeHostAgent_ConnectServer) (uid string, err error) {
 	if s.isConnected(hostInfo.UID) {
-		return "", nil, fmt.Errorf("UID collision: %q", hostInfo.UID)
+		return "", fmt.Errorf("UID collision: %q", hostInfo.UID)
 	}
 
 	if s.connectError != nil {
 		s.logger.Info(fmt.Sprintf("Landscape: %s: Connect error: %v", hostInfo.Hostname, s.connectError))
-		return "", nil, s.connectError
+		return "", s.connectError
 	}
 
 	// Register the connection so commands can be sent
@@ -266,7 +265,7 @@ func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo Host
 		}
 		if err := sendFunc(&landscapeapi.Command{Cmd: cmd}); err != nil {
 			cancel()
-			return "", func() {}, err
+			return "", err
 		}
 	}
 
@@ -281,14 +280,13 @@ func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo Host
 	s.hosts[hostInfo.UID] = h
 	*h.connected = true
 
-	return hostInfo.UID, func() {
-		cancel()
-
+	context.AfterFunc(ctx, func() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 
 		*h.connected = false
-	}, nil
+	})
+	return hostInfo.UID, nil
 }
 
 // IsConnected checks if a client with the specified hostname has an active connection.

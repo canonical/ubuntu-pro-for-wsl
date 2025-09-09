@@ -582,7 +582,7 @@ func TestAutoReconnection(t *testing.T) {
 			select {
 			case <-ch:
 				require.Fail(t, "SendUpdatedInfo should not have returned because there is no connection")
-			case <-time.After(20 * time.Second):
+			case <-time.After(10 * time.Second):
 			}
 
 			if tc.stopEarly {
@@ -614,17 +614,21 @@ func TestAutoReconnection(t *testing.T) {
 			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
 			uid := maps.Keys(hosts)[0]
 
-			ok := monitorDisconnection(t, mockService, uid, func() error {
+			require.True(t, mockService.IsConnected(uid), "Client should still be connected before disconnection starts")
+			ok, err := monitorDisconnection(mockService, uid, func() error {
 				return mockService.Disconnect(uid)
 			})
+			require.NoError(t, err, "Disconnecting the client shouldn't return an error")
 			require.True(t, ok, "Client should have disconnected after terminating the connection from the server")
 
 			// Detecting reconnection
 			require.Eventually(t, func() bool {
+				t.Logf("Checking reconnection of client UID: %s", uid)
 				return mockService.IsConnected(uid)
 			}, 10*time.Second, 100*time.Millisecond, "Client should have reconnected after the stream is dropped")
 
-			ok = monitorDisconnection(t, mockService, uid, func() error {
+			require.True(t, mockService.IsConnected(uid), "Client should still be connected before stopping the server")
+			ok, _ = monitorDisconnection(mockService, uid, func() error {
 				server.Stop()
 				return nil
 			})
@@ -649,10 +653,10 @@ func TestAutoReconnection(t *testing.T) {
 	}
 }
 
-func monitorDisconnection(t *testing.T, landscapeService *landscapemockservice.Service, uid string, trigger func() error) bool {
-	t.Helper()
-
-	require.True(t, landscapeService.IsConnected(uid), "Client should be connected before disconnection")
+func monitorDisconnection(landscapeService *landscapemockservice.Service, uid string, trigger func() error) (bool, error) {
+	if !landscapeService.IsConnected(uid) {
+		panic("Client should be connected before disconnection")
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -678,14 +682,16 @@ func monitorDisconnection(t *testing.T, landscapeService *landscapemockservice.S
 	<-wait
 	time.Sleep(time.Second)
 
-	require.NoErrorf(t, trigger(), "Failed to trigger disconnection")
+	if err := trigger(); err != nil {
+		return false, fmt.Errorf("Failed to trigger disconnection: %v", err)
+	}
 
 	// Wait for disconnection
 	select {
 	case <-wait:
-		return true
+		return true, nil
 	case <-time.After(30 * time.Second):
-		return false
+		return false, nil
 	}
 }
 
@@ -838,7 +844,8 @@ func TestReconnect(t *testing.T) {
 			require.Len(t, hosts, 1, "Only one client should have connected to the Landscape server")
 			uid := maps.Keys(hosts)[0]
 
-			ok := monitorDisconnection(t, mockServerService, uid, func() error {
+			require.True(t, mockServerService.IsConnected(uid), "Client should still be connected before starting the disconnection trigger")
+			ok, _ := monitorDisconnection(mockServerService, uid, func() error {
 				tc.trigger(ctx, service, conf)
 				return nil
 			})
@@ -1082,8 +1089,7 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 		opts = append(opts, grpc.Creds(credentials.NewTLS(config)))
 	}
 
-	var logs bytes.Buffer
-	h := slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug})
+	h := newSyncedTextHandler(&slog.HandlerOptions{Level: slog.LevelDebug})
 	service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)), landscapemockservice.WithConnectError(grpcErr))
 
 	t.Cleanup(func() {
@@ -1092,13 +1098,51 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 		}
 
 		// Cannot use t.Log outside the main goroutine
-		log.Printf("Landscape server logs:\n%s", logs.String())
+		log.Printf("Landscape server logs:\n%s", h.String())
 	})
 
 	server = grpc.NewServer(opts...)
 	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
 	return lis, server, service
+}
+
+type syncedTextHandler struct {
+	th      *slog.TextHandler
+	rawLogs *bytes.Buffer
+	mu      sync.RWMutex
+}
+
+func newSyncedTextHandler(opts *slog.HandlerOptions) *syncedTextHandler {
+	b := bytes.Buffer{}
+	return &syncedTextHandler{th: slog.NewTextHandler(&b, opts), rawLogs: &b}
+}
+
+func (s *syncedTextHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	if s.th != nil {
+		return s.th.Enabled(ctx, level)
+	}
+	return level >= slog.LevelInfo
+}
+
+func (s *syncedTextHandler) Handle(ctx context.Context, r slog.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.th.Handle(ctx, r)
+}
+func (s *syncedTextHandler) String() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.rawLogs.String()
+}
+func (s *syncedTextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return s
+}
+
+func (s *syncedTextHandler) WithGroup(name string) slog.Handler {
+	return s
 }
 
 type mockCloudInit struct {
