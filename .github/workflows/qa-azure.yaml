@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -44,7 +44,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository for internal GH action
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -86,7 +86,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Ubuntu
         uses: Ubuntu/WSL/.github/actions/wsl-install@main
         with:
