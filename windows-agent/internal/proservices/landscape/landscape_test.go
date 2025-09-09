@@ -1089,8 +1089,7 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 		opts = append(opts, grpc.Creds(credentials.NewTLS(config)))
 	}
 
-	var logs bytes.Buffer
-	h := slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug})
+	h := newSyncedTextHandler(&slog.HandlerOptions{Level: slog.LevelDebug})
 	service = landscapemockservice.New(landscapemockservice.WithLogger(slog.New(h)), landscapemockservice.WithConnectError(grpcErr))
 
 	t.Cleanup(func() {
@@ -1099,13 +1098,51 @@ func setUpLandscapeMock(t *testing.T, ctx context.Context, addr string, certPath
 		}
 
 		// Cannot use t.Log outside the main goroutine
-		log.Printf("Landscape server logs:\n%s", logs.String())
+		log.Printf("Landscape server logs:\n%s", h.String())
 	})
 
 	server = grpc.NewServer(opts...)
 	landscapeapi.RegisterLandscapeHostAgentServer(server, service)
 
 	return lis, server, service
+}
+
+type syncedTextHandler struct {
+	th      *slog.TextHandler
+	rawLogs *bytes.Buffer
+	mu      sync.RWMutex
+}
+
+func newSyncedTextHandler(opts *slog.HandlerOptions) *syncedTextHandler {
+	b := bytes.Buffer{}
+	return &syncedTextHandler{th: slog.NewTextHandler(&b, opts), rawLogs: &b}
+}
+
+func (s *syncedTextHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	if s.th != nil {
+		return s.th.Enabled(ctx, level)
+	}
+	return level >= slog.LevelInfo
+}
+
+func (s *syncedTextHandler) Handle(ctx context.Context, r slog.Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.th.Handle(ctx, r)
+}
+func (s *syncedTextHandler) String() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.rawLogs.String()
+}
+func (s *syncedTextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return s
+}
+
+func (s *syncedTextHandler) WithGroup(name string) slog.Handler {
+	return s
 }
 
 type mockCloudInit struct {
