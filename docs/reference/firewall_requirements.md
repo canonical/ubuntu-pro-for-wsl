@@ -19,7 +19,14 @@ The following figure shows the possible connections between the different compon
 
 ![Firewall considerations.](../diagrams/structurizr-Firewall.png)
 
-This table lists the default ports and protocols used by Pro for WSL:
+```{admonition} Feature in development
+:class: important
+Landscape integration is an in-development feature of Ubuntu Pro for WSL.
+
+The application currently does not support establishing a connection with a Landscape server.
+```
+
+The following table lists the default ports and protocols used by Ubuntu Pro for WSL:
 
 | Description | Client System | Server System | Protocol | Default Port | Target address |
 |-------------|---------------|---------------|----------|--------------|----------------|
