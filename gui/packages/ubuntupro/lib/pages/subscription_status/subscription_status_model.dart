@@ -1,7 +1,10 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '/core/agent_api_client.dart';
+
+final _log = Logger('subscription_status');
 
 /// A base class for the view-models that may represent different types of subscriptions and the optional actions they allow.
 sealed class SubscriptionStatusModel {
@@ -66,7 +69,10 @@ class UserSubscriptionStatusModel extends SubscriptionStatusModel {
   final AgentApiClient _client;
 
   /// Pro-detach all Ubuntu WSL instances.
-  Future<SubscriptionInfo> detachPro() => _client.applyProToken('');
+  Future<SubscriptionInfo> detachPro() {
+    _log.info('Detach Pro requested.');
+    return _client.applyProToken('');
+  }
 }
 
 /// Represents a subscription provided by the user's Organization.

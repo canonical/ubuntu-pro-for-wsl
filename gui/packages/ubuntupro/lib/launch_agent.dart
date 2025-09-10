@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 
 import 'core/environment.dart';
+
+final _log = Logger('launch_agent');
 
 /// Starts the Windows background agent from its well-known location relative
 /// to the root of the deployed application package [agentRelativePath].
@@ -14,6 +17,8 @@ import 'core/environment.dart';
 // coverage of the code run in production during test and debugging.
 Future<bool> launchAgent(String agentRelativePath) async {
   final agentPath = p.join(msixRootDir().path, agentRelativePath);
+  _log.debug('Launching agent at $agentPath');
+
   try {
     // Attempts to kill a possibly stuck agent. Failure is desirable in this case.
     await Process.run('taskkill.exe', ['/f', '/im', p.basename(agentPath)]);
@@ -25,9 +30,7 @@ Future<bool> launchAgent(String agentRelativePath) async {
     );
     return true;
   } on ProcessException catch (err) {
-    // TODO: Proper logging.
-    //ignore: avoid_print
-    debugPrint(err.message);
+    _log.error('Failed to launch the agent: ${err.message}');
     return false;
   }
 }

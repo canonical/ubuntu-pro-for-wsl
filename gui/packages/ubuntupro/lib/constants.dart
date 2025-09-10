@@ -4,6 +4,9 @@ const kAgentPublicDir = '.ubuntupro';
 /// The name of the file where the Agent's drop its service connection information.
 const kAddrFileName = '.address';
 
+/// The name of the GUI log file.
+const kLogFile = 'ui.log';
+
 /// Default window width.
 const kWindowWidth = 900.0;
 

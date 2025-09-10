@@ -2,9 +2,12 @@ import 'package:agentapi/agentapi.dart';
 import 'package:dart_either/dart_either.dart';
 import 'package:flutter/foundation.dart';
 import 'package:p4w_ms_store/p4w_ms_store.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 
 import '/core/agent_api_client.dart';
 import '/core/pro_token.dart';
+
+final _log = Logger('subscribe_now');
 
 class SubscribeNowModel extends ChangeNotifier {
   final AgentApiClient client;
@@ -31,6 +34,7 @@ class SubscribeNowModel extends ChangeNotifier {
         super();
 
   Future<SubscriptionInfo> applyProToken(ProToken token) {
+    _log.info('Submitting Pro token ${token.obfuscated}');
     return client.applyProToken(token.value);
   }
 
@@ -39,15 +43,18 @@ class SubscribeNowModel extends ChangeNotifier {
   /// Otherwise the purchase status is returned so the UI can give the user some feedback.
   Future<Either<PurchaseStatus, SubscriptionInfo>>
       purchaseSubscription() async {
+    assert(purchaseAllowed, 'Requesting subscription purchase is not allowed.');
+    const product = '9P25B50XMKXT';
     try {
-      final status = await store.purchaseSubscription('9P25B50XMKXT');
+      final status = await store.purchaseSubscription(product);
+      _log.error('Purchasing subscription $product result: $status.');
       if (status == PurchaseStatus.succeeded) {
         final newInfo = await client.notifyPurchase();
         return newInfo.right();
       }
       return status.left();
     } on Exception catch (err) {
-      debugPrint('$err');
+      _log.error('Failed to purchase subscription $product: $err');
       return PurchaseStatus.unknown.left();
     }
   }

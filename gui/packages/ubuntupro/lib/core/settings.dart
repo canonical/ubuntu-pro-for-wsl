@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 import 'package:win32/win32.dart';
 import 'package:win32_registry/win32_registry.dart';
+
+final _log = Logger('settings');
 
 /// Manages the settings for the user interface.
 class Settings {
@@ -74,9 +77,14 @@ class SettingsRepository {
     try {
       _key = Registry.openPath(RegistryHive.currentUser, path: _keyPath);
       return true;
-    } on WindowsException {
+    } on WindowsException catch (err) {
       // missing key is not an error since we expect them to be set in very few cases.
-      // TODO: Log error cases other than ERROR_FILE_NOT_FOUND.
+      if (err.hr != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+        _log.warning(
+          'Failed to open the Registry key HKCU://$_keyPath: ${err.message}',
+        );
+      }
+
       return false;
     }
   }

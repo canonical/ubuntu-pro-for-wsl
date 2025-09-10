@@ -33,6 +33,20 @@ class ProToken {
   String get value => _value;
   final String _value;
 
+  // Returns a partially hidden version of the contents, suitable for logging low-sensitive information.
+  // Hidden enough to prevent others from reading the value while still allowing the contents author to recognize it.
+  // Useful for reading logs with test data. For example: `Obfuscate("Blahkilull")=="Bl******ll`".
+  // This is mostly a port of the common.Obfuscate Go function.
+  String get obfuscated {
+    const endsToReveal = 2;
+    final asterisksLength = value.length - 2 * endsToReveal;
+    // No need to check if (asterisksLength < 1) because minLength makes it impossible.
+
+    return value.substring(0, endsToReveal) +
+        '*' * asterisksLength +
+        value.substring(asterisksLength + endsToReveal);
+  }
+
   /// Either returns a [TokenError] or a [ProToken] instance upon validating
   /// the candidate String [from].
   static Either<TokenError, ProToken> create(String from) {
