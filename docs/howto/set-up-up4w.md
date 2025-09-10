@@ -92,9 +92,7 @@ Continue to the confirmation screen.
 
 ## Confirm subscription is active
 
-You should now see that your Pro subscription is active:
-
-![Confirmation in graphical interface that subscription is active.](../assets/status-complete.png)
+You should now see that your Pro subscription is active.
 
 Opening the application again at any point will show this screen, confirm the subscription is
 active and enable detaching of the subscription.

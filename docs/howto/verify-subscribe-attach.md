@@ -18,9 +18,7 @@ wait for a few seconds and try again. The process should not take longer than a 
 (howto::verify-pro-sub)=
 ## Pro subscription
 
-After installing UP4W on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
-
-![Confirmation in graphical interface that subscription is active.](../assets/status-complete.png)
+After installing UP4W on a Windows machine and entering your token, the application will show a visual confirmation that your Pro subscription is active.
 
 Find and run _Ubuntu Pro for WSL_ from the Windows start menu at any time and the app will confirm whether you are subscribed.
 
