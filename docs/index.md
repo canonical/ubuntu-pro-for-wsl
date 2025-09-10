@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "A complete Ubuntu environment on Windows using WSL, with enhanced security and remote management provided by Ubuntu Pro for WSL."
+      "A complete Ubuntu environment on Windows using WSL, with enhanced security rovided by Ubuntu Pro for WSL."
 ---
 
 # Ubuntu on WSL
