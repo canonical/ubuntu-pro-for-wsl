@@ -14,8 +14,7 @@ This glossary includes concise descriptions of the components for reference.
 (ref::up4w-gui)=
 ## GUI front end
 
-UP4W has a small GUI that helps users provide an Ubuntu Pro token and
-[configure Landscape](ref::landscape-config).
+UP4W has a small GUI that helps users provide an Ubuntu Pro token.
 
 When the GUI starts, it attempts to establish a connection to the [UP4W Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. For troubleshooting purposes, you can restart the agent by first stopping the Windows process `ubuntu-pro-agent-launcher.exe` in Windows Task Manger or by issuing the following command in a PowerShell terminal:
 
@@ -24,19 +23,6 @@ Stop-Process -Name ubuntu-pro-agent.exe
 ```
 
 You can then launch the GUI to complete the restart.
-
-(ref::landscape-client)=
-## Landscape client
-
-The Landscape client is a `systemd` unit running inside every Ubuntu WSL instance. It sends information about the system to the Landscape server. The server, in turn, sends instructions that the client executes.
-
-The Landscape client comes pre-installed in your distro as part of the package `landscape-client`.
-
-You can check the status of the Landscape client in any particular Ubuntu WSL instance by starting a shell in that instance and running:
-
-```text
-systemctl status landscape-client.service
-```
 
 (ref::ubuntu-pro-client)=
 ## Ubuntu Pro client
@@ -63,10 +49,32 @@ The Windows agent is UP4W's central hub that communicates with all the component
 (ref::up4w-wsl-pro-service)=
 ## WSL Pro service
 
-This is a `systemd` unit running inside every Ubuntu WSL instance. The [Windows agent](ref::up4w-windows-agent) running on the Windows host sends commands that the WSL Pro Service executes, such as pro-attaching or configuring the [Landscape client](ref::landscape-client).
+This is a `systemd` unit running inside every Ubuntu WSL instance. The [Windows agent](ref::up4w-windows-agent) running on the Windows host sends commands that the WSL Pro Service executes.
 
 You can check the current status of the WSL Pro Service in any particular distro with:
 
 ```text
 systemctl status wsl-pro.service
 ```
+
+(ref::landscape-client)=
+## Landscape client
+
+```{admonition} Feature in development
+:class: important
+Landscape integration is an in-development feature of Ubuntu Pro for WSL.
+```
+
+The Landscape client is a `systemd` unit running inside every Ubuntu WSL instance.
+In a future version of UP4W, it will be possible to connect WSL instances with a central Landscape server.
+The instances will then send information about the system to the Landscape server. 
+The server, in turn, can send instructions that the client executes.
+
+The Landscape client comes pre-installed in your distro as part of the package `landscape-client`.
+
+You can check the status of the Landscape client in any particular Ubuntu WSL instance by starting a shell in that instance and running:
+
+```text
+systemctl status landscape-client.service
+```
+
