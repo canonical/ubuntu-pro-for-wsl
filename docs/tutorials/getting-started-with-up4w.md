@@ -122,21 +122,11 @@ Once you have a token you are ready to install UP4W.
 (tut::get-up4w)=
 ### Install and configure UP4W
 
-% :TODO: remove this warning once the app is made generally available (after the beta period).
-
-```{warning}
-The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
-```
-
 UP4W can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
 
-Open the application and paste the token you copied from the Ubuntu Pro dashboard:
+Open the application and enter the token from the Ubuntu Pro dashboard.
 
-![UP4W GUI main screen](../assets/token-input-placeholder.png)
-
-After you confirm, a status screen will appear showing that configuration is complete:
-
-![Configuration is complete](../assets/status-complete.png)
+After you confirm, a status screen will appear showing that configuration is complete.
 
 Done! You can close the UP4W window before continuing.
 If at any time you want to detach your Pro subscription just open the UP4W application
