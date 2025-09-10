@@ -52,7 +52,14 @@ void main() {
     );
   });
 
-  tearDownAll(() => tmpHome?.delete(recursive: true));
+  tearDownAll(() {
+    try {
+      tmpHome?.delete(recursive: true);
+    } on FileSystemException catch (err) {
+      debugPrint(err.message);
+    }
+  });
+
   group('no agent build', () {
     // Verifies that a proper message is displayed when the agent cannot be run.
     testWidgets('cannot run agent', (tester) async {
