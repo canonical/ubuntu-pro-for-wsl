@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "A complete Ubuntu environment on Windows using WSL, with enhanced security and remote management provided by Ubuntu Pro for WSL."
+      "A complete Ubuntu environment on Windows using WSL, with enhanced security rovided by Ubuntu Pro for WSL."
 ---
 
 # Ubuntu on WSL
@@ -14,10 +14,9 @@ including remote development with popular IDEs and cross-OS file management.
 Ubuntu can be used as a terminal interface on Windows and can also
 launch Linux-native graphical applications.
 
-Ubuntu Pro for WSL (UP4W) is an in-development automation tool for managing
-instances of Ubuntu on WSL. If you are responsible for a fleet of Windows
-devices, UP4W will help you to monitor, customise and secure Ubuntu WSL
-instances at scale.
+Ubuntu Pro for WSL (UP4W) is a tool for automatically securing instances of
+Ubuntu on WSL. If you are responsible for a fleet of Windows devices, UP4W
+helps you secure Ubuntu WSL instances at scale.
 
 Ubuntu on WSL provides a fully-featured Ubuntu experience on Windows, suitable
 for learning Linux, developing a personal open-source project or building for
