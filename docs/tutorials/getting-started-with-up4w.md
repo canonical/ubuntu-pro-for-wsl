@@ -216,13 +216,5 @@ each new WSL instance using your organisation's own deployment solution.
 
 > For detailed step-by-step instructions on using the Windows registry read our short guide on how to [install and configure UP4W](../howto/set-up-up4w.md).
 
-Landscape support is also built-in to UP4W.
-With a single configuration file, you can create and manage
-multiple WSL instances that will automatically be registered
-with your Landscape server:
-
-> For more information, please refer to our tutorial on how to [deploy WSL instances with UP4W and Landscape](./deployment.md).
-
-Our documentation includes several other [how-to guides](../howto/index)
-for completing specific tasks, [reference](../reference/index) material
-describing key information relating to UP4W.
+A future version of UP4W will support Landscape integration, enabling the remote management of Ubuntu on WSL
+from a central Landscape server. For more information, read about the [architecture of UP4W](exp::up4w-arch).
