@@ -318,6 +318,3 @@ it to suit your personal needs or the requirements of your organisation.
 
 You can automatically set up new instances of your custom images with
 [cloud-init](howto::cloud-init).
-
-With Ubuntu Pro for WSL, custom images can be deployed remotely to Windows
-machines using Landscape.

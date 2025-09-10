@@ -21,12 +21,8 @@ In Pro for WSL, you can use the Windows registry to supply the configuration for
 
 > See more: [install Pro for WSL and add a Pro token](howto::config-up4w)
 
-![Screenshot of the Windows registry showing how to edit the Landscape configuration for Ubuntu Pro for WSL](./assets/windows-registry.png)
-
 ## Expected contents of the UbuntuPro registry key
 
 The Windows agent will read the following values from the key at `HK_CURRENT_USER\Software\Canonical\UbuntuPro`:
 
 - Value `UbuntuProToken` (type `String`) expects the [Ubuntu Pro token](https://ubuntu.com/pro/subscribe) for the user.
-
-- Value `LandscapeConfig` (type `String` or `Multi-line string`) expects the [Landscape configuration](ref::landscape-config).
