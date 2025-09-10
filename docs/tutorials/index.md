@@ -26,13 +26,3 @@ Pro for WSL application.
 
 Get started with Ubuntu Pro for WSL <getting-started-with-up4w>
 ```
-
-If you are interested in remote management of WSL instances, you can also learn
-how Pro for WSL's Landscape integration can be used to deploy Ubuntu WSL instances.
-
-```{toctree}
-:titlesonly:
-
-Deploy WSL instances with Ubuntu Pro for WSL and Landscape <deployment>
-```
-

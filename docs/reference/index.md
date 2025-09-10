@@ -41,8 +41,7 @@ A glossary of the key system components of Pro for WSL.
 glossary_up4w_components
 ```
 
-Details on firewall configuration, Landscape setup and using the Windows
-registry.
+Details on firewall configuration and using the Windows registry.
 
 ```{toctree}
 :titlesonly:
