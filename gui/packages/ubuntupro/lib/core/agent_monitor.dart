@@ -55,7 +55,7 @@ class AgentStartupMonitor {
     required this.agentLauncher,
     required this.clientFactory,
     AgentApiCallback? onClient,
-  }) : _addrFilePath = agentAddrFilePath(addrFileName) {
+  }) : _addrFilePath = absPathUnderAgentPublicDir(addrFileName) {
     if (onClient != null) {
       addNewClientListener(onClient);
     }
