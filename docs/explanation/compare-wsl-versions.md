@@ -42,7 +42,7 @@ The differences between WSL 1 and WSL 2 and how it affects Ubuntu can be summari
 | [Snap](https://snapcraft.io/) support                                 |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [cloud-init](https://cloud-init.io/) support                          |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [Ubuntu Pro for WSL](../tutorials/getting-started-with-up4w/) support |    {bdg-danger}`No`    | {bdg-success}`Yes` |
-| [Landscape](ref::landscape-client) support                            |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [Landscape](ref::landscape-client) support (future feature)           |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [Ubuntu Pro Client](ref::ubuntu-pro-client) support                   | {bdg-warning}`Partial` | {bdg-success}`Yes` |
 
 ### How this affects Ubuntu for WSL

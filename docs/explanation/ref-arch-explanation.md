@@ -5,12 +5,24 @@ myst:
       "The different components of Ubuntu Pro for WSL work together to support automatic securing of WSL instances and integration with remote management tools."
 ---
 
+(exp::up4w-arch)=
 # Architecture of Ubuntu Pro for WSL
 
 This page describes the different components of Pro for WSL and how they integrate
 together to form the software architecture.
 
 ## Background
+
+```{admonition} Landscape integration is in development
+:class: important
+This architecture explanation includes reference to a Landscape client that
+exists in instances of Ubuntu on WSL. Future versions of Pro for WSL will enable
+you to configure this client to connect to a Landscape server.
+
+Pro for WSL is designed to support Landscape integration. While this feature is
+not yet available, we discuss it here to provide a comprehensive explanation of
+the application's architecture.
+```
 
 ### What is Ubuntu WSL?
 
