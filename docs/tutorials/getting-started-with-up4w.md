@@ -135,23 +135,12 @@ Once you have a token you are ready to install Pro for WSL.
 (tut::get-up4w)=
 ### Install and configure Ubuntu Pro for WSL
 
-% :TODO: remove this warning once the app is made generally available (after the beta period).
-
-```{admonition} Ubuntu Pro for WSL is in beta
-:class: note
-
-The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
-```
 
 Pro for WSL can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
 
-Open the application and paste the token you copied from the Ubuntu Pro dashboard:
+Open the application and enter the token from the Ubuntu Pro dashboard.
 
-![Main screen of the Pro for WSL GUI](../assets/token-input-placeholder.png)
-
-After you confirm, a status screen will appear showing that configuration is complete:
-
-![Configuration is complete](../assets/status-complete.png)
+After you confirm, a status screen will appear showing that configuration is complete.
 
 Done! You can close the Pro for WSL window before continuing.
 If at any time you want to detach your Pro subscription just open the Pro for WSL application
