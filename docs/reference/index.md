@@ -33,8 +33,7 @@ A glossary of key UP4W system components.
 glossary_up4w_components
 ```
 
-Details on firewall configuration, Landscape setup and using the Windows
-registry.
+Details on firewall configuration and using the Windows registry.
 
 ```{toctree}
 :titlesonly:
