@@ -75,9 +75,3 @@ To find other useful Ubuntu pro commands run:
 ```{code-block} text
 u@mib:~$ pro --help
 ```
-
-(howto::verify-landscape)=
-## Landscape
-
-For verification and troubleshooting of Landscape server and client configuration please refer to
-[Landscape | View WSL host machines and child computers](https://ubuntu.com/landscape/docs/perform-common-tasks-with-wsl-in-landscape/#view-wsl-host-machines-and-child-computers).

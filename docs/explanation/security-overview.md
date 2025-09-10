@@ -195,15 +195,13 @@ example — an Ubuntu Server, it does not apply to Ubuntu on WSL.
 
 For Pro-attaching multiple instances automatically, use the Ubuntu Pro for WSL
 application.
-This is most relevant for deployment scenarios in which multiple Windows hosts
-are being managed centrally, using software like Landscape or Intune.
 
 > [Get started with Ubuntu Pro for WSL](howto::up4w)
 
 ### Firewall configuration
 
 Firewall rules must be configured for Ubuntu Pro for WSL to enable interactions
-with different services, including Landscape and the Microsoft Store.
+with different services, including the Microsoft Store.
 
 Any exchanges of data are encrypted using TLS.
 
@@ -356,10 +354,9 @@ It is expected that most users will SSH from WSL rather than SSH into WSL.
 Ubuntu Pro for WSL increases the capacity of system administrators to manage
 and secure Windows hosts containing instances of Ubuntu on WSL.
 
-Learn more about remote management of Ubuntu on WSL in this documentation:
+Learn more about remote management of Ubuntu on WSL:
 
-* [Tutorial on deploying instances with Landscape](tut::deploy)
-* [Guides on remote management with Landscape and Intune](howto::index-remote-deployment)
+* [Guides on remote management](howto::index-remote-deployment)
 
 ### Reporting a vulnerability
 
