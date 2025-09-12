@@ -1,4 +1,7 @@
 name: Update translations and documentation
+permissions:
+  pull-requests: write
+  contents: write
 on:
   push:
     branches:
@@ -46,8 +49,6 @@ jobs:
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
           working-directory: .
-          # Go workspace checksum files tend to update when no one is asking
-          paths-to-ignore: 'go.work.sum'
           fail-on-diff: false
       - name: Create Pull Request
         if: steps.checkpo.outputs.modified == 'true'
@@ -100,8 +101,6 @@ jobs:
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
           working-directory: .
-          # Go workspace checksum files tend to update when no one is asking
-          paths-to-ignore: 'go.work.sum'
           fail-on-diff: false
       - uses: peter-evans/create-pull-request@v7
         name: Create Pull Request
@@ -148,8 +147,6 @@ jobs:
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
           working-directory: wsl-pro-service
-          # Go workspace checksum files tend to update when no one is asking
-          paths-to-ignore: 'go.work.sum'
           fail-on-diff: false
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
