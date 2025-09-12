@@ -68,7 +68,7 @@ void main() {
       pluginMessenger.setMockMethodCallHandler(pluginChannel, (_) async {
         return expectedError.value.index;
       });
-      final model = SubscribeNowModel(client);
+      final model = SubscribeNowModel(client, isPurchaseAllowed: true);
       final result = await model.purchaseSubscription();
       expect(result, expectedError);
     });
@@ -77,7 +77,7 @@ void main() {
       pluginMessenger.setMockMethodCallHandler(pluginChannel, (_) async {
         throw PlatformException(code: 'unexpected');
       });
-      final model = SubscribeNowModel(client);
+      final model = SubscribeNowModel(client, isPurchaseAllowed: true);
       final result = await model.purchaseSubscription();
       expect(result, expectedError);
     });
@@ -89,7 +89,7 @@ void main() {
       when(
         client.notifyPurchase(),
       ).thenThrow(const GrpcError.custom(42, 'surprise'));
-      final model = SubscribeNowModel(client);
+      final model = SubscribeNowModel(client, isPurchaseAllowed: true);
       final result = await model.purchaseSubscription();
       expect(result, expectedError);
     });
@@ -100,7 +100,7 @@ void main() {
       });
       final client_ = MockAgentApiClient();
       when(client_.notifyPurchase()).thenAnswer((_) async => expectedValue);
-      final model = SubscribeNowModel(client_);
+      final model = SubscribeNowModel(client_, isPurchaseAllowed: true);
       final result = await model.purchaseSubscription();
       expect(result.isRight, isTrue);
       expect(result.getOrThrow(), expectedValue);

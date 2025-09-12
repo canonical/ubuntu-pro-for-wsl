@@ -3,13 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show ChangeNotifier;
-import 'package:grpc/grpc.dart' show GrpcError;
+import 'package:grpc/grpc.dart' show GrpcError, StatusCode;
 import 'package:pkcs7/pkcs7.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 
 import '/core/agent_api_client.dart';
 
 const landscapeSaasFQDN = 'landscape.canonical.com';
 const standaloneAN = 'standalone';
+
+final _log = Logger('landscape');
 
 /// The view model for the Landscape configuration page.
 /// This class is responsible for managing the state of the Landscape configuration form, including its subforms
@@ -98,6 +101,13 @@ class LandscapeModel extends ChangeNotifier {
     assert(config != null);
     var err = const GrpcError.ok();
 
+    switch (_active) {
+      case final LandscapeManualConfig c:
+        _log.debug('Submitting manual configuration for server ${c.fqdn}');
+      case final LandscapeCustomConfig c:
+        _log.debug('Submitting custom configuration from ${c.configPath}');
+    }
+
     try {
       _waiting = true;
       notifyListeners();
@@ -109,6 +119,12 @@ class LandscapeModel extends ChangeNotifier {
     }
     _waiting = false;
     notifyListeners();
+
+    if (err.code != StatusCode.ok) {
+      _log.debug(
+        'Failed to submit the Landscape configuration: ${err.message}',
+      );
+    }
     return err;
   }
 }

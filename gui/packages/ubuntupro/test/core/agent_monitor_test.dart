@@ -286,7 +286,7 @@ void main() {
 /// Writes a sample address file to the destination containing either a proper
 /// contents as if the agent would have written it or [line], if supplied.
 void writeDummyAddrFile(Directory homeDir, {String? line}) {
-  final filePath = p.join(homeDir.path, kAddrFileName);
+  final filePath = p.join(homeDir.path, kAgentPublicDir, kAddrFileName);
   const port = 56789;
   const goodLine = '[::]:$port';
   final addr = File(filePath);

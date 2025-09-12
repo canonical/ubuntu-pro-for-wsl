@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 
 import '/core/agent_monitor.dart';
+
+final _log = Logger('startup');
 
 enum ViewState { inProgress, ok, retry, crash }
 
@@ -47,6 +50,7 @@ class StartupModel extends ChangeNotifier {
     final completer = Completer<void>();
     final stream = monitor.start();
     _subs = stream.listen((state) {
+      _log.debug('Received agent state $state');
       _agentState = state;
       _view = state.toViewState();
       notifyListeners();

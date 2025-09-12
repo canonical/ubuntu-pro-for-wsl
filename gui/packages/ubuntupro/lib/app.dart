@@ -1,6 +1,7 @@
 import 'package:agentapi/agentapi.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru/yaru.dart';
@@ -16,6 +17,8 @@ import 'pages/startup/startup_page.dart';
 import 'pages/subscribe_now/subscribe_now_page.dart';
 import 'pages/subscription_status/subscription_status_page.dart';
 import 'routes.dart';
+
+final _log = Logger('app');
 
 class Pro4WSLApp extends StatelessWidget {
   const Pro4WSLApp(this.agentMonitor, this.settings, {super.key});
@@ -45,6 +48,7 @@ class Pro4WSLApp extends StatelessWidget {
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             builder: (context, child) {
               return Wizard(
+                observers: [UP4WRouteObserver(log: _log)],
                 routes: {
                   Routes.startup: WizardRoute(
                     builder: (context) => Provider.value(
@@ -82,6 +86,9 @@ class Pro4WSLApp extends StatelessWidget {
                       onNext: (settings) {
                         switch (settings.arguments as SkipEnum) {
                           case SkipEnum.skip:
+                            _log.debug(
+                              'Skipping Landscape configuration page per user request',
+                            );
                             return Routes.subscriptionStatus;
                           default:
                             return null;
@@ -116,5 +123,27 @@ class Pro4WSLApp extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+// A custom NavigatorObserver that logs route names.
+class UP4WRouteObserver extends NavigatorObserver {
+  final Logger log;
+
+  UP4WRouteObserver({required this.log});
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    log.info(
+      'Pushed new route: ${route.settings.name} from ${previousRoute?.settings.name}',
+    );
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    log.info(
+      'Popped route: ${route.settings.name} back to ${previousRoute?.settings.name}',
+    );
+    super.didPop(route, previousRoute);
   }
 }

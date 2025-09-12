@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 
 import 'agent_api_client.dart';
 import 'agent_api_paths.dart';
+
+final _log = Logger('agent_monitor');
 
 enum AgentState {
   /// Querying agent state, not yet known.
@@ -41,7 +44,10 @@ enum AgentState {
 
 /// A Function that knows how to create an AgentApiClient from a host and a port.
 typedef ApiClientFactory = AgentApiClient Function(
-    String host, int port, Directory certsDir);
+  String host,
+  int port,
+  Directory certsDir,
+);
 
 /// A Function that knows how to launch the agent and report success.
 typedef AgentLauncher = Future<bool> Function();
@@ -55,7 +61,7 @@ class AgentStartupMonitor {
     required this.agentLauncher,
     required this.clientFactory,
     AgentApiCallback? onClient,
-  }) : _addrFilePath = agentAddrFilePath(addrFileName) {
+  }) : _addrFilePath = absPathUnderAgentPublicDir(addrFileName) {
     if (onClient != null) {
       addNewClientListener(onClient);
     }
@@ -192,9 +198,7 @@ class AgentStartupMonitor {
       try {
         await File(_addrFilePath).delete();
       } on PathNotFoundException {
-        // TODO: Log
-        // ignore: avoid_print
-        print(
+        _log.info(
           'Port file expected but not found. Likely a race with the agent at this point, not an issue.',
         );
       }

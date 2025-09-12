@@ -3,15 +3,16 @@ import 'dart:io';
 import 'package:dart_either/dart_either.dart';
 import 'package:path/path.dart' as p;
 
+import '/constants.dart';
 import 'environment.dart';
 
-/// Provides the full path of the "[filename]" file
+/// Provides the absolute path of the "[filename]" file
 /// under the well known directory where the Windows Agent stores its local data.
 /// Returns null if that directory location cannot be determined from the environment.
-String? agentAddrFilePath(String filename) {
+String? absPathUnderAgentPublicDir(String filename) {
   final homeDir = Environment.instance['USERPROFILE'];
   if (homeDir != null) {
-    return p.join(homeDir, filename);
+    return p.join(homeDir, kAgentPublicDir, filename);
   }
 
   return null;

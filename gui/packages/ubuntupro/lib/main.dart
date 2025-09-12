@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
@@ -7,12 +8,20 @@ import 'package:yaru/widgets.dart';
 import 'app.dart';
 import 'constants.dart';
 import 'core/agent_api_client.dart';
+import 'core/agent_api_paths.dart';
 import 'core/agent_monitor.dart';
 import 'core/environment.dart';
 import 'core/settings.dart';
 import 'launch_agent.dart';
+import 'unhandled.dart';
 
 Future<void> main() async {
+  Logger.setup(
+    path: absPathUnderAgentPublicDir(kLogFile),
+    level: LogLevel.info,
+  );
+
+  setUpUnhandledErrors();
   await YaruWindowTitleBar.ensureInitialized();
   await WindowsSingleInstance.ensureSingleInstance(
     [],
@@ -37,6 +46,9 @@ Future<void> main() async {
     minimumSize: Size(kWindowWidth, kWindowHeight),
     center: true,
   );
+
+  Logger('main')
+      .info('Starting Ubuntu Pro for WSL app with settings $settings');
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();

@@ -1,27 +1,39 @@
 import 'package:flutter/foundation.dart';
+import 'package:ubuntu_logger/ubuntu_logger.dart';
 import 'package:win32/win32.dart';
 import 'package:win32_registry/win32_registry.dart';
+
+final _log = Logger('settings');
 
 /// Manages the settings for the user interface.
 class Settings {
   /// Creates a new instance of [Settings] initialized with options read from [repository],
   /// which is loaded, read from and closed.
   Settings(SettingsRepository repository) {
-    if (!repository.load()) return;
+    try {
+      repository.load();
 
-    // Enable store purchase if the registry value is 1.
-    final purchase = repository.readInt(kAllowStorePurchase) == 1
-        ? Options.withStorePurchase
-        : Options.none;
+      // Enable store purchase if the registry value is 1.
+      final purchase = repository.readInt(kAllowStorePurchase) == 1
+          ? Options.withStorePurchase
+          : Options.none;
 
-    // Hide Landscape UI if the registry value is 0.
-    final landscape = repository.readInt(kLandscapeConfigVisibility) == 0
-        ? Options.none
-        : Options.withLandscapeConfiguration;
+      // Hide Landscape UI if the registry value is 0.
+      final landscape = repository.readInt(kLandscapeConfigVisibility) == 0
+          ? Options.none
+          : Options.withLandscapeConfiguration;
 
-    repository.close();
+      repository.close();
 
-    _options = purchase | landscape;
+      _options = purchase | landscape;
+    } on WindowsException catch (err) {
+      // missing key is not an error since we expect them to be set in very few cases.
+      if (err.hr != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+        _log.warning(
+          'Failed to load $repository: ${err.message}',
+        );
+      }
+    }
   }
 
   /// Creates a new instance of [Settings] with the specified [options], thus no need to read from the repository.
@@ -40,6 +52,14 @@ class Settings {
   static const kAllowStorePurchase = 'AllowStorePurchase';
   @visibleForTesting
   static const kLandscapeConfigVisibility = 'LandscapeConfigVisibility';
+
+  @override
+  String toString() {
+    final p = _options & Options.withStorePurchase ? 'enabled' : 'disabled';
+    final l =
+        _options & Options.withLandscapeConfiguration ? 'enabled' : 'disabled';
+    return 'Settings(purchase: $p, landscape: $l)';
+  }
 }
 
 /// Settings options modelled as an enum with bitwise operations, i.e. flags.
@@ -70,15 +90,13 @@ class SettingsRepository {
     return _key!.getIntValue(name);
   }
 
-  bool load() {
-    try {
-      _key = Registry.openPath(RegistryHive.currentUser, path: _keyPath);
-      return true;
-    } on WindowsException {
-      // missing key is not an error since we expect them to be set in very few cases.
-      // TODO: Log error cases other than ERROR_FILE_NOT_FOUND.
-      return false;
-    }
+  @override
+  String toString() {
+    return 'Registry key HKCU:\\$_keyPath';
+  }
+
+  void load() {
+    _key = Registry.openPath(RegistryHive.currentUser, path: _keyPath);
   }
 }
 
