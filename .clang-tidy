@@ -1,0 +1,3 @@
+Checks: '-*,bugprone-*, cert-*, performance-*'
+HeaderFilterRegex: storeapi.*hpp$
+ExcludeHeaderFilterRegex: .*winrt.*\.h$

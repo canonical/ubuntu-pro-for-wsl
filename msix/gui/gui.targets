@@ -9,6 +9,7 @@
 		<AppConfiguration>$(Configuration.ToLower())</AppConfiguration>
 		<OverrideEntryPoint Condition="$(UP4W_END_TO_END) != '' And $(UP4W_END_TO_END) != 'false'">-t end_to_end/end_to_end_test.dart</OverrideEntryPoint>
 		<VersionDefine Condition="$(UP4W_FULL_VERSION) != '' ">--dart-define="UP4W_FULL_VERSION=$(UP4W_FULL_VERSION)"</VersionDefine>
+		<ClangTidyEnv>ClangTidyToolExeAdditionalOptions="--config-file=$(SolutionDir)..\.clang-tidy";EnableClangTidyCodeAnalysis=$(RunCodeAnalysis);RunCodeAnalysis=$(RunCodeAnalysis);EnableMicrosoftCodeAnalysis=false</ClangTidyEnv>
 	</PropertyGroup>
 	<ItemGroup>
 		<AppIcon Include="$(AppIconPath)" />
@@ -18,7 +19,7 @@
 		<Message Text="Building Flutter artifacts to $(AppOutDir)" Importance="high"/>
         <Copy SourceFiles="@(MsixAppIcon)" DestinationFiles="@(AppIcon)" />
 		<Exec Command="flutter pub get" WorkingDirectory="$(AppDir)" />
-		<Exec Command="flutter build windows --$(AppConfiguration) $(OverrideEntryPoint) $(VersionDefine)" WorkingDirectory="$(AppDir)" />
+		<Exec Command="flutter build windows --$(AppConfiguration) $(OverrideEntryPoint) $(VersionDefine)" WorkingDirectory="$(AppDir)" EnvironmentVariables="$(ClangTidyEnv)" />
 		<ItemGroup>
 			<AppContent Include="$(AppOutDir)**\*.*" Visible="False" />
 			<None Include="@(AppContent)" Visible="False">
