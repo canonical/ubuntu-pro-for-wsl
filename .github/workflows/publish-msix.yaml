@@ -24,6 +24,7 @@ jobs:
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
           package-mode: StoreUpload
+          run-code-analysis: false
       - name: Install Store Broker
         shell: powershell
         run: |
