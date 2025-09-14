@@ -30,8 +30,14 @@ Open PowerShell and run:
 > wsl --install
 ```
 
-You may be asked to provide an Administrator password in this process.
-You then need to reboot your machine before installing and running any Ubuntu distro.
+You may see the following text: The requested operation requires elevation.
+If so, you will be presented with a prompt.  If you are using an Administrator
+account, you can just click "Ok" to proceed.  Otherwise, you need to provide an
+Administrator password to proceed.
+
+By default, this command will install and enable WSL, and install the default
+Ubuntu version. Refer to the next section if you want to install a differnt
+version of Ubuntu.
 
 ```{admonition} What if WSL is already installed and enabled?
 :class: tip
