@@ -42,8 +42,9 @@ need to provide an administrator password to proceed.
 The requested operation requires elevation.
 ```
 
-When the command has completed, WSL will be installed and enabled, and the latest
-version of Ubuntu will also be installed.
+This command will install and enable the features necessary to run WSL.
+
+**After running this command, you need to reboot your machine.**
 
 ```{admonition} What if WSL is already installed and enabled?
 :class: important

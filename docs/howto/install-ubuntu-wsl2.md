@@ -38,9 +38,7 @@ instructions to proceed.
 The requested operation requires elevation.
 ```
 
-When complete, WSL will be installed and enabled, and the latest version of
-Ubuntu will be installed. Refer to the next section if you want to install a
-different version of Ubuntu.
+You then need to reboot your machine before installing and running any Ubuntu distro.
 
 ```{admonition} What if WSL is already installed and enabled?
 :class: tip
