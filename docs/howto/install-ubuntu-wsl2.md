@@ -24,12 +24,13 @@ myst:
 To install Ubuntu using any method, you first need to install and enable WSL on
 your Windows machine.
 
-Open PowerShell as an Administrator and run:
+Open PowerShell and run:
 
 ```{code-block} text
 > wsl --install
 ```
 
+You may be asked to provide an Administrator password in this process.
 You then need to reboot your machine before installing and running any Ubuntu distro.
 
 ```{admonition} What if WSL is already installed and enabled?
