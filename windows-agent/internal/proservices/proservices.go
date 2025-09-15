@@ -119,6 +119,7 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	})
 
 	conf.SetLandscapeNotifier(func(ctx context.Context, conf, uid string) {
+		log.Warning(ctx, "Landscape features are experimental and not enabled by default in this version.")
 		landscape.NotifyConfigUpdate(ctx, conf, uid)
 		cloudInit.Update(ctx)
 	})
