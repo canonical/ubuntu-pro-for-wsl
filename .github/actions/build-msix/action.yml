@@ -63,7 +63,7 @@ runs:
         $UP4W_VERSION=$($versionInfo.numeric_version)
 
         # Whether this is a 'stable' or 'pre-release'
-        $relKind=$($versionInfo.release_kind)
+        $relKind=$($versionInfo.release_type)
 
         [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
         $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"

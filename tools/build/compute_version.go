@@ -14,7 +14,7 @@ import (
 type versionInfo struct {
 	Numeric     string `json:"numeric_version"`
 	Full        string `json:"full_version"`
-	ReleaseKind string `json:"release_kind"`
+	ReleaseType string `json:"release_type"`
 }
 
 func main() {
@@ -32,16 +32,15 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Warning: Working tree at %s contains commits after the latest tag %s\n", tag, cut)
 		}
 
-		st := "pre-release"
+		releaseType := "pre-release"
 		if stableOr {
-			st = "stable"
-
+			releaseType = "stable"
 		}
 
 		v := versionInfo{
 			Numeric:     numeric,
 			Full:        fullVersion,
-			ReleaseKind: st,
+			ReleaseType: releaseType,
 		}
 		j, err := json.Marshal(v)
 		if err != nil {
