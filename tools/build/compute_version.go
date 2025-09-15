@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -10,35 +11,48 @@ import (
 	"strings"
 )
 
+type versionInfo struct {
+	Numeric     string `json:"numeric_version"`
+	Full        string `json:"full_version"`
+	ReleaseKind string `json:"release_kind"`
+}
+
 func main() {
-	var numeric bool
-	var isStable bool
-	flag.BoolVar(&numeric, "numeric", false, "Print a numeric version")
-	flag.BoolVar(&isStable, "is-stable", false, "Print whether the version is a stable release or pre-release")
+	var printJSON bool
+	flag.BoolVar(&printJSON, "json", false, "Prints all versioning information in the JSON format")
 	flag.Parse()
 
 	tag := getTag()
-	version, stableOr := computeNumericVersion(tag)
+	fullVersion := computeFullVersion(tag)
 
-	if numeric {
-		fmt.Println(version)
-		return
-	}
-
-	if isStable {
+	if printJSON {
+		numeric, stableOr := computeNumericVersion(tag)
 		cut, _, isPostTag := strings.Cut(tag, "-")
 		if isPostTag {
 			fmt.Fprintf(os.Stderr, "Warning: Working tree at %s contains commits after the latest tag %s\n", tag, cut)
 		}
+
+		st := "pre-release"
 		if stableOr {
-			fmt.Println("stable")
+			st = "stable"
+
+		}
+
+		v := versionInfo{
+			Numeric:     numeric,
+			Full:        fullVersion,
+			ReleaseKind: st,
+		}
+		j, err := json.Marshal(v)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Couldn't marshall the version info to JSON: %v", err)
 			return
 		}
-		fmt.Println("pre-release")
+		fmt.Println(string(j))
 		return
 	}
 
-	fmt.Println(computeFullVersion(tag))
+	fmt.Println(fullVersion)
 }
 
 func computeFullVersion(tag string) string {

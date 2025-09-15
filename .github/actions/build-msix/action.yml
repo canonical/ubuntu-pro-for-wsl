@@ -56,13 +56,14 @@ runs:
       shell: powershell
       run: |
         # Set up the full version (displayed in logs)
-        $env:UP4W_FULL_VERSION=$(go run .\tools\build\compute_version.go)
+        $versionInfo=ConvertFrom-Json $(go run .\tools\build\compute_version.go --json)
+        $env:UP4W_FULL_VERSION=$($versionInfo.full_version)
 
         # Set up the numeric version (used in the AppxManifest)
-        $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
+        $UP4W_VERSION=$($versionInfo.numeric_version)
 
         # Whether this is a 'stable' or 'pre-release'
-        $stable=$(go run .\tools\build\compute_version.go --is-stable)
+        $relKind=$($versionInfo.release_kind)
 
         [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
         $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
@@ -82,7 +83,7 @@ runs:
           $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
           $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${UP4W_VERSION}/UbuntuProForWSL_${UP4W_VERSION}.msixbundle")
         }
-        if ($stable -eq "pre-release") {
+        if ($relKind -eq "pre-release") {
           # Point the App Installer file to the repo wiki instead of the latest stable release.
           $doc.Root.SetAttributeValue("Uri", "https://raw.githubusercontent.com/wiki/canonical/ubuntu-pro-for-wsl/pre-release/UbuntuProForWSL.appinstaller")
         }

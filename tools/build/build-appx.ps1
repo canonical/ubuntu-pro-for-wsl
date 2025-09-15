@@ -72,9 +72,9 @@ function Update-Certificate {
 }
 
 function Set-Version {
-    $env:UP4W_FULL_VERSION=$(go run .\tools\build\compute_version.go)
-
-    $UP4W_VERSION=$(go run .\tools\build\compute_version.go --numeric)
+    $versionInfo=ConvertFrom-Json $(go run .\tools\build\compute_version.go --json)
+    $env:UP4W_FULL_VERSION=$($versionInfo.full_version)
+    $UP4W_VERSION=$($versionInfo.numeric_version)
     # Update the AppxManifest version
     [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
     $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
