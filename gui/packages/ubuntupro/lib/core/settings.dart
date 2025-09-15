@@ -13,15 +13,15 @@ class Settings {
     try {
       repository.load();
 
-      // Enable store purchase if the registry value is 1.
-      final purchase = repository.readInt(kAllowStorePurchase) == 1
-          ? Options.withStorePurchase
-          : Options.none;
-
-      // Hide Landscape UI if the registry value is 0.
-      final landscape = repository.readInt(kLandscapeConfigVisibility) == 0
+      // Disables store purchase if the registry value is 0.
+      final purchase = repository.readInt(kAllowStorePurchase) == 0
           ? Options.none
-          : Options.withLandscapeConfiguration;
+          : Options.withStorePurchase;
+
+      // Show Landscape UI if the registry value is 1.
+      final landscape = repository.readInt(kLandscapeConfigVisibility) == 1
+          ? Options.withLandscapeConfiguration
+          : Options.none;
 
       repository.close();
 
@@ -40,8 +40,8 @@ class Settings {
   /// Useful for integration testing.
   Settings.withOptions(this._options);
 
-  /// By default Landscape is enabled and Store purchase is disabled.
-  Options _options = Options.withLandscapeConfiguration;
+  /// By default Landscape is hidden and Store purchase is enabled.
+  Options _options = Options.withStorePurchase;
 
   bool get isLandscapeConfigurationEnabled =>
       _options & Options.withLandscapeConfiguration;
