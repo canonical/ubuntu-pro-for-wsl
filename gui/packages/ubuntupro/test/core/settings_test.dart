@@ -61,7 +61,7 @@ void main() {
       when(repository.load()).thenAnswer((_) {});
       when(
         repository.readInt(Settings.kLandscapeConfigVisibility),
-      ).thenReturn(null);
+      ).thenReturn(1);
       when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(1);
 
       final settings = Settings(repository);
@@ -74,7 +74,7 @@ void main() {
       when(repository.load()).thenAnswer((_) {});
       when(
         repository.readInt(Settings.kLandscapeConfigVisibility),
-      ).thenReturn(null);
+      ).thenReturn(1);
       when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(0);
 
       final settings = Settings(repository);
@@ -101,7 +101,7 @@ void main() {
       when(
         repository.readInt(Settings.kLandscapeConfigVisibility),
       ).thenReturn(0);
-      when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(null);
+      when(repository.readInt(Settings.kAllowStorePurchase)).thenReturn(0);
 
       final settings = Settings(repository);
 
@@ -115,8 +115,8 @@ void main() {
 
       final settings = Settings(repository);
 
-      expect(settings.isLandscapeConfigurationEnabled, isTrue);
-      expect(settings.isStorePurchaseAllowed, isFalse);
+      expect(settings.isLandscapeConfigurationEnabled, isFalse);
+      expect(settings.isStorePurchaseAllowed, isTrue);
     });
     test('defaults with log', () {
       final repository = MockSettingsRepository();
@@ -126,8 +126,8 @@ void main() {
 
       final settings = Settings(repository);
 
-      expect(settings.isLandscapeConfigurationEnabled, isTrue);
-      expect(settings.isStorePurchaseAllowed, isFalse);
+      expect(settings.isLandscapeConfigurationEnabled, isFalse);
+      expect(settings.isStorePurchaseAllowed, isTrue);
     });
   });
 
