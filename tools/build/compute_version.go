@@ -15,6 +15,7 @@ type versionInfo struct {
 	Numeric     string `json:"numeric_version"`
 	Full        string `json:"full_version"`
 	ReleaseType string `json:"release_type"`
+	Tag         string `json:"tag"`
 }
 
 func main() {
@@ -41,6 +42,7 @@ func main() {
 			Numeric:     numeric,
 			Full:        fullVersion,
 			ReleaseType: releaseType,
+			Tag:         cut,
 		}
 		j, err := json.Marshal(v)
 		if err != nil {
