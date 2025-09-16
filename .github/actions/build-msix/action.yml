@@ -63,7 +63,7 @@ runs:
         $UP4W_VERSION=$($versionInfo.numeric_version)
 
         # Whether this is a 'stable' or 'pre-release'
-        $relKind=$($versionInfo.release_type)
+        $releaseType=$($versionInfo.release_type)
 
         [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
         $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
@@ -83,7 +83,7 @@ runs:
           $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
           $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${UP4W_VERSION}/UbuntuProForWSL_${UP4W_VERSION}.msixbundle")
         }
-        if ($relKind -eq "pre-release") {
+        if ($releaseType -eq "pre-release") {
           # Point the App Installer file to the repo wiki instead of the latest stable release.
           $doc.Root.SetAttributeValue("Uri", "https://raw.githubusercontent.com/wiki/canonical/ubuntu-pro-for-wsl/pre-release/UbuntuProForWSL.appinstaller")
         }
@@ -91,7 +91,7 @@ runs:
 
         # Outputs for the next steps
         "UP4W_VERSION=${UP4W_VERSION}.0" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-        "STABLE_OR=${stable}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        "STABLE_OR=${releaseType}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
         # Set up the mock
         $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ inputs.mode == 'end_to_end_tests' && '1' || '$null'}}
