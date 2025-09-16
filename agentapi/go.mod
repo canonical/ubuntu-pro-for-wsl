@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/agentapi
 
-go 1.23.0
+go 1.22.0
 
 require (
 	google.golang.org/grpc v1.71.1
