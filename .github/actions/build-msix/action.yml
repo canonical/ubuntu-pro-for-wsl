@@ -58,6 +58,7 @@ runs:
         # Set up the full version (displayed in logs)
         $versionInfo=ConvertFrom-Json $(go run .\tools\build\compute_version.go --json)
         $env:UP4W_FULL_VERSION=$($versionInfo.full_version)
+        $tag=$($versionInfo.tag)
 
         # Set up the numeric version (used in the AppxManifest)
         $UP4W_VERSION=$($versionInfo.numeric_version)
@@ -81,7 +82,7 @@ runs:
         $mainBundle = $doc.Root.Element($ns + "MainBundle")
         if ($mainBundle) {
           $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
-          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${UP4W_VERSION}/UbuntuProForWSL_${UP4W_VERSION}.msixbundle")
+          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${tag}/UbuntuProForWSL_${tag}.msixbundle")
         }
         if ($releaseType -eq "pre-release") {
           # Point the App Installer file to the repo wiki instead of the latest stable release.

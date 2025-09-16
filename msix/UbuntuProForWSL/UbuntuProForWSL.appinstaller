@@ -7,7 +7,7 @@ See https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/.github/actions/bu
 	Uri="https://github.com/canonical/ubuntu-pro-for-wsl/releases/latest/download/UbuntuProForWSL.appinstaller"
 	Version="1.0.0.0">
 	<MainBundle
-		Name="UbuntuProForWSL"
+		Name="CanonicalGroupLimited.UbuntuPro"
 		Version="0.0.0.0"
 		Publisher="CN=23596F84-C3EA-4CD8-A7DF-550DCE37BCD0"
 		Uri="https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/0.0.0/UbuntuProForWSL_0.0.0.msixbundle" />
