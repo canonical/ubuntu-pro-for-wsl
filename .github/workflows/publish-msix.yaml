@@ -74,12 +74,12 @@ jobs:
           # Intentionally not copying the msixbundle, as it is already uploaded to the store
           # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
           # and draft, so it doesn't appear as a published release.
+          $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
           if ($env:pre_release -eq "pre-release") {
             Write-output "Creating a new pre-release draft"
             # TODO: Once we have a real first release, place back the `--generate-notes` option.
-            gh release create "${env:tag}" --draft --prerelease --latest=false --title "${env:version}" --verify-tag
+            gh release create "${env:tag}" --draft --prerelease --latest=false --title "${env:version}" --verify-tag -- "${appinstallerFile}"
           } else {
-            $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
             gh release create "${env:tag}" --draft --latest --title "${env:version}" --verify-tag -- "${appinstallerFile}"
           }
           Write-Output "This is a draft release. Once the submission is completed in MS Partner Center, the MSIX package must be downloaded and included as a release asset."
