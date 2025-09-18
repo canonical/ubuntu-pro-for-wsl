@@ -15,6 +15,14 @@ Information on the Ubuntu distros that are available and supported on WSL.
 Ubuntu distributions <distributions>
 ```
 
+Information on how to configure and manage Ubuntu for WSL instances.
+
+```{toctree}
+:titlesonly:
+
+instance_configuration
+```
+
 If you are interested in automated testing of applications in Ubuntu WSL, read:
 
 ```{toctree}
