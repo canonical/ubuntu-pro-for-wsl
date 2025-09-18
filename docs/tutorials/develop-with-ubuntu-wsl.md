@@ -33,14 +33,7 @@ Open a PowerShell prompt and run:
 > wsl --install
 ```
 
-You may see the following output and be presented with a prompt. If you are using
-an administrator account, you can just click "Ok" to proceed.  Otherwise, you
-need to provide an administrator password to proceed.
-
-```{code-block} text
-:class: no-copy
-The requested operation requires elevation.
-```
+You may be prompted to grant permission to continue the installation.
 
 This command will install and enable the features necessary to run WSL.
 

@@ -30,13 +30,7 @@ Open PowerShell and run:
 > wsl --install
 ```
 
-You may see the following output and be presented with a prompt. Follow the
-instructions to proceed.
-
-```{code-block} text
-:class: no-copy
-The requested operation requires elevation.
-```
+You may be prompted to grant permission to continue the installation.
 
 You then need to reboot your machine before installing and running any Ubuntu distro.
 
