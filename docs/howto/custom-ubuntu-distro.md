@@ -56,7 +56,7 @@ into the Ubuntu instance, and change the extension from `.wsl` to `.tar`, using
 this command:
 
 ```{code-block} text
-$ mv /mnt/c/Users/<yourusername>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
+$ mv /mnt/c/Users/username/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
 ```
 
 ```{tip}
@@ -279,7 +279,7 @@ $ mv myNewUbuntu.tar myNewUbuntu.wsl
 Finally, move the distro to a Windows directory:
 
 ```text
-$ sudo mv myNewUbuntu.wsl /mnt/c/Users/<yourusername>/Downloads/
+$ sudo mv myNewUbuntu.wsl /mnt/c/Users/username/Downloads/
 ```
 
 ## Test your custom Ubuntu distro

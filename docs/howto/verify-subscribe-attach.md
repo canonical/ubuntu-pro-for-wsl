@@ -37,7 +37,7 @@ Running the following command in PowerShell will create a new Ubuntu-24.04 insta
 and prompt you to create a username and password for the machine:
 
 ```{code-block} text
-PS C:\Users\me\up4wInstall> wsl ~ -d Ubuntu-24.04
+PS C:\Users\username\up4wInstall> wsl ~ -d Ubuntu-24.04
 ```
 
 You will now be logged in to the new instance shell and can
@@ -66,7 +66,7 @@ Operation in progress: pro attach
 For a list of all Ubuntu Pro services, run 'pro status --all'
 Enable services with: pro enable <service>
 
-     Account: me@ubuntu.com
+     Account: username@ubuntu.com
 Subscription: Ubuntu Pro - free personal subscription
 ```
 
