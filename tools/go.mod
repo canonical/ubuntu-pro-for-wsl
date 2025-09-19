@@ -48,7 +48,7 @@ require (
 	github.com/breml/errchkjson v0.4.0 // indirect
 	github.com/butuzov/ireturn v0.3.1 // indirect
 	github.com/butuzov/mirror v1.3.0 // indirect
-	github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f // indirect
+	github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909070948-cee447de36ba // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909070948-cee447de36ba // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240705150615-15d23a639880 // indirect
