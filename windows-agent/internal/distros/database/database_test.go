@@ -140,6 +140,58 @@ func TestDatabaseGetAll(t *testing.T) {
 }
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
+func TestDatabaseGetUnmanaged(t *testing.T) {
+	ctx := context.Background()
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = wsl.WithMock(ctx, wslmock.New())
+	}
+
+	distro1, _ := wsltestutils.RegisterDistro(t, ctx, false)
+	distro2, _ := wsltestutils.RegisterDistro(t, ctx, false)
+	distro3, _ := wsltestutils.RegisterDistro(t, ctx, false)
+
+	testCases := map[string]struct {
+		distros []string
+
+		want []string
+	}{
+		"empty database":            {want: []string{distro1, distro2, distro3}},
+		"database with one entry":   {distros: []string{distro1}, want: []string{distro2, distro3}},
+		"database with two entries": {distros: []string{distro1, distro2}, want: []string{distro3}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			db, err := database.New(ctx, t.TempDir())
+			require.NoError(t, err, "Setup: database creation should not fail")
+			defer db.Close(ctx)
+
+			for i := range tc.distros {
+				_, err := db.GetDistroAndUpdateProperties(ctx, tc.distros[i], distro.Properties{})
+				require.NoError(t, err, "Setup: could not add %q to database", tc.distros[i])
+			}
+
+			distros := db.GetAll()
+			var gotFromDB []string
+			for _, d := range distros {
+				gotFromDB = append(gotFromDB, d.Name())
+			}
+
+			var gotUnmanaged []string
+			for _, d := range db.GetUnmanagedDistros() {
+				gotUnmanaged = append(gotUnmanaged, d.Name)
+			}
+
+			require.ElementsMatch(t, tc.want, gotUnmanaged, "GetUnmanagedDistros returned unexpected set of distros")
+			require.NotElementsMatch(t, gotFromDB, gotUnmanaged, "GetUnmanagedDistros should not return a distro in the database")
+		})
+	}
+}
+
+//nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGet(t *testing.T) {
 	ctx := context.Background()
 	if wsl.MockAvailable() {
