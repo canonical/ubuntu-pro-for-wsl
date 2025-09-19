@@ -139,6 +139,88 @@ func TestDatabaseGetAll(t *testing.T) {
 	}
 }
 
+func TestDatabaseGetUnmanaged(t *testing.T) {
+	ctx := context.Background()
+	uncRoot := t.TempDir()
+
+	if wsl.MockAvailable() {
+		t.Parallel()
+		ctx = context.WithValue(wsl.WithMock(ctx, wslmock.New()), database.UNCRootKey, uncRoot)
+	}
+
+	// Registers some Ubuntu instances
+	var distros []string
+	for range 3 {
+		distros = append(distros, func() string {
+			d, _ := wsltestutils.RegisterDistro(t, ctx, false)
+			d = strings.ToLower(d)
+			writeOsRelease(t, uncRoot, d, "ubuntu-os-release")
+			return d
+		}())
+	}
+
+	// Register one non-Ubuntu instance.
+	nonUbuntu, _ := wsltestutils.RegisterDistro(t, ctx, false)
+	nonUbuntu = strings.ToLower(nonUbuntu)
+	writeOsRelease(t, uncRoot, nonUbuntu, "other-os-release")
+
+	testCases := map[string]struct {
+		dbDistros []string
+
+		want []string
+	}{
+		"empty database":            {want: distros},
+		"database with one entry":   {dbDistros: []string{distros[0]}, want: distros[1:]},
+		"database with two entries": {dbDistros: distros[0:2], want: []string{distros[2]}},
+		"no unmanaged distros":      {dbDistros: distros, want: []string{}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			if wsl.MockAvailable() {
+				t.Parallel()
+			}
+
+			db, err := database.New(ctx, t.TempDir())
+			require.NoError(t, err, "Setup: database creation should not fail")
+			defer db.Close(ctx)
+
+			for i := range tc.dbDistros {
+				_, err := db.GetDistroAndUpdateProperties(ctx, tc.dbDistros[i], distro.Properties{})
+				require.NoError(t, err, "Setup: could not add %q to database", tc.dbDistros[i])
+			}
+
+			var gotUnmanaged []string
+			for _, d := range db.GetUnmanagedDistros() {
+				gotUnmanaged = append(gotUnmanaged, d.Name)
+			}
+
+			require.ElementsMatch(t, tc.want, gotUnmanaged, "GetUnmanagedDistros returned unexpected set of distros")
+			require.NotElementsMatch(t, tc.dbDistros, gotUnmanaged, "GetUnmanagedDistros should not return a distro in the database")
+			require.NotContains(t, gotUnmanaged, nonUbuntu, "GetUnmanagedDistros should not return a non-Ubuntu distro")
+		})
+	}
+}
+
+// writeOsRelease is a test helper that writes a sample os-release file for the given distro inside
+// the uncRoot directory, creating any needed directories.
+func writeOsRelease(t *testing.T, uncRoot, distroName, template string) {
+	t.Helper()
+
+	testdata, err := filepath.Abs(filepath.Join(testutils.TestFamilyPath(t), template))
+	require.NoError(t, err, "Setup: Couldn't compute absolute path of sample os-release file")
+	data, err := os.ReadFile(testdata)
+	require.NoError(t, err, "Setup: couldn't read sample os-release file")
+
+	dir := filepath.Join(uncRoot, distroName, "usr", "lib")
+	err = os.MkdirAll(dir, 0750)
+	require.NoError(t, err, "Setup: Failed to create directories to contain the distros os-release file")
+
+	//nolint:gosec // This file is meant to be read by anyone.
+	err = os.WriteFile(filepath.Join(dir, "os-release"), data, 0644)
+	require.NoError(t, err, "Setup: Failed to write sample os-release file")
+}
+
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.
 func TestDatabaseGet(t *testing.T) {
 	ctx := context.Background()

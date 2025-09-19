@@ -29,3 +29,5 @@ func (db *DistroDB) DistroNames() (out []string) {
 	}
 	return out
 }
+
+var UNCRootKey = uncRootKey
