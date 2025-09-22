@@ -24,10 +24,11 @@ deploy Ubuntu to remote Windows machines using Landscape.
 
 ## What you need
 
-- A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
-- The latest version of Landscape Server set up and configured on a physical or virtual machine
-- WSL installed and configured on Windows
-- The UP4W app installed and configured with a Pro token
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* A minimum of 16GB RAM and 8-core processor
+* The latest version of Landscape Server set up and configured on a physical or virtual machine
+* WSL installed and configured on Windows
+* The UP4W app installed and configured with a Pro token
 
 ```{tip}
 It is recommended that you complete the [getting
