@@ -21,7 +21,7 @@ It is an industry standard and can now also be used to automatically setup insta
 
 ## What you will need
 
-- Windows 11 with WSL2 already enabled
+- Windows 11 with WSL 2 already enabled
 
 The guide assumes that you are using Ubuntu 24.04,
 but Ubuntu 22.04 can also be used.
@@ -227,7 +227,7 @@ See LICENSE.txt for license information.
 
 ## Enjoy!
 
-That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL2 with minimal touch.
+That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL with minimal touch.
 
 This workflow will guarantee a solid foundation for your next Ubuntu WSL project.
 

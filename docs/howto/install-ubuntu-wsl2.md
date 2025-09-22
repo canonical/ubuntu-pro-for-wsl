@@ -6,7 +6,7 @@ myst:
 ---
 
 (howto::install-ubuntu-wsl)=
-# Install Ubuntu on WSL2
+# Install Ubuntu on WSL 2
 
 ## What you will learn
 
@@ -44,6 +44,14 @@ Ubuntu, unless there is a pre-existing instance named Ubuntu on the machine.
 > WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 ## Install specific versions of Ubuntu on WSL
+
+```{note} WSL versions
+WSL 2 is the default [WSL architecture](explanation::wsl-version) in recent
+versions of Windows. Our documentation assumes that you are installing Ubuntu
+on WSL 2.
+
+Read more about the [differences between WSL versions](explanation::wsl-version).
+```
 
 There are multiple ways of installing Ubuntu distros on WSL.
 The best method depends on your specific requirements.

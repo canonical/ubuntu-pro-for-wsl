@@ -27,7 +27,7 @@ and testing the distro.
 
 To follow the guide, make sure you have:
 
-* Windows 11 with WSL2 installed and enabled
+* Windows 11 with WSL 2 installed and enabled
 * An existing Ubuntu distro installed on WSL
 
 WSL will be used to extract the rootfs, edit the configuration files and manage packages.
