@@ -27,8 +27,9 @@ and testing the distro.
 
 To follow the guide, make sure you have:
 
-* Windows 11 with WSL 2 installed and enabled
-* An existing Ubuntu distro installed on WSL
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* The latest version of WSL (2.4.8 or higher) installed and enabled
+* An existing Ubuntu distro installed on WSL 2
 
 WSL will be used to extract the rootfs, edit the configuration files and manage packages.
 
