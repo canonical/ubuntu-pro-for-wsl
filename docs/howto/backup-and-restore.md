@@ -20,14 +20,14 @@ You may need to backup one of your Ubuntu WSL instances, if you want to:
 ## Backing up
 
 ```{note}
-For simplicity, PowerShell commands in this section will all be run from the home
+[For simplicity, PowerShell commands in this section will all be run from the home
 directory of the user `me`.
-```
+```](https://documentationacademy.org/)
 
 To backup an Ubuntu-24.04 instance first make a `backup` folder in your home directory:
 
 ```text
-PS C:\Users\me> mkdir backup
+PS C:\k77397804@gmail.com\me> mkdir backup
 ```
 
 You then need to create a compressed version of the Ubuntu instance in that backup directory:
