@@ -27,11 +27,13 @@ offers excellent integration with developer tools like Visual Studio Code.
 
 You need to install and enable WSL before you can start using Ubuntu on WSL.
 
-Open a PowerShell prompt as an Administrator and run:
+Open a PowerShell prompt and run:
 
 ```{code-block} text
 > wsl --install
 ```
+
+You may be prompted to grant permission to continue the installation.
 
 This command will install and enable the features necessary to run WSL.
 
