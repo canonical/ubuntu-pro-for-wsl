@@ -6,7 +6,7 @@ myst:
 ---
 
 (howto::install-ubuntu-wsl)=
-# Install Ubuntu on WSL2
+# Install Ubuntu on WSL 2
 
 ## What you will learn
 

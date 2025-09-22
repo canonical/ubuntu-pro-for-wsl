@@ -11,9 +11,9 @@ While WSL's default setup allows you to develop cross-platform applications with
 
 ## What you will learn
 
-* How to install a Windows graphical device driver compatible with WSL2
-* How to install the NVIDIA CUDA toolkit for WSL2 on Ubuntu
-* How to compile and run a sample CUDA application on Ubuntu on WSL2
+* How to install a Windows graphical device driver compatible with WSL 2
+* How to install the NVIDIA CUDA toolkit for WSL 2 on Ubuntu
+* How to compile and run a sample CUDA application on Ubuntu on WSL 2
 
 ## What you will need
 
@@ -167,4 +167,4 @@ We hope you enjoy using Ubuntu inside WSL for your Data Science projects. Don’
 * [Install Ubuntu on WSL 2](../howto/install-ubuntu-wsl2.md)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
 * [CUDA on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)
-* [Ask Ubuntu](https://askubuntu.com/)
+* [Ask Ubuntu](https://askubuntu.com/)* [Ask Ubuntu](https://askubuntu.com/)

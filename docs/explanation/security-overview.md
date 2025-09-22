@@ -210,24 +210,24 @@ Any exchanges of data are encrypted using TLS.
 > [Read our reference on firewall configuration for Ubuntu Pro on WSL](ref::firewall)
 
 (exp::wsl1-incompatibility)=
-### WSL1 incompatibility
+### Incompatibility with WSL 1
 
-WSL2 is the default WSL version on Windows 11.
-The legacy version — WSL1 — can also still be used.
+WSL 2 is the default WSL version on Windows 11.
+The legacy version — WSL 1 — can also still be used.
 
 > [Read more about WSL versions](https://learn.microsoft.com/en-us/windows/wsl/compare-versions)
 
-Ubuntu Pro for WSL only supports WSL2.
+Ubuntu Pro for WSL only supports WSL 2.
 When relying on Ubuntu Pro for WSL to manage the security of WSL instances,
-you should therefore consider enforcing WSL2 on host Windows machines.
+you should therefore consider enforcing WSL 2 on host Windows machines.
 
-To set the default version to WSL2:
+To set the default version to WSL 2:
 
 ```text
 wsl --set-default-version 2
 ```
 
-To convert a specific distribution from WSL1 to WSL2:
+To convert a specific distribution from WSL 1 to WSL 2:
 
 ```text
 wsl --set-version <distro> 2
@@ -248,7 +248,7 @@ To set it:
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion -Value 2
 ```
 
-Intune also supports policies for WSL, which include toggling the availability of WSL1 on client machines:
+Intune also supports policies for WSL, which include toggling the availability of WSL 1 on client machines:
 
 > [Intune configuration options for WSL](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations)
 
@@ -258,14 +258,14 @@ Intune also supports policies for WSL, which include toggling the availability o
 
 WSL features can be controlled if they present a security concern.
 
-For example, root login can be disabled, WSL1 availability toggled and network
+For example, root login can be disabled, WSL 1 availability toggled and network
 access configured.
 
 There are various options to configure WSL instances, including:
 
 * The `.wslconfig` file can be edited to configure [global settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig) for instances
 * [WSL policies for Intune](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations) enable remote management of WSL features
-* Registry entries for features like [WSL1 availability](exp::wsl1-incompatibility) can be changed in the registry editor or with PowerShell scripts 
+* Registry entries for features like [WSL 1 availability](exp::wsl1-incompatibility) can be changed in the registry editor or with PowerShell scripts 
 
 (exp::automate-hardening)=
 ### Automate hardening
