@@ -270,7 +270,7 @@ In this tutorial, we’ve shown you how to set up a development environment with
 
 ### Further Reading
 
-* [Install Ubuntu on WSL2](../howto/install-ubuntu-wsl2.md)
+* [Install Ubuntu on WSL 2](../howto/install-ubuntu-wsl2.md)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
 * [Setting up WSL for Data Science](https://ubuntu.com/blog/wsl-for-data-scientist)
 * [Ask Ubuntu](https://askubuntu.com/)

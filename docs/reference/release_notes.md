@@ -122,7 +122,7 @@ This application is pending an official release of its 1.0 version.
 
 ###### 22.04.2
 
-* Cherry-pick upstream patch to use more portable alignment to resolve failure to execute on WSL1.
+* Cherry-pick upstream patch to use more portable alignment to resolve failure to execute on WSL 1.
 
 ###### 22.04.1
 

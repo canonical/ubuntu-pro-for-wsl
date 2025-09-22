@@ -96,7 +96,7 @@ with the following command in PowerShell:
 > wsl --install Ubuntu-24.04
 ```
 
-For other installation options refer to our [install Ubuntu on WSL2 guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
+For other installation options refer to our [install Ubuntu on WSL guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
 To manually associate this Ubuntu instance with a Pro subscription, you could
 launch the instance and run the `pro attach` command.
