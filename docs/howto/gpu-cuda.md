@@ -21,10 +21,9 @@ The following steps assume a specific hardware configuration. Although the conce
 
 Make sure the following prerequisites are met before moving forward:
 
-
-* A Windows 10 version 21H2 or newer physical machine equipped with an NVIDIA graphics card and administrative permission to be able to install device drivers
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* An NVIDIA graphics card and administrative permission to be able to install device drivers
 * Ubuntu 20.04 or higher installed on WSL 2
-* Familiarity with Linux command line utilities and interacting with Ubuntu on WSL 2
 * Broadband internet connection able to download a few GB of data
 
 ```{tip}

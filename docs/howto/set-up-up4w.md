@@ -14,8 +14,8 @@ myst:
 
 To install and configure UP4W you will need:
 
-- A Windows 10 or 11 machine
-- An Ubuntu Pro token
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* An Ubuntu Pro token
 
 You should also verify that the [firewall rules are correctly set up](../reference/firewall_requirements.md).
 

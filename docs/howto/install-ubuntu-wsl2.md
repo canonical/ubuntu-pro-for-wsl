@@ -16,8 +16,7 @@ myst:
 
 ## What you will need
 
-* Windows 10 or 11 running on a Windows machine
-* All of the latest Windows updates installed
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
 ## Install and enable WSL
 
