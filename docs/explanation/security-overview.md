@@ -215,7 +215,7 @@ Any exchanges of data are encrypted using TLS.
 WSL 2 is the default WSL version on Windows 11.
 The legacy version — WSL 1 — can also still be used.
 
-> [Read more about WSL versions](https://learn.microsoft.com/en-us/windows/wsl/compare-versions)
+> [Read more about WSL versions](explanation::wsl-version)
 
 Ubuntu Pro for WSL only supports WSL 2.
 When relying on Ubuntu Pro for WSL to manage the security of WSL instances,
