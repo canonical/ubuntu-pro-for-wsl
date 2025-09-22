@@ -283,7 +283,7 @@ jobs:
       - name: Install dependencies
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-      - name: Down coverage artifacts
+      - name: Download coverage artifacts
         uses: actions/download-artifact@v5
         with:
           path: ./artifacts/
@@ -291,6 +291,10 @@ jobs:
         shell: bash
         run: |
           reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unified-coverage
+          path: ./coverage/Cobertura.xml
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
