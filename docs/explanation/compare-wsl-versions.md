@@ -4,6 +4,7 @@ myst:
     "description lang=en": "Read about the differences between major versions of WSL, such as WSL 1 and WSL 2, and how it affects Ubuntu on WSL."
 ---
 
+(explanation::wsl-version)=
 # Comparing WSL versions for Ubuntu on WSL
 
 This page explains the main differences between different major versions of WSL and how they affect Ubuntu on WSL.
