@@ -134,6 +134,14 @@ The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
 directory (commonly symbolised by ~) and the `-d` flag is added to specify the
 distro.
 
+We only need an Ubuntu-24.04 instance for this tutorial.
+
+To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
+
+```{code-block} text
+> wsl --unregister Ubuntu-22.04
+```
+
 ```{admonition} Windows terminal integration
 :class: tip
 Each time you install a version of Ubuntu, it appears in the dropdown list of
@@ -141,14 +149,6 @@ terminal profiles in Windows terminal.
 
 If you have one version of Ubuntu running in a tab, you can open another in a
 separate tab by selecting it from the menu.
-```
-
-We only need an Ubuntu-24.04 instance for this tutorial.
-
-To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
-
-```{code-block} text
-> wsl --unregister Ubuntu-22.04
 ```
 
 ## Install Visual Studio Code on Windows
