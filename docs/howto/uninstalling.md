@@ -16,8 +16,6 @@ although in some cases a few additional steps are required.
 
 In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right-click on it, then click **Uninstall**.
 
-![Uninstall Ubuntu Pro for WSL](./assets/start-menu-uninstall.png)
-
 You should also remove the `.ubuntupro` directory from your Windows user profile directory.
 
 ```text
