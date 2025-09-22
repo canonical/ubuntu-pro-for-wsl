@@ -111,12 +111,17 @@ Use `wsl -l -v` to list all of your installed distros.
 * Ubuntu-24.04    Stopped         2
 ```
 
-```{admonition} What is version 2?
-:class: note
-WSL implements two different architectures for running 
-Linux distributions: WSL1 and WSL2.
-This means that you are using WSL2, rather than WSL1.
-WSL2 is the default WSL on recent versions of Windows.
+This shows that both distros are stopped, each uses WSL 2, and Ubuntu-24.04 is
+the default distro.
+
+```{admonition} What is WSL 2?
+:class: warning
+WSL implements two different architectures for running Linux distributions: WSL
+1 and WSL 2.
+WSL 2 is the default WSL architecture on recent versions of Windows and it is
+recommended for this tutorial.
+
+Read more about the [differences between WSL versions](explanation::wsl-version).
 ```
 
 You can open a specific instance from PowerShell using its NAME:

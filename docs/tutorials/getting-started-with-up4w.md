@@ -98,6 +98,19 @@ with the following command in PowerShell:
 
 For other installation options refer to our [install Ubuntu on WSL guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
+To confirm the installation, and that the installed distro is using WSL 2, run:
+
+```{code-block} text
+> wsl -l -v
+```
+
+```{admonition} You must use WSL 2
+:class: warning
+WSL 2 is the default architecture on recent versions of Windows and
+is required for Ubuntu Pro for WSL to function.
+Read more about the [differences between WSL versions](explanation::wsl-version).
+```
+
 To manually associate this Ubuntu instance with a Pro subscription, you could
 launch the instance and run the `pro attach` command.
 
