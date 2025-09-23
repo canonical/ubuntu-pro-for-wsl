@@ -123,7 +123,7 @@ url = https://landscape-server.domain.com/message-system
 ping_url  = http://landscape-server.domain.com/ping
 account_name = standalone
 log_level = debug
-ssl_public_key = C:\Users\username\Downloads\landscape_server.pem
+ssl_public_key = C:\Users\<username>\Downloads\landscape_server.pem
 ```
 
 ```{warning}
