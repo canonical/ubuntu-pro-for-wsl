@@ -279,7 +279,7 @@ $ mv myNewUbuntu.tar myNewUbuntu.wsl
 Finally, move the distro to a Windows directory:
 
 ```text
-$ sudo mv myNewUbuntu.wsl /mnt/c/Users/username/Downloads/
+$ sudo mv myNewUbuntu.wsl /mnt/c/Users/<username>/Downloads/
 ```
 
 ## Test your custom Ubuntu distro
