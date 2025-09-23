@@ -21,7 +21,7 @@ In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right
 You should also remove the `.ubuntupro` directory from your Windows user profile directory.
 
 ```text
-PS C:\Users\username> Remove-Item -Recurse -Force C:\Users\username\.ubuntupro
+> Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
 ```
 
 (howto::uninstall-ubuntu-wsl)=
