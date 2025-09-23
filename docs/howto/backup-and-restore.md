@@ -27,7 +27,7 @@ directory of the user `me`.
 To backup an Ubuntu-24.04 instance first make a `backup` folder in your home directory:
 
 ```text
-PS C:\Users\username> mkdir backup
+> mkdir backup
 ```
 
 You then need to create a compressed version of the Ubuntu instance in that backup directory:
