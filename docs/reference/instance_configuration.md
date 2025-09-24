@@ -6,79 +6,9 @@ myst:
 
 # WSL instance configuration
 
-This page includes reference materials on the basics of managing and configuring your WSL instances.
+This page includes reference materials on configuring your WSL instances.
 
-## Basic instance management
-
-### List installed instances
-
-To get a list of installed instances, their present state, and the WSL version the instance is using, run:
-
-```
-> wsl -l -v
-```
-
-### Install an instance
-
-To install an instance using a `.wsl` [file](https://ubuntu.com/desktop/wsl), run the following command:
-
-```
-> wsl --install --from-file <File Name>
-```
-
-Additional options of note include:
-
-- `--name <Instance Name>`: Specify the unique name of the instance
-- `--no-launch`: Install the instance, but do not launch it automatically afterwards
-- `--version <Version Number>`: Specify the [WSL version](explanation::wsl-version)
-
-```{note}
-For additional methods on WSL instances, please reference the [WSL install how-to guide](../howto/02-install.md).
-```
-
-### Set an instance as the default
-
-WSL commands that are run without specifying the instance with `--distribution` or `-d` utilise the default instance. To set it, run:
-
-```
-> wsl --set-default <Instance Name>
-```
-
-### Terminate an instance
-
-To terminate a specific instance, stopping it from running, run:
-
-```
-> wsl --terminate <Instance Name>
-```
-
-```{note}
-Termination of an instance does not also stop the backend virtual machine behind WSL. To do so, all running instances need to be stopped with `wsl --shutdown`.
-```
-
-### Unregister or remove an instance
-
-To remove and unregister an instance, removing all data, software, and settings associated with that instance, run:
-
-```
-> wsl --unregister <Instance Name>
-```
-
-Afterwards, running `wsl --list` will no longer list that instance, and everything associated with it would have been removed.
-
-### Set WSL version
-
-To set the [WSL version](../explanation/compare-wsl-versions.md) for an already registered instance, run:
-
-```
-> wsl --set-version <Instance Name> <Version Number>
-```
-
-```{warning}
-Switching between WSL versions can not only be time-consuming, but cause unexpected issues due to the architectural differences. Consider backing up your files before attempting a switch.
-```
-
-## Advanced instance configuration
+## Instance configuration
 
 There are a number of different ways to configure WSL instances, each with a different scope and use-case. For the basic use-case of using Ubuntu with WSL, the default configuration should be sufficient. However, certain use-cases may find the flexibility provided by these advanced configuration options to be useful.
 
