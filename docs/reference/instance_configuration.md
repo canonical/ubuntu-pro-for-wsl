@@ -10,15 +10,15 @@ This page includes reference materials on configuring your WSL instances.
 
 ## Instance configuration
 
-There are a number of different ways to configure WSL instances, each with a different scope and use-case. For the basic use-case of using Ubuntu with WSL, the default configuration should be sufficient. However, certain use-cases may find the flexibility provided by these advanced configuration options to be useful.
+There are a number of different ways to configure instances of Ubuntu on WSL, each with a different scope and use-case. Depending on the configuration method, you can affect all Ubuntu instances, only instances of a specific Ubuntu distribution, or an individual instance.
 
-| Method                            | Scope                                              | Location                                                                            |
-| --------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [Ubuntu Pro for WSL](ref::up4w)   | Ubuntu Pro attachment management between instances | [Graphical application ](howto::up4w)                                               |
-| [WSL Settings](ref::wsl-settings) | General settings that apply to all of WSL          | Graphical application named `WSL Settings`                                          |
-| [`.wslconfig`](ref::.wslconfig)   | General settings that apply to all of WSL          | `%UserProfile%\.wslconfig`, outside of a WSL instance                               |
-| [`wsl.config`](ref::wsl.config)   | Settings for specific WSL instance only            | `/etc/wsl.conf`, while inside a WSL instance                                        |
-| [Cloud-init](ref::cloud-init)     | Ubuntu provisioning settings                       | `.userdata` files located at `\UserProfile%\.cloud-init\` outside of a WSL instance |
+| Method                            | Scope                                                      | Location                                                                                   |
+| --------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [Ubuntu Pro for WSL](ref::up4w)   | Pro settings that apply to all compatible Ubuntu instances | Installable [graphical application ](howto::up4w)                                          |
+| [WSL Settings](ref::wsl-settings) | General settings that apply to all WSL instances           | Graphical application named `WSL Settings` pre-installed with WSL                          |
+| [`.wslconfig`](ref::.wslconfig)   | General settings that apply to all WSL instances           | `%UserProfile%\.wslconfig`, in the Windows file system                                     |
+| [`wsl.config`](ref::wsl.config)   | Settings for a specific WSL instance only                  | `/etc/wsl.conf`, while inside a WSL instance                                               |
+| [Cloud-init](ref::cloud-init)     | Ubuntu provisioning settings                               | `<Distro Name>.userdata` files in `%UserProfile%\.cloud-init\`, in the Windows file system |
 
 (ref::up4w)=
 
