@@ -37,14 +37,14 @@ Running the following command in PowerShell will create a new Ubuntu-24.04 insta
 and prompt you to create a username and password for the machine:
 
 ```{code-block} text
-PS C:\Users\username\up4wInstall> wsl ~ -d Ubuntu-24.04
+PS C:\Users\<username></username>\up4wInstall> wsl ~ -d Ubuntu-24.04
 ```
 
 You will now be logged in to the new instance shell and can
 check that UP4W has Pro-attached this instance with:
 
 ```{code-block} text
-u@mib:~$ pro status
++ $ pro status
 ```
 
 The output will confirm the following:
@@ -75,7 +75,7 @@ Each new Ubuntu WSL instance that is created should automatically now be Pro-att
 To find other useful Ubuntu pro commands run:
 
 ```{code-block} text
-u@mib:~$ pro --help
++ $ pro --help
 ```
 
 (howto::verify-landscape)=
