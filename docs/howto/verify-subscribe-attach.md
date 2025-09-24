@@ -37,7 +37,7 @@ Running the following command in PowerShell will create a new Ubuntu-24.04 insta
 and prompt you to create a username and password for the machine:
 
 ```{code-block} text
-PS C:\Users\<username></username>\up4wInstall> wsl ~ -d Ubuntu-24.04
+> wsl ~ -d Ubuntu-24.04
 ```
 
 You will now be logged in to the new instance shell and can

@@ -21,7 +21,7 @@ In the Windows Start Menu, locate the "Ubuntu Pro for WSL" application and right
 You should also remove the `.ubuntupro` directory from your Windows user profile directory.
 
 ```text
-PS C:\Users\username> Remove-Item -Recurse -Force C:\Users\username\.ubuntupro
+> Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
 ```
 
 (howto::uninstall-ubuntu-wsl)=
@@ -30,7 +30,7 @@ PS C:\Users\username> Remove-Item -Recurse -Force C:\Users\username\.ubuntupro
 In PowerShell run the following command to stop WSL:
 
 ```text
-PS C:\Users\username> wsl --shutdown
+> wsl --shutdown
 ```
 
 Then, in the Windows Start Menu, locate the "Ubuntu 24.04 LTS" application, right-click on it, and select "Uninstall".

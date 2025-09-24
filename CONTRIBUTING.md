@@ -249,7 +249,7 @@ Here are some examples:
 - PowerShell prompt symbol with path: `C:\Users\username>`
 - PowerShell prompt symbol with path and PowerShell prefix: `PS C:\Users\username>`
 - Ubuntu prompt symbol: `$`
-- Ubuntu prompt symbol with user and host: `username@host:~$`
+- Ubuntu prompt symbol with user and host: `<username>@<host>:~$`
 
 Whether to include the path or user@host depends on whether it is useful in the context
 of the documentation being written.
