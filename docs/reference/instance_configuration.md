@@ -14,19 +14,11 @@ There are a number of different ways to configure instances of Ubuntu on WSL, ea
 
 | Method                            | Scope                                                      | Location                                                                                   |
 | --------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [Ubuntu Pro for WSL](ref::up4w)   | Pro settings that apply to all compatible Ubuntu instances | Installable [graphical application ](howto::up4w)                                          |
 | [WSL Settings](ref::wsl-settings) | General settings that apply to all WSL instances           | Graphical application named `WSL Settings` pre-installed with WSL                          |
 | [`.wslconfig`](ref::.wslconfig)   | General settings that apply to all WSL instances           | `%UserProfile%\.wslconfig`, in the Windows file system                                     |
 | [`wsl.config`](ref::wsl.config)   | Settings for a specific WSL instance only                  | `/etc/wsl.conf`, while inside a WSL instance                                               |
 | [Cloud-init](ref::cloud-init)     | Ubuntu provisioning settings                               | `<Distro Name>.userdata` files in `%UserProfile%\.cloud-init\`, in the Windows file system |
-
-(ref::up4w)=
-
-### Ubuntu Pro for WSL
-
-Ubuntu Pro for WSL (UP4W) is a graphical application that allows you to automatically configure and attach Ubuntu WSL instances to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
-
-> [Read more about using Ubuntu Pro for WSL](howto::up4w)
+| [Ubuntu Pro for WSL](ref::up4w)   | Pro settings that apply to all compatible Ubuntu instances | Installable [graphical application ](howto::up4w)                                          |
 
 (ref::wsl-settings)=
 
@@ -92,6 +84,14 @@ Afterwards, use the text editor of your choice to edit the `.user-data` file you
 Finally, install Ubuntu as you would normally, cloud-init should apply automatically.
 
 > [Read more about how to use cloud-init with WSL](howto::cloud-init)
+
+(ref::up4w)=
+
+### Ubuntu Pro for WSL
+
+Ubuntu Pro for WSL (UP4W) is a graphical application that allows you to automatically configure and attach Ubuntu WSL instances to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
+
+> [Read more about using Ubuntu Pro for WSL](howto::up4w)
 
 ## Further reading
 
