@@ -27,6 +27,7 @@ directory of the user `me`.
 To backup an Ubuntu-24.04 instance first make a `backup` folder in your home directory:
 
 ```text
+:caption: C:\Users\\\<username>
 > mkdir backup
 ```
 

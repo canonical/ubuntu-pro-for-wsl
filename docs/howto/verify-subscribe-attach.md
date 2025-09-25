@@ -44,7 +44,7 @@ You will now be logged in to the new instance shell and can
 check that UP4W has Pro-attached this instance with:
 
 ```{code-block} text
-+ $ pro status
+$ pro status
 ```
 
 The output will confirm the following:
@@ -75,7 +75,7 @@ Each new Ubuntu WSL instance that is created should automatically now be Pro-att
 To find other useful Ubuntu pro commands run:
 
 ```{code-block} text
-+ $ pro --help
+$ pro --help
 ```
 
 (howto::verify-landscape)=
