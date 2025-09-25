@@ -177,7 +177,7 @@ Operation in progress: pro attach
 For a list of all Ubuntu Pro services, run 'pro status --all'
 Enable services with: pro enable <service>
 
-     Account: me@ubuntu.com
+     Account: username@ubuntu.com
 Subscription: Ubuntu Pro - free personal subscription
 ```
 
