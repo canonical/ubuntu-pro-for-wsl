@@ -315,7 +315,9 @@ WebRTC
 WoU
 amd
 armhf
+automount
 autopkgtest
+backend
 cURL
 containeragent
 dqlite
@@ -330,4 +332,6 @@ riscv
 snapcrafting
 subcluster
 swrast
+unregister
 zSystems
+wslconfig
