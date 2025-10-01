@@ -19,11 +19,6 @@ You may need to backup one of your Ubuntu WSL instances, if you want to:
 (howto::backup)=
 ## Backing up
 
-```{note}
-For simplicity, PowerShell commands in this section will all be run from the home
-directory of the user `me`.
-```
-
 To backup an Ubuntu-24.04 instance first make a `backup` folder in your home directory:
 
 ```text

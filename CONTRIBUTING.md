@@ -251,7 +251,7 @@ Here are some examples:
 - Ubuntu prompt symbol: `$`
 - Ubuntu prompt symbol with user and host: `<username>@<host>:~$`
 
-Whether to include the path or user@host depends on whether it is useful in the context
+Whether to include the path or username@host depends on whether it is useful in the context
 of the documentation being written.
 For example, if demonstrating the use of multiple WSL instances, including the user and host
 can make it easier to tell the instances apart.

@@ -196,7 +196,7 @@ When the Ubuntu-24.04 instance has launched, confirm that the correct default us
 
 ```{code-block} text
 :class: no-copy
-username@<hostname>:~$
+u@<hostname>:~$
 ```
 
 Next, confirm that CUDA has been installed successfully:

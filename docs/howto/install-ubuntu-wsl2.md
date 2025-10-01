@@ -143,7 +143,7 @@ determines the starting directory.
 ### Start Ubuntu in the current Windows directory from the terminal
 
 ```{note}
-For simplicity, we use `username` for the user and `pc` for the machine name in
+For simplicity, we use `username` for the user and `hostname` for the machine name in
 this section.
 ```
 

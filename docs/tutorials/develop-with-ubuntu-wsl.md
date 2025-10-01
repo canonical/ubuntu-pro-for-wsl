@@ -78,7 +78,7 @@ PS C:\Users\username>
 
 ```{code-block} text
 :class: no-copy
-username@pc:~$
+<username>@<hostname>:~$
 ```
 
 To exit the Ubuntu terminal at any time, type the `exit` command and execute it
