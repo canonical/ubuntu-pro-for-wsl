@@ -111,12 +111,17 @@ Use `wsl -l -v` to list all of your installed distros.
 * Ubuntu-24.04    Stopped         2
 ```
 
-```{admonition} What is version 2?
-:class: note
-WSL implements two different architectures for running 
-Linux distributions: WSL1 and WSL2.
-This means that you are using WSL2, rather than WSL1.
-WSL2 is the default WSL on recent versions of Windows.
+This shows that both distros are stopped, each uses WSL 2, and Ubuntu-24.04 is
+the default distro.
+
+```{admonition} What is WSL 2?
+:class: warning
+WSL implements two different architectures for running Linux distributions: WSL
+1 and WSL 2.
+WSL 2 is the default WSL architecture on recent versions of Windows and it is
+recommended for this tutorial.
+
+Read more about the [differences between WSL versions](explanation::wsl-version).
 ```
 
 You can open a specific instance from PowerShell using its NAME:
@@ -129,6 +134,14 @@ The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
 directory (commonly symbolised by ~) and the `-d` flag is added to specify the
 distro.
 
+We only need an Ubuntu-24.04 instance for this tutorial.
+
+To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
+
+```{code-block} text
+> wsl --unregister Ubuntu-22.04
+```
+
 ```{admonition} Windows terminal integration
 :class: tip
 Each time you install a version of Ubuntu, it appears in the dropdown list of
@@ -136,14 +149,6 @@ terminal profiles in Windows terminal.
 
 If you have one version of Ubuntu running in a tab, you can open another in a
 separate tab by selecting it from the menu.
-```
-
-We only need an Ubuntu-24.04 instance for this tutorial.
-
-To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
-
-```{code-block} text
-> wsl --unregister Ubuntu-22.04
 ```
 
 ## Install Visual Studio Code on Windows
@@ -270,7 +275,7 @@ In this tutorial, we’ve shown you how to set up a development environment with
 
 ### Further Reading
 
-* [Install Ubuntu on WSL2](../howto/install-ubuntu-wsl2.md)
+* [Install Ubuntu on WSL 2](../howto/install-ubuntu-wsl2.md)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
 * [Setting up WSL for Data Science](https://ubuntu.com/blog/wsl-for-data-scientist)
 * [Ask Ubuntu](https://askubuntu.com/)
