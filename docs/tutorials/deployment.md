@@ -196,7 +196,7 @@ When the Ubuntu-24.04 instance has launched, confirm that the correct default us
 
 ```{code-block} text
 :class: no-copy
-u@<your-machine>:~$
+u@<hostname>:~$
 ```
 
 Next, confirm that CUDA has been installed successfully:
@@ -204,6 +204,7 @@ Next, confirm that CUDA has been installed successfully:
 ```text
 $ apt policy cuda-toolkit-12-6
 ```
+
 
 ```{code-block} text
 :class: no-copy

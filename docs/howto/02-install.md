@@ -68,7 +68,7 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
 4. Navigate to the unzipped directory containing the .deb file. Here is a possible path:
 
     ```bash
-    cd /mnt/c/Users/WINDOWS-USER/Downloads/wsl-pro-service_*
+    cd /mnt/c/Users/<username>/Downloads/wsl-pro-service_*
     ```
 
 5. Install the deb package.

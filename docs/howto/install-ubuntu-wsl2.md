@@ -142,11 +142,6 @@ determines the starting directory.
 
 ### Start Ubuntu in the current Windows directory from the terminal
 
-```{note}
-For simplicity, we use `username` for the user and `pc` for the machine name in
-this section.
-```
-
 When you open PowerShell, the working Windows directory is `C:\Users\username`.
 
 Run `wsl -d <Distro>` to start an Ubuntu session in that directory. The prompt
@@ -155,7 +150,7 @@ in the Windows home directory:
 
 ```{code-block} text
 :class: no-copy
-username@pc:/mnt/c/Users/username$
+<ubuntu-username>@<hostname>:/mnt/c/Users/<windows-username>$
 ```
 
 ### Start Ubuntu in the Ubuntu home directory from the terminal
@@ -164,7 +159,8 @@ When in a directory in the mounted `C:` drive, you can change to the Ubuntu
 home directory with:
 
 ```{code-block} text
-username@pc:/mnt/c/Users/username$ cd ~
+:caption: /mnt/c/Users/\<windows-username\>
+$ cd ~
 ```
 
 To skip this step, and start an instance from PowerShell with Ubuntu home as

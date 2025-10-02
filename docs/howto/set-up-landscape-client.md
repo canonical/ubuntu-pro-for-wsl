@@ -102,7 +102,7 @@ installation, the auto-generated self-signed certificate can be found at `/etc/s
 
 This can be copied to a Windows machine:
 
->  C:\Users\\<YOUR_WINDOWS_USER_NAME>\landscape_server.pem
+>  C:\Users\\\<username>\landscape_server.pem
 
 The path can then be referenced during Landscape configuration in the UP4W Windows app.
 ```
@@ -123,7 +123,7 @@ url = https://landscape-server.domain.com/message-system
 ping_url  = http://landscape-server.domain.com/ping
 account_name = standalone
 log_level = debug
-ssl_public_key = C:\Users\user\Downloads\landscape_server.pem
+ssl_public_key = C:\Users\<username>\Downloads\landscape_server.pem
 ```
 
 ```{warning}

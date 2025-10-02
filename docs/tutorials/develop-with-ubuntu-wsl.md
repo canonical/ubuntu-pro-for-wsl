@@ -65,20 +65,21 @@ To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
 After the distribution is installed, you are prompted to create a
 username and password. An Ubuntu session will then start automatically.
 
-Changing from PowerShell to Ubuntu is indicated by a change in the terminal prompt.
+Changing from PowerShell to Ubuntu is indicated by a change in the terminal
+prompt, for example:
 
-**PowerShell prompt**:
+**PowerShell prompt**
 
 ```{code-block} text
 :class: no-copy
-PS C:\Users\username>
+PS C:\Users\windows-username>
 ```
 
 **Ubuntu prompt**:
 
 ```{code-block} text
 :class: no-copy
-username@pc:~$
+ubuntu-username@hostname:~$
 ```
 
 To exit the Ubuntu terminal at any time, type the `exit` command and execute it
@@ -124,8 +125,9 @@ You can open a specific instance from PowerShell using its NAME:
 > wsl ~ -d Ubuntu-22.04
 ```
 
-The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory and
-the `-d` flag is added before specifying a distro.
+The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
+directory (commonly symbolised by ~) and the `-d` flag is added to specify the
+distro.
 
 ```{admonition} Windows terminal integration
 :class: tip
@@ -197,7 +199,7 @@ Change into that directory:
 $ cd serverexample/
 ```
 
-Then open the directory in Visual Studio Code:
+Then open the current directory (`.`) in Visual Studio Code:
 
 ```{code-block} text
 $ code .
@@ -244,15 +246,17 @@ Add the following text, then save and close:
 <h1>Hello World</h1>
 ```
 
-Return to your Ubuntu terminal (or use Visual Studio Code's integrated terminal) and type the following to install a server defined by the specification detailed in `package.json`:
+Return to your Ubuntu terminal (or use Visual Studio Code's integrated terminal) and run the following command from within the project directory to install a server defined by the specification detailed in `package.json`:
 
 ```{code-block} text
+:caption: ~/serverexample
 $ npm install
 ```
 
-Finally, start the web server:
+Still inside the project directory, start the web server:
 
 ```{code-block} text
+:caption: ~/serverexample
 $ npm start
 ```
 
