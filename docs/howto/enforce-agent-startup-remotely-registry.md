@@ -99,7 +99,7 @@ try{
 ### Running the scripts with Intune
 
 Access your organisation's [Intune Admin Center](https://intune.microsoft.com) and when logged in go to **Devices > Monitor > Manage Devices > Scripts and remediations**.
-![Scripts and remediations option revealed in the Intune portal](./assets/intune-remediations.png).
+![Scripts and remediations option revealed in the Intune portal](./assets/intune-remediations.png)
 
 Click on the "Create" button to create a new script package. Fill in the **Basics** form with name, description and other details and proceed to **Settings**.
 During that step, upload the scripts in the correct boxes and use the following options:
