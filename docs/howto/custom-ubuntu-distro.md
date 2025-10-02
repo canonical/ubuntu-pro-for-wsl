@@ -235,7 +235,7 @@ If successful, you will see a prompt for the root user:
 
 ```{code-block} text
 :class: no-copy
-root@<username>:/#
+root@<hostname>:/#
 ```
 
 You can now manage packages for your custom distro. For example, `btop` is a
