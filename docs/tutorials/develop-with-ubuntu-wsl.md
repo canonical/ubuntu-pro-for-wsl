@@ -142,6 +142,14 @@ To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 > wsl --unregister Ubuntu-22.04
 ```
 
+We only need an Ubuntu-24.04 instance for this tutorial.
+
+To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
+
+```{code-block} text
+> wsl --unregister Ubuntu-22.04
+```
+
 ```{admonition} Windows terminal integration
 :class: tip
 Each time you install a version of Ubuntu, it appears in the dropdown list of
