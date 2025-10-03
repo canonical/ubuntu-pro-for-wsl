@@ -102,6 +102,12 @@ type uncRootKeyT struct{}
 
 var uncRootKey = uncRootKeyT{}
 
+// WithUNCRootPath returns a child context that will use the supplied Windows Universal Naming Convention
+// root path to access WSL files. This is only meant for testing.
+func WithUNCRootPath(ctx context.Context, uncRoot string) context.Context {
+	return context.WithValue(ctx, uncRootKey, uncRoot)
+}
+
 // selectUNCRoot returns the Windows Universal Naming Convention root path to use to access WSL
 // files based on the supplied context (to allow injection for testing).
 func selectUNCRoot(ctx context.Context) string {

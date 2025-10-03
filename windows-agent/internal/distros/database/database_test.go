@@ -145,7 +145,7 @@ func TestDatabaseGetUnmanaged(t *testing.T) {
 
 	if wsl.MockAvailable() {
 		t.Parallel()
-		ctx = context.WithValue(wsl.WithMock(ctx, wslmock.New()), database.UNCRootKey, uncRoot)
+		ctx = database.WithUNCRootPath(wsl.WithMock(ctx, wslmock.New()), uncRoot)
 	}
 
 	// Registers some Ubuntu instances
@@ -154,7 +154,7 @@ func TestDatabaseGetUnmanaged(t *testing.T) {
 		distros = append(distros, func() string {
 			d, _ := wsltestutils.RegisterDistro(t, ctx, false)
 			d = strings.ToLower(d)
-			writeOsRelease(t, uncRoot, d, "ubuntu-os-release")
+			testutils.WriteOsRelease(t, uncRoot, d, "ubuntu-os-release")
 			return d
 		}())
 	}
@@ -162,7 +162,7 @@ func TestDatabaseGetUnmanaged(t *testing.T) {
 	// Register one non-Ubuntu instance.
 	nonUbuntu, _ := wsltestutils.RegisterDistro(t, ctx, false)
 	nonUbuntu = strings.ToLower(nonUbuntu)
-	writeOsRelease(t, uncRoot, nonUbuntu, "other-os-release")
+	testutils.WriteOsRelease(t, uncRoot, nonUbuntu, "other-os-release")
 
 	testCases := map[string]struct {
 		dbDistros []string
@@ -200,25 +200,6 @@ func TestDatabaseGetUnmanaged(t *testing.T) {
 			require.NotContains(t, gotUnmanaged, nonUbuntu, "GetUnmanagedDistros should not return a non-Ubuntu distro")
 		})
 	}
-}
-
-// writeOsRelease is a test helper that writes a sample os-release file for the given distro inside
-// the uncRoot directory, creating any needed directories.
-func writeOsRelease(t *testing.T, uncRoot, distroName, template string) {
-	t.Helper()
-
-	testdata, err := filepath.Abs(filepath.Join(testutils.TestFamilyPath(t), template))
-	require.NoError(t, err, "Setup: Couldn't compute absolute path of sample os-release file")
-	data, err := os.ReadFile(testdata)
-	require.NoError(t, err, "Setup: couldn't read sample os-release file")
-
-	dir := filepath.Join(uncRoot, distroName, "usr", "lib")
-	err = os.MkdirAll(dir, 0750)
-	require.NoError(t, err, "Setup: Failed to create directories to contain the distros os-release file")
-
-	//nolint:gosec // This file is meant to be read by anyone.
-	err = os.WriteFile(filepath.Join(dir, "os-release"), data, 0644)
-	require.NoError(t, err, "Setup: Failed to write sample os-release file")
 }
 
 //nolint:tparallel // Subtests are parallel but the test itself is not due to the calls to RegisterDistro.

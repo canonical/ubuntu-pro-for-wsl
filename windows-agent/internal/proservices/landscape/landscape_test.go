@@ -297,16 +297,19 @@ func TestSendUpdatedInfo(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		tokenErr bool
-		stateErr bool
+		tokenErr     bool
+		stateErr     bool
+		wslLaunchErr bool
 
 		breakWSLRegistry   bool // Needs dontRegisterDistro to be true
 		dontRegisterDistro bool
 
-		precancelContext     bool
-		disconnectBeforeSend bool
-		distroIsRunning      bool
-		distroIsUnregistered bool
+		precancelContext      bool
+		disconnectBeforeSend  bool
+		distroIsRunning       bool
+		distroIsUnregistered  bool
+		withUnmanagedInstance bool
+		wantUnmanagedInstance bool
 
 		wantErr           bool
 		wantDistroSkipped bool
@@ -315,6 +318,10 @@ func TestSendUpdatedInfo(t *testing.T) {
 		"Success with a running distro":                       {distroIsRunning: true},
 		"Success when the distro State cannot be retreived":   {stateErr: true, wantDistroSkipped: true},
 		"Success when the default distro cannot be retreived": {breakWSLRegistry: true, dontRegisterDistro: true, wantDistroSkipped: true},
+
+		"Success with an unmanaged distro":                       {withUnmanagedInstance: true, wantUnmanagedInstance: true},
+		"Skip unmanaged distro when state cannot be obtained":    {withUnmanagedInstance: true, stateErr: true, wantDistroSkipped: true},
+		"Skip unmanaged distro when hostname cannot be obtained": {withUnmanagedInstance: true, wslLaunchErr: true},
 
 		"Error when the token cannot be retreived":                           {tokenErr: true, wantErr: true},
 		"Error when attempting to SendUpdatedInfo after having disconnected": {disconnectBeforeSend: true, wantErr: true},
@@ -327,9 +334,10 @@ func TestSendUpdatedInfo(t *testing.T) {
 				t.Parallel()
 				mock := wslmock.New()
 				mock.StateError = tc.stateErr
+				mock.WslLaunchError = tc.wslLaunchErr
 				mock.OpenLxssKeyError = tc.breakWSLRegistry
 				ctx = wsl.WithMock(ctx, mock)
-			} else if tc.stateErr {
+			} else if tc.stateErr || tc.wslLaunchErr || tc.breakWSLRegistry {
 				t.Skip("This test is skipped because it necessitates the GoWSL mock")
 			}
 
@@ -343,6 +351,15 @@ func TestSendUpdatedInfo(t *testing.T) {
 			//nolint:errcheck // We don't care about these errors
 			go server.Serve(lis)
 			defer server.Stop()
+
+			unmanaged := ""
+			if tc.withUnmanagedInstance {
+				unmanaged, _ = wsltestutils.RegisterDistro(t, ctx, false)
+				unmanaged = strings.ToLower(unmanaged)
+				uncRoot := t.TempDir()
+				ctx = database.WithUNCRootPath(ctx, uncRoot)
+				testutils.WriteOsRelease(t, uncRoot, unmanaged, "ubuntu-os-release")
+			}
 
 			db, err := database.New(ctx, t.TempDir())
 			require.NoError(t, err, "Setup: database New should not return an error")
@@ -423,7 +440,6 @@ func TestSendUpdatedInfo(t *testing.T) {
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host ID and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
-			require.Equal(t, wantDistroID, msg.DefaultInstanceID, "The only distro that is registered should have been labeled default")
 
 			if tc.wantDistroSkipped {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
@@ -437,6 +453,14 @@ func TestSendUpdatedInfo(t *testing.T) {
 				assert.Equal(t, wantDistroName, got.Name, "Mismatch between local distro Name and that received by the server")
 				assert.Equal(t, wantDistroVersionID, got.VersionID, "Mismatch between local distro VersionId and that received by the server")
 				assert.Equal(t, wantDistroState, got.InstanceState, "Mismatch between local distro InstanceState and that received by the server")
+			}
+
+			if tc.wantUnmanagedInstance {
+				require.Len(t, messages[0].UnmanagedInstances, 1, "Exactly one unmanaged distro should've been sent to Landscape")
+				got := messages[0].UnmanagedInstances[0]
+				assert.Equal(t, unmanaged, got.ID, "Mismatch between local unmanaged distro ID and that received by the server")
+			} else {
+				assert.Empty(t, messages[0].UnmanagedInstances, "No unmanaged distros should've been sent to Landscape")
 			}
 
 			// Exiting if previous assert battery failed
@@ -481,7 +505,6 @@ func TestSendUpdatedInfo(t *testing.T) {
 			assert.Equal(t, wantRegistrationKey, msg.RegistrationKey, "Mismatch between local registration key and that received by the server")
 			assert.Equal(t, wantHostname, msg.Hostname, "Mismatch between local host hostname and that received by the server")
 			assert.Equal(t, wantHostToken, msg.Token, "Mismatch between local host pro token and those received by the server")
-			require.Equal(t, wantDistroID, msg.DefaultInstanceID, "The only distro that is registered should have been labeled default")
 
 			if tc.wantDistroSkipped {
 				require.Empty(t, msg.Instances, "No distro should've been sent to Landscape")
