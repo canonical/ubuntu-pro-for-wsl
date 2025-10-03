@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Latest Windows SDK for Windows 10/11
-set(CMAKE_SYSTEM_VERSION 10.0.22621.0)
+set(CMAKE_SYSTEM_VERSION 10.0.26100.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -77,12 +77,12 @@ if(MSVC)
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /permissive- # standards conformance mode for MSVC compiler.
         /fsanitize=address,leak,undefined
-        /Zi 
+        /Zi
         /INCREMENTAL:NO
         /await
     )
     target_compile_options(StoreApiServicesTests INTERFACE ${MSVC_OPTIONS})
- endif()
+endif()
 
 include(GoogleTest)
 gtest_discover_tests(StoreApiServicesTests DISCOVERY_MODE PRE_TEST)
