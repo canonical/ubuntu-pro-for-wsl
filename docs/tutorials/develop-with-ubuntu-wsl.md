@@ -19,7 +19,7 @@ offers excellent integration with developer tools like Visual Studio Code.
 
 ## What you will need
 
-* A machine running Windows 10 or 11
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
 ## Install Ubuntu on WSL
 

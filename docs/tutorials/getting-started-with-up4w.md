@@ -39,8 +39,7 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 
 ## What you will need
 
-- A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
-- Some familiarity with commands for the Linux shell and PowerShell
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
 ## Set up Ubuntu on WSL
 

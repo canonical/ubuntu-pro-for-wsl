@@ -21,7 +21,7 @@ It is an industry standard and can now also be used to automatically setup insta
 
 ## What you will need
 
-- Windows 11 with WSL 2 already enabled
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
 The guide assumes that you are using Ubuntu 24.04,
 but Ubuntu 22.04 can also be used.
