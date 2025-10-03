@@ -104,8 +104,8 @@ github.com/butuzov/ireturn v0.3.1 h1:mFgbEI6m+9W8oP/oDdfA34dLisRFCj2G6o/yiI1yZrY
 github.com/butuzov/ireturn v0.3.1/go.mod h1:ZfRp+E7eJLC0NQmk1Nrm1LOrn/gQlOykv+cVPdiXH5M=
 github.com/butuzov/mirror v1.3.0 h1:HdWCXzmwlQHdVhwvsfBb2Au0r3HyINry3bDWLYXiKoc=
 github.com/butuzov/mirror v1.3.0/go.mod h1:AEij0Z8YMALaq4yQj9CPPVYOyJQyiexpQEQgihajRfI=
-github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f h1:98VdOj+VrXa3esA66XX0rM0IiJSe0M+6lCGztGdttP4=
-github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 h1:fi5eVdZCelJd6lUufEXgtBbNf/Jll2n2Cgvd9UGqIys=
+github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1/go.mod h1:SEDBCzpOq4KPCsPQiPaUl+lOtkvbBWDRjwavnkY4qss=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909070948-cee447de36ba h1:UGqA3M/shRzMs4vo8b326i6ev6l2MFFgDPfbPdSD6pE=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909070948-cee447de36ba/go.mod h1:xssoyTYh2NqXuj0sG6m7HsLTwI4HXPESweUjbh2WUQs=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909070948-cee447de36ba h1:BdZzJ9clVUCPgUkM4YnJGwmgned0A7HUWD4vT5QjklU=

@@ -32,8 +32,9 @@ type HostInfo struct {
 	AccountName     string
 	RegistrationKey string
 
-	Instances         []InstanceInfo
-	DefaultInstanceID string
+	Instances          []InstanceInfo
+	UnmanagedInstances []InstanceInfo
+	DefaultInstanceID  string
 }
 
 // CmdStatusMsg is the same as landscapeapi.CommandStatus, but without the mutexes and
@@ -67,6 +68,15 @@ func receiveHostInfo(stream landscapeapi.LandscapeHostAgent_ConnectServer) (Host
 
 	for _, inst := range msg.GetInstances() {
 		h.Instances = append(h.Instances, InstanceInfo{
+			ID:            inst.GetId(),
+			Name:          inst.GetName(),
+			VersionID:     inst.GetVersionId(),
+			InstanceState: inst.GetInstanceState(),
+		})
+	}
+
+	for _, inst := range msg.GetUnmanagedInstances() {
+		h.UnmanagedInstances = append(h.UnmanagedInstances, InstanceInfo{
 			ID:            inst.GetId(),
 			Name:          inst.GetName(),
 			VersionID:     inst.GetVersionId(),

@@ -3,7 +3,7 @@ module github.com/canonical/ubuntu-pro-for-wsl/mocks
 go 1.23.0
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20241007124637-88f060ef7c8f
+	github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909070948-cee447de36ba
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909070948-cee447de36ba
 	github.com/spf13/cobra v1.9.1

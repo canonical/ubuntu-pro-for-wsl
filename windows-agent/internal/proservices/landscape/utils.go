@@ -72,17 +72,36 @@ func newHostAgentInfo(ctx context.Context, c serviceData) (info *landscapeapi.Ho
 		instances = append(instances, instanceInfo)
 	}
 
+	var unmanaged []*landscapeapi.HostAgentInfo_InstanceInfo
+	un := c.database().GetUnmanagedDistros()
+	for _, b := range un {
+		instanceInfo, err := newInstanceInfoFromBasicInfo(b)
+
+		if errors.As(err, &newInstanceInfoMinorError{}) {
+			log.Warningf(ctx, "Landscape: skipping unmanaged distro %q from Landscape info: %v", b.Name, err)
+			continue
+		}
+
+		if err != nil {
+			log.Errorf(ctx, "Landscape: skipping unmanaged distro %q from Landscape info: %v", b.Name, err)
+			continue
+		}
+
+		unmanaged = append(unmanaged, instanceInfo)
+	}
+
 	uid, err := c.config().LandscapeAgentUID()
 	if err != nil {
 		return info, err
 	}
 
 	info = &landscapeapi.HostAgentInfo{
-		Token:       conf.ubuntuProToken,
-		Uid:         uid,
-		Hostname:    c.hostname(),
-		Instances:   instances,
-		AccountName: conf.accountName,
+		Token:              conf.ubuntuProToken,
+		Uid:                uid,
+		Hostname:           c.hostname(),
+		Instances:          instances,
+		AccountName:        conf.accountName,
+		UnmanagedInstances: unmanaged,
 	}
 
 	// Optional arguments
@@ -229,16 +248,9 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 		return info, err
 	}
 
-	var instanceState landscapeapi.InstanceState
-	switch state {
-	case gowsl.Running:
-		instanceState = landscapeapi.InstanceState_Running
-	case gowsl.Stopped:
-		instanceState = landscapeapi.InstanceState_Stopped
-	case gowsl.Installing, gowsl.NonRegistered, gowsl.Uninstalling:
-		return nil, newInstanceInfoMinorError{err: fmt.Errorf("cannot query distro due to its state: %s", state)}
-	default:
-		return nil, fmt.Errorf("unknown state %q", state)
+	instanceState, err := translateInstanceState(state)
+	if err != nil {
+		return nil, err
 	}
 
 	properties := d.Properties()
@@ -250,6 +262,39 @@ func newInstanceInfo(d *distro.Distro) (info *landscapeapi.HostAgentInfo_Instanc
 	}
 
 	return info, nil
+}
+
+// newInstanceInfoFromBasicInfo initializes a Instances_InstanceInfo from a BasicDistroInfo.
+func newInstanceInfoFromBasicInfo(b database.BasicDistroInfo) (info *landscapeapi.HostAgentInfo_InstanceInfo, err error) {
+	instanceState, err := translateInstanceState(b.State)
+	if err != nil {
+		return nil, err
+	}
+	info = &landscapeapi.HostAgentInfo_InstanceInfo{
+		Id:            b.Name,
+		Name:          b.Hostname,
+		VersionId:     b.VersionID,
+		InstanceState: instanceState,
+	}
+
+	return info, nil
+}
+
+// translateInstanceState converts a gowsl.State into a landscapeapi.InstanceState to report to the
+// Landscape server.
+func translateInstanceState(state gowsl.State) (instanceState landscapeapi.InstanceState, err error) {
+	switch state {
+	case gowsl.Running:
+		instanceState = landscapeapi.InstanceState_Running
+	case gowsl.Stopped:
+		instanceState = landscapeapi.InstanceState_Stopped
+	case gowsl.Installing, gowsl.NonRegistered, gowsl.Uninstalling:
+		return instanceState, fmt.Errorf("cannot query distro due to its state: %s", state)
+	default:
+		return instanceState, fmt.Errorf("unknown state %q", state)
+	}
+
+	return instanceState, nil
 }
 
 // tryDistroState attempts to get the state of a distro, retrying every interval until timeout.
