@@ -49,7 +49,7 @@ inline std::string to_string(ErrorCode err) {
     case ErrorCode::EmptyJwt:
       return "Empty user JWT was generated.";
     case ErrorCode::Unknown:
-      return "Unkown.";
+      return "Unknown.";
     case ErrorCode::None:
       return "";
   }
