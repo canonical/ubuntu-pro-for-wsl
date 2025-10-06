@@ -262,17 +262,21 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 }
 
 func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
-	d, ok := e.database().Get(cmd.GetId())
+	distroName := cmd.GetId()
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
+
+	d, ok := e.database().Get(distroName)
 	if !ok {
-		return errors.New("distro not in database")
+		log.Warningf(ctx, "Landscape uninstall: attempting to unregister unmanaged distro %q", distroName)
+		d := gowsl.NewDistro(ctx, distroName)
+		return d.Uninstall(ctx)
 	}
 
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 	if err := d.Uninstall(ctx); err != nil {
 		return err
 	}
 
-	if err := e.cloudInit().RemoveDistroData(d.Name()); err != nil {
+	if err := e.cloudInit().RemoveDistroData(distroName); err != nil {
 		log.Warningf(ctx, "Landscape uninstall: distro %q: %v", d.Name(), err)
 	}
 
