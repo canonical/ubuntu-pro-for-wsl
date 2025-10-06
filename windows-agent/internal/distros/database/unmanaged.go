@@ -27,7 +27,7 @@ type BasicDistroInfo struct {
 }
 
 // GetUnmanagedDistros returns a list of Ubuntu instances that are currently registered in WSL but not managed by this agent.
-// That's an expensive operation that involves a light wake up of all instances not previously discovered.
+// This is an expensive operation that involves a light wake up of all instances not previously discovered.
 // This information is a snapshot at the time of the call, we don't store it.
 func (db *DistroDB) GetUnmanagedDistros() (distros []BasicDistroInfo) {
 	managed := db.GetAll()
@@ -78,12 +78,12 @@ func basicDistroInfo(ctx context.Context, d gowsl.Distro, guid uuid.UUID, uncRoo
 		return BasicDistroInfo{}, fmt.Errorf("failed to get distro basic info for %q: %v", d.Name(), err)
 	}
 
-	if osInfo.Id != "ubuntu" {
+	if !strings.EqualFold(osInfo.Id, "ubuntu") {
 		// Our business only concerns with Ubuntu instances.
 		return BasicDistroInfo{}, fmt.Errorf("skipping non-Ubuntu distro instance %q", d.Name())
 	}
 
-	hostname, err := d.Command(ctx, "hostname").CombinedOutput()
+	hostname, err := d.Command(ctx, "hostname").Output()
 	if err != nil {
 		return BasicDistroInfo{}, fmt.Errorf("failed to get hostname for %s: %v", d.Name(), err)
 	}
