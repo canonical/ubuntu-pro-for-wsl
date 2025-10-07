@@ -107,7 +107,7 @@ This repository contains the source code for Ubuntu Pro for WSL.
 
 The application consists of the following components:
 
-* A Windows AppxPackage, consisting of an agent with its user interface. See [Windows Agent](windows-agent/README.md).
+* A Windows MSIX package, consisting of an agent with its user interface. See [Windows Agent](windows-agent/README.md).
 * An Ubuntu WSL Pro Service and its associated API, which controls the Pro and Landscape status between the agent running on Windows and the WSL instance. See [WSL Pro Service](wsl-pro-service/README.md).
 * An interface between the agent and Ubuntu Pro, to handle the transactions with the contract server.
 * An interface between the agent and Landscape, to manage the WSL instances from Landscape.
