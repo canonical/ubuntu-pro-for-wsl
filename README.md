@@ -112,7 +112,6 @@ The application consists of the following components:
 * An interface between the agent and Ubuntu Pro, to handle the transactions with the contract server.
 * An interface between the agent and Landscape, to manage the WSL instances from Landscape.
 * A WSL management API, which controls the lifecycle of the WSL instances, like provisioning, updates, and starting or stopping the WSL instances.
-* Cloud-init, which is used to customize the images on first boot or to reconfigure an image.
 
 ## Documentation
 
