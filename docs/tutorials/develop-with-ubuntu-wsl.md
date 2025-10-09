@@ -64,10 +64,11 @@ Check if WSL is already installed by trying to display its version information:
 ```
 
 If WSL **is not** installed, press <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel, and then
-follow our steps to [install WSL](#install-wsl).
+follow our steps to [install WSL](tut::develop::install-wsl).
 
-When WSL **is** installed, follow our steps to [install Ubuntu](#install-ubuntu).
+When WSL **is** installed, follow our steps to [install Ubuntu](tut::develop::install-ubuntu).
 
+(tut::develop::install-wsl)=
 ### Install WSL
 
 Open a PowerShell prompt and run:
@@ -101,6 +102,7 @@ Enabled:
 
 You may be prompted to grant permissions during the installation process.
 
+(tut::develop::install-ubuntu)=
 ### Install Ubuntu
 
 Check if you have any Ubuntu distributions installed on WSL:
