@@ -27,10 +27,12 @@ You should then be ready for more advanced usage scenarios.
 - Test automatic Pro-attachment of WSL instances
 
 (ref::backup-warning)=
-```{admonition} If you already have Ubuntu WSL pre-installed
-:class: warning
+```{dropdown} If you already have instances of Ubuntu on WSL installed
+:open:
+:color: warning
+:icon: alert
 
-We recommend that any Ubuntu WSL installed is exported then deleted.
+We recommend that any installed instance of Ubuntu on WSL is exported then deleted.
 You can then install it as described in this tutorial.
 At the end of the tutorial you can import and restore your data.
 
@@ -43,12 +45,19 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 
 ## Set up Ubuntu on WSL
 
-We use the following prompt symbols in this tutorial:
+:::{dropdown} Use of prompt symbols
+:open:
+:color: primary
+:icon: terminal
 
-* `>`: runs in PowerShell
-* `$`: runs in Ubuntu
+Prompt symbols in this tutorial are used to distinguish between commands that
+you run in PowerShell and commands that you run in Ubuntu:
 
-Clicking the copy button will only copy the executable command.
+* `>`: PowerShell
+* `$`: Ubuntu
+
+You can paste commands directly from the tutorial because the prompts are not copied.
+:::
 
 (tut::get-wsl)=
 ### Install WSL
@@ -126,8 +135,11 @@ To confirm the installation, and that the installed distro is using WSL 2, run:
 > wsl -l -v
 ```
 
-```{admonition} You must use WSL 2
-:class: warning
+```{dropdown} You must use WSL 2
+:open:
+:color: warning
+:icon: alert
+
 WSL 2 is the default architecture on recent versions of Windows and
 is required for Ubuntu Pro for WSL to function.
 Read more about the [differences between WSL versions](explanation::wsl-version).
@@ -159,7 +171,11 @@ Once you have a token you are ready to install UP4W.
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
 
-```{warning}
+```{dropdown} Ubuntu Pro for WSL is in beta
+:open:
+:color: warning
+:icon: alert
+
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 
