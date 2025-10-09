@@ -21,6 +21,26 @@ offers excellent integration with developer tools like Visual Studio Code.
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
+:::{dropdown} (Optional) Virtualisation requirements
+:color: warning
+:icon: alert
+
+**Virtualisation** needs to be enabled. Many Windows devices already meet this
+requirement, but if your machine does not then you need to modify the UEFI (or
+BIOS).
+
+**Virtual Machine Platform** must be turned on. Running `wsl --install` will
+attempt to do this, but a reboot is required for the change to apply. 
+
+> Refer to [Microsoft's guide on enabling virtualisation on Windows](https://support.microsoft.com/en-us/windows/enable-virtualization-on-windows-c5578302-6e43-4b4b-a449-8ced115f58e1)
+for more information on enabling virtualisation and the Virtual Machine Platform.
+
+**Running WSL in a virtual machine** is possible but nested virtualisation must
+be enabled. We do not recommend following this tutorial in a Windows VM.
+
+> More information on running WSL in a VM is provided in [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-run-wsl-2-in-a-virtual-machine-).
+:::
+
 ## Install Ubuntu on WSL
 
 ### Install WSL
@@ -33,9 +53,30 @@ Open a PowerShell prompt and run:
 > wsl --install
 ```
 
-You may be prompted to grant permission to continue the installation.
+After installing and enabling WSL, you may need to reboot your machine.
 
-This command will install and enable the features necessary to run WSL.
+:::{dropdown} (Optional) Variation in WSL installation behaviour
+:color: info
+:icon: info
+
+The effect of `wsl --install` depends on whether Virtual Machine Platform is
+enabled on Windows:
+
+Not enabled:
+
+* Installs WSL components and enables WSL
+* Turns on the Virtual Machine Platform
+* Prompts for a reboot to complete the setup
+* Does not attempt to install an Ubuntu distribution
+
+Enabled:
+
+* Installs WSL components and enables WSL
+* Does not prompt for a reboot
+* Attempts to install the default Ubuntu distribution
+:::
+
+You may be prompted to grant permissions during the installation process.
 
 **After running this command, you need to reboot your machine.**
 
