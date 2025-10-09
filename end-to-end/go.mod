@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/end-to-end
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1
@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.37.0
 	google.golang.org/grpc v1.75.1
 	gopkg.in/yaml.v3 v3.0.1
 )
