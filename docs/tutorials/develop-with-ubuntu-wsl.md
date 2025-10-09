@@ -111,6 +111,27 @@ To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
 > wsl --install Ubuntu-24.04
 ```
 
+:::{dropdown} (Optional) Installing multiple instances of the same Ubuntu release
+:color: success
+:icon: light-bulb
+
+If you already have an `Ubuntu-24.04` instance and you don't want to change or
+remove it, you can install a second instance by giving it a unique name:
+
+```{code-block} text
+> wsl --install Ubuntu-24.04 --name Ubuntu-tutorial
+```
+
+You can then run that instance with:
+
+```{code-block} text
+> wsl -d Ubuntu-tutorial
+```
+
+If using a distribution with a custom name when following this tutorial, don't
+forget to substitute your custom name for `Ubuntu-24.04` in the commands.
+:::
+
 After an Ubuntu distribution is installed, you are prompted to create a
 username and password. An Ubuntu session will then start automatically.
 
