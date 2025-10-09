@@ -17,6 +17,20 @@ offers excellent integration with developer tools like Visual Studio Code.
 * Creating a basic Node.js webserver on Ubuntu using Visual Studio Code
 * Previewing HTML served from an Ubuntu WSL instance in a native browser on Windows
 
+:::{dropdown} Use of prompt symbols
+:open:
+:color: primary
+:icon: terminal
+
+Prompt symbols in this tutorial are used to distinguish between commands that
+you run in PowerShell and commands that you run in Ubuntu:
+
+* `>`: PowerShell
+* `$`: Ubuntu
+
+You can paste commands directly from the tutorial because the prompts are not copied.
+:::
+
 ## What you will need
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
@@ -80,13 +94,7 @@ You may be prompted to grant permissions during the installation process.
 
 **After running this command, you need to reboot your machine.**
 
-```{admonition} What if WSL is already installed and enabled?
-:class: important
-If WSL is already set up on your machine, running `wsl --install` will install
-the default WSL distro, which is the latest version of Ubuntu.
 
-If an instance named Ubuntu already exists, an installation of Ubuntu will be
-initiated but it will fail.
 ```
 
 ### Install Ubuntu on WSL
@@ -103,7 +111,7 @@ To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
 > wsl --install Ubuntu-24.04
 ```
 
-After the distribution is installed, you are prompted to create a
+After an Ubuntu distribution is installed, you are prompted to create a
 username and password. An Ubuntu session will then start automatically.
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal
@@ -155,8 +163,11 @@ Use `wsl -l -v` to list all of your installed distros.
 This shows that both distros are stopped, each uses WSL 2, and Ubuntu-24.04 is
 the default distro.
 
-```{admonition} What is WSL 2?
-:class: warning
+```{dropdown} What is WSL 2?
+:open:
+:color: warning
+:icon: alert
+
 WSL implements two different architectures for running Linux distributions: WSL
 1 and WSL 2.
 WSL 2 is the default WSL architecture on recent versions of Windows and it is
