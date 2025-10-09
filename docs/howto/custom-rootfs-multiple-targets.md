@@ -83,20 +83,19 @@ $CLOUD_INIT_FILE="~\Downloads\init.yaml"
 
 `````
 
-The `PARENT_COMPUTER_IDS` environment variable contains a list of IDs internally assigned to the
-Windows machines already accepted. The values that appear in the example above are hypothetical,
-actual IDs can be found in the Computers page (or Instances page in the new dashboard) or via the
-Landscape REST API endpoint `GET /computers`.
+The `PARENT_COMPUTER_IDS` environment variable contains a list of IDs internally assigned to 
+Windows machines already registered to Landscape. The values used in this guide are examples,
+and you can get IDs for your machines in the Landscape dashboard or through the
+Landscape REST API.
 
-The example above assumes that there is a server running on the same address as the Landscape server
-itself (on port 9009) and it contains an image named ubuntu-24.04-custom.tar.gz, likely customised
-by the organisation. In practice that URL could point to any address in an intranet or the internet
-that's accessible from the client computers. Ideally, that server would contain not only the images
-but also an optional SHA256SUMS file, following the same pattern as websites like
-https://cloud-images.ubuntu.com and https://cdimage.ubuntu.com, for example. If that file is
-available then the Windows agent will use it to validate the images before installation. While the
-example uses the `.tar.gz` extension, the most recent `.wsl` format as well. Refer to
-[this guide](howto::custom-distro) for ways to customise a WSL image.
+In our example, a [custom image](howto::custom-distro) `ubuntu-24.04-custom.tar.gz` is served from the same address as the Landscape server
+at port 9009. In practice, that URL could point to any address in an intranet or the internet
+that's accessible from the client computers. The image server can also
+provide an SHA256SUMS file, as done by
+[cloud-images.ubuntu.com](https://cloud-images.ubuntu.com) and [cdimage.ubuntu.com](https://cdimage.ubuntu.com). If that file is
+available, the Windows agent validates the images against the SHA256SUMS file before installation. While the
+example uses the `.tar.gz` extension, the most recent `.wsl` format can also be used. Refer to
+[the image customisation for Ubuntu on WSL guide](howto::custom-distro) for more information.
 
 The next step is to generate a Base64-encoded string with the cloud-config data:
 
