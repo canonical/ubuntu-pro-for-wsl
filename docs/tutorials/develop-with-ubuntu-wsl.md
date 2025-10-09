@@ -57,9 +57,18 @@ be enabled. We do not recommend following this tutorial in a Windows VM.
 
 ## Install Ubuntu on WSL
 
-### Install WSL
+Check if WSL is already installed by trying to display its version information:
 
-You need to install and enable WSL before you can start using Ubuntu on WSL.
+```{code-block} text
+> wsl --version
+```
+
+If WSL **is not** installed, press <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel, and then
+follow our steps to [install WSL](#install-wsl).
+
+When WSL **is** installed, follow our steps to [install Ubuntu](#install-ubuntu).
+
+### Install WSL
 
 Open a PowerShell prompt and run:
 
@@ -92,12 +101,21 @@ Enabled:
 
 You may be prompted to grant permissions during the installation process.
 
-**After running this command, you need to reboot your machine.**
+### Install Ubuntu
 
+Check if you have any Ubuntu distributions installed on WSL:
 
+```{code-block} text
+> wsl --list
 ```
 
-### Install Ubuntu on WSL
+Ubuntu is the default WSL distribution for WSL. It may be listed in the output
+of the command if it was included with your WSL installation:
+
+```{code-block} text
+:class: no-copy
+Ubuntu (Default)
+```
 
 For a list of distributions that you can install on WSL, run:
 
@@ -105,6 +123,7 @@ For a list of distributions that you can install on WSL, run:
 > wsl --list --online
 ```
 
+For this tutorial, use a numbered release of Ubuntu.
 To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
 
 ```{code-block} text
