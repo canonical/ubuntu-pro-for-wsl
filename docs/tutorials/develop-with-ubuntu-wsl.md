@@ -17,15 +17,59 @@ offers excellent integration with developer tools like Visual Studio Code.
 * Creating a basic Node.js webserver on Ubuntu using Visual Studio Code
 * Previewing HTML served from an Ubuntu WSL instance in a native browser on Windows
 
+:::{dropdown} Use of prompt symbols
+:open:
+:color: primary
+:icon: terminal
+
+Prompt symbols in this tutorial are used to distinguish between commands that
+you run in PowerShell and commands that you run in Ubuntu:
+
+* `>`: PowerShell
+* `$`: Ubuntu
+
+You can paste commands directly from the tutorial because the prompts are not copied.
+:::
+
 ## What you will need
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
+:::{dropdown} (Optional) Virtualisation requirements
+:color: warning
+:icon: alert
+
+**Virtualisation** needs to be enabled. Many Windows devices already meet this
+requirement, but if your machine does not then you need to modify the UEFI (or
+BIOS).
+
+**Virtual Machine Platform** must be turned on. Running `wsl --install` will
+attempt to do this, but a reboot is required for the change to apply. 
+
+> Refer to [Microsoft's guide on enabling virtualisation on Windows](https://support.microsoft.com/en-us/windows/enable-virtualization-on-windows-c5578302-6e43-4b4b-a449-8ced115f58e1)
+for more information on enabling virtualisation and the Virtual Machine Platform.
+
+**Running WSL in a virtual machine** is possible but nested virtualisation must
+be enabled. We do not recommend following this tutorial in a Windows VM.
+
+> More information on running WSL in a VM is provided in [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-run-wsl-2-in-a-virtual-machine-).
+:::
+
 ## Install Ubuntu on WSL
 
-### Install WSL
+Check if WSL is already installed by trying to display its version information:
 
-You need to install and enable WSL before you can start using Ubuntu on WSL.
+```{code-block} text
+> wsl --version
+```
+
+If WSL **is not** installed, press <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel, and then
+follow our steps to [install WSL](tut::develop::install-wsl).
+
+When WSL **is** installed, follow our steps to [install Ubuntu](tut::develop::install-ubuntu).
+
+(tut::develop::install-wsl)=
+### Install WSL
 
 Open a PowerShell prompt and run:
 
@@ -33,22 +77,47 @@ Open a PowerShell prompt and run:
 > wsl --install
 ```
 
-You may be prompted to grant permission to continue the installation.
+After installing and enabling WSL, you may need to reboot your machine.
 
-This command will install and enable the features necessary to run WSL.
+:::{dropdown} (Optional) Variation in WSL installation behaviour
+:color: info
+:icon: info
 
-**After running this command, you need to reboot your machine.**
+The effect of `wsl --install` depends on whether Virtual Machine Platform is
+enabled on Windows:
 
-```{admonition} What if WSL is already installed and enabled?
-:class: important
-If WSL is already set up on your machine, running `wsl --install` will install
-the default WSL distro, which is the latest version of Ubuntu.
+Not enabled:
 
-If an instance named Ubuntu already exists, an installation of Ubuntu will be
-initiated but it will fail.
+* Installs WSL components and enables WSL
+* Turns on the Virtual Machine Platform
+* Prompts for a reboot to complete the setup
+* Does not attempt to install an Ubuntu distribution
+
+Enabled:
+
+* Installs WSL components and enables WSL
+* Does not prompt for a reboot
+* Attempts to install the default Ubuntu distribution
+:::
+
+You may be prompted to grant permissions during the installation process.
+
+(tut::develop::install-ubuntu)=
+### Install Ubuntu
+
+Check if you have any Ubuntu distributions installed on WSL:
+
+```{code-block} text
+> wsl --list
 ```
 
-### Install Ubuntu on WSL
+Ubuntu is the default WSL distribution for WSL. It may be listed in the output
+of the command if it was included with your WSL installation:
+
+```{code-block} text
+:class: no-copy
+Ubuntu (Default)
+```
 
 For a list of distributions that you can install on WSL, run:
 
@@ -56,13 +125,35 @@ For a list of distributions that you can install on WSL, run:
 > wsl --list --online
 ```
 
+For this tutorial, use a numbered release of Ubuntu.
 To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
 
 ```{code-block} text
 > wsl --install Ubuntu-24.04
 ```
 
-After the distribution is installed, you are prompted to create a
+:::{dropdown} (Optional) Installing multiple instances of the same Ubuntu release
+:color: success
+:icon: light-bulb
+
+If you already have an `Ubuntu-24.04` instance and you don't want to change or
+remove it, you can install a second instance by giving it a unique name:
+
+```{code-block} text
+> wsl --install Ubuntu-24.04 --name Ubuntu-tutorial
+```
+
+You can then run that instance with:
+
+```{code-block} text
+> wsl -d Ubuntu-tutorial
+```
+
+If using a distribution with a custom name when following this tutorial, don't
+forget to substitute your custom name for `Ubuntu-24.04` in the commands.
+:::
+
+After an Ubuntu distribution is installed, you are prompted to create a
 username and password. An Ubuntu session will then start automatically.
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal
@@ -114,8 +205,11 @@ Use `wsl -l -v` to list all of your installed distros.
 This shows that both distros are stopped, each uses WSL 2, and Ubuntu-24.04 is
 the default distro.
 
-```{admonition} What is WSL 2?
-:class: warning
+```{dropdown} What is WSL 2?
+:open:
+:color: warning
+:icon: alert
+
 WSL implements two different architectures for running Linux distributions: WSL
 1 and WSL 2.
 WSL 2 is the default WSL architecture on recent versions of Windows and it is

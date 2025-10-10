@@ -16,6 +16,7 @@ Center
 checksums
 CIS
 Codecov
+Ctrl
 cuda
 distro
 distros
@@ -47,6 +48,7 @@ Structurizr
 systemd
 ubuntu
 UbuntuProForWSL
+UEFI
 winget
 wsl
 WSL
