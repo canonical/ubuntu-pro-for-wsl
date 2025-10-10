@@ -1,158 +1,158 @@
 {
-  "appTitle": "Ubuntu Pro pro WSL",
-  "@appTitle": {},
-  "statusBarAgentConnectingTooltip": "Připojování k agentu Ubuntu Pro…",
-  "@statusBarAgentConnectingTooltip": {},
-  "agentStateInvalid": "Čeká se na inicializaci agenta pro Ubuntu Pro (na pozadí).",
-  "@agentStateInvalid": {},
-  "landscapeFQDNLabel": "Landscape FQDN",
-  "@landscapeFQDNLabel": {},
-  "agentStateQuerying": "Kontrola stavu agenta pro Ubuntu Pro (na pozadí).",
-  "@agentStateQuerying": {},
-  "statusBarReportBugTooltip": "Nahlásit chybu",
-  "@statusBarReportBugTooltip": {},
-  "proHeading": "Zabezpečení softwaru s otevřeným zdrojovým kódem od vydavatelů Ubuntu, nyní dostupné pro Windows. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "purchaseStatusServer": "Něco se pokazilo v Microsoft Store. Zkuste to znovu později.",
-  "@purchaseStatusServer": {},
-  "landscapeHeading": "Nastavte připojení k Landscape pro vzdálenou správu instancí WSL Ubuntu. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeFileEmptyContents": "Soubor nemůže být prázdný",
-  "@landscapeFileEmptyContents": {},
-  "tokenInputDescription": "Zadejte token z {proLink} nebo od vašeho správce systému",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "purchaseStatusAlreadyPurchased": "Už jste přihlášeni k Pro.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "tokenErrorEmpty": "Token je třeba vyplnit",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "Neplatný token",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "Platný token",
-  "@tokenValid": {},
-  "tokenInputTitle": "Připojte tento počítač",
-  "@tokenInputTitle": {},
-  "tokenInputHint": "Token",
-  "@tokenInputHint": {},
-  "attach": "Připojit",
-  "@attach": {},
-  "applyProToken": "Použít Pro Token",
-  "@applyProToken": {},
-  "applyingProToken": "Použití tokenu {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "Agent pro Ubuntu Pro (na pozadí)",
-  "@agent": {},
-  "agentStateStarting": "Agent Ubuntu Pro se spouští (na pozadí).",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "Agent pro Ubuntu Pro (na pozadí) neodpovídá.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateCannotStart": "Agent pro Ubuntu Pro (na pozadí) nebylo možné spustit.",
-  "@agentStateCannotStart": {},
-  "agentStateUnknownEnv": "Stav agenta pro Ubuntu Pro (na pozadí) nelze ověřit. Zkontrolujte nastavení prostředí.",
-  "@agentStateUnknownEnv": {},
-  "agentStateUnreachable": "Pokus o obnovení agenta pro Ubuntu Pro (na pozadí).",
-  "@agentStateUnreachable": {},
-  "getUbuntuPro": "Získat Ubuntu Pro",
-  "@getUbuntuPro": {},
-  "learnMore": "Další informace",
-  "@learnMore": {},
-  "ubuntuProEnabled": "Ubuntu Pro je na tomto počítači povoleno",
-  "@ubuntuProEnabled": {},
-  "ubuntuProEnabledInfo": "Všechny instance WSL Ubuntu mají přístup k funkcím zabezpečení Ubuntu Pro.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Spravovat předplatné Ubuntu Pro",
-  "@manageUbuntuPro": {},
-  "detachPro": "Odpojit Ubuntu Pro",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "Aktualizace informací o předplatném.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "Děkujeme za přihlášení k Ubuntu Pro.",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusUserGaveUp": "Pokus o nákup byl zrušen.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "Problém se sítí zabránil v nákupu pokračovat. Zkuste to znovu, jakmile se připojíte.",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusUnknown": "Neznámá chyba při pokusu o zakoupení předplatného. Zvažte restartování této aplikace.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkip": "Prozatím přeskočit",
-  "@landscapeSkip": {},
-  "landscapeSkipDescription": "Landscape můžete kdykoli nastavit později prostřednictvím této aplikace",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "Zaregistrovat se v Landscape",
-  "@landscapeSkipRegister": {},
-  "landscapeSetupManual": "Ruční nastavení",
-  "@landscapeSetupManual": {},
-  "landscapeSetupCustom": "Pokročilé nastavení",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupManualHint": "Zaregistrovat se na svém vlastním serveru Landscape",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustomHint": "Načíst vlastní konfigurační soubor klienta Landscape",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNError": "Neplatné FQDN. Formát by měl být název hostitele nebo adresa IP.",
-  "@landscapeFQDNError": {},
-  "landscapeFQDNSaaSError": "FQDN by nemělo být landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "Registrační klíč (volitelné)",
-  "@landscapeKeyLabel": {},
-  "landscapeFileLabel": "Popis umístění souboru s nastaveními",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "Soubor s nastaveními je příliš velký",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "Popis umístění je třeba vyplnit",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileNotFound": "Soubor nenalezen",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "Coby soubor nelze zadat složku",
-  "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "Soubor nemá správný formát",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFilePicker": "Vybrat soubor…",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "Nastavit pro Landscape",
-  "@landscapeConfigureButton": {},
-  "landscapeRegister": "Registrovat",
-  "@landscapeRegister": {},
-  "buttonNext": "Další",
-  "@buttonNext": {},
-  "buttonSkip": "Přeskočit",
-  "@buttonSkip": {},
-  "buttonBack": "Zpět",
-  "@buttonBack": {},
-  "landscapeApplyError": "Chyba při pokusu o použití nastavení:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "statusBarAgentRunningTooltip": "Agent Ubuntu Pro je spuštěný",
-  "@statusBarAgentRunningTooltip": {},
-  "landscapeSSLKeyLabel": "Veřejný klíč SSL serveru (volitelné)",
-  "@landscapeSSLKeyLabel": {},
-  "statusBarAgentDownTooltip": "Agent Ubuntu Pro je odpojen. Stisknutím agenta spustíte.",
-  "@statusBarAgentDownTooltip": {}
+    "appTitle": "Ubuntu Pro pro WSL",
+    "@appTitle": {},
+    "statusBarAgentConnectingTooltip": "Připojování k agentu Ubuntu Pro…",
+    "@statusBarAgentConnectingTooltip": {},
+    "agentStateInvalid": "Čeká se na inicializaci agenta pro Ubuntu Pro (na pozadí).",
+    "@agentStateInvalid": {},
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {},
+    "agentStateQuerying": "Kontrola stavu agenta pro Ubuntu Pro (na pozadí).",
+    "@agentStateQuerying": {},
+    "statusBarReportBugTooltip": "Nahlásit chybu",
+    "@statusBarReportBugTooltip": {},
+    "proHeading": "Zabezpečení softwaru s otevřeným zdrojovým kódem od vydavatelů Ubuntu, nyní dostupné pro Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "purchaseStatusServer": "Něco se pokazilo v Microsoft Store. Zkuste to znovu později.",
+    "@purchaseStatusServer": {},
+    "landscapeHeading": "Nastavte připojení k Landscape pro vzdálenou správu instancí WSL Ubuntu. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFileEmptyContents": "Soubor nemůže být prázdný",
+    "@landscapeFileEmptyContents": {},
+    "tokenInputDescription": "Zadejte token z {proLink} nebo od vašeho správce systému",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "purchaseStatusAlreadyPurchased": "Už jste přihlášeni k Pro.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "tokenErrorEmpty": "Token je třeba vyplnit",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Neplatný token",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Platný token",
+    "@tokenValid": {},
+    "tokenInputTitle": "Připojte tento počítač",
+    "@tokenInputTitle": {},
+    "tokenInputHint": "Token",
+    "@tokenInputHint": {},
+    "attach": "Připojit",
+    "@attach": {},
+    "applyProToken": "Použít „Pro“ Token",
+    "@applyProToken": {},
+    "applyingProToken": "Použití tokenu {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Agent pro Ubuntu Pro (na pozadí)",
+    "@agent": {},
+    "agentStateStarting": "Agent Ubuntu Pro se spouští (na pozadí).",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Agent pro Ubuntu Pro (na pozadí) neodpovídá.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateCannotStart": "Agent pro Ubuntu Pro (na pozadí) nebylo možné spustit.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "Stav agenta pro Ubuntu Pro (na pozadí) nelze ověřit. Zkontrolujte nastavení prostředí.",
+    "@agentStateUnknownEnv": {},
+    "agentStateUnreachable": "Pokus o obnovení agenta pro Ubuntu Pro (na pozadí).",
+    "@agentStateUnreachable": {},
+    "getUbuntuPro": "Získat Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "Další informace",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Ubuntu Pro je na tomto počítači povoleno",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "Všechny instance WSL Ubuntu mají přístup k funkcím zabezpečení Ubuntu Pro.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Spravovat předplatné Ubuntu Pro",
+    "@manageUbuntuPro": {},
+    "detachPro": "Odpojit Ubuntu Pro",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Aktualizace informací o předplatném.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Děkujeme za přihlášení k Ubuntu Pro.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusUserGaveUp": "Pokus o nákup byl zrušen.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "Problém se sítí zabránil v nákupu pokračovat. Zkuste to znovu, jakmile se připojíte.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusUnknown": "Neznámá chyba při pokusu o zakoupení předplatného. Zvažte restartování této aplikace.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "Prozatím přeskočit",
+    "@landscapeSkip": {},
+    "landscapeSkipDescription": "Landscape můžete kdykoli nastavit později prostřednictvím této aplikace",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Zaregistrovat se v Landscape",
+    "@landscapeSkipRegister": {},
+    "landscapeSetupManual": "Ruční nastavení",
+    "@landscapeSetupManual": {},
+    "landscapeSetupCustom": "Pokročilé nastavení",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupManualHint": "Zaregistrovat se na svém vlastním serveru Landscape",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustomHint": "Načíst vlastní konfigurační soubor klienta Landscape",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNError": "Neplatné FQDN. Formát by měl být název hostitele nebo adresa IP.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "FQDN by nemělo být landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "Registrační klíč (volitelné)",
+    "@landscapeKeyLabel": {},
+    "landscapeFileLabel": "Popis umístění souboru s nastaveními",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "Soubor s nastaveními je příliš velký",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "Popis umístění je třeba vyplnit",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileNotFound": "Soubor nenalezen",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "Coby soubor nelze zadat složku",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "Soubor nemá správný formát",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "Vybrat soubor…",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "Nastavit pro Landscape",
+    "@landscapeConfigureButton": {},
+    "landscapeRegister": "Registrovat",
+    "@landscapeRegister": {},
+    "buttonNext": "Další",
+    "@buttonNext": {},
+    "buttonSkip": "Přeskočit",
+    "@buttonSkip": {},
+    "buttonBack": "Zpět",
+    "@buttonBack": {},
+    "landscapeApplyError": "Chyba při pokusu o použití nastavení:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "statusBarAgentRunningTooltip": "Agent Ubuntu Pro je spuštěný",
+    "@statusBarAgentRunningTooltip": {},
+    "landscapeSSLKeyLabel": "Veřejný klíč SSL serveru (volitelné)",
+    "@landscapeSSLKeyLabel": {},
+    "statusBarAgentDownTooltip": "Agent Ubuntu Pro je odpojen. Stisknutím agenta spustíte.",
+    "@statusBarAgentDownTooltip": {}
 }
