@@ -1,158 +1,158 @@
 {
-  "detachPro": "Ubuntu Pro leválasztása",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "Az előfizetési információk frissítése.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "Köszönjük, hogy előfizetett az Ubuntu Pro szolgáltatásra.",
-  "@purchaseStatusSuccess": {},
-  "landscapeSkip": "Kihagyás most",
-  "@landscapeSkip": {},
-  "appTitle": "Ubuntu Pro a WSL-hez",
-  "@appTitle": {},
-  "tokenErrorEmpty": "A token nem lehet üres",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "Érvénytelen token",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "Érvényes token",
-  "@tokenValid": {},
-  "tokenInputTitle": "A gép csatolása",
-  "@tokenInputTitle": {},
-  "tokenInputDescription": "Adja meg a(z) {proLink} helyről vagy a rendszergazdától származó tokent",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "tokenInputHint": "Token",
-  "@tokenInputHint": {},
-  "attach": "Csatolás",
-  "@attach": {},
-  "applyProToken": "Pro token alkalmazása",
-  "@applyProToken": {},
-  "applyingProToken": "A(z) {token} token alkalmazása",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "Ubuntu Pro háttérügynök",
-  "@agent": {},
-  "agentStateStarting": "Az Ubuntu Pro háttérügynök elindul.",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "Az Ubuntu Pro háttérügynök nem válaszol.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "Várakozás az Ubuntu Pro háttérügynök előkészítésére.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Az Ubuntu Pro háttérügynököt nem lehet elindítani.",
-  "@agentStateCannotStart": {},
-  "agentStateUnknownEnv": "Az Ubuntu Pro háttérügynök állapotát nem lehet ellenőrizni. Ellenőrizze a környezeti beállításait.",
-  "@agentStateUnknownEnv": {},
-  "agentStateQuerying": "Az Ubuntu Pro háttérügynök állapotának ellenőrzése.",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "Kísérlet az Ubuntu Pro háttérügynök helyreállítására.",
-  "@agentStateUnreachable": {},
-  "proHeading": "Nyílt forráskódú szoftver biztonsága az Ubuntu kiadója által, mostantól elérhető Windowson is. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "Ubuntu Pro beszerzése",
-  "@getUbuntuPro": {},
-  "learnMore": "Tudjon meg többet",
-  "@learnMore": {},
-  "ubuntuProEnabled": "Az Ubuntu Pro engedélyezve van ezen a gépen",
-  "@ubuntuProEnabled": {},
-  "ubuntuProEnabledInfo": "Az összes Ubuntu WSL példánynak hozzáférése van az Ubuntu Pro biztonsági funkcióihoz.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Ubuntu Pro előfizetés kezelése",
-  "@manageUbuntuPro": {},
-  "purchaseStatusAlreadyPurchased": "Ön már előfizetett a Pro szolgáltatásra.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "A vásárlási kísérlet megszakításra került.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "Egy hálózati probléma megakadályozta a vásárlás folytatását. Próbálja meg újra, amint kapcsolódott.",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusServer": "Valami tönkre ment a Microsoft Store-nál. Próbálja meg később újra.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "Ismeretlen hiba történt az előfizetés vásárlási kísérleténél. Fontolja meg az alkalmazás újraindítását.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkipDescription": "A Landscape később is beállítható ebben az alkalmazásban",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "Regisztráció a Landscape-pel",
-  "@landscapeSkipRegister": {},
-  "landscapeHeading": "Állítsa be a kapcsolatot a Landscape-hez, hogy távolról kezelhesse az Ubuntu WSL példányait. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSetupManual": "Kézi beállítás",
-  "@landscapeSetupManual": {},
-  "landscapeSetupManualHint": "Regisztráció a saját Landscape-kiszolgálójával",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustom": "Speciális beállítások",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "Egyéni Landscape-ügyfél beállítófájl betöltése",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNLabel": "Landscape FQDN",
-  "@landscapeFQDNLabel": {},
-  "landscapeFQDNError": "Érvénytelen FQDN. A formátumnak gépnévnek vagy IP-címnek kell lennie.",
-  "@landscapeFQDNError": {},
-  "landscapeFQDNSaaSError": "Az FQDN nem lehet landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "Regisztrációs kulcs (választható)",
-  "@landscapeKeyLabel": {},
-  "landscapeSSLKeyLabel": "Kiszolgáló SSL nyilvános kulcsa (választható)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileLabel": "Beállítófájl útvonala",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "A beállítófájl túl nagy",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "Meg kell adni egy útvonalat",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "A fájl nem lehet üres",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "A fájl nem található",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "A fájl nem lehet könyvtár",
-  "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "A fájl helytelen formátumban van",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFilePicker": "Fájl kiválasztása…",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "Landscape beállítása",
-  "@landscapeConfigureButton": {},
-  "landscapeApplyError": "Hiba a beállítások alkalmazásának kísérletekor:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeRegister": "Regisztráció",
-  "@landscapeRegister": {},
-  "buttonNext": "Következő",
-  "@buttonNext": {},
-  "buttonSkip": "Kihagyás",
-  "@buttonSkip": {},
-  "buttonBack": "Vissza",
-  "@buttonBack": {},
-  "statusBarReportBugTooltip": "Hiba jelentése",
-  "@statusBarReportBugTooltip": {},
-  "statusBarAgentRunningTooltip": "Az Ubuntu Pro ügynök fut",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "Kapcsolódás az Ubuntu Pro ügynökhöz…",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "Az Ubuntu Pro ügynök le van választva. Nyomja meg az ügynök indításához.",
-  "@statusBarAgentDownTooltip": {}
+    "detachPro": "Ubuntu Pro leválasztása",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Az előfizetési információk frissítése.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Köszönjük, hogy előfizetett az Ubuntu Pro szolgáltatásra.",
+    "@purchaseStatusSuccess": {},
+    "landscapeSkip": "Kihagyás most",
+    "@landscapeSkip": {},
+    "appTitle": "Ubuntu Pro a WSL-hez",
+    "@appTitle": {},
+    "tokenErrorEmpty": "A token nem lehet üres",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Érvénytelen token",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Érvényes token",
+    "@tokenValid": {},
+    "tokenInputTitle": "A gép csatolása",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "Adja meg a(z) {proLink} helyről vagy a rendszergazdától származó tokent",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Token",
+    "@tokenInputHint": {},
+    "attach": "Csatolás",
+    "@attach": {},
+    "applyProToken": "Pro token alkalmazása",
+    "@applyProToken": {},
+    "applyingProToken": "A(z) {token} token alkalmazása",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro háttérügynök",
+    "@agent": {},
+    "agentStateStarting": "Az Ubuntu Pro háttérügynök elindul.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Az Ubuntu Pro háttérügynök nem válaszol.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Várakozás az Ubuntu Pro háttérügynök előkészítésére.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Az Ubuntu Pro háttérügynököt nem lehet elindítani.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "Az Ubuntu Pro háttérügynök állapotát nem lehet ellenőrizni. Ellenőrizze a környezeti beállításait.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "Az Ubuntu Pro háttérügynök állapotának ellenőrzése.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Kísérlet az Ubuntu Pro háttérügynök helyreállítására.",
+    "@agentStateUnreachable": {},
+    "proHeading": "Nyílt forráskódú szoftver biztonsága az Ubuntu kiadója által, mostantól elérhető Windowson is. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Ubuntu Pro beszerzése",
+    "@getUbuntuPro": {},
+    "learnMore": "Tudjon meg többet",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Az Ubuntu Pro engedélyezve van ezen a gépen",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "Az összes Ubuntu WSL példánynak hozzáférése van az Ubuntu Pro biztonsági funkcióihoz.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Ubuntu Pro előfizetés kezelése",
+    "@manageUbuntuPro": {},
+    "purchaseStatusAlreadyPurchased": "Ön már előfizetett a Pro szolgáltatásra.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "A vásárlási kísérlet megszakításra került.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "Egy hálózati probléma megakadályozta a vásárlás folytatását. Próbálja meg újra, amint kapcsolódott.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "Valami tönkre ment a Microsoft Store-nál. Próbálja meg később újra.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "Ismeretlen hiba történt az előfizetés vásárlási kísérleténél. Fontolja meg az alkalmazás újraindítását.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkipDescription": "A Landscape később is beállítható ebben az alkalmazásban",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Regisztráció a Landscape-pel",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "Állítsa be a kapcsolatot a Landscape-hez, hogy távolról kezelhesse az Ubuntu WSL példányait. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Kézi beállítás",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "Regisztráció a saját Landscape-kiszolgálójával",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "Speciális beállítások",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "Egyéni Landscape-ügyfél beállítófájl betöltése",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "Érvénytelen FQDN. A formátumnak gépnévnek vagy IP-címnek kell lennie.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "Az FQDN nem lehet landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "Regisztrációs kulcs (választható)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "Kiszolgáló SSL nyilvános kulcsa (választható)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "Beállítófájl útvonala",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "A beállítófájl túl nagy",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "Meg kell adni egy útvonalat",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "A fájl nem lehet üres",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "A fájl nem található",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "A fájl nem lehet könyvtár",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "A fájl helytelen formátumban van",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "Fájl kiválasztása…",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "Landscape beállítása",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "Hiba a beállítások alkalmazásának kísérletekor:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "Regisztráció",
+    "@landscapeRegister": {},
+    "buttonNext": "Következő",
+    "@buttonNext": {},
+    "buttonSkip": "Kihagyás",
+    "@buttonSkip": {},
+    "buttonBack": "Vissza",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "Hiba jelentése",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Az Ubuntu Pro ügynök fut",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Kapcsolódás az Ubuntu Pro ügynökhöz…",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Az Ubuntu Pro ügynök le van választva. Nyomja meg az ügynök indításához.",
+    "@statusBarAgentDownTooltip": {}
 }
