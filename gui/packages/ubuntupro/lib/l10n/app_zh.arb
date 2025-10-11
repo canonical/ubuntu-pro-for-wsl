@@ -1,158 +1,158 @@
 {
-  "agentStateUnknownEnv": "未能验证 Ubuntu Pro 后台代理状态。请检查您的环境设置。",
-  "@agentStateUnknownEnv": {},
-  "purchaseStatusAlreadyPurchased": "您已经订阅了 Ubuntu Pro。",
-  "@purchaseStatusAlreadyPurchased": {},
-  "tokenInputHint": "令牌",
-  "@tokenInputHint": {},
-  "tokenInputDescription": "输入来自 {proLink} 或你的系统管理员处的令牌",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSkip": "暂时跳过",
-  "@landscapeSkip": {},
-  "agentStateCannotStart": "Ubuntu Pro 后台代理未能启动。",
-  "@agentStateCannotStart": {},
-  "landscapeHeading": "配置到 Landscape 的连接来远程管理您的 Ubuntu WSL 实例。{landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "agentStateInvalid": "正在等待 Ubuntu Pro 后台代理初始化。",
-  "@agentStateInvalid": {},
-  "agentStateQuerying": "正在检查 Ubuntu Pro 后台代理状态。",
-  "@agentStateQuerying": {},
-  "agentStatePingNonResponsive": "Ubuntu Pro 后台代理未响应。",
-  "@agentStatePingNonResponsive": {},
-  "agentStateUnreachable": "正在尝试恢复Ubuntu Pro 后台代理。",
-  "@agentStateUnreachable": {},
-  "ubuntuProEnabledInfo": "所有 Ubuntu WSL 实例都具有对 Ubuntu Pro 的访问权限。",
-  "@ubuntuProEnabledInfo": {},
-  "purchaseStatusSuccess": "感谢您订阅 Ubuntu Pro。",
-  "@purchaseStatusSuccess": {},
-  "landscapeSkipDescription": "您可以稍后在此应用内配置 Landscape",
-  "@landscapeSkipDescription": {},
-  "purchaseStatusUserGaveUp": "已取消购买。",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusUnknown": "在购买订阅的过程中出现未知错误。请考虑重新启动此应用。",
-  "@purchaseStatusUnknown": {},
-  "landscapeFileTooLarge": "配置文件过大",
-  "@landscapeFileTooLarge": {},
-  "landscapeSetupCustomHint": "加载自定义 Landscape 客户端配置文件",
-  "@landscapeSetupCustomHint": {},
-  "appTitle": "适用于 WSL 的 Ubuntu Pro",
-  "@appTitle": {},
-  "tokenErrorEmpty": "令牌不能为空",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "无效令牌",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "令牌有效",
-  "@tokenValid": {},
-  "tokenInputTitle": "绑定此机器",
-  "@tokenInputTitle": {},
-  "attach": "绑定",
-  "@attach": {},
-  "applyProToken": "应用 Pro 令牌",
-  "@applyProToken": {},
-  "applyingProToken": "正在应用令牌 {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "Ubuntu Pro后台代理",
-  "@agent": {},
-  "agentStateStarting": "Ubuntu Pro 后台代理正在启动。",
-  "@agentStateStarting": {},
-  "proHeading": "来自 Ubuntu 发布者的开源软件安全，现于 Windows 上可用。{aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "获取 Ubuntu Pro",
-  "@getUbuntuPro": {},
-  "learnMore": "了解更多",
-  "@learnMore": {},
-  "ubuntuProEnabled": "Ubuntu Pro 已在此机器上启用",
-  "@ubuntuProEnabled": {},
-  "manageUbuntuPro": "管理 Ubuntu Pro 订阅",
-  "@manageUbuntuPro": {},
-  "detachPro": "解绑 Ubuntu Pro",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "正在更新订阅信息。",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusNetwork": "网络问题阻止了购买进行。请连接好网络，然后再试一次。",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusServer": "Microsoft Store 出了些问题。请稍候再试。",
-  "@purchaseStatusServer": {},
-  "landscapeSkipRegister": "用 Landscape 注册",
-  "@landscapeSkipRegister": {},
-  "landscapeRegister": "注册",
-  "@landscapeRegister": {},
-  "buttonNext": "下一步",
-  "@buttonNext": {},
-  "buttonSkip": "跳过",
-  "@buttonSkip": {},
-  "buttonBack": "返回",
-  "@buttonBack": {},
-  "landscapeSetupManual": "手动配置",
-  "@landscapeSetupManual": {},
-  "landscapeSetupCustom": "高级配置",
-  "@landscapeSetupCustom": {},
-  "landscapeFQDNLabel": "Landscape FQDN",
-  "@landscapeFQDNLabel": {},
-  "landscapeFilePicker": "选择文件…",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "配置 Landscape",
-  "@landscapeConfigureButton": {},
-  "landscapeKeyLabel": "注册密钥（可选）",
-  "@landscapeKeyLabel": {},
-  "landscapeFileLabel": "配置文件路径",
-  "@landscapeFileLabel": {},
-  "landscapeFileNotFound": "文件未找到",
-  "@landscapeFileNotFound": {},
-  "statusBarReportBugTooltip": "报告问题",
-  "@statusBarReportBugTooltip": {},
-  "landscapeFQDNSaaSError": "FQDN 不能是 landscape.canonical.com。",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeSSLKeyLabel": "服务器 SSL 公钥（可选）",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileEmptyPath": "必须指定路径",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "文件不能为空",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileIsDir": "文件不能为目录",
-  "@landscapeFileIsDir": {},
-  "statusBarAgentRunningTooltip": "Ubuntu Pro 代理正在运行",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "正在连接到 Ubuntu Pro 代理…",
-  "@statusBarAgentConnectingTooltip": {},
-  "landscapeSetupManualHint": "用您自己的 Landscape 服务器注册",
-  "@landscapeSetupManualHint": {},
-  "landscapeFileInvalidFormat": "文件格式有误",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeApplyError": "尝试应用配置时出现问题：\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeFQDNError": "FQDN 无效。格式必须为主机名或 IP 地址。",
-  "@landscapeFQDNError": {},
-  "statusBarAgentDownTooltip": "Ubuntu Pro 代理已断开。点按来启动它。",
-  "@statusBarAgentDownTooltip": {}
+    "agentStateUnknownEnv": "未能验证 Ubuntu Pro 后台代理状态。请检查您的环境设置。",
+    "@agentStateUnknownEnv": {},
+    "purchaseStatusAlreadyPurchased": "您已经订阅了 Ubuntu Pro。",
+    "@purchaseStatusAlreadyPurchased": {},
+    "tokenInputHint": "令牌",
+    "@tokenInputHint": {},
+    "tokenInputDescription": "输入来自 {proLink} 或你的系统管理员处的令牌",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSkip": "暂时跳过",
+    "@landscapeSkip": {},
+    "agentStateCannotStart": "Ubuntu Pro 后台代理未能启动。",
+    "@agentStateCannotStart": {},
+    "landscapeHeading": "配置到 Landscape 的连接来远程管理您的 Ubuntu WSL 实例。{landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStateInvalid": "正在等待 Ubuntu Pro 后台代理初始化。",
+    "@agentStateInvalid": {},
+    "agentStateQuerying": "正在检查 Ubuntu Pro 后台代理状态。",
+    "@agentStateQuerying": {},
+    "agentStatePingNonResponsive": "Ubuntu Pro 后台代理未响应。",
+    "@agentStatePingNonResponsive": {},
+    "agentStateUnreachable": "正在尝试恢复Ubuntu Pro 后台代理。",
+    "@agentStateUnreachable": {},
+    "ubuntuProEnabledInfo": "所有 Ubuntu WSL 实例都具有对 Ubuntu Pro 的访问权限。",
+    "@ubuntuProEnabledInfo": {},
+    "purchaseStatusSuccess": "感谢您订阅 Ubuntu Pro。",
+    "@purchaseStatusSuccess": {},
+    "landscapeSkipDescription": "您可以稍后在此应用内配置 Landscape",
+    "@landscapeSkipDescription": {},
+    "purchaseStatusUserGaveUp": "已取消购买。",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusUnknown": "在购买订阅的过程中出现未知错误。请考虑重新启动此应用。",
+    "@purchaseStatusUnknown": {},
+    "landscapeFileTooLarge": "配置文件过大",
+    "@landscapeFileTooLarge": {},
+    "landscapeSetupCustomHint": "加载自定义 Landscape 客户端配置文件",
+    "@landscapeSetupCustomHint": {},
+    "appTitle": "适用于 WSL 的 Ubuntu Pro",
+    "@appTitle": {},
+    "tokenErrorEmpty": "令牌不能为空",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "无效令牌",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "令牌有效",
+    "@tokenValid": {},
+    "tokenInputTitle": "绑定此机器",
+    "@tokenInputTitle": {},
+    "attach": "绑定",
+    "@attach": {},
+    "applyProToken": "应用 Pro 令牌",
+    "@applyProToken": {},
+    "applyingProToken": "正在应用令牌 {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro后台代理",
+    "@agent": {},
+    "agentStateStarting": "Ubuntu Pro 后台代理正在启动。",
+    "@agentStateStarting": {},
+    "proHeading": "来自 Ubuntu 发布者的开源软件安全，现于 Windows 上可用。{aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "获取 Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "了解更多",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Ubuntu Pro 已在此机器上启用",
+    "@ubuntuProEnabled": {},
+    "manageUbuntuPro": "管理 Ubuntu Pro 订阅",
+    "@manageUbuntuPro": {},
+    "detachPro": "解绑 Ubuntu Pro",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "正在更新订阅信息。",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusNetwork": "网络问题阻止了购买进行。请连接好网络，然后再试一次。",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "Microsoft Store 出了些问题。请稍候再试。",
+    "@purchaseStatusServer": {},
+    "landscapeSkipRegister": "用 Landscape 注册",
+    "@landscapeSkipRegister": {},
+    "landscapeRegister": "注册",
+    "@landscapeRegister": {},
+    "buttonNext": "下一步",
+    "@buttonNext": {},
+    "buttonSkip": "跳过",
+    "@buttonSkip": {},
+    "buttonBack": "返回",
+    "@buttonBack": {},
+    "landscapeSetupManual": "手动配置",
+    "@landscapeSetupManual": {},
+    "landscapeSetupCustom": "高级配置",
+    "@landscapeSetupCustom": {},
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {},
+    "landscapeFilePicker": "选择文件…",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "配置 Landscape",
+    "@landscapeConfigureButton": {},
+    "landscapeKeyLabel": "注册密钥（可选）",
+    "@landscapeKeyLabel": {},
+    "landscapeFileLabel": "配置文件路径",
+    "@landscapeFileLabel": {},
+    "landscapeFileNotFound": "文件未找到",
+    "@landscapeFileNotFound": {},
+    "statusBarReportBugTooltip": "报告问题",
+    "@statusBarReportBugTooltip": {},
+    "landscapeFQDNSaaSError": "FQDN 不能是 landscape.canonical.com。",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeSSLKeyLabel": "服务器 SSL 公钥（可选）",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileEmptyPath": "必须指定路径",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "文件不能为空",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileIsDir": "文件不能为目录",
+    "@landscapeFileIsDir": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro 代理正在运行",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "正在连接到 Ubuntu Pro 代理…",
+    "@statusBarAgentConnectingTooltip": {},
+    "landscapeSetupManualHint": "用您自己的 Landscape 服务器注册",
+    "@landscapeSetupManualHint": {},
+    "landscapeFileInvalidFormat": "文件格式有误",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeApplyError": "尝试应用配置时出现问题：\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFQDNError": "FQDN 无效。格式必须为主机名或 IP 地址。",
+    "@landscapeFQDNError": {},
+    "statusBarAgentDownTooltip": "Ubuntu Pro 代理已断开。点按来启动它。",
+    "@statusBarAgentDownTooltip": {}
 }
