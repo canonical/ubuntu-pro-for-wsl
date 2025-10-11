@@ -1,158 +1,158 @@
 {
-  "appTitle": "Ubuntu Pro untuk WSL",
-  "@appTitle": {},
-  "tokenErrorInvalid": "Token tidak valid",
-  "@tokenErrorInvalid": {},
-  "tokenInputHint": "Token",
-  "@tokenInputHint": {},
-  "agentStateUnknownEnv": "Status agen latar Ubuntu Pro tidak dapat diverifikasi. Periksa pengaturan lingkungan Anda.",
-  "@agentStateUnknownEnv": {},
-  "applyingProToken": "Menerapkan token {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "attach": "Cantolkan",
-  "@attach": {},
-  "tokenErrorEmpty": "Token tidak boleh kosong",
-  "@tokenErrorEmpty": {},
-  "tokenValid": "Token valid",
-  "@tokenValid": {},
-  "tokenInputTitle": "Cantolkan mesin ini",
-  "@tokenInputTitle": {},
-  "tokenInputDescription": "Masukkan token dari {proLink} atau administrator sistem Anda",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "applyProToken": "Terapkan Token Pro",
-  "@applyProToken": {},
-  "agent": "Agen latar Ubuntu Pro",
-  "@agent": {},
-  "agentStateStarting": "Agen latar Ubuntu Pro sedang memulai.",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "Agen latar Ubuntu Pro tidak merespon.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "Menunggu inisialisasi agen latar Ubuntu Pro.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Agen latar Ubuntu Pro tidak bisa dimulai.",
-  "@agentStateCannotStart": {},
-  "agentStateQuerying": "Memeriksa status agen latar Ubuntu Linux Pro.",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "Mencoba memulihkan agen latar Ubuntu Pro.",
-  "@agentStateUnreachable": {},
-  "proHeading": "Keamanan perangkat lunak open source oleh penerbit Ubuntu, sekarang tersedia di Windows. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "Dapatkan Ubuntu Pro",
-  "@getUbuntuPro": {},
-  "learnMore": "Pelajari lebih lanjut",
-  "@learnMore": {},
-  "ubuntuProEnabled": "Ubuntu Pro diaktifkan pada mesin ini",
-  "@ubuntuProEnabled": {},
-  "ubuntuProEnabledInfo": "Semua instansi Ubuntu WSL memiliki akses ke fitur keamanan Ubuntu Pro.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Kelola langganan Ubuntu Pro",
-  "@manageUbuntuPro": {},
-  "detachPro": "Lepaskan Ubuntu Pro",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "Memperbarui informasi berlangganan.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "Terima kasih untuk berlangganan Ubuntu Pro.",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "Anda sudah berlangganan Pro.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "Upaya pembelian dibatalkan.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "Masalah jaringan mencegah pembelian berlanjut. Silakan coba lagi setelah terhubung.",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusServer": "Ada yang salah dengan Microsoft Store. Silakan coba lagi nanti.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "Kesalahan yang tidak diketahui saat mencoba membeli langganan. Pertimbangkan restart aplikasi ini.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkip": "Lewati dulu",
-  "@landscapeSkip": {},
-  "landscapeRegister": "Mendaftar",
-  "@landscapeRegister": {},
-  "landscapeFileInvalidFormat": "Berkas dalam format yang salah",
-  "@landscapeFileInvalidFormat": {},
-  "statusBarReportBugTooltip": "Laporkan kutu",
-  "@statusBarReportBugTooltip": {},
-  "landscapeFilePicker": "Pilih berkas...",
-  "@landscapeFilePicker": {},
-  "landscapeSkipDescription": "Anda selalu dapat mengonfigurasi Landscape nanti di aplikasi ini",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "Mendaftar dengan Landscape",
-  "@landscapeSkipRegister": {},
-  "landscapeHeading": "Konfigurasikan koneksi ke Landscape untuk mengelola instansi Ubuntu WSL Anda dari jarak jauh. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSetupManual": "Konfigurasi manual",
-  "@landscapeSetupManual": {},
-  "landscapeSetupManualHint": "Mendaftar dengan server Landscape Anda sendiri",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustom": "Konfigurasi tingkat lanjut",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "Muat berkas konfigurasi klien Landscape ubahan",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNLabel": "FQDN Landscape",
-  "@landscapeFQDNLabel": {},
-  "landscapeFQDNError": "FQDN tidak valid. Format harus berupa nama host atau alamat IP.",
-  "@landscapeFQDNError": {},
-  "landscapeFQDNSaaSError": "FQDN tidak boleh landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "Kunci pendaftaran (opsional)",
-  "@landscapeKeyLabel": {},
-  "landscapeSSLKeyLabel": "Kunci publik server SSL (opsional)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileLabel": "Path berkas konfig",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "Berkas konfigurasi terlalu besar",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "Suatu path mesti dinyatakan",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "Berkas tidak boleh kosong",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "Berkas tidak ditemukan",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "Berkas tidak boleh berupa direktori",
-  "@landscapeFileIsDir": {},
-  "landscapeConfigureButton": "Konfigurasikan Landscape",
-  "@landscapeConfigureButton": {},
-  "landscapeApplyError": "Kesalahan ketika mencoba menerapkan konfigurasi:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "buttonNext": "Selanjutnya",
-  "@buttonNext": {},
-  "buttonSkip": "Lewati",
-  "@buttonSkip": {},
-  "buttonBack": "Mundur",
-  "@buttonBack": {},
-  "statusBarAgentRunningTooltip": "Agen Ubuntu Pro sedang berjalan",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "Menyambung ke agen Ubuntu Pro...",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "Agen Ubuntu Pro terputus. Tekan untuk memulai agen.",
-  "@statusBarAgentDownTooltip": {}
+    "appTitle": "Ubuntu Pro untuk WSL",
+    "@appTitle": {},
+    "tokenErrorInvalid": "Token tidak valid",
+    "@tokenErrorInvalid": {},
+    "tokenInputHint": "Token",
+    "@tokenInputHint": {},
+    "agentStateUnknownEnv": "Status agen latar Ubuntu Pro tidak dapat diverifikasi. Periksa pengaturan lingkungan Anda.",
+    "@agentStateUnknownEnv": {},
+    "applyingProToken": "Menerapkan token {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "attach": "Cantolkan",
+    "@attach": {},
+    "tokenErrorEmpty": "Token tidak boleh kosong",
+    "@tokenErrorEmpty": {},
+    "tokenValid": "Token valid",
+    "@tokenValid": {},
+    "tokenInputTitle": "Cantolkan mesin ini",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "Masukkan token dari {proLink} atau administrator sistem Anda",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "applyProToken": "Terapkan Token Pro",
+    "@applyProToken": {},
+    "agent": "Agen latar Ubuntu Pro",
+    "@agent": {},
+    "agentStateStarting": "Agen latar Ubuntu Pro sedang memulai.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Agen latar Ubuntu Pro tidak merespon.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Menunggu inisialisasi agen latar Ubuntu Pro.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Agen latar Ubuntu Pro tidak bisa dimulai.",
+    "@agentStateCannotStart": {},
+    "agentStateQuerying": "Memeriksa status agen latar Ubuntu Linux Pro.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Mencoba memulihkan agen latar Ubuntu Pro.",
+    "@agentStateUnreachable": {},
+    "proHeading": "Keamanan perangkat lunak open source oleh penerbit Ubuntu, sekarang tersedia di Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Dapatkan Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "Pelajari lebih lanjut",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Ubuntu Pro diaktifkan pada mesin ini",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "Semua instansi Ubuntu WSL memiliki akses ke fitur keamanan Ubuntu Pro.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Kelola langganan Ubuntu Pro",
+    "@manageUbuntuPro": {},
+    "detachPro": "Lepaskan Ubuntu Pro",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Memperbarui informasi berlangganan.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Terima kasih untuk berlangganan Ubuntu Pro.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "Anda sudah berlangganan Pro.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "Upaya pembelian dibatalkan.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "Masalah jaringan mencegah pembelian berlanjut. Silakan coba lagi setelah terhubung.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "Ada yang salah dengan Microsoft Store. Silakan coba lagi nanti.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "Kesalahan yang tidak diketahui saat mencoba membeli langganan. Pertimbangkan restart aplikasi ini.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "Lewati dulu",
+    "@landscapeSkip": {},
+    "landscapeRegister": "Mendaftar",
+    "@landscapeRegister": {},
+    "landscapeFileInvalidFormat": "Berkas dalam format yang salah",
+    "@landscapeFileInvalidFormat": {},
+    "statusBarReportBugTooltip": "Laporkan kutu",
+    "@statusBarReportBugTooltip": {},
+    "landscapeFilePicker": "Pilih berkas...",
+    "@landscapeFilePicker": {},
+    "landscapeSkipDescription": "Anda selalu dapat mengonfigurasi Landscape nanti di aplikasi ini",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Mendaftar dengan Landscape",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "Konfigurasikan koneksi ke Landscape untuk mengelola instansi Ubuntu WSL Anda dari jarak jauh. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Konfigurasi manual",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "Mendaftar dengan server Landscape Anda sendiri",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "Konfigurasi tingkat lanjut",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "Muat berkas konfigurasi klien Landscape ubahan",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "FQDN Landscape",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "FQDN tidak valid. Format harus berupa nama host atau alamat IP.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "FQDN tidak boleh landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "Kunci pendaftaran (opsional)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "Kunci publik server SSL (opsional)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "Path berkas konfig",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "Berkas konfigurasi terlalu besar",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "Suatu path mesti dinyatakan",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "Berkas tidak boleh kosong",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "Berkas tidak ditemukan",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "Berkas tidak boleh berupa direktori",
+    "@landscapeFileIsDir": {},
+    "landscapeConfigureButton": "Konfigurasikan Landscape",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "Kesalahan ketika mencoba menerapkan konfigurasi:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "buttonNext": "Selanjutnya",
+    "@buttonNext": {},
+    "buttonSkip": "Lewati",
+    "@buttonSkip": {},
+    "buttonBack": "Mundur",
+    "@buttonBack": {},
+    "statusBarAgentRunningTooltip": "Agen Ubuntu Pro sedang berjalan",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Menyambung ke agen Ubuntu Pro...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Agen Ubuntu Pro terputus. Tekan untuk memulai agen.",
+    "@statusBarAgentDownTooltip": {}
 }
