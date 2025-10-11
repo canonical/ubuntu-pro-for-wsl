@@ -1,158 +1,158 @@
 {
-  "attach": "Seo",
-  "@attach": {},
-  "ubuntuProEnabled": "Ubuntu Pro on nüüd selles masinas kasutusel",
-  "@ubuntuProEnabled": {},
-  "tokenInputDescription": "Sisesta tunnusluba, milles oled saanud {proLink} lehelt või oma süsteemihaldajalt",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "learnMore": "Lisateave",
-  "@learnMore": {},
-  "statusBarReportBugTooltip": "Teata veast",
-  "@statusBarReportBugTooltip": {},
-  "getUbuntuPro": "Telli Ubuntu Pro teenus",
-  "@getUbuntuPro": {},
-  "applyingProToken": "Pro teenuse tunnusluba {token} on rakendamisel",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "appTitle": "Ubuntu Pro WSL-i jaoks",
-  "@appTitle": {},
-  "tokenErrorEmpty": "Tunnusluba ei tohi jääda tühjaks",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "Vigane tunnusluba",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "Kehtiv tunnusluba",
-  "@tokenValid": {},
-  "tokenInputTitle": "Lisa see masin",
-  "@tokenInputTitle": {},
-  "tokenInputHint": "Tunnusluba",
-  "@tokenInputHint": {},
-  "applyProToken": "Rakenda Pro teenuse tunnusluba",
-  "@applyProToken": {},
-  "landscapeFileTooLarge": "Seadistustefail on liiga suur",
-  "@landscapeFileTooLarge": {},
-  "landscapeFQDNLabel": "Landscape'i täielik domeeninimi",
-  "@landscapeFQDNLabel": {},
-  "landscapeApplyError": "Seadistuste rakendamisel tekkis viga:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeFQDNError": "Vigane täielik domeeninimi. Vorming peaks olema hosti nimi või ip-aadress.",
-  "@landscapeFQDNError": {},
-  "statusBarAgentRunningTooltip": "Ubuntu Pro agentprogramm töötab",
-  "@statusBarAgentRunningTooltip": {},
-  "proHeading": "Avatud lähtekoodil põhinev turvatarkvara Ubuntu arendajatelt on nüüd saadaval Windowsis. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeKeyLabel": "Registreerimisvõti (kui on vaja)",
-  "@landscapeKeyLabel": {},
-  "statusBarAgentConnectingTooltip": "Ühendan Ubuntu Pro agentprogrammiga...",
-  "@statusBarAgentConnectingTooltip": {},
-  "buttonSkip": "Jäta vahele",
-  "@buttonSkip": {},
-  "agentStateUnknownEnv": "Taustateenusena töötava Ubuntu Pro agentprogrammi olekut ei õnnestu verifitseerida. Palun kontrolli keskkonna seadistusi.",
-  "@agentStateUnknownEnv": {},
-  "agentStateQuerying": "Kontrollime taustateenusena töötava Ubuntu Pro agentprogrammi olekut.",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "Proovime taastada taustateenusena töötavat Ubuntu Pro agentprogrammi.",
-  "@agentStateUnreachable": {},
-  "purchaseStatusServer": "Microsoft Store'iga läks midagi viltu. Palun proovi hiljem uuesti.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "Tellimuse ostmisel tekkis tundmatu viga. Proovi rakendust uuesti käivitada.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkip": "Jäta hetkel vahele",
-  "@landscapeSkip": {},
-  "landscapeSetupManualHint": "Registreeri sinu oma Landscape'i serveriga",
-  "@landscapeSetupManualHint": {},
-  "landscapeSkipRegister": "Registreeru Landscape'i teenuses",
-  "@landscapeSkipRegister": {},
-  "landscapeHeading": "Seadista ühendus Landscape'i teenusega ja halda oma Ubuntu WSL-i paigaldusi eemalt. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSetupCustom": "Täiendavad seadistused",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "Laadi Landscape'i kliendi kohendatud seadistusfail",
-  "@landscapeSetupCustomHint": {},
-  "buttonNext": "Edasi",
-  "@buttonNext": {},
-  "landscapeFQDNSaaSError": "Täielik domeeninimi ei tohiks olla landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeSSLKeyLabel": "Serveri avalik SSL-i võti (kui on vaja)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileEmptyPath": "Asukoht peab olema määratud",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileInvalidFormat": "Fail on vales vormingus",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeConfigureButton": "Seadista Landscape'i teenus",
-  "@landscapeConfigureButton": {},
-  "buttonBack": "Tagasi",
-  "@buttonBack": {},
-  "statusBarAgentDownTooltip": "Ubuntu Pro agentprogrammi ühendus on katkenud. Tema uuesti käivitamiseks vajuta nuppu „Käivita“.",
-  "@statusBarAgentDownTooltip": {},
-  "landscapeSkipDescription": "Sa võid Landscape'i teenust selles rakenduses ka alati hiljem seadistada",
-  "@landscapeSkipDescription": {},
-  "landscapeFilePicker": "Vali fail...",
-  "@landscapeFilePicker": {},
-  "landscapeSetupManual": "Käsitsi seadistamine",
-  "@landscapeSetupManual": {},
-  "landscapeFileNotFound": "Faili ei leidu",
-  "@landscapeFileNotFound": {},
-  "landscapeFileEmptyContents": "Fail ei tohi olla tühi",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileIsDir": "Fail ei tohi olla kaust",
-  "@landscapeFileIsDir": {},
-  "landscapeRegister": "Registreeri",
-  "@landscapeRegister": {},
-  "ubuntuProEnabledInfo": "Kõikidel Ubuntu WSL-i paigaldustel on ligipääs Ubuntu Pro turvauuendustele ja teenustele.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Halda Ubuntu Pro tellimust",
-  "@manageUbuntuPro": {},
-  "detachPro": "Eemalda Ubuntu Pro tellimus",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "Uuendan tellimuse teavet.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "Täname, et tellisid Ubuntu Pro teenuse.",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "Sul juba on Ubuntu Pro tellimus olemas.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "Ostmine on katkestatud.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "Võrguühenduse viga takistab ostmise jätkamist. Palun proovi uuesti peale ühenduse loomist.",
-  "@purchaseStatusNetwork": {},
-  "agent": "Taustateenusena töötav Ubuntu Pro agentprogramm",
-  "@agent": {},
-  "agentStateStarting": "Taustateenusena töötav Ubuntu Pro agentprogramm on käivitamisel.",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "Taustateenusena töötav Ubuntu Pro agentprogramm ei vasta.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "Taustateenusena töötav Ubuntu Pro agentprogramm on valmendamisel.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Taustateenusena töötava Ubuntu Pro agentprogrammi käivitamine ei õnnestu.",
-  "@agentStateCannotStart": {},
-  "landscapeFileLabel": "Seadistustefaili asukoht",
-  "@landscapeFileLabel": {}
+    "attach": "Seo",
+    "@attach": {},
+    "ubuntuProEnabled": "Ubuntu Pro on nüüd selles masinas kasutusel",
+    "@ubuntuProEnabled": {},
+    "tokenInputDescription": "Sisesta tunnusluba, milles oled saanud {proLink} lehelt või oma süsteemihaldajalt",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "learnMore": "Lisateave",
+    "@learnMore": {},
+    "statusBarReportBugTooltip": "Teata veast",
+    "@statusBarReportBugTooltip": {},
+    "getUbuntuPro": "Telli Ubuntu Pro teenus",
+    "@getUbuntuPro": {},
+    "applyingProToken": "Pro teenuse tunnusluba {token} on rakendamisel",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "appTitle": "Ubuntu Pro WSL-i jaoks",
+    "@appTitle": {},
+    "tokenErrorEmpty": "Tunnusluba ei tohi jääda tühjaks",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Vigane tunnusluba",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Kehtiv tunnusluba",
+    "@tokenValid": {},
+    "tokenInputTitle": "Lisa see masin",
+    "@tokenInputTitle": {},
+    "tokenInputHint": "Tunnusluba",
+    "@tokenInputHint": {},
+    "applyProToken": "Rakenda Pro teenuse tunnusluba",
+    "@applyProToken": {},
+    "landscapeFileTooLarge": "Seadistustefail on liiga suur",
+    "@landscapeFileTooLarge": {},
+    "landscapeFQDNLabel": "Landscape'i täielik domeeninimi",
+    "@landscapeFQDNLabel": {},
+    "landscapeApplyError": "Seadistuste rakendamisel tekkis viga:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFQDNError": "Vigane täielik domeeninimi. Vorming peaks olema hosti nimi või ip-aadress.",
+    "@landscapeFQDNError": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro agentprogramm töötab",
+    "@statusBarAgentRunningTooltip": {},
+    "proHeading": "Avatud lähtekoodil põhinev turvatarkvara Ubuntu arendajatelt on nüüd saadaval Windowsis. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "Registreerimisvõti (kui on vaja)",
+    "@landscapeKeyLabel": {},
+    "statusBarAgentConnectingTooltip": "Ühendan Ubuntu Pro agentprogrammiga...",
+    "@statusBarAgentConnectingTooltip": {},
+    "buttonSkip": "Jäta vahele",
+    "@buttonSkip": {},
+    "agentStateUnknownEnv": "Taustateenusena töötava Ubuntu Pro agentprogrammi olekut ei õnnestu verifitseerida. Palun kontrolli keskkonna seadistusi.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "Kontrollime taustateenusena töötava Ubuntu Pro agentprogrammi olekut.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Proovime taastada taustateenusena töötavat Ubuntu Pro agentprogrammi.",
+    "@agentStateUnreachable": {},
+    "purchaseStatusServer": "Microsoft Store'iga läks midagi viltu. Palun proovi hiljem uuesti.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "Tellimuse ostmisel tekkis tundmatu viga. Proovi rakendust uuesti käivitada.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "Jäta hetkel vahele",
+    "@landscapeSkip": {},
+    "landscapeSetupManualHint": "Registreeri sinu oma Landscape'i serveriga",
+    "@landscapeSetupManualHint": {},
+    "landscapeSkipRegister": "Registreeru Landscape'i teenuses",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "Seadista ühendus Landscape'i teenusega ja halda oma Ubuntu WSL-i paigaldusi eemalt. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupCustom": "Täiendavad seadistused",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "Laadi Landscape'i kliendi kohendatud seadistusfail",
+    "@landscapeSetupCustomHint": {},
+    "buttonNext": "Edasi",
+    "@buttonNext": {},
+    "landscapeFQDNSaaSError": "Täielik domeeninimi ei tohiks olla landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeSSLKeyLabel": "Serveri avalik SSL-i võti (kui on vaja)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileEmptyPath": "Asukoht peab olema määratud",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileInvalidFormat": "Fail on vales vormingus",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeConfigureButton": "Seadista Landscape'i teenus",
+    "@landscapeConfigureButton": {},
+    "buttonBack": "Tagasi",
+    "@buttonBack": {},
+    "statusBarAgentDownTooltip": "Ubuntu Pro agentprogrammi ühendus on katkenud. Tema uuesti käivitamiseks vajuta nuppu „Käivita“.",
+    "@statusBarAgentDownTooltip": {},
+    "landscapeSkipDescription": "Sa võid Landscape'i teenust selles rakenduses ka alati hiljem seadistada",
+    "@landscapeSkipDescription": {},
+    "landscapeFilePicker": "Vali fail...",
+    "@landscapeFilePicker": {},
+    "landscapeSetupManual": "Käsitsi seadistamine",
+    "@landscapeSetupManual": {},
+    "landscapeFileNotFound": "Faili ei leidu",
+    "@landscapeFileNotFound": {},
+    "landscapeFileEmptyContents": "Fail ei tohi olla tühi",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileIsDir": "Fail ei tohi olla kaust",
+    "@landscapeFileIsDir": {},
+    "landscapeRegister": "Registreeri",
+    "@landscapeRegister": {},
+    "ubuntuProEnabledInfo": "Kõikidel Ubuntu WSL-i paigaldustel on ligipääs Ubuntu Pro turvauuendustele ja teenustele.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Halda Ubuntu Pro tellimust",
+    "@manageUbuntuPro": {},
+    "detachPro": "Eemalda Ubuntu Pro tellimus",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Uuendan tellimuse teavet.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Täname, et tellisid Ubuntu Pro teenuse.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "Sul juba on Ubuntu Pro tellimus olemas.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "Ostmine on katkestatud.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "Võrguühenduse viga takistab ostmise jätkamist. Palun proovi uuesti peale ühenduse loomist.",
+    "@purchaseStatusNetwork": {},
+    "agent": "Taustateenusena töötav Ubuntu Pro agentprogramm",
+    "@agent": {},
+    "agentStateStarting": "Taustateenusena töötav Ubuntu Pro agentprogramm on käivitamisel.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Taustateenusena töötav Ubuntu Pro agentprogramm ei vasta.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Taustateenusena töötav Ubuntu Pro agentprogramm on valmendamisel.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Taustateenusena töötava Ubuntu Pro agentprogrammi käivitamine ei õnnestu.",
+    "@agentStateCannotStart": {},
+    "landscapeFileLabel": "Seadistustefaili asukoht",
+    "@landscapeFileLabel": {}
 }
