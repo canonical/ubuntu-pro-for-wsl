@@ -1,158 +1,158 @@
 {
-  "agentStateStarting": "Фоновий агент Ubuntu Pro запускається.",
-  "@agentStateStarting": {},
-  "applyProToken": "Застосувати токен Pro",
-  "@applyProToken": {},
-  "proHeading": "Безпека програмного забезпечення з відкритим кодом від видавців Ubuntu, тепер доступна для Windows. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "applyingProToken": "Застосування токена {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSkip": "Поки що пропустити",
-  "@landscapeSkip": {},
-  "landscapeFileTooLarge": "Файл конфігурації завеликий",
-  "@landscapeFileTooLarge": {},
-  "agentStateUnknownEnv": "Неможливо верифікувати фоновий агент Ubuntu Pro. Перевірте налаштування середовища.",
-  "@agentStateUnknownEnv": {},
-  "landscapeFileIsDir": "Файл не може бути каталогом",
-  "@landscapeFileIsDir": {},
-  "landscapeConfigureButton": "Налаштувати Landscape",
-  "@landscapeConfigureButton": {},
-  "landscapeHeading": "Налаштувати під'єднання до Landscape для віддаленого керування вашими екземплярами Ubuntu WSL. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeFQDNLabel": "Landscape FQDN",
-  "@landscapeFQDNLabel": {},
-  "landscapeFQDNSaaSError": "FQDN не повинен бути landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeFilePicker": "Вибрати файл...",
-  "@landscapeFilePicker": {},
-  "landscapeApplyError": "Помилка під час спроби застосувати конфігурацію:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "purchaseStatusNetwork": "Проблема з мережею не дала можливості продовжити купівлю. Повторіть спробу після під'єднання.",
-  "@purchaseStatusNetwork": {},
-  "appTitle": "Ubuntu Pro для WSL",
-  "@appTitle": {},
-  "tokenErrorEmpty": "Токен не може бути порожнім",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "Недійсний токен",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "Дійсний токен",
-  "@tokenValid": {},
-  "tokenInputTitle": "Долучити цю машину",
-  "@tokenInputTitle": {},
-  "tokenInputDescription": "Введіть токен з {proLink} або вашого системного адміністратора",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "tokenInputHint": "Токен",
-  "@tokenInputHint": {},
-  "attach": "Долучити",
-  "@attach": {},
-  "agent": "Фоновий агент Ubuntu Pro",
-  "@agent": {},
-  "agentStatePingNonResponsive": "Фоновий агент Ubuntu Pro не відповідає.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "Очікування ініціалізації фонового агента Ubuntu Pro.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Неможливо запустити фоновий агент Ubuntu Pro.",
-  "@agentStateCannotStart": {},
-  "agentStateQuerying": "Перевірка стану фонового агента Ubuntu Pro.",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "Спроба відновити фоновий агент Ubuntu Pro.",
-  "@agentStateUnreachable": {},
-  "getUbuntuPro": "Отримати Ubuntu Pro",
-  "@getUbuntuPro": {},
-  "learnMore": "Докладніше",
-  "@learnMore": {},
-  "ubuntuProEnabled": "Ubuntu Pro увімкнено на цій машині",
-  "@ubuntuProEnabled": {},
-  "ubuntuProEnabledInfo": "Усі екземпляри Ubuntu WSL мають доступ до функцій безпеки Ubuntu Pro.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Керувати передплатою Ubuntu Pro",
-  "@manageUbuntuPro": {},
-  "detachPro": "Від'єднати Ubuntu Pro",
-  "@detachPro": {},
-  "purchaseStatusSuccess": "Дякуємо за передплату Ubuntu Pro.",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "Ви вже передплатили Pro.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "Спробу оплати скасовано.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusServer": "У Microsoft Store сталася помилка. Спробуйте пізніше.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "Невідома помилка під час спроби оформити передплату. Спробуйте перезапустити застосунок.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkipDescription": "Ви завжди можете налаштувати Landscape пізніше у цьому застосунку",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "Зареєструватися за допомогою Landscape",
-  "@landscapeSkipRegister": {},
-  "landscapeSetupManual": "Налаштувати вручну",
-  "@landscapeSetupManual": {},
-  "landscapeSetupManualHint": "Зареєструватися на власному сервері Landscape",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustom": "Розширене налаштування",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "Завантажити власний файл конфігурації клієнта Landscape",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNError": "Недійсний FQDN. Формат повинен бути ім'ям хосту або IP-адресою.",
-  "@landscapeFQDNError": {},
-  "landscapeKeyLabel": "Реєстраційний ключ (необов'язково)",
-  "@landscapeKeyLabel": {},
-  "landscapeSSLKeyLabel": "Відкритий ключ SSL сервера (необов'язково)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileLabel": "Шлях до файлу конфігурації",
-  "@landscapeFileLabel": {},
-  "landscapeFileEmptyPath": "Потрібно вказати шлях",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "Файл не повинен бути порожнім",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "Файл не знайдено",
-  "@landscapeFileNotFound": {},
-  "landscapeFileInvalidFormat": "Файл має неправильний формат",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeRegister": "Зареєструвати",
-  "@landscapeRegister": {},
-  "buttonNext": "Далі",
-  "@buttonNext": {},
-  "buttonSkip": "Пропустити",
-  "@buttonSkip": {},
-  "buttonBack": "Назад",
-  "@buttonBack": {},
-  "statusBarReportBugTooltip": "Повідомити про помилку",
-  "@statusBarReportBugTooltip": {},
-  "statusBarAgentRunningTooltip": "Агент Ubuntu Pro запущено",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "Під'єднання до агента Ubuntu Pro...",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "Агент Ubuntu Pro від'єднано. Натисніть, щоб запустити його.",
-  "@statusBarAgentDownTooltip": {},
-  "updatingSubscriptionInfo": "Оновлення інформації про передплату.",
-  "@updatingSubscriptionInfo": {}
+    "agentStateStarting": "Фоновий агент Ubuntu Pro запускається.",
+    "@agentStateStarting": {},
+    "applyProToken": "Застосувати токен Pro",
+    "@applyProToken": {},
+    "proHeading": "Безпека програмного забезпечення з відкритим кодом від видавців Ubuntu, тепер доступна для Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "applyingProToken": "Застосування токена {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSkip": "Поки що пропустити",
+    "@landscapeSkip": {},
+    "landscapeFileTooLarge": "Файл конфігурації завеликий",
+    "@landscapeFileTooLarge": {},
+    "agentStateUnknownEnv": "Неможливо верифікувати фоновий агент Ubuntu Pro. Перевірте налаштування середовища.",
+    "@agentStateUnknownEnv": {},
+    "landscapeFileIsDir": "Файл не може бути каталогом",
+    "@landscapeFileIsDir": {},
+    "landscapeConfigureButton": "Налаштувати Landscape",
+    "@landscapeConfigureButton": {},
+    "landscapeHeading": "Налаштувати під'єднання до Landscape для віддаленого керування вашими екземплярами Ubuntu WSL. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNSaaSError": "FQDN не повинен бути landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeFilePicker": "Вибрати файл...",
+    "@landscapeFilePicker": {},
+    "landscapeApplyError": "Помилка під час спроби застосувати конфігурацію:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "purchaseStatusNetwork": "Проблема з мережею не дала можливості продовжити купівлю. Повторіть спробу після під'єднання.",
+    "@purchaseStatusNetwork": {},
+    "appTitle": "Ubuntu Pro для WSL",
+    "@appTitle": {},
+    "tokenErrorEmpty": "Токен не може бути порожнім",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Недійсний токен",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Дійсний токен",
+    "@tokenValid": {},
+    "tokenInputTitle": "Долучити цю машину",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "Введіть токен з {proLink} або вашого системного адміністратора",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Токен",
+    "@tokenInputHint": {},
+    "attach": "Долучити",
+    "@attach": {},
+    "agent": "Фоновий агент Ubuntu Pro",
+    "@agent": {},
+    "agentStatePingNonResponsive": "Фоновий агент Ubuntu Pro не відповідає.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Очікування ініціалізації фонового агента Ubuntu Pro.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Неможливо запустити фоновий агент Ubuntu Pro.",
+    "@agentStateCannotStart": {},
+    "agentStateQuerying": "Перевірка стану фонового агента Ubuntu Pro.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Спроба відновити фоновий агент Ubuntu Pro.",
+    "@agentStateUnreachable": {},
+    "getUbuntuPro": "Отримати Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "Докладніше",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Ubuntu Pro увімкнено на цій машині",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "Усі екземпляри Ubuntu WSL мають доступ до функцій безпеки Ubuntu Pro.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Керувати передплатою Ubuntu Pro",
+    "@manageUbuntuPro": {},
+    "detachPro": "Від'єднати Ubuntu Pro",
+    "@detachPro": {},
+    "purchaseStatusSuccess": "Дякуємо за передплату Ubuntu Pro.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "Ви вже передплатили Pro.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "Спробу оплати скасовано.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusServer": "У Microsoft Store сталася помилка. Спробуйте пізніше.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "Невідома помилка під час спроби оформити передплату. Спробуйте перезапустити застосунок.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkipDescription": "Ви завжди можете налаштувати Landscape пізніше у цьому застосунку",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Зареєструватися за допомогою Landscape",
+    "@landscapeSkipRegister": {},
+    "landscapeSetupManual": "Налаштувати вручну",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "Зареєструватися на власному сервері Landscape",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "Розширене налаштування",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "Завантажити власний файл конфігурації клієнта Landscape",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNError": "Недійсний FQDN. Формат повинен бути ім'ям хосту або IP-адресою.",
+    "@landscapeFQDNError": {},
+    "landscapeKeyLabel": "Реєстраційний ключ (необов'язково)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "Відкритий ключ SSL сервера (необов'язково)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "Шлях до файлу конфігурації",
+    "@landscapeFileLabel": {},
+    "landscapeFileEmptyPath": "Потрібно вказати шлях",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "Файл не повинен бути порожнім",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "Файл не знайдено",
+    "@landscapeFileNotFound": {},
+    "landscapeFileInvalidFormat": "Файл має неправильний формат",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeRegister": "Зареєструвати",
+    "@landscapeRegister": {},
+    "buttonNext": "Далі",
+    "@buttonNext": {},
+    "buttonSkip": "Пропустити",
+    "@buttonSkip": {},
+    "buttonBack": "Назад",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "Повідомити про помилку",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Агент Ubuntu Pro запущено",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Під'єднання до агента Ubuntu Pro...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Агент Ubuntu Pro від'єднано. Натисніть, щоб запустити його.",
+    "@statusBarAgentDownTooltip": {},
+    "updatingSubscriptionInfo": "Оновлення інформації про передплату.",
+    "@updatingSubscriptionInfo": {}
 }
