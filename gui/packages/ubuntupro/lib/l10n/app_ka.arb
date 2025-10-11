@@ -1,158 +1,158 @@
 {
-  "appTitle": "Ubuntu Pro WSL-სთვის",
-  "@appTitle": {},
-  "statusBarAgentRunningTooltip": "Ubuntu Pro-ის აგენტი გაშვებულია",
-  "@statusBarAgentRunningTooltip": {},
-  "purchaseStatusSuccess": "მადლობა Ubuntu Pro-ის გამოწერისთვის.",
-  "@purchaseStatusSuccess": {},
-  "landscapeFileTooLarge": "კონფიგურაციის ფაილი მეტისმეტად დიდია",
-  "@landscapeFileTooLarge": {},
-  "agentStateStarting": "მიმდინარეობს Ubuntu Pro-ის ფონური აგენტის გაშვება.",
-  "@agentStateStarting": {},
-  "landscapeFileLabel": "კონფიგურაციის ფაილის ბილიკი",
-  "@landscapeFileLabel": {},
-  "landscapeSetupManual": "ხელით მორგება",
-  "@landscapeSetupManual": {},
-  "landscapeRegister": "რეგისტრაცია",
-  "@landscapeRegister": {},
-  "landscapeSkipDescription": "Landscape-ის მორგება ნებისმიერ დროს, ამ აპში შეგიძლიათ",
-  "@landscapeSkipDescription": {},
-  "tokenInputHint": "ტოკენი",
-  "@tokenInputHint": {},
-  "agentStatePingNonResponsive": "Ubuntu Pro-ის ფონური აგენტი არ პასუხობს.",
-  "@agentStatePingNonResponsive": {},
-  "landscapeFileEmptyPath": "ბილიკის მითითება აუცილებელია",
-  "@landscapeFileEmptyPath": {},
-  "proHeading": "ღია წყაროს მქონე პროგრამების უსაფრთხოება Ubuntu-ის გამომცემლებისგან ახლა ხელმისაწვდომია Windows-ზე. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
+    "appTitle": "Ubuntu Pro WSL-სთვის",
+    "@appTitle": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro-ის აგენტი გაშვებულია",
+    "@statusBarAgentRunningTooltip": {},
+    "purchaseStatusSuccess": "მადლობა Ubuntu Pro-ის გამოწერისთვის.",
+    "@purchaseStatusSuccess": {},
+    "landscapeFileTooLarge": "კონფიგურაციის ფაილი მეტისმეტად დიდია",
+    "@landscapeFileTooLarge": {},
+    "agentStateStarting": "მიმდინარეობს Ubuntu Pro-ის ფონური აგენტის გაშვება.",
+    "@agentStateStarting": {},
+    "landscapeFileLabel": "კონფიგურაციის ფაილის ბილიკი",
+    "@landscapeFileLabel": {},
+    "landscapeSetupManual": "ხელით მორგება",
+    "@landscapeSetupManual": {},
+    "landscapeRegister": "რეგისტრაცია",
+    "@landscapeRegister": {},
+    "landscapeSkipDescription": "Landscape-ის მორგება ნებისმიერ დროს, ამ აპში შეგიძლიათ",
+    "@landscapeSkipDescription": {},
+    "tokenInputHint": "ტოკენი",
+    "@tokenInputHint": {},
+    "agentStatePingNonResponsive": "Ubuntu Pro-ის ფონური აგენტი არ პასუხობს.",
+    "@agentStatePingNonResponsive": {},
+    "landscapeFileEmptyPath": "ბილიკის მითითება აუცილებელია",
+    "@landscapeFileEmptyPath": {},
+    "proHeading": "ღია წყაროს მქონე პროგრამების უსაფრთხოება Ubuntu-ის გამომცემლებისგან ახლა ხელმისაწვდომია Windows-ზე. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStateUnknownEnv": "Ubuntu Pro-ის ფონური აგენტის მდგომარეობის გადამოწმება შეუძლებელია. შეამოწმეთ გარემოს პარამეტრები.",
+    "@agentStateUnknownEnv": {},
+    "buttonNext": "შემდეგი",
+    "@buttonNext": {},
+    "buttonSkip": "გამოტოვება",
+    "@buttonSkip": {},
+    "landscapeFQDNError": "არასწორი FQDN. ფორმატი უნდა იყოს ჰოსტის სახელი, ან IP მისამართი.",
+    "@landscapeFQDNError": {},
+    "landscapeKeyLabel": "რეგისტრაციის გასაღები (არასავალდებულო)",
+    "@landscapeKeyLabel": {},
+    "purchaseStatusUserGaveUp": "შეძენის მცდელობა გაუქმდა.",
+    "@purchaseStatusUserGaveUp": {},
+    "ubuntuProEnabledInfo": "ყველა Ubuntu WSL-ის გაშვებულ ასლს აქვს წვდომა Ubuntu Pro-ის უსაფრთხოების ფუნქციებთან.",
+    "@ubuntuProEnabledInfo": {},
+    "landscapeFileInvalidFormat": "ფაილის ფორმატი არასწორია",
+    "@landscapeFileInvalidFormat": {},
+    "purchaseStatusNetwork": "ქსელის პრობლემა შეძენის შესრულებისას. სცადეთ თავიდან, როცა ქსელი აღდგება.",
+    "@purchaseStatusNetwork": {},
+    "tokenErrorEmpty": "ტოკენი ცარიელი ვერ იქნება",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "არასწორი ტოკენი",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "სწორი ტოკენი",
+    "@tokenValid": {},
+    "tokenInputTitle": "ამ მანქანის მიმაგრება",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "შეიყვანეთ ტოკენი {proLink}-დან, ან თქვენი სისტემური ადმინისტრატორისგან",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "attach": "მიმაგრება",
+    "@attach": {},
+    "applyProToken": "Pro ტოკენის გამოყენება",
+    "@applyProToken": {},
+    "applyingProToken": "მიმდინარეობს ტოკენის {token} გადატარება",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro-ის ფონის აგენტი",
+    "@agent": {},
+    "agentStateInvalid": "Ubuntu Pro-ის ფონური აგენტის ინიციალიზაციის მოლოდინი.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Ubuntu Pro-ის ფონური აგენტის გაშვება შეუძლებელია.",
+    "@agentStateCannotStart": {},
+    "agentStateQuerying": "მიმდინარეობს Ubuntu Pro-ის ფონური აგენტის მდგომარეობის შემოწმება.",
+    "@agentStateQuerying": {},
+    "getUbuntuPro": "Ubuntu Pro-ის მიღება",
+    "@getUbuntuPro": {},
+    "agentStateUnreachable": "Ubuntu Pro-ის ფონური აგენტის აღდგენის მცდელობა.",
+    "@agentStateUnreachable": {},
+    "buttonBack": "უკან",
+    "@buttonBack": {},
+    "learnMore": "გაიგეთ მეტი",
+    "@learnMore": {},
+    "landscapeSetupCustom": "დამატებითი კონფიგურაცია",
+    "@landscapeSetupCustom": {},
+    "landscapeFQDNLabel": "Landscape FQDN-ის სახელი",
+    "@landscapeFQDNLabel": {},
+    "landscapeFilePicker": "აირჩიეთ ფაილი...",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "Landscape-ის მორგება",
+    "@landscapeConfigureButton": {},
+    "detachPro": "Ubuntu Pro-ის მოხსნა",
+    "@detachPro": {},
+    "landscapeSkip": "ჯერჯერობით გამოტოვება",
+    "@landscapeSkip": {},
+    "landscapeSkipRegister": "რეგისტრაცია Landscape-სთან",
+    "@landscapeSkipRegister": {},
+    "landscapeFileNotFound": "ფაილი ვერ ვიპოვე",
+    "@landscapeFileNotFound": {},
+    "statusBarReportBugTooltip": "შეტყობინება შეცდომის შესახებ",
+    "@statusBarReportBugTooltip": {},
+    "manageUbuntuPro": "Ubuntu Pro-ის გამოწერის მართვა",
+    "@manageUbuntuPro": {},
+    "updatingSubscriptionInfo": "გამოწერის ინფორმაციის განახლება.",
+    "@updatingSubscriptionInfo": {},
+    "landscapeFQDNSaaSError": "FQDN არ უნდა იყოს landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeSSLKeyLabel": "სერვერის SSL-ის საჯარო გასაღები (არასავალდებულო)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileEmptyContents": "ფაილი არ უნდა იყოს ცარიელი",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileIsDir": "ფაილი საქაღალდე ვერ იქნება",
+    "@landscapeFileIsDir": {},
+    "statusBarAgentConnectingTooltip": "Ubuntu Pro-ის აგენტთან დაკავშირება...",
+    "@statusBarAgentConnectingTooltip": {},
+    "purchaseStatusAlreadyPurchased": "Pro უკვე გამოწერილი გაქვთ.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "landscapeSetupManualHint": "რეგისტრაცია თქვენ საკუთარ Landscape-ის სერვერზე",
+    "@landscapeSetupManualHint": {},
+    "ubuntuProEnabled": "Ubuntu Pro ჩართულია ამ მანქანაზე",
+    "@ubuntuProEnabled": {},
+    "landscapeSetupCustomHint": "მორგებული Landscape-ის კლიენტის კონფიგურაციის ფაილის ჩატვირთვა",
+    "@landscapeSetupCustomHint": {},
+    "landscapeApplyError": "შეცდომა კონფიგურაციის გადატარების მცდელობისას:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "purchaseStatusServer": "Microsoft Store-ს რაღაც სჭირს. მოგვიანებით სცადეთ.",
+    "@purchaseStatusServer": {},
+    "statusBarAgentDownTooltip": "Ubuntu Pro-ის აგენტი დაკავშირებული არაა. დააჭირეთ აგენტის გასაშვებად.",
+    "@statusBarAgentDownTooltip": {},
+    "purchaseStatusUnknown": "უცნობი შეცდომა გამოწერის შეძენისას. იფიქრეთ ამ აპის გადატვირთვაზე.",
+    "@purchaseStatusUnknown": {},
+    "landscapeHeading": "მოირგეთ კავშირი Landscape-ის სერვერამდე, რომ თქვენი Ubuntu WSL-ის გაშვებული ასლები დაშორებულად მართოთ. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
     }
-  },
-  "agentStateUnknownEnv": "Ubuntu Pro-ის ფონური აგენტის მდგომარეობის გადამოწმება შეუძლებელია. შეამოწმეთ გარემოს პარამეტრები.",
-  "@agentStateUnknownEnv": {},
-  "buttonNext": "შემდეგი",
-  "@buttonNext": {},
-  "buttonSkip": "გამოტოვება",
-  "@buttonSkip": {},
-  "landscapeFQDNError": "არასწორი FQDN. ფორმატი უნდა იყოს ჰოსტის სახელი, ან IP მისამართი.",
-  "@landscapeFQDNError": {},
-  "landscapeKeyLabel": "რეგისტრაციის გასაღები (არასავალდებულო)",
-  "@landscapeKeyLabel": {},
-  "purchaseStatusUserGaveUp": "შეძენის მცდელობა გაუქმდა.",
-  "@purchaseStatusUserGaveUp": {},
-  "ubuntuProEnabledInfo": "ყველა Ubuntu WSL-ის გაშვებულ ასლს აქვს წვდომა Ubuntu Pro-ის უსაფრთხოების ფუნქციებთან.",
-  "@ubuntuProEnabledInfo": {},
-  "landscapeFileInvalidFormat": "ფაილის ფორმატი არასწორია",
-  "@landscapeFileInvalidFormat": {},
-  "purchaseStatusNetwork": "ქსელის პრობლემა შეძენის შესრულებისას. სცადეთ თავიდან, როცა ქსელი აღდგება.",
-  "@purchaseStatusNetwork": {},
-  "tokenErrorEmpty": "ტოკენი ცარიელი ვერ იქნება",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "არასწორი ტოკენი",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "სწორი ტოკენი",
-  "@tokenValid": {},
-  "tokenInputTitle": "ამ მანქანის მიმაგრება",
-  "@tokenInputTitle": {},
-  "tokenInputDescription": "შეიყვანეთ ტოკენი {proLink}-დან, ან თქვენი სისტემური ადმინისტრატორისგან",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "attach": "მიმაგრება",
-  "@attach": {},
-  "applyProToken": "Pro ტოკენის გამოყენება",
-  "@applyProToken": {},
-  "applyingProToken": "მიმდინარეობს ტოკენის {token} გადატარება",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "Ubuntu Pro-ის ფონის აგენტი",
-  "@agent": {},
-  "agentStateInvalid": "Ubuntu Pro-ის ფონური აგენტის ინიციალიზაციის მოლოდინი.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Ubuntu Pro-ის ფონური აგენტის გაშვება შეუძლებელია.",
-  "@agentStateCannotStart": {},
-  "agentStateQuerying": "მიმდინარეობს Ubuntu Pro-ის ფონური აგენტის მდგომარეობის შემოწმება.",
-  "@agentStateQuerying": {},
-  "getUbuntuPro": "Ubuntu Pro-ის მიღება",
-  "@getUbuntuPro": {},
-  "agentStateUnreachable": "Ubuntu Pro-ის ფონური აგენტის აღდგენის მცდელობა.",
-  "@agentStateUnreachable": {},
-  "buttonBack": "უკან",
-  "@buttonBack": {},
-  "learnMore": "გაიგეთ მეტი",
-  "@learnMore": {},
-  "landscapeSetupCustom": "დამატებითი კონფიგურაცია",
-  "@landscapeSetupCustom": {},
-  "landscapeFQDNLabel": "Landscape FQDN-ის სახელი",
-  "@landscapeFQDNLabel": {},
-  "landscapeFilePicker": "აირჩიეთ ფაილი...",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "Landscape-ის მორგება",
-  "@landscapeConfigureButton": {},
-  "detachPro": "Ubuntu Pro-ის მოხსნა",
-  "@detachPro": {},
-  "landscapeSkip": "ჯერჯერობით გამოტოვება",
-  "@landscapeSkip": {},
-  "landscapeSkipRegister": "რეგისტრაცია Landscape-სთან",
-  "@landscapeSkipRegister": {},
-  "landscapeFileNotFound": "ფაილი ვერ ვიპოვე",
-  "@landscapeFileNotFound": {},
-  "statusBarReportBugTooltip": "შეტყობინება შეცდომის შესახებ",
-  "@statusBarReportBugTooltip": {},
-  "manageUbuntuPro": "Ubuntu Pro-ის გამოწერის მართვა",
-  "@manageUbuntuPro": {},
-  "updatingSubscriptionInfo": "გამოწერის ინფორმაციის განახლება.",
-  "@updatingSubscriptionInfo": {},
-  "landscapeFQDNSaaSError": "FQDN არ უნდა იყოს landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeSSLKeyLabel": "სერვერის SSL-ის საჯარო გასაღები (არასავალდებულო)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileEmptyContents": "ფაილი არ უნდა იყოს ცარიელი",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileIsDir": "ფაილი საქაღალდე ვერ იქნება",
-  "@landscapeFileIsDir": {},
-  "statusBarAgentConnectingTooltip": "Ubuntu Pro-ის აგენტთან დაკავშირება...",
-  "@statusBarAgentConnectingTooltip": {},
-  "purchaseStatusAlreadyPurchased": "Pro უკვე გამოწერილი გაქვთ.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "landscapeSetupManualHint": "რეგისტრაცია თქვენ საკუთარ Landscape-ის სერვერზე",
-  "@landscapeSetupManualHint": {},
-  "ubuntuProEnabled": "Ubuntu Pro ჩართულია ამ მანქანაზე",
-  "@ubuntuProEnabled": {},
-  "landscapeSetupCustomHint": "მორგებული Landscape-ის კლიენტის კონფიგურაციის ფაილის ჩატვირთვა",
-  "@landscapeSetupCustomHint": {},
-  "landscapeApplyError": "შეცდომა კონფიგურაციის გადატარების მცდელობისას:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "purchaseStatusServer": "Microsoft Store-ს რაღაც სჭირს. მოგვიანებით სცადეთ.",
-  "@purchaseStatusServer": {},
-  "statusBarAgentDownTooltip": "Ubuntu Pro-ის აგენტი დაკავშირებული არაა. დააჭირეთ აგენტის გასაშვებად.",
-  "@statusBarAgentDownTooltip": {},
-  "purchaseStatusUnknown": "უცნობი შეცდომა გამოწერის შეძენისას. იფიქრეთ ამ აპის გადატვირთვაზე.",
-  "@purchaseStatusUnknown": {},
-  "landscapeHeading": "მოირგეთ კავშირი Landscape-ის სერვერამდე, რომ თქვენი Ubuntu WSL-ის გაშვებული ასლები დაშორებულად მართოთ. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  }
 }
