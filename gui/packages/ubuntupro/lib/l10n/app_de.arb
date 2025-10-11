@@ -1,158 +1,158 @@
 {
-  "purchaseStatusSuccess": "Vielen Dank, dass Sie Ubuntu Pro abonniert haben.",
-  "@purchaseStatusSuccess": {},
-  "landscapeSetupManual": "Manuelle Konfiguration",
-  "@landscapeSetupManual": {},
-  "landscapeFQDNError": "Ungültiger FQDN. Das Format sollte ein Hostname oder eine IP-Adresse sein.",
-  "@landscapeFQDNError": {},
-  "landscapeHeading": "Konfigurieren Sie die Verbindung zu Landscape, um Ihre Ubuntu WSL-Instanzen aus der Ferne zu verwalten. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeConfigureButton": "Landscape konfigurieren",
-  "@landscapeConfigureButton": {},
-  "attach": "Anbinden",
-  "@attach": {},
-  "landscapeSetupManualHint": "Registrieren Sie sich mit Ihrem eigenen Landscape-Server",
-  "@landscapeSetupManualHint": {},
-  "appTitle": "Ubuntu Pro für WSL",
-  "@appTitle": {},
-  "tokenErrorInvalid": "Ungültiges Token",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "Gültiges Token",
-  "@tokenValid": {},
-  "agentStateCannotStart": "Ubuntu Pro-Hintergrundagent kann nicht gestartet werden.",
-  "@agentStateCannotStart": {},
-  "agentStateUnreachable": "Wiederherstellung des Ubuntu Pro-Hintergrundagenten wird versucht.",
-  "@agentStateUnreachable": {},
-  "landscapeSkip": "Vorerst überspringen",
-  "@landscapeSkip": {},
-  "landscapeRegister": "Registrieren",
-  "@landscapeRegister": {},
-  "ubuntuProEnabled": "Ubuntu Pro ist auf diesem Gerät aktiviert",
-  "@ubuntuProEnabled": {},
-  "landscapeSSLKeyLabel": "Öffentlicher SSL-Schlüssel des Servers (optional)",
-  "@landscapeSSLKeyLabel": {},
-  "purchaseStatusNetwork": "Aufgrund eines Netzwerkproblems konnte der Kauf nicht durchgeführt werden. Bitte versuchen Sie es erneut, sobald Sie verbunden sind.",
-  "@purchaseStatusNetwork": {},
-  "tokenErrorEmpty": "Token darf nicht leer sein",
-  "@tokenErrorEmpty": {},
-  "tokenInputDescription": "Geben Sie ein Token von {proLink} oder Ihrem Systemadministrator ein",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "tokenInputHint": "Token",
-  "@tokenInputHint": {},
-  "tokenInputTitle": "Dieses Gerät anbinden",
-  "@tokenInputTitle": {},
-  "applyProToken": "Pro-Token anwenden",
-  "@applyProToken": {},
-  "applyingProToken": "Token {token} wird angewendet",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "Ubuntu Pro-Hintergrundagent",
-  "@agent": {},
-  "agentStateStarting": "Ubuntu Pro-Hintergrundagent wird gestartet.",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "Ubuntu Pro-Hintergrundagent reagiert nicht.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "Wartet auf die Initialisierung des Ubuntu Pro-Hintergrundagenten.",
-  "@agentStateInvalid": {},
-  "agentStateUnknownEnv": "Der Status des Ubuntu Pro-Hintergrundagenten kann nicht verifiziert werden. Überprüfen Sie Ihre Umgebungseinstellungen.",
-  "@agentStateUnknownEnv": {},
-  "agentStateQuerying": "Status des Ubuntu Pro-Hintergrundagenten wird geprüft.",
-  "@agentStateQuerying": {},
-  "proHeading": "Die Sicherheit quelloffener Software von den Herausgebern von Ubuntu, jetzt auch für Windows verfügbar. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "Ubuntu Pro erhalten",
-  "@getUbuntuPro": {},
-  "learnMore": "Mehr erfahren",
-  "@learnMore": {},
-  "ubuntuProEnabledInfo": "Alle Ubuntu WSL-Instanzen haben Zugriff auf die Sicherheitsfunktionen von Ubuntu Pro.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Ubuntu Pro-Abonnement verwalten",
-  "@manageUbuntuPro": {},
-  "detachPro": "Ubuntu Pro abtrennen",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "Abonnementinformationen werden aktualisiert.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusAlreadyPurchased": "Sie haben bereits ein Pro-Abonnement.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "Kaufversuch wurde abgebrochen.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusServer": "Im Microsoft Store ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "Beim Versuch, das Abonnement zu kaufen, ist ein unbekannter Fehler aufgetreten. Erwägen Sie einen Neustart dieser App.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkipDescription": "Sie können Landscape auch später in dieser App konfigurieren",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "Mit Landscape registrieren",
-  "@landscapeSkipRegister": {},
-  "landscapeSetupCustom": "Erweiterte Konfiguration",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "Laden Sie eine benutzerdefinierte Landscape-Client-Konfigurationsdatei",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNSaaSError": "Der FQDN sollte nicht landscape.canonical.com lauten.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "Registrierungsschlüssel (optional)",
-  "@landscapeKeyLabel": {},
-  "landscapeFileLabel": "Pfad der Konfigurationsdatei",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "Konfigurationsdatei ist zu groß",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "Es muss ein Pfad angegeben werden",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "Datei darf nicht leer sein",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "Datei nicht gefunden",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "Datei darf kein Verzeichnis sein",
-  "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "Datei hat ein falsches Format",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFilePicker": "Datei auswählen...",
-  "@landscapeFilePicker": {},
-  "landscapeApplyError": "Fehler beim Versuch, die Konfiguration anzuwenden:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "buttonNext": "Weiter",
-  "@buttonNext": {},
-  "buttonSkip": "Überspringen",
-  "@buttonSkip": {},
-  "buttonBack": "Zurück",
-  "@buttonBack": {},
-  "statusBarReportBugTooltip": "Einen Fehler melden",
-  "@statusBarReportBugTooltip": {},
-  "statusBarAgentRunningTooltip": "Ubuntu Pro-Agent wird ausgeführt",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "Verbindung zum Ubuntu Pro-Agenten wird aufgebaut...",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "Der Ubuntu Pro-Agent ist getrennt. Drücken, um den Agenten zu starten.",
-  "@statusBarAgentDownTooltip": {},
-  "landscapeFQDNLabel": "Landscape FQDN",
-  "@landscapeFQDNLabel": {}
+    "purchaseStatusSuccess": "Vielen Dank, dass Sie Ubuntu Pro abonniert haben.",
+    "@purchaseStatusSuccess": {},
+    "landscapeSetupManual": "Manuelle Konfiguration",
+    "@landscapeSetupManual": {},
+    "landscapeFQDNError": "Ungültiger FQDN. Das Format sollte ein Hostname oder eine IP-Adresse sein.",
+    "@landscapeFQDNError": {},
+    "landscapeHeading": "Konfigurieren Sie die Verbindung zu Landscape, um Ihre Ubuntu WSL-Instanzen aus der Ferne zu verwalten. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeConfigureButton": "Landscape konfigurieren",
+    "@landscapeConfigureButton": {},
+    "attach": "Anbinden",
+    "@attach": {},
+    "landscapeSetupManualHint": "Registrieren Sie sich mit Ihrem eigenen Landscape-Server",
+    "@landscapeSetupManualHint": {},
+    "appTitle": "Ubuntu Pro für WSL",
+    "@appTitle": {},
+    "tokenErrorInvalid": "Ungültiges Token",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Gültiges Token",
+    "@tokenValid": {},
+    "agentStateCannotStart": "Ubuntu Pro-Hintergrundagent kann nicht gestartet werden.",
+    "@agentStateCannotStart": {},
+    "agentStateUnreachable": "Wiederherstellung des Ubuntu Pro-Hintergrundagenten wird versucht.",
+    "@agentStateUnreachable": {},
+    "landscapeSkip": "Vorerst überspringen",
+    "@landscapeSkip": {},
+    "landscapeRegister": "Registrieren",
+    "@landscapeRegister": {},
+    "ubuntuProEnabled": "Ubuntu Pro ist auf diesem Gerät aktiviert",
+    "@ubuntuProEnabled": {},
+    "landscapeSSLKeyLabel": "Öffentlicher SSL-Schlüssel des Servers (optional)",
+    "@landscapeSSLKeyLabel": {},
+    "purchaseStatusNetwork": "Aufgrund eines Netzwerkproblems konnte der Kauf nicht durchgeführt werden. Bitte versuchen Sie es erneut, sobald Sie verbunden sind.",
+    "@purchaseStatusNetwork": {},
+    "tokenErrorEmpty": "Token darf nicht leer sein",
+    "@tokenErrorEmpty": {},
+    "tokenInputDescription": "Geben Sie ein Token von {proLink} oder Ihrem Systemadministrator ein",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Token",
+    "@tokenInputHint": {},
+    "tokenInputTitle": "Dieses Gerät anbinden",
+    "@tokenInputTitle": {},
+    "applyProToken": "Pro-Token anwenden",
+    "@applyProToken": {},
+    "applyingProToken": "Token {token} wird angewendet",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro-Hintergrundagent",
+    "@agent": {},
+    "agentStateStarting": "Ubuntu Pro-Hintergrundagent wird gestartet.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Ubuntu Pro-Hintergrundagent reagiert nicht.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Wartet auf die Initialisierung des Ubuntu Pro-Hintergrundagenten.",
+    "@agentStateInvalid": {},
+    "agentStateUnknownEnv": "Der Status des Ubuntu Pro-Hintergrundagenten kann nicht verifiziert werden. Überprüfen Sie Ihre Umgebungseinstellungen.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "Status des Ubuntu Pro-Hintergrundagenten wird geprüft.",
+    "@agentStateQuerying": {},
+    "proHeading": "Die Sicherheit quelloffener Software von den Herausgebern von Ubuntu, jetzt auch für Windows verfügbar. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Ubuntu Pro erhalten",
+    "@getUbuntuPro": {},
+    "learnMore": "Mehr erfahren",
+    "@learnMore": {},
+    "ubuntuProEnabledInfo": "Alle Ubuntu WSL-Instanzen haben Zugriff auf die Sicherheitsfunktionen von Ubuntu Pro.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Ubuntu Pro-Abonnement verwalten",
+    "@manageUbuntuPro": {},
+    "detachPro": "Ubuntu Pro abtrennen",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Abonnementinformationen werden aktualisiert.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusAlreadyPurchased": "Sie haben bereits ein Pro-Abonnement.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "Kaufversuch wurde abgebrochen.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusServer": "Im Microsoft Store ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "Beim Versuch, das Abonnement zu kaufen, ist ein unbekannter Fehler aufgetreten. Erwägen Sie einen Neustart dieser App.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkipDescription": "Sie können Landscape auch später in dieser App konfigurieren",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Mit Landscape registrieren",
+    "@landscapeSkipRegister": {},
+    "landscapeSetupCustom": "Erweiterte Konfiguration",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "Laden Sie eine benutzerdefinierte Landscape-Client-Konfigurationsdatei",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNSaaSError": "Der FQDN sollte nicht landscape.canonical.com lauten.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "Registrierungsschlüssel (optional)",
+    "@landscapeKeyLabel": {},
+    "landscapeFileLabel": "Pfad der Konfigurationsdatei",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "Konfigurationsdatei ist zu groß",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "Es muss ein Pfad angegeben werden",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "Datei darf nicht leer sein",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "Datei nicht gefunden",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "Datei darf kein Verzeichnis sein",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "Datei hat ein falsches Format",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "Datei auswählen...",
+    "@landscapeFilePicker": {},
+    "landscapeApplyError": "Fehler beim Versuch, die Konfiguration anzuwenden:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "buttonNext": "Weiter",
+    "@buttonNext": {},
+    "buttonSkip": "Überspringen",
+    "@buttonSkip": {},
+    "buttonBack": "Zurück",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "Einen Fehler melden",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro-Agent wird ausgeführt",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Verbindung zum Ubuntu Pro-Agenten wird aufgebaut...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Der Ubuntu Pro-Agent ist getrennt. Drücken, um den Agenten zu starten.",
+    "@statusBarAgentDownTooltip": {},
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {}
 }
