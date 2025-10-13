@@ -11,7 +11,7 @@
     "@statusBarAgentConnectingTooltip": {},
     "agentStateUnknownEnv": "Stav agenta Ubuntu Pro sa nedá overiť. Skontrolujte nastavenia prostredia.",
     "@agentStateUnknownEnv": {},
-    "proHeading": "Bezpečnosť open-source softvéru od tvorcov Ubuntu, teraz dostupná aj vo Windows.",
+    "proHeading": "Bezpečnosť open-source softvéru od tvorcov Ubuntu, teraz dostupná aj vo Windows. {aboutLink}",
     "@proHeading": {
         "placeholders": {
             "aboutLink": {
