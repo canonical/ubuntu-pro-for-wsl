@@ -3,15 +3,15 @@
     "@landscapeFilePicker": {},
     "ubuntuProEnabledInfo": "Všetky Ubuntu WSL inštancie majú prístup k bezpečnostným funkciám Ubuntu Pro.",
     "@ubuntuProEnabledInfo": {},
-    "purchaseStatusNetwork": "Nákup sa nepodarilo dokončiť kvôli problémom so sieťou. Skúste to znova, keď budete pripojený.",
+    "purchaseStatusNetwork": "Nákup sa nepodarilo dokončiť kvôli problémom so sieťou. Skúste to znova, keď budete pripojení.",
     "@purchaseStatusNetwork": {},
     "landscapeSkipDescription": "Landscape môžete vždy nakonfigurovať neskôr v tejto aplikácii",
     "@landscapeSkipDescription": {},
     "statusBarAgentConnectingTooltip": "Pripojovanie k Ubuntu Pro agentovi...",
     "@statusBarAgentConnectingTooltip": {},
-    "agentStateUnknownEnv": "Stav Ubuntu Pro background agenta sa nedá overiť. Skontrolujte nastavenia prostredia.",
+    "agentStateUnknownEnv": "Stav agenta Ubuntu Pro sa nedá overiť. Skontrolujte nastavenia prostredia.",
     "@agentStateUnknownEnv": {},
-    "proHeading": "Bezpečnosť open-source softvéru od vydavateľov Ubuntu, teraz dostupná na Windows. {aboutLink}",
+    "proHeading": "Bezpečnosť open-source softvéru od tvorcov Ubuntu, teraz dostupná aj vo Windows.",
     "@proHeading": {
         "placeholders": {
             "aboutLink": {
@@ -19,7 +19,7 @@
             }
         }
     },
-    "landscapeHeading": "Nakonfigurovať pripojenie k Landscape na vzdialené spravovanie vašich Ubuntu WSL inštancií. {landscapeLink}",
+    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialené spravovanie vašich Ubuntu WSL inštancií. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -27,7 +27,7 @@
             }
         }
     },
-    "tokenInputDescription": "Zadať token z {proLink} alebo od svojho správcu systému",
+    "tokenInputDescription": "Zadajte token z {proLink} alebo od svojho správcu systému",
     "@tokenInputDescription": {
         "placeholders": {
             "proLink": {
@@ -77,7 +77,7 @@
     "@landscapeFQDNLabel": {},
     "landscapeFQDNError": "Neplatný FQDN. Očakáva sa úplne kvalifikovaný názov domény alebo IP adresa.",
     "@landscapeFQDNError": {},
-    "landscapeFQDNSaaSError": "FQDN by nemal byť landscape.canonical.com.",
+    "landscapeFQDNSaaSError": "FQDN nesmie byť landscape.canonical.com.",
     "@landscapeFQDNSaaSError": {},
     "getUbuntuPro": "Získať Ubuntu Pro",
     "@getUbuntuPro": {},
@@ -101,7 +101,7 @@
             }
         }
     },
-    "agent": "Ubuntu Pro background agent",
+    "agent": "Agent na pozadí Ubuntu Pro",
     "@agent": {},
     "agentStateStarting": "Ubuntu Pro background agent sa spúšťa.",
     "@agentStateStarting": {},
@@ -143,7 +143,7 @@
     "@statusBarReportBugTooltip": {},
     "statusBarAgentRunningTooltip": "Ubuntu Pro agent beží",
     "@statusBarAgentRunningTooltip": {},
-    "statusBarAgentDownTooltip": "Ubuntu Pro agent je odpojený. Stlačte na spustenie agenta.",
+    "statusBarAgentDownTooltip": "Ubuntu Pro agent je odpojený. Kliknutím ho spustíte.",
     "@statusBarAgentDownTooltip": {},
     "landscapeRegister": "Registrovať",
     "@landscapeRegister": {},
@@ -157,7 +157,7 @@
     },
     "landscapeDetails": "Podrobnosti",
     "@landscapeDetails": {},
-    "landscapeProceedAnywayHint": "Pokračujte a pokusy o pripojenie k serveru Landscape budú pokračovať na pozadí.",
+    "landscapeProceedAnywayHint": "Pokračujte a pokusy o pripojenie k serveru Landscape budú prebiehať na pozadí.",
     "@landscapeProceedAnywayHint": {},
     "landscapeChangeLaterHint": "Konfiguráciu môžete kedykoľvek zmeniť.",
     "@landscapeChangeLaterHint": {},
