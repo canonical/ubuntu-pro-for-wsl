@@ -1,158 +1,158 @@
 {
-  "tokenValid": "Valida ĵetono",
-  "@tokenValid": {},
-  "agentStatePingNonResponsive": "Fona agento de Ubuntu Pro ne respondas.",
-  "@agentStatePingNonResponsive": {},
-  "buttonBack": "Reen",
-  "@buttonBack": {},
-  "purchaseStatusUnknown": "Nekonata eraro pri aĉetado de la abono. Provu relanĉi ĉi tiun programon.",
-  "@purchaseStatusUnknown": {},
-  "landscapeFileTooLarge": "Agorda dosiero estas tro granda",
-  "@landscapeFileTooLarge": {},
-  "agentStateCannotStart": "Ne eblas lanĉi fonan agenton de Ubuntu Pro.",
-  "@agentStateCannotStart": {},
-  "landscapeFileNotFound": "Dosiero ne troviĝis",
-  "@landscapeFileNotFound": {},
-  "tokenErrorEmpty": "Ĵetono ne povas esti malplena",
-  "@tokenErrorEmpty": {},
-  "landscapeConfigureButton": "Agordi Landscape",
-  "@landscapeConfigureButton": {},
-  "tokenErrorInvalid": "Nevalida ĵetono",
-  "@tokenErrorInvalid": {},
-  "statusBarReportBugTooltip": "Raporti cimon",
-  "@statusBarReportBugTooltip": {},
-  "proHeading": "Malfermitkoda programa sekureco far la eldonantoj de Ubuntu, nun disponebla ĉe Windows. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
+    "tokenValid": "Valida ĵetono",
+    "@tokenValid": {},
+    "agentStatePingNonResponsive": "Fona agento de Ubuntu Pro ne respondas.",
+    "@agentStatePingNonResponsive": {},
+    "buttonBack": "Reen",
+    "@buttonBack": {},
+    "purchaseStatusUnknown": "Nekonata eraro pri aĉetado de la abono. Provu relanĉi ĉi tiun programon.",
+    "@purchaseStatusUnknown": {},
+    "landscapeFileTooLarge": "Agorda dosiero estas tro granda",
+    "@landscapeFileTooLarge": {},
+    "agentStateCannotStart": "Ne eblas lanĉi fonan agenton de Ubuntu Pro.",
+    "@agentStateCannotStart": {},
+    "landscapeFileNotFound": "Dosiero ne troviĝis",
+    "@landscapeFileNotFound": {},
+    "tokenErrorEmpty": "Ĵetono ne povas esti malplena",
+    "@tokenErrorEmpty": {},
+    "landscapeConfigureButton": "Agordi Landscape",
+    "@landscapeConfigureButton": {},
+    "tokenErrorInvalid": "Nevalida ĵetono",
+    "@tokenErrorInvalid": {},
+    "statusBarReportBugTooltip": "Raporti cimon",
+    "@statusBarReportBugTooltip": {},
+    "proHeading": "Malfermitkoda programa sekureco far la eldonantoj de Ubuntu, nun disponebla ĉe Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFQDNError": "Nevalida plene kvalifikita nomregno. Formo devas esti gastiga nomo aŭ IP-adreso.",
+    "@landscapeFQDNError": {},
+    "purchaseStatusAlreadyPurchased": "Vi jam abonas Ubuntu Pro.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "tokenInputDescription": "Tajpu ĵetonon el {proLink} aŭ via sistemadministranto",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Ĵetono",
+    "@tokenInputHint": {},
+    "attach": "Alkroĉi",
+    "@attach": {},
+    "applyingProToken": "Efektivigante ĵetonon {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "applyProToken": "Efektivigi ĵetonon de Ubuntu Pro",
+    "@applyProToken": {},
+    "agent": "Fona agento de Ubuntu Pro",
+    "@agent": {},
+    "agentStateStarting": "Fona agento de Ubuntu Pro lanĉiĝas.",
+    "@agentStateStarting": {},
+    "learnMore": "Lerni plu",
+    "@learnMore": {},
+    "tokenInputTitle": "Alkroĉi ĉi tiun komputilon",
+    "@tokenInputTitle": {},
+    "getUbuntuPro": "Akiri Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "detachPro": "Dekroĉi Ubuntu Pro",
+    "@detachPro": {},
+    "appTitle": "Ubuntu Pro por WSL",
+    "@appTitle": {},
+    "manageUbuntuPro": "Administri abonon al Ubuntu Pro",
+    "@manageUbuntuPro": {},
+    "updatingSubscriptionInfo": "Ĝisdatigante la informon pri abonado.",
+    "@updatingSubscriptionInfo": {},
+    "agentStateQuerying": "Kontrolante la staton de la fona agento de Ubuntu Pro.",
+    "@agentStateQuerying": {},
+    "purchaseStatusUserGaveUp": "Nuligis provon aĉeti.",
+    "@purchaseStatusUserGaveUp": {},
+    "agentStateInvalid": "Atendante lanĉon de fona agento de Ubuntu Pro.",
+    "@agentStateInvalid": {},
+    "agentStateUnreachable": "Provante reatingi fonan agenton de Ubuntu Pro.",
+    "@agentStateUnreachable": {},
+    "ubuntuProEnabled": "Ubuntu Pro estas ŝaltita sur ĉi tiu komputilo",
+    "@ubuntuProEnabled": {},
+    "purchaseStatusSuccess": "Dankon pro abonado al Ubuntu Pro.",
+    "@purchaseStatusSuccess": {},
+    "agentStateUnknownEnv": "Ne eblas kontroli la staton de la fona agento de Ubuntu Pro. Bonvolu kontroli viajn mediajn agordojn.",
+    "@agentStateUnknownEnv": {},
+    "ubuntuProEnabledInfo": "Ĉiu instalaĵo de Ubuntu WSL rajtas uzi la sekurecajn funkciojn de Ubuntu Pro.",
+    "@ubuntuProEnabledInfo": {},
+    "purchaseStatusNetwork": "Reta problemo malhelpis aĉetadon. Bonvolu reprovi post konektado.",
+    "@purchaseStatusNetwork": {},
+    "landscapeRegister": "Registri",
+    "@landscapeRegister": {},
+    "buttonNext": "Sekven",
+    "@buttonNext": {},
+    "buttonSkip": "Preterpasi",
+    "@buttonSkip": {},
+    "landscapeFilePicker": "Elekti dosieron…",
+    "@landscapeFilePicker": {},
+    "landscapeSkip": "Preterpasi portempe",
+    "@landscapeSkip": {},
+    "landscapeSkipRegister": "Registri per Landscape",
+    "@landscapeSkipRegister": {},
+    "landscapeKeyLabel": "Ŝlosilo de registrado (nedeviga)",
+    "@landscapeKeyLabel": {},
+    "landscapeFileLabel": "Loko de agorda dosiero",
+    "@landscapeFileLabel": {},
+    "landscapeSetupManual": "Malaŭtomata agordado",
+    "@landscapeSetupManual": {},
+    "landscapeSetupCustom": "Altnivela agordado",
+    "@landscapeSetupCustom": {},
+    "landscapeFQDNLabel": "Plene kvalifikita nomregno por Landscape",
+    "@landscapeFQDNLabel": {},
+    "landscapeFileEmptyContents": "Dosiero ne povas esti malplena",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileIsDir": "Dosiero ne povas esti dosierujo",
+    "@landscapeFileIsDir": {},
+    "statusBarAgentRunningTooltip": "Agento de Ubuntu Pro ruliĝas",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Konektante al agento de Ubuntu Pro…",
+    "@statusBarAgentConnectingTooltip": {},
+    "landscapeSetupManualHint": "Registri per via propra servilo Landscape",
+    "@landscapeSetupManualHint": {},
+    "landscapeFileInvalidFormat": "Dosiero havas netaŭgan formon",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFQDNSaaSError": "Plene kvalifikita nomregno ne estu landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeSSLKeyLabel": "Servila publika ŝlosilo SSL (nedeviga)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileEmptyPath": "Vi devas specifi dosierlokon",
+    "@landscapeFileEmptyPath": {},
+    "landscapeApplyError": "Eraro dum provado efektivigi la agordon:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "statusBarAgentDownTooltip": "Agento de Ubuntu Pro estas malkonektita. Premu butonon por lanĉi la agenton.",
+    "@statusBarAgentDownTooltip": {},
+    "landscapeSetupCustomHint": "Agordi propran klientan agordan dosieron por Landscape",
+    "@landscapeSetupCustomHint": {},
+    "purchaseStatusServer": "Io fiaskis pri Microsoft Store. Bonvolu reprovi poste.",
+    "@purchaseStatusServer": {},
+    "landscapeSkipDescription": "Vi povas agordi Landscape poste en ĉi tiu programo",
+    "@landscapeSkipDescription": {},
+    "landscapeHeading": "Agordu la konekton al Landscape por fore administri viajn instalaĵojn de Ubuntu WSL. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
     }
-  },
-  "landscapeFQDNError": "Nevalida plene kvalifikita nomregno. Formo devas esti gastiga nomo aŭ IP-adreso.",
-  "@landscapeFQDNError": {},
-  "purchaseStatusAlreadyPurchased": "Vi jam abonas Ubuntu Pro.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "tokenInputDescription": "Tajpu ĵetonon el {proLink} aŭ via sistemadministranto",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "tokenInputHint": "Ĵetono",
-  "@tokenInputHint": {},
-  "attach": "Alkroĉi",
-  "@attach": {},
-  "applyingProToken": "Efektivigante ĵetonon {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "applyProToken": "Efektivigi ĵetonon de Ubuntu Pro",
-  "@applyProToken": {},
-  "agent": "Fona agento de Ubuntu Pro",
-  "@agent": {},
-  "agentStateStarting": "Fona agento de Ubuntu Pro lanĉiĝas.",
-  "@agentStateStarting": {},
-  "learnMore": "Lerni plu",
-  "@learnMore": {},
-  "tokenInputTitle": "Alkroĉi ĉi tiun komputilon",
-  "@tokenInputTitle": {},
-  "getUbuntuPro": "Akiri Ubuntu Pro",
-  "@getUbuntuPro": {},
-  "detachPro": "Dekroĉi Ubuntu Pro",
-  "@detachPro": {},
-  "appTitle": "Ubuntu Pro por WSL",
-  "@appTitle": {},
-  "manageUbuntuPro": "Administri abonon al Ubuntu Pro",
-  "@manageUbuntuPro": {},
-  "updatingSubscriptionInfo": "Ĝisdatigante la informon pri abonado.",
-  "@updatingSubscriptionInfo": {},
-  "agentStateQuerying": "Kontrolante la staton de la fona agento de Ubuntu Pro.",
-  "@agentStateQuerying": {},
-  "purchaseStatusUserGaveUp": "Nuligis provon aĉeti.",
-  "@purchaseStatusUserGaveUp": {},
-  "agentStateInvalid": "Atendante lanĉon de fona agento de Ubuntu Pro.",
-  "@agentStateInvalid": {},
-  "agentStateUnreachable": "Provante reatingi fonan agenton de Ubuntu Pro.",
-  "@agentStateUnreachable": {},
-  "ubuntuProEnabled": "Ubuntu Pro estas ŝaltita sur ĉi tiu komputilo",
-  "@ubuntuProEnabled": {},
-  "purchaseStatusSuccess": "Dankon pro abonado al Ubuntu Pro.",
-  "@purchaseStatusSuccess": {},
-  "agentStateUnknownEnv": "Ne eblas kontroli la staton de la fona agento de Ubuntu Pro. Bonvolu kontroli viajn mediajn agordojn.",
-  "@agentStateUnknownEnv": {},
-  "ubuntuProEnabledInfo": "Ĉiu instalaĵo de Ubuntu WSL rajtas uzi la sekurecajn funkciojn de Ubuntu Pro.",
-  "@ubuntuProEnabledInfo": {},
-  "purchaseStatusNetwork": "Reta problemo malhelpis aĉetadon. Bonvolu reprovi post konektado.",
-  "@purchaseStatusNetwork": {},
-  "landscapeRegister": "Registri",
-  "@landscapeRegister": {},
-  "buttonNext": "Sekven",
-  "@buttonNext": {},
-  "buttonSkip": "Preterpasi",
-  "@buttonSkip": {},
-  "landscapeFilePicker": "Elekti dosieron…",
-  "@landscapeFilePicker": {},
-  "landscapeSkip": "Preterpasi portempe",
-  "@landscapeSkip": {},
-  "landscapeSkipRegister": "Registri per Landscape",
-  "@landscapeSkipRegister": {},
-  "landscapeKeyLabel": "Ŝlosilo de registrado (nedeviga)",
-  "@landscapeKeyLabel": {},
-  "landscapeFileLabel": "Loko de agorda dosiero",
-  "@landscapeFileLabel": {},
-  "landscapeSetupManual": "Malaŭtomata agordado",
-  "@landscapeSetupManual": {},
-  "landscapeSetupCustom": "Altnivela agordado",
-  "@landscapeSetupCustom": {},
-  "landscapeFQDNLabel": "Plene kvalifikita nomregno por Landscape",
-  "@landscapeFQDNLabel": {},
-  "landscapeFileEmptyContents": "Dosiero ne povas esti malplena",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileIsDir": "Dosiero ne povas esti dosierujo",
-  "@landscapeFileIsDir": {},
-  "statusBarAgentRunningTooltip": "Agento de Ubuntu Pro ruliĝas",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "Konektante al agento de Ubuntu Pro…",
-  "@statusBarAgentConnectingTooltip": {},
-  "landscapeSetupManualHint": "Registri per via propra servilo Landscape",
-  "@landscapeSetupManualHint": {},
-  "landscapeFileInvalidFormat": "Dosiero havas netaŭgan formon",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFQDNSaaSError": "Plene kvalifikita nomregno ne estu landscape.canonical.com.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeSSLKeyLabel": "Servila publika ŝlosilo SSL (nedeviga)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileEmptyPath": "Vi devas specifi dosierlokon",
-  "@landscapeFileEmptyPath": {},
-  "landscapeApplyError": "Eraro dum provado efektivigi la agordon:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "statusBarAgentDownTooltip": "Agento de Ubuntu Pro estas malkonektita. Premu butonon por lanĉi la agenton.",
-  "@statusBarAgentDownTooltip": {},
-  "landscapeSetupCustomHint": "Agordi propran klientan agordan dosieron por Landscape",
-  "@landscapeSetupCustomHint": {},
-  "purchaseStatusServer": "Io fiaskis pri Microsoft Store. Bonvolu reprovi poste.",
-  "@purchaseStatusServer": {},
-  "landscapeSkipDescription": "Vi povas agordi Landscape poste en ĉi tiu programo",
-  "@landscapeSkipDescription": {},
-  "landscapeHeading": "Agordu la konekton al Landscape por fore administri viajn instalaĵojn de Ubuntu WSL. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  }
 }
