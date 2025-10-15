@@ -9,7 +9,7 @@
 		<AppConfiguration>$(Configuration.ToLower())</AppConfiguration>
 		<OverrideEntryPoint Condition="$(UP4W_END_TO_END) != '' And $(UP4W_END_TO_END) != 'false'">-t end_to_end/end_to_end_test.dart</OverrideEntryPoint>
 		<VersionDefine Condition="$(UP4W_FULL_VERSION) != '' ">--dart-define="UP4W_FULL_VERSION=$(UP4W_FULL_VERSION)"</VersionDefine>
-		<ClangTidyEnv>ClangTidyToolExeAdditionalOptions="--config-file=$(SolutionDir)..\.clang-tidy";EnableClangTidyCodeAnalysis=$(RunCodeAnalysis);RunCodeAnalysis=$(RunCodeAnalysis);EnableMicrosoftCodeAnalysis=false</ClangTidyEnv>
+		<ClangTidyEnv>ClangTidyToolExeAdditionalOptions="--config-file=$(SolutionDir)..\.clang-tidy";EnableClangTidyCodeAnalysis=$(RunCodeAnalysis);RunCodeAnalysis=$(RunCodeAnalysis);EnableMicrosoftCodeAnalysis=false;ClangTidyToolPath=$(MSBuildProjectDirectory);ClangTidyToolExe=clang-tidy-not-yet.bat</ClangTidyEnv>
 	</PropertyGroup>
 	<ItemGroup>
 		<AppIcon Include="$(AppIconPath)" />
