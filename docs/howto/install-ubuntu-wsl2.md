@@ -36,7 +36,7 @@ Open PowerShell and run:
 
 You may be prompted to grant permission to continue the installation.
 
-You may need to reboot your machine before installing and running any Ubuntu distro.
+You may also need to reboot your machine before installing and running any Ubuntu distro.
 
 :::{dropdown} Variation in WSL installation behaviour
 :color: primary

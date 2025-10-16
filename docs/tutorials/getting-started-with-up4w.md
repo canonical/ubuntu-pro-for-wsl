@@ -53,9 +53,12 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
     :end-before: <!-- Include end virtualisation requirements -->
 ```
 
+## Set up Ubuntu on WSL
 
 You can paste commands directly from the tutorial because the prompts are not copied.
 :::
+To use UP4W, you need WSL installed and enabled on your machine, and at least
+one instance of Ubuntu on WSL.
 
 (tut::get-wsl)=
 ### Install WSL

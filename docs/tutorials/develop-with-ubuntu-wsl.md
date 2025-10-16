@@ -33,7 +33,9 @@ offers excellent integration with developer tools like Visual Studio Code.
 
 ## Install Ubuntu on WSL
 
-Check if WSL is already installed by trying to display its version information:
+You can check if WSL is already installed by trying to display its version information.
+
+Open PowerShell and run the following command:
 
 ```{code-block} text
 > wsl --version
@@ -42,31 +44,31 @@ Check if WSL is already installed by trying to display its version information:
 If WSL **is not** installed, press <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel, and then
 follow our steps to [install WSL](tut::develop::install-wsl).
 
-When WSL **is** installed, follow our steps to [install Ubuntu](tut::develop::install-ubuntu).
+When WSL **is** already installed, follow our steps to [install Ubuntu](tut::develop::install-ubuntu).
 
 (tut::develop::install-wsl)=
 ### Install WSL
 
-Open a PowerShell prompt and run:
+In PowerShell, run the following command to install and enable WSL:
 
 ```{code-block} text
 > wsl --install
 ```
 
-After installing and enabling WSL, you may need to reboot your machine.
+You may need to reboot your machine for the changes to take effect.
 
-You may be prompted to grant permissions during the installation process.
+You may also be prompted to grant permissions during the installation process.
 
 (tut::develop::install-ubuntu)=
 ### Install Ubuntu
 
-Check if you have any Ubuntu distributions installed on WSL:
+To check if you have any Ubuntu distributions installed on WSL, run:
 
 ```{code-block} text
 > wsl --list
 ```
 
-Ubuntu is the default WSL distribution for WSL. It may be listed in the output
+Ubuntu is the default distribution for WSL. It may be listed in the output
 of the command if it was included with your WSL installation:
 
 ```{code-block} text
@@ -80,8 +82,8 @@ For a list of distributions that you can install on WSL, run:
 > wsl --list --online
 ```
 
-For this tutorial, use a numbered release of Ubuntu.
-To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
+For this tutorial, install Ubuntu 24.04 LTS by running the following command in
+PowerShell:
 
 ```{code-block} text
 > wsl --install Ubuntu-24.04
@@ -157,16 +159,14 @@ Use `wsl -l -v` to list all of your installed distros.
 * Ubuntu-24.04    Stopped         2
 ```
 
-This shows that both distros are stopped, each uses WSL 2, and Ubuntu-24.04 is
-the default distro.
+This shows that both distros are stopped, that each uses WSL 2, and that
+Ubuntu-24.04 is the default distro.
 
 ```{dropdown} What is WSL 2?
 :open:
 :color: warning
 :icon: alert
 
-WSL implements two different architectures for running Linux distributions: WSL
-1 and WSL 2.
 WSL 2 is the default WSL architecture on recent versions of Windows and it is
 recommended for this tutorial.
 
@@ -180,16 +180,8 @@ You can open a specific instance from PowerShell using its NAME:
 ```
 
 The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
-directory (commonly symbolised by ~) and the `-d` flag is added to specify the
+directory, which is commonly symbolised by ~. The `-d` flag is added to specify the
 distro.
-
-We only need an Ubuntu-24.04 instance for this tutorial.
-
-To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
-
-```{code-block} text
-> wsl --unregister Ubuntu-22.04
-```
 
 We only need an Ubuntu-24.04 instance for this tutorial.
 
