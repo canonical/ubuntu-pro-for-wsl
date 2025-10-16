@@ -7,7 +7,7 @@ myst:
 
 # Start the Ubuntu Pro for WSL background agent remotely with Intune
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```

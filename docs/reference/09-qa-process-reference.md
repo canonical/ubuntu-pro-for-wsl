@@ -7,7 +7,7 @@ myst:
 
 # QA Process
 
-```{include} ../dev_docs_notice.txt
+```{include} ../includes/dev_docs_notice.txt
     :start-after: <!-- Include start dev -->
     :end-before: <!-- Include end dev -->
 ```

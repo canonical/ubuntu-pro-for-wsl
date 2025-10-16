@@ -8,7 +8,7 @@ myst:
 (howto::up4w)=
 # Get started with Ubuntu Pro for WSL
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
@@ -19,6 +19,11 @@ Developers get to use Ubuntu WSL while benefiting from the stability, security a
 
 In this tutorial you will learn how to install UP4W on Windows and verify that Ubuntu WSL instances are Pro-attaching.
 You should then be ready for more advanced usage scenarios.
+
+```{include} ../includes/prompt_symbols_notice.txt
+    :start-after: <!-- Include start prompt symbols -->
+    :end-before: <!-- Include end prompt symbols -->
+```
 
 ## What you will do
 
@@ -43,18 +48,11 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
-## Set up Ubuntu on WSL
+```{include} ../includes/virtualisation_requirements.txt
+    :start-after: <!-- Include start virtualisation requirements -->
+    :end-before: <!-- Include end virtualisation requirements -->
+```
 
-:::{dropdown} Use of prompt symbols
-:open:
-:color: primary
-:icon: terminal
-
-Prompt symbols in this tutorial are used to distinguish between commands that
-you run in PowerShell and commands that you run in Ubuntu:
-
-* `>`: PowerShell
-* `$`: Ubuntu
 
 You can paste commands directly from the tutorial because the prompts are not copied.
 :::

@@ -18,25 +18,10 @@ myst:
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
-:::{dropdown} (Optional) Virtualisation requirements
-:color: warning
-:icon: alert
-
-**Virtualisation** needs to be enabled. Many Windows devices already meet this
-requirement, but if your machine does not then you need to modify the UEFI (or
-BIOS).
-
-**Virtual Machine Platform** must be turned on. Running `wsl --install` will
-attempt to do this, but a reboot is required for the change to apply. 
-
-> Refer to [Microsoft's guide on enabling virtualisation on Windows](https://support.microsoft.com/en-us/windows/enable-virtualization-on-windows-c5578302-6e43-4b4b-a449-8ced115f58e1)
-for more information on enabling virtualisation and the Virtual Machine Platform.
-
-**Running WSL in a virtual machine** is possible but nested virtualisation must
-be enabled. This guide has not been tested in a virtual machine.
-
-> More information on running WSL in a VM is provided in [Microsoft's FAQ](https://learn.microsoft.com/en-us/windows/wsl/faq#can-i-run-wsl-2-in-a-virtual-machine-).
-:::
+```{include} ../includes/virtualisation_requirements.txt
+    :start-after: <!-- Include start virtualisation requirements -->
+    :end-before: <!-- Include end virtualisation requirements -->
+```
 
 ## Install and enable WSL
 

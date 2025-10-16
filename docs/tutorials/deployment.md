@@ -8,7 +8,7 @@ myst:
 (tut::deploy)=
 # Deploy WSL instances remotely with Ubuntu Pro for WSL and Landscape
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
