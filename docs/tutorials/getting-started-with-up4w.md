@@ -68,34 +68,7 @@ To install and enable WSL on Windows, run the following command in PowerShell:
 
 You may need to reboot the Windows machine after WSL installation.
 
-
-:::{dropdown} (Optional) Variation in WSL installation behaviour
-:color: info
-:icon: info
-
-The effect of `wsl --install` depends on whether Virtual Machine Platform is
-enabled on Windows:
-
-Not enabled:
-
-* Installs WSL components and enables WSL
-* Turns on the Virtual Machine Platform
-* Prompts for a reboot to complete the setup
-* Does not attempt to install an Ubuntu distribution
-
-Enabled:
-
-* Installs WSL components and enables WSL
-* Does not prompt for a reboot
-* Attempts to install the default Ubuntu distribution
-
----
-
-If WSL is already installed and enabled, the `wsl --install` command will
-download and install the latest Ubuntu distro, unless a distro with the name
-"Ubuntu" is already installed.
-
-:::
+You may need to reboot the Windows machine for the changes to take effect.
 
 Global configuration settings for WSL may block the communication between the Ubuntu
 Pro for WSL application and instances of Ubuntu on WSL. If you already have WSL

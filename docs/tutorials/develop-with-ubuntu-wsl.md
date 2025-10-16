@@ -55,27 +55,6 @@ Open a PowerShell prompt and run:
 
 After installing and enabling WSL, you may need to reboot your machine.
 
-:::{dropdown} (Optional) Variation in WSL installation behaviour
-:color: info
-:icon: info
-
-The effect of `wsl --install` depends on whether Virtual Machine Platform is
-enabled on Windows:
-
-Not enabled:
-
-* Installs WSL components and enables WSL
-* Turns on the Virtual Machine Platform
-* Prompts for a reboot to complete the setup
-* Does not attempt to install an Ubuntu distribution
-
-Enabled:
-
-* Installs WSL components and enables WSL
-* Does not prompt for a reboot
-* Attempts to install the default Ubuntu distribution
-:::
-
 You may be prompted to grant permissions during the installation process.
 
 (tut::develop::install-ubuntu)=

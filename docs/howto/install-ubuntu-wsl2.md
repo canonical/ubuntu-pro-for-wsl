@@ -38,34 +38,17 @@ You may be prompted to grant permission to continue the installation.
 
 You may need to reboot your machine before installing and running any Ubuntu distro.
 
-> Read Microsoft's documentation for more information on [installing
-> WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+:::{dropdown} Variation in WSL installation behaviour
+:color: primary
+:icon: question
 
+The effect of `wsl --install` may vary depending on your system. After
+installation, a reboot is usually required before WSL distros can be installed.
+If those WSL components are already enabled, a reboot may not be required and
+an installation of the default Ubuntu distribution will be attempted.
 
-:::{dropdown} (Optional) Variation in WSL installation behaviour
-:color: info
-:icon: info
-
-The effect of `wsl --install` depends on whether Virtual Machine Platform is
-enabled on Windows:
-
-Not enabled:
-
-* Installs WSL components and enables WSL
-* Turns on the Virtual Machine Platform
-* Prompts for a reboot to complete the setup
-* Does not attempt to install an Ubuntu distribution
-
-Enabled:
-
-* Installs WSL components and enables WSL
-* Does not prompt for a reboot
-* Attempts to install the default Ubuntu distribution
-
----
-
-If WSL is already installed and enabled, running `wsl --install` will install
-Ubuntu, unless there is a pre-existing instance named Ubuntu on the machine.
+Read Microsoft’s documentation for more information on
+[installing WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 :::
 
 ## Install specific versions of Ubuntu on WSL
