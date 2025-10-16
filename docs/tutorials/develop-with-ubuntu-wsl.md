@@ -191,8 +191,9 @@ To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 
 ```{admonition} Windows terminal integration
 :class: tip
-Each time you install a version of Ubuntu, it appears in the dropdown list of
-terminal profiles in Windows terminal.
+After you install a version of Ubuntu and close Windows terminal, that Ubuntu
+will be listed in the dropdown menu ({octicon}`chevron-down;1em;`) of terminal
+profiles the next time you open Windows terminal.
 
 If you have one version of Ubuntu running in a tab, you can open another in a
 separate tab by selecting it from the menu.
