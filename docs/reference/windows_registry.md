@@ -8,7 +8,7 @@ myst:
 (windows-registry)=
 # The Windows registry and Ubuntu Pro for WSL
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```

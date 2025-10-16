@@ -7,7 +7,7 @@ myst:
 
 # Install individual components of Ubuntu Pro for WSL for development
 
-```{include} ../dev_docs_notice.txt
+```{include} ../includes/dev_docs_notice.txt
     :start-after: <!-- Include start dev -->
     :end-before: <!-- Include end dev -->
 ```

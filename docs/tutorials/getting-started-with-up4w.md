@@ -8,7 +8,7 @@ myst:
 (howto::up4w)=
 # Get started with Ubuntu Pro for WSL
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
@@ -20,6 +20,11 @@ Developers get to use Ubuntu WSL while benefiting from the stability, security a
 In this tutorial you will learn how to install UP4W on Windows and verify that Ubuntu WSL instances are Pro-attaching.
 You should then be ready for more advanced usage scenarios.
 
+```{include} ../includes/prompt_symbols_notice.txt
+    :start-after: <!-- Include start prompt symbols -->
+    :end-before: <!-- Include end prompt symbols -->
+```
+
 ## What you will do
 
 - Install UP4W from the Microsoft Store
@@ -27,10 +32,10 @@ You should then be ready for more advanced usage scenarios.
 - Test automatic Pro-attachment of WSL instances
 
 (ref::backup-warning)=
-```{admonition} If you already have Ubuntu WSL pre-installed
-:class: warning
+```{admonition} If you already have instances of Ubuntu on WSL installed
+:class: important
 
-We recommend that any Ubuntu WSL installed is exported then deleted.
+We recommend that any installed instance of Ubuntu on WSL is exported then deleted.
 You can then install it as described in this tutorial.
 At the end of the tutorial you can import and restore your data.
 
@@ -41,14 +46,15 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
+```{include} ../includes/virtualisation_requirements.txt
+    :start-after: <!-- Include start virtualisation requirements -->
+    :end-before: <!-- Include end virtualisation requirements -->
+```
+
 ## Set up Ubuntu on WSL
 
-We use the following prompt symbols in this tutorial:
-
-* `>`: runs in PowerShell
-* `$`: runs in Ubuntu
-
-Clicking the copy button will only copy the executable command.
+To use UP4W, you need WSL installed and enabled on your machine, and at least
+one instance of Ubuntu on WSL.
 
 (tut::get-wsl)=
 ### Install WSL
@@ -59,13 +65,7 @@ To install and enable WSL on Windows, run the following command in PowerShell:
 > wsl --install
 ```
 
-**You need to reboot the Windows machine after WSL installation**.
-
-```{admonition} What if WSL is already installed and enabled?
-:class: important
-The `wsl --install` command will download and install the latest Ubuntu distro,
-unless a distro with the name "Ubuntu" is already installed.
-```
+You may need to reboot the Windows machine for the changes to take effect.
 
 Global configuration settings for WSL may block the communication between the Ubuntu
 Pro for WSL application and instances of Ubuntu on WSL. If you already have WSL
@@ -105,6 +105,7 @@ To confirm the installation, and that the installed distro is using WSL 2, run:
 
 ```{admonition} You must use WSL 2
 :class: warning
+
 WSL 2 is the default architecture on recent versions of Windows and
 is required for Ubuntu Pro for WSL to function.
 Read more about the [differences between WSL versions](explanation::wsl-version).
@@ -136,7 +137,9 @@ Once you have a token you are ready to install UP4W.
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
 
-```{warning}
+```{admonition} Ubuntu Pro for WSL is in beta
+:class: note
+
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 

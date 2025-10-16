@@ -7,7 +7,7 @@ myst:
 
 # Remotely enforce startup of the Ubuntu Pro for WSL background agent using the Windows Registry
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```

@@ -186,7 +186,7 @@ example — an Ubuntu Server, it does not apply to Ubuntu on WSL.
 
 ## The Ubuntu Pro for WSL application
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```

@@ -1,0 +1,15 @@
+<!-- Include start prompt symbols -->
+
+:::{dropdown} Use of prompt symbols in this documentation
+:color: primary
+:icon: terminal
+
+Prompt symbols on this page are used to distinguish between commands that
+you run in PowerShell and commands that you run in Ubuntu:
+
+* `>`: PowerShell
+* `$`: Ubuntu
+
+When you copy any command, the prompt symbol will not be copied.
+:::
+<!-- Include end prompt symbols -->
