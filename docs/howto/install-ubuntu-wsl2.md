@@ -56,11 +56,9 @@ Read Microsoft’s documentation for more information on
 There are multiple ways of installing Ubuntu distros on WSL.
 The best method depends on your specific requirements.
 
-:::{dropdown} WSL versions
-:open:
-:color: secondary
-:icon: pencil
-
+:::{admonition} WSL versions
+:class: important
+ 
 WSL 2 is the default [WSL architecture](explanation::wsl-version) in recent
 versions of Windows. Our documentation assumes that you are installing Ubuntu
 on WSL 2.
@@ -98,10 +96,8 @@ Install a specific Ubuntu distro using a NAME from the output:
 > wsl --install Ubuntu-24.04
 ```
 
-```{dropdown} Using the new WSL distro format
-:open:
-:color: info
-:icon: info
+```{admonition} Using the new WSL distro format
+:class: tip
 
 At time of writing, Ubuntu 24.04 LTS and later versions are downloaded in [WSL's
 new tar-based format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available).
@@ -194,10 +190,7 @@ the working directory, run:
 > wsl ~ -d Ubuntu
 ```
 
-:::{dropdown} Tip
-:open:
-:color: success
-:icon: light-bulb
+:::{tip}
 
 For the **default WSL distro**, this command can be shortened further to:
 

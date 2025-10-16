@@ -89,8 +89,8 @@ PowerShell:
 > wsl --install Ubuntu-24.04
 ```
 
-:::{dropdown} (Optional) Installing multiple instances of the same Ubuntu release
-:color: success
+:::{dropdown} Installing multiple instances of the same Ubuntu release
+:color: primary
 :icon: light-bulb
 
 If you already have an `Ubuntu-24.04` instance and you don't want to change or
@@ -162,10 +162,8 @@ Use `wsl -l -v` to list all of your installed distros.
 This shows that both distros are stopped, that each uses WSL 2, and that
 Ubuntu-24.04 is the default distro.
 
-```{dropdown} What is WSL 2?
-:open:
-:color: warning
-:icon: alert
+```{admonition} What is WSL 2?
+:class: note
 
 WSL 2 is the default WSL architecture on recent versions of Windows and it is
 recommended for this tutorial.
