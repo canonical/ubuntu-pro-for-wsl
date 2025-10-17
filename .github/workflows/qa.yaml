@@ -278,7 +278,7 @@ jobs:
     name: "Collect and upload code coverage"
     runs-on: [self-hosted, linux, amd64, tiobe, noble]
     env:
-      coverage_path: ./.coverage/cobertura.xml
+      coverage_dir: ./coverage
     needs:
       - quality-flutter
       - tests-go-with-mocks
@@ -303,16 +303,19 @@ jobs:
         shell: bash
         run: |
           export PATH="$HOME/.dotnet/tools:$PATH"
-          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./.coverage" -reporttypes:Cobertura
-          mv ./.coverage/Cobertura.xml ${coverage_path}
+          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"${coverage_dir}" -reporttypes:Cobertura
+          # TODO: Agree with the TiCS team to at least use the same directory name in both "subprojects".
+          # It currently expects a "coverage" dir at project root and a ".coverage" under
+          # wsl-pro-service/
+          cp -r ${coverage_dir} ./wsl-pro-service/.coverage
       - uses: actions/upload-artifact@v4
         with:
           name: unified-coverage
-          path: ${{ env.coverage_path }}
+          path: ${{ env.coverage_dir }}
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ${{ env.coverage_path }}
+          directory: ${{ env.coverage_dir }}
           disable_search: true
       
       - name: Determine TiCS run conditions
@@ -330,12 +333,23 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
             echo "tics_mode=qserver" >> $GITHUB_OUTPUT
           fi
-      - name: "TiCS"
+      - name: "TiCS: Linux"
         if: ${{ steps.tics-condition.outputs.tics_mode != '' }}
         uses: tiobe/tics-github-action@v3
         with:
           mode:  ${{ steps.tics-condition.outputs.tics_mode }}
-          project: UP4W
+          project: ubuntu-pro-for-wsl-linux
+          # Docs say even if you use Go partially, so here we Go.
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+          postAnnotations: false # Often not useful due to just false positives hitting the GitHub 10 annotations limit
+      - name: "TiCS: Windows"
+        if: ${{ steps.tics-condition.outputs.tics_mode != '' }}
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode:  ${{ steps.tics-condition.outputs.tics_mode }}
+          project: ubuntu-pro-for-wsl-windows
           # Docs say even if you use Go partially, so here we Go.
           viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
