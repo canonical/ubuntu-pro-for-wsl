@@ -294,7 +294,7 @@ jobs:
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt install -y dotnet-sdk-8.0
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          go install honnef.co/go/tools/cmd/staticcheck@v0.4.7
+          go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Download coverage artifacts
         uses: actions/download-artifact@v5
         with:
