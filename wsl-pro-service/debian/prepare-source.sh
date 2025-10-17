@@ -9,13 +9,17 @@ VERSION_FILE="./version"
 
 export GOWORK=off
 
-is_source_build=$(git status > /dev/null 2>&1 && echo "1" || true)
-
+has_git=$(git status > /dev/null 2>&1 && echo "1" || true)
+# We assume this script triggered by the root of the wsl-pro-service directory tree,
+# such as when invoked by the debhelper.
+tools_file="../tools/build/compute_version.go"
 # Handle vendoring and version detection
-if [ -n "${is_source_build}" ]; then
-    go run ../tools/build/compute_version.go > ${VERSION_FILE}
-    rm -r vendor &> /dev/null || true
-    go mod vendor
+if [ -n "${has_git}" ]; then
+    if [ -r "${tools_file}" ]; then
+       go run "${tools_file}" > ${VERSION_FILE}
+       rm -r vendor &> /dev/null || true
+       go mod vendor
+    fi
 fi
 
 version=$(cat ${VERSION_FILE})
