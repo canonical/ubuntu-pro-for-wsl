@@ -10,7 +10,7 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    # Weekly scan
+    # Weekly scan at 03:17 on Mondays
     - cron: "17 3 * * 1"
 
 concurrency:
