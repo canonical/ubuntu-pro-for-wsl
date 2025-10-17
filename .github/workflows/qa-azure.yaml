@@ -54,6 +54,7 @@ jobs:
           mode: ${{ matrix.mode }}
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
+          run-code-analysis: true
 
       - name: Upload sideload artifact
         uses: actions/upload-artifact@v4

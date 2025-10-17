@@ -9,6 +9,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Weekly scan at 03:17 on Mondays
+    - cron: "17 3 * * 1"
 
 concurrency:
   group: QA-${{ github.head_ref || github.run_id }}
@@ -273,16 +276,25 @@ jobs:
 
   codecoverage:
     name: "Collect and upload code coverage"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, amd64, tiobe, noble]
+    env:
+      coverage_path: ./.coverage/cobertura.xml
     needs:
       - quality-flutter
       - tests-go-with-mocks
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }} # Prevent overlapping runs that cause failures with QServer/TiCS
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: windows-agent/go.mod
       - name: Install dependencies
         run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y dotnet-sdk-8.0
           dotnet tool install -g dotnet-reportgenerator-globaltool
+          go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Download coverage artifacts
         uses: actions/download-artifact@v5
         with:
@@ -290,13 +302,42 @@ jobs:
       - name: Combine coverage reports
         shell: bash
         run: |
-          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
+          export PATH="$HOME/.dotnet/tools:$PATH"
+          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./.coverage" -reporttypes:Cobertura
+          mv ./.coverage/Cobertura.xml ${coverage_path}
       - uses: actions/upload-artifact@v4
         with:
           name: unified-coverage
-          path: ./coverage/Cobertura.xml
+          path: ${{ env.coverage_path }}
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/Cobertura.xml
+          files: ${{ env.coverage_path }}
           disable_search: true
+      
+      - name: Determine TiCS run conditions
+        id: tics-condition
+        env:
+          TICSAUTHTOKEN: ${{ secrets.TICSAUTHTOKEN }}
+        run: |
+          # When triggered by certain actors, such as Dependabot, the TiCS secret is not available.
+          if [[ -z "${TICSAUTHTOKEN}" ]]; then
+            echo "::warning::TiCS token not available"
+            exit 0
+          fi
+          # Client mode is intentionally disabled due to how the results are hidden in the dashboard
+          # Only trigger TICS on push to main and schedule events.
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "tics_mode=qserver" >> $GITHUB_OUTPUT
+          fi
+      - name: "TiCS"
+        if: ${{ steps.tics-condition.outputs.tics_mode != '' }}
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode:  ${{ steps.tics-condition.outputs.tics_mode }}
+          project: UP4W
+          # Docs say even if you use Go partially, so here we Go.
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+          postAnnotations: false # Often not useful due to just false positives hitting the GitHub 10 annotations limit
