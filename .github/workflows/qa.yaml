@@ -292,7 +292,7 @@ jobs:
           go-version-file: windows-agent/go.mod
       - name: Install dependencies
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt install -y dotnet-sdk-8.0
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y dotnet-sdk-8.0
           dotnet tool install -g dotnet-reportgenerator-globaltool
           go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Download coverage artifacts
