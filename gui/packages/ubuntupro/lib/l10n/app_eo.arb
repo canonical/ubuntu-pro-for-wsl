@@ -29,7 +29,7 @@
             }
         }
     },
-    "landscapeFQDNError": "Nevalida plene kvalifikita nomregno. Formo devas esti gastiga nomo aŭ IP-adreso.",
+    "landscapeFQDNError": "Nevalida plene kvalifikita nomregno. Formo devas esti plene kvalifikita nomregno aŭ IP-adreso.",
     "@landscapeFQDNError": {},
     "purchaseStatusAlreadyPurchased": "Vi jam abonas Ubuntu Pro.",
     "@purchaseStatusAlreadyPurchased": {},
@@ -154,5 +154,33 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "landscapeDetails": "Detaloj",
+    "@landscapeDetails": {},
+    "landscapeUnknownError": "Nekonata eraro dum konektado al Landscape",
+    "@landscapeUnknownError": {},
+    "landscapeUnknownErrorContent": "Bonvolu raporti ĉi tiun incidenton inkluzivante la jenajn detalojn.",
+    "@landscapeUnknownErrorContent": {},
+    "landscapeProceedAnyway": "Daŭrigi malgraŭ tio",
+    "@landscapeProceedAnyway": {},
+    "landscapeInvalidConfig": "Nevalida agordo de Landscape",
+    "@landscapeInvalidConfig": {},
+    "landscapeEditYourConfig": "Modifi vian agordon",
+    "@landscapeEditYourConfig": {},
+    "landscapeInvalidConfigContent": "La servilo malakceptis la submetitan agordon. Bonvolu kontroli viajn agordojn.",
+    "@landscapeInvalidConfigContent": {},
+    "landscapeUnchangedConfig": "Neŝanĝita agordo",
+    "@landscapeUnchangedConfig": {},
+    "landscapeUnreachable": "Landscape ne estas atingebla",
+    "@landscapeUnreachable": {},
+    "landscapeUnreachableContent": "Ne eblis konekti al la servilo de Landscape.",
+    "@landscapeUnreachableContent": {},
+    "landscapeChangeLaterHint": "Vi povas ŝanĝi la agordon iam ajn.",
+    "@landscapeChangeLaterHint": {},
+    "landscapeWSLUnavailable": "Funkcioj de Landscape pri WSL ne estas ŝaltitaj",
+    "@landscapeWSLUnavailable": {},
+    "landscapeWSLUnavailableContent": "Funkcioj pri WSL ne estas ŝaltitaj en la servilo de Landscape. Bonvolu kontakti vian sistemadministranton.",
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeProceedAnywayHint": "Se vi daŭrigas malgraŭ tio, provoj atingi la servilon de Landscape daŭros fone.",
+    "@landscapeProceedAnywayHint": {}
 }
