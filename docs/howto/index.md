@@ -21,7 +21,7 @@ index-setup
 
 ## Remote deployment
 
-Use the Ubuntu Pro for WSL application to remotely manage Ubuntu on WSL.
+Use the Pro for WSL application to remotely manage Ubuntu on WSL.
 
 ```{toctree}
 :titlesonly:

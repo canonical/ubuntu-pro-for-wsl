@@ -8,7 +8,7 @@ application are designed and secured.
 
 ## Ubuntu Pro for WSL
 
-Understand Ubuntu Pro for WSL, its components, and how they work together.
+Understand Pro for WSL, its components, and how they work together.
 
 ```{toctree}
 :titlesonly:
