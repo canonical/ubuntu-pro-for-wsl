@@ -14,12 +14,12 @@ myst:
 
 Ubuntu Pro for WSL, being a Microsoft Store application, cannot ship user services as of the time of writing (late
 2024), but can deploy startup tasks instead, programs that run with user permissions when the user logs into the
-Windows device. The UP4W background agent runs as a startup task, which is only enabled by the
+Windows device. The Pro for WSL background agent runs as a startup task, which is only enabled by the
 operating system when the user interacts with the application for the first time. While this behaviour is a feature for
 end-users it presents a source of friction for deployments at scale, when system administrators expect zero-touch
-deployment of UP4W to just work.
+deployment of Pro for WSL to just work.
 
-This guide shows how sysadmins can use the Windows Registry to enforce the enablement of the UP4W background agent
+This guide shows how sysadmins can use the Windows Registry to enforce the enablement of the Pro for WSL background agent
 startup task without depending on end-user interaction. While this guide uses
 [Intune](https://learn.microsoft.com/en-us/mem/intune/fundamentals/what-is-intune), it should be reproducible with any
 remote management solution capable of deploying MS Store (or MSIX-packaged) applications and registry keys.
@@ -33,14 +33,14 @@ remote management solution capable of deploying MS Store (or MSIX-packaged) appl
 ## Overview
 
 1. The registry path `"HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\CanonicalGroupLimited.UbuntuPro_79rhkp1fndgsc"`
-   holds configuration information specific about UP4W and is created or overwritten when the MSIX package is
+   holds configuration information specific about Pro for WSL and is created or overwritten when the MSIX package is
    installed.
 2. A sub-key named `UbuntuProAutoStart` governs the startup task state.
 3. Setting the DWORD value named `State` to `4` makes the operating system interpret it as
    ["Enabled by Policy"](https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.startuptaskstate).
-4. When the user logs in, Windows executes the UP4W startup task, even if the user has not interacted with the application.
+4. When the user logs in, Windows executes the Pro for WSL startup task, even if the user has not interacted with the application.
 5. A Windows remote management solution can monitor that registry key value and proactively fix it, thus enforcing the
-   UP4W startup task to be always enabled.
+   Pro for WSL startup task to be always enabled.
 
 (howto::enforce-with-intune)=
 ## Using Intune Remediations
@@ -51,7 +51,7 @@ Intune, you can deploy these script packages and monitor reports of their effect
 [Visit the Microsoft Intune documentation](https://learn.microsoft.com/en-us/mem/intune/fundamentals/remediations)
 to learn more. Those scripts run on a predefined schedule and if the detection script reports a failure (by
 `exit 1`) then the remediation script will run. That allows system administrators to watch for the specific Registry
-key value that represents the enablement of the UP4W background agent startup task. The contents of both scripts are
+key value that represents the enablement of the Pro for WSL background agent startup task. The contents of both scripts are
 presented below. **Make sure to save them encoded in UTF-8**, as required by Intune.
 
 ### Detection script
@@ -125,6 +125,6 @@ the MSIX (if remotely deployed): when the MSIX is installed the registry sub-key
 previous value that the remote management solution would have deployed if that happened before the package installation.
 
 An advantage of Intune Remediation scripts in this scenario is that eventually Intune finds the non-compliant
-state and fixes it automatically. A potential disadvantage is that the fix doesn't start the UP4W background
+state and fixes it automatically. A potential disadvantage is that the fix doesn't start the Pro for WSL background
 agent, The fix enables the startup task and the agent will start at next user login.
 

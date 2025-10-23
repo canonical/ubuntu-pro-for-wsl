@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-At some point you may want to read the UP4W logs, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
+At some point you may want to read the Ubuntu Pro for WSL logs, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
 
 ## Access the logs for the WSL Pro service
 

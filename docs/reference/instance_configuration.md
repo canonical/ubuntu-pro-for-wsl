@@ -87,9 +87,9 @@ Finally, install that distribution as you would normally, and the cloud-init con
 
 ## Ubuntu Pro for WSL
 
-Ubuntu Pro for WSL (UP4W) is a graphical application that automatically configures all compatible instances of Ubuntu on WSL to attach to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
+Ubuntu Pro for WSL is a graphical application that automatically configures all compatible instances of Ubuntu on WSL to attach to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
 
-> [Read more about using Ubuntu Pro for WSL](howto::up4w)
+> [Read more about using Pro for WSL](howto::up4w)
 
 ## Further reading
 

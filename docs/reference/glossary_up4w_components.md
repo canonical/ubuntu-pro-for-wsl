@@ -8,16 +8,16 @@ myst:
 (ref::glossary-up4w-components)=
 # Glossary of Ubuntu Pro for WSL components
 
-The architecture of UP4W and how its components integrate together is covered in our detailed [explanation article](../explanation/ref-arch-explanation.md).
+The architecture of Pro for WSL and how its components integrate together is covered in our detailed [explanation article](../explanation/ref-arch-explanation.md).
 This glossary includes concise descriptions of the components for reference.
 
 (ref::up4w-gui)=
 ## GUI front end
 
-UP4W has a small GUI that helps users provide an Ubuntu Pro token and
+Pro for WSL has a small GUI that helps users provide an Ubuntu Pro token and
 [configure Landscape](ref::landscape-config).
 
-When the GUI starts, it attempts to establish a connection to the [UP4W Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. For troubleshooting purposes, you can restart the agent by first stopping the Windows process `ubuntu-pro-agent-launcher.exe` in Windows Task Manger or by issuing the following command in a PowerShell terminal:
+When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. For troubleshooting purposes, you can restart the agent by first stopping the Windows process `ubuntu-pro-agent-launcher.exe` in Windows Task Manger or by issuing the following command in a PowerShell terminal:
 
 ```text
 Stop-Process -Name ubuntu-pro-agent.exe
@@ -42,7 +42,7 @@ systemctl status landscape-client.service
 ## Ubuntu Pro client
 
 The Ubuntu Pro client is a command-line utility that manages the
-different offerings of your Ubuntu Pro subscription. In UP4W, this executable
+different offerings of your Ubuntu Pro subscription. In Pro for WSL, this executable
 is used within each of the managed WSL distros to enable [Ubuntu
 Pro](https://documentation.ubuntu.com/pro/) services within that distro.
 
@@ -52,13 +52,13 @@ which comes pre-installed in Ubuntu WSL instances since Ubuntu 24.04 LTS.
 (ref::up4w-windows-agent)=
 ## Windows agent
 
-UP4W's Windows agent is a Windows application running in the background. It starts automatically when the user logs in to Windows. If it stops for any reason, it can be started by launching the UP4W GUI or running the executable from the terminal, optionally with `-vvv` for verbose logging:
+Pro for WSL's Windows agent is a Windows application running in the background. It starts automatically when the user logs in to Windows. If it stops for any reason, it can be started by launching the Pro for WSL GUI or running the executable from the terminal, optionally with `-vvv` for verbose logging:
 
 ```text
 ubuntu-pro-agent.exe -vvv
 ```
 
-The Windows agent is UP4W's central hub that communicates with all the components to coordinate them.
+The Windows agent is Pro for WSL's central hub that communicates with all the components to coordinate them.
 
 (ref::up4w-wsl-pro-service)=
 ## WSL Pro service

@@ -101,7 +101,7 @@ You can confirm this in any Ubuntu instance with:
 pro status
 ```
 
-## System components of the Pro for WSL app
+## System components of the Ubuntu Pro for WSL app
 
 This repository contains the source code for Ubuntu Pro for WSL.
 

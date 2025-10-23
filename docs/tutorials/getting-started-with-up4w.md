@@ -14,10 +14,10 @@ myst:
 ```
 
 Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) is an easy and fast way to run Ubuntu on a Windows machine.
-Ubuntu Pro for WSL (UP4W) automatically attaches Ubuntu WSL instances to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
+Ubuntu Pro for WSL automatically attaches Ubuntu WSL instances to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
 Developers get to use Ubuntu WSL while benefiting from the stability, security and compliance offered by Ubuntu Pro.
 
-In this tutorial you will learn how to install UP4W on Windows and verify that Ubuntu WSL instances are Pro-attaching.
+In this tutorial you will learn how to install Pro for WSL on Windows and verify that Ubuntu WSL instances are Pro-attaching.
 You should then be ready for more advanced usage scenarios.
 
 ```{include} ../includes/prompt_symbols_notice.txt
@@ -27,8 +27,8 @@ You should then be ready for more advanced usage scenarios.
 
 ## What you will do
 
-- Install UP4W from the Microsoft Store
-- Configure UP4W with a Pro token
+- Install Pro for WSL from the Microsoft Store
+- Configure Pro for WSL with a Pro token
 - Test automatic Pro-attachment of WSL instances
 
 (ref::backup-warning)=
@@ -53,7 +53,7 @@ Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
 
 ## Set up Ubuntu on WSL
 
-To use UP4W, you need WSL installed and enabled on your machine, and at least
+To use Pro for WSL, you need WSL installed and enabled on your machine, and at least
 one instance of Ubuntu on WSL.
 
 (tut::get-wsl)=
@@ -107,7 +107,7 @@ To confirm the installation, and that the installed distro is using WSL 2, run:
 :class: warning
 
 WSL 2 is the default architecture on recent versions of Windows and
-is required for Ubuntu Pro for WSL to function.
+is required for the Pro for WSL app to function.
 Read more about the [differences between WSL versions](explanation::wsl-version).
 ```
 
@@ -115,7 +115,7 @@ To manually associate this Ubuntu instance with a Pro subscription, you could
 launch the instance and run the `pro attach` command.
 
 This, however, would need to be repeated manually for each new instance.
-UP4W solves this scalability problem by automating Pro-attachment.
+Pro for WSL solves this scalability problem by automating Pro-attachment.
 Next, let's take a look at how that works in practice.
 
 ## Set up Ubuntu Pro for WSL
@@ -130,10 +130,10 @@ Your subscription token can be retrieved from the [Ubuntu Pro Dashboard](https:/
 Visit the [Ubuntu Pro](https://ubuntu.com/pro/subscribe) page if you need a new subscription.
 The `Myself` option for a personal subscription is free for up to 5 machines. 
 
-Once you have a token you are ready to install UP4W.
+Once you have a token you are ready to install Pro for WSL.
 
 (tut::get-up4w)=
-### Install and configure UP4W
+### Install and configure Ubuntu Pro for WSL
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
 
@@ -143,22 +143,22 @@ Once you have a token you are ready to install UP4W.
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 
-UP4W can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
+Pro for WSL can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
 
 Open the application and paste the token you copied from the Ubuntu Pro dashboard:
 
-![UP4W GUI main screen](../assets/token-input-placeholder.png)
+![Main screen of the Pro for WSL GUI](../assets/token-input-placeholder.png)
 
 After you confirm, a status screen will appear showing that configuration is complete:
 
 ![Configuration is complete](../assets/status-complete.png)
 
-Done! You can close the UP4W window before continuing.
-If at any time you want to detach your Pro subscription just open the UP4W application
+Done! You can close the Pro for WSL window before continuing.
+If at any time you want to detach your Pro subscription just open the Pro for WSL application
 and select **Detach Ubuntu Pro**.
 
-Your Ubuntu Pro subscription is now attached to UP4W on the Windows host.
-UP4W will automatically forward the subscription to the Ubuntu Pro client on your Ubuntu WSL instances.
+Your Ubuntu Pro subscription is now attached to Pro for WSL on the Windows host.
+Pro for WSL will automatically forward the subscription to the Ubuntu Pro client on your Ubuntu WSL instances.
 
 (tut::verify-pro-attach)=
 ## Verify Pro-attachment
@@ -172,7 +172,7 @@ you installed previously, entering a username and password when prompted.
 > wsl ~ -d Ubuntu-24.04
 ```
 
-You will now be logged in to the Ubuntu instance and can check that UP4W has Pro-attached this instance with:
+You will now be logged in to the Ubuntu instance and can check that Pro for WSL has Pro-attached this instance with:
 
 ```{code-block} text
 $ pro status
@@ -228,26 +228,26 @@ After this instanced has installed and launched, enter a username and password, 
 
 You should again get confirmation of successful Pro-attachment for the new instance.
 
-> If you want to uninstall UP4W after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
+> If you want to uninstall Pro for WSL after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
 
 ## Next steps
 
-This is only the start of what you can do with UP4W.
+This is only the start of what you can do with Pro for WSL.
 
 If you need to create and manage large numbers of Ubuntu WSL instances
 you will probably want to use the Windows registry.
 By using the Windows registry you can associate a Pro token with
 each new WSL instance using your organisation's own deployment solution.
 
-> For detailed step-by-step instructions on using the Windows registry read our short guide on how to [install and configure UP4W](../howto/set-up-up4w.md).
+> For detailed step-by-step instructions on using the Windows registry read our short guide on how to [install and configure Pro for WSL](../howto/set-up-up4w.md).
 
-Landscape support is also built-in to UP4W.
+Landscape support is also built-in to Pro for WSL.
 With a single configuration file, you can create and manage
 multiple WSL instances that will automatically be registered
 with your Landscape server:
 
-> For more information, please refer to our tutorial on how to [deploy WSL instances with UP4W and Landscape](./deployment.md).
+> For more information, please refer to our tutorial on how to [deploy WSL instances with Pro for WSL and Landscape](./deployment.md).
 
 Our documentation includes several other [how-to guides](../howto/index)
 for completing specific tasks, [reference](../reference/index) material
-describing key information relating to UP4W.
+describing key information relating to Pro for WSL.

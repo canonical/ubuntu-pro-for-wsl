@@ -28,7 +28,7 @@ Click the appropriate tab to read more.
 
 ## Access the registry
 
-First, ensure that UP4W has run at least once after installation.
+First, ensure that Ubuntu Pro for WSL has run at least once after installation.
 This ensures that the key and values necessary for configuration will be set up
 in the registry.
 
@@ -56,9 +56,9 @@ automatically Pro-attaching WSL instances through Landscape:
 ```
 
 ```{group-tab} Graphical Windows application
-In the UP4W app navigate to the Landscape configuration screen:
+In the Pro for WSL app navigate to the Landscape configuration screen:
 
-![UP4W GUI main screen](../assets/landscape-config-ui.png)
+![Main screen of the Pro for WSL GUI](../assets/landscape-config-ui.png)
 
 Choose your preferred configuration option and enter the required details.
 
@@ -104,7 +104,7 @@ This can be copied to a Windows machine:
 
 >  C:\Users\\\<username>\landscape_server.pem
 
-The path can then be referenced during Landscape configuration in the UP4W Windows app.
+The path can then be referenced during Landscape configuration in the Pro for WSL app.
 ```
 
 (howto::config-landscape-client)=

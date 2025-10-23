@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-To install and configure UP4W you will need:
+To install and configure Ubuntu Pro for WSL you will need:
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 * An Ubuntu Pro token
@@ -20,7 +20,7 @@ To install and configure UP4W you will need:
 You should also verify that the [firewall rules are correctly set up](../reference/firewall_requirements.md).
 
 (howto::install-up4w)=
-## Install UP4W
+## Install Ubuntu Pro for WSL
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
 
@@ -28,14 +28,14 @@ You should also verify that the [firewall rules are correctly set up](../referen
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 
-You can install UP4W [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
+You can install Pro for WSL [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
 
 ![Install Ubuntu Pro for WSL from the Store](./assets/store.png)
 
 (howto::config-up4w)=
 ## Choose a configuration method
 
-After installation has finished you can start configuring UP4W in two ways:
+After installation has finished you can start configuring Pro for WSL in two ways:
 
 - Windows registry: easier to automate and deploy at scale 
 - Graphical Windows application: convenient option for individual users
@@ -48,7 +48,7 @@ Click the appropriate tab to read more.
 
 ## Access the registry
 
-First, ensure that UP4W has run at least once after installation.
+First, ensure that Pro for WSL has run at least once after installation.
 This ensures that the key and values necessary for configuration will be set up
 in the registry.
 
@@ -70,7 +70,7 @@ Input your Ubuntu Pro token in `UbuntuProToken > Modify > Write the Ubuntu Pro t
 
 ![Windows registry showing UbuntuPro in tree.](./assets/registry-token.png) 
 
-After configuration using the Windows Registry the status in the UP4W Windows application will show that
+After configuration using the Windows Registry the status in the Pro for WSL application will show that
 the Pro subscription is active and managed by the user's organisation.
 Unlike installation through the graphical Windows application, there is no option to detach the Pro
 subscription in the application interface when the registry is used:

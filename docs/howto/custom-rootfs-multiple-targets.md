@@ -22,7 +22,7 @@ To follow the steps outlined in this guide you can use either:
 ## Prerequisites
 
 - A running self-hosted Landscape server version `24.10~beta.5` or later.
-- Multiple Windows machines [already registered with Landscape](howto::config-landscape) via Ubuntu Pro for WSL.
+- Multiple Windows machines [already registered with Landscape](howto::config-landscape) using Pro for WSL.
 - Make sure you have installed `curl` and `jq`, if you're following this guide using Bash.
 - Familiarity with Bash and/or PowerShell.
 

@@ -12,13 +12,13 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-If you have just installed and configured UP4W and a verification step is failing,
+If you have just installed and configured Pro for WSL and a verification step is failing,
 wait for a few seconds and try again. The process should not take longer than a minute.
 
 (howto::verify-pro-sub)=
 ## Pro subscription
 
-After installing UP4W on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
+After installing Pro for WSL on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
 
 ![Confirmation in graphical interface that subscription is active.](../assets/status-complete.png)
 
@@ -41,7 +41,7 @@ and prompt you to create a username and password for the machine:
 ```
 
 You will now be logged in to the new instance shell and can
-check that UP4W has Pro-attached this instance with:
+check that Pro for WSL has Pro-attached this instance with:
 
 ```{code-block} text
 $ pro status

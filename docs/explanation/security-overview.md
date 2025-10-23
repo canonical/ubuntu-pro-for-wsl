@@ -193,7 +193,7 @@ example — an Ubuntu Server, it does not apply to Ubuntu on WSL.
 
 ### Automatic Pro-attachment
 
-For Pro-attaching multiple instances automatically, use the Ubuntu Pro for WSL
+For Pro-attaching multiple instances automatically, use the Pro for WSL
 application.
 This is most relevant for deployment scenarios in which multiple Windows hosts
 are being managed centrally, using software like Landscape or Intune.
@@ -202,7 +202,7 @@ are being managed centrally, using software like Landscape or Intune.
 
 ### Firewall configuration
 
-Firewall rules must be configured for Ubuntu Pro for WSL to enable interactions
+Firewall rules must be configured for Pro for WSL to enable interactions
 with different services, including Landscape and the Microsoft Store.
 
 Any exchanges of data are encrypted using TLS.
@@ -217,8 +217,8 @@ The legacy version — WSL 1 — can also still be used.
 
 > [Read more about WSL versions](explanation::wsl-version)
 
-Ubuntu Pro for WSL only supports WSL 2.
-When relying on Ubuntu Pro for WSL to manage the security of WSL instances,
+Pro for WSL only supports WSL 2.
+When relying on Pro for WSL to manage the security of WSL instances,
 you should therefore consider enforcing WSL 2 on host Windows machines.
 
 To set the default version to WSL 2:
@@ -353,7 +353,7 @@ It is expected that most users will SSH from WSL rather than SSH into WSL.
 
 ### Remote management tools
 
-Ubuntu Pro for WSL increases the capacity of system administrators to manage
+Pro for WSL increases the capacity of system administrators to manage
 and secure Windows hosts containing instances of Ubuntu on WSL.
 
 Learn more about remote management of Ubuntu on WSL in this documentation:
@@ -367,7 +367,7 @@ Details on the security updates that we provide and the responsible disclosure
 of security vulnerabilities for the Ubuntu distribution on WSL can be found
 below:
 
-* [Security policy for the Ubuntu Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
+* [Security policy for the Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
 * [Security policy for the Ubuntu distro on WSL](https://github.com/ubuntu/WSL/blob/main/SECURITY.md)
 
 ## Resources

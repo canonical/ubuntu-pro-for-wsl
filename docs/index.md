@@ -14,9 +14,9 @@ including remote development with popular IDEs and cross-OS file management.
 Ubuntu can be used as a terminal interface on Windows and can also
 launch Linux-native graphical applications.
 
-Ubuntu Pro for WSL (UP4W) is an in-development automation tool for managing
+Ubuntu Pro for WSL is an in-development automation tool for managing
 instances of Ubuntu on WSL. If you are responsible for a fleet of Windows
-devices, UP4W will help you to monitor, customise and secure Ubuntu WSL
+devices, Pro for WSL will help you to monitor, customise and secure Ubuntu WSL
 instances at scale.
 
 Ubuntu on WSL provides a fully-featured Ubuntu experience on Windows, suitable
@@ -33,7 +33,7 @@ production in an enterprise environment.
 **Start here** and learn the basics of:
 
 * [Developing with Ubuntu on WSL](/tutorials/develop-with-ubuntu-wsl.md)
-* [Securing WSL with the Ubuntu Pro app](/tutorials/getting-started-with-up4w.md)
+* [Securing WSL with the Pro for WSL app](/tutorials/getting-started-with-up4w.md)
 ```
 
 ```{grid-item-card} [How-to guides](howto/index)
@@ -42,7 +42,7 @@ production in an enterprise environment.
 **Follow guides** for common tasks, such as:
 
 * [Installing an Ubuntu distro on WSL](/howto/install-ubuntu-wsl2.md)
-* [Installing Ubuntu Pro for WSL](./howto/set-up-up4w.md)
+* [Installing the Pro for WSL app](./howto/set-up-up4w.md)
 ```
 
 ````
@@ -63,7 +63,7 @@ production in an enterprise environment.
 
 **Build an understanding** of:
 
-* [The architecture of Ubuntu Pro for WSL](/explanation/ref-arch-explanation.md)
+* [Architecture of the Pro for WSL app](/explanation/ref-arch-explanation.md)
 * [Security overview for Ubuntu on WSL](/explanation/security-overview.md)
 ```
 

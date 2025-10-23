@@ -12,9 +12,9 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-Some features in UP4W are opt-in or can be toggled on and off via the Windows Registry.
+Some features in Ubuntu Pro for WSL are opt-in or can be toggled on and off via the Windows Registry.
 While the code is arranged such that CI always tests with those features enabled,
-when running UP4W on your machine, you may need to toggle them on and off
+when running Pro for WSL on your machine, you may need to toggle them on and off
 explicitly via the Windows registry. This guide shows you how to do that.
 
 ## Enable subscribing via the Microsoft Store

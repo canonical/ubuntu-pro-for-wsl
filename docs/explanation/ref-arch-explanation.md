@@ -7,7 +7,7 @@ myst:
 
 # Architecture of Ubuntu Pro for WSL
 
-This page describes the different components of Ubuntu Pro for WSL (UP4W) and how they integrate
+This page describes the different components of Pro for WSL and how they integrate
 together to form the software architecture.
 
 ## Background
@@ -34,8 +34,8 @@ follow system administration policies.
 
 ### How does Ubuntu Pro for WSL solve this problem?
 
-Ubuntu Pro for WSL (UP4W) helps automate the management of Ubuntu WSL.
-For each new instance that is discovered or created, UP4W will automatically:
+Pro for WSL helps automate the management of Ubuntu WSL.
+For each new instance that is discovered or created, Pro for WSL will automatically:
 
 * Attach them to your Ubuntu Pro subscription
 * Enrol them with your Landscape server
@@ -43,10 +43,10 @@ For each new instance that is discovered or created, UP4W will automatically:
 The integration with Ubuntu Pro keeps instances secure, while the
 integration with Landscape enables remote deployment and management.
 
-Without UP4W, these configurations would be manual, time-consuming and
+Without Pro for WSL, these configurations would be manual, time-consuming and
 error-prone.
 
-## The components of UP4W
+## The components of Ubuntu Pro for WSL
 
 ```{admonition} WSL architecture
 :class: tip
@@ -57,10 +57,10 @@ A good overview of WSL architecture is provided in [this blog from Microsoft](ht
 
 ### Overview
 
-UP4W consists of some components that run on a Windows host
+Pro for WSL consists of some components that run on a Windows host
 and others that run within instances of Ubuntu  WSL.
 
-A user interacts with the UP4W application. UP4W then automatically
+A user interacts with the Pro for WSL application. Pro for WSL then automatically
 pro-attaches and Landscape-enrols each new instance of Ubuntu WSL that is
 created on the Windows host.
 
@@ -76,7 +76,7 @@ instances, which are secured by Ubuntu Pro and that can be managed by Landscape.
 ### Components on the Windows host
 
 The Windows host is a single machine running the Windows OS. WSL instances can
-be created and instanced on this host. The UP4W application that is installed
+be created and instanced on this host. The Pro for WSL application that is installed
 on the Windows host consists of a GUI front end and an agent that runs in the
 background.
 
@@ -95,9 +95,9 @@ able to communicate with the Landscape server.
 :align: center
 ```
 
-It is possible to bypass the GUI and instead configure UP4W using the Windows
+It is possible to bypass the GUI and instead configure Pro for WSL using the Windows
 registry. This may be the preferred option for those operating at scale. When
-UP4W is launched, a registry path is created that can be used to store a Pro
+Pro for WSL is launched, a registry path is created that can be used to store a Pro
 token and a Landscape configuration. A system administrator can use a remote
 management solution like Intune to configure the registry on fleets of devices.
 
@@ -136,10 +136,10 @@ release.
 
 ### Source code
 
-UP4W is open-source software. You can look at the code in the [GitHub
+Pro for WSL is open-source software. You can look at the code in the [GitHub
 repo](https://github.com/canonical/ubuntu-pro-for-wsl).
 
-The following technologies are used to build UP4W:
+The following technologies are used to build Pro for WSL:
 
 * **Go**: Windows agent and WSL Pro service
 * **Flutter**: GUI front end
@@ -152,13 +152,13 @@ distributed as a Debian package from the Ubuntu archive. It receives
 automatic updates and upgrades that are typical for Ubuntu packages.
 The Pro service comes pre-installed on the most recent LTS releases of Ubuntu on WSL.
 
-The Windows components of Ubuntu Pro for WSL are distributed in a single
+The Windows components of Pro for WSL are distributed in a single
 [MSIX](https://learn.microsoft.com/en-us/windows/msix/overview) package.
 The package is available through the Microsoft Store, our download page, and as GitHub
 Release assets. Together with the MSIX package, we also publish an
 [`AppInstaller` file](https://learn.microsoft.com/en-us/windows/msix/app-installer/app-installer-file-overview)
 that Windows treats as an installable file. The file is later used to track and
-fetch updates for the Ubuntu Pro for WSL app, if it has not been installed from
+fetch updates for the Pro for WSL app, if it has not been installed from
 the Microsoft Store. This a common scenario in many corporate environments,
 where access to the Microsoft Store may be restricted.
 
@@ -166,5 +166,5 @@ On Windows 11, packages installed by any of these methods will receive automatic
 updates, which is guaranteed by the operating system. In comparison, Windows 10
 has limited support for automatic updates of MSIX packages that have been
 installed directly. To ensure automatic updates on Windows 10, it is preferable
-to install the Ubuntu Pro for WSL application through the Microsoft Store or
+to install the Pro for WSL application through the Microsoft Store or
 using the `AppInstaller` file that accompanies the MSIX package.

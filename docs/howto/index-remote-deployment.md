@@ -13,7 +13,7 @@ Manage Ubuntu on WSL with Canonical's Landscape.
 :titlesonly:
 :maxdepth: 1
 
-Configure the Landscape client with UP4W <set-up-landscape-client>
+Configure the Landscape client with Ubuntu Pro for WSL <set-up-landscape-client>
 Create WSL instances on multiple Windows machines with the Landscape API <custom-rootfs-multiple-targets>
 ```
 
@@ -25,6 +25,6 @@ Manage Ubuntu on WSL with Microsoft's Intune.
 :titlesonly:
 :maxdepth: 1
 
-Enforce the UP4W background agent startup remotely using the Windows Registry <enforce-agent-startup-remotely-registry>
-Start the UP4W background agent remotely <start-agent-remotely>
+Enforce the Ubuntu Pro for WSL background agent startup remotely using the Windows Registry <enforce-agent-startup-remotely-registry>
+Start the Ubuntu Pro for WSL background agent remotely <start-agent-remotely>
 ```

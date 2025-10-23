@@ -53,7 +53,7 @@ While Ubuntu works on WSL 1, the experience may be degraded relative to WSL 2. T
 
 ### How this affects Ubuntu Pro for WSL
 
-[Ubuntu Pro for WSL](../tutorials/getting-started-with-up4w/) relies on systemd for much of its functionality, including automatic Pro attachment, so it does not support WSL 1. For the same reason, the [Landscape](ref::landscape-client) tool for remote management of Ubuntu instances is also not supported on WSL 1. You can still manually attach your WSL 1 instance to [Ubuntu Pro](https://documentation.ubuntu.com/pro/) using the [Ubuntu Pro Client](ref::ubuntu-pro-client), although some of Ubuntu Pro's features may not work on WSL 1.
+[Pro for WSL](../tutorials/getting-started-with-up4w/) relies on systemd for much of its functionality, including automatic Pro attachment, so it does not support WSL 1. For the same reason, the [Landscape](ref::landscape-client) tool for remote management of Ubuntu instances is also not supported on WSL 1. You can still manually attach your WSL 1 instance to [Ubuntu Pro](https://documentation.ubuntu.com/pro/) using the [Ubuntu Pro Client](ref::ubuntu-pro-client), although some of Ubuntu Pro's features may not work on WSL 1.
 
 ### Switching WSL versions
 

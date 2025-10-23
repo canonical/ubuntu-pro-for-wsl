@@ -27,8 +27,8 @@ Secure and manage Ubuntu on WSL with an Ubuntu Pro subscription.
 :titlesonly:
 :maxdepth: 1
 
-Install UP4W and add a Pro token <set-up-up4w>
+Install Ubuntu Pro for WSL and add a Pro token <set-up-up4w>
 Verify Pro subscription and attachment <verify-subscribe-attach>
-Uninstalling UP4W, Ubuntu WSL apps and WSL <uninstalling>
+Uninstalling Ubuntu Pro for WSL, Ubuntu WSL apps and WSL <uninstalling>
 ```
 
