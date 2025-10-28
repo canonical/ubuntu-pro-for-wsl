@@ -48,8 +48,8 @@ Click the appropriate tab to read more.
 
 ## Set up the key and values
 
-First, ensure that UP4W has run at least once after installation.
-This guarantees that the key and values necessary for configuration will be set up
+First, ensure that Ubuntu Pro for WSL has run at least once after installation.
+This guarantees that the key and values necessary for configuration are set up
 in the registry.
 
 ```{admonition} Methods of modifying registry data
@@ -63,19 +63,13 @@ for alternative methods to modify the registry data.
 
 ## Add Pro token using the registry editor
 
-To open the registry editor on a Windows machine, type `Win+R` and enter
-`regedit`:
-
-![Windows where regedit command is run.](./assets/regedit.png) 
+To open the registry editor on a Windows machine, type
+<kbd>Win</kbd>+<kbd>R</kbd> then enter `regedit`:
 
 Navigate to the `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` key.
 
-![Windows registry showing UbuntuPro in tree.](./assets/registry-default.png) 
-
 Locate the {guilabel}`UbuntuProToken` value and enter your Pro token in the
-{guilabel}`Value data` field:
-
-![Windows registry showing UbuntuPro in tree.](./assets/registry-token.png) 
+{guilabel}`Value data` field.
 
 After configuration using the Windows Registry the status in the Pro for WSL application will show that
 the Pro subscription is active and managed by the user's organisation.
