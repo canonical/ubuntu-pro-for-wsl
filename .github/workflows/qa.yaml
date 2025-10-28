@@ -376,6 +376,16 @@ jobs:
       - name: Install dependencies
         run: |
           go install honnef.co/go/tools/cmd/staticcheck@latest
+      - name: Read flutter version
+        id: flutter-version
+        uses: ./.github/actions/read-file
+        with:
+          path: tools/flutter-version
+      - name: Set up flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Download coverage artifacts
         uses: actions/download-artifact@v5
         with:
