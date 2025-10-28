@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-This guide will show you how to install UP4W for local development and testing.
+This guide will show you how to install Pro for WSL for local development and testing.
 
 <br/>
 
@@ -40,7 +40,7 @@ Notice that, for the step above, there is also an alternative version of the MSI
 
 This is the Windows-side agent that manages the distros.
 
-1. Uninstall Ubuntu Pro for WSL if you had installed previously:
+1. Uninstall Pro for WSL if you had installed previously:
 
     ```powershell
     Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage

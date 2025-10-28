@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-> See first: [UP4W - WSL Pro Service](ref::up4w-wsl-pro-service)
+> See first: [Pro for WSL - WSL Pro Service](ref::up4w-wsl-pro-service)
 
 ## Usage
 
