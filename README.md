@@ -49,6 +49,9 @@ automated Pro-attachment at scale for fleets of devices.
 
 ![Demo of Ubuntu Pro for WSL](./img/readme-pro.gif)
 
+> [!TIP]
+> You can get a [free Pro subscription for up to 5 machines](https://ubuntu.com/pro/subscribe).
+
 ## Basic usage of Ubuntu on WSL
 
 Ubuntu distros can be installed on Windows by running the following command in PowerShell:
@@ -91,7 +94,10 @@ Find and install the Ubuntu Pro for WSL application in the Microsoft Store.
 After installation, open the application and enter your Ubuntu Pro token.
 
 > [!TIP]
-> You can get [free Pro subscription for up to 5 machines](https://ubuntu.com/pro/subscribe).
+> If you are a system administrator, you can also use the Windows registry to
+> add a Pro token. After the Ubuntu Pro app has run at least once, the relevant
+> key will be available as `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`. The
+> Pro token can be added as data for the `UbuntuProToken` value.
 
 Now, all instance of Ubuntu on WSL will be automatically Pro-attached on your machine.
 
