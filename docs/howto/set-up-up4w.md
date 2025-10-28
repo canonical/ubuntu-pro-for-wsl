@@ -42,31 +42,38 @@ After installation has finished you can start configuring Pro for WSL in two way
 
 Click the appropriate tab to read more.
 
-````{tabs}
+`````{tabs}
 
-```{group-tab} Windows registry
+````{group-tab} Windows registry
 
-## Access the registry
+## Set up the key and values
 
-First, ensure that Pro for WSL has run at least once after installation.
-This ensures that the key and values necessary for configuration will be set up
+First, ensure that UP4W has run at least once after installation.
+This guarantees that the key and values necessary for configuration will be set up
 in the registry.
+
+```{admonition} Methods of modifying registry data
+:class: tip
+This guide uses the registry editor for setting the Pro token.
 
 Advanced users of the registry can find relevant information in the
 [Microsoft documentation](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
-about alternative methods for modifying the registry data.
+for alternative methods to modify the registry data.
+```
 
-To open the registry type `Win+R` and enter `regedit`:
+## Add Pro token using the registry editor
+
+To open the registry editor on a Windows machine, type `Win+R` and enter
+`regedit`:
 
 ![Windows where regedit command is run.](./assets/regedit.png) 
 
-## Add Pro token in the registry
-
-Navigate to `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`:
+Navigate to the `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` key.
 
 ![Windows registry showing UbuntuPro in tree.](./assets/registry-default.png) 
 
-Input your Ubuntu Pro token in `UbuntuProToken > Modify > Write the Ubuntu Pro token`:
+Locate the {guilabel}`UbuntuProToken` value and enter your Pro token in the
+{guilabel}`Value data` field:
 
 ![Windows registry showing UbuntuPro in tree.](./assets/registry-token.png) 
 
@@ -78,9 +85,9 @@ subscription in the application interface when the registry is used:
 ![alt text](./assets/status-complete-registry.png) 
 
 
-```
+````
 
-```{group-tab} Graphical Windows application
+````{group-tab} Graphical Windows application
 
 ## Enter your Pro token
 
@@ -99,9 +106,9 @@ You should now see that your Pro subscription is active:
 Opening the application again at any point will show this screen, confirm the subscription is
 active and enable detaching of the subscription.
 
-```
-
-
 ````
+
+
+`````
 
 For additional verification steps refer to [our guide](./verify-subscribe-attach.md).

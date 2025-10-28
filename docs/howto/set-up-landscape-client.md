@@ -22,40 +22,42 @@ The Landscape client can be configured in two ways:
 
 Click the appropriate tab to read more.
 
-````{tabs}
+`````{tabs}
 
-```{group-tab} Windows registry
+````{group-tab} Windows registry
 
 ## Access the registry
 
 First, ensure that Ubuntu Pro for WSL has run at least once after installation.
-This ensures that the key and values necessary for configuration will be set up
+This guarantees that the key and values necessary for configuration will be set up
 in the registry.
+
+```{admonition} Methods of modifying registry data
+:class: tip
+This guide uses the registry editor for setting the Pro token.
 
 Advanced users of the registry can find relevant information in the
 [Microsoft documentation](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
-about alternative methods for modifying the registry data.
+for alternative methods to modify the registry data.
+```
 
-To open the registry type `Win+R` and enter `regedit`:
-
-![Windows where regedit command is run.](./assets/regedit.png) 
+To open the registry type <kbd>Win</kbd>+<kbd>R</kbd> and enter `regedit`.
 
 ## Configure Landscape in the registry
 
-If you are using Landscape you can input your configuration in `LandscapeConfig > Modify > Write the Landscape config`:
+Navigate to the `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` key.
 
-![Windows registry with child window showing Landscape configuration.](./assets/registry-child-window-config.png) 
+Locate the {guilabel}`LandscapeConfig` value and enter your Landscape config in the
+{guilabel}`Value data` field.
 
 Refer to the section on [Landscape client configuration](howto::config-landscape-client) for an example.
 
 After you have populated the configuration with data you should be ready to create and manage 
-automatically Pro-attaching WSL instances through Landscape:
+automatically Pro-attaching WSL instances through Landscape.
 
-![Windows registry showing completed Ubuntu Pro for WSL configuration.](./assets/registry-complete.png) 
+````
 
-```
-
-```{group-tab} Graphical Windows application
+````{group-tab} Graphical Windows application
 In the Pro for WSL app navigate to the Landscape configuration screen:
 
 ![Main screen of the Pro for WSL GUI](../assets/landscape-config-ui.png)
@@ -87,9 +89,9 @@ case of errors, a dialog presents the error details and lets you decide whether
 to edit the configuration and try again, or proceed with the configuration
 already provided.
 
-```
-
 ````
+
+`````
 
 ```{warning}
 Until version 0.1.15 of Ubuntu Pro for WSL, the app explicitly requires referencing a path
@@ -102,7 +104,7 @@ installation, the auto-generated self-signed certificate can be found at `/etc/s
 
 This can be copied to a Windows machine:
 
->  C:\Users\\\<username>\landscape_server.pem
+> C:\Users\\\<username>\landscape_server.pem
 
 The path can then be referenced during Landscape configuration in the Pro for WSL app.
 ```
