@@ -276,25 +276,18 @@ jobs:
 
   codecoverage:
     name: "Collect and upload code coverage"
-    runs-on: [self-hosted, linux, amd64, tiobe, noble]
-    env:
-      coverage_dir: ./coverage
+    runs-on: ubuntu-latest
+    outputs:
+      tics-mode: ${{ steps.tics-condition.outputs.tics_mode }}
     needs:
       - quality-flutter
       - tests-go-with-mocks
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }} # Prevent overlapping runs that cause failures with QServer/TiCS
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: windows-agent/go.mod
       - name: Install dependencies
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y dotnet-sdk-8.0
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Download coverage artifacts
         uses: actions/download-artifact@v5
         with:
@@ -302,22 +295,17 @@ jobs:
       - name: Combine coverage reports
         shell: bash
         run: |
-          export PATH="$HOME/.dotnet/tools:$PATH"
-          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"${coverage_dir}" -reporttypes:Cobertura
-          # TODO: Agree with the TiCS team to at least use the same directory name in both "subprojects".
-          # It currently expects a "coverage" dir at project root and a ".coverage" under
-          # wsl-pro-service/
-          cp -r ${coverage_dir} ./wsl-pro-service/.coverage
+          reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
       - uses: actions/upload-artifact@v4
         with:
           name: unified-coverage
-          path: ${{ env.coverage_dir }}
+          path: ./coverage/Cobertura.xml
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ${{ env.coverage_dir }}
+          files: ./coverage/Cobertura.xml
           disable_search: true
-      
+
       - name: Determine TiCS run conditions
         id: tics-condition
         env:
@@ -333,22 +321,69 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
             echo "tics_mode=qserver" >> $GITHUB_OUTPUT
           fi
+
+  tics-linux:
+    name: TiCS for the Linux components
+    runs-on: [self-hosted, linux, amd64, tiobe, noble]
+    needs: codecoverage
+    if: ${{ needs.codecoverage.outputs.tics-mode != '' }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }} # Prevent overlapping runs that cause failures with QServer/TiCS
+    env:
+      coverage_dir: ./wsl-pro-service/.coverage
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: windows-agent/go.mod
+      - name: Install dependencies
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: unified-coverage
+          path: ${{ env.coverage_dir }}
       - name: "TiCS: Linux"
-        if: ${{ steps.tics-condition.outputs.tics_mode != '' }}
         uses: tiobe/tics-github-action@v3
         with:
-          mode:  ${{ steps.tics-condition.outputs.tics_mode }}
+          mode: ${{ needs.codecoverage.outputs.tics-mode }}
           project: ubuntu-pro-for-wsl-linux
-          # Docs say even if you use Go partially, so here we Go.
           viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
           ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
           installTics: true
           postAnnotations: false # Often not useful due to just false positives hitting the GitHub 10 annotations limit
+
+  tics-windows:
+    name: TiCS for the Windows components
+    runs-on: windows-latest
+    needs:
+      - codecoverage
+      - tics-linux
+    if: ${{ needs.codecoverage.outputs.tics-mode != '' }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }} # Prevent overlapping runs that cause failures with QServer/TiCS
+    env:
+      coverage_dir: ./coverage
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: windows-agent/go.mod
+      - name: Install dependencies
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: unified-coverage
+          path: ${{ env.coverage_dir }}
       - name: "TiCS: Windows"
-        if: ${{ steps.tics-condition.outputs.tics_mode != '' }}
         uses: tiobe/tics-github-action@v3
         with:
-          mode:  ${{ steps.tics-condition.outputs.tics_mode }}
+          mode: ${{ needs.codecoverage.outputs.tics-mode }}
           project: ubuntu-pro-for-wsl-windows
           # Docs say even if you use Go partially, so here we Go.
           viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
