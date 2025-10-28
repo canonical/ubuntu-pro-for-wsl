@@ -329,7 +329,7 @@ jobs:
     needs: codecoverage
     if: ${{ needs.codecoverage.outputs.tics-mode != '' }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }} # Prevent overlapping runs that cause failures with QServer/TiCS
+      group: ${{ github.workflow }}-${{ github.ref }}-linux # Prevent overlapping runs that cause failures with QServer/TiCS
     env:
       coverage_dir: ./wsl-pro-service/.coverage
     steps:
@@ -364,7 +364,7 @@ jobs:
       - tics-linux
     if: ${{ needs.codecoverage.outputs.tics-mode != '' }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }} # Prevent overlapping runs that cause failures with QServer/TiCS
+      group: ${{ github.workflow }}-${{ github.ref }}-windows # Prevent overlapping runs that cause failures with QServer/TiCS
     env:
       coverage_dir: ./coverage
     steps:
