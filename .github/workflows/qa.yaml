@@ -268,11 +268,6 @@ jobs:
         working-directory: ${{ matrix.subproject }}
         run: |
           go test -shuffle=on ./... -race -tags=gowslmock
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          directory: ${{ matrix.subproject }}/coverage/codecov
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   codecoverage:
     name: "Collect and upload code coverage"
