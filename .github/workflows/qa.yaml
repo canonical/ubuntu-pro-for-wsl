@@ -318,10 +318,9 @@ jobs:
           fi
           # Client mode is intentionally disabled due to how the results are hidden in the dashboard
           # Only trigger TICS on push to main and schedule events.
-          # if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
-          #   echo "tics_mode=qserver" >> $GITHUB_OUTPUT
-          # fi
-          echo "tics_mode=qserver" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "tics_mode=qserver" >> $GITHUB_OUTPUT
+          fi
 
   tics-linux:
     name: TiCS for the Linux components
