@@ -14,8 +14,7 @@ This glossary includes concise descriptions of the components for reference.
 (ref::up4w-gui)=
 ## GUI front end
 
-Pro for WSL has a small GUI that helps users provide an Ubuntu Pro token and
-[configure Landscape](ref::landscape-config).
+Pro for WSL has a small GUI that helps users provide an Ubuntu Pro token.
 
 When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. For troubleshooting purposes, you can restart the agent by first stopping the Windows process `ubuntu-pro-agent-launcher.exe` in Windows Task Manger or by issuing the following command in a PowerShell terminal:
 
