@@ -75,6 +75,15 @@
     "landscapeFQDNLabel": "Landscape FQDN",
     "landscapeFQDNError": "Invalid FQDN. Expected a fully qualified domain name or IP address.",
     "landscapeFQDNSaaSError": "FQDN shouldn't be landscape.canonical.com.",
+    "landscapeAccountNameLabel": "Account name",
+    "landscapeAccountNameError": "Account name cannot be empty nor \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
     "landscapeKeyLabel": "Registration key (optional)",
     "landscapeSSLKeyLabel": "Server SSL public key (optional)",
     "landscapeFileLabel": "Config file path",
