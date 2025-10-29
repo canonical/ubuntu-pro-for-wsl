@@ -299,7 +299,6 @@ func setDefaultRegistry(r Registry) (err error) {
 
 	err = errors.Join(err,
 		createIfNotExist(r, k, ubuntuProTokenField, false),
-		createIfNotExist(r, k, landscapeConfigField, true),
 	)
 
 	return err
