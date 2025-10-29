@@ -122,6 +122,17 @@ void main() {
 
       await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
       await tester.pumpAndSettle();
+
+      final accountInput = find.ancestor(
+        of: find.text(lang.landscapeAccountNameLabel),
+        matching: find.byType(TextField),
+      );
+      expect(accountInput, findsOne);
+      expect(
+        tester.widget<TextField>(accountInput).enabled,
+        isFalse,
+      );
+
       await tester.tap(continueButton);
       await tester.pump();
       expect(applied, isTrue);
@@ -189,6 +200,56 @@ void main() {
 
       final errorText = find.text(lang.landscapeFQDNError);
       expect(errorText, findsOne);
+    });
+
+    testWidgets('fqdn and account name interlock', (tester) async {
+      final model = LandscapeModel(MockAgentApiClient());
+
+      final app = buildApp(model);
+      await tester.pumpWidget(app);
+      final context = tester.element(find.byType(ColumnPage));
+      final lang = AppLocalizations.of(context);
+
+      await tester.tap(find.text(lang.landscapeSetupManual));
+      await tester.pump();
+
+      final fqdnInput = find.ancestor(
+        of: find.text(lang.landscapeFQDNLabel),
+        matching: find.byType(TextField),
+      );
+      expect(fqdnInput, findsOne);
+
+      final accountInput = find.ancestor(
+        of: find.text(lang.landscapeAccountNameLabel),
+        matching: find.byType(TextField),
+      );
+      expect(accountInput, findsOne);
+
+      // SaaS with standalone account name is invalid
+      await tester.enterText(fqdnInput, landscapeSaasFQDN);
+      await tester.pump();
+
+      await tester.enterText(accountInput, standaloneAN);
+      await tester.pumpAndSettle();
+
+      final errorText = find.text(lang.landscapeAccountNameError(standaloneAN));
+      expect(errorText, findsOne);
+
+      // Self-hosted enforces standalone account name and clears the error state.
+      await tester.enterText(fqdnInput, kExampleLandscapeFQDN);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(accountInput).enabled,
+        isFalse,
+      );
+      final editable = find.descendant(
+        of: accountInput,
+        matching: find.byType(EditableText),
+      );
+      expect(editable, findsOne);
+      final state = tester.state(editable) as EditableTextState;
+      expect(state.textEditingValue.text, standaloneAN);
+      expect(errorText, findsNothing);
     });
 
     testWidgets('custom config', (tester) async {
