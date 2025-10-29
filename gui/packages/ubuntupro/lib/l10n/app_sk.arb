@@ -1,13 +1,13 @@
 {
     "landscapeFilePicker": "Vybrať súbor...",
     "@landscapeFilePicker": {},
-    "ubuntuProEnabledInfo": "Všetky Ubuntu WSL inštancie majú prístup k bezpečnostným funkciám Ubuntu Pro.",
+    "ubuntuProEnabledInfo": "Všetky inštancie Ubuntu WSL majú prístup k bezpečnostným funkciám Ubuntu Pro.",
     "@ubuntuProEnabledInfo": {},
     "purchaseStatusNetwork": "Nákup sa nepodarilo dokončiť kvôli problémom so sieťou. Skúste to znova, keď budete pripojení.",
     "@purchaseStatusNetwork": {},
     "landscapeSkipDescription": "Landscape môžete vždy nakonfigurovať neskôr v tejto aplikácii",
     "@landscapeSkipDescription": {},
-    "statusBarAgentConnectingTooltip": "Pripojovanie k Ubuntu Pro agentovi...",
+    "statusBarAgentConnectingTooltip": "Pripojovanie k agentovi Ubuntu Pro...",
     "@statusBarAgentConnectingTooltip": {},
     "agentStateUnknownEnv": "Stav agenta Ubuntu Pro sa nedá overiť. Skontrolujte nastavenia prostredia.",
     "@agentStateUnknownEnv": {},
@@ -19,7 +19,7 @@
             }
         }
     },
-    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialené spravovanie vašich Ubuntu WSL inštancií. {landscapeLink}",
+    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialenú správu Ubuntu WSL inštancií. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -27,7 +27,7 @@
             }
         }
     },
-    "tokenInputDescription": "Zadajte token z {proLink} alebo od svojho správcu systému",
+    "tokenInputDescription": "Zadajte token z {proLink} alebo od správcu systému",
     "@tokenInputDescription": {
         "placeholders": {
             "proLink": {
@@ -43,7 +43,7 @@
     "@landscapeConfigureButton": {},
     "tokenValid": "Platný token",
     "@tokenValid": {},
-    "tokenInputTitle": "Pripojiť toto zariadenie",
+    "tokenInputTitle": "Pripojiť tento počítač",
     "@tokenInputTitle": {},
     "tokenInputHint": "Token",
     "@tokenInputHint": {},
@@ -55,7 +55,7 @@
     "@landscapeSkip": {},
     "appTitle": "Ubuntu Pro pre WSL",
     "@appTitle": {},
-    "ubuntuProEnabled": "Ubuntu Pro je povolené na tomto zariadení",
+    "ubuntuProEnabled": "Ubuntu Pro je aktivované na tomto počítači",
     "@ubuntuProEnabled": {},
     "manageUbuntuPro": "Spravovať predplatné Ubuntu Pro",
     "@manageUbuntuPro": {},
@@ -83,7 +83,7 @@
     "@getUbuntuPro": {},
     "landscapeSetupCustom": "Pokročilá konfigurácia",
     "@landscapeSetupCustom": {},
-    "landscapeSetupManualHint": "Zaregistrovať sa na svoj vlastný Landscape server",
+    "landscapeSetupManualHint": "Zaregistrujte sa na vlastný server Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustomHint": "Načítať vlastný konfiguračný súbor klienta Landscape",
     "@landscapeSetupCustomHint": {},
@@ -91,9 +91,9 @@
     "@applyProToken": {},
     "landscapeSetupManual": "Manuálna konfigurácia",
     "@landscapeSetupManual": {},
-    "purchaseStatusAlreadyPurchased": "Už ste prihlásení na odber Pro.",
+    "purchaseStatusAlreadyPurchased": "Už máte aktívne predplatné Pro.",
     "@purchaseStatusAlreadyPurchased": {},
-    "applyingProToken": "Použitie tokenu {token}",
+    "applyingProToken": "Aplikuje sa token {token}",
     "@applyingProToken": {
         "placeholders": {
             "token": {
@@ -101,19 +101,19 @@
             }
         }
     },
-    "agent": "Agent na pozadí Ubuntu Pro",
+    "agent": "Agent Ubuntu Pro",
     "@agent": {},
-    "agentStateStarting": "Ubuntu Pro background agent sa spúšťa.",
+    "agentStateStarting": "Spúšťa sa agent Ubuntu Pro.",
     "@agentStateStarting": {},
-    "agentStatePingNonResponsive": "Ubuntu Pro background agent neodpovedá.",
+    "agentStatePingNonResponsive": "Agent Ubuntu Pro neodpovedá.",
     "@agentStatePingNonResponsive": {},
-    "agentStateInvalid": "Čaká sa na inicializáciu Ubuntu Pro background agenta.",
+    "agentStateInvalid": "Čaká sa na inicializáciu agenta Ubuntu Pro.",
     "@agentStateInvalid": {},
-    "agentStateCannotStart": "Ubuntu Pro background agent sa nedá spustiť.",
+    "agentStateCannotStart": "Agenta Ubuntu Pro sa nedá spustiť.",
     "@agentStateCannotStart": {},
-    "agentStateQuerying": "Kontroluje sa stav Ubuntu Pro background agenta.",
+    "agentStateQuerying": "Kontroluje sa stav agenta Ubuntu Pro.",
     "@agentStateQuerying": {},
-    "agentStateUnreachable": "Pokus o obnovenie Ubuntu Pro background agenta.",
+    "agentStateUnreachable": "Prebieha pokus o obnovenie agenta Ubuntu Pro.",
     "@agentStateUnreachable": {},
     "landscapeFileLabel": "Cesta k súboru konfigurácie",
     "@landscapeFileLabel": {},
@@ -141,9 +141,9 @@
     "@buttonBack": {},
     "statusBarReportBugTooltip": "Nahlásiť chybu",
     "@statusBarReportBugTooltip": {},
-    "statusBarAgentRunningTooltip": "Ubuntu Pro agent beží",
+    "statusBarAgentRunningTooltip": "Agent Ubuntu Pro beží",
     "@statusBarAgentRunningTooltip": {},
-    "statusBarAgentDownTooltip": "Ubuntu Pro agent je odpojený. Kliknutím ho spustíte.",
+    "statusBarAgentDownTooltip": "Agent Ubuntu Pro je odpojený. Kliknutím ho spustíte.",
     "@statusBarAgentDownTooltip": {},
     "landscapeRegister": "Registrovať",
     "@landscapeRegister": {},
@@ -157,13 +157,13 @@
     },
     "landscapeDetails": "Podrobnosti",
     "@landscapeDetails": {},
-    "landscapeProceedAnywayHint": "Pokračujte a pokusy o pripojenie k serveru Landscape budú prebiehať na pozadí.",
+    "landscapeProceedAnywayHint": "Pokračujte – pokusy o pripojenie k serveru Landscape sa budú vykonávať na pozadí.",
     "@landscapeProceedAnywayHint": {},
     "landscapeChangeLaterHint": "Konfiguráciu môžete kedykoľvek zmeniť.",
     "@landscapeChangeLaterHint": {},
     "landscapeEditYourConfig": "Upraviť konfiguráciu",
     "@landscapeEditYourConfig": {},
-    "landscapeProceedAnyway": "Pokračovať aj napriek tomu",
+    "landscapeProceedAnyway": "Pokračovať napriek tomu",
     "@landscapeProceedAnyway": {},
     "landscapeInvalidConfig": "Neplatná konfigurácia Landscape",
     "@landscapeInvalidConfig": {},
