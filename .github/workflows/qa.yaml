@@ -252,7 +252,7 @@ jobs:
           mkdir -p ${cov_dir}/codecov ${cov_dir}/raw
           go test -shuffle=on -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./... -tags=gowslmock
           grep -hv -e "testutils" -e "pb.go:" ${cov_dir}/raw/coverage.out > ${cov_dir}/codecov/coverage.out.codecov
-          gocov convert ${cov_dir}/codecov/coverage.out.codecov | gocov-xml > ${cov_dir}/coverage.xml
+          gocov convert ${cov_dir}/codecov/coverage.out.codecov | gocov-xml > ${cov_dir}/codecov/coverage.xml
 
           SAFE_ID=$(echo "${{ matrix.subproject }}-${{ matrix.os }}" | tr '/' '_')
           echo "SAFE_ID=$SAFE_ID" >> $GITHUB_ENV
@@ -260,7 +260,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ env.SAFE_ID }}
-          path: ${{ matrix.subproject }}/coverage/coverage.xml
+          path: ${{ matrix.subproject }}/coverage/codecov/
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
@@ -268,11 +268,6 @@ jobs:
         working-directory: ${{ matrix.subproject }}
         run: |
           go test -shuffle=on ./... -race -tags=gowslmock
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          directory: ${{ matrix.subproject }}/coverage/codecov
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   codecoverage:
     name: "Collect and upload code coverage"
@@ -303,7 +298,7 @@ jobs:
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/Cobertura.xml
+          files: ./coverage/Cobertura.xml,./artifacts/*/coverage.out.codecov
           disable_search: true
 
       - name: Determine TiCS run conditions
