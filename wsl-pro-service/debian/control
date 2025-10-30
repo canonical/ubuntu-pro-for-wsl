@@ -7,7 +7,7 @@ Build-Depends: debhelper-compat (= 13),
                dh-apport,
                dh-golang,
                dctrl-tools,
-               golang-go (>= 2:1.23~),
+               golang-go (>= 2:1.24~),
 Standards-Version: 4.6.2
 XS-Go-Import-Path: github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 Homepage: https://github.com/canonical/ubuntu-pro-for-wsl

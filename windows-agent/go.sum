@@ -4,8 +4,8 @@ github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 
 github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1/go.mod h1:SEDBCzpOq4KPCsPQiPaUl+lOtkvbBWDRjwavnkY4qss=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f h1:NiCanRAKQannR6M4uB1YB/s3ZB+aIEIESclRlcrIKic=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f/go.mod h1:xssoyTYh2NqXuj0sG6m7HsLTwI4HXPESweUjbh2WUQs=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f h1:dRvnh9c8Su1KB9CoOTwj6hYi8AgwF6i6EvifCvBsaQU=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f/go.mod h1:zRV9zbYgMl8VnSZCIaA+q++vWsQgwQ0oJzVGOZJrej0=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd h1:/9peLQI3kBMeKJfDatynSTwLOL5/SSyaUCJXyE3NkpI=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd/go.mod h1:4C2t7TaXOlD1eaGQAKb0mnJuIQZp8N3FBdvu/eYPWwE=
 github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909072650-75a32126b04f h1:JK3prcDQNJkBrpA6kvoSetLNtzt9cnh0A4xNcehXrnA=
 github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909072650-75a32126b04f/go.mod h1:oKYdDRNC9OmJPzhQBsurBiMcw0iGwKh81d07G4ER0KY=
 github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f h1:ucD2J83emCWLKYL1x7TOkRITRxwomu1Z4aFd/ykUqZ0=

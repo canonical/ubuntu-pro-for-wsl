@@ -2,13 +2,11 @@ package testutils
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
-	"math/big"
 	"net"
 	"os"
 	"path/filepath"
@@ -37,7 +35,7 @@ type MockWindowsAgent struct {
 	Stopped chan struct{}
 }
 
-// MockWindowsAgent mocks the windows-agent. It starts a GRPC service that will perform
+// NewMockWindowsAgent creates a new windows-agent mock. It starts a GRPC service that will perform
 // the port dance and stay connected. It'll write the port file as well.
 // For simplicity's sake, it only suports one WSL distro at a time.
 //
@@ -96,18 +94,15 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 func agentTLSCreds(t *testing.T, destDir string) (wslProService, agentCreds credentials.TransportCredentials) {
 	t.Helper()
 
-	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	require.NoError(t, err, "failed to generate serial number for the CA cert", err)
+	require.NoError(t, os.MkdirAll(destDir, 0700), "failed to create certificates directory")
 
-	require.NoError(t, os.MkdirAll(destDir, 0700), "failed to create certificates directory", err)
-
-	rootCert, rootKey, err := certs.CreateRootCA("UP4W Test", serial, destDir)
-	require.NoError(t, err, "failed to create root CA", err)
+	rootCert, rootKey, err := certs.CreateRootCA("UP4W Test", destDir)
+	require.NoError(t, err, "failed to create root CA")
 
 	// Create and write the server and client certificates signed by the root certificate created above.
-	agentCert, err := certs.CreateTLSCertificateSignedBy("server", common.GRPCServerNameOverride, serial.Rsh(serial, 2), rootCert, rootKey, destDir)
+	agentCert, err := certs.CreateTLSCertificateSignedBy("server", common.GRPCServerNameOverride, rootCert, rootKey, destDir)
 	require.NoError(t, err, "failed to create agent certificate", err)
-	wslProServiceCert, err := certs.CreateTLSCertificateSignedBy("client", "wsl-pro-service-test", serial.Lsh(serial, 3), rootCert, rootKey, destDir)
+	wslProServiceCert, err := certs.CreateTLSCertificateSignedBy("client", "wsl-pro-service-test", rootCert, rootKey, destDir)
 	require.NoError(t, err, "failed to create WSL Pro service certificate", err)
 
 	ca := x509.NewCertPool()
