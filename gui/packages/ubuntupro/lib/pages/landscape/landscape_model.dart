@@ -32,7 +32,7 @@ class LandscapeModel extends ChangeNotifier {
 
   bool get accountNameIsRequired =>
       configType == LandscapeConfigType.manual &&
-      manual.fqdn.endsWith(landscapeSaasFQDN);
+      manual._fqdn?.host == landscapeSaasFQDN;
 
   /// Whether we are waiting on agent's response after submitting a configuration
   bool _waiting = false;
@@ -198,6 +198,9 @@ class LandscapeManualConfig extends LandscapeConfig {
       // If not using Landscape SaaS, enforce the standalone account name.
       _accountName = standaloneAN;
       _accountNameError = AccountNameError.none;
+      _log.info(
+        'Self-hosted Landscape was selected. Overriding account name to "$standaloneAN" for host "$host"',
+      );
     }
   }
 
