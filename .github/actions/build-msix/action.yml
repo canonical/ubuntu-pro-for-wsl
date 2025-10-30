@@ -86,7 +86,7 @@ runs:
         $mainBundle = $doc.Root.Element($ns + "MainBundle")
         if ($mainBundle) {
           $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
-          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${tag}/UbuntuProForWSL_${tag}.msixbundle")
+          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${tag}/UbuntuProForWSL.msixbundle")
         }
         if ($releaseType -eq "pre-release") {
           # Point the App Installer file to the repo wiki instead of the latest stable release.
