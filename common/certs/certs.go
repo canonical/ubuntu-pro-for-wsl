@@ -11,7 +11,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"math/big"
 	"os"
 	"path/filepath"
 	"time"
@@ -25,16 +24,16 @@ import (
 // - https://github.com/grpc/grpc-go/blob/master/examples/features/encryption/mTLS
 // - and https://gist.github.com/annanay25/43e3846e21b30818d8dcd5f9987e852d.
 
-// CreateRootCA creates a new root certificate authority (CA) certificate and private key pair with the serial number and common name provided.
+// CreateRootCA creates a new root certificate authority (CA) certificate and private key pair with the common name provided.
 // Only the cert is written into destDir in the PEM format. Being a CA, the certificate and private key returned can be used to sign other certificates.
-func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCert *x509.Certificate, rootKey *ecdsa.PrivateKey, err error) {
+func CreateRootCA(commonName string, destDir string) (rootCert *x509.Certificate, rootKey *ecdsa.PrivateKey, err error) {
 	// generate a new key-pair for the root certificate based on the P256 elliptic curve
 	rootKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate random key: %v", err)
 	}
 
-	rootCertTmpl := template(commonName, serialNo)
+	rootCertTmpl := template(commonName)
 	rootCertTmpl.IsCA = true
 	rootCertTmpl.Subject.CommonName = commonName + " CA"
 	rootCertTmpl.KeyUsage = x509.KeyUsageCertSign
@@ -55,7 +54,7 @@ func CreateRootCA(commonName string, serialNo *big.Int, destDir string) (rootCer
 }
 
 // CreateTLSCertificateSignedBy creates a certificate and key pair usable for authentication signed by the root certificate authority (root CA) certificate and key provided and write them into destDir in the PEM format.
-func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey, destDir string) (tlsCert *tls.Certificate, err error) {
+func CreateTLSCertificateSignedBy(name, certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey, destDir string) (tlsCert *tls.Certificate, err error) {
 	decorate.OnError(&err, "could not create root signed certificate pair for %s:", name)
 
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -63,7 +62,7 @@ func CreateTLSCertificateSignedBy(name, certCN string, serial *big.Int, rootCACe
 		return nil, fmt.Errorf("failed to generate random key: %v", err)
 	}
 
-	certTmpl := template(certCN, serial)
+	certTmpl := template(certCN)
 	// Customizing the usage for client and server applications:
 	// Even though x509.CreateCertificate documentation says it will use it, if present,
 	// it seems we need to set AuthorityKeyId manually to make the verification work.
@@ -112,10 +111,9 @@ func createCert(template, parent *x509.Certificate, pub, parentPriv any) (cert *
 	return cert, certDER, err
 }
 
-// template is a helper function to create a cert template with a serial number and other required fields filled in for UP4W specific use case.
-func template(commonName string, serial *big.Int) *x509.Certificate {
+// template is a helper function to create a cert template with required fields filled in for UP4W specific use case.
+func template(commonName string) *x509.Certificate {
 	return &x509.Certificate{
-		SerialNumber:          serial,
 		Subject:               pkix.Name{Organization: []string{commonName}, CommonName: commonName},
 		DNSNames:              []string{commonName, "localhost", "127.0.0.1"},
 		SignatureAlgorithm:    x509.ECDSAWithSHA256,

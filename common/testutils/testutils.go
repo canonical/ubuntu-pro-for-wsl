@@ -11,7 +11,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"math/big"
 	"net"
 	"os"
 	"path/filepath"
@@ -48,7 +47,6 @@ func GenerateTempCertificate(t *testing.T, path string) {
 	require.NoError(t, err, errPrefix+"could not generate keys")
 
 	template := x509.Certificate{
-		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
 			CommonName:   "CanonicalGroupLimited",
 			Country:      []string{"US"},
