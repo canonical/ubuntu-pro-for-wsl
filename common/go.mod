@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/common
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/golang/protobuf v1.5.4
