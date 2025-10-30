@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20240909072650-75a32126b04f
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20240909072650-75a32126b04f
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f
 	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20240909072650-75a32126b04f
@@ -32,7 +32,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/snapcore/go-gettext v0.0.0-20230721153050-9082cdc2db05 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
