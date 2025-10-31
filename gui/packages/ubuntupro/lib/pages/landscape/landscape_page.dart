@@ -296,6 +296,16 @@ class _ManualForm extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DelayedTextField(
+          label: Text(lang.landscapeAccountNameLabel),
+          errorText: enabled && model.manual.hasAccountNameError
+              ? lang.landscapeAccountNameError(standaloneAN)
+              : null,
+          hintText: standaloneAN,
+          onChanged: model.setAccountName,
+          enabled: enabled && model.accountNameIsRequired,
+        ),
+        const SizedBox(height: 8),
+        DelayedTextField(
           label: Text(lang.landscapeKeyLabel),
           hintText: '163456',
           onChanged: model.setManualRegistrationKey,
@@ -444,8 +454,6 @@ extension FQDNErrorL10n on FqdnError {
         return lang.landscapeFQDNError;
       case FqdnError.none:
         return null;
-      case FqdnError.saas:
-        return lang.landscapeFQDNSaaSError;
     }
   }
 }
