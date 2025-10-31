@@ -99,8 +99,35 @@ prevent creation of a default user which confused WSLg
 (ref::up4w-releases)=
 ### Ubuntu Pro for WSL
 
-This application is pending an official release of its 1.0 version.
+#### Version 1.0
 
+This is the first public release of the Pro for WSL application and comes
+with the components necessary to support automated attachment of an Ubuntu Pro
+subscription to instances of Ubuntu on WSL.
+
+##### Windows agent
+
+The background agent runs on the Windows host and communicates
+between different components of the Pro for WSL application.
+
+##### WSL Pro service
+
+This systemd service runs in each instance of Ubuntu on WSL, and receives
+commands for Pro attachment from the Windows agent.
+
+##### Flutter-based GUI
+
+The GUI interface is used to enter Pro tokens and monitor subscription status.
+It is also a convenient method to globally attach or detach a Pro subscription
+from WSL instances.
+
+##### Documentation
+
+Supporting documentation is available for [getting started
+using Pro for WSL](howto::up4w) and [configuring a Pro
+subscription](howto::config-up4w) using different methods. An [architectural
+overview](../explanation/ref-arch-explanation) of the application is also
+provided.
 
 ### Previous LTS distro releases
 
@@ -134,7 +161,11 @@ This application is pending an official release of its 1.0 version.
 ### Interim distro releases
 
 
-```{dropdown} Click to expand for 25.04 (Plucky Puffin), and more...
+```{dropdown} Click to expand for 25.10 (Questing Quokka), and more...
+#### Ubuntu 25.10 (Questing Quokka)
+
+* None
+
 #### Ubuntu 25.04 (Plucky Puffin)
 
 * Published WSL images have moved to
