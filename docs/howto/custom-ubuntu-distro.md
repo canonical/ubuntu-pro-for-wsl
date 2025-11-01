@@ -27,8 +27,9 @@ and testing the distro.
 
 To follow the guide, make sure you have:
 
-* Windows 11 with WSL2 installed and enabled
-* An existing Ubuntu distro installed on WSL
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* The latest version of WSL (2.4.8 or higher) installed and enabled
+* An existing Ubuntu distro installed on WSL 2
 
 WSL will be used to extract the rootfs, edit the configuration files and manage packages.
 
@@ -56,7 +57,7 @@ into the Ubuntu instance, and change the extension from `.wsl` to `.tar`, using
 this command:
 
 ```{code-block} text
-$ mv /mnt/c/Users/<yourusername>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
+$ mv /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
 ```
 
 ```{tip}
@@ -64,15 +65,18 @@ If you downloaded a different version of Ubuntu 24.04 LTS, adjust the filename
 in the command to use the correct name.
 ```
 
-Create a directory to store the rootfs of your custom distro:
+In the home directory (`~`), create a directory to store the rootfs of your
+custom distro:
 
 ```{code-block} text
+:caption: ~
 $ mkdir myNewUbuntu
 ```
 
-Extract the rootfs into that directory:
+Extract the rootfs into that new directory:
 
 ```{code-block} text
+:caption: ~
 $ sudo tar -xpf ubuntu-24.04.3-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
 ```
 
@@ -96,14 +100,14 @@ There are two configuration files for the WSL distro that you are customising:
 Open the configuration file:
 
 ```{code-block} text
-$ vim myNewUbuntu/etc/wsl-distribution.conf
+$ vim ~/myNewUbuntu/etc/wsl-distribution.conf
 ```
 
 Change the name of your distro and the name of its icon:
 
 ```{code-block} diff
 :linenos:
-:caption: myNewUbuntu/etc/wsl-distribution.conf
+:caption: ~/myNewUbuntu/etc/wsl-distribution.conf
 [oobe]
 command = /usr/lib/wsl/wsl-setup
 defaultUid = 1000
@@ -133,7 +137,7 @@ $ sudo apt install imagemagick
 Once installed, create a grayscale icon using its `convert` command:
 
 ```{code-block} text
-$ convert myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray myNewUbuntu/usr/share/wsl/myIcon.ico
+$ convert ~/myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray ~/myNewUbuntu/usr/share/wsl/myIcon.ico
 ```
 
 ### Boot configuration file
@@ -141,7 +145,7 @@ $ convert myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray myNewUbuntu/usr/s
 You can also customise which settings are applied to the distro on boot:
 
 ```{code-block} text
-$ vim myNewUbuntu/etc/wsl.conf
+$ vim ~/myNewUbuntu/etc/wsl.conf
 ```
 
 For the purpose of this guide, we will keep the default boot settings.
@@ -156,11 +160,11 @@ systemd=true
 The OOBE is a relatively complex script, handling aspects of the user
 experience, including the user prompt and log messages during provisioning.
 
-Make a minor change to the following echo command in `myNewUbuntu/usr/lib/wsl/wsl-setup`:
+Make a minor change to the following echo command in the `myNewUbuntu/usr/lib/wsl/wsl-setup` file:
 
 ```{code-block} diff
 :linenos:
-:caption: myNewUbuntu/usr/lib/wsl/wsl-setup
+:caption: ~/myNewUbuntu/usr/lib/wsl/wsl-setup
 
 #!/bin/bash
 set -euo pipefail
@@ -179,7 +183,7 @@ Change the background colour to black, reduce its opacity and add a retro-style
 terminal effect in `myNewUbuntu/usr/share/wsl/terminal-profile.json` :
 
 ```{code-block} diff
-:caption: myNewUbuntu/usr/share/wsl/terminal-profile.json
+:caption: ~/myNewUbuntu/usr/share/wsl/terminal-profile.json
 {
     "profiles": [
         {
@@ -211,10 +215,11 @@ terminal effect in `myNewUbuntu/usr/share/wsl/terminal-profile.json` :
 You can customise the packages available when your custom image is installed
 using the `apt` package manager for Ubuntu.
 
-From the home directory of your Ubuntu instance, mount the necessary file
+From the home directory (`~`) of your Ubuntu instance, mount the necessary file
 systems:
 
 ```{code-block} text
+:caption: ~
 $ sudo mount -t proc /proc myNewUbuntu/proc
 $ sudo mount --rbind /sys myNewUbuntu/sys
 $ sudo mount --make-rslave myNewUbuntu/sys
@@ -227,14 +232,14 @@ $ sudo mount --make-rslave myNewUbuntu/run
 Then `chroot` into the root directory of your custom distro and open a bash shell:
 
 ```{code-block} text
-$ sudo chroot myNewDistro /bin/bash
+$ sudo chroot ~/myNewDistro /bin/bash
 ```
 
 If successful, you will see a prompt for the root user:
 
 ```{code-block} text
 :class: no-copy
-root@<your-machine>:/#
+root@<hostname>:/#
 ```
 
 You can now manage packages for your custom distro. For example, `btop` is a
@@ -269,29 +274,29 @@ Next, you will create the installable version of your custom distro.
 Change into the distro directory:
 
 ```{code-block} text
-:caption: /home/\<username>
-$ cd myNewUbuntu
+$ cd ~/myNewUbuntu
 ```
 
-Then compress the rootfs, outputting the tarball to the parent directory:
+Inside that directory, compress the rootfs, outputting the tarball to the parent directory:
 
 ```{code-block} text
-:caption: /home/\<username>/myNewUbuntu
+:caption: ~/myNewUbuntu
 $ sudo tar --numeric-owner --absolute-names --one-file-system -czvf ../myNewUbuntu.tar .
 ```
 
 Then `cd` into the home directory and change the file extension of the distro
 file:
 
-```text
-$ cd ..
+```{code-block} text
+$ cd ~
 $ mv myNewUbuntu.tar myNewUbuntu.wsl
 ```
 
 Finally, move the distro to a Windows directory:
 
-```text
-$ sudo mv myNewUbuntu.wsl /mnt/c/Users/<yourusername>/Downloads/
+```{code-block} text
+:caption: ~
+$ sudo mv myNewUbuntu.wsl /mnt/c/Users/<username>/Downloads/
 ```
 
 ## Test your custom Ubuntu distro

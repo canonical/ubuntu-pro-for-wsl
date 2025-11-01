@@ -1,11 +1,8 @@
 package proservices
 
 import (
-	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
-	"math/big"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
@@ -16,25 +13,19 @@ import (
 func newTLSCertificates(destDir string) (c agentCerts, err error) {
 	decorate.OnError(&err, "could not create TLS credentials:")
 
-	// generates a pseudo-random serial number for the root CA certificate.
-	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	if err != nil {
-		return agentCerts{}, fmt.Errorf("failed to generate serial number for the root CA cert: %v", err)
-	}
-
-	rootCert, rootKey, err := certs.CreateRootCA(common.GRPCServerNameOverride, serial, destDir)
+	rootCert, rootKey, err := certs.CreateRootCA(common.GRPCServerNameOverride, destDir)
 	if err != nil {
 		return agentCerts{}, err
 	}
 
 	// Create and write the agent and clients certificates signed by the root certificate created above.
-	agentCert, err := certs.CreateTLSCertificateSignedBy(common.AgentCertFilePrefix, common.GRPCServerNameOverride, serial.Rsh(serial, 2), rootCert, rootKey, destDir)
+	agentCert, err := certs.CreateTLSCertificateSignedBy(common.AgentCertFilePrefix, common.GRPCServerNameOverride, rootCert, rootKey, destDir)
 	if err != nil {
 		return agentCerts{}, err
 	}
 	// We won't store the TLS client certificate, because only the agent should access this function and it's not interested in the client TLS certificate.
 	// But we still need to write them to disk, so clients can construct their TLS configs from there.
-	_, err = certs.CreateTLSCertificateSignedBy(common.ClientsCertFilePrefix, common.GRPCServerNameOverride, serial.Lsh(serial, 3), rootCert, rootKey, destDir)
+	_, err = certs.CreateTLSCertificateSignedBy(common.ClientsCertFilePrefix, common.GRPCServerNameOverride, rootCert, rootKey, destDir)
 	if err != nil {
 		return agentCerts{}, err
 	}

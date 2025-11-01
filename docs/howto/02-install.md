@@ -7,12 +7,12 @@ myst:
 
 # Install individual components of Ubuntu Pro for WSL for development
 
-```{include} ../dev_docs_notice.txt
+```{include} ../includes/dev_docs_notice.txt
     :start-after: <!-- Include start dev -->
     :end-before: <!-- Include end dev -->
 ```
 
-This guide will show you how to install UP4W for local development and testing.
+This guide will show you how to install Pro for WSL for local development and testing.
 
 <br/>
 
@@ -40,7 +40,7 @@ Notice that, for the step above, there is also an alternative version of the MSI
 
 This is the Windows-side agent that manages the distros.
 
-1. Uninstall Ubuntu Pro for WSL if you had installed previously:
+1. Uninstall Pro for WSL if you had installed previously:
 
     ```powershell
     Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage
@@ -68,7 +68,7 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
 4. Navigate to the unzipped directory containing the .deb file. Here is a possible path:
 
     ```bash
-    cd /mnt/c/Users/WINDOWS-USER/Downloads/wsl-pro-service_*
+    cd /mnt/c/Users/<username>/Downloads/wsl-pro-service_*
     ```
 
 5. Install the deb package.

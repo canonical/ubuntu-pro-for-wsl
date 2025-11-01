@@ -186,14 +186,14 @@ example — an Ubuntu Server, it does not apply to Ubuntu on WSL.
 
 ## The Ubuntu Pro for WSL application
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
 ### Automatic Pro-attachment
 
-For Pro-attaching multiple instances automatically, use the Ubuntu Pro for WSL
+For Pro-attaching multiple instances automatically, use the Pro for WSL
 application.
 This is most relevant for deployment scenarios in which multiple Windows hosts
 are being managed centrally, using software like Landscape or Intune.
@@ -202,7 +202,7 @@ are being managed centrally, using software like Landscape or Intune.
 
 ### Firewall configuration
 
-Firewall rules must be configured for Ubuntu Pro for WSL to enable interactions
+Firewall rules must be configured for Pro for WSL to enable interactions
 with different services, including Landscape and the Microsoft Store.
 
 Any exchanges of data are encrypted using TLS.
@@ -210,24 +210,24 @@ Any exchanges of data are encrypted using TLS.
 > [Read our reference on firewall configuration for Ubuntu Pro on WSL](ref::firewall)
 
 (exp::wsl1-incompatibility)=
-### WSL1 incompatibility
+### Incompatibility with WSL 1
 
-WSL2 is the default WSL version on Windows 11.
-The legacy version — WSL1 — can also still be used.
+WSL 2 is the default WSL version on Windows 11.
+The legacy version — WSL 1 — can also still be used.
 
-> [Read more about WSL versions](https://learn.microsoft.com/en-us/windows/wsl/compare-versions)
+> [Read more about WSL versions](explanation::wsl-version)
 
-Ubuntu Pro for WSL only supports WSL2.
-When relying on Ubuntu Pro for WSL to manage the security of WSL instances,
-you should therefore consider enforcing WSL2 on host Windows machines.
+Pro for WSL only supports WSL 2.
+When relying on Pro for WSL to manage the security of WSL instances,
+you should therefore consider enforcing WSL 2 on host Windows machines.
 
-To set the default version to WSL2:
+To set the default version to WSL 2:
 
 ```text
 wsl --set-default-version 2
 ```
 
-To convert a specific distribution from WSL1 to WSL2:
+To convert a specific distribution from WSL 1 to WSL 2:
 
 ```text
 wsl --set-version <distro> 2
@@ -248,7 +248,7 @@ To set it:
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion -Value 2
 ```
 
-Intune also supports policies for WSL, which include toggling the availability of WSL1 on client machines:
+Intune also supports policies for WSL, which include toggling the availability of WSL 1 on client machines:
 
 > [Intune configuration options for WSL](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations)
 
@@ -258,14 +258,14 @@ Intune also supports policies for WSL, which include toggling the availability o
 
 WSL features can be controlled if they present a security concern.
 
-For example, root login can be disabled, WSL1 availability toggled and network
+For example, root login can be disabled, WSL 1 availability toggled and network
 access configured.
 
 There are various options to configure WSL instances, including:
 
 * The `.wslconfig` file can be edited to configure [global settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig) for instances
 * [WSL policies for Intune](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations) enable remote management of WSL features
-* Registry entries for features like [WSL1 availability](exp::wsl1-incompatibility) can be changed in the registry editor or with PowerShell scripts 
+* Registry entries for features like [WSL 1 availability](exp::wsl1-incompatibility) can be changed in the registry editor or with PowerShell scripts 
 
 (exp::automate-hardening)=
 ### Automate hardening
@@ -353,7 +353,7 @@ It is expected that most users will SSH from WSL rather than SSH into WSL.
 
 ### Remote management tools
 
-Ubuntu Pro for WSL increases the capacity of system administrators to manage
+Pro for WSL increases the capacity of system administrators to manage
 and secure Windows hosts containing instances of Ubuntu on WSL.
 
 Learn more about remote management of Ubuntu on WSL in this documentation:
@@ -367,7 +367,7 @@ Details on the security updates that we provide and the responsible disclosure
 of security vulnerabilities for the Ubuntu distribution on WSL can be found
 below:
 
-* [Security policy for the Ubuntu Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
+* [Security policy for the Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
 * [Security policy for the Ubuntu distro on WSL](https://github.com/ubuntu/WSL/blob/main/SECURITY.md)
 
 ## Resources

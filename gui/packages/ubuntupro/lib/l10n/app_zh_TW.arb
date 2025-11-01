@@ -1,158 +1,158 @@
 {
-  "ubuntuProEnabledInfo": "所有 Ubuntu WSL 實例都可以存取 Ubuntu Pro 安全功能。",
-  "@ubuntuProEnabledInfo": {},
-  "landscapeHeading": "設定與 Landscape 的連線，以便遠端管理您的 Ubuntu WSL 實體。{landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "tokenInputDescription": "輸入來自 {proLink} 或系統管理員的 token",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "agentStateStarting": "Ubuntu Pro 背景代理程式正在啟動。",
-  "@agentStateStarting": {},
-  "purchaseStatusServer": "Microsoft Store 出現問題。請稍後再試。",
-  "@purchaseStatusServer": {},
-  "agentStateUnknownEnv": "Ubuntu Pro 背景代理程式狀態無法驗證。請檢查您的環境設定。",
-  "@agentStateUnknownEnv": {},
-  "appTitle": "適用於 WSL 的 Ubuntu Pro",
-  "@appTitle": {},
-  "tokenErrorEmpty": "Token 不能為空",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "無效 token",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "有效 token",
-  "@tokenValid": {},
-  "tokenInputTitle": "綁定本機",
-  "@tokenInputTitle": {},
-  "tokenInputHint": "Token",
-  "@tokenInputHint": {},
-  "attach": "綁定",
-  "@attach": {},
-  "applyProToken": "套用 Pro Token",
-  "@applyProToken": {},
-  "applyingProToken": "正在套用 token {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agentStatePingNonResponsive": "Ubuntu Pro 背景代理程式沒有回應。",
-  "@agentStatePingNonResponsive": {},
-  "agent": "Ubuntu Pro 背景代理程式",
-  "@agent": {},
-  "agentStateInvalid": "等待 Ubuntu Pro 背景代理程式初始化。",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Ubuntu Pro 背景代理程式無法啟動。",
-  "@agentStateCannotStart": {},
-  "agentStateQuerying": "檢查 Ubuntu Pro 背景代理程式的狀態。",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "嘗試復原 Ubuntu Pro 背景代理程式。",
-  "@agentStateUnreachable": {},
-  "proHeading": "由 Ubuntu 發行商提供的開放原始碼軟體安全性，現在可在 Windows 上使用。{aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "取得 Ubuntu Pro",
-  "@getUbuntuPro": {},
-  "learnMore": "了解更多",
-  "@learnMore": {},
-  "ubuntuProEnabled": "本機已啟用 Ubuntu Pro",
-  "@ubuntuProEnabled": {},
-  "manageUbuntuPro": "管理 Ubuntu Pro 訂閱",
-  "@manageUbuntuPro": {},
-  "detachPro": "分離 Ubuntu Pro",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "更新訂閱資訊。",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "感謝您訂閱 Ubuntu Pro。",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "您已訂閱 Ubuntu Pro。",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "購買嘗試已取消。",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "網路問題導致無法繼續購買。請在連線後再試一次。",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusUnknown": "嘗試購買訂閱時出現未知錯誤。請考慮重新啟動此應用程式。",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkip": "暫時跳過",
-  "@landscapeSkip": {},
-  "landscapeSkipDescription": "您可以稍後在此應用程式中設定 Landscape",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "用 Landscape 註冊",
-  "@landscapeSkipRegister": {},
-  "landscapeSetupManual": "手動設定",
-  "@landscapeSetupManual": {},
-  "landscapeSetupManualHint": "使用您自己的 Landscape 伺服器註冊",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustom": "進階設定",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "載入自訂的 Landscape 用戶端設定檔",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNLabel": "Landscape 完整網域名稱",
-  "@landscapeFQDNLabel": {},
-  "landscapeFQDNError": "無效的 FQDN。格式應為主機名稱或 IP 位址。",
-  "@landscapeFQDNError": {},
-  "landscapeFQDNSaaSError": "FQDN 不應該是 landscape.canonical.com。",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "註冊金鑰（可選）",
-  "@landscapeKeyLabel": {},
-  "landscapeSSLKeyLabel": "伺服器 SSL 公開金鑰 (可選)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileLabel": "設定檔案路徑",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "設定檔太大",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "必須指定路徑",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "檔案不能是空的",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "未找到檔案",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "檔案不能是目錄",
-  "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "檔案格式不正確",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFilePicker": "選擇檔案...",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "設定 Landscape",
-  "@landscapeConfigureButton": {},
-  "landscapeApplyError": "嘗試套用配置時出錯：\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeRegister": "註冊",
-  "@landscapeRegister": {},
-  "buttonNext": "下一步",
-  "@buttonNext": {},
-  "buttonSkip": "跳過",
-  "@buttonSkip": {},
-  "buttonBack": "返回",
-  "@buttonBack": {},
-  "statusBarReportBugTooltip": "回報錯誤",
-  "@statusBarReportBugTooltip": {},
-  "statusBarAgentRunningTooltip": "Ubuntu Pro 代理程式正在執行",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "正在連接到 Ubuntu Pro 代理...",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "Ubuntu Pro 代理程式已斷線。按下 啟動代理程式。",
-  "@statusBarAgentDownTooltip": {}
+    "ubuntuProEnabledInfo": "所有 Ubuntu WSL 實例都可以存取 Ubuntu Pro 安全功能。",
+    "@ubuntuProEnabledInfo": {},
+    "landscapeHeading": "設定與 Landscape 的連線，以便遠端管理您的 Ubuntu WSL 實體。{landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputDescription": "輸入來自 {proLink} 或系統管理員的 token",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStateStarting": "Ubuntu Pro 背景代理程式正在啟動。",
+    "@agentStateStarting": {},
+    "purchaseStatusServer": "Microsoft Store 出現問題。請稍後再試。",
+    "@purchaseStatusServer": {},
+    "agentStateUnknownEnv": "Ubuntu Pro 背景代理程式狀態無法驗證。請檢查您的環境設定。",
+    "@agentStateUnknownEnv": {},
+    "appTitle": "適用於 WSL 的 Ubuntu Pro",
+    "@appTitle": {},
+    "tokenErrorEmpty": "Token 不能為空",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "無效 token",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "有效 token",
+    "@tokenValid": {},
+    "tokenInputTitle": "綁定本機",
+    "@tokenInputTitle": {},
+    "tokenInputHint": "Token",
+    "@tokenInputHint": {},
+    "attach": "綁定",
+    "@attach": {},
+    "applyProToken": "套用 Pro Token",
+    "@applyProToken": {},
+    "applyingProToken": "正在套用 token {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStatePingNonResponsive": "Ubuntu Pro 背景代理程式沒有回應。",
+    "@agentStatePingNonResponsive": {},
+    "agent": "Ubuntu Pro 背景代理程式",
+    "@agent": {},
+    "agentStateInvalid": "等待 Ubuntu Pro 背景代理程式初始化。",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Ubuntu Pro 背景代理程式無法啟動。",
+    "@agentStateCannotStart": {},
+    "agentStateQuerying": "檢查 Ubuntu Pro 背景代理程式的狀態。",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "嘗試復原 Ubuntu Pro 背景代理程式。",
+    "@agentStateUnreachable": {},
+    "proHeading": "由 Ubuntu 發行商提供的開放原始碼軟體安全性，現在可在 Windows 上使用。{aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "取得 Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "了解更多",
+    "@learnMore": {},
+    "ubuntuProEnabled": "本機已啟用 Ubuntu Pro",
+    "@ubuntuProEnabled": {},
+    "manageUbuntuPro": "管理 Ubuntu Pro 訂閱",
+    "@manageUbuntuPro": {},
+    "detachPro": "分離 Ubuntu Pro",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "更新訂閱資訊。",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "感謝您訂閱 Ubuntu Pro。",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "您已訂閱 Ubuntu Pro。",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "購買嘗試已取消。",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "網路問題導致無法繼續購買。請在連線後再試一次。",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusUnknown": "嘗試購買訂閱時出現未知錯誤。請考慮重新啟動此應用程式。",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "暫時跳過",
+    "@landscapeSkip": {},
+    "landscapeSkipDescription": "您可以稍後在此應用程式中設定 Landscape",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "用 Landscape 註冊",
+    "@landscapeSkipRegister": {},
+    "landscapeSetupManual": "手動設定",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "使用您自己的 Landscape 伺服器註冊",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "進階設定",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "載入自訂的 Landscape 用戶端設定檔",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "Landscape 完整網域名稱",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "無效的 FQDN。格式應為主機名稱或 IP 位址。",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "FQDN 不應該是 landscape.canonical.com。",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "註冊金鑰（可選）",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "伺服器 SSL 公開金鑰 (可選)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "設定檔案路徑",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "設定檔太大",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "必須指定路徑",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "檔案不能是空的",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "未找到檔案",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "檔案不能是目錄",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "檔案格式不正確",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "選擇檔案...",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "設定 Landscape",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "嘗試套用配置時出錯：\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "註冊",
+    "@landscapeRegister": {},
+    "buttonNext": "下一步",
+    "@buttonNext": {},
+    "buttonSkip": "跳過",
+    "@buttonSkip": {},
+    "buttonBack": "返回",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "回報錯誤",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro 代理程式正在執行",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "正在連接到 Ubuntu Pro 代理...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Ubuntu Pro 代理程式已斷線。按下 啟動代理程式。",
+    "@statusBarAgentDownTooltip": {}
 }

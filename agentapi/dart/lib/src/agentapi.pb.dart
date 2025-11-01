@@ -35,7 +35,7 @@ class Empty extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Empty clone() => Empty()..mergeFromMessage(this);
+  Empty clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Empty copyWith(void Function(Empty) updates) =>
       super.copyWith((message) => updates(message as Empty)) as Empty;
@@ -80,7 +80,7 @@ class ProAttachInfo extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProAttachInfo clone() => ProAttachInfo()..mergeFromMessage(this);
+  ProAttachInfo clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProAttachInfo copyWith(void Function(ProAttachInfo) updates) =>
       super.copyWith((message) => updates(message as ProAttachInfo))
@@ -136,7 +136,7 @@ class LandscapeConfig extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  LandscapeConfig clone() => LandscapeConfig()..mergeFromMessage(this);
+  LandscapeConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   LandscapeConfig copyWith(void Function(LandscapeConfig) updates) =>
       super.copyWith((message) => updates(message as LandscapeConfig))
@@ -223,7 +223,7 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SubscriptionInfo clone() => SubscriptionInfo()..mergeFromMessage(this);
+  SubscriptionInfo clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   SubscriptionInfo copyWith(void Function(SubscriptionInfo) updates) =>
       super.copyWith((message) => updates(message as SubscriptionInfo))
@@ -243,8 +243,16 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<SubscriptionInfo>(create);
   static SubscriptionInfo? _defaultInstance;
 
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
   SubscriptionInfo_SubscriptionType whichSubscriptionType() =>
       _SubscriptionInfo_SubscriptionTypeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
   void clearSubscriptionType() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -344,7 +352,7 @@ class LandscapeSource extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  LandscapeSource clone() => LandscapeSource()..mergeFromMessage(this);
+  LandscapeSource clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   LandscapeSource copyWith(void Function(LandscapeSource) updates) =>
       super.copyWith((message) => updates(message as LandscapeSource))
@@ -364,8 +372,14 @@ class LandscapeSource extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<LandscapeSource>(create);
   static LandscapeSource? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   LandscapeSource_LandscapeSourceType whichLandscapeSourceType() =>
       _LandscapeSource_LandscapeSourceTypeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   void clearLandscapeSourceType() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -433,7 +447,7 @@ class ConfigSources extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConfigSources clone() => ConfigSources()..mergeFromMessage(this);
+  ConfigSources clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ConfigSources copyWith(void Function(ConfigSources) updates) =>
       super.copyWith((message) => updates(message as ConfigSources))
@@ -517,7 +531,7 @@ class DistroInfo extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DistroInfo clone() => DistroInfo()..mergeFromMessage(this);
+  DistroInfo clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DistroInfo copyWith(void Function(DistroInfo) updates) =>
       super.copyWith((message) => updates(message as DistroInfo)) as DistroInfo;
@@ -616,7 +630,7 @@ class ProAttachCmd extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProAttachCmd clone() => ProAttachCmd()..mergeFromMessage(this);
+  ProAttachCmd clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProAttachCmd copyWith(void Function(ProAttachCmd) updates) =>
       super.copyWith((message) => updates(message as ProAttachCmd))
@@ -672,7 +686,7 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  LandscapeConfigCmd clone() => LandscapeConfigCmd()..mergeFromMessage(this);
+  LandscapeConfigCmd clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   LandscapeConfigCmd copyWith(void Function(LandscapeConfigCmd) updates) =>
       super.copyWith((message) => updates(message as LandscapeConfigCmd))
@@ -739,7 +753,7 @@ class MSG extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MSG clone() => MSG()..mergeFromMessage(this);
+  MSG clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MSG copyWith(void Function(MSG) updates) =>
       super.copyWith((message) => updates(message as MSG)) as MSG;
@@ -757,7 +771,11 @@ class MSG extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MSG>(create);
   static MSG? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
   MSG_Data whichData() => _MSG_DataByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
   void clearData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)

@@ -11,9 +11,9 @@ While WSL's default setup allows you to develop cross-platform applications with
 
 ## What you will learn
 
-* How to install a Windows graphical device driver compatible with WSL2
-* How to install the NVIDIA CUDA toolkit for WSL2 on Ubuntu
-* How to compile and run a sample CUDA application on Ubuntu on WSL2
+* How to install a Windows graphical device driver compatible with WSL 2
+* How to install the NVIDIA CUDA toolkit for WSL 2 on Ubuntu
+* How to compile and run a sample CUDA application on Ubuntu on WSL 2
 
 ## What you will need
 
@@ -21,10 +21,9 @@ The following steps assume a specific hardware configuration. Although the conce
 
 Make sure the following prerequisites are met before moving forward:
 
-
-* A Windows 10 version 21H2 or newer physical machine equipped with an NVIDIA graphics card and administrative permission to be able to install device drivers
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* NVIDIA graphics card and administrative permission to install device drivers (see also [NVIDIA's system requirements for CUDA](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/))
 * Ubuntu 20.04 or higher installed on WSL 2
-* Familiarity with Linux command line utilities and interacting with Ubuntu on WSL 2
 * Broadband internet connection able to download a few GB of data
 
 ```{tip}

@@ -1,158 +1,158 @@
 {
-  "tokenInputHint": "Jeton",
-  "@tokenInputHint": {},
-  "appTitle": "WSL için Ubuntu Pro",
-  "@appTitle": {},
-  "tokenErrorEmpty": "Jeton boş olamaz",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "Geçersiz jeton",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "Geçerli jeton",
-  "@tokenValid": {},
-  "tokenInputTitle": "Bu makineyi ekleyin",
-  "@tokenInputTitle": {},
-  "tokenInputDescription": "{proLink} veya sistem yöneticinizden bir jeton girin",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "attach": "Ekle",
-  "@attach": {},
-  "applyProToken": "Pro Jeton'u Uygula",
-  "@applyProToken": {},
-  "applyingProToken": "{token} jeton uygulanıyor",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "Ubuntu Pro arka plan aracısı",
-  "@agent": {},
-  "agentStateStarting": "Ubuntu Pro arka plan aracı başlatılıyor.",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "Ubuntu Pro arka plan aracısı yanıt vermiyor.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "Ubuntu Pro arka plan aracısının başlatılması bekleniyor.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "Ubuntu Pro arka plan aracısı başlatılamıyor.",
-  "@agentStateCannotStart": {},
-  "agentStateUnknownEnv": "Ubuntu Pro arka plan aracı durumu doğrulanamıyor. Ortam ayarlarınızı kontrol edin.",
-  "@agentStateUnknownEnv": {},
-  "agentStateQuerying": "Ubuntu Pro arka plan aracısının durumunu kontrol ediyorum.",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "Ubuntu Pro arka plan aracısını kurtarmaya çalışıyorum.",
-  "@agentStateUnreachable": {},
-  "proHeading": "Ubuntu yayıncılarının açık kaynaklı yazılım güvenliği artık Windows'ta da mevcut. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "Ubuntu Pro'yu edinin",
-  "@getUbuntuPro": {},
-  "learnMore": "Daha fazla bilgi edin",
-  "@learnMore": {},
-  "ubuntuProEnabled": "Bu makinede Ubuntu Pro etkin",
-  "@ubuntuProEnabled": {},
-  "ubuntuProEnabledInfo": "Tüm Ubuntu WSL örnekleri Ubuntu Pro güvenlik özelliklerine erişebilir.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "Ubuntu Pro aboneliğini yönetin",
-  "@manageUbuntuPro": {},
-  "detachPro": "Ubuntu Pro'yu kaldırın",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "Abonelik bilgilerinin güncellenmesi.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "Ubuntu Pro'ya abone olduğunuz için teşekkür ederiz.",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "Zaten Pro'ya abonesiniz.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "Satın alma girişimi iptal edildi.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "Bir ağ sorunu nedeniyle satın alma işlemi gerçekleştirilemedi. Lütfen bağlandıktan sonra tekrar deneyin.",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusServer": "Microsoft Store'da bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "Abonelik satın alınırken bilinmeyen bir hata oluştu. Bu uygulamayı yeniden başlatmayı düşünün.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkip": "Şimdilik atla",
-  "@landscapeSkip": {},
-  "landscapeSkipDescription": "Landscape'yi daha sonra bu uygulamada istediğiniz zaman yapılandırabilirsiniz",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "Landscape'e kaydolun",
-  "@landscapeSkipRegister": {},
-  "landscapeHeading": "Ubuntu WSL örneklerinizi uzaktan yönetmek için Landscape bağlantısını yapılandırın. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSetupManual": "Manuel yapılandırma",
-  "@landscapeSetupManual": {},
-  "landscapeSetupManualHint": "Kendi Landscape sunucunuzla kaydolun",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustom": "Gelişmiş yapılandırma",
-  "@landscapeSetupCustom": {},
-  "landscapeSetupCustomHint": "Özel bir Landscape istemci yapılandırma dosyası yükleyin",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNLabel": "Landscape FQDN",
-  "@landscapeFQDNLabel": {},
-  "landscapeFQDNError": "Geçersiz FQDN. Biçim, ana bilgisayar adı veya IP adresi olmalıdır.",
-  "@landscapeFQDNError": {},
-  "landscapeFQDNSaaSError": "FQDN landscape.canonical.com olmamalı.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "Kayıt anahtarı (isteğe bağlı)",
-  "@landscapeKeyLabel": {},
-  "landscapeSSLKeyLabel": "Sunucu SSL genel anahtarı (isteğe bağlı)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileLabel": "Yapılandırma dosyası yolu",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "Yapılandırma dosyası çok büyük",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "Bir yol belirtilmelidir",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "Dosya boş olamaz",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "Dosya bulunamadı",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "Dosya bir dizin olamaz",
-  "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "Dosya yanlış biçimde",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFilePicker": "Dosya seç...",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "Landscape'i Yapılandır",
-  "@landscapeConfigureButton": {},
-  "landscapeApplyError": "Yapılandırmayı uygulamaya çalışırken hata oluştu:\n\t{message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeRegister": "Kayıt ol",
-  "@landscapeRegister": {},
-  "buttonNext": "Sonraki",
-  "@buttonNext": {},
-  "buttonSkip": "Atla",
-  "@buttonSkip": {},
-  "buttonBack": "Geri",
-  "@buttonBack": {},
-  "statusBarReportBugTooltip": "Bir hata bildirin",
-  "@statusBarReportBugTooltip": {},
-  "statusBarAgentRunningTooltip": "Ubuntu Pro aracısı çalışıyor",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "Ubuntu Pro aracısına bağlanılıyor...",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "Ubuntu Pro aracısı bağlantısı kesildi. Aracı başlatmak için tuşuna basın.",
-  "@statusBarAgentDownTooltip": {}
+    "tokenInputHint": "Jeton",
+    "@tokenInputHint": {},
+    "appTitle": "WSL için Ubuntu Pro",
+    "@appTitle": {},
+    "tokenErrorEmpty": "Jeton boş olamaz",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Geçersiz jeton",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Geçerli jeton",
+    "@tokenValid": {},
+    "tokenInputTitle": "Bu makineyi ekleyin",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "{proLink} veya sistem yöneticinizden bir jeton girin",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "attach": "Ekle",
+    "@attach": {},
+    "applyProToken": "Pro Jeton'u Uygula",
+    "@applyProToken": {},
+    "applyingProToken": "{token} jeton uygulanıyor",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro arka plan aracısı",
+    "@agent": {},
+    "agentStateStarting": "Ubuntu Pro arka plan aracı başlatılıyor.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Ubuntu Pro arka plan aracısı yanıt vermiyor.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Ubuntu Pro arka plan aracısının başlatılması bekleniyor.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Ubuntu Pro arka plan aracısı başlatılamıyor.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "Ubuntu Pro arka plan aracı durumu doğrulanamıyor. Ortam ayarlarınızı kontrol edin.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "Ubuntu Pro arka plan aracısının durumunu kontrol ediyorum.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Ubuntu Pro arka plan aracısını kurtarmaya çalışıyorum.",
+    "@agentStateUnreachable": {},
+    "proHeading": "Ubuntu yayıncılarının açık kaynaklı yazılım güvenliği artık Windows'ta da mevcut. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Ubuntu Pro'yu edinin",
+    "@getUbuntuPro": {},
+    "learnMore": "Daha fazla bilgi edin",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Bu makinede Ubuntu Pro etkin",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "Tüm Ubuntu WSL örnekleri Ubuntu Pro güvenlik özelliklerine erişebilir.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Ubuntu Pro aboneliğini yönetin",
+    "@manageUbuntuPro": {},
+    "detachPro": "Ubuntu Pro'yu kaldırın",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Abonelik bilgilerinin güncellenmesi.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Ubuntu Pro'ya abone olduğunuz için teşekkür ederiz.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "Zaten Pro'ya abonesiniz.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "Satın alma girişimi iptal edildi.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "Bir ağ sorunu nedeniyle satın alma işlemi gerçekleştirilemedi. Lütfen bağlandıktan sonra tekrar deneyin.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "Microsoft Store'da bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "Abonelik satın alınırken bilinmeyen bir hata oluştu. Bu uygulamayı yeniden başlatmayı düşünün.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "Şimdilik atla",
+    "@landscapeSkip": {},
+    "landscapeSkipDescription": "Landscape'yi daha sonra bu uygulamada istediğiniz zaman yapılandırabilirsiniz",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Landscape'e kaydolun",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "Ubuntu WSL örneklerinizi uzaktan yönetmek için Landscape bağlantısını yapılandırın. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Manuel yapılandırma",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "Kendi Landscape sunucunuzla kaydolun",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "Gelişmiş yapılandırma",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "Özel bir Landscape istemci yapılandırma dosyası yükleyin",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "Geçersiz FQDN. Biçim, ana bilgisayar adı veya IP adresi olmalıdır.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "FQDN landscape.canonical.com olmamalı.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "Kayıt anahtarı (isteğe bağlı)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "Sunucu SSL genel anahtarı (isteğe bağlı)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "Yapılandırma dosyası yolu",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "Yapılandırma dosyası çok büyük",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "Bir yol belirtilmelidir",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "Dosya boş olamaz",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "Dosya bulunamadı",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "Dosya bir dizin olamaz",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "Dosya yanlış biçimde",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "Dosya seç...",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "Landscape'i Yapılandır",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "Yapılandırmayı uygulamaya çalışırken hata oluştu:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "Kayıt ol",
+    "@landscapeRegister": {},
+    "buttonNext": "Sonraki",
+    "@buttonNext": {},
+    "buttonSkip": "Atla",
+    "@buttonSkip": {},
+    "buttonBack": "Geri",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "Bir hata bildirin",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro aracısı çalışıyor",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Ubuntu Pro aracısına bağlanılıyor...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Ubuntu Pro aracısı bağlantısı kesildi. Aracı başlatmak için tuşuna basın.",
+    "@statusBarAgentDownTooltip": {}
 }

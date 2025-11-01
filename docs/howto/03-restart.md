@@ -7,18 +7,18 @@ myst:
 
 # Restart Ubuntu Pro for WSL during development
 
-```{include} ../dev_docs_notice.txt
+```{include} ../includes/dev_docs_notice.txt
     :start-after: <!-- Include start dev -->
     :end-before: <!-- Include end dev -->
 ```
 
-Some configuration changes only apply when you restart UP4W. Here is a guide on how to restart it. There are two options.
+Some configuration changes only apply when you restart Ubuntu Pro for WSL. Here is a guide on how to restart it. There are two options.
 
-## Option 1: Restart your UP4W host machine
+## Option 1: Restart your Ubuntu Pro for WSL host machine
 
 This is the simple one. If you're not in a hurry to see the configuration updated, just wait until next time you boot your machine.
 
-## Option 2: Restart only UP4W
+## Option 2: Restart only Ubuntu Pro for WSL
 
 1. Stop the agent:
 

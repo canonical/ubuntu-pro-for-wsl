@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/common
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/golang/protobuf v1.5.4
@@ -12,7 +12,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20250220202122-f4267f82434b
 	google.golang.org/grpc v1.75.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1
-	google.golang.org/protobuf v1.36.9
+	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
 

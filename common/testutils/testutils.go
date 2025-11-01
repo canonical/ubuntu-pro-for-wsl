@@ -11,7 +11,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"math/big"
 	"net"
 	"os"
 	"path/filepath"
@@ -48,7 +47,6 @@ func GenerateTempCertificate(t *testing.T, path string) {
 	require.NoError(t, err, errPrefix+"could not generate keys")
 
 	template := x509.Certificate{
-		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
 			CommonName:   "CanonicalGroupLimited",
 			Country:      []string{"US"},
@@ -80,4 +78,23 @@ func GenerateTempCertificate(t *testing.T, path string) {
 
 	err = os.WriteFile(filepath.Join(path, "key.pem"), out.Bytes(), 0600)
 	require.NoError(t, err, errPrefix+"could not write private key to file")
+}
+
+// WriteOsRelease is a test helper that writes a sample os-release file for the given distro inside
+// the uncRoot directory, creating any needed directories.
+func WriteOsRelease(t *testing.T, uncRoot, distroName, template string) {
+	t.Helper()
+
+	testdata, err := filepath.Abs(filepath.Join(TestFamilyPath(t), template))
+	require.NoError(t, err, "Setup: Couldn't compute absolute path of sample os-release file")
+	data, err := os.ReadFile(testdata)
+	require.NoError(t, err, "Setup: couldn't read sample os-release file")
+
+	dir := filepath.Join(uncRoot, distroName, "usr", "lib")
+	err = os.MkdirAll(dir, 0750)
+	require.NoError(t, err, "Setup: Failed to create directories to contain the distros os-release file")
+
+	//nolint:gosec // This file is meant to be read by anyone.
+	err = os.WriteFile(filepath.Join(dir, "os-release"), data, 0644)
+	require.NoError(t, err, "Setup: Failed to write sample os-release file")
 }

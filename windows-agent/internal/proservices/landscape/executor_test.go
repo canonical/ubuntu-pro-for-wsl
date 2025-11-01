@@ -202,6 +202,7 @@ func TestInstall(t *testing.T) {
 		"Error when the distro ID is reserved (Preview)":                  {sendRootfsURL: "goodfile", distroName: "Ubuntu-Preview", wantInstalled: false},
 		"Error when the distro ID is reserved (case sensitiveness)":       {sendRootfsURL: "goodfile", distroName: "ubuntu-preview", wantInstalled: false},
 		"Error when the distro ID is reserved (release numbers)":          {sendRootfsURL: "goodfile", distroName: "Ubuntu-19.13", wantInstalled: false},
+		"Success when the distro ID contains reserved (plus more)":        {sendRootfsURL: "goodfile", distroName: "My-Ubuntu-19.13", wantInstalled: true},
 		"Error when the distro ID is reserved (release numbers and case)": {sendRootfsURL: "goodfile", distroName: "uBuntu-19.13", wantInstalled: false},
 		"Error when the rootfs isn't a valid tarball":                     {sendRootfsURL: "badfile", wantInstalled: false},
 		"Error when the checksum doesn't match":                           {sendRootfsURL: "badchecksum", wantInstalled: false},

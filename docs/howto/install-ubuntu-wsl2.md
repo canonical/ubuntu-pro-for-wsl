@@ -6,7 +6,7 @@ myst:
 ---
 
 (howto::install-ubuntu-wsl)=
-# Install Ubuntu on WSL2
+# Install Ubuntu on WSL 2
 
 ## What you will learn
 
@@ -16,8 +16,12 @@ myst:
 
 ## What you will need
 
-* Windows 10 or 11 running on a Windows machine
-* All of the latest Windows updates installed
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+
+```{include} ../includes/virtualisation_requirements.txt
+    :start-after: <!-- Include start virtualisation requirements -->
+    :end-before: <!-- Include end virtualisation requirements -->
+```
 
 ## Install and enable WSL
 
@@ -32,21 +36,35 @@ Open PowerShell and run:
 
 You may be prompted to grant permission to continue the installation.
 
-You then need to reboot your machine before installing and running any Ubuntu distro.
+You may also need to reboot your machine before installing and running any Ubuntu distro.
 
-```{admonition} What if WSL is already installed and enabled?
-:class: tip
-When WSL is already installed and enabled, running `wsl --install` will install
-Ubuntu, unless there is a pre-existing instance named Ubuntu on the machine.
-```
+:::{dropdown} Variation in WSL installation behaviour
+:color: primary
+:icon: question
 
-> Read Microsoft's documentation for more information on [installing
-> WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+The effect of `wsl --install` may vary depending on your system. After
+installation, a reboot is usually required before WSL distros can be installed.
+If those WSL components are already enabled, a reboot may not be required and
+an installation of the default Ubuntu distribution will be attempted.
+
+Read Microsoft’s documentation for more information on
+[installing WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+:::
 
 ## Install specific versions of Ubuntu on WSL
 
 There are multiple ways of installing Ubuntu distros on WSL.
 The best method depends on your specific requirements.
+
+:::{admonition} WSL versions
+:class: important
+ 
+WSL 2 is the default [WSL architecture](explanation::wsl-version) in recent
+versions of Windows. Our documentation assumes that you are installing Ubuntu
+on WSL 2.
+
+Read more about the [differences between WSL versions](explanation::wsl-version).
+:::
 
 ### Method 1: Install Ubuntu from the terminal
 
@@ -78,7 +96,9 @@ Install a specific Ubuntu distro using a NAME from the output:
 > wsl --install Ubuntu-24.04
 ```
 
-```{important}
+```{admonition} Using the new WSL distro format
+:class: tip
+
 At time of writing, Ubuntu 24.04 LTS and later versions are downloaded in [WSL's
 new tar-based format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available).
 Earlier Ubuntu versions are currently downloaded in the old format. The new format
@@ -142,11 +162,6 @@ determines the starting directory.
 
 ### Start Ubuntu in the current Windows directory from the terminal
 
-```{note}
-For simplicity, we use `username` for the user and `pc` for the machine name in
-this section.
-```
-
 When you open PowerShell, the working Windows directory is `C:\Users\username`.
 
 Run `wsl -d <Distro>` to start an Ubuntu session in that directory. The prompt
@@ -155,7 +170,7 @@ in the Windows home directory:
 
 ```{code-block} text
 :class: no-copy
-username@pc:/mnt/c/Users/username$
+<ubuntu-username>@<hostname>:/mnt/c/Users/<windows-username>$
 ```
 
 ### Start Ubuntu in the Ubuntu home directory from the terminal
@@ -164,7 +179,8 @@ When in a directory in the mounted `C:` drive, you can change to the Ubuntu
 home directory with:
 
 ```{code-block} text
-username@pc:/mnt/c/Users/username$ cd ~
+:caption: /mnt/c/Users/\<windows-username\>
+$ cd ~
 ```
 
 To skip this step, and start an instance from PowerShell with Ubuntu home as
@@ -174,7 +190,8 @@ the working directory, run:
 > wsl ~ -d Ubuntu
 ```
 
-````{tip}
+:::{tip}
+
 For the **default WSL distro**, this command can be shortened further to:
 
 ```{code-block} text
@@ -184,7 +201,7 @@ For the **default WSL distro**, this command can be shortened further to:
 The default distro for WSL is Ubuntu, although [this can be
 configured](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#set-default-linux-distribution).
 
-````
+:::
 
 ## Enjoy Ubuntu on WSL
 

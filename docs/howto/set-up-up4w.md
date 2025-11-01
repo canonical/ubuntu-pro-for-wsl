@@ -7,20 +7,20 @@ myst:
 
 # Install Ubuntu Pro for WSL and add a Pro token
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-To install and configure UP4W you will need:
+To install and configure Ubuntu Pro for WSL you will need:
 
-- A Windows 10 or 11 machine
-- An Ubuntu Pro token
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* An Ubuntu Pro token
 
 You should also verify that the [firewall rules are correctly set up](../reference/firewall_requirements.md).
 
 (howto::install-up4w)=
-## Install UP4W
+## Install Ubuntu Pro for WSL
 
 % :TODO: remove this warning once the app is made generally available (after the beta period).
 
@@ -28,49 +28,50 @@ You should also verify that the [firewall rules are correctly set up](../referen
 The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
 ```
 
-You can install UP4W [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
+You can install Pro for WSL [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
 
 ![Install Ubuntu Pro for WSL from the Store](./assets/store.png)
 
 (howto::config-up4w)=
 ## Choose a configuration method
 
-After installation has finished you can start configuring UP4W in two ways:
+After installation has finished you can start configuring Pro for WSL in two ways:
 
 - Windows registry: easier to automate and deploy at scale 
 - Graphical Windows application: convenient option for individual users
 
 Click the appropriate tab to read more.
 
-````{tabs}
+`````{tabs}
 
-```{group-tab} Windows registry
+````{group-tab} Windows registry
 
-## Access the registry
+## Set up the key and values
 
-First, ensure that UP4W has run at least once after installation.
-This ensures that the key and values necessary for configuration will be set up
+First, ensure that Ubuntu Pro for WSL has run at least once after installation.
+This guarantees that the key and values necessary for configuration are set up
 in the registry.
+
+```{admonition} Methods of modifying registry data
+:class: tip
+This guide uses the registry editor for setting the Pro token.
 
 Advanced users of the registry can find relevant information in the
 [Microsoft documentation](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
-about alternative methods for modifying the registry data.
+for alternative methods to modify the registry data.
+```
 
-To open the registry type `Win+R` and enter `regedit`:
+## Add Pro token using the registry editor
 
-![Windows where regedit command is run.](./assets/regedit.png) 
+To open the registry editor on a Windows machine, type
+<kbd>Win</kbd>+<kbd>R</kbd> then enter `regedit`:
 
-## Add Pro token in the registry
+Navigate to the `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` key.
 
-Navigate to `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`:
+Locate the {guilabel}`UbuntuProToken` value and enter your Pro token in the
+{guilabel}`Value data` field.
 
-![Windows registry showing UbuntuPro in tree.](./assets/registry-default.png) 
-
-Input your Ubuntu Pro token in `UbuntuProToken > Modify > Write the Ubuntu Pro token`:
-
-![Windows registry showing UbuntuPro in tree.](./assets/registry-token.png) 
-
-After configuration using the Windows Registry the status in the UP4W Windows application will show that
+After configuration using the Windows Registry the status in the Pro for WSL application will show that
 the Pro subscription is active and managed by the user's organisation.
 Unlike installation through the graphical Windows application, there is no option to detach the Pro
 subscription in the application interface when the registry is used:
@@ -78,9 +79,9 @@ subscription in the application interface when the registry is used:
 ![alt text](./assets/status-complete-registry.png) 
 
 
-```
+````
 
-```{group-tab} Graphical Windows application
+````{group-tab} Graphical Windows application
 
 ## Enter your Pro token
 
@@ -99,9 +100,9 @@ You should now see that your Pro subscription is active:
 Opening the application again at any point will show this screen, confirm the subscription is
 active and enable detaching of the subscription.
 
-```
-
-
 ````
+
+
+`````
 
 For additional verification steps refer to [our guide](./verify-subscribe-attach.md).

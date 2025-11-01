@@ -21,7 +21,7 @@ It is an industry standard and can now also be used to automatically setup insta
 
 ## What you will need
 
-- Windows 11 with WSL2 already enabled
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
 The guide assumes that you are using Ubuntu 24.04,
 but Ubuntu 22.04 can also be used.
@@ -36,13 +36,13 @@ before you install the distro.
 
 ## Write the cloud-config file
 
-Locate your Windows user home directory, which is typically `C:\Users\<YOUR_USER_NAME>`.
+Locate your Windows user home directory, which is typically `C:\Users\<username>`.
 
 ````{tip}
 If you want to find your home directory, run the following in PowerShell:
 
 ```text
-echo $env:USERPROFILE` in PowerShell
+echo $env:USERPROFILE in PowerShell
 ```
 ````
 
@@ -130,7 +130,7 @@ Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.6.36.3-microsoft-standard-WSL2 x86_64
 
 This message is shown once a day. To disable it please create the
 /home/jdoe/.hushlogin file.
-jdoe@mib01:~$
+jdoe@<hostname>:~$
 ```
 
 Once logged into the new distro instance's shell, verify that:
@@ -138,7 +138,7 @@ Once logged into the new distro instance's shell, verify that:
 1. The default user matches what was configured:
 
 ```{code-block} text
-jdoe@mib:~$ whoami
+jdoe@<hostname>:~$ whoami
 ```
 
 This should be verified with the output:
@@ -151,7 +151,7 @@ jdoe
 2. The supplied cloud-config user data was approved by cloud-init validation.
 
 ```{code-block} text
-jdoe@mib:~$ sudo cloud-init schema --system
+jdoe@<hostname>:~$ sudo cloud-init schema --system
 ```
 
 Verified with the output:
@@ -164,7 +164,7 @@ Valid schema user-data
 3. The locale is set
 
 ```{code-block} text
-jdoe@mib:~$ locale
+jdoe@<hostname>:~$ locale
 ```
 
 Verified with:
@@ -192,7 +192,7 @@ LC_ALL=
 4. The packages were installed and the commands that they provide are available.
 
 ```{code-block} text
-jdoe@mib:~$ apt list --installed | egrep 'ginac|octave'
+jdoe@<hostname>:~$ apt list --installed | egrep 'ginac|octave'
 ```
 
 Verified:
@@ -213,7 +213,7 @@ octave/noble,now 8.4.0-1 amd64 [installed]
    documentation (there is no deb or snap available for that program):
 
 ```{code-block} text
-jdoe@mib:~$ /opt/vcpkg/vcpkg version
+jdoe@<hostname>:~$ /opt/vcpkg/vcpkg version
 ```
 
 This should be verified with:
@@ -227,7 +227,7 @@ See LICENSE.txt for license information.
 
 ## Enjoy!
 
-That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL2 with minimal touch.
+That’s all folks! In this guide, we’ve shown you how to use cloud-init to automatically set up Ubuntu on WSL with minimal touch.
 
 This workflow will guarantee a solid foundation for your next Ubuntu WSL project.
 

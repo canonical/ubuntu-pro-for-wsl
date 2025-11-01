@@ -8,12 +8,12 @@ myst:
 (tut::deploy)=
 # Deploy WSL instances remotely with Ubuntu Pro for WSL and Landscape
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-In this tutorial you will learn how Ubuntu Pro for WSL (UP4W) can help you
+In this tutorial you will learn how Ubuntu Pro for WSL can help you
 deploy Ubuntu to remote Windows machines using Landscape.
 
 ## What you will do
@@ -24,15 +24,16 @@ deploy Ubuntu to remote Windows machines using Landscape.
 
 ## What you need
 
-- A Windows 10 or 11 machine with a minimum of 16GB RAM and 8-core processor
-- The latest version of Landscape Server set up and configured on a physical or virtual machine
-- WSL installed and configured on Windows
-- The UP4W app installed and configured with a Pro token
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+* A minimum of 16GB RAM and 8-core processor
+* The latest version of Landscape Server set up and configured on a physical or virtual machine
+* WSL installed and configured on Windows
+* The Pro for WSL app installed and configured with a Pro token
 
 ```{tip}
 It is recommended that you complete the [getting
 started](./getting-started-with-up4w.md) tutorial to familiarise yourself with
-installation and configuration of the UP4W app.
+installation and configuration of the Pro for WSL app.
 ```
 
 ### WSL must be installed and configured
@@ -86,16 +87,16 @@ documentation](https://ubuntu.com/landscape/install) for detailed setup and
 configuration instructions.
 
 (tut::config-landscape-up4w)=
-## Configure Landscape in the UP4W app
+## Configure Landscape in the Ubuntu Pro for WSL app
 
-Open the UP4W app, enter your Pro token and continue to the Landscape configuration screen.
+Open the Pro for WSL app, enter your Pro token and continue to the Landscape configuration screen.
 
 Choose your preferred configuration option and enter the required details.
 If you choose Manual configuration, you only require the FQDN of your Landscape server.
 
 When you continue, a status screen will confirm that your configuration is complete.
 
-> A dedicated how-to guide on configuring Landscape with UP4W can be found [here](../howto/set-up-landscape-client).
+> A dedicated how-to guide on configuring Landscape with Pro for WSL can be found [here](../howto/set-up-landscape-client).
 
 ## Register the Windows host instance with Landscape
 
@@ -196,7 +197,7 @@ When the Ubuntu-24.04 instance has launched, confirm that the correct default us
 
 ```{code-block} text
 :class: no-copy
-u@<your-machine>:~$
+u@<hostname>:~$
 ```
 
 Next, confirm that CUDA has been installed successfully:
@@ -204,6 +205,7 @@ Next, confirm that CUDA has been installed successfully:
 ```text
 $ apt policy cuda-toolkit-12-6
 ```
+
 
 ```{code-block} text
 :class: no-copy
@@ -229,9 +231,12 @@ $ nvidia-smi
 +---------------------------------------------------------------------------+
 ```
 
-Finally, run `pro status`, to confirm that UP4W has automatically Pro-attached the Ubuntu instance.
+Finally, run `pro status`, to confirm that Pro for WSL has automatically Pro-attached the Ubuntu instance.
 
 ````{dropdown} Deleting the deployed instance and restoring any backups
+:color: primary
+:icon: undo
+
 Terminate the new instance and uninstall it from PowerShell:
 
 ```{code-block} text
@@ -255,4 +260,4 @@ You can then launch the distro as before.
 
 Our documentation includes several [how-to guides](../howto/index)
 for completing specific tasks and [reference](../reference/index) material
-describing key information relating to UP4W.
+describing key information relating to Pro for WSL.

@@ -7,18 +7,18 @@ myst:
 
 # Verify active Pro subscription and automatic Pro attachment with Ubuntu Pro for WSL
 
-```{include} ../pro_content_notice.txt
+```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-If you have just installed and configured UP4W and a verification step is failing,
+If you have just installed and configured Pro for WSL and a verification step is failing,
 wait for a few seconds and try again. The process should not take longer than a minute.
 
 (howto::verify-pro-sub)=
 ## Pro subscription
 
-After installing UP4W on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
+After installing Pro for WSL on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
 
 ![Confirmation in graphical interface that subscription is active.](../assets/status-complete.png)
 
@@ -37,14 +37,14 @@ Running the following command in PowerShell will create a new Ubuntu-24.04 insta
 and prompt you to create a username and password for the machine:
 
 ```{code-block} text
-PS C:\Users\me\up4wInstall> wsl ~ -d Ubuntu-24.04
+> wsl ~ -d Ubuntu-24.04
 ```
 
 You will now be logged in to the new instance shell and can
-check that UP4W has Pro-attached this instance with:
+check that Pro for WSL has Pro-attached this instance with:
 
 ```{code-block} text
-u@mib:~$ pro status
+$ pro status
 ```
 
 The output will confirm the following:
@@ -66,7 +66,7 @@ Operation in progress: pro attach
 For a list of all Ubuntu Pro services, run 'pro status --all'
 Enable services with: pro enable <service>
 
-     Account: me@ubuntu.com
+     Account: username@ubuntu.com
 Subscription: Ubuntu Pro - free personal subscription
 ```
 
@@ -75,7 +75,7 @@ Each new Ubuntu WSL instance that is created should automatically now be Pro-att
 To find other useful Ubuntu pro commands run:
 
 ```{code-block} text
-u@mib:~$ pro --help
+$ pro --help
 ```
 
 (howto::verify-landscape)=

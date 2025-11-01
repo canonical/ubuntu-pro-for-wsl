@@ -15,6 +15,14 @@ Information on the Ubuntu distros that are available and supported on WSL.
 Ubuntu distributions <distributions>
 ```
 
+Information on how to configure Ubuntu for WSL instances.
+
+```{toctree}
+:titlesonly:
+
+instance_configuration
+```
+
 If you are interested in automated testing of applications in Ubuntu WSL, read:
 
 ```{toctree}
@@ -25,7 +33,7 @@ GitHub actions for Ubuntu WSL <actions>
 
 ## Ubuntu Pro for WSL
 
-A glossary of key UP4W system components.
+A glossary of the key system components of Pro for WSL.
 
 ```{toctree}
 :titlesonly:
@@ -42,7 +50,7 @@ registry.
 index_system_configuration
 ```
 
-Information helpful for developers working on Ubuntu Pro for WSL.
+Information helpful for developers working on Pro for WSL.
 
 ```{toctree}
 :titlesonly:
@@ -52,7 +60,7 @@ index_up4w_development
 
 ## Release notes
 
-Highlights from the latest releases of Ubuntu on WSL and Ubuntu Pro for WSL:
+Highlights from the latest releases of Ubuntu on WSL and Pro for WSL:
 
 ```{toctree}
 :titlesonly:

@@ -221,9 +221,9 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		}
 
 		id := distro.Name()
-		reserved := regexp.MustCompile(`(?i)Ubuntu-[0-9]{2}\.[0-9]{2}`)
+		reserved := regexp.MustCompile(`^(?i)Ubuntu-[0-9]{2}\.[0-9]{2}$`)
 		if strings.EqualFold(id, "Ubuntu") || strings.EqualFold(id, "Ubuntu-Preview") || reserved.Match([]byte(id)) {
-			return fmt.Errorf("target distro ID %s is reserved for installation from MS Store", id)
+			return fmt.Errorf("target distro ID %s is reserved and should not be used for custom instances", id)
 		}
 
 		e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
@@ -262,17 +262,21 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 }
 
 func (e executor) uninstall(ctx context.Context, cmd *landscapeapi.Command_Uninstall) (err error) {
-	d, ok := e.database().Get(cmd.GetId())
+	distroName := cmd.GetId()
+	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
+
+	d, ok := e.database().Get(distroName)
 	if !ok {
-		return errors.New("distro not in database")
+		log.Warningf(ctx, "Landscape uninstall: attempting to unregister unmanaged distro %q", distroName)
+		d := gowsl.NewDistro(ctx, distroName)
+		return d.Uninstall(ctx)
 	}
 
-	e.sendProgressStatusMsg(ctx, landscapeapi.CommandState_InProgress)
 	if err := d.Uninstall(ctx); err != nil {
 		return err
 	}
 
-	if err := e.cloudInit().RemoveDistroData(d.Name()); err != nil {
+	if err := e.cloudInit().RemoveDistroData(distroName); err != nil {
 		log.Warningf(ctx, "Landscape uninstall: distro %q: %v", d.Name(), err)
 	}
 

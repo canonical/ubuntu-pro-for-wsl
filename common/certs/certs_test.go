@@ -1,7 +1,6 @@
 package certs_test
 
 import (
-	"math/big"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,14 +14,12 @@ func TestCreateRooCA(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		missingSerialNumber bool
-		breakCertPem        bool
+		breakCertPem bool
 
 		wantErr bool
 	}{
 		"Success": {},
 
-		"Error when serial number is missing":                       {missingSerialNumber: true, wantErr: true},
 		"Error when the root CA certificate file cannot be written": {breakCertPem: true, wantErr: true},
 	}
 
@@ -30,18 +27,13 @@ func TestCreateRooCA(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var testSerial *big.Int
-			if !tc.missingSerialNumber {
-				testSerial = new(big.Int).SetInt64(1)
-			}
-
 			dir := t.TempDir()
 
 			if tc.breakCertPem {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, common.RootCACertFileName), 0700), "Setup: failed to create a directory that should break cert.pem")
 			}
 
-			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", testSerial, dir)
+			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", dir)
 
 			if tc.wantErr {
 				require.Error(t, err, "CreateRootCA should have failed")
@@ -59,16 +51,14 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		missingSerialNumber bool
-		rootIsNotCA         bool
-		breakCertPem        bool
-		breakKeyPem         bool
+		rootIsNotCA  bool
+		breakCertPem bool
+		breakKeyPem  bool
 
 		wantErr bool
 	}{
 		"Success": {},
 
-		"Error when serial number is missing":                    {missingSerialNumber: true, wantErr: true},
 		"Error when the signing certificate is not an authority": {rootIsNotCA: true, wantErr: true},
 		"Error when the cert.pem file cannot be written":         {breakCertPem: true, wantErr: true},
 		"Error when the key.pem file cannot be written":          {breakKeyPem: true, wantErr: true},
@@ -78,16 +68,11 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", new(big.Int).SetInt64(1), t.TempDir())
+			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", t.TempDir())
 			require.NoError(t, err, "Setup: failed to generate root CA cert")
 			if tc.rootIsNotCA {
 				rootCert.IsCA = false
 				rootCert.AuthorityKeyId = nil
-			}
-
-			var testSerial *big.Int
-			if !tc.missingSerialNumber {
-				testSerial = new(big.Int).SetInt64(1)
 			}
 
 			dir := t.TempDir()
@@ -103,7 +88,7 @@ func TestCreateTLSCertificateSignedBy(t *testing.T) {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, agentKeyName), 0700), "Setup: failed to create a directory that should break key.pem")
 			}
 
-			tlsCert, err := certs.CreateTLSCertificateSignedBy(common.AgentCertFilePrefix, "test-server-cn", testSerial, rootCert, rootKey, dir)
+			tlsCert, err := certs.CreateTLSCertificateSignedBy(common.AgentCertFilePrefix, "test-server-cn", rootCert, rootKey, dir)
 
 			if tc.wantErr {
 				require.Error(t, err, "CreateTLSCertificateSignedBy should have failed")

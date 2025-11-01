@@ -9,6 +9,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Weekly scan at 03:17 on Mondays
+    - cron: "17 3 * * 1"
 
 concurrency:
   group: QA-${{ github.head_ref || github.run_id }}
@@ -249,15 +252,15 @@ jobs:
           mkdir -p ${cov_dir}/codecov ${cov_dir}/raw
           go test -shuffle=on -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./... -tags=gowslmock
           grep -hv -e "testutils" -e "pb.go:" ${cov_dir}/raw/coverage.out > ${cov_dir}/codecov/coverage.out.codecov
-          gocov convert ${cov_dir}/codecov/coverage.out.codecov | gocov-xml > ${cov_dir}/coverage.xml
+          gocov convert ${cov_dir}/codecov/coverage.out.codecov | gocov-xml > ${cov_dir}/codecov/coverage.xml
 
           SAFE_ID=$(echo "${{ matrix.subproject }}-${{ matrix.os }}" | tr '/' '_')
           echo "SAFE_ID=$SAFE_ID" >> $GITHUB_ENV
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-${{ env.SAFE_ID }}
-          path: ${{ matrix.subproject }}/coverage/coverage.xml
+          path: ${{ matrix.subproject }}/coverage/codecov/
       - name: Run tests (with race detector)
         shell: bash
         # -race not supported on Windows
@@ -265,15 +268,12 @@ jobs:
         working-directory: ${{ matrix.subproject }}
         run: |
           go test -shuffle=on ./... -race -tags=gowslmock
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          directory: ${{ matrix.subproject }}/coverage/codecov
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   codecoverage:
     name: "Collect and upload code coverage"
     runs-on: ubuntu-latest
+    outputs:
+      tics-mode: ${{ steps.tics-condition.outputs.tics_mode }}
     needs:
       - quality-flutter
       - tests-go-with-mocks
@@ -283,16 +283,115 @@ jobs:
       - name: Install dependencies
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-      - name: Down coverage artifacts
-        uses: actions/download-artifact@v5
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v6
         with:
           path: ./artifacts/
       - name: Combine coverage reports
         shell: bash
         run: |
           reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
+      - uses: actions/upload-artifact@v5
+        with:
+          name: unified-coverage
+          path: ./coverage/Cobertura.xml
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/Cobertura.xml
+          files: ./coverage/Cobertura.xml,./artifacts/*/coverage.out.codecov
           disable_search: true
+
+      - name: Determine TiCS run conditions
+        id: tics-condition
+        env:
+          TICSAUTHTOKEN: ${{ secrets.TICSAUTHTOKEN }}
+        run: |
+          # When triggered by certain actors, such as Dependabot, the TiCS secret is not available.
+          if [[ -z "${TICSAUTHTOKEN}" ]]; then
+            echo "::warning::TiCS token not available"
+            exit 0
+          fi
+          # Client mode is intentionally disabled due to how the results are hidden in the dashboard
+          # Only trigger TICS on push to main and schedule events.
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "tics_mode=qserver" >> $GITHUB_OUTPUT
+          fi
+
+  tics-linux:
+    name: TiCS for the Linux components
+    runs-on: [self-hosted, linux, amd64, tiobe, noble]
+    needs: codecoverage
+    if: ${{ needs.codecoverage.outputs.tics-mode != '' }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-linux # Prevent overlapping runs that cause failures with QServer/TiCS
+    env:
+      coverage_dir: ./wsl-pro-service/.coverage
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: windows-agent/go.mod
+      - name: Install dependencies
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: unified-coverage
+          path: ${{ env.coverage_dir }}
+      - name: "TiCS: Linux"
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: ${{ needs.codecoverage.outputs.tics-mode }}
+          project: ubuntu-pro-for-wsl-linux
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+          postAnnotations: false # Often not useful due to just false positives hitting the GitHub 10 annotations limit
+
+  tics-windows:
+    name: TiCS for the Windows components
+    runs-on: windows-latest
+    needs:
+      - codecoverage
+      - tics-linux
+    if: ${{ needs.codecoverage.outputs.tics-mode != '' }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-windows # Prevent overlapping runs that cause failures with QServer/TiCS
+    env:
+      coverage_dir: ./coverage
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: windows-agent/go.mod
+      - name: Install dependencies
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+      - name: Read flutter version
+        id: flutter-version
+        uses: ./.github/actions/read-file
+        with:
+          path: tools/flutter-version
+      - name: Set up flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ steps.flutter-version.outputs.contents }}
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: unified-coverage
+          path: ${{ env.coverage_dir }}
+      - name: "TiCS: Windows"
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: ${{ needs.codecoverage.outputs.tics-mode }}
+          project: ubuntu-pro-for-wsl-windows
+          # Docs say even if you use Go partially, so here we Go.
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=GoProjects
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+          postAnnotations: false # Often not useful due to just false positives hitting the GitHub 10 annotations limit

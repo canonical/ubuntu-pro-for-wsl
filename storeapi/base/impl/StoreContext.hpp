@@ -8,6 +8,7 @@
 #error This is Windows specific Store API Context implementation and cannot compile on other platforms.
 #endif  // _MSC_VER
 
+#include <unknwn.h>
 // For the underlying Store API
 #include <winrt/windows.services.store.h>
 

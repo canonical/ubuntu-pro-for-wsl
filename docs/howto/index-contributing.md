@@ -24,9 +24,9 @@ Useful guides when developing and testing Ubuntu Pro for WSL.
 :titlesonly:
 :maxdepth: 1
 
-Install UP4W for development <02-install>
-Restart UP4W for development <03-restart>
-Access UP4W logs for development <06-access-the-logs>
-Enable features for development <07-toggle-features>
-Reset UP4W <reset-factory>
+Install Ubuntu Pro for WSL for development <02-install>
+Restart Ubuntu Pro for WSL for development <03-restart>
+Access Ubuntu Pro for WSL logs for development <06-access-the-logs>
+Enable Ubuntu Pro for WSL features for development <07-toggle-features>
+Reset Ubuntu Pro for WSL <reset-factory>
 ```

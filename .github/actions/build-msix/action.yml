@@ -15,6 +15,10 @@ inputs:
   certificate_password:
     required: true
     description: "certificate_password to pass to sign the msix"
+  run-code-analysis:
+    required: false
+    description: "Whether to run code analysis during the build"
+    default: "true"
 outputs:
   msix-version:
     description: "The version of the built MSIX bundle"
@@ -82,7 +86,7 @@ runs:
         $mainBundle = $doc.Root.Element($ns + "MainBundle")
         if ($mainBundle) {
           $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
-          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${tag}/UbuntuProForWSL_${tag}.msixbundle")
+          $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${tag}/UbuntuProForWSL.msixbundle")
         }
         if ($releaseType -eq "pre-release") {
           # Point the App Installer file to the repo wiki instead of the latest stable release.
@@ -108,5 +112,6 @@ runs:
           -property:AppxBundlePlatforms=x64                                                 `
           -property:UapAppxPackageBuildMode=${{ inputs.package-mode }}                      `
           -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `
+          -property:RunCodeAnalysis=${{ inputs.run-code-analysis }}                      `
           -nologo                                                                           `
           -verbosity:normal

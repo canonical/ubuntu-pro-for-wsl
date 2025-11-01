@@ -54,9 +54,10 @@ jobs:
           mode: ${{ matrix.mode }}
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
+          run-code-analysis: true
 
       - name: Upload sideload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: UbuntuProForWSL+${{ github.sha }}-${{ matrix.mode }}
           path: |
@@ -105,7 +106,7 @@ jobs:
           # We can check that Go works, though.
           go version
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           # name: is left blank so that all artifacts are downloaded
           path: ci-artifacts

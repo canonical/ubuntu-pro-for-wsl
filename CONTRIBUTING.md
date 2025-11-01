@@ -50,14 +50,14 @@ sign it again.
 
 An automated test is executed on PRs to check if it has been accepted.
 
-Please refer to the licences for Ubuntu WSL and Ubuntu Pro for WSL below.
+Please refer to the licences for Ubuntu WSL and Pro for WSL below.
 
 - [Ubuntu WSL](https://github.com/ubuntu/WSL/blob/main/LICENSE)
-- [Ubuntu Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/LICENSE)
+- [Pro for WSL](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/LICENSE)
 
 ### A Windows machine
 
-To test and debug Ubuntu on WSL and Ubuntu Pro for WSL you will need a Windows
+To test and debug Ubuntu on WSL and Pro for WSL you will need a Windows
 machine with WSL installed.
 
 It is possible to run Ubuntu on WSL in a VM with nested visualisation but we do
@@ -70,14 +70,14 @@ Microsoft maintains a separate repository for the WSL technology itself.
 
 ### Code for the distro and the app are in different repositories
 
-The source code for the Ubuntu on WSL **distribution** and the Ubuntu Pro for WSL **Windows application** can be found on GitHub:
+The source code for the Ubuntu on WSL **distribution** and the Pro for WSL **Windows application** can be found on GitHub:
 
 - Distribution: [Ubuntu on WSL repo](https://github.com/ubuntu/WSL)
-- Windows application: [Ubuntu Pro for WSL repo](https://github.com/canonical/ubuntu-pro-for-wsl)
+- Windows application: [Pro for WSL repo](https://github.com/canonical/ubuntu-pro-for-wsl)
 
 ### Issues with WSL itself should be directed to Microsoft
 
-We accept any contributions relating to Ubuntu WSL and Ubuntu Pro for WSL.
+We accept any contributions relating to Ubuntu WSL and Pro for WSL.
 However, we do not directly maintain WSL itself, which is a Microsoft product.
 If you have identified a problem or bug in WSL then file an issue in
 [Microsoft's WSL project repository](https://github.com/microsoft/WSL/issues/).
@@ -136,7 +136,7 @@ Once merged to the main branch, `po` files will be automatically updated and are
 
 ## Contributing to the code
 
-Currently, we anticipate that most contributions will be for the Ubuntu Pro for WSL application.
+Currently, we anticipate that most contributions will be for the Pro for WSL application.
 Information helpful for the development of this application is included below.
 
 ### The test suite for Ubuntu Pro for WSL
@@ -166,7 +166,7 @@ Note that you'll need to [create a self-signing certificate](https://learn.micro
 
 ## Contributing to the documentation
 
-The documentation for the Ubuntu WSL distro and Ubuntu Pro for WSL is maintained [here](https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/docs).
+The documentation for the Ubuntu WSL distro and Pro for WSL is maintained [here](https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/docs).
 
 You can contribute to the documentation in various different ways. If you are not a developer but want to help make the product better then helping us to improve the documentation is a way to achieve that.
 
@@ -246,12 +246,12 @@ We use prompts to ensure that the reader can distinguish between them.
 Here are some examples:
 
 - PowerShell prompt symbol: `>`
-- PowerShell prompt symbol with path: `C:\Users\myuser>`
-- PowerShell prompt symbol with path and PowerShell prefix: `PS C:\Users\myuser>`
+- PowerShell prompt symbol with path: `C:\Users\username>`
+- PowerShell prompt symbol with path and PowerShell prefix: `PS C:\Users\username>`
 - Ubuntu prompt symbol: `$`
-- Ubuntu prompt symbol with user and host: `user@host:~$`
+- Ubuntu prompt symbol with user and host: `<username>@<host>:~$`
 
-Whether to include the path or user@host depends on whether it is useful in the context
+Whether to include the path or username@host depends on whether it is useful in the context
 of the documentation being written.
 For example, if demonstrating the use of multiple WSL instances, including the user and host
 can make it easier to tell the instances apart.

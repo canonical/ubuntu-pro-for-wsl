@@ -10,6 +10,11 @@ myst:
 Ubuntu on WSL can be used as a powerful development environment on Windows and
 offers excellent integration with developer tools like Visual Studio Code.
 
+```{include} ../includes/prompt_symbols_notice.txt
+    :start-after: <!-- Include start prompt symbols -->
+    :end-before: <!-- Include end prompt symbols -->
+```
+
 ## What you will learn
 
 * Installing WSL and Ubuntu on WSL from the terminal
@@ -19,36 +24,57 @@ offers excellent integration with developer tools like Visual Studio Code.
 
 ## What you will need
 
-* A machine running Windows 10 or 11
+* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+
+```{include} ../includes/virtualisation_requirements.txt
+    :start-after: <!-- Include start virtualisation requirements -->
+    :end-before: <!-- Include end virtualisation requirements -->
+```
 
 ## Install Ubuntu on WSL
 
+You can check if WSL is already installed by trying to display its version information.
+
+Open PowerShell and run the following command:
+
+```{code-block} text
+> wsl --version
+```
+
+If WSL **is not** installed, press <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel, and then
+follow our steps to [install WSL](tut::develop::install-wsl).
+
+When WSL **is** already installed, follow our steps to [install Ubuntu](tut::develop::install-ubuntu).
+
+(tut::develop::install-wsl)=
 ### Install WSL
 
-You need to install and enable WSL before you can start using Ubuntu on WSL.
-
-Open a PowerShell prompt and run:
+In PowerShell, run the following command to install and enable WSL:
 
 ```{code-block} text
 > wsl --install
 ```
 
-You may be prompted to grant permission to continue the installation.
+You may need to reboot your machine for the changes to take effect.
 
-This command will install and enable the features necessary to run WSL.
+You may also be prompted to grant permissions during the installation process.
 
-**After running this command, you need to reboot your machine.**
+(tut::develop::install-ubuntu)=
+### Install Ubuntu
 
-```{admonition} What if WSL is already installed and enabled?
-:class: important
-If WSL is already set up on your machine, running `wsl --install` will install
-the default WSL distro, which is the latest version of Ubuntu.
+To check if you have any Ubuntu distributions installed on WSL, run:
 
-If an instance named Ubuntu already exists, an installation of Ubuntu will be
-initiated but it will fail.
+```{code-block} text
+> wsl --list
 ```
 
-### Install Ubuntu on WSL
+Ubuntu is the default distribution for WSL. It may be listed in the output
+of the command if it was included with your WSL installation:
+
+```{code-block} text
+:class: no-copy
+Ubuntu (Default)
+```
 
 For a list of distributions that you can install on WSL, run:
 
@@ -56,29 +82,52 @@ For a list of distributions that you can install on WSL, run:
 > wsl --list --online
 ```
 
-To install Ubuntu 24.04 LTS, run the following command in a PowerShell terminal:
+For this tutorial, install Ubuntu 24.04 LTS by running the following command in
+PowerShell:
 
 ```{code-block} text
 > wsl --install Ubuntu-24.04
 ```
 
-After the distribution is installed, you are prompted to create a
+:::{dropdown} Installing multiple instances of the same Ubuntu release
+:color: primary
+:icon: light-bulb
+
+If you already have an `Ubuntu-24.04` instance and you don't want to change or
+remove it, you can install a second instance by giving it a unique name:
+
+```{code-block} text
+> wsl --install Ubuntu-24.04 --name Ubuntu-tutorial
+```
+
+You can then run that instance with:
+
+```{code-block} text
+> wsl -d Ubuntu-tutorial
+```
+
+If using a distribution with a custom name when following this tutorial, don't
+forget to substitute your custom name for `Ubuntu-24.04` in the commands.
+:::
+
+After an Ubuntu distribution is installed, you are prompted to create a
 username and password. An Ubuntu session will then start automatically.
 
-Changing from PowerShell to Ubuntu is indicated by a change in the terminal prompt.
+Changing from PowerShell to Ubuntu is indicated by a change in the terminal
+prompt, for example:
 
-**PowerShell prompt**:
+**PowerShell prompt**
 
 ```{code-block} text
 :class: no-copy
-PS C:\Users\username>
+PS C:\Users\windows-username>
 ```
 
 **Ubuntu prompt**:
 
 ```{code-block} text
 :class: no-copy
-username@pc:~$
+ubuntu-username@hostname:~$
 ```
 
 To exit the Ubuntu terminal at any time, type the `exit` command and execute it
@@ -110,12 +159,16 @@ Use `wsl -l -v` to list all of your installed distros.
 * Ubuntu-24.04    Stopped         2
 ```
 
-```{admonition} What is version 2?
+This shows that both distros are stopped, that each uses WSL 2, and that
+Ubuntu-24.04 is the default distro.
+
+```{admonition} What is WSL 2?
 :class: note
-WSL implements two different architectures for running 
-Linux distributions: WSL1 and WSL2.
-This means that you are using WSL2, rather than WSL1.
-WSL2 is the default WSL on recent versions of Windows.
+
+WSL 2 is the default WSL architecture on recent versions of Windows and it is
+recommended for this tutorial.
+
+Read more about the [differences between WSL versions](explanation::wsl-version).
 ```
 
 You can open a specific instance from PowerShell using its NAME:
@@ -124,17 +177,9 @@ You can open a specific instance from PowerShell using its NAME:
 > wsl ~ -d Ubuntu-22.04
 ```
 
-The `~` is passed to the `wsl command` to start the instance in the Ubuntu home directory and
-the `-d` flag is added before specifying a distro.
-
-```{admonition} Windows terminal integration
-:class: tip
-Each time you install a version of Ubuntu, it appears in the dropdown list of
-terminal profiles in Windows terminal.
-
-If you have one version of Ubuntu running in a tab, you can open another in a
-separate tab by selecting it from the menu.
-```
+The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
+directory, which is commonly symbolised by ~. The `-d` flag is added to specify the
+distro.
 
 We only need an Ubuntu-24.04 instance for this tutorial.
 
@@ -142,6 +187,16 @@ To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 
 ```{code-block} text
 > wsl --unregister Ubuntu-22.04
+```
+
+```{admonition} Windows terminal integration
+:class: tip
+After you install a version of Ubuntu and close Windows terminal, that Ubuntu
+will be listed in the dropdown menu ({octicon}`chevron-down;1em;`) of terminal
+profiles the next time you open Windows terminal.
+
+If you have one version of Ubuntu running in a tab, you can open another in a
+separate tab by selecting it from the menu.
 ```
 
 ## Install Visual Studio Code on Windows
@@ -197,7 +252,7 @@ Change into that directory:
 $ cd serverexample/
 ```
 
-Then open the directory in Visual Studio Code:
+Then open the current directory (`.`) in Visual Studio Code:
 
 ```{code-block} text
 $ code .
@@ -244,15 +299,17 @@ Add the following text, then save and close:
 <h1>Hello World</h1>
 ```
 
-Return to your Ubuntu terminal (or use Visual Studio Code's integrated terminal) and type the following to install a server defined by the specification detailed in `package.json`:
+Return to your Ubuntu terminal (or use Visual Studio Code's integrated terminal) and run the following command from within the project directory to install a server defined by the specification detailed in `package.json`:
 
 ```{code-block} text
+:caption: ~/serverexample
 $ npm install
 ```
 
-Finally, start the web server:
+Still inside the project directory, start the web server:
 
 ```{code-block} text
+:caption: ~/serverexample
 $ npm start
 ```
 
@@ -266,7 +323,7 @@ In this tutorial, we’ve shown you how to set up a development environment with
 
 ### Further Reading
 
-* [Install Ubuntu on WSL2](../howto/install-ubuntu-wsl2.md)
+* [Install Ubuntu on WSL 2](../howto/install-ubuntu-wsl2.md)
 * [Microsoft WSL Documentation](https://learn.microsoft.com/en-us/windows/wsl/)
 * [Setting up WSL for Data Science](https://ubuntu.com/blog/wsl-for-data-scientist)
 * [Ask Ubuntu](https://askubuntu.com/)

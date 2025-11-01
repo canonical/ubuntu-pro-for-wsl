@@ -16,12 +16,14 @@ Center
 checksums
 CIS
 Codecov
+Ctrl
 cuda
 distro
 distros
 ESM
 grayscale
 gRPC
+gz
 IDEs
 js
 Intune
@@ -46,6 +48,7 @@ Structurizr
 systemd
 ubuntu
 UbuntuProForWSL
+UEFI
 winget
 wsl
 WSL

@@ -1,158 +1,158 @@
 {
-  "tokenInputTitle": "இந்த இயந்திரத்தை இணை",
-  "@tokenInputTitle": {},
-  "tokenInputDescription": "{proLink} அல்லது உங்கள் கணினி நிர்வாகியிலிருந்து ஒரு கிள்ளாக்கை உள்ளிடவும்",
-  "@tokenInputDescription": {
-    "placeholders": {
-      "proLink": {
-        "type": "String"
-      }
-    }
-  },
-  "tokenInputHint": "கிள்ளாக்கு",
-  "@tokenInputHint": {},
-  "attach": "இணைப்பு",
-  "@attach": {},
-  "applyProToken": "புரோ கிள்ளாக்கைப் பயன்படுத்து",
-  "@applyProToken": {},
-  "applyingProToken": "கிள்ளாக்கைப் பயன்படுத்துதல் {token}",
-  "@applyingProToken": {
-    "placeholders": {
-      "token": {
-        "type": "String"
-      }
-    }
-  },
-  "agent": "உபுண்டு புரோ பின்னணி முகவர்",
-  "@agent": {},
-  "agentStateStarting": "உபுண்டு புரோ பின்னணி முகவர் தொடங்குகிறது.",
-  "@agentStateStarting": {},
-  "agentStatePingNonResponsive": "உபுண்டு புரோ பின்னணி முகவர் பதிலளிக்கவில்லை.",
-  "@agentStatePingNonResponsive": {},
-  "agentStateInvalid": "உபுண்டு புரோ பின்னணி முகவர் துவக்கத்திற்காகக் காத்திருக்கிறது.",
-  "@agentStateInvalid": {},
-  "agentStateCannotStart": "உபுண்டு புரோ பின்னணி முகவரைத் தொடங்க முடியாது.",
-  "@agentStateCannotStart": {},
-  "agentStateUnknownEnv": "உபுண்டு புரோ பின்னணி முகவர் நிலையைச் சரிபார்க்க முடியாது. உங்கள் சுற்றுச்சூழல் அமைப்புகளைச் சரிபார்.",
-  "@agentStateUnknownEnv": {},
-  "agentStateQuerying": "உபுண்டு புரோ பின்னணி முகவரின் நிலையைச் சரிபார்க்கிறது.",
-  "@agentStateQuerying": {},
-  "agentStateUnreachable": "உபுண்டு புரோ பின்னணி முகவரை மீட்டெடுக்க முயற்சிக்கிறது.",
-  "@agentStateUnreachable": {},
-  "proHeading": "உபுண்டுவின் வெளியீட்டாளர்களின் திறந்த மூல மென்பொருள் பாதுகாப்பு, இப்போது சாளரங்களில் கிடைக்கிறது. {aboutLink}",
-  "@proHeading": {
-    "placeholders": {
-      "aboutLink": {
-        "type": "String"
-      }
-    }
-  },
-  "getUbuntuPro": "உபுண்டு புரோவைப் பெறுங்கள்",
-  "@getUbuntuPro": {},
-  "learnMore": "மேலும் அறிக",
-  "@learnMore": {},
-  "ubuntuProEnabled": "இந்தக் கணினியில் உபுண்டு புரோ இயக்கப்பட்டது",
-  "@ubuntuProEnabled": {},
-  "ubuntuProEnabledInfo": "அனைத்து உபுண்டு டபல்யுஎச்எல் நிகழ்வுகளும் உபுண்டு புரோ பாதுகாப்பு அம்சங்களுக்கான அணுகலைக் கொண்டுள்ளன.",
-  "@ubuntuProEnabledInfo": {},
-  "manageUbuntuPro": "உபுண்டு புரோ சந்தாவை நிர்வகி",
-  "@manageUbuntuPro": {},
-  "detachPro": "உபுண்டு புரோவை பிரி",
-  "@detachPro": {},
-  "updatingSubscriptionInfo": "சந்தா தகவலைப் புதுப்பித்தல்.",
-  "@updatingSubscriptionInfo": {},
-  "purchaseStatusSuccess": "உபுண்டு புரோவுக்கு குழுசேர்ந்ததற்கு நன்றி.",
-  "@purchaseStatusSuccess": {},
-  "purchaseStatusAlreadyPurchased": "நீங்கள் ஏற்கனவே புரோவுக்கு குழுசேர்ந்தீர்கள்.",
-  "@purchaseStatusAlreadyPurchased": {},
-  "purchaseStatusUserGaveUp": "கொள்முதல் முயற்சி கைவிடப்பட்டது.",
-  "@purchaseStatusUserGaveUp": {},
-  "purchaseStatusNetwork": "ஒரு பிணையச் சிக்கல் வாங்குவதைத் தடுத்தது. இணைக்கப்பட்டவுடன் மீண்டும் முயற்சி.",
-  "@purchaseStatusNetwork": {},
-  "purchaseStatusServer": "நுண்மென் கடையில் ஏதோ தவறு ஏற்பட்டது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்.",
-  "@purchaseStatusServer": {},
-  "purchaseStatusUnknown": "சந்தா வாங்க முயற்சிக்கும்போது தெரியாத பிழை. இந்தப் பயன்பாட்டை மறுதொடக்கம் செய்வதைக் கவனியுங்கள்.",
-  "@purchaseStatusUnknown": {},
-  "landscapeSkip": "இப்போதைக்கு தவிர்",
-  "@landscapeSkip": {},
-  "landscapeSkipDescription": "இந்தப் பயன்பாட்டில் நீங்கள் எப்போதும் நிலப்பரப்பை கட்டமைக்க முடியும்",
-  "@landscapeSkipDescription": {},
-  "landscapeSkipRegister": "நிலப்பரப்பில் பதிவு செய்யுங்கள்",
-  "@landscapeSkipRegister": {},
-  "landscapeHeading": "உங்கள் உபுண்டு டபல்யுஎச்எல் நிகழ்வுகளைத் தொலைவிலிருந்து நிர்வகிக்க நிலப்பரப்புக்கான இணைப்பை உள்ளமை. {landscapeLink}",
-  "@landscapeHeading": {
-    "placeholders": {
-      "landscapeLink": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeSetupManualHint": "உங்கள் சொந்த இயற்கை சேவையகத்துடன் பதிவு செய்",
-  "@landscapeSetupManualHint": {},
-  "landscapeSetupCustomHint": "தனிப்பயன் இயற்கை கிளையன்ட் உள்ளமைவு கோப்பை ஏற்றவும்",
-  "@landscapeSetupCustomHint": {},
-  "landscapeFQDNLabel": "நிலப்பரப்பு எப்கியுடிஎன்",
-  "@landscapeFQDNLabel": {},
-  "landscapeFQDNError": "தவறான எப்கியுடிஎன். வடிவம் ஒரு புரவலன்பெயர் அல்லது இணைய முகவரியாக இருக்க வேண்டும்.",
-  "@landscapeFQDNError": {},
-  "landscapeFQDNSaaSError": "எப்கியுடிஎன் LandScape.canonical.com ஆக இருக்கக் கூடாது.",
-  "@landscapeFQDNSaaSError": {},
-  "landscapeKeyLabel": "பதிவு திறவுகோல் (விரும்பினால்)",
-  "@landscapeKeyLabel": {},
-  "landscapeSSLKeyLabel": "சேவையகம் பாகும பொது திறவுகோல் (விரும்பினால்)",
-  "@landscapeSSLKeyLabel": {},
-  "landscapeFileLabel": "கோப்புப் பாதை கட்டமை",
-  "@landscapeFileLabel": {},
-  "landscapeFileTooLarge": "உள்ளமைவு கோப்பு மிகப் பெரியது",
-  "@landscapeFileTooLarge": {},
-  "landscapeFileEmptyPath": "ஒரு பாதை குறிப்பிடப்பட வேண்டும்",
-  "@landscapeFileEmptyPath": {},
-  "landscapeFileEmptyContents": "கோப்பு காலியாக இருக்கக் கூடாது",
-  "@landscapeFileEmptyContents": {},
-  "landscapeFileNotFound": "கோப்பு கிடைக்கவில்லை",
-  "@landscapeFileNotFound": {},
-  "landscapeFileIsDir": "கோப்பு ஒரு கோப்பகமாக இருக்க முடியாது",
-  "@landscapeFileIsDir": {},
-  "landscapeFileInvalidFormat": "கோப்பு தவறான வடிவத்தில் உள்ளது",
-  "@landscapeFileInvalidFormat": {},
-  "landscapeFilePicker": "கோப்பைத் தேர்ந்தெடு...",
-  "@landscapeFilePicker": {},
-  "landscapeConfigureButton": "நிலப்பரப்பை உள்ளமை",
-  "@landscapeConfigureButton": {},
-  "landscapeApplyError": "உள்ளமைவைப் பயன்படுத்த முயற்சிக்கும்போது பிழை:\n {message}",
-  "@landscapeApplyError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "landscapeRegister": "பதிவு செய்",
-  "@landscapeRegister": {},
-  "buttonNext": "அடுத்தது",
-  "@buttonNext": {},
-  "buttonSkip": "தவிர்",
-  "@buttonSkip": {},
-  "buttonBack": "பின்",
-  "@buttonBack": {},
-  "statusBarReportBugTooltip": "ஒரு பிழையைப் புகாரளி",
-  "@statusBarReportBugTooltip": {},
-  "statusBarAgentRunningTooltip": "உபுண்டு புரோ முகவர் இயங்குகிறது",
-  "@statusBarAgentRunningTooltip": {},
-  "statusBarAgentConnectingTooltip": "உபுண்டு புரோ முகவருடன் இணைகிறது ...",
-  "@statusBarAgentConnectingTooltip": {},
-  "statusBarAgentDownTooltip": "உபுண்டு புரோ முகவர் துண்டிக்கப்பட்டுள்ளது. முகவரைத் தொடங்க அழுத்தவும்.",
-  "@statusBarAgentDownTooltip": {},
-  "appTitle": "டபல்யுஎச்எல்க்கான உபுண்டு புரோ",
-  "@appTitle": {},
-  "tokenErrorEmpty": "கிள்ளாக்கு காலியாக இருக்க முடியாது",
-  "@tokenErrorEmpty": {},
-  "tokenErrorInvalid": "தவறான கிள்ளாக்கு",
-  "@tokenErrorInvalid": {},
-  "tokenValid": "செல்லுபடியாகும் கிள்ளாக்கு",
-  "@tokenValid": {},
-  "landscapeSetupManual": "கையேடு உள்ளமைவு",
-  "@landscapeSetupManual": {},
-  "landscapeSetupCustom": "மேம்பட்ட உள்ளமைவு",
-  "@landscapeSetupCustom": {}
+    "tokenInputTitle": "இந்த இயந்திரத்தை இணை",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "{proLink} அல்லது உங்கள் கணினி நிர்வாகியிலிருந்து ஒரு கிள்ளாக்கை உள்ளிடவும்",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "கிள்ளாக்கு",
+    "@tokenInputHint": {},
+    "attach": "இணைப்பு",
+    "@attach": {},
+    "applyProToken": "புரோ கிள்ளாக்கைப் பயன்படுத்து",
+    "@applyProToken": {},
+    "applyingProToken": "கிள்ளாக்கைப் பயன்படுத்துதல் {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "உபுண்டு புரோ பின்னணி முகவர்",
+    "@agent": {},
+    "agentStateStarting": "உபுண்டு புரோ பின்னணி முகவர் தொடங்குகிறது.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "உபுண்டு புரோ பின்னணி முகவர் பதிலளிக்கவில்லை.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "உபுண்டு புரோ பின்னணி முகவர் துவக்கத்திற்காகக் காத்திருக்கிறது.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "உபுண்டு புரோ பின்னணி முகவரைத் தொடங்க முடியாது.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "உபுண்டு புரோ பின்னணி முகவர் நிலையைச் சரிபார்க்க முடியாது. உங்கள் சுற்றுச்சூழல் அமைப்புகளைச் சரிபார்.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "உபுண்டு புரோ பின்னணி முகவரின் நிலையைச் சரிபார்க்கிறது.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "உபுண்டு புரோ பின்னணி முகவரை மீட்டெடுக்க முயற்சிக்கிறது.",
+    "@agentStateUnreachable": {},
+    "proHeading": "உபுண்டுவின் வெளியீட்டாளர்களின் திறந்த மூல மென்பொருள் பாதுகாப்பு, இப்போது சாளரங்களில் கிடைக்கிறது. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "உபுண்டு புரோவைப் பெறுங்கள்",
+    "@getUbuntuPro": {},
+    "learnMore": "மேலும் அறிக",
+    "@learnMore": {},
+    "ubuntuProEnabled": "இந்தக் கணினியில் உபுண்டு புரோ இயக்கப்பட்டது",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "அனைத்து உபுண்டு டபல்யுஎச்எல் நிகழ்வுகளும் உபுண்டு புரோ பாதுகாப்பு அம்சங்களுக்கான அணுகலைக் கொண்டுள்ளன.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "உபுண்டு புரோ சந்தாவை நிர்வகி",
+    "@manageUbuntuPro": {},
+    "detachPro": "உபுண்டு புரோவை பிரி",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "சந்தா தகவலைப் புதுப்பித்தல்.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "உபுண்டு புரோவுக்கு குழுசேர்ந்ததற்கு நன்றி.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "நீங்கள் ஏற்கனவே புரோவுக்கு குழுசேர்ந்தீர்கள்.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "கொள்முதல் முயற்சி கைவிடப்பட்டது.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "ஒரு பிணையச் சிக்கல் வாங்குவதைத் தடுத்தது. இணைக்கப்பட்டவுடன் மீண்டும் முயற்சி.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "நுண்மென் கடையில் ஏதோ தவறு ஏற்பட்டது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "சந்தா வாங்க முயற்சிக்கும்போது தெரியாத பிழை. இந்தப் பயன்பாட்டை மறுதொடக்கம் செய்வதைக் கவனியுங்கள்.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "இப்போதைக்கு தவிர்",
+    "@landscapeSkip": {},
+    "landscapeSkipDescription": "இந்தப் பயன்பாட்டில் நீங்கள் எப்போதும் நிலப்பரப்பை கட்டமைக்க முடியும்",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "நிலப்பரப்பில் பதிவு செய்யுங்கள்",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "உங்கள் உபுண்டு டபல்யுஎச்எல் நிகழ்வுகளைத் தொலைவிலிருந்து நிர்வகிக்க நிலப்பரப்புக்கான இணைப்பை உள்ளமை. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManualHint": "உங்கள் சொந்த இயற்கை சேவையகத்துடன் பதிவு செய்",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustomHint": "தனிப்பயன் இயற்கை கிளையன்ட் உள்ளமைவு கோப்பை ஏற்றவும்",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "நிலப்பரப்பு எப்கியுடிஎன்",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "தவறான எப்கியுடிஎன். வடிவம் ஒரு புரவலன்பெயர் அல்லது இணைய முகவரியாக இருக்க வேண்டும்.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "எப்கியுடிஎன் LandScape.canonical.com ஆக இருக்கக் கூடாது.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeKeyLabel": "பதிவு திறவுகோல் (விரும்பினால்)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "சேவையகம் பாகும பொது திறவுகோல் (விரும்பினால்)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "கோப்புப் பாதை கட்டமை",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "உள்ளமைவு கோப்பு மிகப் பெரியது",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "ஒரு பாதை குறிப்பிடப்பட வேண்டும்",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "கோப்பு காலியாக இருக்கக் கூடாது",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "கோப்பு கிடைக்கவில்லை",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "கோப்பு ஒரு கோப்பகமாக இருக்க முடியாது",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "கோப்பு தவறான வடிவத்தில் உள்ளது",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "கோப்பைத் தேர்ந்தெடு...",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "நிலப்பரப்பை உள்ளமை",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "உள்ளமைவைப் பயன்படுத்த முயற்சிக்கும்போது பிழை:\n {message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "பதிவு செய்",
+    "@landscapeRegister": {},
+    "buttonNext": "அடுத்தது",
+    "@buttonNext": {},
+    "buttonSkip": "தவிர்",
+    "@buttonSkip": {},
+    "buttonBack": "பின்",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "ஒரு பிழையைப் புகாரளி",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "உபுண்டு புரோ முகவர் இயங்குகிறது",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "உபுண்டு புரோ முகவருடன் இணைகிறது ...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "உபுண்டு புரோ முகவர் துண்டிக்கப்பட்டுள்ளது. முகவரைத் தொடங்க அழுத்தவும்.",
+    "@statusBarAgentDownTooltip": {},
+    "appTitle": "டபல்யுஎச்எல்க்கான உபுண்டு புரோ",
+    "@appTitle": {},
+    "tokenErrorEmpty": "கிள்ளாக்கு காலியாக இருக்க முடியாது",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "தவறான கிள்ளாக்கு",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "செல்லுபடியாகும் கிள்ளாக்கு",
+    "@tokenValid": {},
+    "landscapeSetupManual": "கையேடு உள்ளமைவு",
+    "@landscapeSetupManual": {},
+    "landscapeSetupCustom": "மேம்பட்ட உள்ளமைவு",
+    "@landscapeSetupCustom": {}
 }
