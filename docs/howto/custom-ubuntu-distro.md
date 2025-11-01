@@ -221,12 +221,9 @@ systems:
 ```{code-block} text
 :caption: ~
 $ sudo mount -t proc /proc myNewUbuntu/proc
-$ sudo mount --rbind /sys myNewUbuntu/sys
-$ sudo mount --make-rslave myNewUbuntu/sys
-$ sudo mount --rbind /dev myNewUbuntu/dev
-$ sudo mount --make-rslave myNewUbuntu/dev
-$ sudo mount --rbind /run myNewUbuntu/run
-$ sudo mount --make-rslave myNewUbuntu/run
+$ sudo mount --rbind --make-rslave /sys myNewUbuntu/sys
+$ sudo mount --rbind --make-rslave /dev myNewUbuntu/dev
+$ sudo mount --rbind --make-rslave /run myNewUbuntu/run
 ```
 
 Then `chroot` into the root directory of your custom distro and open a bash shell:
