@@ -261,10 +261,10 @@ exit
 After exiting the chroot environment it's useful to cleanup the mount points.
 
 ```{code-block} text
-sudo umount -R myNewUbuntu/proc
-sudo umount -R myNewUbuntu/sys
-sudo umount -R myNewUbuntu/dev
-sudo umount -R myNewUbuntu/run
+$ sudo umount -R myNewUbuntu/proc
+$ sudo umount -R myNewUbuntu/sys
+$ sudo umount -R myNewUbuntu/dev
+$ sudo umount -R myNewUbuntu/run
 ```
 
 ## Create the final distro file
