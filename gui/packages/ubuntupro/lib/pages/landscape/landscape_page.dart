@@ -300,7 +300,6 @@ class _ManualForm extends StatelessWidget {
           errorText: enabled && model.manual.hasAccountNameError
               ? lang.landscapeAccountNameError(standaloneAN)
               : null,
-          hintText: standaloneAN,
           onChanged: model.setAccountName,
           enabled: enabled && model.accountNameIsRequired,
         ),
