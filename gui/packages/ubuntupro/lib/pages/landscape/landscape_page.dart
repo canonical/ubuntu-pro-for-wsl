@@ -81,7 +81,7 @@ class LandscapePage extends StatelessWidget {
                 height: 16,
                 width: 16,
                 child: CircularProgressIndicator(),
-              )
+              ),
           ],
         ),
       ),
@@ -200,38 +200,35 @@ class LandscapeErrorDialog extends StatelessWidget {
       content: SizedBox(
         width: 640,
         child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (content.isNotEmpty) Text(content),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 200),
-                child: YaruExpansionPanel(
-                  shrinkWrap: true,
-                  // Padding below is the default, I'm just setting it now to prevent misaligned contents
-                  // in case default changes in the future.
-                  headerPadding: const EdgeInsets.only(left: 20),
-                  headers: [Text(lang.landscapeDetails)],
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 8.0),
-                      child: Row(
-                        children: [Expanded(child: SelectableText(details))],
-                      ),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (content.isNotEmpty) Text(content),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: YaruExpansionPanel(
+                shrinkWrap: true,
+                // Padding below is the default, I'm just setting it now to prevent misaligned contents
+                // in case default changes in the future.
+                headerPadding: const EdgeInsets.only(left: 20),
+                headers: [Text(lang.landscapeDetails)],
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 8.0),
+                    child: Row(
+                      children: [Expanded(child: SelectableText(details))],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                lang.landscapeProceedAnywayHint,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                lang.landscapeChangeLaterHint,
-              ),
-            ]),
+            ),
+            const SizedBox(height: 16),
+            Text(lang.landscapeProceedAnywayHint),
+            const SizedBox(height: 4),
+            Text(lang.landscapeChangeLaterHint),
+          ],
+        ),
       ),
       actions: actions,
     );
