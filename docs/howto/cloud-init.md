@@ -42,7 +42,7 @@ Locate your Windows user home directory, which is typically `C:\Users\<username>
 If you want to find your home directory, run the following in PowerShell:
 
 ```text
-echo $env:USERPROFILE in PowerShell
+echo $env:USERPROFILE
 ```
 ````
 
