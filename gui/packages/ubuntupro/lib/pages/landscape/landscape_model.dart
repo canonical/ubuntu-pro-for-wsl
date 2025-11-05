@@ -31,8 +31,7 @@ class LandscapeModel extends ChangeNotifier {
   bool get isComplete => _active.isComplete;
 
   bool get accountNameIsRequired =>
-      configType == LandscapeConfigType.manual &&
-      manual._fqdn?.host == landscapeSaasFQDN;
+      configType == LandscapeConfigType.manual && manual.isSaaS;
 
   /// Whether we are waiting on agent's response after submitting a configuration
   bool _waiting = false;
@@ -177,32 +176,22 @@ class LandscapeManualConfig extends LandscapeConfig {
   String get fqdn => _fqdn?.toString() ?? '';
   FqdnError _fqdnError = FqdnError.none;
   FqdnError get fqdnError => _fqdnError;
+  bool get isSaaS => _fqdn?.host == landscapeSaasFQDN;
 
-  String _accountName = standaloneAN;
+  String _accountName = '';
   AccountNameError _accountNameError = AccountNameError.none;
   bool get hasAccountNameError => _accountNameError != AccountNameError.none;
   AccountNameError get accountNameError => _accountNameError;
   set accountName(String value) {
-    _enforceAccountNameForHost(value, _fqdn?.host);
+    if (isSaaS) {
+      _accountNameError = (value.isEmpty || value == standaloneAN)
+          ? AccountNameError.invalid
+          : AccountNameError.none;
+    }
+    _accountName = value;
   }
 
-  void _enforceAccountNameForHost(String account, String? host) {
-    if (host == landscapeSaasFQDN) {
-      if (account == standaloneAN || account.isEmpty) {
-        _accountNameError = AccountNameError.invalid;
-        return;
-      }
-      _accountNameError = AccountNameError.none;
-      _accountName = account;
-    } else {
-      // If not using Landscape SaaS, enforce the standalone account name.
-      _accountName = standaloneAN;
-      _accountNameError = AccountNameError.none;
-      _log.info(
-        'Self-hosted Landscape was selected. Overriding account name to "$standaloneAN" for host "$host"',
-      );
-    }
-  }
+  String get accountName => isSaaS ? _accountName : standaloneAN;
 
   String registrationKey = '';
 
@@ -230,7 +219,9 @@ class LandscapeManualConfig extends LandscapeConfig {
       _fqdn = url;
     }
 
-    _enforceAccountNameForHost(_accountName, _fqdn?.host);
+    _accountNameError = (isSaaS && _accountName == standaloneAN)
+        ? AccountNameError.invalid
+        : AccountNameError.none;
   }
 
   Uri? _sanitizeFqdn(String value) {
@@ -372,7 +363,7 @@ class LandscapeManualConfig extends LandscapeConfig {
 [host]
 url = ${fqdn.host}:${fqdn.port}
 [client]
-account_name = $_accountName
+account_name = $accountName
 url = $clientUrl
 ping_url = $pingUrl
 log_level = info
