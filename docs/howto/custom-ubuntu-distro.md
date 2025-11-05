@@ -221,9 +221,9 @@ systems:
 ```{code-block} text
 :caption: ~
 $ sudo mount -t proc /proc myNewUbuntu/proc
-$ sudo mount --rbind /sys myNewUbuntu/sys
-$ sudo mount --rbind /dev myNewUbuntu/dev
-$ sudo mount --rbind /run myNewUbuntu/run
+$ sudo mount --rbind --make-rslave /sys myNewUbuntu/sys
+$ sudo mount --rbind --make-rslave /dev myNewUbuntu/dev
+$ sudo mount --rbind --make-rslave /run myNewUbuntu/run
 ```
 
 Then `chroot` into the root directory of your custom distro and open a bash shell:
@@ -253,6 +253,15 @@ When you're finished managing packages, exit the `chroot` environment:
 
 ```{code-block} text
 exit
+```
+
+After exiting the chroot environment it's useful to cleanup the mount points.
+
+```{code-block} text
+$ sudo umount -R myNewUbuntu/proc
+$ sudo umount -R myNewUbuntu/sys
+$ sudo umount -R myNewUbuntu/dev
+$ sudo umount -R myNewUbuntu/run
 ```
 
 ## Create the final distro file
