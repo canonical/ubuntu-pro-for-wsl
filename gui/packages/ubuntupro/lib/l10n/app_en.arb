@@ -69,7 +69,7 @@
         }
     },
     "landscapeSetupManual": "Manual configuration",
-    "landscapeSetupManualHint": "Register with your own Landscape server",
+    "landscapeSetupManualHint": "Register with a Landscape server",
     "landscapeSetupCustom": "Advanced configuration",
     "landscapeSetupCustomHint": "Load a custom Landscape client configuration file",
     "landscapeFQDNLabel": "Landscape FQDN",
