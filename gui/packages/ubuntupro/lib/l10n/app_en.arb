@@ -69,12 +69,21 @@
         }
     },
     "landscapeSetupManual": "Manual configuration",
-    "landscapeSetupManualHint": "Register with your own Landscape server",
+    "landscapeSetupManualHint": "Register with a Landscape server",
     "landscapeSetupCustom": "Advanced configuration",
     "landscapeSetupCustomHint": "Load a custom Landscape client configuration file",
     "landscapeFQDNLabel": "Landscape FQDN",
     "landscapeFQDNError": "Invalid FQDN. Expected a fully qualified domain name or IP address.",
     "landscapeFQDNSaaSError": "FQDN shouldn't be landscape.canonical.com.",
+    "landscapeAccountNameLabel": "Account name",
+    "landscapeAccountNameError": "Account name cannot be empty or \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
     "landscapeKeyLabel": "Registration key (optional)",
     "landscapeSSLKeyLabel": "Server SSL public key (optional)",
     "landscapeFileLabel": "Config file path",

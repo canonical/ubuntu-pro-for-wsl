@@ -30,6 +30,9 @@ class LandscapeModel extends ChangeNotifier {
   /// Whether the current form is complete (ready to be submitted).
   bool get isComplete => _active.isComplete;
 
+  bool get accountNameIsRequired =>
+      configType == LandscapeConfigType.manual && manual.isSaaS;
+
   /// Whether we are waiting on agent's response after submitting a configuration
   bool _waiting = false;
   bool get isWaiting => _waiting;
@@ -75,6 +78,14 @@ class LandscapeModel extends ChangeNotifier {
     assert(_active is LandscapeManualConfig);
     if (fqdn == null) return;
     manual.fqdn = fqdn;
+    notifyListeners();
+  }
+
+  /// Sets (and validates) the FQDN for the manual configuration.
+  void setAccountName(String? account) {
+    assert(_active is LandscapeManualConfig);
+    if (account == null) return;
+    manual.accountName = account;
     notifyListeners();
   }
 
@@ -143,7 +154,9 @@ enum FileError {
   invalidFormat,
 }
 
-enum FqdnError { invalid, none, saas }
+enum FqdnError { invalid, none }
+
+enum AccountNameError { invalid, none }
 
 const validCertExtensions = ['cer', 'crt', 'der', 'pem'];
 
@@ -163,6 +176,22 @@ class LandscapeManualConfig extends LandscapeConfig {
   String get fqdn => _fqdn?.toString() ?? '';
   FqdnError _fqdnError = FqdnError.none;
   FqdnError get fqdnError => _fqdnError;
+  bool get isSaaS => _fqdn?.host == landscapeSaasFQDN;
+
+  String _accountName = '';
+  AccountNameError _accountNameError = AccountNameError.none;
+  bool get hasAccountNameError => _accountNameError != AccountNameError.none;
+  AccountNameError get accountNameError => _accountNameError;
+  set accountName(String value) {
+    if (isSaaS) {
+      _accountNameError = (value.isEmpty || value == standaloneAN)
+          ? AccountNameError.invalid
+          : AccountNameError.none;
+    }
+    _accountName = value;
+  }
+
+  String get accountName => isSaaS ? _accountName : standaloneAN;
 
   String registrationKey = '';
 
@@ -178,8 +207,6 @@ class LandscapeManualConfig extends LandscapeConfig {
 
     if (uri == null || uri.host.isEmpty) {
       _fqdnError = FqdnError.invalid;
-    } else if (uri.host.endsWith(landscapeSaasFQDN)) {
-      _fqdnError = FqdnError.saas;
     }
     return _fqdnError == FqdnError.none;
   }
@@ -191,6 +218,10 @@ class LandscapeManualConfig extends LandscapeConfig {
     if (_validateFQDN(url)) {
       _fqdn = url;
     }
+
+    _accountNameError = (isSaaS && _accountName == standaloneAN)
+        ? AccountNameError.invalid
+        : AccountNameError.none;
   }
 
   Uri? _sanitizeFqdn(String value) {
@@ -289,7 +320,8 @@ class LandscapeManualConfig extends LandscapeConfig {
   bool get isComplete =>
       fqdnError == FqdnError.none &&
       fqdn.isNotEmpty &&
-      fileError == FileError.none;
+      fileError == FileError.none &&
+      !hasAccountNameError;
 
   @override
   String? config() {
@@ -331,7 +363,7 @@ class LandscapeManualConfig extends LandscapeConfig {
 [host]
 url = ${fqdn.host}:${fqdn.port}
 [client]
-account_name = $standaloneAN
+account_name = $accountName
 url = $clientUrl
 ping_url = $pingUrl
 log_level = info
