@@ -47,7 +47,6 @@ class Empty extends $pb.GeneratedMessage {
   static Empty create() => Empty._();
   @$core.override
   Empty createEmptyInstance() => create();
-  static $pb.PbList<Empty> createRepeated() => $pb.PbList<Empty>();
   @$core.pragma('dart2js:noInline')
   static Empty getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Empty>(create);
@@ -93,8 +92,6 @@ class ProAttachInfo extends $pb.GeneratedMessage {
   static ProAttachInfo create() => ProAttachInfo._();
   @$core.override
   ProAttachInfo createEmptyInstance() => create();
-  static $pb.PbList<ProAttachInfo> createRepeated() =>
-      $pb.PbList<ProAttachInfo>();
   @$core.pragma('dart2js:noInline')
   static ProAttachInfo getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ProAttachInfo>(create);
@@ -149,8 +146,6 @@ class LandscapeConfig extends $pb.GeneratedMessage {
   static LandscapeConfig create() => LandscapeConfig._();
   @$core.override
   LandscapeConfig createEmptyInstance() => create();
-  static $pb.PbList<LandscapeConfig> createRepeated() =>
-      $pb.PbList<LandscapeConfig>();
   @$core.pragma('dart2js:noInline')
   static LandscapeConfig getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<LandscapeConfig>(create);
@@ -236,8 +231,6 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   static SubscriptionInfo create() => SubscriptionInfo._();
   @$core.override
   SubscriptionInfo createEmptyInstance() => create();
-  static $pb.PbList<SubscriptionInfo> createRepeated() =>
-      $pb.PbList<SubscriptionInfo>();
   @$core.pragma('dart2js:noInline')
   static SubscriptionInfo getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<SubscriptionInfo>(create);
@@ -365,8 +358,6 @@ class LandscapeSource extends $pb.GeneratedMessage {
   static LandscapeSource create() => LandscapeSource._();
   @$core.override
   LandscapeSource createEmptyInstance() => create();
-  static $pb.PbList<LandscapeSource> createRepeated() =>
-      $pb.PbList<LandscapeSource>();
   @$core.pragma('dart2js:noInline')
   static LandscapeSource getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<LandscapeSource>(create);
@@ -460,8 +451,6 @@ class ConfigSources extends $pb.GeneratedMessage {
   static ConfigSources create() => ConfigSources._();
   @$core.override
   ConfigSources createEmptyInstance() => create();
-  static $pb.PbList<ConfigSources> createRepeated() =>
-      $pb.PbList<ConfigSources>();
   @$core.pragma('dart2js:noInline')
   static ConfigSources getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ConfigSources>(create);
@@ -543,7 +532,6 @@ class DistroInfo extends $pb.GeneratedMessage {
   static DistroInfo create() => DistroInfo._();
   @$core.override
   DistroInfo createEmptyInstance() => create();
-  static $pb.PbList<DistroInfo> createRepeated() => $pb.PbList<DistroInfo>();
   @$core.pragma('dart2js:noInline')
   static DistroInfo getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<DistroInfo>(create);
@@ -643,8 +631,6 @@ class ProAttachCmd extends $pb.GeneratedMessage {
   static ProAttachCmd create() => ProAttachCmd._();
   @$core.override
   ProAttachCmd createEmptyInstance() => create();
-  static $pb.PbList<ProAttachCmd> createRepeated() =>
-      $pb.PbList<ProAttachCmd>();
   @$core.pragma('dart2js:noInline')
   static ProAttachCmd getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ProAttachCmd>(create);
@@ -699,8 +685,6 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
   static LandscapeConfigCmd create() => LandscapeConfigCmd._();
   @$core.override
   LandscapeConfigCmd createEmptyInstance() => create();
-  static $pb.PbList<LandscapeConfigCmd> createRepeated() =>
-      $pb.PbList<LandscapeConfigCmd>();
   @$core.pragma('dart2js:noInline')
   static LandscapeConfigCmd getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<LandscapeConfigCmd>(create);
@@ -765,7 +749,6 @@ class MSG extends $pb.GeneratedMessage {
   static MSG create() => MSG._();
   @$core.override
   MSG createEmptyInstance() => create();
-  static $pb.PbList<MSG> createRepeated() => $pb.PbList<MSG>();
   @$core.pragma('dart2js:noInline')
   static MSG getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MSG>(create);
