@@ -118,13 +118,13 @@ func (c *Client) GetProToken(ctx context.Context, userJWT string) (token string,
 		return "", fmt.Errorf("bad user ID key: %v", userJWT)
 	case http.StatusInternalServerError:
 		return "", errors.New("couldn't validate the user entitlement against MS Store")
+	case http.StatusOK:
 	default:
 		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			return "", fmt.Errorf("unknown error from the contracts server: Code %d, %v", res.StatusCode, err)
 		}
 		return "", fmt.Errorf("unknown error from the contracts server: Code %d, %s", res.StatusCode, body)
-	case http.StatusOK:
 	}
 
 	var resp contractsapi.SyncUserSubscriptionsResponse

@@ -257,7 +257,7 @@ func (d *Distro) IsValid() bool {
 		return false
 	}
 
-	if !d.identity.isValid() {
+	if !d.isValid() {
 		d.Invalidate(d.ctx)
 		return false
 	}

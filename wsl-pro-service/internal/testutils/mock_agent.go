@@ -67,7 +67,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	if err != nil {
 		close(m.Started)
 		close(m.Stopped)
-		require.Fail(t, "Setup: could not write listening port file: %v", err)
+		require.Fail(t, "Setup: could not write listening port file", err)
 	}
 
 	go func() {

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/ubuntu/gowsl"
 	wsl "github.com/ubuntu/gowsl"
 )
 
@@ -50,7 +49,7 @@ func PowershellImportDistro(t *testing.T, ctx context.Context, distroName string
 		UnregisterDistro(t, ctx, distroName)
 	})
 
-	d := gowsl.NewDistro(ctx, distroName)
+	d := wsl.NewDistro(ctx, distroName)
 	guid, err := d.GUID()
 	require.NoError(t, err, "Setup: could not get distro GUID")
 

@@ -157,7 +157,7 @@ func (m *SystemMock) Path(path ...string) string {
 // Hostname returns a mock hostname.
 func (m SystemMock) Hostname() (string, error) {
 	if m.DistroHostname == nil {
-		return "", errors.New("Mock Hostname error")
+		return "", errors.New("mock hostname error")
 	}
 	return *m.DistroHostname, nil
 }
