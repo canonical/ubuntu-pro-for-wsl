@@ -9,6 +9,7 @@ use (
 	./end-to-end
 	./mocks
 	./storeapi/go-wrapper/microsoftstore
+	./tools
 	./windows-agent
 	./wsl-pro-service
 )
