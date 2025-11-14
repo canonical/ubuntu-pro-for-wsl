@@ -1,7 +1,7 @@
 github.com/0xrawsec/golang-utils v1.3.2 h1:ww4jrtHRSnX9xrGzJYbalx5nXoZewy4zPxiY+ubJgtg=
 github.com/0xrawsec/golang-utils v1.3.2/go.mod h1:m7AzHXgdSAkFCD9tWWsApxNVxMlyy7anpPVOyT/yM7E=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c h1:NxFWYekGaOxzSAHSRzUlZ0J6TA2zFajqHMLpkA4A7rc=
-github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c/go.mod h1:3N+AXDrTJvuwy+F9uIDzi2g9xqpeZpxfwobtn84JHEQ=
+github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 h1:fi5eVdZCelJd6lUufEXgtBbNf/Jll2n2Cgvd9UGqIys=
+github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1/go.mod h1:SEDBCzpOq4KPCsPQiPaUl+lOtkvbBWDRjwavnkY4qss=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20251113192537-602febbf6af4 h1:PfkIoNHCLDJORIWddRWUQl4yQsUvJ3aQ+jpySPys9pk=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20251113192537-602febbf6af4/go.mod h1:tMZEv5qrcxgEkMHdEOjyXgHVz9Y1Bf+WBXm3xdhtDd4=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251113192537-602febbf6af4 h1:UADgR4334olIypTwPUSNYibfyC3UP9OIqY+FTn+U5NM=
@@ -103,8 +103,8 @@ golang.org/x/exp v0.0.0-20240909161429-701f63a606c0/go.mod h1:2TbTHSBQa924w8M6Xs
 golang.org/x/net v0.42.0 h1:jzkYrhi3YQWD6MLBJcsklgQsoAcw89EcZbJw8Z614hs=
 golang.org/x/net v0.42.0/go.mod h1:FF1RA5d3u7nAYA4z2TkclSCKh68eSXtiFwcWQpPXdt8=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.35.0 h1:vz1N37gP5bs89s7He8XuIYXpyY0+QlsKmzipCbUtyxI=
-golang.org/x/sys v0.35.0/go.mod h1:BJP2sWEmIv4KK5OTEluFJCKSidICx8ciO85XgH3Ak8k=
+golang.org/x/sys v0.38.0 h1:3yZWxaJjBmCWXqhN1qh02AkOnCQ1poK6oF+a7xWL6Gc=
+golang.org/x/sys v0.38.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
 golang.org/x/text v0.28.0 h1:rhazDwis8INMIwQ4tpjLDzUhx6RlXqZNPEM0huQojng=
 golang.org/x/text v0.28.0/go.mod h1:U8nCwOR8jO/marOQ0QbDiOngZVEBB7MAiitBuMjXiNU=
 gonum.org/v1/gonum v0.16.0 h1:5+ul4Swaf3ESvrOnidPp4GZbzf0mxVQpDCYUQE7OJfk=

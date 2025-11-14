@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/canonical/landscape-hostagent-api v0.0.0-20240603054541-f5b328f91e2c // indirect
+	github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20251113192537-602febbf6af4 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251113192537-602febbf6af4 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20240322101935-3e73eb563dc3 // indirect
@@ -40,7 +40,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20251003130259-5c49d26cf9f5 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/grpc v1.75.1 // indirect
