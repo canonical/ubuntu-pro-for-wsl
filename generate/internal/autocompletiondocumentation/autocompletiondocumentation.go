@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/tools/generate/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-wsl/generate/internal/generators"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"gopkg.in/yaml.v3"
@@ -25,13 +25,13 @@ VERB:
 
 	help
 		Print this message and exit.
-	completion 
+	completion
 		Create completions files in a structured hierarchy in CONFIG.completions.
-	man 
+	man
 		Create man pages files in a structured hierarchy in CONFIG.man.
-	update-readme 
+	update-readme
 		Update CONFIG.readme with commands.
-	update-doc-cli-ref 
+	update-doc-cli-ref
 		Update CONFIG.docs with commands.
 
 CONFIG:

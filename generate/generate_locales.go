@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/canonical/ubuntu-pro-for-wsl/tools/generate/internal/locales"
+	"github.com/canonical/ubuntu-pro-for-wsl/generate/internal/locales"
 )
 
 func main() {

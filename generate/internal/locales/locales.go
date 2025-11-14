@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/tools/generate/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-wsl/generate/internal/generators"
 	"gopkg.in/yaml.v3"
 )
 
