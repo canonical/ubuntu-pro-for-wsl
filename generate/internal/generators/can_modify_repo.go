@@ -5,7 +5,7 @@ package main
 import (
 	"os"
 
-	"github.com/canonical/ubuntu-pro-for-wsl/tools/generate/internal/generators"
+	"github.com/canonical/ubuntu-pro-for-wsl/generate/internal/generators"
 )
 
 func main() {
