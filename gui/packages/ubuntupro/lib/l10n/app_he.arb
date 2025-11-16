@@ -147,7 +147,7 @@
     "@landscapeSSLKeyLabel": {},
     "landscapeSetupCustom": "הגדרות מתקדמות",
     "@landscapeSetupCustom": {},
-    "landscapeSetupManualHint": "רישום מול שרת Landscape משלך",
+    "landscapeSetupManualHint": "רישום מול שרת Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupManual": "הגדרות ידניות",
     "@landscapeSetupManual": {},
@@ -185,7 +185,7 @@
     "@landscapeWSLUnavailableContent": {},
     "landscapeAccountNameLabel": "שם חשבון",
     "@landscapeAccountNameLabel": {},
-    "landscapeAccountNameError": "שם החשבון אינו יכול להיות ריק או „{reservedAccount}”.",
+    "landscapeAccountNameError": "שם החשבון לא יכול להיות ריק או „{reservedAccount}”.",
     "@landscapeAccountNameError": {
         "placeholders": {
             "reservedAccount": {
