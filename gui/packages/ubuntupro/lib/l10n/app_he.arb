@@ -182,5 +182,15 @@
     "landscapeUnknownErrorContent": "נא לדווח על האירוע הזה ולצרף את הפרטים שלהלן.",
     "@landscapeUnknownErrorContent": {},
     "landscapeWSLUnavailableContent": "יכולות WSL כבויות בשרת ה־Landscape. נא ליצור קשר עם הנהלת המערכת שלך.",
-    "@landscapeWSLUnavailableContent": {}
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeAccountNameLabel": "שם חשבון",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "שם החשבון אינו יכול להיות ריק או „{reservedAccount}”.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
