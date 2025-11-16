@@ -109,7 +109,7 @@
     },
     "landscapeSetupManual": "Cumraíocht láimhe",
     "@landscapeSetupManual": {},
-    "landscapeSetupManualHint": "Cláraigh le do fhreastalaí Tírdhreacha féin",
+    "landscapeSetupManualHint": "Cláraigh le freastalaí Tírdhreacha",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Cumraíocht chun cinn",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Earráid anaithnid agus ceangal á dhéanamh leis an suíomh Tírdhreach",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Tuairiscigh an eachtra seo, le do thoil, lena n-áirítear na sonraí thíos.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Ainm an chuntais",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Ní féidir ainm an chuntais a bheith folamh nó \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
