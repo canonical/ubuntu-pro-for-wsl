@@ -83,7 +83,7 @@
     "@getUbuntuPro": {},
     "landscapeSetupCustom": "Pokročilá konfigurácia",
     "@landscapeSetupCustom": {},
-    "landscapeSetupManualHint": "Zaregistrujte sa na vlastný server Landscape",
+    "landscapeSetupManualHint": "Zaregistrovať sa na server Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustomHint": "Načítať vlastný konfiguračný súbor klienta Landscape",
     "@landscapeSetupCustomHint": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Neznáma chyba pri pripájaní k serveru Landscape",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Nahláste túto udalosť vrátane nižšie uvedených podrobností.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Názov účtu",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Názov účtu nesmie byť prázdny alebo „{reservedAccount}“.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
