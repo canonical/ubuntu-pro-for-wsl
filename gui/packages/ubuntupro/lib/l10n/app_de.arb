@@ -17,7 +17,7 @@
     "@landscapeConfigureButton": {},
     "attach": "Anbinden",
     "@attach": {},
-    "landscapeSetupManualHint": "Registrieren Sie sich mit Ihrem eigenen Landscape-Server",
+    "landscapeSetupManualHint": "Mit einem Landscape-Server registrieren",
     "@landscapeSetupManualHint": {},
     "appTitle": "Ubuntu Pro für WSL",
     "@appTitle": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Unbekannter Fehler beim Herstellen einer Verbindung zu Landscape",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Bitte melden Sie diesen Vorfall unter Angabe der folgenden Details.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Kontoname",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Der Kontoname darf nicht leer sein oder „{reservedAccount}“ lauten.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
