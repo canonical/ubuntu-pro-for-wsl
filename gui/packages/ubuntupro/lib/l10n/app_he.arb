@@ -147,7 +147,7 @@
     "@landscapeSSLKeyLabel": {},
     "landscapeSetupCustom": "הגדרות מתקדמות",
     "@landscapeSetupCustom": {},
-    "landscapeSetupManualHint": "רישום מול שרת Landscape משלך",
+    "landscapeSetupManualHint": "רישום מול שרת Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupManual": "הגדרות ידניות",
     "@landscapeSetupManual": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownErrorContent": "נא לדווח על האירוע הזה ולצרף את הפרטים שלהלן.",
     "@landscapeUnknownErrorContent": {},
     "landscapeWSLUnavailableContent": "יכולות WSL כבויות בשרת ה־Landscape. נא ליצור קשר עם הנהלת המערכת שלך.",
-    "@landscapeWSLUnavailableContent": {}
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeAccountNameLabel": "שם חשבון",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "שם החשבון לא יכול להיות ריק או „{reservedAccount}”.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }

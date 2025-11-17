@@ -87,7 +87,7 @@
     "@landscapeSkipRegister": {},
     "landscapeSetupManual": "Konfiguracja ręczna",
     "@landscapeSetupManual": {},
-    "landscapeSetupManualHint": "Zarejestruj na własnym serwerze Landscape",
+    "landscapeSetupManualHint": "Zarejestruj się na serwerze Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Konfiguracja zaawansowana",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Nieznany błąd podczas łączenia się z serwerem Landscape",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Zgłoś ten incydent wraz ze szczegółami podanymi poniżej.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Nazwa konta",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Nazwa konta nie może być pusta ani „{reservedAccount}”.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }

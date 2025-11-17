@@ -99,7 +99,7 @@
     },
     "landscapeSetupManual": "Manuell konfiguration",
     "@landscapeSetupManual": {},
-    "landscapeSetupManualHint": "Registrera dig med din egen Landscape-server",
+    "landscapeSetupManualHint": "Registrera dig med en Landscape-server",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Avancerad konfiguration",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Okänt fel vid anslutning till Landscape",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Rapportera incidenten tillsammans med detaljerna nedanför.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Kontonamn",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Kontonamn får inte vara tomt eller \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
