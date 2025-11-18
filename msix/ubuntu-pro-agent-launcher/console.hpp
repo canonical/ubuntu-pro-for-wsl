@@ -57,8 +57,11 @@ class PseudoConsole {
   HANDLE GetReadHandle() const { return hOutRead; }
 
   /// Starts a child process under this pseudo-console by running the fully
-  /// specified [commandLine].
-  Process StartProcess(std::wstring commandLine);
+  /// specified [commandLine]. If provided, the [envVars] will be merged with
+  /// the parent process' environment for the child process. Each string in
+  /// [envVars] must be in the form "KEY=VALUE" as expected by the Win32 APIs.
+  Process StartProcess(std::wstring commandLine,
+                       std::initializer_list<std::wstring> envVars = {}) const;
 
   ~PseudoConsole();
 };

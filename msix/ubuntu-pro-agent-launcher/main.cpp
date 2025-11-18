@@ -38,7 +38,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR pCmdLine, int) try {
 
   // start the child process
   auto agent = thisBinaryDir() / L"ubuntu-pro-agent.exe";
-  auto p = console.StartProcess(std::format(L"{} {}", agent.c_str(), pCmdLine));
+  auto p = console.StartProcess(std::format(L"{} {}", agent.c_str(), pCmdLine),
+                                {L"GRPC_ENFORCE_ALPN_ENABLED=false"});
 
   up4w::AsyncReader reader{console.GetReadHandle()};
   reader.StartRead();

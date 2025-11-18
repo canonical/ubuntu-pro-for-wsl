@@ -1,6 +1,7 @@
 #include "console.hpp"
 
 #include <memory>
+#include <numeric>
 #include <type_traits>
 
 #include "error.hpp"
@@ -100,7 +101,80 @@ unique_attr_list PseudoConsoleProcessAttrList(HPCON con) {
   return result;
 }
 
-Process PseudoConsole::StartProcess(std::wstring commandLine) {
+///  Models a Win32 Environment Strings block with merging capabilities and auto
+///  releasing semantics. Environment blocks are contiguous sequences of
+///  null-terminated strings obtained by calling GetEnvironmentStrings(), ended
+///  by an additional null character. They must be treated as read-only (even
+///  though the API returns RW pointers) and released by calling
+///  FreeEnvironmentStrings.
+class EnvironmentBlock {
+  // unique_ptr guarantees calling the deleter when this object goes out of
+  // scope no matter how.
+  using RawBlockT =
+      std::unique_ptr<wchar_t[], decltype(&::FreeEnvironmentStringsW)>;
+  static BOOL noopDeleter(wchar_t*) { return TRUE; }
+  RawBlockT block_ = {nullptr, noopDeleter};
+  size_t countChars_ = 0;
+  // A theoretical limit for environment blocks to make sure we won't loop
+  // forever when counting the OS-provided block size.
+  static constexpr unsigned int kMmaxEnvBlockSize = 65536;
+
+  // A read-only pointer to the beginning of the block, as per STL conventions.
+  const wchar_t* cbegin() const { return block_.get(); }
+  // A read-only pointer to 1 past the end of the block, as per STL conventions.
+  const wchar_t* cend() const { return block_.get() + countChars_; }
+
+ public:
+  explicit EnvironmentBlock(wchar_t* envStrings) {
+    if (envStrings == nullptr) {
+      return;
+    }
+    // Calculate the size of the environment strings block
+    const wchar_t* cursor = envStrings;
+    unsigned int count = 0;
+    while (count < kMmaxEnvBlockSize) {
+      if (*cursor == L'\0' && *(cursor + 1) == L'\0') {
+        count += 2;
+        break;
+      }
+      count++;
+      cursor++;
+    }
+    if (count >= kMmaxEnvBlockSize) {
+      throw hresult_exception{ERROR_BAD_ENVIRONMENT};
+    }
+    countChars_ = count;
+    block_ = {envStrings, &::FreeEnvironmentStringsW};
+  }
+
+  /// Returns a new environment block merging this with the specified additional
+  /// environment variables in [env], described as "KEY=VALUE" null-terminated
+  /// strings.
+  std::vector<wchar_t> mergeWith(
+      std::initializer_list<std::wstring> env) const {
+    std::vector<wchar_t> merged;
+    auto envTotalSize = std::accumulate(
+        env.begin(), env.end(), size_t{0},
+        [](size_t acc, const std::wstring& s) { return acc + s.size() + 1; });
+    merged.reserve(countChars_ + envTotalSize);
+    for (auto& var : env) {
+      std::copy(var.begin(), var.end(), std::back_inserter(merged));
+      merged.push_back(L'\0');
+    }
+
+    if (block_ == nullptr) {
+      merged.push_back(L'\0');
+      return merged;
+    }
+
+    std::copy(cbegin(), cend(), std::back_inserter(merged));
+    return merged;
+  }
+};
+
+Process PseudoConsole::StartProcess(
+    std::wstring commandLine,
+    std::initializer_list<std::wstring> envVars) const {
   unique_attr_list attributes = PseudoConsoleProcessAttrList(hDevice);
   // Prepare Startup Information structure
   STARTUPINFOEX si{};
@@ -111,10 +185,13 @@ Process PseudoConsole::StartProcess(std::wstring commandLine) {
   si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
   si.lpAttributeList = attributes.get();
 
+  EnvironmentBlock envBlock{GetEnvironmentStringsW()};
+  auto env = envBlock.mergeWith(envVars);
+
   Process p{};
   if (!CreateProcessW(NULL, commandLine.data(), NULL, NULL, FALSE,
-                      EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo,
-                      &p)) {
+                      EXTENDED_STARTUPINFO_PRESENT, env.data(), NULL,
+                      &si.StartupInfo, &p)) {
     throw hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
   }
 
