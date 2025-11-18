@@ -38,6 +38,11 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR pCmdLine, int) try {
 
   // start the child process
   auto agent = thisBinaryDir() / L"ubuntu-pro-agent.exe";
+  // Disable ALPN enforcement for gRPC to avoid issues with Landscape SaaS,
+  // which won't have ALPN support in time for the beta.
+  if (!SetEnvironmentVariableW(L"GRPC_ENFORCE_ALPN_ENABLED", L"false")) {
+    throw up4w::hresult_exception{HRESULT_FROM_WIN32(GetLastError())};
+  }
   auto p = console.StartProcess(std::format(L"{} {}", agent.c_str(), pCmdLine));
 
   up4w::AsyncReader reader{console.GetReadHandle()};

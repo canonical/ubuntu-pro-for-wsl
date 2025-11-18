@@ -57,7 +57,7 @@ class PseudoConsole {
   HANDLE GetReadHandle() const { return hOutRead; }
 
   /// Starts a child process under this pseudo-console by running the fully
-  /// specified [commandLine].
+  /// specified [commandLine]. The child process inherits the parent environment.
   Process StartProcess(std::wstring commandLine);
 
   ~PseudoConsole();
