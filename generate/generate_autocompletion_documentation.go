@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/canonical/ubuntu-pro-for-wsl/tools/generate/internal/autocompletiondocumentation"
+	"github.com/canonical/ubuntu-pro-for-wsl/generate/internal/autocompletiondocumentation"
 	windowsagentdoc "github.com/canonical/ubuntu-pro-for-wsl/windows-agent/generate/doc"
 	wslproservicedoc "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/generate/doc"
 	"github.com/spf13/cobra"
