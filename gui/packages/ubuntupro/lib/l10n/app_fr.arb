@@ -75,7 +75,7 @@
     },
     "landscapeSetupManual": "Configuration manuelle",
     "@landscapeSetupManual": {},
-    "landscapeSetupManualHint": "Vous inscrire avec votre propre serveur Landscape",
+    "landscapeSetupManualHint": "S'inscrire avec un serveur Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Configuration avancée",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Erreur inconnue lors de la connexion à Landscape",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Veuillez signaler cet incident en incluant les détails ci-dessous.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Nom du compte",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Le nom du compte ne peut pas être vide ni \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
