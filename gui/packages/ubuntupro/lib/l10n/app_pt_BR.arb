@@ -157,7 +157,7 @@
     "@statusBarAgentDownTooltip": {},
     "landscapeAccountNameLabel": "Nome da conta",
     "@landscapeAccountNameLabel": {},
-    "landscapeAccountNameError": "Nome da conta não pode ser fazio ou \"{reservedAccount}\".",
+    "landscapeAccountNameError": "Nome da conta não pode ser vazio ou \"{reservedAccount}\".",
     "@landscapeAccountNameError": {
         "placeholders": {
             "reservedAccount": {
