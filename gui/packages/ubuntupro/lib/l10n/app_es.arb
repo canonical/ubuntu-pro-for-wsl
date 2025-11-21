@@ -101,7 +101,7 @@
             }
         }
     },
-    "landscapeSetupManualHint": "Registrar con su propio servidor Landscape",
+    "landscapeSetupManualHint": "Registrar con un servidor Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Configuración avanzada",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnreachable": "Landscape inalcanzable",
     "@landscapeUnreachable": {},
     "landscapeWSLUnavailable": "Las características de WSL de Landscape están deshabilitadas",
-    "@landscapeWSLUnavailable": {}
+    "@landscapeWSLUnavailable": {},
+    "landscapeAccountNameLabel": "Nombre de cuenta",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "El nombre de la cuenta no puede estar vacío o «{reservedAccount}».",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }

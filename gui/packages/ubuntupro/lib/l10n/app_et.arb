@@ -81,7 +81,7 @@
     "@purchaseStatusUnknown": {},
     "landscapeSkip": "Jäta hetkel vahele",
     "@landscapeSkip": {},
-    "landscapeSetupManualHint": "Registreeri sinu oma Landscape'i serveriga",
+    "landscapeSetupManualHint": "Registreeri Landscape'i serveris",
     "@landscapeSetupManualHint": {},
     "landscapeSkipRegister": "Registreeru Landscape'i teenuses",
     "@landscapeSkipRegister": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Tundmatu viga ühendamisel Landscape-i teenusega",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Palun teata sellest veast ning kaasa veakirjeldusse alljärgnev teave.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Kasutajakonto nimi",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Kasutajakonto nimi ei saa jääda tühjaks ega olla „{reservedAccount}“.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }

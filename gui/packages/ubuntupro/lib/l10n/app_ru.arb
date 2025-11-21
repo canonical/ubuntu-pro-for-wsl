@@ -109,7 +109,7 @@
     "@landscapeSkipRegister": {},
     "landscapeSetupManual": "Ручная настройка",
     "@landscapeSetupManual": {},
-    "landscapeSetupManualHint": "Зарегистрируйтесь через собственный сервер Landscape",
+    "landscapeSetupManualHint": "Зарегистрируйтесь через сервер Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Расширенная настройка",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnreachable": "Landscape недоступен",
     "@landscapeUnreachable": {},
     "landscapeProceedAnyway": "Продолжить в любом случае",
-    "@landscapeProceedAnyway": {}
+    "@landscapeProceedAnyway": {},
+    "landscapeAccountNameLabel": "Имя учётной записи",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Имя учётной записи не может быть пустым или «{reservedAccount}».",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
