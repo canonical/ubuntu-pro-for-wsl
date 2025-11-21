@@ -53,7 +53,18 @@ func (s *System) EnsureValidLandscapeConfig(ctx context.Context) (err error) {
 
 func (s *System) syncWithCloudInit() {
 	log.Debug(context.Background(), "Checking cloud-init status")
-	cmd := exec.Command("bash", "-ec", "systemctl is-enabled --quiet cloud-init.service && cloud-init status --wait")
+	// Wait for cloud-init to finish if systemd and its service is enabled.
+	// Since plucky the wsl-setup package ships a small script created for that purpose.
+	// As we need to support back to focal, we keep a fallback if the script is not readable.
+	script := `
+if [ -r /usr/lib/wsl/wait-for-cloud-init ]; then
+  source /usr/lib/wsl/wait-for-cloud-init
+  exit 0
+fi
+if status=$(LANG=C systemctl is-system-running 2>/dev/null) || [ "${status}" != "offline" ] && systemctl is-enabled --quiet cloud-init.service 2>/dev/null; then
+  cloud-init status --wait > /dev/null 2>&1 || true
+fi`
+	cmd := exec.Command("bash", "-ec", script)
 	_ = cmd.Run()
 }
 

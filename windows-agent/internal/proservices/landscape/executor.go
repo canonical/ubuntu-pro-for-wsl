@@ -241,6 +241,11 @@ func (e executor) install(ctx context.Context, cmd *landscapeapi.Command_Install
 		return fmt.Errorf("could not initialize the distro properties in the database: %v", err)
 	}
 
+	// TODO: Remove this once we're sure wsl-pro-service correctly syncs with cloud-init in all
+	// supported releases. See UDENG-8594.
+	if err := distro.Terminate(); err != nil {
+		return fmt.Errorf("couldn't terminate the distro after cloud-init finished: %v", err)
+	}
 	sleep := distro.Command(ctx, "sleep 5")
 	if err := sleep.Run(); err != nil {
 		return fmt.Errorf("could not wait for distro to start: %v", err)
