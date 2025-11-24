@@ -255,7 +255,7 @@ When you're finished managing packages, exit the `chroot` environment:
 exit
 ```
 
-After exiting the chroot environment it's useful to cleanup the mount points.
+After exiting the `chroot` environment it's useful to cleanup the mount points.
 
 ```{code-block} text
 $ sudo umount -R myNewUbuntu/proc
