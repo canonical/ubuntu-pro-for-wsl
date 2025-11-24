@@ -52,10 +52,12 @@ Its arguments are:
 - `distro`: an installed WSL distro. Write its name as it would appear on WSL. Read more: [Ubuntu WSL distributions](reference::distros)
 - `working-dir`: the path where the repository should be cloned. Set to `~` by default.
 - `submodules:`: whether to fetch sub-modules or not. False by default.
-- `token`: optional GitHub access token for things such as private repositories and extra permissions. Not set by default.
+- `token`: optional GitHub access token for accessing private repositories, granting extra permissions, and other capabilities requiring authenticated access. Not set by default.
 
 ```{warning}
-The token if passed persists in the local Git configuration if set, and is not removed at the end of the workflow job. Ensure that any token passed is used in a secure manner with minimally scoped permissions, such as by using the [workflow `permissions` key](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions).
+If a token is specified and thus written to the local Git configuration, it will not be removed at the end of the workflow job.
+
+Ensure that any token passed is used in a secure manner with minimally scoped permissions, such as by using the [workflow `permissions` key](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions).
 ```
 
 Example usage:
