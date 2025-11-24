@@ -71,6 +71,7 @@ cdimage
 changelog
 compinit
 config
+cryptographic
 dev
 exe
 gapped
