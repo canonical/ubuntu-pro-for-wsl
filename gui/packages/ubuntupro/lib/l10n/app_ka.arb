@@ -37,7 +37,7 @@
     "@buttonNext": {},
     "buttonSkip": "გამოტოვება",
     "@buttonSkip": {},
-    "landscapeFQDNError": "არასწორი FQDN. ფორმატი უნდა იყოს ჰოსტის სახელი, ან IP მისამართი.",
+    "landscapeFQDNError": "არასწორი FQDN. მოველოდი სრულ დომენის სახელს ან IP მისამართს.",
     "@landscapeFQDNError": {},
     "landscapeKeyLabel": "რეგისტრაციის გასაღები (არასავალდებულო)",
     "@landscapeKeyLabel": {},
@@ -127,7 +127,7 @@
     "@statusBarAgentConnectingTooltip": {},
     "purchaseStatusAlreadyPurchased": "Pro უკვე გამოწერილი გაქვთ.",
     "@purchaseStatusAlreadyPurchased": {},
-    "landscapeSetupManualHint": "რეგისტრაცია თქვენ საკუთარ Landscape-ის სერვერზე",
+    "landscapeSetupManualHint": "რეგისტრაცია Landscape-ის სერვერზე",
     "@landscapeSetupManualHint": {},
     "ubuntuProEnabled": "Ubuntu Pro ჩართულია ამ მანქანაზე",
     "@ubuntuProEnabled": {},
@@ -154,5 +154,43 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "landscapeAccountNameLabel": "ანგარიშის სახელი",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "ანგარიშის სახელი ცარიელი ან \"{reservedAccount}\" ვერ იქნება.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeDetails": "დეტალები",
+    "@landscapeDetails": {},
+    "landscapeProceedAnywayHint": "გააგრძელეთ და Landscape-ის სერვერთან წვდომის მცდელობები ფონურად გაგრძელდება.",
+    "@landscapeProceedAnywayHint": {},
+    "landscapeChangeLaterHint": "კონფიგურაციის შეცვლა ნებისმიერ დროს შეგიძლიათ.",
+    "@landscapeChangeLaterHint": {},
+    "landscapeEditYourConfig": "ჩაასწორეთ თქვენი კონფიგურაცია",
+    "@landscapeEditYourConfig": {},
+    "landscapeProceedAnyway": "მაინც გაგრძელება",
+    "@landscapeProceedAnyway": {},
+    "landscapeInvalidConfig": "Lnscape-ის არასწორი კონფიგურაცია",
+    "@landscapeInvalidConfig": {},
+    "landscapeInvalidConfigContent": "სერვერმა უარჰყო მიწოდებული კონფიგურაცია. გადაამოწმეთ თქვენი პარამეტრები.",
+    "@landscapeInvalidConfigContent": {},
+    "landscapeUnchangedConfig": "უცვლელი კონფიგურაცია",
+    "@landscapeUnchangedConfig": {},
+    "landscapeUnreachable": "Landscape ხელმიუწვდომელია",
+    "@landscapeUnreachable": {},
+    "landscapeUnreachableContent": "Landscape-ის სერვერთან დაკავშირება შეუძლებელია.",
+    "@landscapeUnreachableContent": {},
+    "landscapeWSLUnavailable": "Landscape WSL ფუნქციები გამორთულია",
+    "@landscapeWSLUnavailable": {},
+    "landscapeWSLUnavailableContent": "Landscape-ის სერვერში WSL-ის ფუნქციები გამორთულია. დაუკავშირდით თქვენს სისტემურ ადმინისტრატორს.",
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeUnknownError": "აღმოჩენილია უცნობი შეცდომა Landscape-ისთან მიერთებისას",
+    "@landscapeUnknownError": {},
+    "landscapeUnknownErrorContent": "მოგვწერეთ ამ ინციდენტის შესახებ ქვემოთ ჩამოთვლილი დეტალების ჩათვლით.",
+    "@landscapeUnknownErrorContent": {}
 }
