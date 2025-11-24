@@ -275,6 +275,14 @@ information refer to [the Landscape configuration reference page](howto::config-
 All cryptographic functionalities used by Ubuntu Pro for WSL are provided by the Go standard
 library.
 
+### Decommissioning
+
+To support remote configuration and for sharing of certain files between the system components, Pro
+for WSL relies on non-virtualised access to the Windows registry `HKCU` hive and the user's profile
+directory. For that reason just uninstalling the MSIX may leave behind unwanted data in both
+locations. Refer to [how to uninstall Pro for WSL](howto::uninstall-up4w) guide on how to complete a
+secure clean-up.
+
 ## Security tips
 
 ### Configuring WSL features
