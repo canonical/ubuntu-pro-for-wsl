@@ -51,7 +51,14 @@ This action checks out your repository in a WSL distro. If you want to check it 
 Its arguments are:
 - `distro`: an installed WSL distro. Write its name as it would appear on WSL. Read more: [Ubuntu WSL distributions](reference::distros)
 - `working-dir`: the path where the repository should be cloned. Set to `~` by default.
-- `submodules:`: Whether to fetch sub-modules or not. False by default.
+- `submodules:`: whether to fetch sub-modules or not. False by default.
+- `token`: optional GitHub access token for accessing private repositories, granting extra permissions, and other capabilities requiring authenticated access. Not set by default.
+
+```{warning}
+If a token is specified and thus written to the local Git configuration, it will not be removed at the end of the workflow job.
+
+Ensure that any token passed is used in a secure manner with minimally scoped permissions, such as by using the [workflow `permissions` key](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions).
+```
 
 Example usage:
 ```yaml
@@ -61,6 +68,7 @@ Example usage:
     distro: Ubuntu-20.04
     working-dir: /tmp/github/
     submodules: true
+    token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## WSL bash
@@ -82,4 +90,3 @@ Example usage:
         DEBIAN_FRONTEND=noninteractive sudo apt update
         DEBIAN_FRONTEND=noninteractive sudo apt install python3-pip
 ```
-
