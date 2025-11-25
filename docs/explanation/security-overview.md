@@ -254,22 +254,22 @@ Intune also supports policies for WSL, which include toggling the availability o
 
 ### Cryptography used by Ubuntu Pro for WSL
 
-Ubuntu Pro for WSL use of cryptography starts at installation time: an MSIX package can only be
-installed on Windows if its signed by a trusted source. Even when downloading the MSIX from GitHub
-releases or from Canonical website, the binary package is signed by Microsoft Store, thus no
-security exceptions are required to allow installing the application.
+The use of cryptography in Ubuntu Pro for WSL starts at installation time: an MSIX package can only be
+installed on Windows if it's signed by a trusted source. Even when downloading the MSIX from GitHub
+releases or from the Canonical website, the binary package is signed by Microsoft Store, thus no
+security exceptions are required when installing the application.
 
-At runtime the Windows background agent communicates with the wsl-pro-service within the Ubuntu on
-WSL instances via mutual TLS. Even though the network is local, virtual and private, data in flux is
-always encrypted. During startup the agent creates self-signed certificates (removing previously
-existing ones) which are used to ensure data is encrypted both ways.
+At runtime, the Windows background agent communicates with the WSL Pro Service within the instances of Ubuntu on
+WSL through mutual TLS. Even though the network is local, virtual and private, data in flux is
+always encrypted. During startup, the agent creates self-signed certificates (removing previously
+existing ones) that are used to ensure data is encrypted in both directions.
 
-Those features are not configurable by the user.
+These cryptographic features are not configurable by the user.
 
-Both the Windows agent and the WSL instances use TLS when communicating with a Landscape server, by
-default relying on the operating system's certificate store. It's possible to configure a connection
-to use a custom provided certificate issued for that server or even plain TCP, although that's
-discouraged and unlikely to be useful in real scenarios other than some local testing. For more
+Both the Windows agent and the WSL instances use TLS when communicating with a Landscape server, 
+relying on the operating system's certificate store by default. It's possible to configure a connection
+to use a custom certificate issued for that server or even plain TCP, although that's
+discouraged and unlikely to be useful in real scenarios, other than local testing. For more
 information refer to [the Landscape configuration reference page](howto::config-landscape).
 
 All cryptographic functionalities used by Ubuntu Pro for WSL are provided by the Go standard
@@ -277,10 +277,10 @@ library.
 
 ### Decommissioning
 
-To support remote configuration and for sharing of certain files between the system components, Pro
+To support remote configuration and sharing of certain files between the system components, Pro
 for WSL relies on non-virtualised access to the Windows registry `HKCU` hive and the user's profile
-directory. For that reason just uninstalling the MSIX may leave behind unwanted data in both
-locations. Refer to [how to uninstall Pro for WSL](howto::uninstall-up4w) guide on how to complete a
+directory. For that reason, uninstalling the MSIX may leave behind unwanted data in both
+locations. Refer to our guidance on [uninstalling Pro for WSL](howto::uninstall-up4w) for how to complete a
 secure clean-up.
 
 ## Security tips

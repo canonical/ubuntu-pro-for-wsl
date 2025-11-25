@@ -22,7 +22,7 @@ You should also remove `.ubuntupro` from your Windows user profile directory.
 > Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
 ```
 
-If you (or your organisation) used the Windows Registry to store any configuration data, such as
+If you or your organisation used the Windows Registry to store any configuration data, such as
 your Pro token, you should also remove the matching registry key:
 
 ```text
