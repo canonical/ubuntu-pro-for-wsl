@@ -71,6 +71,7 @@ cdimage
 changelog
 compinit
 config
+cryptographic
 dev
 exe
 gapped
@@ -116,6 +117,7 @@ ppid
 scalability
 Snapcraft
 UTF
+virtualised
 
 # Registry keys and types
 DWORD
