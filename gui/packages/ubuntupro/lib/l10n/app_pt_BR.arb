@@ -95,7 +95,7 @@
             }
         }
     },
-    "landscapeSetupManualHint": "Registrar no seu próprio servidor do Landscape",
+    "landscapeSetupManualHint": "Registrar em um servidor do Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "Configuração avançada",
     "@landscapeSetupCustom": {},
@@ -111,7 +111,7 @@
     "@landscapeSetupCustomHint": {},
     "landscapeFQDNLabel": "Nome de domínio completamente qualificado (FQDN) do Landscape",
     "@landscapeFQDNLabel": {},
-    "landscapeFQDNError": "FQDN inválido. Formato deve ser somente um nome de host ou endereço IP.",
+    "landscapeFQDNError": "FQDN inválido. Espera-se um nome de domínio completamente qualificado ou endereço IP.",
     "@landscapeFQDNError": {},
     "landscapeFQDNSaaSError": "FQDN não pode ser landscape.canonical.com.",
     "@landscapeFQDNSaaSError": {},
@@ -154,5 +154,43 @@
     "statusBarAgentRunningTooltip": "O agente do Ubuntu Pro está rodando",
     "@statusBarAgentRunningTooltip": {},
     "statusBarAgentDownTooltip": "O agente do Ubuntu Pro está desconectado. Pressione para iniciar o agente.",
-    "@statusBarAgentDownTooltip": {}
+    "@statusBarAgentDownTooltip": {},
+    "landscapeAccountNameLabel": "Nome da conta",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Nome da conta não pode ser vazio ou \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeDetails": "Detalhes",
+    "@landscapeDetails": {},
+    "landscapeProceedAnywayHint": "Continue e tentativas de conectar-se ao servidor do Landscape continuarão em segundo plano.",
+    "@landscapeProceedAnywayHint": {},
+    "landscapeChangeLaterHint": "Você pode mudar a configuração a qualquer momento.",
+    "@landscapeChangeLaterHint": {},
+    "landscapeEditYourConfig": "Editar sua configuração",
+    "@landscapeEditYourConfig": {},
+    "landscapeProceedAnyway": "Prosseguir mesmo assim",
+    "@landscapeProceedAnyway": {},
+    "landscapeInvalidConfig": "Configuração do Landscape inválida",
+    "@landscapeInvalidConfig": {},
+    "landscapeInvalidConfigContent": "O servidor rejeitou a configuração submetida. Por favor verifique suas configurações.",
+    "@landscapeInvalidConfigContent": {},
+    "landscapeUnchangedConfig": "Configuração sem modificações",
+    "@landscapeUnchangedConfig": {},
+    "landscapeUnreachable": "Landscape está inalcaçável",
+    "@landscapeUnreachable": {},
+    "landscapeUnreachableContent": "Falha ao conectar com o servidor do Landscape.",
+    "@landscapeUnreachableContent": {},
+    "landscapeWSLUnavailable": "Os recursos do WSL no Landscape estão desabilitados.",
+    "@landscapeWSLUnavailable": {},
+    "landscapeWSLUnavailableContent": "Os recursos do WSL estão desabilitados no servidor do Landscape. Por favor contate o seu administrador de sistemas.",
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeUnknownError": "Erro não especificado ao conectar ao Landscape",
+    "@landscapeUnknownError": {},
+    "landscapeUnknownErrorContent": "Por favor reporte este incidente incluindo os detalhes abaixo.",
+    "@landscapeUnknownErrorContent": {}
 }
