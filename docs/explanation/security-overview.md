@@ -273,7 +273,7 @@ discouraged for security reasons and unlikely to be useful in real scenarios, ot
 testing. For more information refer to [the Landscape configuration reference page](howto::config-landscape).
 
 All cryptographic functionalities used by Ubuntu Pro for WSL are provided by the Go standard
-library.
+library `crypto` and its supplementary `golang.org/x/crypto` modules.
 
 ### Decommissioning
 
