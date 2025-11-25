@@ -264,12 +264,6 @@ existing ones) that are used to ensure data is encrypted in both directions.
 
 These cryptographic features are not configurable by the user.
 
-Both the Windows agent and the WSL instances use TLS when communicating with a Landscape server, 
-relying on the operating system's certificate store by default. It's possible to configure a connection
-to use a custom certificate issued for that server or even plain TCP, although that's
-discouraged for security reasons and unlikely to be useful in real scenarios, other than local
-testing. For more information refer to [the Landscape configuration reference page](howto::config-landscape).
-
 All cryptographic functionalities used by Ubuntu Pro for WSL are provided by the Go standard
 library `crypto` and its supplementary `golang.org/x/crypto` modules.
 
