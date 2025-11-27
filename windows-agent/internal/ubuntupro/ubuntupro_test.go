@@ -78,6 +78,7 @@ func TestFetchFromMicrosoftStore(t *testing.T) {
 		breakSetStoreProToken bool
 
 		alreadyHaveToken    bool
+		hasOrgToken         bool
 		subscriptionExpired bool
 
 		msStoreJWTErr        bool
@@ -88,6 +89,7 @@ func TestFetchFromMicrosoftStore(t *testing.T) {
 	}{
 		"Success": {wantToken: proToken},
 		"Success when there is a store token already":  {alreadyHaveToken: true, wantToken: oldProToken},
+		"Success when there is an organization token":  {hasOrgToken: true, wantToken: oldProToken},
 		"Success when there is an expired store token": {alreadyHaveToken: true, subscriptionExpired: true, wantToken: proToken},
 
 		// Config errors
@@ -110,6 +112,10 @@ func TestFetchFromMicrosoftStore(t *testing.T) {
 			conf := &mockConfig{
 				subscriptionErr:     tc.breakSubscription,
 				setStoreProTokenErr: tc.breakSetStoreProToken,
+			}
+
+			if tc.hasOrgToken {
+				conf.registryProToken = oldProToken
 			}
 
 			if tc.alreadyHaveToken {
@@ -181,7 +187,8 @@ func (s mockMSStore) GetSubscriptionExpirationDate() (tm time.Time, err error) {
 }
 
 type mockConfig struct {
-	storeProToken string
+	storeProToken    string
+	registryProToken string
 
 	subscriptionErr     bool
 	setStoreProTokenErr bool
@@ -190,6 +197,10 @@ type mockConfig struct {
 func (c mockConfig) Subscription() (string, config.Source, error) {
 	if c.subscriptionErr {
 		return "", config.SourceNone, errors.New("mock config Subscription: mock error")
+	}
+
+	if c.registryProToken != "" {
+		return c.registryProToken, config.SourceRegistry, nil
 	}
 
 	if c.storeProToken != "" {
