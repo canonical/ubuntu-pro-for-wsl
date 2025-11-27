@@ -293,6 +293,7 @@ func TestLockReleaseAwake(t *testing.T) {
 		"Error due to inability to start distro":                  {mockOnly: true, errorOnLock: true, wantLockErr: true},
 		"Error due to inability to get state in second LockAwake": {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorStateOnSecondLock: true, wantSecondLockErr: true},
 		"Error due to inability to start distro a second time":    {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorOnSecondLock: true, wantSecondLockErr: true},
+		"Error when the distro is unregistered under the hood":    {mockOnly: true, wantLockErr: true},
 	}
 
 	for name, tc := range testCases {
