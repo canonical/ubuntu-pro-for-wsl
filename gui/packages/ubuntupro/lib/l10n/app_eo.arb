@@ -121,7 +121,7 @@
     "@statusBarAgentRunningTooltip": {},
     "statusBarAgentConnectingTooltip": "Konektante al agento de Ubuntu Pro…",
     "@statusBarAgentConnectingTooltip": {},
-    "landscapeSetupManualHint": "Registri per via propra servilo Landscape",
+    "landscapeSetupManualHint": "Registri per servilo Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeFileInvalidFormat": "Dosiero havas netaŭgan formon",
     "@landscapeFileInvalidFormat": {},
@@ -182,5 +182,15 @@
     "landscapeWSLUnavailableContent": "Funkcioj pri WSL ne estas ŝaltitaj en la servilo de Landscape. Bonvolu kontakti vian sistemadministranton.",
     "@landscapeWSLUnavailableContent": {},
     "landscapeProceedAnywayHint": "Se vi daŭrigas malgraŭ tio, provoj atingi la servilon de Landscape daŭros fone.",
-    "@landscapeProceedAnywayHint": {}
+    "@landscapeProceedAnywayHint": {},
+    "landscapeAccountNameLabel": "Nomo de konto",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "La nomo de konto ne povas esti malplena nek «{reservedAccount}».",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
