@@ -19,7 +19,7 @@ const (
 	// MsStoreProductID is the ID of the product in the Microsoft Store
 	//
 	// TODO: Replace with real product ID.
-	MsStoreProductID = "9P25B50XMKXT"
+	MsStoreProductID = "9PBDP6SFLM8G"
 
 	// CertificatesDir is the agent's public subdirectory where the certificates are stored.
 	CertificatesDir = "certs"

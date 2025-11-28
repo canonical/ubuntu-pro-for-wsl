@@ -44,17 +44,17 @@ class SubscribeNowModel extends ChangeNotifier {
   Future<Either<PurchaseStatus, SubscriptionInfo>>
       purchaseSubscription() async {
     assert(purchaseAllowed, 'Requesting subscription purchase is not allowed.');
-    const product = '9P25B50XMKXT';
+    const productID = '9PBDP6SFLM8G';
     try {
-      final status = await store.purchaseSubscription(product);
-      _log.error('Purchasing subscription $product result: $status.');
+      final status = await store.purchaseSubscription(productID);
+      _log.warning('Purchasing subscription $productID result: $status.');
       if (status == PurchaseStatus.succeeded) {
         final newInfo = await client.notifyPurchase();
         return newInfo.right();
       }
       return status.left();
     } on Exception catch (err) {
-      _log.error('Failed to purchase subscription $product: $err');
+      _log.error('Failed to purchase subscription $productID: $err');
       return PurchaseStatus.unknown.left();
     }
   }
