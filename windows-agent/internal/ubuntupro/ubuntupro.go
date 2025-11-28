@@ -49,7 +49,7 @@ func FetchFromMicrosoftStore(ctx context.Context, conf Config, db *database.Dist
 
 	switch src {
 	case config.SourceRegistry: // assumed to be assigned by the organization, so let's skip checking with MS Store and contracts backend.
-		log.Debug(ctx, "Config: Skip checking with Microsoft Store: Organisation wide subscription is active")
+		log.Debug(ctx, "Config: Skip checking with Microsoft Store: Organization wide subscription is active")
 		return nil
 	case config.SourceMicrosoftStore:
 		// Shortcut to avoid spamming the contract server
