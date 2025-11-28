@@ -18,7 +18,7 @@ import (
 // It returns wslDistroNotFoundError when the distroName contains the
 // unregister magic word, to ease testing.
 func Touch(ctx context.Context, distroName string) error {
-	if strings.Contains(distroName, "unregistered") {
+	if strings.HasSuffix(distroName, "unregistered-late") {
 		return &wslDistroNotFoundError{errors.New(distroName)}
 	}
 	d := wsl.NewDistro(ctx, distroName)

@@ -262,6 +262,7 @@ func TestLockReleaseAwake(t *testing.T) {
 		invalidateBeforeLock    bool
 		invalidateBeforeRelease bool
 		errorOnLock             bool
+		unregisterDistroLate    bool
 
 		// Stacking
 		doubleLock               bool
@@ -293,7 +294,7 @@ func TestLockReleaseAwake(t *testing.T) {
 		"Error due to inability to start distro":                  {mockOnly: true, errorOnLock: true, wantLockErr: true},
 		"Error due to inability to get state in second LockAwake": {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorStateOnSecondLock: true, wantSecondLockErr: true},
 		"Error due to inability to start distro a second time":    {mockOnly: true, doubleLock: true, stopDistroInbetweenLocks: true, errorOnSecondLock: true, wantSecondLockErr: true},
-		"Error when the distro is unregistered under the hood":    {mockOnly: true, wantLockErr: true},
+		"Error when the distro is unregistered under the hood":    {mockOnly: true, unregisterDistroLate: true, wantLockErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -309,7 +310,13 @@ func TestLockReleaseAwake(t *testing.T) {
 				t.Skip("This test is only available for the mock back-end")
 			}
 
-			distroName, _ := wsltestutils.RegisterDistro(t, ctx, true)
+			// That makes the mock break at Touch().
+			distroName := wsltestutils.RandomDistroName(t) + "unregistered-late"
+			if tc.unregisterDistroLate {
+				_ = wsltestutils.RegisterDistroNamed(t, ctx, distroName)
+			} else {
+				distroName, _ = wsltestutils.RegisterDistro(t, ctx, true)
+			}
 
 			d, err := distro.New(ctx, distroName, distro.Properties{}, t.TempDir(), startupMutex())
 			defer d.Cleanup(context.Background())
