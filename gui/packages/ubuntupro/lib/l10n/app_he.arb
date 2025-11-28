@@ -115,7 +115,7 @@
     "@landscapeFileNotFound": {},
     "landscapeFileIsDir": "הקובץ לא יכול להיות תיקייה",
     "@landscapeFileIsDir": {},
-    "landscapeFileInvalidFormat": "הקובץ הוא בתבנית שגויה",
+    "landscapeFileInvalidFormat": "התבנית של קובץ זה אינה תקנית",
     "@landscapeFileInvalidFormat": {},
     "landscapeFilePicker": "בחירת קובץ…",
     "@landscapeFilePicker": {},
