@@ -43,7 +43,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_markdown: ^0.7.6+2
-  flutter_svg: ^2.2.2
+  flutter_svg: ^2.2.3
   grpc: ^4.0.1
   intl: ^0.20.2
   meta: ^1.12.0
