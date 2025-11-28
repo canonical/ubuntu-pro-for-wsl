@@ -47,9 +47,13 @@ func FetchFromMicrosoftStore(ctx context.Context, conf Config, db *database.Dist
 		return fmt.Errorf("could not get current subscription status: %v", err)
 	}
 
-	// Shortcut to avoid spamming the contract server
-	// We don't need to request a new token if we have a non-expired one
-	if src == config.SourceMicrosoftStore {
+	switch src {
+	case config.SourceRegistry: // assumed to be assigned by the organization, so let's skip checking with MS Store and contracts backend.
+		log.Debug(ctx, "Config: Skip checking with Microsoft Store: Organization wide subscription is active")
+		return nil
+	case config.SourceMicrosoftStore:
+		// Shortcut to avoid spamming the contract server
+		// We don't need to request a new token if we have a non-expired one
 		valid, err := contracts.ValidSubscription(args...)
 		if err != nil {
 			return fmt.Errorf("could not obtain current subscription status: %v", err)
@@ -61,6 +65,7 @@ func FetchFromMicrosoftStore(ctx context.Context, conf Config, db *database.Dist
 		}
 
 		log.Debug(ctx, "Config: no valid Microsoft Store subscription")
+	default:
 	}
 
 	log.Debug(ctx, "Config: attempting to obtain Ubuntu Pro token from the Microsoft Store")

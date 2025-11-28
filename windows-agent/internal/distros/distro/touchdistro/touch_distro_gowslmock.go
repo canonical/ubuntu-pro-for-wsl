@@ -7,13 +7,20 @@ package touchdistro
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	wsl "github.com/ubuntu/gowsl"
 )
 
 // Touch sends a "exit 0" command to a distro in order to wake it up.
+// It returns wslDistroNotFoundError when the distroName contains the
+// unregister magic word, to ease testing.
 func Touch(ctx context.Context, distroName string) error {
+	if strings.HasSuffix(distroName, "unregistered-late") {
+		return &wslDistroNotFoundError{errors.New(distroName)}
+	}
 	d := wsl.NewDistro(ctx, distroName)
 
 	select {

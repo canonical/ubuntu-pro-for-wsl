@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -16,7 +17,11 @@ import (
 func Touch(ctx context.Context, distroName string) error {
 	cmd := wslCmd(ctx, distroName, "exit", "0")
 	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("could not run 'exit 0': %v. Output: %s", err, out)
+		o := string(out)
+		if strings.Contains(o, "Wsl/Service/WSL_E_DISTRO_NOT_FOUND") {
+			return &wslDistroNotFoundError{err}
+		}
+		return fmt.Errorf("could not run 'exit 0': %v. Output: %s", err, o)
 	}
 
 	return nil

@@ -71,6 +71,15 @@ func requireIsTestDistro(t *testing.T, distroName string) {
 	}
 }
 
+// RegisterDistroNamed registers a distro and returns its GUID.
+//
+//nolint:revive // The context is better after the testing.T
+func RegisterDistroNamed(t *testing.T, ctx context.Context, distroName string) (GUID string) {
+	t.Helper()
+
+	return registerDistro(t, ctx, distroName, true)
+}
+
 // RegisterDistro registers a distro and returns its randomly-generated name and its GUID.
 //
 //nolint:revive // The context is better after the testing.T

@@ -134,6 +134,11 @@ func (m *stateManager) keepAwake(ctx context.Context) (err error) {
 				return
 			case <-time.After(5 * time.Second):
 				if err := touchdistro.Touch(ctx, m.distroIdentity.Name); err != nil {
+					// The distro instance could have been manually
+					// unregistered.
+					if touchdistro.IsWslDistroNotFound(err) {
+						return
+					}
 					log.Errorf(ctx, "Distro %q: %v", m.distroIdentity.Name, err)
 				}
 			}

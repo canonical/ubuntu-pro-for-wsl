@@ -225,7 +225,9 @@ func (s *Service) keepConnected() error {
 				case err := <-connectionDone:
 					select {
 					case <-waitCh:
-						// Connection was dropped so fast we'll consider it a failure.
+						// Connection was dropped so fast we'll consider it a partial failure, instead of maintaining
+						// the wait times, let's reset to a minimum.
+						wait = minWait
 						return errors.New("connection dropped unexpectedly")
 					default:
 					}

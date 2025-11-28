@@ -16,10 +16,8 @@ const (
 	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
 	ListeningPortFileName = ".address"
 
-	// MsStoreProductID is the ID of the product in the Microsoft Store
-	//
-	// TODO: Replace with real product ID.
-	MsStoreProductID = "9P25B50XMKXT"
+	// MsStoreProductID is the ID of the product in the Microsoft Store.
+	MsStoreProductID = "9PBDP6SFLM8G"
 
 	// CertificatesDir is the agent's public subdirectory where the certificates are stored.
 	CertificatesDir = "certs"
