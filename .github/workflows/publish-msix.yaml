@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -85,7 +85,7 @@ jobs:
           }
           Write-Output "This is a draft release. Once the submission is completed in MS Partner Center, the MSIX package must be downloaded and included as a release asset."
       - name: Check out the repository wiki
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: canonical/ubuntu-pro-for-wsl.wiki
           path: wiki
