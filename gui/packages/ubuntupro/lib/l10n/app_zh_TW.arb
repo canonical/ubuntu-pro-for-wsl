@@ -97,7 +97,7 @@
     "@landscapeSkipRegister": {},
     "landscapeSetupManual": "手動設定",
     "@landscapeSetupManual": {},
-    "landscapeSetupManualHint": "使用您自己的 Landscape 伺服器註冊",
+    "landscapeSetupManualHint": "使用 Landscape 伺服器註冊",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustom": "進階設定",
     "@landscapeSetupCustom": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "連接至 Landscape 時發生未知錯誤",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "請回報此事件，並包含以下詳細資訊。",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "帳號名稱",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "帳號名稱不得為空白或「{reservedAccount}」。",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
