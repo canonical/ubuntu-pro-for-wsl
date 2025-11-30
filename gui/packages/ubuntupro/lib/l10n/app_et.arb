@@ -155,7 +155,7 @@
     "@agentStateCannotStart": {},
     "landscapeFileLabel": "Seadistustefaili asukoht",
     "@landscapeFileLabel": {},
-    "landscapeDetails": "Lisateave",
+    "landscapeDetails": "Üksikasjad",
     "@landscapeDetails": {},
     "landscapeProceedAnywayHint": "Jätka ning katsed ühenduse loomiseks Landscape'i serveriga jätkuvad taustal.",
     "@landscapeProceedAnywayHint": {},
