@@ -224,7 +224,7 @@ Install an older LTS release --- Ubuntu 22.04 --- from PowerShell:
 > wsl --install Ubuntu-22.04
 ```
 
-After this instanced has installed and launched, enter a username and password, then run `pro status`.
+After this instance has installed and launched, enter a username and password, then run `pro status`.
 
 You should again get confirmation of successful Pro-attachment for the new instance.
 
