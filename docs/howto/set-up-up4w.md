@@ -22,12 +22,6 @@ You should also verify that the [firewall rules are correctly set up](../referen
 (howto::install-up4w)=
 ## Install Ubuntu Pro for WSL
 
-% :TODO: remove this warning once the app is made generally available (after the beta period).
-
-```{warning}
-The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
-```
-
 You can install Pro for WSL [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
 
 ![Install Ubuntu Pro for WSL from the Store](./assets/store.png)
