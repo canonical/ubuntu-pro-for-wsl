@@ -3,8 +3,6 @@
 ```{admonition} Ubuntu Pro
 :class: pro-block
 This page refers to features that require an [Ubuntu Pro
-subscription](https://ubuntu.com/pro/subscribe) and access to the Ubuntu Pro
-for WSL application. The application is currently in **beta** and not yet
-generally available.
+subscription](https://ubuntu.com/pro/subscribe).
 ```
 <!-- Include end pro -->

@@ -135,14 +135,6 @@ Once you have a token you are ready to install Pro for WSL.
 (tut::get-up4w)=
 ### Install and configure Ubuntu Pro for WSL
 
-% :TODO: remove this warning once the app is made generally available (after the beta period).
-
-```{admonition} Ubuntu Pro for WSL is in beta
-:class: note
-
-The install link below will work only if you're logged in to the Microsoft Store with an account for which access to the app has been enabled.
-```
-
 Pro for WSL can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
 
 Open the application and paste the token you copied from the Ubuntu Pro dashboard:
@@ -224,7 +216,7 @@ Install an older LTS release --- Ubuntu 22.04 --- from PowerShell:
 > wsl --install Ubuntu-22.04
 ```
 
-After this instanced has installed and launched, enter a username and password, then run `pro status`.
+After this instance has installed and launched, enter a username and password, then run `pro status`.
 
 You should again get confirmation of successful Pro-attachment for the new instance.
 
