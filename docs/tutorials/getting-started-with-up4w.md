@@ -27,7 +27,7 @@ You should then be ready for more advanced usage scenarios.
 
 ## What you will do
 
-- Install Pro for WSL from the Microsoft Store
+- Install Pro for WSL
 - Configure Pro for WSL with a Pro token
 - Test automatic Pro-attachment of WSL instances
 
@@ -135,9 +135,9 @@ Once you have a token you are ready to install Pro for WSL.
 (tut::get-up4w)=
 ### Install and configure Ubuntu Pro for WSL
 
-Pro for WSL can be installed from [this link to the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ).
+Pro for WSL can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
 
-Open the application and paste the token you copied from the Ubuntu Pro dashboard:
+Once installed, open the application and paste the token you copied from the Ubuntu Pro dashboard:
 
 ![Main screen of the Pro for WSL GUI](../assets/token-input-placeholder.png)
 
