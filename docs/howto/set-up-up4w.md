@@ -22,9 +22,7 @@ You should also verify that the [firewall rules are correctly set up](../referen
 (howto::install-up4w)=
 ## Install Ubuntu Pro for WSL
 
-You can install Pro for WSL [on this page of the Microsoft Store](https://apps.microsoft.com/detail/9PD1WZNBDXKZ):
-
-![Install Ubuntu Pro for WSL from the Store](./assets/store.png)
+Pro for WSL can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
 
 (howto::config-up4w)=
 ## Choose a configuration method
