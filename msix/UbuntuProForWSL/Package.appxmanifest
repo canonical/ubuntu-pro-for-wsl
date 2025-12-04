@@ -11,7 +11,7 @@
     <!-- Windows 10 21H1 Build 19043 or later -->
     <virtualization:RegistryWriteVirtualization>
       <virtualization:ExcludedKeys>
-        <virtualization:ExcludedKey>HKEY_CURRENT_USER\Software\</virtualization:ExcludedKey>
+        <virtualization:ExcludedKey>HKEY_CURRENT_USER\Software\Canonical\UbuntuPro</virtualization:ExcludedKey>
       </virtualization:ExcludedKeys>
     </virtualization:RegistryWriteVirtualization>
     <uap13:AutoUpdate>
