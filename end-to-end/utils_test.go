@@ -258,9 +258,24 @@ func writeUbuntuProRegistry(t *testing.T, field string, value string) {
 	t.Helper()
 
 	key, _, err := registry.CreateKey(registry.CURRENT_USER, registryPath, registry.WRITE)
-	require.NoErrorf(t, err, "Setup: could not open UbuntuPro registry key")
+	require.NoError(t, err, "Setup: could not open UbuntuPro registry key")
 	defer key.Close()
 
 	err = key.SetStringsValue(field, strings.Split(value, "\n"))
 	require.NoError(t, err, "could not write token in registry")
+}
+
+func requireRegistryIsInitialized(t *testing.T, valueNames []string) {
+	t.Helper()
+
+	key, err := registry.OpenKey(registry.CURRENT_USER, registryPath, registry.READ)
+	require.NoError(t, err, "Setup: could not open UbuntuPro registry key")
+	defer key.Close()
+
+	values, err := key.ReadValueNames(len(valueNames))
+	require.NoError(t, err, "Setup: could not read the UbuntuPro registry key values")
+
+	for v := range valueNames {
+		require.Contains(t, values, v, "Setup: UbuntuPro registry key was not initialized as expected")
+	}
 }
