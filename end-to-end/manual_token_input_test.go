@@ -85,6 +85,8 @@ func TestManualTokenInput(t *testing.T) {
 				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
+			// By now the agent should have initialized the registry
+			requireRegistryIsInitialized(t, []string{"UbuntuProToken", "LandscapeConfig"})
 			const maxTimeout = time.Minute
 
 			if !tc.wantAttached {
