@@ -13,7 +13,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/mocks/storeserver/storemockserver"
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const (

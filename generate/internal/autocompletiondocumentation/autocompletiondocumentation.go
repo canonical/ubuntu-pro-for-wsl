@@ -14,7 +14,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/generate/internal/generators"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const usage = `Usage:

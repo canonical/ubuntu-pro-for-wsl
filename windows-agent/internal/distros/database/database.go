@@ -18,7 +18,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/ubuntu/decorate"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const (

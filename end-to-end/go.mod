@@ -8,10 +8,10 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f
 	github.com/stretchr/testify v1.11.1
 	github.com/ubuntu/gowsl v0.0.0-20251003130259-5c49d26cf9f5
+	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/sys v0.38.0
 	google.golang.org/grpc v1.77.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -29,4 +29,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

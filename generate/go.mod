@@ -7,7 +7,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20251113212915-53f76463e568
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
-	gopkg.in/yaml.v3 v3.0.1
+	go.yaml.in/yaml/v3 v3.0.4
 )
 
 require (
@@ -38,7 +38,6 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19 // indirect
 	github.com/ubuntu/gowsl v0.0.0-20251003130259-5c49d26cf9f5 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
@@ -47,4 +46,5 @@ require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
