@@ -14,8 +14,8 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/ubuntu/decorate"
+	"go.yaml.in/yaml/v3"
 	"gopkg.in/ini.v1"
-	"gopkg.in/yaml.v3"
 )
 
 // Config is a configuration provider for ProToken and the Landscape config.

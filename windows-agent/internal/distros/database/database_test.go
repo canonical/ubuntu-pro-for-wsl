@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 	wsl "github.com/ubuntu/gowsl"
 	wslmock "github.com/ubuntu/gowsl/mock"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 )
 
 type dbDirState int

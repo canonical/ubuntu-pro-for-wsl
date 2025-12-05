@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/ubuntu/decorate"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func (c *Config) load() (err error) {
