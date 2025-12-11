@@ -7,7 +7,7 @@ with remote management tools.
 
 ## Landscape
 
-Manage Ubuntu on WSL with Canonical's Landscape.
+Manage Ubuntu on WSL with Landscape from Canonical.
 
 ```{toctree}
 :titlesonly:
