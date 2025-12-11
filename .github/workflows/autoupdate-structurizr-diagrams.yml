@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
       - name: Create Pull Request if there is a diff
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Auto update diagrams
           title: 'docs: Auto update diagram files'
