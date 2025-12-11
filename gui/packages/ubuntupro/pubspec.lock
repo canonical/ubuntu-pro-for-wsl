@@ -1143,10 +1143,10 @@ packages:
     dependency: "direct dev"
     description:
       name: yaru_test
-      sha256: d4249bbd5e0b62c0774afe575785c075b8ff7053cd7d85065da5ad0a309e0226
+      sha256: ee017f18154fdf2d989310717b5f93520f5c5e4e985a1a02fc5688672be56f65
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.2"
+    version: "0.3.3"
   yaru_window:
     dependency: transitive
     description:
