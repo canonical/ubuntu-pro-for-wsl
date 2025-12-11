@@ -63,6 +63,7 @@ Radeon
 # Other jargon
 adapter
 autoload
+automount
 autopkgtest
 autopkgtests
 backporting
