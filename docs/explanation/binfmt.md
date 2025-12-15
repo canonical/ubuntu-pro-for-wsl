@@ -91,15 +91,15 @@ Users that need emulators and binfmt support managed by systemd more than the Wi
 interoperability or that can tolerate the need to restart WSL when the interoperability breaks are encouraged
 to remove that file.
 
-```bash
-sudo rm /usr/lib/systemd/system/systemd-binfmt.service.d/wsl.conf
-sudo systemctl daemon-reload
+```{code-block} text
+$ sudo rm /usr/lib/systemd/system/systemd-binfmt.service.d/wsl.conf
+$ sudo systemctl daemon-reload
 ```
 
 Then, manually restart that service:
 
-```bash
-sudo systemctl restart systemd-binfmt.service
+```{code-block} text
+$ sudo systemctl restart systemd-binfmt.service
 ```
 
 After running these commands, foreign executable file format registration mediated by systemd will work.

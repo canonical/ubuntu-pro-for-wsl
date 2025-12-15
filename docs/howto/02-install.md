@@ -42,8 +42,8 @@ This is the Windows-side agent that manages the distros.
 
 1. Uninstall Pro for WSL if you had installed previously:
 
-    ```powershell
-    Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage
+    ```{code-block} powershell
+    > Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage
     ```
 
 2. Follow the download steps to download UbuntuProForWSL
@@ -59,26 +59,26 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
 
 1. Uninstall the WSL-Pro-Service from your distro if you had it installed previously:
 
-    ```bash
-    sudo apt remove wsl-pro-service
+    ```{code-block} text
+    $ sudo apt remove wsl-pro-service
     ```
 
 2. Follow the download steps to download the WSL-Pro-Service.
 3. Unzip the artifact.
 4. Navigate to the unzipped directory containing the .deb file. Here is a possible path:
 
-    ```bash
-    cd /mnt/c/Users/<username>/Downloads/wsl-pro-service_*
+    ```{code-block} text
+    $ cd /mnt/c/Users/<username>/Downloads/wsl-pro-service_*
     ```
 
 5. Install the deb package.
 
-    ```bash
-    sudo apt install ./wsl-pro-service_*.deb
+    ```{code-block} text
+    $ sudo apt install ./wsl-pro-service_*.deb
     ```
 
 6. Ensure it works via systemd:
 
-    ```bash
-    systemctl status wsl-pro.service
+    ```{code-block} text
+    $ systemctl status wsl-pro.service
     ```

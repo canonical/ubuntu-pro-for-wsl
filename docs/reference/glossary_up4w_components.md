@@ -19,8 +19,8 @@ Pro for WSL has a small GUI that helps users provide an Ubuntu Pro token and
 
 When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. For troubleshooting purposes, you can restart the agent by first stopping the Windows process `ubuntu-pro-agent-launcher.exe` in Windows Task Manger or by issuing the following command in a PowerShell terminal:
 
-```text
-Stop-Process -Name ubuntu-pro-agent.exe
+```{code-block} powershell
+> Stop-Process -Name ubuntu-pro-agent.exe
 ```
 
 You can then launch the GUI to complete the restart.
@@ -34,8 +34,8 @@ The Landscape client comes pre-installed in your distro as part of the package `
 
 You can check the status of the Landscape client in any particular Ubuntu WSL instance by starting a shell in that instance and running:
 
-```text
-systemctl status landscape-client.service
+```{code-block} text
+$ systemctl status landscape-client.service
 ```
 
 (ref::ubuntu-pro-client)=
@@ -54,8 +54,8 @@ which comes pre-installed in Ubuntu WSL instances since Ubuntu 24.04 LTS.
 
 Pro for WSL's Windows agent is a Windows application running in the background. It starts automatically when the user logs in to Windows. If it stops for any reason, it can be started by launching the Pro for WSL GUI or running the executable from the terminal, optionally with `-vvv` for verbose logging:
 
-```text
-ubuntu-pro-agent.exe -vvv
+```{code-block} text
+> ubuntu-pro-agent.exe -vvv
 ```
 
 The Windows agent is Pro for WSL's central hub that communicates with all the components to coordinate them.
@@ -67,6 +67,6 @@ This is a `systemd` unit running inside every Ubuntu WSL instance. The [Windows 
 
 You can check the current status of the WSL Pro Service in any particular distro with:
 
-```text
-systemctl status wsl-pro.service
+```{code-block} text
+$ systemctl status wsl-pro.service
 ```
