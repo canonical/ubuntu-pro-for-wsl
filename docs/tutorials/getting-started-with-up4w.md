@@ -1,4 +1,5 @@
 ---
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/desktop/wsl)"
 myst:
   html_meta:
     "description lang=en":
@@ -136,6 +137,13 @@ Once you have a token you are ready to install Pro for WSL.
 ### Install and configure Ubuntu Pro for WSL
 
 Pro for WSL can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
+
+```{admonition} Other installation methods
+:class: tip
+The app can also be installed using WinGet and the Microsoft Store.
+
+Read our dedicated [Pro for WSL installation guide](howto::install-up4w).
+```
 
 Once installed, open the application and paste the token you copied from the Ubuntu Pro dashboard:
 

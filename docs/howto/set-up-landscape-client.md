@@ -17,14 +17,12 @@ myst:
 
 The Landscape client can be configured in two ways:
 
-- Windows registry: easier to automate and deploy at scale 
-- Graphical Windows application: convenient option for individual users
+- The **Windows registry**: useful for automating deployment at scale 
+- The application's **graphical interface**: convenient option for individual users
 
-Click the appropriate tab to read more.
+`````{tab-set}
 
-`````{tabs}
-
-````{group-tab} Windows registry
+````{tab-item} Configure with the Windows registry
 
 ## Access the registry
 
@@ -57,7 +55,7 @@ automatically Pro-attaching WSL instances through Landscape.
 
 ````
 
-````{group-tab} Graphical Windows application
+````{tab-item} Configure with the graphical interface
 In the Pro for WSL app navigate to the Landscape configuration screen:
 
 ![Main screen of the Pro for WSL GUI](../assets/landscape-config-ui.png)
@@ -110,7 +108,7 @@ The path can then be referenced during Landscape configuration in the Pro for WS
 ```
 
 (howto::config-landscape-client)=
-## Configuring the landscape client
+## Landscape configuration example
 
 Both the `LandscapeConfig` data in the Windows registry and the Advanced Configuration
 option in the graphical Windows application can be configured as follows:
