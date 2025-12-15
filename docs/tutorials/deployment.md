@@ -235,7 +235,6 @@ $ nvidia-smi
 Finally, run `pro status`, to confirm that Pro for WSL has automatically Pro-attached the Ubuntu instance.
 
 ````{dropdown} Deleting the deployed instance and restoring any backups
-:color: primary
 :icon: undo
 
 Terminate the new instance and uninstall it from PowerShell:

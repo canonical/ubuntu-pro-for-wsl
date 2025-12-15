@@ -39,7 +39,6 @@ You may be prompted to grant permission to continue the installation.
 You may also need to reboot your machine before installing and running any Ubuntu distro.
 
 :::{dropdown} Variation in WSL installation behaviour
-:color: primary
 :icon: question
 
 The effect of `wsl --install` may vary depending on your system. After

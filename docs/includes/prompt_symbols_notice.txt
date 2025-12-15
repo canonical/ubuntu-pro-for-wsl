@@ -1,7 +1,6 @@
 <!-- Include start prompt symbols -->
 
-:::{dropdown} Use of prompt symbols in this documentation
-:color: primary
+```{dropdown} Use of prompt symbols in this documentation
 :icon: terminal
 
 Prompt symbols on this page are used to distinguish between commands that
@@ -11,5 +10,5 @@ you run in PowerShell and commands that you run in Ubuntu:
 * `$`: Ubuntu
 
 When you copy any command, the prompt symbol will not be copied.
-:::
+```
 <!-- Include end prompt symbols -->

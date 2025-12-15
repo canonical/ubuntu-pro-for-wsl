@@ -1,7 +1,6 @@
 <!-- Include start virtualisation requirements -->
 
 :::{dropdown} Virtualisation requirements when using WSL
-:color: primary
 :icon: device-desktop
 
 **Virtualisation** needs to be enabled. Many Windows devices already meet this

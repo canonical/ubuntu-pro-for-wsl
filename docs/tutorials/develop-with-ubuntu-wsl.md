@@ -90,7 +90,6 @@ PowerShell:
 ```
 
 :::{dropdown} Installing multiple instances of the same Ubuntu release
-:color: primary
 :icon: light-bulb
 
 If you already have an `Ubuntu-24.04` instance and you don't want to change or
