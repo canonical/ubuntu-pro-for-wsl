@@ -72,7 +72,7 @@ recommending the modern tar-based format.
 
 If you don't know the format of an installed distro, run:
 
-```{codeblock} powershell
+```{code-block} powershell
 > Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss"
 ```
 
