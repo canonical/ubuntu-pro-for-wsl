@@ -52,7 +52,7 @@ jobs:
           fail-on-diff: false
       - name: Create Pull Request
         if: steps.checkpo.outputs.modified == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Auto update po files
           title: 'docs(i18n): Auto update po files'
@@ -102,7 +102,7 @@ jobs:
         with:
           working-directory: .
           fail-on-diff: false
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         name: Create Pull Request
         if: steps.check-diff.outputs.diff == 'true'
         with:
@@ -149,7 +149,7 @@ jobs:
           working-directory: wsl-pro-service
           fail-on-diff: false
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         if: steps.check-diff.outputs.diff == 'true'
         with:
           commit-message: Auto update internal dependencies
