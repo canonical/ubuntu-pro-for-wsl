@@ -20,8 +20,8 @@ deploy Ubuntu to remote Windows machines using Landscape.
 ## What you will do
 
 - Register a Windows host instance with Landscape
-- Create a WSL profile on Landscape
-- Deploy Ubuntu to a remote Windows machine
+- Create a custom WSL profile on Landscape
+- Deploy Ubuntu with the custom profile to a remote Windows machine
 
 ## What you need
 
@@ -78,14 +78,20 @@ Instructions for restoring the backup can be found at the end of the tutorial.
 
 ````
 
-### Landscape server must be installed and accessible
+### A Landscape server must be set up and available
 
-You need a Landscape server set up and you should be
-able access the Landscape dashboard in a browser.
+You need a Landscape server set up and access to the Landscape dashboard in a browser.
+
+[Landscape SaaS edition](https://documentation.ubuntu.com/landscape/what-is-landscape/#editions-of-landscape)
+is bundled with your Pro subscription and can be set up as follows:
+
+1. Use your Ubuntu One SSO credentials to sign in to [landscape.canonical.com](https://landscape.canonical.com)
+2. Create a Landscape SaaS account
+3. Note the account name associated with the Landscape server
 
 Please refer to the [Landscape
-documentation](https://ubuntu.com/landscape/install) for detailed setup and
-configuration instructions.
+documentation](https://documentation.ubuntu.com/landscape/how-to-guides/landscape-installation-and-set-up/) for detailed setup and
+additional installation options.
 
 (tut::config-landscape-up4w)=
 ## Configure Landscape in the Ubuntu Pro for WSL app
@@ -95,6 +101,11 @@ Open the Pro for WSL app, enter your Pro token and continue to the Landscape con
 Choose your preferred configuration option and enter the required details.
 If you choose Manual configuration, you only require the FQDN of your Landscape server.
 
+```{note}
+If you are using Landscape SaaS, enter `landscape.canonical.com` for the FQDN
+and the account name from your Landscape dashboard.
+```
+
 When you continue, a status screen will confirm that your configuration is complete.
 
 > A dedicated how-to guide on configuring Landscape with Pro for WSL can be found [here](../howto/set-up-landscape-client).
@@ -102,20 +113,20 @@ When you continue, a status screen will confirm that your configuration is compl
 ## Register the Windows host instance with Landscape
 
 ```{admonition} Usage of the term "instance"
-:class: note
+:class: warning
 In the Landscape dashboard, an "instance" refers to the Windows host running WSL.
 
-On the Windows machine itself, an "instance" refers to an installed WSL distro.
+In this documentation, we often use "instance" to refer to instances of WSL running on the Windows host.
 ```
 
 Refresh the Landscape dashboard.
 
-Go to **Instances**, and review the pending instances.
+Go to {guilabel}`Instances`, and review the pending instances.
 
 Check the box for your Windows host instance and approve it, leaving the access
 group as "Global access".
 
-Refresh the page and the Windows host will be listed under **Instances**.
+Refresh the page and the Windows host will be listed under {guilabel}`Instances`.
 
 Select the Windows host and assign it the tag "wsl-target".
 
@@ -175,7 +186,7 @@ runcmd:
 Search for the "wsl-target" tag and select it, then confirm that you want to
 add the WSL profile.
 
-Go to **Activities** and confirm that the "Create instance Ubuntu-24.04" activity is queued.
+Go to {guilabel}`Activities` and confirm that the "Create instance Ubuntu-24.04" activity is queued.
 
 This means that an instance of Ubuntu is in the process of being deployed to
 the Windows host.
