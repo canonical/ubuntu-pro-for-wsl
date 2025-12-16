@@ -7,4 +7,4 @@ environment:
 
 dependencies:
   grpc: ">=4.0.0 <6.0.0"
-  protobuf: ">=4.0.0 <6.0.0"
+  protobuf: ">=4.0.0 <7.0.0"
