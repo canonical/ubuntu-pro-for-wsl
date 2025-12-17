@@ -53,7 +53,7 @@ start the tutorial.
 
 To check if an Ubuntu-24.04 instance exists, run the following in PowerShell:
 
-```text
+```{code-block} text
 > wsl -l -v
 ```
 
@@ -185,7 +185,7 @@ the Windows host.
 
 On the Windows host machine, list the installed WSL distros:
 
-```text
+```{code-block} text
 > wsl -l -v
 ```
 
@@ -203,7 +203,7 @@ u@<hostname>:~$
 
 Next, confirm that CUDA has been installed successfully:
 
-```text
+```{code-block} text
 $ apt policy cuda-toolkit-12-6
 ```
 
@@ -219,7 +219,7 @@ cuda-toolkit-12-6
 
 Then confirm that your GPU is being detected correctly:
 
-```text
+```{code-block} text
 $ nvidia-smi
 ```
 
@@ -235,7 +235,6 @@ $ nvidia-smi
 Finally, run `pro status`, to confirm that Pro for WSL has automatically Pro-attached the Ubuntu instance.
 
 ````{dropdown} Deleting the deployed instance and restoring any backups
-:color: primary
 :icon: undo
 
 Terminate the new instance and uninstall it from PowerShell:

@@ -28,7 +28,7 @@ If you installed the app using WinGet, you can instead run the following command
 
 Remove `.ubuntupro` from your Windows user profile directory.
 
-```text
+```{code-block} powershell
 > Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
 ```
 
@@ -37,7 +37,7 @@ Remove `.ubuntupro` from your Windows user profile directory.
 If you or your organisation used the Windows Registry to store any configuration data, such as
 a Pro token, remove the matching registry key:
 
-```text
+```{code-block} powershell
 > Remove-Item -Recurse -Force HKCU:\Software\Canonical\UbuntuPro
 ```
 
@@ -48,7 +48,7 @@ a Pro token, remove the matching registry key:
 
 In PowerShell, run the following command to stop WSL:
 
-```text
+```{code-block} text
 > wsl --shutdown
 ```
 
@@ -58,7 +58,7 @@ The method to uninstall an Ubuntu distro depends on the installation format.
 
 For installations that use the modern tar-based installation format, run:
 
-```text
+```{code-block} text
 > wsl --unregister <distro>
 ```
 
@@ -72,7 +72,7 @@ recommending the modern tar-based format.
 
 If you don't know the format of an installed distro, run:
 
-```text
+```{code-block} powershell
 > Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss"
 ```
 
@@ -85,7 +85,7 @@ value `1`.
 
 Only uninstall WSL if you no longer need WSL on your Windows machine:
 
-```text
+```{code-block} text
 > wsl --uninstall
 ```
 

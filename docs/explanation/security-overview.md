@@ -36,16 +36,16 @@ recommend that you manually verify the checksum.
 Before Ubuntu is installed on WSL, you can verify the checksum of the download
 in PowerShell, like this:
 
-```powershell
-Get-FileHash C:\Users\<username>\downloads\ubuntu-<version number>-wsl-amd64.wsl -A SHA256
+```{code-block} powershell
+> Get-FileHash C:\Users\<username>\downloads\ubuntu-<version number>-wsl-amd64.wsl -A SHA256
 ```
 
 You can then cross-reference the output against the checksum on the
 [releases.ubuntu.com](https://releases.ubuntu.com) page before installing the
 verified download:
 
-```powershell
-wsl --install --from-file ubuntu-<version number>-wsl.amd64.wsl
+```{code-block} text
+> wsl --install --from-file ubuntu-<version number>-wsl.amd64.wsl
 ```
 
 * [Read more about verifying an Ubuntu download](https://ubuntu.com/tutorials/how-to-verify-ubuntu#1-overview)
@@ -76,10 +76,10 @@ permissions of the Windows user supersede that of the Ubuntu user.
 
 ### Root access
 
-Access to a WSL instance as the root user is possible:
+Access to a WSL instance as the root user is possible by running the following from PowerShell:
 
-```text
-wsl -d <ubuntu distro> -u root
+```{code-block} text
+> wsl -d <ubuntu distro> -u root
 ```
 
 After accessing an instance as a regular (non-root) user, a password is still expected for
@@ -97,8 +97,8 @@ Windows side; they run with the Windows user permissions only.
 
 As with any distribution, packages should be routinely updated and upgraded:
 
-```text
-sudo apt update && sudo apt upgrade -y
+```{code-block} text
+$ sudo apt update && sudo apt upgrade -y
 ```
 
 It is generally recommended that you install packages from official repositories using
@@ -161,8 +161,8 @@ distributions. For Ubuntu on WSL, the Pro client is pre-installed.
 To manually attach a Pro subscription to a new instance, run this
 command from inside the instance:
 
-```text
-sudo pro attach
+```{code-block} text
+$ sudo pro attach
 ```
 
 Once your instance is Pro-attached, you can run various commands to monitor and secure your instance, including `pro security-status` and `pro fix`:
@@ -223,14 +223,14 @@ you should therefore consider enforcing WSL 2 on host Windows machines.
 
 To set the default version to WSL 2:
 
-```text
-wsl --set-default-version 2
+```{code-block} text
+> wsl --set-default-version 2
 ```
 
 To convert a specific distribution from WSL 1 to WSL 2:
 
-```text
-wsl --set-version <distro> 2
+```{code-block} text
+> wsl --set-version <distro> 2
 ```
 
 You can also get and set the default WSL version using the Windows registry,
@@ -238,14 +238,14 @@ which may be necessary for certain remote management setups.
 
 To get the version:
 
-```powershell
-Get-ItemPropertyValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion
+```{code-block} powershell
+> Get-ItemPropertyValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion
 ```
 
 To set it:
 
-```powershell
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion -Value 2
+```{code-block} powershell
+> Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" -Name DefaultVersion -Value 2
 ```
 
 Intune also supports policies for WSL, which include toggling the availability of WSL 1 on client machines:
