@@ -1,3 +1,12 @@
+wsl-pro-service (0.1.19) UNRELEASED; urgency=medium
+
+  * Packaging fixes to prevent lintian errors.
+  * Better sync with cloud-init.
+  * Improved Go version detection for packaging.
+  * Upgrade Go to 1.24 and multiple dependencies.
+
+ -- Carlos Nihelton <cnihelton@ubuntu.com>  Wed, 17 Dec 2025 11:27:24 -0300
+
 wsl-pro-service (0.1.18) plucky; urgency=medium
 
   * Pin Go toolchain to 1.23.8 to fix the following security vulnerabilities:

@@ -30,8 +30,8 @@ override_dh_auto_install:
 	dh_auto_install -- --no-source
 
 	# systemd services
-	mkdir -p debian/wsl-pro-service/lib/systemd/system
-	cp -a services/* debian/wsl-pro-service/lib/systemd/system/
+	mkdir -p debian/wsl-pro-service/usr/lib/systemd/system
+	cp -a services/* debian/wsl-pro-service/usr/lib/systemd/system/
 
 	# Install our service in libexec as it's not intended for end user
 	mv debian/wsl-pro-service/usr/bin/ debian/wsl-pro-service/usr/libexec/

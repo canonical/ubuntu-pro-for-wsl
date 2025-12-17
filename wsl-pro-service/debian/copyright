@@ -23,21 +23,9 @@ Files: vendor/github.com/golang/*
 Copyright: 2010 The Go Authors
 License: BSD-3
 
-Files: vendor/github.com/hashicorp/*
-Copyright: HashiCorp
-License: MPL-2.0
-
 Files: vendor/github.com/inconshreveable/*
 Copyright: 2022 Alan Shreve (@inconshreveable)
 License: Apache-2.0
-
-Files: vendor/github.com/magiconair/*
-Copyright: 2013-2020, Frank Schroeder
-License: BSD-2
-
-Files: vendor/github.com/mitchellh/*
-Copyright: 2013 Mitchell Hashimoto
-License: MIT
 
 Files: vendor/github.com/pelletier/*
 Copyright: 2021 - 2023 Thomas Pelletier
@@ -50,10 +38,6 @@ License: BSD-3
 Files: vendor/github.com/sagikazarmark/locafero/*
 Copyright: 2023 Márk Sági-Kazár
 License: MIT 
-
-Files: vendor/github.com/sagikazarmark/slog-shim/*
-Copyright: 2009 The Go Authors
-License: BSD-3
 
 Files: vendor/github.com/sirupsen/*
 Copyright: 2014 Simon Eskildsen
@@ -97,14 +81,6 @@ Files: vendor/github.com/ubuntu/decorate/*
 Copyright: 2022-2023 Canonical Ltd.
 License: MIT
 
-Files: vendor/go.uber.org/atomic/*
-Copyright: 2016 Uber Technologies, Inc
-License: MIT
-
-Files: vendor/go.uber.org/multierr/*
-Copyright: 2017-2021 Uber Technologies, Inc
-License: MIT
-
 Files: vendor/golang.org/x/*
 Copyright: 2009 The Go Authors
 License: BSD-3
@@ -136,6 +112,22 @@ Files: vendor/gopkg.in/yaml.v3/apic.go
        vendor/gopkg.in/yaml.v3/yamlprivateh.go
 Copyright: 2006-2010 Kirill Simonov
            2006-2011 Kirill Simonov
+License: MIT
+
+Files: vendor/go.yaml.in/yaml/v3/*
+Copyright: 2011-2019 Canonical Ltd
+	   2025 - The go-yaml Project Contributors
+License: Apache-2.0
+
+Files: vendor/go.yaml.in/yaml/v3/apic.go
+       vendor/go.yaml.in/yaml/v3/emitterc.go
+       vendor/go.yaml.in/yaml/v3/parserc.go
+       vendor/go.yaml.in/yaml/v3/readerc.go
+       vendor/go.yaml.in/yaml/v3/scannerc.go
+       vendor/go.yaml.in/yaml/v3/writerc.go
+       vendor/go.yaml.in/yaml/v3/yamlh.go
+       vendor/go.yaml.in/yaml/v3/yamlprivateh.go
+Copyright: 2006-2011 Kirill Simonov
 License: MIT
 
 License: Apache-2.0
