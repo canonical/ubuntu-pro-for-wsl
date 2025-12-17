@@ -114,6 +114,22 @@ Copyright: 2006-2010 Kirill Simonov
            2006-2011 Kirill Simonov
 License: MIT
 
+Files: vendor/go.yaml.in/yaml/v3/*
+Copyright: 2011-2019 Canonical Ltd
+	   2025 - The go-yaml Project Contributors
+License: Apache-2.0
+
+Files: vendor/go.yaml.in/yaml/v3/apic.go
+       vendor/go.yaml.in/yaml/v3/emitterc.go
+       vendor/go.yaml.in/yaml/v3/parserc.go
+       vendor/go.yaml.in/yaml/v3/readerc.go
+       vendor/go.yaml.in/yaml/v3/scannerc.go
+       vendor/go.yaml.in/yaml/v3/writerc.go
+       vendor/go.yaml.in/yaml/v3/yamlh.go
+       vendor/go.yaml.in/yaml/v3/yamlprivateh.go
+Copyright: 2006-2011 Kirill Simonov
+License: MIT
+
 License: Apache-2.0
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
