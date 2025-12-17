@@ -6,8 +6,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -181,13 +185,30 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 
 	// Using the 'echo.' syntax instead of 'echo ' because if %USERPROFILE% was set to empty string it would cause the output to be 'ECHO is on'.
 	// With 'echo.%UserProfile%' it correctly prints empty line in that case.
-	cmd := s.backend.CmdExe(ctx, cmdExe, "/C", "echo.%UserProfile%")
-	winHome, err := runCommand(cmd)
+	// Using the /U flag makes it output UTF-16LE, otherwise it would be ANSI, which is
+	// code-page dependent, not necessarily ASCII or UTF-8 compliant and unpredictable.
+	cmd := s.backend.CmdExe(ctx, cmdExe, "/U", "/C", "echo.%UserProfile%")
+	var stdout, stderr bytes.Buffer
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
 	if err != nil {
+		return wslPath, fmt.Errorf("%s: error: %v", cmd.Path, err)
+	}
+
+	fmt.Println("Formatted Hex Dump:")
+	rawBytes := stdout.Bytes()
+	fmt.Printf("Buffer Length: %d\n", len(rawBytes))
+	fmt.Print(hex.Dump(rawBytes))
+	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
+	reader := transform.NewReader(&stdout, utf16le.NewDecoder())
+	var sb strings.Builder
+	if _, err = io.Copy(&sb, reader); err != nil {
 		return wslPath, err
 	}
 
-	trimmed := strings.TrimSpace(string(winHome))
+	trimmed := strings.TrimSpace(sb.String())
 	if len(trimmed) == 0 {
 		return wslPath, errors.New("%UserProfile% value is empty")
 	}

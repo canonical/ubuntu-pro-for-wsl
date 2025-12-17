@@ -15,6 +15,9 @@ import (
 	"syscall"
 	"testing"
 
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
+
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/stretchr/testify/require"
@@ -604,30 +607,38 @@ func CmdExeMock(t *testing.T) {
 	}
 
 	mockMain(t, func(argv []string) exitCode {
-		if len(argv) != 2 {
+		if len(argv) != 3 {
 			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
 
-		if argv[0] != "/C" {
+		if argv[0] != "/U" && argv[1] != "/C" {
 			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
 
-		if argv[1] != "echo.%UserProfile%" {
-			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+		utf16le := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
+
+		if argv[2] != "echo.%UserProfile%" {
+			writer := transform.NewWriter(os.Stderr, utf16le.NewEncoder())
+			fmt.Fprintf(writer, "Mock not implemented for args %q\n", argv)
+			_ = writer.Close()
 			return exitBadUsage
 		}
 
 		if envExists(CmdExeErr) {
 			return exitError
 		}
+
+		writer := transform.NewWriter(os.Stdout, utf16le.NewEncoder())
+		defer writer.Close()
+
 		if envExists(EmptyUserprofileEnvVar) {
-			fmt.Print("\r\n")
+			fmt.Fprint(writer, "\r\n")
 			return exitOk
 		}
 
-		fmt.Fprintln(os.Stdout, windowsUserProfileDir)
+		fmt.Fprintf(writer, "%s\r\n", windowsUserProfileDir)
 		return exitOk
 	})
 }
