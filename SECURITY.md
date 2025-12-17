@@ -1,9 +1,5 @@
 # Security policy
 
-## Note about the general availability of Ubuntu Pro for WSL
-
-Ubuntu Pro for WSL is not yet generally available. It's currently under active development and testing.
-
 ## Supported versions
 
 Ubuntu Pro for WSL is made of two main components: the application, which runs on the Windows host, and the `wsl-pro-service`,
