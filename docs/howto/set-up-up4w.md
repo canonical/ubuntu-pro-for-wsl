@@ -1,4 +1,5 @@
 ---
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/desktop/wsl)"
 myst:
   html_meta:
     "description lang=en":
@@ -12,31 +13,52 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-To install and configure Ubuntu Pro for WSL you will need:
+To install Ubuntu Pro for WSL, you need Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
-* Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
-* An Ubuntu Pro token
+To configure your Ubuntu instances to Pro-attach, you must have an Ubuntu Pro token.
 
-You should also verify that the [firewall rules are correctly set up](../reference/firewall_requirements.md).
+If necessary, you can verify that your [firewall rules are correctly set up](../reference/firewall_requirements.md).
 
 (howto::install-up4w)=
 ## Install Ubuntu Pro for WSL
 
-Pro for WSL can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
+Pro for WSL can be installed from the Ubuntu website, the Microsoft Store, or using WinGet.
+
+`````{tab-set}
+````{tab-item} Ubuntu website
+Go to [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
+
+Click {guilabel}`Download the Ubuntu Pro for WSL app`.
+
+Run the downloaded installer.
+````
+
+````{tab-item} Microsoft Store
+Search for "Ubuntu Pro" in the Microsoft Store.
+
+Open the store page and install the app.
+````
+
+````{tab-item} WinGet
+Run the following command in PowerShell to install the app:
+
+```{code-block} text
+> winget install Canonical.UbuntuProforWSL
+```
+````
+``````
 
 (howto::config-up4w)=
 ## Choose a configuration method
 
-After installation has finished you can start configuring Pro for WSL in two ways:
+After installing Pro for WSL, the application can be configured in two ways:
 
-- Windows registry: easier to automate and deploy at scale 
-- Graphical Windows application: convenient option for individual users
+- The **Windows registry**: useful for automating deployment at scale 
+- The application's **graphical interface**: convenient option for individual users
 
-Click the appropriate tab to read more.
+`````{tab-set}
 
-`````{tabs}
-
-````{group-tab} Windows registry
+````{tab-item} Configure with the Windows registry
 
 ## Set up the key and values
 
@@ -63,17 +85,17 @@ Navigate to the `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` key.
 Locate the {guilabel}`UbuntuProToken` value and enter your Pro token in the
 {guilabel}`Value data` field.
 
-After configuration using the Windows Registry the status in the Pro for WSL application will show that
+After configuration using the Windows Registry, the status in the Pro for WSL application will show that
 the Pro subscription is active and managed by the user's organisation.
-Unlike installation through the graphical Windows application, there is no option to detach the Pro
-subscription in the application interface when the registry is used:
+
+Unlike configuration through the graphical interface, when the registry is used
+to configure Pro for WSL there is no option for the user to detach the Pro
+subscription in the application:
 
 ![alt text](./assets/status-complete-registry.png) 
-
-
 ````
 
-````{group-tab} Graphical Windows application
+````{tab-item} Configure with the graphical interface
 
 ## Enter your Pro token
 
@@ -91,10 +113,7 @@ You should now see that your Pro subscription is active:
 
 Opening the application again at any point will show this screen, confirm the subscription is
 active and enable detaching of the subscription.
-
 ````
-
-
 `````
 
 For additional verification steps refer to [our guide](./verify-subscribe-attach.md).

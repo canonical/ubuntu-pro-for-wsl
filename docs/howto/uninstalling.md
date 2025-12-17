@@ -13,17 +13,29 @@ Ubuntu distros, and WSL itself.
 (howto::uninstall-up4w)=
 ## Ubuntu Pro for WSL
 
+### Uninstall the Pro for WSL app
+
 Go to `Settings > Apps > Installed Apps`, locate the "Ubuntu Pro for WSL"
 application, right-click on it and select **Uninstall**.
 
-You should also remove `.ubuntupro` from your Windows user profile directory.
+If you installed the app using WinGet, you can instead run the following command in PowerShell:
+
+```{code-block} text
+> winget uninstall Canonical.UbuntuProforWSL
+```
+
+### Remove Pro for WSL data
+
+Remove `.ubuntupro` from your Windows user profile directory.
 
 ```text
 > Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
 ```
 
+### Remove registry key
+
 If you or your organisation used the Windows Registry to store any configuration data, such as
-your Pro token, you should also remove the matching registry key:
+a Pro token, remove the matching registry key:
 
 ```text
 > Remove-Item -Recurse -Force HKCU:\Software\Canonical\UbuntuPro
@@ -32,18 +44,22 @@ your Pro token, you should also remove the matching registry key:
 (howto::uninstall-ubuntu-wsl)=
 ## Ubuntu distros
 
+### Stop WSL
+
 In PowerShell, run the following command to stop WSL:
 
 ```text
 > wsl --shutdown
 ```
 
+### Uninstall Ubuntu distros
+
 The method to uninstall an Ubuntu distro depends on the installation format.
 
 For installations that use the modern tar-based installation format, run:
 
 ```text
-PS C:\Users\me> wsl --unregister <distro>
+> wsl --unregister <distro>
 ```
 
 If a distribution was installed in the legacy format, go to `Settings > Apps >
@@ -57,21 +73,20 @@ recommending the modern tar-based format.
 If you don't know the format of an installed distro, run:
 
 ```text
-PS C:\Users\me> Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss"
+> Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss"
 ```
 
 Distros installed using the tar-based format include the property `modern` with
 value `1`.
-
 ````
 
 (howto::uninstall-wsl)=
 ## WSL app
 
-Only do this if you no longer need WSL on your Windows machine:
+Only uninstall WSL if you no longer need WSL on your Windows machine:
 
 ```text
-PS C:\Users\me> wsl --uninstall
+> wsl --uninstall
 ```
 
 ```{note}

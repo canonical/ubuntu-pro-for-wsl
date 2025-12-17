@@ -273,6 +273,8 @@ linkcheck_ignore = [
     "https://apps.microsoft.com/detail/9PD1WZNBDXKZ",
     # Linkcheck struggles with hashes in URLs
     "https://matrix.to/#/#documentation:ubuntu.com",
+    # Server is rejecting automated requests
+    "https://www.freedesktop.org/software/*",
 ]
 
 
