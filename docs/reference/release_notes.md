@@ -99,8 +99,41 @@ prevent creation of a default user which confused WSLg
 (ref::up4w-releases)=
 ### Ubuntu Pro for WSL
 
-This application is pending an official release of its 1.0 version.
+#### Version 1.0
 
+The first public release of Pro for WSL introduces turnkey security maintenance
+and enterprise support for Ubuntu 24.04 LTS running on WSL, and enables
+the effective management of Ubuntu on WSL by system administrators.
+
+##### Automatic Pro attachment of Ubuntu instances
+
+Once installed and configured with a Pro token, Pro for WSL runs in the
+background of the Windows machine, automatically detecting and Pro-attaching
+instances of Ubuntu on WSL.
+
+##### Landscape integration for remote management of WSL
+
+Landscape can register Windows machines in which the Pro for WSL application
+has been configured to connect to the Landscape server.
+
+Using the Landscape dashboard or API, system administrators can then monitor,
+secure, and provision instances of Ubuntu on WSL across fleets of Windows machines.
+
+##### Multiple configuration methods
+
+Pro for WSL offers two approaches to configure Pro-attachment and Landscape-integration:
+
+* The **Windows registry** is the best option for system administrators who need to develop
+scalable deployment flows for over 5 Windows machines with an enterprise Pro subscription.
+* The **Graphical application** is suitable for individual users who want to secure their
+own device with a free Pro subscription and the free Pro for WSL app. 
+
+##### Comprehensive documentation
+
+Supporting documentation is available for [getting started using Pro for
+WSL](howto::up4w) and [configuring a Pro subscription](howto::config-up4w). An
+[architectural overview](../explanation/ref-arch-explanation) of Pro for WSL is
+also provided.
 
 ### Previous LTS distro releases
 
@@ -134,7 +167,11 @@ This application is pending an official release of its 1.0 version.
 ### Interim distro releases
 
 
-```{dropdown} Click to expand for 25.04 (Plucky Puffin), and more...
+```{dropdown} Click to expand for 25.10 (Questing Quokka), and more...
+#### Ubuntu 25.10 (Questing Quokka)
+
+* None
+
 #### Ubuntu 25.04 (Plucky Puffin)
 
 * Published WSL images have moved to
