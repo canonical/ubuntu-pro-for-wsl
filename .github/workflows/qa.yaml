@@ -257,7 +257,7 @@ jobs:
           SAFE_ID=$(echo "${{ matrix.subproject }}-${{ matrix.os }}" | tr '/' '_')
           echo "SAFE_ID=$SAFE_ID" >> $GITHUB_ENV
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ env.SAFE_ID }}
           path: ${{ matrix.subproject }}/coverage/codecov/
@@ -291,7 +291,7 @@ jobs:
         shell: bash
         run: |
           reportgenerator -reports:"./artifacts/*/*.xml" -targetdir:"./coverage" -reporttypes:Cobertura
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: unified-coverage
           path: ./coverage/Cobertura.xml
