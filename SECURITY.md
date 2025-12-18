@@ -30,7 +30,7 @@ other channels, as well as on the project's
 
 Pro for WSL operates within the security context of the authenticated Windows user. By design, the
 application runs with standard user privileges and does not require administrative elevation. While the local
-user maintains full access to their own instance data, cross-user data access is strictly
+user maintains full access to their own application data, cross-user data access is strictly
 prohibited.
 
 A vulnerability is classified as a security issue if a flaw in Pro for WSL, or its underlying
