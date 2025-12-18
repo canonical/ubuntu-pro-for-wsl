@@ -6,8 +6,8 @@ Ubuntu Pro for WSL is made of two main components: the application, which runs o
 which runs within instances of Ubuntu on WSL. When referring to supported versions, both components must be considered
 separately. We currently provide security updates for:
 
-* the Windows application on all versions of Windows 11
-* the `wsl-pro-service` on Ubuntu 24.04 LTS.
+* the latest stable release of the Windows application on all versions of Windows 11
+* the `wsl-pro-service` on Ubuntu 24.04 LTS and later.
 
 We are planning to backport the service to Ubuntu 22.04 LTS.
 
@@ -20,6 +20,27 @@ WSL terminal running your Ubuntu distro:
 ```
 lsb_release -a
 ```
+
+The latest stable release of the Windows application is published to the Microsoft Store, to WinGet and
+other channels, as well as on the project's
+[GitHub Releases page](https://github.com/canonical/ubuntu-pro-for-wsl/releases) marked with the
+`Latest` badge.
+
+## What qualifies as a security issue
+
+Pro for WSL operates within the security context of the authenticated Windows user. By design, the
+application runs with standard user privileges and does not require administrative elevation. While the local
+user maintains full access to their own application data, cross-user data access is strictly
+prohibited.
+
+A vulnerability is classified as a security issue if a flaw in Pro for WSL, or its underlying
+dependencies, enables any of the following:
+* **Privilege Escalation**: Gaining higher-level system permissions than those assigned.
+* **Unauthorized Access**: Modifying or exfiltrating Pro for WSL data by non-privileged or secondary users.
+* **Denial of Service (DoS)**: Compromising system availability or integrity.
+
+Any behaviour meeting these criteria must be documented and reported through the established
+security channels for immediate investigation.
 
 ## Reporting a vulnerability
 
