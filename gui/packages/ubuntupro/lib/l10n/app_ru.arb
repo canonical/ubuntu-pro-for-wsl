@@ -19,9 +19,9 @@
     "@landscapeFQDNError": {},
     "statusBarAgentDownTooltip": "Агент Ubuntu Pro отключен. Нажмите для запуска агента.",
     "@statusBarAgentDownTooltip": {},
-    "tokenInputTitle": "Привязать это устройство",
+    "tokenInputTitle": "Привязать эту машину",
     "@tokenInputTitle": {},
-    "tokenInputDescription": "Введите токен, полученный от {proLink} или Вашего системного администратора",
+    "tokenInputDescription": "Введите токен, полученный на {proLink} или от Вашего системного администратора",
     "@tokenInputDescription": {
         "placeholders": {
             "proLink": {
@@ -85,7 +85,7 @@
     "@getUbuntuPro": {},
     "learnMore": "Подробнее",
     "@learnMore": {},
-    "ubuntuProEnabled": "Ubuntu Pro задействован на этом устройстве",
+    "ubuntuProEnabled": "Ubuntu Pro задействован на этой машине",
     "@ubuntuProEnabled": {},
     "ubuntuProEnabledInfo": "Все экземпляры Ubuntu WSL имеют доступ к функциям безопасности Ubuntu Pro.",
     "@ubuntuProEnabledInfo": {},
