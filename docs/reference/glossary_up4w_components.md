@@ -87,7 +87,7 @@ Distro
           * {term}`Fedora`
 
      See also:
-      * [Linux kernel](https://en.wikipedia.org/wiki/Linux_kernel)
+     * [Linux kernel](https://en.wikipedia.org/wiki/Linux_kernel)
 
 :::
 
@@ -145,11 +145,7 @@ Graphical User Interface (GUI)
 
 GUI front end 
 Grafical User Iinterface front end 
-    GUI front end in Pro for WSL refers to a small GUI that helps users provide an Ubuntu Pro token and [configure Landscape](ref::landscape-config). When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w windows-agent). If this fails, the agent is restarted. 
-
-      See also:
-      * Stopping the Windows process`ubuntu-pro-agent-launcher.exe`in Windows Task Manger
-      * Issuing the following command in a PowerShell terminal: `Stop-Process -Name ubuntu-pro-agent.exe`
+    GUI front end in Pro for WSL refers to a small GUI that helps users provide an Ubuntu Pro token and [configure Landscape](ref::landscape-config). When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w windows-agent). If this fails, the agent is restarted. Stop the process by clicking `ubuntu-pro-agent-launcher.exe` "end task" in Windows Task Manger. In a PowerShell terminal type: `Stop-Process -Name ubuntu-pro-agent.exe`
     
 :::
 
