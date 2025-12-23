@@ -144,7 +144,7 @@ Graphical User Interface (GUI)
     *command-line interface({term}`CLI`)     
 
 GUI front end 
-Grafical User Iinterface front end 
+Grafical User Interface front end 
     GUI front end in Pro for WSL refers to a small GUI that helps users provide an Ubuntu Pro token and [configure Landscape](ref::landscape-config). When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w windows-agent). If this fails, the agent is restarted. Stop the process by clicking `ubuntu-pro-agent-launcher.exe` "end task" in Windows Task Manger. In a PowerShell terminal type: `Stop-Process -Name ubuntu-pro-agent.exe`
     
 :::
