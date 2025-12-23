@@ -51,7 +51,20 @@ for details on how to get involved.
 
 :::{glossary}
 
-    *Work in Progress*
+Client-Side Code
+  Client-side code is code that runs on the user's device (in their {term}`web browser`, {term}`desktop app`, or {term}`mobile app`) rather than on a remote server.
+
+
+Client-side technologies
+  Client-side technologies refer to web technologies that run on the user's device, primarily executed within the browser, such as HTML, CSS, and JavaScript, enabling dynamic user interfaces and interactive web applications. These technologies are essential for enhancing user experience by reducing server load and allowing asynchronous interactions without continuous full-page reloads. As the functionality and efficiency of web browsers continue to grow, understanding client-side technologies becomes crucial for modern web development, as they empower developers to create fast, responsive, and engaging user experiences.
+
+
+CLI
+Command-line interface
+  CLI is a way to interact with a computer by typing text commands instead of clicking buttons and icons.
+
+  See also:
+    * [command-line interfaces](https://en.wikipedia.org/wiki/Command-line_interface)
 
 
 :::
@@ -61,17 +74,20 @@ for details on how to get involved.
 
 :::{glossary}
 
-## Distro 
-  Distro is short for distribution - specifically a Linux distribution.
-  A Linux distro is a complete operating system built around the Linux kernel, bundled with different software, tools, and a package manager. Think     of it as a "version" of Linux.
-  Popular Linux distros include: 
-      * Ubuntu
-      * Deblan
-      * Fedora
+Debian
+  Debian is a free, open-source operating system. The "parent" of Ubuntu and many other distributions. Debian is known for extreme stability and reliability. It is Run entirely by volunteers (no company behind it).
+    
+    See also:
+    * [Debian the Community](https://www.debian.org/)
 
-    Related topic(s):
-    * Linux distribution
-    * Linux kernel
+Distro 
+    Distro is short for distribution - specifically a Linux distribution. A Linux distro is a complete operating system built around the Linux kernel, bundled with different software, tools, and a package manager. Popular Linux distros include: 
+          * {term}`Ubuntu`
+          * {term}`Debian`
+          * {term}`Fedora`
+
+     See also:
+      * [Linux kernel](https://en.wikipedia.org/wiki/Linux_kernel)
 
 :::
 
@@ -90,20 +106,27 @@ for details on how to get involved.
 
 :::{glossary}
 
-## Front end 
-   Refers to everything the user directly interacts with in an application. 
-   The front-end includes:
-   * The GUI (visual design and layout)
-   * User interaction logic {term}`(UIL)`
-   * Client-side code (like {term}`HTML`, {term}`CSS`, {term}`JavaScript` for {term}`web apps`)
-   * How data is displayed to users
+Fedora
+  Fedora is a free, open-source Linux distribution that focuses on innovation and cutting-edge technology. It is sponsored by Red Hat (now owned by IBM) and is known for being at the forefront of new Linux features.
 
+
+    See also:
+    * [Fedora_Linux](https://en.wikipedia.org/wiki/Fedora_Linux)(https://www.youtube.com/watch?v=aYpnpjQDX64)
+
+  
+
+Front end 
+    Front end refers to everything the user directly interacts with in an application. The front-end includes:
+           * GUI (visual design and layout)
+           * User interaction logic (UIL)
+           * Client-side code (like {term}`HTML`, {term}`CSS`, {term}`JavaScript` for {term}`web apps`)
+           * How data is displayed to users
 
     Related topic(s):
-    * GUI
-    * GUI front end
-    * User interaction logic (UIL)
-    * Client-side code
+    * {term}`GUI`
+    * {term}`GUI front end`
+    * User interaction logic ({term}`UIL`)
+    * {term}`Client-side code`
 :::
 
 
@@ -113,35 +136,20 @@ for details on how to get involved.
 
 :::{glossary}
 
-    *Work in Progress*
-
-    
-(ref::up4w-gui)=
-## GUI 
+GUI 
 Graphical User Interface (GUI)
-    It is a visual way for people to interact with computers using graphics like windows, icons, buttons, and menus instead of typing text commands. Before GUIs became common in the 1980s, most people interacted with computers through command-line       interfaces {term}`(CLIs)`. GUIs made computers much more accessible because you could point and click with a mouse rather than memorize commands.
-    Common elements of a GUI include:
- * Windows that display content and applications
- * Icons representing files, folders, and programs
- * Buttons you can click to perform actions
- * Menus with dropdown options
- * Dialog boxes for settings and confirmations
+    GUI is a visual way for people to interact with computers using graphics like windows, icons, buttons, and menus instead of typing text commands. Common elements of a GUI include windows, icons, buttons, menus, and dialog boxes. 
 
-## GUI front end (Ubuntu Pro for WSL)
-  Grafical User Iinterface front end 
-  GUI front end in Pro for WSL refers to a small GUI that helps users provide an Ubuntu Pro token and
-[configure Landscape](ref::landscape-config).
-
-  When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w-windows-agent). If this fails, the agent is restarted. 
-  For troubleshooting purposes, you can restart the agent by:
-  * Stopping the Windows process `ubuntu-pro-agent-launcher.exe`in Windows Task Manger
-  * Issuing the following command in a PowerShell terminal:
-
- See also:
- ```text
-    * Stop-Process -Name ubuntu-pro-agent.exe
- ```
     Related topic(s):
+    *command-line interface({term}`CLI`)     
+
+GUI front end 
+Grafical User Iinterface front end 
+    GUI front end in Pro for WSL refers to a small GUI that helps users provide an Ubuntu Pro token and [configure Landscape](ref::landscape-config). When the GUI starts, it attempts to establish a connection to the [Pro for WSL Windows Agent](ref::up4w windows-agent). If this fails, the agent is restarted. 
+
+      See also:
+      * Stopping the Windows process`ubuntu-pro-agent-launcher.exe`in Windows Task Manger
+      * Issuing the following command in a PowerShell terminal: `Stop-Process -Name ubuntu-pro-agent.exe`
     
 :::
 
@@ -189,18 +197,12 @@ Graphical User Interface (GUI)
 
 :::{glossary}
 
+Landscape client
+    Landscape client is a {term}`systemd` unit running inside every Ubuntu WSL instance. The Landscape client comes pre-installed in your {term}`distro` as part of the package `landscape-client`. It sends information about the system to the Landscape server. The server, in turn, sends instructions that the client executes. Check the status of the Landscape client in any particular Ubuntu WSL instance by starting a shell in that instance and running systemctl status landscape-client.service
 
-(ref::landscape-client)=
-## Landscape client
+Landscape configuration
+    It has different meanings depending on the context. In IT "landscape" refers to the overall system architecture.
 
-    The Landscape client is a {term}`systemd` unit running inside every Ubuntu WSL instance.   The Landscape client comes pre-installed in your {term}`distro` as part of the package `landscape-client`. 
-    It sends information about the system to the Landscape server. The server, in turn, sends instructions that the client executes.
-    Check the status of the Landscape client in any particular Ubuntu WSL instance by:
-      * starting a shell in that instance and running:
-
-```text
-systemctl status landscape-client.service
-```
 :::
 
 (terms_M)=
@@ -281,13 +283,16 @@ systemctl status landscape-client.service
 
 :::{glossary}
 
-(ref::ubuntu-pro-client)=
-## Ubuntu Pro client
-    Ubuntu Pro client is a command-line utility that manages the different offerings of the Ubuntu Pro subscription. In Pro for WSL, this executable
-    is used within each of the managed WSL distros to enable [Ubuntu Pro](https://documentation.ubuntu.com/pro/) services within that distro. 
-    This executable comes pre-installed in {term}`Ubuntu WSL` as part of the {term} `ubuntu-pro-client` package since Ubuntu 24.04 LTS.
+Ubuntu
+  Ubuntu is a free, open-source operating system based on Linux. It's one of the most popular Linux distributions (distros) in the world, known for being user-friendly and beginner-friendly.
 
+Ubuntu Pro client
+    Ubuntu Pro client is a command-line utility that manages the different offerings of the Ubuntu Pro subscription. In Pro for WSL, this executable is used within each of the managed WSL distros to enable [Ubuntu Pro](https:/documentation.ubuntu.com/pro/) services within that distro and it comes pre-installed in {term}`Ubuntu WSL` as part of the {term} `ubuntu-pro-client` package since Ubuntu 24.04 LTS.
 
+UIL
+User interaction logic
+  UIL is the code and rules that handle how users interact with software.
+  
 :::
 
 (terms_V)=
@@ -295,7 +300,7 @@ systemctl status landscape-client.service
 
 :::{glossary}
 
-   ## Verbose logging (-vvv)
+Verbose logging (-vvv)
 
 :::
 
@@ -304,25 +309,14 @@ systemctl status landscape-client.service
 
 :::{glossary}
 
-   (ref::up4w-windows-agent)=
-## Windows agent (Pro for WSL)
-   The Windows agent is a Windows application running in the background. It starts automatically when the user logs in to Windows. 
-   If it stops for any reason, it can be started by launching the Pro for WSL {term}`GUI` or running the executable from the terminal, optionally with `-vvv` for verbose logging:
 
-      ```text
-      ubuntu-pro-agent.exe -vvv
-      ```
-    The Windows agent is Pro for WSL's central hub that communicates with all the components to coordinate them.
+Windows agent 
+    Windows agent (Pro for WSL) is a Windows application running in the background. It starts automatically when the user logs in to Windows. If it stops for any reason, it can be started by launching the Pro for WSL {term}`GUI` or running the executable from the terminal, optionally with `-vvv` for verbose logging {term}`ubuntu-pro-agent.exe -vvv`. Windows agent is Pro for WSL's central hub that communicates with all the components to coordinate them.
+    
 
-    (ref::up4w-wsl-pro-service)=
-## WSL Pro service
-  Windows Subsystem for Linux (WSL) Pro Service is a bridge between the Windows agent and Ubuntu WSL instances that controls Pro and Landscape status   GitHub. It is a component that's part of Ubuntu Pro for WSL. It is a `systemd` unit running inside every Ubuntu WSL instance. The [Windows agent]     (ref::up4w-windows-agent) running on the Windows host sends commands that the WSL Pro Service executes, such as pro-attaching or configuring the      [Landscape client](ref::landscape-client).
-  Check the current status of the WSL Pro Service in any particular {term}`distro` with:
-
-  ```text
-  systemctl status wsl-pro.service
-  ```
-
+WSL Pro service
+Windows Subsystem for Linux (WSL) Pro Service 
+    WSL Pro service is a bridge between the Windows agent and Ubuntu WSL instances that controls Pro and Landscape status GitHub. It is a component that's part of Ubuntu Pro for WSL. It is a `systemd` unit running inside every Ubuntu WSL instance. The [Windows agent](ref::up4w-windows-agent) running on the Windows host sends commands that the WSL Pro Service executes, such as pro-attaching or configuring the [Landscape client](ref::landscape-client). Check the current status of the WSL Pro Service in any particular {term}`distro` with: systemctl status wsl-pro.service 
 
 :::
 
