@@ -67,9 +67,9 @@
     "@purchaseStatusAlreadyPurchased": {},
     "purchaseStatusUserGaveUp": "கொள்முதல் முயற்சி கைவிடப்பட்டது.",
     "@purchaseStatusUserGaveUp": {},
-    "purchaseStatusNetwork": "ஒரு பிணையச் சிக்கல் வாங்குவதைத் தடுத்தது. இணைக்கப்பட்டவுடன் மீண்டும் முயற்சி.",
+    "purchaseStatusNetwork": "பிணையம் சிக்கல் வாங்குதலைத் தொடரவிடாமல் தடுத்தது. இணைக்கப்பட்டதும் மீண்டும் முயற்சிக்கவும்.",
     "@purchaseStatusNetwork": {},
-    "purchaseStatusServer": "நுண்மென் கடையில் ஏதோ தவறு ஏற்பட்டது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்.",
+    "purchaseStatusServer": "நுண்மென் ச்டோரில் ஏதோ தவறாகிவிட்டது. பிறகு முயற்சிக்கவும்.",
     "@purchaseStatusServer": {},
     "purchaseStatusUnknown": "சந்தா வாங்க முயற்சிக்கும்போது தெரியாத பிழை. இந்தப் பயன்பாட்டை மறுதொடக்கம் செய்வதைக் கவனியுங்கள்.",
     "@purchaseStatusUnknown": {},
@@ -87,13 +87,13 @@
             }
         }
     },
-    "landscapeSetupManualHint": "உங்கள் சொந்த இயற்கை சேவையகத்துடன் பதிவு செய்",
+    "landscapeSetupManualHint": "லேண்ட்ச்கேப் சர்வரில் பதிவு செய்யவும்",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustomHint": "தனிப்பயன் இயற்கை கிளையன்ட் உள்ளமைவு கோப்பை ஏற்றவும்",
     "@landscapeSetupCustomHint": {},
     "landscapeFQDNLabel": "நிலப்பரப்பு எப்கியுடிஎன்",
     "@landscapeFQDNLabel": {},
-    "landscapeFQDNError": "தவறான எப்கியுடிஎன். வடிவம் ஒரு புரவலன்பெயர் அல்லது இணைய முகவரியாக இருக்க வேண்டும்.",
+    "landscapeFQDNError": "தவறான FQDN. முழு தகுதி வாய்ந்த டொமைன் பெயர் அல்லது ஐபி முகவரி எதிர்பார்க்கப்படுகிறது.",
     "@landscapeFQDNError": {},
     "landscapeFQDNSaaSError": "எப்கியுடிஎன் LandScape.canonical.com ஆக இருக்கக் கூடாது.",
     "@landscapeFQDNSaaSError": {},
@@ -154,5 +154,43 @@
     "landscapeSetupManual": "கையேடு உள்ளமைவு",
     "@landscapeSetupManual": {},
     "landscapeSetupCustom": "மேம்பட்ட உள்ளமைவு",
-    "@landscapeSetupCustom": {}
+    "@landscapeSetupCustom": {},
+    "landscapeAccountNameLabel": "கணக்கு பெயர்",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "கணக்கின் பெயர் காலியாகவோ அல்லது \"{reservedAccount}\" ஆகவோ இருக்கக்கூடாது.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeDetails": "விவரங்கள்",
+    "@landscapeDetails": {},
+    "landscapeProceedAnywayHint": "தொடரவும் மற்றும் லேண்ட்ச்கேப் சர்வரை அடைவதற்கான முயற்சிகளும் பின்னணியில் தொடரும்.",
+    "@landscapeProceedAnywayHint": {},
+    "landscapeChangeLaterHint": "நீங்கள் எந்த நேரத்திலும் உள்ளமைவை மாற்றலாம்.",
+    "@landscapeChangeLaterHint": {},
+    "landscapeEditYourConfig": "உங்கள் கட்டமைப்பைத் திருத்தவும்",
+    "@landscapeEditYourConfig": {},
+    "landscapeProceedAnyway": "எப்படியும் தொடருங்கள்",
+    "@landscapeProceedAnyway": {},
+    "landscapeInvalidConfig": "தவறான நிலப்பரப்பு உள்ளமைவு",
+    "@landscapeInvalidConfig": {},
+    "landscapeInvalidConfigContent": "சமர்ப்பிக்கப்பட்ட உள்ளமைவை சேவையகம் நிராகரித்தது. உங்கள் அமைப்புகளைச் சரிபார்க்கவும்.",
+    "@landscapeInvalidConfigContent": {},
+    "landscapeUnchangedConfig": "மாறாத கட்டமைப்பு",
+    "@landscapeUnchangedConfig": {},
+    "landscapeUnreachable": "நிலப்பரப்பு அணுக முடியாதது",
+    "@landscapeUnreachable": {},
+    "landscapeUnreachableContent": "லேண்ட்ச்கேப் சர்வருடன் இணைக்க முடியவில்லை.",
+    "@landscapeUnreachableContent": {},
+    "landscapeWSLUnavailable": "லேண்ட்ச்கேப் WSL நற்பொருத்தங்கள் முடக்கப்பட்டுள்ளன",
+    "@landscapeWSLUnavailable": {},
+    "landscapeWSLUnavailableContent": "லேண்ட்ச்கேப் சர்வரில் WSL நற்பொருத்தங்கள் முடக்கப்பட்டுள்ளன. உங்கள் கணினி நிர்வாகியைத் தொடர்பு கொள்ளவும்.",
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeUnknownError": "லேண்ட்ச்கேப்புடன் இணைக்கும் போது தெரியாத பிழை",
+    "@landscapeUnknownError": {},
+    "landscapeUnknownErrorContent": "கீழே உள்ள விவரங்கள் உட்பட இந்த சம்பவத்தைப் புகாரளிக்கவும்.",
+    "@landscapeUnknownErrorContent": {}
 }
