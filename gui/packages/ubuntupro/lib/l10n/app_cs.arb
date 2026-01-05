@@ -107,7 +107,7 @@
     "@landscapeSetupManual": {},
     "landscapeSetupCustom": "Pokročilé nastavení",
     "@landscapeSetupCustom": {},
-    "landscapeSetupManualHint": "Zaregistrovat se na svém vlastním serveru Landscape",
+    "landscapeSetupManualHint": "Zaregistrovat se pomocí serveru Landscape",
     "@landscapeSetupManualHint": {},
     "landscapeSetupCustomHint": "Načíst vlastní konfigurační soubor klienta Landscape",
     "@landscapeSetupCustomHint": {},
@@ -182,5 +182,15 @@
     "landscapeUnknownError": "Neznámá chyba při připojování k Landscape",
     "@landscapeUnknownError": {},
     "landscapeUnknownErrorContent": "Prosíme nahlašte tento incident včetně níže uvedených podrobností.",
-    "@landscapeUnknownErrorContent": {}
+    "@landscapeUnknownErrorContent": {},
+    "landscapeAccountNameLabel": "Název účtu",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "Název účtu nemůže být prázdný nebo {reservedAccount}.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    }
 }
