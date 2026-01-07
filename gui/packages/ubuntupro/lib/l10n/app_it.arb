@@ -1,1 +1,8 @@
-{}
+{
+    "appTitle": "Ubuntu Pro per WSL",
+    "@appTitle": {},
+    "tokenErrorEmpty": "Il token non può essere vuoto",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Token non valido",
+    "@tokenErrorInvalid": {}
+}
