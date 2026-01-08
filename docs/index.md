@@ -12,7 +12,7 @@ developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
 including remote development with popular IDEs and cross-OS file management.
 
-Ubuntu Pro for WSL is an in-development automation tool for managing
+Ubuntu Pro for WSL is an automation tool for managing
 instances of Ubuntu on WSL. If you are responsible for a fleet of Windows
 devices, Pro for WSL will help you to monitor, customise and secure WSL at scale.
 
