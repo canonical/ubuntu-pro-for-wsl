@@ -30,8 +30,6 @@ production in an enterprise environment.
 * **Configuration and customisation**: [Instance configuration reference](/reference/instance_configuration/) • [Automating configuration with cloud-init](/howto/cloud-init/) • [Customising an Ubuntu image for WSL](/howto/custom-ubuntu-distro/) • [Differences between WSL 1 and WSL 2](/explanation/compare-wsl-versions/)
 * **GPU and graphics**: [Enabling GPU acceleration with CUDA](/howto/gpu-cuda/) • [Creating data visualisations](/howto/data-science-and-engineering/)
 * **DevOps**:  [GitHub actions for WSL](/reference/actions/) • [Running a WSL GitHub workflow on Azure](/howto/run-workflows-azure/)  
-* **Contributing**: [General contribution guidelines](/howto/contributing/) • [Developer guidelines](howto::dev-contrib)
-
 
 ## How the documentation is organised
 
@@ -46,10 +44,10 @@ This documentation uses the [Diátaxis structure](https://diataxis.fr/).
 
 Ubuntu on WSL is a member of the Ubuntu family. It’s an open-source project
 that warmly welcomes community contributions, suggestions, fixes and
-constructive feedback. Check out our [contribution
-guidelines](/howto/contributing)
-on GitHub in order to bring ideas, report bugs, participate in discussions and
-much more!
+constructive feedback.
+
+* [Code of conduct](https://ubuntu.com/community/ethos/code-of-conduct)
+* [Contribution guidelines](/howto/contributing)
 
 Thinking about using Ubuntu on WSL for your next project? Get in touch!
 
