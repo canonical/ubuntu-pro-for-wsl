@@ -11,13 +11,10 @@ Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) enables
 developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
 including remote development with popular IDEs and cross-OS file management.
-Ubuntu can be used as a terminal interface on Windows and can also
-launch Linux-native graphical applications.
 
 Ubuntu Pro for WSL is an in-development automation tool for managing
 instances of Ubuntu on WSL. If you are responsible for a fleet of Windows
-devices, Pro for WSL will help you to monitor, customise and secure Ubuntu WSL
-instances at scale.
+devices, Pro for WSL will help you to monitor, customise and secure WSL at scale.
 
 Ubuntu on WSL provides a fully-featured Ubuntu experience on Windows, suitable
 for learning Linux, developing a personal open-source project or building for
