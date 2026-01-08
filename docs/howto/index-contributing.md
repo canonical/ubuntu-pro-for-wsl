@@ -16,6 +16,7 @@ guidelines.
 General contribution guidelines <contributing>
 ```
 
+(howto::dev-contrib)=
 ## Guides for developing Ubuntu Pro for WSL
 
 Useful guides when developing and testing Ubuntu Pro for WSL.
