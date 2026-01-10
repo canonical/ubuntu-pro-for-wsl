@@ -1,1 +1,196 @@
-{}
+{
+    "appTitle": "WSL غا ماس كېلىدىغان Ubuntu Pro",
+    "@appTitle": {},
+    "tokenErrorEmpty": "پەرمان تاختا بوش قالمايدۇ",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "ئىناۋەتسىز پەرمان تاختا",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "ئىناۋەتلىك پەرمان تاختا",
+    "@tokenValid": {},
+    "tokenInputTitle": "بۇ ماشىنىغا باغلا",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "{proLink} نىڭ ياكى سىستېما باشقۇرغۇچىنىڭ پەرمان تاختىسى كىرگۈزۈلىدۇ",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "پەرمان تاختا",
+    "@tokenInputHint": {},
+    "attach": "باغلا",
+    "@attach": {},
+    "applyProToken": "Pro پەرمان تاختىنى قوللان",
+    "@applyProToken": {},
+    "applyingProToken": "{token} پەرمان تاختىنى قوللىنىۋاتىدۇ",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسى",
+    "@agent": {},
+    "agentStateStarting": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسى قوزغىلىۋاتىدۇ.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسى ئىنكاس قايتۇرۇۋاتىدۇ.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسىنى دەسلەپلەشتۈرۈشنى كۈتۈۋاتىدۇ.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسى قوزغىتالمىدى.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسىنىڭ ھالىتىنى دەلىللىيەلمىدى. مۇھىم تەڭشىكىنى تەكشۈرۈڭ.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسىنىڭ ھالىتىنى تەكشۈرۈۋاتىدۇ.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسىنى ئەسلىگە كەلتۈرۈشنى سىناۋاتىدۇ.",
+    "@agentStateUnreachable": {},
+    "proHeading": "Ubuntu تارقاتقۇچىنىڭ ئوچۇق كودلۇق يۇمشاق دېتال بىخەتەرلىكىنى ھازىر Windows تا ئىشلەتكىلى بولىدۇ. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Ubuntu Pro غا ئېرىشىش",
+    "@getUbuntuPro": {},
+    "learnMore": "مول بىلىم",
+    "@learnMore": {},
+    "ubuntuProEnabled": "بۇ كومپيۇتېردا Ubuntu Pro قوزغىتىلدى",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "بارلىق Ubuntu WSL ئەمەلىي مىسالى Ubuntu Pro بىخەتەرلىك ئىقتىدارىنى زىيارەت قىلالايدۇ.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Ubuntu Pro مۇشتەرىلىكىنى باشقۇرۇش",
+    "@manageUbuntuPro": {},
+    "detachPro": "Ubuntu Pro باغلىنىشىنى يەش",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "مۇشتەرىلىك ئۇچۇرىنى يېڭىلاۋاتىدۇ.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Ubuntu Pro غا مۇشتەرى بولغانلىقىڭىزغا كۆپ رەھمەت.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "سىز Ubuntu Pro غا مۇشتەرى بولۇپ بولغان.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "سېتىۋېلىش ئەمەلدىن قالدۇرۇلدى.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "تور مەسىلىسى سېتىۋېلىش جەريانىنى توستى. تورغا باغلانغاندا قايتا سىناڭ.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "Microsoft دۇكىنىدا مەسىلە كۆرۈلدى. سەل تۇرۇپ قايتا سىناڭ.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "مۇشتەرىلىكنى سېتىۋېلىش جەريانىدا يوچۇن خاتالىق كۆرۈلدى. بۇ ئەپنى قايتا قوزغىتىشنى ئويلىشىڭ.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "ھازىرچە ئاتلا",
+    "@landscapeSkip": {},
+    "landscapeSkipDescription": "سەل تۇرۇپ بۇ ئەپتە Landscape نى سەپلىيەلەيسىز",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "Landscape تە تىزىملىتىڭ",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "Landscape دە سەپلەنگەن باغلانما ئارقىلىق Ubuntu WSL ئەمەلىي مىسالىنى يىراقتىن باشقۇرىدۇ. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "قولدا سەپلەش",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "Landscape مۇلازىمېتىردا تىزىملىتىڭ",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "ئالىي سەپلىمە",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "ئىختىيارى Landscape خېرىدار سەپلىمە ھۆججىتىنى يۈكلەيدۇ",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "Landscape مۇكەممەل دائىرە ئىسمى",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "ئىناۋەتسىز مۇكەممەل دائىرە ئىسمى. مۇكەممەل دائىرە ئىسمى ياكى IP ئادرېس تەمىنلىنىشى كېرەك.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "مۇكەممەل دائىرە ئىسمى landscape.canonical.com بولماسلىقى كېرەك.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeAccountNameLabel": "ھېساب ئاتى",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "ھېساب ئاتى ياكى «{reservedAccount}» بوش قالمايدۇ.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "تىزىملىتىش ئاچقۇچى (تاللاشچان)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "مۇلازىمېتىر SSL ئاممىۋى ئاچقۇچى (تاللاشچان)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "سەپلىمە ھۆججەت يولى",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "سەپلىمە ھۆججەت بەك چوڭ",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "يول چوقۇم بەلگىلىنىشى كېرەك",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "ھۆججەت بوش قالسا بولمايدۇ",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "ھۆججەت تېپىلمىدى",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "ھۆججەت مۇندەرىجە بولماسلىقى كېرەك",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "ھۆججەت پىچىمى خاتا",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "ھۆججەت تاللىنىدۇ…",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "Landscape سەپلە",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "سەپلىمىنى قوللىنىۋاتقاندا خاتالىق كۆرۈلدى:\n{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "خەتلەت",
+    "@landscapeRegister": {},
+    "landscapeDetails": "تەپسىلاتى",
+    "@landscapeDetails": {},
+    "landscapeProceedAnywayHint": "مەشغۇلاتنى داۋاملاشتۇرۇڭ، سىستېما ئارقا سۇپىدا Landscape مۇلازىمېتىرغا باغلىنىشنى سىنايدۇ.",
+    "@landscapeProceedAnywayHint": {},
+    "landscapeChangeLaterHint": "خالىغان ۋاقىتتا سەپلىمىنى ئۆزگەرتەلەيسىز.",
+    "@landscapeChangeLaterHint": {},
+    "landscapeEditYourConfig": "سەپلىمە تەھرىرلەيدۇ",
+    "@landscapeEditYourConfig": {},
+    "landscapeProceedAnyway": "يەنىلا داۋاملاشتۇر",
+    "@landscapeProceedAnyway": {},
+    "landscapeInvalidConfig": "ئىناۋەتسىز Landscape سەپلىمىسى",
+    "@landscapeInvalidConfig": {},
+    "landscapeInvalidConfigContent": "مۇلازىمېتىر تاپشۇرۇلغان سەپلىمىنى رەت قىلدى. تەڭشىكىڭىزنى دەلىللەڭ.",
+    "@landscapeInvalidConfigContent": {},
+    "landscapeUnchangedConfig": "ئۆزگەرتىلمىگەن سەپلىمە",
+    "@landscapeUnchangedConfig": {},
+    "landscapeUnreachable": "Landscape نى زىيارەت قىلغىلى بولمايدۇ",
+    "@landscapeUnreachable": {},
+    "landscapeUnreachableContent": "Landscape مۇلازىمېتىرغا باغلىنالمىدى .",
+    "@landscapeUnreachableContent": {},
+    "landscapeWSLUnavailable": "Landscape WSL ئىقتىدارى چەكلەنگەن",
+    "@landscapeWSLUnavailable": {},
+    "landscapeWSLUnavailableContent": "Landscape مۇلازىمېتىردا WSL ئىقتىدارى چەكلەنگەن. سىستېما باشقۇرغۇچىڭىز بىلەن ئالاقىلىشىڭ.",
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeUnknownError": "Landscape كە باغلانغاندا يوچۇن خاتالىق كۆرۈلدى",
+    "@landscapeUnknownError": {},
+    "landscapeUnknownErrorContent": "تۆۋەندىكى تەپسىلاتنى ئۆز ئىچىگە ئالغان بۇ كاشىلىنى مەلۇم قىلىڭ.",
+    "@landscapeUnknownErrorContent": {},
+    "buttonNext": "كېيىنكى",
+    "@buttonNext": {},
+    "buttonSkip": "ئاتلا",
+    "@buttonSkip": {},
+    "buttonBack": "قايت",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "كەمتۈك مەلۇم قىل",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Ubuntu Pro ۋاكالەتچىسى ئىجرا قىلىنىۋاتىدۇ",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "Ubuntu Pro ۋاكالەتچىسىگە باغلىنىۋاتىدۇ…",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Ubuntu Pro ۋاكالەتچىسى ئۈزۈلدى. چېكىلسە ۋاكالەتچىنى قوزغىتىدۇ.",
+    "@statusBarAgentDownTooltip": {}
+}
