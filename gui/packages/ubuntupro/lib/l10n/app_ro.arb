@@ -1,1 +1,78 @@
-{}
+{
+    "appTitle": "Ubuntu Pro pentru WSL",
+    "@appTitle": {},
+    "tokenErrorEmpty": "Jetonul nu poate fi gol",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "Jeton invalid",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "Jeton valid",
+    "@tokenValid": {},
+    "tokenInputTitle": "Atașează acest dispozitiv",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "Introdu un jeton de la {proLink} sau administratorul sistemului tău",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Jeton",
+    "@tokenInputHint": {},
+    "attach": "Atașare",
+    "@attach": {},
+    "applyProToken": "Aplicare Jeton Pro",
+    "@applyProToken": {},
+    "applyingProToken": "Aplicând jetonul {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Agent Ubuntu Pro de fundal",
+    "@agent": {},
+    "agentStateStarting": "Agentul Ubuntu Pro de fundal pornește.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Agentul Ubuntu Pro de fundal nu răspunde.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "Așteptând inițializarea agentului Ubuntu Pro de fundal.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "Agentul Ubuntu Pro de fundal nu a putut fi pornit.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "Statutul Agentului Ubuntu Pro de fundal nu a putut fi verificat. Verifică setările tale de mediu.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "Verificând statutul agentului Ubuntu Pro de fundal.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "Încercând a recupera agentul Ubuntu Pro de fundal.",
+    "@agentStateUnreachable": {},
+    "proHeading": "Software de securitate open source de la editorii Ubuntu, acum disponibil pe Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Obține Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "Află mai multe",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Ubuntu Pro este activat pe acest dispozitiv",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "Toate instanțele Ubuntu WSL au acces la funcțiile de securitate a Ubuntu Pro.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "Gestionează abonamentul Ubuntu Pro",
+    "@manageUbuntuPro": {},
+    "detachPro": "Detașează Ubuntu Pro",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "Actualizând informațiile abonamentului.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "Mulțumim pentru abonarea ta la Ubuntu Pro.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "Ești deja abonat(ă) la Pro.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "Tentativa de achiziționare a fost anulată.",
+    "@purchaseStatusUserGaveUp": {}
+}
