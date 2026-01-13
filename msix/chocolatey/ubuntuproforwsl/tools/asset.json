@@ -1,0 +1,10 @@
+{
+  "version": "1.0.1.0",
+  "tag": "1.0.1",
+  "download_url": "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/1.0.1/UbuntuProForWSL.msixbundle",
+  "name": "UbuntuProForWSL.msixbundle",
+  "checksum": {
+    "value": "c9d7f7bc10750ac566b8792ea8d67bddfefadf806ecc2e89508226d808de1523",
+    "type": "sha256"
+  }
+}
