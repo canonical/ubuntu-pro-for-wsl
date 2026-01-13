@@ -1,0 +1,72 @@
+name: Update chocolatey and other assets that depends on release assets being published.
+concurrency: published-release 
+on:
+  release:
+    types: [published] # Only triggers for stable releases.
+
+jobs:
+  update-choco-assets:
+    permissions:
+      content: write
+    name: Update chocolatey assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt update
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y git jq xmlstarlet
+      - shell: bash
+        env:
+          GH_TOKEN= ${{ secrets.github_token }}
+        run: |
+          # Documentation says GITHUB_REF is the Tag ref of release refs/tags/<tag_name>
+          tag=$(echo $GITHUB_REF | cut -f2 -d'/')
+          releaseJson=$( curl -L \
+                         -H "Accept: application/vnd.github+json" \
+                         -H "Authorization: Bearer $GH_TOKEN" \
+                         -H "X-GitHub-Api-Version: 2022-11-28" \
+                            "${{ github.api_url }}/releases/tags/$tag" \
+                        | tr -d '[:cntrl:]' ) 
+
+          cd ./msix/chocolatey/ubuntuproforwsl/
+          # Replaces the existing asset.json with information from the latest release.
+          jq '.name as $version |
+              .tag_name as $tag  |
+              .assets[] | 
+               select(.name == "UbuntuProForWSL.msixbundle") |
+              . + (.digest | capture("(?<type>[^:]+):(?<value>.+)")) as $hash |
+           { 
+             version: $version, 
+             tag: $tag, 
+             name: .name, 
+             download_url: .browser_download_url, 
+             checksum: { value: $hash.value, type: $hash.type }
+           }' <<< "$releaseJson" > ./tools/asset.json
+
+           newVersion=$( jq '.version' ./tools/asset.json )
+           ns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"
+           # Edit the XML file in place
+           xmlstarlet ed -L -N n="$ns" \
+                      -u "/n:package/n:metadata/n:version" \
+                      -v "$newVersion" ./ubuntuproforwsl.nuspec
+
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: Auto update chocolatey files
+          title: 'maint(msix): Auto update chocolatey files'
+          labels: packaging, automated pr
+          body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/on-release-published.yaml) by GitHub Action"
+          branch: auto-updates/chocolatey
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push branch
+        run: |
+          git push origin auto-updates/chocolatey:main
+
+
+
+
