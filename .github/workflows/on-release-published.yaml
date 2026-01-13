@@ -1,4 +1,4 @@
-name: Update chocolatey and other assets that depends on release assets being published.
+name: Update Chocolatey assets on release
 concurrency: published-release 
 on:
   release:
@@ -7,7 +7,7 @@ on:
 jobs:
   update-choco-assets:
     permissions:
-      content: write
+      contents: write
     name: Update chocolatey assets
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +20,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt install -y git jq xmlstarlet
       - shell: bash
         env:
-          GH_TOKEN= ${{ secrets.github_token }}
+          GH_TOKEN: ${{ secrets.github_token }}
         run: |
           # Documentation says GITHUB_REF is the Tag ref of release refs/tags/<tag_name>
           tag=$(echo $GITHUB_REF | cut -f2 -d'/')
@@ -43,7 +43,10 @@ jobs:
              tag: $tag, 
              name: .name, 
              download_url: .browser_download_url, 
-             checksum: { value: $hash.value, type: $hash.type }
+             checksum: { 
+               value: $hash.value,
+               type: $hash.type
+             }
            }' <<< "$releaseJson" > ./tools/asset.json
 
            newVersion=$( jq '.version' ./tools/asset.json )
@@ -59,14 +62,10 @@ jobs:
         with:
           commit-message: Auto update chocolatey files
           title: 'maint(msix): Auto update chocolatey files'
-          labels: packaging, automated pr
+          labels: |
+            packaging
+            automated pr
           body: "[Auto-generated pull request](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/on-release-published.yaml) by GitHub Action"
           branch: auto-updates/chocolatey
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push branch
-        run: |
-          git push origin auto-updates/chocolatey:main
-
-
-
 

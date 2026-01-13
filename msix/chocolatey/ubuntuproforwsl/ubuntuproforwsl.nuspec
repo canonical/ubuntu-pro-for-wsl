@@ -12,7 +12,7 @@
     <!-- Note that unstable versions like 0.0.1 can be considered a released version, but it's possible that one can release a 0.0.1-beta before you release a 0.0.1 version. If the version number is final, that is considered a released version and not a prerelease. -->
     <!-- This value is updated by CI at release time. -->
     <version>1.0.1.0</version>
-    <packageSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl/chocolatey/ubuntuproforwsl</packageSourceUrl>
+    <packageSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/msix/chocolatey/ubuntuproforwsl</packageSourceUrl>
     <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
     <owners>Canonical Ltd.</owners>
     <!-- ============================== -->

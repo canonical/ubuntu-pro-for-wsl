@@ -3,15 +3,27 @@
 $packageName = $env:ChocolateyPackageName
 $packageVersion = $env:ChocolateyPackageVersion
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$msixBundleFileName = "UbuntuProForWSL-$packageVersion.msixbundle"
-$downloadPath = Join-Path $toolsDir $msixBundleFileName
 $assetFile = Join-Path $toolsDir "asset.json"
 
 # The asset.json file is updated by CI at release time.
+# Expected structure:
+# {
+#   "version": "<MSIX package version>",
+#   "tag": "<release tag>",
+#   "name": "<asset file name>",
+#   "download_url": "<https URL to the .msixbundle asset>",
+#   "checksum": {
+#     "value": "<checksum string>",
+#     "type": "<checksum algorithm, e.g. sha256>"
+#   }
+# }
 $asset = Get-Content -Raw -Path "$assetFile" | ConvertFrom-Json
 $url = $asset.download_url
 $checksum = $asset.checksum.value
 $type = $asset.checksum.type
+
+$msixBundleFileName = $asset.name
+$downloadPath = Join-Path $toolsDir $msixBundleFileName
 
 Write-Verbose "Downloading $msixBundleFileName from $url"
 # Use the Chocolatey helper function to download the file securely.
