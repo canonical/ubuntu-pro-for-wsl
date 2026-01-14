@@ -26,7 +26,6 @@ try {
             $fullKeyPath = "HKU:\$sid\$registryKeyPath"
 
             Remove-Item -Path $fullKeyPath -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Host "   Successfully removed registry key $fullKeyPath."
         }
     }
 }
@@ -38,7 +37,18 @@ catch {
 
 Write-Host "Checking for and removing provisioned package..."
 # Clean up any remaining data before unprovisioning.
-ubuntu-pro-agent.exe clean | Out-Null
+try {
+    $agentCommand = Get-Command ubuntu-pro-agent.exe -ErrorAction SilentlyContinue
+    if ($agentCommand) {
+        ubuntu-pro-agent.exe clean | Out-Null
+    }
+    else {
+        Write-Verbose "   ubuntu-pro-agent.exe not found. Skipping agent cleanup."
+    }
+}
+catch {
+    Write-Warning "   Failed to run ubuntu-pro-agent.exe clean: $($_.Exception.Message)"
+}
 
 try {
     # Get the provisioned package object, which requires the exact Package Name string.
@@ -63,7 +73,7 @@ Write-Host "Checking for and removing package for all existing users..."
 try {
     # Get all installed packages that match the base name across all user accounts.
     # We use a wildcard to match any version or architecture (the Package Family Name part).
-    $installedPackages = Get-AppxPackage -AllUsers -Name "*$msixPackageName*"
+    $installedPackages = Get-AppxPackage -AllUsers -Name $msixPackageName
 
     if ($installedPackages) {
         # Iterate over all found packages (in case different versions/architectures exist)

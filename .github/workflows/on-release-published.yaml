@@ -21,16 +21,11 @@ jobs:
       - shell: bash
         env:
           GH_TOKEN: ${{ secrets.github_token }}
+          RELEASE_JSON: ${{ toJson(github.event.release) }}
         run: |
-          # Documentation says GITHUB_REF is the Tag ref of release refs/tags/<tag_name>
-          tag=$(echo $GITHUB_REF | cut -f2 -d'/')
-          releaseJson=$( curl -L \
-                         -H "Accept: application/vnd.github+json" \
-                         -H "Authorization: Bearer $GH_TOKEN" \
-                         -H "X-GitHub-Api-Version: 2022-11-28" \
-                            "${{ github.api_url }}/releases/tags/$tag" \
-                        | tr -d '[:cntrl:]' ) 
-
+          # The body of the release likely contain newline chars that break JSON parsing.
+          # The fields we care about are immune to the removal of newlines.
+          releaseJson=$( echo "$RELEASE_JSON" | tr -d "[:cntrl:]" )
           cd ./msix/chocolatey/ubuntuproforwsl/
           # Replaces the existing asset.json with information from the latest release.
           jq '.name as $version |
@@ -49,7 +44,7 @@ jobs:
              }
            }' <<< "$releaseJson" > ./tools/asset.json
 
-           newVersion=$( jq '.version' ./tools/asset.json )
+           newVersion=$( jq -r '.version' ./tools/asset.json )
            ns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"
            # Edit the XML file in place
            xmlstarlet ed -L -N n="$ns" \
