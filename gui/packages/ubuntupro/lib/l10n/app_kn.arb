@@ -1,1 +1,22 @@
-{}
+{
+    "appTitle": "WSL ಗಾಗಿ ಉಬುಂಟು ಪ್ರೊ",
+    "@appTitle": {},
+    "tokenErrorEmpty": "ಟೋಕನ್ ಖಾಲಿ ಇರುವಂತಿಲ್ಲ",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "ಅಮಾನ್ಯ ಟೋಕನ್",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "ಮಾನ್ಯ ಟೋಕನ್",
+    "@tokenValid": {},
+    "tokenInputTitle": "ಈ ಯಂತ್ರವನ್ನು ಲಗತ್ತಿಸಿ",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "{proLink} ಅಥವಾ ನಿಮ್ಮ ಸಿಸ್ಟಂ ನಿರ್ವಾಹಕರಿಂದ ಟೋಕನ್ ಅನ್ನು ನಮೂದಿಸಿ",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "ಟೋಕನ್",
+    "@tokenInputHint": {}
+}
