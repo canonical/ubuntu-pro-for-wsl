@@ -20,7 +20,6 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt install -y git jq xmlstarlet
       - shell: bash
         env:
-          GH_TOKEN: ${{ secrets.github_token }}
           RELEASE_JSON: ${{ toJson(github.event.release) }}
         run: |
           # The body of the release likely contain newline chars that break JSON parsing.
