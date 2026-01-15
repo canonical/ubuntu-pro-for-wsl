@@ -47,7 +47,7 @@ dependencies:
   grpc: ^4.0.1
   intl: ^0.20.2
   meta: ^1.12.0
-  mockito: ^5.6.1
+  mockito: ^5.6.3
   p4w_ms_store:
     git:
       url: https://github.com/canonical/ubuntu-pro-for-wsl
