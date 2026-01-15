@@ -5,7 +5,7 @@ $packageVersion = $env:ChocolateyPackageVersion
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $assetFile = Join-Path $toolsDir "asset.json"
 
-# The asset.json file is updated by CI at release time.
+# The asset.json file is generaated by CI at release time.
 # Expected structure:
 # {
 #   "version": "<MSIX package version>",

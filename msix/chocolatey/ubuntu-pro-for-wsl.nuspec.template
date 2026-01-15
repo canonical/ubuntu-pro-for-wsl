@@ -6,12 +6,12 @@
     <!-- This section is about this package, although id and version have ties back to the software -->
     <!-- id is lowercase and if you want a good separator for words, use '-', not '.'. Dots are only acceptable as suffixes for certain types of packages, e.g. .install, .portable, .extension, .template -->
     <!-- If the software is cross-platform, attempt to use the same id as the debian/rpm package(s) if possible. -->
-    <id>ubuntuproforwsl</id>
+    <id>ubuntu-pro-for-wsl</id>
     <!-- version should MATCH as closely as possible with the underlying software -->
     <!-- Is the version a prerelease of a version? https://docs.nuget.org/create/versioning#creating-prerelease-packages -->
     <!-- Note that unstable versions like 0.0.1 can be considered a released version, but it's possible that one can release a 0.0.1-beta before you release a 0.0.1 version. If the version number is final, that is considered a released version and not a prerelease. -->
     <!-- This value is updated by CI at release time. -->
-    <version>1.0.1.0</version>
+    <version>REPLACE_IN_CI</version>
     <packageSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/msix/chocolatey/ubuntuproforwsl</packageSourceUrl>
     <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
     <owners>Canonical Ltd.</owners>
@@ -35,67 +35,12 @@
     <tags>ubuntu-pro wsl automation landscape</tags>
     <summary>Ubuntu Pro for WSL is a Windows application that automates the attachment of Ubuntu on WSL instances to your Ubuntu Pro subscription.</summary>
     <!-- Same contents as the package README.md file. -->
-    <description><![CDATA[
-<p align="center">
-  <a href="https://documentation.ubuntu.com/wsl/stable/tutorials/getting-started-with-up4w/">Get started with Ubuntu Pro for WSL</a> •
-  <a href="https://documentation.ubuntu.com/wsl/stable/howto/enforce-agent-startup-remotely-registry/">Remotely enforce startup of Pro agent</a> •
-  <a href="https://ubuntu.com/pro/subscribe">Get an Ubuntu Pro subscription</a>
-</p>
-
-**Ubuntu Pro for WSL** is a Windows application that automates the
-attachment of your Ubuntu Pro subscription. It solves the problem of needing to
-manually Pro-attach each new Ubuntu instance created on a Windows machine when
-you want the security benefits of Ubuntu Pro. For organisations, it enables
-automated Pro-attachment at scale for fleets of devices.
-
-## Basic usage of Ubuntu Pro for WSL
-
-Find and install the Ubuntu Pro for WSL application in the Microsoft Store.
-
-After installation, open the application and enter your Ubuntu Pro token.
-
-> [!TIP]
-> If you are a system administrator, you can also use the Windows registry to
-> add a Pro token. After the Ubuntu Pro app has run at least once, the relevant
-> key will be available as `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`. The
-> Pro token can be added as data for the `UbuntuProToken` value.
-
-Now, all instances of Ubuntu on WSL will be automatically Pro-attached on your machine.
-
-You can confirm this in any Ubuntu instance with:
-
-```
-pro status
-```
-
-## Documentation
-
-Our [official documentation](https://documentation.ubuntu.com/wsl/stable/)
-includes tutorials, guides, references, and explanations on both:
-
-* The Ubuntu on WSL distribution
-* The Ubuntu Pro for WSL application
-
-Documentation is maintained in the `docs` directory of this repository. It is
-written in markdown, built with Sphinx, and published on [Read the Docs](https://about.readthedocs.com/).
-
-## Contribute
-
-This is an open source project and we warmly welcome community contributions, suggestions, and constructive feedback. If you're interested in contributing, please take a look at our [Contribution guidelines](CONTRIBUTING.md) first.
-
-* To report a bug, please create a new issue in this repository, using the Report an issue template.
-* For suggestions and constructive feedback, use the Request a feature template.
-
-## Project and community
-
-We're friendly! We have a community forum at [https://discourse.ubuntu.com](https://discourse.ubuntu.com) where we discuss feature plans, development news, issues, updates and troubleshooting.
-
-For news and updates, follow the [Ubuntu twitter account](https://twitter.com/ubuntu) and on [Facebook](https://www.facebook.com/ubuntu).
-]]></description>
+    <description>REPLACE_IN_CI</description>
     <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
   </metadata>
   <files>
     <!-- this section controls what actually gets packaged into the Chocolatey package -->
-    <file src="tools\**" target="tools"/>
+    <file src="tools\**" target="tools" />
   </files>
 </package>
+

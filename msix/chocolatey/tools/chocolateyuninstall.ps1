@@ -7,8 +7,9 @@ $registryKeyPath = "Software\Canonical\UbuntuPro"
 
 Write-Host "Starting uninstallation for ${env:ChocolateyPackageName}..."
 
+# Registry clean-up is necessary because the app uses the unvirtualizedResources capability,
+# thus its registry entries in HKCU are visible to other apps and remain even after uninstalling the application.
 Write-Host "   Starting registry cleanup for all user profiles..."
-
 try {
     # Create a PSDrive for HKEY_USERS if it isn't available for PowerShell.
     if (-not (Test-Path HKU:)) {

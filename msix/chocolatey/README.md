@@ -1,4 +1,4 @@
-﻿## Ubuntu Pro for WSL
+﻿# Ubuntu Pro for WSL
 
 <p align="center">
   <a href="https://documentation.ubuntu.com/wsl/stable/tutorials/getting-started-with-up4w/">Get started with Ubuntu Pro for WSL</a> •
