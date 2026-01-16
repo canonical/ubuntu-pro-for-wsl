@@ -41,9 +41,10 @@ type Mock struct {
 
 // key mocks a registry key.
 type key struct {
-	mu     *sync.RWMutex
-	data   map[string]string
-	events []Event
+	mu      *sync.RWMutex
+	data    map[string]string
+	intData map[string]uint64
+	events  []Event
 }
 
 func (r *Mock) notify(k *key) {
@@ -84,6 +85,30 @@ func (*Mock) getValue(k *key, field string) (string, error) {
 	return d, nil
 }
 
+func (r *Mock) setIntValue(k *key, field string, value uint64) {
+	defer r.notify(k)
+
+	k.mu.Lock()
+	defer k.mu.Unlock()
+
+	if k.intData == nil {
+		k.intData = make(map[string]uint64)
+	}
+	k.intData[field] = value
+}
+
+func (*Mock) getIntValue(k *key, field string) (uint64, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+
+	d, ok := k.intData[field]
+	if !ok {
+		return 0, ErrFieldNotExist
+	}
+
+	return d, nil
+}
+
 // keyHandle represents the object Win32 callers get when opening a key.
 // Note that the Win32 API returns a HANDLE (i.e. a typedef'd void*), so this
 // struct represents the structure that HANDLE points to.
@@ -113,9 +138,10 @@ func NewMock() *Mock {
 	// "sane" Windows install.
 	m := &Mock{
 		ubuntuPro: key{
-			mu:     &sync.RWMutex{},
-			data:   make(map[string]string),
-			events: make([]Event, 0),
+			mu:      &sync.RWMutex{},
+			data:    make(map[string]string),
+			intData: make(map[string]uint64),
+			events:  make([]Event, 0),
 		},
 	}
 
@@ -169,6 +195,8 @@ func (r *Mock) HKCUCreateKey(path string) (Key, error) {
 var validPaths = []string{
 	`Software\Canonical\UbuntuPro`,
 	`Software/Canonical/UbuntuPro`,
+	`Software\Canonical\Ubuntu`,
+	`Software/Canonical/Ubuntu`,
 }
 
 func (r *Mock) openKey(path string, readOnly bool) Key {
@@ -298,6 +326,45 @@ func (r *Mock) WriteValue(ptr Key, field, value string, multiString bool) error 
 	}
 
 	r.setValue(handle.key, field, value)
+
+	return nil
+}
+
+// ReadIntegerValue reads the value of the specified integer (DWORD or QWORD) field in the specified key.
+func (r *Mock) ReadIntegerValue(ptr Key, field string) (uint64, error) {
+	if ptr == 0 {
+		return 0, errors.New("null key")
+	}
+
+	if r.CannotRead.Load() {
+		return 0, ErrMock
+	}
+
+	handle, ok := r.keyHandles.data[ptr]
+
+	if !ok {
+		return 0, ErrKeyNotExist
+	}
+
+	return r.getIntValue(handle.key, field)
+}
+
+// SetDWordValue sets the value of the specified DWORD field in the specified key.
+func (r *Mock) SetDWordValue(ptr Key, field string, value uint32) error {
+	r.keyHandles.mu.Lock()
+	defer r.keyHandles.mu.Unlock()
+
+	handle, ok := r.keyHandles.data[ptr]
+
+	if !ok {
+		return ErrKeyNotExist
+	}
+
+	if handle.readOnly {
+		return ErrAccessDenied
+	}
+
+	r.setIntValue(handle.key, field, uint64(value))
 
 	return nil
 }

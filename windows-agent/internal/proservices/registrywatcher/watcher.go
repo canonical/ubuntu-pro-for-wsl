@@ -37,6 +37,9 @@ const registryPath = `Software\Canonical\UbuntuPro`
 // We watch this key if registryPath does not exist.
 const registryParentPath = `Software\`
 
+// registryPath is the path to the registry key that Ubuntu for WSL uses in general.
+const registryTelemetryPath = `Software\Canonical\Ubuntu`
+
 // Registry is an interface to the Windows registry.
 type Registry interface {
 	HKCUOpenKey(path string) (registry.Key, error)
@@ -44,6 +47,8 @@ type Registry interface {
 	CloseKey(k registry.Key)
 	ReadValue(k registry.Key, field string) (value string, err error)
 	WriteValue(k registry.Key, field, value string, multiline bool) (err error)
+	ReadIntegerValue(k registry.Key, field string) (uint64, error)
+	SetDWordValue(k registry.Key, field string, value uint32) error
 
 	// Win32 stuff: not strictly registry but not worth separating out
 	RegNotifyChangeKeyValue(k registry.Key) (registry.Event, error)
@@ -245,6 +250,8 @@ func (s *Service) readThenPushRegistryData(ctx context.Context) {
 const (
 	ubuntuProTokenField  = "UbuntuProToken"
 	landscapeConfigField = "LandscapeConfig"
+
+	telemetryConsentField = "UbuntuInsightsConsent"
 )
 
 func loadRegistry(reg Registry) (data config.RegistryData, err error) {
@@ -300,6 +307,7 @@ func setDefaultRegistry(r Registry) (err error) {
 	err = errors.Join(err,
 		createIfNotExist(r, k, ubuntuProTokenField, false),
 		createIfNotExist(r, k, landscapeConfigField, true),
+		setDefaultTelemetryConsent(r),
 	)
 
 	return err
@@ -319,6 +327,33 @@ func createIfNotExist(r Registry, k registry.Key, field string, multiline bool) 
 	// Field does not exist
 	if err := r.WriteValue(k, field, "", multiline); err != nil {
 		return fmt.Errorf("could not write default value: %v", err)
+	}
+
+	return nil
+}
+
+func setDefaultTelemetryConsent(r Registry) (err error) {
+	defer decorate.OnError(&err, "could not initialize telemetry consent")
+
+	key, err := r.HKCUCreateKey(registryTelemetryPath)
+	if err != nil {
+		return fmt.Errorf(`could not create registry key HKCU\%s: %v`, registryTelemetryPath, err)
+	}
+	defer r.CloseKey(key)
+
+	// Initialize consent to "false" if not present, or is not either 0 or 1.
+	val, err := r.ReadIntegerValue(key, telemetryConsentField)
+	if err == nil && (val == 0 || val == 1) {
+		// Consent already properly initialized
+		return nil
+	} else if err != nil && !errors.Is(err, registry.ErrFieldNotExist) {
+		// Some other error
+		return fmt.Errorf("could not read pre-existing telemetry consent value: %v", err)
+	}
+
+	// Field does not exist or is invalid
+	if err := r.SetDWordValue(key, telemetryConsentField, 0); err != nil {
+		return fmt.Errorf("could not write default telemetry consent value: %v", err)
 	}
 
 	return nil
