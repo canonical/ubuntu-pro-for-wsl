@@ -87,7 +87,7 @@ jobs:
       - name: Test the package
         working-directory: ./msix/chocolatey/
         run: |
-          choco install ubuntu-pro-for-wsl --debug --verbose --source .
+          choco install ubuntu-pro-for-wsl --verbose --source .
 
       - name: Push to chocolatey.org
         if: ${{ github.event_name == 'release' }}
