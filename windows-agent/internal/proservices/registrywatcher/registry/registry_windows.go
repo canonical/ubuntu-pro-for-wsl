@@ -89,6 +89,30 @@ func (Windows) WriteValue(k Key, field, value string, multiLine bool) error {
 	return err
 }
 
+// ReadIntegerValue reads the value of the specified integer (DWORD or QWORD) field in the specified key.
+func (Windows) ReadIntegerValue(k Key, field string) (uint64, error) {
+	value, _, err := registry.Key(k).GetIntegerValue(field)
+	if errors.Is(err, registry.ErrNotExist) {
+		return 0, ErrFieldNotExist
+	} else if err != nil {
+		return 0, err
+	}
+
+	return value, nil
+}
+
+// SetDWordValue sets the value of the specified DWORD field in the specified key.
+func (Windows) SetDWordValue(k Key, field string, value uint32) error {
+	err := registry.Key(k).SetDWordValue(field, value)
+	if errors.Is(err, registry.ErrNotExist) {
+		return ErrKeyNotExist
+	}
+	if errors.Is(err, syscall.Errno(5)) {
+		return ErrAccessDenied
+	}
+	return err
+}
+
 // RegNotifyChangeKeyValue creates an event and attaches it to a registry key.
 // Modifying that key or its children will trigger the event.
 // This trigger can be detected by WaitForSingleObject.

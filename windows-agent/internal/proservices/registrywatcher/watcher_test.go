@@ -169,6 +169,86 @@ func TestRegistryWatcher(t *testing.T) {
 	}
 }
 
+func TestDefaultTelemetryConsent(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		preExistingKey   bool
+		preExistingValue *uint32 // nil means value not present
+		wantValue        uint64
+	}{
+		"Key missing": {
+			preExistingKey: false,
+			wantValue:      0,
+		},
+		"Key exists, value missing": {
+			preExistingKey:   true,
+			preExistingValue: nil,
+			wantValue:        0,
+		},
+		"Key exists, value is 0": {
+			preExistingKey:   true,
+			preExistingValue: ptr(uint32(0)),
+			wantValue:        0,
+		},
+		"Key exists, value is 1": {
+			preExistingKey:   true,
+			preExistingValue: ptr(uint32(1)),
+			wantValue:        1,
+		},
+		"Key exists, value is 2": {
+			preExistingKey:   true,
+			preExistingValue: ptr(uint32(2)),
+			wantValue:        0,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			t.Parallel()
+
+			conf := &mockConfig{}
+			db, err := database.New(ctx, t.TempDir())
+			require.NoError(t, err)
+
+			reg := registry.NewMock()
+			defer reg.RequireNoLeaks(t)
+
+			telemetryKeyPath := "Software/Canonical/Ubuntu"
+			telemetryField := "UbuntuInsightsConsent"
+
+			if tc.preExistingKey {
+				k, err := reg.HKCUCreateKey(telemetryKeyPath)
+				require.NoError(t, err)
+
+				if tc.preExistingValue != nil {
+					err = reg.SetDWordValue(k, telemetryField, *tc.preExistingValue)
+					require.NoError(t, err)
+				}
+				reg.CloseKey(k)
+			}
+
+			w := registrywatcher.New(ctx, conf, db, registrywatcher.WithRegistry(reg))
+			w.Start()
+			w.Stop()
+
+			// Check the value
+			k, err := reg.HKCUOpenKey(telemetryKeyPath)
+			require.NoError(t, err)
+			defer reg.CloseKey(k)
+
+			val, err := reg.ReadIntegerValue(k, telemetryField)
+			require.NoError(t, err)
+			require.Equal(t, tc.wantValue, val)
+		})
+	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
+}
+
 type mockConfig struct {
 	err      bool
 	received []config.RegistryData

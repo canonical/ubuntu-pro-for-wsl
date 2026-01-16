@@ -12,6 +12,7 @@
     <virtualization:RegistryWriteVirtualization>
       <virtualization:ExcludedKeys>
         <virtualization:ExcludedKey>HKEY_CURRENT_USER\Software\Canonical\UbuntuPro</virtualization:ExcludedKey>
+        <virtualization:ExcludedKey>HKEY_CURRENT_USER\Software\Canonical\Ubuntu</virtualization:ExcludedKey>
       </virtualization:ExcludedKeys>
     </virtualization:RegistryWriteVirtualization>
     <uap13:AutoUpdate>
