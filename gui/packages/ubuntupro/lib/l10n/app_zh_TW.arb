@@ -31,7 +31,7 @@
     "@tokenErrorInvalid": {},
     "tokenValid": "有效 token",
     "@tokenValid": {},
-    "tokenInputTitle": "綁定本機",
+    "tokenInputTitle": "綁定此機器",
     "@tokenInputTitle": {},
     "tokenInputHint": "Token",
     "@tokenInputHint": {},
