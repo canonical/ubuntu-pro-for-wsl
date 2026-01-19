@@ -25,7 +25,7 @@
     <!-- There are a number of CDN Services that can be used for hosting the Icon for a package. More information can be found here: https://docs.chocolatey.org/en-us/create/create-packages#package-icon-guidelines -->
     <!-- Here is an example using Githack -->
     <iconUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/msix/UbuntuProForWSL/Images/StoreLogo.png</iconUrl>
-    <copyright>2025 Canonical Ltd.</copyright>
+    <copyright>2026 Canonical Ltd.</copyright>
     <!-- If there is a license Url available, it is required for the community feed -->
     <licenseUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
