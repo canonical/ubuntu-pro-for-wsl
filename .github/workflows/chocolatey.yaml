@@ -68,7 +68,7 @@ jobs:
 
           Write-Output "releaseJson=$releaseStr" >> $env:GITHUB_OUTPUT
 
-      - name: Generate the chocolatey files
+      - name: Generate the chocolatey package
         run: |
           $release = '${{ steps.release-data.outputs.releaseJson }}' | ConvertFrom-Json
           $release | ConvertTo-Json -Depth 3 | Out-File "./tools/asset.json" -Encoding utf8
@@ -91,7 +91,14 @@ jobs:
           }
 
           $doc.Save($nuspecPath.BaseName) # Removes the .template extension, leaving the .nuspec
+
+          # Finally, pack it!
           choco pack
+
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v6
+        with:
+          path: ./msix/chocolatey/ubuntu-pro-for-wsl.*.nupkg
 
       - name: Test installing the package
         run: |
@@ -100,11 +107,6 @@ jobs:
       - name: Test uninstalling the package
         run: |
           choco uninstall ubuntu-pro-for-wsl --verbose
-
-      - name: Upload artifacts for debugging
-        uses: actions/upload-artifact@v6
-        with:
-          path: ubuntu-pro-for-wsl.*.nupkg
 
       - name: Push to chocolatey.org
         if: ${{ github.event_name == 'release' }}
