@@ -32,8 +32,8 @@
     <projectSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl</projectSourceUrl>
     <docsUrl>https://documentation.ubuntu.com/wsl</docsUrl>
     <bugTrackerUrl>https://github.com/canonical/ubuntu-pro-for-wsl/issues</bugTrackerUrl>
-    <tags>ubuntu-pro wsl automation landscape</tags>
-    <summary>Ubuntu Pro for WSL is a Windows application that automates the attachment of Ubuntu on WSL instances to your Ubuntu Pro subscription.</summary>
+    <tags>ubuntu ubuntu-pro wsl automation landscape</tags>
+    <summary>Ubuntu Pro for WSL is a Windows application that automates the attachment of Ubuntu on WSL instances to your Ubuntu Pro subscription as well as registration to Landscape.</summary>
     <!-- Same contents as the package README.md file. -->
     <description>REPLACE_IN_CI</description>
     <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
