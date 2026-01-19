@@ -1,11 +1,5 @@
 ﻿# Ubuntu Pro for WSL
 
-<p align="center">
-  <a href="https://documentation.ubuntu.com/wsl/stable/tutorials/getting-started-with-up4w/">Get started with Ubuntu Pro for WSL</a> •
-  <a href="https://documentation.ubuntu.com/wsl/stable/howto/enforce-agent-startup-remotely-registry/">Remotely enforce startup of Pro agent</a> •
-  <a href="https://ubuntu.com/pro/subscribe">Get an Ubuntu Pro subscription</a>
-</p>
-
 **Ubuntu Pro for WSL** is a Windows application that automates the
 attachment of your Ubuntu Pro subscription. It solves the problem of needing to
 manually Pro-attach each new Ubuntu instance created on a Windows machine when
