@@ -86,9 +86,13 @@ jobs:
           $doc.Save($nuspecPath.BaseName) # Removes the .template extension, leaving the .nuspec
           choco pack
 
-      - name: Test the package
+      - name: Test installing the package
         run: |
           choco install ubuntu-pro-for-wsl --verbose --source .
+
+      - name: Test uninstalling the package
+        run: |
+          choco uninstall ubuntu-pro-for-wsl --verbose
 
       - name: Push to chocolatey.org
         if: ${{ github.event_name == 'release' }}
