@@ -21,7 +21,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
-      - name: Generate the chocolatey files
+      - name: Fetch data about the latest release
+        id: release-data
         env:
           RELEASE_JSON_RAW: ${{ github.event.name == 'release' && toJson(github.event.release) || '' }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,13 +39,12 @@ jobs:
             $release = Invoke-RestMethod -Uri "${{ github.api_url }}/repos/canonical/ubuntu-pro-for-wsl/releases/latest" -Headers $headers
 
             Write-Host "Latest Release: $($release.name)"
-            Write-Host "Tag: $($release.tag_name)"
           } else {
             $release = $env:RELEASE_JSON_RAW | ConvertFrom-Json
 
             Write-Host "Packaging Release: $($release.name)"
-            Write-Host "Tag: $($release.tag_name)"
           }
+          Write-Host "Tag: $($release.tag_name)"
 
           $bundle="UbuntuProForWSL.msixbundle"
           $targetAsset = $release.assets | Where-Object { $_.name -eq $bundle}
@@ -55,7 +55,7 @@ jobs:
 
           # Split the digest (e.g., "sha256:c9d7f...")
           $hashParts = $targetAsset.digest -split ':'
-          [PSCustomObject]@{
+          $releaseStr = [PSCustomObject]@{
               version      = $release.name
               tag          = $release.tag_name
               name         = $targetAsset.name
@@ -64,7 +64,14 @@ jobs:
                   value = $hashParts[1]
                   type  = $hashParts[0]
               }
-          } | ConvertTo-Json -Depth 3 | Out-File "./tools/asset.json" -Encoding utf8
+          } | ConvertTo-Json -Compress -Depth 3 
+
+          Write-Output "releaseJson=$releaseStr" >> $env:GITHUB_OUTPUT
+
+      - name: Generate the chocolatey files
+        run: |
+          $release = '${{ steps.release-data.outputs.releaseJson }}' | ConvertFrom-Json
+          $release | ConvertTo-Json -Depth 3 | Out-File "./tools/asset.json" -Encoding utf8
 
           $nuspecPath = Get-ChildItem -Path "./ubuntu-pro-for-wsl.nuspec.template"
           [System.Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
@@ -74,7 +81,7 @@ jobs:
           # In LINQ, we combine the XML namespace and local tag name like this: $ns + "tagName"
           $metadataNode = $doc.Root.Element($ns + "metadata")
           $versionNode = $metadataNode.Element($ns + "version")
-          if ($versionNode) { $versionNode.Value = $release.name }
+          if ($versionNode) { $versionNode.Value = $release.version }
 
           $readmeContent = Get-Content "./README.md" -Raw
           $descNode = $metadataNode.Element($ns + "description") 
