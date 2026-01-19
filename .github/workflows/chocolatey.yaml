@@ -94,6 +94,11 @@ jobs:
         run: |
           choco uninstall ubuntu-pro-for-wsl --verbose
 
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v6
+        with:
+          path: ubuntu-pro-for-wsl.*.nupkg
+
       - name: Push to chocolatey.org
         if: ${{ github.event_name == 'release' }}
         run: |
