@@ -87,8 +87,8 @@ func (Windows) WriteValue(k Key, field, value string, multiLine bool) error {
 	return translateRegistryError(err)
 }
 
-// ReadIntegerValue reads the value of the specified integer (DWORD or QWORD) field in the specified key.
-func (Windows) ReadIntegerValue(k Key, field string) (uint64, error) {
+// ReadDWordValue reads the value of the specified DWORD integer field in the specified key.
+func (Windows) ReadDWordValue(k Key, field string) (uint64, error) {
 	value, _, err := registry.Key(k).GetIntegerValue(field)
 	if errors.Is(err, registry.ErrNotExist) {
 		return 0, ErrFieldNotExist

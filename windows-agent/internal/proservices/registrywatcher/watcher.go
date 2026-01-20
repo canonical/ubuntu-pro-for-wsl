@@ -47,7 +47,7 @@ type Registry interface {
 	CloseKey(k registry.Key)
 	ReadValue(k registry.Key, field string) (value string, err error)
 	WriteValue(k registry.Key, field, value string, multiline bool) (err error)
-	ReadIntegerValue(k registry.Key, field string) (uint64, error)
+	ReadDWordValue(k registry.Key, field string) (uint64, error)
 	SetDWordValue(k registry.Key, field string, value uint32) error
 
 	// Win32 stuff: not strictly registry but not worth separating out
@@ -342,7 +342,7 @@ func setDefaultTelemetryConsent(r Registry) (err error) {
 	defer r.CloseKey(key)
 
 	// Initialize consent to "false" if not present, or is not either 0 or 1.
-	val, err := r.ReadIntegerValue(key, telemetryConsentField)
+	val, err := r.ReadDWordValue(key, telemetryConsentField)
 	if err == nil && (val == 0 || val == 1) {
 		// Consent already properly initialized
 		return nil

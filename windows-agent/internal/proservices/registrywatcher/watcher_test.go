@@ -238,7 +238,7 @@ func TestDefaultTelemetryConsent(t *testing.T) {
 			require.NoError(t, err)
 			defer reg.CloseKey(k)
 
-			val, err := reg.ReadIntegerValue(k, telemetryField)
+			val, err := reg.ReadDWordValue(k, telemetryField)
 			require.NoError(t, err)
 			require.Equal(t, tc.wantValue, val)
 		})

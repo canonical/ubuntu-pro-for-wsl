@@ -347,8 +347,8 @@ func (r *Mock) WriteValue(ptr Key, field, value string, multiString bool) error 
 	return nil
 }
 
-// ReadIntegerValue reads the value of the specified integer (DWORD or QWORD) field in the specified key.
-func (r *Mock) ReadIntegerValue(ptr Key, field string) (uint64, error) {
+// ReadDWordValue reads the value of the specified DWORD integer field in the specified key.
+func (r *Mock) ReadDWordValue(ptr Key, field string) (uint64, error) {
 	if ptr == 0 {
 		return 0, errors.New("null key")
 	}
