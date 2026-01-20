@@ -19,6 +19,7 @@ import (
 type Mock struct {
 	// registry contains the registry key database.
 	ubuntuPro key
+	ubuntu    key
 	keyExists bool
 
 	// keyHandles contains the handles to the keys. The Win32API returns void pointers to the
@@ -91,9 +92,6 @@ func (r *Mock) setIntValue(k *key, field string, value uint64) {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 
-	if k.intData == nil {
-		k.intData = make(map[string]uint64)
-	}
 	k.intData[field] = value
 }
 
@@ -143,6 +141,12 @@ func NewMock() *Mock {
 			intData: make(map[string]uint64),
 			events:  make([]Event, 0),
 		},
+		ubuntu: key{
+			mu:      &sync.RWMutex{},
+			data:    make(map[string]string),
+			intData: make(map[string]uint64),
+			events:  make([]Event, 0),
+		},
 	}
 
 	m.keyHandles.data = make(map[Key]*keyHandle)
@@ -168,8 +172,9 @@ func (r *Mock) RequireNoLeaks(t *testing.T) {
 
 // HKCUOpenKey mocks opening a key in the specified path under the HK_CURRENT_USER registry.
 func (r *Mock) HKCUOpenKey(path string) (Key, error) {
-	r.ubuntuPro.mu.Lock()
-	defer r.ubuntuPro.mu.Unlock()
+	k := r.getKey(path)
+	k.mu.Lock()
+	defer k.mu.Unlock()
 
 	if r.CannotOpen.Load() {
 		return 0, ErrMock
@@ -180,34 +185,46 @@ func (r *Mock) HKCUOpenKey(path string) (Key, error) {
 
 // HKCUCreateKey opens a key in the specified path under the HK_CURRENT_USER registry with write permissions.
 func (r *Mock) HKCUCreateKey(path string) (Key, error) {
-	r.ubuntuPro.mu.Lock()
-	defer r.ubuntuPro.mu.Unlock()
+	k := r.getKey(path)
+	k.mu.Lock()
+	defer k.mu.Unlock()
 
 	if r.CannotCreate.Load() {
 		return 0, ErrMock
 	}
 
-	r.keyExists = true
+	if k == &r.ubuntuPro {
+		r.keyExists = true
+	}
 
 	return r.openKey(path, false), nil
 }
 
-var validPaths = []string{
+var validProPaths = []string{
 	`Software\Canonical\UbuntuPro`,
 	`Software/Canonical/UbuntuPro`,
+}
+
+var validUbuntuPaths = []string{
 	`Software\Canonical\Ubuntu`,
 	`Software/Canonical/Ubuntu`,
 }
 
-func (r *Mock) openKey(path string, readOnly bool) Key {
+func (r *Mock) getKey(path string) *key {
 	path = filepath.Clean(path)
-
-	if !slices.Contains(validPaths, path) {
-		panic("Attempting to access key outside of UbuntuPro")
+	if slices.Contains(validProPaths, path) {
+		return &r.ubuntuPro
 	}
+	if slices.Contains(validUbuntuPaths, path) {
+		return &r.ubuntu
+	}
+	panic(fmt.Sprintf("Attempting to access key outside of UbuntuPro: %s", path))
+}
 
+func (r *Mock) openKey(path string, readOnly bool) Key {
+	// The path validation is done in getKey
 	return r.keyHandles.alloc(&keyHandle{
-		key:      &r.ubuntuPro,
+		key:      r.getKey(path),
 		readOnly: readOnly,
 	})
 }
