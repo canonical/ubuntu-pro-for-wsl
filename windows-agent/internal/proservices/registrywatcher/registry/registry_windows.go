@@ -14,28 +14,32 @@ import (
 // Windows is the Windows registry.
 type Windows struct{}
 
+func translateRegistryError(err error) error {
+	if errors.Is(err, registry.ErrNotExist) {
+		return ErrKeyNotExist
+	}
+	if errors.Is(err, syscall.Errno(5)) { // Access is denied
+		return ErrAccessDenied
+	}
+	return err
+}
+
 // HKCUOpenKey opens a key in the specified path under the HK_CURRENT_USER registry with read permissions.
 func (Windows) HKCUOpenKey(path string) (Key, error) {
 	key, err := registry.OpenKey(registry.CURRENT_USER, path, registry.READ)
-	if errors.Is(err, registry.ErrNotExist) {
-		return 0, ErrKeyNotExist
+	if err != nil {
+		return 0, translateRegistryError(err)
 	}
-	if errors.Is(err, syscall.Errno(5)) { // Access is denied
-		return 0, ErrAccessDenied
-	}
-	return Key(key), err
+	return Key(key), nil
 }
 
 // HKCUCreateKey creaters a key in the specified path under the HK_CURRENT_USER registry with write permissions.
 func (Windows) HKCUCreateKey(path string) (Key, error) {
 	key, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.READ|registry.WRITE)
-	if errors.Is(err, registry.ErrNotExist) {
-		return 0, ErrKeyNotExist
+	if err != nil {
+		return 0, translateRegistryError(err)
 	}
-	if errors.Is(err, syscall.Errno(5)) { // Access is denied
-		return 0, ErrAccessDenied
-	}
-	return Key(key), err
+	return Key(key), nil
 }
 
 // CloseKey releases a key.
@@ -80,13 +84,7 @@ func (Windows) WriteValue(k Key, field, value string, multiLine bool) error {
 		err = registry.Key(k).SetStringValue(field, value)
 	}
 
-	if errors.Is(err, registry.ErrNotExist) {
-		return ErrKeyNotExist
-	}
-	if errors.Is(err, syscall.Errno(5)) {
-		return ErrAccessDenied
-	}
-	return err
+	return translateRegistryError(err)
 }
 
 // ReadIntegerValue reads the value of the specified integer (DWORD or QWORD) field in the specified key.
@@ -104,13 +102,7 @@ func (Windows) ReadIntegerValue(k Key, field string) (uint64, error) {
 // SetDWordValue sets the value of the specified DWORD field in the specified key.
 func (Windows) SetDWordValue(k Key, field string, value uint32) error {
 	err := registry.Key(k).SetDWordValue(field, value)
-	if errors.Is(err, registry.ErrNotExist) {
-		return ErrKeyNotExist
-	}
-	if errors.Is(err, syscall.Errno(5)) {
-		return ErrAccessDenied
-	}
-	return err
+	return translateRegistryError(err)
 }
 
 // RegNotifyChangeKeyValue creates an event and attaches it to a registry key.
