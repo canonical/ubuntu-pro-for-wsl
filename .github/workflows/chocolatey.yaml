@@ -82,6 +82,11 @@ jobs:
           $metadataNode = $doc.Root.Element($ns + "metadata")
           $versionNode = $metadataNode.Element($ns + "version")
           if ($versionNode) { $versionNode.Value = $release.version }
+          $copyrightNode = $metadataNode.Element($ns + "copyright")
+          if ($copyrightNode) {
+            $year=(Get-Date).Year
+            $copyrightNode.Value = "2025-$year Canonical Ltd."
+          }
 
           $readmeContent = Get-Content "./README.md" -Raw
           $descNode = $metadataNode.Element($ns + "description") 
