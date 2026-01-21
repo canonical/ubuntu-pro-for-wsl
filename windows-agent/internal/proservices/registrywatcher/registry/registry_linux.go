@@ -28,6 +28,16 @@ func (Windows) WriteValue(k Key, field, value string, multiLine bool) error {
 	panic("the Windows registry is not available on Linux")
 }
 
+// ReadDWordValue reads the value of the specified DWORD integer field in the specified key.
+func (Windows) ReadDWordValue(k Key, field string) (uint64, error) {
+	panic("the Windows registry is not available on Linux")
+}
+
+// SetDWordValue sets the value of the specified DWORD field in the specified key.
+func (Windows) SetDWordValue(k Key, field string, value uint32) error {
+	panic("the Windows registry is not available on Linux")
+}
+
 // RegNotifyChangeKeyValue creates an event and attaches it to a registry key.
 // Modifying that key or its children will trigger the event.
 // This trigger can be detected by WaitForSingleObject.
