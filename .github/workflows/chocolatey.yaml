@@ -73,7 +73,7 @@ jobs:
           $release = '${{ steps.release-data.outputs.releaseJson }}' | ConvertFrom-Json
           $release | ConvertTo-Json -Depth 3 | Out-File "./tools/asset.json" -Encoding utf8
 
-          $nuspecPath = Get-ChildItem -Path "./ubuntu-pro-for-wsl.nuspec.template"
+          $nuspecPath = Get-Item -Path "./ubuntu-pro-for-wsl.nuspec.template"
           [System.Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
           $doc = [System.Xml.Linq.XDocument]::Load($nuspecPath.FullName)
           $ns = $doc.Root.GetDefaultNamespace()
@@ -90,7 +90,8 @@ jobs:
               $descNode.ReplaceNodes((New-Object System.Xml.Linq.XCData($readmeContent)))
           }
 
-          $doc.Save($nuspecPath.BaseName) # Removes the .template extension, leaving the .nuspec
+          $nuspecOutputPath = Join-Path (Split-Path $nuspecPath.FullName) $nuspecPath.BaseName
+          $doc.Save($nuspecOutputPath) # Removes the .template extension, leaving the .nuspec in the same directory
 
           # Finally, pack it!
           choco pack
