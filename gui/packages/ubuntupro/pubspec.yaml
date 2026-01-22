@@ -63,7 +63,7 @@ dependencies:
   window_manager: ^0.5.1
   windows_single_instance: ^1.1.0
   wizard_router: ^1.4.0
-  yaru: ^9.0.0
+  yaru: ^9.0.1
 
 dev_dependencies:
   build_runner: ^2.10.5
