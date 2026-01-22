@@ -1,0 +1,123 @@
+name: Publish to Chocolatey on release
+concurrency: published-release 
+on:
+  pull_request:
+    paths:
+      - .github/workflows/chocolatey.yaml # This file.
+      - msix/chocolatey/*
+  release:
+    types: [published] # Only triggers for stable releases.
+  workflow_dispatch:
+
+jobs:
+  update-choco-assets:
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: ./msix/chocolatey/
+    name: Update package
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Fetch data about the latest release
+        id: release-data
+        env:
+          RELEASE_JSON_RAW: ${{ github.event.name == 'release' && toJson(github.event.release) || '' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # If not a release event
+          if (${env:RELEASE_JSON_RAW}.Length -eq 0) {
+            $headers = @{
+                "Accept"                = "application/vnd.github+json"
+                "Authorization"         = "Bearer $env:GH_TOKEN"
+                "X-GitHub-Api-Version"  = "2022-11-28"
+            }
+
+            # Invoke-RestMethod follows redirects by default, so we can use the /release/latest slug.
+            $release = Invoke-RestMethod -Uri "${{ github.api_url }}/repos/canonical/ubuntu-pro-for-wsl/releases/latest" -Headers $headers
+
+            Write-Host "Latest Release: $($release.name)"
+          } else {
+            $release = $env:RELEASE_JSON_RAW | ConvertFrom-Json
+
+            Write-Host "Packaging Release: $($release.name)"
+          }
+          Write-Host "Tag: $($release.tag_name)"
+
+          $bundle="UbuntuProForWSL.msixbundle"
+          $targetAsset = $release.assets | Where-Object { $_.name -eq $bundle}
+          if ($null -eq $targetAsset) {
+              Write-Error "Asset $bundle not found in release."
+              exit 1
+          }
+
+          # Split the digest (e.g., "sha256:c9d7f...")
+          $hashParts = $targetAsset.digest -split ':'
+          $releaseStr = [PSCustomObject]@{
+              version      = $release.name
+              tag          = $release.tag_name
+              name         = $targetAsset.name
+              download_url = $targetAsset.browser_download_url
+              checksum     = @{
+                  value = $hashParts[1]
+                  type  = $hashParts[0]
+              }
+          } | ConvertTo-Json -Compress -Depth 3 
+
+          Write-Output "releaseJson=$releaseStr" >> $env:GITHUB_OUTPUT
+
+      - name: Generate the chocolatey package
+        run: |
+          $release = '${{ steps.release-data.outputs.releaseJson }}' | ConvertFrom-Json
+          $release | ConvertTo-Json -Depth 3 | Out-File "./tools/asset.json" -Encoding utf8
+
+          $nuspecPath = Get-Item -Path "./ubuntu-pro-for-wsl.nuspec.template"
+          [System.Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
+          $doc = [System.Xml.Linq.XDocument]::Load($nuspecPath.FullName)
+          $ns = $doc.Root.GetDefaultNamespace()
+
+          # In LINQ, we combine the XML namespace and local tag name like this: $ns + "tagName"
+          $metadataNode = $doc.Root.Element($ns + "metadata")
+          $versionNode = $metadataNode.Element($ns + "version")
+          if ($versionNode) { $versionNode.Value = $release.version }
+          $copyrightNode = $metadataNode.Element($ns + "copyright")
+          if ($copyrightNode) {
+            $year=(Get-Date).Year
+            $copyrightNode.Value = "2025-$year Canonical Ltd."
+          }
+
+          $readmeContent = Get-Content "./README.md" -Raw
+          $descNode = $metadataNode.Element($ns + "description") 
+          if ($descNode) {
+              # Replace content with a new XCData object
+              $descNode.ReplaceNodes((New-Object System.Xml.Linq.XCData($readmeContent)))
+          }
+
+          $nuspecOutputPath = Join-Path (Split-Path $nuspecPath.FullName) $nuspecPath.BaseName
+          $doc.Save($nuspecOutputPath) # Removes the .template extension, leaving the .nuspec in the same directory
+
+          # Finally, pack it!
+          choco pack
+
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v6
+        with:
+          path: ./msix/chocolatey/ubuntu-pro-for-wsl.*.nupkg
+          name: nupkg
+
+      - name: Test installing the package
+        run: |
+          choco install ubuntu-pro-for-wsl --verbose --source .
+
+      - name: Test uninstalling the package
+        run: |
+          choco uninstall ubuntu-pro-for-wsl --verbose
+
+      - name: Push to chocolatey.org
+        if: ${{ github.event_name == 'release' }}
+        run: |
+          choco apikey --key ${{ secrets.CHOCO_API_KEY }} --source https://push.chocolatey.org/
+          choco push ubuntu-pro-for-wsl.*.nupkg --source https://push.chocolatey.org/
+

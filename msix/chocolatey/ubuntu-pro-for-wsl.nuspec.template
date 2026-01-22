@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- == PACKAGE SPECIFIC SECTION == -->
+    <!-- This section is about this package, although id and version have ties back to the software -->
+    <!-- id is lowercase and if you want a good separator for words, use '-', not '.'. Dots are only acceptable as suffixes for certain types of packages, e.g. .install, .portable, .extension, .template -->
+    <!-- If the software is cross-platform, attempt to use the same id as the debian/rpm package(s) if possible. -->
+    <id>ubuntu-pro-for-wsl</id>
+    <!-- version should MATCH as closely as possible with the underlying software -->
+    <!-- Is the version a prerelease of a version? https://docs.nuget.org/create/versioning#creating-prerelease-packages -->
+    <!-- Note that unstable versions like 0.0.1 can be considered a released version, but it's possible that one can release a 0.0.1-beta before you release a 0.0.1 version. If the version number is final, that is considered a released version and not a prerelease. -->
+    <!-- This value is updated by CI at release time. -->
+    <version>REPLACE_IN_CI</version>
+    <packageSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/msix/chocolatey/ubuntuproforwsl</packageSourceUrl>
+    <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
+    <owners>Canonical Ltd.</owners>
+    <!-- ============================== -->
+    <!-- == SOFTWARE SPECIFIC SECTION == -->
+    <!-- This section is about the software itself -->
+    <title>Ubuntu Pro for WSL</title>
+    <authors>Canonical Ltd.</authors>
+    <!-- projectUrl is required for the community feed -->
+    <projectUrl>https://github.com/canonical/ubuntu-pro-for-wsl</projectUrl>
+    <!-- There are a number of CDN Services that can be used for hosting the Icon for a package. More information can be found here: https://docs.chocolatey.org/en-us/create/create-packages#package-icon-guidelines -->
+    <!-- Here is an example using Githack -->
+    <iconUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/msix/UbuntuProForWSL/Images/StoreLogo.png</iconUrl>
+    <copyright>REPLACE_IN_CI</copyright>
+    <!-- If there is a license Url available, it is required for the community feed -->
+    <licenseUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl</projectSourceUrl>
+    <docsUrl>https://documentation.ubuntu.com/wsl</docsUrl>
+    <bugTrackerUrl>https://github.com/canonical/ubuntu-pro-for-wsl/issues</bugTrackerUrl>
+    <tags>ubuntu ubuntu-pro wsl automation landscape</tags>
+    <summary>Ubuntu Pro for WSL is a Windows application that automates the attachment of Ubuntu on WSL instances to your Ubuntu Pro subscription as well as registration to Landscape.</summary>
+    <!-- Same contents as the package README.md file. -->
+    <description>REPLACE_IN_CI</description>
+    <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
+  </metadata>
+  <files>
+    <!-- this section controls what actually gets packaged into the Chocolatey package -->
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
+
