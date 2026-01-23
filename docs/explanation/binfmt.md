@@ -17,9 +17,9 @@ execute that specific format. The executable formats are registered via a file i
 to pass that along to Windows (check `/proc/sys/fs/binfmt_misc/WSLInterop*` in a WSL distro instance).
 
 Historically, the systemd unit `systemd-binfmt.service` was known to break WSL binary
-interoperability, so it was disabled for Ubuntu on WSL. That's no longer the case for recent
-versions of Ubuntu and WSL This documentation explains why that used to be a problem, why it no
-longer is and what to do if you still find issues related to WSL binary interoperability. 
+interoperability, so it was disabled for Ubuntu on WSL. This documentation explains these issues
+with WSL binary interoperability, why they no longer apply in more recent versions of Ubuntu and
+WSL, and what you can do if you still have problems.
 
 ## The systemd-binfmt.service and Windows binary interoperability
 
