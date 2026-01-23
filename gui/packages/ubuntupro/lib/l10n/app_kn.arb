@@ -1,1 +1,123 @@
-{}
+{
+    "appTitle": "WSL ಗಾಗಿ ಉಬುಂಟು ಪ್ರೊ",
+    "tokenErrorEmpty": "ಟೋಕನ್ ಖಾಲಿ ಇರುವಂತಿಲ್ಲ",
+    "tokenErrorInvalid": "ಅಮಾನ್ಯ ಟೋಕನ್",
+    "tokenValid": "ಮಾನ್ಯ ಟೋಕನ್",
+    "tokenInputTitle": "ಈ ಯಂತ್ರವನ್ನು ಲಗತ್ತಿಸಿ",
+    "tokenInputDescription": "{proLink} ಅಥವಾ ನಿಮ್ಮ ಸಿಸ್ಟಂ ನಿರ್ವಾಹಕರಿಂದ ಟೋಕನ್ ಅನ್ನು ನಮೂದಿಸಿ",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "ಟೋಕನ್",
+    "agentStateStarting": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಪ್ರಾರಂಭವಾಗುತ್ತಿದೆ.",
+    "agentStatePingNonResponsive": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಪ್ರತಿಕ್ರಿಯಿಸುತ್ತಿಲ್ಲ.",
+    "agentStateInvalid": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಪ್ರಾರಂಭಕ್ಕಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ.",
+    "agentStateCannotStart": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸಲಾಗುವುದಿಲ್ಲ.",
+    "agentStateUnknownEnv": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಸ್ಥಿತಿಯನ್ನು ಪರಿಶೀಲಿಸಲಾಗುವುದಿಲ್ಲ. ನಿಮ್ಮ ಪರಿಸರ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+    "agentStateQuerying": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಸ್ಥಿತಿಯನ್ನು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ.",
+    "agentStateUnreachable": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್ ಅನ್ನು ಮರುಪಡೆಯಲು ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತಿದೆ.",
+    "proHeading": "ಉಬುಂಟು ಪ್ರಕಾಶಕರಿಂದ ಓಪನ್ ಸೋರ್ಸ್ ಸಾಫ್ಟ್‌ವೇರ್ ಭದ್ರತೆ, ಈಗ ವಿಂಡೋಸ್‌ನಲ್ಲಿ ಲಭ್ಯವಿದೆ. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "ಉಬುಂಟು ಪ್ರೊ ಪಡೆಯಿರಿ",
+    "learnMore": "ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ",
+    "ubuntuProEnabled": "ಈ ಯಂತ್ರದಲ್ಲಿ ಉಬುಂಟು ಪ್ರೊ ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ",
+    "ubuntuProEnabledInfo": "ಎಲ್ಲಾ ಉಬುಂಟು WSL ನಿದರ್ಶನಗಳು ಉಬುಂಟು ಪ್ರೊ ಭದ್ರತಾ ವೈಶಿಷ್ಟ್ಯಗಳಿಗೆ ಪ್ರವೇಶವನ್ನು ಹೊಂದಿವೆ.",
+    "manageUbuntuPro": "ಉಬುಂಟು ಪ್ರೊ ಚಂದಾದಾರಿಕೆಯನ್ನು ನಿರ್ವಹಿಸಿ",
+    "detachPro": "ಉಬುಂಟು ಪ್ರೊ ಅನ್ನು ಬೇರ್ಪಡಿಸಿ",
+    "attach": "ಲಗತ್ತಿಸಿ",
+    "applyProToken": "ಪ್ರೊ ಟೋಕನ್ ಅನ್ನು ಅನ್ವಯಿಸಿ",
+    "applyingProToken": "ಟೋಕನ್ {token} ಅನ್ವಯಿಸಲಾಗುತ್ತಿದೆಟೋಕನ್ {token} ಅನ್ವಯಿಸಲಾಗುತ್ತಿದೆ",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "ಉಬುಂಟು ಪ್ರೊ ಹಿನ್ನೆಲೆ ಏಜೆಂಟ್",
+    "updatingSubscriptionInfo": "ಚಂದಾದಾರಿಕೆ ಮಾಹಿತಿಯನ್ನು ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ.",
+    "purchaseStatusSuccess": "ಉಬುಂಟು ಪ್ರೊಗೆ ಚಂದಾದಾರರಾಗಿದ್ದಕ್ಕಾಗಿ ಧನ್ಯವಾದಗಳು.",
+    "purchaseStatusAlreadyPurchased": "ನೀವು ಈಗಾಗಲೇ Pro ಗೆ ಚಂದಾದಾರರಾಗಿರುವಿರಿ.",
+    "purchaseStatusUserGaveUp": "ಖರೀದಿ ಪ್ರಯತ್ನವನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ.",
+    "purchaseStatusNetwork": "ನೆಟ್‌ವರ್ಕ್ ಸಮಸ್ಯೆಯು ಖರೀದಿಯನ್ನು ಮುಂದುವರಿಸದಂತೆ ತಡೆಯುತ್ತದೆ. ಒಮ್ಮೆ ಸಂಪರ್ಕಿಸಿದ ನಂತರ ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "purchaseStatusServer": "Microsoft Store ನಲ್ಲಿ ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "purchaseStatusUnknown": "ಚಂದಾದಾರಿಕೆಯನ್ನು ಖರೀದಿಸಲು ಪ್ರಯತ್ನಿಸುವಾಗ ಅಜ್ಞಾತ ದೋಷ. ಈ ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಮರುಪ್ರಾರಂಭಿಸುವುದನ್ನು ಪರಿಗಣಿಸಿ.",
+    "landscapeSkip": "ಸದ್ಯಕ್ಕೆ ಬಿಟ್ಟುಬಿಡಿ",
+    "landscapeSkipDescription": "ಈ ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿ ನಂತರ ನೀವು ಯಾವಾಗಲೂ ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಅನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಬಹುದು",
+    "landscapeSkipRegister": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್‌ನೊಂದಿಗೆ ನೋಂದಾಯಿಸಿ",
+    "landscapeHeading": "ನಿಮ್ಮ ಉಬುಂಟು WSL ನಿದರ್ಶನಗಳನ್ನು ದೂರದಿಂದಲೇ ನಿರ್ವಹಿಸಲು ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್‌ಗೆ ಸಂಪರ್ಕವನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಿ. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "ಹಸ್ತಚಾಲಿತ ಸಂರಚನೆ",
+    "landscapeSetupManualHint": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಸರ್ವರ್‌ನೊಂದಿಗೆ ನೋಂದಾಯಿಸಿ",
+    "landscapeSetupCustom": "ಸುಧಾರಿತ ಸಂರಚನೆ",
+    "landscapeSetupCustomHint": "ಕಸ್ಟಮ್ ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಕ್ಲೈಂಟ್ ಕಾನ್ಫಿಗರೇಶನ್ ಫೈಲ್ ಅನ್ನು ಲೋಡ್ ಮಾಡಿ",
+    "landscapeFQDNLabel": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ FQDN",
+    "landscapeFQDNError": "ಅಮಾನ್ಯ FQDN. ಸಂಪೂರ್ಣ ಅರ್ಹ ಡೊಮೇನ್ ಹೆಸರು ಅಥವಾ IP ವಿಳಾಸವನ್ನು ನಿರೀಕ್ಷಿಸಲಾಗಿದೆ.",
+    "landscapeFQDNSaaSError": "FQDN Landscape.canonical.com ಆಗಿರಬಾರದು.",
+    "landscapeAccountNameLabel": "ಖಾತೆಯ ಹೆಸರು",
+    "landscapeAccountNameError": "ಖಾತೆಯ ಹೆಸರು ಖಾಲಿಯಾಗಿರಬಾರದು ಅಥವಾ \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "ನೋಂದಣಿ ಕೀ (ಐಚ್ಛಿಕ)",
+    "landscapeSSLKeyLabel": "ಸರ್ವರ್ SSL ಸಾರ್ವಜನಿಕ ಕೀ (ಐಚ್ಛಿಕ)",
+    "landscapeFileLabel": "ಫೈಲ್ ಮಾರ್ಗವನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಿ",
+    "landscapeFileTooLarge": "ಕಾನ್ಫಿಗರೇಶನ್ ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ",
+    "landscapeFileEmptyPath": "ಒಂದು ಮಾರ್ಗವನ್ನು ನಿರ್ದಿಷ್ಟಪಡಿಸಬೇಕು",
+    "landscapeFileEmptyContents": "ಫೈಲ್ ಖಾಲಿಯಾಗಿರಬಾರದು",
+    "landscapeFileNotFound": "ಫೈಲ್ ಕಂಡುಬಂದಿಲ್ಲ",
+    "landscapeFileIsDir": "ಫೈಲ್ ಡೈರೆಕ್ಟರಿಯಾಗಿರಬಾರದು",
+    "landscapeFileInvalidFormat": "ಫೈಲ್ ತಪ್ಪಾದ ಸ್ವರೂಪದಲ್ಲಿದೆ",
+    "landscapeFilePicker": "ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ...",
+    "landscapeConfigureButton": "ಭೂದೃಶ್ಯವನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಿ",
+    "landscapeApplyError": "ಸಂರಚನೆಯನ್ನು ಅನ್ವಯಿಸಲು ಪ್ರಯತ್ನಿಸುವಾಗ ದೋಷ:{message}ಸಂರಚನೆಯನ್ನು ಅನ್ವಯಿಸಲು ಪ್ರಯತ್ನಿಸುವಾಗ ದೋಷ:{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "ನೋಂದಾಯಿಸಿ",
+    "landscapeDetails": "ವಿವರಗಳು",
+    "landscapeProceedAnywayHint": "ಮುಂದುವರಿಯಿರಿ ಮತ್ತು ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಸರ್ವರ್ ಅನ್ನು ತಲುಪುವ ಪ್ರಯತ್ನಗಳು ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಮುಂದುವರಿಯುತ್ತದೆ.",
+    "landscapeChangeLaterHint": "ನೀವು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಕಾನ್ಫಿಗರೇಶನ್ ಅನ್ನು ಬದಲಾಯಿಸಬಹುದು.",
+    "landscapeEditYourConfig": "ನಿಮ್ಮ ಸಂರಚನೆಯನ್ನು ಸಂಪಾದಿಸಿ",
+    "landscapeProceedAnyway": "ಹೇಗಾದರೂ ಮುಂದುವರಿಯಿರಿ",
+    "landscapeInvalidConfig": "ಅಮಾನ್ಯವಾದ ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಕಾನ್ಫಿಗರೇಶನ್",
+    "landscapeInvalidConfigContent": "ಸಲ್ಲಿಸಿದ ಕಾನ್ಫಿಗರೇಶನ್ ಅನ್ನು ಸರ್ವರ್ ತಿರಸ್ಕರಿಸಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+    "landscapeUnchangedConfig": "ಬದಲಾಗದ ಸಂರಚನೆ",
+    "landscapeUnreachable": "ಭೂದೃಶ್ಯವನ್ನು ತಲುಪಲಾಗುವುದಿಲ್ಲ",
+    "landscapeUnreachableContent": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+    "landscapeWSLUnavailable": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ WSL ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ",
+    "landscapeWSLUnavailableContent": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್ ಸರ್ವರ್‌ನಲ್ಲಿ WSL ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸಿಸ್ಟಂ ನಿರ್ವಾಹಕರನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+    "landscapeUnknownError": "ಲ್ಯಾಂಡ್‌ಸ್ಕೇಪ್‌ಗೆ ಸಂಪರ್ಕಿಸುವಾಗ ಅಜ್ಞಾತ ದೋಷ",
+    "landscapeUnknownErrorContent": "ದಯವಿಟ್ಟು ಕೆಳಗಿನ ವಿವರಗಳನ್ನು ಒಳಗೊಂಡಂತೆ ಈ ಘಟನೆಯನ್ನು ವರದಿ ಮಾಡಿ.",
+    "buttonNext": "ಮುಂದೆ",
+    "buttonSkip": "ಬಿಟ್ಟುಬಿಡಿ",
+    "buttonBack": "ಹಿಂದೆ",
+    "statusBarReportBugTooltip": "ದೋಷವನ್ನು ವರದಿ ಮಾಡಿ",
+    "statusBarAgentRunningTooltip": "ಉಬುಂಟು ಪ್ರೊ ಏಜೆಂಟ್ ಚಾಲನೆಯಲ್ಲಿದೆ",
+    "statusBarAgentConnectingTooltip": "ಉಬುಂಟು ಪ್ರೊ ಏಜೆಂಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ...",
+    "statusBarAgentDownTooltip": "ಉಬುಂಟು ಪ್ರೊ ಏಜೆಂಟ್ ಸಂಪರ್ಕ ಕಡಿತಗೊಂಡಿದೆ. ಏಜೆಂಟ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸಲು ಒತ್ತಿರಿ."
+}

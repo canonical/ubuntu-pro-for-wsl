@@ -1,1 +1,196 @@
-{}
+{
+    "appTitle": "Ubuntu Pro ສຳລັບ WSL",
+    "@appTitle": {},
+    "tokenErrorEmpty": "ໂທເຄັນຕ້ອງບໍ່ຫວ່າງເປົ່າ",
+    "@tokenErrorEmpty": {},
+    "tokenErrorInvalid": "ໂທເຄັນບໍ່ຖືກຕ້ອງ",
+    "@tokenErrorInvalid": {},
+    "tokenValid": "ໂທເຄັນຖືກຕ້ອງ",
+    "@tokenValid": {},
+    "tokenInputTitle": "ເຊື່ອມຕໍ່ເຄື່ອງນີ້",
+    "@tokenInputTitle": {},
+    "tokenInputDescription": "ປ້ອນໂທເຄັນຈາກ {proLink} ຫຼື ຈາກຜູ້ເບິ່ງແຍງລະບົບຂອງທ່ານ",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "ໂທເຄັນ",
+    "@tokenInputHint": {},
+    "attach": "ເຊື່ອມຕໍ່",
+    "@attach": {},
+    "applyProToken": "ນຳໃຊ້ໂທເຄັນ Pro",
+    "@applyProToken": {},
+    "applyingProToken": "ກຳລັງນຳໃຊ້ໂທເຄັນ {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro",
+    "@agent": {},
+    "agentStateStarting": "Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro ກຳລັງເລີ່ມຕົ້ນ.",
+    "@agentStateStarting": {},
+    "agentStatePingNonResponsive": "Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro ບໍ່ຕອບສະໜອງ.",
+    "@agentStatePingNonResponsive": {},
+    "agentStateInvalid": "ກຳລັງລໍຖ້າການເລີ່ມຕົ້ນ Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro.",
+    "@agentStateInvalid": {},
+    "agentStateCannotStart": "ບໍ່ສາມາດເລີ່ມຕົ້ນ Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro ໄດ້.",
+    "@agentStateCannotStart": {},
+    "agentStateUnknownEnv": "ບໍ່ສາມາດກວດສອບສະຖານະ Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro ໄດ້. ກະລຸນາກວດເບິ່ງການຕັ້ງຄ່າສະພາບແວດລ້ອມຂອງທ່ານ.",
+    "@agentStateUnknownEnv": {},
+    "agentStateQuerying": "ກຳລັງກວດສອບສະຖານະ Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro.",
+    "@agentStateQuerying": {},
+    "agentStateUnreachable": "ກຳລັງພະຍາຍາມກູ້ຄືນ Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro.",
+    "@agentStateUnreachable": {},
+    "proHeading": "ຄວາມປອດໄພຂອງຊອບແວໂອເພນຊອດໂດຍຜູ້ຈັດພິມ Ubuntu, ຕອນນີ້ໃຊ້ໄດ້ແລ້ວໃນ Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "ຮັບເອົາ Ubuntu Pro",
+    "@getUbuntuPro": {},
+    "learnMore": "ຮຽນຮູ້ເພີ່ມເຕີມ",
+    "@learnMore": {},
+    "ubuntuProEnabled": "Ubuntu Pro ຖືກເປີດໃຊ້ງານໃນເຄື່ອງນີ້ແລ້ວ",
+    "@ubuntuProEnabled": {},
+    "ubuntuProEnabledInfo": "ທຸກໆອິນສະແຕນ Ubuntu WSL ສາມາດເຂົ້າເຖິງຄຸນສົມບັດຄວາມປອດໄພຂອງ Ubuntu Pro ໄດ້.",
+    "@ubuntuProEnabledInfo": {},
+    "manageUbuntuPro": "ຈັດການການສະໝັກໃຊ້ Ubuntu Pro",
+    "@manageUbuntuPro": {},
+    "detachPro": "ຍົກເລີກການເຊື່ອມຕໍ່ Ubuntu Pro",
+    "@detachPro": {},
+    "updatingSubscriptionInfo": "ກຳລັງອັບເດດຂໍ້ມູນການສະໝັກໃຊ້.",
+    "@updatingSubscriptionInfo": {},
+    "purchaseStatusSuccess": "ຂອບໃຈທີ່ສະໝັກໃຊ້ Ubuntu Pro.",
+    "@purchaseStatusSuccess": {},
+    "purchaseStatusAlreadyPurchased": "ທ່ານໄດ້ສະໝັກໃຊ້ Pro ແລ້ວ.",
+    "@purchaseStatusAlreadyPurchased": {},
+    "purchaseStatusUserGaveUp": "ຄວາມພະຍາຍາມສັ່ງຊື້ຖືກຍົກເລີກ.",
+    "@purchaseStatusUserGaveUp": {},
+    "purchaseStatusNetwork": "ບັນຫາເຄືອຂ່າຍຂັດຂວາງການສັ່ງຊື້. ກະລຸນາລອງໃໝ່ອີກຄັ້ງເມື່ອເຊື່ອມຕໍ່ແລ້ວ.",
+    "@purchaseStatusNetwork": {},
+    "purchaseStatusServer": "ເກີດຂໍ້ຜິດພາດກັບ Microsoft Store. ກະລຸນາລອງໃໝ່ອີກຄັ້ງພາຍຫຼັງ.",
+    "@purchaseStatusServer": {},
+    "purchaseStatusUnknown": "ເກີດຂໍ້ຜິດພາດທີ່ບໍ່ຮູ້ຈັກເມື່ອພະຍາຍາມຊື້ການສະໝັກໃຊ້. ລອງປິດແລ້ວເປີດແອັບນີ້ໃໝ່.",
+    "@purchaseStatusUnknown": {},
+    "landscapeSkip": "ຂ້າມໄປກ່ອນ",
+    "@landscapeSkip": {},
+    "landscapeSkipDescription": "ທ່ານສາມາດຕັ້ງຄ່າ Landscape ພາຍຫຼັງໄດ້ສະເໝີໃນແອັບນີ້",
+    "@landscapeSkipDescription": {},
+    "landscapeSkipRegister": "ລົງທະບຽນກັບ Landscape",
+    "@landscapeSkipRegister": {},
+    "landscapeHeading": "ຕັ້ງຄ່າການເຊື່ອມຕໍ່ກັບ Landscape ເພື່ອຈັດການອິນສະແຕນ Ubuntu WSL ຂອງທ່ານຈາກໄລຍະໄກ. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "ການຕັ້ງຄ່າດ້ວຍຕົນເອງ",
+    "@landscapeSetupManual": {},
+    "landscapeSetupManualHint": "ລົງທະບຽນກັບເຊີບເວີ Landscape",
+    "@landscapeSetupManualHint": {},
+    "landscapeSetupCustom": "ການຕັ້ງຄ່າຂັ້ນສູງ",
+    "@landscapeSetupCustom": {},
+    "landscapeSetupCustomHint": "ໂຫຼດໄຟລ໌ຕັ້ງຄ່າໄຄລເອັນ Landscape ແບບກຳນົດເອງ",
+    "@landscapeSetupCustomHint": {},
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "@landscapeFQDNLabel": {},
+    "landscapeFQDNError": "FQDN ບໍ່ຖືກຕ້ອງ. ຕ້ອງການຊື່ໂດເມນທີ່ສົມບູນ ຫຼື ທີ່ຢູ່ IP.",
+    "@landscapeFQDNError": {},
+    "landscapeFQDNSaaSError": "FQDN ບໍ່ຄວນເປັນ landscape.canonical.com.",
+    "@landscapeFQDNSaaSError": {},
+    "landscapeAccountNameLabel": "ຊື່ບັນຊີ",
+    "@landscapeAccountNameLabel": {},
+    "landscapeAccountNameError": "ຊື່ບັນຊີຕ້ອງບໍ່ຫວ່າງເປົ່າ ຫຼື ເປັນ \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "ຄີລົງທະບຽນ (ທາງເລືອກ)",
+    "@landscapeKeyLabel": {},
+    "landscapeSSLKeyLabel": "ຄີສາທາລະນະ SSL ຂອງເຊີບເວີ (ທາງເລືອກ)",
+    "@landscapeSSLKeyLabel": {},
+    "landscapeFileLabel": "ເສັ້ນທາງໄຟລ໌ຕັ້ງຄ່າ",
+    "@landscapeFileLabel": {},
+    "landscapeFileTooLarge": "ໄຟລ໌ຕັ້ງຄ່າມີຂະໜາດໃຫຍ່ເກີນໄປ",
+    "@landscapeFileTooLarge": {},
+    "landscapeFileEmptyPath": "ຕ້ອງລະບຸເສັ້ນທາງໄຟລ໌",
+    "@landscapeFileEmptyPath": {},
+    "landscapeFileEmptyContents": "ໄຟລ໌ຕ້ອງບໍ່ຫວ່າງເປົ່າ",
+    "@landscapeFileEmptyContents": {},
+    "landscapeFileNotFound": "ບໍ່ພົບໄຟລ໌",
+    "@landscapeFileNotFound": {},
+    "landscapeFileIsDir": "ໄຟລ໌ບໍ່ສາມາດເປັນໂຟນເດີໄດ້",
+    "@landscapeFileIsDir": {},
+    "landscapeFileInvalidFormat": "ໄຟລ໌ຢູ່ໃນຮູບແບບທີ່ບໍ່ຖືກຕ້ອງ",
+    "@landscapeFileInvalidFormat": {},
+    "landscapeFilePicker": "ເລືອກໄຟລ໌...",
+    "@landscapeFilePicker": {},
+    "landscapeConfigureButton": "ຕັ້ງຄ່າ Landscape",
+    "@landscapeConfigureButton": {},
+    "landscapeApplyError": "ເກີດຂໍ້ຜິດພາດເມື່ອພະຍາຍາມນຳໃຊ້ການຕັ້ງຄ່າ:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "ລົງທະບຽນ",
+    "@landscapeRegister": {},
+    "landscapeDetails": "ລາຍລະອຽດ",
+    "@landscapeDetails": {},
+    "landscapeProceedAnywayHint": "ດຳເນີນການຕໍ່ ແລະ ຄວາມພະຍາຍາມເຂົ້າຫາເຊີບເວີ Landscape ຈະສືບຕໍ່ໃນເບື້ອງຫຼັງ.",
+    "@landscapeProceedAnywayHint": {},
+    "landscapeChangeLaterHint": "ທ່ານສາມາດປ່ຽນການຕັ້ງຄ່າໄດ້ທຸກເວລາ.",
+    "@landscapeChangeLaterHint": {},
+    "landscapeEditYourConfig": "ແກ້ໄຂການຕັ້ງຄ່າຂອງທ່ານ",
+    "@landscapeEditYourConfig": {},
+    "landscapeProceedAnyway": "ດຳເນີນການຕໍ່",
+    "@landscapeProceedAnyway": {},
+    "landscapeInvalidConfig": "ການຕັ້ງຄ່າ Landscape ບໍ່ຖືກຕ້ອງ",
+    "@landscapeInvalidConfig": {},
+    "landscapeInvalidConfigContent": "ເຊີບເວີປະຕິເສດການຕັ້ງຄ່າທີ່ສົ່ງໄປ. ກະລຸນາກວດສອບການຕັ້ງຄ່າຂອງທ່ານ.",
+    "@landscapeInvalidConfigContent": {},
+    "landscapeUnchangedConfig": "ການຕັ້ງຄ່າທີ່ບໍ່ໄດ້ປ່ຽນແປງ",
+    "@landscapeUnchangedConfig": {},
+    "landscapeUnreachable": "ບໍ່ສາມາດຕິດຕໍ່ Landscape ໄດ້",
+    "@landscapeUnreachable": {},
+    "landscapeUnreachableContent": "ບໍ່ສາມາດເຊື່ອມຕໍ່ກັບເຊີບເວີ Landscape ໄດ້.",
+    "@landscapeUnreachableContent": {},
+    "landscapeWSLUnavailable": "ຄຸນສົມບັດ Landscape WSL ຖືກປິດໃຊ້ງານ",
+    "@landscapeWSLUnavailable": {},
+    "landscapeWSLUnavailableContent": "ຄຸນສົມບັດ WSL ຖືກປິດໃຊ້ງານໃນເຊີບເວີ Landscape. ກະລຸນາຕິດຕໍ່ຜູ້ເບິ່ງແຍງລະບົບຂອງທ່ານ.",
+    "@landscapeWSLUnavailableContent": {},
+    "landscapeUnknownError": "ຂໍ້ຜິດພາດທີ່ບໍ່ຮູ້ຈັກເມື່ອເຊື່ອມຕໍ່ກັບ Landscape",
+    "@landscapeUnknownError": {},
+    "landscapeUnknownErrorContent": "ກະລຸນາລາຍງານເຫດການນີ້ລວມທັງລາຍລະອຽດດ້ານລຸ່ມ.",
+    "@landscapeUnknownErrorContent": {},
+    "buttonNext": "ຕໍ່ໄປ",
+    "@buttonNext": {},
+    "buttonSkip": "ຂ້າມ",
+    "@buttonSkip": {},
+    "buttonBack": "ກັບຄືນ",
+    "@buttonBack": {},
+    "statusBarReportBugTooltip": "ລາຍງານຂໍ້ຜິດພາດ (Bug)",
+    "@statusBarReportBugTooltip": {},
+    "statusBarAgentRunningTooltip": "Agent ຂອງ Ubuntu Pro ກຳລັງເຮັດວຽກ",
+    "@statusBarAgentRunningTooltip": {},
+    "statusBarAgentConnectingTooltip": "ກຳລັງເຊື່ອມຕໍ່ກັບ Agent ຂອງ Ubuntu Pro...",
+    "@statusBarAgentConnectingTooltip": {},
+    "statusBarAgentDownTooltip": "Agent ຂອງ Ubuntu Pro ຖືກຕັດການເຊື່ອມຕໍ່. ກົດເພື່ອເລີ່ມຕົ້ນ Agent.",
+    "@statusBarAgentDownTooltip": {}
+}
