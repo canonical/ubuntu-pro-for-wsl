@@ -43,8 +43,8 @@ packages that rely on `binfmt_misc`.
 ## WSL protection of binfmt registrations
 
 The scenarios above were reported by users in previous versions of WSL. The developers have since
-implemented numerous improvements. Since version 2.5.7, WSL is capable of restoring its binfmt
-registration at startup and when that service is restarted, by implementing a systemd generator that
+implemented numerous improvements. From version 2.5.7, WSL is capable of restoring its binfmt
+registration at startup and when that service is restarted. This was achieved by implementing a systemd generator that
 recreates the WSL binfmt registration whenever the `systemd-binfmt.service` unit runs, including
 system startup and manual restarts. That protection is immune to `systemctl daemon-reload`, for
 example. Because of that protection, Ubuntu 24.04 LTS and later no longer comes with that unit
@@ -69,7 +69,7 @@ $ sudo systemctl daemon-reload
 That creates a file at `/etc/systemd/system/<UNIT_NAME>/override.conf` with the contents above,
 effectively disabling that unit under WSL.
 
-If later you need to undo that, just remove that file and run `sudo systemctl daemon-reload`.
+If later you need to re-enable the unit, remove that file and run `sudo systemctl daemon-reload`.
 
 ## Further reading
 
