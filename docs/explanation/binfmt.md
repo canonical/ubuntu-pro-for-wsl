@@ -44,11 +44,15 @@ packages that rely on `binfmt_misc`.
 
 The scenarios above were reported by users in previous versions of WSL. The developers have since
 implemented numerous improvements. From version 2.5.7, WSL is capable of restoring its binfmt
-registration at startup and when that service is restarted. This was achieved by implementing a
-systemd generator that recreates the WSL binfmt registration whenever the `systemd-binfmt.service`
-unit runs, including system startup and manual restarts. That protection is immune to `systemctl
-daemon-reload`, for example. Because of that protection, Ubuntu 24.04 LTS and later no longer comes
-with that unit disabled, as we no longer consider it a potential issue for Ubuntu users on WSL.
+registration at startup and when that service is restarted. This is achieved by implementing a
+systemd generator that creates an override for the `systemd-binfmt.service` unit. Generators are
+small executables that systemd runs when it loads the system configuration, either automatically at
+system startup or manually (due `systemctl daemon-reload`), generally used to create or override
+systemd units. The override created by the WSL generator stays in sync with `systemd-binfmt.service`
+and recreates the WSL binfmt registration if needed. That strategy is more reliable than previous
+mechanisms implemented by WSL to protect the binfmt registration. Therefore, Ubuntu 24.04 LTS and
+later no longer comes with that unit disabled, as we no longer consider it a potential issue for
+Ubuntu users on WSL.
 
 In the unlikely event that WSL instances still have binary interoperability issues, which could be
 caused by `systemd-binfmt.service` or another systemd unit changing the binfmt registrations, an
