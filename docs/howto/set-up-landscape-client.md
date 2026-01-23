@@ -97,7 +97,7 @@ to the SSL certificate on a Windows host machine.
 Newer versions completely follow the Windows OS certificate stores, only requiring reference
 to that certificate if the machine running the Landscape server is not trusted on your network.
 
-For example, if you followed the [Landscape Quickstart](https://ubuntu.com/landscape/docs/quickstart-deployment)
+For example, if you followed the [Landscape Quickstart](https://documentation.ubuntu.com/landscape/quickstart-deployment)
 installation, the auto-generated self-signed certificate can be found at `/etc/ssl/certs/landscape_server.pem`.
 
 This can be copied to a Windows machine:
