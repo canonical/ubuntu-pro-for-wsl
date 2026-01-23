@@ -79,3 +79,4 @@ If later you need to re-enable the unit, remove that file and run `sudo systemct
 
 - [Kernel Support for miscellaneous Binary Formats](https://docs.kernel.org/admin-guide/binfmt-misc.html)
 - [binfmt.d](https://www.freedesktop.org/software/systemd/man/latest/binfmt.d.html#)
+- [systemd.generator](https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html)
