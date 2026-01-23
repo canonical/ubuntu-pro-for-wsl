@@ -17,7 +17,7 @@ Both Landscape clients are configured via a single, plain text configuration fil
 
 The schema for this file is the same as Landscape for Ubuntu desktop or server, with a few additional keys specific to the WSL settings, which can be grouped into keys that affect just the Windows-side client and keys that affect both the Windows-side client and the Ubuntu WSL-side client(s). These additions are documented below.
 
-> See more: [Landscape | Configure Ubuntu Pro for WSL for Landscape](https://ubuntu.com/landscape/docs/register-wsl-hosts-to-landscape/)
+> See more: [Landscape | Configure Ubuntu Pro for WSL for Landscape](https://documentation.ubuntu.com/landscape/how-to-guides/wsl-integration/register-wsl-hosts/)
 
 Here is an example of what the configuration looks like:
 

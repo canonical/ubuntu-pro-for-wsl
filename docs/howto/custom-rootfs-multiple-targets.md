@@ -358,7 +358,7 @@ foreach ($COMPUTER_ID in $PARENT_COMPUTER_IDS) {
 
 ## Further reading
 
-- Visit [the Landscape API documentation](https://ubuntu.com/landscape/docs/make-rest-api-requests) to learn more about it.
-- [Landscape documentation about WSL integration](https://ubuntu.com/landscape/docs/use-a-specific-ubuntu-image-source-for-wsl)
+- Visit [the Landscape API documentation](https://documentation.ubuntu.com/landscape/how-to-guides/api/make-a-rest-api-request/) to learn more about it.
+- [Landscape documentation about WSL integration](https://documentation.ubuntu.com/landscape/how-to-guides/wsl-integration/use-wsl-profiles/)
 contains more information about this and other methods of creating WSL
 instances on Windows machines registered with Landscape via its REST API.
