@@ -50,10 +50,10 @@ system startup and manual restarts. That protection is immune to `systemctl daem
 example. Because of that protection, Ubuntu 24.04 LTS and later no longer comes with that unit
 disabled, as we no longer consider it a potential issue for Ubuntu users on WSL.
 
-In the unlikely event of your WSL instances still facing binary interoperability issues caused by
-`systemd-binfmt.service` or another systemd unit that your system may have installed that affects
-binfmt registration, an easy solution is to override the unit to disable it under WSL by running the
-command `systemctl edit <UNIT_NAME>` and entering the following contents:
+In the unlikely event that WSL instances still have binary interoperability issues, which could be
+caused by `systemd-binfmt.service` or another systemd unit changing the binfmt registrations, an
+easy solution is to override the unit to disable it under WSL. To override the unit, run the command
+`systemctl edit <UNIT_NAME>` and entering the following contents:
 
 ```ini
 [Unit]
