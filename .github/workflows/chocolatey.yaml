@@ -116,7 +116,7 @@ jobs:
           choco uninstall ubuntu-pro-for-wsl --verbose
 
       - name: Push to chocolatey.org
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
         run: |
           $tag=$(Get-Content .\tools\asset.json | ConvertFrom-JSON).tag
           choco apikey --key ${{ secrets.CHOCO_API_KEY }} --source https://push.chocolatey.org/
