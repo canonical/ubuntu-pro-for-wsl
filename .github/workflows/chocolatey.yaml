@@ -118,6 +118,7 @@ jobs:
       - name: Push to chocolatey.org
         if: ${{ github.event_name == 'release' }}
         run: |
+          $tag=$(Get-Content .\tools\asset.json | ConvertFrom-JSON).tag
           choco apikey --key ${{ secrets.CHOCO_API_KEY }} --source https://push.chocolatey.org/
-          choco push ubuntu-pro-for-wsl.*.nupkg --source https://push.chocolatey.org/
+          choco push ".\ubuntu-pro-for-wsl.$tag.nupkg" --source https://push.chocolatey.org/
 
