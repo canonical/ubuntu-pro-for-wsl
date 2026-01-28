@@ -37,6 +37,9 @@
     <!-- Same contents as the package README.md file. -->
     <description>REPLACE_IN_CI</description>
     <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
+    <dependencies>
+      <dependency id="vcredist140"/>
+    </dependencies>
   </metadata>
   <files>
     <!-- this section controls what actually gets packaged into the Chocolatey package -->
