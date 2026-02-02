@@ -49,10 +49,7 @@ const (
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
 	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistro = "Ubuntu-Preview"
-
-	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistroAppx = "CanonicalGroupLimited.UbuntuPreview"
+	referenceDistro = "Ubuntu"
 
 	// up4wAppxPackage is the Ubuntu Pro for WSL package.
 	up4wAppxPackage = "CanonicalGroupLimited.UbuntuPro"
@@ -61,11 +58,7 @@ const (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	if err := assertAppxInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
-	if err := assertAppxInstalled(ctx, referenceDistroAppx); err != nil {
+	if err := assertMSIXInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -202,15 +195,15 @@ func buildProject(ctx context.Context) (string, error) {
 	return buildPath, nil
 }
 
-// assertAppxInstalled returns an error if the provided Appx is not installed.
-func assertAppxInstalled(ctx context.Context, appx string) error {
-	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).CombinedOutput()
+// assertMSIXInstalled returns an error if the provided MSIX is not installed.
+func assertMSIXInstalled(ctx context.Context, msix string) error {
+	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, msix).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("could not determine if %q is installed: %v. %s", appx, err, out)
+		return fmt.Errorf("could not determine if %q is installed: %v. %s", msix, err, out)
 	}
 	s := strings.TrimSpace(string(out))
 	if s != "Ok" {
-		return fmt.Errorf("appx %q is not installed", appx)
+		return fmt.Errorf("msix %q is not installed", msix)
 	}
 
 	return nil
@@ -357,13 +350,9 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 		return "", nil, err
 	}
 
-	launcher, err := common.WSLLauncher(sourceDistro)
-	if err != nil {
-		cleanup()
-		return "", nil, err
-	}
-
-	out, err := powershellf(ctx, "%s install --root --ui=none", launcher).CombinedOutput()
+	// We could consider using a cached image instead of installing every time CI runs.
+	// That also allows testing multiple Ubuntu releases symmetrically.
+	out, err := powershellf(ctx, "wsl.exe --install -d %s --no-launch", sourceDistro).CombinedOutput()
 	if err != nil {
 		cleanup()
 		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)

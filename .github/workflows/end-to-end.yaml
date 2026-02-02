@@ -13,10 +13,6 @@ on:
   push:
     branches: [main]
 
-env:
-  az_name: wsl-ci-3
-  az_resource_group: wsl
-
 jobs:
   build-wsl-pro-service:
     name: Build wsl-pro-service debian package
@@ -64,47 +60,20 @@ jobs:
             msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.cer
             msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.msixbundle
 
-  vm-setup:
-    name: Set up Azure VM
-    runs-on: ubuntu-latest
-    steps:
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_VM_CREDS }}
-      - name: Start the Runner
-        shell: bash
-        run: |
-          az vm start --name ${{ env.az_name }} --resource-group ${{ env.az_resource_group }}
-
   qa:
-    name: Run end-to-end tests on the Azure VM
-    runs-on: [self-hosted, Windows]
-    needs: [vm-setup, build-wsl-pro-service, build-ubuntu-pro-for-wsl]
+    name: Run end-to-end tests
+    runs-on: [windows-latest]
+    needs: [build-wsl-pro-service, build-ubuntu-pro-for-wsl]
     steps:
-      - name: Set up git
-        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout repository
         uses: actions/checkout@v6
-      - name: Set up Ubuntu
-        uses: Ubuntu/WSL/.github/actions/wsl-install@main
-        with:
-          # TODO: Migrate this to the tar-based 24.04
-          distro: "Ubuntu-Preview"
-          useStore: true
-      - name: Set up Go
-        # actions/setup-go is broken
-        shell: powershell
+      # GH runners come with WSL pre-installed.
+      - name: Sanity check WSL version
         run: |
-          winget install GoLang.Go --accept-source-agreements --accept-package-agreements --silent --verbose
-          # Cannot check for error: there is no way to distinguish the two:
-          # - Legitimate error
-          # - Error because no updates found (Golang.Go is already up to date)
-          #
-          # We can check that Go works, though.
-          go version
+          wsl --version
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.work
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
@@ -114,7 +83,7 @@ jobs:
         shell: powershell
         working-directory: ci-artifacts
         run: |
-          Write-Output "::group::Set up AppxPackage"
+          Write-Output "::group::Set up the MSIX Package"
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
@@ -145,8 +114,6 @@ jobs:
           UP4W_TEST_BUILD_PATH: "../ci-artifacts"
           UP4W_TEST_PRO_TOKEN: "${{ secrets.UBUNTU_PRO_TOKEN }}"
         run: |
-          go env -w "GOPRIVATE=github.com/${{ github.repository }}"
-
           go test .\end-to-end -shuffle=on -timeout 20m
           if ( "$LastExitCode" -ne "0" ) { Exit(1) }
       - name: Clean up
@@ -165,17 +132,3 @@ jobs:
           $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWSL_*.cer").Thumbprint
           Remove-Item -Path "Cert:LocalMachine\TrustedPeople\${thumbprint}"
 
-  stop-vm:
-    name: Clean up the Azure VM
-    runs-on: ubuntu-latest
-    needs: [vm-setup, qa]
-    if: always()
-    steps:
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_VM_CREDS }}
-      - name: Deallocate the Runner
-        shell: bash
-        run: |
-          az vm deallocate --name ${{ env.az_name }} --resource-group ${{ env.az_resource_group }}
