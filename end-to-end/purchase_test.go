@@ -26,7 +26,6 @@ func TestPurchase(t *testing.T) {
 	// TODO: Remove this line when cloud-init support for UP4W is released.
 	// Follow this PR for more information: https://github.com/canonical/cloud-init/pull/5116
 	t.Skip("This test depends on cloud-init support for UP4W being released.")
-
 	type whenToken int
 	const (
 		never whenToken = iota
@@ -132,8 +131,16 @@ func TestPurchase(t *testing.T) {
 
 			defer logWslProServiceOnError(t, ctx, d)
 
-			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
-			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
+			out, err := d.Command(ctx, "cloud-init status --wait --long").CombinedOutput()
+			s := string(out)
+			t.Logf("cloud-init output:\n%s", s)
+			if err != nil {
+				out2, err2 := d.Command(ctx, "cat /run/cloud/ds-identify.log").CombinedOutput()
+				t.Logf("ds-identify:\n%s\n%s", err2, out2)
+				out2, err2 = d.Command(ctx, "cat /var/log/cloud-init.log").CombinedOutput()
+				t.Logf("cloud-init:\n%s\n%s", err2, out2)
+			}
+			require.Containsf(t, s, "status: done", "Setup: could not wake distro up: %v. %s", err, out)
 
 			// ... or after registration, but never both.
 			if tc.whenToStartAgent == afterDistroRegistration {
