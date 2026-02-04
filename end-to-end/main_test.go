@@ -357,11 +357,21 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 		cleanup()
 		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
 	}
+	out, err = powershellf(ctx, "wsl.exe -d %s -- mv /etc/wsl.conf /etc/wsl.conf.bak", sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not back up wsl.conf %q: %v. %s", sourceDistro, err, out)
+	}
+	out, err = powershellf(ctx, `wsl.exe -d %s -- bash -ec "printf '[boot]\nsystemd=false' >> /etc/wsl.conf"`, sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not write custom wsl.conf %q: %v. %s", sourceDistro, err, out)
+	}
 	// Let's create a default user to avoid interactive prompts during first boot.
 	out, err = powershellf(ctx, "wsl.exe -d %s -- adduser --quiet --gecos Ubuntu ubuntu", sourceDistro).CombinedOutput()
 	if err != nil {
 		cleanup()
-		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
+		return "", nil, fmt.Errorf("could not create a user %q: %v. %s", sourceDistro, err, out)
 	}
 
 	log.Printf("Setup: Installed %q\n", sourceDistro)
@@ -375,19 +385,24 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	out, err = d.Command(ctx, fmt.Sprintf(`DEBIAN_FRONTEND=noninteractive bash -ec "apt update && apt install -y $(wslpath -ua '%s')"`, debPkgPath)).CombinedOutput()
+	out, err = powershellf(ctx, `wsl.exe -d %s -- DEBIAN_FRONTEND=noninteractive bash -ec "apt update && apt install -y $(wslpath -ua '%s')"`, sourceDistro, debPkgPath).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
 	}
 	// Minor precaution to make sure tests will find a pristine environment.
-	out, err = powershellf(ctx, `wsl.exe -d %s -- cloud-init clean --logs`, sourceDistro).CombinedOutput()
+	out, err = powershellf(ctx, `wsl.exe -d %s -u root -- cloud-init clean --logs`, sourceDistro).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
 	}
 	// We expect this to fail most often than not.
-	_, _ = powershellf(ctx, `wsl.exe -d %s -- rm /etc/cloud/cloud-init.disabled`, sourceDistro).CombinedOutput()
+	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- rm /etc/cloud/cloud-init.disabled`, sourceDistro).CombinedOutput()
+	out, err = powershellf(ctx, "wsl.exe -d %s -u root -- mv /etc/wsl.conf.bak /etc/wsl.conf", sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not back up wsl.conf %q: %v. %s", sourceDistro, err, out)
+	}
 
 	log.Printf("Setup: Installed wsl-pro-service into %q\n", sourceDistro)
 
