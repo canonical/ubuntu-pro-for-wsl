@@ -164,11 +164,8 @@ func TestPurchase(t *testing.T) {
 				return attached
 			}, maxTimeout, time.Second, "distro should have been Pro attached")
 
-			landscape.RequireReceivedInfo(t, token, []wsl.Distro{d}, hostname)
-			// Skipping because we know it to be broken
-			// See https://warthogs.atlassian.net/browse/UDENG-1810
-			//
-			// landscape.RequireUninstallCommand(t, ctx, d, info)
+			info := landscape.RequireReceivedInfo(t, token, []wsl.Distro{d}, hostname)
+			landscape.RequireUninstallCommand(t, ctx, d, info)
 		})
 	}
 }

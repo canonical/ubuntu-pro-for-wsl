@@ -357,6 +357,12 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 		cleanup()
 		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
 	}
+	// Let's create a default user to avoid interactive prompts during first boot.
+	out, err = powershellf(ctx, "wsl.exe -d %s -- adduser --quiet --gecos Ubuntu ubuntu", sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
+	}
 
 	log.Printf("Setup: Installed %q\n", sourceDistro)
 
@@ -374,6 +380,14 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
 	}
+	// Minor precaution to make sure tests will find a pristine environment.
+	out, err = powershellf(ctx, `wsl.exe -d %s -- cloud-init clean --logs`, sourceDistro).CombinedOutput()
+	if err != nil {
+		defer cleanup()
+		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
+	}
+	// We expect this to fail most often than not.
+	_, _ = powershellf(ctx, `wsl.exe -d %s -- rm /etc/cloud/cloud-init.disabled`, sourceDistro).CombinedOutput()
 
 	log.Printf("Setup: Installed wsl-pro-service into %q\n", sourceDistro)
 
@@ -397,7 +411,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 func assertDistroUnregistered(d wsl.Distro) error {
 	registered, err := d.IsRegistered()
 	if err != nil {
-		return fmt.Errorf("ubuntu-preview: %v", err)
+		return fmt.Errorf("ubuntu: %v", err)
 	}
 
 	if !registered {
