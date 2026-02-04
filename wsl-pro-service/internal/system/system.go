@@ -15,11 +15,10 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/text/encoding/unicode"
-	"golang.org/x/text/transform"
-
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/ubuntu/decorate"
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 	"gopkg.in/ini.v1"
 )
 
