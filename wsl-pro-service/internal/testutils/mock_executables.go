@@ -619,7 +619,9 @@ func CmdExeMock(t *testing.T) {
 			return exitBadUsage
 		}
 
-		if argv[0] != "/U" || argv[1] != "/C" {
+		// The /C and /U flags could come in any relative order and are case insensitive.
+		flags := strings.ToLower(strings.Join(argv[0:2], ""))
+		if flags != "/u/c" && flags != "/c/u" {
 			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
