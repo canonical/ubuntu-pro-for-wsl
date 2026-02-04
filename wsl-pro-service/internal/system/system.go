@@ -6,17 +6,17 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"golang.org/x/text/encoding/unicode"
-	"golang.org/x/text/transform"
 	"io"
 	"os"
 	"os/exec"
 	"os/user"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/ubuntu/decorate"
@@ -197,10 +197,13 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 		return wslPath, fmt.Errorf("%s: error: %v", cmd.Path, err)
 	}
 
-	fmt.Println("Formatted Hex Dump:")
+	// This ugly hack is to support testing with mocked cmd.exe. We mock executables by subprocessing a go test binary.
+	// As much as I try to force it to output UTF-16, it ends up eating the last NULL byte of the '\n' sequence, resulting in '\r\n' being
+	// represented as 0x0d 0x00 0x0a (missing 0x00). So we detect this very specific case and add the missing NULL byte back.
 	rawBytes := stdout.Bytes()
-	fmt.Printf("Buffer Length: %d\n", len(rawBytes))
-	fmt.Print(hex.Dump(rawBytes))
+	if bytes.Equal(rawBytes[len(rawBytes)-3:], []byte{0x0d, 0x00, 0x0a}) {
+		stdout.WriteByte(0x00)
+	}
 	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
 	reader := transform.NewReader(&stdout, utf16le.NewDecoder())
 	var sb strings.Builder
