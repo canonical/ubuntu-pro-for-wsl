@@ -58,7 +58,7 @@ func TestCloudInitIntegration(t *testing.T) {
 	err = landscape.service.SendCommand(ctx, info.UID, &landscapeapi.Command{
 		Cmd: &landscapeapi.Command_Install_{
 			Install: &landscapeapi.Command_Install{
-				Id:        referenceDistro, // CanonicalGroupLimited.[UbuntuPreview]
+				Id:        referenceDistro,
 				Cloudinit: &cloudInitUserData,
 			},
 		},
