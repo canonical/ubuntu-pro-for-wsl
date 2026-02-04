@@ -606,22 +606,26 @@ func CmdExeMock(t *testing.T) {
 	}
 
 	mockMain(t, func(argv []string) exitCode {
+		utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
+		errWriter := transform.NewWriter(os.Stderr, utf16le.NewEncoder())
+		defer func() {
+			if err := errWriter.Close(); err != nil {
+				t.Logf("Error closing the UTF-16 Stderr writer: %v", err)
+			}
+		}()
+
 		if len(argv) != 3 {
-			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
 
-		if argv[0] != "/U" && argv[1] != "/C" {
-			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
+		if argv[0] != "/U" || argv[1] != "/C" {
+			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
-
-		utf16le := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
 
 		if argv[2] != "echo.%UserProfile%" {
-			writer := transform.NewWriter(os.Stderr, utf16le.NewEncoder())
-			fmt.Fprintf(writer, "Mock not implemented for args %q\n", argv)
-			_ = writer.Close()
+			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
 			return exitBadUsage
 		}
 
@@ -629,15 +633,19 @@ func CmdExeMock(t *testing.T) {
 			return exitError
 		}
 
-		writer := transform.NewWriter(os.Stdout, utf16le.NewEncoder())
-		defer writer.Close()
+		outWriter := transform.NewWriter(os.Stdout, utf16le.NewEncoder())
+		defer func() {
+			if err := outWriter.Close(); err != nil {
+				t.Logf("Error closing the UTF-16 Stdout writer: %v", err)
+			}
+		}()
 
 		if envExists(EmptyUserprofileEnvVar) {
-			fmt.Fprint(writer, "\r\n")
+			fmt.Fprint(outWriter, "\r\n")
 			return exitOk
 		}
 
-		fmt.Fprintf(writer, "%s\r\n", windowsUserProfileDir)
+		fmt.Fprintf(outWriter, "%s\r\n", windowsUserProfileDir)
 		return exitOk
 	})
 }

@@ -171,6 +171,24 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 	return s.wslDistroNameCache, nil
 }
 
+// decodeUtf16Le decodes a bytes.Buffer containing (presumed small amount of) UTF-16LE encoded data into a string.
+func decodeUtf16Le(input bytes.Buffer) (string, error) {
+	// This ugly hack is to support testing with mocked cmd.exe. We mock executables by subprocessing a go test binary.
+	// As much as I try to force it to output UTF-16, it ends up eating the last NULL byte of the '\n' sequence, resulting in '\r\n' being
+	// represented as 0x0d 0x00 0x0a (missing 0x00). So we detect this very specific case and add the missing NULL byte back.
+	rawBytes := input.Bytes()
+	if len(rawBytes) >= 3 && len(rawBytes)%2 == 1 && bytes.Equal(rawBytes[len(rawBytes)-3:], []byte{0x0d, 0x00, 0x0a}) {
+		input.WriteByte(0x00)
+	}
+	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
+	reader := transform.NewReader(bytes.NewReader(input.Bytes()), utf16le.NewDecoder())
+	var sb strings.Builder
+	if _, err := io.Copy(&sb, reader); err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(sb.String()), nil
+}
+
 // UserProfileDir provides the path to Windows' user profile directory from WSL,
 // usually `/mnt/c/Users/JohnDoe/`.
 func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error) {
@@ -193,24 +211,14 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		return wslPath, fmt.Errorf("%s: error: %v", cmd.Path, err)
+		decodedStderr, derr := decodeUtf16Le(stderr)
+		return wslPath, fmt.Errorf("%s: error: %v.\n\tStderr: %s", cmd.Path, errors.Join(err, derr), decodedStderr)
 	}
 
-	// This ugly hack is to support testing with mocked cmd.exe. We mock executables by subprocessing a go test binary.
-	// As much as I try to force it to output UTF-16, it ends up eating the last NULL byte of the '\n' sequence, resulting in '\r\n' being
-	// represented as 0x0d 0x00 0x0a (missing 0x00). So we detect this very specific case and add the missing NULL byte back.
-	rawBytes := stdout.Bytes()
-	if bytes.Equal(rawBytes[len(rawBytes)-3:], []byte{0x0d, 0x00, 0x0a}) {
-		stdout.WriteByte(0x00)
+	trimmed, err := decodeUtf16Le(stdout)
+	if err != nil {
+		return wslPath, fmt.Errorf("could not decode %s output: %v", cmd.Path, err)
 	}
-	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
-	reader := transform.NewReader(&stdout, utf16le.NewDecoder())
-	var sb strings.Builder
-	if _, err = io.Copy(&sb, reader); err != nil {
-		return wslPath, err
-	}
-
-	trimmed := strings.TrimSpace(sb.String())
 	if len(trimmed) == 0 {
 		return wslPath, errors.New("%UserProfile% value is empty")
 	}
