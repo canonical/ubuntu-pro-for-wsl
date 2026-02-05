@@ -1,7 +1,7 @@
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260129140400-a8808cc02641 h1:Wy8WXD86RhrJfW4VdldAqU4Bs7kNTMfhHodWR13SiOQ=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260129140400-a8808cc02641/go.mod h1:ebgvpHIyoj5hy9AHUV9jxPwglrsSqz1/dRmIJml543M=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260129140400-a8808cc02641 h1:OEe0Q/awVAQhKMJ156kzYrCXNCmmi42s+DuGjSjEFZU=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260129140400-a8808cc02641/go.mod h1:pHAWff/CZTBM3N4uzZ/DrVEvhnC8ZmsWV2Y8cxJO8v4=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260205112209-37cae271b3c7 h1:xeY15do6PEDIcxon9dj3OS5oCcHUkuHm4bKzAQH7oBI=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260205112209-37cae271b3c7/go.mod h1:7TPyxr2Z8SK2h3OIgY+YDaymL0yHEwfM9+CPLCLuYNg=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
@@ -99,8 +99,8 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda h1:
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda/go.mod h1:7i2o+ce6H/6BluujYR+kqX3GKH+dChPTQU19wjRPiGk=
 google.golang.org/grpc v1.78.0 h1:K1XZG/yGDJnzMdd/uZHAkVqJE+xIDOcmdSFZkBUicNc=
 google.golang.org/grpc v1.78.0/go.mod h1:I47qjTo4OKbMkjA/aOOwxDIiPSBofUtQUI5EfpWvW7U=
-google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.0 h1:6Al3kEFFP9VJhRz3DID6quisgPnTeZVr4lep9kkxdPA=
-google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.0/go.mod h1:QLvsjh0OIR0TYBeiu2bkWGTJBUNQ64st52iWj/yA93I=
+google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.1 h1:/WILD1UcXj/ujCxgoL/DvRgt2CP3txG8+FwkUbb9110=
+google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.1/go.mod h1:YNKnb2OAApgYn2oYY47Rn7alMr1zWjb2U8Q0aoGWiNc=
 google.golang.org/protobuf v1.36.11 h1:fV6ZwhNocDyBLK0dj+fg8ektcVegBBuEolpbTQyBNVE=
 google.golang.org/protobuf v1.36.11/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
