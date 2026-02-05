@@ -92,7 +92,8 @@ const (
 	WslpathBadOutput       = "UP4W_WSLPATH_BAD_OUTPUT"
 	EmptyUserprofileEnvVar = "UP4W_EMPTY_USERPROFILE_ENV_VAR"
 
-	CmdExeErr = "UP4W_CMDEXE_ERR"
+	CmdExeErr      = "UP4W_CMDEXE_ERR"
+	CmdEncodingErr = "UP4W_CMD_ENCODING_ERR"
 
 	WslInfoErr   = "UP4W_WSLINFO_ERR"
 	WslInfoIsNAT = "UP4W_WSLINFO_IS_NAT"
@@ -633,6 +634,12 @@ func CmdExeMock(t *testing.T) {
 
 		if envExists(CmdExeErr) {
 			return exitError
+		}
+
+		if envExists(CmdEncodingErr) {
+			// We want to print non-UTF-16 in this particular case.
+			fmt.Print("I am UTF-8 🦄 !\r\n")
+			return exitOk
 		}
 
 		outWriter := transform.NewWriter(os.Stdout, utf16le.NewEncoder())

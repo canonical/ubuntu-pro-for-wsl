@@ -202,6 +202,7 @@ func TestUserProfileDir(t *testing.T) {
 		cachedCmdExe           bool
 		cmdExeNotExist         bool
 		cmdExeErr              bool
+		cmdEncodingErr         bool
 		emptyUserprofileEnvVar bool
 		wslpathErr             bool
 		wslpathBadOutput       bool
@@ -219,6 +220,7 @@ func TestUserProfileDir(t *testing.T) {
 		"Error finding cmd.exe because there is no Windows FS in /proc/mounts": {wantErr: true, overrideProcMount: true},
 		"Error when cmd.exe does not exist":                                    {cmdExeNotExist: true, overrideProcMount: true, wantErr: true},
 		"Error on cmd.exe error":                                               {cmdExeErr: true, wantErr: true},
+		"Error on cmd.exe output encoding wrong":                               {cmdEncodingErr: true, wantErr: true},
 		"Error when UserProfile env var is empty":                              {emptyUserprofileEnvVar: true, wantErr: true},
 		"Error on wslpath error":                                               {wslpathErr: true, wantErr: true},
 		"Error when wslpath returns a bad path":                                {wslpathBadOutput: true, wantErr: true},
@@ -231,6 +233,9 @@ func TestUserProfileDir(t *testing.T) {
 			system, mock := testutils.MockSystem(t)
 			if tc.cmdExeErr {
 				mock.SetControlArg(testutils.CmdExeErr)
+			}
+			if tc.cmdEncodingErr {
+				mock.SetControlArg(testutils.CmdEncodingErr)
 			}
 			if tc.emptyUserprofileEnvVar {
 				mock.SetControlArg(testutils.EmptyUserprofileEnvVar)
