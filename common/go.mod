@@ -12,7 +12,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20251003130259-5c49d26cf9f5
 	go.yaml.in/yaml/v3 v3.0.4
 	google.golang.org/grpc v1.78.0
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.1
 	google.golang.org/protobuf v1.36.11
 )
 
