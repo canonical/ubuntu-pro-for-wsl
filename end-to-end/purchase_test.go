@@ -135,7 +135,7 @@ func TestPurchase(t *testing.T) {
 			s := string(out)
 			t.Logf("cloud-init output:\n%s", s)
 			if err != nil {
-				out2, err2 := d.Command(ctx, "cat /run/cloud/ds-identify.log").CombinedOutput()
+				out2, err2 := d.Command(ctx, "cat /run/cloud-init/ds-identify.log").CombinedOutput()
 				t.Logf("ds-identify:\n%s\n%s", err2, out2)
 				out2, err2 = d.Command(ctx, "cat /var/log/cloud-init.log").CombinedOutput()
 				t.Logf("cloud-init:\n%s\n%s", err2, out2)
