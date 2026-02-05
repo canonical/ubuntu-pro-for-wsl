@@ -114,7 +114,7 @@ jobs:
           UP4W_TEST_BUILD_PATH: "../ci-artifacts"
           UP4W_TEST_PRO_TOKEN: "${{ secrets.UBUNTU_PRO_TOKEN }}"
         run: |
-          go test .\end-to-end -shuffle=on -timeout 20m
+          go test -v .\end-to-end -shuffle=on -timeout 20m
           if ( "$LastExitCode" -ne "0" ) { Exit(1) }
       - name: Clean up
         if: always()
