@@ -152,4 +152,3 @@ func TestWithProMock(t *testing.T)             { testutils.ProMock(t) }
 func TestWithLandscapeConfigMock(t *testing.T) { testutils.LandscapeConfigMock(t) }
 func TestWithWslPathMock(t *testing.T)         { testutils.WslPathMock(t) }
 func TestWithWslInfoMock(t *testing.T)         { testutils.WslInfoMock(t) }
-func TestWithCmdExeMock(t *testing.T)          { testutils.CmdExeMock(t) }

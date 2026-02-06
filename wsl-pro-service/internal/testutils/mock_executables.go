@@ -42,6 +42,10 @@ type SystemMock struct {
 
 	// extraEnv are extra environment variables that will be passed to mocked executables
 	extraEnv []string
+
+	// controlArgs is a hash set of knobs affecting the behaviour of mocks that might not be
+	// affected by the extraEnv from above.
+	controlArgs map[controlArg]struct{}
 }
 
 var (
@@ -90,7 +94,8 @@ const (
 	WslpathBadOutput       = "UP4W_WSLPATH_BAD_OUTPUT"
 	EmptyUserprofileEnvVar = "UP4W_EMPTY_USERPROFILE_ENV_VAR"
 
-	CmdExeErr = "UP4W_CMDEXE_ERR"
+	CmdExeErr         = "UP4W_CMDEXE_ERR"
+	CmdExeEncodingErr = "UP4W_CMD_ENCODING_ERR"
 
 	WslInfoErr   = "UP4W_WSLINFO_ERR"
 	WslInfoIsNAT = "UP4W_WSLINFO_IS_NAT"
@@ -126,6 +131,7 @@ func MockSystem(t *testing.T) (*system.System, *SystemMock) {
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
 		LandscapeGroupGID:       u.Gid,
+		controlArgs:             make(map[controlArg]struct{}),
 	}
 
 	return system.New(system.WithTestBackend(mock)), mock
@@ -140,6 +146,7 @@ func (m *SystemMock) DefaultPublicDir() string {
 // SetControlArg adds control arguments to the mock executables.
 func (m *SystemMock) SetControlArg(arg controlArg) {
 	m.extraEnv = append(m.extraEnv, fmt.Sprintf("%s=1", arg))
+	m.controlArgs[arg] = struct{}{}
 }
 
 // Path prepends FsRoot to a path.
@@ -253,11 +260,6 @@ func (m *SystemMock) WslpathExecutable(ctx context.Context, args ...string) *exe
 // WslinfoExecutable mocks `wslinfo $args...`.
 func (m *SystemMock) WslinfoExecutable(ctx context.Context, args ...string) *exec.Cmd {
 	return m.mockExec(ctx, "TestWithWslInfoMock", args...)
-}
-
-// CmdExe mocks `cmd.exe $args...`.
-func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *exec.Cmd {
-	return m.mockExec(ctx, "TestWithCmdExeMock", args...)
 }
 
 type exitCode int
@@ -588,46 +590,6 @@ func WslInfoMock(t *testing.T) {
 		}
 
 		fmt.Fprintln(os.Stdout, "other")
-		return exitOk
-	})
-}
-
-// CmdExeMock mocks the executable for `cmd.exe`.
-// Add it to your package_test with:
-//
-//	func TestWithCmdExeMock(t *testing.T) { testutils.CmdExeMock(t) }
-//
-//nolint:thelper // This is a faux test used to mock the executable `cmd.exe`
-func CmdExeMock(t *testing.T) {
-	if t.Name() != "TestWithCmdExeMock" {
-		panic("The CmdExeMock faux test must be named TestWithCmdExeMock")
-	}
-
-	mockMain(t, func(argv []string) exitCode {
-		if len(argv) != 2 {
-			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
-			return exitBadUsage
-		}
-
-		if argv[0] != "/C" {
-			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
-			return exitBadUsage
-		}
-
-		if argv[1] != "echo.%UserProfile%" {
-			fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
-			return exitBadUsage
-		}
-
-		if envExists(CmdExeErr) {
-			return exitError
-		}
-		if envExists(EmptyUserprofileEnvVar) {
-			fmt.Print("\r\n")
-			return exitOk
-		}
-
-		fmt.Fprintln(os.Stdout, windowsUserProfileDir)
 		return exitOk
 	})
 }
