@@ -183,8 +183,16 @@ func decodeUtf16Le(input bytes.Buffer) (string, error) {
 	// designed for robustness, so it just replaces invalid pieces with U+FFFD.
 	// We need to check for the replacement char manually then:
 	decoded := sb.String()
-	if strings.Contains(decoded, "�") {
-		return "", fmt.Errorf("result should not contain the U+FFFD char: %s", decoded)
+	// Validate that the original bytes are a well-formed UTF-16LE encoding by
+	// round-tripping the decoded string back to UTF-16LE and comparing bytes.
+	var reencoded bytes.Buffer
+	encoder := utf16le.NewEncoder()
+	encReader := transform.NewReader(strings.NewReader(decoded), encoder)
+	if _, err := io.Copy(&reencoded, encReader); err != nil {
+		return "", fmt.Errorf("could not re-encode UTF-16LE data: %w", err)
+	}
+	if !bytes.Equal(input.Bytes(), reencoded.Bytes()) {
+		return "", fmt.Errorf("input UTF-16LE validation failed")
 	}
 	return strings.TrimSpace(decoded), nil
 }
