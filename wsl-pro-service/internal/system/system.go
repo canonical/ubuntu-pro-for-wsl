@@ -6,14 +6,15 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"os/user"
 	"strconv"
 	"strings"
+	"unicode/utf16"
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/ubuntu/decorate"
@@ -171,32 +172,6 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 	return s.wslDistroNameCache, nil
 }
 
-// decodeUtf16Le decodes a bytes.Buffer containing (presumed small amount of) UTF-16LE encoded data into a string.
-func decodeUtf16Le(input bytes.Buffer) (string, error) {
-	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
-	reader := transform.NewReader(bytes.NewReader(input.Bytes()), utf16le.NewDecoder())
-	var sb strings.Builder
-	if _, err := io.Copy(&sb, reader); err != nil {
-		return "", err
-	}
-	// The step above is unlikely to fail due to ill-formed UTF-16 data, because the decoder is
-	// designed for robustness, so it just replaces invalid pieces with U+FFFD.
-	// We need to check for the replacement char manually then:
-	decoded := sb.String()
-	// Validate that the original bytes are a well-formed UTF-16LE encoding by
-	// round-tripping the decoded string back to UTF-16LE and comparing bytes.
-	var reencoded bytes.Buffer
-	encoder := utf16le.NewEncoder()
-	encReader := transform.NewReader(strings.NewReader(decoded), encoder)
-	if _, err := io.Copy(&reencoded, encReader); err != nil {
-		return "", fmt.Errorf("could not re-encode UTF-16LE data: %w", err)
-	}
-	if !bytes.Equal(input.Bytes(), reencoded.Bytes()) {
-		return "", fmt.Errorf("input UTF-16LE validation failed")
-	}
-	return strings.TrimSpace(decoded), nil
-}
-
 // UserProfileDir provides the path to Windows' user profile directory from WSL,
 // usually `/mnt/c/Users/JohnDoe/`.
 func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error) {
@@ -219,11 +194,11 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		decodedStderr, derr := decodeUtf16Le(stderr)
+		decodedStderr, derr := decodeUtf16LeStrict(stderr)
 		return wslPath, fmt.Errorf("%s: error: %v.\n\tStderr: %s", cmd.Path, errors.Join(err, derr), decodedStderr)
 	}
 
-	trimmed, err := decodeUtf16Le(stdout)
+	trimmed, err := decodeUtf16LeStrict(stdout)
 	if err != nil {
 		return wslPath, fmt.Errorf("could not decode %s output: %v", cmd.Path, err)
 	}
@@ -355,4 +330,81 @@ func (s *System) currentUser() (int, error) {
 	}
 
 	return int(userID), nil
+}
+
+// decodeUtf16LeStrict decodes a bytes.Buffer containing (presumed small amount of) UTF-16LE encoded data into a string.
+// Instead of replacing invalid 'chars' with U+FFFD it breaks right away, returning an error.
+// If an output contains that char, so does the input.
+func decodeUtf16LeStrict(input bytes.Buffer) (string, error) {
+	data := input.Bytes()
+	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
+
+	// We chain our validator with the actual decoder.
+	// transform.Chain runs them in sequence.
+	// Note: Our validator doesn't actually change the bytes, it just "looks" at them.
+	strictDecoder := transform.Chain(&strictUTF16Transformer{}, utf16le.NewDecoder())
+
+	decodedBytes, _, err := transform.Bytes(strictDecoder, data)
+	if err != nil {
+		return "", fmt.Errorf("validation failed: %w", err)
+	}
+
+	return strings.TrimSpace(string(decodedBytes)), nil
+}
+
+type strictUTF16Transformer struct {
+	transform.NopResetter
+}
+
+var (
+	errInvalidSurrogatePair = errors.New("invalid surrogate pair")
+	errOddByteCount         = errors.New("odd number of bytes")
+)
+
+func (t *strictUTF16Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	for i := 0; i+1 < len(src); i += 2 {
+		// Ensure we have space in destination
+		if nDst+1 >= len(dst) {
+			return nDst, nSrc, transform.ErrShortDst
+		}
+
+		u16 := binary.LittleEndian.Uint16(src[i:])
+
+		if utf16.IsSurrogate(rune(u16)) {
+			// Need the second half of the pair
+			if i+3 < len(src) {
+				u16Next := binary.LittleEndian.Uint16(src[i+2:])
+
+				// utf16.Decode returns a slice. We check the first element.
+				decoded := utf16.Decode([]uint16{u16, u16Next})
+				if len(decoded) > 0 && decoded[0] == '\uFFFD' {
+					return nDst, nSrc, errInvalidSurrogatePair
+				}
+
+				// Copy 4 bytes (the whole pair) to dst
+				if nDst+3 >= len(dst) {
+					return nDst, nSrc, transform.ErrShortDst
+				}
+				copy(dst[nDst:], src[i:i+4])
+				nDst += 4
+				nSrc += 4
+				i += 2 // Skip the second half of the pair in the loop
+			} else {
+				// Not enough bytes the source for the second half of the pair
+				return nDst, nSrc, transform.ErrShortSrc
+			}
+		} else {
+			// Normal BMP character: Copy 2 bytes to dst
+			dst[nDst] = src[i]
+			dst[nDst+1] = src[i+1]
+			nDst += 2
+			nSrc += 2
+		}
+	}
+
+	if atEOF && len(src)%2 != 0 {
+		return nDst, nSrc, errOddByteCount
+	}
+
+	return nDst, nSrc, nil
 }
