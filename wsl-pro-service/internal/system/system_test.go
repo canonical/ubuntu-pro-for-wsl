@@ -235,7 +235,7 @@ func TestUserProfileDir(t *testing.T) {
 				mock.SetControlArg(testutils.CmdExeErr)
 			}
 			if tc.cmdEncodingErr {
-				mock.SetControlArg(testutils.CmdEncodingErr)
+				mock.SetControlArg(testutils.CmdExeEncodingErr)
 			}
 			if tc.emptyUserprofileEnvVar {
 				mock.SetControlArg(testutils.EmptyUserprofileEnvVar)

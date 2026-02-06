@@ -44,6 +44,10 @@ type SystemMock struct {
 
 	// extraEnv are extra environment variables that will be passed to mocked executables
 	extraEnv []string
+
+	// controlArgs is a hash set of knobs affecting the behaviour of mocks that might not be
+	// affected by the extraEnv from above.
+	controlArgs map[controlArg]struct{}
 }
 
 var (
@@ -92,8 +96,8 @@ const (
 	WslpathBadOutput       = "UP4W_WSLPATH_BAD_OUTPUT"
 	EmptyUserprofileEnvVar = "UP4W_EMPTY_USERPROFILE_ENV_VAR"
 
-	CmdExeErr      = "UP4W_CMDEXE_ERR"
-	CmdEncodingErr = "UP4W_CMD_ENCODING_ERR"
+	CmdExeErr         = "UP4W_CMDEXE_ERR"
+	CmdExeEncodingErr = "UP4W_CMD_ENCODING_ERR"
 
 	WslInfoErr   = "UP4W_WSLINFO_ERR"
 	WslInfoIsNAT = "UP4W_WSLINFO_IS_NAT"
@@ -129,6 +133,7 @@ func MockSystem(t *testing.T) (*system.System, *SystemMock) {
 		DistroHostname:          &distroHostname,
 		WslDistroNameEnvEnabled: true,
 		LandscapeGroupGID:       u.Gid,
+		controlArgs:             make(map[controlArg]struct{}),
 	}
 
 	return system.New(system.WithTestBackend(mock)), mock
@@ -143,6 +148,7 @@ func (m *SystemMock) DefaultPublicDir() string {
 // SetControlArg adds control arguments to the mock executables.
 func (m *SystemMock) SetControlArg(arg controlArg) {
 	m.extraEnv = append(m.extraEnv, fmt.Sprintf("%s=1", arg))
+	m.controlArgs[arg] = struct{}{}
 }
 
 // Path prepends FsRoot to a path.
@@ -256,11 +262,6 @@ func (m *SystemMock) WslpathExecutable(ctx context.Context, args ...string) *exe
 // WslinfoExecutable mocks `wslinfo $args...`.
 func (m *SystemMock) WslinfoExecutable(ctx context.Context, args ...string) *exec.Cmd {
 	return m.mockExec(ctx, "TestWithWslInfoMock", args...)
-}
-
-// CmdExe mocks `cmd.exe $args...`.
-func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *exec.Cmd {
-	return m.mockExec(ctx, "TestWithCmdExeMock", args...)
 }
 
 type exitCode int
@@ -636,7 +637,7 @@ func CmdExeMock(t *testing.T) {
 			return exitError
 		}
 
-		if envExists(CmdEncodingErr) {
+		if envExists(CmdExeEncodingErr) {
 			// We want to print non-UTF-16 in this particular case.
 			fmt.Print("I am UTF-8 🦄 !\r\n")
 			return exitOk
