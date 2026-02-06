@@ -173,13 +173,6 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 
 // decodeUtf16Le decodes a bytes.Buffer containing (presumed small amount of) UTF-16LE encoded data into a string.
 func decodeUtf16Le(input bytes.Buffer) (string, error) {
-	// This ugly hack is to support testing with mocked cmd.exe. We mock executables by subprocessing a go test binary.
-	// As much as I try to force it to output UTF-16, it ends up eating the last NULL byte of the '\n' sequence, resulting in '\r\n' being
-	// represented as 0x0d 0x00 0x0a (missing 0x00). So we detect this very specific case and add the missing NULL byte back.
-	rawBytes := input.Bytes()
-	if len(rawBytes) >= 3 && len(rawBytes)%2 == 1 && bytes.Equal(rawBytes[len(rawBytes)-3:], []byte{0x0d, 0x00, 0x0a}) {
-		input.WriteByte(0x00)
-	}
 	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
 	reader := transform.NewReader(bytes.NewReader(input.Bytes()), utf16le.NewDecoder())
 	var sb strings.Builder
