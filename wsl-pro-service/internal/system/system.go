@@ -179,7 +179,7 @@ func decodeUtf16Le(input bytes.Buffer) (string, error) {
 	if _, err := io.Copy(&sb, reader); err != nil {
 		return "", err
 	}
-	// The step above is unlikely to fail due ill-formed UTF-16 data, because the decoder is
+	// The step above is unlikely to fail due to ill-formed UTF-16 data, because the decoder is
 	// designed for robustness, so it just replaces invalid pieces with U+FFFD.
 	// We need to check for the replacement char manually then:
 	decoded := sb.String()

@@ -10,7 +10,7 @@ import (
 
 // CmdExe mocks `cmd.exe $args...` on Linux.
 // It's special because we want this Cmd to output UTF-16, we cannot go through `go test`,
-// as it prevents us from priting arbitrary UTF-16 encoded text.
+// as it prevents us from printing arbitrary UTF-16 encoded text.
 // Thus, on Linux, we pipe the desired output to iconv (unless an encoding error is desired, for
 // which case the relevant control argument will be set in the mock).
 func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *exec.Cmd {
@@ -19,9 +19,13 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 	}
 
 	code, pipe, output := func() (exitCode, string, string) {
-		// Assune we'll output UTF-16LE unless otherwise specified, so we forecast piping
+		// Assume we'll output UTF-16LE unless otherwise specified, so we forecast piping
 		// the desired output into iconv.
 		pipe := " | iconv -f UTF-8 -t UTF-16LE "
+		if len(args) < 3 {
+			// mock not implemented for arguments
+			return exitBadUsage, pipe, fmt.Sprintf("%q: Mock not implemented for args: %s", path, strings.Join(args, ""))
+		}
 		// The /C and /U flags could come in any relative order and are case insensitive.
 		flags := strings.ToLower(strings.Join(args[0:2], ""))
 		if (flags != "/u/c" && flags != "/c/u") || (args[2] != "echo.%UserProfile%") {
