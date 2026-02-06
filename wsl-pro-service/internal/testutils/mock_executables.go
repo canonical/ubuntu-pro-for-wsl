@@ -19,8 +19,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
-	"golang.org/x/text/encoding/unicode"
-	"golang.org/x/text/transform"
 )
 
 // SystemMock is used to override system's behaviour. Its control parameters are not thread safe.
@@ -592,70 +590,6 @@ func WslInfoMock(t *testing.T) {
 		}
 
 		fmt.Fprintln(os.Stdout, "other")
-		return exitOk
-	})
-}
-
-// CmdExeMock mocks the executable for `cmd.exe`.
-// Add it to your package_test with:
-//
-//	func TestWithCmdExeMock(t *testing.T) { testutils.CmdExeMock(t) }
-//
-//nolint:thelper // This is a faux test used to mock the executable `cmd.exe`
-func CmdExeMock(t *testing.T) {
-	if t.Name() != "TestWithCmdExeMock" {
-		panic("The CmdExeMock faux test must be named TestWithCmdExeMock")
-	}
-
-	mockMain(t, func(argv []string) exitCode {
-		utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
-		errWriter := transform.NewWriter(os.Stderr, utf16le.NewEncoder())
-		defer func() {
-			if err := errWriter.Close(); err != nil {
-				t.Logf("Error closing the UTF-16 Stderr writer: %v", err)
-			}
-		}()
-
-		if len(argv) != 3 {
-			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
-			return exitBadUsage
-		}
-
-		// The /C and /U flags could come in any relative order and are case insensitive.
-		flags := strings.ToLower(strings.Join(argv[0:2], ""))
-		if flags != "/u/c" && flags != "/c/u" {
-			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
-			return exitBadUsage
-		}
-
-		if argv[2] != "echo.%UserProfile%" {
-			fmt.Fprintf(errWriter, "Mock not implemented for args %q\n", argv)
-			return exitBadUsage
-		}
-
-		if envExists(CmdExeErr) {
-			return exitError
-		}
-
-		if envExists(CmdExeEncodingErr) {
-			// We want to print non-UTF-16 in this particular case.
-			fmt.Print("I am UTF-8 🦄 !\r\n")
-			return exitOk
-		}
-
-		outWriter := transform.NewWriter(os.Stdout, utf16le.NewEncoder())
-		defer func() {
-			if err := outWriter.Close(); err != nil {
-				t.Logf("Error closing the UTF-16 Stdout writer: %v", err)
-			}
-		}()
-
-		if envExists(EmptyUserprofileEnvVar) {
-			fmt.Fprint(outWriter, "\r\n")
-			return exitOk
-		}
-
-		fmt.Fprintf(outWriter, "%s\r\n", windowsUserProfileDir)
 		return exitOk
 	})
 }
