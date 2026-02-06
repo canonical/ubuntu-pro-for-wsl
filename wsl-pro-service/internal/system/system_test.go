@@ -2,10 +2,14 @@ package system_test
 
 import (
 	"context"
+	"encoding/binary"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"unicode/utf16"
+
+	"golang.org/x/text/transform"
 
 	commontestutils "github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
@@ -774,6 +778,159 @@ func TestEnsureValidLandscapeConfig(t *testing.T) {
 			require.Equal(t, want, got, "Landscape executable did not receive the right config")
 		})
 	}
+}
+
+func TestStrictUTF16Transform(t *testing.T) {
+	type testCase struct {
+		src      []byte
+		atEOF    bool
+		dstSize  int
+		wantDst  []byte
+		wantNDst int
+		wantNSrc int
+		wantErr  error
+	}
+
+	// Helper to encode a valid surrogate pair (e.g., U+1D11E MUSICAL SYMBOL G CLEF)
+	encodeSurrogatePair := func(r rune) []byte {
+		pair := utf16.Encode([]rune{r})
+		b := make([]byte, 4)
+		binary.LittleEndian.PutUint16(b[0:2], pair[0])
+		binary.LittleEndian.PutUint16(b[2:4], pair[1])
+		return b
+	}
+
+	// Helper to encode a single high surrogate (unpaired)
+	encodeUnpairedHigh := func() []byte {
+		b := make([]byte, 2)
+		binary.LittleEndian.PutUint16(b, 0xD800) // High surrogate
+		return b
+	}
+
+	// Helper to encode an invalid surrogate pair (high followed by non-low)
+	encodeInvalidPair := func() []byte {
+		b := make([]byte, 4)
+		binary.LittleEndian.PutUint16(b[0:2], 0xD800) // High surrogate
+		binary.LittleEndian.PutUint16(b[2:4], 0xD800) // Another high surrogate (invalid)
+		return b
+	}
+
+	// Helper to encode a normal BMP character (e.g., 'A')
+	encodeBMP := func(r rune) []byte {
+		b := make([]byte, 2)
+		binary.LittleEndian.PutUint16(b, uint16(r))
+		return b
+	}
+
+	cases := map[string]testCase{
+		"Valid surrogate pair": {
+			src:      encodeSurrogatePair(0x1D11E),
+			atEOF:    true,
+			dstSize:  4,
+			wantDst:  encodeSurrogatePair(0x1D11E),
+			wantNDst: 4,
+			wantNSrc: 4,
+			wantErr:  nil,
+		},
+		"Unpaired high surrogate at EOF": {
+			src:     encodeUnpairedHigh(),
+			atEOF:   true,
+			dstSize: 2,
+			wantErr: transform.ErrShortSrc,
+		},
+		"Invalid surrogate pair": {
+			src:     encodeInvalidPair(),
+			atEOF:   true,
+			dstSize: 4,
+			wantErr: nil,
+		},
+		"Odd number of bytes at EOF": {
+			src:     append(encodeBMP('A'), 0x00),
+			atEOF:   true,
+			dstSize: 3,
+			wantErr: nil,
+		},
+		"Normal BMP character": {
+			src:      encodeBMP('A'),
+			atEOF:    true,
+			dstSize:  2,
+			wantDst:  encodeBMP('A'),
+			wantNDst: 2,
+			wantNSrc: 2,
+			wantErr:  nil,
+		},
+		"Short destination buffer": {
+			src:     encodeBMP('A'),
+			atEOF:   true,
+			dstSize: 1,
+			wantErr: transform.ErrShortDst,
+		},
+		"Short source buffer for surrogate": {
+			src:     encodeSurrogatePair(0x1D11E)[:2],
+			atEOF:   false,
+			dstSize: 4,
+			wantErr: transform.ErrShortSrc,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			tr := &system.StrictUTF16Transformer{}
+			dst := make([]byte, tc.dstSize)
+			nDst, nSrc, err := tr.Transform(dst, tc.src, tc.atEOF)
+
+			if tc.wantErr != nil {
+				if err != tc.wantErr {
+					t.Fatalf("expected error %v, got %v", tc.wantErr, err)
+				}
+				return
+			}
+
+			// For custom error cases, check error string
+			switch name {
+			case "Invalid surrogate pair":
+				if err == nil || !strings.Contains(err.Error(), "invalid surrogate pair") {
+					t.Fatalf("expected invalid surrogate pair error, got %v", err)
+				}
+				return
+			case "Odd number of bytes at EOF":
+				if err == nil || !strings.Contains(err.Error(), "odd number of bytes") {
+					t.Fatalf("expected odd number of bytes error, got %v", err)
+				}
+				return
+			case "Unpaired high surrogate at EOF":
+				if err == nil || !strings.Contains(err.Error(), "unpaired high surrogate at EOF") {
+					t.Fatalf("expected unpaired high surrogate at EOF error, got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if nDst != tc.wantNDst {
+				t.Errorf("nDst: got %d, want %d", nDst, tc.wantNDst)
+			}
+			if nSrc != tc.wantNSrc {
+				t.Errorf("nSrc: got %d, want %d", nSrc, tc.wantNSrc)
+			}
+			if tc.wantDst != nil && !equalBytes(dst[:nDst], tc.wantDst) {
+				t.Errorf("dst: got %v, want %v", dst[:nDst], tc.wantDst)
+			}
+		})
+	}
+}
+
+func equalBytes(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func TestRealBackend(t *testing.T) {

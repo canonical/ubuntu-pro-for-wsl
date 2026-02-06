@@ -7,3 +7,4 @@ func (s *System) CmdExeCache() *string {
 }
 
 type RealBackend = realBackend
+type StrictUTF16Transformer = strictUTF16Transformer

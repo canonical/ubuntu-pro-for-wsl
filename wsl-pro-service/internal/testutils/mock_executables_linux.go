@@ -26,9 +26,9 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 			// mock not implemented for arguments
 			return exitBadUsage, pipe, fmt.Sprintf("%q: Mock not implemented for args: %s", path, strings.Join(args, ""))
 		}
-		// The /C and /U flags could come in any relative order and are case insensitive.
+		// The /U and /C flags could only come in this specific order but are case insensitive.
 		flags := strings.ToLower(strings.Join(args[0:2], ""))
-		if (flags != "/u/c" && flags != "/c/u") || (args[2] != "echo.%UserProfile%") {
+		if (flags != "/u/c") || (args[2] != "echo.%UserProfile%") {
 			// mock not implemented for arguments
 			return exitBadUsage, pipe, fmt.Sprintf("%q: Mock not implemented for args: %s", path, strings.Join(args, ""))
 		}
@@ -54,8 +54,8 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 	if code != exitOk {
 		// Print to stderr instead of stdout and exit with specified code.
 		//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
-		return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("printf '%s' %s >&2; exit %d", output, pipe, code))
+		return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s' %s >&2; exit %d", output, pipe, code))
 	}
 	//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
-	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("printf '%s' %s ", output, pipe))
+	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s' %s ", output, pipe))
 }
