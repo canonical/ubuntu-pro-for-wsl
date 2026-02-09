@@ -40,12 +40,12 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 		if _, ok := m.controlArgs[CmdExeEncodingErr]; ok {
 			// For this case we'll avoid piping to iconv because we want to output
 			// another encoding (UTF-8 here, but could be anything else).
-			return exitOk, "", "I am UTF-8 🦄 !\r\n"
+			return exitOk, "", "I am UTF-8 🦄 !"
 		}
 
 		if _, ok := m.controlArgs[EmptyUserprofileEnvVar]; ok {
 			// cmd.exe would still print a new line.
-			return exitOk, pipe, "\r\n"
+			return exitOk, pipe, ""
 		}
 
 		return exitOk, pipe, windowsUserProfileDir
@@ -54,8 +54,8 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 	if code != exitOk {
 		// Print to stderr instead of stdout and exit with specified code.
 		//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
-		return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s' %s >&2; exit %d", output, pipe, code))
+		return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s\r\n' %s >&2; exit %d", output, pipe, code))
 	}
 	//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
-	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s' %s ", output, pipe))
+	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s\r\n' %s ", output, pipe))
 }

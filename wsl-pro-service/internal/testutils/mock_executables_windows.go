@@ -38,12 +38,12 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 		if _, ok := m.controlArgs[CmdExeEncodingErr]; ok {
 			// For this case we'll avoid the /U flag because we want to output
 			// another encoding (the system's active ANSI CP here, but could be anything else).
-			return exitOk, nil, "I am an arbitrarily CP encoded message 🦄 !\r\n"
+			return exitOk, nil, "I am an arbitrarily CP encoded message 🦄 !"
 		}
 
 		if _, ok := m.controlArgs[EmptyUserprofileEnvVar]; ok {
-			// cmd.exe would still print a new line.
-			return exitOk, realFlags, "\r\n"
+			// cmd.exe will still print a new line.
+			return exitOk, realFlags, ""
 		}
 
 		return exitOk, realFlags, windowsUserProfileDir
@@ -53,7 +53,8 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 	if code != exitOk {
 		// Print to stderr instead of stdout and exit with specified code.
 		// The single ampersand in cmd.exe implies executing the second command despite the
-		// result of the first.
+		// result of the first. We don't need to append '\r\n' because cmd's echo always
+		// prints it.
 		cmdStr = fmt.Sprintf("echo.'%s' 1>&2 & exit %d", output, code)
 	}
 
