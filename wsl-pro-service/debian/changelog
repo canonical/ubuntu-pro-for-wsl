@@ -7,6 +7,12 @@ wsl-pro-service (0.1.19) resolute; urgency=medium
 
  -- Carlos Nihelton <cnihelton@ubuntu.com>  Wed, 17 Dec 2025 18:15:30 -0300
 
+wsl-pro-service (0.1.18build1) resolute; urgency=medium
+
+  * No-change mass rebuild for Ubuntu 26.04 (LP: #2132257)
+
+ -- Sebastien Bacher <seb128@debian.org>  Mon, 02 Feb 2026 21:52:55 +0100
+
 wsl-pro-service (0.1.18) plucky; urgency=medium
 
   * Pin Go toolchain to 1.23.8 to fix the following security vulnerabilities:
