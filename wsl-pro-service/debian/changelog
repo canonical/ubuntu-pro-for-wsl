@@ -1,11 +1,20 @@
-wsl-pro-service (0.1.19) resolute; urgency=medium
+wsl-pro-service (0.1.19ubuntu) resolute; urgency=medium
 
-  * Packaging fixes to prevent lintian errors.
+  * Packaging fixes to prevent lintian errors, including compliance with DEP17
+    (LP: #2139225)
   * Better sync with cloud-init.
   * Improved Go version detection for packaging.
   * Upgrade Go to 1.24 and multiple dependencies.
+  * Subprocess cmd.exe in unicode mode to prevent problems with non-ascii
+    chars in paths.
 
- -- Carlos Nihelton <cnihelton@ubuntu.com>  Wed, 17 Dec 2025 18:15:30 -0300
+ -- Carlos Nihelton <cnihelton@ubuntu.com>  Tue, 10 Feb 2026 11:45:30 -0300
+
+wsl-pro-service (0.1.18build1) resolute; urgency=medium
+
+  * No-change mass rebuild for Ubuntu 26.04 (LP: #2132257)
+
+ -- Sebastien Bacher <seb128@debian.org>  Mon, 02 Feb 2026 21:52:55 +0100
 
 wsl-pro-service (0.1.18) plucky; urgency=medium
 
