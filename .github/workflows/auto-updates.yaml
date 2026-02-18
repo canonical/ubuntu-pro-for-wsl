@@ -51,7 +51,7 @@ jobs:
           working-directory: .
           fail-on-diff: false
       - name: Create Pull Request
-        if: steps.checkpo.outputs.modified == 'true'
+        if: steps.check-diff.outputs.diff == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Auto update po files
@@ -61,7 +61,7 @@ jobs:
           branch: auto-updates/locales
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Push branch
-        if: steps.checkpo.outputs.modified == 'true'
+        if: steps.check-diff.outputs.diff == 'true'
         run: |
           git push origin auto-updates/locales:main
 
