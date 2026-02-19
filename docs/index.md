@@ -12,7 +12,7 @@ developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
 including remote development with popular IDEs and cross-OS file management.
 
-Ubuntu Pro for WSL is an automation tool for managing
+[Ubuntu Pro for WSL](./explanation/pro-explanation) is an automation tool for managing
 instances of Ubuntu on WSL. If you are responsible for a fleet of Windows
 devices, Pro for WSL will help you to monitor, customise and secure WSL at scale.
 
@@ -25,7 +25,7 @@ production in an enterprise environment.
 * **Getting started**: [Setting up a development environment from scratch with Ubuntu on WSL](/tutorials/develop-with-ubuntu-wsl/)
 * **Installation**: [Install Ubuntu on WSL](/howto/install-ubuntu-wsl2.md) • [Install Pro for WSL](/howto/set-up-up4w)
 * **Releases**: [Distribution release reference](/reference/distributions/) • [Release notes for the Ubuntu distro and Pro app](/reference/release_notes)
-* **WSL for enterprise:** [Remote deployment of WSL with Landscape](/tutorials/deployment/) • [Attaching a Pro subscription using the Windows registry](/howto/set-up-up4w/) • [Configuring the Landscape client](/howto/set-up-landscape-client/) • [Using the Landscape API](/howto/custom-rootfs-multiple-targets/) • [Enforcing Pro agent startup](/howto/enforce-agent-startup-remotely-registry/) • [Starting the agent remotely with InTune](/howto/start-agent-remotely/)
+* **WSL for enterprise:** [What is Pro for WSL?](./explanation/pro-explanation) • [Remote deployment of WSL with Landscape](/tutorials/deployment/) • [Attaching a Pro subscription using the Windows registry](/howto/set-up-up4w/) • [Configuring the Landscape client](/howto/set-up-landscape-client/) • [Using the Landscape API](/howto/custom-rootfs-multiple-targets/) • [Enforcing Pro agent startup](/howto/enforce-agent-startup-remotely-registry/) • [Starting the agent remotely with InTune](/howto/start-agent-remotely/)
 * **Security and Ubuntu Pro**: [Security overview](/explanation/security-overview/) • [Securing WSL with Pro](/tutorials/getting-started-with-up4w/) • [Firewall requirements](/reference/firewall_requirements/)
 * **Configuration and customisation**: [Instance configuration reference](/reference/instance_configuration/) • [Automating configuration with cloud-init](/howto/cloud-init/) • [Customising an Ubuntu image for WSL](/howto/custom-ubuntu-distro/) • [Differences between WSL 1 and WSL 2](/explanation/compare-wsl-versions/)
 * **GPU and graphics**: [Enabling GPU acceleration with CUDA](/howto/gpu-cuda/) • [Creating data visualisations](/howto/data-science-and-engineering/)

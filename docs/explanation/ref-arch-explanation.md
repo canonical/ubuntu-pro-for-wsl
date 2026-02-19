@@ -10,42 +10,6 @@ myst:
 This page describes the different components of Pro for WSL and how they integrate
 together to form the software architecture.
 
-## Background
-
-### What is Ubuntu WSL?
-
-With the Windows Subsystem for Linux (WSL), Linux distributions can be run on
-Windows with minimal overhead. Ubuntu WSL is an image that is optimised for
-running Ubuntu WSL. A user can create an Ubuntu WSL instance on a Windows
-machine and use that instance as a production-ready development environment.
-Ubuntu WSL also benefits from tight integration with Ubuntu Pro and
-Landscape, which makes it easier to secure Ubuntu WSL instances and manage them
-at scale.
-
-### Why is managing WSL instances at scale difficult?
-
-An individual user can create and configure multiple, independent instances of
-Ubuntu WSL on their machine. For a system administrator, who is managing
-fleets of Windows machines with multiple users, the potential number of Ubuntu
-WSL instances increases dramatically. While the system administrator has tools
-for managing Windows machines, WSL instances can be a black box that cannot be
-directly monitored or patched. This can result in WSL instances that do not
-follow system administration policies.
-
-### How does Ubuntu Pro for WSL solve this problem?
-
-Pro for WSL helps automate the management of Ubuntu WSL.
-For each new instance that is discovered or created, Pro for WSL will automatically:
-
-* Attach them to your Ubuntu Pro subscription
-* Enrol them with your Landscape server
-
-The integration with Ubuntu Pro keeps instances secure, while the
-integration with Landscape enables remote deployment and management.
-
-Without Pro for WSL, these configurations would be manual, time-consuming and
-error-prone.
-
 ## The components of Ubuntu Pro for WSL
 
 ```{admonition} WSL architecture
@@ -61,7 +25,7 @@ Pro for WSL consists of some components that run on a Windows host
 and others that run within instances of Ubuntu  WSL.
 
 A user interacts with the Pro for WSL application. Pro for WSL then automatically
-pro-attaches and Landscape-enrols each new instance of Ubuntu WSL that is
+pro-attaches and Landscape-enrolls each new instance of Ubuntu WSL that is
 created on the Windows host.
 
 In an organisation, multiple users of Windows machines can create Ubuntu WSL
