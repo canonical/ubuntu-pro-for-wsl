@@ -12,6 +12,7 @@ Understand Pro for WSL, its components, and how they work together.
 
 ```{toctree}
 :titlesonly:
+pro-explanation
 ref-arch-explanation
 ```
 
