@@ -14,6 +14,7 @@
     <version>REPLACE_IN_CI</version>
     <packageSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/msix/chocolatey/ubuntuproforwsl</packageSourceUrl>
     <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
+    <!-- This package lives inside the application's source code repository -->
     <owners>Canonical Ltd.</owners>
     <!-- ============================== -->
     <!-- == SOFTWARE SPECIFIC SECTION == -->
@@ -21,6 +22,7 @@
     <title>Ubuntu Pro for WSL</title>
     <authors>Canonical Ltd.</authors>
     <!-- projectUrl is required for the community feed -->
+    <!-- We're still using the repository as the project URL until we create a specific page under ubuntu.com -->
     <projectUrl>https://github.com/canonical/ubuntu-pro-for-wsl</projectUrl>
     <!-- There are a number of CDN Services that can be used for hosting the Icon for a package. More information can be found here: https://docs.chocolatey.org/en-us/create/create-packages#package-icon-guidelines -->
     <!-- Here is an example using Githack -->
@@ -37,6 +39,10 @@
     <!-- Same contents as the package README.md file. -->
     <description>REPLACE_IN_CI</description>
     <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
+    <dependencies>
+      <!-- Matching the same VCRedist minimum runtime version of the GitHub runners where we build the app -->
+      <dependency id="vcredist140" version="14.50.35719"/>
+    </dependencies>
   </metadata>
   <files>
     <!-- this section controls what actually gets packaged into the Chocolatey package -->
