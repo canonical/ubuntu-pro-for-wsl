@@ -17,108 +17,42 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cmd/wsl-pro-service/service/version.go:23
-#, c-format
-msgid "%s\t%s"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:107
-msgid "%s isn't a boolean: %v"
-msgstr ""
-
-#: internal/daemon/daemon.go:118
+#: internal/daemon/daemon.go:229
 msgid "All connections have now ended."
 msgstr ""
 
-#: internal/grpc/logstreamer/server.go:43
-#, c-format
-msgid "Connecting as [[%s]]"
-msgstr ""
-
-#: internal/grpc/grpcerror/grpcerror.go:29
-msgid "Couldn't connect to %s daemon: %v"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:44
-msgid "Couldn't send initial connection log to client"
-msgstr ""
-
-#: internal/grpc/grpcerror/grpcerror.go:38
-msgid "Error %s from server: %v"
-msgstr ""
-
-#: internal/grpc/grpcerror/grpcerror.go:35
-msgid "Error from server: %v"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:46
-#, c-format
-msgid "New connection from client [[%s]]"
-msgstr ""
-
-#: internal/daemon/daemon.go:98
+#: internal/daemon/daemon.go:238
 msgid "Ready state sent to systemd"
 msgstr ""
 
 #: cmd/wsl-pro-service/service/version.go:14
-msgid "Returns version of agent and exits"
+msgid "Returns version of wsl-pro-service and exits"
 msgstr ""
 
-#: internal/grpc/grpcerror/grpcerror.go:32
-msgid "Service took too long to respond. Disconnecting client."
+#: internal/daemon/daemon.go:218
+msgid "Stopping active requests."
 msgstr ""
 
-#: cmd/wsl-pro-service/service/service.go:52
+#: cmd/wsl-pro-service/service/service.go:46
 msgid "WSL Pro Service"
 msgstr ""
 
-#: cmd/wsl-pro-service/service/service.go:53
+#: cmd/wsl-pro-service/service/service.go:47
 msgid "WSL Pro Service connects Ubuntu Pro for WSL agent to your distro."
 msgstr ""
 
-#: internal/daemon/daemon.go:116
-msgid "Wait for active requests to close."
+#: internal/daemon/daemon.go:221
+msgid "Waiting for active requests to close."
 msgstr ""
 
-#: internal/daemon/daemon.go:47
-msgid "can't create daemon"
+#: cmd/wsl-pro-service/service/config.go:74
+msgid "configuration file path"
 msgstr ""
 
-#: internal/grpc/logstreamer/log.go:184
-msgid "can't send logs to client: %v"
-msgstr ""
-
-#: internal/grpc/logstreamer/log.go:176
-msgid "couldn't send logs to client"
-msgstr ""
-
-#: internal/daemon/daemon.go:96
+#: internal/daemon/daemon.go:235
 msgid "couldn't send ready notification to systemd: %v"
 msgstr ""
 
-#: internal/daemon/daemon.go:82
-msgid "error while serving"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:119
-msgid "invalid metadata %s for incoming request: %q"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:88
-msgid ""
-"invalid metdata from client: %v\n"
-". Please use the StreamClientInterceptor: %v"
-msgstr ""
-
-#: cmd/wsl-pro-service/service/service.go:128
+#: cmd/wsl-pro-service/service/config.go:65
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:95
-msgid "missing client metadata"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:116
-#, c-format
-msgid "missing metadata %s for incoming request"
 msgstr ""

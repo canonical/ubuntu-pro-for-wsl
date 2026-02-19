@@ -18,113 +18,100 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cmd/wsl-pro-service/service/version.go:23
-#, c-format
-msgid "%s\t%s"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:107
-msgid "%s isn't a boolean: %v"
-msgstr "%s no és booleà"
-
-#: internal/daemon/daemon.go:118
+#: internal/daemon/daemon.go:229
 msgid "All connections have now ended."
 msgstr "Totes les connexions han acabat"
 
-#: internal/grpc/logstreamer/server.go:43
-#, c-format
-msgid "Connecting as [[%s]]"
-msgstr "Connectant com a [[%s]]"
-
-#: internal/grpc/grpcerror/grpcerror.go:29
-msgid "Couldn't connect to %s daemon: %v"
-msgstr "No s'ha pogut realitzar la connexió amb el dimoni: %v"
-
-#: internal/grpc/logstreamer/server.go:44
-msgid "Couldn't send initial connection log to client"
-msgstr "No s'ha pogut enviar el registre"
-
-#: internal/grpc/grpcerror/grpcerror.go:38
-msgid "Error %s from server: %v"
-msgstr "Error %s provinent del servidor: %v"
-
-#: internal/grpc/grpcerror/grpcerror.go:35
-msgid "Error from server: %v"
-msgstr "Error provinent del servidor: %v"
-
-#: internal/grpc/logstreamer/server.go:46
-#, c-format
-msgid "New connection from client [[%s]]"
-msgstr "Nova connexió del client [[%s]]"
-
-#: internal/daemon/daemon.go:98
+#: internal/daemon/daemon.go:238
 msgid "Ready state sent to systemd"
 msgstr "Estat «ready» enviat al systemd"
 
 #: cmd/wsl-pro-service/service/version.go:14
-msgid "Returns version of agent and exits"
+#, fuzzy
+msgid "Returns version of wsl-pro-service and exits"
 msgstr "Retorna la versió de l'agent i surt"
 
-#: internal/grpc/grpcerror/grpcerror.go:32
-msgid "Service took too long to respond. Disconnecting client."
-msgstr "El servei ha trigat massa en respondre. Desconnectant client."
+#: internal/daemon/daemon.go:218
+#, fuzzy
+msgid "Stopping active requests."
+msgstr "Espera a que les peticions actives acabin"
 
-#: cmd/wsl-pro-service/service/service.go:52
+#: cmd/wsl-pro-service/service/service.go:46
 msgid "WSL Pro Service"
 msgstr "Servei WSL Pro"
 
-#: cmd/wsl-pro-service/service/service.go:53
+#: cmd/wsl-pro-service/service/service.go:47
 msgid "WSL Pro Service connects Ubuntu Pro for WSL agent to your distro."
 msgstr ""
 
-#: internal/daemon/daemon.go:116
-msgid "Wait for active requests to close."
+#: internal/daemon/daemon.go:221
+#, fuzzy
+msgid "Waiting for active requests to close."
 msgstr "Espera a que les peticions actives acabin"
 
-#: internal/daemon/daemon.go:47
-msgid "can't create daemon"
-msgstr "no es pot crear el dimoni"
+#: cmd/wsl-pro-service/service/config.go:74
+msgid "configuration file path"
+msgstr ""
 
-#: internal/grpc/logstreamer/log.go:184
-msgid "can't send logs to client: %v"
-msgstr "no es poden enviar registres al client: %v"
-
-#: internal/grpc/logstreamer/log.go:176
-msgid "couldn't send logs to client"
-msgstr "no s'ha pogut enviar registres al client"
-
-#: internal/daemon/daemon.go:96
+#: internal/daemon/daemon.go:235
 msgid "couldn't send ready notification to systemd: %v"
 msgstr "no s'ha pogut enviar l'estat «ready» al systemd"
 
-#: internal/daemon/daemon.go:82
-msgid "error while serving"
-msgstr "error mentre es servia"
-
-#: internal/grpc/logstreamer/server.go:119
-msgid "invalid metadata %s for incoming request: %q"
-msgstr "metadada %s invalida per la petició entrant: %q"
-
-#: internal/grpc/logstreamer/server.go:88
-msgid ""
-"invalid metdata from client: %v\n"
-". Please use the StreamClientInterceptor: %v"
-msgstr ""
-"metadada %s invalida provenint del client: %v\n"
-" Si us plau, utilitzi el StreamClientInterceptor"
-
-#: cmd/wsl-pro-service/service/service.go:128
+#: cmd/wsl-pro-service/service/config.go:65
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
 msgstr "informació (-v), depuració (-vv) o depuració amb ubicació (-vvv)"
 
-#: internal/grpc/logstreamer/server.go:95
-msgid "missing client metadata"
-msgstr "manquen metadades del client"
+#~ msgid "%s isn't a boolean: %v"
+#~ msgstr "%s no és booleà"
 
-#: internal/grpc/logstreamer/server.go:116
 #, c-format
-msgid "missing metadata %s for incoming request"
-msgstr "manca la metadada %s del client"
+#~ msgid "Connecting as [[%s]]"
+#~ msgstr "Connectant com a [[%s]]"
 
-#~ msgid "Ubuntu Pro for WSL agent"
+#~ msgid "Couldn't connect to %s daemon: %v"
+#~ msgstr "No s'ha pogut realitzar la connexió amb el dimoni: %v"
+
+#~ msgid "Couldn't send initial connection log to client"
+#~ msgstr "No s'ha pogut enviar el registre"
+
+#~ msgid "Error %s from server: %v"
+#~ msgstr "Error %s provinent del servidor: %v"
+
+#~ msgid "Error from server: %v"
+#~ msgstr "Error provinent del servidor: %v"
+
+#, c-format
+#~ msgid "New connection from client [[%s]]"
+#~ msgstr "Nova connexió del client [[%s]]"
+
+#~ msgid "Service took too long to respond. Disconnecting client."
+#~ msgstr "El servei ha trigat massa en respondre. Desconnectant client."
+
+#~ msgid "can't create daemon"
+#~ msgstr "no es pot crear el dimoni"
+
+#~ msgid "can't send logs to client: %v"
+#~ msgstr "no es poden enviar registres al client: %v"
+
+#~ msgid "couldn't send logs to client"
+#~ msgstr "no s'ha pogut enviar registres al client"
+
+#~ msgid "error while serving"
+#~ msgstr "error mentre es servia"
+
+#~ msgid "invalid metadata %s for incoming request: %q"
+#~ msgstr "metadada %s invalida per la petició entrant: %q"
+
+#~ msgid ""
+#~ "invalid metdata from client: %v\n"
+#~ ". Please use the StreamClientInterceptor: %v"
 #~ msgstr ""
+#~ "metadada %s invalida provenint del client: %v\n"
+#~ " Si us plau, utilitzi el StreamClientInterceptor"
+
+#~ msgid "missing client metadata"
+#~ msgstr "manquen metadades del client"
+
+#, c-format
+#~ msgid "missing metadata %s for incoming request"
+#~ msgstr "manca la metadada %s del client"

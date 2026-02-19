@@ -17,100 +17,38 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cmd/ubuntu-pro-agent/agent/version.go:23
-#, c-format
-msgid "%s\t%s"
+#: internal/daemon/daemon.go:334
+msgid "Daemon: all connections have now ended."
 msgstr ""
 
-#: internal/grpc/logstreamer/server.go:107
-msgid "%s isn't a boolean: %v"
+#: internal/daemon/daemon.go:246
+msgid "Daemon: error while serving"
 msgstr ""
 
-#: internal/daemon/daemon.go:129
-msgid "All connections have now ended."
+#: internal/daemon/daemon.go:332
+msgid "Daemon: waiting for active requests to close."
 msgstr ""
 
-#: internal/grpc/logstreamer/server.go:43
-#, c-format
-msgid "Connecting as [[%s]]"
-msgstr ""
-
-#: internal/grpc/grpcerror/grpcerror.go:29
-msgid "Couldn't connect to %s daemon: %v"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:44
-msgid "Couldn't send initial connection log to client"
-msgstr ""
-
-#: internal/grpc/grpcerror/grpcerror.go:38
-msgid "Error %s from server: %v"
-msgstr ""
-
-#: internal/grpc/grpcerror/grpcerror.go:35
-msgid "Error from server: %v"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:46
-#, c-format
-msgid "New connection from client [[%s]]"
+#: cmd/ubuntu-pro-agent/agent/clean.go:21
+msgid "Removes all the agent's data and exits"
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/version.go:14
 msgid "Returns version of agent and exits"
 msgstr ""
 
-#: internal/grpc/grpcerror/grpcerror.go:32
-msgid "Service took too long to respond. Disconnecting client."
-msgstr ""
-
-#: cmd/ubuntu-pro-agent/agent/agent.go:57
+#: cmd/ubuntu-pro-agent/agent/agent.go:68
 msgid "Ubuntu Pro for WSL agent"
 msgstr ""
 
-#: cmd/ubuntu-pro-agent/agent/agent.go:58
+#: cmd/ubuntu-pro-agent/agent/agent.go:69
 msgid "Ubuntu Pro for WSL agent for managing your pro-enabled distro."
 msgstr ""
 
-#: internal/daemon/daemon.go:127
-msgid "Wait for active requests to close."
+#: cmd/ubuntu-pro-agent/agent/config.go:69
+msgid "configuration file path"
 msgstr ""
 
-#: internal/daemon/daemon.go:49
-msgid "can't create daemon"
-msgstr ""
-
-#: internal/grpc/logstreamer/log.go:184
-msgid "can't send logs to client: %v"
-msgstr ""
-
-#: internal/grpc/logstreamer/log.go:176
-msgid "couldn't send logs to client"
-msgstr ""
-
-#: internal/daemon/daemon.go:87
-msgid "error while serving"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:119
-msgid "invalid metadata %s for incoming request: %q"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:88
-msgid ""
-"invalid metdata from client: %v\n"
-". Please use the StreamClientInterceptor: %v"
-msgstr ""
-
-#: cmd/ubuntu-pro-agent/agent/agent.go:127
+#: cmd/ubuntu-pro-agent/agent/config.go:60
 msgid "issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:95
-msgid "missing client metadata"
-msgstr ""
-
-#: internal/grpc/logstreamer/server.go:116
-#, c-format
-msgid "missing metadata %s for incoming request"
 msgstr ""
