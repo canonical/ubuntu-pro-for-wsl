@@ -38,7 +38,8 @@
     <description>REPLACE_IN_CI</description>
     <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
     <dependencies>
-      <dependency id="vcredist140"/>
+      <!-- Matching the same VCRedist minimum runtime version of the GitHub runners where we build the app -->
+      <dependency id="vcredist140" version="14.50.35719"/>
     </dependencies>
   </metadata>
   <files>
