@@ -327,6 +327,7 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 	}
 
 	// Ubuntu Pro subscription
+	// We store it in the config now because we don't duplicate org data inside the config file.
 	c.configState.Subscription.Organization = data.UbuntuProToken
 	if hasChanged(data.UbuntuProToken, &c.configState.Subscription.Checksum) {
 		log.Debug(ctx, "Config: new Ubuntu Pro subscription received from the registry")
@@ -343,9 +344,10 @@ func (c *Config) UpdateRegistryData(ctx context.Context, data RegistryData, db *
 	if err != nil {
 		log.Errorf(ctx, "Config: removing Landscape configuration from registry: %v", err)
 	}
+	// Ditto for not duplicating org data.
+	c.Landscape.OrgConfig = conf
 	if hasChanged(conf, &c.Landscape.Checksum) {
 		log.Debug(ctx, "Config: new Landscape configuration received from the registry")
-		c.Landscape.OrgConfig = conf
 
 		// We must resolve the landscape config in case a lower priority config becomes active
 		resolv, _ := c.Landscape.resolve()
