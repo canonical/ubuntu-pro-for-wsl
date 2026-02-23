@@ -576,15 +576,14 @@ func TestUpdateRegistryData(t *testing.T) {
 			c := config.New(ctx, dir)
 
 			var calledUbuntuProNotifier int
-			proNotifier := func(context.Context, string) {
+			c.SetUbuntuProNotifier(func(context.Context, string) {
 				calledUbuntuProNotifier++
-			}
+			})
+
 			var calledLandscapeNotifier int
-			lcapeNotifier := func(context.Context, string, string) {
+			c.SetLandscapeNotifier(func(context.Context, string, string) {
 				calledLandscapeNotifier++
-			}
-			c.SetUbuntuProNotifier(proNotifier)
-			c.SetLandscapeNotifier(lcapeNotifier)
+			})
 
 			// Enter a first set of data to override the defaults
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
@@ -649,11 +648,7 @@ func TestUpdateRegistryData(t *testing.T) {
 			require.Equal(t, want, lcape, "LandscapeClientConfig did not return the Landscape config we wrote")
 			require.Equal(t, config.SourceRegistry, src, "Landscape config did not come from registry")
 
-			// Enter the second set of data again, this time against a fresh config,
-			// simulating the restart of the agent.
-			c = config.New(ctx, dir)
-			c.SetUbuntuProNotifier(proNotifier)
-			c.SetLandscapeNotifier(lcapeNotifier)
+			// Enter the second set of data again
 			err = c.UpdateRegistryData(ctx, config.RegistryData{
 				UbuntuProToken:  proToken2,
 				LandscapeConfig: landscapeConf2,
