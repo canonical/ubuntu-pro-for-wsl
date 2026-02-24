@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -160,6 +161,7 @@ func (s *Service) keepConnected() error {
 	const minWait = time.Second
 	const maxWait = 10 * time.Minute
 	wait := 0 * time.Second // No wait in the first iteration
+	errc := errorCount{}
 
 	s.running = make(chan struct{})
 	started := make(chan error)
@@ -245,10 +247,11 @@ func (s *Service) keepConnected() error {
 			default:
 			}
 
-			if checkErr := mustDisableService(err); checkErr != nil {
+			if checkErr := errc.checkError(err); checkErr != nil {
 				if !s.disabled.Load() {
 					// "Landscape: service disabled" not already logged.
 					log.Warningf(s.ctx, "Landscape: %v", checkErr)
+					log.Debugf(s.ctx, "Landscape: %s", errc.String())
 					s.disabled.Store(true)
 				}
 				continue
@@ -262,6 +265,7 @@ func (s *Service) keepConnected() error {
 
 			// Connection was long-lived. We don't need to wait before reconnecting.
 			wait = minWait
+			errc = errorCount{}
 		}
 	}()
 
@@ -273,24 +277,68 @@ func (s *Service) keepConnected() error {
 	}
 }
 
-// mustDisableService returns an error that wraps err if it requires disabling the service, otherwise it returns nil.
-func mustDisableService(err error) error {
-	// Service must remain disabled if we don't have a Landscape config.
-	if target := (noConfigError{}); errors.As(err, &target) {
-		return fmt.Errorf("service disabled: %w", target)
-	}
-	// Or if the server rejects our request.
-	if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
-		return fmt.Errorf("service disabled: %w", err)
-	}
-	// Or if the DNS server doesn't find the host.
-	if status.Code(err) == codes.Unavailable {
-		// I wish there was an idiomatic way in gRPC to check if calling a DNS server succeeded but it server couldn't find the host.
-		if strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host") {
+type errorCount struct {
+	noConfig        int
+	serverRejection int
+	nameResolution  int
+	other           int
+}
+
+// isSaturated returns true if the  error counts reached their maximum allowance, false otherwise.
+func (errc errorCount) isSaturated() bool {
+	// Just hardcoding the maximum counts for now. We might want to adjust this to become a constructor parameter.
+	return errc.noConfig > 0 || errc.serverRejection > 0 || errc.nameResolution > 6
+}
+
+// String returns a string representation of the error counts.
+func (errc errorCount) String() string {
+	return fmt.Sprintf("error counts: no config=%d, server rejections=%d, name resolution=%d, other=%d",
+		errc.noConfig, errc.serverRejection, errc.nameResolution, errc.other)
+}
+
+// checkError updates the error counts and returns an error that wraps err if it reaches the maximum error count allowance, otherwise it returns nil.
+func (errc *errorCount) checkError(err error) error {
+	lastError := func() error {
+		if err == nil {
+			return nil
+		}
+		// Service must remain disabled if we don't have a Landscape config.
+		if target := (noConfigError{}); errors.As(err, &target) {
+			errc.noConfig++
+			return fmt.Errorf("service disabled: %w", target)
+		}
+
+		code := status.Code(err)
+		// Or if the server rejects our request.
+		if code == codes.PermissionDenied || code == codes.InvalidArgument {
+			errc.serverRejection++
 			return fmt.Errorf("service disabled: %w", err)
 		}
-	}
+		// Or if the DNS server doesn't find the host.
+		if code == codes.Unavailable {
+			var dnsErr *net.DNSError
+			if errors.As(err, &dnsErr) {
+				errc.nameResolution++
+				if dnsErr.IsNotFound {
+					return fmt.Errorf("service disabled: DNS server %q suggested possibly invalid host %q. %s",
+						dnsErr.Server, dnsErr.Name, dnsErr.Error())
+				}
+				return dnsErr
+			}
+			// In case a proxy intercepted the call and didn't report a beautiful DNSError.
+			if strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host") {
+				errc.nameResolution++
+				return fmt.Errorf("service disabled: %w", err)
+			}
+		}
 
+		errc.other++
+		return err
+	}()
+
+	if errc.isSaturated() {
+		return lastError
+	}
 	return nil
 }
 

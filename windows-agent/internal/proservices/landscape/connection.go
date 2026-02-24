@@ -13,6 +13,7 @@ import (
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 )
 
@@ -57,15 +58,26 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		return nil, err
 	}
 
-	log.Infof(ctx, "Landscape: connecting to %s", conn.hostConf.hostagentURL)
-
-	grpcConn, err := grpc.NewClient(conn.hostConf.hostagentURL, grpc.WithTransportCredentials(creds))
+	grpcConn, err := grpc.NewClient(conn.hostConf.hostagentURL,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithConnectParams(grpc.ConnectParams{
+			Backoff: backoff.Config{
+				BaseDelay:  1.0 * time.Second,
+				Multiplier: 1.6,
+				Jitter:     0.2,
+				MaxDelay:   120 * time.Second,
+			},
+			MinConnectTimeout: 60 * time.Second,
+		}),
+	)
 	if err != nil {
 		return nil, err
 	}
+	log.Infof(ctx, "Landscape: connecting to %s", grpcConn.CanonicalTarget())
 	conn.grpcConn = grpcConn
 
 	cl := landscapeapi.NewLandscapeHostAgentClient(grpcConn)
+
 	client, err := cl.Connect(ctx)
 	if err != nil {
 		return nil, err
