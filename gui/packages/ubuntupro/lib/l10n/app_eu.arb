@@ -1,1 +1,123 @@
-{}
+{
+    "appTitle": "Ubuntu Pro WSLrako",
+    "tokenErrorEmpty": "Tokena ezin da hutsik egon",
+    "tokenErrorInvalid": "Token baliogabea",
+    "tokenValid": "Baliozko tokena",
+    "tokenInputTitle": "Erantsi makina honetara",
+    "tokenInputDescription": "Sartu {proLink} helbideko token bat edo zure sistemaren administratzailea",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Tokena",
+    "attach": "Erantsi",
+    "applyProToken": "Aplikatu Pro tokena",
+    "applyingProToken": "{token} tokena aplikatzen",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro atzeko planoko agentea",
+    "agentStateStarting": "Ubuntu Pro atzeko planoko agentea abiarazten ari da.",
+    "agentStatePingNonResponsive": "Ubuntu Pro atzeko planoko agenteak ez du erantzuten.",
+    "agentStateInvalid": "Ubuntu Pro atzeko planoko agentearen hasieratzearen zain.",
+    "agentStateCannotStart": "Ubuntu Pro atzeko planoko agentea ezin da abiarazi.",
+    "agentStateUnknownEnv": "Ubuntu Pro atzeko planoko agentearen egoera ezin da egiaztatu. Aztertu zure inguruneko ezarpenak.",
+    "agentStateQuerying": "Ubuntu Pro atzeko planoko agentearen egoera aztertzen.",
+    "agentStateUnreachable": "Ubuntu Pro atzeko planoko agentea berreskuratzen saiatzen.",
+    "proHeading": "Ubunturen argitaratzaileen eskutik datorren kode irekiko softwarearen segurtasuna, orain Windowsen. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Eskuratu Ubuntu Pro",
+    "learnMore": "Informazio gehiago",
+    "ubuntuProEnabled": "Ubuntu Pro gaituta dago makina honetan",
+    "ubuntuProEnabledInfo": "Ubuntu WSL instantzia guztiek daukate Ubuntu Pro-ren segurtasun eginbideetara sarbidea.",
+    "manageUbuntuPro": "Kudeatu Ubuntu Pro harpidetza",
+    "detachPro": "Askatu Ubuntu Pro",
+    "updatingSubscriptionInfo": "Harpidetzaren informazioa eguneratzen.",
+    "purchaseStatusSuccess": "Eskerrik asko Ubuntu Pro-ra harpidetzeagatik.",
+    "purchaseStatusAlreadyPurchased": "Dagoeneko harpidetuta zaude Pro-ra.",
+    "purchaseStatusUserGaveUp": "Erosteko saiakera bertan behera utzi da.",
+    "purchaseStatusNetwork": "Sareko arazo batek erosketa burutzea eragotzi du. Saiatu berriro konektatu ondoren.",
+    "purchaseStatusServer": "Arazo bat gertatu da Microsoft Store dendarekin. Saiatu berriro geroago.",
+    "purchaseStatusUnknown": "Errore ezezaguna harpidetza erosten saiatzean. Aplikazioa berrabiaraziz proba dezakezu.",
+    "landscapeSkip": "Saltatu oraingoz",
+    "landscapeSkipDescription": "Geroago ere konfigura dezakezu Landscape aplikazio honetan",
+    "landscapeSkipRegister": "Erregistratu Landscape erabiliz",
+    "landscapeHeading": "Konfiguratu Landscapera konexioa, zure Ubuntu WSL instantziak urrunetik kudeatzeko. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Eskuzko konfigurazioa",
+    "landscapeSetupManualHint": "Erregistratu Landscape zerbitzari batekin",
+    "landscapeSetupCustom": "Konfigurazio aurreratua",
+    "landscapeSetupCustomHint": "Kargatu Landscape bezero-konfigurazio fitxategi pertsonalizatua",
+    "landscapeFQDNLabel": "Landscaperen FQDNa",
+    "landscapeFQDNError": "FQDN baliogabea. Domeinu-izen edo IP helbide baliozko bat izan behar da.",
+    "landscapeFQDNSaaSError": "FQDNa ezin da landscape.canonical.com izan.",
+    "landscapeAccountNameLabel": "Kontu-izena",
+    "landscapeAccountNameError": "Kontu-izena ezin da hutsik egon edo \"{reservedAccount}\" izan.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "Erregistro gakoa (hautazkoa)",
+    "landscapeSSLKeyLabel": "Zerbitzariaren SSL gako publikoa (hautazkoa)",
+    "landscapeFileLabel": "Konfigurazio-fitxategiaren bidea",
+    "landscapeFileTooLarge": "Konfigurazio-fitxategia handiegia da",
+    "landscapeFileEmptyPath": "Bide bat zehaztu behar da",
+    "landscapeFileEmptyContents": "Fitxategia ezin da hutsik egon",
+    "landscapeFileNotFound": "Ez da fitxategia aurkitu",
+    "landscapeFileIsDir": "Fitxategia ezin da direktorioa izan",
+    "landscapeFileInvalidFormat": "Fitxategiak okerreko formatua dauka",
+    "landscapeFilePicker": "Hautatu fitxategia...",
+    "landscapeConfigureButton": "Konfiguratu Landscape",
+    "landscapeApplyError": "Errorea konfigurazio hau aplikatzen saiatzean:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "Erregistratu",
+    "landscapeDetails": "Xehetasunak",
+    "landscapeProceedAnywayHint": "Egin aurrera, eta Landscape zerbitzarira konektatzeko saiakerek atzeko planoan jarraituko dute.",
+    "landscapeChangeLaterHint": "Edonoiz aldatu ahalko duzu konfigurazioa.",
+    "landscapeEditYourConfig": "Editatu konfigurazioa",
+    "landscapeProceedAnyway": "Egin aurrera halere",
+    "landscapeInvalidConfig": "Landscape konfigurazio baliogabea",
+    "landscapeInvalidConfigContent": "Zerbitzariak bidalitako konfigurazioa baztertu du. Egiaztatu zure ezarpenak.",
+    "landscapeUnchangedConfig": "Aldatu gabeko konfigurazioa",
+    "landscapeUnreachable": "Ezin da Landscape atzitu",
+    "landscapeUnreachableContent": "Ezin izan da Landscape zerbitzarira konektatu.",
+    "landscapeWSLUnavailable": "Landscaperen WSL eginbideak ezgaituta daude",
+    "landscapeWSLUnavailableContent": "WSL eginbideak ezgaituta daude Landscape zerbitzarian. Jarri sistemaren administratzailearekin harremanetan.",
+    "landscapeUnknownError": "Errore ezezaguna Landscapera konektatzean",
+    "landscapeUnknownErrorContent": "Mesedez, eman arazo honen berri, ondorengo xehetasunak ere gehituz.",
+    "buttonNext": "Hurrengoa",
+    "buttonSkip": "Saltatu",
+    "buttonBack": "Atzera",
+    "statusBarReportBugTooltip": "Eman arazoaren berri",
+    "statusBarAgentRunningTooltip": "Ubuntu Pro agentea martxan dago",
+    "statusBarAgentConnectingTooltip": "Ubuntu Pro agentera konektatzen...",
+    "statusBarAgentDownTooltip": "Ubuntu Pro agentea deskonektatua dago. Sakatu agentea abiarazteko."
+}
