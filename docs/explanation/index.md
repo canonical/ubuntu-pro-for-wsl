@@ -43,3 +43,12 @@ Read about the differences between major versions of WSL, such as WSL 1 and WSL 
 :titlesonly:
 compare-wsl-versions
 ```
+
+## Data collection and Ubuntu on WSL
+
+Read about the opt-in, anonymous collection of system data present on Ubuntu on WSL, which helps Ubuntu developers maintain and improve Ubuntu.
+
+```{toctree}
+:titlesonly:
+data-collection
+```
