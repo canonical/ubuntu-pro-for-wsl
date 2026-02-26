@@ -156,15 +156,15 @@ func (s *Service) Connect() (err error) {
 // - the active one drops.
 // - a reconnection is requested via connRetrier.
 func (s *Service) keepConnected() error {
-	const growthFactor = 2
-	const minWait = time.Second
-	const maxWait = 10 * time.Minute
-	wait := 0 * time.Second // No wait in the first iteration
-
 	s.running = make(chan struct{})
 	started := make(chan error)
 
 	go func() {
+		const growthFactor = 2
+		const minWait = time.Second
+		const maxWait = 10 * time.Minute
+		wait := 0 * time.Second // No wait in the first iteration
+		errc := errorCount{}
 		defer close(s.running)
 
 		defer s.disconnect()
@@ -245,10 +245,11 @@ func (s *Service) keepConnected() error {
 			default:
 			}
 
-			if checkErr := mustDisableService(err); checkErr != nil {
+			if checkErr := errc.checkError(err); checkErr != nil {
 				if !s.disabled.Load() {
 					// "Landscape: service disabled" not already logged.
 					log.Warningf(s.ctx, "Landscape: %v", checkErr)
+					log.Debugf(s.ctx, "Landscape: %s", errc.String())
 					s.disabled.Store(true)
 				}
 				continue
@@ -262,6 +263,7 @@ func (s *Service) keepConnected() error {
 
 			// Connection was long-lived. We don't need to wait before reconnecting.
 			wait = minWait
+			errc = errorCount{}
 		}
 	}()
 
@@ -273,24 +275,62 @@ func (s *Service) keepConnected() error {
 	}
 }
 
-// mustDisableService returns an error that wraps err if it requires disabling the service, otherwise it returns nil.
-func mustDisableService(err error) error {
-	// Service must remain disabled if we don't have a Landscape config.
-	if target := (noConfigError{}); errors.As(err, &target) {
-		return fmt.Errorf("service disabled: %w", target)
-	}
-	// Or if the server rejects our request.
-	if status.Code(err) == codes.PermissionDenied || status.Code(err) == codes.InvalidArgument {
-		return fmt.Errorf("service disabled: %w", err)
-	}
-	// Or if the DNS server doesn't find the host.
-	if status.Code(err) == codes.Unavailable {
-		// I wish there was an idiomatic way in gRPC to check if calling a DNS server succeeded but it server couldn't find the host.
-		if strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host") {
-			return fmt.Errorf("service disabled: %w", err)
-		}
-	}
+type errorCount struct {
+	noConfig        int
+	serverRejection int
+	nameResolution  int
+	other           int
+}
 
+// isSaturated returns true if the  error counts reached their maximum allowance, false otherwise.
+func (errc errorCount) isSaturated() bool {
+	// Just hardcoding the maximum counts for now. We might want to adjust this to become a constructor parameter.
+	// This should result in a maximum wait time of around 63s plus the time it takes to
+	// execute a coonection, which is typically 15s per attempt, 6 attempts in the worse case,
+	// total of 2 minutes, in theory, as gRPC hsa its own backoff mhechanism with bultin jitter.
+	return errc.noConfig > 0 || errc.serverRejection > 0 || errc.nameResolution > 6
+}
+
+// String returns a string representation of the error counts.
+func (errc errorCount) String() string {
+	return fmt.Sprintf("error counts: no config=%d, server rejections=%d, name resolution=%d, other=%d",
+		errc.noConfig, errc.serverRejection, errc.nameResolution, errc.other)
+}
+
+// checkError updates the error counts and returns an error that wraps err if it reaches the maximum error count allowance, otherwise it returns nil.
+func (errc *errorCount) checkError(err error) error {
+	lastError := func() error {
+		if err == nil {
+			return nil
+		}
+		// Service must remain disabled if we don't have a Landscape config.
+		if target := (noConfigError{}); errors.As(err, &target) {
+			errc.noConfig++
+			return err
+		}
+
+		code := status.Code(err)
+		// Or if the server rejects our request.
+		if code == codes.PermissionDenied || code == codes.InvalidArgument {
+			errc.serverRejection++
+			return err
+		}
+		// Or if the DNS server doesn't find the host.
+		// I'd love to be able to find a DNSError in the chain, because they are quite rich of information,
+		// but gRPC type-erases it in a status error and the only way to check for it is to parse the error message.
+		if code == codes.Unavailable &&
+			(strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host")) {
+			errc.nameResolution++
+			return err
+		}
+
+		errc.other++
+		return err
+	}()
+
+	if errc.isSaturated() {
+		return fmt.Errorf("service disabled: %w", lastError)
+	}
 	return nil
 }
 

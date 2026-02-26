@@ -57,15 +57,15 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 		return nil, err
 	}
 
-	log.Infof(ctx, "Landscape: connecting to %s", conn.hostConf.hostagentURL)
-
 	grpcConn, err := grpc.NewClient(conn.hostConf.hostagentURL, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
+	log.Infof(ctx, "Landscape: connecting to %s", grpcConn.CanonicalTarget())
 	conn.grpcConn = grpcConn
 
 	cl := landscapeapi.NewLandscapeHostAgentClient(grpcConn)
+
 	client, err := cl.Connect(ctx)
 	if err != nil {
 		return nil, err

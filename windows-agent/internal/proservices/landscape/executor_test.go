@@ -820,7 +820,7 @@ func testReceiveCommand(t *testing.T, distrosettings distroSettings, homedir str
 	if tb.conf == nil {
 		tb.conf = &mockConfig{
 			proToken:              "TOKEN",
-			landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+			landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr().String()),
 		}
 	}
 
