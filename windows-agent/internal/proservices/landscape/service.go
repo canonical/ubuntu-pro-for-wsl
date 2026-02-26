@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"strings"
 	"sync"
@@ -307,31 +306,22 @@ func (errc *errorCount) checkError(err error) error {
 		// Service must remain disabled if we don't have a Landscape config.
 		if target := (noConfigError{}); errors.As(err, &target) {
 			errc.noConfig++
-			return fmt.Errorf("service disabled: %w", target)
+			return err
 		}
 
 		code := status.Code(err)
 		// Or if the server rejects our request.
 		if code == codes.PermissionDenied || code == codes.InvalidArgument {
 			errc.serverRejection++
-			return fmt.Errorf("service disabled: %w", err)
+			return err
 		}
 		// Or if the DNS server doesn't find the host.
-		if code == codes.Unavailable {
-			var dnsErr *net.DNSError
-			if errors.As(err, &dnsErr) {
-				errc.nameResolution++
-				if dnsErr.IsNotFound {
-					return fmt.Errorf("service disabled: DNS server %q suggested possibly invalid host %q. %s",
-						dnsErr.Server, dnsErr.Name, dnsErr.Error())
-				}
-				return dnsErr
-			}
-			// In case a proxy intercepted the call and didn't report a beautiful DNSError.
-			if strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host") {
-				errc.nameResolution++
-				return fmt.Errorf("service disabled: %w", err)
-			}
+		// I'd love to be able to find a DNSError in the chain, because they are quite rich of information,
+		// but gRPC type-erases it in a status error and the only way to check for it is to parse the error message.
+		if code == codes.Unavailable &&
+			(strings.Contains(err.Error(), "produced zero addresses") || strings.Contains(err.Error(), "no such host")) {
+			errc.nameResolution++
+			return err
 		}
 
 		errc.other++
@@ -339,7 +329,7 @@ func (errc *errorCount) checkError(err error) error {
 	}()
 
 	if errc.isSaturated() {
-		return lastError
+		return fmt.Errorf("service disabled: %w", lastError)
 	}
 	return nil
 }
