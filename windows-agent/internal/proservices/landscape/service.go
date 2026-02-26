@@ -157,16 +157,15 @@ func (s *Service) Connect() (err error) {
 // - the active one drops.
 // - a reconnection is requested via connRetrier.
 func (s *Service) keepConnected() error {
-	const growthFactor = 2
-	const minWait = time.Second
-	const maxWait = 10 * time.Minute
-	wait := 0 * time.Second // No wait in the first iteration
-	errc := errorCount{}
-
 	s.running = make(chan struct{})
 	started := make(chan error)
 
 	go func() {
+		const growthFactor = 2
+		const minWait = time.Second
+		const maxWait = 10 * time.Minute
+		wait := 0 * time.Second // No wait in the first iteration
+		errc := errorCount{}
 		defer close(s.running)
 
 		defer s.disconnect()
@@ -287,6 +286,9 @@ type errorCount struct {
 // isSaturated returns true if the  error counts reached their maximum allowance, false otherwise.
 func (errc errorCount) isSaturated() bool {
 	// Just hardcoding the maximum counts for now. We might want to adjust this to become a constructor parameter.
+	// This should result in a maximum wait time of around 63s plus the time it takes to
+	// execute a coonection, which is typically 15s per attempt, 6 attempts in the worse case,
+	// total of 2 minutes, in theory, as gRPC hsa its own backoff mhechanism with bultin jitter.
 	return errc.noConfig > 0 || errc.serverRejection > 0 || errc.nameResolution > 6
 }
 

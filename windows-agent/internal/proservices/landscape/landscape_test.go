@@ -106,6 +106,7 @@ func TestConnect(t *testing.T) {
 	testCases := map[string]struct {
 		precancelContext   bool
 		serverNotAvailable bool
+		serverNotFound     bool
 		serverErrorCode    codes.Code // 0. codes.OK by default.
 
 		landscapeUIDReadErr  bool
@@ -140,6 +141,7 @@ func TestConnect(t *testing.T) {
 		"Error when the landscape UID cannot be retrieved":     {landscapeUIDReadErr: true, wantErr: true},
 		"Error when the landscape UID cannot be stored":        {landscapeUIDWriteErr: true, wantErr: true},
 		"Error when the server cannot be reached":              {serverNotAvailable: true, wantErr: true},
+		"Error when the server cannot be found":                {serverNotFound: true, wantErr: true},
 		"Error when the server returns permission denied":      {serverErrorCode: codes.PermissionDenied, wantErr: true},
 		"Error when the server returns invalid argument":       {serverErrorCode: codes.InvalidArgument, wantErr: true},
 		"Error when the first-contact SendUpdatedInfo fails":   {tokenErr: true, wantErr: true},
@@ -205,8 +207,12 @@ func TestConnect(t *testing.T) {
 				// Fixture exists: override the Landscape config
 				lconf = string(fixture)
 			}
+			address := lis.Addr().String()
+			if tc.serverNotFound {
+				address = "server.notfound.local:1234"
+			}
 
-			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, lconf, certPath, lis.Addr())
+			conf.landscapeClientConfig = executeLandscapeConfigTemplate(t, lconf, certPath, address)
 
 			if !tc.serverNotAvailable {
 				//nolint:errcheck // We don't care about these errors
@@ -345,7 +351,7 @@ func TestSendUpdatedInfo(t *testing.T) {
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
-				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr().String()),
 			}
 
 			//nolint:errcheck // We don't care about these errors
@@ -574,7 +580,7 @@ func TestAutoReconnection(t *testing.T) {
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
-				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr()),
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, defaultLandscapeConfig, "", lis.Addr().String()),
 			}
 
 			db, err := database.New(ctx, t.TempDir())
@@ -833,7 +839,7 @@ func TestReconnect(t *testing.T) {
 
 			conf := &mockConfig{
 				proToken:              "TOKEN",
-				landscapeClientConfig: executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr()),
+				landscapeClientConfig: executeLandscapeConfigTemplate(t, lcapeConfig, certPath, lis.Addr().String()),
 			}
 
 			//nolint:errcheck // We don't care about these errors
@@ -1068,7 +1074,7 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 		})
 	}
 }
-func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, url net.Addr) string {
+func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, url string) string {
 	t.Helper()
 
 	tmpl := template.Must(template.New(t.Name()).Parse(in))
@@ -1077,7 +1083,7 @@ func executeLandscapeConfigTemplate(t *testing.T, in string, certPath string, ur
 		CertPath, HostURL string
 	}{
 		CertPath: certPath,
-		HostURL:  url.String(),
+		HostURL:  url,
 	}
 
 	out := bytes.Buffer{}
