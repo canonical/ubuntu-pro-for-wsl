@@ -193,14 +193,12 @@ func (m *SystemMock) LookupGroup(name string) (*user.Group, error) {
 	}, nil
 }
 
-// mockExec generates a command of the form `bash -ec <SCRIPT>` that will call an alternate binary
-// to the one we are mocking.
+// mockExec returns a command that re-invokes the current test binary to run the named faux test,
+// rather than spawning `go test` (which would require a compilation step).
 //
-// At the core of the script we have
+// The invocation is:
 //
-//	```
-//	go test -run ^<FAUX_TEST>$ -- <ARGS...>
-//	````
+//	<self> -test.run=^<FAUX_TEST>$ [-- <ARGS...>]
 //
 // The environment controls the behaviour of the mock, and FAUX_TEST is the name of a Test* function
 // that mocks the behaviour of the executable. The ARGS are the arguments that would be passed to
@@ -208,12 +206,16 @@ func (m *SystemMock) LookupGroup(name string) (*user.Group, error) {
 //
 // The faux test is in charge of interpreting the environment and the args.
 //
-// The script has some more boilerplate to trim out text from the testing module.
 // In order to make the mock work, the faux test needs to be defined in the test module,
 // see the documentation on ProMock for an example.
 func (m *SystemMock) mockExec(ctx context.Context, fauxTestName string, argv ...string) *exec.Cmd {
 	if !testing.Testing() {
 		panic("mockExec can only be used within a test")
+	}
+
+	self, err := os.Executable()
+	if err != nil {
+		panic(fmt.Sprintf("mockExec: could not get current executable: %v", err))
 	}
 
 	// Switches
@@ -224,20 +226,11 @@ func (m *SystemMock) mockExec(ctx context.Context, fauxTestName string, argv ...
 		fmt.Sprintf("%s=%s", FileSystemRoot, m.FsRoot),           // Indicates where the mock filesystem is
 	)
 
-	// Quote arguments
-	for i := range argv {
-		argv[i] = fmt.Sprintf("%q", argv[i])
-	}
-	args := strings.Join(argv, " ")
-
-	// Heart of the script
-	heart := fmt.Sprintf("go test -run ^%s$ -- %s", fauxTestName, args)
-
-	// Trimming testing framework text
-	script := fmt.Sprintf("set -o pipefail && %s | head -n -2", heart)
+	args := []string{fmt.Sprintf("-test.run=^%s$", fauxTestName), "--"}
+	args = append(args, argv...)
 
 	//nolint:gosec // This is test code
-	cmd := exec.CommandContext(ctx, "bash", "-ec", script)
+	cmd := exec.CommandContext(ctx, self, args...)
 	cmd.Env = env
 	return cmd
 }
@@ -604,7 +597,7 @@ func envExists(arg controlArg) bool {
 //
 //   - reparses os.Args as:
 //
-//     go test -run $testName [-- argv...]
+//     <self> -test.run=^$testName [-- argv...]
 //
 //nolint:thelper // This is not a real test
 func mockMain(t *testing.T, f func(argv []string) exitCode) {
@@ -619,11 +612,6 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 	}
 
 	exit := int(f(argv))
-	if exit == 0 {
-		// testing library only prints this line when it fails
-		// Manually printing it means that we can simply remove the last two lines to get the true output
-		fmt.Fprintln(os.Stdout, "exit status 0")
-	}
 	syscall.Exit(exit)
 }
 
