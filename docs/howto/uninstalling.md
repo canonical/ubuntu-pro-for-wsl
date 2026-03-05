@@ -62,13 +62,13 @@ For installations that use the modern tar-based installation format, run:
 > wsl --unregister <distro>
 ```
 
-If a distribution was installed in the legacy format, go to `Settings > Apps >
+If a distribution was installed in the {term}`legacy format <legacy distro>`, go to `Settings > Apps >
 Installed Apps`, locate the Ubuntu distro, right-click on it, and select
 **Uninstall**.
 
 ````{tip}
 While installing Ubuntu in the legacy format, a message appears in the terminal
-recommending the modern tar-based format.
+recommending the {term}`modern tar-based format <modern distro>`.
 
 If you don't know the format of an installed distro, run:
 

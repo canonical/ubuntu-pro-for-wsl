@@ -15,9 +15,9 @@ myst:
 (howto::config-landscape)=
 ## Choose a configuration method
 
-The Landscape client can be configured in two ways:
+The {term}`Landscape client` can be configured in two ways:
 
-- The **Windows registry**: useful for automating deployment at scale 
+- The {term}`Windows registry`: useful for automating deployment at scale 
 - The application's **graphical interface**: convenient option for individual users
 
 `````{tab-set}

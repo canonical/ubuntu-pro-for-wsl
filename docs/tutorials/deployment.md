@@ -15,12 +15,12 @@ myst:
 ```
 
 In this tutorial you will learn how Ubuntu Pro for WSL can help you
-deploy Ubuntu to remote Windows machines using Landscape.
+deploy Ubuntu to remote Windows machines using {term}`Landscape`.
 
 ## What you will do
 
 - Register a Windows host instance with Landscape
-- Create a custom WSL profile on Landscape
+- Create a custom {term}`WSL profile` on Landscape
 - Deploy Ubuntu with the custom profile to a remote Windows machine
 
 ## What you need
@@ -147,7 +147,7 @@ Complete the fields as follows:
 | RootFS image        | Ubuntu 24.04 LTS                       |
 | Cloud-init          | Plain text                             |
 
-Copy and paste this cloud-init configuration:
+Copy and paste this {term}`cloud-init` configuration:
 
 ```yaml
 #cloud-config

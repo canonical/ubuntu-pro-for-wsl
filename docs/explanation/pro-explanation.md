@@ -7,12 +7,12 @@ myst:
 
 # What is Ubuntu Pro for WSL?
 
-Ubuntu Pro for WSL is a Windows application for securing and managing instances
+Ubuntu Pro for WSL is a Windows application for securing and managing {term}`instances <Instance>`
 of Ubuntu on WSL.
 
 It serves two primary functions:
 
-* Attaching Ubuntu instances to a Pro subscription
+* Attaching Ubuntu instances to a {term}`Pro subscription <Ubuntu Pro>`
 * Configuring Ubuntu instances for management by Landscape
 
 This page includes a top-level explanation of Pro for WSL.
@@ -72,9 +72,9 @@ attached, the application can be used to [configure
 Landscape](../howto/set-up-landscape-client.md).
 
 If you are using Landscape SaaS, the configuration is as simple as supplying
-the account name for the Landscape dashboard.
+the account name for the {term}`Landscape dashboard`.
 
-With Landscape configured, a central administrator can create WSL profiles on
+With Landscape configured, a central administrator can create {term}`WSL profiles` on
 Landscape that can then be used to [remotely deploy instances](tut::deploy)
 on Windows machines, with specific permissions enabled and packages installed.
 
@@ -93,7 +93,7 @@ The GUI is especially useful for individuals who want to secure and manage a
 small number of machines, or for the testing of Pro for WSL features.
 
 Enterprise users, especially system administrators, may wish to bypass the GUI
-completely, and instead configure Pro for WSL using the Windows registry.
+completely, and instead configure Pro for WSL using the {term}`Windows registry`.
 
 ## Pro for WSL has registry keys for enterprise users
 
