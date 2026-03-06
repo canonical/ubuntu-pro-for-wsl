@@ -29,7 +29,7 @@ Documentation is maintained in the `docs` directory of the project repository. I
 
 ## Contribute
 
-This is an open source project and we warmly welcome community contributions, suggestions, and constructive feedback. If you're interested in contributing, please take a look at our [Contribution guidelines](CONTRIBUTING.md) first.
+This is an open source project and we warmly welcome community contributions, suggestions, and constructive feedback. If you're interested in contributing, please take a look at our Contribution guidelines (CONTRIBUTING.md) first.
 
 * To report a bug, please create a new issue in this repository, using the Report an issue template.
 * For suggestions and constructive feedback, use the Request a feature template.
