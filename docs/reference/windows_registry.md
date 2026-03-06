@@ -13,11 +13,11 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-The Windows registry is a database provided by Windows where programs can read and write information. Pro for WSL uses it as a read-only source of configuration.
+The {term}`Windows registry` is a database provided by Windows where programs can read and write information. Pro for WSL uses it as a read-only source of configuration.
 > See more:
 [Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
 
-In Pro for WSL, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the [Windows Agent](ref::up4w-windows-agent).
+In Pro for WSL, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the [{term}`Windows agent`].
 
 > See more: [install Pro for WSL and add a Pro token](howto::config-up4w)
 

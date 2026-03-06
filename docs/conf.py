@@ -252,6 +252,7 @@ redirects = {
     "explanations/up4w": "../../explanation/ref-arch-explanation",
     # deprecated feature so point users to relevant doc
     "guides/autoinstall": "../../howto/cloud-init",
+    "reference/glossary_up4w_components": "../../reference/glossary",
 }
 
 

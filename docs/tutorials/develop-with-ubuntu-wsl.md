@@ -18,7 +18,7 @@ offers excellent integration with developer tools like Visual Studio Code.
 ## What you will learn
 
 * Installing WSL and Ubuntu on WSL from the terminal
-* Setting up Visual Studio Code for remote development with Ubuntu on WSL
+* Setting up Visual Studio Code for {term}`remote development` with Ubuntu on WSL
 * Creating a basic Node.js webserver on Ubuntu using Visual Studio Code
 * Previewing HTML served from an Ubuntu WSL instance in a native browser on Windows
 

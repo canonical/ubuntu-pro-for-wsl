@@ -67,7 +67,7 @@ Read more about the [differences between WSL versions](explanation::wsl-version)
 
 ### Method 1: Install Ubuntu from the terminal
 
-In a PowerShell terminal, run `wsl --list --online` to see a list of all available distros and versions:
+In a PowerShell terminal, run `wsl --list --online` to see a list of all available {term}`distros <Distro>` and versions:
 
 ```{code-block} text
 :class: no-copy

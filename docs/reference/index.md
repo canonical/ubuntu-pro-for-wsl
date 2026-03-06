@@ -33,14 +33,6 @@ GitHub actions for Ubuntu WSL <actions>
 
 ## Ubuntu Pro for WSL
 
-A glossary of the key system components of Pro for WSL.
-
-```{toctree}
-:titlesonly:
-
-glossary_up4w_components
-```
-
 Details on firewall configuration, Landscape setup and using the Windows
 registry.
 
@@ -58,6 +50,16 @@ Information helpful for developers working on Pro for WSL.
 index_up4w_development
 ```
 
+## Glossary
+
+A glossary of the key terms used in the documentation.
+
+```{toctree}
+:titlesonly:
+
+glossary
+```
+
 ## Release notes
 
 Highlights from the latest releases of Ubuntu on WSL and Pro for WSL:
@@ -67,3 +69,4 @@ Highlights from the latest releases of Ubuntu on WSL and Pro for WSL:
 
 Release notes <release_notes>
 ```
+

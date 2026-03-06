@@ -124,7 +124,7 @@ Next, let's take a look at how that works in practice.
 (tut::get-ubuntu-pro)=
 ### Get an Ubuntu Pro token
 
-An active Ubuntu Pro subscription provides you with a token that can be added to the Ubuntu Pro client on WSL instances.
+An active Ubuntu Pro subscription provides you with a {term}`Ubuntu Pro token` that can be added to the {term}`Ubuntu Pro client` on WSL instances.
 
 Your subscription token can be retrieved from the [Ubuntu Pro Dashboard](https://ubuntu.com/pro/dashboard).
 

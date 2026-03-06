@@ -45,7 +45,7 @@ on the Windows host consists of a GUI front end and an agent that runs in the
 background.
 
 A user enters a Pro token and Landscape configuration using the GUI. When the
-GUI is launched it starts the Windows Agent, if it's not already running. The agent runs in the background
+GUI is launched it starts the {term}`Windows agent`, if it's not already running. The agent runs in the background
 on the Windows host and manages communication with other components, including
 the remote Landscape server and the Pro service running within each instance of
 Ubuntu WSL. The agent is responsible for managing the state of instances and
@@ -67,7 +67,7 @@ management solution like Intune to configure the registry on fleets of devices.
 
 ### Components on Ubuntu WSL instances
 
-The WSL Pro service runs in each instance of Ubuntu WSL. From the host, the
+The {term}`WSL Pro service` runs in each instance of Ubuntu WSL. From the host, the
 Windows agent communicates with this service. This allows commands to be sent
 from the host, which are then executed by the Pro service on each instance.
 When an Ubuntu WSL instance is started, the WSL Pro service runs and queries
@@ -76,8 +76,8 @@ If the Pro token is valid, it is retrieved from the Windows agent and
 passed to the Pro service running on Ubuntu WSL instances.
 If not, Ubuntu Pro is disabled on the instances.
 
-Pre-installed on each instance of Ubuntu WSL is an Ubuntu Pro client
-and a Landscape client.
+Pre-installed on each instance of Ubuntu WSL is an {term}`Ubuntu Pro client`
+and a {term}`Landscape client`.
 After a Pro token is provided, the Windows agent can send a
 command to the Ubuntu Pro client to execute pro-attach on active instances.
 Similarly, when a Landscape configuration is provided, the Windows agent

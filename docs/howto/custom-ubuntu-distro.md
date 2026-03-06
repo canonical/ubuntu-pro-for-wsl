@@ -9,7 +9,7 @@ myst:
 # Customise an Ubuntu distro for WSL
 
 This guide shows you how to download an existing Ubuntu release for WSL and
-customise  it to your preference, using the new tar-based image format.
+customise  it to your preference, using the new {term}`tar-based image format <modern distro>`.
 
 ## What you will learn
 
