@@ -49,10 +49,7 @@ const (
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
 	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistro = "Ubuntu-Preview"
-
-	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistroAppx = "CanonicalGroupLimited.UbuntuPreview"
+	referenceDistro = "Ubuntu"
 
 	// up4wAppxPackage is the Ubuntu Pro for WSL package.
 	up4wAppxPackage = "CanonicalGroupLimited.UbuntuPro"
@@ -61,11 +58,7 @@ const (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	if err := assertAppxInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
-	if err := assertAppxInstalled(ctx, referenceDistroAppx); err != nil {
+	if err := assertMSIXInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
 
@@ -202,15 +195,15 @@ func buildProject(ctx context.Context) (string, error) {
 	return buildPath, nil
 }
 
-// assertAppxInstalled returns an error if the provided Appx is not installed.
-func assertAppxInstalled(ctx context.Context, appx string) error {
-	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).CombinedOutput()
+// assertMSIXInstalled returns an error if the provided MSIX is not installed.
+func assertMSIXInstalled(ctx context.Context, msix string) error {
+	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, msix).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("could not determine if %q is installed: %v. %s", appx, err, out)
+		return fmt.Errorf("could not determine if %q is installed: %v. %s", msix, err, out)
 	}
 	s := strings.TrimSpace(string(out))
 	if s != "Ok" {
-		return fmt.Errorf("appx %q is not installed", appx)
+		return fmt.Errorf("msix %q is not installed", msix)
 	}
 
 	return nil
@@ -357,16 +350,28 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 		return "", nil, err
 	}
 
-	launcher, err := common.WSLLauncher(sourceDistro)
-	if err != nil {
-		cleanup()
-		return "", nil, err
-	}
-
-	out, err := powershellf(ctx, "%s install --root --ui=none", launcher).CombinedOutput()
+	// We could consider using a cached image instead of installing every time CI runs.
+	// That also allows testing multiple Ubuntu releases symmetrically.
+	out, err := powershellf(ctx, "wsl.exe --install -d %s --no-launch", sourceDistro).CombinedOutput()
 	if err != nil {
 		cleanup()
 		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
+	}
+	out, err = powershellf(ctx, "wsl.exe -d %s -- mv /etc/wsl.conf /etc/wsl.conf.bak", sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not back up wsl.conf %q: %v. %s", sourceDistro, err, out)
+	}
+	out, err = powershellf(ctx, `wsl.exe -d %s -- bash -ec "printf '[boot]\nsystemd=false' >> /etc/wsl.conf"`, sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not write custom wsl.conf %q: %v. %s", sourceDistro, err, out)
+	}
+	// Let's create a default user to avoid interactive prompts during first boot.
+	out, err = powershellf(ctx, "wsl.exe -d %s -- adduser --quiet --gecos Ubuntu ubuntu", sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not create a user %q: %v. %s", sourceDistro, err, out)
 	}
 
 	log.Printf("Setup: Installed %q\n", sourceDistro)
@@ -380,10 +385,23 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	// From now on, all cleanups must be deferred because the distro
 	// must be unregistered before removing the directory it is in.
 
-	out, err = d.Command(ctx, fmt.Sprintf(`DEBIAN_FRONTEND=noninteractive bash -ec "apt update && apt install -y $(wslpath -ua '%s')"`, debPkgPath)).CombinedOutput()
+	out, err = powershellf(ctx, `wsl.exe -d %s -- DEBIAN_FRONTEND=noninteractive bash -ec "apt update && apt install -y $(wslpath -ua '%s')"`, sourceDistro, debPkgPath).CombinedOutput()
 	if err != nil {
 		defer cleanup()
 		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
+	}
+	// Minor precaution to make sure tests will find a pristine environment.
+	out, err = powershellf(ctx, `wsl.exe -d %s -u root -- cloud-init clean --logs`, sourceDistro).CombinedOutput()
+	if err != nil {
+		defer cleanup()
+		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
+	}
+	// We expect this to fail most often than not.
+	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- rm /etc/cloud/cloud-init.disabled`, sourceDistro).CombinedOutput()
+	out, err = powershellf(ctx, "wsl.exe -d %s -u root -- mv /etc/wsl.conf.bak /etc/wsl.conf", sourceDistro).CombinedOutput()
+	if err != nil {
+		cleanup()
+		return "", nil, fmt.Errorf("could not back up wsl.conf %q: %v. %s", sourceDistro, err, out)
 	}
 
 	log.Printf("Setup: Installed wsl-pro-service into %q\n", sourceDistro)
@@ -408,7 +426,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 func assertDistroUnregistered(d wsl.Distro) error {
 	registered, err := d.IsRegistered()
 	if err != nil {
-		return fmt.Errorf("ubuntu-preview: %v", err)
+		return fmt.Errorf("ubuntu: %v", err)
 	}
 
 	if !registered {
