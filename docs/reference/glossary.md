@@ -17,16 +17,16 @@ You can [edit this glossary](https://github.com/canonical/ubuntu-pro-for-wsl/edi
 ```{glossary}
 :sorted:
 
-Cloud-init
+cloud-init
     Cloud-init is used to initalize and provision WSL instances with specific
     configurations that are applied on initial booting of an instance.
     See the [cloud-init documentation](https://cloudinit.readthedocs.io/).
 
-Distro
+distro
     Distro is short for a Linux distribution. Distros that have been downloaded
     and installed can then be launched as WSL instances.
 
-Instance
+instance
     A Linux distribution that has been launched through WSL. WSL can be used to
     launch multiple instances of different Linux distributions, multiple
     instances of different versions of the same Linux distribution, and two or more
@@ -53,18 +53,18 @@ Landscape server
     The Landscape server is used for the centralized management of remote
     Windows clients and the WSL instances that they host.
 
-Legacy distro
+legacy distro
     A distro that uses the old format for packaging and distributing WSL
     distributions, based on msix/appx.
 
-Modern distro
+modern distro
     A distro that uses the new tar-based format for packaging and distributing
     WSL distributions.
 
 Remote development
     Developing in a WSL instance from a native Windows app, like Visual Studio Code.
 
-Session
+session
     Launching an instance creates a terminal session for that instance. You can
     create multiple, parallel sessions for the same instance.
 
