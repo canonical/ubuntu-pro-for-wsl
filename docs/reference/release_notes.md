@@ -70,7 +70,7 @@ Experience faster download and installation times with 24.04, with a 200MB reduc
 
 ##### Systemd by default
 
-systemd is now enabled by default even when the instance is launched directly from a terminal with the wsl.exe command or from an imported root files system.
+systemd is now enabled by default even when the instance is launched directly from a terminal with the {term}`wsl.exe` command or from an imported root files system.
 
 ##### Point release changes
 

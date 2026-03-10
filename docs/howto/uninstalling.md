@@ -7,7 +7,7 @@ myst:
 
 # Uninstall Ubuntu Pro for WSL, Ubuntu on WSL and WSL
 
-This page briefly outlines the steps required to uninstall Ubuntu Pro for WSL,
+This page briefly outlines the steps required to uninstall {term}`Ubuntu Pro for WSL`,
 Ubuntu distros, and WSL itself.
 
 (howto::uninstall-up4w)=

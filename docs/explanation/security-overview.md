@@ -212,7 +212,7 @@ Any exchanges of data are encrypted using TLS.
 (exp::wsl1-incompatibility)=
 ### Incompatibility with WSL 1
 
-WSL 2 is the default WSL version on Windows 11.
+WSL 2 is the default {term}`WSL version` on Windows 11.
 The legacy version — WSL 1 — can also still be used.
 
 > [Read more about WSL versions](explanation::wsl-version)

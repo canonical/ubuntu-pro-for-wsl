@@ -47,7 +47,7 @@ background.
 A user enters a Pro token and Landscape configuration using the GUI. When the
 GUI is launched it starts the {term}`Windows agent`, if it's not already running. The agent runs in the background
 on the Windows host and manages communication with other components, including
-the remote Landscape server and the Pro service running within each instance of
+the remote {term}`Landscape server` and the Pro service running within each instance of
 Ubuntu WSL. The agent is responsible for managing the state of instances and
 acts as a bridge between those instances and Landscape. If the configuration
 details are valid, all new instances will have Ubuntu Pro enabled and will be

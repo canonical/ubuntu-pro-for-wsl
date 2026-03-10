@@ -80,7 +80,7 @@ Instructions for restoring the backup can be found at the end of the tutorial.
 
 ### A Landscape server must be set up and available
 
-You need a Landscape server set up and access to the Landscape dashboard in a browser.
+You need a {term}`Landscape server` set up and access to the Landscape dashboard in a browser.
 
 [Landscape SaaS edition](https://documentation.ubuntu.com/landscape/what-is-landscape/#editions-of-landscape)
 is bundled with your Pro subscription and can be set up as follows:

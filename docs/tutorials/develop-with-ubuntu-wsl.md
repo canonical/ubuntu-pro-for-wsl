@@ -110,7 +110,7 @@ forget to substitute your custom name for `Ubuntu-24.04` in the commands.
 :::
 
 After an Ubuntu distribution is installed, you are prompted to create a
-username and password. An Ubuntu session will then start automatically.
+username and password. An Ubuntu {term}`session` will then start automatically.
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal
 prompt, for example:
