@@ -9,7 +9,7 @@ myst:
 # Automatic setup of Ubuntu on WSL with cloud-init
 
 {term}`Cloud-init` is a cross-platform tool for provisioning cloud instances.
-It is an industry standard and can now also be used to automatically set up {term}`instances <Instance>` of Ubuntu on WSL.
+It is an industry standard and can now also be used to automatically set up {term}`instances <instance>` of Ubuntu on WSL.
 
 > See more:  [cloud-init official documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
 
@@ -26,7 +26,7 @@ It is an industry standard and can now also be used to automatically set up {ter
 The guide assumes that you are using Ubuntu 24.04,
 but Ubuntu 22.04 can also be used.
 
-In the latest versions of WSL, installing a {term}`distro <Distro>` also launches the instance
+In the latest versions of WSL, installing a {term}`distro` also launches the instance
 and prompts the user through setup. Cloud-init will not provision an instance
 that has already been set up in this way.
 

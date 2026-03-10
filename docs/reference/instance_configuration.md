@@ -6,7 +6,7 @@ myst:
 
 # WSL instance configuration
 
-You can configure {term}`instances <Instance>` of Ubuntu on WSL using different methods.
+You can configure {term}`instances <instance>` of Ubuntu on WSL using different methods.
 
 Each configuration method has a different scope and use-case. Depending on the method, you may affect all Ubuntu instances or only one Ubuntu instance.
 

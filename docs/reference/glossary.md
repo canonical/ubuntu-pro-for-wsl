@@ -23,6 +23,7 @@ cloud-init
     See the [cloud-init documentation](https://cloudinit.readthedocs.io/).
 
 distro
+distribution
     Distro is short for a Linux distribution. Distros that have been downloaded
     and installed can then be launched as WSL instances.
 
@@ -61,7 +62,7 @@ modern distro
     A distro that uses the new tar-based format for packaging and distributing
     WSL distributions.
 
-Remote development
+remote development
     Developing in a WSL instance from a native Windows app, like Visual Studio Code.
 
 session
@@ -97,6 +98,7 @@ Windows registry
     A hierarchical database for storing settings on Windows.
 
 WSL
+Windows Subsystem for Linux
     A virtualization layer for running Linux distributions on Windows.
     See the [Microsoft WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/).
 

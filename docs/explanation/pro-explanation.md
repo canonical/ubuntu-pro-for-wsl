@@ -7,7 +7,7 @@ myst:
 
 # What is Ubuntu Pro for WSL?
 
-Ubuntu Pro for WSL is a Windows application for securing and managing {term}`instances <Instance>`
+Ubuntu Pro for WSL is a Windows application for securing and managing {term}`instances <instance>`
 of Ubuntu on WSL.
 
 It serves two primary functions:
