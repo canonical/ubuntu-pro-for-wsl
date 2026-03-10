@@ -24,15 +24,19 @@ cloud-init
 
 distro
 distribution
-    Distro is short for a Linux distribution. Distros that have been downloaded
-    and installed can then be launched as WSL instances.
+    A packaged Linux environment that can be downloaded
+    and installed for launching as a WSL instance.
+
+    Related topic(s): {term}`instance`, {term}`legacy distro`, {term}`modern distro`, {term}`WSL`
 
 instance
-    A Linux distribution that has been launched through WSL. WSL can be used to
-    launch multiple instances of different Linux distributions, multiple
-    instances of different versions of the same Linux distribution, and two or more
-    instances of the same Linux distribution if they exist on the filesystem
-    with unique names.
+    Most commonly refers to a Linux distribution that has been launched through
+    WSL. In [other
+    documentation](https://learn.microsoft.com/en-us/windows/wsl/),
+    distribution and instance are sometimes used interchangeably. In the
+    Landscape dashboard, "instance" refers to a Windows machine that runs WSL.
+
+    Related topic(s): {term}`distro`, {term}`session`, {term}`WSL`
 
 Landscape
     Landscape is a systems management tool for Ubuntu. See the [Landscape
