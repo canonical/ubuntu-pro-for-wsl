@@ -13,7 +13,7 @@ require (
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/text v0.34.0
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.2
 	gopkg.in/ini.v1 v1.67.1
 )
 
