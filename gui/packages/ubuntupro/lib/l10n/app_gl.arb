@@ -1,1 +1,123 @@
-{}
+{
+    "appTitle": "Ubuntu Pro para WSL",
+    "tokenErrorEmpty": "O token non pode estar baleiro",
+    "tokenErrorInvalid": "Token non válido",
+    "tokenValid": "Token válido",
+    "tokenInputTitle": "Anexar esta máquina",
+    "tokenInputDescription": "Introduza un token de {proLink} ou do seu administrador de sistema",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Token",
+    "attach": "Anexar",
+    "applyProToken": "Aplicar Token Pro",
+    "applyingProToken": "Aplicando token {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Axente en segundo plano de Ubuntu Pro",
+    "agentStateStarting": "O axente en segundo plano de Ubuntu Pro está a iniciarse.",
+    "agentStatePingNonResponsive": "O axente en segundo plano de Ubuntu Pro non responde.",
+    "agentStateInvalid": "Agardando a inicialización do axente en segundo plano de Ubuntu Pro.",
+    "agentStateCannotStart": "Non se pode iniciar o axente en segundo plano de Ubuntu Pro.",
+    "agentStateUnknownEnv": "Non se pode verificar o estado do axente en segundo plano de Ubuntu Pro. Comprobe a configuración do seu entorno.",
+    "agentStateQuerying": "Comprobando o estado do axente en segundo plano de Ubuntu Pro.",
+    "agentStateUnreachable": "Tentando recuperar o axente en segundo plano de Ubuntu Pro.",
+    "proHeading": "Seguranza do software de código aberto dos editores de Ubuntu, agora dispoñíbel en Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Obtén Ubuntu Pro",
+    "ubuntuProEnabledInfo": "Todas as instancias de Ubuntu WSL teñen acceso ás funcionalidades de seguranza de Ubuntu Pro.",
+    "manageUbuntuPro": "Xestionar a subscripción Ubuntu Pro",
+    "detachPro": "Desprender Ubuntu Pro",
+    "updatingSubscriptionInfo": "Actualización da información da subscrición.",
+    "purchaseStatusSuccess": "Grazas por subscribirte a Ubuntu Pro.",
+    "purchaseStatusAlreadyPurchased": "Xa estás subscrito a Pro.",
+    "purchaseStatusUserGaveUp": "Tentativa de compra cancelada.",
+    "purchaseStatusNetwork": "Un problema de rede impediu que a compra continuase. Téntao de novo unha vez conectado.",
+    "purchaseStatusServer": "Produciuse un erro coa Microsoft Store. Téntao de novo máis tarde.",
+    "purchaseStatusUnknown": "Erro descoñecido ao tentar comprar a subscrición. Considere reiniciar esta aplicación.",
+    "landscapeSkip": "Omitir por agora",
+    "landscapeSkipDescription": "Sempre podes configurar Landscape máis tarde nesta aplicación",
+    "landscapeSkipRegister": "Rexistro con Landscape",
+    "landscapeHeading": "Configura a conexión con Landscape para xestionar as túas instancias WSL de Ubuntu de forma remota. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Configuración manual",
+    "landscapeSetupManualHint": "Rexistrarse cun servidor de Landscape",
+    "landscapeSetupCustom": "Configuración avanzada",
+    "landscapeSetupCustomHint": "Cargar un ficheiro de configuración de cliente de Landscape personalizado",
+    "landscapeFQDNLabel": "FQDN de Landscape",
+    "landscapeFQDNError": "FQDN non válido. Esperábase un nome de dominio ou enderezo IP totalmente cualificado.",
+    "landscapeFQDNSaaSError": "O FQDN non debería ser landscape.canonical.com.",
+    "landscapeAccountNameLabel": "Nome da conta",
+    "landscapeAccountNameError": "O nome da conta non pode estar baleiro nin ser \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "Chave de rexistro (opcional)",
+    "landscapeSSLKeyLabel": "Chave pública de servidor SSL (opcional)",
+    "landscapeFileLabel": "Ruta de ficheiro de configuración",
+    "landscapeFileTooLarge": "O ficheiro de configuración é demasiado grande",
+    "landscapeFileEmptyPath": "Debe especificarse unha ruta",
+    "landscapeFileEmptyContents": "O ficheiro non debe estar baleiro",
+    "landscapeFileNotFound": "Ficheiro non atopado",
+    "landscapeFileIsDir": "O ficheiro non pode ser un directorio",
+    "landscapeFileInvalidFormat": "O ficheiro ten un formato incorrecto",
+    "landscapeFilePicker": "Seleccionar ficheiro...",
+    "landscapeConfigureButton": "Configurar Landscape",
+    "landscapeApplyError": "Erro ao tentar aplicar a configuración:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "Rexistrar",
+    "landscapeDetails": "Detalles",
+    "landscapeProceedAnywayHint": "Continúa e os intentos de conectar co servidor Landscape continuarán en segundo plano.",
+    "landscapeChangeLaterHint": "Podes cambiar a configuración en calquera momento.",
+    "landscapeEditYourConfig": "Editar a túa configuración",
+    "landscapeProceedAnyway": "Continuar de todos os xeitos",
+    "landscapeInvalidConfig": "Configuración de Landscape non válida",
+    "landscapeInvalidConfigContent": "O servidor rexeitou a configuración enviada. Verifique a súa configuración.",
+    "landscapeUnchangedConfig": "Configuración sen cambios",
+    "landscapeUnreachable": "Landscape é inalcanzábel",
+    "landscapeUnreachableContent": "Non se puido conectar co servidor Landscape.",
+    "landscapeWSLUnavailable": "As funcionalidades de WSL de Landscape están desactivadas",
+    "landscapeWSLUnavailableContent": "As funcionalidades de WSL están desactivadas no servidor Landscape. Ponte en contacto co administrador do sistema.",
+    "landscapeUnknownError": "Erro descoñecido ao conectar con Landscape",
+    "landscapeUnknownErrorContent": "Por favor, informe deste incidente incluíndo os detalles a continuación.",
+    "buttonNext": "Seguinte",
+    "buttonSkip": "Omitir",
+    "buttonBack": "Atrás",
+    "statusBarReportBugTooltip": "Informar dun fallo",
+    "statusBarAgentRunningTooltip": "O axente de Ubuntu Pro está executándose",
+    "statusBarAgentConnectingTooltip": "Conectando ao axente de Ubuntu Pro...",
+    "statusBarAgentDownTooltip": "O axente de Ubuntu Pro está desconectado. Prema para iniciar o axente.",
+    "learnMore": "Saber máis",
+    "ubuntuProEnabled": "Ubuntu Pro está activado nesta máquina"
+}
