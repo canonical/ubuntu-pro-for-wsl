@@ -125,7 +125,7 @@ systemd
 
 Ubuntu
     A free, open-source operating system, and one of the most popular Linux
-    distributions in the world.
+    distributions in the world. Ubuntu is the default WSL distro.
 
     Related topic(s): {term}`Ubuntu Pro`, {term}`WSL`
 
