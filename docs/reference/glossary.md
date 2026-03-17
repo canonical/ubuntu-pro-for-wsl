@@ -32,13 +32,16 @@ distribution
     Related topic(s): {term}`instance`, {term}`legacy distro`, {term}`modern distro`, {term}`WSL`
 
 instance
-    Most commonly refers to a Linux distribution that has been launched through
-    WSL. In [other
-    documentation](https://learn.microsoft.com/en-us/windows/wsl/),
-    distribution and instance are sometimes used interchangeably. In the
-    Landscape dashboard, "instance" refers to a Windows machine that runs WSL.
+    A uniquely-named Linux distribution that has been launched through WSL.
 
-    Related topic(s): {term}`distro`, {term}`session`, {term}`WSL`
+    Related topic(s): {term}`distro`, {term}`instance (disambiguation)`
+
+instance (disambiguation)
+    In the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/),
+    "distribution" is used to refer to an instance. In the Landscape dashboard,
+    "instance" also refers to a Windows machine that runs WSL.
+
+    Related topic(s): {term}`instance`, {term}`distro`, {term}`Landscape`
 
 Landscape
     A systems management tool for Ubuntu. See the [Landscape
