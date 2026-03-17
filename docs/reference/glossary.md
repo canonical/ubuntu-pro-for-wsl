@@ -98,6 +98,31 @@ session
 
     Related topic(s): {term}`instance`
 
+snapd
+    A background service that manages and maintains installed snaps.
+
+    Related topic(s): {term}`snaps`
+
+snaps
+    Containerized software packages that bundles one or more applications. By
+    default, snaps update automatically. Snaps are managed using the snapd
+    background service.
+
+    Related topic(s): {term}`snapd`
+
+systemctl
+    A command-line tool for controlling systemd and managing systemd services.
+
+    Related topic(s): {term}`systemd`
+
+systemd
+    An init system and service manager that can be used to manage Linux
+    services. It is enabled by default for Linux distributions running on WSL
+    2. Key services and tools depend on systemd, including snapd and
+    systemctl.
+
+    Related topic(s): {term}`snapd`, {term}`snaps`, {term}`systemctl`
+
 Ubuntu
     A free, open-source operating system, and one of the most popular Linux
     distributions in the world.
