@@ -84,7 +84,7 @@ Save the file and close it.
 ```{note}
 The cloud-config will create a user named `jdoe` and set it as default via
 `/etc/wsl.conf`, install the packages `ginac-tools` and `octave`. It will also
-install `vcpkg` from a git repository, since there is no deb or snap of that
+install `vcpkg` from a git repository, since there is no deb or {term}`snap <snaps>` of that
 application.
 ```
 
@@ -210,7 +210,7 @@ octave/noble,now 8.4.0-1 amd64 [installed]
 ```
 
 5. Lastly, verify that the commands requested were also run. In this case we set up `vcpkg` from git, as recommended by its
-   documentation (there is no deb or snap available for that program):
+   documentation (there is no deb or {term}`snap <snaps>` available for that program):
 
 ```{code-block} text
 jdoe@<hostname>:~$ /opt/vcpkg/vcpkg version

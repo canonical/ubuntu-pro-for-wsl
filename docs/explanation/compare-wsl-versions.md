@@ -19,7 +19,7 @@ There are significant architectural differences between the two versions, which 
 
 The primary difference between WSL 1 and WSL 2 is that WSL 1 functions as a compatibility layer, translating Linux system calls for the Windows kernel and providing only partial support for Linux system calls. In contrast, WSL 2 runs a full Linux kernel inside a lightweight virtual machine, offering complete system call compatibility. This fundamental architectural difference leads to significant variations in capabilities and performance between the two versions.
 
-As WSL 1 only has partial support for Linux system calls, some programs may not behave as expected when using WSL 1. Additionally, WSL 1 lacks support for graphical applications and systemd, a system and service management suite.
+As WSL 1 only has partial support for Linux system calls, some programs may not behave as expected when using WSL 1. Additionally, WSL 1 lacks support for graphical applications and {term}`systemd`, a system and service management suite.
 
 In most cases, applications that are entirely contained in WSL will be faster on WSL 2, particularly for file IO intensive applications. However, WSL 1 has faster access to files mounted from Windows, so for certain use cases, WSL 1 may be faster.
 

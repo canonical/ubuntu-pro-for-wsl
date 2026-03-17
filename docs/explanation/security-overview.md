@@ -104,7 +104,7 @@ $ sudo apt update && sudo apt upgrade -y
 It is generally recommended that you install packages from official repositories using
 `apt`.
 
-Ubuntu on WSL also supports the installation of `snaps`, which are a more secure alternative to third-party `apt` repositories.
+Ubuntu on WSL also supports the installation of {term}`snaps`, which are a more secure alternative to third-party `apt` repositories.
 
 > [Read more about third-party packages in the Ubuntu Server documentation](https://documentation.ubuntu.com/server/explanation/software/third-party-repository-usage/)
 
@@ -120,7 +120,7 @@ By default, AppArmor is installed in Ubuntu on WSL but not yet enabled, as it
 requires certain features and patches not currently available in the WSL
 kernel.
 
-As such, snaps cannot be full confined on WSL.
+As such, {term}`snaps` cannot be full confined on WSL.
 
 > [To learn more about how AppArmor contributes to Snap security, read the Snapcraft documentation](https://snapcraft.io/docs/security-policies)
 

@@ -48,7 +48,7 @@ Each unique instance can be configured using the `wsl.config` file located at `/
 
 To modify this file, enter the target WSL instance, and then open `/etc/wsl.config` in a text editor of your choice with admin permissions using `sudo`. For example, `sudo nano /etc/wsl.config`.
 
-The `wsl.config` file can be used to configure instance-specific settings such as systemd support, automount settings, network settings, interoperability settings, and user settings.
+The `wsl.config` file can be used to configure instance-specific settings such as {term}`systemd` support, automount settings, network settings, interoperability settings, and user settings.
 
 ```{warning}
 Certain settings in `.wslconfig` are incompatible with specific Ubuntu features. For example, we generally recommend keeping systemd and interoperability enabled.
