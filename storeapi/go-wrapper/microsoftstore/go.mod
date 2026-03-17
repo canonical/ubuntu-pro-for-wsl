@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore
 
-go 1.24.0
+go 1.26.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd

@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/tools
 
-go 1.24.0
+go 1.26.0
 
 require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.1

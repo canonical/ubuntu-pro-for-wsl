@@ -1,6 +1,6 @@
 module github.com/canonical/ubuntu-pro-for-wsl/generate
 
-go 1.24.0
+go 1.26.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240626165418-426bf0d3695a
