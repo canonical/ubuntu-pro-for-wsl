@@ -4,7 +4,8 @@ myst:
     "description lang=en": "Reference information on configuring WSL instances."
 ---
 
-# WSL instance configuration
+(ref::instance-config)=
+# WSL instance configuration reference
 
 You can configure {term}`instances <instance>` of Ubuntu on WSL using different methods.
 

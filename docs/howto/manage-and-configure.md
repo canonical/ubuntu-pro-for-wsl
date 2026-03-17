@@ -13,7 +13,14 @@ This page includes guidance on managing instances of Ubuntu on WSL.
 (howto::instance-management-resources)=
 ## Additional resources
 
-Microsoft's official documentation has general guidelines for
+We provide a reference for instance configuration to support quick lookup of
+configuration methods, including: [WSL Settings](ref::wsl-settings),
+[`.wslconfig`](ref::.wslconfig), [`wsl.config`](ref::wsl.config),
+[Cloud-init](ref::cloud-init), and [Ubuntu Pro for WSL](ref::up4w):
+
+* [WSL instance configuration reference](ref::instance-config)
+
+Microsoft's official documentation has general guidelines for:
 
 * [Managing WSL instances using `wsl.exe` commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands)
 * [Configuring WSL with global and per-instance settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config)
