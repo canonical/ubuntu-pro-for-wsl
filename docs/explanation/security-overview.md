@@ -120,7 +120,7 @@ By default, AppArmor is installed in Ubuntu on WSL but not yet enabled, as it
 requires certain features and patches not currently available in the WSL
 kernel.
 
-As such, {term}`snaps` cannot be full confined on WSL.
+As such, {term}`snaps` cannot be fully confined on WSL.
 
 > [To learn more about how AppArmor contributes to Snap security, read the Snapcraft documentation](https://snapcraft.io/docs/security-policies)
 
