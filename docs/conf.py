@@ -253,6 +253,8 @@ redirects = {
     # deprecated feature so point users to relevant doc
     "guides/autoinstall": "../../howto/cloud-init",
     "reference/glossary_up4w_components": "../../reference/glossary",
+    # expanded guide to cover more general topics
+    "howto/backup-and-restore": "../../howto/manage-and-configure",
 }
 
 
