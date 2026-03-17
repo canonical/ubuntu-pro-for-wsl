@@ -195,7 +195,7 @@ WSL profile
     Related topic(s): {term}`Landscape`, {term}`Landscape dashboard`
 
 WSL version
-    WSL is available in two version: WSL 1 and WSL 2. WSL 2 is the latest,
+    WSL is available in two versions: WSL 1 and WSL 2. WSL 2 is the latest,
     recommended version.
 
     Related topic(s): {term}`WSL`
