@@ -16,7 +16,7 @@ execute that specific format. The executable formats are registered via a file i
 `systemd-binfmt.service`. WSL registers Windows binaries to be passed to the `/init` program, which knows how
 to pass that along to Windows (check `/proc/sys/fs/binfmt_misc/WSLInterop*` in a WSL distro instance).
 
-Historically, the systemd unit `systemd-binfmt.service` was known to break WSL binary
+Historically, the {term}`systemd` unit `systemd-binfmt.service` was known to break WSL binary
 interoperability, so it was disabled for Ubuntu on WSL. This documentation explains these issues
 with WSL binary interoperability, why they no longer apply in more recent versions of Ubuntu and
 WSL, and what you can do if you still have problems.

@@ -9,7 +9,7 @@ myst:
 # Distributions of Ubuntu on WSL
 
 
-Our flagship distribution (distro) is Ubuntu. It is the default option when you install WSL for the first time. Several releases of the Ubuntu distro are available for WSL.
+Our flagship distribution ({term}`distro`) is Ubuntu. It is the default option when you install WSL for the first time. Several releases of the Ubuntu distro are available for WSL.
 
 (reference::releases)=
 ## Releases of Ubuntu on WSL

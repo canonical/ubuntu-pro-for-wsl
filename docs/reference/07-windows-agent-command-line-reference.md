@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-> See first: [Pro for WSL - Windows Agent](ref::up4w-windows-agent)
+> See first: [Pro for WSL - {term}`Windows agent`]
 
 
 ## Usage

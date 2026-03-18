@@ -8,8 +8,8 @@ myst:
 (howto::cloud-init)=
 # Automatic setup of Ubuntu on WSL with cloud-init
 
-Cloud-init is a cross-platform tool for provisioning cloud instances.
-It is an industry standard and can now also be used to automatically setup instances of Ubuntu on WSL.
+{term}`Cloud-init` is a cross-platform tool for provisioning cloud instances.
+It is an industry standard and can now also be used to automatically set up {term}`instances <instance>` of Ubuntu on WSL.
 
 > See more:  [cloud-init official documentation](https://cloudinit.readthedocs.io/en/latest/index.html).
 
@@ -26,7 +26,7 @@ It is an industry standard and can now also be used to automatically setup insta
 The guide assumes that you are using Ubuntu 24.04,
 but Ubuntu 22.04 can also be used.
 
-In the latest versions of WSL, installing a distro also launches the instance
+In the latest versions of WSL, installing a {term}`distro` also launches the instance
 and prompts the user through setup. Cloud-init will not provision an instance
 that has already been set up in this way.
 
@@ -84,7 +84,7 @@ Save the file and close it.
 ```{note}
 The cloud-config will create a user named `jdoe` and set it as default via
 `/etc/wsl.conf`, install the packages `ginac-tools` and `octave`. It will also
-install `vcpkg` from a git repository, since there is no deb or snap of that
+install `vcpkg` from a git repository, since there is no deb or {term}`snap <snaps>` of that
 application.
 ```
 
@@ -210,7 +210,7 @@ octave/noble,now 8.4.0-1 amd64 [installed]
 ```
 
 5. Lastly, verify that the commands requested were also run. In this case we set up `vcpkg` from git, as recommended by its
-   documentation (there is no deb or snap available for that program):
+   documentation (there is no deb or {term}`snap <snaps>` available for that program):
 
 ```{code-block} text
 jdoe@<hostname>:~$ /opt/vcpkg/vcpkg version

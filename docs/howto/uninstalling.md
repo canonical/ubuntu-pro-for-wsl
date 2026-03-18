@@ -7,7 +7,7 @@ myst:
 
 # Uninstall Ubuntu Pro for WSL, Ubuntu on WSL and WSL
 
-This page briefly outlines the steps required to uninstall Ubuntu Pro for WSL,
+This page briefly outlines the steps required to uninstall {term}`Ubuntu Pro for WSL`,
 Ubuntu distros, and WSL itself.
 
 (howto::uninstall-up4w)=
@@ -62,13 +62,13 @@ For installations that use the modern tar-based installation format, run:
 > wsl --unregister <distro>
 ```
 
-If a distribution was installed in the legacy format, go to `Settings > Apps >
+If a distribution was installed in the {term}`legacy format <legacy distro>`, go to `Settings > Apps >
 Installed Apps`, locate the Ubuntu distro, right-click on it, and select
 **Uninstall**.
 
 ````{tip}
 While installing Ubuntu in the legacy format, a message appears in the terminal
-recommending the modern tar-based format.
+recommending the {term}`modern tar-based format <modern distro>`.
 
 If you don't know the format of an installed distro, run:
 

@@ -15,9 +15,9 @@ myst:
 (howto::config-landscape)=
 ## Choose a configuration method
 
-The Landscape client can be configured in two ways:
+The {term}`Landscape client` can be configured in two ways:
 
-- The **Windows registry**: useful for automating deployment at scale 
+- The {term}`Windows registry`: useful for automating deployment at scale 
 - The application's **graphical interface**: convenient option for individual users
 
 `````{tab-set}
@@ -82,7 +82,7 @@ When you continue, a status screen will appear confirming that configuration is 
 ![Configuration is complete](../assets/status-complete.png)
 
 The application waits a short period of time to confirm that the configuration
-data supplied resulted in a successful connection to the Landscape server. In
+data supplied resulted in a successful connection to the {term}`Landscape server`. In
 case of errors, a dialog presents the error details and lets you decide whether
 to edit the configuration and try again, or proceed with the configuration
 already provided.

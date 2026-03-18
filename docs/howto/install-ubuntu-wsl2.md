@@ -25,7 +25,7 @@ myst:
 
 ## Install and enable WSL
 
-To install Ubuntu using any method, you first need to install and enable WSL on
+To install {term}`Ubuntu` using any method, you first need to install and enable {term}`WSL` on
 your Windows machine.
 
 Open PowerShell and run:
@@ -67,7 +67,7 @@ Read more about the [differences between WSL versions](explanation::wsl-version)
 
 ### Method 1: Install Ubuntu from the terminal
 
-In a PowerShell terminal, run `wsl --list --online` to see a list of all available distros and versions:
+In a PowerShell terminal, run `wsl --list --online` to see a list of all available {term}`distros <distro>` and versions:
 
 ```{code-block} text
 :class: no-copy
@@ -141,7 +141,7 @@ start the installation.
 
 During installation of an Ubuntu distro on WSL, you are asked to create a
 username and password specific to that instance.
-This also starts an Ubuntu session and logs you in.
+This also starts an Ubuntu {term}`session` and logs you in.
 
 After installation, you can open Ubuntu instances by:
 

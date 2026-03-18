@@ -18,7 +18,7 @@ offers excellent integration with developer tools like Visual Studio Code.
 ## What you will learn
 
 * Installing WSL and Ubuntu on WSL from the terminal
-* Setting up Visual Studio Code for remote development with Ubuntu on WSL
+* Setting up Visual Studio Code for {term}`remote development` with Ubuntu on WSL
 * Creating a basic Node.js webserver on Ubuntu using Visual Studio Code
 * Previewing HTML served from an Ubuntu WSL instance in a native browser on Windows
 
@@ -110,7 +110,7 @@ forget to substitute your custom name for `Ubuntu-24.04` in the commands.
 :::
 
 After an Ubuntu distribution is installed, you are prompted to create a
-username and password. An Ubuntu session will then start automatically.
+username and password. An Ubuntu {term}`session` will then start automatically.
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal
 prompt, for example:

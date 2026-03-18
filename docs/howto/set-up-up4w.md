@@ -15,7 +15,7 @@ myst:
 
 To install Ubuntu Pro for WSL, you need Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
-To configure your Ubuntu instances to Pro-attach, you must have an Ubuntu Pro token.
+To configure your Ubuntu instances to Pro-attach, you must have an {term}`Ubuntu Pro token`.
 
 If necessary, you can verify that your [firewall rules are correctly set up](../reference/firewall_requirements.md).
 

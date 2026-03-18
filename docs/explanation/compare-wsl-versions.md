@@ -19,7 +19,7 @@ There are significant architectural differences between the two versions, which 
 
 The primary difference between WSL 1 and WSL 2 is that WSL 1 functions as a compatibility layer, translating Linux system calls for the Windows kernel and providing only partial support for Linux system calls. In contrast, WSL 2 runs a full Linux kernel inside a lightweight virtual machine, offering complete system call compatibility. This fundamental architectural difference leads to significant variations in capabilities and performance between the two versions.
 
-As WSL 1 only has partial support for Linux system calls, some programs may not behave as expected when using WSL 1. Additionally, WSL 1 lacks support for graphical applications and systemd, a system and service management suite.
+As WSL 1 only has partial support for Linux system calls, some programs may not behave as expected when using WSL 1. Additionally, WSL 1 lacks support for graphical applications and {term}`systemd`, a system and service management suite.
 
 In most cases, applications that are entirely contained in WSL will be faster on WSL 2, particularly for file IO intensive applications. However, WSL 1 has faster access to files mounted from Windows, so for certain use cases, WSL 1 may be faster.
 
@@ -42,8 +42,8 @@ The differences between WSL 1 and WSL 2 and how it affects Ubuntu can be summari
 | [Snap](https://snapcraft.io/) support                                 |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [cloud-init](https://cloud-init.io/) support                          |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [Ubuntu Pro for WSL](../tutorials/getting-started-with-up4w/) support |    {bdg-danger}`No`    | {bdg-success}`Yes` |
-| [Landscape](ref::landscape-client) support                            |    {bdg-danger}`No`    | {bdg-success}`Yes` |
-| [Ubuntu Pro Client](ref::ubuntu-pro-client) support                   | {bdg-warning}`Partial` | {bdg-success}`Yes` |
+| [Landscape]({term}`Landscape client`) support                            |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| [Ubuntu Pro Client]({term}`Ubuntu Pro client`) support                   | {bdg-warning}`Partial` | {bdg-success}`Yes` |
 
 ### How this affects Ubuntu for WSL
 
@@ -53,7 +53,7 @@ While Ubuntu works on WSL 1, the experience may be degraded relative to WSL 2. T
 
 ### How this affects Ubuntu Pro for WSL
 
-[Pro for WSL](../tutorials/getting-started-with-up4w/) relies on systemd for much of its functionality, including automatic Pro attachment, so it does not support WSL 1. For the same reason, the [Landscape](ref::landscape-client) tool for remote management of Ubuntu instances is also not supported on WSL 1. You can still manually attach your WSL 1 instance to [Ubuntu Pro](https://documentation.ubuntu.com/pro/) using the [Ubuntu Pro Client](ref::ubuntu-pro-client), although some of Ubuntu Pro's features may not work on WSL 1.
+[Pro for WSL](../tutorials/getting-started-with-up4w/) relies on systemd for much of its functionality, including automatic Pro attachment, so it does not support WSL 1. For the same reason, the [{term}`Landscape client`] tool for remote management of Ubuntu instances is also not supported on WSL 1. You can still manually attach your WSL 1 instance to [Ubuntu Pro](https://documentation.ubuntu.com/pro/) using the [{term}`Ubuntu Pro client`], although some of Ubuntu Pro's features may not work on WSL 1.
 
 ### Switching WSL versions
 
