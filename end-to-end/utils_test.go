@@ -121,6 +121,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 	require.NotEmptyf(t, home, "Agent setup: $env:UserProfile should not be empty")
 
 	require.Eventually(t, func() bool {
+		//nolint:gosec // G703 - The path is controlled by our tests.
 		_, err := os.Stat(filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName))
 		if errors.Is(err, fs.ErrNotExist) {
 			return false
@@ -213,6 +214,7 @@ func logWindowsAgentOnError(t *testing.T) {
 	}
 
 	logsPath := filepath.Join(userProfile, common.UserProfileDir, "log")
+	//nolint:gosec // G703 - The path is controlled by our tests.
 	out, err := os.ReadFile(logsPath)
 	if err != nil {
 		t.Logf("could not read Windows Agent's logs at %q: %v", logsPath, err)

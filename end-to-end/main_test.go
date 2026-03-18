@@ -394,6 +394,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	}
 
 	path = filepath.Join(tmpDir, "snapshot.vhdx")
+	//nolint:gosec // G204 - We control the inputs.
 	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, path, "--vhd").CombinedOutput()
 	if err != nil {
 		defer cleanup()
