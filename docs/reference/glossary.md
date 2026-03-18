@@ -32,7 +32,7 @@ distribution
     Related topic(s): {term}`instance`, {term}`legacy distro`, {term}`modern distro`, {term}`WSL`
 
 instance
-    A uniquely-named Linux distribution that has been launched through WSL.
+    A uniquely-named Linux distribution installed through WSL.
 
     Related topic(s): {term}`distro`, {term}`instance (disambiguation)`
 
