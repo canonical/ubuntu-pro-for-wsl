@@ -3,6 +3,7 @@ package agent
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"syscall"
 
@@ -18,8 +19,12 @@ func createLockFile(path string) (f *os.File, err error) {
 	if err != nil {
 		return nil, err
 	}
+	fd := f.Fd()
+	if fd > math.MaxInt {
+		return nil, fmt.Errorf("file descriptor %d exceeds maximum integer value", fd)
+	}
 	// This would only fail if the file is locked by another process.
-	err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	err = syscall.Flock(int(fd), syscall.LOCK_EX|syscall.LOCK_NB)
 	if err != nil {
 		return nil, fmt.Errorf("could not lock file: %v", errors.Join(err, f.Close()))
 	}
