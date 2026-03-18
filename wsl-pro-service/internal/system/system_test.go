@@ -821,6 +821,9 @@ func TestStrictUTF16Transform(t *testing.T) {
 
 	// Helper to encode a normal BMP character (e.g., 'A')
 	encodeBMP := func(r rune) []byte {
+		if r < 0 || r > math.MaxUint16 {
+			panic(fmt.Sprintf("rune %U is outside the Basic Multilingual Plane", r))
+		}
 		b := make([]byte, 2)
 		binary.LittleEndian.PutUint16(b, uint16(r))
 		return b
