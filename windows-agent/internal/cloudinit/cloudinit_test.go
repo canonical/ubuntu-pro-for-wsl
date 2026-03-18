@@ -135,6 +135,7 @@ hostagent_uid = landscapeUID1234
 			dir := filepath.Join(publicDir, ".cloud-init")
 			path := filepath.Join(dir, "agent.yaml")
 
+			//nolint:gosec // G101 false positive, not real crendentials.
 			conf := &mockConfig{
 				proToken:      "OLD_PRO_TOKEN",
 				landscapeConf: landscapeConfigOld,
