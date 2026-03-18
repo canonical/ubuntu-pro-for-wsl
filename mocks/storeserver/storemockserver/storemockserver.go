@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -213,6 +214,7 @@ func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	//nolint:gosec // G705 - This is a mock server, we control the responses.
 	fmt.Fprintf(w, `{%q:%q}`, JWTResponseKey, responseValue)
 }
 
@@ -244,6 +246,13 @@ func (s *Server) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{%q:%s}`, "products", string(bs))
 }
 
+// renderJSON is a helper to ensure ALL responses are safe JSON.
+func renderJSON(w http.ResponseWriter, code int, data interface{}) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	return json.NewEncoder(w).Encode(data)
+}
+
 func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get(ProductIDParam)
 
@@ -254,19 +263,19 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if id == NonExistentValue {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "product %s does not exist", id)
+		_ = renderJSON(w, http.StatusBadRequest, map[string]string{"error": "product does not exist", "id": id})
 		return
 	}
 
+	sanitizedID := strings.ReplaceAll(strings.ReplaceAll(id, "\n", "\\n"), "\r", "\\r")
 	if id == ServerErrorValue {
-		slog.Info(fmt.Sprintf("%s: server error triggered. Product ID was: %s", PurchasePath, id))
+		slog.Info(fmt.Sprintf("%s: server error triggered. Product ID was: %s", PurchasePath, sanitizedID))
 		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, ServerErrorResult)
 		return
 	}
 
 	if id == CannotPurchaseValue {
-		slog.Info(fmt.Sprintf("%s: purchase error triggered. Product ID was: %s", PurchasePath, id))
+		slog.Info(fmt.Sprintf("%s: purchase error triggered. Product ID was: %s", PurchasePath, sanitizedID))
 		fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, NotPurchasedResult)
 		return
 	}
@@ -282,7 +291,7 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if p.IsInUserCollection {
-			slog.Info(fmt.Sprintf("%s: product %q already in user collection", PurchasePath, id))
+			slog.Info(fmt.Sprintf("%s: product %q already in user collection", PurchasePath, sanitizedID))
 			fmt.Fprintf(w, `{%q:%q}`, PurchaseStatusKey, AlreadyPurchasedResult)
 			return
 		}
@@ -296,5 +305,5 @@ func (s *Server) handlePurchase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusBadRequest)
-	fmt.Fprintf(w, "product %s does not exist", id)
+	_ = renderJSON(w, http.StatusBadRequest, map[string]string{"error": "product does not exist", "id": id})
 }
