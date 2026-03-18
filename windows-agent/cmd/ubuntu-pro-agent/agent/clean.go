@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -64,7 +65,15 @@ func cleanLocation(rootEnv, relpath string) error {
 		return fmt.Errorf("could not clean up location: environment variable %q is not set", rootEnv)
 	}
 
-	path := filepath.Join(root, relpath)
+	intended := filepath.Join(root, relpath)
+	path := filepath.Clean(intended)
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return fmt.Errorf("failed to calculate relative path: %v", err)
+	}
+	if strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+		return fmt.Errorf("security violation: path %s escapes root %s", path, root)
+	}
 	if err := os.RemoveAll(path); err != nil {
 		return fmt.Errorf("could not clean up location %s: %v", path, err)
 	}
