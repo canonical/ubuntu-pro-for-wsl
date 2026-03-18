@@ -308,6 +308,7 @@ func ProMock(t *testing.T) {
 			}
 
 			p := filepath.Join(root, ".pro-attached")
+			//nolint:gosec // G703 - We control the inputs because this mock is only executed in tests.
 			if err := os.WriteFile(p, []byte{}, 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
 			}
@@ -346,6 +347,7 @@ func ProMock(t *testing.T) {
 			}
 
 			p := filepath.Join(root, ".pro-detached")
+			//nolint:gosec // G703 - We control the inputs because this mock is only executed in tests.
 			if err := os.WriteFile(p, []byte{}, 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
 			}
@@ -394,6 +396,7 @@ func LandscapeConfigMock(t *testing.T) {
 
 			// Proving that this executable has run
 			p := filepath.Join(root, ".landscape-disabled")
+			//nolint:gosec // G703 - We control the inputs because this mock is only executed in tests.
 			if err := os.WriteFile(p, []byte{}, 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
 			}
@@ -428,6 +431,7 @@ func LandscapeConfigMock(t *testing.T) {
 			}
 
 			path := filepath.Join(root, argv[1])
+			//nolint:gosec // G703 - We control the inputs because this mock is only executed in tests.
 			stat, err := os.Stat(path)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Could not read config file %q: %v\n", path, err)
@@ -445,12 +449,14 @@ func LandscapeConfigMock(t *testing.T) {
 			}
 
 			// Proving that this executable has run
+			//nolint:gosec // G703 - We control the inputs because this mock is only executed in tests.
 			config, err := os.ReadFile(path)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error: could not read file: %v", err)
 			}
 
 			p := filepath.Join(root, ".landscape-enabled")
+			//nolint:gosec // G703 - We control the inputs because this mock is only executed in tests.
 			if err := os.WriteFile(p, config, 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: could not write file: %v", err)
 			}
