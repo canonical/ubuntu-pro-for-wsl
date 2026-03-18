@@ -1,3 +1,4 @@
+//nolint:gosec // G204 // We control the input variables, there is no risk of command injection.
 package system
 
 import (
