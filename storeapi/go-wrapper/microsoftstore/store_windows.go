@@ -91,6 +91,9 @@ func call(proc *syscall.LazyProc, args ...uintptr) (int64, error) {
 	}
 
 	hresult, _, err := proc.Call(args...)
+	//nolint:gosec //G115 it's OK because we want the wraparound behaviour. Although the API
+	//returns a uintptr, the value is actually a signed int64 and can be negative, thus
+	//guaranteed to fit in an int64.
 	return checkError(int64(hresult), err)
 }
 
