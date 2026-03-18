@@ -218,7 +218,8 @@ func (a *App) publicDir(opts options) (string, error) {
 
 		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
 	}
-
+	//nolint:gosec // G703 not applicable as the caller should be allowed to point publicDir
+	//anywhere they want, especially for testing.
 	if err := os.MkdirAll(opts.publicDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create public dir %s: %v", opts.publicDir, err)
 	}
@@ -237,6 +238,8 @@ func (a *App) privateDir(opts options) (string, error) {
 		opts.privateDir = filepath.Join(localAppData, common.LocalAppDataDir)
 	}
 
+	//nolint:gosec // G703 not applicable as the caller should be allowed to point publicDir
+	//anywhere they want, especially for testing.
 	if err := os.MkdirAll(opts.privateDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create private dir %s: %v", opts.privateDir, err)
 	}
