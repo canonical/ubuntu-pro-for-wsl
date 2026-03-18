@@ -291,6 +291,7 @@ func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 		return 0, errors.New("cannot have more than one listener per key handle")
 	}
 
+	//nolint:gosec // G118: cancel() is called somewhere else, not here.
 	handle.ctx, handle.cancelCtx = context.WithCancel(context.Background())
 
 	// Create event
@@ -387,6 +388,7 @@ func (r *Mock) SetDWordValue(ptr Key, field string, value uint32) error {
 }
 
 func (r *Mock) newEvent(ctx context.Context) Event {
+	//nolint:gosec // G118: cancel() is called somewhere else, not here.
 	ctx, cancel := context.WithCancel(ctx)
 
 	return r.eventHandles.alloc(&eventHandle{

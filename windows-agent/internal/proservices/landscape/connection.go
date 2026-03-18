@@ -44,6 +44,7 @@ func newConnection(ctx context.Context, d serviceData) (conn *connection, err er
 	}
 
 	// A context to control the Landscape client with (needed for as long as the connection lasts)
+	//nolint:gosec // G118: cancel() is called somewhere else, not here.
 	ctx, cancel := context.WithCancel(ctx)
 
 	conn = &connection{
