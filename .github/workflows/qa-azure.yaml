@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_VM_CREDS }}
       - name: Start the Runner
@@ -172,7 +172,7 @@ jobs:
     if: always()
     steps:
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_VM_CREDS }}
       - name: Deallocate the Runner
