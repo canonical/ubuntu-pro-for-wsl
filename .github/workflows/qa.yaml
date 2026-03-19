@@ -286,6 +286,11 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           path: ./artifacts/
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./artifacts/*/coverage.out.codecov
+          disable_search: true
       - name: Combine coverage reports
         shell: bash
         run: |
@@ -294,11 +299,6 @@ jobs:
         with:
           name: unified-coverage
           path: ./coverage/Cobertura.xml
-      - uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/Cobertura.xml,./artifacts/*/coverage.out.codecov
-          disable_search: true
 
       - name: Determine TiCS run conditions
         id: tics-condition
