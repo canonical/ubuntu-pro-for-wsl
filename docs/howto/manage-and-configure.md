@@ -143,7 +143,7 @@ Run `wsl -l -v` to check if the renamed distro is listed.
 (howto::new-instance-name)=
 ### Creating a new instance with a custom name
 
-A `--name` flag can be used with `wsl.exe` to customise
+The `--name` flag can be used with `wsl.exe` to customise
 the name of an instance during installation:
 
 ```{code-block} text
