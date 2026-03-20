@@ -40,7 +40,7 @@ We recommend that any installed instance of Ubuntu on WSL is exported then delet
 You can then install it as described in this tutorial.
 At the end of the tutorial you can import and restore your data.
 
-Read our [how-to guide on backup and restore](../howto/backup-and-restore.md).
+Read our [guidance on backup and restore](howto::backup).
 ```
 
 ## What you will need
