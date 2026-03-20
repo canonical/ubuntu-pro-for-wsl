@@ -55,12 +55,13 @@ runs:
         fi
 
         dart pub global activate cobertura
+        # Default input is coverage/lcov.info and output is coverage/cobertura.xml
         dart pub global run cobertura convert
     - name: Upload coverage artifacts
       uses: actions/upload-artifact@v4
       with:
         name: coverage-${{ matrix.package }}-${{ matrix.os }}
-        path: ${{ inputs.package-dir }}/coverage/cobertura.xml
+        path: ${{ inputs.package-dir }}/coverage/lcov.info,${{ inputs.package-dir }}/coverage/cobertura.xml
     - name: Cleanup
       shell: bash
       working-directory: "${{ inputs.package-dir }}"

@@ -289,7 +289,7 @@ jobs:
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./artifacts/*/coverage.out.codecov
+          files: ./artifacts/*/coverage.out.codecov,./artifacts/*/lcov.info
           disable_search: true
       - name: Combine coverage reports
         shell: bash
