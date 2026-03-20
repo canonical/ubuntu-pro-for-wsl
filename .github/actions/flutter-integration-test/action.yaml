@@ -29,11 +29,27 @@ runs:
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
       run: |
-        if [ -d integration_test ]; then
-          if [ $(uname) = 'Linux' ]; then
-            xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
-              flutter test integration_test/
-          else
-              flutter test integration_test/
-          fi
+        if [ ! -d integration_test ]; then
+          echo "::warning::No integration tests found, skipping."
+          exit 0
         fi
+
+        if [ $(uname) = 'Linux' ]; then
+          xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
+            flutter test --coverage integration_test/
+        else
+            flutter test --coverage integration_test/
+        fi
+        dart pub global activate cobertura
+        # Default input is coverage/lcov.info and output is coverage/cobertura.xml
+        dart pub global run cobertura convert
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.package }}-${{ matrix.os }}-integration
+        path: ${{ inputs.package-dir }}/coverage/*
+    - name: Cleanup
+      shell: bash
+      working-directory: "${{ inputs.package-dir }}"
+      run: |
+        rm -rf ./coverage
