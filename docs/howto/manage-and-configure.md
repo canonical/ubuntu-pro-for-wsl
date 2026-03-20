@@ -46,7 +46,7 @@ To backup an Ubuntu-24.04 instance, first make a `backup` folder:
 > mkdir backup
 ```
 
-You then need to create a compressed version of the Ubuntu instance in that backup directory:
+Then create a compressed version of the Ubuntu instance in that backup directory:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
@@ -64,7 +64,7 @@ To backup an Ubuntu-24.04 instance, first make a `backup` folder:
 > mkdir backup
 ```
 
-You then need to create a `.vhdx` of the Ubuntu instance in that backup directory:
+Then create a `.vhdx` of the Ubuntu instance in that backup directory:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
@@ -84,7 +84,7 @@ To learn more about managing VHD for WSL, read Microsoft's [how to manage WSL di
 Once you have created a backup of your Ubuntu instance, it is safe to
 remove it from WSL and delete all associated data.
 
-This can be achieved with the following command:
+Remove the instance with the following command:
 
 ```{code-block} text
 > wsl --unregister Ubuntu-24.04
@@ -110,7 +110,7 @@ To restore the Ubuntu-24.04 instance that you have previously backed up as a tar
 ````{tab-item} Using VHD
 :sync: vhd
 To restore the Ubuntu-24.04 instance that you have previously backed up as a VHD,
-you can create a copy of the VHD:
+create a copy of the VHD:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
@@ -131,7 +131,6 @@ wsl --import-in-place Ubuntu-24.04 .\backup\Ubuntu-24.04.vhdx
 After restoring your backup of Ubuntu-24.04, it can be launched as normal.
 The instance should be restored with your previous configuration intact.
 
-To login as a user `k`, created with the original instance, run: 
 To log in as a user `k`, created with the original instance, run: 
 
 ```{code-block} text
@@ -207,14 +206,14 @@ Run `wsl -l -v` to check if the renamed distro is listed.
 (howto::new-instance-name)=
 ### Creating a new instance with a custom name
 
-The `--name` flag can be used with `wsl.exe` to customise
+The `--name` flag can be used with `wsl.exe` to customize
 the name of an instance during installation:
 
 ```{code-block} text
 > wsl --install Ubuntu-24.04 --name UbuntuWebDev
 ```
 
-The instance can then be launched as normal:
+Then launch the instance as normal:
 
 ```{code-block} text
 > wsl -d UbuntuWebDev
@@ -230,13 +229,11 @@ This can be used for automatic configuration of local or remote instances.
 (howto::auto-config-cloud-init)=
 ### Automatic configuration of local instances
 
-Cloud-init can be used to automatically configure an Ubuntu instance
-during installation.
-
-You create the configuration files in the `.cloud-init` directory, which
+When adding configuration files for cloud-init, use the `.cloud-init` directory, which
 must be located in your Windows home directory.
 
-Create a `.user-data` file that matches the instances that will be installed
+To automatically configure an Ubuntu instance during installation,
+first create a `.user-data` file that matches the instances that will be installed
 and configured:
 
 ```{code-block} text
@@ -249,8 +246,6 @@ C:\Users\<user>
 
 In this case, `Ubuntu-22.04` and `Ubuntu-24.04` will be automatically configured on installation.
 
-You can create unique cloud-init configuration setups for one distribution (e.g., Ubuntu 24.04),
-as long as you are installing instances with a unique name.
 You can create multiple unique cloud-init configuration setups for a single distribution (e.g., Ubuntu 24.04),
 as long as you are installing instances of that distribution that have been assigned unique names.
 as long as you are installing instances of the distribution that have been assigned unique names.
@@ -267,14 +262,12 @@ C:\Users\<user>
     └── Ubuntu-data-science.user-data
 ```
 
-For details on the contents of these configuration files, read our dedicated [cloud-init guide](howto::cloud-init).
 ```{admonition} How to write a cloud-init configuration
 :class: tip
 For details on the contents of cloud-init configuration files, read our dedicated [cloud-init guide](howto::cloud-init).
 ```
 
-While there is a configuration for a regular `Ubuntu-24.04` installation, there are also configurations
-for instances of Ubuntu 24.04 that have been assigned a specific name:
+Install instances of the Ubuntu-24.04 distribution that will have your unique configurations applied using the `--name` flag:
 
 ```{code-block} text
 > wsl --install Ubuntu-24.04 --name UbuntuWebDev
