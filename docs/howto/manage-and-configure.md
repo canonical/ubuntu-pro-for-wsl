@@ -46,6 +46,7 @@ You then need to create a compressed version of the Ubuntu instance in that back
 ### Removing and deleting the instance
 
 Once you have created a backup of your Ubuntu instance it is safe to
+Once you have created a backup of your Ubuntu instance, it is safe to
 remove it from WSL and delete all associated data.
 
 This can be achieved with the following command:
@@ -70,6 +71,7 @@ This will import your previous data and if you run `wsl -d Ubuntu-24.04`, an Ubu
 should be restored with your previous configuration intact.
 
 To login as a user `k`, created with the original instance, run: 
+To log in as a user `k`, created with the original instance, run: 
 
 ```{code-block} text
 > wsl -d Ubuntu-24.04 -u k
@@ -105,6 +107,8 @@ different names than the original backup:
 ```
 
 This will create two additional instances of Ubuntu 24.04 that can be launched and configured independently.
+This will create two additional instances of Ubuntu 24.04 with unique names
+that can be launched and configured independently.
 
 In PowerShell, running `wsl -l -v` will output the new instances in your list of installed instances:
 
@@ -116,7 +120,7 @@ ubuntu2404b     Stopped       2
 ubuntu2404c     Stopped       2
 ```
 
-To launch the first derived instance and login as the user `k` run:
+To launch the first derived instance and log in as the user `k` run:
 
 ```{code-block} text
 > wsl -d ubuntu2404b -u k
@@ -187,6 +191,9 @@ In this case, `Ubuntu-22.04` and `Ubuntu-24.04` will be automatically configured
 
 You can create unique cloud-init configuration setups for one distribution (e.g., Ubuntu 24.04),
 as long as you are installing instances with a unique name.
+You can create multiple unique cloud-init configuration setups for a single distribution (e.g., Ubuntu 24.04),
+as long as you are installing instances of that distribution that have been assigned unique names.
+as long as you are installing instances of the distribution that have been assigned unique names.
 
 Extending the previous example, you can add instance configurations for specific projects:
 
@@ -201,6 +208,10 @@ C:\Users\<user>
 ```
 
 For details on the contents of these configuration files, read our dedicated [cloud-init guide](howto::cloud-init).
+```{admonition} How to write a cloud-init configuration
+:class: tip
+For details on the contents of cloud-init configuration files, read our dedicated [cloud-init guide](howto::cloud-init).
+```
 
 While there is a configuration for a regular `Ubuntu-24.04` installation, there are also configurations
 for instances of Ubuntu 24.04 that have been assigned a specific name:
@@ -228,7 +239,8 @@ deployment](tut::deploy).
 ## Configuration with custom images
 
 If you want to control the default configurations and packages available
-at the distro-level, you can create a custom Ubuntu image for WSL.
+at the distro-level, you can create a custom Ubuntu image for WSL that
+can be shared and distributed.
 
 For more detail, refer to our dedicated guide on [customizing an Ubuntu
 image](howto::custom-distro).
