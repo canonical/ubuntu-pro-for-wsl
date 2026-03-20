@@ -28,6 +28,17 @@ Microsoft's official documentation has general guidelines for:
 (howto::backup)=
 ## Backing up an instance
 
+When backing up an instance, you can export a tarball or the virtual hard disk
+(VHD) for the instance.
+
+Using a VHD has the advantage of not requiring a compression/decompression step.
+
+`````{tab-set}
+:sync-group: backup
+
+````{tab-item} Using tarballs
+:sync: tarballs
+
 To backup an Ubuntu-24.04 instance, first make a `backup` folder:
 
 ```{code-block} text
@@ -42,10 +53,34 @@ You then need to create a compressed version of the Ubuntu instance in that back
 > wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
 ```
 
+````
+
+````{tab-item} Using VHD
+:sync: vhd
+To backup an Ubuntu-24.04 instance, first make a `backup` folder:
+
+```{code-block} text
+:caption: C:\Users\\\<username>
+> mkdir backup
+```
+
+You then need to create a `.vhdx` of the Ubuntu instance in that backup directory:
+
+```{code-block} text
+:caption: C:\Users\\\<username>
+> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.vhdx --format vhd
+```
+````
+`````
+
+```{admonition} Virtual Hard Disk
+:class: tip
+To learn more about managing VHD for WSL, read Microsoft's [how to manage WSL disk space](https://learn.microsoft.com/en-us/windows/wsl/disk-space).
+```
+
 (howto::removal)=
 ### Removing and deleting the instance
 
-Once you have created a backup of your Ubuntu instance it is safe to
 Once you have created a backup of your Ubuntu instance, it is safe to
 remove it from WSL and delete all associated data.
 
@@ -58,17 +93,43 @@ This can be achieved with the following command:
 (howto::restoring)=
 ### Restoring the backed-up instance
 
-To restore the Ubuntu-24.04 instance that you have previously backed up,
-you need to pass the name of the instance, the install location, and the name of the
-backup to `wsl --import`:
+`````{tab-set}
+:sync-group: backup
+
+````{tab-item} Using tarballs
+:sync: tarballs
+
+To restore the Ubuntu-24.04 instance that you have previously backed up as a tarball:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
 > wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.tar.gz
 ```
+````
 
-This will import your previous data and if you run `wsl -d Ubuntu-24.04`, an Ubuntu WSL instance
-should be restored with your previous configuration intact.
+````{tab-item} Using VHD
+:sync: vhd
+To restore the Ubuntu-24.04 instance that you have previously backed up as a VHD,
+you can create a copy of the VHD:
+
+```{code-block} text
+:caption: C:\Users\\\<username>
+> wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.vhdx --vhd
+```
+
+A quicker option is to import the already filled, ready-to-use, virtual hard drive:
+
+```{code-block} text
+:caption: C:\Users\\\<username>
+wsl --import-in-place Ubuntu-24.04 .\backup\Ubuntu-24.04.vhdx
+```
+````
+`````
+
+### Using the restored backup
+
+After restoring your backup of Ubuntu-24.04, it can be launched as normal.
+The instance should be restored with your previous configuration intact.
 
 To login as a user `k`, created with the original instance, run: 
 To log in as a user `k`, created with the original instance, run: 
@@ -96,9 +157,9 @@ configurations.
 (howto::duplication)=
 ### Creating duplicate instances with unique names
 
-It is also possible to create multiple instances from a base instance.
-Here, the restore process is repeated but the new instances are assigned
-different names than the original backup:
+It is possible to create multiple instances from a base instance. For example,
+to create multiple new instances from an instance that has been backed up as a
+tarball:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
@@ -106,7 +167,6 @@ different names than the original backup:
 > wsl --import ubuntu2404c .\backup\Ubuntu2404c\ .\backup\Ubuntu-24.04.tar.gz
 ```
 
-This will create two additional instances of Ubuntu 24.04 that can be launched and configured independently.
 This will create two additional instances of Ubuntu 24.04 with unique names
 that can be launched and configured independently.
 
