@@ -194,14 +194,18 @@ Stop all WSL instances:
 > wsl --shutdown
 ```
 
-Open the registry editor and go to [the section on naming instances](howto::naming).
+Open the registry editor and find:
 
 `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss`
 
-Find the instance you want to rename and change the value for
+Go to the WSL instance that you want to rename and change the value for
 `DistributionName`.
 
-Run `wsl -l -v` to check if the renamed distro is listed.
+To confirm that the instance has been renamed, run
+
+```{code-block} text
+> wsl -l -v
+```
 
 (howto::new-instance-name)=
 ### Creating a new instance with a custom name
