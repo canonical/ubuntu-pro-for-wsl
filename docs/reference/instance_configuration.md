@@ -15,7 +15,7 @@ Each configuration method has a different scope and use-case. Depending on the m
 | --------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | [WSL Settings](ref::wsl-settings) | General settings that apply to all WSL instances                   | Graphical application named `WSL Settings` pre-installed with WSL                          |
 | [`.wslconfig`](ref::.wslconfig)   | General settings that apply to all WSL instances                   | `%UserProfile%\.wslconfig`, in the Windows file system                                     |
-| [`wsl.config`](ref::wsl.config)   | Settings for a specific WSL instance only                          | `/etc/wsl.conf`, while inside a WSL instance                                               |
+| [`wsl.conf`](ref::wsl.conf)   | Settings for a specific WSL instance only                          | `/etc/wsl.conf`, while inside a WSL instance                                               |
 | [Cloud-init](ref::cloud-init)     | Ubuntu provisioning settings for instances of a named distribution | `<Distro Name>.userdata` files in `%UserProfile%\.cloud-init\`, in the Windows file system |
 | [Ubuntu Pro for WSL](ref::up4w)   | Pro settings that apply to all compatible Ubuntu instances         | Installable [graphical application ](howto::up4w)                                          |
 
@@ -41,25 +41,25 @@ For changes to apply, you may need to run `wsl --shutdown` from PowerShell to sh
 
 > [Read more about `.wslconfig`](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig)
 
-(ref::wsl.config)=
+(ref::wsl.conf)=
 
-## wsl.config
+## wsl.conf
 
-Each unique instance can be configured using the `wsl.config` file located at `/etc/wsl.config` within a given WSL instance. Settings stored in this file are only applied to that instance.
+Each unique instance can be configured using the `wsl.conf` file located at `/etc/wsl.conf` within a given WSL instance. Settings stored in this file are only applied to that instance.
 
-To modify this file, enter the target WSL instance, and then open `/etc/wsl.config` in a text editor of your choice with admin permissions using `sudo`. For example, `sudo nano /etc/wsl.config`.
+To modify this file, enter the target WSL instance, and then open `/etc/wsl.conf` in a text editor of your choice with admin permissions using `sudo`. For example, `sudo nano /etc/wsl.conf`.
 
-The `wsl.config` file can be used to configure instance-specific settings such as {term}`systemd` support, automount settings, network settings, interoperability settings, and user settings.
+The `wsl.conf` file can be used to configure instance-specific settings such as systemd support, automount settings, network settings, interoperability settings, and user settings.
 
 ```{warning}
-Certain settings in `.wslconfig` are incompatible with specific Ubuntu features. For example, we generally recommend keeping systemd and interoperability enabled.
+Certain settings in `wsl.conf` are incompatible with specific Ubuntu features. For example, we generally recommend keeping systemd and interoperability enabled.
 
 For additional information on how features like systemd and interoperability affect the functionality of Ubuntu on WSL, please see the explanation page [comparing WSL versions](explanation::wsl-version).
 ```
 
-To apply changes made to a `wsl.config` file, you need to restart your WSL instances by running `wsl --shutdown` or `wsl --terminate <Instance Name>` from PowerShell. Confirm that the instance is no longer running with `wsl --list --running`.
+To apply changes made to a `wsl.conf` file, you need to restart your WSL instances by running `wsl --shutdown` or `wsl --terminate <Instance Name>` from PowerShell. Confirm that the instance is no longer running with `wsl --list --running`.
 
-> [Read more about `wsl.config`](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconf)
+> [Read more about `wsl.conf`](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconf)
 
 (ref::cloud-init)=
 
