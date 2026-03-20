@@ -1,6 +1,8 @@
 // Package microsoftstore is a wrapper around storeapi.dll
 package microsoftstore
 
+import "errors"
+
 // StoreAPIError are the error constants in the store api.
 type StoreAPIError int64
 
@@ -69,3 +71,6 @@ func (err StoreAPIError) Error() string {
 		return "undefined"
 	}
 }
+
+// ErrCantLoadDLL is the error returned when the DLL cannot be loaded, which can happen if the DLL is not present or if there are missing dependencies.
+var ErrCantLoadDLL = errors.New("storeapi.dll not found or failed to load")

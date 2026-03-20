@@ -78,14 +78,17 @@ func TestGenerateUserJWT(t *testing.T) {
 }
 
 func TestGetSubscriptionExpirationDate(t *testing.T) {
-	if runtime.GOOS != "windows" {
-		t.Skip("This test is only supported on Windows")
+	var wantErr error
+	if runtime.GOOS == "windows" {
+		wantErr = microsoftstore.ErrNoProductsFound
+	} else {
+		wantErr = microsoftstore.ErrCantLoadDLL
 	}
 
-	wantErr := microsoftstore.ErrNoProductsFound
-
+	dllPath := filepath.Join(filepath.Dir(os.Args[0]), "storeapi.dll")
+	_ = os.Remove(dllPath) //nolint:gosec // G703 - we control this path, no risk of traversal attacks.
 	_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
-	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned code %d", wantErr)
+	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned error %v", wantErr)
 }
 
 func TestErrorVerification(t *testing.T) {

@@ -108,13 +108,13 @@ func (d *StoreAPIDLL) loadDll() error {
 
 	path, err := locateStoreDll()
 	if err != nil {
-		return fmt.Errorf("could not find Microsoft Store API dll: %v", err)
+		return errors.Join(ErrCantLoadDLL, err)
 	}
 
 	d.dll.Name = path
 	if err = d.dll.Load(); err != nil {
 		d.dll.Name = ""
-		return fmt.Errorf("could not load the Microsoft Store API dll: %v", err)
+		return errors.Join(ErrCantLoadDLL, err)
 	}
 
 	return nil
