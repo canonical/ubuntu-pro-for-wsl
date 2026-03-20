@@ -23,6 +23,10 @@ type StoreAPIDLL struct {
 
 var singleton *StoreAPIDLL
 
+func init() {
+	reset()
+}
+
 // GenerateUserJWT takes an azure AD server access token and returns a Windows store token.
 func GenerateUserJWT(azureADToken string) (jwt string, err error) {
 	defer decorate.OnError(&err, "couldn't generate a user JWT from the Microsoft Store API")

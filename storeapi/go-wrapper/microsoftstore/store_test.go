@@ -91,6 +91,56 @@ func TestGetSubscriptionExpirationDate(t *testing.T) {
 	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned error %v", wantErr)
 }
 
+func TestGetSubscriptionExpirationDateUnix(t *testing.T) {
+	// This test cannot be parallel because it relies on setting global state, like the DLL
+	// singleton errors and the filesystem.
+	if runtime.GOOS == "windows" {
+		t.Skip("This test is meant to run on Unix like platforms where the DLL can't be loaded, to test error handling in that case")
+	}
+	defer microsoftstore.ResetErrors()
+	errLoad := errors.New("test wants to not load DLL")
+	errFind := errors.New("test wants to not find procedure")
+
+	testcases := map[string]struct {
+		loadFailure bool
+		findFailure bool
+		callFailure bool
+	}{
+		"Default failure path":             {},
+		"When loading DLL fails":           {loadFailure: true},
+		"When finding procedure fails":     {findFailure: true},
+		"When calling the procedure fails": {callFailure: true},
+	}
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			microsoftstore.ResetErrors()
+			//pretend there is a DLL aside of this binary.
+			dir := filepath.Dir(os.Args[0])
+			dllPath := filepath.Join(dir, "storeapi.dll")
+			//nolint:gosec // G703 - we control this path, no risk of traversal attacks.
+			require.NoError(t, os.WriteFile(dllPath, []byte{0x00}, 0600), "Setup: could not write invalid DLL file to test call failure")
+
+			var wantErr error
+			if tc.loadFailure {
+				wantErr = errLoad
+				microsoftstore.WithLoadDLLFailure(errLoad)
+			} else if tc.callFailure {
+				wantErr = microsoftstore.ErrUnimplemented
+				microsoftstore.WithCallProcFailure(microsoftstore.ErrUnimplemented)
+			} else if tc.findFailure {
+				wantErr = errFind
+				microsoftstore.WithFindProcFailure(errFind)
+			} else {
+				//nolint:gosec // G703 - we control this path, no risk of traversal attacks.
+				require.NoError(t, os.Remove(dllPath), "Setup: could not remove the invalid DLL file")
+				wantErr = microsoftstore.ErrCantLoadDLL
+			}
+
+			_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
+			require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned specific error %v", wantErr)
+		})
+	}
+}
 func TestErrorVerification(t *testing.T) {
 	t.Parallel()
 	testcases := map[string]struct {
