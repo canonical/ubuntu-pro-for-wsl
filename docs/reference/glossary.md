@@ -155,6 +155,13 @@ Ubuntu Pro token
 
     Related topic(s): {term}`Ubuntu Pro`, {term}`Ubuntu Pro client`
 
+VHD
+Virtual Hard Disk
+    A unique `.vhdx` file that is created when any Linux distribution is
+    installed using WSL. The VHD for a given WSL instance stores files using an
+    ext4 file system, and is dynamically resized to meet the storage
+    requirements of that instance.
+
 Windows agent
     Pro for WSL's central hub that communicates and coordinates its various
     components.

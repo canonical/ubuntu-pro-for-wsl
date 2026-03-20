@@ -8,7 +8,7 @@ myst:
 (howto::manage-and-configure)=
 # Manage and configure instances of Ubuntu on WSL
 
-This page includes guidance on managing instances of Ubuntu on WSL.
+This page includes guidance on managing {term}`instances <instance>` of Ubuntu on WSL.
 
 (howto::instance-management-resources)=
 ## Additional resources
@@ -29,7 +29,7 @@ Microsoft's official documentation has general guidelines for:
 ## Backing up an instance
 
 When backing up an instance, you can export a tarball or the virtual hard disk
-(VHD) for the instance.
+({term}`VHD`) for the instance.
 
 Using a VHD has the advantage of not requiring a compression/decompression step.
 
@@ -150,7 +150,7 @@ Without specifying a user you will be logged in as the root user.
 ## Naming instances
 
 Assigning unique names to instances can be helpful if you want to install the
-same base distribution for different projects and/or with different
+same base {term}`distribution` for different projects and/or with different
 configurations.
 
 (howto::duplication)=
@@ -194,7 +194,7 @@ Stop all WSL instances:
 > wsl --shutdown
 ```
 
-Open the registry editor and find:
+Open the {term}`registry <Windows registry>` editor and find:
 
 `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss`
 
@@ -210,7 +210,7 @@ To confirm that the instance has been renamed, run
 (howto::new-instance-name)=
 ### Creating a new instance with a custom name
 
-The `--name` flag can be used with `wsl.exe` to customize
+The `--name` flag can be used with {term}`wsl.exe` to customize
 the name of an instance during installation:
 
 ```{code-block} text
@@ -226,7 +226,7 @@ Then launch the instance as normal:
 (howto::auto-config-instances)=
 ## Automatic configuration of instances
 
-New instances can be configured automatically using cloud-init.
+New instances can be configured automatically using {term}`cloud-init`.
 
 This can be used for automatic configuration of local or remote instances.
 
@@ -251,7 +251,6 @@ C:\Users\<user>
 In this case, `Ubuntu-22.04` and `Ubuntu-24.04` will be automatically configured on installation.
 
 You can create multiple unique cloud-init configuration setups for a single distribution (e.g., Ubuntu 24.04),
-as long as you are installing instances of that distribution that have been assigned unique names.
 as long as you are installing instances of the distribution that have been assigned unique names.
 
 Extending the previous example, you can add instance configurations for specific projects:
@@ -284,8 +283,8 @@ instance naming](howto::naming).
 (howto::auto-config-remote)=
 ### Automatic configuration of remote instances
 
-If you centrally manage remote Pro-attached Ubuntu instances using Landscape,
-you can create WSL Profiles to deploy to Windows machines.
+If you centrally manage remote {term}`Pro-attached <Pro-attachment>` Ubuntu instances using {term}`Landscape`,
+you can create {term}`WSL profiles <WSL profile>` to deploy to Windows machines.
 
 These profiles are based on cloud-init.
 
