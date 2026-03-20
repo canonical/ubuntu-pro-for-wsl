@@ -198,8 +198,12 @@ Open the {term}`registry <Windows registry>` editor and find:
 
 `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss`
 
+Each distribution is represented by a unique ID under `Lxss`.
+
 Go to the WSL instance that you want to rename and change the value for
 `DistributionName`.
+
+Select any ID then change the value for `DistributionName` to rename that instance.
 
 To confirm that the instance has been renamed, run
 
