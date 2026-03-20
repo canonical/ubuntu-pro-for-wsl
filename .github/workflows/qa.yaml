@@ -205,9 +205,6 @@ jobs:
         exclude:
           - os: windows
             subproject: wsl-pro-service
-          # Excluded because microsoftstore_test needs msbuild
-          - os: ubuntu
-            subproject: "storeapi/go-wrapper/microsoftstore"
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Check out repository
@@ -224,7 +221,7 @@ jobs:
       # msbuild in the path.
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
-        if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore'
+        if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore' && matrix.os == 'windows'
       - uses: canonical/desktop-engineering/gh-actions/common/dpkg-install-speedup@main
         if: ${{ matrix.os == 'ubuntu' }}
       - name: Install gettext on Linux
