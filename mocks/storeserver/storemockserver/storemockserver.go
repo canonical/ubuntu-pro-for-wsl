@@ -214,7 +214,7 @@ func (s *Server) handleGenerateUserJWT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	//nolint:gosec // G705 - This is a mock server, we control the responses.
+	//#nosec G705 // This is a mock server, we control the responses.
 	fmt.Fprintf(w, `{%q:%q}`, JWTResponseKey, responseValue)
 }
 

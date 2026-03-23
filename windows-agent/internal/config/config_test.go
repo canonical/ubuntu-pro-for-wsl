@@ -538,7 +538,7 @@ func TestUpdateRegistryData(t *testing.T) {
 		t.Parallel()
 	}
 
-	//nolint:gosec // These are not real credentials
+	//#nosec G101 // These are not real credentials
 	const (
 		proToken1      = "UBUNTU_PRO_TOKEN_FIRST"
 		landscapeConf1 = "[host]\nurl=127.0.0.1:8080\n[client]\ngreeting=hello"

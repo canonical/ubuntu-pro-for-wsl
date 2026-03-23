@@ -59,6 +59,6 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 	}
 
 	arguments := append(flags, "/C", cmdStr)
-	//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
+	//#nosec G204 // False positive because we control the args (constructed in the closure above).
 	return exec.CommandContext(ctx, "C:\\Windows\\System32\\cmd.exe", arguments...)
 }

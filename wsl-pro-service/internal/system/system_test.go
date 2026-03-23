@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err, "Setup: could not load fixture")
 				err = os.MkdirAll(filepath.Dir(mock.Path(system.LandscapeConfigPath)), 0700)
 				require.NoError(t, err, "Setup: could not create Landscape config dir")
-				//nolint:gosec // G703 - We control this path, no risk of injection.
+				//#nosec G703 // We control this path, no risk of injection.
 				err = os.WriteFile(mock.Path(system.LandscapeConfigPath), config, 0600)
 				require.NoError(t, err, "Setup: could not write Landscape system config file")
 			}
@@ -299,7 +299,7 @@ func overrideProcMount(t *testing.T, mock *testutils.SystemMock) {
 
 	contents, err := os.ReadFile(procMount)
 	require.NoError(t, err, "Setup: could not read override for /proc/mounts")
-	//nolint:gosec // G703 - We control this path, no risk of injection.
+	//#nosec G703 // We control this path, no risk of injection.
 	err = os.WriteFile(mock.Path("/proc/mounts"), contents, 0600)
 	require.NoError(t, err, "Setup: could not override /proc/mounts")
 }
@@ -572,7 +572,7 @@ func TestWindowsHostAddress(t *testing.T) {
 		from = from + suffix
 		out, err := os.ReadFile(from)
 		require.NoErrorf(t, err, "Setup: could not read file %s", from)
-		//nolint:gosec // G703 - We control this path, no risk of injection.
+		//#nosec G703 // We control this path, no risk of injection.
 		err = os.WriteFile(to, out, 0400)
 		require.NoErrorf(t, err, "Setup: could not write file %s", to)
 	}
@@ -743,7 +743,7 @@ func TestEnsureValidLandscapeConfig(t *testing.T) {
 					require.NoError(t, err, "Setup: could not load fixture")
 					err = os.MkdirAll(filepath.Dir(s.Path(system.LandscapeConfigPath)), 0700)
 					require.NoError(t, err, "Setup: could not create Landscape config dir")
-					//nolint:gosec // G703 - We control this path, no risk of injection.
+					//#nosec G703 // We control this path, no risk of injection.
 					err = os.WriteFile(s.Path(system.LandscapeConfigPath), config, 0600)
 					require.NoError(t, err, "Setup: could not write Landscape system config file")
 				}

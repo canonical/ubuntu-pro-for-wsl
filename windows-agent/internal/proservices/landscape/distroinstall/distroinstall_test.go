@@ -156,7 +156,7 @@ func TestCreateUser(t *testing.T) {
 			ctx, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
 
-			//nolint:gosec // Both distroName and userName are validared in CreateUser
+			//#nosec G204 // Both distroName and userName are validated in CreateUser
 			_, err = exec.CommandContext(ctx, "wsl", "-d", distroName, "-u", username, "--", "sudo", "echo", "hello").Output()
 			require.NoError(t, err, "user should be able to login without a password")
 		})

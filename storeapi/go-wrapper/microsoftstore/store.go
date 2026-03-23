@@ -39,7 +39,7 @@ func GenerateUserJWT(azureADToken string) (jwt string, err error) {
 	var userJWTbegin *byte
 	var userJWTlen uint64
 
-	//nolint:gosec // No other way of calling a Dll proc
+	// #nosec G103 // That's the way of caling a DLL Procedure, passing arguments as uintptrs.
 	if _, err = singleton.call(
 		&singleton.generateUserJWT,
 		uintptr(unsafe.Pointer(accessToken)),
@@ -49,11 +49,10 @@ func GenerateUserJWT(azureADToken string) (jwt string, err error) {
 		return "", fmt.Errorf("GenerateUserJWT: %w", err)
 	}
 
-	//nolint:gosec // This is the way of freeing userJWTbegin per storeapi's API definition
-	// defer windows.CoTaskMemFree(unsafe.Pointer(userJWTbegin))
+	//#nosec G103 // We need unsafe to pass the pointer to the DLL procedure.
 	defer singleton.generateUserJWT.cleanup(unsafe.Pointer(userJWTbegin))
 
-	//nolint:gosec // This is the way of converting a Win32 string to a Go string
+	//#nosec G103 // This is the way of converting a Win32 string to a Go string
 	return string(unsafe.Slice(userJWTbegin, userJWTlen)), nil
 }
 
@@ -68,7 +67,7 @@ func GetSubscriptionExpirationDate() (tm time.Time, err error) {
 
 	var expDate int64
 
-	//nolint:gosec // No other way of calling a Dll proc
+	// #nosec G103 // That's the way of caling a DLL Procedure, passing arguments as uintptrs.
 	if _, err = singleton.call(
 		&singleton.getSubscriptionExpirationDate,
 		uintptr(unsafe.Pointer(prodID)),
@@ -95,9 +94,8 @@ func (d *StoreAPIDLL) call(proc *LazyProc, args ...uintptr) (int64, error) {
 	}
 
 	hresult, _, err := proc.Call(args...)
-	//nolint:gosec //G115 it's OK because we want the wraparound behaviour. Although the API
-	//returns a uintptr, the value is actually a signed int64 and can be negative, thus
-	//guaranteed to fit in an int64.
+	//#nosec G115 // We want the wraparound behaviour. Although the API returns a uintptr, the
+	//value is actually a signed int64 and can be negative, thus guaranteed to fit in an int64.
 	return checkError(int64(hresult), err)
 }
 

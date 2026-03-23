@@ -169,7 +169,7 @@ func compileMoFiles(t *testing.T, localeDir string) {
 			t.Fatalf("couldn't write po file: %v", err)
 		}
 
-		//nolint:gosec // G204 false positive, the binary is hardcoded
+		//#nosec G204 // False positive, the binary is hardcoded
 		cmd := exec.Command("msgfmt", po, "--output-file", mo)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

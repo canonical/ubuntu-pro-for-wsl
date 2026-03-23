@@ -14,8 +14,8 @@ const (
 	// Our Pro Token is much, much smaller.
 	TokenMaxSize = 4096
 
-	//nolint:gosec // G101 false positive, this is not a credential
 	// ADTokenKey is the JSON key of the response payload of the /token endpoint.
+	//#nosec G101 // False positive: this is not a credential
 	ADTokenKey = "azure_ad_token"
 )
 

@@ -85,8 +85,11 @@ func TestGetSubscriptionExpirationDate(t *testing.T) {
 		wantErr = microsoftstore.ErrCantLoadDLL
 	}
 
-	dllPath := filepath.Join(filepath.Dir(os.Args[0]), "storeapi.dll")
-	_ = os.Remove(dllPath) //nolint:gosec // G703 - we control this path, no risk of traversal attacks.
+	r, err := os.OpenRoot(filepath.Dir(os.Args[0]))
+	require.NoError(t, err, "Setup: could not open this binary root directory")
+	defer r.Close()
+	// We just need to make sure the DLL won't be found, not a problem if it already doesn't exist.
+	_ = r.Remove("storeapi.dll")
 	_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
 	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned error %v", wantErr)
 }
@@ -115,10 +118,11 @@ func TestGetSubscriptionExpirationDateUnix(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			microsoftstore.ResetErrors()
 			//pretend there is a DLL aside of this binary.
-			dir := filepath.Dir(os.Args[0])
-			dllPath := filepath.Join(dir, "storeapi.dll")
-			//nolint:gosec // G703 - we control this path, no risk of traversal attacks.
-			require.NoError(t, os.WriteFile(dllPath, []byte{0x00}, 0600), "Setup: could not write invalid DLL file to test call failure")
+			dllName := "storeapi.dll"
+			dir, err := os.OpenRoot(filepath.Dir(os.Args[0]))
+			require.NoError(t, err, "Setup: could not open this binary root directory")
+			require.NoError(t, dir.WriteFile(dllName, []byte{0x00}, 0600), "Setup: could not write invalid DLL file to test call failure")
+			defer dir.Close()
 
 			var wantErr error
 			if tc.loadFailure {
@@ -131,8 +135,7 @@ func TestGetSubscriptionExpirationDateUnix(t *testing.T) {
 				wantErr = errFind
 				microsoftstore.WithFindProcFailure(errFind)
 			} else {
-				//nolint:gosec // G703 - we control this path, no risk of traversal attacks.
-				require.NoError(t, os.Remove(dllPath), "Setup: could not remove the invalid DLL file")
+				require.NoError(t, dir.Remove(dllName), "Setup: could not remove the invalid DLL file")
 				wantErr = microsoftstore.ErrCantLoadDLL
 			}
 
@@ -183,7 +186,7 @@ func buildStoreAPI(ctx context.Context) error {
 		return err
 	}
 
-	//nolint:gosec // Only used in tests.
+	//#nosec G204 // Only used in tests.
 	cmd := exec.CommandContext(ctx, "msbuild",
 		filepath.Join(root, `/msix/storeapi/storeapi.vcxproj`),
 		`-target:Build`,

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -47,7 +45,7 @@ func stopAgent() error {
 
 	filterPID := fmt.Sprintf("PID ne %d", os.Getpid())
 
-	//nolint:gosec // The return value of cmdName() is not user input.
+	//#nosec G204 // The return value of cmdName() is not user input.
 	out, err := exec.CommandContext(ctx, "taskkill.exe",
 		"/F",             // Force-stop the process
 		"/IM", cmdName(), // Match the process name

@@ -123,7 +123,7 @@ func fillBufferFromTemplate(adaptersAddresses *IPAdapterAddresses, sizePointer *
 		return ERROR_BUFFER_OVERFLOW
 	}
 
-	//nolint:gosec // Using unsafe to manipulate pointers mimicking the Win32 API, only used in tests.
+	//#nosec G103// Using unsafe to manipulate pointers mimicking the Win32 API, only used in tests.
 	begin := unsafe.Pointer(adaptersAddresses)
 	for _, addr := range mockIPAddrsTemplate {
 		next := unsafe.Add(begin, objSize) // next = ++begin

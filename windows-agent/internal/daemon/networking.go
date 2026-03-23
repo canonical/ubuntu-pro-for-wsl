@@ -70,7 +70,7 @@ func networkingMode(ctx context.Context, wslCmd, cmdEnv []string) (string, error
 	// It does so by launching the system distribution (wsl --system).
 	name := wslCmd[0]
 	args := append(wslCmd[1:], "--system", "wslinfo", "--networking-mode", "-n")
-	//nolint:gosec //Subprocess is launched from a variable to be testable.
+	//#nosec G204 //Subprocess is launched from a variable to be testable, but the variable is not user input.
 	cmd := exec.CommandContext(ctx, name, args...)
 
 	var stdout, stderr bytes.Buffer

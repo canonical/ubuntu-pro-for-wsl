@@ -122,7 +122,8 @@ func (s *System) writeConfig(landscapeConfig string) (err error) {
 		return fmt.Errorf("could not create config directory: %v", err)
 	}
 
-	//nolint:gosec // Needs 0640 for the landscape client to be able to read it.
+	//#nosec G703 // We control the input, no risk of path traversal.
+	//#nosec G306 // Needs 0640 for the landscape client to be able to read it.
 	if err := os.WriteFile(tmp, []byte(landscapeConfig), 0640); err != nil {
 		return fmt.Errorf("could not write to file: %v", err)
 	}
