@@ -14,6 +14,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/ubuntu/decorate"
 )
 
 func (a *App) installClean() {
@@ -59,24 +60,18 @@ func stopAgent() error {
 	return nil
 }
 
-func cleanLocation(rootEnv, relpath string) error {
+func cleanLocation(rootEnv, relpath string) (err error) {
+	defer decorate.OnError(&err, "could not clean up location")
 	root := os.Getenv(rootEnv)
 	if root == "" {
-		return fmt.Errorf("could not clean up location: environment variable %q is not set", rootEnv)
+		return fmt.Errorf("environment variable %q is not set", rootEnv)
 	}
 
-	intended := filepath.Join(root, relpath)
-	path := filepath.Clean(intended)
-	rel, err := filepath.Rel(root, path)
+	r, err := os.OpenRoot(root)
 	if err != nil {
-		return fmt.Errorf("failed to calculate relative path: %v", err)
+		return fmt.Errorf("failed to open root directory %q: %v", root, err)
 	}
-	if strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
-		return fmt.Errorf("security violation: path %s escapes root %s", path, root)
-	}
-	if err := os.RemoveAll(path); err != nil {
-		return fmt.Errorf("could not clean up location %s: %v", path, err)
-	}
+	defer r.Close()
 
-	return nil
+	return r.RemoveAll(relpath)
 }
