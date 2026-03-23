@@ -118,7 +118,7 @@ func (tm *taskManager) NextTask(ctx context.Context) (task.Task, bool) {
 
 // TaskDone cleans up after a task is completed, and conditionally re-submits failed ones.
 func (tm *taskManager) TaskDone(ctx context.Context, t task.Task, taskResult error) (err error) {
-	decorate.OnError(&err, "task %s", t)
+	defer decorate.OnError(&err, "task %s", t)
 
 	if errors.As(taskResult, &task.NeedsRetryError{}) {
 		log.Errorf(ctx, "%v", taskResult) // Error message already mentions resubmission

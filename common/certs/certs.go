@@ -55,7 +55,7 @@ func CreateRootCA(commonName string, destDir string) (rootCert *x509.Certificate
 
 // CreateTLSCertificateSignedBy creates a certificate and key pair usable for authentication signed by the root certificate authority (root CA) certificate and key provided and write them into destDir in the PEM format.
 func CreateTLSCertificateSignedBy(name, certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey, destDir string) (tlsCert *tls.Certificate, err error) {
-	decorate.OnError(&err, "could not create root signed certificate pair for %s:", name)
+	defer decorate.OnError(&err, "could not create root signed certificate pair for %s:", name)
 
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -98,7 +98,7 @@ func CreateTLSCertificateSignedBy(name, certCN string, rootCACert *x509.Certific
 
 // createCert invokes x509.CreateCertificate and returns the certificate and it's DER as bytes for serialization.
 func createCert(template, parent *x509.Certificate, pub, parentPriv any) (cert *x509.Certificate, certDER []byte, err error) {
-	decorate.OnError(&err, "could not create certificate:")
+	defer decorate.OnError(&err, "could not create certificate:")
 
 	certDER, err = x509.CreateCertificate(rand.Reader, template, parent, pub, parentPriv)
 	if err != nil {

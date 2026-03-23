@@ -13,7 +13,7 @@ import (
 // createLockFile tries to create or open an empty file with given name with exclusive access.
 // If the file already exists AND is still locked, it will fail.
 func createLockFile(path string) (f *os.File, err error) {
-	decorate.OnError(&err, "could not create lock file %s: %v", path, err)
+	defer decorate.OnError(&err, "could not create lock file %s: %v", path, err)
 
 	f, err = os.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
 	if err != nil {

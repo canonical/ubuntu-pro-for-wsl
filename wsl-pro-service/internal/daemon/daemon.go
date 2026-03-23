@@ -298,7 +298,7 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 
 // newTLSConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.
 func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
-	decorate.OnError(&err, "could not load TLS config")
+	defer decorate.OnError(&err, "could not load TLS config")
 
 	cert, err := tls.LoadX509KeyPair(filepath.Join(certsPath, common.ClientsCertFilePrefix+common.CertificateSuffix), filepath.Join(certsPath, common.ClientsCertFilePrefix+common.KeySuffix))
 	if err != nil {

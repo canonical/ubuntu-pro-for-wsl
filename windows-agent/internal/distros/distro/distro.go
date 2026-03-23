@@ -81,7 +81,7 @@ func WithGUID(guid uuid.UUID) Option {
 //   - To avoid the latter check, you can pass a default-constructed identity.GUID. In that
 //     case, the distro will be created with its currently registered GUID.
 func New(ctx context.Context, name string, props Properties, storageDir string, startupMu *sync.Mutex, args ...Option) (distro *Distro, err error) {
-	decorate.OnError(&err, "could not initialize distro %q", name)
+	defer decorate.OnError(&err, "could not initialize distro %q", name)
 
 	var nilGUID uuid.UUID
 	opts := options{
