@@ -19,6 +19,11 @@ func createLockFile(path string) (f *os.File, err error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, f.Close())
+		}
+	}()
 	fd := f.Fd()
 	if fd > math.MaxInt {
 		return nil, fmt.Errorf("file descriptor %d exceeds maximum integer value", fd)
@@ -26,7 +31,7 @@ func createLockFile(path string) (f *os.File, err error) {
 	// This would only fail if the file is locked by another process.
 	err = syscall.Flock(int(fd), syscall.LOCK_EX|syscall.LOCK_NB)
 	if err != nil {
-		return nil, fmt.Errorf("could not lock file: %v", errors.Join(err, f.Close()))
+		return nil, fmt.Errorf("could not lock file: %v", err)
 	}
 
 	return f, nil
