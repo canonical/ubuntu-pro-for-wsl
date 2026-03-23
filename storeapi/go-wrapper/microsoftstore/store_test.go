@@ -78,16 +78,72 @@ func TestGenerateUserJWT(t *testing.T) {
 }
 
 func TestGetSubscriptionExpirationDate(t *testing.T) {
-	if runtime.GOOS != "windows" {
-		t.Skip("This test is only supported on Windows")
+	var wantErr error
+	if runtime.GOOS == "windows" {
+		wantErr = microsoftstore.ErrNoProductsFound
+	} else {
+		wantErr = microsoftstore.ErrCantLoadDLL
 	}
 
-	wantErr := microsoftstore.ErrNoProductsFound
-
+	r, err := os.OpenRoot(filepath.Dir(os.Args[0]))
+	require.NoError(t, err, "Setup: could not open this binary root directory")
+	defer r.Close()
+	// We just need to make sure the DLL won't be found, not a problem if it already doesn't exist.
+	_ = r.Remove("storeapi.dll")
 	_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
-	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned code %d", wantErr)
+	require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned error %v", wantErr)
 }
 
+func TestGetSubscriptionExpirationDateUnix(t *testing.T) {
+	// This test cannot be parallel because it relies on setting global state, like the DLL
+	// singleton errors and the filesystem.
+	if runtime.GOOS == "windows" {
+		t.Skip("This test is meant to run on Unix like platforms where the DLL can't be loaded, to test error handling in that case")
+	}
+	defer microsoftstore.ResetErrors()
+	errLoad := errors.New("test wants to not load DLL")
+	errFind := errors.New("test wants to not find procedure")
+
+	testcases := map[string]struct {
+		loadFailure bool
+		findFailure bool
+		callFailure bool
+	}{
+		"Default failure path":             {},
+		"When loading DLL fails":           {loadFailure: true},
+		"When finding procedure fails":     {findFailure: true},
+		"When calling the procedure fails": {callFailure: true},
+	}
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			microsoftstore.ResetErrors()
+			//pretend there is a DLL aside of this binary.
+			dllName := "storeapi.dll"
+			dir, err := os.OpenRoot(filepath.Dir(os.Args[0]))
+			require.NoError(t, err, "Setup: could not open this binary root directory")
+			require.NoError(t, dir.WriteFile(dllName, []byte{0x00}, 0600), "Setup: could not write invalid DLL file to test call failure")
+			defer dir.Close()
+
+			var wantErr error
+			if tc.loadFailure {
+				wantErr = errLoad
+				microsoftstore.WithLoadDLLFailure(errLoad)
+			} else if tc.callFailure {
+				wantErr = microsoftstore.ErrUnimplemented
+				microsoftstore.WithCallProcFailure(microsoftstore.ErrUnimplemented)
+			} else if tc.findFailure {
+				wantErr = errFind
+				microsoftstore.WithFindProcFailure(errFind)
+			} else {
+				require.NoError(t, dir.Remove(dllName), "Setup: could not remove the invalid DLL file")
+				wantErr = microsoftstore.ErrCantLoadDLL
+			}
+
+			_, gotErr := microsoftstore.GetSubscriptionExpirationDate()
+			require.ErrorIs(t, gotErr, wantErr, "GetSubscriptionExpirationDate should have returned specific error %v", wantErr)
+		})
+	}
+}
 func TestErrorVerification(t *testing.T) {
 	t.Parallel()
 	testcases := map[string]struct {
@@ -130,7 +186,7 @@ func buildStoreAPI(ctx context.Context) error {
 		return err
 	}
 
-	//nolint:gosec // Only used in tests.
+	//#nosec G204 // Only used in tests.
 	cmd := exec.CommandContext(ctx, "msbuild",
 		filepath.Join(root, `/msix/storeapi/storeapi.vcxproj`),
 		`-target:Build`,

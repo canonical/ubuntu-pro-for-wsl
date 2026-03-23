@@ -42,7 +42,7 @@ func ipToRawSockaddrAny(ip net.IP) *syscall.RawSockaddrAny {
 	sa.Family = syscall.AF_INET
 	copy(sa.Addr[:], ip4) // ip4 is already a 4-byte slice
 
-	//nolint:gosec // Unsafe is required to manipulate pointers at the Win32 API level, only used in tests.
+	//#nosec G103 // Unsafe is required to manipulate pointers at the Win32 API level, only used in tests.
 	return (*syscall.RawSockaddrAny)(unsafe.Pointer(sa))
 }
 

@@ -669,6 +669,7 @@ type blockingTask struct {
 }
 
 func newBlockingTask(ctx context.Context) *blockingTask {
+	//#nosec G118 // cancel() is called somewhere else, not here.
 	ctx, cancel := context.WithCancel(ctx)
 	return &blockingTask{
 		ctx:      ctx,

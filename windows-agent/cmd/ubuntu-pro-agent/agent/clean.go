@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/ubuntu/decorate"
 )
 
 func (a *App) installClean() {
@@ -45,7 +45,7 @@ func stopAgent() error {
 
 	filterPID := fmt.Sprintf("PID ne %d", os.Getpid())
 
-	//nolint:gosec // The return value of cmdName() is not user input.
+	//#nosec G204 // The return value of cmdName() is not user input.
 	out, err := exec.CommandContext(ctx, "taskkill.exe",
 		"/F",             // Force-stop the process
 		"/IM", cmdName(), // Match the process name
@@ -58,16 +58,18 @@ func stopAgent() error {
 	return nil
 }
 
-func cleanLocation(rootEnv, relpath string) error {
+func cleanLocation(rootEnv, relpath string) (err error) {
+	defer decorate.OnError(&err, "could not clean up location")
 	root := os.Getenv(rootEnv)
 	if root == "" {
-		return fmt.Errorf("could not clean up location: environment variable %q is not set", rootEnv)
+		return fmt.Errorf("environment variable %q is not set", rootEnv)
 	}
 
-	path := filepath.Join(root, relpath)
-	if err := os.RemoveAll(path); err != nil {
-		return fmt.Errorf("could not clean up location %s: %v", path, err)
+	r, err := os.OpenRoot(root)
+	if err != nil {
+		return fmt.Errorf("failed to open root directory %q: %v", root, err)
 	}
+	defer r.Close()
 
-	return nil
+	return r.RemoveAll(relpath)
 }

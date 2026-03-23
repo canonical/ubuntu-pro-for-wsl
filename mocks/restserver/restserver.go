@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -114,10 +115,12 @@ func (s *ServerBase) Serve(ctx context.Context, address string) error {
 
 // ValidateRequest extracts common boilerplate used to validate the request from endpoints.
 func (s *ServerBase) ValidateRequest(w http.ResponseWriter, r *http.Request, wantMethod string, endpoint Endpoint) (err error) {
-	slog.Info("Received request", "endpoint", r.URL.Path, "method", r.Method)
+	sanitizedPath := strings.ReplaceAll(strings.ReplaceAll(r.URL.Path, "\n", "\\n"), "\r", "\\r")
+	sanitizedMethod := strings.ReplaceAll(strings.ReplaceAll(r.Method, "\n", "\\n"), "\r", "\\r")
+	slog.Info("Received request", "endpoint", sanitizedPath, "method", sanitizedMethod)
 	defer func() {
 		if err != nil {
-			slog.Error("bad request", "error", err, "endpoint", r.URL.Path, "method", r.Method)
+			slog.Error("bad request", "error", err, "endpoint", sanitizedPath, "method", sanitizedMethod)
 		}
 	}()
 
@@ -128,7 +131,7 @@ func (s *ServerBase) ValidateRequest(w http.ResponseWriter, r *http.Request, wan
 
 	if endpoint.Blocked {
 		<-s.done
-		slog.Debug("Server context was cancelled. Exiting", "endpoint", r.URL.Path)
+		slog.Debug("Server context was cancelled. Exiting", "endpoint", sanitizedPath)
 		return errors.New("server stopped")
 	}
 

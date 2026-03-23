@@ -552,6 +552,41 @@ func TestClean(t *testing.T) {
 	}
 }
 
+func TestCleanLocation(t *testing.T) {
+	// Not parallel because we modify the environment
+	testCases := map[string]struct {
+		rootEnv string
+		relPath string
+
+		wantErr bool
+	}{
+		"Success with valid path":                            {rootEnv: "TEST_ROOT", relPath: "testdir"},
+		"Error when rootEnv is empty":                        {relPath: "testdir", wantErr: true},
+		"Error when relPath cannot be made relative to root": {rootEnv: "TEST_ROOT", relPath: string([]byte{0x00}), wantErr: true},
+		"Error when path escapes root":                       {rootEnv: "TEST_ROOT", relPath: "../testdir", wantErr: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			if tc.rootEnv != "" {
+				t.Setenv(tc.rootEnv, root)
+			} else {
+				t.Parallel()
+			}
+
+			path := filepath.Join(root, tc.relPath)
+			err := agent.CleanLocation(tc.rootEnv, tc.relPath)
+			if tc.wantErr {
+				require.Error(t, err, "CleanLocation should return an error")
+				return
+			}
+			require.NoError(t, err, "CleanLocation should not return an error")
+			require.NoFileExists(t, path, "CleanLocation should have removed the directory")
+		})
+	}
+}
+
 // requireGoroutineStarted starts a goroutine and blocks until it has been launched.
 func requireGoroutineStarted(t *testing.T, f func()) {
 	t.Helper()

@@ -58,7 +58,7 @@ func subscribe(ctx context.Context, callback NewAdapterCallback, opts options) (
 		defer close(n.err)
 
 		err := n.start()
-		log.Debugf(context.Background(), "stopped monitoring network adapters: %v", err)
+		log.Debugf(nctx, "stopped monitoring network adapters: %v", err)
 		n.err <- err
 	}()
 	return n, nil

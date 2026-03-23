@@ -246,7 +246,7 @@ func (s *Service) readThenPushRegistryData(ctx context.Context) {
 	}
 }
 
-//nolint:gosec // These are not credentials
+// #nosec G101 // These are not credentials
 const (
 	ubuntuProTokenField  = "UbuntuProToken"
 	landscapeConfigField = "LandscapeConfig"

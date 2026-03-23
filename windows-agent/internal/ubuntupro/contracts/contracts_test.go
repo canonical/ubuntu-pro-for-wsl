@@ -17,7 +17,7 @@ import (
 func TestProToken(t *testing.T) {
 	t.Parallel()
 
-	//nolint:gosec // These are not real tokens
+	//#nosec G101 // These are not real tokens
 	const (
 		azureADToken   = "AZURE_AD_TOKEN"
 		ubuntuProToken = "UBUNTU_PRO_TOKEN"

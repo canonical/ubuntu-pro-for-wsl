@@ -11,7 +11,7 @@ import (
 
 // newTLSCertificates creates a self-signed root CA, agent and clients certificates and writes them into destDir.
 func newTLSCertificates(destDir string) (c agentCerts, err error) {
-	decorate.OnError(&err, "could not create TLS credentials:")
+	defer decorate.OnError(&err, "could not create TLS credentials:")
 
 	rootCert, rootKey, err := certs.CreateRootCA(common.GRPCServerNameOverride, destDir)
 	if err != nil {

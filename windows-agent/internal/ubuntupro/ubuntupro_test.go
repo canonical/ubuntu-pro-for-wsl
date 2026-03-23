@@ -66,7 +66,7 @@ func TestFetchFromMicrosoftStore(t *testing.T) {
 		t.Parallel()
 	}
 
-	//nolint:gosec // These are not real credentials
+	//#nosec G101 // These are not real credentials
 	const (
 		oldProToken  = "OLD_UBUNTU_PRO_TOKEN"
 		proToken     = "UBUNTU_PRO_TOKEN_456"

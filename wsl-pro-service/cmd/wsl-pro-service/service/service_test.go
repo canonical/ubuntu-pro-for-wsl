@@ -112,6 +112,8 @@ func TestConfigAutoDetect(t *testing.T) {
 
 	filename := "wsl-pro-service.yaml"
 	configNextToBinaryPath := filepath.Join(filepath.Dir(os.Args[0]), filename)
+	//#nosec G703 // We control the invocation of this binary, so there is no risk of
+	//symlink attack here. We need to write the config file next to the binary to test auto-detection.
 	require.NoError(t, os.WriteFile(configNextToBinaryPath, []byte("verbosity: 3"), 0600), "Setup: couldn't write config file")
 
 	err := a.Run()

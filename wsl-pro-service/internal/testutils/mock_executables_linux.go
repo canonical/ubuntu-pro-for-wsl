@@ -53,9 +53,9 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 
 	if code != exitOk {
 		// Print to stderr instead of stdout and exit with specified code.
-		//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
+		//#nosec G204 // False positive because we control the args (constructed in the closure above).
 		return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s\r\n' %s >&2; exit %d", output, pipe, code))
 	}
-	//nolint:gosec // G204 - false positive because we control the args (constructed in the closure above).
+	//#nosec G204 // False positive because we control the args (constructed in the closure above).
 	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo '%s\r\n' %s ", output, pipe))
 }

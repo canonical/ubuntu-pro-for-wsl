@@ -94,7 +94,8 @@ func WriteOsRelease(t *testing.T, uncRoot, distroName, template string) {
 	err = os.MkdirAll(dir, 0750)
 	require.NoError(t, err, "Setup: Failed to create directories to contain the distros os-release file")
 
-	//nolint:gosec // This file is meant to be read by anyone.
+	//#nosec G703 // Our tests control the uncRoot and distroName inputs.
+	//#nosec G306 // This file is meant to be read by anyone.
 	err = os.WriteFile(filepath.Join(dir, "os-release"), data, 0644)
 	require.NoError(t, err, "Setup: Failed to write sample os-release file")
 }

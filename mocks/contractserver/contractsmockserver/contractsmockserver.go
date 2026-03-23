@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	//nolint:gosec // G101 false positive, this is not a credential
 	// DefaultADToken is the value returned by default to the GET /token request, encoded in a JSON object.
+	//#nosec G101 // False positive, this is not a credential
 	DefaultADToken = "eHy_ADToken"
-	//nolint:gosec // G101 false positive, this is not a credential
 	// DefaultProToken is the value returned by default to the POST /susbcription request, encoded in a JSON object.
+	//#nosec G101 // False positive, this is not a credential
 	DefaultProToken = "CHx_ProToken"
 )
 

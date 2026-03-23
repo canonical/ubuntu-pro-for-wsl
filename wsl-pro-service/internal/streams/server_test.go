@@ -50,6 +50,7 @@ func TestServe(t *testing.T) {
 	require.Empty(t, agent.Service.ProAttachment.History()[1].GetResult(), "ProAttachment should return a successful result")
 
 	// Test receiving a pro token and returning error
+	//#nosec G101 // not credentials.
 	err = agent.Service.ProAttachment.Send(&agentapi.ProAttachCmd{Token: "HARDCODED_FAILURE"})
 	require.NoError(t, err, "Send should return no error")
 

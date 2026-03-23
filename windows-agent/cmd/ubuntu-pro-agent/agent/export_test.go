@@ -50,3 +50,6 @@ func (a App) Config() DaemonConfig {
 
 // CreateLockFile tries to create or open an empty file with given name with exclusive access.
 var CreateLockFile = createLockFile
+
+// CleanLocation tries to remove the given location relative to the path defined in the environment variable rootEnv.
+var CleanLocation = cleanLocation

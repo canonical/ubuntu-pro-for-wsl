@@ -265,7 +265,7 @@ func (s *Service) firstContact(ctx context.Context, cancel func(), hostInfo Host
 
 	// Assign a UID if none was provided
 	if hostInfo.UID == "" {
-		//nolint:gosec // No need to be cryptographically secure
+		//#nosec G404 // No need to be cryptographically secure
 		hostInfo.UID = fmt.Sprintf("ServerAssignedUID%x", rand.Int())
 
 		cmd := &landscapeapi.Command_AssignHost_{

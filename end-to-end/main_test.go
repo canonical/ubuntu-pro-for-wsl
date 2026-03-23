@@ -32,7 +32,7 @@ const (
 	// registryPath is the path under HKEY_CURRENT_USER in which Ubuntu Pro data is stored.
 	registryPath = `Software\Canonical\UbuntuPro`
 
-	//nolint:gosec // This is an environment variable key, not the token itself.
+	//#nosec G101 // This is an environment variable key, not the token itself.
 	proTokenEnv = "UP4W_TEST_PRO_TOKEN"
 
 	// overrideSafety is an env variable that, if set, allows the tests to perform potentially destructive actions.
@@ -218,7 +218,7 @@ func assertAppxInstalled(ctx context.Context, appx string) error {
 
 // powershellf is syntax sugar to run powrshell commands.
 func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
-	//nolint:gosec // Tainted input is acceptable because all callers have their values hardcoded.
+	//#nosec G204 // This is a test helper for which all callers have hardcoded inputs.
 	return exec.CommandContext(ctx, "powershell.exe",
 		"-NoProfile",
 		"-NoLogo",
@@ -394,6 +394,7 @@ func generateTestImage(ctx context.Context, sourceDistro string) (path string, c
 	}
 
 	path = filepath.Join(tmpDir, "snapshot.vhdx")
+	//#nosec G204 // We control the inputs.
 	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, path, "--vhd").CombinedOutput()
 	if err != nil {
 		defer cleanup()

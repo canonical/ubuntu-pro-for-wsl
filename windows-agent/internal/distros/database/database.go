@@ -67,6 +67,7 @@ func New(ctx context.Context, storageDir string, onCleanup ...func(string)) (db 
 	default:
 	}
 
+	//#nosec G118 // cancel() is called somewhere else, not here.
 	ctx, cancel := context.WithCancel(ctx)
 
 	db = &DistroDB{

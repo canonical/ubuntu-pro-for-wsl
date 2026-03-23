@@ -41,7 +41,7 @@ func RandomDistroName(t *testing.T) (name string) {
 	p := regexp.MustCompile(`[^a-zA-Z0-9_\-\.]+`)
 	name = p.ReplaceAllString(t.Name(), "_")
 
-	//nolint:gosec // No need to be cryptographically secure
+	//#nosec G404 // No need to be cryptographically secure
 	return fmt.Sprintf("%s_%s_%d", testDistroPrefix, name, rand.Uint64())
 }
 

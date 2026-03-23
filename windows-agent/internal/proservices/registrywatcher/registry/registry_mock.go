@@ -291,6 +291,7 @@ func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 		return 0, errors.New("cannot have more than one listener per key handle")
 	}
 
+	//#nosec G118 // cancel() is called somewhere else, not here.
 	handle.ctx, handle.cancelCtx = context.WithCancel(context.Background())
 
 	// Create event
@@ -387,6 +388,7 @@ func (r *Mock) SetDWordValue(ptr Key, field string, value uint32) error {
 }
 
 func (r *Mock) newEvent(ctx context.Context) Event {
+	//#nosec // G118: cancel() is called somewhere else, not here.
 	ctx, cancel := context.WithCancel(ctx)
 
 	return r.eventHandles.alloc(&eventHandle{
@@ -408,7 +410,7 @@ func (h *mockedHeap[P, D]) alloc(data D) P {
 	// Generate a random uintptr
 	var ptr P
 	for {
-		//nolint:gosec // No need for a secure random number as this is test code
+		//#nosec G404 // No need for a secure random number as this is test code
 		ptr = P(rand.Int63())
 		if ptr == 0 {
 			continue
