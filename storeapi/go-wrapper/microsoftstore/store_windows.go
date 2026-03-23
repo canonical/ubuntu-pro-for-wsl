@@ -19,7 +19,7 @@ func (p *LazyProc) Find() error {
 	return p.proc.Find()
 }
 
-// Call calls the procedure with the given arguments and returns the vaules the syscall returns.
+// Call calls the procedure with the given arguments and returns the values the syscall returns.
 func (p *LazyProc) Call(args ...uintptr) (r1, r2 uintptr, err error) {
 	return p.proc.Call(args...)
 }
