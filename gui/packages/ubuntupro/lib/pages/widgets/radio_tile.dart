@@ -36,8 +36,6 @@ class RadioTile<T> extends StatelessWidget {
         padding: EdgeInsets.zero,
         child: YaruRadioListTile(
           contentPadding: const EdgeInsets.all(6),
-          visualDensity: VisualDensity.standard,
-          dense: true,
           title: Text(
             title,
             style: Theme.of(
