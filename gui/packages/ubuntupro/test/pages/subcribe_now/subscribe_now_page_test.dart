@@ -1,5 +1,4 @@
 import 'package:agentapi/agentapi.dart';
-import 'package:dart_either/dart_either.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -78,7 +77,7 @@ void main() {
       );
       var called = false;
       when(client.notifyPurchase()).thenAnswer((_) async {
-        return SubscriptionInfo()..ensureMicrosoftStore().left();
+        return SubscriptionInfo()..ensureMicrosoftStore();
       });
       when(store.purchaseSubscription(any)).thenAnswer((_) async {
         return PurchaseStatus.succeeded;
