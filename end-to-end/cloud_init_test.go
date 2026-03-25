@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -59,7 +58,7 @@ func TestCloudInitIntegration(t *testing.T) {
 	err = landscape.service.SendCommand(ctx, info.UID, &landscapeapi.Command{
 		Cmd: &landscapeapi.Command_Install_{
 			Install: &landscapeapi.Command_Install{
-				Id:        strings.Split(referenceDistroAppx, ".")[1], // CanonicalGroupLimited.[UbuntuPreview]
+				Id:        referenceDistro,
 				Cloudinit: &cloudInitUserData,
 			},
 		},
