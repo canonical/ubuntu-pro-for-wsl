@@ -1,4 +1,7 @@
 {
     "buttonNext": "次へ",
-    "@buttonNext": {}
+    "appTitle": "WSL向けUbuntu Pro",
+    "tokenErrorEmpty": "トークンは空にできません",
+    "tokenErrorInvalid": "無効なトークン",
+    "tokenValid": "有効なトークン"
 }
