@@ -57,7 +57,7 @@ jobs:
           run-code-analysis: true
 
       - name: Upload sideload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: UbuntuProForWSL+${{ github.sha }}-${{ matrix.mode }}
           path: |
