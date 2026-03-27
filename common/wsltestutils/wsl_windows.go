@@ -13,22 +13,16 @@ import (
 	wsl "github.com/ubuntu/gowsl"
 )
 
-// PowershellImportDistro uses powershell.exe to import a distro from a specific rootfs.
-// If the rootfs is an empty string, an empty tarball will be used.
+// PowershellInstallDistro uses powershell.exe to install a distro from a specific rootfs image.
+// The distro instance is not launched yet.
+// It returns the GUID of the registered distro. The distro is automatically unregistered at the end of the test.
 //
 //nolint:revive // The context is better after the testing.T
-func PowershellImportDistro(t *testing.T, ctx context.Context, distroName string, rootFsPath string) (GUID string) {
+func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName string, rootFsPath string) (GUID string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 
-	require.False(t, wsl.MockAvailable(), "Called PowershellImportDistro with the gowslmock active. Use RegisterDistro for a generic implementation")
-
-	// Fake rootfs: the distro can be registered but won't run
-	if rootFsPath == "" {
-		rootFsPath = tmpDir + "/install.tar.gz"
-		err := os.WriteFile(rootFsPath, []byte{}, 0600)
-		require.NoError(t, err, "could not write empty file")
-	}
+	require.False(t, wsl.MockAvailable(), "Called PowershellInstallDistro with the gowslmock active. Use RegisterDistro for a generic implementation")
 
 	_, err := os.Lstat(rootFsPath)
 	require.NoError(t, err, "Setup: Could not stat rootFs:\n%s", rootFsPath)
@@ -37,12 +31,7 @@ func PowershellImportDistro(t *testing.T, ctx context.Context, distroName string
 	tk := time.AfterFunc(2*time.Minute, func() { powershellOutputf(t, `$env:WSL_UTF8=1 ; wsl --shutdown`) })
 	defer tk.Stop()
 
-	var vhdx string
-	if strings.HasSuffix(rootFsPath, ".vhdx") {
-		vhdx = "--vhd"
-	}
-
-	powershellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --import %q %q %q %s", distroName, tmpDir, rootFsPath, vhdx)
+	powershellOutputf(t, "$env:WSL_UTF8=1 ; wsl.exe --install --name %q --location %q --from-file %q --no-launch", distroName, tmpDir, rootFsPath)
 	tk.Stop()
 
 	t.Cleanup(func() {
