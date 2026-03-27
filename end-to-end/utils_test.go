@@ -277,7 +277,7 @@ func requireRegistryIsInitialized(t *testing.T, valueNames []string) {
 	values, err := key.ReadValueNames(len(valueNames))
 	require.NoError(t, err, "Setup: could not read the UbuntuPro registry key values")
 
-	for v := range valueNames {
+	for _, v := range valueNames {
 		require.Contains(t, values, v, "Setup: UbuntuPro registry key was not initialized as expected")
 	}
 }
