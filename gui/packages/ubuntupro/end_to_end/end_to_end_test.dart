@@ -6,8 +6,10 @@ import 'package:integration_test/integration_test.dart';
 import 'package:stack_trace/stack_trace.dart' as stack_trace;
 import 'package:ubuntupro/core/environment.dart';
 import 'package:ubuntupro/main.dart' as app;
+import 'package:ubuntupro/pages/landscape_skip/landscape_skip_page.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
 import 'package:ubuntupro/pages/subscription_status/subscription_status_page.dart';
+import 'package:yaru/widgets.dart';
 
 import '../test/utils/l10n_tester.dart';
 
@@ -27,6 +29,7 @@ void main(List<String> args) {
     'TestOrganizationProvidedToken': testOrganizationProvidedToken,
     'TestCloudInitIntegration': testOrganizationProvidedToken,
     'TestManualTokenInput': testManualTokenInput,
+    'TestManualTokenInputSkipLandscape': testManualTokenInputSkipLandscape,
     'TestPurchase': testPurchase,
   };
 
@@ -49,6 +52,47 @@ Future<void> testOrganizationProvidedToken(WidgetTester tester) async {
   // asserts that we transitioned to the organization-managed status page.
   final l10n = tester.l10n<SubscriptionStatusPage>();
   expect(find.text(l10n.manageUbuntuPro), findsNothing);
+}
+
+Future<void> testManualTokenInputSkipLandscape(WidgetTester tester) async {
+  await app.main();
+  await tester.pumpAndSettle();
+
+  // The "subscribe now page" is only shown if the GUI communicates with the background agent.
+  var l10n = tester.l10n<SubscribeNowPage>();
+
+  // finds the pro token from the environment
+  final goodToken = Environment()[proTokenEnv];
+  expect(
+    goodToken,
+    isNotNull,
+    reason: '$proTokenEnv must be set to a valid token.',
+  );
+
+  // enters a good token value
+  final inputField = find.byType(TextField);
+  await tester.enterText(inputField, goodToken!);
+  await tester.pumpAndSettle();
+
+  // submits the input.
+  final button = find.text(l10n.attach);
+  await tester.tap(button);
+  await tester.pumpAndSettle();
+
+  // check we transition to skip page
+  l10n = tester.l10n<LandscapeSkipPage>();
+  final radios = find.byType(YaruSelectableContainer);
+  expect(radios, findsNWidgets(2));
+  final skip = find.text(l10n.landscapeSkip);
+  await tester.tap(skip);
+  await tester.pump();
+  final next = find.text(l10n.buttonNext);
+  await tester.tap(next);
+  await tester.pumpAndSettle();
+
+  // asserts that we transitioned to the user-managed status page.
+  l10n = tester.l10n<SubscriptionStatusPage>();
+  expect(find.text(l10n.detachPro), findsOneWidget);
 }
 
 Future<void> testManualTokenInput(WidgetTester tester) async {
