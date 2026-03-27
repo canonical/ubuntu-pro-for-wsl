@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -59,14 +58,14 @@ func TestCloudInitIntegration(t *testing.T) {
 	err = landscape.service.SendCommand(ctx, info.UID, &landscapeapi.Command{
 		Cmd: &landscapeapi.Command_Install_{
 			Install: &landscapeapi.Command_Install{
-				Id:        strings.Split(referenceDistroAppx, ".")[1], // CanonicalGroupLimited.[UbuntuPreview]
+				Id:        "Ubuntu",
 				Cloudinit: &cloudInitUserData,
 			},
 		},
 	})
 	require.NoError(t, err, "Setup: could not send install command")
 
-	distro := wsl.NewDistro(ctx, referenceDistro)
+	distro := wsl.NewDistro(ctx, "Ubuntu")
 
 	//nolint:errcheck // Nothing we can do about it
 	defer distro.Unregister()
