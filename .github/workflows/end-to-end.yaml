@@ -73,6 +73,7 @@ jobs:
           wsl --version
       - uses: actions/setup-go@v6
         with:
+          cache-dependency-path: go.work
           go-version-file: go.work
       - name: Download artifacts
         uses: actions/download-artifact@v8
@@ -137,4 +138,3 @@ jobs:
           # Uninstall certificate
           $thumbprint = (Get-PfxCertificate -FilePath "ci-artifacts\windows-agent\UbuntuProForWSL_*.cer").Thumbprint
           Remove-Item -Path "Cert:LocalMachine\TrustedPeople\${thumbprint}"
-
