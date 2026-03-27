@@ -138,7 +138,7 @@ func registerDistro(t *testing.T, ctx context.Context, distroName string, realDi
 			require.NotEmpty(t, appxDir, "could not find rootfs tarball. Is %s installed?", appx)
 			rootFsPath = filepath.Join(appxDir, "install.tar.gz")
 		}
-		return PowershellImportDistro(t, ctx, distroName, rootFsPath)
+		return PowershellInstallDistro(t, ctx, distroName, rootFsPath)
 	}
 
 	t.Cleanup(func() {

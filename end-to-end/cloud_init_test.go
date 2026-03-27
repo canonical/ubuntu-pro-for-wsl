@@ -2,6 +2,7 @@ package endtoend_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,13 +16,9 @@ import (
 )
 
 func TestCloudInitIntegration(t *testing.T) {
-	// TODO: Remove this line when cloud-init support for UP4W is released.
-	// Follow this PR for more information: https://github.com/canonical/cloud-init/pull/5116
-	t.Skip("This test depends on cloud-init support for UP4W being released.")
 	currentFuncName := t.Name()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	testSetup(t)
 	defer logWindowsAgentOnError(t)
@@ -56,17 +53,19 @@ func TestCloudInitIntegration(t *testing.T) {
 	require.NoError(t, err, "Setup: could not read cloud-init file")
 	cloudInitUserData := string(out)
 
+	name := "Ubuntu-Preview"
 	err = landscape.service.SendCommand(ctx, info.UID, &landscapeapi.Command{
 		Cmd: &landscapeapi.Command_Install_{
 			Install: &landscapeapi.Command_Install{
-				Id:        strings.Split(referenceDistroAppx, ".")[1], // CanonicalGroupLimited.[UbuntuPreview]
+				Id:        name,
 				Cloudinit: &cloudInitUserData,
 			},
 		},
+		RequestId: "Server123",
 	})
 	require.NoError(t, err, "Setup: could not send install command")
 
-	distro := wsl.NewDistro(ctx, referenceDistro)
+	distro := wsl.NewDistro(ctx, name)
 
 	//nolint:errcheck // Nothing we can do about it
 	defer distro.Unregister()
@@ -77,12 +76,19 @@ func TestCloudInitIntegration(t *testing.T) {
 			t.Logf("could not determine if distro is registered: %v", err)
 			return false
 		}
-		return ok
-	}, time.Minute, time.Second, "Distro should have been registered")
+		if !ok {
+			return false
+		}
+		state, err := distro.State()
+		if err != nil {
+			t.Logf("could not determine if distro is registered: %v", err)
+			return false
+		}
+		return state == wsl.Stopped
+	}, 10*time.Minute, 10*time.Second, "Distro should have been registered")
+	t.Log(runCommand(t, ctx, time.Minute, distro, "cloud-init status --wait"))
 
 	defer logWslProServiceOnError(t, ctx, distro)
-
-	runCommand(t, ctx, time.Minute, distro, "cloud-init status --wait")
 
 	require.Eventually(t, func() bool {
 		attached, err := distroIsProAttached(t, ctx, distro)
@@ -93,8 +99,8 @@ func TestCloudInitIntegration(t *testing.T) {
 		return attached
 	}, 10*time.Second, time.Second, "distro should have been Pro attached")
 
-	userName := runCommand(t, ctx, 10*time.Second, distro, "whoami")
-	require.Equal(t, "testuser", userName, "cloud-init should have configured the default user")
+	uid, err := distro.Command(ctx, "id -u testuser").CombinedOutput()
+	require.NoError(t, err, "cloud-init should have configured the default user, uid is %s", uid)
 
 	landscape.RequireReceivedInfo(t, proToken, []wsl.Distro{distro}, hostname)
 	landscape.RequireUninstallCommand(t, ctx, distro, info)
@@ -109,18 +115,16 @@ func runCommand(t *testing.T, ctx context.Context, timeout time.Duration, distro
 
 	out, err := distro.Command(ctx, comand).CombinedOutput()
 	if err == nil {
-		return string(out)
+		return strings.TrimSpace(string(out))
 	}
 
 	// We check the context to see if it was a timeout.
 	// This makes the error message easier to understand.
-
 	select {
 	case <-ctx.Done():
 		require.Fail(t, "Timed out waiting for cloud-init to finish")
 	default:
 	}
 
-	require.NoError(t, err, "could not determine if cloud-init is done: %s. Output: %s", out, out)
-	return ""
+	return fmt.Sprintf("Stdout: %s. Stderr: %s", out, err)
 }

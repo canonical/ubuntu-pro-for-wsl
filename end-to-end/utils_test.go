@@ -62,7 +62,7 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 	t.Logf("Registering distro %q", distroName)
 	defer t.Logf("Registered distro %q", distroName)
 
-	_ = wsltestutils.PowershellImportDistro(t, ctx, distroName, testImagePath)
+	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, testImagePath)
 	return distroName
 }
 
@@ -277,7 +277,7 @@ func requireRegistryIsInitialized(t *testing.T, valueNames []string) {
 	values, err := key.ReadValueNames(len(valueNames))
 	require.NoError(t, err, "Setup: could not read the UbuntuPro registry key values")
 
-	for v := range valueNames {
+	for _, v := range valueNames {
 		require.Contains(t, values, v, "Setup: UbuntuPro registry key was not initialized as expected")
 	}
 }

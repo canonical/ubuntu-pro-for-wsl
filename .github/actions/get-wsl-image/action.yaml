@@ -1,0 +1,141 @@
+# This action gets the latest WSL image, leveraging both the persistent behavior of our runners, and the GitHub cache
+name: Get WSL Image
+description: Downloads and caches an Ubuntu image for WSL assuming the URL provided follows the format of the official repositories.
+
+inputs:
+  base_url:
+    description: "The base URL to download the WSL image from"
+    required: false
+    default: "https://cdimages.ubuntu.com/ubuntu-wsl/daily-live/current/"
+  arch:
+    description: "The architecture of the WSL image to download (amd64 or arm64)"
+    required: false
+    default: "amd64"
+  output_path:
+    description: "The path to save the downloaded WSL image to"
+    required: false
+    default: "ubuntu.wsl"
+outputs:
+  cache-key:
+    description: "The cache key for the WSL image, which is its SHA256 hash"
+    value: ${{ steps.compute-cache-key.outputs.cache-key }}
+  image-name:
+    description: "The name of the image we found"
+    value: ${{ steps.compute-cache-key.outputs.image-name }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Compute image cache key
+      id: compute-cache-key
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        shafile="${{ runner.temp }}/SHA256SUMS"
+        uri="${{ inputs.base_url }}/SHA256SUMS"
+        if ! curl --fail -o "$shafile" "${uri}"; then  
+            echo "::error:: Failed to download the checksum file from $uri."  
+            exit 1  
+        fi  
+
+        # Look for a line matching the pattern: <sha> *<name>-wsl-<arch>.wsl
+        arch="${{ inputs.arch }}"
+        line=$(grep -E "^[a-f0-9]+[[:space:]]+\*.*-wsl-${arch}\.wsl$" "$shafile")
+        if [ -z "$line" ]; then
+          echo "::error:: No WSL image found for architecture '$arch' in the $shafile file."
+          exit 2
+        fi
+
+        # Extract the SHA (first field), image name (second field without the *) and manifest.
+        sha=$(echo "$line" | awk '{print $1}')
+        image_name=$(echo "$line" | awk '{print $2}' | sed 's/^\*//')
+        image_manifest=$(echo "$image_name" | sed -E 's/\.wsl$/.manifest/')
+
+        echo "cache-key=$sha" >> "$GITHUB_OUTPUT"
+        echo "image-name=$image_name" >> "$GITHUB_OUTPUT"
+        echo "image-manifest=$image_manifest" >> "$GITHUB_OUTPUT"
+
+    - name: Validate image
+      id: check-locally
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        expected_sha="${{ steps.compute-cache-key.outputs.cache-key }}"
+        output_path="${{ inputs.output_path }}"
+
+        if [ -r "$output_path" ]; then
+          echo "Found local image at $output_path"
+          
+          # Compare the SHAs
+          if (echo "$expected_sha  $output_path" | sha256sum -c); then
+            echo "✅ Local image matches expected SHA. Using local file."
+            echo "is-valid=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ Local image SHA does not match expected SHA. Will need to download."
+            rm "$output_path"
+            echo "is-valid=false" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "No local image found at $output_path"
+          echo "is-valid=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Restore image cache
+      id: restore-cache
+      if: ${{ steps.check-locally.outputs.is-valid != 'true' }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.output_path }}
+        key: ${{ steps.compute-cache-key.outputs.cache-key }}
+        enableCrossOsArchive: true
+
+    - name: Download image
+      if: ${{ steps.check-locally.outputs.is-valid != 'true' && steps.restore-cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        expected_sha="${{ steps.compute-cache-key.outputs.cache-key }}"
+        output_path="${{ inputs.output_path }}"
+        mkdir -p "$(dirname "$output_path")"
+
+        uri="${{ inputs.base_url }}/${{ steps.compute-cache-key.outputs.image-name }}"
+        if ! curl --fail -o "$output_path" "$uri"; then
+            echo "::error:: Failed to download the WSL image from $uri"
+            exit 1
+        fi
+
+        if ! (echo "$expected_sha  $output_path" | sha256sum -c); then
+            echo "::error:: Downloaded WSL image SHA does not match expected SHA."
+            exit 2
+        fi
+
+    - name: Save image to cache
+      if: ${{ steps.restore-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.output_path }}
+        key: ${{ steps.restore-cache.outputs.cache-primary-key }}
+        enableCrossOsArchive: true
+
+    - name: Save image manifest for future troubleshooting
+      if: ${{ steps.restore-cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        uri="${{ inputs.base_url }}/${{ steps.compute-cache-key.outputs.image-manifest }}"
+        manifest_path="${{ runner.temp }}/image.manifest"
+        if ! curl --fail -o "$manifest_path" "$uri"; then
+            echo "::error:: Failed to download the WSL image manifest from $uri. This is not a critical failure, but may make troubleshooting harder in the future."
+        else
+            echo "Image manifest downloaded to $manifest_path"
+        fi
+    - name: Upload image manifest
+      uses: actions/upload-artifact@v7
+      if: ${{ steps.restore-cache.outputs.cache-hit != 'true' }}
+      with:
+        name: ${{ steps.compute-cache-key.outputs.image-name }}.manifest
+        path: "${{ runner.temp }}/image.manifest"
