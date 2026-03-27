@@ -62,7 +62,7 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 	t.Logf("Registering distro %q", distroName)
 	defer t.Logf("Registered distro %q", distroName)
 
-	_ = wsltestutils.PowershellImportDistro(t, ctx, distroName, testImagePath)
+	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, testImagePath)
 	return distroName
 }
 
