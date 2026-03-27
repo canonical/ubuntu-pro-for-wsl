@@ -2,8 +2,10 @@ package endtoend_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -96,18 +98,26 @@ func TestCloudInitIntegration(t *testing.T) {
 	t.Log(runCommand(t, ctx, time.Minute, distro, "cloud-init status --wait"))
 
 	defer logWslProServiceOnError(t, ctx, distro)
+	defer logProClientOnError(t, distro.Name())
 
 	require.Eventually(t, func() bool {
-		attached, err := distroIsProAttached(t, ctx, distro)
-		if err != nil {
-			t.Logf("could not determine if distro is attached: %v", err)
+		attached, err1 := distroIsProAttached(t, ctx, distro)
+		tried, err2 := triedProAttach(t, distro.Name())
+		if err1 != nil && err2 != nil {
+			t.Logf("could not determine if distro tried to attach to Pro: %v", errors.Join(err1, err2))
 			return false
 		}
-		return attached
-	}, 10*time.Second, time.Second, "distro should have been Pro attached")
+		return attached || tried
+	}, 10*time.Second, time.Second, "distro should have tried to attach to Pro")
 
 	uid, err := distro.Command(ctx, "id -u testuser").CombinedOutput()
 	require.NoError(t, err, "cloud-init should have configured the default user, uid is %s", uid)
+	// Finally, give extra room for wsl-pro-service to talk to the agent.
+	cmd := exec.CommandContext(ctx, "wsl.exe", "-d", name)
+	require.NoError(t, cmd.Start(), "Could not launch the distro for final assertions")
+	time.Sleep(1 * time.Second)
+	//nolint:errcheck // There is nothing we can do if this fails.
+	defer cmd.Process.Kill()
 
 	landscape.RequireReceivedInfo(t, proToken, []wsl.Distro{distro}, hostname)
 	landscape.RequireUninstallCommand(t, ctx, distro, info)

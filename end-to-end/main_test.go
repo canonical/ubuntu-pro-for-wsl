@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
-	wsl "github.com/ubuntu/gowsl"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
@@ -247,27 +246,6 @@ func cleanupRegistry() error {
 	}
 	if err != nil {
 		return fmt.Errorf("could not delete UbuntuPro key: %v", err)
-	}
-
-	return nil
-}
-
-func assertDistroUnregistered(d wsl.Distro) error {
-	registered, err := d.IsRegistered()
-	if err != nil {
-		return err
-	}
-
-	if !registered {
-		return nil
-	}
-
-	if os.Getenv(overrideSafety) == "" {
-		return fmt.Errorf("distro %q should not exist. Unregister it to agree to run this potentially destructive test", d.Name())
-	}
-
-	if err := d.Unregister(); err != nil {
-		return err
 	}
 
 	return nil
