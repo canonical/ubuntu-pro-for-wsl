@@ -63,6 +63,7 @@ jobs:
         uses: subosito/flutter-action@v2
         if: matrix.needs-flutter != ''
         with:
+          cache: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Install Dart protoc plugin
@@ -374,6 +375,7 @@ jobs:
       - name: Set up flutter
         uses: subosito/flutter-action@v2
         with:
+          cache: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Download coverage artifacts

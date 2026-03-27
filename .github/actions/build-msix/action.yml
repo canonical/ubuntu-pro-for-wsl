@@ -39,6 +39,7 @@ runs:
         path: tools/flutter-version
     - uses: subosito/flutter-action@v2
       with:
+        cache: true
         channel: stable
         flutter-version: ${{ steps.flutter-version.outputs.contents }}
     - name: Setup MSBuild (PATH)
