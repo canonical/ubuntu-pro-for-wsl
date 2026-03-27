@@ -23,8 +23,9 @@ runs:
         go-version-file: '${{ inputs.go-version-file }}'
     - uses: subosito/flutter-action@v2
       with:
-        channel: 'stable'
-        flutter-version: '${{ inputs.flutter-version }}'
+        cache: true
+        channel: "stable"
+        flutter-version: "${{ inputs.flutter-version }}"
     - name: Integration Test
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
