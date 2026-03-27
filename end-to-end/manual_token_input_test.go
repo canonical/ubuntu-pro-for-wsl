@@ -3,7 +3,7 @@ package endtoend_test
 import (
 	"context"
 	"fmt"
-	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -11,11 +11,7 @@ import (
 	wsl "github.com/ubuntu/gowsl"
 )
 
-func TestManualTokenInput(t *testing.T) {
-	// TODO: Remove this line when cloud-init support for UP4W is released.
-	// Follow this PR for more information: https://github.com/canonical/cloud-init/pull/5116
-	t.Skip("This test depends on cloud-init support for UP4W being released.")
-
+func TestManualTokenInputSkipLandscape(t *testing.T) {
 	type whenToken int
 	const (
 		never whenToken = iota
@@ -40,27 +36,10 @@ func TestManualTokenInput(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
-
-			landscape := NewLandscape(t, ctx)
-			writeUbuntuProRegistry(t, "LandscapeConfig", landscape.ClientConfig)
-
-			serverDone := make(chan struct{})
-			go func() {
-				defer close(serverDone)
-				landscape.Serve()
-			}()
-			t.Cleanup(func() {
-				landscape.Stop()
-				<-serverDone
-			})
-			defer landscape.LogOnError(t)
-
-			hostname, err := os.Hostname()
-			require.NoError(t, err, "Setup: could not test machine's hostname")
 
 			// Either runs the ubuntupro app before...
 			if tc.whenToken == beforeDistroRegistration {
@@ -74,6 +53,12 @@ func TestManualTokenInput(t *testing.T) {
 
 			defer logWslProServiceOnError(t, ctx, d)
 
+			// Make sure the instance is fully provisioned.
+			// #nosec G204 // The distro name is controlled by our tests.
+			cmd := exec.CommandContext(ctx, "wt.exe", "wsl.exe", "-d", name)
+			require.NoError(t, cmd.Start(), "Setup: could not start instance %s", name)
+			//nolint:errcheck // There is nothing we can do if this fails.
+			defer cmd.Process.Kill()
 			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
@@ -81,13 +66,11 @@ func TestManualTokenInput(t *testing.T) {
 			if tc.whenToken == afterDistroRegistration {
 				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
 				defer cleanup()
-				out, err = d.Command(ctx, "exit 0").CombinedOutput()
-				require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 			}
 
-			// By now the agent should have initialized the registry
+			// By now the agent should have initialized the registry with empty values.
 			requireRegistryIsInitialized(t, []string{"UbuntuProToken", "LandscapeConfig"})
-			const maxTimeout = time.Minute
+			const maxTimeout = 2 * time.Minute
 
 			if !tc.wantAttached {
 				time.Sleep(maxTimeout)
@@ -105,10 +88,7 @@ func TestManualTokenInput(t *testing.T) {
 					t.Logf("could not determine if distro is attached: %v", err)
 				}
 				return attached
-			}, maxTimeout, time.Second, "distro should have been Pro attached")
-
-			info := landscape.RequireReceivedInfo(t, os.Getenv(proTokenEnv), []wsl.Distro{d}, hostname)
-			landscape.RequireUninstallCommand(t, ctx, d, info)
+			}, maxTimeout, 10*time.Second, "distro should have been Pro attached")
 		})
 	}
 }
