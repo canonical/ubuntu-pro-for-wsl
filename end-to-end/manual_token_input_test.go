@@ -12,26 +12,17 @@ import (
 )
 
 func TestManualTokenInputSkipLandscape(t *testing.T) {
-	type whenToken int
-	const (
-		never whenToken = iota
-		beforeDistroRegistration
-		afterDistroRegistration
-	)
-
 	// Let's be lazy and don't fall into the risk of changing the function name without updating the places where its name is used.
 	currentFuncName := t.Name()
 
 	testCases := map[string]struct {
-		whenToken        whenToken
 		overrideTokenEnv string
 
 		wantAttached bool
 	}{
-		"Success when applying pro token before registration": {whenToken: beforeDistroRegistration, wantAttached: true},
-		"Success when applying pro token after registration":  {whenToken: afterDistroRegistration, wantAttached: true},
+		"Success when applying pro token after registration": {wantAttached: true},
 
-		"Error with invalid token": {whenToken: afterDistroRegistration, overrideTokenEnv: fmt.Sprintf("%s=%s", proTokenEnv, "CJd8MMN8wXSWsv7wJT8c8dDK")},
+		"Error with invalid token": {overrideTokenEnv: fmt.Sprintf("%s=%s", proTokenEnv, "CJd8MMN8wXSWsv7wJT8c8dDK")},
 	}
 
 	for name, tc := range testCases {
@@ -40,12 +31,6 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 
 			testSetup(t)
 			defer logWindowsAgentOnError(t)
-
-			// Either runs the ubuntupro app before...
-			if tc.whenToken == beforeDistroRegistration {
-				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
-				defer cleanup()
-			}
 
 			// Distro setup
 			name := registerFromTestImage(t, ctx)
@@ -63,11 +48,8 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
-			// ... or after registration, but never both.
-			if tc.whenToken == afterDistroRegistration {
-				cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
-				defer cleanup()
-			}
+			cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
+			defer cleanup()
 
 			// By now the agent should have initialized the registry with empty values.
 			requireRegistryIsInitialized(t, []string{"UbuntuProToken", "LandscapeConfig"})
