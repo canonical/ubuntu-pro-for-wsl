@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -101,6 +102,12 @@ func TestCloudInitIntegration(t *testing.T) {
 
 	uid, err := distro.Command(ctx, "id -u testuser").CombinedOutput()
 	require.NoError(t, err, "cloud-init should have configured the default user, uid is %s", uid)
+	// Finally, give extra room for wsl-pro-service to talk to the agent.
+	cmd := exec.CommandContext(ctx, "wsl.exe", "-d", name)
+	require.NoError(t, cmd.Start(), "Could not launch the distro for final assertions")
+	time.Sleep(1 * time.Second)
+	//nolint:errcheck // There is nothing we can do if this fails.
+	defer cmd.Process.Kill()
 
 	landscape.RequireReceivedInfo(t, proToken, []wsl.Distro{distro}, hostname)
 	landscape.RequireUninstallCommand(t, ctx, distro, info)

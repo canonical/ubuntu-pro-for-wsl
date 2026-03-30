@@ -57,6 +57,7 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			// #nosec G204 // The distro name is controlled by our tests.
 			cmd := exec.CommandContext(ctx, "wt.exe", "wsl.exe", "-d", name)
 			require.NoError(t, cmd.Start(), "Setup: could not start instance %s", name)
+			time.Sleep(1 * time.Second)
 			//nolint:errcheck // There is nothing we can do if this fails.
 			defer cmd.Process.Kill()
 			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
