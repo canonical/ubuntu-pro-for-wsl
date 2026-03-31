@@ -15,7 +15,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: microsoft/setup-msbuild@v1
+    - uses: microsoft/setup-msbuild@v3
       if: runner.os == 'Windows'
     # Go is needed to build the agent for integration testing.
     - uses: actions/setup-go@v4
