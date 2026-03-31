@@ -37,6 +37,7 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			d := wsl.NewDistro(ctx, name)
 
 			defer logWslProServiceOnError(t, ctx, d)
+			defer logProClientOnError(t, ctx, d)
 
 			// Make sure the instance is fully provisioned.
 			// #nosec G204 // The distro name is controlled by our tests.

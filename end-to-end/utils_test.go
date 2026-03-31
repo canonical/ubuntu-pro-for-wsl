@@ -200,6 +200,22 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 	t.Logf("WSL Pro Service logs:\n%s\n", out)
 }
 
+//nolint:revive // testing.T must precede the context because this is a test helper.
+func logProClientOnError(t *testing.T, ctx context.Context, d gowsl.Distro) {
+	t.Helper()
+
+	if !t.Failed() {
+		return
+	}
+
+	out, err := exec.CommandContext(ctx, "wsl.exe", "-d", d.Name(), "-u", "root", "--", "cat", "/var/log/ubuntu-advantage.log").CombinedOutput()
+	if err != nil {
+		t.Logf("could not access Pro Client logs: %v\n%s\n", err, out)
+		return
+	}
+	t.Logf("Pro Client logs:\n%s\n", out)
+}
+
 func logWindowsAgentOnError(t *testing.T) {
 	t.Helper()
 

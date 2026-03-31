@@ -90,6 +90,7 @@ func TestCloudInitIntegration(t *testing.T) {
 	t.Log(runCommand(t, ctx, time.Minute, distro, "cloud-init status --wait"))
 
 	defer logWslProServiceOnError(t, ctx, distro)
+	defer logProClientOnError(t, ctx, distro)
 
 	require.Eventually(t, func() bool {
 		attached, err := distroIsProAttached(t, ctx, distro)
