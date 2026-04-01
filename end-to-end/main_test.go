@@ -13,6 +13,7 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	wsl "github.com/ubuntu/gowsl"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -57,6 +58,9 @@ const (
 )
 
 func TestMain(m *testing.M) {
+	if err := windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED); err != nil {
+		log.Fatalf("Setup: could not initialize COM: %v\n", err)
+	}
 	if err := assertCleanRegistry(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
