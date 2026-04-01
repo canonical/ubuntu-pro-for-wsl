@@ -154,6 +154,16 @@ func stopAgent(ctx context.Context) error {
 }
 
 //nolint:revive // testing.T must precede the context
+func triedProAttach(t *testing.T, ctx context.Context, d gowsl.Distro) bool {
+	t.Helper()
+
+	const pattern = `"Executed with sys.argv: \['/usr/bin/pro', 'attach', '<REDACTED>', '--format=json'\]"`
+	// #nosec G204 // The command and its arguments are fixed, and the distro is controlled by our tests.
+	_, err := exec.CommandContext(ctx, "wsl.exe", "-d", d.Name(), "-u", "root", "--", "grep", pattern, "/var/log/ubuntu-advantage.log").CombinedOutput()
+	return err == nil
+}
+
+//nolint:revive // testing.T must precede the context
 func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (bool, error) {
 	t.Helper()
 
@@ -208,6 +218,7 @@ func logProClientOnError(t *testing.T, ctx context.Context, d gowsl.Distro) {
 		return
 	}
 
+	// #nosec G204 // The command and its arguments are fixed, and the distro is controlled by our tests.
 	out, err := exec.CommandContext(ctx, "wsl.exe", "-d", d.Name(), "-u", "root", "--", "cat", "/var/log/ubuntu-advantage.log").CombinedOutput()
 	if err != nil {
 		t.Logf("could not access Pro Client logs: %v\n%s\n", err, out)

@@ -46,7 +46,8 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			time.Sleep(1 * time.Second)
 			//nolint:errcheck // There is nothing we can do if this fails.
 			defer cmd.Process.Kill()
-			out, err := d.Command(ctx, "cloud-init status --wait").CombinedOutput()
+			// #nosec G204 // The distro name is controlled by our tests.
+			out, err := exec.CommandContext(ctx, "wsl.exe", "-d", name, "cloud-init", "status", "--wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
 			cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
@@ -67,11 +68,9 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			}
 
 			require.Eventually(t, func() bool {
-				attached, err := distroIsProAttached(t, ctx, d)
-				if err != nil {
-					t.Logf("could not determine if distro is attached: %v", err)
-				}
-				return attached
+				ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+				defer cancel()
+				return triedProAttach(t, ctx, d)
 			}, maxTimeout, 10*time.Second, "distro should have been Pro attached")
 		})
 	}
