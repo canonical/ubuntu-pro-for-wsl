@@ -24,7 +24,7 @@ import (
 
 func testSetup(t *testing.T) {
 	t.Helper()
-	ctx := context.Background()
+	ctx := t.Context()
 
 	err := gowsl.Shutdown(ctx)
 	require.NoError(t, err, "Setup: could not shut WSL down")
@@ -42,6 +42,9 @@ func testSetup(t *testing.T) {
 	require.NoError(t, err, "Setup: local app data is polluted, potentially by a previous test")
 
 	t.Cleanup(func() {
+		// t.Context() is cancelled when t.Cleanup runs.
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := errors.Join(
 			stopAgent(ctx),
 			cleanupRegistry(),
@@ -205,6 +208,8 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	out, err := d.Command(ctx, "journalctl -b --no-pager -u wsl-pro.service").CombinedOutput()
 	if err != nil {
 		t.Logf("could not access WSL Pro Service logs: %v\n%s\n", err, out)
@@ -221,6 +226,8 @@ func logProClientOnError(t *testing.T, ctx context.Context, d gowsl.Distro) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	// #nosec G204 // The command and its arguments are fixed, and the distro is controlled by our tests.
 	out, err := exec.CommandContext(ctx, "wsl.exe", "-d", d.Name(), "-u", "root", "--", "cat", "/var/log/ubuntu-advantage.log").CombinedOutput()
 	if err != nil {

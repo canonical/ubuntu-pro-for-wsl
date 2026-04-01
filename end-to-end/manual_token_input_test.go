@@ -35,19 +35,21 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			// Distro setup
 			name := registerFromTestImage(t, ctx)
 			d := wsl.NewDistro(ctx, name)
-
+			// t.Context() is still valid when deferred functions are executed.
 			defer logWslProServiceOnError(t, ctx, d)
 			defer logProClientOnError(t, ctx, d)
 
+			cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+			defer cancel()
 			// Make sure the instance is fully provisioned.
 			// #nosec G204 // The distro name is controlled by our tests.
-			cmd := exec.CommandContext(ctx, "wt.exe", "wsl.exe", "-d", name)
+			cmd := exec.CommandContext(cmdCtx, "wt.exe", "wsl.exe", "-d", name)
 			require.NoError(t, cmd.Start(), "Setup: could not start instance %s", name)
 			time.Sleep(1 * time.Second)
 			//nolint:errcheck // There is nothing we can do if this fails.
 			defer cmd.Process.Kill()
 			// #nosec G204 // The distro name is controlled by our tests.
-			out, err := exec.CommandContext(ctx, "wsl.exe", "-d", name, "cloud-init", "status", "--wait").CombinedOutput()
+			out, err := exec.CommandContext(cmdCtx, "wsl.exe", "-d", name, "cloud-init", "status", "--wait").CombinedOutput()
 			require.NoErrorf(t, err, "Setup: could not wake distro up: %v. %s", err, out)
 
 			cleanup := startAgent(t, ctx, currentFuncName, tc.overrideTokenEnv)
