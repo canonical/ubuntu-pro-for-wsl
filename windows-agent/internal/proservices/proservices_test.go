@@ -12,12 +12,16 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	grpclog "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	wsl "github.com/ubuntu/gowsl"
+	wslmock "github.com/ubuntu/gowsl/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -53,7 +57,7 @@ func TestNew(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			ctx := context.Background()
+			ctx := t.Context()
 
 			publicDir := t.TempDir()
 			privateDir := t.TempDir()
@@ -198,6 +202,141 @@ func TestRegisterGRPCServices(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "Clients should succeed in calling any RPC")
+		})
+	}
+}
+
+// TestOnNewInstanceCreatesTask verifies that when a distro connects to the WSLInstance
+// gRPC service for the first time, the onNewInstance hook registered by the proservices
+// Manager submits a ProAttachment task whose token matches the one stored in the registry.
+func TestOnNewInstanceCreatesTask(t *testing.T) {
+	if wsl.MockAvailable() {
+		t.Parallel()
+	}
+
+	testcases := map[string]struct {
+		alreadyAttached bool
+		wantCommands    bool
+	}{
+		"When the instance is not already attached, onNewInstance should submit a ProAttachment task": {wantCommands: true},
+		"When the instance is already attached, onNewInstance should not submit a ProAttachment task": {alreadyAttached: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			ctx := t.Context()
+
+			if wsl.MockAvailable() {
+				ctx = wsl.WithMock(ctx, wslmock.New())
+				t.Parallel()
+			}
+
+			publicDir := t.TempDir()
+			privateDir := t.TempDir()
+
+			// Populate the registry with a Pro token *before* New() so that the registry watcher's
+			// initial read picks it up and the config contains the subscription when the distro connects.
+			reg := registry.NewMock()
+			k, err := reg.HKCUCreateKey("Software/Canonical/UbuntuPro")
+			require.NoError(t, err, "Setup: could not create Ubuntu Pro registry key")
+			defer reg.CloseKey(k)
+
+			const wantToken = "test-pro-token"
+			err = reg.WriteValue(k, "UbuntuProToken", wantToken, false)
+			require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
+
+			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
+			require.NoError(t, err, "Setup: New should return no error")
+			defer s.Stop(ctx)
+
+			server := s.RegisterGRPCServices(ctx, true)
+
+			var cfg net.ListenConfig
+			lis, err := cfg.Listen(ctx, "tcp", "localhost:0")
+			require.NoError(t, err, "Setup: could not create a listener")
+			defer lis.Close()
+
+			serverDone := make(chan struct{})
+			go func() {
+				defer close(serverDone)
+				_ = server.Serve(lis)
+			}()
+			defer func() {
+				server.Stop()
+				<-serverDone
+			}()
+
+			// Register a fake distro so the DB's Get/Create path succeeds (requires a real WSL entry).
+			distroName, _ := wsltestutils.RegisterDistro(t, ctx, false)
+
+			// Dial the gRPC server using TLS credentials identical to those used in TestRegisterGRPCServices.
+			creds := loadClientCertificates(t, filepath.Join(publicDir, common.CertificatesDir))
+			conn, err := grpc.NewClient(lis.Addr().String(),
+				grpc.WithTransportCredentials(creds),
+				grpc.WithStreamInterceptor(grpclog.StreamClientInterceptor(log.StandardLogger())),
+			)
+			require.NoError(t, err, "Setup: could not create a gRPC client connection")
+			defer conn.Close()
+			conn.Connect()
+
+			wslClient := agentapi.NewWSLInstanceClient(conn)
+
+			// Open all three streams that the server requires before making the connection "ready",
+			// effectively mocking the wsl-pro-service unit inside an instance.
+			connStream, err := wslClient.Connected(ctx)
+			require.NoError(t, err, "Setup: could not open Connected stream")
+
+			proStream, err := wslClient.ProAttachmentCommands(ctx)
+			require.NoError(t, err, "Setup: could not open ProAttachmentCommands stream")
+
+			lpeStream, err := wslClient.LandscapeConfigCommands(ctx)
+			require.NoError(t, err, "Setup: could not open LandscapeConfigCommands stream")
+
+			// Perform the handshakes. Order must match what the wslinstance server expects: first send
+			// DistroInfo on the Connected stream, then send the WSL name on the two command streams.
+			err = connStream.Send(&agentapi.DistroInfo{WslName: distroName, ProAttached: tc.alreadyAttached})
+			require.NoError(t, err, "Setup: could not send DistroInfo on Connected stream")
+
+			sendWslNameMsg := func(send func(*agentapi.MSG) error) {
+				t.Helper()
+				require.NoError(t, send(&agentapi.MSG{Data: &agentapi.MSG_WslName{WslName: distroName}}),
+					"Setup: could not send WSL name on command stream")
+			}
+			sendWslNameMsg(proStream.Send)
+			sendWslNameMsg(lpeStream.Send)
+
+			// The server sends a ProAttachCmd once all streams are ready and onNewInstance runs.
+			// Receive it with a generous timeout to avoid flakiness.
+			type recvResult struct {
+				cmd *agentapi.ProAttachCmd
+				err error
+			}
+			recvCh := make(chan recvResult, 1)
+			go func() {
+				cmd, err := proStream.Recv()
+				recvCh <- recvResult{cmd, err}
+			}()
+
+			const timeout = 20 * time.Second
+			select {
+			case result := <-recvCh:
+				if tc.wantCommands {
+					require.NoError(t, result.err, "ProAttachmentCommands stream should have received a command")
+					require.Equal(t, wantToken, result.cmd.GetToken(), "ProAttachCmd token should match the registry-provided token")
+				} else {
+					require.Error(t, result.err, "ProAttachmentCommands stream should not have received any commands")
+				}
+			case <-time.After(timeout):
+				if tc.wantCommands {
+					t.Fatal("timed out waiting for ProAttachCmd from the server")
+				}
+			}
+
+			if tc.wantCommands {
+				// Acknowledge the command so the server's SendProAttachment call completes cleanly.
+				require.NoError(t, proStream.Send(&agentapi.MSG{Data: &agentapi.MSG_Result{Result: ""}}),
+					"could not acknowledge ProAttachCmd")
+			}
 		})
 	}
 }

@@ -80,7 +80,7 @@ func TestServe(t *testing.T) {
 
 			landscape := &landscapeCtlMock{}
 
-			service := wslinstance.New(ctx, db, landscape)
+			service := wslinstance.New(ctx, db, nil, landscape)
 			server := grpc.NewServer()
 			agentapi.RegisterWSLInstanceServer(server, service)
 
@@ -209,7 +209,7 @@ func TestSendCommands(t *testing.T) {
 
 	landscape := &landscapeCtlMock{}
 
-	service := wslinstance.New(ctx, db, landscape)
+	service := wslinstance.New(ctx, db, nil, landscape)
 	server := grpc.NewServer()
 	agentapi.RegisterWSLInstanceServer(server, service)
 
