@@ -3,6 +3,7 @@ package proservices
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,12 +16,16 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/task"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/wslinstance"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro"
 	"github.com/sirupsen/logrus"
+	"github.com/ubuntu/decorate"
 	wsl "github.com/ubuntu/gowsl"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -110,8 +115,20 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	}
 	s.landscapeService = landscape
 
-	s.wslInstanceService = wslinstance.New(ctx, s.db, s.landscapeService.Controller())
+	// When a new instance connects to the wslinstance service we'll greet it with some tasks.
+	onNewInstance := func(d *distro.Distro) {
+		// When a new instance connects to the wslinstance service we'll greet it with some tasks.
+		dtasks, err := newInstanceTasks(conf, d.Properties())
+		if len(dtasks) > 0 {
+			err = errors.Join(err, d.SubmitDeferredTasks(dtasks...))
+		}
+		if err != nil {
+			log.Warningf(ctx, "%v", err)
+			return
+		}
+	}
 
+	s.wslInstanceService = wslinstance.New(ctx, s.db, onNewInstance, s.landscapeService.Controller())
 	conf.SetUbuntuProNotifier(func(ctx context.Context, token string) {
 		ubuntupro.Distribute(ctx, s.db, token)
 		landscape.NotifyUbuntuProUpdate(ctx, token)
@@ -145,6 +162,25 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	s.creds = credentials.NewTLS(certs.agentTLSConfig())
 	return s, nil
+}
+
+// newInstanceTasks returns the initial tasks to be executed when a new instance connects to the WSLInstance service.
+func newInstanceTasks(conf *config.Config, p distro.Properties) (t []task.Task, err error) {
+	defer decorate.OnError(&err, "when new instance %q connected to WSLInstance service", p.DistroID)
+
+	pro, source, err := conf.Subscription()
+	if err != nil {
+		return nil, err
+	}
+	// There is a Pro subscription bu tthe instance is not attached.
+	if pro != "" && source != config.SourceNone && !p.ProAttached {
+		t = append(t, tasks.ProAttachment{Token: pro})
+	}
+	l, source, err := conf.LandscapeClientConfig()
+	if err == nil && l != "" && source != config.SourceNone {
+		t = append(t, tasks.LandscapeConfigure{Config: l})
+	}
+	return t, err
 }
 
 // Stop deallocates resources in the services.
