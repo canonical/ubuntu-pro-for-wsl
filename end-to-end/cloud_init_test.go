@@ -16,6 +16,13 @@ import (
 )
 
 func TestCloudInitIntegration(t *testing.T) {
+	deinit, err := initializeCOM()
+	if err != nil {
+		deinit()
+		t.Fatalf("could not initialize COM: %v", err)
+	}
+	defer deinit()
+
 	currentFuncName := t.Name()
 
 	ctx := t.Context()

@@ -9,11 +9,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	wsl "github.com/ubuntu/gowsl"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -269,4 +271,16 @@ func assertDistroUnregistered(d wsl.Distro) error {
 	}
 
 	return nil
+}
+
+func initializeCOM() (func(), error) {
+	runtime.LockOSThread()
+	if err := windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED); err != nil {
+		return runtime.UnlockOSThread, fmt.Errorf("could not initialize COM library: %v", err)
+	}
+
+	return func() {
+		windows.CoUninitialize()
+		runtime.UnlockOSThread()
+	}, nil
 }
