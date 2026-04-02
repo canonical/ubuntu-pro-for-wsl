@@ -38,7 +38,10 @@ func PowershellInstallDistro(t *testing.T, ctx context.Context, distroName strin
 		// Any other context might be already cancelled at this point, so we need a fresh one for the cleanup.
 		unctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
-		UnregisterDistro(t, unctx, distroName)
+		// #nosec G204 // The distro name is controlled by our tests.
+		if _, err := exec.CommandContext(unctx, "wsl.exe", "--unregister", distroName).CombinedOutput(); err != nil {
+			t.Logf("Cleanup: could not unregister distro %q: %v", distroName, err)
+		}
 	})
 
 	d := wsl.NewDistro(ctx, distroName)

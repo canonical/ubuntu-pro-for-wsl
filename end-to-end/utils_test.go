@@ -26,10 +26,7 @@ func testSetup(t *testing.T) {
 	t.Helper()
 	ctx := t.Context()
 
-	err := gowsl.Shutdown(ctx)
-	require.NoError(t, err, "Setup: could not shut WSL down")
-
-	err = stopAgent(ctx)
+	err := stopAgent(ctx)
 	require.NoError(t, err, "Setup: could not stop the agent")
 
 	err = reinstallMSIX(ctx, msixPath)
