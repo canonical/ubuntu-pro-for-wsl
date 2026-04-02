@@ -22,9 +22,10 @@ import (
 type mockBehaviour int
 
 const (
-	mockOK        mockBehaviour = iota // A mock that mimicks the happy path
-	mockError                          // A mock that returns an error
-	mockBadOutput                      // A mock that returns a bad value with no error
+	mockOK               mockBehaviour = iota // A mock that mimicks the happy path
+	mockError                                 // A mock that returns an error
+	mockBadOutput                             // A mock that returns a bad value with no error
+	mockIncompleteOutput                      // A mock that returns an incomplete value with no error (used for testing parsing errors due to missing fields)
 )
 
 func TestNew(t *testing.T) {
@@ -159,8 +160,9 @@ func TestWslDistroName(t *testing.T) {
 		"Success reading from WSL_DISTRO_NAME": {},
 		"Success using wslpath":                {distroNameEnvDisabled: true},
 
-		"Error when WSL_DISTRO_NAME is empty and wslpath fails":            {distroNameEnvDisabled: true, distroNameWslPath: mockError, wantErr: true},
-		"Error when WSL_DISTRO_NAME is empty and wslpath returns bad text": {distroNameEnvDisabled: true, distroNameWslPath: mockBadOutput, wantErr: true},
+		"Error when WSL_DISTRO_NAME is empty and wslpath fails":                   {distroNameEnvDisabled: true, distroNameWslPath: mockError, wantErr: true},
+		"Error when WSL_DISTRO_NAME is empty and wslpath returns bad text":        {distroNameEnvDisabled: true, distroNameWslPath: mockBadOutput, wantErr: true},
+		"Error when WSL_DISTRO_NAME is empty and wslpath returns incomplete text": {distroNameEnvDisabled: true, distroNameWslPath: mockIncompleteOutput, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -180,6 +182,8 @@ func TestWslDistroName(t *testing.T) {
 				mock.SetControlArg(testutils.WslpathErr)
 			case mockBadOutput:
 				mock.SetControlArg(testutils.WslpathBadOutput)
+			case mockIncompleteOutput:
+				mock.SetControlArg(testutils.WslpathIncompleteOutput)
 			default:
 				require.Fail(t, "Unknown enum value for distroNameWslPath", "Value: %d", tc.distroNameWslPath)
 			}

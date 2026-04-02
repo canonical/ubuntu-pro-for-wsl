@@ -90,9 +90,10 @@ const (
 	LandscapeEnableErr  = "UP4W_LANDSCAPE_ENABLE_ERR"
 	LandscapeDisableErr = "UP4W_LANDSCAPE_DISABLE_ERR"
 
-	WslpathErr             = "UP4W_WSLPATH_ERR"
-	WslpathBadOutput       = "UP4W_WSLPATH_BAD_OUTPUT"
-	EmptyUserprofileEnvVar = "UP4W_EMPTY_USERPROFILE_ENV_VAR"
+	WslpathErr              = "UP4W_WSLPATH_ERR"
+	WslpathBadOutput        = "UP4W_WSLPATH_BAD_OUTPUT"
+	WslpathIncompleteOutput = "UP4W_WSLPATH_INCOMPLETE_OUTPUT"
+	EmptyUserprofileEnvVar  = "UP4W_EMPTY_USERPROFILE_ENV_VAR"
 
 	CmdExeErr         = "UP4W_CMDEXE_ERR"
 	CmdExeEncodingErr = "UP4W_CMD_ENCODING_ERR"
@@ -506,6 +507,11 @@ func WslPathMock(t *testing.T) {
 
 			if envExists(WslpathBadOutput) {
 				fmt.Fprintf(os.Stdout, "Bad output\r\nBad\toutput\r\n")
+				return exitOk
+			}
+
+			if envExists(WslpathIncompleteOutput) {
+				fmt.Fprint(os.Stdout, "\\\\wsl.localhost\\\n")
 				return exitOk
 			}
 

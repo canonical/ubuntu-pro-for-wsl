@@ -155,7 +155,7 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 		return env, nil
 	}
 
-	cmd := s.backend.WslpathExecutable(ctx, "-w", "/")
+	cmd := s.backend.WslpathExecutable(ctx, "-wa", "/")
 	out, err := runCommand(cmd)
 	if err != nil {
 		return "", fmt.Errorf("could not get distro root path: %v. Output: %s", err, string(out))
@@ -166,6 +166,9 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 	fields := strings.Split(string(out), `\`)
 	if len(fields) < 4 {
 		return "", fmt.Errorf("could not parse distro name from path %q", out)
+	}
+	if fields[3] == "" {
+		return "", fmt.Errorf("parsed distro name is empty from wslpath output %q", out)
 	}
 
 	s.wslDistroNameCache = fields[3]

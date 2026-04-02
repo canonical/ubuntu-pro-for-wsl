@@ -5,6 +5,8 @@ ConditionVirtualization=wsl
 [Service]
 Type=notify
 NotifyAccess=all
+ExecStartPre=-/usr/bin/bash -c 'grep -z "WSL2_DISTRO_NAME" /proc/2/environ | tr "\\0" "\\n" > /run/wsl_distro.env'
+EnvironmentFile=-/run/wsl_distro.env
 ExecStart=/usr/libexec/wsl-pro-service
 Restart=always
 RestartSec=20min
