@@ -64,12 +64,20 @@ jobs:
     name: Run end-to-end tests
     runs-on: [windows-latest]
     needs: [build-wsl-pro-service, build-ubuntu-pro-for-wsl]
+    env:
+      WSL_VER: "2.7.1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      # GH runners come with WSL stable pre-installed.
-      - name: Sanity check WSL version
+      - name: Install WSL Pre-release from GitHub
+        shell: powershell
         run: |
+          $url = "https://github.com/microsoft/WSL/releases/download/${{ env.WSL_VER }}/wsl.${{ env.WSL_VER }}.0.x64.msi"
+          Invoke-WebRequest -Uri $url -OutFile "wsl_update.msi"
+
+          # Install the msix silently
+          # /i = install, /quiet = no UI, /norestart = don't reboot the runner
+          Start-Process msiexec.exe -ArgumentList "/i wsl_update.msi /quiet /norestart" -Wait
           wsl --version
       - uses: actions/setup-go@v6
         with:
