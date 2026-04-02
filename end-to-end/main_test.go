@@ -61,6 +61,8 @@ func TestMain(m *testing.M) {
 	if err := windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED); err != nil {
 		log.Fatalf("Setup: could not initialize COM: %v\n", err)
 	}
+	defer windows.CoUninitialize()
+
 	if err := assertCleanRegistry(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -325,8 +327,9 @@ func generateTestImage(ctx context.Context, sourceImage string) (string, func(),
 	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- cloud-init clean --logs`, reference).CombinedOutput()
 	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- rm /etc/cloud/cloud-init.disabled`, reference).CombinedOutput()
 
-	if err := wsl.Shutdown(ctx); err != nil {
-		return "", nil, fmt.Errorf("could not shut down WSL: %v", err)
+	_, err = powershellf(ctx, `wsl.exe -t %s`, reference).CombinedOutput()
+	if err != nil {
+		return "", nil, fmt.Errorf("could not shut down the reference instance: %v", err)
 	}
 
 	path := filepath.Join(tmpDir, "snapshot.tar.gz")
