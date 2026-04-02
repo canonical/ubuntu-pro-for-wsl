@@ -37,7 +37,7 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			d := wsl.NewDistro(ctx, name)
 			// t.Context() is still valid when deferred functions are executed.
 			defer logWslProServiceOnError(t, ctx, d)
-			defer logProClientOnError(t, ctx, d)
+			defer logProClientOnError(t, d.Name())
 
 			cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()

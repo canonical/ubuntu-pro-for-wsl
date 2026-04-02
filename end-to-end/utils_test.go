@@ -215,18 +215,14 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 	t.Logf("WSL Pro Service logs:\n%s\n", out)
 }
 
-//nolint:revive // testing.T must precede the context because this is a test helper.
-func logProClientOnError(t *testing.T, ctx context.Context, d gowsl.Distro) {
+func logProClientOnError(t *testing.T, instanceName string) {
 	t.Helper()
 
 	if !t.Failed() {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	// #nosec G204 // The command and its arguments are fixed, and the distro is controlled by our tests.
-	out, err := exec.CommandContext(ctx, "wsl.exe", "-d", d.Name(), "-u", "root", "--", "cat", "/var/log/ubuntu-advantage.log").CombinedOutput()
+	out, err := os.ReadFile(fmt.Sprintf(`\\wsl.localhost\%s\var\log\pro-client.log`, instanceName))
 	if err != nil {
 		t.Logf("could not access Pro Client logs: %v\n%s\n", err, out)
 		return
