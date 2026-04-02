@@ -153,14 +153,17 @@ func stopAgent(ctx context.Context) error {
 	return fmt.Errorf("could not stop process %q: %v. %s", process, err, out)
 }
 
-//nolint:revive // testing.T must precede the context
-func triedProAttach(t *testing.T, ctx context.Context, d gowsl.Distro) bool {
+func triedProAttach(t *testing.T, instanceName string) (bool, error) {
 	t.Helper()
 
-	const pattern = `"Executed with sys.argv: \['/usr/bin/pro', 'attach', '<REDACTED>', '--format=json'\]"`
-	// #nosec G204 // The command and its arguments are fixed, and the distro is controlled by our tests.
-	_, err := exec.CommandContext(ctx, "wsl.exe", "-d", d.Name(), "-u", "root", "--", "grep", pattern, "/var/log/ubuntu-advantage.log").CombinedOutput()
-	return err == nil
+	const pattern = `"Executed with sys.argv: ['/usr/bin/pro', 'attach', '<REDACTED>', '--format=json']"`
+	path := fmt.Sprintf(`\\wsl.localhost\%s\var\log\ubuntu-advantage.log`, instanceName)
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return false, fmt.Errorf("could not read log file at %q: %v", path, err)
+	}
+
+	return strings.Contains(string(contents), pattern), nil
 }
 
 //nolint:revive // testing.T must precede the context

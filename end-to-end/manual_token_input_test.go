@@ -68,10 +68,14 @@ func TestManualTokenInputSkipLandscape(t *testing.T) {
 			}
 
 			require.Eventually(t, func() bool {
-				ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-				defer cancel()
-				return triedProAttach(t, ctx, d)
-			}, maxTimeout, 10*time.Second, "distro should have been Pro attached")
+				tried, err := triedProAttach(t, d.Name())
+				if err != nil {
+					t.Logf("could not determine if distro tried to attach to Pro: %v", err)
+					return false
+				}
+				t.Logf("checking if distro instance tried to attach to Pro: %v", tried)
+				return tried
+			}, maxTimeout, 10*time.Second, "The distro instance did not try to attach to Pro")
 		})
 	}
 }
