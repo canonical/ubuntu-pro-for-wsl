@@ -24,12 +24,9 @@ import (
 
 func testSetup(t *testing.T) {
 	t.Helper()
-	ctx := context.Background()
+	ctx := t.Context()
 
-	err := gowsl.Shutdown(ctx)
-	require.NoError(t, err, "Setup: could not shut WSL down")
-
-	err = stopAgent(ctx)
+	err := stopAgent(ctx)
 	require.NoError(t, err, "Setup: could not stop the agent")
 
 	err = reinstallMSIX(ctx, msixPath)
@@ -42,6 +39,9 @@ func testSetup(t *testing.T) {
 	require.NoError(t, err, "Setup: local app data is polluted, potentially by a previous test")
 
 	t.Cleanup(func() {
+		// t.Context() is cancelled when t.Cleanup runs.
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := errors.Join(
 			stopAgent(ctx),
 			cleanupRegistry(),
@@ -62,7 +62,7 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 	t.Logf("Registering distro %q", distroName)
 	defer t.Logf("Registered distro %q", distroName)
 
-	_ = wsltestutils.PowershellImportDistro(t, ctx, distroName, testImagePath)
+	_ = wsltestutils.PowershellInstallDistro(t, ctx, distroName, testImagePath)
 	return distroName
 }
 
@@ -153,6 +153,19 @@ func stopAgent(ctx context.Context) error {
 	return fmt.Errorf("could not stop process %q: %v. %s", process, err, out)
 }
 
+func triedProAttach(t *testing.T, instanceName string) (bool, error) {
+	t.Helper()
+
+	const pattern = `"Executed with sys.argv: ['/usr/bin/pro', 'attach', '<REDACTED>', '--format=json']"`
+	path := fmt.Sprintf(`\\wsl.localhost\%s\var\log\ubuntu-advantage.log`, instanceName)
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return false, fmt.Errorf("could not read log file at %q: %v", path, err)
+	}
+
+	return strings.Contains(string(contents), pattern), nil
+}
+
 //nolint:revive // testing.T must precede the context
 func distroIsProAttached(t *testing.T, ctx context.Context, d gowsl.Distro) (bool, error) {
 	t.Helper()
@@ -192,12 +205,29 @@ func logWslProServiceOnError(t *testing.T, ctx context.Context, d gowsl.Distro) 
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	out, err := d.Command(ctx, "journalctl -b --no-pager -u wsl-pro.service").CombinedOutput()
 	if err != nil {
 		t.Logf("could not access WSL Pro Service logs: %v\n%s\n", err, out)
 		return
 	}
 	t.Logf("WSL Pro Service logs:\n%s\n", out)
+}
+
+func logProClientOnError(t *testing.T, instanceName string) {
+	t.Helper()
+
+	if !t.Failed() {
+		return
+	}
+
+	out, err := os.ReadFile(fmt.Sprintf(`\\wsl.localhost\%s\var\log\pro-client.log`, instanceName))
+	if err != nil {
+		t.Logf("could not access Pro Client logs: %v\n%s\n", err, out)
+		return
+	}
+	t.Logf("Pro Client logs:\n%s\n", out)
 }
 
 func logWindowsAgentOnError(t *testing.T) {
@@ -277,7 +307,7 @@ func requireRegistryIsInitialized(t *testing.T, valueNames []string) {
 	values, err := key.ReadValueNames(len(valueNames))
 	require.NoError(t, err, "Setup: could not read the UbuntuPro registry key values")
 
-	for v := range valueNames {
+	for _, v := range valueNames {
 		require.Contains(t, values, v, "Setup: UbuntuPro registry key was not initialized as expected")
 	}
 }

@@ -22,7 +22,9 @@ func Distribute(ctx context.Context, db *database.DistroDB, ubuntuProToken strin
 	}
 
 	var err error
-	for _, distro := range db.GetAll() {
+	instances := db.GetAll()
+	log.Debugf(ctx, "Distributing Ubuntu Pro token to %d distros", len(instances))
+	for _, distro := range instances {
 		err = errors.Join(err, distro.SubmitTasks(task))
 	}
 

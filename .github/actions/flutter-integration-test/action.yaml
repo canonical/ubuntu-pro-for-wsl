@@ -15,16 +15,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: microsoft/setup-msbuild@v1
+    - uses: microsoft/setup-msbuild@v3
       if: runner.os == 'Windows'
     # Go is needed to build the agent for integration testing.
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@v6
       with:
-        go-version-file: '${{ inputs.go-version-file }}'
+        cache-dependency-path: "${{ inputs.go-version-file }}"
+        go-version-file: "${{ inputs.go-version-file }}"
     - uses: subosito/flutter-action@v2
       with:
-        channel: 'stable'
-        flutter-version: '${{ inputs.flutter-version }}'
+        cache: true
+        channel: "stable"
+        flutter-version: "${{ inputs.flutter-version }}"
     - name: Integration Test
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
@@ -44,7 +46,7 @@ runs:
         # Default input is coverage/lcov.info and output is coverage/cobertura.xml
         dart pub global run cobertura convert
     - name: Upload coverage artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-${{ matrix.package }}-${{ matrix.os }}-integration
         path: ${{ inputs.package-dir }}/coverage/*

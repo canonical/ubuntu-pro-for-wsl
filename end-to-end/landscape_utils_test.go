@@ -105,6 +105,7 @@ func (l landscape) LogOnError(t *testing.T) {
 func (l landscape) Stop() {
 	if l.stop != nil {
 		l.stop()
+		l.server.Stop()
 	}
 }
 
@@ -123,11 +124,15 @@ func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistr
 	require.Equal(t, wantToken, info.Token, "Landscape did not receive the right pro token")
 
 	// Validate distros
+	wantInstances := make([]string, len(wantDistros))
+	for i, d := range wantDistros {
+		wantInstances[i] = d.Name()
+	}
 	gotDistros := make([]string, 0)
 	for _, instance := range info.Instances {
 		gotDistros = append(gotDistros, instance.ID)
 	}
-	require.ElementsMatch(t, wantDistros, gotDistros, "Landscape did not receive the right distros")
+	require.ElementsMatch(t, wantInstances, gotDistros, "Landscape did not receive the right distros")
 
 	// Validate hostname
 	require.Equal(t, wantHostname, info.Hostname, "Landscape did not receive the right hostname from the agent")
@@ -158,5 +163,5 @@ func (l landscape) RequireUninstallCommand(t *testing.T, ctx context.Context, d 
 			t.Logf("While waiting for Landscape uninstall command to complete: %v", err)
 		}
 		return !reg
-	}, time.Minute, time.Second, "Landcape uninstall command never took effect")
+	}, time.Minute, time.Second, "Landscape uninstall command never took effect")
 }
