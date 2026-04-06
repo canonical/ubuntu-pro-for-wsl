@@ -84,6 +84,7 @@ jobs:
           path: ci-artifacts
       - name: Download WSL image
         uses: ./.github/actions/get-wsl-image
+        id: get-wsl-image
         with:
           base_url: "https://cdimages.ubuntu.com/ubuntu-wsl/daily-live/current/"
           arch: "amd64"
@@ -92,7 +93,7 @@ jobs:
         shell: powershell
         working-directory: ci-artifacts
         run: |
-          Write-Output "::group::Set up the MSIX Package"
+          Write-Output "::group::Lay out the MSIX Package"
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
@@ -105,10 +106,31 @@ jobs:
 
           Write-Output "::endgroup::"
 
-          Write-Output "::group::Set up WSL Pro Service"
+          Write-Output "::group::Lay out WSL Pro Service"
           New-Item -Name "wsl-pro-service" -ItemType Directory
           Move-Item -Path "wsl-pro-service_*/wsl-pro-service_*.deb" -Destination "wsl-pro-service/"
           Remove-Item -Recurse "wsl-pro-service_*/"
+          Write-Output "::endgroup::"
+
+          Write-Output "::group::Lay out the manifest override"
+          $manifest= @{
+              ModernDistributions=@{
+                  Ubuntu = @(
+                      @{
+                          Name = "Ubuntu-Preview"
+                          Default = $true
+                          FriendlyName = "Ubuntu base test image"
+                          Amd64Url = @{
+                              Url = "file:///$PWD/images/ubuntu.wsl"
+                              Sha256 = "0x${{ steps.get-wsl-image.outputs.cache-key }}"
+                          }
+                      })
+                  }
+              }
+
+          $manifestFile = "$PWD/images/test_manifest.json"
+          $manifest | ConvertTo-Json -Depth 5 | Out-File -encoding ascii  $manifestFile
+          Set-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss" -Name DistributionListUrlAppend -Value "file://$manifestFile" -Type String -Force
           Write-Output "::endgroup::"
 
       # Installing a debug version of VCLibs from the SDK is required, otherwise installing the Ubuntu pro debug appx will fail.
