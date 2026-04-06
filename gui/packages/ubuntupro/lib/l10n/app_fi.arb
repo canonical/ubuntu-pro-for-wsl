@@ -76,5 +76,15 @@
         }
     },
     "agentStateQuerying": "Tarkistetaan Ubuntu Pro -tausta-agentin tilaa.",
-    "agentStateUnreachable": "Yritetään palauttaa Ubuntu Pro -tausta-agentti."
+    "agentStateUnreachable": "Yritetään palauttaa Ubuntu Pro -tausta-agentti.",
+    "tokenInputDescription": "Syötä poletti osoitteesta {proLink} tai pyydä se järjestelmänvalvojalta",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStateInvalid": "Odotetaan Ubuntu Pro -tausta-agentin käynnistymistä.",
+    "agentStateUnknownEnv": "Ubuntu Pro -tausta-agentin tilaa ei voida varmentaa. Tarkista ympäristön asetukset."
 }
