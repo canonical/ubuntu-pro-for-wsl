@@ -112,17 +112,41 @@ jobs:
           Remove-Item -Recurse "wsl-pro-service_*/"
           Write-Output "::endgroup::"
 
+          Write-Output "::group::Prepare the golden image"
+          wsl.exe --install --name Reference --from-file ./images/ubuntu.wsl --no-launch
+          wsl.exe -d Reference -u root -- apt-get update 
+          wsl.exe -d Reference -u root -- bash -ec 'apt-get install -y "$(wslpath -ua ./wsl-pro-service/*.deb )"'
+          wsl.exe -d Reference -u root -- bash -ec 'echo verbosity: 3 > /etc/wsl-pro-service.yaml'
+          wsl.exe -d Reference -u root -- adduser --disabled-password --quiet --gecos Ubuntu ubuntu
+          wsl.exe -d Reference -u root -- usermod ubuntu -aG sudo,adm
+          wsl.exe -d Reference -u root -- bash -ec 'cloud-init clean --logs || true'
+          wsl.exe -d Reference -u root -- bash -ec 'rm /etc/cloud/cloud-init.disabled || true'
+          wsl.exe --shutdown
+          wsl.exe --export Reference ./images/ubuntu-preview.tar.gz
+          wsl.exe --unregister Reference
+          $sha256 = (Get-FileHash -Path "./images/ubuntu-preview.tar.gz" -Algorithm SHA256 ).Hash
+          Write-Output "::endgroup::"
+
           Write-Output "::group::Lay out the manifest override"
           $manifest= @{
               ModernDistributions=@{
                   Ubuntu = @(
                       @{
-                          Name = "Ubuntu-Preview"
+                          Name = "Ubuntu"
                           Default = $true
                           FriendlyName = "Ubuntu base test image"
                           Amd64Url = @{
                               Url = "file:///$PWD/images/ubuntu.wsl"
                               Sha256 = "0x${{ steps.get-wsl-image.outputs.cache-key }}"
+                          }
+                      },
+                      @{
+                          Name = "Ubuntu-Preview"
+                          Default = $true
+                          FriendlyName = "Ubuntu golden test image"
+                          Amd64Url = @{
+                              Url = "file:///$PWD/images/ubuntu-preview.tar.gz"
+                              Sha256 = "0x$sha256"
                           }
                       })
                   }

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	wsl "github.com/ubuntu/gowsl"
@@ -41,7 +42,9 @@ const (
 	// The structure is expected to be:
 	// └──${prebuiltPath}
 	//    ├───images
-	//    │   └──ubuntu.wsl
+	//    │   ├──test_manifest.json # Optional, but allow direct use of wsl --install in tests.
+	//    │   ├──ubuntu.wsl
+	//    │   └──ubuntu-preview.tar.gz
 	//    ├───wsl-pro-service
 	//    │   └──wsl-pro-service_*.deb
 	//    └───windows-agent
@@ -70,7 +73,9 @@ func TestMain(m *testing.M) {
 		log.Fatalf(`Setup: environment variable %q is not set. It's expected to point to a directory with the following structure:
 	    ${prebuiltPath}
 	    ├───images
-	    │   └──ubuntu.wsl
+	    │   ├──test_manifest.json # Optional, but allow direct use of wsl --install in tests.
+	    │   ├──ubuntu.wsl
+	    │   └──ubuntu-preview.tar.gz
 	    ├───wsl-pro-service
 	    │   └──wsl-pro-service_*.deb
 	    └───windows-agent
@@ -84,14 +89,7 @@ func TestMain(m *testing.M) {
 	log.Printf("MSIX package located at %s", msixPath)
 	log.Printf("Deb package located at %s", debPkgPath)
 
-	ctx := context.Background()
-	imagePath := filepath.Join(buildPath, "images", referenceImage)
-	path, cleanup, err := generateTestImage(ctx, imagePath)
-	if err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-	defer cleanup()
-	testImagePath = path
+	testImagePath = filepath.Join(buildPath, "images", referenceImage)
 
 	m.Run()
 
@@ -99,6 +97,8 @@ func TestMain(m *testing.M) {
 		log.Printf("Cleanup: registry: %v\n", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	cmd := powershellf(ctx, "Get-AppxPackage -Name %q | Remove-AppxPackage", up4wAppxPackage)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
@@ -248,93 +248,6 @@ func cleanupRegistry() error {
 	}
 
 	return nil
-}
-
-// generateTestImage fails if there is a distro instance named "Reference", unless the safety checks are overridden,
-// in which case it's removed. The source image is then registered, transformed, exported and unregistered.
-// The test image has a default user preconfigured to avoid wsl-setup from hanging on first boot.
-// It also contains the wsl-pro-service Debian package found in the project build directory.
-func generateTestImage(ctx context.Context, sourceImage string) (string, func(), error) {
-	// #nosec G706 // sourceImage is a controlled test input, not user input.
-	log.Printf("Setup: Generating test image from %q\n", sourceImage)
-	reference := "Reference"
-
-	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
-	if err != nil {
-		return "", nil, err
-	}
-	cleanup := func() {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Printf("Setup: Cleanup: could not remove test tempdir: %v", err)
-		}
-	}
-	// Ensures cleanup() runs if we return early due to an error.
-	defer func() {
-		if err != nil {
-			cleanup()
-			return
-		}
-		// #nosec G706 // sourceImage is a controlled test input, not user input.
-		log.Printf("Setup: Generated test image from %q\n", sourceImage)
-	}()
-
-	d := wsl.NewDistro(ctx, reference)
-	if err := assertDistroUnregistered(d); err != nil {
-		return "", nil, err
-	}
-
-	out, err := powershellf(ctx, "wsl.exe --install --name %s --from-file %s --no-launch", reference, sourceImage).CombinedOutput()
-	if err != nil {
-		return "", nil, fmt.Errorf("could not register %s instance from image %q: %v. %s", reference, sourceImage, err, out)
-	}
-	// #nosec G706 // sourceImage is a controlled test input, not user input.
-	log.Printf("Setup: Installed %s instance from image %q\n", reference, sourceImage)
-
-	defer func() {
-		if err := d.Unregister(); err != nil {
-			// #nosec G706 // sourceImage is a controlled test input, not user input.
-			log.Printf("Setup: Failed to unregister %s instance from image %q after generating the test image\n", reference, sourceImage)
-		}
-	}()
-	// Transform the reference distro instance:
-	// Install wsl-pro-service from the deb package built with the project.
-	out, err = powershellf(ctx, `wsl.exe -d %s -u root -- bash -ec 'apt-get update && apt-get install --yes "$(wslpath -ua %q)"'`, reference, debPkgPath).CombinedOutput()
-	if err != nil {
-		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
-	}
-	// Set wsl-pro-service verbosity to 3 to get more logs in case of failure. Quotes around the
-	// file contents wouldn't work.
-	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- bash -ec 'echo verbosity: 3 > /etc/wsl-pro-service.yaml'`, reference).CombinedOutput()
-	// #nosec G706 // sourceImage and reference are variables controlled by the test, not user input.
-	log.Printf("Setup: Installed wsl-pro-service into %s instance from image %q\n", reference, sourceImage)
-	// Create a default admin user to prevent wsl-setup from holding the first boot.
-	out, err = powershellf(ctx, `wsl.exe -d %s -u root -- adduser --quiet --gecos Ubuntu ubuntu`, reference).CombinedOutput()
-	if err != nil {
-		return "", nil, fmt.Errorf("failed to create the default user: %v\n%s", err, out)
-	}
-	out, err = powershellf(ctx, `wsl.exe -d %s -u root -- usermod ubuntu -aG sudo,adm`, reference).CombinedOutput()
-	if err != nil {
-		log.Printf("failed to turn the default user into admin: %v\n%s", err, out)
-	}
-
-	// Make sure cloud-init finds a fresh instance to initialize. Those commands should always fail, but that's still a good preventive measure.
-	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- cloud-init clean --logs`, reference).CombinedOutput()
-	_, _ = powershellf(ctx, `wsl.exe -d %s -u root -- rm /etc/cloud/cloud-init.disabled`, reference).CombinedOutput()
-
-	if err := wsl.Shutdown(ctx); err != nil {
-		return "", nil, fmt.Errorf("could not shut down WSL: %v", err)
-	}
-
-	path := filepath.Join(tmpDir, "snapshot.tar.gz")
-	//#nosec G204 // We control the inputs.
-	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", reference, path).CombinedOutput()
-	if err != nil {
-		return "", nil, fmt.Errorf("could not export test image: %v. %s", err, out)
-	}
-
-	log.Println("Setup: Exported tested image")
-
-	return path, cleanup, nil
 }
 
 func assertDistroUnregistered(d wsl.Distro) error {
