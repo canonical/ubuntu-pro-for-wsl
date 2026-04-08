@@ -176,7 +176,7 @@ func newInstanceTasks(conf *config.Config, p distro.Properties) (t []task.Task, 
 	if err != nil {
 		return nil, err
 	}
-	// There is a Pro subscription bu tthe instance is not attached.
+	// There is a Pro subscription but the instance is not attached.
 	if pro != "" && source != config.SourceNone && !p.ProAttached {
 		t = append(t, tasks.ProAttachment{Token: pro})
 	}
