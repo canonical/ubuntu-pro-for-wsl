@@ -16,6 +16,7 @@ Center
 checksums
 CIS
 Codecov
+chrony
 Ctrl
 cuda
 distro
