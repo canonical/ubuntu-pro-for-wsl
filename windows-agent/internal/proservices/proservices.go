@@ -3,7 +3,6 @@ package proservices
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -119,9 +118,14 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 	onNewInstance := func(d *distro.Distro) {
 		// When a new instance connects to the wslinstance service we'll greet it with some tasks.
 		dtasks, err := newInstanceTasks(conf, d.Properties())
-		if len(dtasks) > 0 {
-			err = errors.Join(err, d.SubmitDeferredTasks(dtasks...))
+		if err != nil {
+			log.Warningf(ctx, "%v", err)
+			return
 		}
+		if len(dtasks) == 0 {
+			return
+		}
+		err = d.SubmitDeferredTasks(dtasks...)
 		if err != nil {
 			log.Warningf(ctx, "%v", err)
 			return
