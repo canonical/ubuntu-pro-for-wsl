@@ -1,7 +1,7 @@
 {
-    "updatingSubscriptionInfo": "Ενημέρωση πληροφοριών συνδρομητή.",
+    "updatingSubscriptionInfo": "Ενημέρωση πληροφοριών του συνδρομητή.",
     "appTitle": "Ubuntu Pro για WSL",
-    "proHeading": "Το open source λογισμικό ασφαλείας από τους εκδότες του Ubuntu,τώρα και στα Windows.{aboutLink}",
+    "proHeading": "Το ελεύθερο λογισμικό ασφαλείας από τους κατασκευαστές του Ubuntu, τώρα και σε Windows.{aboutLink}",
     "@proHeading": {
         "placeholders": {
             "aboutLink": {
@@ -9,29 +9,29 @@
             }
         }
     },
-    "purchaseStatusAlreadyPurchased": "Είσαστε ήδη συνδρομητής στο Ubuntu Pro.",
+    "purchaseStatusAlreadyPurchased": "Είσαστε ήδη συνδρομητής στο Pro.",
     "getUbuntuPro": "Λήψη Ubuntu Pro",
     "learnMore": "Μάθετε περισσότερα",
-    "ubuntuProEnabled": "Το Ubuntu Pro είναι ενεργοποιημένο σε αυτό το μηχάνημα",
-    "manageUbuntuPro": "Διαχείριση Ubuntu Pro συνδρομής",
-    "purchaseStatusSuccess": "Ευχαριστούμε για την εγγραφής σας στο Ubuntu Pro.",
-    "purchaseStatusUserGaveUp": "Η αγορά σας ακυρώθηκε.",
+    "ubuntuProEnabled": "Το Ubuntu Pro είναι ενεργοποιημένο σε αυτό το σύστημα",
+    "manageUbuntuPro": "Διαχείριση συνδρομής Ubuntu Pro",
+    "purchaseStatusSuccess": "Ευχαριστούμε για την εγγραφή σας στο Ubuntu Pro.",
+    "purchaseStatusUserGaveUp": "Η προσπάθεια αγοράς σας ακυρώθηκε.",
     "purchaseStatusServer": "Κάτι πήγε στραβά με το Microsoft Store.Παρακαλώ προσπαθήστε αργότερα.",
     "landscapeSetupCustom": "Προχωρημένη διαχείριση",
     "landscapeKeyLabel": "Κλειδί εγγραφής (προαιρετικό)",
     "landscapeFileEmptyContents": "Το αρχείο δεν πρέπει να είναι άδειο",
     "landscapeFileNotFound": "Το αρχείο δεν βρέθηκε",
     "landscapeFileInvalidFormat": "Το αρχείο είναι σε λανθασμένη μορφή",
-    "landscapeFilePicker": "Επιλέξτε αρχείο...",
-    "landscapeRegister": "Εγγραφή",
+    "landscapeFilePicker": "Επιλέξτε αρχείο…",
+    "landscapeRegister": "Καταχώρηση",
     "buttonNext": "Επόμενο",
-    "statusBarReportBugTooltip": "Αναφέρετε ένα λάθος",
-    "statusBarAgentRunningTooltip": "Ο Ubuntu Pro πράκτορας είναι ενεργός",
-    "statusBarAgentConnectingTooltip": "Σύνδεση στο Ubuntu Pro πράκτορα...",
+    "statusBarReportBugTooltip": "Αναφέρετε ένα σφάλμα",
+    "statusBarAgentRunningTooltip": "Η υπηρεσία του Ubuntu Pro εκτελείται",
+    "statusBarAgentConnectingTooltip": "Σύνδεση στην υπηρεσία του Ubuntu Pro…",
     "tokenErrorInvalid": "Μη έγκυρο διακριτικό (token)",
     "tokenValid": "Έγκυρο διακριτικό (token)",
-    "tokenInputHint": "Token",
-    "attach": "Επισύναψη",
-    "applyProToken": "Εφαρμογή Pro Token",
+    "tokenInputHint": "Διακριτικό",
+    "attach": "Συσχέτιση",
+    "applyProToken": "Εφαρμογή ενός διακριτικού Pro",
     "tokenErrorEmpty": "Το διακριτικό (token) δεν μπορεί να είναι κενό"
 }
