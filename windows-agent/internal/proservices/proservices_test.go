@@ -216,10 +216,12 @@ func TestOnNewInstanceCreatesTask(t *testing.T) {
 
 	testcases := map[string]struct {
 		alreadyAttached bool
+		breakConfig     bool
 		wantCommands    bool
 	}{
 		"When the instance is not already attached, onNewInstance should submit a ProAttachment task": {wantCommands: true},
 		"When the instance is already attached, onNewInstance should not submit a ProAttachment task": {alreadyAttached: true},
+		"When the subscription cannot be retrieved":                                                   {breakConfig: true},
 	}
 
 	for name, tc := range testcases {
@@ -241,13 +243,19 @@ func TestOnNewInstanceCreatesTask(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create Ubuntu Pro registry key")
 			defer reg.CloseKey(k)
 
-			const wantToken = "test-pro-token"
-			err = reg.WriteValue(k, "UbuntuProToken", wantToken, false)
-			require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
-
 			s, err := proservices.New(ctx, publicDir, privateDir, proservices.WithRegistry(reg))
 			require.NoError(t, err, "Setup: New should return no error")
 			defer s.Stop(ctx)
+
+			const wantToken = "test-pro-token"
+			if tc.breakConfig {
+				path := filepath.Join(privateDir, "config")
+				require.NoError(t, os.Remove(path), "Setup: could not remove the config file")
+				require.NoError(t, os.Mkdir(path, 0640), "Setup: could not break the config file")
+			} else {
+				err = reg.WriteValue(k, "UbuntuProToken", wantToken, false)
+				require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
+			}
 
 			server := s.RegisterGRPCServices(ctx, true)
 
