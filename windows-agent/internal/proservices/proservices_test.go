@@ -336,14 +336,14 @@ func TestOnNewInstanceCreatesTask(t *testing.T) {
 				}
 			case <-time.After(timeout):
 				if tc.wantCommands {
-					t.Fatal("timed out waiting for ProAttachCmd from the server")
+					t.Fatal("Timed out waiting for ProAttachCmd from the server")
 				}
 			}
 
 			if tc.wantCommands {
 				// Acknowledge the command so the server's SendProAttachment call completes cleanly.
 				require.NoError(t, proStream.Send(&agentapi.MSG{Data: &agentapi.MSG_Result{Result: ""}}),
-					"could not acknowledge ProAttachCmd")
+					"Could not acknowledge ProAttachCmd")
 			}
 		})
 	}
