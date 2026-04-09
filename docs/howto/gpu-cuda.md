@@ -23,7 +23,7 @@ Make sure the following prerequisites are met before moving forward:
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 * NVIDIA graphics card and administrative permission to install device drivers (see also [NVIDIA's system requirements for CUDA](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/))
-* Ubuntu 24.04 or higher installed on WSL 2 (different versions of CUDA will work on older versions of Ubuntu, here we'll use the latest of both)
+* Ubuntu 24.04 or higher installed on WSL 2 (different versions of CUDA will work on older versions of Ubuntu, but here we'll use the latest of both)
 * Broadband internet connection able to download a few GB of data
 
 ```{tip}
@@ -68,11 +68,11 @@ Navigate to the [CUDA Downloads page](https://developer.nvidia.com/cuda-download
 * Version: 2.0
 * Installer Type: deb (network)
 
-The website renders a series of commands matching the options you selected. The last line installs
+The website shows commands that correspond to your selections. The last line installs
 a specific version of the CUDA toolkit compatible with WSL 2 distro instances. Make sure to adjust
 the version to suit your specific needs.
 
-For our example, the output will be the following:
+For our example, the commands shown on the website are:
 
 ```{code-block} text
 $ wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
@@ -175,7 +175,7 @@ Once complete, run the application with:
 $ ./build/deviceQuery
 ```
 
-You should see a similar output to the following detailing the functionality of your CUDA setup (the exact results depend on your hardware setup):
+You should see a similar output to the following, detailing the functionality of your CUDA setup (the exact results depend on your hardware setup):
 
 ```text
 ./build/deviceQuery Starting...
