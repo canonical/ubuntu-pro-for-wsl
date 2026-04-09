@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 )
 
 type realBackend struct{}
@@ -21,7 +22,11 @@ func (b realBackend) Hostname() (string, error) {
 
 // GetenvWslDistroName obtains the value of environment variable WSL_DISTRO_NAME.
 func (b realBackend) GetenvWslDistroName() string {
-	return os.Getenv("WSL_DISTRO_NAME")
+	name := os.Getenv("WSL_DISTRO_NAME")
+	if strings.TrimSpace(name) != "" {
+		return name
+	}
+	return os.Getenv("WSL2_DISTRO_NAME")
 }
 
 // ProExecutable returns the full command to run the pro executable with the provided arguments.

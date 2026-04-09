@@ -130,6 +130,7 @@ func (s *Server) Serve(service CommandService) error {
 	if err != nil {
 		return NewSystemError("could not serve: %v", err)
 	}
+	log.Debugf(s.ctx, "Server: sending preface messages from instance %s", info.GetWslName())
 
 	if err := client.SendInfo(info); err != nil {
 		return fmt.Errorf("could not serve: could not send first Connnected message: %v", err)
