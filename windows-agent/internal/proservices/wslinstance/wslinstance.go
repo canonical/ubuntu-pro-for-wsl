@@ -20,24 +20,32 @@ type LandscapeController interface {
 	SendUpdatedInfo(context.Context) error
 }
 
+// NewInstanceFunc is a callback type for when a new instance connects. It receives the distro that just connected.
+type NewInstanceFunc func(*distro.Distro)
+
 // Service is the WSL Instance GRPC service implementation.
 type Service struct {
 	agentapi.UnimplementedWSLInstanceServer
 
-	db        *database.DistroDB
-	landscape LandscapeController
+	db            *database.DistroDB
+	onNewInstance NewInstanceFunc
+	landscape     LandscapeController
 
 	clients   map[string]*client
 	clientsMu sync.Mutex
 }
 
 // New returns a new service handling WSL Instance API.
-func New(ctx context.Context, db *database.DistroDB, landscape LandscapeController) (s *Service) {
+func New(ctx context.Context, db *database.DistroDB, onNew NewInstanceFunc, landscape LandscapeController) (s *Service) {
 	log.Debug(ctx, "Building new GRPC WSLInstance server")
+	if onNew == nil {
+		onNew = func(*distro.Distro) {}
+	}
 	return &Service{
-		db:        db,
-		landscape: landscape,
-		clients:   make(map[string]*client),
+		db:            db,
+		onNewInstance: onNew,
+		landscape:     landscape,
+		clients:       make(map[string]*client),
 	}
 }
 
@@ -75,6 +83,8 @@ func (s *Service) Connected(stream agentapi.WSLInstance_ConnectedServer) (err er
 		return err
 	}
 
+	// Notify about the new instance connected.
+	s.onNewInstance(d)
 	// Load deferred tasks
 	d.EnqueueDeferredTasks()
 
