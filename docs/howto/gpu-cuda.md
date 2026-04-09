@@ -86,7 +86,17 @@ $ sudo apt-get -y install cuda-toolkit-13-2
 
 Once complete, you should see a series of outputs that end in `done.`:
 
-![Terminal output showing successful installation of NVIDIA CUDA toolkit on Ubuntu.](assets/gpu-cuda/done-done.png)
+```{code-block} text
+done.
+Setting up default-jre-headless (2:1.21-75+exp1) ...
+Setting up openjdk-21-jre:amd64 (21.0.10+7-1~24.04) ...
+Setting up default-jre (2:1.21-75+exp1) ...
+Setting up cuda-nsight-13-2 (13.2.20-1) ...
+Setting up cuda-visual-tools-13-2 (13.2.0-1) ...
+Setting up cuda-tools-13-2 (13.2.0-1) ...
+Setting up cuda-toolkit-13-2 (13.2.0-1) ...
+g@mib01:~$
+```
 
 Congratulations! You should have a working installation of CUDA by now. Let’s test it in the next step.
 
@@ -114,9 +124,48 @@ $ cmake -S . -B build
 $ cmake --build build
 ```
 
-A successful build will look like the screenshot below.
+A successful build will look like the following:
 
-![Terminal output showing the successful compilation of a CUDA sample application.](assets/gpu-cuda/cmake.png)
+```{code-block} text
+g@mib01:~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$ cmake -S . -B build
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- The CUDA compiler identification is NVIDIA 13.2.51 with host compiler GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting CUDA compiler ABI info
+-- Detecting CUDA compiler ABI info - done
+-- Check for working CUDA compiler: /usr/local/cuda-13/bin/nvcc - skipped
+-- Detecting CUDA compile features
+-- Detecting CUDA compile features - done
+-- Found CUDAToolkit: /usr/local/cuda-13/targets/x86_64-linux/include (found version "13.2.51")
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- CUDA Samples installation configured:
+--   Architecture: x86_64
+--   OS: linux
+--   Build Type: release
+--   Install Prefix: /home/g/Dev/cuda-samples/Samples/1_Utilities/deviceQuery/build/bin
+--   Install Directory: /home/g/Dev/cuda-samples/Samples/1_Utilities/deviceQuery/build/bin/x86_64/linux/release
+-- Configuring done (43.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/g/Dev/cuda-samples/Samples/1_Utilities/deviceQuery/build
+g@mib01:~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$ cmake --build build
+[ 50%] Building CXX object CMakeFiles/deviceQuery.dir/deviceQuery.cpp.o
+[100%] Linking CXX executable deviceQuery
+[100%] Built target deviceQuery
+g@mib01:~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$
+```
+
 
 Once complete, run the application with:
 
