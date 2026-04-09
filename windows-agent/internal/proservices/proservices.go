@@ -116,20 +116,17 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	// When a new instance connects to the wslinstance service we'll greet it with some tasks.
 	onNewInstance := func(d *distro.Distro) {
+		props := d.Properties()
+		var e error
+		defer doOnError(&e, func(err error) {
+			log.Warningf(ctx, "Failed to deliver initial tasks for new instance %q: %v", props.DistroID, err)
+		})
 		// When a new instance connects to the wslinstance service we'll greet it with some tasks.
-		dtasks, err := newInstanceTasks(conf, d.Properties())
-		if err != nil {
-			log.Warningf(ctx, "%v", err)
+		dtasks, e := newInstanceTasks(conf, props)
+		if e != nil || len(dtasks) == 0 {
 			return
 		}
-		if len(dtasks) == 0 {
-			return
-		}
-		err = d.SubmitDeferredTasks(dtasks...)
-		if err != nil {
-			log.Warningf(ctx, "%v", err)
-			return
-		}
+		e = d.SubmitDeferredTasks(dtasks...)
 	}
 
 	s.wslInstanceService = wslinstance.New(ctx, s.db, onNewInstance, s.landscapeService.Controller())
@@ -233,4 +230,11 @@ func (m Manager) RegisterGRPCServices(ctx context.Context, isWslNetAvailable boo
 func InitWSLAPI() {
 	d := wsl.NewDistro(context.Background(), "Whatever")
 	_, _ = d.GetConfiguration()
+}
+
+// doOnError is a helper function to defer execution of a callback if the given error pointer is not nil.
+func doOnError(err *error, onError func(error)) {
+	if *err != nil {
+		onError(*err)
+	}
 }
