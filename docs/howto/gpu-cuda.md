@@ -84,7 +84,7 @@ $ sudo apt-get update
 $ sudo apt-get -y install cuda-toolkit-13-2
 ```
 
-Copy the commands shown in the website and paste them on a terminal to execute the installation.
+Run the commands shown on the website in your Ubuntu instance to execute the installation.
 A successful installation will show a lot of text, ending in a pattern similar to the following
 (the exact details may depend on your system and the CUDA version being installed):
 
