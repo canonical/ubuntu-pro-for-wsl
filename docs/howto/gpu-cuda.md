@@ -89,6 +89,7 @@ A successful installation will show a lot of text, ending in a pattern similar t
 (the exact details may depend on your system and the CUDA version being installed):
 
 ```{code-block} text
+:class: no-copy
 done.
 Setting up default-jre-headless (2:1.21-75+exp1) ...
 Setting up openjdk-21-jre:amd64 (21.0.10+7-1~24.04) ...
@@ -129,6 +130,8 @@ $ cmake --build build
 A successful build will look like the following:
 
 ```{code-block} text
+:class: no-copy
+
 g@mib01:~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$ cmake -S . -B build
 -- The C compiler identification is GNU 13.3.0
 -- The CXX compiler identification is GNU 13.3.0
@@ -177,7 +180,9 @@ $ ./build/deviceQuery
 
 You should see a similar output to the following, detailing the functionality of your CUDA setup (the exact results depend on your hardware setup):
 
-```text
+```{code-block} text
+:class: no-copy
+
 ./build/deviceQuery Starting...
 
  CUDA Device Query (Runtime API) version (CUDART static linking)
