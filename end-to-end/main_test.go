@@ -9,11 +9,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
-	wsl "github.com/ubuntu/gowsl"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -41,6 +42,10 @@ const (
 	// prebuiltPath is an env variable that, if set, uses a build at a certain path instead of building the project anew.
 	// The structure is expected to be:
 	// └──${prebuiltPath}
+	//    ├───images
+	//    │   ├──test_manifest.json # Optional, but allow direct use of wsl --install in tests.
+	//    │   ├──ubuntu.wsl
+	//    │   └──ubuntu-preview.tar.gz
 	//    ├───wsl-pro-service
 	//    │   └──wsl-pro-service_*.deb
 	//    └───windows-agent
@@ -48,27 +53,14 @@ const (
 	//
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
-	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistro = "Ubuntu-Preview"
-
-	// referenceDistro is the WSL distro that will be used to generate the test image.
-	referenceDistroAppx = "CanonicalGroupLimited.UbuntuPreview"
+	// referenceImage is the WSL distro image that will be used to generate the test image.
+	referenceImage = "ubuntu.wsl"
 
 	// up4wAppxPackage is the Ubuntu Pro for WSL package.
 	up4wAppxPackage = "CanonicalGroupLimited.UbuntuPro"
 )
 
 func TestMain(m *testing.M) {
-	ctx := context.Background()
-
-	if err := assertAppxInstalled(ctx, "MicrosoftCorporationII.WindowsSubsystemForLinux"); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
-	if err := assertAppxInstalled(ctx, referenceDistroAppx); err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-
 	if err := assertCleanRegistry(); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
@@ -79,26 +71,26 @@ func TestMain(m *testing.M) {
 
 	buildPath := os.Getenv(prebuiltPath)
 	if buildPath == "" {
-		path, err := buildProject(ctx)
-		if err != nil {
-			log.Fatalf("Setup: %v\n", err)
-		}
-		buildPath = path
+		log.Fatalf(`Setup: environment variable %q is not set. It's expected to point to a directory with the following structure:
+	    ${prebuiltPath}
+	    ├───images
+	    │   ├──test_manifest.json # Optional, but allow direct use of wsl --install in tests.
+	    │   ├──ubuntu.wsl
+	    │   └──ubuntu-preview.tar.gz
+	    ├───wsl-pro-service
+	    │   └──wsl-pro-service_*.deb
+	    └───windows-agent
+	        └──UbuntuProForWSL_*.msixbundle
+	`, prebuiltPath)
 	}
 
 	if err := usePrebuiltProject(buildPath); err != nil {
 		log.Fatalf("Setup: %v\n", err)
 	}
-
 	log.Printf("MSIX package located at %s", msixPath)
 	log.Printf("Deb package located at %s", debPkgPath)
 
-	path, cleanup, err := generateTestImage(ctx, referenceDistro)
-	if err != nil {
-		log.Fatalf("Setup: %v\n", err)
-	}
-	defer cleanup()
-	testImagePath = path
+	testImagePath = filepath.Join(buildPath, "images", referenceImage)
 
 	m.Run()
 
@@ -106,6 +98,8 @@ func TestMain(m *testing.M) {
 		log.Printf("Cleanup: registry: %v\n", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	cmd := powershellf(ctx, "Get-AppxPackage -Name %q | Remove-AppxPackage", up4wAppxPackage)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
@@ -139,86 +133,9 @@ func usePrebuiltProject(buildPath string) (err error) {
 	return nil
 }
 
-func buildProject(ctx context.Context) (string, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	buildPath, err := os.MkdirTemp(os.TempDir(), "UP4W-E2E-build")
-	if err != nil {
-		return "", fmt.Errorf("could not create temporary directory for build artifacts")
-	}
-
-	debPath := filepath.Join(buildPath, "wsl-pro-service")
-	winPath := filepath.Join(buildPath, "windows-agent")
-
-	if err := os.MkdirAll(debPath, 0600); err != nil {
-		return "", fmt.Errorf("could not create directory for WSL-Pro-Service Debian package artifacts")
-	}
-
-	if err := os.MkdirAll(winPath, 0600); err != nil {
-		return "", fmt.Errorf("could not create directory for Ubuntu Pro for WSL MSIX artifacts")
-	}
-
-	jobs := map[string]*exec.Cmd{
-		"Build Windows Agent":   powershellf(ctx, `..\tools\build\build-appx.ps1 -Mode end_to_end_tests -OutputDir %q`, winPath),
-		"Build Wsl Pro Service": powershellf(ctx, `..\tools\build\build-deb.ps1 -OutputDir %q`, debPath),
-	}
-
-	results := make(chan error)
-	for jobName, cmd := range jobs {
-		go func() {
-			log.Printf("Started job: %s\n", jobName)
-
-			logPath := strings.ReplaceAll(fmt.Sprintf("%s.log", jobName), " ", "")
-			if f, err := os.Create(logPath); err != nil {
-				log.Printf("%s: could not open log file %q for writing", jobName, logPath)
-			} else {
-				cmd.Stdout = f
-				cmd.Stderr = f
-				defer f.Close()
-			}
-
-			if err := cmd.Run(); err != nil {
-				cancel()
-				results <- fmt.Errorf("%q: %v. Check out %q for more details", jobName, err, logPath)
-				return
-			}
-
-			log.Printf("Finished job: %s\n", jobName)
-			results <- nil
-		}()
-	}
-
-	for range jobs {
-		err = errors.Join(err, <-results)
-	}
-
-	if err != nil {
-		return "", fmt.Errorf("could not build project: %v", err)
-	}
-
-	log.Println("Project built")
-
-	return buildPath, nil
-}
-
-// assertAppxInstalled returns an error if the provided Appx is not installed.
-func assertAppxInstalled(ctx context.Context, appx string) error {
-	out, err := powershellf(ctx, `(Get-AppxPackage -Name %q).Status`, appx).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("could not determine if %q is installed: %v. %s", appx, err, out)
-	}
-	s := strings.TrimSpace(string(out))
-	if s != "Ok" {
-		return fmt.Errorf("appx %q is not installed", appx)
-	}
-
-	return nil
-}
-
-// powershellf is syntax sugar to run powrshell commands.
+// powershellf is syntax sugar to run powrshell commands with formatted arguments.
 func powershellf(ctx context.Context, command string, args ...any) *exec.Cmd {
-	//#nosec G204 // This is a test helper for which all callers have hardcoded inputs.
+	//#nosec G204,G702 // This is a test helper for which all callers have hardcoded inputs.
 	return exec.CommandContext(ctx, "powershell.exe",
 		"-NoProfile",
 		"-NoLogo",
@@ -334,95 +251,14 @@ func cleanupRegistry() error {
 	return nil
 }
 
-// generateTestImage fails if the sourceDistro is registered, unless the safety checks are overridden,
-// in which case the sourceDistro is removed.
-// The source distro is then registered, exported after first boot, and unregistered.
-func generateTestImage(ctx context.Context, sourceDistro string) (path string, cleanup func(), err error) {
-	log.Printf("Setup: Generating test image from %q\n", sourceDistro)
-	defer log.Printf("Setup: Generated test image from %q\n", sourceDistro)
-
-	tmpDir, err := os.MkdirTemp(os.TempDir(), "UP4W_TEST_*")
-	if err != nil {
-		return "", nil, err
-	}
-	cleanup = func() {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Printf("Setup: Cleanup: could not remove test tempdir: %v", err)
-		}
+func initializeCOM() (func(), error) {
+	runtime.LockOSThread()
+	if err := windows.CoInitializeEx(0, windows.COINIT_MULTITHREADED); err != nil {
+		return runtime.UnlockOSThread, fmt.Errorf("could not initialize COM library: %v", err)
 	}
 
-	d := wsl.NewDistro(ctx, sourceDistro)
-	if err := assertDistroUnregistered(d); err != nil {
-		cleanup()
-		return "", nil, err
-	}
-
-	launcher, err := common.WSLLauncher(sourceDistro)
-	if err != nil {
-		cleanup()
-		return "", nil, err
-	}
-
-	out, err := powershellf(ctx, "%s install --root --ui=none", launcher).CombinedOutput()
-	if err != nil {
-		cleanup()
-		return "", nil, fmt.Errorf("could not register %q: %v. %s", sourceDistro, err, out)
-	}
-
-	log.Printf("Setup: Installed %q\n", sourceDistro)
-
-	defer func() {
-		if err := d.Unregister(); err != nil {
-			log.Printf("Setup: Failed to unregister %q after generating the test image\n", sourceDistro)
-		}
-	}()
-
-	// From now on, all cleanups must be deferred because the distro
-	// must be unregistered before removing the directory it is in.
-
-	out, err = d.Command(ctx, fmt.Sprintf(`DEBIAN_FRONTEND=noninteractive bash -ec "apt update && apt install -y $(wslpath -ua '%s')"`, debPkgPath)).CombinedOutput()
-	if err != nil {
-		defer cleanup()
-		return "", nil, fmt.Errorf("could not install wsl-pro-service: %v. %s", err, out)
-	}
-
-	log.Printf("Setup: Installed wsl-pro-service into %q\n", sourceDistro)
-
-	if err := wsl.Shutdown(ctx); err != nil {
-		defer cleanup()
-		return "", nil, fmt.Errorf("could not shut down WSL: %v", err)
-	}
-
-	path = filepath.Join(tmpDir, "snapshot.vhdx")
-	//#nosec G204 // We control the inputs.
-	out, err = exec.CommandContext(ctx, "wsl.exe", "--export", sourceDistro, path, "--vhd").CombinedOutput()
-	if err != nil {
-		defer cleanup()
-		return "", nil, fmt.Errorf("could not export test image: %v. %s", err, out)
-	}
-
-	log.Println("Setup: Exported image")
-
-	return path, cleanup, nil
-}
-
-func assertDistroUnregistered(d wsl.Distro) error {
-	registered, err := d.IsRegistered()
-	if err != nil {
-		return fmt.Errorf("ubuntu-preview: %v", err)
-	}
-
-	if !registered {
-		return nil
-	}
-
-	if os.Getenv(overrideSafety) == "" {
-		return fmt.Errorf("distro %q should not exist. Unregister it to agree to run this potentially destructive test", d.Name())
-	}
-
-	if err := d.Unregister(); err != nil {
-		return err
-	}
-
-	return nil
+	return func() {
+		windows.CoUninitialize()
+		runtime.UnlockOSThread()
+	}, nil
 }

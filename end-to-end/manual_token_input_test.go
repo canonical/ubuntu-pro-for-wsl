@@ -12,9 +12,7 @@ import (
 )
 
 func TestManualTokenInput(t *testing.T) {
-	// TODO: Remove this line when cloud-init support for UP4W is released.
-	// Follow this PR for more information: https://github.com/canonical/cloud-init/pull/5116
-	t.Skip("This test depends on cloud-init support for UP4W being released.")
+	t.Skip("This test is disabled due performance issues leading to too frequent failures")
 
 	type whenToken int
 	const (
