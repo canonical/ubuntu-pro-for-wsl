@@ -36,7 +36,7 @@ runs:
         uri="${{ inputs.base_url }}/SHA256SUMS"
         if ! curl --fail -o "$shafile" "${uri}"; then  
             echo "::error:: Failed to download the checksum file from $uri."  
-            exit 1  
+            exit 1
         fi  
 
         # Look for a line matching the pattern: <sha> *<name>-wsl-<arch>.wsl

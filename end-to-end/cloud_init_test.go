@@ -90,7 +90,7 @@ func TestCloudInitIntegration(t *testing.T) {
 		}
 		state, err := distro.State()
 		if err != nil {
-			t.Logf("could not determine if distro is registered: %v", err)
+			t.Logf("Could not determine if distro is registered: %v", err)
 			return false
 		}
 		return state == wsl.Stopped
@@ -104,7 +104,7 @@ func TestCloudInitIntegration(t *testing.T) {
 		attached, err1 := distroIsProAttached(t, ctx, distro)
 		tried, err2 := triedProAttach(t, distro.Name())
 		if err1 != nil && err2 != nil {
-			t.Logf("could not determine if distro tried to attach to Pro: %v", errors.Join(err1, err2))
+			t.Logf("Could not determine if distro tried to attach to Pro: %v", errors.Join(err1, err2))
 			return false
 		}
 		return attached || tried

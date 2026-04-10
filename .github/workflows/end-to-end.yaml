@@ -89,7 +89,7 @@ jobs:
           base_url: "https://cdimages.ubuntu.com/ubuntu-wsl/daily-live/current/"
           arch: "amd64"
           output_path: "ci-artifacts/images/ubuntu.wsl"
-      - name: Layout the downloaded artifacts
+      - name: Lay out the downloaded artifacts
         shell: powershell
         working-directory: ci-artifacts
         run: |

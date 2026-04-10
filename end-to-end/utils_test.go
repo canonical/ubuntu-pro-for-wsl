@@ -230,7 +230,7 @@ func logProClientOnError(t *testing.T, instanceName string) {
 
 	out, err := os.ReadFile(fmt.Sprintf(`\\wsl.localhost\%s\var\log\ubuntu-advantage.log`, instanceName))
 	if err != nil {
-		t.Logf("could not access Pro Client logs: %v\n%s\n", err, out)
+		t.Logf("Could not access Pro Client logs: %v\n%s\n", err, out)
 		return
 	}
 	t.Logf("Pro Client logs:\n%s\n", out)
