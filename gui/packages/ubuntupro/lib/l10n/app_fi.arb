@@ -86,5 +86,38 @@
         }
     },
     "agentStateInvalid": "Odotetaan Ubuntu Pro -tausta-agentin käynnistymistä.",
-    "agentStateUnknownEnv": "Ubuntu Pro -tausta-agentin tilaa ei voida varmentaa. Tarkista ympäristön asetukset."
+    "agentStateUnknownEnv": "Ubuntu Pro -tausta-agentin tilaa ei voida varmentaa. Tarkista ympäristön asetukset.",
+    "purchaseStatusNetwork": "Verkko-ongelma esti ostoksen tekemisen. Yritä uudelleen kun yhteys on kunnossa.",
+    "purchaseStatusServer": "Microsoft Storen kanssa tapahtui virhe. Yritä uudelleen myöhemmin.",
+    "purchaseStatusUnknown": "Tuntematon virhe yritettäessä tehdä tilausta. Voit kokeille käynnistää sovelluksen uudelleen.",
+    "landscapeSkipDescription": "Landscape-asetukset on mahdollista tehdä myös myöhemmin tässä sovelluksessa",
+    "landscapeHeading": "Tee Landscape-yhteyden asetukset hallitaksesi Ubuntu WSL -instansseja etänä. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "landscapeFQDNError": "Virheellinen FQDN. Edellytetään täyttä palvelinnimeä tai IP-osoitetta.",
+    "landscapeFQDNSaaSError": "FQDN:n ei tule olla landscape.canonical.com.",
+    "landscapeSSLKeyLabel": "Palvelimen julkinen SSL-avain (valinnainen)",
+    "landscapeFileLabel": "Asetustiedoston polku",
+    "landscapeFileTooLarge": "Asetustiedosto on liian suuri",
+    "landscapeFileEmptyPath": "Polku tulee määrittää",
+    "landscapeApplyError": "Virhe yritettäessä ottaa asetuksia käyttöön:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeProceedAnywayHint": "Jatka samalla yrittäen yhteyden muodostamista Landscape-palvelimeen taustalla.",
+    "landscapeChangeLaterHint": "Voit muuttaa asetuksia milloin vain.",
+    "landscapeEditYourConfig": "Muokkaa asetuksia",
+    "landscapeInvalidConfigContent": "Palvelin hylkäsi toimitetut asetukset. Tarkista asetukset.",
+    "landscapeUnchangedConfig": "Asetuksia ei muutettu",
+    "landscapeWSLUnavailableContent": "WSL-ominaisuudet ovat poissa käytöstä Landscape-palvelimella. Ota yhteys järjestelmän ylläpitäjään."
 }
