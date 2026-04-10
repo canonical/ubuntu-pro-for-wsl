@@ -1,4 +1,123 @@
 {
-  "appTitle": "Ubuntu Pro for WSL",
-  "@appTitle": {}
+    "appTitle": "Ubuntu Pro for WSL",
+    "tokenInputTitle": "Liitä tämä kone",
+    "attach": "Liitä",
+    "agent": "Ubuntu Pro -tausta-agentti",
+    "agentStateStarting": "Ubuntu Pro -tausta-agentti käynnistyy.",
+    "agentStatePingNonResponsive": "Ubuntu Pro -tausta-agentti ei vastaa.",
+    "agentStateCannotStart": "Ubuntu Pro -tausta-agenttia ei voi käynnistää.",
+    "getUbuntuPro": "Hanki Ubuntu Pro",
+    "learnMore": "Lue lisää",
+    "ubuntuProEnabled": "Ubuntu Pro on käytössä tällä koneella",
+    "proHeading": "Avoimen lähdekoodin ohjelmistojen tietoturvaa Ubuntun julkaisijoiden toimesta, nyt saatavilla Windowsilla. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "ubuntuProEnabledInfo": "Kaikilla Ubuntu WSL -instansseilla on pääsy Ubuntu Pro -tietoturvaominaisuuksiin.",
+    "manageUbuntuPro": "Hallitse Ubuntu Pro -tilausta",
+    "detachPro": "Irrota Ubuntu Pro",
+    "updatingSubscriptionInfo": "Päivitetään tilaustietoja.",
+    "purchaseStatusSuccess": "Kiitos Ubuntu Pro -tilauksesta.",
+    "purchaseStatusAlreadyPurchased": "Olet jo Pro-tilauksessa.",
+    "purchaseStatusUserGaveUp": "Ostoyritys peruttiin.",
+    "landscapeSkip": "Ohita toistaiseksi",
+    "landscapeSkipRegister": "Rekisteröidy Landscapeen",
+    "landscapeSetupManual": "Manuaalinen määritys",
+    "landscapeSetupManualHint": "Rekisteröidy Landscape-palvelimeen",
+    "landscapeSetupCustom": "Lisämääritykset",
+    "landscapeSetupCustomHint": "Lataa mukautettu Landscape-asiakkaan asetustiedosto",
+    "landscapeAccountNameLabel": "Tilin nimi",
+    "landscapeAccountNameError": "Tilin nimi ei voi olla tyhjä tai \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "Rekisteröitymisavain (valinnainen)",
+    "landscapeFileEmptyContents": "Tiedosto ei voi olla tyhjä",
+    "landscapeFileNotFound": "Tiedostoa ei löytynyt",
+    "landscapeFileIsDir": "Tiedosto ei voi olla hakemisto",
+    "landscapeFileInvalidFormat": "Tiedosto on väärässä muodossa",
+    "landscapeFilePicker": "Valitse tiedosto...",
+    "landscapeConfigureButton": "Määritä Landscape",
+    "landscapeRegister": "Rekisteröidy",
+    "landscapeDetails": "Tiedot",
+    "landscapeProceedAnyway": "Jatka silti",
+    "landscapeInvalidConfig": "Virheellinen Landscape-määritys",
+    "landscapeUnreachable": "Landscape ei ole tavoitettavissa",
+    "landscapeUnreachableContent": "Landscape-palvelimeen ei voitu yhdistää.",
+    "landscapeWSLUnavailable": "Landscape WSL -ominaisuudet on poistettu käytöstä",
+    "landscapeUnknownError": "Tuntematon virhe Landscapeen yhdistäessä",
+    "landscapeUnknownErrorContent": "Ilmoita tästä ongelmasta ja sisällytä alla olevat tiedot.",
+    "buttonNext": "Seuraava",
+    "buttonSkip": "Ohita",
+    "buttonBack": "Takaisin",
+    "statusBarReportBugTooltip": "Ilmoita ongelmasta",
+    "statusBarAgentRunningTooltip": "Ubuntu Pro -agentti on käynnissä",
+    "statusBarAgentConnectingTooltip": "Yhdistetään Ubuntu Pro -agenttiin...",
+    "statusBarAgentDownTooltip": "Ubuntu Pro -agentin yhteys on katkaistu. Paina käynnistääksesi agentin.",
+    "tokenErrorEmpty": "Poletti ei voi olla tyhjä",
+    "tokenErrorInvalid": "Virheellinen poletti",
+    "tokenValid": "Kelvollinen poletti",
+    "tokenInputHint": "Poletti",
+    "applyProToken": "Toteuta Pro-poletti",
+    "applyingProToken": "Toteutetaan polettia {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStateQuerying": "Tarkistetaan Ubuntu Pro -tausta-agentin tilaa.",
+    "agentStateUnreachable": "Yritetään palauttaa Ubuntu Pro -tausta-agentti.",
+    "tokenInputDescription": "Syötä poletti osoitteesta {proLink} tai pyydä se järjestelmänvalvojalta",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "agentStateInvalid": "Odotetaan Ubuntu Pro -tausta-agentin käynnistymistä.",
+    "agentStateUnknownEnv": "Ubuntu Pro -tausta-agentin tilaa ei voida varmentaa. Tarkista ympäristön asetukset.",
+    "purchaseStatusNetwork": "Verkko-ongelma esti ostoksen tekemisen. Yritä uudelleen kun yhteys on kunnossa.",
+    "purchaseStatusServer": "Microsoft Storen kanssa tapahtui virhe. Yritä uudelleen myöhemmin.",
+    "purchaseStatusUnknown": "Tuntematon virhe yritettäessä tehdä tilausta. Voit kokeille käynnistää sovelluksen uudelleen.",
+    "landscapeSkipDescription": "Landscape-asetukset on mahdollista tehdä myös myöhemmin tässä sovelluksessa",
+    "landscapeHeading": "Tee Landscape-yhteyden asetukset hallitaksesi Ubuntu WSL -instansseja etänä. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeFQDNLabel": "Landscape FQDN",
+    "landscapeFQDNError": "Virheellinen FQDN. Edellytetään täyttä palvelinnimeä tai IP-osoitetta.",
+    "landscapeFQDNSaaSError": "FQDN:n ei tule olla landscape.canonical.com.",
+    "landscapeSSLKeyLabel": "Palvelimen julkinen SSL-avain (valinnainen)",
+    "landscapeFileLabel": "Asetustiedoston polku",
+    "landscapeFileTooLarge": "Asetustiedosto on liian suuri",
+    "landscapeFileEmptyPath": "Polku tulee määrittää",
+    "landscapeApplyError": "Virhe yritettäessä ottaa asetuksia käyttöön:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeProceedAnywayHint": "Jatka samalla yrittäen yhteyden muodostamista Landscape-palvelimeen taustalla.",
+    "landscapeChangeLaterHint": "Voit muuttaa asetuksia milloin vain.",
+    "landscapeEditYourConfig": "Muokkaa asetuksia",
+    "landscapeInvalidConfigContent": "Palvelin hylkäsi toimitetut asetukset. Tarkista asetukset.",
+    "landscapeUnchangedConfig": "Asetuksia ei muutettu",
+    "landscapeWSLUnavailableContent": "WSL-ominaisuudet ovat poissa käytöstä Landscape-palvelimella. Ota yhteys järjestelmän ylläpitäjään."
 }
