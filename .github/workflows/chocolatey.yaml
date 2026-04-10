@@ -108,7 +108,7 @@ jobs:
           choco pack
 
       - name: Upload artifacts for debugging
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: ./msix/chocolatey/ubuntu-pro-for-wsl.*.nupkg
           name: nupkg
