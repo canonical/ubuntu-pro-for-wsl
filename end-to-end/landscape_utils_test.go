@@ -105,6 +105,8 @@ func (l landscape) LogOnError(t *testing.T) {
 func (l landscape) Stop() {
 	if l.stop != nil {
 		l.stop()
+	}
+	if l.server != nil {
 		l.server.Stop()
 	}
 }
