@@ -110,14 +110,14 @@ func TestCloudInitIntegration(t *testing.T) {
 		return attached || tried
 	}, 10*time.Second, time.Second, "distro should have tried to attach to Pro")
 
-	uid, err := distro.Command(ctx, "id -u testuser").CombinedOutput()
-	require.NoError(t, err, "cloud-init should have configured the default user, uid is %s", uid)
-	// Finally, give extra room for wsl-pro-service to talk to the agent.
+	// Finally, wake the distro instance so wsl-pro-service can talk to the agent.
 	cmd := exec.CommandContext(ctx, "wsl.exe", "-d", name)
 	require.NoError(t, cmd.Start(), "Could not launch the distro for final assertions")
-	time.Sleep(1 * time.Second)
 	//nolint:errcheck // There is nothing we can do if this fails.
 	defer cmd.Process.Kill()
+
+	uid, err := distro.Command(ctx, "id -u testuser").CombinedOutput()
+	require.NoError(t, err, "cloud-init should have configured the default user, uid is %s", uid)
 
 	landscape.RequireReceivedInfo(t, proToken, []wsl.Distro{distro}, hostname)
 	landscape.RequireUninstallCommand(t, ctx, distro, info)

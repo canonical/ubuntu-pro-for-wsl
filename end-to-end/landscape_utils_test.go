@@ -114,16 +114,20 @@ func (l landscape) RequireReceivedInfo(t *testing.T, wantToken string, wantDistr
 	t.Helper()
 
 	require.Eventually(t, func() bool {
-		return len(l.service.Hosts()) > 0
-	}, time.Minute, time.Second, "Landscape should have had at least one connection")
-
-	require.Len(t, l.service.Hosts(), 1, "Landscape should have had only one connection")
-	info := maps.Values(l.service.Hosts())[0]
+		return len(l.service.Hosts()) == 1
+	}, time.Minute, time.Second, "Landscape should have had exactly one connection")
 
 	// Validate token
-	require.Equal(t, wantToken, info.Token, "Landscape did not receive the right pro token")
+	require.Equal(t, wantToken, maps.Values(l.service.Hosts())[0].Token, "Landscape did not receive the right pro token")
 
 	// Validate distros
+	wantDistroCount := len(wantDistros)
+	require.Eventually(t, func() bool {
+		info := maps.Values(l.service.Hosts())[0]
+		return len(info.Instances) == wantDistroCount
+	}, 30*time.Second, time.Second, "Landscape should have received the right number of distros")
+
+	info := maps.Values(l.service.Hosts())[0]
 	wantInstances := make([]string, len(wantDistros))
 	for i, d := range wantDistros {
 		wantInstances[i] = d.Name()
