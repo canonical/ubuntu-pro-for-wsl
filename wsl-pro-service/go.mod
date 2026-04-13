@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260410174528-2b93db159114
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260410174528-2b93db159114
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260413185827-50d717a18a5b
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.10.2
