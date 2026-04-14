@@ -283,7 +283,7 @@ jobs:
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
       - name: Download coverage artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: ./artifacts/
       - uses: codecov/codecov-action@v5
@@ -336,7 +336,7 @@ jobs:
         run: |
           go install honnef.co/go/tools/cmd/staticcheck@v0.6.1 # Latest still not requireing Go 1.25.
       - name: Download coverage artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: unified-coverage
           path: ${{ env.coverage_dir }}
@@ -383,7 +383,7 @@ jobs:
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Download coverage artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: unified-coverage
           path: ${{ env.coverage_dir }}
