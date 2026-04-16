@@ -57,7 +57,7 @@ Starting with Ubuntu 25.10, we migrated from `systemd-timesyncd` to `chrony` for
 features, such as support for Network Time Security (NTS), which provides cryptographic
 authentication for time data—and offers better resistance against malicious time manipulation. NTS
 is for NTP what HTTPS is for HTTP, roughly speaking. By default, the `chrony.service` is enabled and
-can report clock drifts, but it cannot touch the system clock when running inside WSL without
+can report clock drifts, but it cannot modify the system clock when running inside WSL without
 further configuration. So, on Ubuntu 26.04 LTS and later you don't have to do anything special to
 opt into the implicit time synchronization provided by Hyper-V. If you want to disable `chrony`
 completely, run the following command:
