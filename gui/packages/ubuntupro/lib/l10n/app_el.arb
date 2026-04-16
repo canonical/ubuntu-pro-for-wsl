@@ -33,5 +33,6 @@
     "tokenInputHint": "Διακριτικό",
     "attach": "Συσχέτιση",
     "applyProToken": "Εφαρμογή ενός διακριτικού Pro",
-    "tokenErrorEmpty": "Το διακριτικό (token) δεν μπορεί να είναι κενό"
+    "tokenErrorEmpty": "Το διακριτικό (token) δεν μπορεί να είναι κενό",
+    "tokenInputTitle": "Σύνδεση με αυτό το σύστημα"
 }
