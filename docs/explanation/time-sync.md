@@ -21,7 +21,7 @@ reason, previous versions of Ubuntu enabled the `systemd-timesyncd.service` unit
 is a simple NTP client that can synchronize the system time with external time servers.
 Those issues have been fixed, with the adoption of a kernel patch which ensures that Hyper-V
 time sample messages trigger immediate time synchronization implicitly, i.e. the guest (the WSL
-virtual machine may treat sample messages as forceful requests). That means that, by default, WSL
+virtual machine) may treat sample messages as forceful requests. That means that, by default, WSL
 instances have their system time always synchronized with the Windows host. That implies that a NTP
 client should no longer be needed and, in fact, it could conflict with the host, causing clock skews
 if they synchronize with different time servers than the ones used by Windows.
@@ -55,7 +55,7 @@ always enabled.
 
 Starting with Ubuntu 25.10, we migrated from `systemd-timesyncd` to `chrony` for better security
 features, such as support for Network Time Security (NTS), which provides cryptographic
-authentication for time data—and offers better resistance against malicious time manipulation. NTS
+authentication for time data and offers better resistance against malicious time manipulation. NTS
 is for NTP what HTTPS is for HTTP, roughly speaking. By default, the `chrony.service` is enabled and
 can report clock drifts, but it cannot modify the system clock when running inside WSL without
 further configuration. So, on Ubuntu 26.04 LTS and later you don't have to do anything special to
@@ -100,7 +100,7 @@ server time.nist.gov iburst
 ```
 
 There are lots of other options supported by `chrony`, it's outside of the scope of this document
-to cover them all. You can learn more about `chrony` and its configuration, in [chrony's official documentation](https://chrony.tuxfamily.org/documentation.html)
+to cover them all. You can learn more about `chrony` and its configuration, in [chrony's official documentation](https://chrony.tuxfamily.org/documentation.html).
 
 Ubuntu 24.04 LTS and previous releases have the `systemd-timesyncd.service` unit enabled by default.
 If the default time synchronization suits your needs, you should disable that unit to avoid
