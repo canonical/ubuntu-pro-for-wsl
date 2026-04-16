@@ -25,6 +25,15 @@ Learn more about Ubuntu on WSL's interoperability with Windows, including how su
 binfmt
 ```
 
+## Network time synchronization for Ubuntu on WSL
+
+Learn more about how Ubuntu on WSL synchronizes time and your configuration options for time synchronization.
+
+```{toctree}
+:titlesonly:
+time-sync
+```
+
 ## Security considerations for Ubuntu on WSL
 
 Explore how Ubuntu on WSL can be used safely and securely.

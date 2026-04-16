@@ -18,6 +18,7 @@ CIS
 CMake
 cmake
 Codecov
+chrony
 Ctrl
 cuda
 distro
