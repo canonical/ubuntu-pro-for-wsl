@@ -80,10 +80,13 @@ Then restart the systemd unit to apply the changes:
 $ systemctl restart chrony.service
 ```
 
-With that you tell `chrony` to not worry about being inside a container, and feel free to adjust
-the system clock if it sees it is needed. Note that, if you have the Hyper-V implicit time
-synchronization enabled, you may end up with clock skews if `chrony` synchronizes with different
-time servers than the ones used by Windows.
+With that, you tell `chrony` to not worry about being inside a container (WSL instances are
+perceived as Linux containers by programs like `chrony`), and feel free to adjust
+the system clock if it sees it is needed.
+
+> [!NOTE]
+> Note that, if you have the Hyper-V implicit time synchronization enabled, you may end up with
+> clock skews if `chrony` synchronizes with different time servers than the ones used by Windows.
 
 The pool of servers `chrony` synchronizes with on Ubuntu is defined in
 `/etc/chrony/sources.d/ubuntu-ntp-pools.sources`. You can change that file to synchronize with your
