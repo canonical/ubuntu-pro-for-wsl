@@ -286,7 +286,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: ./artifacts/
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./artifacts/*/coverage.out.codecov,./artifacts/*/lcov.info
