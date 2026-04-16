@@ -27,7 +27,7 @@ binfmt
 
 ## Network time synchronization for Ubuntu on WSL
 
-Learn more about how Ubuntu on WSL synchronizes time and what to do if it doesn't meet your needs.
+Learn more about how Ubuntu on WSL synchronizes time and your configuration options for time synchronization.
 
 ```{toctree}
 :titlesonly:
