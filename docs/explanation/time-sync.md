@@ -7,8 +7,9 @@ myst:
 
 # Time synchronization for Ubuntu on WSL
 
-Since at least early 2000s, major operating systems adopted the Network Time Protocol to synchronize
-their system time with external time sources, network time servers, to ensure accurate timekeeping.
+Since at least the early 2000s, major operating systems adopted the Network Time Protocol (NTP) to
+synchronize their system time with external time sources, network time servers, and to ensure
+accurate timekeeping.
 
 Virtualization environments, such as WSL, can have different time synchronization requirements. For
 example, some users may want to have the WSL instance's system time independent from the Windows
@@ -18,11 +19,12 @@ Historically, WSL had some issues with time synchronization. One problem was tha
 time would get out-of-sync with the Windows host after resuming from suspension or hibernation. For this
 reason, previous versions of Ubuntu enabled the `systemd-timesyncd.service` unit by default, which
 is a simple NTP client that can synchronize the system time with external time servers.
-Those issues were fixed a while ago, with the adoption of a kernel patch that treats messages sent
-by Hyper-V containing time samples as a trigger to resynchronize the virtual machine time. That means
-that, by default, WSL instances have their system time synchronized with the Windows host. That
-implies that a NTP client should no longer be needed and, in fact, it could conflict with the host,
-causing clock skews if they synchronize with different time servers than the ones used by Windows.
+Those issues have been fixed, with the adoption of a kernel patch which ensures that Hyper-V
+time sample messages trigger immediate time synchronization implicitly, i.e. the guest (the WSL
+virtual machine may treat sample messages as forceful requests). That means that, by default, WSL
+instances have their system time always synchronized with the Windows host. That implies that a NTP
+client should no longer be needed and, in fact, it could conflict with the host, causing clock skews
+if they synchronize with different time servers than the ones used by Windows.
 
 It is expected that the majority of users benefit from this implicit time sync between WSL instances
 and the Windows host. Users with special requirements about time synchronization can choose to
