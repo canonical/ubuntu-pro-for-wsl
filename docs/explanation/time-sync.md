@@ -51,13 +51,16 @@ the last option specified for a particular setting should take precedence. But f
 option that's not the observed behaviour, resulting in the implicit time synchronization being
 always enabled.
 
-## Configuring NTP clients in Ubuntu on WSL
+## Interacting with NTP clients in Ubuntu on WSL
 
 Starting with Ubuntu 25.10, we migrated from `systemd-timesyncd` to `chrony` for better security
-features. By default, the `chrony.service` is enabled and can report clock drifts, but it cannot
-touch the system clock when running inside WSL without further configuration. So, on Ubuntu 26.04
-LTS and later you don't have to do anything special to opt into the implicit time synchronization
-provided by Hyper-V. If you want to disable `chrony` completely, run the following command:
+features, such as support for Network Time Security (NTS), which provides cryptographic
+authentication for time data—and offers better resistance against malicious time manipulation. NTS
+is for NTP what HTTPS is for HTTP, roughly speaking. By default, the `chrony.service` is enabled and
+can report clock drifts, but it cannot touch the system clock when running inside WSL without
+further configuration. So, on Ubuntu 26.04 LTS and later you don't have to do anything special to
+opt into the implicit time synchronization provided by Hyper-V. If you want to disable `chrony`
+completely, run the following command:
 
 ```{code-block} text
 $ systemctl disable chrony.service
@@ -83,16 +86,17 @@ synchronization enabled, you may end up with clock skews if `chrony` synchronize
 time servers than the ones used by Windows.
 
 The pool of servers `chrony` synchronizes with on Ubuntu is defined in
-`/etc/chrony/sources.d/ubuntu-ntp-pools.sources`. To change that option, replace the file with your
-own custom configuration. For example, to synchronize with the same NTP servers as Windows, you can
-create a file replacing the one above with the following contents:
+`/etc/chrony/sources.d/ubuntu-ntp-pools.sources`. You can change that file to synchronize with your
+preferred time servers or apply custom configuration. For example, to synchronize with the same NTP
+servers as Windows, you can create a file replacing the one above with the following contents:
 
 ```ini
 server time.windows.com iburst
 server time.nist.gov iburst
 ```
 
-You can learn more about `chrony` and its configuration, in [chrony's official documentation](https://chrony.tuxfamily.org/documentation.html)
+There are lots of other options supported by `chrony`, it's outside of the scope of this document
+to cover them all. You can learn more about `chrony` and its configuration, in [chrony's official documentation](https://chrony.tuxfamily.org/documentation.html)
 
 Ubuntu 24.04 LTS and previous releases have the `systemd-timesyncd.service` unit enabled by default.
 If the default time synchronization suits your needs, you should disable that unit to avoid
