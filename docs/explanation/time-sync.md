@@ -45,8 +45,11 @@ kernelCommandLine = hv_utils.timesync_implicit=0
 
 Some users reported that this doesn't work on WSL version 2.5.4 and later, but tests
 on recent versions of Windows 11 failed even as far back as WSL version 2.4.12.
-The option is added to the kernel CLI, but it cannot override the first one, which results in the
-implicit time synchronization being always enabled.
+The option is appended to the kernel CLI passed by the WSL platform, which already includes
+`hv_utils.timesync_implicit=1`. The Linux kernel parses its command line options left to right, so
+the last option specified for a particular setting should take precedence. But for this particular
+option that's not the observed behaviour, resulting in the implicit time synchronization being
+always enabled.
 
 ## Configuring NTP clients in Ubuntu on WSL
 
