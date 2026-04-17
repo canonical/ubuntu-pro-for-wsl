@@ -178,8 +178,8 @@ func (a *App) Quit() {
 	if a.daemon == nil {
 		return
 	}
-	a.daemon.Quit(context.Background(), false)
 	a.proServices.Stop(context.Background())
+	a.daemon.Quit(context.Background(), false)
 }
 
 // WaitReady signals when the daemon is ready
