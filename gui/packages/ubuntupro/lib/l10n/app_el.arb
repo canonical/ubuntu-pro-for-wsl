@@ -16,7 +16,7 @@
     "manageUbuntuPro": "Διαχείριση συνδρομής Ubuntu Pro",
     "purchaseStatusSuccess": "Ευχαριστούμε για την εγγραφή σας στο Ubuntu Pro.",
     "purchaseStatusUserGaveUp": "Η προσπάθεια αγοράς σας ακυρώθηκε.",
-    "purchaseStatusServer": "Κάτι πήγε στραβά με το Microsoft Store.Παρακαλώ προσπαθήστε αργότερα.",
+    "purchaseStatusServer": "Κάτι πήγε στραβά με το Microsoft Store. Παρακαλώ προσπαθήστε αργότερα.",
     "landscapeSetupCustom": "Προχωρημένη διαχείριση",
     "landscapeKeyLabel": "Κλειδί εγγραφής (προαιρετικό)",
     "landscapeFileEmptyContents": "Το αρχείο δεν πρέπει να είναι άδειο",
@@ -34,5 +34,90 @@
     "attach": "Συσχέτιση",
     "applyProToken": "Εφαρμογή ενός διακριτικού Pro",
     "tokenErrorEmpty": "Το διακριτικό (token) δεν μπορεί να είναι κενό",
-    "tokenInputTitle": "Σύνδεση με αυτό το σύστημα"
+    "tokenInputTitle": "Σύνδεση με αυτό το σύστημα",
+    "tokenInputDescription": "Εισαγάγετε ένα διακριτικό (token) από το {proLink} ή από τον διαχειριστή του συστήματός σας",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "applyingProToken": "Εφαρμογή του διακριτικού {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Πράκτορας παρασκηνίου του Ubuntu Pro",
+    "agentStateStarting": "Εκκίνηση του πράκτορα παρασκηνίου του Ubuntu Pro.",
+    "agentStatePingNonResponsive": "Ο πράκτορας παρασκηνίου του Ubuntu Pro δεν ανταποκρίνεται.",
+    "agentStateInvalid": "Αναμονή για την προετοιμασία του πράκτορα παρασκηνίου του Ubuntu Pro.",
+    "agentStateCannotStart": "Αδυναμία εκκίνησης του πράκτορα παρασκηνίου του Ubuntu Pro.",
+    "agentStateUnknownEnv": "Αδυναμία επαλήθευσης της κατάστασης του πράκτορα παρασκηνίου του Ubuntu Pro. Ελέγξτε τις ρυθμίσεις του περιβάλλοντός σας.",
+    "agentStateQuerying": "Έλεγχος της κατάστασης του πράκτορα παρασκηνίου του Ubuntu Pro.",
+    "agentStateUnreachable": "Προσπάθεια ανάκτησης του πράκτορα παρασκηνίου του Ubuntu Pro.",
+    "ubuntuProEnabledInfo": "Όλα τα στιγμιότυπα Ubuntu WSL έχουν πρόσβαση στις δυνατότητες ασφαλείας του Ubuntu Pro.",
+    "detachPro": "Αποσύνδεση του Ubuntu Pro",
+    "purchaseStatusNetwork": "Ένα πρόβλημα δικτύου εμπόδισε τη διαδικασία αγοράς. Παρακαλούμε δοκιμάστε ξανά μόλις συνδεθείτε.",
+    "purchaseStatusUnknown": "Προέκυψε άγνωστο σφάλμα κατά την προσπάθεια αγοράς της συνδρομής. Δοκιμάστε να επανεκκινήσετε την εφαρμογή.",
+    "landscapeSkip": "Παράλειψη για τώρα",
+    "landscapeSkipDescription": "Μπορείτε να ρυθμίσετε το Landscape αργότερα μέσα από αυτήν την εφαρμογή",
+    "landscapeSkipRegister": "Εγγραφή με το Landscape",
+    "landscapeHeading": "Ρυθμίστε τη σύνδεση στο Landscape για να διαχειρίζεστε τα στιγμιότυπα Ubuntu WSL σας από απόσταση. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Χειροκίνητη ρύθμιση",
+    "landscapeSetupManualHint": "Εγγραφή σε έναν διακομιστή Landscape",
+    "landscapeSetupCustomHint": "Φόρτωση προσαρμοσμένου αρχείου ρυθμίσεων του πελάτη Landscape",
+    "landscapeFQDNLabel": "FQDN του Landscape",
+    "landscapeFQDNError": "Μη έγκυρο FQDN. Απαιτείται ένα πλήρως έγκυρο όνομα τομέα ή μια διεύθυνση IP.",
+    "landscapeFQDNSaaSError": "Το FQDN δεν θα πρέπει να είναι το landscape.canonical.com.",
+    "landscapeAccountNameLabel": "Όνομα λογαριασμού",
+    "landscapeAccountNameError": "Το όνομα λογαριασμού δεν μπορεί να είναι κενό ή «{reservedAccount}».",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSSLKeyLabel": "Δημόσιο κλειδί SSL διακομιστή (προαιρετικό)",
+    "landscapeFileLabel": "Διαδρομή αρχείου ρυθμίσεων",
+    "landscapeFileTooLarge": "Το αρχείο ρυθμίσεων είναι πολύ μεγάλο",
+    "landscapeFileEmptyPath": "Πρέπει να καθοριστεί μια διαδρομή",
+    "landscapeFileIsDir": "Το αρχείο δεν μπορεί να είναι κατάλογος",
+    "landscapeConfigureButton": "Ρύθμιση του Landscape",
+    "landscapeApplyError": "Σφάλμα κατά την προσπάθεια εφαρμογής των ρυθμίσεων:\n\\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeDetails": "Λεπτομέρειες",
+    "landscapeProceedAnywayHint": "Συνεχίστε και οι προσπάθειες σύνδεσης με τον διακομιστή (server) Landscape θα συνεχιστούν στο παρασκήνιο.",
+    "landscapeChangeLaterHint": "Μπορείτε να τροποποιήσετε τις ρυθμίσεις οποιαδήποτε στιγμή.",
+    "landscapeEditYourConfig": "Επεξεργασία των ρυθμίσεών σας",
+    "landscapeProceedAnyway": "Συνεχίστε ούτως ή άλλως",
+    "landscapeInvalidConfig": "Μη έγκυρες ρυθμίσεις Landscape",
+    "landscapeInvalidConfigContent": "Ο διακομιστής απέρριψε τις ρυθμίσεις που υποβλήθηκαν. Παρακαλούμε επαληθεύστε τις ρυθμίσεις σας.",
+    "landscapeUnchangedConfig": "Ρυθμίσεις χωρίς αλλαγές",
+    "landscapeUnreachable": "Αδυναμία πρόσβασης στο Landscape",
+    "landscapeUnreachableContent": "Αδυναμία σύνδεσης στον διακομιστή Landscape.",
+    "landscapeWSLUnavailable": "Οι λειτουργίες του Landscape για WSL είναι απενεργοποιημένες",
+    "landscapeWSLUnavailableContent": "Οι λειτουργίες WSL είναι απενεργοποιημένες στον διακομιστή Landscape. Παρακαλούμε επικοινωνήστε με τον διαχειριστή του συστήματός σας.",
+    "landscapeUnknownError": "Άγνωστο σφάλμα κατά τη σύνδεση στο Landscape",
+    "landscapeUnknownErrorContent": "Παρακαλούμε αναφέρετε αυτό το περιστατικό συμπεριλαμβάνοντας τις παρακάτω λεπτομέρειες.",
+    "buttonSkip": "Παράκαμψη",
+    "buttonBack": "Πίσω",
+    "statusBarAgentDownTooltip": "Ο πράκτορας (agent) του Ubuntu Pro είναι αποσυνδεδεμένος. Πατήστε για να εκκινήσετε τον πράκτορα."
 }
