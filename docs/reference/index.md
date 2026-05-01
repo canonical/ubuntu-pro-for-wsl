@@ -60,13 +60,3 @@ A glossary of the key terms used in the documentation.
 glossary
 ```
 
-## Release notes
-
-Highlights from the latest releases of Ubuntu on WSL and Pro for WSL:
-
-```{toctree}
-:titlesonly:
-
-Release notes <release_notes>
-```
-
