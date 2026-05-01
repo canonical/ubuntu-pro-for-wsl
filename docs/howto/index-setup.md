@@ -14,6 +14,7 @@ Run a full Ubuntu development environment on Windows.
 :maxdepth: 1
 
 Install Ubuntu on WSL <install-ubuntu-wsl2>
+Upgrade Ubuntu <upgrade-ubuntu>
 Manage and configure instances of Ubuntu on WSL <manage-and-configure>
 Automatic setup of Ubuntu on WSL with cloud-init <cloud-init>
 Customise an Ubuntu distro for WSL <custom-ubuntu-distro>

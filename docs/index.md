@@ -23,7 +23,7 @@ production in an enterprise environment.
 ## In this documentation
 
 * **Getting started**: [Setting up a development environment from scratch with Ubuntu on WSL](/tutorials/develop-with-ubuntu-wsl/)
-* **Installation**: [Install Ubuntu on WSL](/howto/install-ubuntu-wsl2.md) • [Install Pro for WSL](/howto/set-up-up4w)
+* **Installation and setup**: [Install Ubuntu on WSL](/howto/install-ubuntu-wsl2.md) • [Distro release reference](/reference/distributions/) • [Upgrade Ubuntu](/howto/upgrade-ubuntu) • [Install Pro for WSL](/howto/set-up-up4w)
 * **WSL for enterprise:** [What is Pro for WSL?](./explanation/pro-explanation) • [Remote deployment of WSL with Landscape](/tutorials/deployment/) • [Attaching a Pro subscription using the Windows registry](/howto/set-up-up4w/) • [Configuring the Landscape client](/howto/set-up-landscape-client/) • [Using the Landscape API](/howto/custom-rootfs-multiple-targets/) • [Enforcing Pro agent startup](/howto/enforce-agent-startup-remotely-registry/) • [Starting the agent remotely with InTune](/howto/start-agent-remotely/)
 * **Security and Ubuntu Pro**: [Security overview](/explanation/security-overview/) • [Securing WSL with Pro](/tutorials/getting-started-with-up4w/) • [Firewall requirements](/reference/firewall_requirements/)
 * **Configuration and customisation**: [Instance configuration reference](/reference/instance_configuration/) • [Automating configuration with cloud-init](/howto/cloud-init/) • [Customising an Ubuntu image for WSL](/howto/custom-ubuntu-distro/) • [Differences between WSL 1 and WSL 2](/explanation/compare-wsl-versions/)
