@@ -257,6 +257,8 @@ redirects = {
     "reference/glossary_up4w_components": "../../reference/glossary",
     # expanded guide to cover more general topics
     "howto/backup-and-restore": "../../howto/manage-and-configure",
+    # we can point to the RTD-based release notes for Ubuntu
+    "reference/release_notes": "https://documentation.ubuntu.com/release-notes/",
 }
 
 
