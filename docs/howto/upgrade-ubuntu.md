@@ -15,7 +15,7 @@ You can upgrade this instance once the first point release of a new LTS is avail
 
 ```{code-block} text
 $ sudo apt update && sudo apt full-upgrade 
-$ do-release-upgrade
+$ sudo do-release-upgrade
 ```
 
 ### Numbered Ubuntu release
