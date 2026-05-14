@@ -1,1 +1,123 @@
-{}
+{
+    "appTitle": "Ubuntu Pro per a WSL",
+    "tokenErrorEmpty": "El testimoni no pot estar buit",
+    "tokenErrorInvalid": "Testimoni no vàlid",
+    "tokenValid": "Testimoni vàlid",
+    "tokenInputTitle": "Adjunta aquesta màquina",
+    "tokenInputDescription": "Introduïu un testimoni de {proLink} o de l'administrador del sistema",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "Testimoni",
+    "attach": "Adjunta",
+    "applyProToken": "Aplica el testimoni Pro",
+    "applyingProToken": "S'està aplicant el testimoni {token}",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Agent de fons d'Ubuntu Pro",
+    "agentStateStarting": "S'està iniciant l'agent de fons Ubuntu Pro.",
+    "agentStatePingNonResponsive": "L'agent de fons d'Ubuntu Pro no respon.",
+    "agentStateInvalid": "S'està esperant la inicialització de l'agent de fons Ubuntu Pro.",
+    "agentStateCannotStart": "No es pot iniciar l'agent de fons Ubuntu Pro.",
+    "agentStateUnknownEnv": "L'estat de l'agent de fons d'Ubuntu Pro no es pot verificar. Comproveu la configuració de l'entorn.",
+    "agentStateQuerying": "S'està comprovant l'estat de l'agent de fons d'Ubuntu Pro.",
+    "agentStateUnreachable": "S'està intentant recuperar l'agent de fons Ubuntu Pro.",
+    "proHeading": "Seguretat de programari de codi obert per part dels editors d'Ubuntu, ara disponible a Windows. {aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Obtenir Ubuntu Pro",
+    "learnMore": "Més informació",
+    "ubuntuProEnabled": "Ubuntu Pro està habilitat en aquesta màquina",
+    "ubuntuProEnabledInfo": "Totes les instàncies WSL d'Ubuntu tenen accés a les funcions de seguretat d'Ubuntu Pro.",
+    "manageUbuntuPro": "Gestiona la subscripció d'Ubuntu Pro",
+    "detachPro": "Desacobla Ubuntu Pro",
+    "updatingSubscriptionInfo": "Actualització de la informació de subscripció.",
+    "purchaseStatusSuccess": "Gràcies per subscriure's a Ubuntu Pro.",
+    "purchaseStatusAlreadyPurchased": "Ja esteu subscrit a Pro.",
+    "purchaseStatusUserGaveUp": "S'ha cancel·lat l'intent de compra.",
+    "purchaseStatusNetwork": "Un problema de xarxa va impedir que la compra es procedís. Torneu-ho a provar un cop connectat.",
+    "purchaseStatusServer": "Alguna cosa ha anat malament amb el Microsoft Store. Torneu-ho a provar més tard.",
+    "purchaseStatusUnknown": "Error desconegut en intentar comprar la subscripció. Considereu reiniciar aquesta aplicació.",
+    "landscapeSkip": "Omet per ara",
+    "landscapeSkipDescription": "Sempre pots configurar Landscape més endavant en aquesta app",
+    "landscapeSkipRegister": "Registra't amb Paisatge",
+    "landscapeHeading": "Configura la connexió a Landscape per gestionar remotament les vostres instàncies WSL d'Ubuntu. {landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "Configuració manual",
+    "landscapeSetupManualHint": "Registra't amb un servidor Landscape",
+    "landscapeSetupCustom": "Configuració avançada",
+    "landscapeSetupCustomHint": "Carrega un fitxer de configuració personalitzat del client Landscape",
+    "landscapeFQDNLabel": "Paisatge FQDN",
+    "landscapeFQDNError": "FQDN no vàlid. S'esperava un nom de domini o una adreça IP completament qualificada.",
+    "landscapeFQDNSaaSError": "FQDN no hauria de ser landscape.canonical.com.",
+    "landscapeAccountNameLabel": "Nom del compte",
+    "landscapeAccountNameError": "El nom del compte no pot estar buit o \"{reservedAccount}\".",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeKeyLabel": "Clau de registre (opcional)",
+    "landscapeSSLKeyLabel": "Clau pública SSL del servidor (opcional)",
+    "landscapeFileLabel": "Camí al fitxer de configuració",
+    "landscapeFileTooLarge": "El fitxer de configuració és massa gran",
+    "landscapeFileEmptyPath": "S'ha d'especificar un camí",
+    "landscapeFileEmptyContents": "El fitxer no pot estar buit",
+    "landscapeFileNotFound": "No s'ha trobat el fitxer",
+    "landscapeFileIsDir": "El fitxer no pot ser un directori",
+    "landscapeFileInvalidFormat": "El fitxer té un format incorrecte",
+    "landscapeFilePicker": "Selecciona un fitxer...",
+    "landscapeConfigureButton": "Configura el paisatge",
+    "landscapeApplyError": "S'ha produït un error en intentar aplicar la configuració:\n\t{message}",
+    "@landscapeApplyError": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeRegister": "Registra",
+    "landscapeDetails": "Detalls",
+    "landscapeProceedAnywayHint": "Continua i els intents d'arribar al servidor Landscape continuaran en segon pla.",
+    "landscapeChangeLaterHint": "Podeu canviar la configuració en qualsevol moment.",
+    "landscapeEditYourConfig": "Edita la configuració",
+    "landscapeProceedAnyway": "Continua igualment",
+    "landscapeInvalidConfig": "La configuració del paisatge no és vàlida",
+    "landscapeInvalidConfigContent": "El servidor ha rebutjat la configuració enviada. Verifiqueu la vostra configuració.",
+    "landscapeUnchangedConfig": "Configuració no canviada",
+    "landscapeUnreachable": "El paisatge no es pot accedir",
+    "landscapeUnreachableContent": "No s'ha pogut connectar amb el servidor Landscape.",
+    "landscapeWSLUnavailable": "Les funcions WSL del paisatge estan desactivades",
+    "landscapeWSLUnavailableContent": "Les funcions WSL estan desactivades al servidor Landscape. Poseu-vos en contacte amb l'administrador de sistemes.",
+    "landscapeUnknownError": "S'ha produït un error desconegut en connectar-se al paisatge",
+    "landscapeUnknownErrorContent": "Si us plau, informeu d'aquest incident incloent els detalls a continuació.",
+    "buttonNext": "Següent",
+    "buttonSkip": "Omet",
+    "buttonBack": "Enrere",
+    "statusBarReportBugTooltip": "Informa d'un error",
+    "statusBarAgentRunningTooltip": "S'està executant l'agent Ubuntu Pro",
+    "statusBarAgentConnectingTooltip": "S'està connectant a l'agent Ubuntu Pro...",
+    "statusBarAgentDownTooltip": "L'agent Ubuntu Pro està desconnectat. Premeu per a iniciar l'agent."
+}

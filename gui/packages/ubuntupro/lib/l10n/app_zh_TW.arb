@@ -1,5 +1,5 @@
 {
-    "ubuntuProEnabledInfo": "所有 Ubuntu WSL 實例都可以存取 Ubuntu Pro 安全功能。",
+    "ubuntuProEnabledInfo": "所有 Ubuntu WSL 實例都可以存取 Ubuntu Pro 的安全功能。",
     "landscapeHeading": "設定與 Landscape 的連線，以便遠端管理您的 Ubuntu WSL 實體。{landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
@@ -53,7 +53,7 @@
     "learnMore": "了解更多",
     "ubuntuProEnabled": "此機器已啟用 Ubuntu Pro",
     "manageUbuntuPro": "管理 Ubuntu Pro 訂閱",
-    "detachPro": "分離 Ubuntu Pro",
+    "detachPro": "與 Ubuntu Pro 解除連接",
     "updatingSubscriptionInfo": "更新訂閱資訊。",
     "purchaseStatusSuccess": "感謝您訂閱 Ubuntu Pro。",
     "purchaseStatusAlreadyPurchased": "您已訂閱 Ubuntu Pro。",
