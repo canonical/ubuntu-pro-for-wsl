@@ -6,7 +6,7 @@ myst:
 ---
 
 (howto::upgrade-instructions)=
-## Upgrade Ubuntu on WSL
+# Upgrade Ubuntu on WSL
 
 To upgrade an instance of Ubuntu on WSL, run:
 
@@ -19,7 +19,7 @@ Note that the upgrade behaviour in WSL depends on whether you are upgrading an
 instance of a default `Ubuntu` release or a numbered Ubuntu release, such as
 `Ubuntu-22.04`.
 
-### Default Ubuntu release
+## Default Ubuntu release
 
 Running `wsl --install` or `wsl --install Ubuntu` installs an {term}`instance`
 of the default Ubuntu release.
@@ -37,7 +37,7 @@ Prompt=normal
 Run `do-release-upgrade` to upgrade this instance to **any new Ubuntu release if
 it is available**, including interim releases.
 
-### Numbered Ubuntu release
+## Numbered Ubuntu release
 
 Ubuntu instances can also be installed as an explicitly-numbered release, with
 a command like `wsl --install Ubuntu-22.04`.
@@ -53,7 +53,7 @@ Prompt=lts
 Run `do-release-upgrade` to upgrade that instance to the **next available LTS if
 it is available**.
 
-### LTS versions of Ubuntu are recommended
+## LTS versions of Ubuntu are recommended
 
 We recommend LTS versions of Ubuntu on WSL, which receive standard support for
 five years.
