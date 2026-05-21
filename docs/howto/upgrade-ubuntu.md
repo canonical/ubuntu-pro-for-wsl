@@ -1,3 +1,10 @@
+---
+myst:
+  html_meta:
+    "description lang=en":
+      "Upgrade instances of Ubuntu on WSL."
+---
+
 (howto::upgrade-instructions)=
 ## Upgrade Ubuntu on WSL
 
