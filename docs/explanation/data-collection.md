@@ -23,7 +23,7 @@ Ubuntu on WSL collects and uploads data following initial setup, as long as the 
 
 When using [WSL 2 with systemd enabled](explanation::wsl-version), data is also collected approximately once a month, with a delay of one week between collection and upload.
 
-Data is also collected following a [release upgrade of an existing instance](ref::upgrade-instructions), though this data is only uploaded on WSL 2 instances with systemd enabled.
+Data is also collected following a [release upgrade of an existing instance](howto::upgrade-instructions), though this data is only uploaded on WSL 2 instances with systemd enabled.
 
 ## What kind of information is collected?
 
