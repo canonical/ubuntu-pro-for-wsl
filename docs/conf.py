@@ -348,7 +348,6 @@ html_css_files = ["css/pro_block.css", "css/cookie-banner.css", "css/dropdown.cs
 
 html_js_files = [
         "js/bundle.js",
-        "js/overwrite_links.js"
 ]
 
 
