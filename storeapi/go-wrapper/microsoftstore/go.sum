@@ -1,5 +1,5 @@
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd h1:/9peLQI3kBMeKJfDatynSTwLOL5/SSyaUCJXyE3NkpI=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd/go.mod h1:4C2t7TaXOlD1eaGQAKb0mnJuIQZp8N3FBdvu/eYPWwE=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260417143002-81c3beae3d8c h1:LOQFG9+8Epm4t6egUsmvN3y+IE1J73wWK4EHUuCHq/4=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260417143002-81c3beae3d8c/go.mod h1:++lXTr0E6xOoOnpZN4mQHksijEVqkPJ2i9KWOOt3uJY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -17,8 +17,8 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19 h1:IP8p46//e//o0KPZdAzl+WF1DdRKHXfkbB+sQDCAlkw=
 github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19/go.mod h1:PUpwIgUuCQyuCz/gwiq6WYbo7IvtXXd8JqL01ez+jZE=
-golang.org/x/sys v0.42.0 h1:omrd2nAlyT5ESRdCLYdm3+fMfNFE/+Rf4bDIQImRJeo=
-golang.org/x/sys v0.42.0/go.mod h1:4GL1E5IUh+htKOUEOaiffhrAeqysfVGipDYzABqnCmw=
+golang.org/x/sys v0.45.0 h1:dO4czNzziLiiXplLQgBCEpCvXQ3dnkn0SdaZSYdQ+FY=
+golang.org/x/sys v0.45.0/go.mod h1:4GL1E5IUh+htKOUEOaiffhrAeqysfVGipDYzABqnCmw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=

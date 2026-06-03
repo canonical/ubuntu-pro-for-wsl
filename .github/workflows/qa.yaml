@@ -78,6 +78,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           working-directory: ${{ matrix.subproject }}
           go-tags: gowslmock
+          go-version-file: go.work
           tools-directory: ${{ github.workspace }}/tools
           golangci-lint-configfile: ${{ github.workspace }}/.golangci.yaml
       - name: Gettext validation

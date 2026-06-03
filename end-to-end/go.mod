@@ -7,11 +7,11 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20251030155050-eabff122a4cd
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20240909072650-75a32126b04f
 	github.com/stretchr/testify v1.11.1
-	github.com/ubuntu/gowsl v0.0.0-20251003130259-5c49d26cf9f5
+	github.com/ubuntu/gowsl v0.0.0-20251112191800-0ef2623cc8fb
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
-	golang.org/x/sys v0.43.0
-	google.golang.org/grpc v1.80.0
+	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3
+	golang.org/x/sys v0.45.0
+	google.golang.org/grpc v1.81.1
 )
 
 require (
@@ -24,9 +24,9 @@ require (
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19 // indirect
-	golang.org/x/net v0.52.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260319201613-d00831a3d3e7 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
