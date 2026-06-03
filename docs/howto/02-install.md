@@ -19,10 +19,8 @@ This guide will show you how to install Pro for WSL for local development and te
 **Requirements:**
 
 - A Windows machine with access to the internet
-- Appx from the Microsoft Store:
-  - Windows Subsystem For Linux
-  - Either Ubuntu, Ubuntu 22.04, or Ubuntu (Preview)
-- The Windows Subsystem for Windows optional feature enabled
+- The Windows Subsystem for Linux optional feature enabled
+- One or more instances of Ubuntu on WSL installed
 
 ## 1. Download the Windows Agent and the WSL Pro Service
 <!-- TODO: Update when we change were artifacts are hosted -->
