@@ -72,7 +72,7 @@ attached, the application can be used to [configure
 Landscape](../howto/set-up-landscape-client.md).
 
 If you are using Landscape SaaS, the configuration is as simple as supplying
-the account name for the {term}`Landscape dashboard`.
+the account name for the {term}`Landscape web portal`.
 
 With Landscape configured, a central administrator can create {term}`WSL profiles <WSL profile>` on
 Landscape that can then be used to [remotely deploy instances](tut::deploy)
