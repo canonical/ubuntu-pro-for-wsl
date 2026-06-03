@@ -76,6 +76,12 @@ legacy distro
 
     Related topic(s): {term}`distro`, {term}`modern distro`, {term}`WSL`
 
+LTS
+    Long Term Support (LTS) releases of Ubuntu on WSL receive standard support for
+    five years. LTS releases are recommended for most users.
+
+    Related topic(s): {term}`distro`
+
 modern distro
     A distro that uses the new tar-based format for packaging and distributing
     WSL distributions.
