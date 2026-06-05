@@ -101,7 +101,7 @@
     "landscapeChangeLaterHint": "Puede cambiar la configuración en cualquier momento.",
     "landscapeEditYourConfig": "Editar su configuración",
     "landscapeProceedAnyway": "Continuar de todas maneras",
-    "landscapeInvalidConfigContent": "El servidor rechazó la configuración enviada. Por favor, verifique sus ajustes.",
+    "landscapeInvalidConfigContent": "El servidor rechazó la configuración enviada. Revise sus parámetros.",
     "landscapeUnchangedConfig": "Configuración sin cambios",
     "landscapeUnreachableContent": "No se pudo establecer la conexión al servidor Landscape.",
     "landscapeWSLUnavailableContent": "Las características de WSL están desactivadas en el servidor Landscape. Por favor, contacte con su administrador de sistemas.",
