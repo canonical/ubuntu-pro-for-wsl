@@ -38,7 +38,7 @@ instance
 
 instance (disambiguation)
     In the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/),
-    "distribution" is used to refer to an instance. In the Landscape dashboard,
+    "distribution" is used to refer to an instance. In the Landscape web portal,
     "instance" also refers to a Windows machine that runs WSL.
 
     Related topic(s): {term}`instance`, {term}`distro`, {term}`Landscape`
@@ -48,7 +48,7 @@ Landscape
     website](https://ubuntu.com/landscape) and [Landscape
     documentation](https://documentation.ubuntu.com/landscape/).
 
-    Related topic(s): {term}`Landscape client`, {term}`Landscape dashboard`, {term}`Landscape server`
+    Related topic(s): {term}`Landscape client`, {term}`Landscape web portal`, {term}`Landscape server`
 
 Landscape client
     A systemd unit running inside every instance of Ubuntu on WSL. The
@@ -58,7 +58,7 @@ Landscape client
 
     Related topic(s): {term}`Landscape`, {term}`Landscape server`, {term}`Ubuntu`, {term}`WSL`
 
-Landscape dashboard
+Landscape web portal
     A browser-based GUI interface for Landscape where WSL instances can be
     managed.
 
@@ -205,7 +205,7 @@ WSL profile
     A set of configurations defined in Landscape for deploying pre-configured
     WSL instances.
 
-    Related topic(s): {term}`Landscape`, {term}`Landscape dashboard`
+    Related topic(s): {term}`Landscape`, {term}`Landscape web portal`
 
 WSL version
     WSL is available in two versions: WSL 1 and WSL 2. WSL 2 is the latest,

@@ -89,7 +89,7 @@ $CLOUD_INIT_FILE="~\Downloads\init.yaml"
 
 The `PARENT_COMPUTER_IDS` environment variable contains a list of IDs internally assigned to
 Windows machines already registered to Landscape. The values used in this guide are examples,
-and you can get IDs for your machines in the Landscape dashboard or through the
+and you can get IDs for your machines in the Landscape web portal or through the
 Landscape REST API.
 ```
 
@@ -259,7 +259,7 @@ foreach ($COMPUTER_ID in $PARENT_COMPUTER_IDS) {
 `````
 
 When that completes, you'll be able to find activities in the Landscape
-dashboard about the installation of a new WSL instance for each of the Windows
+web portal about the installation of a new WSL instance for each of the Windows
 machines listed.
 
 ## Summarising the steps in a single script

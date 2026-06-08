@@ -80,7 +80,7 @@ Instructions for restoring the backup can be found at the end of the tutorial.
 
 ### A Landscape server must be set up and available
 
-You need a {term}`Landscape server` set up and access to the Landscape dashboard in a browser.
+You need a {term}`Landscape server` set up and access to the Landscape web portal in a browser.
 
 [Landscape SaaS edition](https://documentation.ubuntu.com/landscape/what-is-landscape/#editions-of-landscape)
 is bundled with your Pro subscription and can be set up as follows:
@@ -103,7 +103,7 @@ If you choose Manual configuration, you only require the FQDN of your Landscape 
 
 ```{note}
 If you are using Landscape SaaS, enter `landscape.canonical.com` for the FQDN
-and the account name from your Landscape dashboard.
+and the account name from the Landscape web portal.
 ```
 
 When you continue, a status screen will confirm that your configuration is complete.
@@ -114,12 +114,12 @@ When you continue, a status screen will confirm that your configuration is compl
 
 ```{admonition} Usage of the term "instance"
 :class: warning
-In the Landscape dashboard, an "instance" refers to the Windows host running WSL.
+In the Landscape web portal, an "instance" refers to the Windows host running WSL.
 
 In this documentation, we often use "instance" to refer to instances of WSL running on the Windows host.
 ```
 
-Refresh the Landscape dashboard.
+Refresh the Landscape web portal.
 
 Go to {guilabel}`Instances`, and review the pending instances.
 
@@ -135,7 +135,7 @@ Select the Windows host and assign it the tag "wsl-target".
 WSL profiles on Landscape enable the deployment of custom Ubuntu instances to
 your Windows machine.
 
-Go to **Profiles > WSL profiles** in the dashboard and add a WSL profile.
+Go to **Profiles > WSL profiles** in the web portal and add a WSL profile.
 
 Complete the fields as follows:
 
