@@ -5,7 +5,7 @@ on:
   push:
     tags:
       - '**'
-      - '!docs/**'
+      - '!*.post[0-9]+' # Reserved for documentation-only releases.
       - '!wsl-pro-service/**'
 jobs:
   publish-msix:
