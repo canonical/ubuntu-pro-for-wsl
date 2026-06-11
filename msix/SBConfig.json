@@ -9,7 +9,7 @@
     ],
     "ImagesRootPath": "",
     "MediaFallbackLanguage": "",
-    "AppxPath": "./msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*.msixupload",
+    "AppxPath": "./UbuntuProForWSL.msixupload",
     "OutPath": "out",
     "OutName": "appstore-submission",
     "DisableAutoPackageNameFormatting": false

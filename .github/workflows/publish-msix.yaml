@@ -8,25 +8,113 @@ on:
       - '!*.post[0-9]+' # Reserved for documentation-only releases.
       - '!wsl-pro-service/**'
 jobs:
-  publish-msix:
-    permissions:
-      contents: write
-    name: Publish MSIX app to the Microsoft Store
-    runs-on: windows-latest
+  version:
+    name: Compute version
+    runs-on: ubuntu-latest
+    outputs:
+      numeric-version: ${{ steps.version.outputs.numeric_version }}
+      full-version: ${{ steps.version.outputs.full_version }}
+      tag: ${{ steps.version.outputs.tag }}
+      release-type: ${{ steps.version.outputs.release_type }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           fetch-tags: true
           fetch-depth: 0
-      - name: Build MSIX Bundle
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.work
+          cache-dependency-path: go.work
+      - name: Compute version
+        id: version
+        run: |
+          versionInfo=$(go run ./tools/build/compute_version.go --json)
+          echo "numeric_version=$(jq -r '.numeric_version' <<< "$versionInfo").0" >> "$GITHUB_OUTPUT"
+          echo "full_version=$(jq -r '.full_version' <<< "$versionInfo")"         >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq -r '.tag' <<< "$versionInfo")"                           >> "$GITHUB_OUTPUT"
+          echo "release_type=$(jq -r '.release_type' <<< "$versionInfo")"         >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build MSIX (${{ matrix.runner }})
+    needs: version
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        runner: [windows-2025, windows-2025-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - name: Build MSIX
         uses: ./.github/actions/build-msix
-        id: build-msix
         with:
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
           package-mode: StoreUpload
           run-code-analysis: false
+          up4w-version: ${{ needs.version.outputs.numeric-version }}
+          tag: ${{ needs.version.outputs.tag }}
+          release-type: ${{ needs.version.outputs.release-type }}
+      - name: Upload MSIX packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: msix-packages-${{ matrix.runner }}
+          path: msix/UbuntuProForWSL/AppPackages/
+          if-no-files-found: error
+
+  publish-msix:
+    name: Publish MSIX app to the Microsoft Store
+    needs: [version, build]
+    permissions:
+      contents: write
+    runs-on: windows-2025
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - name: Download x64 MSIX packages
+        uses: actions/download-artifact@v8
+        with:
+          name: msix-packages-windows-2025
+          path: artifacts/x64
+      - name: Download ARM64 MSIX packages
+        uses: actions/download-artifact@v8
+        with:
+          name: msix-packages-windows-2025-arm
+          path: artifacts/arm64
+      - name: Setup MSBuild (PATH)
+        uses: microsoft/setup-msbuild@v3
+      - name: Bundle MSIX packages
+        id: bundle
+        shell: powershell
+        env:
+          UP4W_VERSION: ${{ needs.version.outputs.numeric-version }}
+        run: |
+          $stagingDir = "bundle-staging"
+          New-Item -ItemType Directory -Path $stagingDir -Force
+
+          # Collect arch-specific .msix files from both builds.
+          # Platform-independent packages (resource packs) appear in both artifact sets with identical
+          # content; we copy from x64 first, then ARM64 — duplicates are simply overwritten.
+          Get-ChildItem -Path artifacts\x64   -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName $stagingDir }
+          Get-ChildItem -Path artifacts\arm64 -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName $stagingDir }
+
+          $bundlePath = "UbuntuProForWSL.msixbundle"
+          makeappx bundle /d $stagingDir /p $bundlePath /bv $env:UP4W_VERSION /o
+
+          # Create the .msixupload archive (ZIP containing the bundle) expected by the Store.
+          $uploadPath = "UbuntuProForWSL.msixupload"
+          Compress-Archive -Path $bundlePath -DestinationPath $uploadPath
+
+          "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "upload-path=$uploadPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
       - name: Install Store Broker
         shell: powershell
         run: |
@@ -34,7 +122,8 @@ jobs:
       - name: Submit to Microsoft Store
         shell: powershell
         env:
-          pre_release: ${{ steps.build-msix.outputs.is-pre-release }}
+          pre_release: ${{ needs.version.outputs.release-type }}
+          upload_path: ${{ steps.bundle.outputs.upload-path }}
         run: |
           New-Item -ItemType directory -Path store -Force
 
@@ -56,7 +145,7 @@ jobs:
             # The existing package flight for beta testers.
             $flightId="876dc297-0b4d-4a74-94ef-720279050fc4"
             Write-Output "Starting a new submission under package flight $flightId from:"
-            Get-ChildItem ./msix/UbuntuProForWSL/AppPackages/
+            Get-ChildItem ./
             $sub, $url = Update-ApplicationFlightSubmission -AppId $appid -FlightId $flightId -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -AutoCommit -ReplacePackages -Verbose
           } else {
             $sub, $url = Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -ReplacePackages -AutoCommit -Verbose
@@ -70,8 +159,8 @@ jobs:
         id: create-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          version: ${{ steps.build-msix.outputs.msix-version }}
-          pre_release: ${{ steps.build-msix.outputs.is-pre-release }}
+          version: ${{ needs.version.outputs.numeric-version }}
+          pre_release: ${{ needs.version.outputs.release-type }}
           tag: ${{ github.ref_name }}
         run: |
           # Intentionally not copying the msixbundle, as it is already uploaded to the store
