@@ -100,7 +100,7 @@ There are two configuration files for the WSL distro that you are customising:
 Open the configuration file:
 
 ```{code-block} text
-$ vim ~/myNewUbuntu/etc/wsl-distribution.conf
+$ sudo vim ~/myNewUbuntu/etc/wsl-distribution.conf
 ```
 
 Change the name of your distro and the name of its icon:
@@ -145,7 +145,7 @@ $ convert ~/myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray ~/myNewUbuntu/u
 You can also customise which settings are applied to the distro on boot:
 
 ```{code-block} text
-$ vim ~/myNewUbuntu/etc/wsl.conf
+$ sudo vim ~/myNewUbuntu/etc/wsl.conf
 ```
 
 For the purpose of this guide, we will keep the default boot settings.
@@ -229,7 +229,7 @@ $ sudo mount --rbind --make-rslave /run myNewUbuntu/run
 Then `chroot` into the root directory of your custom distro and open a bash shell:
 
 ```{code-block} text
-$ sudo chroot ~/myNewDistro /bin/bash
+$ sudo chroot ~/myNewUbuntu /bin/bash
 ```
 
 If successful, you will see a prompt for the root user:
