@@ -20,9 +20,9 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: subosito/flutter-action@v2
+    - uses: koji-1009/setup-flutter@dc0c32043f6858b5f588f794eb4eefdd797f0bbf # v1.1.6-5-gdc0c320
       with:
-        cache: true
+        cache-sdk: true
         channel: 'stable'
         flutter-version: '${{ inputs.flutter-version }}'
     - name: Dart Codegen

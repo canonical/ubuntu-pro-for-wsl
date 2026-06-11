@@ -60,10 +60,10 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Set up flutter
-        uses: subosito/flutter-action@v2
+        uses: koji-1009/setup-flutter@dc0c32043f6858b5f588f794eb4eefdd797f0bbf # v1.1.6-5-gdc0c320
         if: matrix.needs-flutter != ''
         with:
-          cache: true
+          cache-sdk: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Install Dart protoc plugin
@@ -378,9 +378,9 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Set up flutter
-        uses: subosito/flutter-action@v2
+        uses: koji-1009/setup-flutter@dc0c32043f6858b5f588f794eb4eefdd797f0bbf # v1.1.6-5-gdc0c320
         with:
-          cache: true
+          cache-sdk: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
       - name: Download coverage artifacts
