@@ -45,7 +45,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        runner: [windows-2025, windows-2025-arm]
+        runner: [windows-2025, windows-11-arm]
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Check out repository
@@ -90,16 +90,19 @@ jobs:
       - name: Download ARM64 MSIX packages
         uses: actions/download-artifact@v8
         with:
-          name: msix-packages-windows-2025-arm
+          name: msix-packages-windows-11-arm
           path: artifacts/arm64
-      - name: Setup MSBuild (PATH)
-        uses: microsoft/setup-msbuild@v3
       - name: Bundle MSIX packages
         id: bundle
         shell: powershell
         env:
           UP4W_VERSION: ${{ needs.version.outputs.numeric-version }}
         run: |
+          # Load VS Dev Powershell to get access to makeappx.exe.
+          $vsPath = $(vswhere.exe -products * -requires Microsoft.Component.MSBuild -property installationPath -latest)
+          Import-Module "$vsPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
+
           $stagingDir = "bundle-staging"
           New-Item -ItemType Directory -Path $stagingDir -Force
 
@@ -110,14 +113,9 @@ jobs:
           Get-ChildItem -Path artifacts\arm64 -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName $stagingDir }
 
           $bundlePath = "UbuntuProForWSL.msixbundle"
-          makeappx bundle /d $stagingDir /p $bundlePath /bv $env:UP4W_VERSION /o
-
-          # Create the .msixupload archive (ZIP containing the bundle) expected by the Store.
-          $uploadPath = "UbuntuProForWSL.msixupload"
-          Compress-Archive -Path $bundlePath -DestinationPath $uploadPath
+          makeappx.exe bundle /d $stagingDir /p $bundlePath /bv $env:UP4W_VERSION /o
 
           "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "upload-path=$uploadPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
       - name: Upload MSIX bundle (dry-run)
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v7
@@ -125,7 +123,6 @@ jobs:
           name: msix-bundle
           path: |
             ${{ steps.bundle.outputs.bundle-path }}
-            ${{ steps.bundle.outputs.upload-path }}
           if-no-files-found: error
       - name: Install Store Broker
         if: github.event_name != 'pull_request'
