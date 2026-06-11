@@ -60,9 +60,12 @@ this command:
 $ mv /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
 ```
 
-```{tip}
-If you downloaded a different version of Ubuntu 24.04 LTS, adjust the filename
-in the command to use the correct name.
+```{admonition} Additional step if the WSL image has a .gz extension
+:class: tip
+If the image you downloaded has a filename that ends in `.wsl.gz`, rather than
+`.wsl`, run the following command before changing the extension to `.tar`:
+
+    $ gunzip /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl.gz
 ```
 
 In the home directory (`~`), create a directory to store the rootfs of your
