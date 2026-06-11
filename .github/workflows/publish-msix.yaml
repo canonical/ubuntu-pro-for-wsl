@@ -114,7 +114,6 @@ jobs:
           Compress-Archive -Path $bundlePath -DestinationPath $uploadPath
 
           "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "upload-path=$uploadPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
       - name: Install Store Broker
         shell: powershell
         run: |
@@ -123,7 +122,6 @@ jobs:
         shell: powershell
         env:
           pre_release: ${{ needs.version.outputs.release-type }}
-          upload_path: ${{ steps.bundle.outputs.upload-path }}
         run: |
           New-Item -ItemType directory -Path store -Force
 

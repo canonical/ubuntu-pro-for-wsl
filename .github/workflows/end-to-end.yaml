@@ -126,7 +126,7 @@ jobs:
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
-          Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.msix*" -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.msix" -Destination "windows-agent/"
           Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.cer"       -Destination "windows-agent/"
           Remove-Item -Recurse "UbuntuProForWSL+*/"
 
