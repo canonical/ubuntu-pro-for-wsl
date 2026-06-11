@@ -34,7 +34,33 @@ jobs:
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
+  version:
+    name: Compute version
+    runs-on: ubuntu-latest
+    outputs:
+      numeric-version: ${{ steps.version.outputs.numeric_version }}
+      tag: ${{ steps.version.outputs.tag }}
+      release-type: ${{ steps.version.outputs.release_type }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.work
+          cache-dependency-path: go.work
+      - name: Compute version
+        id: version
+        run: |
+          versionInfo=$(go run ./tools/build/compute_version.go --json)
+          echo "numeric_version=$(jq -r '.numeric_version' <<< "$versionInfo").0" >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq -r '.tag' <<< "$versionInfo")"                           >> "$GITHUB_OUTPUT"
+          echo "release_type=$(jq -r '.release_type' <<< "$versionInfo")"         >> "$GITHUB_OUTPUT"
+
   build-ubuntu-pro-for-wsl:
+    needs: version
     strategy:
       matrix:
         mode: ["production", "end_to_end_tests"]
@@ -53,6 +79,9 @@ jobs:
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
           run-code-analysis: true
+          up4w-version: ${{ needs.version.outputs.numeric-version }}
+          tag: ${{ needs.version.outputs.tag }}
+          release-type: ${{ needs.version.outputs.release-type }}
 
       - name: Upload sideload artifact
         uses: actions/upload-artifact@v7
@@ -60,7 +89,7 @@ jobs:
           name: UbuntuProForWSL+${{ github.sha }}-${{ matrix.mode }}
           path: |
             msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.cer
-            msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.msixbundle
+            msix/UbuntuProForWSL/AppPackages/UbuntuProForWSL_*/UbuntuProForWSL_*.msix
 
   qa:
     name: Run end-to-end tests
@@ -97,7 +126,7 @@ jobs:
           Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage -ErrorAction Ignore
 
           New-Item -Name "windows-agent" -ItemType Directory
-          Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.msixbundle" -Destination "windows-agent/"
+          Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.msix*" -Destination "windows-agent/"
           Move-Item -Path "UbuntuProForWSL+*-end_to_end_tests/UbuntuProForWSL_*/*.cer"       -Destination "windows-agent/"
           Remove-Item -Recurse "UbuntuProForWSL+*/"
 
