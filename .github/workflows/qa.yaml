@@ -66,6 +66,7 @@ jobs:
           cache-sdk: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
+          git-source: git
       - name: Install Dart protoc plugin
         if: matrix.needs-flutter != ''
         shell: bash
@@ -383,6 +384,7 @@ jobs:
           cache-sdk: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
+          git-source: git
       - name: Download coverage artifacts
         uses: actions/download-artifact@v8
         with:

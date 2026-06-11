@@ -25,8 +25,9 @@ runs:
     - uses: koji-1009/setup-flutter@dc0c32043f6858b5f588f794eb4eefdd797f0bbf # v1.1.6-5-gdc0c320
       with:
         cache-sdk: true
-        channel: "stable"
-        flutter-version: "${{ inputs.flutter-version }}"
+        channel: 'stable'
+        flutter-version: '${{ inputs.flutter-version }}'
+        git-source: git
     - name: Integration Test
       shell: bash
       working-directory: '${{ inputs.package-dir }}'
