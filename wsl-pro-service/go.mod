@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3
-	golang.org/x/text v0.37.0
+	golang.org/x/text v0.38.0
 	google.golang.org/grpc v1.81.1
 	gopkg.in/ini.v1 v1.67.2
 )
