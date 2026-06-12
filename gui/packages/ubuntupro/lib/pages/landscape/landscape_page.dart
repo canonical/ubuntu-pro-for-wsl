@@ -400,7 +400,7 @@ class _FilePickerFieldState extends State<_FilePickerField> {
         FilledButton(
           onPressed: widget.enabled
               ? () async {
-                  final result = await FilePicker.platform.pickFiles(
+                  final result = await FilePicker.pickFiles(
                     allowedExtensions: widget.allowedExtensions,
                     type: widget.allowedExtensions == null
                         ? FileType.any

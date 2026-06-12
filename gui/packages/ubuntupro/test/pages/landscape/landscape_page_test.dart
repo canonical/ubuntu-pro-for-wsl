@@ -1,5 +1,4 @@
 import 'package:agentapi/agentapi.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
@@ -30,7 +29,6 @@ void main() {
   // This should be resolved so that we don't have to specify a manual text scale factor.
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
-  FilePicker.platform = FakeFilePicker([caCert]);
 
   final launcher = FakeUrlLauncher();
   UrlLauncherPlatform.instance = launcher;
@@ -446,29 +444,3 @@ const clientKey = './test/testdata/certs/client_key.pem';
 const binaryCert = './test/testdata/certs/binary_cert.der';
 const notATextCert = './test/testdata/certs/not_a_cert.pem';
 const notABinCert = './test/testdata/certs/not_a_cert.der';
-
-class FakeFilePicker extends FilePicker {
-  /// Fake [FilePicker] that always returns the given `paths`.
-  FakeFilePicker(this.paths);
-
-  final List<String> paths;
-
-  @override
-  Future<FilePickerResult?> pickFiles({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-    Function(FilePickerStatus p1)? onFileLoading,
-    bool allowCompression = true,
-    int compressionQuality = 30,
-    bool allowMultiple = false,
-    bool withData = false,
-    bool withReadStream = false,
-    bool lockParentWindow = false,
-    bool readSequential = false,
-  }) async =>
-      FilePickerResult(
-        paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
-      );
-}
