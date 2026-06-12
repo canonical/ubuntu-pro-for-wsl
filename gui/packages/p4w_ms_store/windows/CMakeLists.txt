@@ -118,7 +118,6 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE ${STORE_API_DEFINES})
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include" PRIVATE ${STORE_API_DIR})
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_20)
-target_compile_options(${PLUGIN_NAME} PRIVATE /await)
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin windowsapp)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
