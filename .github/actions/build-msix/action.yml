@@ -68,7 +68,7 @@ runs:
         $tag='${{ inputs.tag }}'
         $releaseType='${{ inputs.release-type }}'
 
-        # Detect host architecture
+        # Detect host architecture: It'd print AMD64 for what MSBuild and tools expect x64.
         $platform = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'ARM64' } else { 'x64' }
 
         [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
@@ -105,7 +105,7 @@ runs:
           -maxCpuCount                                                                      `
           -nodeReuse:false                                                                  `
           -property:Configuration=${{ inputs.mode == 'production' && 'Release' || 'Debug'}} `
-          -property:AppxBundle=Never                                                         `
+          -property:AppxBundle=Always                                                         `
           -property:Platform=$platform                                                       `
           -property:UapAppxPackageBuildMode=${{ inputs.package-mode }}                      `
           -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `

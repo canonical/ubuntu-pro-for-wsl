@@ -49,7 +49,7 @@ const (
 	//    ├───wsl-pro-service
 	//    │   └──wsl-pro-service_*.deb
 	//    └───windows-agent
-	//        └──UbuntuProForWSL_*.msix
+	//        └──UbuntuProForWSL_*.msixbundle
 	//
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
@@ -80,7 +80,7 @@ func TestMain(m *testing.M) {
 	    ├───wsl-pro-service
 	    │   └──wsl-pro-service_*.deb
 	    └───windows-agent
-	        └──UbuntuProForWSL_*.msix
+	        └──UbuntuProForWSL_*.msixbundle
 	`, prebuiltPath)
 	}
 
@@ -109,7 +109,7 @@ func TestMain(m *testing.M) {
 func usePrebuiltProject(buildPath string) (err error) {
 	// Locate the Appx package and store the path in global variable so that we can
 	// reinstall it before every test
-	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWSL_*.msix"))
+	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWSL_*.msixbundle"))
 	if err != nil {
 		return fmt.Errorf("could not locate MSIX: %v", err)
 	}

@@ -92,7 +92,7 @@ jobs:
         with:
           name: msix-packages-windows-11-arm
           path: artifacts/arm64
-      - name: Bundle MSIX packages
+      - name: Lay out and Bundle MSIX packages
         id: bundle
         shell: powershell
         env:
@@ -103,19 +103,41 @@ jobs:
           Import-Module "$vsPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
           Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
 
+          $preStagingDir = "pre-staging"
+          New-Item -ItemType Directory -Path $preStagingDir -Force
           $stagingDir = "bundle-staging"
           New-Item -ItemType Directory -Path $stagingDir -Force
 
-          # Collect arch-specific .msix files from both builds.
+          # Collect arch-specific .msixbundle files from both builds.
           # Platform-independent packages (resource packs) appear in both artifact sets with identical
-          # content; we copy from x64 first, then ARM64 — duplicates are simply overwritten.
-          Get-ChildItem -Path artifacts\x64   -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName $stagingDir }
-          Get-ChildItem -Path artifacts\arm64 -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName $stagingDir }
+          # content; we copy the contents of both bundles, duplicates are simply overwritten.
+          # But first we need to rename them to .zip.
+          Get-ChildItem -Path artifacts\*\ -Recurse -Filter *.msixbundle | ForEach-Object { 
+            $newName = $_.Name -replace '\.msixbundle$', '.zip'
+            Rename-Item -Path $_.FullName -NewName $newName -PassThru | Expand-Archive -DestinationPath $preStagingDir -Force
+          }
+          # Save one appinstaller file for later use. They are identical across architectures, so it doesn't matter which one we pick.
+          $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
+          Get-ChildItem -Path artifacts\*\ -Recurse -Filter *.appinstaller | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName -Destination "$appinstallerFile" -Force }
+          # Take only the MSIX files from the pre-staging dir:
+          Get-ChildItem -Path $preStagingDir\ -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName -Destination $stagingDir -Force }
 
           $bundlePath = "UbuntuProForWSL.msixbundle"
           makeappx.exe bundle /d $stagingDir /p $bundlePath /bv $env:UP4W_VERSION /o
 
-          "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          # Sign the MSIX Bundle.
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
+          certutil -decode certificate\certificate.txt certificate\certificate.pfx
+          try {
+            signtool.exe sign /fd SHA256 /a /v /f certificate\certificate.pfx /p '${{ secrets.CERTIFICATE_PASSWORD }}' $bundlePath
+
+            "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "appinstaller-path=$appinstallerFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          } finally {
+            Remove-Item certificate\ -Recurse
+          }
+
       - name: Upload MSIX bundle (dry-run)
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v7
@@ -123,6 +145,7 @@ jobs:
           name: msix-bundle
           path: |
             ${{ steps.bundle.outputs.bundle-path }}
+            ${{ steps.bundle.outputs.appinstaller-path }}
           if-no-files-found: error
       - name: Install Store Broker
         if: github.event_name != 'pull_request'
@@ -177,7 +200,7 @@ jobs:
           # Intentionally not copying the msixbundle, as it is already uploaded to the store
           # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
           # and draft, so it doesn't appear as a published release.
-          $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
+          $appinstallerFile="${{ steps.bundle.outputs.appinstaller-path }}"
           if ($env:pre_release -eq "pre-release") {
             Write-output "Creating a new pre-release draft"
             # TODO: Once we have a real first release, place back the `--generate-notes` option.
@@ -199,9 +222,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The appinstaller file output is relative to the main repo root.
+          $appinstallerFile="..\${{ steps.bundle.outputs.appinstaller-path }}"
           $folder = ".\pre-release\"
           New-Item -Path "$folder" -ItemType Directory -Force
-          Copy-Item ..\msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller "$folder"
+          Copy-Item "$appinstallerFile" "$folder"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$folder"
