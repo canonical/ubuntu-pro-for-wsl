@@ -20,13 +20,13 @@ runs:
     # Go is needed to build the agent for integration testing.
     - uses: actions/setup-go@v6
       with:
-        cache-dependency-path: "${{ inputs.go-version-file }}"
-        go-version-file: "${{ inputs.go-version-file }}"
-    - uses: subosito/flutter-action@v2
+        cache-dependency-path: '${{ inputs.go-version-file }}'
+        go-version-file: '${{ inputs.go-version-file }}'
+    - uses: CarlosNihelton/flutter-action@53984264025d6f0cda85838542ad2d440351ceb7
       with:
         cache: true
-        channel: "stable"
-        flutter-version: "${{ inputs.flutter-version }}"
+        channel: 'stable'
+        flutter-version: '${{ inputs.flutter-version }}'
     - name: Integration Test
       shell: bash
       working-directory: '${{ inputs.package-dir }}'

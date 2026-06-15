@@ -60,7 +60,7 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Set up flutter
-        uses: subosito/flutter-action@v2
+        uses: CarlosNihelton/flutter-action@53984264025d6f0cda85838542ad2d440351ceb7
         if: matrix.needs-flutter != ''
         with:
           cache: true
@@ -378,7 +378,7 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Set up flutter
-        uses: subosito/flutter-action@v2
+        uses: CarlosNihelton/flutter-action@53984264025d6f0cda85838542ad2d440351ceb7
         with:
           cache: true
           channel: 'stable'
