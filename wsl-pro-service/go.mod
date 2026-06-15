@@ -14,7 +14,7 @@ require (
 	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3
 	golang.org/x/text v0.38.0
 	google.golang.org/grpc v1.81.1
-	gopkg.in/ini.v1 v1.67.2
+	gopkg.in/ini.v1 v1.67.3
 )
 
 require (
