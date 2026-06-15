@@ -60,9 +60,12 @@ this command:
 $ mv /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
 ```
 
-```{tip}
-If you downloaded a different version of Ubuntu 24.04 LTS, adjust the filename
-in the command to use the correct name.
+```{admonition} Additional step if the WSL image has a .gz extension
+:class: tip
+If the image you downloaded has a filename that ends in `.wsl.gz`, rather than
+`.wsl`, run the following command before changing the extension to `.tar`:
+
+    $ gunzip /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl.gz
 ```
 
 In the home directory (`~`), create a directory to store the rootfs of your
@@ -100,7 +103,7 @@ There are two configuration files for the WSL distro that you are customising:
 Open the configuration file:
 
 ```{code-block} text
-$ vim ~/myNewUbuntu/etc/wsl-distribution.conf
+$ sudo vim ~/myNewUbuntu/etc/wsl-distribution.conf
 ```
 
 Change the name of your distro and the name of its icon:
@@ -145,7 +148,7 @@ $ convert ~/myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray ~/myNewUbuntu/u
 You can also customise which settings are applied to the distro on boot:
 
 ```{code-block} text
-$ vim ~/myNewUbuntu/etc/wsl.conf
+$ sudo vim ~/myNewUbuntu/etc/wsl.conf
 ```
 
 For the purpose of this guide, we will keep the default boot settings.
@@ -229,7 +232,7 @@ $ sudo mount --rbind --make-rslave /run myNewUbuntu/run
 Then `chroot` into the root directory of your custom distro and open a bash shell:
 
 ```{code-block} text
-$ sudo chroot ~/myNewDistro /bin/bash
+$ sudo chroot ~/myNewUbuntu /bin/bash
 ```
 
 If successful, you will see a prompt for the root user:
