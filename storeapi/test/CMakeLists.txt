@@ -79,7 +79,6 @@ if(MSVC)
         /fsanitize=address,leak,undefined
         /Zi
         /INCREMENTAL:NO
-        /await
     )
     target_compile_options(StoreApiServicesTests INTERFACE ${MSVC_OPTIONS})
 endif()

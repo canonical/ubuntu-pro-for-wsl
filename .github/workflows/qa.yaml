@@ -60,12 +60,13 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Set up flutter
-        uses: subosito/flutter-action@v2
+        uses: CarlosNihelton/flutter-action@53984264025d6f0cda85838542ad2d440351ceb7
         if: matrix.needs-flutter != ''
         with:
           cache: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
+          pub-cache: true
       - name: Install Dart protoc plugin
         if: matrix.needs-flutter != ''
         shell: bash
@@ -378,11 +379,12 @@ jobs:
         with:
           path: tools/flutter-version
       - name: Set up flutter
-        uses: subosito/flutter-action@v2
+        uses: CarlosNihelton/flutter-action@53984264025d6f0cda85838542ad2d440351ceb7
         with:
           cache: true
           channel: 'stable'
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
+          pub-cache: true
       - name: Download coverage artifacts
         uses: actions/download-artifact@v8
         with:

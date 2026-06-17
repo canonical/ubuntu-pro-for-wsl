@@ -1,6 +1,6 @@
 import 'package:agentapi/agentapi.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:mockito/annotations.dart';
@@ -30,7 +30,6 @@ void main() {
   // This should be resolved so that we don't have to specify a manual text scale factor.
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
   binding.platformDispatcher.textScaleFactorTestValue = 0.6;
-  FilePicker.platform = FakeFilePicker([caCert]);
 
   final launcher = FakeUrlLauncher();
   UrlLauncherPlatform.instance = launcher;
@@ -138,16 +137,70 @@ void main() {
       expect(applied, isTrue);
     });
 
-    testWidgets('custom config', (tester) async {
-      final client = MockAgentApiClient();
+    group('custom config', () {
+      testWidgets('via text field', (tester) async {
+        final client = MockAgentApiClient();
 
-      var applied = false;
-      when(client.applyLandscapeConfig(any)).thenAnswer((_) async {
-        applied = true;
-        return LandscapeSource()..ensureUser();
+        var applied = false;
+        when(client.applyLandscapeConfig(any)).thenAnswer((_) async {
+          applied = true;
+          return LandscapeSource()..ensureUser();
+        });
+
+        final model = LandscapeModel(client);
+        final app = buildApp(model);
+        await tester.pumpWidget(app);
+        final context = tester.element(find.byType(ColumnPage));
+        final lang = AppLocalizations.of(context);
+
+        await tester.tap(find.text(lang.landscapeSetupCustom));
+        await tester.pump();
+
+        final fileInput = find.ancestor(
+          of: find.text(lang.landscapeFileLabel),
+          matching: find.byType(TextField),
+        );
+        expect(fileInput, findsOne);
+        await tester.tap(fileInput);
+        await tester.pump();
+
+        await tester.enterText(fileInput, customConf);
+        await tester.pumpAndSettle();
+
+        final continueButton = find.button(lang.landscapeRegister);
+        expect(
+            tester.widget<ButtonStyleButton>(continueButton).enabled, isTrue);
+        expect(applied, isFalse);
+
+        await tester.tap(continueButton);
+        await tester.pumpAndSettle();
+        expect(applied, isTrue);
       });
+    });
 
-      final model = LandscapeModel(client);
+    testWidgets('via file picker', (tester) async {
+      const channel = MethodChannel('miguelruivo.flutter.plugins.filepicker');
+      // Forces the file picker to always return the same path p.
+      // Kinda breaks its encapsulation, but the alternative results in even more
+      // uncovered lines. If this ever becomes brittle, we should refactor the file
+      // picking logic into a separate service that can be mocked more easily.
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          channel,
+          (call) async => (call.method != 'any' && call.method != 'custom')
+              ? debugPrint(call.toString()) // In case the methods are renamed.
+              : [
+                  {
+                    'path': customConf,
+                    'name': 'file.conf',
+                    'size': 10,
+                  }
+                ]);
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+      final model = LandscapeModel(MockAgentApiClient());
+
       final app = buildApp(model);
       await tester.pumpWidget(app);
       final context = tester.element(find.byType(ColumnPage));
@@ -155,25 +208,25 @@ void main() {
 
       await tester.tap(find.text(lang.landscapeSetupCustom));
       await tester.pump();
+      // Find the only button of type FilledButton ancestor of the landscapeFilePicker label that's
+      // enabled:
+      final fileButton = find.ancestor(
+        of: find.text(lang.landscapeFilePicker),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is FilledButton && widget.enabled == true,
+        ),
+      );
 
-      final fileInput = find.ancestor(
+      expect(fileButton, findsOne);
+      await tester.tap(fileButton);
+      await tester.pumpAndSettle();
+
+      final textField = find.ancestor(
         of: find.text(lang.landscapeFileLabel),
         matching: find.byType(TextField),
       );
-      expect(fileInput, findsOne);
-      await tester.tap(fileInput);
-      await tester.pump();
-
-      await tester.enterText(fileInput, customConf);
-      await tester.pumpAndSettle();
-
-      final continueButton = find.button(lang.landscapeRegister);
-      expect(tester.widget<ButtonStyleButton>(continueButton).enabled, isTrue);
-      expect(applied, isFalse);
-
-      await tester.tap(continueButton);
-      await tester.pumpAndSettle();
-      expect(applied, isTrue);
+      expect(textField, findsOne);
+      expect(tester.widget<TextField>(textField).controller?.text, customConf);
     });
   });
 
@@ -446,29 +499,3 @@ const clientKey = './test/testdata/certs/client_key.pem';
 const binaryCert = './test/testdata/certs/binary_cert.der';
 const notATextCert = './test/testdata/certs/not_a_cert.pem';
 const notABinCert = './test/testdata/certs/not_a_cert.der';
-
-class FakeFilePicker extends FilePicker {
-  /// Fake [FilePicker] that always returns the given `paths`.
-  FakeFilePicker(this.paths);
-
-  final List<String> paths;
-
-  @override
-  Future<FilePickerResult?> pickFiles({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-    Function(FilePickerStatus p1)? onFileLoading,
-    bool allowCompression = true,
-    int compressionQuality = 30,
-    bool allowMultiple = false,
-    bool withData = false,
-    bool withReadStream = false,
-    bool lockParentWindow = false,
-    bool readSequential = false,
-  }) async =>
-      FilePickerResult(
-        paths.map((p) => PlatformFile(name: p, path: p, size: 0)).toList(),
-      );
-}
