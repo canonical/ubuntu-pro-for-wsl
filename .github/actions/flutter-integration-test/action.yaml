@@ -27,6 +27,7 @@ runs:
         cache: true
         channel: 'stable'
         flutter-version: '${{ inputs.flutter-version }}'
+        pub-cache: true
     - name: Integration Test
       shell: bash
       working-directory: '${{ inputs.package-dir }}'

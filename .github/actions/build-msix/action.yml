@@ -43,6 +43,7 @@ runs:
         cache: true
         channel: stable
         flutter-version: ${{ steps.flutter-version.outputs.contents }}
+        pub-cache: true
     - name: Setup MSBuild (PATH)
       uses: microsoft/setup-msbuild@v3
     - name: Install certificate
