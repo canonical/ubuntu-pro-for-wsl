@@ -107,7 +107,7 @@ runs:
           -property:Configuration=${{ inputs.mode == 'production' && 'Release' || 'Debug'}} `
           -property:AppxBundle=Always                                                       `
           -property:AppxBundlePlatforms=$platform                                           `
-          -property:Platform=$platform                                                      `  
+          -property:Platform=$platform                                                      `
           -property:UapAppxPackageBuildMode=${{ inputs.package-mode }}                      `
           -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `
           -property:RunCodeAnalysis=${{ inputs.run-code-analysis }}                         `
