@@ -97,6 +97,7 @@ jobs:
         shell: powershell
         env:
           UP4W_VERSION: ${{ needs.version.outputs.numeric-version }}
+          CERT_PASSWD: ${{ secrets.CERTIFICATE_PASSWORD }}
         run: |
           # Load VS Dev Powershell to get access to makeappx.exe.
           $vsPath = $(vswhere.exe -products * -requires Microsoft.Component.MSBuild -property installationPath -latest)
@@ -126,16 +127,18 @@ jobs:
           makeappx.exe bundle /d $stagingDir /p $bundlePath /bv $env:UP4W_VERSION /o
 
           # Sign the MSIX Bundle.
-          New-Item -ItemType directory -Path certificate
-          Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
-          certutil -decode certificate\certificate.txt certificate\certificate.pfx
-          try {
-            signtool.exe sign /fd SHA256 /a /v /f certificate\certificate.pfx /p '${{ secrets.CERTIFICATE_PASSWORD }}' $bundlePath
+          if (-not [string]::IsNullOrWhitespace($env:CERT_PASSWD)) {
+            New-Item -ItemType directory -Path certificate
+            Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
+            certutil -decode certificate\certificate.txt certificate\certificate.pfx
+            try {
+              signtool.exe sign /fd SHA256 /a /v /f certificate\certificate.pfx /p "${env:CERT_PASSWD}" $bundlePath
 
-            "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-            "appinstaller-path=$appinstallerFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          } finally {
-            Remove-Item certificate\ -Recurse
+              "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+              "appinstaller-path=$appinstallerFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            } finally {
+              Remove-Item certificate\ -Recurse
+            }
           }
 
       - name: Upload MSIX bundle (dry-run)
