@@ -1,5 +1,5 @@
 name: Publish MSIX app to the Microsoft Store
-concurrency: publish-msix
+concurrency: publish-msix-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
 on:
   workflow_dispatch:
   push:
@@ -7,34 +7,159 @@ on:
       - '**'
       - '!*.post[0-9]+' # Reserved for documentation-only releases.
       - '!wsl-pro-service/**'
+  pull_request:
+    paths:
+      - '.github/workflows/publish-msix.yaml'
 jobs:
-  publish-msix:
-    permissions:
-      contents: write
-    name: Publish MSIX app to the Microsoft Store
-    runs-on: windows-latest
+  version:
+    name: Compute version
+    runs-on: ubuntu-latest
+    outputs:
+      numeric-version: ${{ steps.version.outputs.numeric_version }}
+      full-version: ${{ steps.version.outputs.full_version }}
+      tag: ${{ steps.version.outputs.tag }}
+      release-type: ${{ steps.version.outputs.release_type }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           fetch-tags: true
           fetch-depth: 0
-      - name: Build MSIX Bundle
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.work
+          cache-dependency-path: go.work
+      - name: Compute version
+        id: version
+        run: |
+          versionInfo=$(go run ./tools/build/compute_version.go --json)
+          echo "numeric_version=$(jq -r '.numeric_version' <<< "$versionInfo").0" >> "$GITHUB_OUTPUT"
+          echo "full_version=$(jq -r '.full_version' <<< "$versionInfo")"         >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq -r '.tag' <<< "$versionInfo")"                           >> "$GITHUB_OUTPUT"
+          echo "release_type=$(jq -r '.release_type' <<< "$versionInfo")"         >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build MSIX (${{ matrix.runner }})
+    needs: version
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        runner: [windows-2025, windows-11-vs2026-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - name: Build MSIX
         uses: ./.github/actions/build-msix
-        id: build-msix
         with:
           certificate: ${{ secrets.CERTIFICATE }}
           certificate_password: ${{ secrets.CERTIFICATE_PASSWORD }}
           package-mode: StoreUpload
           run-code-analysis: false
+          up4w-version: ${{ needs.version.outputs.numeric-version }}
+          tag: ${{ needs.version.outputs.tag }}
+          release-type: ${{ needs.version.outputs.release-type }}
+      - name: Upload MSIX packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: msix-packages-${{ matrix.runner }}
+          path: msix/UbuntuProForWSL/AppPackages/
+          if-no-files-found: error
+
+  publish-msix:
+    name: Publish MSIX app to the Microsoft Store
+    needs: [version, build]
+    permissions:
+      contents: write
+    runs-on: windows-2025
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - name: Download x64 MSIX packages
+        uses: actions/download-artifact@v8
+        with:
+          name: msix-packages-windows-2025
+          path: artifacts/x64
+      - name: Download ARM64 MSIX packages
+        uses: actions/download-artifact@v8
+        with:
+          name: msix-packages-windows-11-vs2026-arm
+          path: artifacts/arm64
+      - name: Lay out and Bundle MSIX packages
+        id: bundle
+        shell: powershell
+        env:
+          UP4W_VERSION: ${{ needs.version.outputs.numeric-version }}
+          CERT_PASSWD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          # Load VS Dev Powershell to get access to makeappx.exe.
+          $vsPath = $(vswhere.exe -products * -requires Microsoft.Component.MSBuild -property installationPath -latest)
+          Import-Module "$vsPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
+
+          $preStagingDir = "pre-staging"
+          New-Item -ItemType Directory -Path $preStagingDir -Force
+          $stagingDir = "bundle-staging"
+          New-Item -ItemType Directory -Path $stagingDir -Force
+
+          # Collect arch-specific .msixbundle files from both builds.
+          # Platform-independent packages (resource packs) appear in both artifact sets with identical
+          # content; we copy the contents of both bundles, duplicates are simply overwritten.
+          # But first we need to rename them to .zip.
+          Get-ChildItem -Path artifacts\*\ -Recurse -Filter *.msixbundle | ForEach-Object { 
+            $newName = $_.Name -replace '\.msixbundle$', '.zip'
+            Rename-Item -Path $_.FullName -NewName $newName -PassThru | Expand-Archive -DestinationPath $preStagingDir -Force
+          }
+          # Save one appinstaller file for later use. They are identical across architectures, so it doesn't matter which one we pick.
+          $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
+          Get-ChildItem -Path artifacts\*\ -Recurse -Filter *.appinstaller | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName -Destination "$appinstallerFile" -Force }
+          # Take only the MSIX files from the pre-staging dir:
+          Get-ChildItem -Path $preStagingDir\ -Recurse -Filter *.msix | ForEach-Object { Copy-Item $_.FullName -Destination $stagingDir -Force }
+
+          $bundlePath = "UbuntuProForWSL.msixbundle"
+          makeappx.exe bundle /d $stagingDir /p $bundlePath /bv $env:UP4W_VERSION /o
+
+          # Sign the MSIX Bundle.
+          if (-not [string]::IsNullOrWhitespace($env:CERT_PASSWD)) {
+            New-Item -ItemType directory -Path certificate
+            Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
+            certutil -decode certificate\certificate.txt certificate\certificate.pfx
+            try {
+              signtool.exe sign /fd SHA256 /a /v /f certificate\certificate.pfx /p "${env:CERT_PASSWD}" $bundlePath
+
+              "bundle-path=$bundlePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+              "appinstaller-path=$appinstallerFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            } finally {
+              Remove-Item certificate\ -Recurse
+            }
+          }
+
+      - name: Upload MSIX bundle (dry-run)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: msix-bundle
+          path: |
+            ${{ steps.bundle.outputs.bundle-path }}
+            ${{ steps.bundle.outputs.appinstaller-path }}
+          if-no-files-found: error
       - name: Install Store Broker
+        if: github.event_name != 'pull_request'
         shell: powershell
         run: |
           Install-Module -Name StoreBroker -AcceptLicense -Force -Scope CurrentUser -Verbose
       - name: Submit to Microsoft Store
+        if: github.event_name != 'pull_request'
         shell: powershell
         env:
-          pre_release: ${{ steps.build-msix.outputs.is-pre-release }}
+          pre_release: ${{ needs.version.outputs.release-type }}
         run: |
           New-Item -ItemType directory -Path store -Force
 
@@ -56,7 +181,7 @@ jobs:
             # The existing package flight for beta testers.
             $flightId="876dc297-0b4d-4a74-94ef-720279050fc4"
             Write-Output "Starting a new submission under package flight $flightId from:"
-            Get-ChildItem ./msix/UbuntuProForWSL/AppPackages/
+            Get-ChildItem ./
             $sub, $url = Update-ApplicationFlightSubmission -AppId $appid -FlightId $flightId -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -AutoCommit -ReplacePackages -Verbose
           } else {
             $sub, $url = Update-ApplicationSubmission -AppId $appid -SubmissionDataPath "$subFileStem.json" -PackagePath "$subFileStem.zip" -Force -ReplacePackages -AutoCommit -Verbose
@@ -66,18 +191,19 @@ jobs:
           Write-Output "Access the submission via the link below:"
           Write-Output "https://partner.microsoft.com/en-us/dashboard/products/$appid/submissions/$sub/"
       - name: Create the GH Release
+        if: github.event_name != 'pull_request'
         shell: powershell
         id: create-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          version: ${{ steps.build-msix.outputs.msix-version }}
-          pre_release: ${{ steps.build-msix.outputs.is-pre-release }}
+          version: ${{ needs.version.outputs.numeric-version }}
+          pre_release: ${{ needs.version.outputs.release-type }}
           tag: ${{ github.ref_name }}
         run: |
           # Intentionally not copying the msixbundle, as it is already uploaded to the store
           # We wanted the msix bundle signed by the store instead, reason why we don't mark this as 'latest'
           # and draft, so it doesn't appear as a published release.
-          $appinstallerFile="msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller"
+          $appinstallerFile="${{ steps.bundle.outputs.appinstaller-path }}"
           if ($env:pre_release -eq "pre-release") {
             Write-output "Creating a new pre-release draft"
             # TODO: Once we have a real first release, place back the `--generate-notes` option.
@@ -87,19 +213,23 @@ jobs:
           }
           Write-Output "This is a draft release. Once the submission is completed in MS Partner Center, the MSIX package must be downloaded and included as a release asset."
       - name: Check out the repository wiki
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v6
         with:
           repository: canonical/ubuntu-pro-for-wsl.wiki
           path: wiki
       - name: Store the App Installer File for the pre-release audience
+        if: github.event_name != 'pull_request'
         shell: powershell
         working-directory: './wiki'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The appinstaller file output is relative to the main repo root.
+          $appinstallerFile="..\${{ steps.bundle.outputs.appinstaller-path }}"
           $folder = ".\pre-release\"
           New-Item -Path "$folder" -ItemType Directory -Force
-          Copy-Item ..\msix\UbuntuProForWSL\UbuntuProForWSL.appinstaller "$folder"
+          Copy-Item "$appinstallerFile" "$folder"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$folder"

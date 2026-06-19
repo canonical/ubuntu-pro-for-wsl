@@ -19,13 +19,15 @@ inputs:
     required: false
     description: "Whether to run code analysis during the build"
     default: "true"
-outputs:
-  msix-version:
-    description: "The version of the built MSIX bundle"
-    value: ${{ steps.build.outputs.UP4W_VERSION }}
-  is-pre-release:
-    description: "Whether the version is a pre-release or stable release"
-    value: ${{ steps.build.outputs.STABLE_OR }}
+  up4w-version:
+    required: true
+    description: "Numeric version string (e.g. 1.2.3.4) for the MSIX package"
+  tag:
+    required: true
+    description: "Git tag used to construct the appinstaller URI"
+  release-type:
+    required: true
+    description: "Release type: 'stable' or 'pre-release'"
 runs:
   using: "composite"
   steps:
@@ -58,26 +60,22 @@ runs:
         Import-PfxCertificate -Password $pwd -CertStoreLocation Cert:CurrentUser\My -FilePath certificate\certificate.pfx
 
         Remove-Item certificate\ -Recurse
-    - name: Build Bundle
+    - name: Build MSIX
       id: build
       shell: powershell
       run: |
-        # Set up the full version (displayed in logs)
-        $versionInfo=ConvertFrom-Json $(go run .\tools\build\compute_version.go --json)
-        $env:UP4W_FULL_VERSION=$($versionInfo.full_version)
-        $tag=$($versionInfo.tag)
+        $UP4W_VERSION='${{ inputs.up4w-version }}'
+        $tag='${{ inputs.tag }}'
+        $releaseType='${{ inputs.release-type }}'
 
-        # Set up the numeric version (used in the AppxManifest)
-        $UP4W_VERSION=$($versionInfo.numeric_version)
-
-        # Whether this is a 'stable' or 'pre-release'
-        $releaseType=$($versionInfo.release_type)
+        # Detect host architecture: It'd print AMD64 for what MSBuild and tools expect x64.
+        $platform = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'ARM64' } else { 'x64' }
 
         [Reflection.Assembly]::LoadWithPartialName("System.Xml.Linq")
         $path = "$PWD/Msix/UbuntuProForWSL/Package.appxmanifest"
         $doc = [System.Xml.Linq.XDocument]::Load($path)
         $xName = [System.Xml.Linq.XName]::Get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Identity")
-        $doc.Root.Element($xName).Attribute("Version").Value = "${UP4W_VERSION}.0";
+        $doc.Root.Element($xName).Attribute("Version").Value = "${UP4W_VERSION}";
         $doc.Save($path)
 
         # Do the same with the app installer file
@@ -85,10 +83,10 @@ runs:
         $path = "$PWD/Msix/UbuntuProForWSL/UbuntuProForWSL.appinstaller"
         $doc = [System.Xml.Linq.XDocument]::Load($path)
         $ns = $doc.Root.Name.Namespace
-        $doc.Root.SetAttributeValue("Version", "${UP4W_VERSION}.0")
+        $doc.Root.SetAttributeValue("Version", "${UP4W_VERSION}")
         $mainBundle = $doc.Root.Element($ns + "MainBundle")
         if ($mainBundle) {
-          $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}.0")
+          $mainBundle.SetAttributeValue("Version", "${UP4W_VERSION}")
           $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${tag}/UbuntuProForWSL.msixbundle")
         }
         if ($releaseType -eq "pre-release") {
@@ -96,10 +94,6 @@ runs:
           $doc.Root.SetAttributeValue("Uri", "https://raw.githubusercontent.com/wiki/canonical/ubuntu-pro-for-wsl/pre-release/UbuntuProForWSL.appinstaller")
         }
         $doc.Save($path)
-
-        # Outputs for the next steps
-        "UP4W_VERSION=${UP4W_VERSION}.0" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-        "STABLE_OR=${releaseType}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
         # Set up the mock
         $env:UP4W_TEST_WITH_MS_STORE_MOCK=${{ inputs.mode == 'end_to_end_tests' && '1' || '$null'}}
@@ -112,9 +106,11 @@ runs:
           -nodeReuse:false                                                                  `
           -property:Configuration=${{ inputs.mode == 'production' && 'Release' || 'Debug'}} `
           -property:AppxBundle=Always                                                       `
-          -property:AppxBundlePlatforms=x64                                                 `
+          -property:AppxBundlePlatforms=$platform                                           `
+          -property:Platform=$platform                                                      `
+          -property:PlatformToolset=v145                                                    `
           -property:UapAppxPackageBuildMode=${{ inputs.package-mode }}                      `
           -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `
-          -property:RunCodeAnalysis=${{ inputs.run-code-analysis }}                      `
+          -property:RunCodeAnalysis=${{ inputs.run-code-analysis }}                         `
           -nologo                                                                           `
           -verbosity:normal
