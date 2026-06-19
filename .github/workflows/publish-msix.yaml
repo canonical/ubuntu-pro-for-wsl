@@ -45,7 +45,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        runner: [windows-2025, windows-11-arm]
+        runner: [windows-2025, windows-11-vs2026-arm]
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Check out repository
@@ -90,7 +90,7 @@ jobs:
       - name: Download ARM64 MSIX packages
         uses: actions/download-artifact@v8
         with:
-          name: msix-packages-windows-11-arm
+          name: msix-packages-windows-11-vs2026-arm
           path: artifacts/arm64
       - name: Lay out and Bundle MSIX packages
         id: bundle
