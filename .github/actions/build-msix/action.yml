@@ -108,6 +108,7 @@ runs:
           -property:AppxBundle=Always                                                       `
           -property:AppxBundlePlatforms=$platform                                           `
           -property:Platform=$platform                                                      `
+          -property:PlatformToolset=v145                                                    `
           -property:UapAppxPackageBuildMode=${{ inputs.package-mode }}                      `
           -property:UP4W_END_TO_END=${{ inputs.mode == 'end_to_end_tests' }}                `
           -property:RunCodeAnalysis=${{ inputs.run-code-analysis }}                         `
