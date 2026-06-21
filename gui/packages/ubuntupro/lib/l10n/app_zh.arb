@@ -106,5 +106,17 @@
             }
         }
     },
-    "landscapeDetails": "详情"
+    "landscapeDetails": "详情",
+    "landscapeProceedAnywayHint": "请继续，系统会在后台尝试连接 Landscape 服务器。",
+    "landscapeChangeLaterHint": "您可以随时更改设置。",
+    "landscapeEditYourConfig": "编辑您的设置",
+    "landscapeProceedAnyway": "继续前行",
+    "landscapeInvalidConfig": "无效的 Landscape 设置",
+    "landscapeInvalidConfigContent": "服务器拒绝了您提交的设置。请重新检查您的设置。",
+    "landscapeUnchangedConfig": "设置未更改",
+    "landscapeUnreachableContent": "无法连接到 Landscape 服务器。",
+    "landscapeWSLUnavailable": "Landscape WSL 功能已禁用",
+    "landscapeUnreachable": "Landscape 无法被触及",
+    "landscapeWSLUnavailableContent": "WSL 功能在 Landscape 服务器中已禁用。请联系您的系统管理员。",
+    "landscapeUnknownError": "连接 Landscape 时发生未知错误"
 }
