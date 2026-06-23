@@ -30,7 +30,7 @@ jobs:
         with:
           source-dir: wsl-pro-service
           token: ${{ secrets.GITHUB_TOKEN }}
-          docker-image: ubuntu:26.04 # TODO: Rollback to devel once lintian 2.135.0ubuntu1 or later migrates from proposed. See UDENG-10739.
+          docker-image: ubuntu:devel
         env:
           UP4W_SKIP_INTERNAL_DEPENDENCY_UPDATE: "1"
 
