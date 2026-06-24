@@ -31,10 +31,16 @@ created on the Windows host.
 In an organisation, multiple users of Windows machines can create Ubuntu WSL
 instances, which are secured by Ubuntu Pro and that can be managed by Landscape.
 
-```{figure} ../diagrams/structurizr-SystemLandscape.png
-:name: user-interact-arch
-:alt: architecture diagram showing user interaction with Ubuntu Pro for WSL
-:align: center
+```{mermaid}
+graph TD
+    User["User"]
+    UP4W["Ubuntu Pro for WSL"]
+    Landscape["Landscape server"]
+    Subscription["Ubuntu Pro subscription"]
+
+    User -->|uses| UP4W
+    UP4W -->|registers Windows host<br/>and WSL instances with| Landscape
+    UP4W -->|adds all Ubuntu instances to| Subscription
 ```
 
 ### Components on the Windows host
@@ -53,10 +59,23 @@ acts as a bridge between those instances and Landscape. If the configuration
 details are valid, all new instances will have Ubuntu Pro enabled and will be
 able to communicate with the Landscape server.
 
-```{figure} ../diagrams/structurizr-SystemContainers.png
-:name: top-level-arch
-:alt: architecture diagram showing coordinating role of agent
-:align: center
+
+```{mermaid}
+stateDiagram-v2
+    LandscapeServer: Remote Landscape server
+    ProService: WSL Pro Service
+    Registry: Windows registry
+    UP4W: Pro for WSL
+
+    state UP4W {
+        GUI: Graphical app
+        Agent: Pro Agent
+        GUI --> Agent: writes config to
+    }
+
+    LandscapeServer --> Agent: reads from and sends<br/>instructions to
+    Agent --> ProService: sends config to
+    Agent --> Registry: reads config from
 ```
 
 It is possible to bypass the GUI and instead configure Pro for WSL using the Windows
@@ -86,10 +105,34 @@ can send a command to configure the Landscape client in each instance.
 The administrator of the Landscape server can also send commands to the agent
 to deploy new instances or delete existing instances.
 
-```{figure} ../diagrams/structurizr-Production.png
-:name: production-arch
-:alt: architecture diagram for production, with instances deployed from remote server
-:align: center
+```{mermaid}
+stateDiagram-v2
+    LandscapeServer: Remote Landscape server
+    LandscapeClient: Landscape client
+    ProClient: Pro client
+    UbuntuWSL: Instance of Ubuntu on WSL
+    UP4W: Pro for WSL
+    WindowsHost: Windows host
+
+    state WindowsHost {
+        WinRegistry: Windows registry
+
+        state UP4W {
+            GUI: Graphical app
+            Agent: Pro Agent
+            GUI --> Agent: writes config to
+        }
+
+        state UbuntuWSL {
+            ProService: Pro Service
+            ProService --> LandscapeClient: configures
+            ProService --> ProClient: configures
+        }
+    }
+
+    LandscapeServer --> Agent: reads from and sends<br/> instructions to
+    Agent --> WinRegistry: reads config from
+    Agent --> ProService: sends config to
 ```
 
 Ubuntu WSL instances that are deployed at scale can be extensively customised.
