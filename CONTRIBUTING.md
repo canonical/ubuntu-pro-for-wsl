@@ -87,7 +87,7 @@ If you have an issue relating to the WSL kernel then you should direct your comm
 
 If you are unsure whether your problem relates to an Ubuntu project or the Microsoft project then familiarise yourself with their respective documentation.
 
-- [Ubuntu on WSL docs](https://documentation.ubuntu.com/wsl/en/latest/)
+- [Ubuntu on WSL docs](https://ubuntu.com/wsl/docs/stable/)
 - [Microsoft WSL docs](https://learn.microsoft.com/en-us/windows/wsl/)
 
 At this point, if you are still not sure, try to contact a maintainer of one of the projects, who will advise you where best to submit your Issue.

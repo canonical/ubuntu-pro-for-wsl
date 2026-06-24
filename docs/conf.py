@@ -226,9 +226,9 @@ templates_path = [".sphinx/_templates"]
 #       the sphinx_reredirects extension will be disabled.
 
 redirects = {
-    # deprecated tutorials that will be reworked into new content
-    "tutorials/dotnet-systemd": "https://github.com/ubuntu/WSL/blob/main/docs/tutorials/dotnet-systemd.md",
-    "tutorials/interop": "https://github.com/ubuntu/WSL/blob/main/docs/tutorials/interop.md",
+    # deprecated tutorials
+    "tutorials/dotnet-systemd": "../../",
+    "tutorials/interop": "../../",
     # tutorials that have since been converted to howto guides
     "tutorials/cloud-init": "../../howto/cloud-init",
     "tutorials/data-science-and-engineering": "../../howto/data-science-and-engineering",
