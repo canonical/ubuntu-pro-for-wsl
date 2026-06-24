@@ -333,17 +333,22 @@ extensions = [
     "sphinx_last_updated_by_git",
     "sphinx.ext.intersphinx",
     "sphinx_sitemap",
+    "sphinxcontrib.mermaid",
 ]
+
+# Use a newer than default mermaid version.
+# 11.13.0 fixes quoted participant names with entity type annotations
+# (https://github.com/mermaid-js/mermaid/pull/7136).
+# mermaid_version = "11.15.0"
 
 # Excludes files or directories from processing
 
 exclude_patterns = [
-    "diagrams/readme.md",
 ]
 
 # Adds custom CSS files, located under 'html_static_path'
 
-html_css_files = ["css/pro_block.css", "css/cookie-banner.css", "css/dropdown.css"]
+html_css_files = ["css/pro_block.css", "css/cookie-banner.css", "css/dropdown.css", "mermaid-custom.css"]
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
@@ -419,3 +424,6 @@ copybutton_selector = "div:not(.no-copy) > div.highlight > pre"
 # Define prompts to be excluded from copying when a copy button is used
 copybutton_prompt_text = r"^.*?[\$>]\s+"
 copybutton_prompt_is_regexp = True
+
+# The elk renderer is useful for more complex Mermaid diagrams
+mermaid_include_elk = True

@@ -30,3 +30,6 @@ sphinx-sitemap
 # Vale dependencies
 rst2html
 vale
+
+# Additional extensions
+sphinxcontrib-mermaid==2.0.2
