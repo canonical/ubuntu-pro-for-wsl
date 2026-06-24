@@ -17,8 +17,6 @@ Firewall rules must be configured for Ubuntu Pro for WSL to operate fully.
 
 The following figure shows the possible connections between the different components and their default ports and protocols:
 
-#### Firewall Requirements Diagram (Mermaid)
-
 ```{mermaid}
 %%{init: {"layout":"elk"}}%%
 
