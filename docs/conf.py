@@ -425,5 +425,5 @@ copybutton_selector = "div:not(.no-copy) > div.highlight > pre"
 copybutton_prompt_text = r"^.*?[\$>]\s+"
 copybutton_prompt_is_regexp = True
 
-# The elk renderer is useful for more complex Mermaid diagrams
-mermaid_include_elk = True
+# Enables GitHub-compatible syntax for diagrams
+myst_fence_as_directive = ["mermaid"]

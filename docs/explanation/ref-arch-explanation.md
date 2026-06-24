@@ -31,7 +31,7 @@ created on the Windows host.
 In an organisation, multiple users of Windows machines can create Ubuntu WSL
 instances, which are secured by Ubuntu Pro and that can be managed by Landscape.
 
-```{mermaid}
+```mermaid
 graph TD
     User["User"]
     UP4W["Ubuntu Pro for WSL"]
@@ -60,7 +60,7 @@ details are valid, all new instances will have Ubuntu Pro enabled and will be
 able to communicate with the Landscape server.
 
 
-```{mermaid}
+```mermaid
 stateDiagram-v2
     LandscapeServer: Remote Landscape server
     ProService: WSL Pro Service
@@ -105,7 +105,7 @@ can send a command to configure the Landscape client in each instance.
 The administrator of the Landscape server can also send commands to the agent
 to deploy new instances or delete existing instances.
 
-```{mermaid}
+```mermaid
 stateDiagram-v2
     LandscapeServer: Remote Landscape server
     LandscapeClient: Landscape client

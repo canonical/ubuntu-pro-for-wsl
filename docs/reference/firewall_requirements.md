@@ -17,9 +17,7 @@ Firewall rules must be configured for Ubuntu Pro for WSL to operate fully.
 
 The following figure shows the possible connections between the different components and their default ports and protocols:
 
-```{mermaid}
-%%{init: {"layout":"elk"}}%%
-
+```mermaid
 stateDiagram-v2
     LandscapeServer: Landscape server
     MicrosoftStore: Microsoft Store
