@@ -348,7 +348,7 @@ exclude_patterns = [
 
 # Adds custom CSS files, located under 'html_static_path'
 
-html_css_files = ["css/pro_block.css", "css/cookie-banner.css", "css/dropdown.css", "mermaid-custom.css"]
+html_css_files = ["css/pro_block.css", "css/cookie-banner.css", "css/dropdown.css", "css/mermaid-custom.css"]
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
