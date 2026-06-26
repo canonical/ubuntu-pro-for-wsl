@@ -17,7 +17,32 @@ Firewall rules must be configured for Ubuntu Pro for WSL to operate fully.
 
 The following figure shows the possible connections between the different components and their default ports and protocols:
 
-![Firewall considerations.](../diagrams/structurizr-Firewall.png)
+```mermaid
+stateDiagram-v2
+    LandscapeServer: Landscape server
+    MicrosoftStore: Microsoft Store
+    CanonicalServer: Canonical contract server
+    WindowsHost: Windows host
+    UbuntuWSL: Instance of Ubuntu on WSL
+
+    state WindowsHost {
+        ProAgent: Pro agent
+
+        state UbuntuWSL {
+            LandscapeClient: Landscape client
+            WSLProService: Pro Service
+            UbuntuProClient: Pro Client
+        }
+    }
+
+    ProAgent --> MicrosoftStore: tcp/https(443)<br/><strong>MS Network</strong>
+    ProAgent --> CanonicalServer: tcp/https(443)<br/><strong>contracts.canonical.com</strong>
+    ProAgent --> LandscapeServer: tcp/grpc(6554)<br/><strong>On-premises Landscape</strong>
+    WSLProService --> ProAgent: tcp/grpc(49152-65535)<br/><strong>Hyper-V Virtual Adapter</strong>
+    UbuntuProClient --> CanonicalServer: tcp/https(443)<br/><strong>contracts.canonical.com</strong>
+    LandscapeClient --> LandscapeServer: tcp/https(443)<br/><strong>On-premises Landscape</strong>
+```
+
 
 This table lists the default ports and protocols used by Pro for WSL:
 

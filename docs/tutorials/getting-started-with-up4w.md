@@ -96,7 +96,7 @@ with the following command in PowerShell:
 > wsl --install Ubuntu-24.04
 ```
 
-For other installation options refer to our [install Ubuntu on WSL guide](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
+For other installation options refer to our [install Ubuntu on WSL guide](https://ubuntu.com/wsl/docs/stable/howto/install-ubuntu-wsl2/).
 
 To confirm the installation, and that the installed distro is using WSL 2, run:
 

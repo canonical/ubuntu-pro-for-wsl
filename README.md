@@ -20,9 +20,9 @@
 ## Ubuntu on WSL
 
 <p align="center">
-  <a href="https://documentation.ubuntu.com/wsl/stable/tutorials/develop-with-ubuntu-wsl/">Develop with Ubuntu on WSL</a> •
-  <a href="https://documentation.ubuntu.com/wsl/stable/howto/cloud-init/">Automatic setup of Ubuntu on WSL with Cloud init</a> •
-  <a href="https://documentation.ubuntu.com/wsl/stable/howto/gpu-cuda/">Enabling GPU acceleration with CUDA</a>
+  <a href="https://ubuntu.com/wsl/docs/stable/tutorials/develop-with-ubuntu-wsl/">Develop with Ubuntu on WSL</a> •
+  <a href="https://ubuntu.com/wsl/docs/stable/howto/cloud-init/">Automatic setup of Ubuntu on WSL with Cloud init</a> •
+  <a href="https://ubuntu.com/wsl/docs/stable/howto/gpu-cuda/">Enabling GPU acceleration with CUDA</a>
 </p>
 
 **Ubuntu on WSL** provides a fully-functional Ubuntu terminal environment on
@@ -36,8 +36,8 @@ OS, it's a fast way of setting up a powerful development environment.
 ## Ubuntu Pro for WSL
 
 <p align="center">
-  <a href="https://documentation.ubuntu.com/wsl/stable/tutorials/getting-started-with-up4w/">Get started with Ubuntu Pro for WSL</a> •
-  <a href="https://documentation.ubuntu.com/wsl/stable/howto/enforce-agent-startup-remotely-registry/">Remotely enforce startup of Pro agent</a> •
+  <a href="https://ubuntu.com/wsl/docs/stable/tutorials/getting-started-with-up4w/">Get started with Ubuntu Pro for WSL</a> •
+  <a href="https://ubuntu.com/wsl/docs/stable/howto/enforce-agent-startup-remotely-registry/">Remotely enforce startup of Pro agent</a> •
   <a href="https://ubuntu.com/pro/subscribe">Get an Ubuntu Pro subscription</a>
 </p>
 
@@ -85,7 +85,7 @@ wsl ~ -d <Instance name>
 
 Then you can use that instance just like any other Ubuntu machine, for writing
 code, running scripts, and even [opening Linux GUI
-apps](https://documentation.ubuntu.com/wsl/stable/howto/data-science-and-engineering/).
+apps](https://ubuntu.com/wsl/docs/stable/howto/data-science-and-engineering/).
 
 ## Basic usage of Ubuntu Pro for WSL
 
@@ -121,7 +121,7 @@ The application consists of the following components:
 
 ## Documentation
 
-Our [official documentation](https://documentation.ubuntu.com/wsl/stable/)
+Our [official documentation](https://ubuntu.com/wsl/docs/stable/)
 includes tutorials, guides, references, and explanations on both:
 
 * The Ubuntu on WSL distribution
