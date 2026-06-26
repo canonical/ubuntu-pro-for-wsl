@@ -33,9 +33,18 @@ wsl-pro-service/debian/wsl-pro-service
 # Visual Studio and CMake
 .vs/
 out/
+/build/
+/dist/
 
 # Visual Studio Code
 .vscode/
 
 # Unnecessary lock files
 /go.work.sum
+
+# Stuff we're not yet ready to commit.
+.opencode/
+openspec/
+.github/prompts/
+.github/skills/
+**/*.pfx
