@@ -24,7 +24,7 @@ jobs:
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt update
           sudo DEBIAN_FRONTEND=noninteractive apt install -y gettext git
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repo
         with:
           ref: main
@@ -78,7 +78,7 @@ jobs:
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt update
           sudo DEBIAN_FRONTEND=noninteractive apt install -y git
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository
         with:
           ref: main
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
