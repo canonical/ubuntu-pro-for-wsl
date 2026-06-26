@@ -39,3 +39,10 @@ out/
 
 # Unnecessary lock files
 /go.work.sum
+
+# Stuff we're not yet ready to commit.
+.opencode/
+openspec/
+.github/prompts/
+.github/skills/
+**/*.pfx
