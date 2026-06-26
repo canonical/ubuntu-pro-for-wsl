@@ -1,3 +1,14 @@
+# Allow standalone build (e.g., from Go tests) or add_subdirectory from root
+if(NOT TARGET storeapi)
+    cmake_minimum_required(VERSION 3.15)
+    project(storeapi_dll LANGUAGES CXX)
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    if(MSVC)
+        add_definitions(-D_UNICODE)
+    endif()
+endif()
+
 set(STOREAPI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 set(STOREAPI_DLL_SRCS
