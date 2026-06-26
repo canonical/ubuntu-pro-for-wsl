@@ -222,11 +222,6 @@ jobs:
         uses: ./.github/actions/setup-git
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      # The Windows Store needs to be built. The tests do it automatically, but they need
-      # msbuild in the path.
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v3
-        if: matrix.subproject == 'storeapi/go-wrapper/microsoftstore' && matrix.os == 'windows'
       - uses: canonical/desktop-engineering/gh-actions/common/dpkg-install-speedup@main
         if: ${{ matrix.os == 'ubuntu' }}
       - name: Install gettext on Linux
