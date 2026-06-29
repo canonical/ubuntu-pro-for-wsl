@@ -20,7 +20,7 @@ pro status
 
 ## Documentation
 
-Our [official documentation](https://documentation.ubuntu.com/wsl/stable/) includes tutorials, guides, references, and explanations on both:
+Our [official documentation](https://ubuntu.com/wsl/docs/stable/) includes tutorials, guides, references, and explanations on both:
 
 * The Ubuntu on WSL distribution
 * The Ubuntu Pro for WSL application
