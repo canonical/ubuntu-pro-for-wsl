@@ -24,19 +24,19 @@
     <projectUrl>https://github.com/canonical/ubuntu-pro-for-wsl</projectUrl>
     <!-- There are a number of CDN Services that can be used for hosting the Icon for a package. More information can be found here: https://docs.chocolatey.org/en-us/create/create-packages#package-icon-guidelines -->
     <!-- Here is an example using Githack -->
-    <iconUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/msix/UbuntuProForWSL/Images/StoreLogo.png</iconUrl>
+    <iconUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/msix/Images/StoreLogo.png</iconUrl>
     <copyright>REPLACE_IN_CI</copyright>
     <!-- If there is a license Url available, it is required for the community feed -->
     <licenseUrl>https://rawcdn.githack.com/canonical/ubuntu-pro-for-wsl/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/canonical/ubuntu-pro-for-wsl</projectSourceUrl>
-    <docsUrl>https://documentation.ubuntu.com/wsl</docsUrl>
+    <docsUrl>https://ubuntu.com/wsl/docs</docsUrl>
     <bugTrackerUrl>https://github.com/canonical/ubuntu-pro-for-wsl/issues</bugTrackerUrl>
     <tags>ubuntu ubuntu-pro wsl automation landscape</tags>
     <summary>Ubuntu Pro for WSL is a Windows application that automates the attachment of Ubuntu on WSL instances to your Ubuntu Pro subscription as well as registration to Landscape.</summary>
     <!-- Same contents as the package README.md file. -->
     <description>REPLACE_IN_CI</description>
-    <releaseNotes>https://documentation.ubuntu.com/wsl/stable/reference/release_notes/#ref-up4w-releases</releaseNotes>
+    <releaseNotes>https://github.com/canonical/ubuntu-pro-for-wsl/releases</releaseNotes>
   </metadata>
   <files>
     <!-- this section controls what actually gets packaged into the Chocolatey package -->
