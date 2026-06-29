@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -43,7 +43,7 @@ jobs:
       release-type: ${{ steps.version.outputs.release_type }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -68,7 +68,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository for internal GH action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -97,7 +97,7 @@ jobs:
     needs: [build-wsl-pro-service, build-ubuntu-pro-for-wsl]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       # GH runners come with WSL stable pre-installed.
       - name: Sanity check WSL version
         run: |
