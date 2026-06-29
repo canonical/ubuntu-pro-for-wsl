@@ -115,7 +115,7 @@ jobs:
         uses: ./.github/actions/get-wsl-image
         id: get-wsl-image
         with:
-          base_url: "https://cdimages.ubuntu.com/ubuntu-wsl/daily-live/current/"
+          base_url: "https://cdimages.ubuntu.com/ubuntu-wsl/stonking/daily-live/current" # The latest devel
           arch: "amd64"
           output_path: "ci-artifacts/images/ubuntu.wsl"
       - name: Lay out the downloaded artifacts
