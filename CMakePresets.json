@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows-msvc-sca",
+      "displayName": "Visual Studio 2026 with Static Code Analysis",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "enableMicrosoftCodeAnalysis": true,
+          "enableClangTidyCodeAnalysis": true,
+          "clangTidyChecks": ""
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc-sca",
+      "displayName": "Build Visual Studio 2026 with SCA",
+      "configurePreset": "windows-msvc-sca",
+      "nativeToolOptions": [
+        "/p:RunCodeAnalysis=true",
+        "/p:EnableClangTidyCodeAnalysis=true",
+        "/p:EnableMicrosoftCodeAnalysis=true",
+        "/p:ClangTidyToolExeAdditionalArgs=--config-file=\"${sourceDir}/.clang-tidy\""
+      ]
+    }
+  ]
+}
