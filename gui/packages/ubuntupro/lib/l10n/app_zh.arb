@@ -118,5 +118,6 @@
     "landscapeWSLUnavailable": "Landscape WSL 功能已禁用",
     "landscapeUnreachable": "Landscape 无法被触及",
     "landscapeWSLUnavailableContent": "WSL 功能在 Landscape 服务器中已禁用。请联系您的系统管理员。",
-    "landscapeUnknownError": "连接 Landscape 时发生未知错误"
+    "landscapeUnknownError": "连接 Landscape 时发生未知错误",
+    "landscapeUnknownErrorContent": "请报告此事件，并包括以下详细资料。"
 }
