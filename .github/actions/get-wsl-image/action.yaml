@@ -6,7 +6,7 @@ inputs:
   base_url:
     description: "The base URL to download the WSL image from"
     required: false
-    default: "https://cdimages.ubuntu.com/ubuntu-wsl/daily-live/current/"
+    default: "https://cdimages.ubuntu.com/ubuntu-wsl/resolute/daily-live/current" # The current LTS.
   arch:
     description: "The architecture of the WSL image to download (amd64 or arm64)"
     required: false
@@ -34,7 +34,7 @@ runs:
 
         shafile="${{ runner.temp }}/SHA256SUMS"
         uri="${{ inputs.base_url }}/SHA256SUMS"
-        if ! curl --fail -o "$shafile" "${uri}"; then  
+        if ! curl -v --fail -o "$shafile" "${uri}"; then  
             echo "::error:: Failed to download the checksum file from $uri."  
             exit 1
         fi  
@@ -85,7 +85,7 @@ runs:
     - name: Restore image cache
       id: restore-cache
       if: ${{ steps.check-locally.outputs.is-valid != 'true' }}
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: ${{ inputs.output_path }}
         key: ${{ steps.compute-cache-key.outputs.cache-key }}
@@ -102,7 +102,7 @@ runs:
         mkdir -p "$(dirname "$output_path")"
 
         uri="${{ inputs.base_url }}/${{ steps.compute-cache-key.outputs.image-name }}"
-        if ! curl --fail -o "$output_path" "$uri"; then
+        if ! curl -v --fail -o "$output_path" "$uri"; then
             echo "::error:: Failed to download the WSL image from $uri"
             exit 1
         fi
@@ -114,7 +114,7 @@ runs:
 
     - name: Save image to cache
       if: ${{ steps.restore-cache.outputs.cache-hit != 'true' }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: ${{ inputs.output_path }}
         key: ${{ steps.restore-cache.outputs.cache-primary-key }}
@@ -128,7 +128,7 @@ runs:
 
         uri="${{ inputs.base_url }}/${{ steps.compute-cache-key.outputs.image-manifest }}"
         manifest_path="${{ runner.temp }}/image.manifest"
-        if ! curl --fail -o "$manifest_path" "$uri"; then
+        if ! curl -v --fail -o "$manifest_path" "$uri"; then
             echo "::error:: Failed to download the WSL image manifest from $uri. This is not a critical failure, but may make troubleshooting harder in the future."
         else
             echo "Image manifest downloaded to $manifest_path"
