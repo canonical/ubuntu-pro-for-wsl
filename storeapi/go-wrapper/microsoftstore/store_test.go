@@ -186,19 +186,33 @@ func buildStoreAPI(ctx context.Context) error {
 		return err
 	}
 
+	dllDir := filepath.Join(root, "storeapi", "dll")
+	buildDir := filepath.Join(root, "build", "dll")
+	dllPath := filepath.Join(buildDir, "Debug", "storeapi.dll")
+
+	if _, err := os.Stat(dllPath); err == nil {
+		slog.Info("store api DLL already built, skipping")
+		return nil
+	}
+
 	//#nosec G204 // Only used in tests.
-	cmd := exec.CommandContext(ctx, "msbuild",
-		filepath.Join(root, `/msix/storeapi/storeapi.vcxproj`),
-		`-target:Build`,
-		`-property:Configuration=Debug`,
-		`-property:Platform=x64`,
-		`-nologo`,
-		`-verbosity:normal`,
+	configureCmd := exec.CommandContext(ctx, "cmake",
+		"-S", dllDir,
+		"-B", buildDir,
+		"-DCMAKE_BUILD_TYPE=Debug",
 	)
+	slog.Info("Configuring store api DLL")
+	if out, err := configureCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("could not configure store api DLL: %v. Log:\n%s", err, out)
+	}
 
+	//#nosec G204 // Only used in tests.
+	buildCmd := exec.CommandContext(ctx, "cmake",
+		"--build", buildDir,
+		"--config", "Debug",
+	)
 	slog.Info("Building store api DLL")
-
-	if out, err := cmd.CombinedOutput(); err != nil {
+	if out, err := buildCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("could not build store api DLL: %v. Log:\n%s", err, out)
 	}
 

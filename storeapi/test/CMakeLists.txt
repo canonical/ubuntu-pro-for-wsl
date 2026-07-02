@@ -27,7 +27,7 @@ set(StoreApiServicesTests_SRCS
     "../base/impl/WinMockContext.cpp"
 )
 set(StoreApiServicesTests_DEFINES "")
-if(DEFINED ENV{UP4W_TEST_WITH_MS_STORE_MOCK})
+if(DEFINED ENV{UP4W_TEST_WITH_MS_STORE_MOCK} OR DEFINED CACHE{UP4W_TEST_WITH_MS_STORE_MOCK})
     list(APPEND StoreApiServicesTests_DEFINES "UP4W_TEST_WITH_MS_STORE_MOCK")
 else()
     message(STATUS "Building with the production version of MS Store client API. Set the environment variable 'UP4W_TEST_WITH_MS_STORE_MOCK' if you want to build with the mock store API.")
@@ -37,7 +37,7 @@ include(FetchContent)
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip
+  URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
