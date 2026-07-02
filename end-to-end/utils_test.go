@@ -81,18 +81,18 @@ func registerFromTestImage(t *testing.T, ctx context.Context) string {
 func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string) (cleanup func()) {
 	t.Helper()
 
-	t.Log("Starting agent")
-
 	out, err := powershellf(ctx, "(Get-AppxPackage CanonicalGroupLimited.UbuntuPro).InstallLocation").CombinedOutput()
 	require.NoError(t, err, "could not locate ubuntupro.exe: %v. %s", err, out)
 
 	ubuntupro := filepath.Join(strings.TrimSpace(string(out)), "gui", "ubuntupro.exe")
+	t.Log("Starting agent")
+
 	//#nosec G204 // The executable is located at the Appx directory
 	cmd := exec.CommandContext(ctx, ubuntupro, arg)
 
-	var buff bytes.Buffer
-	cmd.Stdout = &buff
-	cmd.Stderr = &buff
+	var outBuff, errBuff bytes.Buffer
+	cmd.Stdout = &outBuff
+	cmd.Stderr = &errBuff
 
 	if environ != nil {
 		cmd.Env = append(cmd.Environ(), environ...)
@@ -106,7 +106,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 
 		if err := stopAgent(ctx); err != nil {
 			// We have to abort because the tests become coupled via the agent
-			log.Fatalf("Could not kill ubuntu-pro-agent process: %v: %s", err, out)
+			log.Fatalf("Could not kill ubuntu-pro-agent process: %v", err)
 		}
 
 		//nolint:errcheck // Nothing we can do about it
@@ -114,7 +114,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 
 		//nolint:errcheck // We know that the previous "Kill" stopped it
 		cmd.Wait()
-		t.Logf("Agent stopped. Stdout+stderr: %s", buff.String())
+		t.Logf("Agent stopped. Stdout: %s\nStderr: %s\n", outBuff.String(), errBuff.String())
 	}
 
 	defer func() {
@@ -126,6 +126,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 	home := os.Getenv("UserProfile")
 	require.NotEmptyf(t, home, "Agent setup: $env:UserProfile should not be empty")
 
+	t.Log("Confirming if agent started...")
 	require.Eventually(t, func() bool {
 		//#nosec G703 // The path is controlled by our tests.
 		_, err := os.Stat(filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName))
@@ -139,7 +140,7 @@ func startAgent(t *testing.T, ctx context.Context, arg string, environ ...string
 		return true
 	}, 30*time.Second, 100*time.Millisecond, "Agent never started serving")
 
-	t.Log("Started agent")
+	t.Log("Started agent successfully")
 	return cleanup
 }
 
@@ -261,7 +262,7 @@ func logWindowsAgentOnError(t *testing.T) {
 }
 
 func reinstallMSIX(ctx context.Context, path string) error {
-	cmd := powershellf(ctx, "Get-AppxPackage %q | Remove-AppxPackage", up4wAppxPackage)
+	cmd := powershellf(ctx, "Get-AppxPackage %q | Remove-AppxPackage", up4wMsixPackage)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		// (Probably because it was not installed)
 		log.Printf("Could not remove old AppxPackage: %v. %s", err, out)
