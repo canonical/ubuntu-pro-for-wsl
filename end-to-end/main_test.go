@@ -49,15 +49,15 @@ const (
 	//    ├───wsl-pro-service
 	//    │   └──wsl-pro-service_*.deb
 	//    └───windows-agent
-	//        └──UbuntuProForWSL_*.msixbundle
+	//        └──CanonicalGroupLimited.UbuntuPro_*.msix
 	//
 	prebuiltPath = "UP4W_TEST_BUILD_PATH"
 
 	// referenceImage is the WSL distro image that will be used to generate the test image.
 	referenceImage = "ubuntu.wsl"
 
-	// up4wAppxPackage is the Ubuntu Pro for WSL package.
-	up4wAppxPackage = "CanonicalGroupLimited.UbuntuPro"
+	// up4wMsixPackage is the Ubuntu Pro for WSL package.
+	up4wMsixPackage = "CanonicalGroupLimited.UbuntuPro"
 )
 
 func TestMain(m *testing.M) {
@@ -80,7 +80,7 @@ func TestMain(m *testing.M) {
 	    ├───wsl-pro-service
 	    │   └──wsl-pro-service_*.deb
 	    └───windows-agent
-	        └──UbuntuProForWSL_*.msixbundle
+	        └──CanonicalGroupLimited.UbuntuPro_*.msix
 	`, prebuiltPath)
 	}
 
@@ -100,16 +100,16 @@ func TestMain(m *testing.M) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	cmd := powershellf(ctx, "Get-AppxPackage -Name %q | Remove-AppxPackage", up4wAppxPackage)
+	cmd := powershellf(ctx, "Get-AppxPackage -Name %q | Remove-AppxPackage", up4wMsixPackage)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		log.Printf("Cleanup: could not remove Appx: %v: %s", err, out)
+		log.Printf("Cleanup: could not remove MSIX: %v: %s", err, out)
 	}
 }
 
 func usePrebuiltProject(buildPath string) (err error) {
-	// Locate the Appx package and store the path in global variable so that we can
+	// Locate the MSIX package and store the path in global variable so that we can
 	// reinstall it before every test
-	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", "UbuntuProForWSL_*.msixbundle"))
+	result, err := globSingleResult(filepath.Join(buildPath, "windows-agent", fmt.Sprintf("%s_*.msix", up4wMsixPackage)))
 	if err != nil {
 		return fmt.Errorf("could not locate MSIX: %v", err)
 	}
