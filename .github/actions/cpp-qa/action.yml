@@ -6,7 +6,7 @@ inputs:
     required: true
     description: "Subdirectory of the repository root where lies the code to be checked."
   build-dir:
-    default: "$env:TEMP/cpp-qa_${{ github.run_id }}_${{ github.run_attempt }}/out"
+    default: "out/cpp-qa_${{ github.run_id }}_${{ github.run_attempt }}/test/"
     description: "CMake build directory relative to the subproject dir."
   config:
     default: "Debug"
@@ -26,5 +26,12 @@ runs:
       working-directory: ${{ inputs.subproject-dir }}
       shell: powershell
       run: |
+        # Load VS Dev Powershell for consistency.
+        $vsPath = $(vswhere.exe -products * -requires Microsoft.Component.MSBuild -property installationPath -latest)
+        Import-Module "$vsPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+        Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
+
         cmake --build ${{ inputs.build-dir }} --config Debug --verbose
+        if ($LASTEXITCODE -ne 0) { throw "CMake --build failed" }
         ctest --test-dir ${{ inputs.build-dir }} --build-config Debug
+        if ($LASTEXITCODE -ne 0) { throw "CTest failed" }
