@@ -61,8 +61,9 @@ TEST(Mock, PurchaseNonExistent) {
 
   std::string const productID{"nonexistent"};
   ClientStoreService<impl::WinMockContext> guiService{0};
-  EXPECT_THROW({ auto p = guiService.FetchAvailableProduct(productID); },
-               winrt::hresult_error);
+  EXPECT_THROW(
+      { auto p = guiService.FetchAvailableProduct(productID); },
+      winrt::hresult_error);
 }
 
 TEST(Mock, PurchaseServerError) {

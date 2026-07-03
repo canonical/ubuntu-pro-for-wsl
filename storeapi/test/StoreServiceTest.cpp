@@ -16,8 +16,7 @@ class DoubledService : public StoreService<DoubledContext> {
 
 TEST(StoreService, DoubledProductsThrow) {
   DoubledService service{};
-  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); },
-               Exception);
+  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); }, Exception);
 }
 
 class EmptyService : public StoreService<EmptyContext> {
@@ -27,8 +26,7 @@ class EmptyService : public StoreService<EmptyContext> {
 
 TEST(StoreService, EmptyProductsThrow) {
   EmptyService service{};
-  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); },
-               Exception);
+  EXPECT_THROW({ service.GetSubscriptionProduct("never-mind"); }, Exception);
 }
 
 class IdentityService : public StoreService<FirstContext> {

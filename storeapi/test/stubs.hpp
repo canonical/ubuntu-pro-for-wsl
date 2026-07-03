@@ -22,8 +22,9 @@
 struct DoubledContext {
   struct Product {};
 
-  std::vector<Product> GetProducts([[maybe_unused]] std::span<const std::string> kinds,
-                                   [[maybe_unused]] std::span<const std::string> ids) const {
+  std::vector<Product> GetProducts(
+      [[maybe_unused]] std::span<const std::string> kinds,
+      [[maybe_unused]] std::span<const std::string> ids) const {
     return {Product{}, Product{}, Product{}};
   }
 };
@@ -48,8 +49,9 @@ struct EmptyContext {
     }
   };
 
-  std::vector<Product> GetProducts([[maybe_unused]] std::span<const std::string> kinds,
-                                   [[maybe_unused]] std::span<const std::string> ids) const {
+  std::vector<Product> GetProducts(
+      [[maybe_unused]] std::span<const std::string> kinds,
+      [[maybe_unused]] std::span<const std::string> ids) const {
     return {};
   }
 
@@ -69,7 +71,8 @@ struct FirstContext {
   }
 };
 
-// A Store Context that always finds exactly one product but generates empty JWT.
+// A Store Context that always finds exactly one product but generates empty
+// JWT.
 struct EmptyJwtContext {
   struct Product {
     std::string kind;
