@@ -63,7 +63,7 @@
     "detachPro": "解绑 Ubuntu Pro",
     "updatingSubscriptionInfo": "正在更新订阅信息。",
     "purchaseStatusNetwork": "网络问题阻止了购买进行。请连接好网络，然后再试一次。",
-    "purchaseStatusServer": "Microsoft Store 出了些问题。请稍候再试。",
+    "purchaseStatusServer": "Microsoft Store 出现了一些问题。请稍候再试。",
     "landscapeSkipRegister": "用 Landscape 注册",
     "landscapeRegister": "注册",
     "buttonNext": "下一步",
