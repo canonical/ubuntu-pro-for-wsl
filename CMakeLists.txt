@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
-    add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:_UNICODE>)
+  # Applies globally to all targets in the project.
+  add_compile_definitions(UNICODE _UNICODE)
 endif()
 
 add_subdirectory(storeapi/dll)

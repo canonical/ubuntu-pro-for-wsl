@@ -29,7 +29,7 @@ target_compile_definitions(storeapi PRIVATE
 # Should only be needed on standalone builds. If included via add_subdirectory() that definition should be inherited instead.
 if(PROJECT_IS_TOP_LEVEL)
     if(MSVC)
-        target_compile_definitions(storeapi PRIVATE _UNICODE)
+      target_compile_definitions(storeapi PRIVATE UNICODE _UNICODE)
     endif()
 endif()
 
