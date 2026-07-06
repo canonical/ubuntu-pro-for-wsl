@@ -90,18 +90,19 @@ function Build-Go {
     $agentInstallDir = "$ArchInstallTree\agent"
     New-Item -ItemType Directory -Path "$agentInstallDir" -Force | Out-Null
 
-    $tags = ''
-    if ($Mode -eq 'end_to_end_tests') { $tags = '-tags=server_mocks' }
-
-    $ldflags = ''
-    if ($FullVersion) {
-        $ldflags = "-ldflags=-X=github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts.Version=""$FullVersion"""
+    $args = @('build')
+    if ($Mode -eq 'end_to_end_tests') {
+        $args += '-tags=server_mocks'
     }
+    if ($FullVersion) {
+        $args += "-ldflags=-X=github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts.Version=$FullVersion"
+    }
+    $args += @('-o', "$agentInstallDir\ubuntu-pro-agent.exe", '.')
 
     Write-Output "Building Go agent..."
     Push-Location "$RepoRoot\windows-agent\cmd\ubuntu-pro-agent"
     try {
-        & go build $tags $ldflags -o "$agentInstallDir\ubuntu-pro-agent.exe" .
+        & go @args
         if ($LASTEXITCODE -ne 0) { throw "Go build failed" }
     } finally {
         Pop-Location
