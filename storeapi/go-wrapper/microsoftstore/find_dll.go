@@ -12,13 +12,13 @@ func locateStoreDll() (string, error) {
 		// Appx path
 		locateStoreDllAppx,
 
-		// storeapi build path
-		func() (string, error) { return locateStoreDllRepo(`msix\storeapi\x64\Debug\`) },
-		func() (string, error) { return locateStoreDllRepo(`msix\storeapi\x64\Release\`) },
+		// CMake build paths (standalone build from storeapi/dll)
+		func() (string, error) { return locateStoreDllRepo(`build\dll\Debug\`) },
+		func() (string, error) { return locateStoreDllRepo(`build\dll\Release\`) },
 
-		// Solution build path
-		func() (string, error) { return locateStoreDllRepo(`msix\x64\Debug\`) },
-		func() (string, error) { return locateStoreDllRepo(`msix\x64\Release\`) },
+		// CMake build paths (root build)
+		func() (string, error) { return locateStoreDllRepo(`build\x64\storeapi\dll\Debug\`) },
+		func() (string, error) { return locateStoreDllRepo(`build\x64\storeapi\dll\Release\`) },
 	}
 
 	var accErr error

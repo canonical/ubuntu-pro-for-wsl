@@ -34,12 +34,12 @@ class ClientStoreService : public StoreService<ContextType> {
   /// Fetches a subscription product matching the provided product ID available
   /// for purchase. An Exception is thrown if the product is already purchased
   /// or not found.
-  AvailableProduct FetchAvailableProduct(std::string productId) {
-    auto product = this->GetSubscriptionProduct(productId);
+  AvailableProduct FetchAvailableProduct(std::string prodID) {
+    auto product = this->GetSubscriptionProduct(prodID);
     if (product.IsInUserCollection() &&
         product.CurrentExpirationDate() > std::chrono::system_clock::now()) {
       throw Exception(ErrorCode::InvalidProductId,
-                      std::format("product {} already purchased", productId));
+                      std::format("product {} already purchased", prodID));
     }
     return {product};
   }

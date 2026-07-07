@@ -10,12 +10,12 @@ using namespace ::testing;
 
 TEST(ServerStoreService, NoUsersLikeInCI) {
   auto service = ServerStoreService<NoUsersContext>{};
-  EXPECT_THROW({auto user = service.CurrentUserInfo();}, Exception);
+  EXPECT_THROW({ auto user = service.CurrentUserInfo(); }, Exception);
 }
 
 TEST(ServerStoreService, TooManyUsers) {
   auto service = ServerStoreService<TooManyUsersContext>{};
-  EXPECT_THROW({auto user = service.CurrentUserInfo();}, Exception);
+  EXPECT_THROW({ auto user = service.CurrentUserInfo(); }, Exception);
 }
 
 TEST(ServerStoreService, FindOneUser) {
@@ -30,9 +30,7 @@ TEST(ServerStoreService, EmptyJwtThrows) {
   auto service = ServerStoreService<EmptyJwtContext>{};
   UserInfo user{.id = "my@name.com"};
   EXPECT_THROW(
-      {
-        auto jwt = service.GenerateUserJwt("this-is-a-web-token", user);
-      },
+      { auto jwt = service.GenerateUserJwt("this-is-a-web-token", user); },
       Exception);
 }
 

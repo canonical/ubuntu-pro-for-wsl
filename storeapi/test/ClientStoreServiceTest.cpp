@@ -11,14 +11,14 @@ static constexpr char productId[] = "my-awesome-addon";
 
 TEST(ClientStoreService, ProductNotFound) {
   auto service = ClientStoreService<EmptyContext>{0};
-  EXPECT_THROW({ auto prod = service.FetchAvailableProduct(productId); },
-               Exception);
+  EXPECT_THROW(
+      { auto prod = service.FetchAvailableProduct(productId); }, Exception);
 }
 
 TEST(ClientStoreService, CannotRePurchase) {
   auto service = ClientStoreService<AlreadyPurchasedContext>{0};
-  EXPECT_THROW({ auto p = service.FetchAvailableProduct(productId); },
-               Exception);
+  EXPECT_THROW(
+      { auto p = service.FetchAvailableProduct(productId); }, Exception);
 }
 
 TEST(ClientStoreService, Success) {

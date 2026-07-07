@@ -22,8 +22,9 @@
 struct DoubledContext {
   struct Product {};
 
-  std::vector<Product> GetProducts(std::span<const std::string> kinds,
-                                   std::span<const std::string> ids) const {
+  std::vector<Product> GetProducts(
+      [[maybe_unused]] std::span<const std::string> kinds,
+      [[maybe_unused]] std::span<const std::string> ids) const {
     return {Product{}, Product{}, Product{}};
   }
 };
@@ -48,13 +49,13 @@ struct EmptyContext {
     }
   };
 
-  std::vector<Product> GetProducts(std::span<const std::string> kinds,
-                                   std::span<const std::string> ids) const {
+  std::vector<Product> GetProducts(
+      [[maybe_unused]] std::span<const std::string> kinds,
+      [[maybe_unused]] std::span<const std::string> ids) const {
     return {};
   }
 
-  // noop
-  void InitDialogs(Window window) {}
+  void InitDialogs([[maybe_unused]] Window window) {}
 };
 
 // A Store Context that always finds exactly one product.
@@ -70,7 +71,8 @@ struct FirstContext {
   }
 };
 
-// A Store Context that always finds exactly one product.
+// A Store Context that always finds exactly one product but generates empty
+// JWT.
 struct EmptyJwtContext {
   struct Product {
     std::string kind;
@@ -82,7 +84,8 @@ struct EmptyJwtContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+  std::string GenerateUserJwt([[maybe_unused]] std::string hToken,
+                              [[maybe_unused]] std::string hUserId) const {
     return {};
   }
 };
@@ -99,7 +102,8 @@ struct IdentityJwtContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+  std::string GenerateUserJwt(std::string hToken,
+                              [[maybe_unused]] std::string hUserId) const {
     return hToken;
   }
 };
@@ -123,7 +127,8 @@ struct NeverSubscribedContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+  std::string GenerateUserJwt(std::string hToken,
+                              [[maybe_unused]] std::string hUserId) const {
     return hToken;
   }
 };
@@ -148,7 +153,8 @@ struct UnixEpochContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+  std::string GenerateUserJwt(std::string hToken,
+                              [[maybe_unused]] std::string hUserId) const {
     return hToken;
   }
 };
@@ -176,12 +182,12 @@ struct AlreadyPurchasedContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+  std::string GenerateUserJwt(std::string hToken,
+                              [[maybe_unused]] std::string hUserId) const {
     return hToken;
   }
 
-  // noop
-  void InitDialogs(Window window) {}
+  void InitDialogs([[maybe_unused]] Window window) {}
 };
 
 // A Store Context that always finds a valid subscription.
@@ -207,12 +213,12 @@ struct PurchaseSuccessContext {
     return {Product{.kind = kinds[0], .id = ids[0]}};
   }
 
-  std::string GenerateUserJwt(std::string hToken, std::string hUserId) const {
+  std::string GenerateUserJwt(std::string hToken,
+                              [[maybe_unused]] std::string hUserId) const {
     return hToken;
   }
 
-  // noop
-  void InitDialogs(Window window) {}
+  void InitDialogs([[maybe_unused]] Window window) {}
 };
 
 struct TooManyUsersContext {

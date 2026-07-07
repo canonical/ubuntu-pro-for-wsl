@@ -104,8 +104,7 @@ std::string WinMockContext::GenerateUserJwt(std::string token,
   return winrt::to_string(res.GetNamedString(L"jwt"));
 }
 
-// NOOP, for now at least.
-void WinMockContext::InitDialogs(Window parentWindow) {}
+void WinMockContext::InitDialogs([[maybe_unused]] Window parentWindow) {}
 
 void WinMockContext::Product::PromptUserForPurchase(
     PurchaseCallback callback) const {
