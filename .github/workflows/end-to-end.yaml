@@ -87,7 +87,7 @@ jobs:
           channel: stable
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
           pub-cache: true
-      - uses: microsoft/setup-WinAppCli@2e1c15e9fe58b43697420e71d3aac9e6cd956273 # v0.1
+      - uses: microsoft/setup-WinAppCli@64bc6fd4c3e4c69e2de589dfc34684470891b8b7 # v0.1
       - name: Build components
         shell: powershell
         run: |
