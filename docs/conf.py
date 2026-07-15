@@ -229,11 +229,13 @@ redirects = {
     # deprecated tutorials
     "tutorials/dotnet-systemd": "../../",
     "tutorials/interop": "../../",
-    # tutorials that have since been converted to howto guides
+    # renamed tutorials
+    "tutorials/vscode": "../../tutorials/develop-with-ubuntu-wsl",
+    # tutorials that have converted to howto guides
     "tutorials/cloud-init": "../../howto/cloud-init",
     "tutorials/data-science-and-engineering": "../../howto/data-science-and-engineering",
     "tutorials/gpu-cuda": "../../howto/gpu-cuda",
-    "tutorials/vscode": "../../tutorials/develop-with-ubuntu-wsl",
+    "tutorials/deployment": "../../howto/deploy-with-landscape-web-portal",
     # change in diataxis names
     "guides/": "../../howto/",
     "guides/contributing": "../../howto/contributing",
