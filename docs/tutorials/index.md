@@ -10,29 +10,35 @@ Pro for WSL application.
 Start by learning to set up a development environment with Ubuntu on WSL by
 building and testing a small web project.
 
+If you are unfamiliar with Ubuntu, Windows, or WSL, this is the best place
+to start. It guides you step-by-step through installing WSL and Ubuntu,
+and the creation of a small web server in Ubuntu from Visual Studio Code
+running on Windows. It also has useful beginner tips, including customizing
+the name of the Ubuntu distro during installation.
+
 ```{toctree}
 :titlesonly:
 
-Develop with Ubuntu on WSL <develop-with-ubuntu-wsl>
+Get started with Ubuntu on WSL for development <develop-with-ubuntu-wsl>
 ```
 
 ## Ubuntu Pro for WSL
 
-Then learn to automatically Pro-attach your Ubuntu WSL instances with the
-Pro for WSL application.
+Pro is a subscription offered by Canonical that enhances the security of
+Ubuntu. The Pro for WSL application is separate to the Ubuntu distro, and
+makes it easy to attach the subscription to all Ubuntu instances on a machine.
+
+The Pro app also integrates with Landscape, making it possible to remotely
+manage Ubuntu instances on a Windows machine.
+
+If you or your organization are interested in using Pro with WSL, the tutorial
+below will get you started by guiding you through installing the app on a
+Windows machine and automatically attaching your Pro subscription to Ubuntu
+instances.
 
 ```{toctree}
 :titlesonly:
 
-Get started with Ubuntu Pro for WSL <getting-started-with-up4w>
-```
-
-If you are interested in remote management of WSL instances, you can also learn
-how Pro for WSL's Landscape integration can be used to deploy Ubuntu WSL instances.
-
-```{toctree}
-:titlesonly:
-
-Deploy WSL instances with Ubuntu Pro for WSL and Landscape <deployment>
+Get started securing WSL with Ubuntu Pro <getting-started-with-up4w>
 ```
 
