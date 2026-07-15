@@ -12,9 +12,10 @@ developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
 including remote development with popular IDEs and cross-OS file management.
 
-[Ubuntu Pro for WSL](./explanation/pro-explanation) is an automation tool for managing
-instances of Ubuntu on WSL. If you are responsible for a fleet of Windows
-devices, Pro for WSL will help you to monitor, customise and secure WSL at scale.
+[Ubuntu Pro for WSL](./explanation/pro-explanation) is a tool for managing
+Ubuntu on WSL. It enables automatic attachment of your Pro subscription
+to Ubuntu instances, and remote deployment with Landscape. If you are responsible for a fleet of Windows
+devices, Pro for WSL helps you monitor, customize, and secure WSL at scale.
 
 Ubuntu on WSL provides a fully-featured Ubuntu experience on Windows, suitable
 for learning Linux, developing a personal open-source project or building for
@@ -36,7 +37,7 @@ production in an enterprise environment.
 
 This documentation uses the [Diátaxis structure](https://diataxis.fr/).
 
-* [Tutorials](/tutorials/index) take you through practical, end-to-end learning experiences.
+* [Tutorials](/tutorials/index) take you through practical, end-to-end learning experiences for WSL and Pro.
 * [How-to guides](/howto/index) provide you with the steps necessary for completing specific tasks.
 * [References](/reference/index) give you concise and factual information to support your understanding.
 * [Explanations](/explanation/index) include topic overviews and additional context on the software.
