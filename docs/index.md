@@ -56,7 +56,7 @@ Thinking about using Ubuntu on WSL for your next project? Get in touch!
 :hidden:
 :titlesonly:
 
-Ubuntu on WSL <self>
+Home <self>
 Tutorials </tutorials/index>
 How-to guides </howto/index>
 Reference </reference/index>
