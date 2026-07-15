@@ -25,7 +25,7 @@ production in an enterprise environment.
 
 |                    |                                                                     |
 |--------------------|---------------------------------------------------------------------|
-|**Get started** | [Set up an development environment on Windows with Ubuntu on WSL](/tutorials/develop-with-ubuntu-wsl/) |
+|**Get started** | [Set up a development environment on Windows with Ubuntu on WSL](/tutorials/develop-with-ubuntu-wsl/) |
 |**Install Ubuntu** | [Install Ubuntu on WSL](/howto/install-ubuntu-wsl2.md) • [Available releases](/reference/distributions/) • [Upgrade your installation](/howto/upgrade-ubuntu) |
 |**Configuration** | [Instance configuration methods](/reference/instance_configuration/) • [Automate configuration with cloud-init](/howto/cloud-init/) |
 |**Security** | [Enable Pro](/howto/set-up-up4w) • [Security overview](/explanation/security-overview/) • [Firewall requirements](/reference/firewall_requirements/) |

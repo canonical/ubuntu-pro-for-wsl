@@ -14,8 +14,8 @@ specific production environments.
 
 ## Landscape
 
-Landscape is a systems adminstration tool from Canonical. Pro for WSL supports
-Landscape natively and a Lanscape client is installed in each Ubuntu instance.
+Landscape is a systems administration tool from Canonical. Pro for WSL supports
+Landscape natively and a Landscape client is installed in each Ubuntu instance.
 The guides below show you how to configure the Landscape client, and deploy WSL
 using the Landscape web portal or API.
 
