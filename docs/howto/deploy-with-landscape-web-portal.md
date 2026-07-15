@@ -14,16 +14,13 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-In this tutorial you will learn how Ubuntu Pro for WSL can help you
-deploy Ubuntu to remote Windows machines using {term}`Landscape`.
+This guide shows you how to use Ubuntu Pro for WSL and Landscape
+to deploy Ubuntu to remote Windows machines using {term}`Landscape`.
 
-## What you will do
+It uses the Landscape web portal for deployment. If you want to know about
+using the Landscape API, we have a [guide](howto::landscape-api) for that too.
 
-- Register a Windows host instance with Landscape
-- Create a custom {term}`WSL profile` on Landscape
-- Deploy Ubuntu with the custom profile to a remote Windows machine
-
-## What you need
+## Prerequisites
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 * A minimum of 16GB RAM and 8-core processor
@@ -33,13 +30,13 @@ deploy Ubuntu to remote Windows machines using {term}`Landscape`.
 
 ```{tip}
 It is recommended that you complete the [getting
-started](./getting-started-with-up4w.md) tutorial to familiarise yourself with
+started](tut::up4w) tutorial to familiarise yourself with
 installation and configuration of the Pro for WSL app.
 ```
 
 ### WSL must be installed and configured
 
-You need WSL installed and configured to follow this tutorial.
+You need WSL installed and configured to follow this guide.
 
 Installation instructions are provided in the [official Microsoft
 documentation](https://learn.microsoft.com/en-us/windows/wsl/install).
@@ -48,8 +45,8 @@ documentation](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 You will be remotely deploying Ubuntu-24.04 on a Windows machine using Landscape.
 
-Uninstall any pre-existing instance of Ubuntu-24.04 on the machine before you
-start the tutorial.
+Uninstall any pre-existing instance of Ubuntu-24.04 on the machine before
+following the guide.
 
 To check if an Ubuntu-24.04 instance exists, run the following in PowerShell:
 
@@ -74,7 +71,7 @@ If you have an existing Ubuntu-24.04 instance, run the following commands:
 This stops any running instance of Ubuntu-24.04, creates a backup folder,
 generates a compressed backup of the distro, and uninstalls the instance.
 
-Instructions for restoring the backup can be found at the end of the tutorial.
+Instructions for restoring the backup can be found at the end of the guide.
 
 ````
 
