@@ -17,7 +17,7 @@ Each configuration method has a different scope and use-case. Depending on the m
 | [`.wslconfig`](ref::.wslconfig)   | General settings that apply to all WSL instances                   | `%UserProfile%\.wslconfig`, in the Windows file system                                     |
 | [`wsl.conf`](ref::wsl.conf)   | Settings for a specific WSL instance only                          | `/etc/wsl.conf`, while inside a WSL instance                                               |
 | [Cloud-init](ref::cloud-init)     | Ubuntu provisioning settings for instances of a named distribution | `<Distro Name>.userdata` files in `%UserProfile%\.cloud-init\`, in the Windows file system |
-| [Ubuntu Pro for WSL](ref::up4w)   | Pro settings that apply to all compatible Ubuntu instances         | Installable [graphical application ](howto::up4w)                                          |
+| [Ubuntu Pro for WSL](ref::up4w)   | Pro settings that apply to all compatible Ubuntu instances         | Installable [graphical application ](tut::up4w)                                          |
 
 (ref::wsl-settings)=
 
@@ -90,7 +90,7 @@ Finally, install that distribution as you would normally, and the cloud-init con
 
 Ubuntu Pro for WSL is a graphical application that automatically configures all compatible instances of Ubuntu on WSL to attach to your [Ubuntu Pro](https://ubuntu.com/pro) subscription.
 
-> [Read more about using Pro for WSL](howto::up4w)
+> [Read more about using Pro for WSL](tut::up4w)
 
 ## Further reading
 

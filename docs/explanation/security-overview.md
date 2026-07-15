@@ -198,7 +198,7 @@ application.
 This is most relevant for deployment scenarios in which multiple Windows hosts
 are being managed centrally, using software like Landscape or Intune.
 
-> [Get started with Ubuntu Pro for WSL](howto::up4w)
+> [Get started with Ubuntu Pro for WSL](tut::up4w)
 
 ### Firewall configuration
 

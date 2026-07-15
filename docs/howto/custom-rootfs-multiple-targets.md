@@ -5,6 +5,7 @@ myst:
       "Scale up your deployment of a custom rootfs using Ubuntu Pro for WSL's Landscape integration."
 ---
 
+(howto::landscape-api)=
 # Deploy a custom rootfs to multiple Windows machines with Ubuntu Pro for WSL and the Landscape API
 
 ```{include} ../includes/pro_content_notice.txt
