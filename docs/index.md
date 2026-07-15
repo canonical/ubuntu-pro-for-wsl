@@ -18,7 +18,7 @@ to Ubuntu instances, and remote deployment with Landscape. If you are responsibl
 devices, Pro for WSL helps you monitor, customize, and secure WSL at scale.
 
 Ubuntu on WSL provides a fully-featured Ubuntu experience on Windows, suitable
-for learning Linux, developing a personal open-source project or building for
+for learning Linux, developing a personal open-source project, or building for
 production in an enterprise environment.
 
 ## In this documentation
