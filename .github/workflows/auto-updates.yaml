@@ -28,7 +28,7 @@ jobs:
         name: Check out repo
         with:
           ref: main
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           cache-dependency-path: go.work
           go-version-file: common/go.mod
@@ -86,7 +86,7 @@ jobs:
         uses: ./.github/actions/setup-git
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         name: Set up Go
         with:
           cache-dependency-path: go.work
@@ -134,7 +134,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           cache-dependency-path: go.work
           go-version-file: go.work
