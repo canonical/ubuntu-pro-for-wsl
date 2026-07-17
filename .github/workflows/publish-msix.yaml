@@ -216,12 +216,11 @@ jobs:
         working-directory: './wiki'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # The appinstaller file output is relative to the main repo root.
+        # The appinstaller file output is an absolute path.
         run: |
-          $appinstallerFile="..\${{ steps.bundle.outputs.appinstaller-path }}"
           $folder = ".\pre-release\"
           New-Item -Path "$folder" -ItemType Directory -Force
-          Copy-Item "$appinstallerFile" "$folder"
+          Copy-Item "${{ steps.bundle.outputs.appinstaller-path }}" "$folder"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$folder"

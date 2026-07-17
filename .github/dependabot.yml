@@ -1,49 +1,20 @@
 version: 2
 updates:
+  # General Go dependency updates for all Go modules in the repository.
   - package-ecosystem: "gomod"
-    directory: "/agentapi"
+    directories:
+      - "/agentapi"
+      - "/common"
+      - "/contractsapi"
+      - "/end-to-end"
+      - "/generate"
+      - "/mocks"
+      - "/storeapi/go-wrapper/microsoftstore"
+      - "/tools"
+      - "/windows-agent/"
+      - "/wsl-pro-service"
     commit-message:
-      prefix: "deps(agentapi): "
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-
-  - package-ecosystem: "gomod"
-    directory: "/windows-agent"
-    commit-message:
-      prefix: "deps(windows-agent): "
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-
-  - package-ecosystem: "gomod"
-    directory: "/common"
-    commit-message:
-      prefix: "deps(common): "
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-
-  - package-ecosystem: "gomod"
-    directory: "/end-to-end"
-    commit-message:
-      prefix: "deps(end-to-end): "
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-
-  - package-ecosystem: "gomod"
-    directory: "/tools"
-    commit-message:
-      prefix: "deps(tools): "
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-
-  - package-ecosystem: "gomod"
-    directory: "/wsl-pro-service"
-    commit-message:
-      prefix: "deps(wsl-pro-service): "
+      prefix: "deps(go): "
     schedule:
       interval: "weekly"
       day: "thursday"
@@ -58,25 +29,22 @@ updates:
       interval: "weekly"
       day: "thursday"
 
+  # So we update grpc and protobuf packages exclusively.
   - package-ecosystem: "pub"
-    # So we update grpc and protobuf packages
     directory: "/agentapi/dart"
     commit-message:
       prefix: "deps(agentapi): "
     schedule:
       interval: "weekly"
       day: "thursday"
+
+  # Other Dart packages update more often.
   - package-ecosystem: "pub"
-    directory: "/gui/packages/p4w_ms_store"
+    directories:
+      - "/gui/packages/p4w_ms_store"
+      - "/gui/packages/ubuntupro"
     commit-message:
-      prefix: "deps(gui-p4w_ms_store): "
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-  - package-ecosystem: "pub"
-    directory: "/gui/packages/ubuntupro"
-    commit-message:
-      prefix: "deps(gui-ubuntupro): "
+      prefix: "deps(gui): "
     schedule:
       interval: "weekly"
       day: "thursday"
