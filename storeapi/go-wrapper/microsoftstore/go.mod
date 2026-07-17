@@ -6,7 +6,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260417143002-81c3beae3d8c
 	github.com/stretchr/testify v1.11.1
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
-	golang.org/x/sys v0.45.0
+	golang.org/x/sys v0.47.0
 )
 
 require (
