@@ -25,7 +25,7 @@ Get started with Ubuntu on WSL for development <develop-with-ubuntu-wsl>
 ## Ubuntu Pro for WSL
 
 Pro is a subscription offered by Canonical that enhances the security of
-Ubuntu. The Pro for WSL application is separate to the Ubuntu distro, and
+Ubuntu. The Ubuntu Pro for WSL application is separate to the Ubuntu distro, and
 makes it easy to attach the subscription to all Ubuntu instances on a machine.
 
 The Pro app also integrates with Landscape, making it possible to remotely
