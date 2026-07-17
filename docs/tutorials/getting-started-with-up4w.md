@@ -6,7 +6,7 @@ myst:
       "Ubuntu Pro for WSL is a Windows application that automatically attaches your Ubuntu Pro subscription to every Ubuntu instance created on WSL."
 ---
 
-(howto::up4w)=
+(tut::up4w)=
 # Get started with Ubuntu Pro for WSL
 
 ```{include} ../includes/pro_content_notice.txt
@@ -235,7 +235,7 @@ You should again get confirmation of successful Pro-attachment for the new insta
 This is only the start of what you can do with Pro for WSL.
 
 If you need to create and manage large numbers of Ubuntu WSL instances
-you will probably want to use the Windows registry.
+you will probably want to use the Windows registry for installing the Pro app.
 By using the Windows registry you can associate a Pro token with
 each new WSL instance using your organisation's own deployment solution.
 
@@ -244,9 +244,9 @@ each new WSL instance using your organisation's own deployment solution.
 Landscape support is also built-in to Pro for WSL.
 With a single configuration file, you can create and manage
 multiple WSL instances that will automatically be registered
-with your Landscape server:
+with your Landscape server.
 
-> For more information, please refer to our tutorial on how to [deploy WSL instances with Pro for WSL and Landscape](./deployment.md).
+> For more information, please refer to our guide on how to [deploy WSL instances with Pro for WSL and Landscape](tut::deploy).
 
 Our documentation includes several other [how-to guides](../howto/index)
 for completing specific tasks, [reference](../reference/index) material

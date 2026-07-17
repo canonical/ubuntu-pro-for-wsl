@@ -20,7 +20,7 @@ Information on how to configure Ubuntu for WSL instances.
 ```{toctree}
 :titlesonly:
 
-instance_configuration
+WSL instance configuration <instance_configuration>
 ```
 
 If you are interested in automated testing of applications in Ubuntu WSL, read:
