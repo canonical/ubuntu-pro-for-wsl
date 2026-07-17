@@ -123,7 +123,7 @@ jobs:
       - name: Set up Go
         # We need to set up Go so that the agent can be built for the end-to-end tests
         if: matrix.package == 'ubuntupro'
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           cache-dependency-path: go.work
           go-version-file: windows-agent/go.mod
@@ -214,7 +214,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           cache-dependency-path: go.work
           go-version-file: ${{ matrix.subproject }}/go.mod
@@ -325,7 +325,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           cache-dependency-path: go.work
           go-version-file: windows-agent/go.mod
@@ -361,7 +361,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           cache-dependency-path: go.work
           go-version-file: windows-agent/go.mod
