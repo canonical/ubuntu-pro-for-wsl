@@ -116,13 +116,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: powershell
         run: |
-          $headers = @{
-              "Authorization" = "Bearer $token"
-              "Accept"        = "application/vnd.github+json"
-              "X-GitHub-Api-Version" = "2022-11-28"
-          }
-          # This CI artefact will expire in about 2 months, hopefully we'll have a new release by then.
           New-Item -Type Directory "${env:USERPROFILE}\.winappcli" -Force
+          # This CI artefact will expire in about 2 months, hopefully we'll have a new release by then.
           gh run download 29867852444 --repo 'microsoft/winappCli' --name 'cli-binaries' --dir "${env:USERPROFILE}\.winappcli"
       - name: Pack MSIX bundle
         id: bundle
