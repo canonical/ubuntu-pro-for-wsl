@@ -68,7 +68,6 @@ jobs:
           channel: stable
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
           pub-cache: true
-      - uses: microsoft/setup-WinAppCli@2e1c15e9fe58b43697420e71d3aac9e6cd956273 # v0.1
       - name: Build components
         shell: powershell
         run: |
@@ -109,13 +108,29 @@ jobs:
           # End result should then be: [dist/arm64/ dist/x64].
           path: dist
           merge-multiple: true
-      - name: Install winappCLI
-        uses: microsoft/setup-WinAppCli@2e1c15e9fe58b43697420e71d3aac9e6cd956273 # v0.1
+      # - name: Install winappCLI
+      # uses: microsoft/setup-WinAppCli@b93bbddc1f7abc061ca0d3a8119e3a0c7dd71495 # v0.2
+      # TODO: Revert this back to the setup-WinappCli action once the commit is released: https://github.com/microsoft/winappCli/commit/881d8bf0d77ad30bc995a274a631b1b5ef1dab15
+      - name: Set up winappCli
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: powershell
+        run: |
+          $headers = @{
+              "Authorization" = "Bearer $token"
+              "Accept"        = "application/vnd.github+json"
+              "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          # This CI artefact will expire in about 2 months, hopefully we'll have a new release by then.
+          New-Item -Type Directory "${env:USERPROFILE}\.winappcli" -Force
+          gh run download 29867852444 --repo 'microsoft/winappCli' --name 'cli-binaries' --dir "${env:USERPROFILE}\.winappcli"
       - name: Pack MSIX bundle
         id: bundle
         # The Pack action with a password protected PFX certificate requires PowerShell 7.
         shell: pwsh
         run: |
+          $platform = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
+          $env:PATH = "${env:USERPROFILE}\.winappcli\win-$platform\;${env:PATH}"
           # Decode certificate
           New-Item -ItemType directory -Path certificate
           Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
@@ -127,7 +142,7 @@ jobs:
               -Output UbuntuProForWSL.msixbundle -Cert "$PWD/certificate/certificate.pfx" -CertPass $certPass
 
           if ($LASTEXITCODE -ne 0) { throw "build.ps1 Pack failed" }
-          
+
           # Propagate outputs
           $msixFiles = Get-ChildItem -Path . -Filter '*.msixbundle'
           # Both architectures should have app installer files with the exact same contents.
