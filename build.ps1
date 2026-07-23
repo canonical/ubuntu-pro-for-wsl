@@ -33,6 +33,7 @@
     Optional output file path for the resulting MSIX bundle.
 #>
 
+[CmdletBinding()]
 param (
     [Parameter(Mandatory = $true, Position = 0)]
     [ValidateSet('Compile', 'Pack')]
@@ -74,7 +75,9 @@ function Build-Cpp {
     }
 
     Write-Output "Building C++ components..."
-    cmake --build "$buildDir" --config "$Config"
+    $cmakeArgs = @('--build', "$buildDir", '--config', "$Config")
+    if ($VerbosePreference -eq 'Continue') { $cmakeArgs += '--verbose' }
+    cmake @cmakeArgs
     if ($LASTEXITCODE -ne 0) { throw "CMake build failed" }
 
     # Places the artifacts to the 'dist\<arch>' folder
@@ -126,6 +129,9 @@ function Build-Flutter {
     }
     if ($FullVersion) {
         $flutterArgs += "--dart-define=""UP4W_FULL_VERSION=$FullVersion"""
+    }
+    if ($VerbosePreference -eq 'Continue') {
+        $flutterArgs += '--verbose'
     }
 
     Write-Output "Building Flutter app..."
