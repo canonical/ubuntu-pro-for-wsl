@@ -117,7 +117,7 @@ jobs:
         shell: powershell
         run: |
           New-Item -Type Directory "${env:USERPROFILE}\.winappcli" -Force
-          # This CI artefact will expire in about 2 months, hopefully we'll have a new release by then.
+          # This CI artifact will expire in about 2 months, hopefully we'll have a new release by then.
           gh run download 29867852444 --repo 'microsoft/winappCli' --name 'cli-binaries' --dir "${env:USERPROFILE}\.winappcli"
       - name: Pack MSIX bundle
         id: bundle
