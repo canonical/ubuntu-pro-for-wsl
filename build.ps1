@@ -24,7 +24,7 @@
 .PARAMETER InputFolders
     One or more folders to package. Multiple folders produce a multi-architecture .msixbundle. Single folder produces only a .msix.
 .PARAMETER Manifest
-    A Package.appxmanifst file containing the packaging definitions.
+    A Package.appxmanifest file containing the packaging definitions.
 .PARAMETER Cert
     Path to a PFX certificate for signing the MSIX.
 .PARAMETER CertPass
