@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+# winget configure .configurations/dev.dsc.yaml
+properties:
+  configurationVersion: 0.2.0
+  resources:
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: go
+      directives:
+        description: Install Go (latest)
+        allowPrerelease: true
+      settings:
+        id: GoLang.Go
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: vsBuildTools
+      directives:
+        description: Install Visual Studio 2026 Community Build Tools
+      settings:
+        id: Microsoft.VisualStudio.2026.BuildTools
+        source: winget
+
+    - resource: Microsoft.VisualStudio.DSC/VSComponents
+      id: vsComponents
+      dependsOn:
+        - vsBuildTools
+      directives:
+        description: Install C++ workload, Windows SDK, and CMake tools
+      settings:
+        productId: Microsoft.VisualStudio.Product.BuildTools
+        channelId: VisualStudio.18.Release
+        components:
+          - Microsoft.VisualStudio.Workload.VCTools
+          - Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+          - Microsoft.VisualStudio.Component.VC.Tools.ARM64
+          - Microsoft.VisualStudio.Component.Windows11SDK.26100
+          - Microsoft.VisualStudio.Component.VC.CMake.Project
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: windowsAppSdk
+      directives:
+        description: Install Windows App SDK
+      settings:
+        id: Microsoft.WindowsAppSDK
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: winAppCli
+      directives:
+        description: Install WinAppCLI (MSIX packaging tool)
+      settings:
+        id: Microsoft.WinAppCli
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: wsl
+      directives:
+        description: Install Windows Subsystem for Linux
+      settings:
+        id: Microsoft.WSL
+        source: winget
