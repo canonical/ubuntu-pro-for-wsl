@@ -2,10 +2,24 @@
 artifact
 artifacts
 autocompletion
+declaratively
 enablement
+Hyrum
+hoc
 Remediations
 remediations
+reachability
+unary
+unconfigured
+uninstallation
+swappable
+tamperable
+tamperability
+Unmanaged
+unmanaged
 unregistering
+virtualized
+virtualizes
 
 # Tools and brands
 AppArmor
@@ -18,6 +32,7 @@ CIS
 CMake
 cmake
 Codecov
+conhost
 chrony
 Ctrl
 cuda
@@ -33,6 +48,7 @@ Intune
 livepatch
 macOS
 makefile
+MSBuild
 MSIX
 npm
 OOBE
@@ -69,6 +85,7 @@ autoload
 automount
 autopkgtest
 autopkgtests
+backoff
 backporting
 binfmt
 cdimage
@@ -95,16 +112,21 @@ JWT
 localhost
 LTS
 MotD
+mutex
 Numbat
 os
 pem
 PRs
 repo
 rootfs
+retryable
 SLA
 SRU
 SSL
 ssl
+sideload
+Sideload
+sideloaded
 tcp
 TLS
 toolchain
