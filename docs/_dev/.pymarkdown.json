@@ -12,7 +12,7 @@
             "enabled": true
         },
         "blanks-around-headings": {
-            "enabled": true
+            "enabled": false
         },
         "heading-start-left": {
             "enabled": true
@@ -22,7 +22,7 @@
             "punctuation": ".,;。，；"
         },
         "blanks-around-fences": {
-            "enabled": true,
+            "enabled": false,
             "list_items": false
         },
         "blanks-around-lists": {
