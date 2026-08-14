@@ -74,7 +74,9 @@ func normalizeLandscapeConfig(ctx context.Context, s *System, iniFile *ini.File)
 - Use lowercase error messages without trailing punctuation.
 - Avoid exporting foreign implementation details by default. Expose them only when callers have a concrete need to branch on them.
 - Do not automatically return sentinel errors from underlying libraries, unless the caller is expected to match them. Use `fmt.Errorf("<message>: %v", err)` instead.
-
+ 
+ ### Example of good error handling
+ 
 ```go
 // ProStatus returns whether this distro is pro-attached.
 func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
@@ -111,6 +113,7 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 - Update golden files intentionally with `TESTS_UPDATE_GOLDEN=yes`, then commit the updated golden artifacts in the same PR.
 - Prefer explicit, stable assertions over ad hoc string-contains checks.
 
+### Example of good test
 
 ```go
 tests := map[string]struct {

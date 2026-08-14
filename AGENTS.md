@@ -1,9 +1,9 @@
-# Ubuntu Pro for WSL Guide for Coding Agents
+# Ubuntu Pro for WSL: Guide for coding agents
 
 ## Description
 
-**Ubuntu Pro for WSL** is a multi component system that automates enrollment of **Ubuntu on WSL**
-instances (a.k.a the _instances_ ) into Canonical security and compliance services, such as Landscape
+**Ubuntu Pro for WSL** is a multi component system that automates enrollment of any **Ubuntu on WSL**
+instance (a.k.a "the instance") into Canonical security and compliance services, such as Landscape
 and Ubuntu Pro, by automatically enforcing its configuration to all existing and future instances.
 It's made of components running on Ubuntu on WSL (Linux) and on the Windows host, described below:
 
@@ -25,12 +25,12 @@ The source code of all those components is hosted at https://github.com/canonica
 as a polyglot monorepo.
 
 
-## Features in a nutshell
+## Summary of features
 
 ### Ubuntu Pro
 
 When configured with a Pro Token, this system enforces all _instances_ to automatically
-attach to Ubuntu Pro using that token, granting access to Extended Support Maintenance (ESM) `apt`
+attach to Ubuntu Pro using that token, granting access to Extended Support Maintenance (ESM), `apt`
 repositories and other security features. It supports a hierarchy of sources of a token:
 
 - OEM (coming soon), with the highest precedence.
@@ -49,13 +49,13 @@ compliance. The following sources are hierarchically supported:
 - User - manual input via the GUI.
 
 The `agent` communicates with the configured Landscape server and runs commands on its behalf, such
-as to keep an _instance_ alive, install and uninstall _instances_.
+as to keep an _instance_ alive, install or uninstall _instances_.
 
 
-## Collaboration with other Canonical tools
+## Integration with other Canonical tools
 
 To enforce Pro attachment and Landscape configuration at first boot time, we leverage `cloud-init`.
-Actions taken after first boot are intermediated by `wsl-pro-service` itself.
+Actions taken after first boot are mediated by `wsl-pro-service` itself.
 While we act on configuring the `landscape-client`, it remains the one communicating with the server
 about the particular _instance_ it's running on.
 
@@ -76,7 +76,7 @@ following constrained scenarios:
 | High level build orchestration on Windows | PowerShell | | Native and powerful enough |
 | Low level build system for C++ | CMake | `launcher` and parts of the `agent` and `gui` | Simplest and most widely used for C++ |
 | CI/CD | YAML + PowerShell or Bash / GitHub Actions | | Native to GitHub and widely used |
-| User documentation | `myST` + `sphinx` + `Read the Docs` | `docs` | Organization standard |
+| User documentation | `myST` + `sphinx` + `Python` + `Read the Docs` | `docs` | Organization standard |
 
 Except for the `wsl-pro-service`, which heavily assumes Linux, and the C++ abstractions, which are
 allowed to tightly couple to Windows features, **all high level components must be written in a
@@ -122,14 +122,14 @@ To learn more about the design and implementation of this system, consult the fo
 documentation:
 
 - `docs/internal/adr.md` - Architectural decision records (ADRs) describing the true hard-to-change
-   core decisions that steer and constrain the desing and implementation of this system, grouped by
+   core decisions that steer and constrain the design and implementation of this system, grouped by
    different areas of implementation (packaging, security, integration, etc).
 - `docs/internal/domain.md` - Defines the ubiquitous language, describing the meaning of terms and
     their usage in the codebase and, to less extent, user facing text, acting as a glossary to avoid
     repeating descriptions and keep the terminology sharp and concise.
 
 Those must be kept up-to-date as terms or decisions are introduced or changed to keep them useful.
-Only true hard-to-reverse, surprising without context or the result of a real trade-off decisions
+Only decisions that are hard-to-reverse, surprising without context, or the result of a trade-off,
 should be recorded in the ADRs.
 
 When writing code, follow the per language coding standards:

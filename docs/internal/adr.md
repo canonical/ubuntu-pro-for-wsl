@@ -9,8 +9,8 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 
 ### 1.01 - Package Windows components as MSIX
 
-* **Problem/Context**: Windows packaging options are mostly complex, third-party, and lack Package
-  Identity, needed for in-app purchases.
+* **Problem/Context**: Windows packaging options are mostly complex and third-party. They also lack Package
+  Identity needed for in-app purchases.
 * **Decision**: Use MSIX — first-party, modern, tool-supported, and more secure than MSI.
 * **Consequences**:
   - Positive: Declarative, easier to maintain; clean Store upgrades/uninstall; easy OEM install; App

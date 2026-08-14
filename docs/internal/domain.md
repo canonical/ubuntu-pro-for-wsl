@@ -1,11 +1,11 @@
-# Domain Model
+# Domain model
 
 Ubiquitous language for Ubuntu Pro for WSL. This is a glossary — definitions only, no implementation
 details, no specs, no scratch-pad content. Keep entries sorted alphabetically.
 
 ---
 
-### Address File
+### Address file
 
 The file the *Windows Agent* writes under the *Public Directory* at every startup, holding its
 current gRPC listening address. Removed on clean shutdown, rewritten on every restart (which also
@@ -24,7 +24,7 @@ an empty payload resets to unconfigured — empty Pro token detaches, empty Land
 registration. Contrast with commands a *Landscape* server sends to the *Landscape Host Agent*, a
 separate channel.
 
-### Configuration Source
+### Configuration source
 
 The provenance of a configuration parameter (*Pro Token* or *Landscape* client configuration): *User*
 (manual GUI input), *Microsoft Store* (a *Microsoft Store subscription* purchase), or *Organization*
@@ -32,7 +32,7 @@ The provenance of a configuration parameter (*Pro Token* or *Landscape* client c
 Microsoft Store > User — and a lower-precedence source cannot replace an active higher-precedence
 value.
 
-### Contracts Server
+### Contracts server
 
 Canonical's hosted backend bridging Microsoft Store purchases to Ubuntu Pro. The *Windows Agent*
 calls it to obtain an ephemeral Azure AD token and validate a *Microsoft Store subscription*
@@ -46,7 +46,7 @@ type (Pro attachment, Landscape). The only channel between a distro instance and
 stream opens with a handshake carrying the instance's WSL name, binding all its streams to one
 identity.
 
-### Deferred Task
+### Deferred task
 
 A *Task* submitted without waking the distro instance: it waits until the instance next runs (e.g.
 its next connection) before executing.
@@ -63,7 +63,7 @@ The (name, GUID) pair uniquely identifying a distro instance. Name alone isn't s
 unregistering and re-registering under the same name — so the *Windows Agent* validates the stored
 GUID against the system and treats a mismatch as a different instance, invalidating the old entry.
 
-### Distro Database
+### Distro database
 
 The *Windows Agent*'s persisted registry of managed distro instances, held in the *Private
 Directory*. Each entry stores a *Distro identity* and configuration state, validated against the
@@ -127,20 +127,20 @@ Source* of a *Pro Token*: the purchase lives in Microsoft's systems and only yie
 the *Contracts Server* validates the entitlement. Not itself an Ubuntu Pro subscription — the
 purchase that, once validated, unlocks one.
 
-### Private Directory
+### Private directory
 
 The filesystem directory `%LocalAppData%\Ubuntu Pro` on the Windows host (virtualized when deployed
 via msix), accessed only by the *Windows Agent*. Holds its private state: config store, distro
 database, per-distro task queues, single-instance lock file. Contrast with the *Public Directory*,
 located for easy access from within distro instances.
 
-### Pro Token
+### Pro token
 
 An opaque credential from Canonical's Contracts API authorising a machine to access Ubuntu Pro
 services (ESM, FIPS, etc.). The *Windows Agent* holds the active token and instructs each distro
 instance's *Ubuntu Pro client* to attach with it.
 
-### Public Directory
+### Public directory
 
 The filesystem directory `%UserProfile%\.ubuntupro` on the Windows host: the trust boundary across
 which the Windows Agent (sole legitimate author) writes files consumed by the root-privileged
@@ -156,7 +156,7 @@ An RPC whose direction is inverted relative to the connection: the party that ac
 *wsl-pro-service*, gRPC client) executes it and returns the result on the same bidirectional stream.
 How commands reach a distro instance over its *control stream*.
 
-### Secure Projection
+### Secure projection
 
 The property of a node under the *Public Directory* whereby the WSL 9P server translates its NT
 Extended Attributes (`$LXUID`, `$LXGID`, `$LXMOD`) into Linux-visible ownership/mode, appearing
@@ -206,7 +206,7 @@ token (vended by the *Contracts Server*) to an anonymous hash of the local Windo
 Agent* sends it to the Contracts Server, which queries Microsoft about the user's purchases on the
 app's behalf. Neither a *Pro Token* nor a user credential.
 
-### Windows Agent
+### Windows agent
 
 The `ubuntu-pro-agent.exe` process on the Windows host, running with user privileges: the system's
 orchestrator. Reads configuration from the registry and its *Private Directory*, manages the
