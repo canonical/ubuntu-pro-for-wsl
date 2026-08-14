@@ -137,5 +137,3 @@ When writing code, follow the per language coding standards:
 |----------|------|
 | Go | `docs/internal/go-standards.md` |
 
-When writing or reviewing for the documentation website, follow `docs/internal/docs-standards.md`.
-
