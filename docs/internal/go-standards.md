@@ -20,6 +20,8 @@
 - At a given layer, either log an error or return it with context. Avoid duplicating the same failure message in both places unless each layer adds distinct operational value.
 - Keep empty lines separating logical blocks, making lines closely related standing out as a group.
 
+### Example of good code style
+
 ```go
 // normalizeLandscapeConfig ensures that the landscape config has the expected computer_title and SSL certificate path
 // transformed in a Linux path.
