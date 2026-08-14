@@ -18,8 +18,8 @@ the `agent` serving both end users and developers on testing and debugging.
 - **ubuntu-pro-agent-launcher.exe** (a.k.a. the `launcher`): An invisible Win32 window that hosts
 the `agent` under a pseudo console, allowing it to run in the background without console windows
 popping up every time it interacts with WSL via API or command line.
-- **ubuntu.com/wsl/docs** (a.k.a the `docs`): The official documentation for Ubuntu on WSL and Pro
-for WSL, hosted on the Ubuntu website.
+- **ubuntu.com/wsl/docs**: The official documentation for Ubuntu on WSL and Pro for WSL, hosted on
+the Ubuntu website.
 
 The source code of all those components is hosted at https://github.com/canonical/ubuntu-pro-for-wsl
 as a polyglot monorepo.
