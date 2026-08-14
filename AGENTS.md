@@ -55,8 +55,8 @@ as to keep an _instance_ alive, install or uninstall _instances_.
 
 To enforce Pro attachment and Landscape configuration at first boot time, we leverage `cloud-init`.
 Actions taken after first boot are mediated by `wsl-pro-service` itself.
-While we act on configuring the `landscape-client`, it remains the one communicating with the server
-about the particular _instance_ it's running on.
+The `landscape-client` is configured through the Pro for WSL app, but still has the role of
+communicating with the server about the instance it is running on.
 
 ## Tech stack
 
