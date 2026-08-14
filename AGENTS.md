@@ -33,7 +33,6 @@ When configured with a Pro Token, this system enforces all _instances_ to automa
 attach to Ubuntu Pro using that token, granting access to Extended Support Maintenance (ESM), `apt`
 repositories and other security features. It supports a hierarchy of sources of a token:
 
-- OEM (coming soon), with the highest precedence.
 - Organization - deployed via a Windows registry key (friendly to remote management solutions)
 - Microsoft Store subscription purchase - triggered via the GUI, a Canonical Contracts backend
 deliver a Pro token once the entitlement is validated against the MS Store Graph API.
@@ -136,8 +135,6 @@ When writing code, follow the per language coding standards:
 
 | Language | File |
 |----------|------|
-| C++ | `docs/internal/cpp-standards.md` |
-| Dart | `docs/internal/dart-standards.dart.md` |
 | Go | `docs/internal/go-standards.md` |
 
 When writing or reviewing for the documentation website, follow `docs/internal/docs-standards.md`.
