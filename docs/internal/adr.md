@@ -21,8 +21,8 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 ### 1.02 - Package wsl-pro-service as deb for image inclusion
 
 * **Problem/Context**: Must touch system binaries, run as root, and be present at first boot.
-* **Decision**: Package as deb, seeded in the image via Ubuntu archive main pocket — our scope doesn't
-  fit a confined snap.
+* **Decision**: Package as deb, seeded in the image via Ubuntu archive `main` component — our scope
+  doesn't fit a confined snap.
 * **Consequences**:
   - Positive: Simple to reason about; shells out to pro client/landscape-register instead of needing
     IPC; leverages systemd.
