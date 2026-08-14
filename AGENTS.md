@@ -30,7 +30,7 @@ as a polyglot monorepo.
 ### Ubuntu Pro
 
 When configured with a Pro Token, this system enforces all _instances_ to automatically
-attach to Ubuntu Pro using that token, granting access to Extended Support Maintenance (ESM), `apt`
+attach to Ubuntu Pro using that token, granting access to Extended Support Maintenance (ESM)
 repositories and other security features. It supports a hierarchy of sources of a token:
 
 - Organization - deployed via a Windows registry key (friendly to remote management solutions)
