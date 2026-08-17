@@ -3,9 +3,9 @@
 ## Description
 
 **Ubuntu Pro for WSL** is a multi component system that automates enrollment of any **Ubuntu on WSL**
-instance (a.k.a "the instance") into Canonical security and compliance services, such as Landscape
-and Ubuntu Pro, by automatically enforcing its configuration to all existing and future instances.
-It's made of components running on Ubuntu on WSL (Linux) and on the Windows host, described below:
+instance into Canonical security and compliance services, such as Landscape and Ubuntu Pro, by
+automatically enforcing its configuration to all existing and future instances. It's made of
+components running on Ubuntu on WSL (Linux) and on the Windows host, described below:
 
 - **wsl-pro-service**: A systemd unit distributed as a Debian package in the `main` component of the
 Ubuntu archive (thus security and maintainability are key values). It runs inside each Ubuntu on WSL
