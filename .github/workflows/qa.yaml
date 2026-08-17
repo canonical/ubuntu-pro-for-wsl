@@ -154,8 +154,8 @@ jobs:
       # It looks silly to keep this matrix, but we'll be able to run this on Linux eventually and there are gotchas already solved here
       # such as the dependency on xvfb since ubuntu runners on GH don't have graphical capabilities.
       matrix:
-        os: [windows]
-    runs-on: ${{ matrix.os }}-latest
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Set up git
         # This step needs to be done before checkout so that the checkout respects clrf
@@ -186,6 +186,10 @@ jobs:
 
   quality-cpp:
     name: "C++ Quality Checks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
     runs-on: windows-latest
     steps:
       - name: Set up git
