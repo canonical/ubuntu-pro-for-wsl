@@ -106,14 +106,41 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   the Public Directory, projected into every instance via 9P/DrvFs; by default 9P maps files to the
   unprivileged WSL user, exposing private keys and letting any process tamper with them.
 * **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
-  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation, so 9P projects it as
-  root-owned. Centralized in the `securefiles` custodian component, with a plain `os` fallback (no EA
-  stamping) on non-Windows for cross-platform build/test.
+  ($LXUID=0, $LXGID=0, $LXMOD - directories 040700, files 0100600) so 9P projects it as root-owned.
+  The `securefiles` custodian holds the directory as an `os.Root`, so containment is structural, and
+  creates each node with `NtCreateFile` relative to that root's handle, carrying the attributes in the
+  same syscall: the standard library's own creation calls cannot attach an attribute buffer, and
+  creating first then stamping would leave a window in which an unprivileged process opens the node
+  and keeps a readable descriptor across the later ownership change. For the same reason the public root
+  and first-level sub-tree roots are stamped in place when pre-existing (stamping a directory node revokes
+  unprivileged creation and deletion inside it because Linux checks the directory's current ownership
+  and mode on every operation), while everything beneath them is replaced rather than repaired; the
+  certificates sub-tree is replaced outright. Stamping in place is avoided for individual files because it
+  cannot revoke descriptors already open. Consumers hold sub-scoped custodians instead of paths, and the custodian chooses modes.
+  A plain `os` fallback (no stamping) on non-Windows keeps the cross-platform build and test working.
 * **Consequences**:
-  - Positive: Confidentiality/integrity/availability hold inside every instance; attributes are
-    stamped before content is written; `common/certs` stays a pure in-memory generator.
-  - Negative: Depends on WSL 9P EA behavior via github.com/Microsoft/go-winio; the parent directory
-    remains tamperable by the WSL user (accepted limitation).
+  - Positive: Confidentiality/integrity/availability hold inside every instance; a node is never
+    visible unstamped; `common/certs` became a pure in-memory generator, so the guarantee is structural
+    rather than a property of call-site wiring; consumers cannot reach a sibling's sub-tree.
+  - Negative: Depends on undocumented WSL 9P behaviour and on `NT.dll` calls via
+    golang.org/x/sys/windows, with github.com/Microsoft/go-winio added solely to encode the attribute
+    buffer; replacing instead of repairing forces per-distro cloud-init data to be read and rewritten
+    at startup; the parent directory remains tamperable by the WSL user (accepted limitation).
+
+### 2.02 - Stamping failure degrades loudly rather than blocking the agent
+
+* **Problem/Context**: Where `%UserProfile%` is redirected to a filesystem that cannot carry Extended
+  Attributes, stamping fails, and the Public Directory cannot be secured at all.
+* **Decision**: Proceed with unstamped nodes and report the degraded state at error level on every
+  startup, rather than refusing to serve. The path is a fixed contract with wsl-pro-service, so
+  relocating is not an option, and this is a hardening feature: failing closed would break users who
+  work today to protect them from an exposure they already have.
+* **Consequences**:
+  - Positive: No regression for affected users; the condition is visible rather than silent; nothing is
+    made worse than the pre-existing behaviour.
+  - Negative: The security property is best-effort on those machines, where the shared client key stays
+    readable by any process in any instance; fail-closed remains the intended end state once field data
+    shows whether the condition ever occurs, so this record is provisional.
 
 ## 3. Integration
 
@@ -158,7 +185,8 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   restart; clients re-read material on every (re)connection and pin the fixed server name "UP4W".
 * **Consequences**:
   - Positive: No external PKI, zero user setup; compromise window bounded by process lifetime + cert
-    expiry; reuses ADR-2.01 secure projection.
+    expiry; reuses ADR-2.01 secure projection; no private key belonging to the agent or the CA is ever
+    at rest, so the trust boundary protects three files instead of five.
   - Negative: Every restart rotates the PKI, invalidating existing connections until instances re-read
     it; all clients share one TLS identity, so the agent can't cryptographically distinguish
     instances (WSL name is self-asserted; accepted as one trust domain per Windows user); the fixed
