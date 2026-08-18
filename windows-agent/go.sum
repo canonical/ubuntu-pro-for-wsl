@@ -1,3 +1,5 @@
+github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
+github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 h1:fi5eVdZCelJd6lUufEXgtBbNf/Jll2n2Cgvd9UGqIys=
 github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1/go.mod h1:SEDBCzpOq4KPCsPQiPaUl+lOtkvbBWDRjwavnkY4qss=
 github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260417143002-81c3beae3d8c h1:VS4dxL2VGnsCDWX33ubiPqe1sqGruIrDifBNGAa7CBs=
