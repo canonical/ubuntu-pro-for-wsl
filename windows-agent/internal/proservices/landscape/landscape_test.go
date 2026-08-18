@@ -26,6 +26,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/database"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/landscape"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -1036,7 +1037,10 @@ func TestNotifyConfigUpdateWithAgentYaml(t *testing.T) {
 
 			homedir := t.TempDir()
 			c := config.New(ctx, storageDir)
-			cloudInit, err := cloudinit.New(ctx, c, homedir)
+			custodian, err := securefiles.Open(filepath.Join(homedir, ".cloud-init"))
+			require.NoError(t, err, "Setup: could not open cloud-init custodian")
+			defer custodian.Close() // On Windows the open root handle blocks removing the temp directory.
+			cloudInit, err := cloudinit.New(ctx, c, custodian)
 			require.NoError(t, err, "Setup: cloudinit New should not return an error")
 			service, err := landscape.New(ctx, c, db, &cloudInit, nil, landscape.WithHomeDir(homedir))
 			require.NoError(t, err, "Setup: New should not return an error")

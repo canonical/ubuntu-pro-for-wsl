@@ -1,4 +1,4 @@
-//go:build windows && realwsl
+//go:build windows && realwsl && !gowslmock
 
 // Real-WSL end-to-end tests: against a live distro, verify the EA stamp
 // actually projects root ownership inside WSL and that a sub-custodian cannot
