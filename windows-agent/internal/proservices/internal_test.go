@@ -15,31 +15,62 @@ import (
 func TestNewTLSCertificates(t *testing.T) {
 	t.Parallel()
 
-	dir := t.TempDir()
+	testcases := map[string]struct {
+		breakCertificatesDir bool
+		breakPublishableFile bool
 
-	cfg, err := newTLSCertificates(dir)
-	require.NoError(t, err, "newTLSCertificates failed")
-	require.NotNil(t, cfg, "newTLSCertificates should have returned a TLS config")
+		wantErr bool
+	}{
+		"Success": {},
 
-	certsDir := filepath.Join(dir, common.CertificatesDir)
-	entries, err := os.ReadDir(certsDir)
-	require.NoError(t, err, "could not read certificates directory")
-	require.Len(t, entries, 3, "exactly three files should be published")
-
-	wantNames := map[string]struct{}{
-		common.RootCACertFileName:                               {},
-		common.ClientsCertFilePrefix + common.CertificateSuffix: {},
-		common.ClientsCertFilePrefix + common.KeySuffix:         {},
+		"Error when the certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
+		"Error when a publishable file cannot be written":         {breakPublishableFile: true, wantErr: true},
 	}
-	for _, entry := range entries {
-		delete(wantNames, entry.Name())
-	}
-	require.Empty(t, wantNames, "not all expected publishable files were written")
 
-	_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.CertificateSuffix))
-	require.True(t, os.IsNotExist(err), "agent certificate must not be written to disk")
-	_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.KeySuffix))
-	require.True(t, os.IsNotExist(err), "agent private key must not be written to disk")
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+
+			if tc.breakCertificatesDir {
+				err := os.WriteFile(filepath.Join(dir, common.CertificatesDir), []byte{}, 0600)
+				require.NoError(t, err, "Setup: could not create the file that should break the certificates directory")
+			}
+			if tc.breakPublishableFile {
+				err := os.MkdirAll(filepath.Join(dir, common.CertificatesDir, common.RootCACertFileName), 0700)
+				require.NoError(t, err, "Setup: could not create the directory that should break the publishable file")
+			}
+
+			cfg, err := newTLSCertificates(dir)
+			if tc.wantErr {
+				require.Error(t, err, "newTLSCertificates should have failed")
+				return
+			}
+			require.NoError(t, err, "newTLSCertificates failed")
+			require.NotNil(t, cfg, "newTLSCertificates should have returned a TLS config")
+
+			certsDir := filepath.Join(dir, common.CertificatesDir)
+			entries, err := os.ReadDir(certsDir)
+			require.NoError(t, err, "could not read certificates directory")
+			require.Len(t, entries, 3, "exactly three files should be published")
+
+			wantNames := map[string]struct{}{
+				common.RootCACertFileName:                               {},
+				common.ClientsCertFilePrefix + common.CertificateSuffix: {},
+				common.ClientsCertFilePrefix + common.KeySuffix:         {},
+			}
+			for _, entry := range entries {
+				delete(wantNames, entry.Name())
+			}
+			require.Empty(t, wantNames, "not all expected publishable files were written")
+
+			_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.CertificateSuffix))
+			require.True(t, os.IsNotExist(err), "agent certificate must not be written to disk")
+			_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.KeySuffix))
+			require.True(t, os.IsNotExist(err), "agent private key must not be written to disk")
+		})
+	}
 }
 
 func TestNewInstanceHook(t *testing.T) {

@@ -29,12 +29,15 @@ type PKI struct {
 	Publishable    [3]PublishableFile
 }
 
+// generateKey is assigned to a package-level variable so tests can simulate key generation failures.
+var generateKey = ecdsa.GenerateKey
+
 // GenerateEphemeralPKI creates a self-signed root CA authority, agent identity, and shared client identity.
 // It returns a PKI holding the agent's TLS config (in memory) and the publishable byte streams for clients.
 func GenerateEphemeralPKI() (pki PKI, err error) {
 	defer decorate.OnError(&err, "could not generate ephemeral PKI:")
 
-	rootKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	rootKey, err := generateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return PKI{}, fmt.Errorf("failed to generate CA key: %v", err)
 	}
@@ -84,7 +87,7 @@ func GenerateEphemeralPKI() (pki PKI, err error) {
 }
 
 func createIdentity(name, certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey) (*tls.Certificate, error) {
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	key, err := generateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate key for %s: %v", name, err)
 	}
@@ -117,7 +120,7 @@ func createIdentity(name, certCN string, rootCACert *x509.Certificate, rootCAKey
 }
 
 func createClientIdentity(certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey) (der []byte, keyPEM []byte, err error) {
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	key, err := generateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate key for client: %v", err)
 	}
