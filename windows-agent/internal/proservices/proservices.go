@@ -4,11 +4,8 @@ package proservices
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
-	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -152,16 +149,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		log.Warning(ctx, err.Error())
 	}
 
-	destDir := filepath.Join(publicDir, common.CertificatesDir)
-	if err := os.MkdirAll(destDir, 0700); err != nil {
-		return s, fmt.Errorf("failed to create certificates directory: %s", err)
-	}
-	certs, err := newTLSCertificates(destDir)
+	tlsConfig, err := newTLSCertificates(publicDir)
 	if err != nil {
 		return s, fmt.Errorf("failed to create certificates: %s", err)
 	}
 
-	s.creds = credentials.NewTLS(certs.agentTLSConfig())
+	s.creds = credentials.NewTLS(tlsConfig)
 	return s, nil
 }
 

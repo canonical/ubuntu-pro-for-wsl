@@ -91,34 +91,37 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 }
 
 // agentTLSCreds is a helper that creates a pair of TLS credentials for the agent and the WSL Pro service for testing.
+// It builds the ephemeral PKI in memory and writes the three publishable files directly to destDir,
+// mimicking what the real agent publishes through the securefiles custodian.
 func agentTLSCreds(t *testing.T, destDir string) (wslProService, agentCreds credentials.TransportCredentials) {
 	t.Helper()
 
+	pki, err := certs.GenerateEphemeralPKI()
+	require.NoError(t, err, "failed to generate ephemeral PKI")
+
 	require.NoError(t, os.MkdirAll(destDir, 0700), "failed to create certificates directory")
+	for _, f := range pki.Publishable {
+		require.NoError(t, os.WriteFile(filepath.Join(destDir, f.Name), f.Bytes, 0600), "failed to write %s", f.Name)
+	}
 
-	rootCert, rootKey, err := certs.CreateRootCA("UP4W Test", destDir)
-	require.NoError(t, err, "failed to create root CA")
-
-	// Create and write the server and client certificates signed by the root certificate created above.
-	agentCert, err := certs.CreateTLSCertificateSignedBy("server", common.GRPCServerNameOverride, rootCert, rootKey, destDir)
-	require.NoError(t, err, "failed to create agent certificate", err)
-	wslProServiceCert, err := certs.CreateTLSCertificateSignedBy("client", "wsl-pro-service-test", rootCert, rootKey, destDir)
-	require.NoError(t, err, "failed to create WSL Pro service certificate", err)
+	clientCert, err := tls.LoadX509KeyPair(
+		filepath.Join(destDir, common.ClientsCertFilePrefix+common.CertificateSuffix),
+		filepath.Join(destDir, common.ClientsCertFilePrefix+common.KeySuffix),
+	)
+	require.NoError(t, err, "failed to load client certificate")
 
 	ca := x509.NewCertPool()
-	ca.AddCert(rootCert)
+	caBytes, err := os.ReadFile(filepath.Join(destDir, common.RootCACertFileName))
+	require.NoError(t, err, "failed to read CA certificate")
+	require.True(t, ca.AppendCertsFromPEM(caBytes), "failed to parse CA certificate")
+
 	wslProService = credentials.NewTLS(&tls.Config{
 		MinVersion:   tls.VersionTLS13,
 		ServerName:   common.GRPCServerNameOverride,
-		Certificates: []tls.Certificate{*wslProServiceCert},
+		Certificates: []tls.Certificate{clientCert},
 		RootCAs:      ca,
 	})
-	agentCreds = credentials.NewTLS(&tls.Config{
-		Certificates: []tls.Certificate{*agentCert},
-		ClientCAs:    ca,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		MinVersion:   tls.VersionTLS13,
-	})
+	agentCreds = credentials.NewTLS(pki.AgentTLSConfig)
 
 	return wslProService, agentCreds
 }

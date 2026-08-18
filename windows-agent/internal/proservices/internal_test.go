@@ -14,42 +14,32 @@ import (
 
 func TestNewTLSCertificates(t *testing.T) {
 	t.Parallel()
-	testcases := map[string]struct {
-		inexistentDestDir bool
-		breakKeyFile      string
 
-		wantErr bool
-	}{
-		"Success": {},
+	dir := t.TempDir()
 
-		"Error when the destination directory does not exist":  {inexistentDestDir: true, wantErr: true},
-		"Error when the agent private key cannot be written":   {breakKeyFile: common.AgentCertFilePrefix + common.KeySuffix, wantErr: true},
-		"Error when the clients private key cannot be written": {breakKeyFile: common.ClientsCertFilePrefix + common.KeySuffix, wantErr: true},
+	cfg, err := newTLSCertificates(dir)
+	require.NoError(t, err, "newTLSCertificates failed")
+	require.NotNil(t, cfg, "newTLSCertificates should have returned a TLS config")
+
+	certsDir := filepath.Join(dir, common.CertificatesDir)
+	entries, err := os.ReadDir(certsDir)
+	require.NoError(t, err, "could not read certificates directory")
+	require.Len(t, entries, 3, "exactly three files should be published")
+
+	wantNames := map[string]struct{}{
+		common.RootCACertFileName:                               {},
+		common.ClientsCertFilePrefix + common.CertificateSuffix: {},
+		common.ClientsCertFilePrefix + common.KeySuffix:         {},
 	}
-
-	for name, tc := range testcases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			dir := t.TempDir()
-			if tc.inexistentDestDir {
-				dir = filepath.Join(dir, "inexistent")
-			}
-
-			if tc.breakKeyFile != "" {
-				err := os.MkdirAll(filepath.Join(dir, tc.breakKeyFile), 0700)
-				require.NoError(t, err, "Setup: could not write directory that should break %s", tc.breakKeyFile)
-			}
-
-			c, err := newTLSCertificates(dir)
-			if tc.wantErr {
-				require.Error(t, err, "NewTLSCertificates should have failed")
-				return
-			}
-			require.NoError(t, err, "NewTLSCertificates failed")
-			require.NotEmpty(t, c, "NewTLSCertificates should have returned a non-empty value")
-		})
+	for _, entry := range entries {
+		delete(wantNames, entry.Name())
 	}
+	require.Empty(t, wantNames, "not all expected publishable files were written")
+
+	_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.CertificateSuffix))
+	require.True(t, os.IsNotExist(err), "agent certificate must not be written to disk")
+	_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.KeySuffix))
+	require.True(t, os.IsNotExist(err), "agent private key must not be written to disk")
 }
 
 func TestNewInstanceHook(t *testing.T) {

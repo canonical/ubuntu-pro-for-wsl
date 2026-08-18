@@ -1,8 +1,8 @@
 package certs_test
 
 import (
-	"os"
-	"path/filepath"
+	"crypto/tls"
+	"crypto/x509"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -10,94 +10,120 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateRooCA(t *testing.T) {
+func TestGenerateEphemeralPKI(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]struct {
-		breakCertPem bool
+	pki, err := certs.GenerateEphemeralPKI()
+	require.NoError(t, err, "GenerateEphemeralPKI failed")
+	require.NotNil(t, pki.AgentTLSConfig, "AgentTLSConfig should not be nil")
 
-		wantErr bool
-	}{
-		"Success": {},
-
-		"Error when the root CA certificate file cannot be written": {breakCertPem: true, wantErr: true},
+	// Verify publishable set names exactly the three files: ca_cert.pem, client_cert.pem, client_key.pem
+	expectedFiles := [3]string{
+		common.RootCACertFileName,
+		common.ClientsCertFilePrefix + common.CertificateSuffix,
+		common.ClientsCertFilePrefix + common.KeySuffix,
 	}
 
-	for name, tc := range testcases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	require.Equal(t, expectedFiles[0], pki.Publishable[0].Name, "First publishable file should be CA cert")
+	require.Equal(t, expectedFiles[1], pki.Publishable[1].Name, "Second publishable file should be client cert")
+	require.Equal(t, expectedFiles[2], pki.Publishable[2].Name, "Third publishable file should be client key")
 
-			dir := t.TempDir()
-
-			if tc.breakCertPem {
-				require.NoError(t, os.MkdirAll(filepath.Join(dir, common.RootCACertFileName), 0700), "Setup: failed to create a directory that should break cert.pem")
-			}
-
-			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", dir)
-
-			if tc.wantErr {
-				require.Error(t, err, "CreateRootCA should have failed")
-				return
-			}
-			require.NoError(t, err, "CreateRootCA failed")
-			require.NotNil(t, rootCert, "CreateRootCA didn't return a certificate")
-			require.NotNil(t, rootKey, "CreateRootCA didn't return a private key")
-			require.FileExists(t, filepath.Join(dir, common.RootCACertFileName), "CreateRootCA failed to write the certificate to disk")
-		})
+	for i := range 3 {
+		require.NotEmpty(t, pki.Publishable[i].Bytes, "Publishable file %s should not be empty", pki.Publishable[i].Name)
 	}
 }
 
-func TestCreateTLSCertificateSignedBy(t *testing.T) {
+func TestHandshake(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]struct {
-		rootIsNotCA  bool
-		breakCertPem bool
-		breakKeyPem  bool
+	pki1, err := certs.GenerateEphemeralPKI()
+	require.NoError(t, err)
 
-		wantErr bool
-	}{
-		"Success": {},
+	pki2, err := certs.GenerateEphemeralPKI()
+	require.NoError(t, err)
 
-		"Error when the signing certificate is not an authority": {rootIsNotCA: true, wantErr: true},
-		"Error when the cert.pem file cannot be written":         {breakCertPem: true, wantErr: true},
-		"Error when the key.pem file cannot be written":          {breakKeyPem: true, wantErr: true},
+	clientCert1, err := tls.X509KeyPair(pki1.Publishable[1].Bytes, pki1.Publishable[2].Bytes)
+	require.NoError(t, err)
+
+	caPool1 := x509.NewCertPool()
+	require.True(t, caPool1.AppendCertsFromPEM(pki1.Publishable[0].Bytes))
+
+	clientTLSConfig1 := &tls.Config{
+		Certificates: []tls.Certificate{clientCert1},
+		RootCAs:      caPool1,
+		ServerName:   common.GRPCServerNameOverride,
+		MinVersion:   tls.VersionTLS13,
 	}
 
-	for name, tc := range testcases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	clientCert2, err := tls.X509KeyPair(pki2.Publishable[1].Bytes, pki2.Publishable[2].Bytes)
+	require.NoError(t, err)
 
-			rootCert, rootKey, err := certs.CreateRootCA("test-root-ca", t.TempDir())
-			require.NoError(t, err, "Setup: failed to generate root CA cert")
-			if tc.rootIsNotCA {
-				rootCert.IsCA = false
-				rootCert.AuthorityKeyId = nil
-			}
+	caPool2 := x509.NewCertPool()
+	require.True(t, caPool2.AppendCertsFromPEM(pki2.Publishable[0].Bytes))
 
-			dir := t.TempDir()
-
-			agentCertName := common.AgentCertFilePrefix + common.CertificateSuffix
-			agentKeyName := common.AgentCertFilePrefix + common.KeySuffix
-
-			if tc.breakCertPem {
-				require.NoError(t, os.MkdirAll(filepath.Join(dir, agentCertName), 0700), "Setup: failed to create a directory that should break cert.pem")
-			}
-
-			if tc.breakKeyPem {
-				require.NoError(t, os.MkdirAll(filepath.Join(dir, agentKeyName), 0700), "Setup: failed to create a directory that should break key.pem")
-			}
-
-			tlsCert, err := certs.CreateTLSCertificateSignedBy(common.AgentCertFilePrefix, "test-server-cn", rootCert, rootKey, dir)
-
-			if tc.wantErr {
-				require.Error(t, err, "CreateTLSCertificateSignedBy should have failed")
-				return
-			}
-			require.NoError(t, err, "CreateTLSCertificateSignedBy failed")
-			require.NotNil(t, tlsCert, "CreateTLSCertificateSignedBy returned a nil certificate")
-			require.FileExists(t, filepath.Join(dir, agentCertName), "CreateTLSCertificateSignedBy failed to write the certificate")
-			require.FileExists(t, filepath.Join(dir, agentKeyName), "CreateTLSCertificateSignedBy failed to write the certificate")
-		})
+	clientTLSConfig2 := &tls.Config{
+		Certificates: []tls.Certificate{clientCert2},
+		RootCAs:      caPool2,
+		ServerName:   common.GRPCServerNameOverride,
+		MinVersion:   tls.VersionTLS13,
 	}
+
+	// Start listener with pki1's AgentTLSConfig
+	listener, err := tls.Listen("tcp", "127.0.0.1:0", pki1.AgentTLSConfig)
+	require.NoError(t, err)
+	defer listener.Close()
+
+	done := make(chan error, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			done <- err
+			return
+		}
+		defer conn.Close()
+		tlsConn, ok := conn.(*tls.Conn)
+		if !ok {
+			done <- nil
+			return
+		}
+		err = tlsConn.Handshake()
+		done <- err
+	}()
+
+	// Connect with matching client (pki1) -> success
+	conn, err := tls.Dial("tcp", listener.Addr().String(), clientTLSConfig1)
+	require.NoError(t, err)
+	require.NoError(t, conn.Handshake())
+	conn.Close()
+
+	serverErr := <-done
+	require.NoError(t, serverErr)
+
+	// Now try connecting with a client from a different PKI (pki2) -> rejected
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			done <- err
+			return
+		}
+		defer conn.Close()
+		tlsConn, ok := conn.(*tls.Conn)
+		if !ok {
+			done <- nil
+			return
+		}
+		err = tlsConn.Handshake()
+		done <- err
+	}()
+
+	conn2, err := tls.Dial("tcp", listener.Addr().String(), clientTLSConfig2)
+	if err == nil {
+		err = conn2.Handshake()
+		conn2.Close()
+		require.Error(t, err, "Client from different PKI should fail handshake")
+	} else {
+		require.Error(t, err, "Dial with different PKI client should fail")
+	}
+
+	<-done // accept routine finished
 }
