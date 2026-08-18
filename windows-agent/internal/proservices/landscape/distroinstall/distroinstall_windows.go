@@ -22,6 +22,7 @@ const createNoWindow = 0x08000000
 
 func executableInstallCommand(ctx context.Context, executable string) (out []byte, err error) {
 	// We need to use powershell because the Appx executable is not in the path
+	// #nosec G204 // The executable path is controlled by the caller; this is not user input.
 	cmd := exec.CommandContext(ctx, "powershell.exe",
 		"-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
 		executable, "install", "--root")
@@ -71,6 +72,7 @@ func getUserIDCommand(ctx context.Context, distro wsl.Distro, userName string) (
 func wslCommand(ctx context.Context, distro wsl.Distro, path string, args ...string) *exec.Cmd {
 	args = append([]string{"-u", "root", "-d", distro.Name(), "--", path}, args...)
 
+	// #nosec G204 // The distro and command arguments are controlled by the caller; this is not user input.
 	cmd := exec.CommandContext(ctx, "wsl.exe", args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow:    true,
