@@ -23,7 +23,8 @@ type PublishableFile struct {
 	Bytes []byte
 }
 
-// PKI represents an ephemeral Public Key Infrastructure instance.
+// PKI represents an ephemeral Public Key Infrastructure instance. Consume the bits you need at
+// startup and drop it.
 type PKI struct {
 	AgentTLSConfig *tls.Config
 	Publishable    [3]PublishableFile
