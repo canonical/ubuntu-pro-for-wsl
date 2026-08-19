@@ -70,6 +70,9 @@ linters:
        # SA4009 (argument homedir is overwritten before first use) gives false positives
       - path: (.+)\.go$
         text: SA4009
+      # mTLS uses TLS 1.2 intentionally to support Windows 10 hosts.
+      - path: '(common[\/]certs[\/](certs|certs_test)|wsl-pro-service[\/]internal[\/]daemon[\/]daemon|wsl-pro-service[\/]internal[\/]testutils[\/]mock_agent|windows-agent[\/]internal[\/]proservices[\/]proservices_test)\.go$'
+        text: G402
     paths:
       - third_party$
       - builtin$
