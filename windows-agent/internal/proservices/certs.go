@@ -28,9 +28,9 @@ func newTLSCertificates(publicDir string) (cfg *tls.Config, err error) {
 		return nil, fmt.Errorf("failed to create certificates directory: %v", err)
 	}
 
-	for _, f := range pki.Publishable {
-		if err := os.WriteFile(filepath.Join(destDir, f.Name), f.Bytes, 0600); err != nil {
-			return nil, fmt.Errorf("failed to write %s: %v", f.Name, err)
+	for name, data := range pki.PEMFiles {
+		if err := os.WriteFile(filepath.Join(destDir, name), data, 0600); err != nil {
+			return nil, fmt.Errorf("failed to write %s: %v", name, err)
 		}
 	}
 

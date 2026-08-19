@@ -23,17 +23,11 @@ import (
 // same minimum on both sides to avoid handshake surprises.
 const MinTLSVersion = tls.VersionTLS12
 
-// PublishableFile represents a single certificate file that must be published to disk.
-type PublishableFile struct {
-	Name  string
-	Bytes []byte
-}
-
 // PKI represents an ephemeral Public Key Infrastructure instance. Consume the bits you need at
 // startup and drop it.
 type PKI struct {
 	AgentTLSConfig *tls.Config
-	Publishable    [3]PublishableFile
+	PEMFiles       map[string][]byte
 }
 
 // generateKey is assigned to a package-level variable so tests can simulate key generation failures.
@@ -88,10 +82,10 @@ func GenerateEphemeralPKI() (pki PKI, err error) {
 
 	return PKI{
 		AgentTLSConfig: agentTLSConfig,
-		Publishable: [3]PublishableFile{
-			{Name: common.RootCACertFileName, Bytes: caPEM},
-			{Name: common.ClientsCertFilePrefix + common.CertificateSuffix, Bytes: clientCertPEM},
-			{Name: common.ClientsCertFilePrefix + common.KeySuffix, Bytes: clientKeyPEM},
+		PEMFiles: map[string][]byte{
+			common.RootCACertFileName:                               caPEM,
+			common.ClientsCertFilePrefix + common.CertificateSuffix: clientCertPEM,
+			common.ClientsCertFilePrefix + common.KeySuffix:         clientKeyPEM,
 		},
 	}, nil
 }

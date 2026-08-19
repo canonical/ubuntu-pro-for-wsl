@@ -100,8 +100,8 @@ func agentTLSCreds(t *testing.T, destDir string) (wslProService, agentCreds cred
 	require.NoError(t, err, "failed to generate ephemeral PKI")
 
 	require.NoError(t, os.MkdirAll(destDir, 0700), "failed to create certificates directory")
-	for _, f := range pki.Publishable {
-		require.NoError(t, os.WriteFile(filepath.Join(destDir, f.Name), f.Bytes, 0600), "failed to write %s", f.Name)
+	for name, data := range pki.PEMFiles {
+		require.NoError(t, os.WriteFile(filepath.Join(destDir, name), data, 0600), "failed to write %s", name)
 	}
 
 	clientCert, err := tls.LoadX509KeyPair(

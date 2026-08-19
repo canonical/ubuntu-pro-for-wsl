@@ -17,19 +17,17 @@ func TestGenerateEphemeralPKI(t *testing.T) {
 	require.NoError(t, err, "GenerateEphemeralPKI failed")
 	require.NotNil(t, pki.AgentTLSConfig, "AgentTLSConfig should not be nil")
 
-	// Verify publishable set names exactly the three files: ca_cert.pem, client_cert.pem, client_key.pem
-	expectedFiles := [3]string{
-		common.RootCACertFileName,
-		common.ClientsCertFilePrefix + common.CertificateSuffix,
-		common.ClientsCertFilePrefix + common.KeySuffix,
+	// Verify publishable set contains exactly the three expected files.
+	expectedFiles := map[string]struct{}{
+		common.RootCACertFileName:                               {},
+		common.ClientsCertFilePrefix + common.CertificateSuffix: {},
+		common.ClientsCertFilePrefix + common.KeySuffix:         {},
 	}
 
-	require.Equal(t, expectedFiles[0], pki.Publishable[0].Name, "First publishable file should be CA cert")
-	require.Equal(t, expectedFiles[1], pki.Publishable[1].Name, "Second publishable file should be client cert")
-	require.Equal(t, expectedFiles[2], pki.Publishable[2].Name, "Third publishable file should be client key")
-
-	for i := range 3 {
-		require.NotEmpty(t, pki.Publishable[i].Bytes, "Publishable file %s should not be empty", pki.Publishable[i].Name)
+	require.Len(t, pki.PEMFiles, len(expectedFiles), "PEMFiles should contain exactly %d files", len(expectedFiles))
+	for name := range expectedFiles {
+		require.Contains(t, pki.PEMFiles, name, "PEMFiles should contain %s", name)
+		require.NotEmpty(t, pki.PEMFiles[name], "PEM file %s should not be empty", name)
 	}
 }
 
@@ -42,11 +40,14 @@ func TestHandshake(t *testing.T) {
 	pki2, err := certs.GenerateEphemeralPKI()
 	require.NoError(t, err)
 
-	clientCert1, err := tls.X509KeyPair(pki1.Publishable[1].Bytes, pki1.Publishable[2].Bytes)
+	clientCert1, err := tls.X509KeyPair(
+		pki1.PEMFiles[common.ClientsCertFilePrefix+common.CertificateSuffix],
+		pki1.PEMFiles[common.ClientsCertFilePrefix+common.KeySuffix],
+	)
 	require.NoError(t, err)
 
 	caPool1 := x509.NewCertPool()
-	require.True(t, caPool1.AppendCertsFromPEM(pki1.Publishable[0].Bytes))
+	require.True(t, caPool1.AppendCertsFromPEM(pki1.PEMFiles[common.RootCACertFileName]))
 
 	clientTLSConfig1 := &tls.Config{
 		Certificates: []tls.Certificate{clientCert1},
@@ -55,11 +56,14 @@ func TestHandshake(t *testing.T) {
 		MinVersion:   certs.MinTLSVersion,
 	}
 
-	clientCert2, err := tls.X509KeyPair(pki2.Publishable[1].Bytes, pki2.Publishable[2].Bytes)
+	clientCert2, err := tls.X509KeyPair(
+		pki2.PEMFiles[common.ClientsCertFilePrefix+common.CertificateSuffix],
+		pki2.PEMFiles[common.ClientsCertFilePrefix+common.KeySuffix],
+	)
 	require.NoError(t, err)
 
 	caPool2 := x509.NewCertPool()
-	require.True(t, caPool2.AppendCertsFromPEM(pki2.Publishable[0].Bytes))
+	require.True(t, caPool2.AppendCertsFromPEM(pki2.PEMFiles[common.RootCACertFileName]))
 
 	clientTLSConfig2 := &tls.Config{
 		Certificates: []tls.Certificate{clientCert2},
@@ -86,8 +90,7 @@ func TestHandshake(t *testing.T) {
 			done <- nil
 			return
 		}
-		err = tlsConn.Handshake()
-		done <- err
+		done <- tlsConn.Handshake()
 	}()
 
 	// Connect with matching client (pki1) -> success
@@ -112,8 +115,7 @@ func TestHandshake(t *testing.T) {
 			done <- nil
 			return
 		}
-		err = tlsConn.Handshake()
-		done <- err
+		done <- tlsConn.Handshake()
 	}()
 
 	conn2, err := tls.Dial("tcp", listener.Addr().String(), clientTLSConfig2)
