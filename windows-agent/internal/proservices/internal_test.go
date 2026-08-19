@@ -1,8 +1,11 @@
 package proservices
 
 import (
+	"crypto/rand"
+	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -86,6 +89,76 @@ func TestNewTLSCertificates(t *testing.T) {
 			require.True(t, os.IsNotExist(err), "agent private key must not be written to disk")
 		})
 	}
+}
+
+func TestNewTLSCertificatesFilesystemFailures(t *testing.T) {
+	t.Parallel()
+	// Permission-based failures work differently (or not at all) on Windows, so
+	// we verify these branches on Unix-like systems only.
+	if runtime.GOOS == "windows" {
+		t.Skip("permission-based filesystem failures are not portable to Windows")
+	}
+
+	testcases := map[string]struct {
+		breakReadDir bool
+		breakRemove  bool
+	}{
+		"Error when the certificates directory cannot be read":  {breakReadDir: true},
+		"Error when a stale certificate file cannot be removed": {breakRemove: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			certsDir := filepath.Join(dir, common.CertificatesDir)
+			require.NoError(t, os.MkdirAll(certsDir, 0700), "Setup: could not create certificates directory")
+
+			if tc.breakReadDir {
+				// Remove read permission so os.ReadDir fails while os.Stat still succeeds.
+				//nolint:gosec // G302 - test setup needs directory execute permission.
+				require.NoError(t, os.Chmod(certsDir, 0100), "Setup: could not remove read permission")
+				defer func() {
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					require.NoError(t, os.Chmod(certsDir, 0700), "Teardown: could not restore permissions")
+				}()
+			}
+
+			if tc.breakRemove {
+				require.NoError(t, os.WriteFile(filepath.Join(certsDir, "stale.pem"), []byte("stale"), 0600), "Setup: could not create stale certificate file")
+				// Remove write permission from the directory so os.Remove fails.
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(certsDir, 0500), "Setup: could not remove write permission")
+				defer func() {
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					require.NoError(t, os.Chmod(certsDir, 0700), "Teardown: could not restore permissions")
+				}()
+			}
+
+			_, err := newTLSCertificates(dir)
+			require.Error(t, err, "newTLSCertificates should have failed")
+		})
+	}
+}
+
+// failingReader is used to make x509.CreateCertificate fail while generating
+// certificates, exercising the error path in newTLSCertificates without
+// mocking it directly.
+type failingReader struct{}
+
+func (failingReader) Read(p []byte) (int, error) {
+	return 0, errors.New("injected random reader failure")
+}
+
+func TestNewTLSCertificatesPKIFailure(t *testing.T) {
+	// Do not run in parallel: this test mutates rand.Reader.
+	orig := rand.Reader
+	rand.Reader = failingReader{}
+	defer func() { rand.Reader = orig }()
+
+	_, err := newTLSCertificates(t.TempDir())
+	require.Error(t, err, "newTLSCertificates should have failed")
 }
 
 func TestNewInstanceHook(t *testing.T) {
