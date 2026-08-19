@@ -12,6 +12,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	grpclog "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
@@ -353,7 +354,7 @@ func loadClientCertificates(t *testing.T, certsDir string) credentials.Transport
 	require.True(t, ca.AppendCertsFromPEM(caBytes), "failed to parse %q", caFilePath)
 
 	tlsConfig := &tls.Config{
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   certs.MinTLSVersion,
 		ServerName:   common.GRPCServerNameOverride,
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      ca,

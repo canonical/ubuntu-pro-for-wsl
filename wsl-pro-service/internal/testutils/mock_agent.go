@@ -116,7 +116,7 @@ func agentTLSCreds(t *testing.T, destDir string) (wslProService, agentCreds cred
 	require.True(t, ca.AppendCertsFromPEM(caBytes), "failed to parse CA certificate")
 
 	wslProService = credentials.NewTLS(&tls.Config{
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   certs.MinTLSVersion,
 		ServerName:   common.GRPCServerNameOverride,
 		Certificates: []tls.Certificate{clientCert},
 		RootCAs:      ca,

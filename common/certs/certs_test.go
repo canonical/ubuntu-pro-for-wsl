@@ -52,7 +52,7 @@ func TestHandshake(t *testing.T) {
 		Certificates: []tls.Certificate{clientCert1},
 		RootCAs:      caPool1,
 		ServerName:   common.GRPCServerNameOverride,
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   certs.MinTLSVersion,
 	}
 
 	clientCert2, err := tls.X509KeyPair(pki2.Publishable[1].Bytes, pki2.Publishable[2].Bytes)
@@ -65,7 +65,7 @@ func TestHandshake(t *testing.T) {
 		Certificates: []tls.Certificate{clientCert2},
 		RootCAs:      caPool2,
 		ServerName:   common.GRPCServerNameOverride,
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   certs.MinTLSVersion,
 	}
 
 	// Start listener with pki1's AgentTLSConfig

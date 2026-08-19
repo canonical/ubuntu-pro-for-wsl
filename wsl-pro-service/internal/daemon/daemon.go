@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
@@ -319,7 +320,7 @@ func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
 		ServerName:   common.GRPCServerNameOverride,
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      ca,
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   certs.MinTLSVersion,
 	}, nil
 }
 

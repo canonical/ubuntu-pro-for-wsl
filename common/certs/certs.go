@@ -17,6 +17,12 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
+// MinTLSVersion is the minimum TLS version used for the PKI-generated mTLS connections.
+//
+// We pin TLS 1.2 rather than 1.3 because the mTLS channel must work on Windows 10 hosts. We keep the
+// same minimum on both sides to avoid handshake surprises.
+const MinTLSVersion = tls.VersionTLS12
+
 // PublishableFile represents a single certificate file that must be published to disk.
 type PublishableFile struct {
 	Name  string
@@ -35,6 +41,9 @@ var generateKey = ecdsa.GenerateKey
 
 // GenerateEphemeralPKI creates a self-signed root CA authority, agent identity, and shared client identity.
 // It returns a PKI holding the agent's TLS config (in memory) and the publishable byte streams for clients.
+//
+// We use ECDSA P-256 rather than Ed25519 because Flutter's BoringSSL-based TLS stack does not support
+// Ed25519 certificates when the connection is constrained to TLS 1.2.
 func GenerateEphemeralPKI() (pki PKI, err error) {
 	defer decorate.OnError(&err, "could not generate ephemeral PKI:")
 
@@ -74,7 +83,7 @@ func GenerateEphemeralPKI() (pki PKI, err error) {
 		Certificates: []tls.Certificate{*agentTLS},
 		ClientCAs:    caCertPool,
 		ClientAuth:   tls.RequireAndVerifyClientCert,
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   MinTLSVersion,
 	}
 
 	return PKI{
