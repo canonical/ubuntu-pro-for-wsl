@@ -1,6 +1,9 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
 
+# GCI is very picky when a Windows checkout puts some CRLF pairs in the Go files
+*.go text eol=lf
+
 # Declare files that will always have CRLF line endings on checkout.
 *.appxmanifest text eol=crlf
 *.props text eol=crlf
