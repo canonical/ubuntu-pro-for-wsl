@@ -18,10 +18,13 @@ func TestNewTLSCertificates(t *testing.T) {
 	testcases := map[string]struct {
 		breakCertificatesDir bool
 		breakPublishableFile bool
+		leaveStaleFile       bool
 
 		wantErr bool
 	}{
 		"Success": {},
+
+		"Success removes stale certificate files": {leaveStaleFile: true},
 
 		"Error when the certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
 		"Error when a publishable file cannot be written":         {breakPublishableFile: true, wantErr: true},
@@ -36,6 +39,13 @@ func TestNewTLSCertificates(t *testing.T) {
 			if tc.breakCertificatesDir {
 				err := os.WriteFile(filepath.Join(dir, common.CertificatesDir), []byte{}, 0600)
 				require.NoError(t, err, "Setup: could not create the file that should break the certificates directory")
+			}
+			if tc.leaveStaleFile {
+				staleDir := filepath.Join(dir, common.CertificatesDir)
+				err := os.MkdirAll(staleDir, 0700)
+				require.NoError(t, err, "Setup: could not create the stale certificates directory")
+				err = os.WriteFile(filepath.Join(staleDir, "stale.pem"), []byte("stale"), 0600)
+				require.NoError(t, err, "Setup: could not create stale certificate file")
 			}
 			if tc.breakPublishableFile {
 				err := os.MkdirAll(filepath.Join(dir, common.CertificatesDir, common.RootCACertFileName), 0700)
@@ -64,6 +74,11 @@ func TestNewTLSCertificates(t *testing.T) {
 				delete(wantNames, entry.Name())
 			}
 			require.Empty(t, wantNames, "not all expected publishable files were written")
+
+			if tc.leaveStaleFile {
+				_, err = os.Stat(filepath.Join(certsDir, "stale.pem"))
+				require.True(t, os.IsNotExist(err), "stale certificate file should have been removed")
+			}
 
 			_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.CertificateSuffix))
 			require.True(t, os.IsNotExist(err), "agent certificate must not be written to disk")
