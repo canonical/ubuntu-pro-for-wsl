@@ -11,16 +11,32 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
+// newTLSCertificatesOpts holds the configurable dependencies for newTLSCertificates.
+// It exists primarily so tests can inject failures without mutating global state.
+type newTLSCertificatesOpts struct {
+	generatePKI func() (certs.PKI, error)
+}
+
+// newTLSCertificatesOption configures newTLSCertificatesOpts.
+type newTLSCertificatesOption func(*newTLSCertificatesOpts)
+
 // newTLSCertificates creates a fresh ephemeral PKI and writes the publishable set
 // (root CA certificate, client certificate and client key) into the certificates
 // subdirectory of publicDir. Any stale files left over from a previous run or a
 // previous code version are removed first. The agent's own identity is held in
 // memory and returned as a TLS server config; nothing of the agent is ever
 // written to disk.
-func newTLSCertificates(publicDir string) (cfg *tls.Config, err error) {
+func newTLSCertificates(publicDir string, opts ...newTLSCertificatesOption) (cfg *tls.Config, err error) {
 	defer decorate.OnError(&err, "could not create TLS credentials:")
 
-	pki, err := certs.GenerateEphemeralPKI()
+	options := newTLSCertificatesOpts{
+		generatePKI: certs.GenerateEphemeralPKI,
+	}
+	for _, o := range opts {
+		o(&options)
+	}
+
+	pki, err := options.generatePKI()
 	if err != nil {
 		return nil, err
 	}

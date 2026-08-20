@@ -1,7 +1,6 @@
 package proservices
 
 import (
-	"crypto/rand"
 	"errors"
 	"os"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/stretchr/testify/require"
@@ -142,22 +142,20 @@ func TestNewTLSCertificatesFilesystemFailures(t *testing.T) {
 	}
 }
 
-// failingReader is used to make x509.CreateCertificate fail while generating
-// certificates, exercising the error path in newTLSCertificates without
-// mocking it directly.
-type failingReader struct{}
-
-func (failingReader) Read(p []byte) (int, error) {
-	return 0, errors.New("injected random reader failure")
+// newTLSCertificatesWithFailingPKI is a newTLSCertificatesOption that makes PKI
+// generation fail, exercising the error path without mutating global state.
+func newTLSCertificatesWithFailingPKI() newTLSCertificatesOption {
+	return func(o *newTLSCertificatesOpts) {
+		o.generatePKI = func() (certs.PKI, error) {
+			return certs.PKI{}, errors.New("injected PKI failure")
+		}
+	}
 }
 
 func TestNewTLSCertificatesPKIFailure(t *testing.T) {
-	// Do not run in parallel: this test mutates rand.Reader.
-	orig := rand.Reader
-	rand.Reader = failingReader{}
-	defer func() { rand.Reader = orig }()
+	t.Parallel()
 
-	_, err := newTLSCertificates(t.TempDir())
+	_, err := newTLSCertificates(t.TempDir(), newTLSCertificatesWithFailingPKI())
 	require.Error(t, err, "newTLSCertificates should have failed")
 }
 
