@@ -280,6 +280,7 @@ extensions = [
 # Excludes files or directories from processing
 exclude_patterns = [
     ".venv*",
+    "internal",
 ]
 
 # Adds custom CSS files, located under 'html_static_path' or remotely
