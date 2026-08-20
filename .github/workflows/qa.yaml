@@ -22,6 +22,10 @@ jobs:
     name: "Go Quality checks"
     permissions: {}
     strategy:
+      # Should avoid rate limits when setting up protoc or running golangci-lint
+      # Those tests run quite fast, so the serialization won't become a problem after all.
+      # The tests with mocks jobs don't have this problem.
+      max-parallel: 4
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
