@@ -152,9 +152,10 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   local process could otherwise connect — and a public CA doesn't fit (no DNS name, dynamic addresses).
 * **Decision**: At every startup the agent generates a fresh self-signed root CA, an agent cert, and
   one client key pair shared by the GUI and all instances, written to the Public Directory under Secure
-  Projection. Both sides require/verify peer certs (TLS 1.3 min); certs expire after 30 days, rotating
-  naturally on restart; clients re-read material on every (re)connection and pin the fixed server name
-  "UP4W".
+  Projection. Both sides require/verify peer certs. We pin TLS 1.2 as the minimum version (Windows 10
+  compatibility) and use ECDSA P-256 certificates because Flutter's BoringSSL-based TLS stack does not
+  support Ed25519 certificates together with TLS 1.2. Certs expire after 30 days, rotating naturally on
+  restart; clients re-read material on every (re)connection and pin the fixed server name "UP4W".
 * **Consequences**:
   - Positive: No external PKI, zero user setup; compromise window bounded by process lifetime + cert
     expiry; reuses ADR-2.01 secure projection.

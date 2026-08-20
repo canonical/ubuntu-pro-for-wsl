@@ -12,6 +12,7 @@ import (
 
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	grpclog "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/wsltestutils"
@@ -37,21 +38,17 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		breakConfig          bool
-		breakNewDistroDB     bool
-		breakCertificatesDir bool
-		breakCA              bool
-		breakCloudInit       bool
+		breakConfig      bool
+		breakNewDistroDB bool
+		breakCloudInit   bool
 
 		wantErr bool
 	}{
 		"When the subscription stays empty":               {},
 		"When the config cannot check if it is read-only": {breakConfig: true},
 
-		"Error when database cannot create its dump file":     {breakNewDistroDB: true, wantErr: true},
-		"Error when certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
-		"Error when CA certificate cannot be created":         {breakCA: true, wantErr: true},
-		"Error when cloud-init dir cannot be created":         {breakCloudInit: true, wantErr: true},
+		"Error when database cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
+		"Error when cloud-init dir cannot be created":     {breakCloudInit: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -71,12 +68,6 @@ func TestNew(t *testing.T) {
 				dbFile := filepath.Join(privateDir, consts.DatabaseFileName)
 				err := os.MkdirAll(dbFile, 0600)
 				require.NoError(t, err, "Setup: could not write directory where database wants to put a file")
-			}
-			if tc.breakCertificatesDir {
-				require.NoError(t, os.WriteFile(filepath.Join(publicDir, common.CertificatesDir), []byte{}, 0600), "Setup: could not create the file that should break writing the certificates")
-			}
-			if tc.breakCA {
-				require.NoError(t, os.MkdirAll(filepath.Join(publicDir, common.CertificatesDir, common.RootCACertFileName), 0700), "Setup: could not break the root CA certificate file")
 			}
 
 			if tc.breakCloudInit {
@@ -363,7 +354,7 @@ func loadClientCertificates(t *testing.T, certsDir string) credentials.Transport
 	require.True(t, ca.AppendCertsFromPEM(caBytes), "failed to parse %q", caFilePath)
 
 	tlsConfig := &tls.Config{
-		MinVersion:   tls.VersionTLS13,
+		MinVersion:   certs.MinTLSVersion,
 		ServerName:   common.GRPCServerNameOverride,
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      ca,

@@ -1,11 +1,14 @@
 package proservices
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
 	"github.com/stretchr/testify/require"
@@ -14,17 +17,20 @@ import (
 
 func TestNewTLSCertificates(t *testing.T) {
 	t.Parallel()
+
 	testcases := map[string]struct {
-		inexistentDestDir bool
-		breakKeyFile      string
+		breakCertificatesDir bool
+		breakPublishableFile bool
+		leaveStaleFile       bool
 
 		wantErr bool
 	}{
 		"Success": {},
 
-		"Error when the destination directory does not exist":  {inexistentDestDir: true, wantErr: true},
-		"Error when the agent private key cannot be written":   {breakKeyFile: common.AgentCertFilePrefix + common.KeySuffix, wantErr: true},
-		"Error when the clients private key cannot be written": {breakKeyFile: common.ClientsCertFilePrefix + common.KeySuffix, wantErr: true},
+		"Success removes stale certificate files": {leaveStaleFile: true},
+
+		"Error when the certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
+		"Error when a publishable file cannot be written":         {breakPublishableFile: true, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -32,24 +38,125 @@ func TestNewTLSCertificates(t *testing.T) {
 			t.Parallel()
 
 			dir := t.TempDir()
-			if tc.inexistentDestDir {
-				dir = filepath.Join(dir, "inexistent")
+
+			if tc.breakCertificatesDir {
+				err := os.WriteFile(filepath.Join(dir, common.CertificatesDir), []byte{}, 0600)
+				require.NoError(t, err, "Setup: could not create the file that should break the certificates directory")
+			}
+			if tc.leaveStaleFile {
+				staleDir := filepath.Join(dir, common.CertificatesDir)
+				err := os.MkdirAll(staleDir, 0700)
+				require.NoError(t, err, "Setup: could not create the stale certificates directory")
+				err = os.WriteFile(filepath.Join(staleDir, "stale.pem"), []byte("stale"), 0600)
+				require.NoError(t, err, "Setup: could not create stale certificate file")
+			}
+			if tc.breakPublishableFile {
+				err := os.MkdirAll(filepath.Join(dir, common.CertificatesDir, common.RootCACertFileName), 0700)
+				require.NoError(t, err, "Setup: could not create the directory that should break the publishable file")
 			}
 
-			if tc.breakKeyFile != "" {
-				err := os.MkdirAll(filepath.Join(dir, tc.breakKeyFile), 0700)
-				require.NoError(t, err, "Setup: could not write directory that should break %s", tc.breakKeyFile)
-			}
-
-			c, err := newTLSCertificates(dir)
+			cfg, err := newTLSCertificates(dir)
 			if tc.wantErr {
-				require.Error(t, err, "NewTLSCertificates should have failed")
+				require.Error(t, err, "newTLSCertificates should have failed")
 				return
 			}
-			require.NoError(t, err, "NewTLSCertificates failed")
-			require.NotEmpty(t, c, "NewTLSCertificates should have returned a non-empty value")
+			require.NoError(t, err, "newTLSCertificates failed")
+			require.NotNil(t, cfg, "newTLSCertificates should have returned a TLS config")
+
+			certsDir := filepath.Join(dir, common.CertificatesDir)
+			entries, err := os.ReadDir(certsDir)
+			require.NoError(t, err, "could not read certificates directory")
+			require.Len(t, entries, 3, "exactly three files should be published")
+
+			wantNames := map[string]struct{}{
+				common.RootCACertFileName:                               {},
+				common.ClientsCertFilePrefix + common.CertificateSuffix: {},
+				common.ClientsCertFilePrefix + common.KeySuffix:         {},
+			}
+			for _, entry := range entries {
+				delete(wantNames, entry.Name())
+			}
+			require.Empty(t, wantNames, "not all expected publishable files were written")
+
+			if tc.leaveStaleFile {
+				_, err = os.Stat(filepath.Join(certsDir, "stale.pem"))
+				require.True(t, os.IsNotExist(err), "stale certificate file should have been removed")
+			}
+
+			_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.CertificateSuffix))
+			require.True(t, os.IsNotExist(err), "agent certificate must not be written to disk")
+			_, err = os.Stat(filepath.Join(certsDir, common.AgentCertFilePrefix+common.KeySuffix))
+			require.True(t, os.IsNotExist(err), "agent private key must not be written to disk")
 		})
 	}
+}
+
+func TestNewTLSCertificatesFilesystemFailures(t *testing.T) {
+	t.Parallel()
+	// Permission-based failures work differently (or not at all) on Windows, so
+	// we verify these branches on Unix-like systems only.
+	if runtime.GOOS == "windows" {
+		t.Skip("permission-based filesystem failures are not portable to Windows")
+	}
+
+	testcases := map[string]struct {
+		breakReadDir bool
+		breakRemove  bool
+	}{
+		"Error when the certificates directory cannot be read":  {breakReadDir: true},
+		"Error when a stale certificate file cannot be removed": {breakRemove: true},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			certsDir := filepath.Join(dir, common.CertificatesDir)
+			require.NoError(t, os.MkdirAll(certsDir, 0700), "Setup: could not create certificates directory")
+
+			if tc.breakReadDir {
+				// Remove read permission so os.ReadDir fails while os.Stat still succeeds.
+				//nolint:gosec // G302 - test setup needs directory execute permission.
+				require.NoError(t, os.Chmod(certsDir, 0100), "Setup: could not remove read permission")
+				defer func() {
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					require.NoError(t, os.Chmod(certsDir, 0700), "Teardown: could not restore permissions")
+				}()
+			}
+
+			if tc.breakRemove {
+				require.NoError(t, os.WriteFile(filepath.Join(certsDir, "stale.pem"), []byte("stale"), 0600), "Setup: could not create stale certificate file")
+				// Remove write permission from the directory so os.Remove fails.
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(certsDir, 0500), "Setup: could not remove write permission")
+				defer func() {
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					require.NoError(t, os.Chmod(certsDir, 0700), "Teardown: could not restore permissions")
+				}()
+			}
+
+			_, err := newTLSCertificates(dir)
+			require.Error(t, err, "newTLSCertificates should have failed")
+		})
+	}
+}
+
+// newTLSCertificatesWithFailingPKI is a newTLSCertificatesOption that makes PKI
+// generation fail, exercising the error path without mutating global state.
+func newTLSCertificatesWithFailingPKI() newTLSCertificatesOption {
+	return func(o *newTLSCertificatesOpts) {
+		o.generatePKI = func() (certs.PKI, error) {
+			return certs.PKI{}, errors.New("injected PKI failure")
+		}
+	}
+}
+
+func TestNewTLSCertificatesPKIFailure(t *testing.T) {
+	t.Parallel()
+
+	_, err := newTLSCertificates(t.TempDir(), newTLSCertificatesWithFailingPKI())
+	require.Error(t, err, "newTLSCertificates should have failed")
 }
 
 func TestNewInstanceHook(t *testing.T) {

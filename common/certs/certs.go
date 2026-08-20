@@ -11,55 +11,89 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/ubuntu/decorate"
 )
 
-// Heavily inspired in:
-// - https://go.dev/src/crypto/tls/generate_cert.go
-// - https://github.com/grpc/grpc-go/blob/master/examples/features/encryption/mTLS
-// - and https://gist.github.com/annanay25/43e3846e21b30818d8dcd5f9987e852d.
+// MinTLSVersion is the minimum TLS version used for the PKI-generated mTLS connections.
+//
+// We pin TLS 1.2 rather than 1.3 because the mTLS channel must work on Windows 10 hosts. We keep the
+// same minimum on both sides to avoid handshake surprises.
+const MinTLSVersion = tls.VersionTLS12
 
-// CreateRootCA creates a new root certificate authority (CA) certificate and private key pair with the common name provided.
-// Only the cert is written into destDir in the PEM format. Being a CA, the certificate and private key returned can be used to sign other certificates.
-func CreateRootCA(commonName string, destDir string) (rootCert *x509.Certificate, rootKey *ecdsa.PrivateKey, err error) {
-	// generate a new key-pair for the root certificate based on the P256 elliptic curve
-	rootKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+// PKI represents an ephemeral Public Key Infrastructure instance. Consume the bits you need at
+// startup and drop it.
+type PKI struct {
+	AgentTLSConfig *tls.Config
+	PEMFiles       map[string][]byte
+}
+
+// generateKey is assigned to a package-level variable so tests can simulate key generation failures.
+var generateKey = ecdsa.GenerateKey
+
+// GenerateEphemeralPKI creates a self-signed root CA authority, agent identity, and shared client identity.
+// It returns a PKI holding the agent's TLS config (in memory) and the publishable byte streams for clients.
+//
+// We use ECDSA P-256 rather than Ed25519 because Flutter's BoringSSL-based TLS stack does not support
+// Ed25519 certificates when the connection is constrained to TLS 1.2.
+func GenerateEphemeralPKI() (pki PKI, err error) {
+	defer decorate.OnError(&err, "could not generate ephemeral PKI:")
+
+	rootKey, err := generateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate random key: %v", err)
+		return PKI{}, fmt.Errorf("failed to generate CA key: %v", err)
 	}
 
-	rootCertTmpl := template(commonName)
+	rootCertTmpl := template(common.GRPCServerNameOverride)
 	rootCertTmpl.IsCA = true
-	rootCertTmpl.Subject.CommonName = commonName + " CA"
+	rootCertTmpl.Subject.CommonName = common.GRPCServerNameOverride + " CA"
 	rootCertTmpl.KeyUsage = x509.KeyUsageCertSign
 
 	// We pass the template as the parent as well so that the certificate is self-signed.
 	rootCert, rootDER, err := createCert(rootCertTmpl, rootCertTmpl, &rootKey.PublicKey, rootKey)
 	if err != nil {
-		return nil, nil, err
+		return PKI{}, fmt.Errorf("failed to create root CA cert: %v", err)
 	}
 
-	// Write the CA certificate to disk.
-	// Notice that we don't write the private key to disk. Only the caller of this function can create other certificates signed by this root CA.
-	if err = writeCert(filepath.Join(destDir, common.RootCACertFileName), rootDER); err != nil {
-		return nil, nil, err
+	agentTLS, err := createIdentity(common.AgentCertFilePrefix, common.GRPCServerNameOverride, rootCert, rootKey)
+	if err != nil {
+		return PKI{}, fmt.Errorf("failed to create agent certificate: %v", err)
 	}
 
-	return rootCert, rootKey, nil
+	clientCertDER, clientKeyPEM, err := createClientIdentity(common.GRPCServerNameOverride, rootCert, rootKey)
+	if err != nil {
+		return PKI{}, fmt.Errorf("failed to create client certificate: %v", err)
+	}
+
+	caPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: rootDER})
+	clientCertPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCertDER})
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AddCert(rootCert)
+
+	agentTLSConfig := &tls.Config{
+		Certificates: []tls.Certificate{*agentTLS},
+		ClientCAs:    caCertPool,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		MinVersion:   MinTLSVersion,
+	}
+
+	return PKI{
+		AgentTLSConfig: agentTLSConfig,
+		PEMFiles: map[string][]byte{
+			common.RootCACertFileName:                               caPEM,
+			common.ClientsCertFilePrefix + common.CertificateSuffix: clientCertPEM,
+			common.ClientsCertFilePrefix + common.KeySuffix:         clientKeyPEM,
+		},
+	}, nil
 }
 
-// CreateTLSCertificateSignedBy creates a certificate and key pair usable for authentication signed by the root certificate authority (root CA) certificate and key provided and write them into destDir in the PEM format.
-func CreateTLSCertificateSignedBy(name, certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey, destDir string) (tlsCert *tls.Certificate, err error) {
-	defer decorate.OnError(&err, "could not create root signed certificate pair for %s:", name)
-
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func createIdentity(name, certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey) (*tls.Certificate, error) {
+	key, err := generateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate random key: %v", err)
+		return nil, fmt.Errorf("failed to generate key for %s: %v", name, err)
 	}
 
 	certTmpl := template(certCN)
@@ -82,18 +116,42 @@ func CreateTLSCertificateSignedBy(name, certCN string, rootCACert *x509.Certific
 		return nil, fmt.Errorf("certificate verification failed: %v", err)
 	}
 
-	if err = writeCert(filepath.Join(destDir, name+common.CertificateSuffix), der); err != nil {
-		return nil, err
-	}
-	if err = writeKey(filepath.Join(destDir, name+common.KeySuffix), key); err != nil {
-		return nil, err
-	}
-
 	return &tls.Certificate{
 		Certificate: [][]byte{der},
 		PrivateKey:  key,
 		Leaf:        cert,
 	}, nil
+}
+
+func createClientIdentity(certCN string, rootCACert *x509.Certificate, rootCAKey *ecdsa.PrivateKey) (der []byte, keyPEM []byte, err error) {
+	key, err := generateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate key for client: %v", err)
+	}
+
+	certTmpl := template(certCN)
+	certTmpl.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement | x509.KeyUsageKeyEncipherment
+	certTmpl.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth}
+	certTmpl.AuthorityKeyId = rootCACert.SubjectKeyId
+
+	cert, der, err := createCert(certTmpl, rootCACert, &key.PublicKey, rootCAKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AddCert(rootCACert)
+	if _, err = cert.Verify(x509.VerifyOptions{Roots: caCertPool}); err != nil {
+		return nil, nil, fmt.Errorf("certificate verification failed: %v", err)
+	}
+
+	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal client key: %v", err)
+	}
+	keyPEM = pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: pkcs8Key})
+
+	return der, keyPEM, nil
 }
 
 // createCert invokes x509.CreateCertificate and returns the certificate and it's DER as bytes for serialization.
@@ -107,7 +165,6 @@ func createCert(template, parent *x509.Certificate, pub, parentPriv any) (cert *
 
 	// parse the resulting certificate so we can use it again
 	cert, err = x509.ParseCertificate(certDER)
-
 	return cert, certDER, err
 }
 
@@ -121,31 +178,4 @@ func template(commonName string) *x509.Certificate {
 		NotAfter:              time.Now().Add(time.Hour * 24 * 30), // arbitrarily chosen expiration in a month
 		BasicConstraintsValid: true,
 	}
-}
-
-// writeCert writes a certificate to disk in PEM format to the given filename.
-func writeCert(filename string, DER []byte) error {
-	w, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("failed to open %q for writing: %v", filename, err)
-	}
-	defer w.Close()
-
-	return pem.Encode(w, &pem.Block{Type: "CERTIFICATE", Bytes: DER})
-}
-
-// writeKey writes a private key to disk in PEM format to the given filename.
-func writeKey(filename string, priv *ecdsa.PrivateKey) error {
-	w, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return fmt.Errorf("failed to open %q for writing: %v", filename, err)
-	}
-	defer w.Close()
-
-	p, err := x509.MarshalPKCS8PrivateKey(priv)
-	if err != nil {
-		return fmt.Errorf("failed to marshal private key: %v", err)
-	}
-
-	return pem.Encode(w, &pem.Block{Type: "PRIVATE KEY", Bytes: p})
 }
