@@ -11,6 +11,9 @@ inputs:
   run-build-runner:
     default: 'false'
     description: "Whether we must run build-runner for this package."
+  integration-tests-dir:
+    required: false
+    description: "Directory relative to package root containing integration tests to run"
 
 outputs:
   coverage-info:
@@ -50,6 +53,8 @@ runs:
       shell: bash
       working-directory: "${{ inputs.package-dir }}"
       run: |
+        # Make sure we don't have a coverage directory already populated
+        rm -rf coverage/
         flutter test --coverage
         # Remove entries for generated code, if any.
         if [ -n "$(which lcov 2>/dev/null)" ]; then
@@ -63,6 +68,29 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: coverage-${{ matrix.package }}-${{ matrix.os }}
+        path: ${{ inputs.package-dir }}/coverage/*
+    - name: Integration Test
+      shell: bash
+      working-directory: '${{ inputs.package-dir }}'
+      if: ${{ inputs.integration-tests-dir != '' }}
+      run: |
+        # Make sure we don't have a coverage directory already populated
+        rm -rf coverage/
+
+        if [ $(uname) = 'Linux' ]; then
+          xvfb-run -a -s '-screen 0 1024x768x24 +extension GLX' \
+            flutter test --coverage ${{ inputs.integration-tests-dir }}
+        else
+            flutter test --coverage ${{ inputs.integration-tests-dir }}
+        fi
+        dart pub global activate cobertura
+        # Default input is coverage/lcov.info and output is coverage/cobertura.xml
+        dart pub global run cobertura convert
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v7
+      if: ${{ inputs.integration-tests-dir != '' }}
+      with:
+        name: coverage-${{ matrix.package }}-${{ matrix.os }}-integration
         path: ${{ inputs.package-dir }}/coverage/*
     - name: Cleanup
       shell: bash

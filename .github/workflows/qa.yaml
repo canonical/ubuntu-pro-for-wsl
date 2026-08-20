@@ -143,6 +143,8 @@ jobs:
           flutter-version: ${{ steps.flutter-version.outputs.contents }}
           package-dir: gui/packages/${{ matrix.package }}
           run-build-runner: ${{ matrix.package ==  'ubuntupro' }}
+          # Only the ubuntupro package has integration tests.
+          integration-tests-dir: ${{ case(matrix.package == 'ubuntupro' && matrix.os == 'windows', 'integration_test', '') }}
       - name: Ensure module files are up to date
         uses: canonical/desktop-engineering/gh-actions/common/has-diff@main
         with:
@@ -150,43 +152,6 @@ jobs:
           paths-to-ignore: ${{ matrix.package == 'ubuntupro' && 'pubspec.lock' || '' }}
           fail-on-diff: true
 
-  flutter-integration:
-    name: "Flutter integration tests"
-    strategy:
-      fail-fast: false
-      # For now we don't have a way to run integration test on ubuntu.
-      # It looks silly to keep this matrix, but we'll be able to run this on Linux eventually and there are gotchas already solved here
-      # such as the dependency on xvfb since ubuntu runners on GH don't have graphical capabilities.
-      matrix:
-        os: [windows]
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-      - name: Set up git
-        # This step needs to be done before checkout so that the checkout respects clrf
-        uses: canonical/ubuntu-pro-for-wsl/.github/actions/setup-git@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: canonical/desktop-engineering/gh-actions/common/dpkg-install-speedup@main
-        if: ${{ matrix.os == 'ubuntu' }}
-      - name: Ensure dependencies on Ubuntu
-        if: ${{ matrix.os == 'ubuntu' }}
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt update
-          sudo DEBIAN_FRONTEND=noninteractive apt install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev unzip xvfb
-      - name: Check out repository
-        uses: actions/checkout@v7
-      - name: Read flutter version
-        id: flutter-version
-        uses: ./.github/actions/read-file
-        with:
-          path: tools/flutter-version
-      - name: Flutter QA
-        uses: ./.github/actions/flutter-integration-test/
-        with:
-          flutter-version: ${{ steps.flutter-version.outputs.contents }}
-          go-version-file: windows-agent/go.mod
-          # Only the app entry point is expected to have integration tests
-          package-dir: 'gui/packages/ubuntupro'
 
   quality-cpp:
     name: "C++ Quality Checks"
