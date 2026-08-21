@@ -316,7 +316,11 @@ landscape:
         });
 
         tearDownAll(() {
-          configDir?.deleteSync(recursive: true);
+          try {
+            configDir?.deleteSync(recursive: true);
+          } on FileSystemException catch (err) {
+            debugPrint(err.message);
+          }
         });
 
         testWidgets('success', (tester) async {
