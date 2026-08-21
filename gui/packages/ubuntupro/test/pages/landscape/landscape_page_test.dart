@@ -486,12 +486,6 @@ Widget buildApp(LandscapeModel model) {
 
 const customConf = './test/testdata/landscape/custom.conf';
 const notFoundPath = './test/testdata/landscape/notfound.txt';
-const caCert = './test/testdata/certs/ca_cert.pem';
-const clientCert = './test/testdata/certs/client_cert.pem';
-const clientKey = './test/testdata/certs/client_key.pem';
-const binaryCert = './test/testdata/certs/binary_cert.der';
-const notATextCert = './test/testdata/certs/not_a_cert.pem';
-const notABinCert = './test/testdata/certs/not_a_cert.der';
 
 /// Create a simple Fake provider for the FilePickerPlatform to return a single specific path when pickFiles is called.
 final class FakeFilePickerPlatform extends FilePickerPlatform
