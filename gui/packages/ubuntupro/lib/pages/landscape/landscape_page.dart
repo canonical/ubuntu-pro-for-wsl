@@ -406,8 +406,8 @@ class _FilePickerFieldState extends State<_FilePickerField> {
                         ? FileType.any
                         : FileType.custom,
                   );
-                  if (result != null) {
-                    final file = File(result.files.single.path!);
+                  if (result.isNotEmpty) {
+                    final file = File(result.first.path!);
                     txt.text = file.path;
                     widget.onChanged(file.path);
                   }

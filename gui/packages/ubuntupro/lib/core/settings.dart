@@ -87,7 +87,7 @@ class SettingsRepository {
   void close() => _key?.close();
   int? readInt(String name) {
     if (_key == null) return null;
-    return _key!.getIntValue(name);
+    return _key!.getInt(name);
   }
 
   @override
@@ -96,7 +96,7 @@ class SettingsRepository {
   }
 
   void load() {
-    _key = Registry.openPath(RegistryHive.currentUser, path: _keyPath);
+    _key = RegistryKey.openCurrentUser().open(_keyPath);
   }
 }
 
