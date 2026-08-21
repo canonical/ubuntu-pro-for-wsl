@@ -234,6 +234,47 @@ jobs:
         run: |
           go test -shuffle=on ./... -race -tags=gowslmock
 
+  tests-windows-real-wsl:
+    name: "Run Windows projection tests on real WSL 2"
+    runs-on: windows-latest
+    env:
+      UP4W_TEST_ROOTFS: "C:\\TEMP\\rootfs.tar.gz"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          cache-dependency-path: go.work
+          go-version-file: windows-agent/go.mod
+      - name: Download WSL image
+        uses: ./.github/actions/get-wsl-image
+        id: get-wsl-image
+        with:
+          base_url: "https://cdimages.ubuntu.com/ubuntu-wsl/stonking/daily-live/current" # The latest devel
+          arch: "amd64"
+          output_path: ${{ env.UP4W_TEST_ROOTFS }}
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          go install github.com/boumenot/gocover-cobertura@latest
+      - name: Run real-WSL projection tests
+        shell: bash
+        working-directory: windows-agent
+        run: |
+          set -eu
+
+          cov_dir=$(pwd)/coverage
+          mkdir -p ${cov_dir}/codecov ${cov_dir}/raw
+          go test -v -tags=realwsl -run 'Projection|CannotReachSibling' -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./internal/securefiles/
+          grep -hv -e "testutils" -e "pb.go:" ${cov_dir}/raw/coverage.out > ${cov_dir}/codecov/coverage.out.codecov
+          GOFLAGS="-tags=realwsl" gocover-cobertura -by-files < ${cov_dir}/codecov/coverage.out.codecov > ${cov_dir}/codecov/coverage.xml
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-windows-agent-windows-realwsl
+          path: windows-agent/coverage/codecov/
+
   codecoverage:
     name: "Collect and upload code coverage"
     runs-on: ubuntu-latest
@@ -242,6 +283,7 @@ jobs:
     needs:
       - quality-flutter
       - tests-go-with-mocks
+      - tests-windows-real-wsl
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
