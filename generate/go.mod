@@ -6,7 +6,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240626165418-426bf0d3695a
 	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20260417143002-81c3beae3d8c
 	github.com/spf13/cobra v1.10.2
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	go.yaml.in/yaml/v3 v3.0.5
 )
 
