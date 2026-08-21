@@ -1,10 +1,14 @@
 import 'package:agentapi/agentapi.dart';
+import 'package:cross_file/cross_file.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:path/path.dart' as p;
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:ubuntupro/core/agent_api_client.dart';
@@ -179,26 +183,15 @@ void main() {
     });
 
     testWidgets('via file picker', (tester) async {
-      const channel = MethodChannel('miguelruivo.flutter.plugins.filepicker');
       // Forces the file picker to always return the same path p.
       // Kinda breaks its encapsulation, but the alternative results in even more
       // uncovered lines. If this ever becomes brittle, we should refactor the file
       // picking logic into a separate service that can be mocked more easily.
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          channel,
-          (call) async => (call.method != 'any' && call.method != 'custom')
-              ? debugPrint(call.toString()) // In case the methods are renamed.
-              : [
-                  {
-                    'path': customConf,
-                    'name': 'file.conf',
-                    'size': 10,
-                  }
-                ]);
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, null),
-      );
+      final backup = FilePickerPlatform.instance;
+      final expected = p.normalize(p.absolute(customConf));
+      FilePickerPlatform.instance = FakeFilePickerPlatform(customConf);
+      addTearDown(() => FilePickerPlatform.instance = backup);
+
       final model = LandscapeModel(MockAgentApiClient());
 
       final app = buildApp(model);
@@ -226,7 +219,7 @@ void main() {
         matching: find.byType(TextField),
       );
       expect(textField, findsOne);
-      expect(tester.widget<TextField>(textField).controller?.text, customConf);
+      expect(tester.widget<TextField>(textField).controller?.text, expected);
     });
   });
 
@@ -499,3 +492,55 @@ const clientKey = './test/testdata/certs/client_key.pem';
 const binaryCert = './test/testdata/certs/binary_cert.der';
 const notATextCert = './test/testdata/certs/not_a_cert.pem';
 const notABinCert = './test/testdata/certs/not_a_cert.der';
+
+/// Create a simple Fake provider for the FilePickerPlatform to return a single specific path when pickFiles is called.
+final class FakeFilePickerPlatform extends FilePickerPlatform
+    with MockPlatformInterfaceMixin {
+  final String mockPath;
+  FakeFilePickerPlatform(this.mockPath);
+
+  @override
+  Future<List<PlatformFile>> pickFiles(
+      {List<String>? allowedExtensions,
+      AndroidOptions androidOptions = const AndroidOptions(),
+      int compressionQuality = 100,
+      String? dialogTitle,
+      String? initialDirectory,
+      LinuxOptions linuxOptions = const LinuxOptions(),
+      dynamic Function(FilePickerStatus)? onFileLoading,
+      FileType type = FileType.any,
+      WebOptions webOptions = const WebOptions(),
+      WindowsOptions windowsOptions = const WindowsOptions()}) {
+    return Future.value([
+      FakePlatformFile(
+        name: mockPath.split('/').last,
+        uri: Uri.file(p.absolute(mockPath)),
+      ),
+    ]);
+  }
+}
+
+/// An otherwise unusable fake of PlatformFile to fill the blanks when testing with the stubbed file picker.
+final class FakePlatformFile extends PlatformFile {
+  @override
+  final String name;
+
+  @override
+  final Uri uri;
+
+  FakePlatformFile({required this.name, required this.uri});
+
+  @override
+  Future<int> length() async => 0;
+
+  @override
+  Future<Uint8List> readAsBytes() async => Uint8List(0);
+
+  @override
+  Stream<Uint8List> readAsByteStream() async* {
+    yield Uint8List(0);
+  }
+
+  @override
+  XFile get xFile => XFile(uri.path, name: name);
+}
