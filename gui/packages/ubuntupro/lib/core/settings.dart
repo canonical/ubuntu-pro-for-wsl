@@ -98,6 +98,13 @@ class SettingsRepository {
   void load() {
     _key = RegistryKey.openCurrentUser().open(_keyPath);
   }
+
+  @visibleForTesting
+  static SettingsRepository withKey(String hkcuPath) {
+    final r = SettingsRepository();
+    r._key = RegistryKey.openCurrentUser().open(hkcuPath);
+    return r;
+  }
 }
 
 // The registry key we want to read from.

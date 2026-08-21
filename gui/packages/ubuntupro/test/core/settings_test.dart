@@ -121,7 +121,10 @@ void main() {
     test('defaults with log', () {
       final repository = MockSettingsRepository();
       when(repository.load()).thenThrow(
-        WindowsException(HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED)),
+        WindowsException(
+          HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED),
+          message: 'Mock error',
+        ),
       );
 
       final settings = Settings(repository);
@@ -137,6 +140,20 @@ void main() {
       expect(r.readInt('AKey'), isNull);
       r.close(); // no crash
     });
+    test(
+      'non null existing value',
+      () {
+        final r = SettingsRepository.withKey(
+          r'Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\',
+        );
+        final kbd = r.readInt('Hidden');
+        expect(kbd, isNotNull);
+        // 1 = show, 2 = hide hidden files; since Windows 2000!
+        expect(kbd, isIn([1, 2]));
+        r.close();
+      }, // depends on the real registry.
+      testOn: 'windows',
+    );
 
     test(
       'no crash on load/close',
