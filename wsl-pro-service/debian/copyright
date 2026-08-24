@@ -10,10 +10,6 @@ Files: vendor/github.com/coreos/go-systemd/*
 Copyright: 2015 CoreOS, Inc
 License: Apache-2.0
 
-Files: vendor/github.com/davecgh/go-spew/*
-Copyright: 2012-2016 Dave Collins
-License: ISC
-
 Files: vendor/github.com/fsnotify/fsnotify/*
 Copyright: 2012 The Go Authors
            fsnotify Authors
@@ -31,10 +27,6 @@ Files: vendor/github.com/pelletier/*
 Copyright: 2021 - 2023 Thomas Pelletier
 License: MIT
 
-Files: vendor/github.com/pmezard/*
-Copyright: 2013, Patrick Mezard
-License: BSD-3
-
 Files: vendor/github.com/sagikazarmark/locafero/*
 Copyright: 2023 Márk Sági-Kazár
 License: MIT 
@@ -46,10 +38,6 @@ License: MIT
 Files: vendor/github.com/snapcore/*
 Copyright: 2016, Jonas Obrist
 License: BSD-3
-
-Files: vendor/github.com/sourcegraph/*
-Copyright: 2023 Sourcegraph
-License: MIT
 
 Files: vendor/github.com/spf13/afero/*
 Copyright: 2016 Steve Francia <spf@spf13.com>
@@ -72,6 +60,14 @@ License: BSD-3
 Files: vendor/github.com/stretchr/*
 Copyright: 2012-2020 Mat Ryer, Tyler Bunnell and contributors
 License: MIT
+
+Files: vendor/github.com/stretchr/testify/internal/difflib/*
+Copyright: 2013, Patrick Mezard
+License: BSD-3
+
+Files: vendor/github.com/stretchr/testify/internal/spew/*
+Copyright: 2012-2016 Dave Collins
+License: ISC
 
 Files: vendor/github.com/subosito/*
 Copyright: 2013 Alif Rachmawadi
@@ -98,25 +94,9 @@ Files: vendor/gopkg.in/ini.v1/*
 Copyright: 2016 Unknwon
 License: Apache-2.0
 
-Files: vendor/gopkg.in/yaml.v3/*
-Copyright: 2011-2019 Canonical Ltd
-License: Apache-2.0
-
-Files: vendor/gopkg.in/yaml.v3/apic.go
-       vendor/gopkg.in/yaml.v3/emitterc.go
-       vendor/gopkg.in/yaml.v3/parserc.go
-       vendor/gopkg.in/yaml.v3/readerc.go
-       vendor/gopkg.in/yaml.v3/scannerc.go
-       vendor/gopkg.in/yaml.v3/writerc.go
-       vendor/gopkg.in/yaml.v3/yamlh.go
-       vendor/gopkg.in/yaml.v3/yamlprivateh.go
-Copyright: 2006-2010 Kirill Simonov
-           2006-2011 Kirill Simonov
-License: MIT
-
 Files: vendor/go.yaml.in/yaml/v3/*
 Copyright: 2011-2019 Canonical Ltd
-	   2025 - The go-yaml Project Contributors
+           2025 - The go-yaml Project Contributors
 License: Apache-2.0
 
 Files: vendor/go.yaml.in/yaml/v3/apic.go
@@ -127,7 +107,8 @@ Files: vendor/go.yaml.in/yaml/v3/apic.go
        vendor/go.yaml.in/yaml/v3/writerc.go
        vendor/go.yaml.in/yaml/v3/yamlh.go
        vendor/go.yaml.in/yaml/v3/yamlprivateh.go
-Copyright: 2006-2011 Kirill Simonov
+Copyright: 2006-2010 Kirill Simonov
+           2006-2011 Kirill Simonov
 License: MIT
 
 License: Apache-2.0
