@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/canonical/ubuntu-pro-for-wsl/windows-agent v0.0.0-20240626165418-426bf0d3695a
-	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20260417143002-81c3beae3d8c
+	github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service v0.0.0-20260824122752-d9c61076a5c5
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	go.yaml.in/yaml/v3 v3.0.5
@@ -12,10 +12,10 @@ require (
 
 require (
 	github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260417143002-81c3beae3d8c // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260824122752-d9c61076a5c5 // indirect
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5 // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20260417143002-81c3beae3d8c // indirect
-	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20260417143002-81c3beae3d8c // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20260824122752-d9c61076a5c5 // indirect
+	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20260824122752-d9c61076a5c5 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
@@ -24,7 +24,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.3.1 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/sirupsen/logrus v1.10.1 // indirect
@@ -44,7 +43,7 @@ require (
 	google.golang.org/grpc v1.83.0 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/canonical/ubuntu-pro-for-wsl/windows-agent => ../windows-agent

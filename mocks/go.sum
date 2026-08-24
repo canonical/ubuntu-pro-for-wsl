@@ -1,7 +1,7 @@
 github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1 h1:fi5eVdZCelJd6lUufEXgtBbNf/Jll2n2Cgvd9UGqIys=
 github.com/canonical/landscape-hostagent-api v0.0.0-20250919154603-590e7d7ae4e1/go.mod h1:SEDBCzpOq4KPCsPQiPaUl+lOtkvbBWDRjwavnkY4qss=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260417143002-81c3beae3d8c h1:LOQFG9+8Epm4t6egUsmvN3y+IE1J73wWK4EHUuCHq/4=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260417143002-81c3beae3d8c/go.mod h1:++lXTr0E6xOoOnpZN4mQHksijEVqkPJ2i9KWOOt3uJY=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5 h1:15ws2Mctt+NAlNv0QPuxgO80DLpjleoW9VOtxjO6cWc=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5/go.mod h1:cSgMLPh39R0Tez+myYJ9yHeZRVdqj05pCpisHCJhyfk=
 github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20260417143002-81c3beae3d8c h1:cCEa+bRvNyKTl0R3RUG+k/yNbTXqD5HVwKbd5Hkk78o=
 github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20260417143002-81c3beae3d8c/go.mod h1:+xsuPhzibt0BVagpsL4p/Gnsl46YPrtIAMaGyPmZR9A=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=

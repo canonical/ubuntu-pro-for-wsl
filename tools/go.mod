@@ -221,3 +221,5 @@ tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	golang.org/x/vuln/cmd/govulncheck
 )
+
+replace gopkg.in/yaml.v3 => go.yaml.in/yaml/v3 v3.0.5
