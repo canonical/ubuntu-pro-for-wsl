@@ -108,10 +108,15 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 * **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
   ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation, so 9P projects it as
   root-owned. Centralized in the `securefiles` custodian component, with a plain `os` fallback (no EA
-  stamping) on non-Windows for cross-platform build/test.
+  stamping) on non-Windows for cross-platform build/test. As a defense-in-depth measure, wsl-pro-service
+  validates instance-side ownership (UID 0, GID 0) and mode (0700 for directories, 0600 for files) before
+  consuming any projected file or directory, rejects symlinks, refuses improperly configured artifacts,
+  and fails loudly with SystemError when invalid attributes or symlinks are encountered.
 * **Consequences**:
   - Positive: Confidentiality/integrity/availability hold inside every instance; attributes are
-    stamped before content is written; `common/certs` stays a pure in-memory generator.
+    stamped before content is written; `common/certs` stays a pure in-memory generator; instance-side
+    defense-in-depth validation ensures compromised or improperly projected artifacts are rejected
+    with SystemError before use.
   - Negative: Depends on WSL 9P EA behavior via github.com/Microsoft/go-winio; the parent directory
     remains tamperable by the WSL user (accepted limitation).
 

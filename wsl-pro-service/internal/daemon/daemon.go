@@ -19,6 +19,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
+	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/coreos/go-systemd/daemon"
@@ -30,7 +31,8 @@ import (
 
 // Daemon is a grpc daemon with systemd support.
 type Daemon struct {
-	addressPath, certsPath string
+	publicDirPath string
+	reader        SecureReader
 
 	// Interface to the WSL distro
 	system *system.System
@@ -62,6 +64,7 @@ const (
 
 type options struct {
 	systemdSdNotifier systemdSdNotifier
+	reader            SecureReader
 }
 
 type systemdSdNotifier func(unsetEnvironment bool, state string) (bool, error)
@@ -84,19 +87,25 @@ func New(ctx context.Context, s *system.System, args ...Option) (*Daemon, error)
 		f(&opts)
 	}
 
+	if opts.reader == nil {
+		opts.reader = newDefaultSecureReader()
+	}
+
 	home, err := s.UserProfileDir(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not find address file: could not find $env:UserProfile: %v", err)
 	}
 
+	publicDirPath := filepath.Join(home, common.UserProfileDir)
+
 	ctx, cancel := context.WithCancel(ctx)
 	gCtx, gCancel := context.WithCancel(ctx)
 
 	return &Daemon{
-		systemdSdNotifier: opts.systemdSdNotifier,
+		publicDirPath:     publicDirPath,
+		reader:            opts.reader,
 		system:            s,
-		addressPath:       filepath.Join(home, common.UserProfileDir, common.ListeningPortFileName),
-		certsPath:         filepath.Join(home, common.UserProfileDir, common.CertificatesDir),
+		systemdSdNotifier: opts.systemdSdNotifier,
 
 		ctx:    ctx,
 		cancel: cancel,
@@ -104,6 +113,20 @@ func New(ctx context.Context, s *system.System, args ...Option) (*Daemon, error)
 		gracefulCtx:    gCtx,
 		gracefulCancel: gCancel,
 	}, nil
+}
+
+// WithSecureReader overrides the SecureReader used to ingest files written by the Windows agent.
+// It exists so tests can substitute a fake reader; production code must rely on the default
+// reader, which enforces the Secure Projection ownership and permission invariants.
+// It panics when called outside test binaries.
+func WithSecureReader(r SecureReader) Option {
+	testdetection.MustBeTesting()
+
+	return func(o *options) {
+		if r != nil {
+			o.reader = r
+		}
+	}
 }
 
 // Serve serves on the streams, automatically reconnecting when the connection drops.
@@ -282,7 +305,7 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 
 	log.Infof(ctx, "Daemon: starting connection to Windows Agent via %s", addr)
 
-	tlsConfig, err := newTLSConfigFromDir(d.certsPath)
+	tlsConfig, err := d.newTLSConfigFromDir(common.CertificatesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -297,20 +320,40 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	return streams.NewServer(ctx, d.system, conn), nil
 }
 
-// newTLSConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.
-func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
+// newTLSConfigFromDir loads certificates from the given directory (relative to the Public
+// Directory) and returns a matching tls.Config.
+func (d *Daemon) newTLSConfigFromDir(certsDir string) (conf *tls.Config, err error) {
 	defer decorate.OnError(&err, "could not load TLS config")
 
-	cert, err := tls.LoadX509KeyPair(filepath.Join(certsPath, common.ClientsCertFilePrefix+common.CertificateSuffix), filepath.Join(certsPath, common.ClientsCertFilePrefix+common.KeySuffix))
+	certPEM, err := d.reader.ReadFile(d.publicDirPath, filepath.Join(certsDir, common.ClientsCertFilePrefix+common.CertificateSuffix))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		return nil, streams.NewSystemError("%w", err)
+	}
+
+	keyPEM, err := d.reader.ReadFile(d.publicDirPath, filepath.Join(certsDir, common.ClientsCertFilePrefix+common.KeySuffix))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		return nil, streams.NewSystemError("%w", err)
+	}
+
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		return nil, err
 	}
 
 	ca := x509.NewCertPool()
-	caFilePath := filepath.Join(certsPath, common.RootCACertFileName)
-	caBytes, err := os.ReadFile(caFilePath)
+	caFilePath := filepath.Join(certsDir, common.RootCACertFileName)
+	caBytes, err := d.reader.ReadFile(d.publicDirPath, caFilePath)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		return nil, streams.NewSystemError("%w", err)
 	}
 	if ok := ca.AppendCertsFromPEM(caBytes); !ok {
 		return nil, fmt.Errorf("failed to parse %q", caFilePath)
@@ -327,9 +370,12 @@ func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
 // address fetches the address of the control stream from the Windows filesystem.
 func (d *Daemon) address(ctx context.Context, system *system.System) (string, error) {
 	// Parse the port from the file written by the windows agent.
-	addr, err := os.ReadFile(d.addressPath)
+	addr, err := d.reader.ReadFile(d.publicDirPath, common.ListeningPortFileName)
 	if err != nil {
-		return "", fmt.Errorf("could not read agent port file %q: %v", d.addressPath, err)
+		if errors.Is(err, os.ErrNotExist) {
+			return "", err
+		}
+		return "", streams.NewSystemError("%w", err)
 	}
 
 	port, err := splitPort(string(addr))

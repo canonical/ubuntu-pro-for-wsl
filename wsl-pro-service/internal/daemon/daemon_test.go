@@ -3,6 +3,7 @@ package daemon_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	agentapi "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -70,6 +72,7 @@ func TestServe(t *testing.T) {
 		missingCertsDir         bool
 		missingCaCert           bool
 		breakLandscapeConf      bool
+		insecureAttributes      bool
 
 		// Break the port file in various ways
 		breakPortFile         bool
@@ -85,6 +88,7 @@ func TestServe(t *testing.T) {
 		wantSystemdNotReady bool
 		wantConnected       bool
 		wantErr             bool
+		wantSystemError     bool
 	}{
 		"Success": {wantConnected: true},
 		"Success with systemd notifier returning true": {notifierReturn: true, wantConnected: true},
@@ -105,9 +109,10 @@ func TestServe(t *testing.T) {
 		"No connection because cannot read root CA certificate file": {missingCaCert: true, wantConnected: false},
 
 		// Errors
-		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
-		"Error because the notifier returns an error":       {notifierErr: true, wantErr: true},
-		"Error because WindowsHostAddress returns an error": {breakWindowsHostAddress: true, wantErr: true},
+		"Error because the context is pre-cancelled":                                {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
+		"Error because the notifier returns an error":                               {notifierErr: true, wantErr: true},
+		"Error because WindowsHostAddress returns an error":                         {breakWindowsHostAddress: true, wantErr: true},
+		"Error and immediate termination because projected attributes are insecure": {insecureAttributes: true, wantErr: true, wantSystemError: true},
 	}
 
 	for name, tc := range testCases {
@@ -168,7 +173,19 @@ func TestServe(t *testing.T) {
 				returnErr: tc.notifierErr,
 			}
 
-			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
+			var opts []daemon.Option
+			opts = append(opts, daemon.WithSystemdNotifier(systemd.notify))
+			if tc.insecureAttributes {
+				mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
+					return nil, fmt.Errorf("refused %q: not strictly owned by root (uid 1000, gid 1000)", targetPath)
+				})
+				opts = append(opts, daemon.WithSecureReader(mockReader))
+			} else {
+				mockReader := testutils.NewMockSecureReader(nil)
+				opts = append(opts, daemon.WithSecureReader(mockReader))
+			}
+
+			d, err := daemon.New(ctx, system, opts...)
 			require.NoError(t, err, "New should return no error")
 
 			if tc.precancelContext {
@@ -198,6 +215,9 @@ func TestServe(t *testing.T) {
 				select {
 				case err := <-serveExit:
 					require.Error(t, err, "Serve should have returned an error")
+					if tc.wantSystemError {
+						require.ErrorIs(t, err, streams.SystemError{}, "Serve should return a streams.SystemError")
+					}
 				case <-time.After(30 * time.Second):
 					require.Fail(t, "Serve should have returned an error, but is still serving")
 				}
@@ -239,6 +259,91 @@ func TestServe(t *testing.T) {
 	}
 }
 
+func TestServe_FailsOnInsecureClientKey(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	system, mock := testutils.MockSystem(t)
+	publicDir := mock.DefaultPublicDir()
+	agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
+	defer agent.Stop()
+
+	keyPath := filepath.Join(common.CertificatesDir, common.ClientsCertFilePrefix+common.KeySuffix)
+
+	mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
+		if targetPath == keyPath {
+			return nil, fmt.Errorf("refused %q: not strictly owned by root (uid 1000, gid 1000)", targetPath)
+		}
+		return os.ReadFile(filepath.Join(rootDir, targetPath))
+	})
+
+	d, err := daemon.New(ctx, system, daemon.WithSecureReader(mockReader))
+	require.NoError(t, err)
+
+	serveExit := make(chan error, 1)
+	go func() { serveExit <- d.Serve(&mockService{}) }()
+
+	select {
+	case err := <-serveExit:
+		require.Error(t, err)
+		require.ErrorIs(t, err, streams.SystemError{}, "insecure client key must cause immediate SystemError termination")
+		require.Contains(t, err.Error(), "not strictly owned by root")
+	case <-time.After(10 * time.Second):
+		t.Fatal("Serve should have returned a SystemError for insecure client key, but is still serving")
+	}
+
+	d.Quit(ctx, false)
+}
+
+func TestServe_FailsOnMissingClientKeyIsNotSystemError(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	system, mock := testutils.MockSystem(t)
+	publicDir := mock.DefaultPublicDir()
+	agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
+	defer agent.Stop()
+
+	keyPath := filepath.Join(common.CertificatesDir, common.ClientsCertFilePrefix+common.KeySuffix)
+
+	mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
+		if targetPath == keyPath {
+			return nil, os.ErrNotExist
+		}
+		return os.ReadFile(filepath.Join(rootDir, targetPath))
+	})
+
+	d, err := daemon.New(ctx, system, daemon.WithSecureReader(mockReader))
+	require.NoError(t, err)
+
+	serveExit := make(chan error, 1)
+	go func() { serveExit <- d.Serve(&mockService{}) }()
+
+	// Missing file is transient (agent not started yet) — Serve should NOT return
+	// a SystemError; it should keep retrying. We assert it does not exit with an error
+	// within a short window.
+	select {
+	case err := <-serveExit:
+		require.Failf(t, "Serve should not have exited for missing key (transient)", "got %v", err)
+	case <-time.After(2 * time.Second):
+		// still serving — expected
+	}
+
+	d.Quit(ctx, false)
+	select {
+	case err := <-serveExit:
+		if err != nil {
+			require.NotErrorIs(t, err, streams.SystemError{}, "missing key should not be a SystemError")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Serve did not exit after Quit")
+	}
+}
+
 func TestServeAndQuit(t *testing.T) {
 	t.Parallel()
 
@@ -273,7 +378,12 @@ func TestServeAndQuit(t *testing.T) {
 				returns: true,
 			}
 
-			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
+			mockReader := testutils.NewMockSecureReader(nil)
+
+			d, err := daemon.New(ctx, system,
+				daemon.WithSystemdNotifier(systemd.notify),
+				daemon.WithSecureReader(mockReader),
+			)
 			require.NoError(t, err, "New should return no error")
 
 			if tc.quitBeforeServe {
@@ -424,7 +534,12 @@ func TestReconnection(t *testing.T) {
 
 			systemd := &SystemdSdNotifierMock{returns: true}
 
-			d, err := daemon.New(ctx, system, daemon.WithSystemdNotifier(systemd.notify))
+			mockReader := testutils.NewMockSecureReader(nil)
+
+			d, err := daemon.New(ctx, system,
+				daemon.WithSystemdNotifier(systemd.notify),
+				daemon.WithSecureReader(mockReader),
+			)
 			require.NoError(t, err, "New should return no error")
 
 			defer d.Quit(ctx, true)
