@@ -1,5 +1,5 @@
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260812184813-22bb9134fc34 h1:zSQYvpsgcMxMFg2f1F3DZGmcpTaf5VT8ZUkXylHd6wI=
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260812184813-22bb9134fc34/go.mod h1:/VN4jQYbY3rzPzIXf+kLhyL/sPGaTaw1MmbOUA4sbsA=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260824183407-a574002dccd3 h1:bSe0y6ZAjFOYccgQfL6CjUxEjkyDXbJxT1QAYvNYcDc=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260824183407-a574002dccd3/go.mod h1:WlngONPK70r/uPTxaaEObNYxLAyuk+RQYh5nsLfTsW0=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5 h1:15ws2Mctt+NAlNv0QPuxgO80DLpjleoW9VOtxjO6cWc=
 github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5/go.mod h1:cSgMLPh39R0Tez+myYJ9yHeZRVdqj05pCpisHCJhyfk=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
