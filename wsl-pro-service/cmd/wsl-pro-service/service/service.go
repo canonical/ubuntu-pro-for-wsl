@@ -33,7 +33,8 @@ type daemonConfig struct {
 }
 
 type options struct {
-	system *system.System
+	system     *system.System
+	daemonOpts []daemon.Option
 }
 
 type option func(*options)
@@ -94,7 +95,7 @@ func (a *App) serve(args ...option) (err error) {
 	}
 
 	// Connect with the agent.
-	a.daemon, err = daemon.New(ctx, opt.system)
+	a.daemon, err = daemon.New(ctx, opt.system, opt.daemonOpts...)
 	if err != nil {
 		close(a.ready)
 		return fmt.Errorf("could not create daemon: %v", err)

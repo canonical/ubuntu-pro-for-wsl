@@ -45,6 +45,8 @@ type MockWindowsAgent struct {
 func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *MockWindowsAgent {
 	t.Helper()
 
+	require.NoError(t, os.MkdirAll(publicDir, 0700), "Setup: could not create public directory")
+
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
 	require.NoError(t, err, "Setup: could not listen to agent address")
