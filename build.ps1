@@ -24,7 +24,7 @@
 .PARAMETER InputFolders
     One or more folders to package. Multiple folders produce a multi-architecture .msixbundle. Single folder produces only a .msix.
 .PARAMETER Manifest
-    A Package.appxmanifst file containing the packaging definitions.
+    A Package.appxmanifest file containing the packaging definitions.
 .PARAMETER Cert
     Path to a PFX certificate for signing the MSIX.
 .PARAMETER CertPass
@@ -33,6 +33,7 @@
     Optional output file path for the resulting MSIX bundle.
 #>
 
+[CmdletBinding()]
 param (
     [Parameter(Mandatory = $true, Position = 0)]
     [ValidateSet('Compile', 'Pack')]
@@ -74,7 +75,9 @@ function Build-Cpp {
     }
 
     Write-Output "Building C++ components..."
-    cmake --build "$buildDir" --config "$Config"
+    $cmakeArgs = @('--build', "$buildDir", '--config', "$Config")
+    if ($VerbosePreference -eq 'Continue') { $cmakeArgs += '--verbose' }
+    cmake @cmakeArgs
     if ($LASTEXITCODE -ne 0) { throw "CMake build failed" }
 
     # Places the artifacts to the 'dist\<arch>' folder
@@ -90,19 +93,19 @@ function Build-Go {
     $agentInstallDir = "$ArchInstallTree\agent"
     New-Item -ItemType Directory -Path "$agentInstallDir" -Force | Out-Null
 
-    $args = @('build')
+    $goArgs = @('build')
     if ($Mode -eq 'end_to_end_tests') {
-        $args += '-tags=server_mocks'
+        $goArgs += '-tags=server_mocks'
     }
     if ($FullVersion) {
-        $args += "-ldflags=-X=github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts.Version=$FullVersion"
+        $goArgs += "-ldflags=-X=github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/consts.Version=$FullVersion"
     }
-    $args += @('-o', "$agentInstallDir\ubuntu-pro-agent.exe", '.')
+    $goArgs += @('-o', "$agentInstallDir\ubuntu-pro-agent.exe", '.')
 
     Write-Output "Building Go agent..."
     Push-Location "$RepoRoot\windows-agent\cmd\ubuntu-pro-agent"
     try {
-        & go @args
+        & go @goArgs
         if ($LASTEXITCODE -ne 0) { throw "Go build failed" }
     } finally {
         Pop-Location
@@ -126,6 +129,9 @@ function Build-Flutter {
     }
     if ($FullVersion) {
         $flutterArgs += "--dart-define=""UP4W_FULL_VERSION=$FullVersion"""
+    }
+    if ($VerbosePreference -eq 'Continue') {
+        $flutterArgs += '--verbose'
     }
 
     Write-Output "Building Flutter app..."

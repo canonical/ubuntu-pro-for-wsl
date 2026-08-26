@@ -155,6 +155,10 @@ jobs:
 
   quality-cpp:
     name: "C++ Quality Checks"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
     runs-on: windows-latest
     steps:
       - name: Set up git
