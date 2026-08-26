@@ -322,7 +322,7 @@ jobs:
 
   tics-windows:
     name: TiCS for the Windows components
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs:
       - codecoverage
       - tics-linux
