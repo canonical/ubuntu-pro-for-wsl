@@ -48,3 +48,18 @@ func OpenRoot(path string) (RootFs, error) {
 func DefaultValidate(path string, info fs.FileInfo) error {
 	return defaultValidate(path, info)
 }
+
+// WithTestSecureReader overrides the SecureReader used by the daemon. It is exported from
+// a _test.go file, so it is reachable from daemon_test (which compiles this file into
+// package daemon's test binary) but not from external test binaries like service_test
+// (which compile only their own package's _test.go files).
+//
+// It is intended for tests only; production code must rely on the default reader, which
+// enforces the Secure Projection ownership and permission invariants.
+func WithTestSecureReader(r SecureReader) Option {
+	return func(o *options) {
+		if r != nil {
+			o.reader = r
+		}
+	}
+}

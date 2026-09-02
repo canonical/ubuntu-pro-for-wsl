@@ -13,7 +13,6 @@ import (
 
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/cmd/wsl-pro-service/service"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/consts"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/testutils"
 	log "github.com/sirupsen/logrus"
@@ -213,10 +212,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 	sys, mock := testutils.MockSystem(t)
 	mock.SetControlArg(testutils.WslInfoErr)
 
-	a := service.New(
-		service.WithSystem(sys),
-		service.WithDaemonOptions(daemon.WithSecureReader(testutils.NewMockSecureReader(nil))),
-	)
+	a := service.New(service.WithSystem(sys))
 
 	agent := testutils.NewMockWindowsAgent(t, context.Background(), mock.DefaultPublicDir())
 	defer agent.Stop()
@@ -255,10 +251,7 @@ func requireGoroutineStarted(t *testing.T, f func()) {
 func startDaemon(t *testing.T, s *system.System) (app *service.App, done func()) {
 	t.Helper()
 
-	a := service.New(
-		service.WithSystem(s),
-		service.WithDaemonOptions(daemon.WithSecureReader(testutils.NewMockSecureReader(nil))),
-	)
+	a := service.New(service.WithSystem(s))
 
 	a.SetArgs("-vvv")
 
