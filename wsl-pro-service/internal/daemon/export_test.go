@@ -23,24 +23,25 @@ func NewRetryConfig(minWait, maxWait time.Duration, maxRetries uint8) RetryConfi
 	}
 }
 
-// OsFs is an exported interface alias for testing.
-type OsFs = osFs
-
 // RootFs is an exported interface alias for testing.
 type RootFs = rootFs
-
-// RealOSFs is an exported struct alias for testing.
-type RealOSFs = realOSFs
 
 // DefaultSecureReader is an exported struct alias for testing.
 type DefaultSecureReader = defaultSecureReader
 
-// NewDefaultSecureReader creates a defaultSecureReader with the given osFs backend for testing.
-func NewDefaultSecureReader(fsBackend OsFs) *DefaultSecureReader {
-	if fsBackend == nil {
-		fsBackend = realOSFs{}
+// NewDefaultSecureReader creates a defaultSecureReader with the given openRoot seam for
+// testing. Passing nil wires the production openRootOS seam (real os.OpenRoot).
+func NewDefaultSecureReader(openRoot func(string) (RootFs, error)) *DefaultSecureReader {
+	if openRoot == nil {
+		openRoot = openRootOS
 	}
-	return &defaultSecureReader{fs: fsBackend}
+	return &defaultSecureReader{openRoot: openRoot}
+}
+
+// OpenRoot is the production openRoot seam, exported so tests can drive real os.OpenRoot
+// without going through the reader's validation.
+func OpenRoot(path string) (RootFs, error) {
+	return openRootOS(path)
 }
 
 // DefaultValidate validates file attributes for testing.

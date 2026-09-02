@@ -15,16 +15,24 @@ type SecureReader interface {
 	ReadFile(rootDir, targetPath string) ([]byte, error)
 }
 
-// osFs abstracts OS-level filesystem interactions for defaultSecureReader.
-type osFs interface {
-	// Lstat stats an absolute path without following symlinks (used for the root itself).
-	Lstat(path string) (fs.FileInfo, error)
-	// OpenRoot opens the named directory as a confined filesystem root.
-	OpenRoot(path string) (rootFs, error)
-}
-
-// rootFs abstracts path operations confined to a root directory.
-// Paths passed to its methods are interpreted relative to the root and may not escape it.
+// rootFs exists for the same reason as the surrounding seam, plus a Go-language
+// constraint: *os.Root.Open returns *os.File, but this interface narrows the return to
+// io.ReadCloser so the test mock can hand back an io.NopCloser(bytes.NewReader(...))
+// without spinning up a real temporary file. Because Go interface satisfaction requires
+// identical method signatures, *os.Root does not satisfy rootFs as written, which is
+// why osRootAdapter is needed to bridge it. Removing the io.ReadCloser narrowing (or
+// the adapter that implements it) would force the mock into real temp files; do not do
+// either without also redesigning the table tests in secure_reader_test.go.
+//
+// Why Lstat is load-bearing: the read walk calls Lstat on every component from the root
+// to the target, including the root itself via Lstat("."). Lstat is the only stat flavor
+// that returns the symlink itself rather than following it; replacing it with Stat would
+// silently allow a symlink anywhere along targetPath to be resolved to its target,
+// bypassing validateNode's symlink check and the per-component ownership/mode checks.
+// The agent doesn't create symlinks inside its public dir, so no reason for us to accept symlinks.
+//
+// Paths passed to rootFs methods are interpreted relative to the root and may not
+// escape it; that confinement is provided by *os.Root, not by this interface.
 type rootFs interface {
 	io.Closer
 
@@ -34,15 +42,12 @@ type rootFs interface {
 	Open(name string) (io.ReadCloser, error)
 }
 
-// realOSFs implements osFs using the os package, relying on os.Root to confine all
-// root-relative path resolution to the root directory (no symlink or ".." escapes).
-type realOSFs struct{}
-
-func (realOSFs) Lstat(path string) (fs.FileInfo, error) {
-	return os.Lstat(path)
-}
-
-func (realOSFs) OpenRoot(path string) (rootFs, error) {
+// openRootOS is the production openRoot seam used by defaultSecureReader. It pins the
+// named directory via os.OpenRoot (kernel-enforced confinement against ".." and
+// symlink escapes) and adapts *os.Root to rootFs so the inner interface can hand back
+// io.ReadCloser from Open. Tests substitute their own openRoot to simulate OpenRoot
+// failures without touching the filesystem; see secure_reader_test.go.
+func openRootOS(path string) (rootFs, error) {
 	root, err := os.OpenRoot(path)
 	if err != nil {
 		return nil, err
@@ -50,8 +55,9 @@ func (realOSFs) OpenRoot(path string) (rootFs, error) {
 	return osRootAdapter{root}, nil
 }
 
-// osRootAdapter adapts *os.Root to the rootFs interface, narrowing Open's return
-// type from *os.File to io.ReadCloser.
+// osRootAdapter bridges *os.Root (production) and rootFs (interface). The narrow
+// io.ReadCloser return on rootFs.Open is the reason this wrapper exists; see rootFs
+// for the full rationale. Every method is a one-line forward to *os.Root.
 type osRootAdapter struct {
 	root *os.Root
 }
@@ -71,11 +77,14 @@ func (a osRootAdapter) Close() error {
 // defaultSecureReader validates the path hierarchy, ownership, and permissions of
 // agent-written files inside the Public Directory before reading them.
 type defaultSecureReader struct {
-	fs osFs
+	// openRoot is the seam used to construct the confined root filesystem. Production
+	// wires this to openRootOS; tests substitute a closure to simulate OpenRoot
+	// failures without touching the filesystem.
+	openRoot func(path string) (rootFs, error)
 }
 
 func newDefaultSecureReader() *defaultSecureReader {
-	return &defaultSecureReader{fs: realOSFs{}}
+	return &defaultSecureReader{openRoot: openRootOS}
 }
 
 // defaultValidate validates that a file or directory is strictly owned by root (UID 0, GID 0)
@@ -130,24 +139,28 @@ func validateNode(path string, fi fs.FileInfo) error {
 //  3. Every directory along targetPath is root-owned with mode 0700.
 //  4. The target file is root-owned with mode 0600.
 func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, error) {
-	// Validate the root directory itself.
-	fi, err := r.fs.Lstat(rootDir)
-	if err != nil {
+	// os.OpenRoot follows symlinks to directories, so a symlink root whose target is
+	// itself a directory would slip past root.Lstat(".") below. Reject symlinks at
+	// the absolute path before opening.
+	if fi, err := os.Lstat(rootDir); err != nil {
 		return nil, fmt.Errorf("could not stat %q: %w", rootDir, err)
-	}
-	if err := validateNode(rootDir, fi); err != nil {
-		return nil, err
+	} else if fi.Mode()&fs.ModeSymlink != 0 {
+		return nil, fmt.Errorf("refused %q: root is a symlink", rootDir)
 	}
 
-	root, err := r.fs.OpenRoot(rootDir)
+	root, err := r.openRoot(rootDir)
 	if err != nil {
 		return nil, fmt.Errorf("could not open root %q: %w", rootDir, err)
 	}
 	defer root.Close()
 
-	// The target must be a local path inside the root.
-	if !filepath.IsLocal(targetPath) {
-		return nil, fmt.Errorf("refused %q: path escapes root %q", targetPath, rootDir)
+	// Validate the root directory itself: Lstat(".") sees the directory os.Root opened,
+	// which is pinned to the same inode subsequent operations will target. This closes
+	// the small TOCTOU window between an absolute-path Lstat and OpenRoot.
+	if fi, err := root.Lstat("."); err != nil {
+		return nil, fmt.Errorf("could not stat root %q: %w", rootDir, err)
+	} else if err := validateNode(rootDir, fi); err != nil {
+		return nil, err
 	}
 
 	// Validate each component from the root down to the target.
