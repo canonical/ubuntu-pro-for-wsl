@@ -227,7 +227,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			},
 			wantErr: "could not open root",
 		},
-		"Rejected when the target path escapes the root": {
+		"Refuses paths that escape the root": {
 			rootDir:    "/root/public",
 			targetPath: "../outside.txt",
 			mockFS: mockOSFs{
@@ -237,7 +237,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantErr:    "path escapes root",
 			wantClosed: true,
 		},
-		"Rejected when the target path is absolute": {
+		"Refuses absolute target paths": {
 			rootDir:    "/root/public",
 			targetPath: "/etc/passwd",
 			mockFS: mockOSFs{
@@ -430,7 +430,7 @@ func TestRealOSFs_OpenRoot_AndAdapter(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, root)
 	defer func() {
-		// Close should succeed once; second close should error (os.Root is single-use)
+		// os.Root is single-use; further uses after Close return errors.
 		require.NoError(t, root.Close())
 	}()
 
