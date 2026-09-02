@@ -3,8 +3,8 @@ module github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 go 1.26.0
 
 require (
-	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260824183407-a574002dccd3
-	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5
+	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260902121508-c422290ae37c
+	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260902121508-c422290ae37c
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/sirupsen/logrus v1.10.1
 	github.com/spf13/cobra v1.10.2
