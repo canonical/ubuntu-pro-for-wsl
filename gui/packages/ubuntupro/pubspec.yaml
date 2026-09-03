@@ -82,7 +82,7 @@ dev_dependencies:
   nested: ^1.0.0
   plugin_platform_interface: ^2.1.8
   protobuf: ^6.0.0
-  stack_trace: ^1.11.0
+  stack_trace: ^1.12.2
   url_launcher_platform_interface: ^2.3.2
   yaru_test: ^0.3.3
 
