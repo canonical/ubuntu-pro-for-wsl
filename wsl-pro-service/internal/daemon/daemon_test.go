@@ -262,7 +262,14 @@ func TestServe(t *testing.T) {
 func TestServe_FailsOnInsecureClientKey(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// An insecure client key is a non-transient error: connect() wraps it in a
+	// streams.SystemError, serveOnce bubbles it up, and retryConfig.Run returns
+	// it immediately without entering a backoff delay. The deadline therefore
+	// only elapses on a regression (e.g. the error is no longer classified as a
+	// SystemError and Serve enters the retry backoff instead). Bounding the wait
+	// makes that regression fail fast with a clear message, and cancelling the
+	// daemon through ctx lets the serveExit goroutine drain before the test ends.
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	system, mock := testutils.MockSystem(t)
@@ -290,17 +297,19 @@ func TestServe_FailsOnInsecureClientKey(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, streams.SystemError{}, "insecure client key must cause immediate SystemError termination")
 		require.Contains(t, err.Error(), "not strictly owned by root")
-	case <-time.After(10 * time.Second):
-		t.Fatal("Serve should have returned a SystemError for insecure client key, but is still serving")
+	case <-ctx.Done():
+		t.Fatalf("Serve did not terminate with a SystemError within 10s: %v", ctx.Err())
 	}
-
-	d.Quit(ctx, false)
 }
 
 func TestServe_FailsOnMissingClientKeyIsNotSystemError(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// Bound the two state waits below so that a regression that stops Serve from
+	// reaching the retry path (or from exiting after Quit) fails fast instead of
+	// hanging until the whole test binary times out. The happy paths complete in
+	// a single connection attempt, so the deadline is a fail-safe, not a delay.
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	system, mock := testutils.MockSystem(t)
@@ -317,30 +326,56 @@ func TestServe_FailsOnMissingClientKeyIsNotSystemError(t *testing.T) {
 		return os.ReadFile(filepath.Join(rootDir, targetPath))
 	})
 
-	d, err := daemon.New(ctx, system, daemon.WithTestSecureReader(mockReader))
+	// Missing file is transient (agent not started yet): connect() returns a
+	// non-SystemError, serveOnce reports success=false and the retry loop enters
+	// onWait, which publishes "Not connected: waiting to retry" through the
+	// systemd notifier. Intercept that status with a channel so the test waits
+	// on the observable consequence of the missing key (rather than a fixed
+	// wall-clock window).
+	retrying := make(chan struct{}, 1)
+	notifier := func(_ bool, state string) (bool, error) {
+		if strings.Contains(state, "Not connected: waiting to retry") {
+			select {
+			case retrying <- struct{}{}:
+			default:
+			}
+		}
+		return false, nil
+	}
+
+	d, err := daemon.New(ctx, system,
+		daemon.WithSystemdNotifier(notifier),
+		daemon.WithTestSecureReader(mockReader),
+	)
 	require.NoError(t, err)
 
 	serveExit := make(chan error, 1)
 	go func() { serveExit <- d.Serve(&mockService{}) }()
 
-	// Missing file is transient (agent not started yet) — Serve should NOT return
-	// a SystemError; it should keep retrying. We assert it does not exit with an error
-	// within a short window.
+	// Once the daemon publishes "not connected: waiting to retry", it has
+	// classified the missing key as transient and is back in the retry loop.
+	// Reaching the retry state is the deterministic, observable consequence of
+	// the missing key. The only way Serve can exit at this point instead is a
+	// bug (e.g. the missing key being misclassified as a SystemError), which
+	// surfaces as an early receive below.
 	select {
+	case <-retrying:
+		// Expected: the daemon is waiting to retry.
 	case err := <-serveExit:
 		require.Failf(t, "Serve should not have exited for missing key (transient)", "got %v", err)
-	case <-time.After(2 * time.Second):
-		// still serving — expected
+	case <-ctx.Done():
+		t.Fatalf("daemon did not reach the retry path within 10s: %v", ctx.Err())
 	}
 
+	// Quit cancels the daemon's graceful context and blocks until Serve returns.
+	// A missing key must never surface as a SystemError.
 	d.Quit(ctx, false)
+
 	select {
 	case err := <-serveExit:
-		if err != nil {
-			require.NotErrorIs(t, err, streams.SystemError{}, "missing key should not be a SystemError")
-		}
-	case <-time.After(5 * time.Second):
-		t.Fatal("Serve did not exit after Quit")
+		require.NotErrorIs(t, err, streams.SystemError{}, "missing key should not be a SystemError")
+	case <-ctx.Done():
+		t.Fatalf("Serve did not exit after Quit within deadline: %v", ctx.Err())
 	}
 }
 
