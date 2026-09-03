@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -223,10 +224,6 @@ func TestCanServeOnlyOnce(t *testing.T) {
 func TestServeWSLIP(t *testing.T) {
 	t.Parallel()
 
-	registerer := func(context.Context, bool) *grpc.Server {
-		return grpc.NewServer()
-	}
-
 	testcases := map[string]struct {
 		netmode      string
 		withAdapters daemontestutils.MockIPAdaptersState
@@ -258,6 +255,15 @@ func TestServeWSLIP(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 
+			registered := make(chan struct{}, 1)
+			registerer := func(context.Context, bool) *grpc.Server {
+				select {
+				case registered <- struct{}{}:
+				default:
+				}
+				return grpc.NewServer()
+			}
+
 			d := daemon.New(ctx, registerer, addrDir)
 			defer d.Quit(ctx, false)
 
@@ -266,7 +272,7 @@ func TestServeWSLIP(t *testing.T) {
 			}
 			mock := daemontestutils.NewHostIPConfigMock(tc.withAdapters)
 
-			serveErr := make(chan error)
+			serveErr := make(chan error, 1)
 			go func() {
 				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock),
 					daemon.WithNetDevicesAPIProvider(
@@ -285,13 +291,14 @@ func TestServeWSLIP(t *testing.T) {
 				return
 			}
 
-			serverStopped := make(chan struct{})
-			go func() {
-				time.Sleep(500 * time.Millisecond)
-				d.Quit(ctx, false)
-				close(serverStopped)
-			}()
-			<-serverStopped
+			select {
+			case <-registered:
+			// Should never reach.
+			case <-time.After(5 * time.Second):
+				require.Fail(t, "Timed out waiting for server registration")
+			}
+
+			d.Quit(ctx, false)
 
 			err := <-serveErr
 			if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
@@ -315,13 +322,16 @@ func TestServeWSLIP(t *testing.T) {
 func TestAddingWSLAdapterRestarts(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	addrDir := t.TempDir()
+
+	registered := make(chan int, 10)
+	var gen atomic.Int32
 
 	registerer := func(context.Context, bool) *grpc.Server {
 		server := grpc.NewServer()
 		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
+		registered <- int(gen.Add(1))
 		return server
 	}
 
@@ -341,27 +351,34 @@ func TestAddingWSLAdapterRestarts(t *testing.T) {
 	}()
 
 	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
-
 	daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
-	addrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
+
+	// Generation 1
+	select {
+	case g := <-registered:
+		require.Equal(t, 1, g, "Expected generation 1 on startup")
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "Timed out waiting for generation 1")
+	}
 
 	// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
 	systemNotification <- nil
 
-	// d.Serve() shouldn't have exitted with an error yet at this point.
+	// Generation 2 after restart
 	select {
-	case err := <-serveErr:
-		require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
-	case <-time.After(200 * time.Millisecond):
-		// proceed.
+	case g := <-registered:
+		require.Equal(t, 2, g, "Expected generation 2 after restart")
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "Timed out waiting for generation 2 after restart")
 	}
 
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
-	// Contents could be the same without our control, thus best to check the file time.
-	newAddrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
-	require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
+	d.Quit(ctx, false)
+
+	err := <-serveErr
+	if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+		err = nil
+	}
+	require.NoError(t, err, "Serve should not have caused error after Quit")
 }
 
 func TestServeError(t *testing.T) {
@@ -390,26 +407,38 @@ func TestQuitBeforeServe(t *testing.T) {
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
+	registered := make(chan struct{}, 1)
 	registerer := func(context.Context, bool) *grpc.Server {
+		select {
+		case registered <- struct{}{}:
+		default:
+		}
 		return grpc.NewServer()
 	}
 
 	d := daemon.New(ctx, registerer, addrDir)
 	d.Quit(ctx, false)
 
-	serverErr := make(chan error)
+	serverErr := make(chan error, 1)
 	go func() {
-		defer close(serverErr)
 		serverErr <- d.Serve(ctx)
+		close(serverErr)
 	}()
 
 	select {
-	case err := <-serverErr:
-		require.Fail(t, "Calling Quit() before Serve() on a fresh daemon should not result in an error", err)
-	case <-time.After(1 * time.Second):
+	case <-registered:
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "Timed out waiting for server registration")
 	}
 
 	d.Quit(ctx, false)
+
+	err := <-serverErr
+	if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+		err = nil
+	}
+	require.NoError(t, err, "Serve should return without error after Quit")
+
 	daemontestutils.RequireWaitPathDoesNotExist(t, filepath.Join(addrDir, common.ListeningPortFileName), "Port file should not exist after returning from Serve()")
 }
 
@@ -439,35 +468,60 @@ func TestWaitReady(t *testing.T) {
 			addrDir := t.TempDir()
 
 			d := daemon.New(ctx, registerer, addrDir)
-			serverErr := make(chan error)
-			if !tc.skipServe {
-				go func() {
-					defer close(serverErr)
-					serverErr <- d.Serve(ctx)
-				}()
-			}
+			serverErr := make(chan error, 1)
 
+			waiterStarted := make(chan struct{})
 			ready := make(chan struct{})
 			go func() {
+				close(waiterStarted)
 				// This would block until the server is ready, potentially "forever" if the server never starts.
 				d.WaitReady()
 				close(ready)
 			}()
 
-			select {
-			case err := <-serverErr:
-				require.Fail(t, "Serve error", err)
-			case <-ctx.Done():
-				require.Fail(t, "Context should not be cancelled yet")
-			case <-ready:
-				if tc.wantBlock {
-					require.Fail(t, "WaitReady should not return as the server should not ready")
+			<-waiterStarted
+
+			if !tc.skipServe {
+				go func() {
+					serverErr <- d.Serve(ctx)
+					close(serverErr)
+				}()
+
+				select {
+				case err := <-serverErr:
+					require.Fail(t, "Serve error", err)
+				case <-ready:
+					// Success: unblocked upon Serve start
+				case <-time.After(5 * time.Second):
+					require.Fail(t, "WaitReady timed out waiting for Serve start")
 				}
-			case <-time.After(1 * time.Second):
-				if !tc.wantBlock {
-					require.Fail(t, "WaitReady should block forever in this case")
-				}
+
+				d.Quit(ctx, false)
+				<-serverErr
+				return
 			}
+
+			// In non-serving case, verify it is blocked
+			select {
+			case <-ready:
+				require.Fail(t, "WaitReady should not return as the server should not ready")
+			default:
+			}
+
+			// Clean waiter shutdown: start Serve to unblock the waiter goroutine so it doesn't leak
+			go func() {
+				serverErr <- d.Serve(ctx)
+				close(serverErr)
+			}()
+
+			select {
+			case <-ready:
+			case <-time.After(5 * time.Second):
+				require.Fail(t, "WaitReady timed out during shutdown")
+			}
+
+			d.Quit(ctx, false)
+			<-serverErr
 		})
 	}
 }

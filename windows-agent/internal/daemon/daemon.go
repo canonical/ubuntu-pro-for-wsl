@@ -213,13 +213,6 @@ func (d *Daemon) restart(ctx context.Context) {
 		return
 	}
 
-	select {
-	case <-ctx.Done():
-		log.Warning(ctx, "Restart daemon requested meanwhile context was canceled.")
-		return
-	default:
-	}
-
 	// This select binds the time this would block on sending via d.quit (when the channel is full) to the context cancellation.
 	select {
 	case <-ctx.Done():
