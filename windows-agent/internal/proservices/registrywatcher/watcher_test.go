@@ -17,6 +17,9 @@ import (
 	wslmock "github.com/ubuntu/gowsl/mock"
 )
 
+// TestRegistryWatcher exercises the entire lifecycle of registrywatcher.Service: initial synchronous registry read,
+// transition to continuous watching via Win32 registry notifications (RegNotifyChangeKeyValue), push of updated data
+// to config upon registry edits, and clean resource cleanup on w.Stop().
 func TestRegistryWatcher(t *testing.T) {
 	t.Parallel()
 
@@ -165,6 +168,8 @@ func TestRegistryWatcher(t *testing.T) {
 	}
 }
 
+// TestDefaultTelemetryConsent tests how the registry watcher initializes and validates the Ubuntu telemetry consent
+// DWORD value under HKCU\Software\Canonical\Ubuntu\UbuntuInsightsConsent.
 func TestDefaultTelemetryConsent(t *testing.T) {
 	t.Parallel()
 
@@ -286,6 +291,8 @@ func (conf *mockConfig) Empty() bool {
 	return len(conf.received) == 0
 }
 
+// TestWaitForSingleObjectCancellation asserts that Service.waitForSingleObject returns context.Canceled without blocking, triggering
+// s.registry.SetEvent to wake and join the waiter goroutine so no background wait goroutine or Win32 handle remains open on shutdown.
 func TestWaitForSingleObjectCancellation(t *testing.T) {
 	t.Parallel()
 
@@ -309,6 +316,8 @@ func TestWaitForSingleObjectCancellation(t *testing.T) {
 	require.ErrorIs(t, err, context.Canceled, "WaitForSingleObject should return context.Canceled on cancellation")
 }
 
+// TestMockWaitForWatchTimeout tests the mock, it verifies that Mock.WaitForWatch respects context cancellation and
+// returns context.DeadlineExceeded rather than blocking forever.
 func TestMockWaitForWatchTimeout(t *testing.T) {
 	t.Parallel()
 
@@ -322,6 +331,7 @@ func TestMockWaitForWatchTimeout(t *testing.T) {
 	require.ErrorIs(t, err, context.DeadlineExceeded)
 }
 
+// TestMockConfigPredicates verifies that the test mock's locked predicates accurately report received configuration state under a read lock.
 func TestMockConfigPredicates(t *testing.T) {
 	t.Parallel()
 
