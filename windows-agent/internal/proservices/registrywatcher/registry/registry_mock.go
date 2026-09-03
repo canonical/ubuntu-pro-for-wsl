@@ -183,29 +183,25 @@ func (r *Mock) RequireNoLeaks(t *testing.T) {
 
 // HKCUOpenKey mocks opening a key in the specified path under the HK_CURRENT_USER registry.
 func (r *Mock) HKCUOpenKey(path string) (Key, error) {
-	k := r.getKey(path)
-	k.mu.Lock()
-	defer k.mu.Unlock()
-
 	if r.CannotOpen.Load() {
 		return 0, ErrMock
 	}
 
+	_ = r.getKey(path)
 	return r.openKey(path, true), nil
 }
 
 // HKCUCreateKey opens a key in the specified path under the HK_CURRENT_USER registry with write permissions.
 func (r *Mock) HKCUCreateKey(path string) (Key, error) {
-	k := r.getKey(path)
-	k.mu.Lock()
-	defer k.mu.Unlock()
-
 	if r.CannotCreate.Load() {
 		return 0, ErrMock
 	}
 
+	k := r.getKey(path)
 	if k == &r.ubuntuPro {
+		r.ubuntuPro.mu.Lock()
 		r.keyExists = true
+		r.ubuntuPro.mu.Unlock()
 	}
 
 	return r.openKey(path, false), nil
@@ -242,12 +238,11 @@ func (r *Mock) openKey(path string, readOnly bool) Key {
 
 // CloseKey mocks releasing a key, triggering any associated events.
 func (r *Mock) CloseKey(ptr Key) {
-	defer r.keyHandles.free(ptr)
-
 	r.keyHandles.mu.Lock()
-	defer r.keyHandles.mu.Unlock()
-
 	handle, ok := r.keyHandles.data[ptr]
+	r.keyHandles.mu.Unlock()
+
+	r.keyHandles.free(ptr)
 
 	if !ok {
 		return
@@ -293,9 +288,9 @@ func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 	}
 
 	r.keyHandles.mu.Lock()
-	defer r.keyHandles.mu.Unlock()
-
 	handle, ok := r.keyHandles.data[ptr]
+	r.keyHandles.mu.Unlock()
+
 	if !ok {
 		return 0, ErrKeyNotExist
 	}
@@ -312,9 +307,8 @@ func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 
 	// Attach event to key
 	handle.key.mu.Lock()
-	defer handle.key.mu.Unlock()
-
 	handle.key.events = append(handle.key.events, evHandle)
+	handle.key.mu.Unlock()
 
 	select {
 	case r.watchRegistered <- struct{}{}:
@@ -417,9 +411,8 @@ func (r *Mock) ReadDWordValue(ptr Key, field string) (uint64, error) {
 // SetDWordValue sets the value of the specified DWORD field in the specified key.
 func (r *Mock) SetDWordValue(ptr Key, field string, value uint32) error {
 	r.keyHandles.mu.Lock()
-	defer r.keyHandles.mu.Unlock()
-
 	handle, ok := r.keyHandles.data[ptr]
+	r.keyHandles.mu.Unlock()
 
 	if !ok {
 		return ErrKeyNotExist

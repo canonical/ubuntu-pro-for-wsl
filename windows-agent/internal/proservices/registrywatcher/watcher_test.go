@@ -117,13 +117,12 @@ func TestRegistryWatcher(t *testing.T) {
 				reg.CannotOpen.Store(false)
 				reg.CannotRead.Store(false)
 			} else {
-				// Nothing broken: registry data is pushed during call to Start
-				require.Eventually(t, func() bool {
-					return conf.Received(config.RegistryData{
-						UbuntuProToken:  startingProToken,
-						LandscapeConfig: startingLandscapeConfig,
-					})
-				}, maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config")
+				// Nothing broken: registry data is pushed synchronously during call to Start
+				startingData := config.RegistryData{
+					UbuntuProToken:  startingProToken,
+					LandscapeConfig: startingLandscapeConfig,
+				}
+				require.True(t, conf.Received(startingData), "Registry watcher should have updated the config")
 			}
 
 			if !tc.breakReadValue && !tc.breakOpenKey && !tc.breakNotifyChangeKeyValue && !tc.breakWaitForSingleObject {
