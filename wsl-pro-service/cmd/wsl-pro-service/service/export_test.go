@@ -1,9 +1,6 @@
 package service
 
-import (
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
-	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
-)
+import "github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 
 func WithSystem(s *system.System) func(*options) {
 	return func(o *options) {
@@ -17,11 +14,4 @@ type DaemonConfig = daemonConfig
 // Config returns the daemonConfig for test purposes.
 func (a App) Config() DaemonConfig {
 	return a.config
-}
-
-// WithDaemonOptions injects daemon options into the service App for testing.
-func WithDaemonOptions(opts ...daemon.Option) func(*options) {
-	return func(o *options) {
-		o.daemonOpts = append(o.daemonOpts, opts...)
-	}
 }
