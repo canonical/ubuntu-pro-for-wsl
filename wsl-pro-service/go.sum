@@ -1,7 +1,7 @@
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260902121508-c422290ae37c h1:0Fvh8t9mEgmfrlA1s9uSxhPcGGE1hj5FMyxq0NAXXjs=
-github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260902121508-c422290ae37c/go.mod h1:BZ62AQ3kij53KM8yHUVLDKw2ulVG3vUPDRmbgPMPVUE=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260902121508-c422290ae37c h1:aNj/it9b1T5D2f+q5rVT5uSgMJKMhJDQyRjSa5LRSaE=
-github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260902121508-c422290ae37c/go.mod h1:EwbWc3kn34dUOOzPgmflteerBQdtMs5ebWJBQYd9v7c=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260903122912-69f2c7beac8e h1:IosMnSi4nbGlYMhxvIgeqEuUV1GUSsflMg6P/AB/nqE=
+github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260903122912-69f2c7beac8e/go.mod h1:z9HTyA+X97cSnVytaFuWEiYEUCsJ+BRi+X6Q5uTZF4A=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260903122912-69f2c7beac8e h1:FavX8K3659Qb7orRlCmY5V40MykGieW/BJcfpc6C3BA=
+github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260903122912-69f2c7beac8e/go.mod h1:ZaX0U2IYvNakNtzLNAySIHTPycwA6yQtyQvO8p3yUbU=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
