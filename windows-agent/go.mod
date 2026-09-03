@@ -10,7 +10,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/mocks v0.0.0-20260824122752-d9c61076a5c5
 	github.com/canonical/ubuntu-pro-for-wsl/storeapi/go-wrapper/microsoftstore v0.0.0-20260824122752-d9c61076a5c5
 	github.com/google/uuid v1.6.0
-	github.com/sirupsen/logrus v1.10.1
+	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
