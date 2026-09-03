@@ -324,6 +324,20 @@ func (r *Mock) WaitForSingleObject(handle Event) error {
 	return nil
 }
 
+// SetEvent triggers an event.
+func (r *Mock) SetEvent(handle Event) error {
+	r.eventHandles.mu.Lock()
+	event, ok := r.eventHandles.data[handle]
+	r.eventHandles.mu.Unlock()
+
+	if !ok {
+		return errors.New("invalid event")
+	}
+
+	event.trigger()
+	return nil
+}
+
 // WriteValue is used to write a value into the registry.
 func (r *Mock) WriteValue(ptr Key, field, value string, multiString bool) error {
 	r.keyHandles.mu.Lock()

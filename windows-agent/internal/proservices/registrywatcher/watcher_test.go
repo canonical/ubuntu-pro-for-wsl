@@ -289,3 +289,26 @@ func (conf *mockConfig) LatestReceived() config.RegistryData {
 
 	return conf.received[len(conf.received)-1]
 }
+
+func TestWaitForSingleObjectCancellation(t *testing.T) {
+	t.Parallel()
+
+	reg := registry.NewMock()
+	defer reg.RequireNoLeaks(t)
+
+	k, err := reg.HKCUCreateKey("Software/Canonical/UbuntuPro")
+	require.NoError(t, err, "Setup: could not create key")
+	defer reg.CloseKey(k)
+
+	ev, err := reg.RegNotifyChangeKeyValue(k)
+	require.NoError(t, err, "Setup: could not watch key")
+	defer reg.CloseEvent(ev)
+
+	w := registrywatcher.New(context.Background(), &mockConfig{}, nil, registrywatcher.WithRegistry(reg))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err = w.WaitForSingleObject(ctx, ev)
+	require.ErrorIs(t, err, context.Canceled, "WaitForSingleObject should return context.Canceled on cancellation")
+}
