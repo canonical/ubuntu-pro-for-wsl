@@ -6,6 +6,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/agentapi v0.0.0-20260903122912-69f2c7beac8e
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260903122912-69f2c7beac8e
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+	github.com/hanwen/go-fuse/v2 v2.11.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0

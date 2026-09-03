@@ -45,7 +45,14 @@ type MockWindowsAgent struct {
 func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *MockWindowsAgent {
 	t.Helper()
 
-	require.NoError(t, os.MkdirAll(publicDir, 0700), "Setup: could not create public directory")
+	// Mount a FUSE view at publicDir under which every file and directory appears
+	// owned by uid=0, gid=0 to any reader. Writes through publicDir land in a
+	// private backing directory owned by the test runner; the daemon's reader,
+	// which requires uid=0,gid=0 ownership, sees the lie and accepts the test
+	// files. NewFakeFs requires publicDir to exist and be empty; MockSystem
+	// guarantees that, but if a caller passes a non-empty path NewFakeFs will
+	// return an error which we skip on (FUSE is optional test infrastructure).
+	require.NoError(t, NewFakeFs(t, publicDir), "Setup: failed to create file filesystem")
 
 	var cfg net.ListenConfig
 	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
