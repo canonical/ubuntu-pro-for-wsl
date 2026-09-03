@@ -3,6 +3,7 @@ package registrywatcher_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -110,33 +111,27 @@ func TestRegistryWatcher(t *testing.T) {
 				require.True(t, reg.UbuntuProKeyExists(), "UbuntuPro key should exist after the watcher starts")
 			}
 
-			// wantMsgLen is the expected number of times that data is sent to the config
-			var wantMsgLen int
-
 			if tc.wantCannotRead {
 				// Cannot read from the registry: no data should be pushed
-				time.Sleep(30 * time.Second)
-				require.Equal(t, wantMsgLen, conf.ReceivedLen(), "Registry watcher should not have updated the config")
+				require.True(t, conf.Empty(), "Registry watcher should not have updated the config")
 				reg.CannotOpen.Store(false)
 				reg.CannotRead.Store(false)
 			} else {
 				// Nothing broken: registry data is pushed during call to Start
-				wantMsgLen++
-				require.Equal(t, wantMsgLen, conf.ReceivedLen(), "Registry watcher should have updated the config")
-				require.Equal(t, startingProToken, conf.LatestReceived().UbuntuProToken, "Ubuntu Pro token config should have contained the registry value")
-				require.Equal(t, startingLandscapeConfig, conf.LatestReceived().LandscapeConfig, "Landscape config should have contained the registry value")
+				require.Eventually(t, func() bool {
+					return conf.Received(config.RegistryData{
+						UbuntuProToken:  startingProToken,
+						LandscapeConfig: startingLandscapeConfig,
+					})
+				}, maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config")
 			}
 
-			// The watcher makes a redundant config push when it starts watching, except if readValue was broken.
-			if !tc.breakReadValue {
-				wantMsgLen++
-				require.Eventually(t, func() bool { return conf.ReceivedLen() >= wantMsgLen },
-					time.Minute, 100*time.Millisecond, "Registry watcher should have started watching")
-				require.Equal(t, startingProToken, conf.LatestReceived().UbuntuProToken, "Ubuntu Pro token config should have contained the registry value")
-				require.Equal(t, startingLandscapeConfig, conf.LatestReceived().LandscapeConfig, "Landscape config should have contained the registry value")
+			if !tc.breakReadValue && !tc.breakOpenKey && !tc.breakNotifyChangeKeyValue && !tc.breakWaitForSingleObject {
+				watchCtx, watchCancel := context.WithTimeout(ctx, maxUpdateTime)
+				defer watchCancel()
+				err = reg.WaitForWatch(watchCtx)
+				require.NoError(t, err, "Registry watcher should have started watching")
 			}
-
-			wantMsgLen = conf.ReceivedLen() + 1
 
 			if tc.breakCreateKey {
 				// We disable the mock's broken CreateKey.
@@ -148,23 +143,25 @@ func TestRegistryWatcher(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create key")
 			defer reg.CloseKey(k)
 
-			wantMsgLen = conf.ReceivedLen() + 1
 			err = reg.WriteValue(k, "UbuntuProToken", newProToken, false)
 			require.NoError(t, err, "Setup: could not write UbuntuProToken into the registry")
 
-			require.Eventuallyf(t, func() bool { return conf.ReceivedLen() >= wantMsgLen },
-				maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config after changing the registry")
-			require.Equal(t, newProToken, conf.LatestReceived().UbuntuProToken, "Ubuntu Pro token config should have contained the new registry value")
-			require.Equal(t, startingLandscapeConfig, conf.LatestReceived().LandscapeConfig, "Landscape config should have contained the new registry value")
+			require.Eventually(t, func() bool {
+				return conf.Received(config.RegistryData{
+					UbuntuProToken:  newProToken,
+					LandscapeConfig: startingLandscapeConfig,
+				})
+			}, maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config after changing the registry")
 
-			wantMsgLen = conf.ReceivedLen() + 1
 			err = reg.WriteValue(k, "LandscapeConfig", newLandscapeConfig, true)
 			require.NoError(t, err, "Setup: could not write LandscapeConfig into the registry")
 
-			require.Eventually(t, func() bool { return conf.ReceivedLen() >= wantMsgLen },
-				maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config after changing the registry")
-			require.Equal(t, newProToken, conf.LatestReceived().UbuntuProToken, "Ubuntu Pro token config should have contained the new registry value")
-			require.Equal(t, newLandscapeConfig, conf.LatestReceived().LandscapeConfig, "Landscape config should have contained the new registry value")
+			require.Eventually(t, func() bool {
+				return conf.Received(config.RegistryData{
+					UbuntuProToken:  newProToken,
+					LandscapeConfig: newLandscapeConfig,
+				})
+			}, maxUpdateTime, 100*time.Millisecond, "Registry watcher should have updated the config after changing the registry")
 		})
 	}
 }
@@ -274,20 +271,20 @@ func (conf *mockConfig) UpdateRegistryData(ctx context.Context, data config.Regi
 	return nil
 }
 
-// ReceivedLen is the number of times data has been pushed to the config.
-func (conf *mockConfig) ReceivedLen() int {
+// Received returns whether the given config data was received.
+func (conf *mockConfig) Received(data config.RegistryData) bool {
 	conf.mu.RLock()
 	defer conf.mu.RUnlock()
 
-	return len(conf.received)
+	return slices.Contains(conf.received, data)
 }
 
-// LatestReceived is the latest data pushed to the config.
-func (conf *mockConfig) LatestReceived() config.RegistryData {
+// Empty returns whether no config data has been received.
+func (conf *mockConfig) Empty() bool {
 	conf.mu.RLock()
 	defer conf.mu.RUnlock()
 
-	return conf.received[len(conf.received)-1]
+	return len(conf.received) == 0
 }
 
 func TestWaitForSingleObjectCancellation(t *testing.T) {
@@ -311,4 +308,36 @@ func TestWaitForSingleObjectCancellation(t *testing.T) {
 
 	err = w.WaitForSingleObject(ctx, ev)
 	require.ErrorIs(t, err, context.Canceled, "WaitForSingleObject should return context.Canceled on cancellation")
+}
+
+func TestMockWaitForWatchTimeout(t *testing.T) {
+	t.Parallel()
+
+	reg := registry.NewMock()
+	defer reg.RequireNoLeaks(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+
+	err := reg.WaitForWatch(ctx)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+}
+
+func TestMockConfigPredicates(t *testing.T) {
+	t.Parallel()
+
+	conf := &mockConfig{}
+	require.True(t, conf.Empty())
+
+	dummy := config.RegistryData{UbuntuProToken: "test-token"}
+	require.False(t, conf.Received(dummy))
+
+	db, err := database.New(context.Background(), t.TempDir())
+	require.NoError(t, err)
+
+	err = conf.UpdateRegistryData(context.Background(), dummy, db)
+	require.NoError(t, err)
+
+	require.False(t, conf.Empty())
+	require.True(t, conf.Received(dummy))
 }

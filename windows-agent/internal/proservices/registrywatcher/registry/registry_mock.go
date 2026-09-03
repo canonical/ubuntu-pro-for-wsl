@@ -32,6 +32,9 @@ type Mock struct {
 	// a "pointer", which is just a key into this map.
 	eventHandles mockedHeap[Event, *eventHandle]
 
+	watchRegistered chan struct{}
+	activeWaits     atomic.Int32
+
 	// Settings to break the registry
 	CannotCreate atomic.Bool
 	CannotOpen   atomic.Bool
@@ -151,6 +154,7 @@ func NewMock() *Mock {
 
 	m.keyHandles.data = make(map[Key]*keyHandle)
 	m.eventHandles.data = make(map[Event]*eventHandle)
+	m.watchRegistered = make(chan struct{}, 1)
 
 	return m
 }
@@ -166,8 +170,15 @@ func (r *Mock) UbuntuProKeyExists() bool {
 // RequireNoLeaks is a test helper to ensure we freed all allocations.
 func (r *Mock) RequireNoLeaks(t *testing.T) {
 	t.Helper()
+
+	r.keyHandles.mu.Lock()
+	defer r.keyHandles.mu.Unlock()
+	r.eventHandles.mu.Lock()
+	defer r.eventHandles.mu.Unlock()
+
 	require.Empty(t, r.keyHandles.data, "registry mock: leaking registry key handles")
 	require.Empty(t, r.eventHandles.data, "registry mock: leaking event handles")
+	require.Zero(t, r.activeWaits.Load(), "registry mock: active WaitForSingleObject waits remaining")
 }
 
 // HKCUOpenKey mocks opening a key in the specified path under the HK_CURRENT_USER registry.
@@ -262,7 +273,9 @@ func (r *Mock) ReadValue(ptr Key, field string) (value string, err error) {
 		return "", ErrMock
 	}
 
+	r.keyHandles.mu.Lock()
 	handle, ok := r.keyHandles.data[ptr]
+	r.keyHandles.mu.Unlock()
 
 	if !ok {
 		return "", ErrKeyNotExist
@@ -303,11 +316,29 @@ func (r *Mock) RegNotifyChangeKeyValue(ptr Key) (Event, error) {
 
 	handle.key.events = append(handle.key.events, evHandle)
 
+	select {
+	case r.watchRegistered <- struct{}{}:
+	default:
+	}
+
 	return evHandle, nil
+}
+
+// WaitForWatch waits until RegNotifyChangeKeyValue installs a watch or the context is cancelled.
+func (r *Mock) WaitForWatch(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-r.watchRegistered:
+		return nil
+	}
 }
 
 // WaitForSingleObject waits until the event is triggered. This is a blocking function.
 func (r *Mock) WaitForSingleObject(handle Event) error {
+	r.activeWaits.Add(1)
+	defer r.activeWaits.Add(-1)
+
 	if r.CannotWait.Load() {
 		return ErrMock
 	}
@@ -372,7 +403,9 @@ func (r *Mock) ReadDWordValue(ptr Key, field string) (uint64, error) {
 		return 0, ErrMock
 	}
 
+	r.keyHandles.mu.Lock()
 	handle, ok := r.keyHandles.data[ptr]
+	r.keyHandles.mu.Unlock()
 
 	if !ok {
 		return 0, ErrKeyNotExist
