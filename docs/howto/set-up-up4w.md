@@ -43,7 +43,7 @@ Open the store page and install the app.
 Run the following command in PowerShell to install the app:
 
 ```{code-block} text
-> winget install Canonical.UbuntuProforWSL
+> winget install --source winget Canonical.UbuntuProforWSL
 ```
 ````
 ``````
