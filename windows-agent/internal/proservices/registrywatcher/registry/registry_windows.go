@@ -131,6 +131,7 @@ func (Windows) RegNotifyChangeKeyValue(k Key) (ev Event, err error) {
 
 	err = windows.RegNotifyChangeKeyValue(windows.Handle(k), true, notifyFilter, event, true)
 	if err != nil {
+		_ = windows.CloseHandle(event)
 		return 0, fmt.Errorf("in call to RegNotifyChangeKeyValue: %v", err)
 	}
 
