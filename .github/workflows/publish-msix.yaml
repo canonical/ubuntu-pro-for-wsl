@@ -1,4 +1,4 @@
-name: Publish MSIX app to the Microsoft Store
+name: Publish MSIX app on release
 concurrency: publish-msix-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
 on:
   workflow_dispatch:
