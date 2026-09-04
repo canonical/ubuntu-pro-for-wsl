@@ -13,6 +13,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
 	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3
+	golang.org/x/sys v0.47.0
 	golang.org/x/text v0.41.0
 	google.golang.org/grpc v1.83.2
 	gopkg.in/ini.v1 v1.67.3
@@ -33,7 +34,6 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect

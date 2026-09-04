@@ -71,7 +71,7 @@ func (m *mockRootFs) Open(name string) (io.ReadCloser, error) {
 	}
 	content, ok := m.contents[filepath.Clean(name)]
 	if !ok {
-		return nil, errors.New("no contents configured for " + name)
+		return io.NopCloser(bytes.NewReader(nil)), nil
 	}
 	return io.NopCloser(bytes.NewReader([]byte(content))), nil
 }
