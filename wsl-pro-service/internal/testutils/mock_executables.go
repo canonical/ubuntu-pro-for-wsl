@@ -656,7 +656,7 @@ func MockFilesystemRoot(t *testing.T) (rootDir string) {
 
 	// Mock Windows FS
 	publicDir := filepath.Join(rootDir, defaultPublicDir)
-	err = os.MkdirAll(publicDir, 0750)
+	err = os.MkdirAll(publicDir, 0700)
 	require.NoErrorf(t, err, "Setup: could not create mock %s", publicDir)
 
 	system32 := filepath.Join(rootDir, defaultWindowsMount, "WINDOWS/system32")
