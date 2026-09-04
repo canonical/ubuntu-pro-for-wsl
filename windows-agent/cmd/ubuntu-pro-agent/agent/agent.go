@@ -19,6 +19,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -40,6 +41,7 @@ type App struct {
 
 	daemon      *daemon.Daemon
 	proServices *proservices.Manager
+	publicDir   *securefiles.Custodian
 
 	ready chan struct{}
 }
@@ -103,7 +105,21 @@ func New(o ...option) *App {
 
 			ctx := context.Background()
 
-			cleanup, err = a.setUpLogger(ctx)
+			publicDir, err := a.publicDirPath(opt)
+			if err != nil {
+				close(a.ready)
+				return err
+			}
+
+			c, err := securefiles.Open(publicDir)
+			if err != nil {
+				close(a.ready)
+				return fmt.Errorf("could not create public dir: %v", err)
+			}
+			defer c.Close()
+			a.publicDir = c
+
+			cleanup, err = a.setUpLogger(ctx, c)
 			if err != nil {
 				log.Warningf(ctx, "could not set logger output: %v", err)
 			}
@@ -128,7 +144,7 @@ func New(o ...option) *App {
 
 // serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
 func (a *App) serve(ctx context.Context, opt options) error {
-	publicDir, err := a.publicDir(opt)
+	publicDir, err := a.publicDirPath(opt)
 	if err != nil {
 		close(a.ready)
 		return err
@@ -145,7 +161,7 @@ func (a *App) serve(ctx context.Context, opt options) error {
 	log.Debugf(ctx, "Agent private directory: %s", privateDir)
 
 	proservices, err := proservices.New(ctx,
-		publicDir,
+		a.publicDir,
 		privateDir,
 		proservices.WithRegistry(opt.registry),
 	)
@@ -155,7 +171,7 @@ func (a *App) serve(ctx context.Context, opt options) error {
 	}
 	a.proServices = &proservices
 
-	a.daemon = daemon.New(ctx, proservices.RegisterGRPCServices, publicDir)
+	a.daemon = daemon.New(ctx, proservices.RegisterGRPCServices, a.publicDir)
 
 	close(a.ready)
 
@@ -205,11 +221,11 @@ func (a *App) SetArgs(args ...string) {
 // PublicDir creates a directory to store public data in.
 func (a *App) PublicDir() (string, error) {
 	// This wrapper is used to have a cleaner public API.
-	return a.publicDir(options{})
+	return a.publicDirPath(options{})
 }
 
-// publicDir is a wrapper around PublicDir to allow overriding its path with an option.
-func (a *App) publicDir(opts options) (string, error) {
+// publicDirPath is a wrapper around PublicDir to allow overriding its path with an option.
+func (a *App) publicDirPath(opts options) (string, error) {
 	if opts.publicDir == "" {
 		homeDir := os.Getenv("UserProfile")
 		if homeDir == "" {
@@ -247,28 +263,24 @@ func (a *App) privateDir(opts options) (string, error) {
 	return opts.privateDir, nil
 }
 
-func (a *App) setUpLogger(ctx context.Context) (func(), error) {
+func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func(), error) {
 	noop := func() {}
 
 	logrus.SetFormatter(&logrus.TextFormatter{
 		DisableQuote: true,
 	})
 
-	publicDir, err := a.PublicDir()
-	if err != nil {
-		return noop, err
+	// Discard any rotated log left by an earlier run so logs do not accumulate.
+	if err := c.RemoveAll("log.old"); err != nil {
+		log.Warningf(ctx, "Could not remove previous rotated log file: %v", err)
 	}
 
-	logFile := filepath.Join(publicDir, "log")
-
-	// Move old log file
-	oldLogFile := filepath.Join(publicDir, "log.old")
-	err = os.Rename(logFile, oldLogFile)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Warningf(ctx, "Could not archive previous log file: %v", err)
+	// Rotate the current log to log.old in place using the custodian.
+	if err := c.Rename("log", "log.old"); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Warningf(ctx, "Could not rotate log to log.old: %v", err)
 	}
 
-	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
+	f, err := c.CreateFile("log")
 	if err != nil {
 		return noop, fmt.Errorf("could not open log file: %v", err)
 	}
@@ -281,7 +293,9 @@ func (a *App) setUpLogger(ctx context.Context) (func(), error) {
 	log.Infof(ctx, "Version: %s", consts.Version)
 	log.Debug(ctx, "Debug mode is enabled")
 
-	return func() { _ = f.Close() }, nil
+	return func() {
+		_ = f.Close()
+	}, nil
 }
 
 // ensureSingleInstance creates a lock file to ensure that only one instance of the agent is running.
