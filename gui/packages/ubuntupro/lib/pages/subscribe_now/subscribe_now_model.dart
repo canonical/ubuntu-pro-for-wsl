@@ -14,7 +14,7 @@ class SubscribeNowModel extends ChangeNotifier {
   P4wMsStore store;
 
   Either<TokenError, ProToken?> _token = const Either.left(TokenError.empty);
-  ProToken? get token => _token.orNull();
+  ProToken? get token => _token.getOrNull();
   TokenError? get tokenError =>
       _token.fold(ifLeft: (e) => e, ifRight: (_) => null);
   bool get canSubmit => token != null;
