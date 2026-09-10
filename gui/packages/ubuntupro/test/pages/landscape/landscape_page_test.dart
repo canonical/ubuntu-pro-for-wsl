@@ -494,17 +494,19 @@ final class FakeFilePickerPlatform extends FilePickerPlatform
   FakeFilePickerPlatform(this.mockPath);
 
   @override
-  Future<List<PlatformFile>> pickFiles(
-      {List<String>? allowedExtensions,
-      AndroidOptions androidOptions = const AndroidOptions(),
-      int compressionQuality = 100,
-      String? dialogTitle,
-      String? initialDirectory,
-      LinuxOptions linuxOptions = const LinuxOptions(),
-      dynamic Function(FilePickerStatus)? onFileLoading,
-      FileType type = FileType.any,
-      WebOptions webOptions = const WebOptions(),
-      WindowsOptions windowsOptions = const WindowsOptions()}) {
+  Future<List<PlatformFile>> pickFiles({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    Function(FilePickerStatus)? onFileLoading,
+    int compressionQuality = 0,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) {
     return Future.value([
       FakePlatformFile(
         name: mockPath.split('/').last,
@@ -537,4 +539,9 @@ final class FakePlatformFile extends PlatformFile {
 
   @override
   XFile get xFile => XFile(uri.path, name: name);
+
+  @override
+  int? lengthSync() {
+    return 0;
+  }
 }
