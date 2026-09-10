@@ -81,7 +81,7 @@ void main() {
     // Exercises the expected usage: reading from a file
     final res = await readAgentPortFromFile(filePath);
 
-    expect(res.orNull(), (host, port));
+    expect(res.getOrNull(), (host, port));
   });
 
   test('invalid file name', () async {
