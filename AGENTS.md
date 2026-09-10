@@ -137,3 +137,4 @@ When writing code, follow the per language coding standards:
 |----------|------|
 | Go | `docs/internal/go-standards.md` |
 
+When working on user-facing documentation, always refer to ./docs/AGENTS.md.

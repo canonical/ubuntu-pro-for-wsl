@@ -281,6 +281,7 @@ extensions = [
 exclude_patterns = [
     ".venv*",
     "internal",
+    "AGENTS.md"
 ]
 
 # Adds custom CSS files, located under 'html_static_path' or remotely
