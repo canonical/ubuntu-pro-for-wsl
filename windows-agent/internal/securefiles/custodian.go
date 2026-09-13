@@ -287,10 +287,11 @@ func (c *Custodian) Purge(isAllowed func(relPath string) bool) ([]string, error)
 		name := entry.Name()
 
 		if strings.HasPrefix(name, ".tmp-") || !isAllowed(name) {
-			if err := c.root.RemoveAll(name); err == nil {
-				removed = append(removed, name)
-				log.Infof(context.Background(), "securefiles: purged unrecognised node or leftover temporary: %s", name)
+			if err := c.root.RemoveAll(name); err != nil {
+				return removed, fmt.Errorf("failed to purge %q: %v", name, err)
 			}
+			removed = append(removed, name)
+			log.Infof(context.Background(), "securefiles: purged unrecognised node or leftover temporary: %s", name)
 		}
 	}
 

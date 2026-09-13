@@ -278,11 +278,10 @@ func TestCustodianErrors(t *testing.T) {
 		"Purge on a closed custodian fails":   {op: "purge", closeFirst: true},
 		"ReadDir on a closed custodian fails": {op: "readdir", path: "x", closeFirst: true},
 
-		"Purge keeps nodes it cannot remove": {
+		"Purge fails when a rejected node cannot be removed": {
 			op:            "purge",
 			seedFiles:     map[string]string{"junk.txt": "junk"},
 			readOnlyRoot:  true,
-			noErr:         true,
 			wantSurvivors: []string{"junk.txt"},
 		},
 	}
