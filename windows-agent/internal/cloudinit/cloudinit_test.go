@@ -506,12 +506,6 @@ func TestSubScopedCustodianCloudInitPurge(t *testing.T) {
 	_ = ci
 }
 
-// startupPurgeState carries per-row state captured by a seed and compared by
-// the corresponding check (file identities that must change on recreation).
-type startupPurgeState struct {
-	hook *test.Hook
-}
-
 // TestStartupPurge drives cloudinit.New over a seeded .cloud-init sub-tree and
 // checks, one row per scenario, what survives the startup disposition: stamped
 // nodes are left untouched, whatever their name or content, and unstamped nodes
@@ -521,244 +515,98 @@ func TestStartupPurge(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// prepare seeds the raw filesystem before any custodian exists, modelling
-		// a root left by a released agent.
-		prepare func(t *testing.T, publicDir string)
-		// seed runs on the open custodian before New.
-		seed func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState)
-		// notOwned, when non-nil, forces the ownership predicate.
-		notOwned *bool
+		// seedStamped are written through the custodian, so they carry the watermark.
+		seedStamped map[string]string
+		// seedRaw are written behind the custodian's back, so they carry none: what a
+		// crash, a pre-custodian agent, or a stamp-less filesystem leaves behind.
+		seedRaw map[string]string
+		// seedDirs are directories planted in the sub-tree, foreign by shape rather than
+		// by stamp. seedDangling plants a symlink whose target cannot be stated, and
+		// seedUnremovable a tree the purge cannot delete (non-root POSIX only).
+		seedDirs        []string
+		seedDangling    string
+		seedUnremovable string
 		// degraded marks the filesystem as unable to carry the watermark, after seeding.
 		degraded bool
-		// skipUnlessPOSIX marks a case that depends on read-only directory semantics.
-		skipUnlessPOSIX bool
-		// check runs after New succeeds.
-		check func(t *testing.T, c *securefiles.Custodian, cloudInitDir string, state *startupPurgeState)
+
+		// wantFiles must still hold exactly this content; wantGone must be absent
+		// entirely, whatever their shape; wantDirs must still be directories.
+		wantFiles map[string]string
+		wantGone  []string
+		wantDirs  []string
+
+		// wantLogContains must appear in an entry at wantLogLevel, and nothing at
+		// warning or above may name quietAbout (quietAboutOnUnix only off Windows,
+		// where an attribute-less file has no clean "not owned" answer).
+		wantLogLevel     logrus.Level
+		wantLogContains  string
+		quietAbout       []string
+		quietAboutOnUnix []string
 	}{
 		"Preserves per-distro data on restart": {
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				require.NoError(t, c.WriteFile("CoolDistro.user-data", []byte("distro-user-data")))
-				require.NoError(t, c.WriteFile("CoolDistro.meta-data", []byte("instance-id: inst-123\n")))
-			},
-			check: func(t *testing.T, _ *securefiles.Custodian, cloudInitDir string, state *startupPurgeState) {
-				t.Helper()
-
-				// Per-distro content survived with its metadata.
-				gotMeta, err := os.ReadFile(filepath.Join(cloudInitDir, "CoolDistro.meta-data"))
-				require.NoError(t, err)
-				var md testMetadata
-				require.NoError(t, yaml.Unmarshal(gotMeta, &md))
-				require.Equal(t, "inst-123", md.InstanceID)
-				gotUserData, err := os.ReadFile(filepath.Join(cloudInitDir, "CoolDistro.user-data"))
-				require.NoError(t, err)
-				require.Equal(t, "distro-user-data", string(gotUserData))
-
-				// Agent.yaml carries the new token.
-				gotAgent, err := os.ReadFile(filepath.Join(cloudInitDir, "agent.yaml"))
-				require.NoError(t, err)
-				require.Contains(t, string(gotAgent), "token")
-			},
+			seedStamped: map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
+			wantFiles:   map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
 		},
+		// Without extended attributes every node reads as unstamped. Purging on that
+		// basis would destroy the user's provisioning data on every startup.
 		"Keeps per-distro data when the watermark cannot be read": {
-			degraded: true,
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				// Written raw, the way createNode's fallback leaves them when the
-				// filesystem cannot carry the stamp: this is the data a user already
-				// has on such a profile, and it must survive the next startup.
-				require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), "CoolDistro.user-data"), []byte("distro-user-data"), 0600))
-				require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), "CoolDistro.meta-data"), []byte("instance-id: inst-123\n"), 0600))
-			},
-			check: func(t *testing.T, _ *securefiles.Custodian, cloudInitDir string, state *startupPurgeState) {
-				t.Helper()
-
-				// Without extended attributes every node reads as unstamped. Purging on
-				// that basis would destroy the user's provisioning data on every startup.
-				gotUserData, err := os.ReadFile(filepath.Join(cloudInitDir, "CoolDistro.user-data"))
-				require.NoError(t, err, "per-distro user-data must survive an unverifiable filesystem")
-				require.Equal(t, "distro-user-data", string(gotUserData))
-				require.FileExists(t, filepath.Join(cloudInitDir, "CoolDistro.meta-data"),
-					"per-distro meta-data must survive an unverifiable filesystem")
-
-				// The condition is reported rather than acted upon, so it is diagnosable.
-				foundError := false
-				for _, entry := range state.hook.AllEntries() {
-					if entry.Level == logrus.ErrorLevel && strings.Contains(entry.Message, "cannot carry the ownership watermark") {
-						foundError = true
-						break
-					}
-				}
-				require.True(t, foundError, "expected an error-level log naming the unverifiable filesystem")
-			},
+			seedRaw:         map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
+			degraded:        true,
+			wantFiles:       map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
+			wantLogLevel:    logrus.ErrorLevel,
+			wantLogContains: "cannot carry the ownership watermark",
 		},
+
 		"Removes an unstamped unrecognised file": {
-			notOwned: new(bool),
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				require.NoError(t, c.WriteFile("stale.txt", []byte("stale")))
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				_, err := os.ReadFile(filepath.Join(c.BasePath(), "stale.txt"))
-				require.Error(t, err, "unstamped unrecognised file should be purged")
-				foundWarning := false
-				for _, entry := range state.hook.AllEntries() {
-					if entry.Level == logrus.WarnLevel && strings.Contains(entry.Message, "stale.txt") {
-						foundWarning = true
-						break
-					}
-				}
-				require.True(t, foundWarning, "expected warning log naming stale.txt")
-			},
+			seedRaw:         map[string]string{"stale.txt": "planted"},
+			wantGone:        []string{"stale.txt"},
+			wantLogLevel:    logrus.WarnLevel,
+			wantLogContains: "stale.txt",
+		},
+		"Removes a per-distro node that is not owned": {
+			seedRaw:         map[string]string{"ForeignDistro.user-data": "planted"},
+			wantGone:        []string{"ForeignDistro.user-data"},
+			wantLogLevel:    logrus.ErrorLevel,
+			wantLogContains: "ForeignDistro.user-data",
 		},
 		"Preserves a lone meta-data file": {
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				require.NoError(t, c.WriteFile("LoneDistro.meta-data", []byte("instance-id: lone-inst-123\n")))
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				readMeta, err := os.ReadFile(filepath.Join(c.BasePath(), "LoneDistro.meta-data"))
-				require.NoError(t, err)
-				require.Equal(t, []byte("instance-id: lone-inst-123\n"), readMeta)
-				_, err = os.ReadFile(filepath.Join(c.BasePath(), "LoneDistro.user-data"))
-				require.Error(t, err, "user-data should not be fabricated for a lone meta-data file")
-			},
+			seedStamped: map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},
+			wantFiles:   map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},
+			wantGone:    []string{"LoneDistro.user-data"},
 		},
+
+		// Adoption without the watermark is unconditional for files, because nothing can
+		// distinguish ours from foreign. A directory is foreign by shape, so losing the
+		// watermark must not turn this sub-tree into somewhere directories survive.
+		"Purges a directory even when the watermark cannot be read": {
+			seedDirs: []string{"DirDistro.user-data"},
+			degraded: true,
+			wantGone: []string{"DirDistro.user-data"},
+		},
+		"Purges a directory named like a distro file": {
+			seedDirs: []string{"DirDistro.meta-data"},
+			wantGone: []string{"DirDistro.meta-data"},
+		},
+
 		// Refusing to start would leave the node exactly where it is, still there for
 		// cloud-init to consume at first boot, and would take the agent down too.
 		"Reports but survives a node it cannot remove": {
-			skipUnlessPOSIX: true,
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				keep := filepath.Join(c.BasePath(), "Foreign.user-data", "keep")
-				require.NoError(t, os.MkdirAll(keep, 0700), "Setup: could not create the obstructing tree")
-				require.NoError(t, os.WriteFile(filepath.Join(keep, "child"), []byte("x"), 0600), "Setup: could not fill it")
-				//nolint:gosec // G302 - test setup removes directory write permission.
-				require.NoError(t, os.Chmod(keep, 0500), "Setup: could not make it read-only")
-				//nolint:gosec // G302 - test teardown restores directory permissions.
-				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, cloudInitDir string, state *startupPurgeState) {
-				t.Helper()
-				require.DirExists(t, filepath.Join(cloudInitDir, "Foreign.user-data"), "the node that could not be removed stays")
-				require.FileExists(t, filepath.Join(cloudInitDir, "agent.yaml"), "the agent's own file is still published")
-
-				foundError := false
-				for _, entry := range state.hook.AllEntries() {
-					if entry.Level == logrus.ErrorLevel && strings.Contains(entry.Message, "could not remove every unrecognised node") {
-						foundError = true
-						break
-					}
-				}
-				require.True(t, foundError, "expected an error-level log naming the surviving node")
-			},
-		},
-		"Purges a directory even when the watermark cannot be read": {
-			degraded: true,
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				require.NoError(t, os.Mkdir(filepath.Join(c.BasePath(), "DirDistro.user-data"), 0o700))
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				// Adoption without the watermark is unconditional for files, because
-				// nothing can distinguish ours from foreign. A directory is different:
-				// it is foreign by shape rather than by stamp, so losing the watermark
-				// must not turn this sub-tree into somewhere directories can survive.
-				_, err := c.ReadDir("DirDistro.user-data")
-				require.Error(t, err, "a directory must be purged even on an unverifiable filesystem")
-			},
-		},
-		"Purges a directory named like a distro file": {
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				require.NoError(t, os.Mkdir(filepath.Join(c.BasePath(), "DirDistro.meta-data"), 0o700))
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				_, err := c.ReadDir("DirDistro.meta-data")
-				require.Error(t, err, "directory named like distro meta-data should be purged")
-			},
-		},
-		"Removes leftover temporaries and a stale agent file quietly": {
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				// Raw (unstamped) churn left by an earlier crash or a pre-custodian agent.
-				require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), ".tmp-agent.yaml-abcd1234"), []byte("partial"), 0600))
-				require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), "agent.yaml"), []byte("stale"), 0600))
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				_, err := os.ReadFile(filepath.Join(c.BasePath(), ".tmp-agent.yaml-abcd1234"))
-				require.Error(t, err, "leftover temporary should be purged")
-
-				// The stale agent file was replaced by a freshly generated one.
-				got, err := os.ReadFile(filepath.Join(c.BasePath(), "agent.yaml"))
-				require.NoError(t, err, "agent.yaml should have been regenerated")
-				require.NotEqual(t, "stale", string(got))
-
-				// Expected churn is disposed of quietly: no warning or error names them.
-				// Exception on Windows: a completely EA-less file has no clean "not
-				// owned" answer there (the EA query errors), so the stale agent file
-				// earns a warning at the ownership check. Its removal is still quiet.
-				for _, entry := range state.hook.AllEntries() {
-					if entry.Level > logrus.WarnLevel {
-						continue
-					}
-					require.NotContains(t, entry.Message, ".tmp-", "leftover temporaries should not be reported")
-					if runtime.GOOS != "windows" {
-						require.NotContains(t, entry.Message, "agent.yaml", "the agent's own file should not be reported")
-					}
-				}
-			},
+			seedUnremovable: "Foreign.user-data",
+			wantDirs:        []string{"Foreign.user-data"},
+			wantLogLevel:    logrus.ErrorLevel,
+			wantLogContains: "could not remove every unrecognised node",
 		},
 		"Warns and purges a node whose ownership cannot be determined": {
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				// A dangling symlink fails the ownership check: its target cannot be
-				// stated, so the node is treated as foreign and purged.
-				dangling := filepath.Join(c.BasePath(), "dangling.user-data")
-				if err := os.Symlink(filepath.Join(c.BasePath(), "no-such-target"), dangling); err != nil {
-					t.Skipf("symlinks unavailable: %v", err)
-				}
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				_, err := os.Lstat(filepath.Join(c.BasePath(), "dangling.user-data"))
-				require.True(t, os.IsNotExist(err), "node with undeterminable ownership should be purged")
-
-				foundWarning := false
-				for _, entry := range state.hook.AllEntries() {
-					if entry.Level == logrus.WarnLevel && strings.Contains(entry.Message, "could not check ownership") {
-						foundWarning = true
-						break
-					}
-				}
-				require.True(t, foundWarning, "expected warning about the ownership check failure")
-			},
+			seedDangling:    "dangling.user-data",
+			wantGone:        []string{"dangling.user-data"},
+			wantLogLevel:    logrus.WarnLevel,
+			wantLogContains: "could not check ownership",
 		},
-		"Removes a per-distro node that is not owned": {
-			notOwned: new(bool),
-			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
-				t.Helper()
-				require.NoError(t, c.WriteFile("ForeignDistro.user-data", []byte("foreign-user-data")))
-			},
-			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
-				t.Helper()
-				// The foreign content was never read back and re-blessed.
-				_, err := os.ReadFile(filepath.Join(c.BasePath(), "ForeignDistro.user-data"))
-				require.Error(t, err, "unowned per-distro node should not survive startup")
-				foundError := false
-				for _, entry := range state.hook.AllEntries() {
-					if entry.Level == logrus.ErrorLevel && strings.Contains(entry.Message, "ForeignDistro.user-data") {
-						foundError = true
-						break
-					}
-				}
-				require.True(t, foundError, "expected error-level log naming the unowned per-distro node")
-			},
+		"Removes leftover temporaries and a stale agent file quietly": {
+			seedRaw:          map[string]string{".tmp-agent.yaml-abcd1234": "partial", "agent.yaml": "stale"},
+			wantGone:         []string{".tmp-agent.yaml-abcd1234"},
+			quietAbout:       []string{".tmp-"},
+			quietAboutOnUnix: []string{"agent.yaml"},
 		},
 	}
 
@@ -766,42 +614,109 @@ func TestStartupPurge(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if tc.skipUnlessPOSIX && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
+			if tc.seedUnremovable != "" && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
 				t.Skip("read-only directory semantics require a non-root Unix user")
 			}
 
-			publicDir := t.TempDir()
-			cloudInitDir := filepath.Join(publicDir, ".cloud-init")
-
-			if tc.prepare != nil {
-				tc.prepare(t, publicDir)
-			}
-
+			cloudInitDir := filepath.Join(t.TempDir(), ".cloud-init")
 			custodian, err := securefiles.Open(cloudInitDir)
 			require.NoError(t, err, "Setup: could not open cloud-init custodian")
 			defer custodian.Close()
 
-			if tc.notOwned != nil {
-				custodian.SetMockOwned(tc.notOwned)
+			hook := test.NewGlobal()
+			defer hook.Reset()
+
+			for name, content := range tc.seedStamped {
+				require.NoError(t, custodian.WriteFile(name, []byte(content)), "Setup: could not write %s", name)
 			}
-			state := &startupPurgeState{hook: test.NewGlobal()}
-			defer state.hook.Reset()
-			if tc.seed != nil {
-				tc.seed(t, custodian, state)
+			for name, content := range tc.seedRaw {
+				require.NoError(t, os.WriteFile(filepath.Join(cloudInitDir, name), []byte(content), 0600),
+					"Setup: could not plant %s", name)
 			}
+			for _, name := range tc.seedDirs {
+				require.NoError(t, os.Mkdir(filepath.Join(cloudInitDir, name), 0700), "Setup: could not plant %s", name)
+			}
+			if tc.seedDangling != "" {
+				target := filepath.Join(cloudInitDir, "no-such-target")
+				if err := os.Symlink(target, filepath.Join(cloudInitDir, tc.seedDangling)); err != nil {
+					t.Skipf("symlinks unavailable: %v", err)
+				}
+			}
+			if tc.seedUnremovable != "" {
+				keep := filepath.Join(cloudInitDir, tc.seedUnremovable, "keep")
+				require.NoError(t, os.MkdirAll(keep, 0700), "Setup: could not create the obstructing tree")
+				require.NoError(t, os.WriteFile(filepath.Join(keep, "child"), []byte("x"), 0600), "Setup: could not fill it")
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(keep, 0500), "Setup: could not make it read-only")
+				//nolint:gosec // G302 - test teardown restores directory permissions.
+				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
+			}
+
 			// Degrade after seeding: the data must predate the loss of the watermark,
 			// exactly as it does when a healthy profile is later moved to a filesystem
-			// without extended attributes.
-			custodian.SetMockDegraded(tc.degraded)
+			// without extended attributes. Only the report is overridden; every other
+			// call still reaches the real sub-tree on disk.
+			var dir cloudinit.Custodian = custodian
+			if tc.degraded {
+				dir = degradedCustodian{Custodian: custodian}
+			}
 
-			ctx := context.Background()
-			conf := &mockConfig{proToken: "token"}
-			_, err = cloudinit.New(ctx, conf, custodian)
+			_, err = cloudinit.New(context.Background(), &mockConfig{proToken: "token"}, dir)
 			require.NoError(t, err, "Setup: cloudinit.New should succeed")
 
-			if tc.check != nil {
-				tc.check(t, custodian, cloudInitDir, state)
+			// The agent's own file is published whatever else happened, which is also
+			// what proves a stale one was replaced rather than kept.
+			gotAgent, err := os.ReadFile(filepath.Join(cloudInitDir, "agent.yaml"))
+			require.NoError(t, err, "agent.yaml should have been written")
+			require.Contains(t, string(gotAgent), "token", "agent.yaml should carry the token")
+
+			for name, want := range tc.wantFiles {
+				got, err := os.ReadFile(filepath.Join(cloudInitDir, name))
+				require.NoError(t, err, "%s should have survived startup", name)
+				require.Equal(t, want, string(got), "%s should have survived unchanged", name)
+			}
+			for _, name := range tc.wantGone {
+				_, err := os.Lstat(filepath.Join(cloudInitDir, name))
+				require.True(t, os.IsNotExist(err), "%s should not have survived startup", name)
+			}
+			for _, name := range tc.wantDirs {
+				require.DirExists(t, filepath.Join(cloudInitDir, name), "%s should still be there", name)
+			}
+
+			if tc.wantLogContains != "" {
+				require.True(t, loggedAt(hook, tc.wantLogLevel, tc.wantLogContains),
+					"expected a %s entry mentioning %q", tc.wantLogLevel, tc.wantLogContains)
+			}
+			quiet := tc.quietAbout
+			if runtime.GOOS != "windows" {
+				quiet = append(quiet, tc.quietAboutOnUnix...)
+			}
+			for _, entry := range hook.AllEntries() {
+				if entry.Level > logrus.WarnLevel {
+					continue
+				}
+				for _, substr := range quiet {
+					require.NotContains(t, entry.Message, substr, "expected churn to be disposed of quietly")
+				}
 			}
 		})
 	}
 }
+
+// degradedCustodian is a real custodian that reports a filesystem unable to carry the
+// watermark. Everything else is delegated, so the sub-tree under test is genuine.
+type degradedCustodian struct {
+	cloudinit.Custodian
+}
+
+// loggedAt reports whether the hook captured an entry at the given level containing substr.
+func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
+	for _, entry := range hook.AllEntries() {
+		if entry.Level == level && strings.Contains(entry.Message, substr) {
+			return true
+		}
+	}
+	return false
+}
+
+func (degradedCustodian) IsDegraded() bool { return true }

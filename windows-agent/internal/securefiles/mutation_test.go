@@ -5,6 +5,7 @@
 package securefiles_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,13 +15,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMutations(t *testing.T) {
+func TestWriteFile(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T, c *securefiles.Custodian, dir string){
-		"quick successive writes leave no leftover temp files":    testQuickSuccessiveWritesNoLeftoverTemp,
-		"write succeeds when a leftover temp file exists":         testWriteSucceedsWithLeftoverTemp,
-		"remove, rename, remove-all work and reject path escapes": testRemoveRemoveAllAndRename,
+	const leftoverTemp = ".tmp-target.txt-12345678"
+
+	testCases := map[string]struct {
+		plantLeftoverTemp bool
+		writes            int
+	}{
+		"a write publishes its content":                 {writes: 1},
+		"repeated writes publish the last one":          {writes: 50},
+		"a write succeeds despite a leftover temporary": {plantLeftoverTemp: true, writes: 1},
 	}
 
 	for name, tc := range testCases {
@@ -29,82 +35,175 @@ func TestMutations(t *testing.T) {
 
 			dir := t.TempDir()
 			c, err := securefiles.Open(dir)
-			require.NoError(t, err)
+			require.NoError(t, err, "Setup: could not open custodian")
 			defer func() { _ = c.Close() }()
 
-			tc(t, c, dir)
+			var wantTemps []string
+			if tc.plantLeftoverTemp {
+				require.NoError(t, os.WriteFile(filepath.Join(dir, leftoverTemp), []byte("leftover"), 0600),
+					"Setup: could not plant the leftover temporary")
+				wantTemps = append(wantTemps, leftoverTemp)
+			}
+
+			var want string
+			for i := range tc.writes {
+				want = fmt.Sprintf("write %d", i)
+				require.NoError(t, c.WriteFile("target.txt", []byte(want)), "every write must succeed")
+			}
+
+			got, err := os.ReadFile(filepath.Join(dir, "target.txt"))
+			require.NoError(t, err, "the published node must be readable")
+			require.Equal(t, want, string(got), "the published node must hold the last write")
+
+			entries, err := os.ReadDir(dir)
+			require.NoError(t, err, "the sub-tree must be listable")
+
+			var gotTemps []string
+			for _, entry := range entries {
+				if strings.HasPrefix(entry.Name(), ".tmp-") {
+					gotTemps = append(gotTemps, entry.Name())
+				}
+			}
+			// A write cleans up after itself, but it is not a sweep: a temporary left by
+			// something else stays until Purge, so only what was planted may remain.
+			require.ElementsMatch(t, wantTemps, gotTemps, "a write must not leave its own temporary behind")
 		})
 	}
 }
 
-func testQuickSuccessiveWritesNoLeftoverTemp(t *testing.T, c *securefiles.Custodian, dir string) {
-	t.Helper()
-	for range 50 {
-		err := c.WriteFile("rapid.txt", []byte("version"))
-		require.NoError(t, err)
+// TestRename covers publishing by rename. The source must already carry the ownership
+// stamp: a node created outside the custodian may still be held open by whoever made it,
+// and stamping it after publication would hand that descriptor a root-owned node, which
+// ADR 2.01 forbids.
+func TestRename(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		from string
+		to   string
+		// noSource leaves the source out: either it is deliberately absent, or its path
+		// lies outside the sub-tree and so cannot be created through the custodian at all.
+		noSource bool
+		// plantUnowned writes the source behind the custodian's back, so it carries no stamp.
+		plantUnowned bool
+
+		wantErr   bool
+		wantErrIs error
+	}{
+		"an owned node is published":                    {from: "source.txt", to: "published.txt"},
+		"a node the custodian does not own is refused":  {from: "source.txt", to: "published.txt", plantUnowned: true, wantErr: true, wantErrIs: securefiles.ErrNotOwned},
+		"a source that is not there is reported":        {from: "source.txt", to: "published.txt", noSource: true, wantErr: true},
+		"a source outside the sub-tree is refused":      {from: "../escape.txt", to: "published.txt", noSource: true, wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
+		"a destination outside the sub-tree is refused": {from: "source.txt", to: "../escape.txt", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
+		"a backslash escape is refused":                 {from: "source.txt", to: "..\\escape.txt", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
+		"an absolute destination is refused":            {from: "source.txt", to: "/etc/passwd", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
 	}
 
-	entries, err := os.ReadDir(dir)
-	require.NoError(t, err)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	for _, entry := range entries {
-		require.False(t, strings.HasPrefix(entry.Name(), ".tmp-"), "Found leftover temp file: %s", entry.Name())
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			if tc.plantUnowned && c.IsDegraded() {
+				t.Skip("a filesystem that cannot carry the stamp has no ownership to verify")
+			}
+
+			if !tc.noSource {
+				if tc.plantUnowned {
+					require.NoError(t, os.WriteFile(filepath.Join(dir, tc.from), []byte("payload"), 0600),
+						"Setup: could not plant the unstamped node")
+				} else {
+					require.NoError(t, c.WriteFile(tc.from, []byte("payload")), "Setup: could not seed the source")
+				}
+			}
+
+			err = c.Rename(tc.from, tc.to)
+
+			if !tc.wantErr {
+				require.NoError(t, err, "the rename should have succeeded")
+				require.NoFileExists(t, filepath.Join(dir, tc.from), "the source must be gone once published")
+
+				got, err := os.ReadFile(filepath.Join(dir, tc.to))
+				require.NoError(t, err, "the published node must be readable")
+				require.Equal(t, "payload", string(got), "the rename must carry the content over")
+				return
+			}
+
+			if tc.wantErrIs != nil {
+				require.ErrorIs(t, err, tc.wantErrIs, "unexpected error kind")
+			} else {
+				require.Error(t, err, "the rename should have been reported as failed")
+			}
+
+			require.NoFileExists(t, filepath.Join(dir, tc.to), "nothing may be published by a failed rename")
+			if !tc.noSource {
+				require.FileExists(t, filepath.Join(dir, tc.from), "the refused source must stay where it was")
+			}
+		})
 	}
 }
 
-func testWriteSucceedsWithLeftoverTemp(t *testing.T, c *securefiles.Custodian, dir string) {
-	t.Helper()
-	leftoverTemp := filepath.Join(dir, ".tmp-target.txt-12345678")
-	err := os.WriteFile(leftoverTemp, []byte("leftover"), 0600)
-	require.NoError(t, err)
+func TestRemove(t *testing.T) {
+	t.Parallel()
 
-	err = c.WriteFile("target.txt", []byte("fresh content"))
-	require.NoError(t, err)
+	testCases := map[string]struct {
+		path string
+		// recursive selects RemoveAll over Remove.
+		recursive bool
+		// seedFile and seedTree say what to create first; an escaping path gets neither,
+		// because the custodian refuses to create it just as it refuses to remove it.
+		seedFile bool
+		seedTree bool
 
-	content, err := os.ReadFile(filepath.Join(dir, "target.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "fresh content", string(content))
-}
+		wantErrIs error
+	}{
+		"a file is removed":                           {path: "victim.txt", seedFile: true},
+		"a populated sub-tree is removed recursively": {path: "tree", recursive: true, seedTree: true},
+		"a path outside the sub-tree is refused":      {path: "../escape.txt", wantErrIs: securefiles.ErrPathEscapes},
+		"a backslash escape is refused":               {path: "..\\escape.txt", wantErrIs: securefiles.ErrPathEscapes},
+		"an absolute path is refused":                 {path: "/etc/passwd", wantErrIs: securefiles.ErrPathEscapes},
+		"a recursive escape is refused":               {path: "../escape.txt", recursive: true, wantErrIs: securefiles.ErrPathEscapes},
+	}
 
-func testRemoveRemoveAllAndRename(t *testing.T, c *securefiles.Custodian, dir string) {
-	t.Helper()
-	err := c.WriteFile("f1.txt", []byte("f1"))
-	require.NoError(t, err)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	err = c.Rename("f1.txt", "f2.txt")
-	require.NoError(t, err)
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
 
-	_, err = os.Stat(filepath.Join(dir, "f1.txt"))
-	require.True(t, os.IsNotExist(err))
+			switch {
+			case tc.seedTree:
+				sub, err := c.Subdir(tc.path)
+				require.NoError(t, err, "Setup: could not create the sub-tree")
+				require.NoError(t, sub.WriteFile("nested.txt", []byte("nested")), "Setup: could not fill the sub-tree")
+				// The nested custodian holds an open handle on the sub-tree: on Windows it
+				// cannot be removed until that handle is closed, so close it here to keep
+				// the test portable.
+				require.NoError(t, sub.Close(), "Setup: could not close the nested custodian")
+			case tc.seedFile:
+				require.NoError(t, c.WriteFile(tc.path, []byte("payload")), "Setup: could not seed the node")
+			}
 
-	f2Content, err := os.ReadFile(filepath.Join(dir, "f2.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "f1", string(f2Content))
+			if tc.recursive {
+				err = c.RemoveAll(tc.path)
+			} else {
+				err = c.Remove(tc.path)
+			}
 
-	err = c.Remove("f2.txt")
-	require.NoError(t, err)
+			if tc.wantErrIs != nil {
+				require.ErrorIs(t, err, tc.wantErrIs, "unexpected error kind")
+				return
+			}
 
-	subC, err := c.Subdir("tree")
-	require.NoError(t, err)
-	err = subC.WriteFile("nested.txt", []byte("nested"))
-	require.NoError(t, err)
-
-	// The nested custodian holds an open handle on "tree": on Windows the sub-tree
-	// cannot be removed until that handle is closed, so close it first to keep
-	// the test portable.
-	require.NoError(t, subC.Close())
-
-	err = c.RemoveAll("tree")
-	require.NoError(t, err)
-
-	_, err = os.Stat(filepath.Join(dir, "tree"))
-	require.True(t, os.IsNotExist(err))
-
-	escapes := []string{"../escape.txt", "..\\escape.txt", "/etc/passwd"}
-	for _, esc := range escapes {
-		require.ErrorIs(t, c.Remove(esc), securefiles.ErrPathEscapes)
-		require.ErrorIs(t, c.RemoveAll(esc), securefiles.ErrPathEscapes)
-		require.ErrorIs(t, c.Rename(esc, "valid.txt"), securefiles.ErrPathEscapes)
-		require.ErrorIs(t, c.Rename("valid.txt", esc), securefiles.ErrPathEscapes)
+			require.NoError(t, err, "the removal should have succeeded")
+			require.NoFileExists(t, filepath.Join(dir, tc.path), "the node must be gone")
+		})
 	}
 }

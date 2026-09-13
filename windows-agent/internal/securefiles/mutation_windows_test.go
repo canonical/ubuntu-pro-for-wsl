@@ -145,7 +145,7 @@ func TestRenameOverOpenDestination(t *testing.T) {
 			// requires, then switch the filesystem behaviour under test.
 			require.NoError(t, c.WriteFile("source.txt", []byte("new")), "Setup: could not seed source")
 			require.NoError(t, c.WriteFile("target.txt", []byte("old")), "Setup: could not seed target")
-			c.SetMockDegraded(tc.degraded)
+			c.SetDegraded(tc.degraded)
 
 			holder, err := holdDestination(filepath.Join(dir, "target.txt"), tc.politeReader)
 			require.NoError(t, err, "Setup: could not hold the destination open")
