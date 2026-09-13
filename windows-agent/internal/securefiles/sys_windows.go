@@ -17,11 +17,11 @@ import (
 
 type platformSys struct {
 	mu         sync.Mutex
+	nt         ntCalls
 	root       *os.Root
 	rootFile   *os.File
 	rootHandle windows.Handle
 	degraded   bool
-	mockOwned  *bool
 
 	// rootID identifies the directory ensureRoot created and stamped, so that the
 	// separate reopen in setRoot can be checked against it. Unset for sub-custodians,
@@ -47,13 +47,19 @@ type fileRenameInfoStruct struct {
 // whenever any process holds the destination open, however politely it shares it.
 const fileRenameInformationEx = 65
 
-// testNtSetEaFileResult, when non-nil, overrides the return value of NtSetEaFile in tests.
-var testNtSetEaFileResult *uint32
-
-// testNtCreateFileResult, when non-nil, overrides the return value of NtCreateFile
-// in createNode during tests, so creation failure paths can be exercised without
-// sabotaging the root the custodian was opened on.
-var testNtCreateFileResult *uint32
+// ntCalls is the NT surface the stamping path uses. It is a field of platformSys
+// rather than a set of package-level variables so that there is no process-wide switch
+// an attacker could flip to turn stamping off for every custodian at once: it is set
+// once at construction and never reassigned. Production wires realNtCalls; the tests in
+// this package wire a fake to reproduce the two conditions only a filesystem can create
+// — extended attributes refused, and a rename information class the volume does not
+// implement.
+type ntCalls struct {
+	setEaFile          func(h windows.Handle, ea []byte) error
+	createFile         func(handle *windows.Handle, access uint32, oa *windows.OBJECT_ATTRIBUTES, iosb *windows.IO_STATUS_BLOCK, attrs, share, disp, opts uint32, ea []byte) error
+	setInformationFile func(h windows.Handle, iosb *windows.IO_STATUS_BLOCK, buf []byte, class uint32) error
+	identity           func(h windows.Handle) (fileIdentity, bool)
+}
 
 // fileIdentity is a node's identity as the filesystem reports it: the volume it lives on
 // and its file ID. It is what distinguishes the directory the custodian created from
@@ -69,9 +75,36 @@ type fileIDInfo struct {
 	FileID             [16]byte
 }
 
+// realNtCalls returns the production implementation: the NT calls themselves.
+func realNtCalls() ntCalls {
+	return ntCalls{
+		setEaFile: func(h windows.Handle, ea []byte) error {
+			var iosb windows.IO_STATUS_BLOCK
+			return windows.NtSetEaFile(h, &iosb, &ea[0], uint32(len(ea))) //#nosec G115 // length of a small EA buffer; always fits in 32 bits.
+		},
+		createFile: func(handle *windows.Handle, access uint32, oa *windows.OBJECT_ATTRIBUTES, iosb *windows.IO_STATUS_BLOCK, attrs, share, disp, opts uint32, ea []byte) error {
+			return windows.NtCreateFile(
+				handle, access, oa, iosb, nil, attrs, share, disp, opts,
+				uintptr(unsafe.Pointer(&ea[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
+				uint32(len(ea)),                 //#nosec G115 // length of a small EA buffer; always fits in 32 bits.
+			)
+		},
+		setInformationFile: func(h windows.Handle, iosb *windows.IO_STATUS_BLOCK, buf []byte, class uint32) error {
+			return windows.NtSetInformationFile(h, iosb, &buf[0], uint32(len(buf)), class) //#nosec G115 // rename-info buffer; always fits in 32 bits.
+		},
+		identity: identityOf,
+	}
+}
+
 func newPlatformSys(basePath string) (*platformSys, error) {
+	return newPlatformSysWith(basePath, realNtCalls())
+}
+
+// newPlatformSysWith is newPlatformSys with the NT surface supplied rather than assumed.
+func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 	s := &platformSys{
 		rootHandle: windows.InvalidHandle,
+		nt:         nt,
 	}
 
 	if err := s.ensureRoot(basePath); err != nil {
@@ -90,6 +123,7 @@ func newSubPlatformSys(degraded bool) *platformSys {
 	return &platformSys{
 		rootHandle: windows.InvalidHandle,
 		degraded:   degraded,
+		nt:         realNtCalls(),
 	}
 }
 
@@ -120,14 +154,7 @@ func (s *platformSys) stampSubdir(rel string) error {
 	}
 	defer closeHandle(handle)
 
-	var iosbSet windows.IO_STATUS_BLOCK
-	errSet := windows.NtSetEaFile(
-		handle,
-		&iosbSet,
-		&eaBuf[0],
-		uint32(len(eaBuf)), //#nosec G115 // length of small EA buffer; always fits in 32 bits.
-	)
-	if errSet != nil {
+	if err := s.nt.setEaFile(handle, eaBuf); err != nil {
 		s.degraded = true
 	}
 
@@ -158,7 +185,7 @@ func (s *platformSys) setRoot(root *os.Root) error {
 	// itself is a failed verification, not an absent one — otherwise a swap onto a
 	// filesystem that exposes no identity would walk straight past this check.
 	if s.rootIDKnown {
-		id, ok := identityOf(windows.Handle(f.Fd()))
+		id, ok := s.nt.identity(windows.Handle(f.Fd()))
 		if !ok || id != s.rootID {
 			return errors.Join(ErrRootReplaced, f.Close())
 		}
@@ -250,25 +277,13 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	// If opening a pre-existing root directory (iosb.Information == 1 -> FILE_OPENED),
 	// NtCreateFile does not apply the eaBuf parameter. Stamp EA via NtSetEaFile.
 	if iosb.Information == 1 /* FILE_OPENED */ {
-		var iosbSet windows.IO_STATUS_BLOCK
-		var errSet error
-		if testNtSetEaFileResult != nil {
-			errSet = windows.NTStatus(*testNtSetEaFileResult)
-		} else {
-			errSet = windows.NtSetEaFile(
-				handle,
-				&iosbSet,
-				&eaBuf[0],
-				uint32(len(eaBuf)), //#nosec G115 // length of small EA buffer; always fits in 32 bits.
-			)
-		}
-		if errSet != nil {
+		if err := s.nt.setEaFile(handle, eaBuf); err != nil {
 			s.degraded = true
 		}
 	}
 
 	// Record what was created, so the reopen in setRoot can be tied back to it.
-	s.rootID, s.rootIDKnown = identityOf(handle)
+	s.rootID, s.rootIDKnown = s.nt.identity(handle)
 
 	closeHandle(handle)
 	return nil
@@ -292,12 +307,6 @@ func (s *platformSys) isDegraded() bool {
 	return s.degraded
 }
 
-func (s *platformSys) setMockDegraded(degraded bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.degraded = degraded
-}
-
 // isOwned reports whether the node at rel carries the agent's watermark: the
 // $LXUID/$LXGID/$LXMOD stamp queried through NtQueryEaFile for exactly the
 // values the custodian writes. It never answers on behalf of a filesystem that
@@ -310,10 +319,6 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.mockOwned != nil {
-		return *s.mockOwned, nil
-	}
-
 	h, err := s.openExisting(rel, windows.GENERIC_READ, 0, windows.FILE_NON_DIRECTORY_FILE)
 	if err != nil {
 		return false, err
@@ -325,12 +330,6 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 		return false, err
 	}
 	return uid == 0 && gid == 0 && mode == stampedFileMode(), nil
-}
-
-func (s *platformSys) setMockOwned(owned *bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.mockOwned = owned
 }
 
 func (s *platformSys) createNode(relativePath string, isDir bool) error {
@@ -372,24 +371,7 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 		createOptions |= windows.FILE_NON_DIRECTORY_FILE
 	}
 
-	var ntErr error
-	if testNtCreateFileResult != nil {
-		ntErr = windows.NTStatus(*testNtCreateFileResult)
-	} else {
-		ntErr = windows.NtCreateFile(
-			&handle,
-			desiredAccess,
-			oa,
-			&iosb,
-			nil,
-			fileAttributes,
-			shareAccess,
-			createDisposition,
-			createOptions,
-			uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			uint32(len(eaBuf)),                 //#nosec G115 // length of small EA buffer; always fits in 32 bits.
-		)
-	}
+	ntErr := s.nt.createFile(&handle, desiredAccess, oa, &iosb, fileAttributes, shareAccess, createDisposition, createOptions, eaBuf)
 
 	if ntErr != nil {
 		// A filesystem that will not take the attribute buffer degrades and falls back;
@@ -502,23 +484,11 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	// fall back to the original one, where an open destination is simply refused.
 	var iosbSet windows.IO_STATUS_BLOCK
 	info.Flags = windows.FILE_RENAME_REPLACE_IF_EXISTS | windows.FILE_RENAME_POSIX_SEMANTICS
-	errSet := windows.NtSetInformationFile(
-		handle,
-		&iosbSet,
-		&buf[0],
-		uint32(infoSize), //#nosec G115 // infoSize is small and fits in 32 bits.
-		fileRenameInformationEx,
-	)
+	errSet := s.nt.setInformationFile(handle, &iosbSet, buf, fileRenameInformationEx)
 
 	if isUnsupportedInfoClass(errSet) {
 		info.Flags = windows.FILE_RENAME_REPLACE_IF_EXISTS
-		errSet = windows.NtSetInformationFile(
-			handle,
-			&iosbSet,
-			&buf[0],
-			uint32(infoSize), //#nosec G115 // infoSize is small and fits in 32 bits.
-			windows.FileRenameInformation,
-		)
+		errSet = s.nt.setInformationFile(handle, &iosbSet, buf, windows.FileRenameInformation)
 	}
 
 	return mapNtStatus(errSet)

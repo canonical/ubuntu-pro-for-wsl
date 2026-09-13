@@ -46,7 +46,7 @@ func TestXattrDegradedTransitions(t *testing.T) {
 		// precreate writes a stamped file before enabling the hooks.
 		precreate bool
 
-		// op is the operation under test: "write", "isowned", or "" for none.
+		// op is the operation under test: "write", "isowned", "rename", or "" for none.
 		op string
 
 		wantErr      bool
@@ -79,20 +79,27 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			op:        "isowned",
 			wantErr:   true,
 		},
+		// Rename verifies ownership through the same reader, so a filesystem that cannot
+		// answer stops the rename rather than letting it proceed unverified.
+		"rename fails when reading the watermark fails": {
+			getErr:    unix.EPERM,
+			precreate: true,
+			op:        "rename",
+			wantErr:   true,
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			origSet, origGet, origList := fsetxattr, fgetxattr, flistxattr
-			t.Cleanup(func() { fsetxattr, fgetxattr, flistxattr = origSet, origGet, origList })
-
-			// The probe runs while the root is established, so its hook predates Open.
+			// The probe runs while the root is established, so it must be in place
+			// before Open rather than injected afterwards.
+			openCalls := realXattrCalls()
 			if tc.probeErr != nil {
-				flistxattr = func(int, []byte) (int, error) { return 0, tc.probeErr }
+				openCalls.list = func(int, []byte) (int, error) { return 0, tc.probeErr }
 			}
 
 			dir := t.TempDir()
-			c, err := Open(dir)
+			c, err := OpenWithXattrs(dir, openCalls)
 			require.NoError(t, err, "Setup: could not open custodian")
 			defer func() { _ = c.Close() }()
 
@@ -100,12 +107,14 @@ func TestXattrDegradedTransitions(t *testing.T) {
 				require.NoError(t, c.WriteFile("f.txt", []byte("x")), "Setup: could not write file")
 			}
 
+			opCalls := realXattrCalls()
 			if tc.setErr != nil {
-				fsetxattr = func(int, string, []byte, int) error { return tc.setErr }
+				opCalls.set = func(int, string, []byte, int) error { return tc.setErr }
 			}
 			if tc.getErr != nil {
-				fgetxattr = func(int, string, []byte) (int, error) { return 0, tc.getErr }
+				opCalls.get = func(int, string, []byte) (int, error) { return 0, tc.getErr }
 			}
+			c.FailXattr(opCalls)
 
 			var opErr error
 			owned := false
@@ -118,6 +127,8 @@ func TestXattrDegradedTransitions(t *testing.T) {
 				}
 			case "isowned":
 				owned, opErr = c.IsOwned("f.txt")
+			case "rename":
+				opErr = c.Rename("f.txt", "moved.txt")
 			default:
 				t.Fatalf("unknown op %q", tc.op)
 			}

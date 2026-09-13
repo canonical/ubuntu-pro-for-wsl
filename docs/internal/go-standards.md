@@ -4,6 +4,7 @@
 
 - Prefer small, explicit functions over clever abstractions.
 - Document exported symbols with complete sentences, starting with its name.
+- Subjects first, details last: the most important definitions at the top of the file - public types, constructor methods, public API - helpers and private code at the bottom.
 - Validate required inputs and dependencies early, then return immediately on invalid state.
 - Strive for making invalid states non-representable to avoid spreading validation everywhere.
 - Keep control flow flat: prefer guard clauses and early returns over nested `else` blocks.

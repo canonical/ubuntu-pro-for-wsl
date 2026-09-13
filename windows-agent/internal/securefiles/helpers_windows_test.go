@@ -15,18 +15,17 @@ func closeHandle(h windows.Handle) {
 	_ = windows.CloseHandle(h)
 }
 
-// encodeLxEa builds the $LXUID/$LXGID/$LXMOD extended-attribute buffer WSL
-// uses to project Linux metadata, with the given values.
-func encodeLxEa(uid, gid uint32, mode uint32) ([]byte, error) {
+// lxAttributes builds the $LXUID/$LXGID/$LXMOD attributes themselves, so a test table can
+// declare the stamp it plants instead of encoding it in the test body.
+func lxAttributes(uid, gid, mode uint32) []winio.ExtendedAttribute {
 	var uidBytes, gidBytes, modeBytes [4]byte
 	binary.LittleEndian.PutUint32(uidBytes[:], uid)
 	binary.LittleEndian.PutUint32(gidBytes[:], gid)
 	binary.LittleEndian.PutUint32(modeBytes[:], mode)
 
-	eas := []winio.ExtendedAttribute{
+	return []winio.ExtendedAttribute{
 		{Name: "$LXUID", Value: uidBytes[:]},
 		{Name: "$LXGID", Value: gidBytes[:]},
 		{Name: "$LXMOD", Value: modeBytes[:]},
 	}
-	return winio.EncodeExtendedAttributes(eas)
 }

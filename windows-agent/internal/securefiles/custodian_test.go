@@ -40,6 +40,13 @@ func TestCustodian(t *testing.T) {
 		// useSub makes the case run against the nested custodian c.Subdir("sub") instead of c.
 		useSub bool
 
+		// neverOpened runs against a zero-value custodian that Open never touched, the
+		// state a caller reaches by declaring one and skipping the error path.
+		neverOpened bool
+
+		// closeTwice closes the custodian a second time, which must be a safe no-op.
+		closeTwice bool
+
 		// mkdirs are created with os.Mkdir before any other action.
 		mkdirs []string
 
@@ -77,6 +84,10 @@ func TestCustodian(t *testing.T) {
 		// wantDirEntries lists directories whose entries are listed through the custodian.
 		wantDirEntries map[string][]string
 	}{
+		"a custodian closed twice": {closeTwice: true},
+
+		"a custodian that was never opened": {neverOpened: true},
+
 		"path escapes are refused": {
 			escapePaths:       escapePaths,
 			testSymlinkEscape: true,
@@ -113,8 +124,13 @@ func TestCustodian(t *testing.T) {
 			t.Parallel()
 
 			dir := t.TempDir()
-			c, err := securefiles.Open(dir)
-			require.NoError(t, err)
+			var zero securefiles.Custodian
+			c := &zero
+			if !tc.neverOpened {
+				opened, err := securefiles.Open(dir)
+				require.NoError(t, err)
+				c = opened
+			}
 			defer func() { _ = c.Close() }()
 
 			target := c
@@ -193,6 +209,16 @@ func TestCustodian(t *testing.T) {
 				content, err := os.ReadFile(filepath.Join(basePath, tc.freshFile))
 				require.NoError(t, err)
 				require.Equal(t, tc.freshContent, string(content))
+			}
+
+			if tc.neverOpened {
+				require.False(t, c.IsDegraded(), "a custodian with no platform must not claim to be degraded")
+				require.NotPanics(t, c.LogDegradedOnce, "logging must tolerate a custodian with no platform")
+			}
+
+			if tc.closeTwice {
+				require.NoError(t, c.Close(), "the first close should release everything cleanly")
+				require.NoError(t, c.Close(), "a second close must be a safe no-op")
 			}
 		})
 	}
@@ -405,49 +431,6 @@ func TestOpenErrors(t *testing.T) {
 	}
 }
 
-func TestSetMockOwned(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	c, err := securefiles.Open(dir)
-	require.NoError(t, err)
-	defer func() { _ = c.Close() }()
-
-	require.NoError(t, c.WriteFile("own.txt", []byte("x")))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "foreign.txt"), []byte("x"), 0600))
-
-	// The mock overrides the platform predicate in both directions.
-	ownedTrue := true
-	c.SetMockOwned(&ownedTrue)
-	owned, err := c.IsOwned("foreign.txt")
-	require.NoError(t, err)
-	require.True(t, owned, "Mocked ownership should report a foreign node as owned")
-
-	ownedFalse := false
-	c.SetMockOwned(&ownedFalse)
-	owned, err = c.IsOwned("own.txt")
-	require.NoError(t, err)
-	require.False(t, owned, "Mocked ownership should report an owned node as foreign")
-
-	// A nil mock restores the platform behaviour. Linux reports a raw node as
-	// cleanly unowned (the xattr is simply missing); on Windows a completely
-	// EA-less file has no clean answer, so the predicate errors instead; the
-	// attribute-less fallback platforms recognise every node.
-	c.SetMockOwned(nil)
-	owned, err = c.IsOwned("foreign.txt")
-	switch runtime.GOOS {
-	case "windows":
-		require.Error(t, err, "IsOwned on an EA-less file errors on Windows")
-		require.False(t, owned)
-	case "linux":
-		require.NoError(t, err)
-		require.False(t, owned)
-	default:
-		require.NoError(t, err)
-		require.True(t, owned)
-	}
-}
-
 func TestDegradedModeOperationsAndLogging(t *testing.T) {
 	dir := t.TempDir()
 
@@ -458,7 +441,7 @@ func TestDegradedModeOperationsAndLogging(t *testing.T) {
 	require.NoError(t, err)
 	defer c.Close()
 
-	c.SetMockDegraded(true)
+	c.SetDegraded(true)
 	require.True(t, c.IsDegraded())
 
 	// Test creation and requests serve in degraded mode
@@ -483,7 +466,7 @@ func TestDegradedModeOperationsAndLogging(t *testing.T) {
 	c2, err := securefiles.Open(dir)
 	require.NoError(t, err)
 	defer c2.Close()
-	c2.SetMockDegraded(true)
+	c2.SetDegraded(true)
 
 	// Simulate log on startup/init
 	c2.LogDegradedOnce()

@@ -1,6 +1,6 @@
 //go:build windows
 
-// Internal tests over the Windows platform layer: they drive the NT syscall hooks to
+// Internal tests over the Windows platform layer: they drive the NT syscall seams to
 // reproduce filesystems this machine does not have, and pin ADR 2.02 throughout — a
 // refusal degrades the custodian loudly and never fails closed.
 
@@ -19,6 +19,10 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// TestOpenStampingFailureDegrades pins ADR 2.02 at construction: a filesystem that
+// refuses the attribute write must leave a degraded custodian that still works, reported
+// loudly, never a failure to start. Both roots reach the same stamping call: one adopted
+// from a pre-existing directory, one created by ensureRoot itself.
 func TestOpenStampingFailureDegrades(t *testing.T) {
 	testCases := map[string]struct {
 		// preCreate leaves the root on disk before Open, so it is adopted rather than created.
@@ -40,17 +44,12 @@ func TestOpenStampingFailureDegrades(t *testing.T) {
 			hook := test.NewGlobal()
 			defer hook.Reset()
 
-			// Force NtSetEaFile to fail as if the filesystem denied the EA write.
-			denied := uint32(windows.STATUS_ACCESS_DENIED)
-			testNtSetEaFileResult = &denied
-			defer func() { testNtSetEaFileResult = nil }()
-
-			cust, err := Open(rootDir)
+			cust, err := OpenRefusingStamp(rootDir, uint32(windows.STATUS_ACCESS_DENIED))
 			require.NoError(t, err, "stamping must never fail closed")
 			defer cust.Close()
 
 			// A root ensureRoot creates carries its stamp in the NtCreateFile call itself
-			// (ADR 2.01), so it never reaches the attribute write this hook denies. Only
+			// (ADR 2.01), so it never reaches the attribute write this seam refuses. Only
 			// an adopted root is stamped separately, and only it can degrade here.
 			require.Equal(t, tc.wantDegraded, cust.IsDegraded(), "unexpected degraded state")
 			require.Equal(t, tc.wantDegraded, loggedAt(hook, logrus.ErrorLevel, ""),
@@ -59,15 +58,20 @@ func TestOpenStampingFailureDegrades(t *testing.T) {
 	}
 }
 
-// TestCreateFileEaFailureDegradesAndFallsBack drives the createNode failure paths
-// through the testNtCreateFileResult hook: an EA-rejection must degrade the
-// custodian and fall back to plain creation, while an unrelated failure surfaces
-// as an error.
+// TestCreateNode covers what createNode does when the filesystem will not take the stamp.
+// ADR 2.02 requires it to fail open: an EA rejection degrades the custodian and falls back
+// to plain creation, while an unrelated failure is a real error. Once degraded it stops
+// reaching NtCreateFile at all, and must still create nodes and still refuse a collision
+// rather than silently adopting whatever is already there.
 func TestCreateNode(t *testing.T) {
 	testCases := map[string]struct {
-		// failCreation makes NtCreateFile fail with this status, standing in for a
-		// filesystem that rejects the extended attributes carried on the create.
+		// failCreation makes NtCreateFile fail with this status; zero leaves it alone.
 		failCreation uint32
+		// preDegraded marks the filesystem as unable to carry the stamp before the call.
+		preDegraded bool
+		// seedExisting puts a node at the path before the call.
+		seedExisting bool
+		isDir        bool
 
 		wantErr      bool
 		wantExists   bool
@@ -81,31 +85,50 @@ func TestCreateNode(t *testing.T) {
 			failCreation: uint32(windows.STATUS_ACCESS_DENIED),
 			wantErr:      true,
 		},
+		"a degraded custodian still creates files": {
+			preDegraded: true,
+			wantExists:  true, wantDegraded: true,
+		},
+		"a degraded custodian still creates directories": {
+			preDegraded: true, isDir: true,
+			wantExists: true, wantDegraded: true,
+		},
+		"an existing node is refused, not adopted": {
+			preDegraded: true, seedExisting: true,
+			wantErr: true, wantExists: true, wantDegraded: true,
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			// The hook is read inside createNode only, so Open still establishes a real root.
-			status := tc.failCreation
-			testNtCreateFileResult = &status
-			defer func() { testNtCreateFileResult = nil }()
-
 			dir := t.TempDir()
 			cust, err := Open(dir)
 			require.NoError(t, err, "Setup: could not open custodian")
 			defer cust.Close()
 
-			const node = "node.txt"
-			err = cust.WriteFile(node, []byte("data"))
+			const node = "node"
+			if tc.seedExisting {
+				require.NoError(t, cust.sys.createNode(node, tc.isDir), "Setup: could not seed the existing node")
+			}
+			if tc.preDegraded {
+				cust.SetDegraded(true)
+			}
+			if tc.failCreation != 0 {
+				cust.FailCreation(tc.failCreation)
+			}
+
+			err = cust.sys.createNode(node, tc.isDir)
 			if tc.wantErr {
-				require.Error(t, err, "a non-EA creation failure must surface as an error")
+				require.Error(t, err, "the creation should have been refused")
 			} else {
-				require.NoError(t, err, "an EA-rejected creation must fail open into the plain fallback")
+				require.NoError(t, err, "the creation should have succeeded")
 			}
 
 			path := filepath.Join(dir, node)
 			if tc.wantExists {
-				require.FileExists(t, path, "the fallback must still create the node plainly")
+				require.DirExists(t, filepath.Dir(path), "Setup: the sub-tree should exist")
+				_, statErr := os.Stat(path)
+				require.NoError(t, statErr, "the node should exist on disk")
 			} else {
 				require.NoFileExists(t, path, "a failed creation must leave no node behind")
 			}
@@ -167,8 +190,11 @@ func TestSetRootVerifiesIdentity(t *testing.T) {
 		// standing in for a path redirected between the two resolutions.
 		replaced bool
 		// unverifiable models a filesystem that supplies no usable file identity,
-		// such as a network redirector.
+		// such as a network redirector. It describes the root as first resolved.
 		unverifiable bool
+		// loseIdentity models the reopened node failing to identify itself although the
+		// original did, as a swap onto a filesystem that exposes no identity would.
+		loseIdentity bool
 
 		wantErr error
 	}{
@@ -176,6 +202,11 @@ func TestSetRootVerifiesIdentity(t *testing.T) {
 		"a directory swapped in behind it":    {replaced: true, wantErr: ErrRootReplaced},
 		"no identity to compare against":      {unverifiable: true},
 		"swapped, but no identity to compare": {replaced: true, unverifiable: true},
+
+		// A root that identified itself once must keep doing so. Accepting a reopened
+		// handle that cannot be identified would let a swap onto a filesystem without
+		// identities walk straight past the comparison.
+		"identity lost between the two resolutions": {loseIdentity: true, wantErr: ErrRootReplaced},
 	}
 
 	for name, tc := range testCases {
@@ -197,6 +228,9 @@ func TestSetRootVerifiesIdentity(t *testing.T) {
 			if tc.unverifiable {
 				sys.rootIDKnown = false
 			}
+			if tc.loseIdentity {
+				sys.nt.identity = func(windows.Handle) (fileIdentity, bool) { return fileIdentity{}, false }
+			}
 
 			root, err := os.OpenRoot(opened)
 			require.NoError(t, err, "Setup: could not open the root")
@@ -209,6 +243,258 @@ func TestSetRootVerifiesIdentity(t *testing.T) {
 			}
 			require.NoError(t, err, "setRoot should accept the root")
 			require.NoError(t, sys.Close())
+		})
+	}
+}
+
+// TestNTPathEncodingIsRefused pins that a relative path the NT layer cannot encode is
+// refused rather than silently truncated at the NUL. NT counted strings carry an explicit
+// length, so a truncating implementation would let a caller name "good\x00evil" and have
+// the kernel act on "good" instead. Every case therefore seeds a real node called "good":
+// if the NUL were dropped, the call would succeed against that node instead of failing.
+func TestNTPathEncodingIsRefused(t *testing.T) {
+	t.Parallel()
+
+	const bad = "good\x00evil"
+
+	testCases := map[string]struct {
+		seedFile bool
+		seedDir  bool
+
+		call  func(s *platformSys) error
+		after func(t *testing.T, dir string)
+	}{
+		"ownership check": {
+			seedFile: true,
+			call: func(s *platformSys) error {
+				owned, err := s.isOwned(bad)
+				if err == nil && owned {
+					return nil // truncated onto the seeded node
+				}
+				return err
+			},
+		},
+		"node creation": {
+			call: func(s *platformSys) error { return s.createNode(bad, false) },
+			after: func(t *testing.T, dir string) {
+				t.Helper()
+				require.NoFileExists(t, filepath.Join(dir, "good"), "a truncated path must not create the shorter node")
+			},
+		},
+		"directory open": {
+			seedDir: true,
+			call: func(s *platformSys) error {
+				h, err := s.openDirNoReparse(bad)
+				if err == nil {
+					closeHandle(h)
+				}
+				return err
+			},
+		},
+		"rename source": {
+			seedFile: true,
+			call:     func(s *platformSys) error { return s.renameNode(bad, "moved.txt") },
+			after: func(t *testing.T, dir string) {
+				t.Helper()
+				require.FileExists(t, filepath.Join(dir, "good"), "a truncated path must not move the shorter node")
+			},
+		},
+		"sub-directory stamp": {
+			seedDir: true,
+			call:    func(s *platformSys) error { return s.stampSubdir(bad) },
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			cust, err := Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer cust.Close()
+
+			if tc.seedFile {
+				require.NoError(t, cust.WriteFile("good", []byte("seed")), "Setup: could not seed the file")
+			}
+			if tc.seedDir {
+				require.NoError(t, os.Mkdir(filepath.Join(dir, "good"), DirMode), "Setup: could not seed the directory")
+			}
+
+			require.Error(t, tc.call(cust.sys), "an unencodable path must be refused, never truncated")
+
+			if tc.after != nil {
+				tc.after(t, dir)
+			}
+		})
+	}
+}
+
+// TestRenameNode covers the two conditions renameNode has to survive on its own: a
+// destination leaf it cannot encode, which is checked only after the source is open, and
+// a filesystem with no FILE_RENAME_INFORMATION_EX at all, where the rename must still
+// happen through the original information class rather than be reported as a failure.
+func TestRenameNode(t *testing.T) {
+	testCases := map[string]struct {
+		to string
+		// withoutRenameInfoEx models a filesystem that rejects the newer information class.
+		withoutRenameInfoEx bool
+
+		wantErr bool
+	}{
+		"an unencodable destination is refused":                 {to: "bad\x00name", wantErr: true},
+		"a filesystem without the newer info class still moves": {to: "dst.txt", withoutRenameInfoEx: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			cust, err := Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer cust.Close()
+
+			require.NoError(t, cust.WriteFile("src.txt", []byte("payload")), "Setup: could not seed the source")
+			if tc.withoutRenameInfoEx {
+				cust.WithoutRenameInfoEx()
+			}
+
+			err = cust.sys.renameNode("src.txt", tc.to)
+			if tc.wantErr {
+				require.Error(t, err, "the rename should have been refused")
+				require.FileExists(t, filepath.Join(dir, "src.txt"), "the source must survive a refused rename")
+				return
+			}
+
+			require.NoError(t, err, "the rename should have succeeded")
+			require.NoFileExists(t, filepath.Join(dir, "src.txt"), "the source must be gone after the rename")
+			got, err := os.ReadFile(filepath.Join(dir, tc.to))
+			require.NoError(t, err, "the destination must exist after the rename")
+			require.Equal(t, "payload", string(got), "the rename must move the content")
+		})
+	}
+}
+
+// TestIdentityOf pins the best-effort contract of the identity check: a handle it cannot
+// interrogate yields "unknown" rather than a zero identity, which would compare equal to
+// another unknown one and wrongly certify a swapped root.
+func TestIdentityOf(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// realDir interrogates a handle to an actual directory instead of an invalid one.
+		realDir bool
+
+		wantKnown bool
+	}{
+		"an uninterrogable handle": {},
+		"an open directory":        {realDir: true, wantKnown: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// ensureRoot closes its handle, so a live one has to come from elsewhere.
+			h := windows.InvalidHandle
+			if tc.realDir {
+				f, err := os.Open(t.TempDir())
+				require.NoError(t, err, "Setup: could not open the directory")
+				defer func() { _ = f.Close() }()
+				h = windows.Handle(f.Fd())
+			}
+
+			_, ok := identityOf(h)
+			require.Equal(t, tc.wantKnown, ok, "unexpected identity availability")
+		})
+	}
+}
+
+// TestStampSubdirDegrades covers the two ways stampSubdir declines to stamp: it is a
+// no-op once the filesystem is known not to carry the attribute, and a refusal of the
+// attribute write degrades the custodian instead of failing the call, per ADR 2.02.
+func TestStampSubdirDegrades(t *testing.T) {
+	testCases := map[string]struct {
+		alreadyDegraded bool
+		denyEaWrite     bool
+
+		wantDegraded bool
+	}{
+		"a degraded filesystem is not stamped again": {alreadyDegraded: true, wantDegraded: true},
+		"a refused attribute write degrades":         {denyEaWrite: true, wantDegraded: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			cust, err := Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer cust.Close()
+
+			require.NoError(t, os.Mkdir(filepath.Join(dir, "sub"), DirMode), "Setup: could not pre-create the sub-directory")
+
+			if tc.alreadyDegraded {
+				cust.SetDegraded(true)
+			}
+			if tc.denyEaWrite {
+				cust.FailStamping(uint32(windows.STATUS_ACCESS_DENIED))
+			}
+
+			require.NoError(t, cust.sys.stampSubdir("sub"), "stamping must never fail closed")
+			require.Equal(t, tc.wantDegraded, cust.IsDegraded(), "unexpected degraded state")
+		})
+	}
+}
+
+// TestEnsureRootRejectsUnusableBasePath pins that a base path the platform cannot
+// establish is reported at construction, where it can still be acted on.
+func TestEnsureRootRejectsUnusableBasePath(t *testing.T) {
+	t.Parallel()
+
+	tmp := t.TempDir()
+	blocker := filepath.Join(tmp, "file")
+	require.NoError(t, os.WriteFile(blocker, []byte("x"), FileMode), "Setup: could not seed the blocking file")
+
+	testCases := map[string]struct {
+		basePath string
+	}{
+		"a parent that is a file, not a directory": {basePath: filepath.Join(blocker, "child", "root")},
+		"a leaf name the NT layer cannot encode":   {basePath: filepath.Join(tmp, "bad\x00name")},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := newPlatformSys(tc.basePath)
+			require.Error(t, err, "an unusable base path must be refused")
+		})
+	}
+}
+
+// TestLogRemoteVolume pins that a sub-tree hosted on a volume this machine does not own
+// is reported at error level, and that a local one stays quiet. The stamp is written on
+// the remote filesystem, so a healthy-looking custodian is not evidence that instances see
+// a root-owned sub-tree; ADR 2.02 requires the condition to be reported, not refused.
+func TestLogRemoteVolume(t *testing.T) {
+	testCases := map[string]struct {
+		basePath string
+
+		wantReported bool
+	}{
+		"a sub-tree on a UNC path":    {basePath: `\\server\share\publicdir`, wantReported: true},
+		"a sub-tree on a local drive": {basePath: `C:\Users\someone\.ubuntupro`},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			hook := test.NewGlobal()
+			defer hook.Reset()
+
+			c := &Custodian{basePath: tc.basePath}
+			c.logRemoteVolume()
+
+			require.Equal(t, tc.wantReported, loggedAt(hook, logrus.ErrorLevel, "a UNC path"),
+				"unexpected reporting of the backing volume")
 		})
 	}
 }

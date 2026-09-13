@@ -16,10 +16,10 @@ import (
 // shared between goroutines, and degraded in particular is read to decide whether a node
 // can be verified at all.
 type platformSys struct {
-	mu        sync.Mutex
-	root      *os.Root
-	degraded  bool
-	mockOwned *bool
+	mu       sync.Mutex
+	xattr    xattrCalls
+	root     *os.Root
+	degraded bool
 }
 
 // watermarkXattr is the user namespace extended attribute used to stamp files
@@ -34,16 +34,28 @@ const watermarkXattr = "user.io.canonical.up4w.custodian.watermark"
 // describes nothing and is treated as no watermark at all.
 const watermarkLen = 12
 
-// fsetxattr and fgetxattr alias the xattr syscalls so tests can swap them and
-// simulate a filesystem without xattr support or a failing xattr call, the
-// same role testNtSetEaFileResult plays in sys_windows.go.
-var (
-	fsetxattr  = unix.Fsetxattr
-	fgetxattr  = unix.Fgetxattr
-	flistxattr = unix.Flistxattr
-)
+// xattrCalls is the xattr surface the watermark path uses. It is a field of platformSys
+// rather than a set of package-level variables so that no process-wide switch exists that
+// could turn watermarking off for every custodian at once: it is set once at construction
+// and never reassigned. Production wires realXattrCalls; the tests in this package wire a
+// fake to stand in for a filesystem that does not carry user extended attributes.
+type xattrCalls struct {
+	set  func(fd int, attr string, data []byte, flags int) error
+	get  func(fd int, attr string, dest []byte) (int, error)
+	list func(fd int, dest []byte) (int, error)
+}
+
+// realXattrCalls returns the production implementation: the xattr syscalls themselves.
+func realXattrCalls() xattrCalls {
+	return xattrCalls{set: unix.Fsetxattr, get: unix.Fgetxattr, list: unix.Flistxattr}
+}
 
 func newPlatformSys(basePath string) (*platformSys, error) {
+	return newPlatformSysWith(basePath, realXattrCalls())
+}
+
+// newPlatformSysWith is newPlatformSys with the xattr surface supplied rather than assumed.
+func newPlatformSysWith(basePath string, xattr xattrCalls) (*platformSys, error) {
 	if err := os.MkdirAll(basePath, DirMode); err != nil {
 		return nil, err
 	}
@@ -54,7 +66,7 @@ func newPlatformSys(basePath string) (*platformSys, error) {
 	}
 	defer func() { _ = f.Close() }()
 
-	return &platformSys{degraded: !xattrsSupported(int(f.Fd()))}, nil //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+	return &platformSys{xattr: xattr, degraded: !xattrsSupported(xattr, int(f.Fd()))}, nil //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 }
 
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
@@ -63,7 +75,7 @@ func newPlatformSys(basePath string) (*platformSys, error) {
 // containment the parent established. Degradation is inherited because it describes the
 // filesystem, not the node.
 func newSubPlatformSys(degraded bool) *platformSys {
-	return &platformSys{degraded: degraded}
+	return &platformSys{degraded: degraded, xattr: realXattrCalls()}
 }
 
 // stampSubdir is a no-op: the Linux watermark is only ever applied to regular files, so
@@ -98,7 +110,7 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 	}
 
 	if !s.degraded {
-		if err := stampNode(f); err != nil {
+		if err := stampNode(s.xattr, f); err != nil {
 			closeErr := f.Close()
 			if isXattrUnsupported(err) {
 				// Filesystem does not support xattrs: mirror Windows degraded mode by
@@ -129,26 +141,11 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		}
 		// On Linux directories are not stamped; only regular files carry the watermark.
 		if !st.IsDir() {
-			var ust unix.Stat_t
-			if err := unix.Fstat(int(f.Fd()), &ust); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
-				return err
-			}
-			buf := make([]byte, watermarkLen)
-			n, err := fgetxattr(int(f.Fd()), watermarkXattr, buf) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+			owned, err := ownedByWatermark(s.xattr, int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 			if err != nil {
-				if isXattrMissing(err) {
-					return ErrNotOwned
-				}
 				return err
 			}
-			// Presence is not ownership. A watermark of the wrong size, or one that no
-			// longer describes the node, proves no more than a missing one: accepting it
-			// would let anyone who can write the attribute have the custodian publish
-			// their content under a trusted name.
-			if n != watermarkLen ||
-				binary.BigEndian.Uint32(buf[0:4]) != ust.Uid ||
-				binary.BigEndian.Uint32(buf[4:8]) != ust.Gid ||
-				binary.BigEndian.Uint32(buf[8:12]) != ust.Mode {
+			if !owned {
 				return ErrNotOwned
 			}
 		}
@@ -163,13 +160,6 @@ func (s *platformSys) isDegraded() bool {
 	return s.degraded
 }
 
-func (s *platformSys) setMockDegraded(degraded bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.degraded = degraded
-}
-
 // isOwned reports whether the node carries the custodian's watermark and still
 // has the same owner, group, and mode recorded at creation time. It never
 // answers on behalf of a filesystem that cannot carry xattrs: there the query
@@ -180,23 +170,48 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.mockOwned != nil {
-		return *s.mockOwned, nil
-	}
-
 	f, err := s.root.Open(rel)
 	if err != nil {
 		return false, err
 	}
 	defer func() { _ = f.Close() }()
 
+	return ownedByWatermark(s.xattr, int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+}
+
+// xattrsSupported reports whether the filesystem behind fd can carry the watermark at
+// all. Probing once, while the root is being established, is what lets every later read
+// be a pure query: a predicate that discovered the answer mid-scan would have to mutate
+// shared state from a read path, and would report a node as unverifiable for a reason
+// that has nothing to do with that node. Listing is used rather than a write so the probe
+// leaves no trace of its own.
+func xattrsSupported(xattr xattrCalls, fd int) bool {
+	_, err := xattr.list(fd, nil)
+	return !isXattrUnsupported(err)
+}
+
+// remoteVolume always reports a local volume: the custodian's projection concerns are
+// Windows-specific, and the Linux build exists to keep the cross-platform tests honest.
+func remoteVolume(string) (remote bool, kind string) {
+	return false, ""
+}
+
+// ownedByWatermark reports whether the open node still carries the watermark recorded
+// for it at creation: the value must be present, the right size, and still describe the
+// node's own owner, group and mode. Both the ownership predicate and the rename path go
+// through here, because a rename that accepted a node the predicate would reject would
+// let a tamperer who can write the attribute have the custodian publish their content.
+// A missing watermark is not an error, only an answer; a filesystem that cannot carry
+// one at all is, because then nothing about the node can be verified.
+func ownedByWatermark(xattr xattrCalls, fd int) (bool, error) {
 	var st unix.Stat_t
-	if err := unix.Fstat(int(f.Fd()), &st); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+	if err := unix.Fstat(fd, &st); err != nil {
 		return false, err
 	}
 
 	buf := make([]byte, watermarkLen)
-	if _, err := fgetxattr(int(f.Fd()), watermarkXattr, buf); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+	n, err := xattr.get(fd, watermarkXattr, buf)
+	if err != nil {
 		if isXattrMissing(err) {
 			return false, nil
 		}
@@ -208,6 +223,9 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 		}
 		return false, err
 	}
+	if n != watermarkLen {
+		return false, nil
+	}
 
 	uid := binary.BigEndian.Uint32(buf[0:4])
 	gid := binary.BigEndian.Uint32(buf[4:8])
@@ -215,35 +233,11 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	return uid == st.Uid && gid == st.Gid && mode == st.Mode, nil
 }
 
-func (s *platformSys) setMockOwned(owned *bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.mockOwned = owned
-}
-
-// xattrsSupported reports whether the filesystem behind fd can carry the watermark at
-// all. Probing once, while the root is being established, is what lets every later read
-// be a pure query: a predicate that discovered the answer mid-scan would have to mutate
-// shared state from a read path, and would report a node as unverifiable for a reason
-// that has nothing to do with that node. Listing is used rather than a write so the probe
-// leaves no trace of its own.
-func xattrsSupported(fd int) bool {
-	_, err := flistxattr(fd, nil)
-	return !isXattrUnsupported(err)
-}
-
-// remoteVolume always reports a local volume: the custodian's projection concerns are
-// Windows-specific, and the Linux build exists to keep the cross-platform tests honest.
-func remoteVolume(string) (remote bool, kind string) {
-	return false, ""
-}
-
 // stampNode writes the custodian's watermark to the open file as a user
 // namespace extended attribute. The value records the file's current owner,
 // group, and mode so that later tampering with ownership or permissions
 // invalidates it.
-func stampNode(f *os.File) error {
+func stampNode(xattr xattrCalls, f *os.File) error {
 	var st unix.Stat_t
 	if err := unix.Fstat(int(f.Fd()), &st); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 		return err
@@ -253,7 +247,7 @@ func stampNode(f *os.File) error {
 	binary.BigEndian.PutUint32(b[0:4], st.Uid)
 	binary.BigEndian.PutUint32(b[4:8], st.Gid)
 	binary.BigEndian.PutUint32(b[8:12], st.Mode)
-	return fsetxattr(int(f.Fd()), watermarkXattr, b, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+	return xattr.set(int(f.Fd()), watermarkXattr, b, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 }
 
 func isXattrMissing(err error) bool {

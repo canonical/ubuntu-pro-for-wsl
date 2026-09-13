@@ -11,7 +11,6 @@ import (
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/ubuntu/decorate"
 	"go.yaml.in/yaml/v3"
 	"gopkg.in/ini.v1"
@@ -23,15 +22,27 @@ type Config interface {
 	LandscapeClientConfig() (string, config.Source, error)
 }
 
+// Custodian is the part of a securefiles custodian this package depends on: a contained
+// sub-tree it can write to, ask about ownership, and sweep. It is declared here, by the
+// consumer, so the security component needs no test seam of its own to let these tests
+// reproduce a filesystem that cannot carry the watermark.
+type Custodian interface {
+	IsDegraded() bool
+	IsOwned(relPath string) (bool, error)
+	Purge(isAllowed func(relPath string, isDir bool) bool) ([]string, error)
+	Remove(relPath string) error
+	WriteFile(relPath string, data []byte) error
+}
+
 // CloudInit contains necessary data to drop cloud-init user data files for WSL's data source to pick them up.
 type CloudInit struct {
-	dir  *securefiles.Custodian
+	dir  Custodian
 	conf Config
 }
 
 // New creates a CloudInit object and attaches it to the configuration notifier.
 // The custodian must already be scoped to the cloud-init sub-tree; the writer only addresses files by leaf name.
-func New(ctx context.Context, conf Config, dir *securefiles.Custodian) (CloudInit, error) {
+func New(ctx context.Context, conf Config, dir Custodian) (CloudInit, error) {
 	c := CloudInit{
 		dir:  dir,
 		conf: conf,
