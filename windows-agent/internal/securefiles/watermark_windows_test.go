@@ -99,6 +99,16 @@ func TestWindowsEaWatermark(t *testing.T) {
 		require.NoError(t, err, "incomplete stamps should decode without error")
 		require.False(t, owned, "incomplete stamp should not be owned")
 	}
+
+	// Degradation is not an answer about ownership. A filesystem that cannot carry
+	// extended attributes makes every node unverifiable, so the predicate keeps
+	// reporting the query failure instead of adopting the node: deciding that an
+	// unverifiable sub-tree is "ours" is the caller's policy, and pinning it here
+	// prevents that policy from silently moving back into the platform layer.
+	c.SetMockDegraded(true)
+	owned, err = c.IsOwned("raw.txt")
+	require.Error(t, err, "a degraded filesystem must not turn an unreadable stamp into an answer")
+	require.False(t, owned, "degraded custodian must not claim ownership of an unstamped node")
 }
 
 // setEaFile replaces the extended attributes of the node behind h with the

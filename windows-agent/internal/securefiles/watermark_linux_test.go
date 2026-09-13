@@ -49,4 +49,15 @@ func TestLinuxXattrWatermark(t *testing.T) {
 	owned, err = c.IsOwned("tampered.txt")
 	require.NoError(t, err)
 	require.False(t, owned, "file with changed mode should not be owned")
+
+	// Degradation is not an answer about ownership, mirroring the Windows predicate:
+	// a filesystem that cannot carry the watermark makes every node unverifiable, and
+	// deciding what that means is the caller's policy, not this predicate's.
+	c.SetMockDegraded(true)
+	owned, err = c.IsOwned("stamped.txt")
+	require.NoError(t, err)
+	require.True(t, owned, "degradation must not change the answer for a node that still carries the watermark")
+	owned, err = c.IsOwned("raw.txt")
+	require.NoError(t, err)
+	require.False(t, owned, "degraded custodian must not claim ownership of an unstamped node")
 }
