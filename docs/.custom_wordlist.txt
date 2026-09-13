@@ -6,6 +6,7 @@ declaratively
 enablement
 Hyrum
 hoc
+injectable
 Remediations
 remediations
 reachability
@@ -127,6 +128,7 @@ ssl
 sideload
 Sideload
 sideloaded
+syscall
 tcp
 TLS
 toolchain
