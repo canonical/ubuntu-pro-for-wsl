@@ -95,16 +95,9 @@ func (s *platformSys) ensureRoot(basePath string) error {
 		return err
 	}
 
-	uString, err := windows.NewNTUnicodeString(baseName)
+	oa, err := relativeAttributes(parentHandle, baseName)
 	if err != nil {
 		return err
-	}
-
-	oa := windows.OBJECT_ATTRIBUTES{
-		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
-		RootDirectory: parentHandle,
-		ObjectName:    uString,
-		Attributes:    windows.OBJ_CASE_INSENSITIVE,
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
@@ -119,7 +112,7 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	err = windows.NtCreateFile(
 		&handle,
 		desiredAccess,
-		&oa,
+		oa,
 		&iosb,
 		nil,
 		fileAttributes,
@@ -198,40 +191,8 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 		return true, nil
 	}
 
-	uString, err := windows.NewNTUnicodeString(rel)
+	h, err := s.openExisting(rel, windows.GENERIC_READ, 0, windows.FILE_NON_DIRECTORY_FILE)
 	if err != nil {
-		return false, err
-	}
-	oa := windows.OBJECT_ATTRIBUTES{
-		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
-		RootDirectory: s.rootHandle,
-		ObjectName:    uString,
-		Attributes:    windows.OBJ_CASE_INSENSITIVE,
-	}
-
-	var iosb windows.IO_STATUS_BLOCK
-	var h windows.Handle
-	err = windows.NtCreateFile(
-		&h,
-		windows.GENERIC_READ|windows.SYNCHRONIZE,
-		&oa,
-		&iosb,
-		nil,
-		0,
-		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
-		windows.FILE_OPEN,
-		windows.FILE_SYNCHRONOUS_IO_NONALERT|windows.FILE_NON_DIRECTORY_FILE,
-		0,
-		0,
-	)
-	if err != nil {
-		if errors.Is(err, windows.STATUS_STOPPED_ON_SYMLINK) {
-			return false, ErrPathEscapes
-		}
-		var status windows.NTStatus
-		if errors.As(err, &status) {
-			return false, status.Errno()
-		}
 		return false, err
 	}
 	defer closeHandle(h)
@@ -267,16 +228,9 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 		return err
 	}
 
-	uString, err := windows.NewNTUnicodeString(relativePath)
+	oa, err := relativeAttributes(s.rootHandle, relativePath)
 	if err != nil {
 		return err
-	}
-
-	oa := windows.OBJECT_ATTRIBUTES{
-		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
-		RootDirectory: s.rootHandle,
-		ObjectName:    uString,
-		Attributes:    windows.OBJ_CASE_INSENSITIVE,
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
@@ -302,7 +256,7 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 		ntErr = windows.NtCreateFile(
 			&handle,
 			desiredAccess,
-			&oa,
+			oa,
 			&iosb,
 			nil,
 			fileAttributes,
@@ -315,22 +269,49 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	}
 
 	if ntErr != nil {
-		if errors.Is(ntErr, windows.STATUS_STOPPED_ON_SYMLINK) {
-			return ErrPathEscapes
-		}
+		// A filesystem that will not take the attribute buffer degrades and falls back;
+		// every other failure, a redirected path above all, is reported as it is.
 		if errors.Is(ntErr, windows.STATUS_EAS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_INVALID_PARAMETER) {
 			s.degraded = true
 			return fallbackCreate(s.root, relativePath, isDir)
 		}
-		var status windows.NTStatus
-		if errors.As(ntErr, &status) {
-			return status.Errno()
-		}
-		return ntErr
+		return mapNtStatus(ntErr)
 	}
 
 	closeHandle(handle)
 	return nil
+}
+
+// openExisting opens an existing node relative to the custodian's root handle. Every NT open
+// in this file wants the same things — no reparse point may be followed, the node is shared
+// with other readers and writers, and the handle is synchronous — so they are settled here
+// rather than repeated at each call site, where one omission would be a silent hole.
+func (s *platformSys) openExisting(rel string, access, attributes, options uint32) (windows.Handle, error) {
+	oa, err := relativeAttributes(s.rootHandle, rel)
+	if err != nil {
+		return windows.InvalidHandle, err
+	}
+
+	var iosb windows.IO_STATUS_BLOCK
+	var h windows.Handle
+
+	if err := windows.NtCreateFile(
+		&h,
+		access|windows.SYNCHRONIZE,
+		oa,
+		&iosb,
+		nil,
+		attributes,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
+		windows.FILE_OPEN,
+		options|windows.FILE_SYNCHRONOUS_IO_NONALERT,
+		0,
+		0,
+	); err != nil {
+		return windows.InvalidHandle, mapNtStatus(err)
+	}
+
+	return h, nil
 }
 
 func (s *platformSys) renameNode(oldRel, newRel string) error {
@@ -341,39 +322,9 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		return s.root.Rename(oldRel, newRel)
 	}
 
-	oldUString, err := windows.NewNTUnicodeString(oldRel)
+	handle, err := s.openExisting(oldRel, windows.GENERIC_READ|windows.GENERIC_WRITE|windows.DELETE, 0, 0)
 	if err != nil {
 		return err
-	}
-
-	oa := windows.OBJECT_ATTRIBUTES{
-		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
-		RootDirectory: s.rootHandle,
-		ObjectName:    oldUString,
-		Attributes:    windows.OBJ_CASE_INSENSITIVE,
-	}
-
-	var iosb windows.IO_STATUS_BLOCK
-	var handle windows.Handle
-
-	desiredAccess := uint32(windows.GENERIC_READ | windows.GENERIC_WRITE | windows.DELETE | windows.SYNCHRONIZE)
-	shareAccess := uint32(windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE | windows.FILE_SHARE_DELETE)
-
-	err = windows.NtCreateFile(
-		&handle,
-		desiredAccess,
-		&oa,
-		&iosb,
-		nil,
-		0,
-		shareAccess,
-		windows.FILE_OPEN,
-		windows.FILE_SYNCHRONOUS_IO_NONALERT,
-		0,
-		0,
-	)
-	if err != nil {
-		return mapNtStatus(err)
 	}
 	defer closeHandle(handle)
 
@@ -406,7 +357,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		if errSet == nil {
 			break
 		}
-		if errors.Is(errSet, windows.STATUS_STOPPED_ON_SYMLINK) {
+		if errors.Is(errSet, windows.STATUS_STOPPED_ON_SYMLINK) || errors.Is(errSet, windows.STATUS_REPARSE_POINT_ENCOUNTERED) {
 			return ErrPathEscapes
 		}
 		if !errors.Is(errSet, windows.STATUS_ACCESS_DENIED) && !errors.Is(errSet, windows.STATUS_SHARING_VIOLATION) {
@@ -467,7 +418,7 @@ func mapNtStatus(err error) error {
 	if err == nil {
 		return nil
 	}
-	if errors.Is(err, windows.STATUS_STOPPED_ON_SYMLINK) {
+	if errors.Is(err, windows.STATUS_STOPPED_ON_SYMLINK) || errors.Is(err, windows.STATUS_REPARSE_POINT_ENCOUNTERED) {
 		return ErrPathEscapes
 	}
 	var ntstatus windows.NTStatus
@@ -549,4 +500,21 @@ func fallbackCreate(root *os.Root, rel string, isDir bool) error {
 // stampedFileMode returns the Extended Attribute file mode including the file type bits.
 func stampedFileMode() uint32 {
 	return 0100000 | uint32(FileMode)
+}
+
+// relativeAttributes names rel underneath root. Every NT open in this file goes through
+// it, so a call site that forgets OBJ_DONT_REPARSE — and would follow a reparse point
+// planted inside the sub-tree — cannot be written in the first place.
+func relativeAttributes(root windows.Handle, rel string) (*windows.OBJECT_ATTRIBUTES, error) {
+	name, err := windows.NewNTUnicodeString(rel)
+	if err != nil {
+		return nil, err
+	}
+
+	return &windows.OBJECT_ATTRIBUTES{
+		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})), //#nosec G115 // the size of a fixed struct always fits in 32 bits.
+		RootDirectory: root,
+		ObjectName:    name,
+		Attributes:    windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE,
+	}, nil
 }
