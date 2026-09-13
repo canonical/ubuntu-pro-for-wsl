@@ -65,7 +65,10 @@ func TestNew(t *testing.T) {
 		"Success": {},
 		"No file if there is no config to write into":        {emptyConfig: true, wantNoAgentYaml: true},
 		"Error when cloud-init agent file cannot be written": {breakWriteAgentData: true, wantErr: true},
-		"Error when the custodian is already closed":         {closedCustodian: true, wantErr: true, wantErrContains: "could not purge"},
+		// A closed custodian surfaces at the first write rather than at the purge:
+		// an unpurgeable node is reported and survived, so it is the inability to
+		// publish the agent's own file that makes New fail.
+		"Error when the custodian is already closed": {closedCustodian: true, wantErr: true, wantErrContains: "could not create agent's cloud-init file"},
 	}
 
 	for name, tc := range testCases {
@@ -77,7 +80,8 @@ func TestNew(t *testing.T) {
 			custodian := newCloudInitCustodian(t)
 
 			if tc.closedCustodian {
-				// The startup purge runs on construction, so a closed custodian fails New.
+				// Construction both purges and writes the agent's file, so a closed
+				// custodian fails New at whichever of the two cannot proceed.
 				require.NoError(t, custodian.Close(), "Setup: could not close the custodian")
 			}
 
@@ -526,6 +530,8 @@ func TestStartupPurge(t *testing.T) {
 		notOwned *bool
 		// degraded marks the filesystem as unable to carry the watermark, after seeding.
 		degraded bool
+		// skipUnlessPOSIX marks a case that depends on read-only directory semantics.
+		skipUnlessPOSIX bool
 		// check runs after New succeeds.
 		check func(t *testing.T, c *securefiles.Custodian, cloudInitDir string, state *startupPurgeState)
 	}{
@@ -618,6 +624,51 @@ func TestStartupPurge(t *testing.T) {
 				require.Equal(t, []byte("instance-id: lone-inst-123\n"), readMeta)
 				_, err = os.ReadFile(filepath.Join(c.BasePath(), "LoneDistro.user-data"))
 				require.Error(t, err, "user-data should not be fabricated for a lone meta-data file")
+			},
+		},
+		// Refusing to start would leave the node exactly where it is, still there for
+		// cloud-init to consume at first boot, and would take the agent down too.
+		"Reports but survives a node it cannot remove": {
+			skipUnlessPOSIX: true,
+			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
+				t.Helper()
+				keep := filepath.Join(c.BasePath(), "Foreign.user-data", "keep")
+				require.NoError(t, os.MkdirAll(keep, 0700), "Setup: could not create the obstructing tree")
+				require.NoError(t, os.WriteFile(filepath.Join(keep, "child"), []byte("x"), 0600), "Setup: could not fill it")
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(keep, 0500), "Setup: could not make it read-only")
+				//nolint:gosec // G302 - test teardown restores directory permissions.
+				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, cloudInitDir string, state *startupPurgeState) {
+				t.Helper()
+				require.DirExists(t, filepath.Join(cloudInitDir, "Foreign.user-data"), "the node that could not be removed stays")
+				require.FileExists(t, filepath.Join(cloudInitDir, "agent.yaml"), "the agent's own file is still published")
+
+				foundError := false
+				for _, entry := range state.hook.AllEntries() {
+					if entry.Level == logrus.ErrorLevel && strings.Contains(entry.Message, "could not remove every unrecognised node") {
+						foundError = true
+						break
+					}
+				}
+				require.True(t, foundError, "expected an error-level log naming the surviving node")
+			},
+		},
+		"Purges a directory even when the watermark cannot be read": {
+			degraded: true,
+			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
+				t.Helper()
+				require.NoError(t, os.Mkdir(filepath.Join(c.BasePath(), "DirDistro.user-data"), 0o700))
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, _ string, state *startupPurgeState) {
+				t.Helper()
+				// Adoption without the watermark is unconditional for files, because
+				// nothing can distinguish ours from foreign. A directory is different:
+				// it is foreign by shape rather than by stamp, so losing the watermark
+				// must not turn this sub-tree into somewhere directories can survive.
+				_, err := c.ReadDir("DirDistro.user-data")
+				require.Error(t, err, "a directory must be purged even on an unverifiable filesystem")
 			},
 		},
 		"Purges a directory named like a distro file": {
@@ -714,6 +765,11 @@ func TestStartupPurge(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			if tc.skipUnlessPOSIX && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
+				t.Skip("read-only directory semantics require a non-root Unix user")
+			}
+
 			publicDir := t.TempDir()
 			cloudInitDir := filepath.Join(publicDir, ".cloud-init")
 

@@ -29,6 +29,9 @@ var (
 	// ErrNotOwned is returned when an operation requires an already-owned node,
 	// but the source node lacks the custodian's watermark.
 	ErrNotOwned = errors.New("node is not owned by custodian")
+	// ErrRootReplaced is returned when the directory opened as the custodian's root is
+	// not the one it created and stamped, meaning the path was redirected in between.
+	ErrRootReplaced = errors.New("root directory was replaced between creation and open")
 )
 
 // Custodian scopes filesystem operations to a sub-tree and stamps nodes with their projected ownership.
@@ -82,6 +85,8 @@ func Open(basePath string) (*Custodian, error) {
 	}
 
 	c.LogDegradedOnce()
+	c.logRemoteVolume()
+
 	return c, nil
 }
 
@@ -281,7 +286,14 @@ func (c *Custodian) Rename(oldName, newName string) error {
 
 // Purge removes all unrecognised nodes and leftover temporaries in the custodian's sub-tree
 // based on the caller-supplied policy function isAllowed. Returns the list of removed relative names.
-func (c *Custodian) Purge(isAllowed func(relPath string) bool) ([]string, error) {
+//
+// isAllowed is told whether the node is a directory, because the directory listing has
+// already established it: a policy that had only the name would have to open every entry
+// to find out, which costs more than the ownership check it is usually paired with. The
+// answer is the one the listing saw, so a node that changes type afterwards is judged on
+// the older reading — harmless here, where being a directory only ever means "not ours"
+// and leads to removal.
+func (c *Custodian) Purge(isAllowed func(relPath string, isDir bool) bool) ([]string, error) {
 	f, err := c.root.Open(".")
 	if err != nil {
 		return nil, err
@@ -293,19 +305,25 @@ func (c *Custodian) Purge(isAllowed func(relPath string) bool) ([]string, error)
 	}
 
 	var removed []string
+	var failures []error
+
 	for _, entry := range entries {
 		name := entry.Name()
 
-		if strings.HasPrefix(name, ".tmp-") || !isAllowed(name) {
+		if strings.HasPrefix(name, ".tmp-") || !isAllowed(name, entry.IsDir()) {
 			if err := c.root.RemoveAll(name); err != nil {
-				return removed, fmt.Errorf("failed to purge %q: %v", name, err)
+				// One node that resists removal must not shield the rest of the sub-tree
+				// from being purged, so the sweep continues and the failures are
+				// reported together at the end.
+				failures = append(failures, fmt.Errorf("failed to purge %q: %v", name, err))
+				continue
 			}
 			removed = append(removed, name)
 			log.Infof(context.Background(), "securefiles: purged unrecognised node or leftover temporary: %s", name)
 		}
 	}
 
-	return removed, nil
+	return removed, errors.Join(failures...)
 }
 
 // SetMockDegraded forces the custodian into degraded mode for testing.
@@ -321,6 +339,22 @@ func (c *Custodian) SetMockOwned(owned *bool) {
 	if c.sys != nil {
 		c.sys.setMockOwned(owned)
 	}
+}
+
+// logRemoteVolume reports, at error level, that the sub-tree lives on a volume this
+// machine does not own. Stamping can still succeed there, so the custodian does not
+// degrade and IsDegraded keeps reporting healthy; but the stamp is written on the remote
+// filesystem, and what instances see is a projection of that share rather than of a local
+// volume. A custodian that looks healthy is therefore not evidence that the sub-tree is
+// secured, which is precisely the case an operator cannot diagnose from the outside.
+// Following ADR 2.02, the condition is reported and nothing is refused.
+func (c *Custodian) logRemoteVolume() {
+	remote, kind := remoteVolume(c.basePath)
+	if !remote {
+		return
+	}
+
+	log.Errorf(context.Background(), "securefiles: %s is on %s; the ownership stamp is written on the remote filesystem, so the sub-tree may not be projected as root-owned inside instances even though stamping succeeds", c.basePath, kind)
 }
 
 // resolve validates name lexically and returns its cleaned form relative to

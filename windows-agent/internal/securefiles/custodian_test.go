@@ -278,6 +278,10 @@ func TestCustodianErrors(t *testing.T) {
 		"Purge on a closed custodian fails":   {op: "purge", closeFirst: true},
 		"ReadDir on a closed custodian fails": {op: "readdir", path: "x", closeFirst: true},
 
+		// A node the policy rejected but that could not be removed is the one outcome a
+		// purge must not report as success: the caller would carry on believing the
+		// sub-tree holds nothing foreign, while the node stays readable by every
+		// instance. The failure is surfaced and the node is left where it is.
 		"Purge fails when a rejected node cannot be removed": {
 			op:            "purge",
 			seedFiles:     map[string]string{"junk.txt": "junk"},
@@ -341,7 +345,7 @@ func TestCustodianErrors(t *testing.T) {
 			case "readdir":
 				_, opErr = c.ReadDir(tc.path)
 			case "purge":
-				removed, opErr = c.Purge(func(string) bool { return false })
+				removed, opErr = c.Purge(func(string, bool) bool { return false })
 			default:
 				t.Fatalf("unknown op %q", tc.op)
 			}
@@ -354,6 +358,7 @@ func TestCustodianErrors(t *testing.T) {
 				require.ErrorIs(t, opErr, securefiles.ErrPathEscapes)
 			default:
 				require.Error(t, opErr)
+				require.Empty(t, removed, "a failed operation must not report nodes as removed")
 			}
 
 			for _, name := range tc.wantSurvivors {

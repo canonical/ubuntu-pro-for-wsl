@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"unsafe"
 
@@ -21,6 +22,12 @@ type platformSys struct {
 	rootHandle windows.Handle
 	degraded   bool
 	mockOwned  *bool
+
+	// rootID identifies the directory ensureRoot created and stamped, so that the
+	// separate reopen in setRoot can be checked against it. Unset for sub-custodians,
+	// which are derived from a parent handle and never resolved by path.
+	rootID      fileIdentity
+	rootIDKnown bool
 }
 
 // fileRenameInfoStruct is FILE_RENAME_INFORMATION. Its leading word is a BOOLEAN
@@ -47,6 +54,20 @@ var testNtSetEaFileResult *uint32
 // in createNode during tests, so creation failure paths can be exercised without
 // sabotaging the root the custodian was opened on.
 var testNtCreateFileResult *uint32
+
+// fileIdentity is a node's identity as the filesystem reports it: the volume it lives on
+// and its file ID. It is what distinguishes the directory the custodian created from
+// whatever its path resolves to a moment later.
+type fileIdentity struct {
+	volume uint64
+	file   [16]byte
+}
+
+// fileIDInfo mirrors FILE_ID_INFO, which golang.org/x/sys/windows does not declare.
+type fileIDInfo struct {
+	VolumeSerialNumber uint64
+	FileID             [16]byte
+}
 
 func newPlatformSys(basePath string) (*platformSys, error) {
 	s := &platformSys{
@@ -117,13 +138,36 @@ func (s *platformSys) stampSubdir(rel string) error {
 // calls from the os.Root, so EA-stamped creation is rooted at the same
 // directory that provides structural containment.
 func (s *platformSys) setRoot(root *os.Root) error {
-	s.root = root
 	f, err := root.Open(".")
 	if err != nil {
 		return err
 	}
+
+	// ensureRoot created and stamped the root through a handle and then closed it, so
+	// this is a second, independent resolution of the same path. os.Root does not
+	// protect its own root: containment applies to names opened through it, not to the
+	// root itself. Between the two resolutions the parent directory — which ADR 2.01
+	// concedes stays writable from inside an instance — can be made to point somewhere
+	// else, and every later operation would be rooted there instead. Identity is what
+	// ties the two resolutions to one node.
+	//
+	// The concession to filesystems that supply no identity is made once, when the root
+	// is first resolved: if there was never an identity to record, there is nothing to
+	// compare and the custodian proceeds rather than refusing to serve. Once one has
+	// been recorded the concession is spent, and a reopened handle that cannot identify
+	// itself is a failed verification, not an absent one — otherwise a swap onto a
+	// filesystem that exposes no identity would walk straight past this check.
+	if s.rootIDKnown {
+		id, ok := identityOf(windows.Handle(f.Fd()))
+		if !ok || id != s.rootID {
+			return errors.Join(ErrRootReplaced, f.Close())
+		}
+	}
+
+	s.root = root
 	s.rootFile = f
 	s.rootHandle = windows.Handle(f.Fd())
+
 	return nil
 }
 
@@ -222,6 +266,9 @@ func (s *platformSys) ensureRoot(basePath string) error {
 			s.degraded = true
 		}
 	}
+
+	// Record what was created, so the reopen in setRoot can be tied back to it.
+	s.rootID, s.rootIDKnown = identityOf(handle)
 
 	closeHandle(handle)
 	return nil
@@ -494,9 +541,63 @@ func mapNtStatus(err error) error {
 	return err
 }
 
+// identityOf reports the identity of the node behind h, and whether the filesystem
+// supplied a usable one. FileIdInfo is asked first because its 128-bit ID is the real
+// one: ReFS reports a narrower derived value through GetFileInformationByHandle, so
+// comparing the 64-bit form there is weaker than it looks. A filesystem that supplies no
+// identity is not an error; it only means the node cannot be re-identified later.
+func identityOf(h windows.Handle) (fileIdentity, bool) {
+	var info fileIDInfo
+	if err := windows.GetFileInformationByHandleEx(
+		h,
+		windows.FileIdInfo,
+		(*byte)(unsafe.Pointer(&info)), //#nosec G103 // the API writes the documented struct into this buffer.
+		uint32(unsafe.Sizeof(info)),
+	); err == nil {
+		id := fileIdentity{volume: info.VolumeSerialNumber, file: info.FileID}
+		return id, id.file != [16]byte{}
+	}
+
+	var byHandle windows.ByHandleFileInformation
+	if err := windows.GetFileInformationByHandle(h, &byHandle); err != nil {
+		return fileIdentity{}, false
+	}
+
+	id := fileIdentity{volume: uint64(byHandle.VolumeSerialNumber)}
+	binary.LittleEndian.PutUint64(id.file[:8], uint64(byHandle.FileIndexHigh)<<32|uint64(byHandle.FileIndexLow))
+
+	return id, id.file != [16]byte{}
+}
+
 // closeHandle closes a Windows handle and discards its error, used in cleanup paths where propagation is not useful.
 func closeHandle(h windows.Handle) {
 	_ = windows.CloseHandle(h)
+}
+
+// remoteVolume reports whether path lives on a volume this machine does not own, and
+// names the kind for the log. A UNC path is classified by its prefix rather than by
+// GetDriveType: for an unreachable server that call blocks on name resolution for
+// seconds and then answers DRIVE_NO_ROOT_DIR anyway, which is neither fast nor
+// informative at startup. Drive letters are cheap to classify, so they go through the
+// API, which is what identifies a mapped network drive.
+func remoteVolume(path string) (remote bool, kind string) {
+	vol := filepath.VolumeName(path)
+	if strings.HasPrefix(vol, `\\`) {
+		return true, "a UNC path"
+	}
+	if vol == "" {
+		return false, ""
+	}
+
+	root, err := windows.UTF16PtrFromString(vol + `\`)
+	if err != nil {
+		return false, ""
+	}
+	if windows.GetDriveType(root) == windows.DRIVE_REMOTE {
+		return true, "a mapped network drive"
+	}
+
+	return false, ""
 }
 
 // ntQueryLxEa reads the $LXUID, $LXGID and $LXMOD extended attributes of the

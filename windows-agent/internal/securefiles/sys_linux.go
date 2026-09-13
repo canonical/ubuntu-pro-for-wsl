@@ -7,11 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	"golang.org/x/sys/unix"
 )
 
+// platformSys guards its fields for the same reason the Windows one does: a custodian is
+// shared between goroutines, and degraded in particular is read to decide whether a node
+// can be verified at all.
 type platformSys struct {
+	mu        sync.Mutex
 	root      *os.Root
 	degraded  bool
 	mockOwned *bool
@@ -33,15 +38,23 @@ const watermarkLen = 12
 // simulate a filesystem without xattr support or a failing xattr call, the
 // same role testNtSetEaFileResult plays in sys_windows.go.
 var (
-	fsetxattr = unix.Fsetxattr
-	fgetxattr = unix.Fgetxattr
+	fsetxattr  = unix.Fsetxattr
+	fgetxattr  = unix.Fgetxattr
+	flistxattr = unix.Flistxattr
 )
 
 func newPlatformSys(basePath string) (*platformSys, error) {
 	if err := os.MkdirAll(basePath, DirMode); err != nil {
 		return nil, err
 	}
-	return &platformSys{}, nil
+
+	f, err := os.Open(basePath)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+
+	return &platformSys{degraded: !xattrsSupported(int(f.Fd()))}, nil //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 }
 
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
@@ -72,6 +85,9 @@ func (s *platformSys) Close() error {
 }
 
 func (s *platformSys) createNode(rel string, isDir bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if isDir {
 		return s.root.Mkdir(rel, DirMode)
 	}
@@ -98,6 +114,9 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 }
 
 func (s *platformSys) renameNode(oldRel, newRel string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if !s.degraded {
 		f, err := s.root.Open(oldRel)
 		if err != nil {
@@ -138,10 +157,16 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 }
 
 func (s *platformSys) isDegraded() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	return s.degraded
 }
 
 func (s *platformSys) setMockDegraded(degraded bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.degraded = degraded
 }
 
@@ -152,6 +177,9 @@ func (s *platformSys) setMockDegraded(degraded bool) {
 // predicate. Callers must consult isDegraded first and decide what an
 // unverifiable sub-tree means for them.
 func (s *platformSys) isOwned(rel string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.mockOwned != nil {
 		return *s.mockOwned, nil
 	}
@@ -173,9 +201,9 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 			return false, nil
 		}
 		if isXattrUnsupported(err) {
-			// Discovered mid-scan: record the condition, but report it as an error
-			// rather than claiming ownership of a node that cannot be verified.
-			s.degraded = true
+			// Whether the filesystem carries xattrs was settled when the root was
+			// established, so this is not the place to decide it: report that the node
+			// cannot be verified and leave the custodian's state alone.
 			return false, fmt.Errorf("filesystem cannot carry the ownership watermark: %v", err)
 		}
 		return false, err
@@ -188,7 +216,27 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 }
 
 func (s *platformSys) setMockOwned(owned *bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.mockOwned = owned
+}
+
+// xattrsSupported reports whether the filesystem behind fd can carry the watermark at
+// all. Probing once, while the root is being established, is what lets every later read
+// be a pure query: a predicate that discovered the answer mid-scan would have to mutate
+// shared state from a read path, and would report a node as unverifiable for a reason
+// that has nothing to do with that node. Listing is used rather than a write so the probe
+// leaves no trace of its own.
+func xattrsSupported(fd int) bool {
+	_, err := flistxattr(fd, nil)
+	return !isXattrUnsupported(err)
+}
+
+// remoteVolume always reports a local volume: the custodian's projection concerns are
+// Windows-specific, and the Linux build exists to keep the cross-platform tests honest.
+func remoteVolume(string) (remote bool, kind string) {
+	return false, ""
 }
 
 // stampNode writes the custodian's watermark to the open file as a user
