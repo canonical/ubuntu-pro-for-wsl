@@ -44,7 +44,9 @@ func newPlatformSys(basePath string) (*platformSys, error) {
 		rootHandle: windows.InvalidHandle,
 	}
 
-	_ = s.ensureRoot(basePath)
+	if err := s.ensureRoot(basePath); err != nil {
+		return nil, err
+	}
 
 	return s, nil
 }
@@ -123,6 +125,18 @@ func (s *platformSys) ensureRoot(basePath string) error {
 		uint32(len(eaBuf)),                 //#nosec G115 // length of small EA buffer; always fits in 32 bits.
 	)
 	if err != nil {
+		// OBJ_DONT_REPARSE is what made this call fail rather than quietly follow a
+		// junction or symlink standing where the root should be. The fallback below would
+		// undo that in one line: os.MkdirAll succeeds on an existing directory link, and
+		// this path records no identity, so setRoot would have nothing to compare and the
+		// custodian would serve every later operation from outside basePath without a
+		// word. A redirected root is a refusal, not a degradation.
+		if escapes := mapNtStatus(err); errors.Is(escapes, ErrPathEscapes) {
+			return escapes
+		}
+
+		// What remains is a filesystem that will not carry the stamp at creation time.
+		// That one degrades loudly and keeps serving, per ADR 2.02.
 		s.degraded = true
 		return os.MkdirAll(basePath, DirMode)
 	}

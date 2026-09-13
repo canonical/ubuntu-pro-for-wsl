@@ -61,14 +61,14 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 
 	if !s.degraded {
 		if err := stampNode(f); err != nil {
-			_ = f.Close()
+			closeErr := f.Close()
 			if isXattrUnsupported(err) {
 				// Filesystem does not support xattrs: mirror Windows degraded mode by
 				// failing open rather than refusing to operate.
 				s.degraded = true
-				return nil
+				return closeErr
 			}
-			return err
+			return errors.Join(err, closeErr, s.root.Remove(rel))
 		}
 	}
 
