@@ -117,6 +117,8 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
   than keeping them alive against a contrived error.
 - If a test function cannot have sub-tests, it must have a comment explaining what it does and why
   it's useful to prevent regression.
+- When a new test function has similar implementation to an existing one, make them a single
+  table-driven (parametric) test function instead.
 - Strive to call `t.Parallel()` inside the sub-tests, comment in the test if parallelization is not possible.
 - Keep test cases deterministic and self-contained; avoid hidden shared mutable state between cases.
 - Prefix assertion messages with "Setup: " when a setup step fails before the actual test assertion.
