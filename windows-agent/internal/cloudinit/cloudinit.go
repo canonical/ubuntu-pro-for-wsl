@@ -95,10 +95,10 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 		log.Errorf(ctx, "cloud-init: filesystem cannot carry the ownership watermark, so foreign nodes are indistinguishable from ours: adopting the whole sub-tree unverified")
 	}
 
-	isOurs := func(rel string) bool {
+	isOurs := func(rel string, isDir bool) bool {
 		// Directories are never adopted: this sub-tree legitimately holds files only.
 		// That judgement is structural, so it still holds without the watermark.
-		if _, err := c.dir.ReadDir(rel); err == nil {
+		if isDir {
 			return false
 		}
 		if unverifiable {
@@ -118,9 +118,14 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 		return owned
 	}
 
+	// A node judged foreign but left behind is reported, not fatal. Refusing to start
+	// leaves it exactly where it is, still there to be consumed by cloud-init at the
+	// instance's first boot, and takes the agent down with it: the component that would
+	// have removed the node on a later run is the only thing lost. ADR 2.02 makes the
+	// same trade for the stamping failure this descends from.
 	removed, err := c.dir.Purge(isOurs)
 	if err != nil {
-		return fmt.Errorf("could not purge cloud-init sub-tree: %v", err)
+		log.Errorf(ctx, "cloud-init: could not remove every unrecognised node from the sub-tree, and they stay readable by every instance: %v", err)
 	}
 
 	for _, rel := range removed {
