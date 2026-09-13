@@ -16,6 +16,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -163,6 +165,23 @@ func TestConfigBadArg(t *testing.T) {
 	require.Error(t, err, "Run should return an error, stdout: %v", out)
 }
 
+func TestConfigUnmarshalError(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	// A configuration key with a type that cannot decode into the config struct
+	// must fail Run with a decode error rather than a usage error.
+	configPath := filepath.Join(t.TempDir(), "ubuntu-pro-agent.yaml")
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: [1, 2]"), 0600), "Setup: couldn't write config file")
+
+	a := agent.New()
+	a.SetArgs("version", "--config", configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.Error(t, err, "Run should return an error, stdout: %v", out)
+	require.Contains(t, err.Error(), "unable to decode configuration")
+}
+
 func TestConfigArg(t *testing.T) {
 	getStdout := captureStdout(t)
 
@@ -276,11 +295,15 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 		invalidLocalAppData bool
 		invalidUserProfile  bool
+
+		cloudInitIsFile bool
 	}{
 		"Invalid private directory": {invalidPrivateDir: true},
 		"Invalid public directory":  {invalidPublicDir: true},
 		"Invalid LocalAppData":      {invalidLocalAppData: true},
 		"Invalid UserProfile":       {invalidUserProfile: true},
+
+		"Cloud-init directory obstructed by a file": {cloudInitIsFile: true},
 	}
 
 	for name, tc := range testCases {
@@ -309,6 +332,13 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
 			require.NoError(t, err, "Failed to write file")
+
+			if tc.cloudInitIsFile {
+				// A plain file where the cloud-init custodian directory must live makes
+				// the services manager construction fail inside serve().
+				err := os.WriteFile(filepath.Join(publicDir, ".cloud-init"), []byte("I'm not a directory"), 0600)
+				require.NoError(t, err, "Setup: could not obstruct the cloud-init directory")
+			}
 
 			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
 			a.SetArgs("")
@@ -374,8 +404,12 @@ func TestPublicDir(t *testing.T) {
 func TestLogs(t *testing.T) {
 	// Not parallel because we modify the environment
 
+	hook := test.NewGlobal()
+	defer hook.Reset()
+
 	fooContent := "foo"
 	emptyContent := ""
+	oldContent := "Old log content"
 
 	tests := map[string]struct {
 		existingLogContent string
@@ -386,10 +420,10 @@ func TestLogs(t *testing.T) {
 
 		wantOldLogFileContent *string
 	}{
-		"Run and exit successfully despite logs not being written": {logDirError: true},
-		"Existing log file has been renamed to old":                {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
-		"Existing empty log file has been renamed to old":          {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
-		"Ignore when failing to archive log file":                  {existingLogContent: "OLD_IS_DIRECTORY"},
+		"Run and exit successfully despite logs not being written":  {logDirError: true},
+		"Existing log file has been renamed to old":                 {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
+		"Existing empty log file has been renamed to old":           {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
+		"Ignore obstructing rotated log directory and still rotate": {existingLogContent: "OLD_IS_DIRECTORY", wantOldLogFileContent: &oldContent},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -415,12 +449,33 @@ func TestLogs(t *testing.T) {
 					require.NoError(t, err, "Setup: create invalid log.old file")
 					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
 					require.NoError(t, err, "Setup: creating pre-existing log file")
+					tc.existingLogContent = oldContent
 				case "-":
 					tc.existingLogContent = ""
 					fallthrough
 				default:
 					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
 					require.NoError(t, err, "Setup: creating pre-existing log file")
+				}
+
+				if tc.logDirError {
+					// Obstruct the logger setup end to end: log.old is a directory tree
+					// that cannot be removed (read-only nested directory), so discarding
+					// the previous rotation fails; the rotation rename of the "log"
+					// directory onto the surviving non-empty log.old fails; and the "log"
+					// directory cannot be removed to create the log file. All failures are
+					// non-fatal: the agent runs without log output.
+					// On Windows and as root read-only directories do not block removal,
+					// so the obstruction degenerates and the logger simply succeeds.
+					keepDir := filepath.Join(oldLogFile, "keep")
+					require.NoError(t, os.MkdirAll(keepDir, 0700), "Setup: could not create obstructing log.old directory")
+					require.NoError(t, os.WriteFile(filepath.Join(keepDir, "keep.txt"), []byte("x"), 0600), "Setup: could not fill obstructing log.old directory")
+					require.NoError(t, os.MkdirAll(logFile, 0700), "Setup: could not create obstructing log directory")
+					require.NoError(t, os.WriteFile(filepath.Join(logFile, "keep.txt"), []byte("x"), 0600), "Setup: could not fill obstructing log directory")
+					//nolint:gosec // G302 - test setup removes write permission.
+					require.NoError(t, os.Chmod(keepDir, 0500), "Setup: could not make obstructing directory read-only")
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					t.Cleanup(func() { _ = os.Chmod(keepDir, 0700) })
 				}
 			}
 
@@ -444,6 +499,16 @@ func TestLogs(t *testing.T) {
 			case <-time.After(20 * time.Second):
 				require.Fail(t, "Run should have exited")
 			case <-ch:
+			}
+
+			if tc.logDirError && runtime.GOOS != "windows" && os.Geteuid() != 0 {
+				// Where the obstruction bites, every logger failure must have been
+				// logged as a non-fatal warning.
+				var warnings []string
+				for _, entry := range hook.AllEntries() {
+					warnings = append(warnings, entry.Message)
+				}
+				require.Contains(t, strings.Join(warnings, "\n"), "could not set logger output", "Expected a warning about the logger setup failure")
 			}
 
 			// Don't check for log files if the directory was not writable
@@ -658,4 +723,50 @@ func captureStdout(t *testing.T) func() string {
 
 func TestWithWslSystemMock(t *testing.T) {
 	daemontestutils.MockWslSystemCmd(t)
+}
+
+func TestAgentPreservesCloudInitUserDataOnStartup(t *testing.T) {
+	publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
+	privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
+
+	// Seed cloud-init per-distro data through a custodian, so the files carry the agent's
+	// watermark on platforms that stamp: the startup purge only ever re-blesses agent-owned
+	// nodes and removes everything else.
+	cloudInitDir := filepath.Join(publicDir, ".cloud-init")
+	userDataPath := filepath.Join(cloudInitDir, "Noble.user-data")
+	metaDataPath := filepath.Join(cloudInitDir, "Noble.meta-data")
+
+	seed, err := securefiles.Open(cloudInitDir)
+	require.NoError(t, err)
+	require.NoError(t, seed.WriteFile("Noble.user-data", []byte("user-data-content")))
+	require.NoError(t, seed.WriteFile("Noble.meta-data", []byte("instance-id: test-id")))
+	require.NoError(t, seed.Close())
+
+	a := agent.NewForTesting(t, publicDir, privateDir)
+	a.SetArgs()
+
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- a.Run()
+		close(runErr)
+	}()
+
+	a.WaitReady()
+	a.Quit()
+	err = <-runErr
+	if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
+		require.NoError(t, err, "Agent should start and shut down cleanly")
+	}
+
+	// Verify cloud-init user-data and meta-data survived startup purge and were recreated with same content
+	require.FileExists(t, userDataPath)
+	require.FileExists(t, metaDataPath)
+
+	userData, err := os.ReadFile(userDataPath)
+	require.NoError(t, err)
+	require.Equal(t, []byte("user-data-content"), userData)
+
+	metaData, err := os.ReadFile(metaDataPath)
+	require.NoError(t, err)
+	require.Contains(t, string(metaData), "instance-id: test-id")
 }

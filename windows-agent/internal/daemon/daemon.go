@@ -6,14 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/ubuntu/decorate"
 	"google.golang.org/grpc"
 )
@@ -23,7 +22,7 @@ type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) *gr
 
 // Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
-	listeningPortFilePath string
+	addressFile *securefiles.Custodian
 
 	// serving signals that Serve has been called once. This channel is closed when Serve is called.
 	serving chan struct{}
@@ -41,17 +40,15 @@ type Daemon struct {
 
 // New returns an new, initialized daemon server that is ready to register GRPC services.
 // It hooks up to windows service management handler.
-func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDir string) *Daemon {
+func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, c *securefiles.Custodian) *Daemon {
 	log.Debug(ctx, "Building new daemon")
 
-	listeningPortFilePath := filepath.Join(addrDir, common.ListeningPortFileName)
-
 	return &Daemon{
-		listeningPortFilePath: listeningPortFilePath,
-		registerer:            registerGRPCServices,
-		quit:                  make(chan quitRequest, 1),
-		serving:               make(chan struct{}),
-		stopped:               make(chan struct{}, 1),
+		addressFile: c,
+		registerer:  registerGRPCServices,
+		quit:        make(chan quitRequest, 1),
+		serving:     make(chan struct{}),
+		stopped:     make(chan struct{}, 1),
 	}
 }
 
@@ -118,7 +115,7 @@ var errRestartDaemon = errors.New("Daemon: Restart requested")
 func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
-		if err := os.Remove(d.listeningPortFilePath); err != nil {
+		if err := d.addressFile.Remove(common.ListeningPortFileName); err != nil {
 			log.Warningf(ctx, "Daemon: could not remove address file: %v", err)
 		}
 		d.stopped <- struct{}{}
@@ -281,11 +278,21 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 
 		// Write a file on disk to signal selected ports to clients.
 		// We write it here to signal error when calling service.Start().
-		if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
-			return err
+		// CreateFile (not WriteFile) so the node appears via a direct create:
+		// the GUI's startup monitor waits for a create event on this file, and a
+		// temp-then-rename write is reported as a rename, which such watchers never see.
+		f, err := d.addressFile.CreateFile(common.ListeningPortFileName)
+		if err != nil {
+			return fmt.Errorf("could not create the address file: %v", err)
+		}
+		if _, err := f.WriteString(addr); err != nil {
+			return fmt.Errorf("could not write the address file: %v", errors.Join(err, f.Close()))
+		}
+		if err := f.Close(); err != nil {
+			return fmt.Errorf("could not close the address file: %v", err)
 		}
 
-		log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
+		log.Debugf(ctx, "Daemon: address file written to %s", d.addressFile.BasePath())
 		log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 		return nil
 	}()
