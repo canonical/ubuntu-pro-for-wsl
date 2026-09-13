@@ -445,20 +445,27 @@ func TestLogs(t *testing.T) {
 				switch tc.existingLogContent {
 				case "":
 				case "OLD_IS_DIRECTORY":
-					err := os.Mkdir(oldLogFile, 0700)
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian for fake log")
+					err = os.Mkdir(oldLogFile, 0700)
 					require.NoError(t, err, "Setup: create invalid log.old file")
-					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
-					require.NoError(t, err, "Setup: creating pre-existing log file")
+					require.NoError(t, seedCust.WriteFile("log", []byte("Old log content")), "Setup: creating pre-existing log file")
+					require.NoError(t, seedCust.Close())
 					tc.existingLogContent = oldContent
 				case "-":
 					tc.existingLogContent = ""
 					fallthrough
 				default:
-					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
-					require.NoError(t, err, "Setup: creating pre-existing log file")
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian for fake log")
+					require.NoError(t, seedCust.WriteFile("log", []byte(tc.existingLogContent)), "Setup: creating pre-existing log file")
+					require.NoError(t, seedCust.Close())
 				}
 
 				if tc.logDirError {
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian before obstructing")
+					require.NoError(t, seedCust.Close())
 					// Obstruct the logger setup end to end: log.old is a directory tree
 					// that cannot be removed (read-only nested directory), so discarding
 					// the previous rotation fails; the rotation rename of the "log"

@@ -8,6 +8,9 @@
 package securefiles
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,9 +30,10 @@ func TestXattrErrorClassification(t *testing.T) {
 	require.False(t, isXattrMissing(nil))
 }
 
-// TestXattrDegradedTransitions drives the failure paths of the xattr watermark
-// by swapping the syscall hooks. It is intentionally not parallel: the hooks
-// are package-level state.
+// TestXattrDegradedTransitions drives the failure paths of the xattr watermark by
+// swapping the syscall hooks. A read never claims ownership of a node it cannot verify:
+// it reports the failure and leaves the decision to the caller. It is intentionally not
+// parallel: the hooks are package-level state.
 func TestXattrDegradedTransitions(t *testing.T) {
 	testCases := map[string]struct {
 		// setErr and getErr make the respective syscall fail with the given error.
@@ -49,7 +53,6 @@ func TestXattrDegradedTransitions(t *testing.T) {
 		"write degrades and fails open when xattrs are unsupported": {
 			setErr:       unix.ENOTSUP,
 			op:           "write",
-			wantOwned:    true,
 			wantDegraded: true,
 		},
 		"write fails when stamping fails for another reason": {
@@ -57,11 +60,13 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			op:      "write",
 			wantErr: true,
 		},
-		"isOwned degrades and reports owned when xattrs are unsupported": {
+		// A node on a filesystem that cannot carry the watermark is unverifiable, not
+		// owned: the read records the condition but refuses to answer for the node.
+		"isOwned reports an unverifiable node and records the condition": {
 			getErr:       unix.ENOTSUP,
 			precreate:    true,
 			op:           "isowned",
-			wantOwned:    true,
+			wantErr:      true,
 			wantDegraded: true,
 		},
 		"isOwned fails when reading the watermark fails for another reason": {
@@ -113,6 +118,88 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			}
 			require.Equal(t, tc.wantOwned, owned)
 			require.Equal(t, tc.wantDegraded, c.IsDegraded())
+		})
+	}
+}
+
+// TestRenameChecksOwnershipOnLinux pins that a rename moves only nodes the custodian
+// still owns. Presence of the watermark is not ownership: an empty, truncated or forged
+// value must be refused exactly as a missing one is, otherwise anyone who can write the
+// attribute can have the custodian publish their content under a trusted name.
+func TestRenameChecksOwnershipOnLinux(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// raw plants the node behind the custodian's back, so it carries no watermark.
+		raw bool
+		// dir plants a directory. Directories are never stamped on Linux, so they move
+		// on the strength of the sub-tree alone, unlike Windows where they carry 040700.
+		dir bool
+		// plantWatermark is written as the node's watermark once the node exists, as a
+		// tamperer with write access to the attribute would.
+		plantWatermark []byte
+
+		wantErr error
+	}{
+		"a node the custodian wrote": {},
+
+		"a directory": {dir: true},
+
+		"a node written behind its back": {raw: true, wantErr: ErrNotOwned},
+
+		// A watermark that is present but says nothing, or says something that no longer
+		// describes the node, proves no more than a missing one.
+		"a node with an empty watermark": {
+			raw:            true,
+			plantWatermark: []byte{},
+			wantErr:        ErrNotOwned,
+		},
+		"a node with a truncated watermark": {
+			raw:            true,
+			plantWatermark: make([]byte, 8),
+			wantErr:        ErrNotOwned,
+		},
+		"a node whose watermark describes another owner": {
+			raw:            true,
+			plantWatermark: make([]byte, 12),
+			wantErr:        ErrNotOwned,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			const src, dst = "src", "dst"
+			switch {
+			case tc.dir:
+				_, err := c.Subdir(src)
+				require.NoError(t, err, "Setup: could not create the sub-tree root")
+			case tc.raw:
+				require.NoError(t, os.WriteFile(filepath.Join(dir, src), []byte("raw"), 0600),
+					"Setup: could not plant the node")
+			default:
+				require.NoError(t, c.WriteFile(src, []byte("ok")), "Setup: could not write the node")
+			}
+
+			if tc.plantWatermark != nil {
+				f, err := os.Open(filepath.Join(dir, src))
+				require.NoError(t, err, "Setup: could not open the node")
+				err = unix.Fsetxattr(int(f.Fd()), watermarkXattr, tc.plantWatermark, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+				require.NoError(t, errors.Join(err, f.Close()), "Setup: could not plant the watermark")
+			}
+
+			err = c.Rename(src, dst)
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr, "the rename should have been refused")
+				return
+			}
+			require.NoError(t, err, "the rename should have been allowed")
 		})
 	}
 }

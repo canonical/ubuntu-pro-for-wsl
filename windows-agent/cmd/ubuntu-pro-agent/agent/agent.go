@@ -218,13 +218,15 @@ func (a *App) SetArgs(args ...string) {
 	a.rootCmd.SetArgs(args)
 }
 
-// PublicDir creates a directory to store public data in.
+// PublicDir returns the path to the directory used to store public data.
 func (a *App) PublicDir() (string, error) {
 	// This wrapper is used to have a cleaner public API.
 	return a.publicDirPath(options{})
 }
 
-// publicDirPath is a wrapper around PublicDir to allow overriding its path with an option.
+// publicDirPath resolves the public directory path, validating that its parent exists and is a directory.
+// Creation of the public directory is intentionally left to securefiles.Open to ensure atomic
+// root-ownership EA stamping on Windows without a pre-creation TOCTOU window (ADR 2.01).
 func (a *App) publicDirPath(opts options) (string, error) {
 	if opts.publicDir == "" {
 		homeDir := os.Getenv("UserProfile")
@@ -234,10 +236,15 @@ func (a *App) publicDirPath(opts options) (string, error) {
 
 		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
 	}
-	//#nosec G703 // Not applicable as the caller should be allowed to point publicDir anywhere
-	//they want, especially for testing.
-	if err := os.MkdirAll(opts.publicDir, 0700); err != nil {
-		return "", fmt.Errorf("could not create public dir %s: %v", opts.publicDir, err)
+
+	parent := filepath.Dir(opts.publicDir)
+	//#nosec G703 // Validating that the parent directory exists and is a directory.
+	fi, err := os.Stat(parent)
+	if err != nil {
+		return "", fmt.Errorf("could not access public dir parent %s: %v", parent, err)
+	}
+	if !fi.IsDir() {
+		return "", fmt.Errorf("public dir parent %s is not a directory", parent)
 	}
 
 	return opts.publicDir, nil
@@ -256,6 +263,7 @@ func (a *App) privateDir(opts options) (string, error) {
 
 	//#nosec G703 // Not applicable as the caller should be allowed to point publicDir anywhere
 	//they want, especially for testing.
+	//nolint:forbidigo // Private state directory is outside the 9P public projection boundary and not managed by the custodian.
 	if err := os.MkdirAll(opts.privateDir, 0700); err != nil {
 		return "", fmt.Errorf("could not create private dir %s: %v", opts.privateDir, err)
 	}

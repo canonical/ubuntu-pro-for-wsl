@@ -466,10 +466,13 @@ func TestDegradedModeOperationsAndLogging(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "degraded content", string(content))
 
-	// In degraded mode the ownership predicate falls back to recognising every node.
-	owned, err := c.IsOwned("degraded_dir/degraded_file.txt")
-	require.NoError(t, err)
-	require.True(t, owned, "Degraded custodian should recognise every node as owned")
+	// Degradation does not make the predicate claim ownership: without the watermark
+	// the answer is unknowable, and it is the caller that decides what to do with an
+	// unverifiable sub-tree (see cloudinit.startupPurge). The error is deliberately
+	// not asserted here: Windows fails the EA query outright while Linux reports a
+	// missing xattr, and the platform files pin each shape.
+	owned, _ := c.IsOwned("degraded_dir/degraded_file.txt")
+	require.False(t, owned, "Degraded custodian must not claim ownership it cannot verify")
 
 	// Verify logging on Open when degraded
 	c2, err := securefiles.Open(dir)

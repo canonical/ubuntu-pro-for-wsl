@@ -5,6 +5,7 @@ package securefiles
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"os"
 
 	"golang.org/x/sys/unix"
@@ -23,6 +24,11 @@ type platformSys struct {
 // test-owned temporary directories.
 const watermarkXattr = "user.io.canonical.up4w.custodian.watermark"
 
+// watermarkLen is the exact size of the watermark: owner, group and mode, each a
+// big-endian uint32. A value of any other length did not come from stampNode, so it
+// describes nothing and is treated as no watermark at all.
+const watermarkLen = 12
+
 // fsetxattr and fgetxattr alias the xattr syscalls so tests can swap them and
 // simulate a filesystem without xattr support or a failing xattr call, the
 // same role testNtSetEaFileResult plays in sys_windows.go.
@@ -36,6 +42,22 @@ func newPlatformSys(basePath string) (*platformSys, error) {
 		return nil, err
 	}
 	return &platformSys{}, nil
+}
+
+// newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
+// already created. It does no path walk of its own: the node is reached through the
+// parent's root, and re-resolving its absolute path here would step outside the
+// containment the parent established. Degradation is inherited because it describes the
+// filesystem, not the node.
+func newSubPlatformSys(degraded bool) *platformSys {
+	return &platformSys{degraded: degraded}
+}
+
+// stampSubdir is a no-op: the Linux watermark is only ever applied to regular files, so
+// there is nothing to stamp in place when a sub-directory is adopted. It exists to keep
+// Subdir platform-agnostic, mirroring the Windows directory stamp.
+func (s *platformSys) stampSubdir(string) error {
+	return nil
 }
 
 // setRoot anchors the platform operations on the custodian's root: every node
@@ -76,6 +98,42 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 }
 
 func (s *platformSys) renameNode(oldRel, newRel string) error {
+	if !s.degraded {
+		f, err := s.root.Open(oldRel)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = f.Close() }()
+		st, err := f.Stat()
+		if err != nil {
+			return err
+		}
+		// On Linux directories are not stamped; only regular files carry the watermark.
+		if !st.IsDir() {
+			var ust unix.Stat_t
+			if err := unix.Fstat(int(f.Fd()), &ust); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+				return err
+			}
+			buf := make([]byte, watermarkLen)
+			n, err := fgetxattr(int(f.Fd()), watermarkXattr, buf) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+			if err != nil {
+				if isXattrMissing(err) {
+					return ErrNotOwned
+				}
+				return err
+			}
+			// Presence is not ownership. A watermark of the wrong size, or one that no
+			// longer describes the node, proves no more than a missing one: accepting it
+			// would let anyone who can write the attribute have the custodian publish
+			// their content under a trusted name.
+			if n != watermarkLen ||
+				binary.BigEndian.Uint32(buf[0:4]) != ust.Uid ||
+				binary.BigEndian.Uint32(buf[4:8]) != ust.Gid ||
+				binary.BigEndian.Uint32(buf[8:12]) != ust.Mode {
+				return ErrNotOwned
+			}
+		}
+	}
 	return s.root.Rename(oldRel, newRel)
 }
 
@@ -88,13 +146,14 @@ func (s *platformSys) setMockDegraded(degraded bool) {
 }
 
 // isOwned reports whether the node carries the custodian's watermark and still
-// has the same owner, group, and mode recorded at creation time.
+// has the same owner, group, and mode recorded at creation time. It never
+// answers on behalf of a filesystem that cannot carry xattrs: there the query
+// fails and ownership is unknowable rather than true, mirroring the Windows
+// predicate. Callers must consult isDegraded first and decide what an
+// unverifiable sub-tree means for them.
 func (s *platformSys) isOwned(rel string) (bool, error) {
 	if s.mockOwned != nil {
 		return *s.mockOwned, nil
-	}
-	if s.degraded {
-		return true, nil
 	}
 
 	f, err := s.root.Open(rel)
@@ -108,14 +167,16 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 		return false, err
 	}
 
-	buf := make([]byte, 12)
+	buf := make([]byte, watermarkLen)
 	if _, err := fgetxattr(int(f.Fd()), watermarkXattr, buf); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 		if isXattrMissing(err) {
 			return false, nil
 		}
 		if isXattrUnsupported(err) {
+			// Discovered mid-scan: record the condition, but report it as an error
+			// rather than claiming ownership of a node that cannot be verified.
 			s.degraded = true
-			return true, nil
+			return false, fmt.Errorf("filesystem cannot carry the ownership watermark: %v", err)
 		}
 		return false, err
 	}
@@ -140,7 +201,7 @@ func stampNode(f *os.File) error {
 		return err
 	}
 
-	b := make([]byte, 12)
+	b := make([]byte, watermarkLen)
 	binary.BigEndian.PutUint32(b[0:4], st.Uid)
 	binary.BigEndian.PutUint32(b[4:8], st.Gid)
 	binary.BigEndian.PutUint32(b[8:12], st.Mode)
