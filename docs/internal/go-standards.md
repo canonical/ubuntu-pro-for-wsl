@@ -67,9 +67,9 @@ func normalizeLandscapeConfig(ctx context.Context, s *System, iniFile *ini.File)
 
 ## Error handling
 
-- Use `decoreate.OnError` to add context to errors returned from functions at a single location.
+- Use `decorate.OnError` to add context to errors returned from functions at a single location.
 - Prefer `errors.New` for static sentinel errors and declare them as `var ErrSomething = errors.New("...")`.
-- Return errors wrapped with `%v`; only use `%w` only when callers must match it with `errors.Is`/`errors.As`.
+- Return errors wrapped with `%v`; only use `%w` when callers must match it with `errors.Is`/`errors.As`.
 - If the underlying error is only being included for human consumption, use `%v` instead of `%w`.
 - Prefer one meaningful layer of context at the abstraction boundary that changes what the operation means to the caller.
 - When a caller needs to match a domain-specific condition and still retain extra detail, prefer `errors.Join` with a sentinel error.
