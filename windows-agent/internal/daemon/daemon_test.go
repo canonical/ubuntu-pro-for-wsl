@@ -15,6 +15,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -36,7 +37,12 @@ func TestNew(t *testing.T) {
 		return nil
 	}
 
-	_ = daemon.New(context.Background(), countRegistrations, t.TempDir())
+	addrDir := t.TempDir()
+	c, setupErr := securefiles.Open(addrDir)
+	require.NoError(t, setupErr, "Setup: could not create custodian")
+	defer c.Close()
+
+	_ = daemon.New(context.Background(), countRegistrations, c)
 	require.Equal(t, 0, regCount, "daemon should not register GRPC services before serving")
 }
 
@@ -63,6 +69,9 @@ func TestStartQuit(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
 			if tc.preexistingPortFile {
 				err := os.MkdirAll(addrDir, 0600)
@@ -77,7 +86,7 @@ func TestStartQuit(t *testing.T) {
 				return server
 			}
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 
 			serveErr := make(chan error)
 			go func() {
@@ -178,6 +187,9 @@ func TestCanServeOnlyOnce(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
 			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
@@ -185,7 +197,7 @@ func TestCanServeOnlyOnce(t *testing.T) {
 				return server
 			}
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 			firstServeErr := make(chan error)
 			go func() {
 				firstServeErr <- d.Serve(ctx)
@@ -246,6 +258,7 @@ func TestServeWSLIP(t *testing.T) {
 		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
 
 		"Error when the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error"), wantErr: true},
+		"Error when the WSL adapter IP cannot be listened on":                {withAdapters: daemontestutils.HyperVAdapterNonLocalIP, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -253,12 +266,15 @@ func TestServeWSLIP(t *testing.T) {
 			t.Parallel()
 
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 			// Very lenient timeout because we either expect Serve to fail immediately or we stop it manually.
 			// As the last resource, the test will fail due to the context timeout (otherwise it would hang indefinitely).
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 			defer d.Quit(ctx, false)
 
 			if tc.netmode == "" {
@@ -315,53 +331,89 @@ func TestServeWSLIP(t *testing.T) {
 func TestAddingWSLAdapterRestarts(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	addrDir := t.TempDir()
-
-	registerer := func(context.Context, bool) *grpc.Server {
-		server := grpc.NewServer()
-		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-		return server
+	testcases := map[string]struct {
+		addedAdapterIsWSL bool
+	}{
+		"WSL adapter addition restarts the daemon": {addedAdapterIsWSL: true},
+		"Other adapter addition keeps monitoring":  {addedAdapterIsWSL: false},
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	systemNotification := make(chan error)
-	defer close(systemNotification)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
-	mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
+			registerer := func(context.Context, bool) *grpc.Server {
+				server := grpc.NewServer()
+				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
+				return server
+			}
 
-	serveErr := make(chan error, 1)
-	go func() {
-		serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
-			daemon.WithNetDevicesAPIProvider(daemontestutils.NetDevicesMockAPIWithAddedWSL(systemNotification)),
-		)
-		close(serveErr)
-	}()
+			d := daemon.New(ctx, registerer, c)
 
-	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+			systemNotification := make(chan error)
+			defer close(systemNotification)
 
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
-	addrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
+			provider := daemontestutils.NetDevicesMockAPIWithAddedWSL
+			if !tc.addedAdapterIsWSL {
+				provider = daemontestutils.NetDevicesMockAPIWithAddedNonWSL
+			}
 
-	// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
-	systemNotification <- nil
+			mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
 
-	// d.Serve() shouldn't have exitted with an error yet at this point.
-	select {
-	case err := <-serveErr:
-		require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
-	case <-time.After(200 * time.Millisecond):
-		// proceed.
+			serveErr := make(chan error, 1)
+			go func() {
+				serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
+					daemon.WithNetDevicesAPIProvider(provider(systemNotification)),
+				)
+				close(serveErr)
+			}()
+
+			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+
+			daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
+			addrSt, err := os.Stat(addrPath)
+			require.NoError(t, err, "Address file should be readable")
+
+			// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
+			systemNotification <- nil
+
+			// d.Serve() shouldn't have exited with an error at this point.
+			select {
+			case err := <-serveErr:
+				require.NoError(t, err, "An adapter notification should not have caused Serve() to exit with an error")
+			case <-time.After(200 * time.Millisecond):
+				// proceed.
+			}
+
+			if !tc.addedAdapterIsWSL {
+				newAddrSt, err := os.Stat(addrPath)
+				require.NoError(t, err, "Address file should be readable")
+				require.Equal(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should not be rewritten without a restart")
+
+				d.Quit(ctx, false)
+				err = <-serveErr
+				if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+					// We stopped the server manually, so we expect this error, although it's possible that there is not even an error at this point.
+					err = nil
+				}
+				require.NoError(t, err, "Serve should return no error when stopped normally")
+				return
+			}
+
+			daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
+			// Contents could be the same without our control, thus best to check the file time.
+			newAddrSt, err := os.Stat(addrPath)
+			require.NoError(t, err, "Address file should be readable")
+			require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
+		})
 	}
-
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
-	// Contents could be the same without our control, thus best to check the file time.
-	newAddrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
-	require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
 }
 
 func TestServeError(t *testing.T) {
@@ -369,15 +421,20 @@ func TestServeError(t *testing.T) {
 
 	ctx := context.Background()
 	addrDir := t.TempDir()
+	c, setupErr := securefiles.Open(addrDir)
+	require.NoError(t, setupErr, "Setup: could not create custodian")
 
 	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, c)
 	defer d.Quit(ctx, false)
 
-	// Remove parent directory to prevent listening port file to be written
+	// Remove the parent directory to prevent the listening port file from being written.
+	// The custodian must be closed first: on Windows a directory cannot be removed
+	// while a handle to it is still open.
+	require.NoError(t, c.Close(), "Setup: could not close the custodian")
 	require.NoError(t, os.RemoveAll(addrDir), "Setup: could not remove cache directory")
 
 	err := d.Serve(ctx)
@@ -389,12 +446,15 @@ func TestQuitBeforeServe(t *testing.T) {
 
 	ctx := context.Background()
 	addrDir := t.TempDir()
+	c, setupErr := securefiles.Open(addrDir)
+	require.NoError(t, setupErr, "Setup: could not create custodian")
+	defer c.Close()
 
 	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, c)
 	d.Quit(ctx, false)
 
 	serverErr := make(chan error)
@@ -437,8 +497,11 @@ func TestWaitReady(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 			serverErr := make(chan error)
 			if !tc.skipServe {
 				go func() {
