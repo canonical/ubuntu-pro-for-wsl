@@ -50,44 +50,7 @@ type Custodian struct {
 // Pre-existing content is adopted: a consumer with data that must survive a
 // restart (such as per-distro cloud-init files) can read it before rewriting its nodes.
 func Open(basePath string) (*Custodian, error) {
-	absPath, err := filepath.Abs(basePath)
-	if err != nil {
-		return nil, fmt.Errorf("invalid base path: %v", err)
-	}
-
-	// Ensure parent dir exists
-	parent := filepath.Dir(absPath)
-	if err := os.MkdirAll(parent, DirMode); err != nil {
-		return nil, fmt.Errorf("failed to create parent directory %s: %v", parent, err)
-	}
-
-	sys, err := newPlatformSys(absPath)
-	if err != nil {
-		return nil, err
-	}
-
-	root, err := os.OpenRoot(absPath)
-	if err != nil {
-		sys.Close()
-		return nil, fmt.Errorf("failed to open root for %s: %v", absPath, err)
-	}
-	if err := sys.setRoot(root); err != nil {
-		root.Close()
-		sys.Close()
-		return nil, fmt.Errorf("failed to open root for %s: %v", absPath, err)
-	}
-
-	c := &Custodian{
-		root:     root,
-		basePath: absPath,
-		relPath:  "",
-		sys:      sys,
-	}
-
-	c.LogDegradedOnce()
-	c.logRemoteVolume()
-
-	return c, nil
+	return open(basePath, newPlatformSys)
 }
 
 // Close releases any resources held by the custodian.
@@ -114,8 +77,8 @@ func (c *Custodian) IsDegraded() bool {
 	return false
 }
 
-// LogDegradedOnce logs an error once if the custodian is degraded.
-func (c *Custodian) LogDegradedOnce() {
+// logDegradedOnce logs an error once if the custodian is degraded.
+func (c *Custodian) logDegradedOnce() {
 	if c.IsDegraded() {
 		log.Errorf(context.Background(), "securefiles: underlying filesystem at %s does not support extended attributes; operating in degraded mode without secure projection", c.basePath)
 	}
@@ -326,19 +289,50 @@ func (c *Custodian) Purge(isAllowed func(relPath string, isDir bool) bool) ([]st
 	return removed, errors.Join(failures...)
 }
 
-// SetMockDegraded forces the custodian into degraded mode for testing.
-func (c *Custodian) SetMockDegraded(degraded bool) {
-	if c.sys != nil {
-		c.sys.setMockDegraded(degraded)
+// open builds a custodian over the platform layer newSys returns. Production always
+// passes newPlatformSys; the parameter exists so that the tests in this package can
+// supply a platform whose stamping fails from the outset, which is the one condition
+// no test machine can produce on demand. It is unexported and has no exported caller,
+// so a shipped binary offers no way to substitute the platform layer.
+func open(basePath string, newSys func(string) (*platformSys, error)) (*Custodian, error) {
+	absPath, err := filepath.Abs(basePath)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base path: %v", err)
 	}
-}
 
-// SetMockOwned forces the ownership predicate to return owned for testing. A
-// nil value restores the per-platform behaviour.
-func (c *Custodian) SetMockOwned(owned *bool) {
-	if c.sys != nil {
-		c.sys.setMockOwned(owned)
+	// Ensure parent dir exists
+	parent := filepath.Dir(absPath)
+	if err := os.MkdirAll(parent, DirMode); err != nil {
+		return nil, fmt.Errorf("failed to create parent directory %s: %v", parent, err)
 	}
+
+	sys, err := newSys(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	root, err := os.OpenRoot(absPath)
+	if err != nil {
+		sys.Close()
+		return nil, fmt.Errorf("failed to open root for %s: %v", absPath, err)
+	}
+	if err := sys.setRoot(root); err != nil {
+		root.Close()
+		sys.Close()
+		return nil, fmt.Errorf("failed to open root for %s: %v", absPath, err)
+	}
+
+	c := &Custodian{
+		root:     root,
+		basePath: absPath,
+		relPath:  "",
+		sys:      sys,
+	}
+
+	c.logDegradedOnce()
+	c.logRemoteVolume()
+
+	return c, nil
 }
 
 // logRemoteVolume reports, at error level, that the sub-tree lives on a volume this
