@@ -123,3 +123,54 @@ func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
 	}
 	return false
 }
+
+// TestEnsureRootRefusesARedirectedRoot pins that a directory link standing where the root
+// should be is refused rather than followed. OBJ_DONT_REPARSE makes the creation fail on
+// purpose; the degraded fallback must not undo that, because os.MkdirAll succeeds on an
+// existing directory link and that path records no identity, leaving setRoot nothing to
+// compare and the custodian rooted outside basePath in silence.
+func TestEnsureRootRefusesARedirectedRoot(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// redirect puts a directory symlink where the root would be created, standing in
+		// for any reparse point: a junction planted from inside an instance behaves alike.
+		redirect bool
+
+		wantErr error
+	}{
+		"a root the custodian creates itself": {},
+
+		"a directory link standing in for the root": {redirect: true, wantErr: ErrPathEscapes},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			base := t.TempDir()
+			outside := filepath.Join(base, "outside")
+			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+
+			rootPath := filepath.Join(base, "root")
+			if tc.redirect {
+				if err := os.Symlink(outside, rootPath); err != nil {
+					t.Skip("symlink creation not permitted in this environment")
+				}
+			}
+
+			sys, err := newPlatformSys(rootPath)
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr, "a redirected root must be refused")
+				require.Nil(t, sys, "a refused root must not yield a usable platform")
+
+				entries, err := os.ReadDir(outside)
+				require.NoError(t, err, "Setup: could not list the link target")
+				require.Empty(t, entries, "nothing may be created through the link")
+				return
+			}
+			require.NoError(t, err, "the custodian should have established its root")
+			require.NoError(t, sys.Close())
+		})
+	}
+}
