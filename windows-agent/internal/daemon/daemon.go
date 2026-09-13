@@ -285,11 +285,9 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 		if err != nil {
 			return fmt.Errorf("could not create the address file: %v", err)
 		}
-		if _, err := f.WriteString(addr); err != nil {
-			return fmt.Errorf("could not write the address file: %v", errors.Join(err, f.Close()))
-		}
-		if err := f.Close(); err != nil {
-			return fmt.Errorf("could not close the address file: %v", err)
+		_, err = f.WriteString(addr)
+		if err = errors.Join(err, f.Close()); err != nil {
+			return fmt.Errorf("when writing the address file: %v", err)
 		}
 
 		log.Debugf(ctx, "Daemon: address file written to %s", d.addressFile.BasePath())
