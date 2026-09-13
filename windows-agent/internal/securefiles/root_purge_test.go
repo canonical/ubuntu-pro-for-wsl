@@ -48,6 +48,44 @@ func TestRootPurge(t *testing.T) {
 				}
 			},
 		},
+		// A node that resists removal must not become a shelter for the rest: the sweep
+		// carries on, the failure is reported, and only the stuck node is left behind.
+		"Purge continues past a node it cannot remove": {
+			prepare: func(t *testing.T, parent string) string {
+				t.Helper()
+				if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+					t.Skip("read-only directory semantics require a non-root Unix user")
+				}
+				return parent
+			},
+			preseed: func(t *testing.T, c *securefiles.Custodian) {
+				t.Helper()
+				basePath := c.BasePath()
+
+				// An unremovable node: a directory whose read-only child cannot be unlinked.
+				keep := filepath.Join(basePath, "stuck", "keep")
+				require.NoError(t, os.MkdirAll(keep, 0700), "Setup: could not create the obstructing tree")
+				require.NoError(t, os.WriteFile(filepath.Join(keep, "child"), []byte("x"), 0600), "Setup: could not fill it")
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(keep, 0500), "Setup: could not make it read-only")
+				//nolint:gosec // G302 - test teardown restores directory permissions.
+				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
+
+				require.NoError(t, os.WriteFile(filepath.Join(basePath, "removable.txt"), []byte("x"), 0600), "Setup: could not seed the removable node")
+			},
+			run: func(t *testing.T, c *securefiles.Custodian) []string {
+				t.Helper()
+				removed, err := c.Purge(func(string, bool) bool { return false })
+				require.Error(t, err, "an unremovable node must be reported")
+				return removed
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, removed []string) {
+				t.Helper()
+				require.Equal(t, []string{"removable.txt"}, removed, "the sweep must continue past the stuck node")
+				require.DirExists(t, filepath.Join(c.BasePath(), "stuck"), "the stuck node stays where it is")
+				require.NoFileExists(t, filepath.Join(c.BasePath(), "removable.txt"), "the removable node must still be purged")
+			},
+		},
 		"Purge removes unrecognised nodes and temp files while keeping allowed ones": {
 			prepare: func(t *testing.T, parent string) string {
 				t.Helper()
@@ -62,7 +100,7 @@ func TestRootPurge(t *testing.T) {
 			},
 			run: func(t *testing.T, c *securefiles.Custodian) []string {
 				t.Helper()
-				allowedPolicy := func(relPath string) bool { return relPath == "legit.txt" }
+				allowedPolicy := func(relPath string, _ bool) bool { return relPath == "legit.txt" }
 				removed, err := c.Purge(allowedPolicy)
 				require.NoError(t, err)
 				return removed
@@ -89,7 +127,7 @@ func TestRootPurge(t *testing.T) {
 			run: func(t *testing.T, c *securefiles.Custodian) []string {
 				t.Helper()
 				require.NoError(t, os.RemoveAll(c.BasePath()))
-				_, err := c.Purge(func(string) bool { return false })
+				_, err := c.Purge(func(string, bool) bool { return false })
 				require.Error(t, err, "purging a vanished root must error rather than report success")
 				return nil
 			},
@@ -110,7 +148,7 @@ func TestRootPurge(t *testing.T) {
 			},
 			run: func(t *testing.T, c *securefiles.Custodian) []string {
 				t.Helper()
-				isAllowed := func(relPath string) bool { return relPath == "keep.txt" }
+				isAllowed := func(relPath string, _ bool) bool { return relPath == "keep.txt" }
 				removed, err := c.Purge(isAllowed)
 				require.NoError(t, err)
 				return removed

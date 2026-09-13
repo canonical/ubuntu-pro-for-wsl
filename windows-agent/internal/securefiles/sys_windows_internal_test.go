@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
@@ -109,6 +110,105 @@ func TestCreateNode(t *testing.T) {
 				require.NoFileExists(t, path, "a failed creation must leave no node behind")
 			}
 			require.Equal(t, tc.wantDegraded, cust.IsDegraded(), "unexpected degraded state")
+		})
+	}
+}
+
+// TestRemoteVolumeClassification pins how the public directory's volume is classified.
+// The distinction matters because a remote volume is the one case where the custodian
+// reports healthy while the guarantee may not hold: stamping succeeds on the server, but
+// what instances see is a projection of a share. UNC paths must be recognised without
+// calling GetDriveType, which blocks on name resolution for an unreachable server and
+// then reports DRIVE_NO_ROOT_DIR regardless.
+func TestRemoteVolumeClassification(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		path string
+
+		wantRemote bool
+		wantKind   string
+	}{
+		"a local drive":                 {path: `C:\Users\someone\.ubuntupro`},
+		"a relative path has no volume": {path: `.ubuntupro`},
+		"a UNC path":                    {path: `\\server\share\Users\someone\.ubuntupro`, wantRemote: true, wantKind: "a UNC path"},
+		"an unreachable UNC path":       {path: `\\no-such-host-xyz\share\.ubuntupro`, wantRemote: true, wantKind: "a UNC path"},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			start := time.Now()
+			remote, kind := remoteVolume(tc.path)
+			elapsed := time.Since(start)
+
+			require.Equal(t, tc.wantRemote, remote, "volume should be classified as remote=%v", tc.wantRemote)
+			require.Equal(t, tc.wantKind, kind)
+
+			// Classification runs on the startup path, so it must never reach out to
+			// the network: an unreachable server would otherwise stall the agent.
+			require.Less(t, elapsed, 250*time.Millisecond, "classification must not perform a network lookup")
+		})
+	}
+}
+
+// TestSetRootVerifiesIdentity covers the gap between creating the root and opening it.
+// ensureRoot creates and stamps the directory through a handle, closes it, and setRoot
+// then resolves the same path again; os.Root does not protect its own root, and ADR 2.01
+// concedes the parent stays writable from inside an instance. If the path is redirected
+// in between, every later "secure" write lands in the attacker's directory, stamped and
+// reported as owned. Identity is the only thing tying the two resolutions together.
+func TestSetRootVerifiesIdentity(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// replaced opens a different directory than the one ensureRoot prepared,
+		// standing in for a path redirected between the two resolutions.
+		replaced bool
+		// unverifiable models a filesystem that supplies no usable file identity,
+		// such as a network redirector.
+		unverifiable bool
+
+		wantErr error
+	}{
+		"the directory that was created":      {},
+		"a directory swapped in behind it":    {replaced: true, wantErr: ErrRootReplaced},
+		"no identity to compare against":      {unverifiable: true},
+		"swapped, but no identity to compare": {replaced: true, unverifiable: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			base := t.TempDir()
+			rootDir := filepath.Join(base, "root")
+
+			sys, err := newPlatformSys(rootDir)
+			require.NoError(t, err, "Setup: could not establish the root")
+			require.True(t, sys.rootIDKnown, "Setup: the local filesystem should supply an identity")
+
+			opened := rootDir
+			if tc.replaced {
+				opened = filepath.Join(base, "elsewhere")
+				require.NoError(t, os.MkdirAll(opened, 0700), "Setup: could not create the swapped directory")
+			}
+			if tc.unverifiable {
+				sys.rootIDKnown = false
+			}
+
+			root, err := os.OpenRoot(opened)
+			require.NoError(t, err, "Setup: could not open the root")
+			defer func() { _ = root.Close() }()
+
+			err = sys.setRoot(root)
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr, "a redirected root must be refused")
+				return
+			}
+			require.NoError(t, err, "setRoot should accept the root")
+			require.NoError(t, sys.Close())
 		})
 	}
 }

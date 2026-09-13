@@ -31,11 +31,14 @@ func TestXattrErrorClassification(t *testing.T) {
 }
 
 // TestXattrDegradedTransitions drives the failure paths of the xattr watermark by
-// swapping the syscall hooks. A read never claims ownership of a node it cannot verify:
-// it reports the failure and leaves the decision to the caller. It is intentionally not
+// swapping the syscall hooks. Whether the filesystem carries xattrs is settled once, when
+// the root is established, so a read never changes it: the predicate reports that a node
+// cannot be verified and leaves the decision to the caller. It is intentionally not
 // parallel: the hooks are package-level state.
 func TestXattrDegradedTransitions(t *testing.T) {
 	testCases := map[string]struct {
+		// probeErr makes the support probe fail, before the root is established.
+		probeErr error
 		// setErr and getErr make the respective syscall fail with the given error.
 		setErr error
 		getErr error
@@ -43,14 +46,18 @@ func TestXattrDegradedTransitions(t *testing.T) {
 		// precreate writes a stamped file before enabling the hooks.
 		precreate bool
 
-		// op is the operation under test: "write" or "isowned".
+		// op is the operation under test: "write", "isowned", or "" for none.
 		op string
 
 		wantErr      bool
 		wantOwned    bool
 		wantDegraded bool
 	}{
-		"write degrades and fails open when xattrs are unsupported": {
+		"a filesystem without xattrs is degraded from the start": {
+			probeErr:     unix.ENOTSUP,
+			wantDegraded: true,
+		},
+		"write degrades and falls back when xattrs are unsupported": {
 			setErr:       unix.ENOTSUP,
 			op:           "write",
 			wantDegraded: true,
@@ -60,14 +67,11 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			op:      "write",
 			wantErr: true,
 		},
-		// A node on a filesystem that cannot carry the watermark is unverifiable, not
-		// owned: the read records the condition but refuses to answer for the node.
-		"isOwned reports an unverifiable node and records the condition": {
-			getErr:       unix.ENOTSUP,
-			precreate:    true,
-			op:           "isowned",
-			wantErr:      true,
-			wantDegraded: true,
+		"isOwned reports an unverifiable node without degrading": {
+			getErr:    unix.ENOTSUP,
+			precreate: true,
+			op:        "isowned",
+			wantErr:   true,
 		},
 		"isOwned fails when reading the watermark fails for another reason": {
 			getErr:    unix.EPERM,
@@ -79,6 +83,14 @@ func TestXattrDegradedTransitions(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			origSet, origGet, origList := fsetxattr, fgetxattr, flistxattr
+			t.Cleanup(func() { fsetxattr, fgetxattr, flistxattr = origSet, origGet, origList })
+
+			// The probe runs while the root is established, so its hook predates Open.
+			if tc.probeErr != nil {
+				flistxattr = func(int, []byte) (int, error) { return 0, tc.probeErr }
+			}
+
 			dir := t.TempDir()
 			c, err := Open(dir)
 			require.NoError(t, err, "Setup: could not open custodian")
@@ -88,8 +100,6 @@ func TestXattrDegradedTransitions(t *testing.T) {
 				require.NoError(t, c.WriteFile("f.txt", []byte("x")), "Setup: could not write file")
 			}
 
-			origSet, origGet := fsetxattr, fgetxattr
-			t.Cleanup(func() { fsetxattr, fgetxattr = origSet, origGet })
 			if tc.setErr != nil {
 				fsetxattr = func(int, string, []byte, int) error { return tc.setErr }
 			}
@@ -100,6 +110,7 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			var opErr error
 			owned := false
 			switch tc.op {
+			case "":
 			case "write":
 				opErr = c.WriteFile("f.txt", []byte("x"))
 				if opErr == nil {
