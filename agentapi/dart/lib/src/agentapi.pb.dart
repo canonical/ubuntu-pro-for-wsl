@@ -17,21 +17,21 @@ import 'package:protobuf/protobuf.dart' as $pb;
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class Empty extends $pb.GeneratedMessage {
-  factory Empty() => create();
+  factory Empty() => Empty._();
 
   Empty._();
 
   factory Empty.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      Empty()..mergeFromBuffer(data, registry);
   factory Empty.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      Empty()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'Empty',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: Empty.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -44,12 +44,14 @@ class Empty extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use Empty() / Empty.new instead')
   static Empty create() => Empty._();
+  static $pb.GeneratedMessage $_createMessage() => Empty._();
   @$core.override
-  Empty createEmptyInstance() => create();
+  Empty createEmptyInstance() => Empty._();
   @$core.pragma('dart2js:noInline')
-  static Empty getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Empty>(create);
+  static Empty getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Empty>(Empty.$_createMessage);
   static Empty? _defaultInstance;
 }
 
@@ -57,7 +59,7 @@ class ProAttachInfo extends $pb.GeneratedMessage {
   factory ProAttachInfo({
     $core.String? token,
   }) {
-    final result = create();
+    final result = ProAttachInfo._();
     if (token != null) result.token = token;
     return result;
   }
@@ -66,15 +68,15 @@ class ProAttachInfo extends $pb.GeneratedMessage {
 
   factory ProAttachInfo.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      ProAttachInfo()..mergeFromBuffer(data, registry);
   factory ProAttachInfo.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      ProAttachInfo()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ProAttachInfo',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: ProAttachInfo.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'token')
     ..hasRequiredFields = false;
 
@@ -89,12 +91,15 @@ class ProAttachInfo extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use ProAttachInfo() / ProAttachInfo.new instead')
   static ProAttachInfo create() => ProAttachInfo._();
+  static $pb.GeneratedMessage $_createMessage() => ProAttachInfo._();
   @$core.override
-  ProAttachInfo createEmptyInstance() => create();
+  ProAttachInfo createEmptyInstance() => ProAttachInfo._();
   @$core.pragma('dart2js:noInline')
-  static ProAttachInfo getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ProAttachInfo>(create);
+  static ProAttachInfo getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProAttachInfo>(
+          ProAttachInfo.$_createMessage);
   static ProAttachInfo? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -111,7 +116,7 @@ class LandscapeConfig extends $pb.GeneratedMessage {
   factory LandscapeConfig({
     $core.String? config,
   }) {
-    final result = create();
+    final result = LandscapeConfig._();
     if (config != null) result.config = config;
     return result;
   }
@@ -120,15 +125,15 @@ class LandscapeConfig extends $pb.GeneratedMessage {
 
   factory LandscapeConfig.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      LandscapeConfig()..mergeFromBuffer(data, registry);
   factory LandscapeConfig.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      LandscapeConfig()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'LandscapeConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: LandscapeConfig.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'config')
     ..hasRequiredFields = false;
 
@@ -143,12 +148,15 @@ class LandscapeConfig extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use LandscapeConfig() / LandscapeConfig.new instead')
   static LandscapeConfig create() => LandscapeConfig._();
+  static $pb.GeneratedMessage $_createMessage() => LandscapeConfig._();
   @$core.override
-  LandscapeConfig createEmptyInstance() => create();
+  LandscapeConfig createEmptyInstance() => LandscapeConfig._();
   @$core.pragma('dart2js:noInline')
-  static LandscapeConfig getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<LandscapeConfig>(create);
+  static LandscapeConfig getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LandscapeConfig>(
+          LandscapeConfig.$_createMessage);
   static LandscapeConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -177,7 +185,7 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
     Empty? organization,
     Empty? microsoftStore,
   }) {
-    final result = create();
+    final result = SubscriptionInfo._();
     if (productId != null) result.productId = productId;
     if (none != null) result.none = none;
     if (user != null) result.user = user;
@@ -190,10 +198,10 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
 
   factory SubscriptionInfo.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      SubscriptionInfo()..mergeFromBuffer(data, registry);
   factory SubscriptionInfo.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      SubscriptionInfo()..mergeFromJson(json, registry);
 
   static const $core.Map<$core.int, SubscriptionInfo_SubscriptionType>
       _SubscriptionInfo_SubscriptionTypeByTag = {
@@ -206,15 +214,17 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'SubscriptionInfo',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: SubscriptionInfo.$_createMessage)
     ..oo(0, [2, 3, 4, 5])
     ..aOS(1, _omitFieldNames ? '' : 'productId', protoName: 'productId')
-    ..aOM<Empty>(2, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
-    ..aOM<Empty>(3, _omitFieldNames ? '' : 'user', subBuilder: Empty.create)
+    ..aOM<Empty>(2, _omitFieldNames ? '' : 'none',
+        subBuilder: Empty.$_createMessage)
+    ..aOM<Empty>(3, _omitFieldNames ? '' : 'user',
+        subBuilder: Empty.$_createMessage)
     ..aOM<Empty>(4, _omitFieldNames ? '' : 'organization',
-        subBuilder: Empty.create)
+        subBuilder: Empty.$_createMessage)
     ..aOM<Empty>(5, _omitFieldNames ? '' : 'microsoftStore',
-        protoName: 'microsoftStore', subBuilder: Empty.create)
+        protoName: 'microsoftStore', subBuilder: Empty.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -228,12 +238,15 @@ class SubscriptionInfo extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use SubscriptionInfo() / SubscriptionInfo.new instead')
   static SubscriptionInfo create() => SubscriptionInfo._();
+  static $pb.GeneratedMessage $_createMessage() => SubscriptionInfo._();
   @$core.override
-  SubscriptionInfo createEmptyInstance() => create();
+  SubscriptionInfo createEmptyInstance() => SubscriptionInfo._();
   @$core.pragma('dart2js:noInline')
-  static SubscriptionInfo getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SubscriptionInfo>(create);
+  static SubscriptionInfo getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SubscriptionInfo>(
+          SubscriptionInfo.$_createMessage);
   static SubscriptionInfo? _defaultInstance;
 
   @$pb.TagNumber(2)
@@ -310,7 +323,7 @@ class LandscapeSource extends $pb.GeneratedMessage {
     Empty? user,
     Empty? organization,
   }) {
-    final result = create();
+    final result = LandscapeSource._();
     if (none != null) result.none = none;
     if (user != null) result.user = user;
     if (organization != null) result.organization = organization;
@@ -321,10 +334,10 @@ class LandscapeSource extends $pb.GeneratedMessage {
 
   factory LandscapeSource.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      LandscapeSource()..mergeFromBuffer(data, registry);
   factory LandscapeSource.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      LandscapeSource()..mergeFromJson(json, registry);
 
   static const $core.Map<$core.int, LandscapeSource_LandscapeSourceType>
       _LandscapeSource_LandscapeSourceTypeByTag = {
@@ -336,12 +349,14 @@ class LandscapeSource extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'LandscapeSource',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: LandscapeSource.$_createMessage)
     ..oo(0, [1, 2, 3])
-    ..aOM<Empty>(1, _omitFieldNames ? '' : 'none', subBuilder: Empty.create)
-    ..aOM<Empty>(2, _omitFieldNames ? '' : 'user', subBuilder: Empty.create)
+    ..aOM<Empty>(1, _omitFieldNames ? '' : 'none',
+        subBuilder: Empty.$_createMessage)
+    ..aOM<Empty>(2, _omitFieldNames ? '' : 'user',
+        subBuilder: Empty.$_createMessage)
     ..aOM<Empty>(3, _omitFieldNames ? '' : 'organization',
-        subBuilder: Empty.create)
+        subBuilder: Empty.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -355,12 +370,15 @@ class LandscapeSource extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use LandscapeSource() / LandscapeSource.new instead')
   static LandscapeSource create() => LandscapeSource._();
+  static $pb.GeneratedMessage $_createMessage() => LandscapeSource._();
   @$core.override
-  LandscapeSource createEmptyInstance() => create();
+  LandscapeSource createEmptyInstance() => LandscapeSource._();
   @$core.pragma('dart2js:noInline')
-  static LandscapeSource getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<LandscapeSource>(create);
+  static LandscapeSource getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LandscapeSource>(
+          LandscapeSource.$_createMessage);
   static LandscapeSource? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -412,7 +430,7 @@ class ConfigSources extends $pb.GeneratedMessage {
     SubscriptionInfo? proSubscription,
     LandscapeSource? landscapeSource,
   }) {
-    final result = create();
+    final result = ConfigSources._();
     if (proSubscription != null) result.proSubscription = proSubscription;
     if (landscapeSource != null) result.landscapeSource = landscapeSource;
     return result;
@@ -422,19 +440,21 @@ class ConfigSources extends $pb.GeneratedMessage {
 
   factory ConfigSources.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      ConfigSources()..mergeFromBuffer(data, registry);
   factory ConfigSources.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      ConfigSources()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ConfigSources',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: ConfigSources.$_createMessage)
     ..aOM<SubscriptionInfo>(1, _omitFieldNames ? '' : 'proSubscription',
-        protoName: 'proSubscription', subBuilder: SubscriptionInfo.create)
+        protoName: 'proSubscription',
+        subBuilder: SubscriptionInfo.$_createMessage)
     ..aOM<LandscapeSource>(2, _omitFieldNames ? '' : 'landscapeSource',
-        protoName: 'landscapeSource', subBuilder: LandscapeSource.create)
+        protoName: 'landscapeSource',
+        subBuilder: LandscapeSource.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -448,12 +468,15 @@ class ConfigSources extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use ConfigSources() / ConfigSources.new instead')
   static ConfigSources create() => ConfigSources._();
+  static $pb.GeneratedMessage $_createMessage() => ConfigSources._();
   @$core.override
-  ConfigSources createEmptyInstance() => create();
+  ConfigSources createEmptyInstance() => ConfigSources._();
   @$core.pragma('dart2js:noInline')
-  static ConfigSources getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ConfigSources>(create);
+  static ConfigSources getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConfigSources>(
+          ConfigSources.$_createMessage);
   static ConfigSources? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -488,7 +511,7 @@ class DistroInfo extends $pb.GeneratedMessage {
     $core.bool? proAttached,
     $core.String? hostname,
   }) {
-    final result = create();
+    final result = DistroInfo._();
     if (wslName != null) result.wslName = wslName;
     if (id != null) result.id = id;
     if (versionId != null) result.versionId = versionId;
@@ -502,15 +525,15 @@ class DistroInfo extends $pb.GeneratedMessage {
 
   factory DistroInfo.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      DistroInfo()..mergeFromBuffer(data, registry);
   factory DistroInfo.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      DistroInfo()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'DistroInfo',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: DistroInfo.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'wslName')
     ..aOS(2, _omitFieldNames ? '' : 'id')
     ..aOS(3, _omitFieldNames ? '' : 'versionId')
@@ -529,12 +552,14 @@ class DistroInfo extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use DistroInfo() / DistroInfo.new instead')
   static DistroInfo create() => DistroInfo._();
+  static $pb.GeneratedMessage $_createMessage() => DistroInfo._();
   @$core.override
-  DistroInfo createEmptyInstance() => create();
+  DistroInfo createEmptyInstance() => DistroInfo._();
   @$core.pragma('dart2js:noInline')
   static DistroInfo getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DistroInfo>(create);
+      $pb.GeneratedMessage.$_defaultFor<DistroInfo>(DistroInfo.$_createMessage);
   static DistroInfo? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -596,7 +621,7 @@ class ProAttachCmd extends $pb.GeneratedMessage {
   factory ProAttachCmd({
     $core.String? token,
   }) {
-    final result = create();
+    final result = ProAttachCmd._();
     if (token != null) result.token = token;
     return result;
   }
@@ -605,15 +630,15 @@ class ProAttachCmd extends $pb.GeneratedMessage {
 
   factory ProAttachCmd.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      ProAttachCmd()..mergeFromBuffer(data, registry);
   factory ProAttachCmd.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      ProAttachCmd()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ProAttachCmd',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: ProAttachCmd.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'token')
     ..hasRequiredFields = false;
 
@@ -628,12 +653,15 @@ class ProAttachCmd extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use ProAttachCmd() / ProAttachCmd.new instead')
   static ProAttachCmd create() => ProAttachCmd._();
+  static $pb.GeneratedMessage $_createMessage() => ProAttachCmd._();
   @$core.override
-  ProAttachCmd createEmptyInstance() => create();
+  ProAttachCmd createEmptyInstance() => ProAttachCmd._();
   @$core.pragma('dart2js:noInline')
-  static ProAttachCmd getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ProAttachCmd>(create);
+  static ProAttachCmd getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProAttachCmd>(
+          ProAttachCmd.$_createMessage);
   static ProAttachCmd? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -650,7 +678,7 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
   factory LandscapeConfigCmd({
     $core.String? config,
   }) {
-    final result = create();
+    final result = LandscapeConfigCmd._();
     if (config != null) result.config = config;
     return result;
   }
@@ -659,15 +687,15 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
 
   factory LandscapeConfigCmd.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      LandscapeConfigCmd()..mergeFromBuffer(data, registry);
   factory LandscapeConfigCmd.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      LandscapeConfigCmd()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'LandscapeConfigCmd',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: LandscapeConfigCmd.$_createMessage)
     ..aOS(1, _omitFieldNames ? '' : 'config')
     ..hasRequiredFields = false;
 
@@ -682,12 +710,15 @@ class LandscapeConfigCmd extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use LandscapeConfigCmd() / LandscapeConfigCmd.new instead')
   static LandscapeConfigCmd create() => LandscapeConfigCmd._();
+  static $pb.GeneratedMessage $_createMessage() => LandscapeConfigCmd._();
   @$core.override
-  LandscapeConfigCmd createEmptyInstance() => create();
+  LandscapeConfigCmd createEmptyInstance() => LandscapeConfigCmd._();
   @$core.pragma('dart2js:noInline')
   static LandscapeConfigCmd getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<LandscapeConfigCmd>(create);
+      $pb.GeneratedMessage.$_defaultFor<LandscapeConfigCmd>(
+          LandscapeConfigCmd.$_createMessage);
   static LandscapeConfigCmd? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -707,7 +738,7 @@ class MSG extends $pb.GeneratedMessage {
     $core.String? wslName,
     $core.String? result,
   }) {
-    final result$ = create();
+    final result$ = MSG._();
     if (wslName != null) result$.wslName = wslName;
     if (result != null) result$.result = result;
     return result$;
@@ -717,10 +748,10 @@ class MSG extends $pb.GeneratedMessage {
 
   factory MSG.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      MSG()..mergeFromBuffer(data, registry);
   factory MSG.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      MSG()..mergeFromJson(json, registry);
 
   static const $core.Map<$core.int, MSG_Data> _MSG_DataByTag = {
     1: MSG_Data.wslName,
@@ -730,7 +761,7 @@ class MSG extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'MSG',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'agentapi'),
-      createEmptyInstance: create)
+      createEmptyInstance: MSG.$_createMessage)
     ..oo(0, [1, 2])
     ..aOS(1, _omitFieldNames ? '' : 'wslName')
     ..aOS(2, _omitFieldNames ? '' : 'result')
@@ -746,12 +777,14 @@ class MSG extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use MSG() / MSG.new instead')
   static MSG create() => MSG._();
+  static $pb.GeneratedMessage $_createMessage() => MSG._();
   @$core.override
-  MSG createEmptyInstance() => create();
+  MSG createEmptyInstance() => MSG._();
   @$core.pragma('dart2js:noInline')
-  static MSG getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MSG>(create);
+  static MSG getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MSG>(MSG.$_createMessage);
   static MSG? _defaultInstance;
 
   @$pb.TagNumber(1)
