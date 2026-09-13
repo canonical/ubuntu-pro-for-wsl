@@ -1,9 +1,8 @@
 //go:build windows
 
-// Windows production-mechanism tests: files are stamped with
-// $LXUID/$LXGID/$LXMOD at creation, the root is stamped when adopting a
-// pre-existing directory, and rename targets are stamped. What the ownership
-// predicate makes of those EAs is unit-tested in watermark_windows_test.go.
+// Windows production-mechanism tests: what the custodian stamps with
+// $LXUID/$LXGID/$LXMOD, and when. What the ownership predicate makes of those
+// attributes is unit-tested in watermark_windows_test.go.
 
 package securefiles_test
 
@@ -17,74 +16,79 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAtomicCreationStampingOnWindows(t *testing.T) {
-	dir := t.TempDir()
+// TestWindowsStamping pins what carries the $LXUID/$LXGID/$LXMOD stamp, which is what
+// projects a node as root-owned inside an instance. Files are stamped as they are
+// created, and survive being published by rename. Directories are the one place ADR 2.01
+// allows stamping in place rather than replacing: the public root and the first-level
+// sub-tree roots are adopted when an earlier run left them behind, and a directory stamp
+// is what revokes unprivileged creation and deletion inside them, so an adopted
+// directory left unstamped would leave the whole sub-tree writable from an instance.
+// What the ownership predicate makes of these attributes is unit-tested in
+// watermark_windows_test.go.
+func TestWindowsStamping(t *testing.T) {
+	t.Parallel()
 
-	c, err := securefiles.Open(dir)
-	require.NoError(t, err)
-	defer c.Close()
+	testCases := map[string]struct {
+		// subdir names a sub-tree root reached through Subdir rather than the root itself.
+		subdir string
+		// preCreate plants the directories with plain os.MkdirAll before the custodian
+		// exists, so they are adopted and stamped in place rather than created stamped.
+		preCreate bool
+		// file names a regular file written through the custodian.
+		file string
+		// renameTo publishes that file under a new name before the stamp is read.
+		renameTo string
 
-	// File creation carries owner 0, group 0, mode 0100600.
-	err = c.WriteFile("file.txt", []byte("hello"))
-	require.NoError(t, err)
+		wantMode uint32
+	}{
+		"a created root":           {wantMode: 040700},
+		"an adopted root":          {preCreate: true, wantMode: 040700},
+		"a created sub-tree root":  {subdir: "certs", wantMode: 040700},
+		"an adopted sub-tree root": {subdir: "certs", preCreate: true, wantMode: 040700},
+		"a created file":           {file: "file.txt", wantMode: 0100600},
+		"a published file":         {file: "file.txt", renameTo: "file.old", wantMode: 0100600},
+	}
 
-	uid, gid, mode, err := securefilestest.ReadLxAttributes(filepath.Join(dir, "file.txt"))
-	require.NoError(t, err)
-	require.Equal(t, uint32(0), uid)
-	require.Equal(t, uint32(0), gid)
-	require.Equal(t, uint32(0100600), mode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	// The root directory itself carries owner 0, group 0, mode 040700.
-	uid, gid, mode, err = securefilestest.ReadLxAttributes(dir)
-	require.NoError(t, err)
-	require.Equal(t, uint32(0), uid)
-	require.Equal(t, uint32(0), gid)
-	require.Equal(t, uint32(040700), mode)
-}
+			rootDir := filepath.Join(t.TempDir(), "root")
+			if tc.preCreate {
+				plant := rootDir
+				if tc.subdir != "" {
+					plant = filepath.Join(rootDir, tc.subdir)
+				}
+				require.NoError(t, os.MkdirAll(plant, 0750), "Setup: could not plant the directory")
+			}
 
-func TestOpenPreExistingUnstampedRootStampsEA(t *testing.T) {
-	tmpDir := t.TempDir()
-	rootDir := filepath.Join(tmpDir, "pre-existing-root")
+			cust, err := securefiles.Open(rootDir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = cust.Close() }()
 
-	// Pre-create directory via plain os.MkdirAll (unstamped).
-	require.NoError(t, os.MkdirAll(rootDir, 0750))
+			stamped := rootDir
+			if tc.subdir != "" {
+				sub, err := cust.Subdir(tc.subdir)
+				require.NoError(t, err, "the sub-tree root must be usable")
+				defer func() { _ = sub.Close() }()
+				stamped = filepath.Join(rootDir, tc.subdir)
+			}
+			if tc.file != "" {
+				require.NoError(t, cust.WriteFile(tc.file, []byte("content")), "the file must be written")
+				stamped = filepath.Join(rootDir, tc.file)
+			}
+			if tc.renameTo != "" {
+				require.NoError(t, cust.Rename(tc.file, tc.renameTo), "an owned node must be publishable")
+				stamped = filepath.Join(rootDir, tc.renameTo)
+			}
 
-	// Open via custodian.
-	cust, err := securefiles.Open(rootDir)
-	require.NoError(t, err)
-	defer cust.Close()
+			require.False(t, cust.IsDegraded(), "stamping a usable filesystem must not degrade the custodian")
 
-	require.False(t, cust.IsDegraded(), "Custodian should stamp pre-existing root and not be degraded")
-
-	// Verify EA attributes and values on the root.
-	uid, gid, mode, err := securefilestest.ReadLxAttributes(rootDir)
-	require.NoError(t, err)
-	require.Equal(t, uint32(0), uid)
-	require.Equal(t, uint32(0), gid)
-	require.Equal(t, uint32(040700), mode)
-}
-
-func TestRenameStampsEAOnUnstampedNode(t *testing.T) {
-	tmpDir := t.TempDir()
-	rootDir := filepath.Join(tmpDir, "root")
-
-	// Create custodian
-	cust, err := securefiles.Open(rootDir)
-	require.NoError(t, err)
-	defer cust.Close()
-
-	// Seed raw unstamped file using plain os.WriteFile
-	rawPath := filepath.Join(rootDir, "raw.log")
-	require.NoError(t, os.WriteFile(rawPath, []byte("raw content"), 0600))
-
-	// Rotate via custodian.Rename
-	err = cust.Rename("raw.log", "raw.old")
-	require.NoError(t, err)
-
-	// Verify EA attributes were stamped on the renamed target node
-	uid, gid, mode, err := securefilestest.ReadLxAttributes(filepath.Join(rootDir, "raw.old"))
-	require.NoError(t, err)
-	require.Equal(t, uint32(0), uid)
-	require.Equal(t, uint32(0), gid)
-	require.Equal(t, uint32(0100600), mode)
+			uid, gid, mode, err := securefilestest.ReadLxAttributes(stamped)
+			require.NoError(t, err, "the node must carry the stamp")
+			require.Equal(t, uint32(0), uid, "the stamp must claim root as owner")
+			require.Equal(t, uint32(0), gid, "the stamp must claim root as group")
+			require.Equal(t, tc.wantMode, mode, "unexpected mode in the stamp")
+		})
+	}
 }

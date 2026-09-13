@@ -11,9 +11,11 @@ func createLockFile(path string) (f *os.File, err error) {
 	defer decorate.OnError(&err, "could not create lock file %s: %v", path, err)
 
 	// On Windows removing fails if the file is opened by another process with ERROR_SHARING_VIOLATION.
+	//nolint:forbidigo // Lockfile lives in the private directory; raw removal tests process mutual exclusion and stale locks.
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 	// If this process is the only instance of this program, then the file won't exist.
+	//nolint:forbidigo // Atomic single-instance mutual exclusion in the private directory requires exclusive file creation via OpenFile.
 	return os.OpenFile(path, os.O_CREATE|os.O_EXCL, 0600)
 }

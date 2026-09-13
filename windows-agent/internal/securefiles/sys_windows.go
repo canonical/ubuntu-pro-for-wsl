@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 	"unsafe"
 
 	"github.com/Microsoft/go-winio"
@@ -24,12 +23,22 @@ type platformSys struct {
 	mockOwned  *bool
 }
 
+// fileRenameInfoStruct is FILE_RENAME_INFORMATION. Its leading word is a BOOLEAN
+// ReplaceIfExists for FileRenameInformation and a ULONG of flags for
+// FileRenameInformationEx; the documented struct overlaps them in a union, and
+// FILE_RENAME_REPLACE_IF_EXISTS is 1, so one field serves both classes.
 type fileRenameInfoStruct struct {
-	ReplaceIfExists uint8
-	RootDirectory   windows.Handle
-	FileNameLength  uint32
-	FileName        [1]uint16
+	Flags          uint32
+	RootDirectory  windows.Handle
+	FileNameLength uint32
+	FileName       [1]uint16
 }
+
+// fileRenameInformationEx is the FILE_INFORMATION_CLASS of FILE_RENAME_INFORMATION_EX,
+// which golang.org/x/sys/windows does not declare. Unlike FileRenameInformation it
+// honours FILE_RENAME_POSIX_SEMANTICS, without which the kernel refuses the rename
+// whenever any process holds the destination open, however politely it shares it.
+const fileRenameInformationEx = 65
 
 // testNtSetEaFileResult, when non-nil, overrides the return value of NtSetEaFile in tests.
 var testNtSetEaFileResult *uint32
@@ -49,6 +58,59 @@ func newPlatformSys(basePath string) (*platformSys, error) {
 	}
 
 	return s, nil
+}
+
+// newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
+// already created and stamped. It deliberately does no path walk of its own: the node is
+// reached through the parent's root handle, and re-resolving its absolute path here would
+// step outside the containment the parent established. Degradation is inherited because
+// it describes the filesystem, not the node.
+func newSubPlatformSys(degraded bool) *platformSys {
+	return &platformSys{
+		rootHandle: windows.InvalidHandle,
+		degraded:   degraded,
+	}
+}
+
+// stampSubdir stamps an already-existing sub-directory in place, for the case where the
+// custodian adopts one left by an earlier run. ADR 2.01 requires first-level sub-tree
+// roots to carry the stamp: on a stamped directory Linux checks the current ownership and
+// mode on every operation, so the stamp revokes unprivileged creation and deletion inside
+// it. The node is opened relative to the root handle and without following reparse points,
+// so adoption cannot be redirected outside the sub-tree. A filesystem that refuses the
+// attribute degrades the custodian rather than failing the call, per ADR 2.02.
+func (s *platformSys) stampSubdir(rel string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.degraded {
+		return nil
+	}
+
+	eaBuf, err := encodeLxEa(0, 0, 040700)
+	if err != nil {
+		return err
+	}
+
+	handle, err := s.openExisting(rel, windows.GENERIC_WRITE|windows.FILE_WRITE_EA,
+		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
+	if err != nil {
+		return err
+	}
+	defer closeHandle(handle)
+
+	var iosbSet windows.IO_STATUS_BLOCK
+	errSet := windows.NtSetEaFile(
+		handle,
+		&iosbSet,
+		&eaBuf[0],
+		uint32(len(eaBuf)), //#nosec G115 // length of small EA buffer; always fits in 32 bits.
+	)
+	if errSet != nil {
+		s.degraded = true
+	}
+
+	return nil
 }
 
 // setRoot derives the root directory handle used for relative NtCreateFile
@@ -191,18 +253,18 @@ func (s *platformSys) setMockDegraded(degraded bool) {
 
 // isOwned reports whether the node at rel carries the agent's watermark: the
 // $LXUID/$LXGID/$LXMOD stamp queried through NtQueryEaFile for exactly the
-// values the custodian writes. On a degraded filesystem there are no extended
-// attributes, so it falls back to the caller's filename recognition and never
-// deletes extra nodes.
+// values the custodian writes. It never answers on behalf of a filesystem that
+// cannot carry extended attributes: there the query simply fails, and ownership
+// is unknowable rather than true. Callers must consult isDegraded first and
+// decide what an unverifiable sub-tree means for them, because reading an
+// unknowable answer as either "ours" or "foreign" is a policy choice, not a
+// fact this predicate can supply.
 func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.mockOwned != nil {
 		return *s.mockOwned, nil
-	}
-	if s.degraded {
-		return true, nil
 	}
 
 	h, err := s.openExisting(rel, windows.GENERIC_READ, 0, windows.FILE_NON_DIRECTORY_FILE)
@@ -328,6 +390,11 @@ func (s *platformSys) openExisting(rel string, access, attributes, options uint3
 	return h, nil
 }
 
+func (s *platformSys) openDirNoReparse(relDir string) (windows.Handle, error) {
+	return s.openExisting(relDir, windows.GENERIC_READ|windows.FILE_LIST_DIRECTORY,
+		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
+}
+
 func (s *platformSys) renameNode(oldRel, newRel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -342,48 +409,62 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	}
 	defer closeHandle(handle)
 
-	newRel16, err := windows.UTF16FromString(newRel)
+	// Ensure the source node is already owned. Stamping in place after rename is
+	// rejected because it leaves a window where unstamped content is published
+	// and cannot revoke descriptors already open on the source.
+	if !s.degraded {
+		uid, gid, mode, err := ntQueryLxEa(handle)
+		if err != nil || uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
+			return ErrNotOwned
+		}
+	}
+
+	// Resolve the destination parent directory handle safely without following reparse points.
+	dirPart := filepath.Dir(newRel)
+	leafPart := filepath.Base(newRel)
+
+	targetParentHandle := s.rootHandle
+	if dirPart != "." && dirPart != "" {
+		parentH, err := s.openDirNoReparse(dirPart)
+		if err != nil {
+			return err
+		}
+		defer closeHandle(parentH)
+		targetParentHandle = parentH
+	}
+
+	leaf16, err := windows.UTF16FromString(leafPart)
 	if err != nil {
 		return err
 	}
 
-	nameBytesLen := (len(newRel16) - 1) * 2
+	nameBytesLen := (len(leaf16) - 1) * 2
 	infoSize := unsafe.Sizeof(fileRenameInfoStruct{}) + uintptr(nameBytesLen) - 2 //#nosec G115 // byte length of a short relative path; far below uintptr range.
 
 	buf := make([]byte, infoSize)
 	info := (*fileRenameInfoStruct)(unsafe.Pointer(&buf[0])) //#nosec G103 // reinterpreting the rename-info buffer as its documented header; the buffer is sized to hold it.
-	info.ReplaceIfExists = 1
-	info.RootDirectory = s.rootHandle
+	info.RootDirectory = targetParentHandle
 	info.FileNameLength = uint32(nameBytesLen) //#nosec G115 // rename target byte length; a short relative path, always fits in 32 bits.
 
-	copy((*[1 << 20]byte)(unsafe.Pointer(&info.FileName[0]))[:nameBytesLen], (*[1 << 20]byte)(unsafe.Pointer(&newRel16[0]))[:nameBytesLen]) //#nosec G103 // fixed-size overlay over the rename-info buffer, only ever sliced to the real name length.
+	copy((*[1 << 20]byte)(unsafe.Pointer(&info.FileName[0]))[:nameBytesLen], (*[1 << 20]byte)(unsafe.Pointer(&leaf16[0]))[:nameBytesLen]) //#nosec G103 // fixed-size overlay over the rename-info buffer, only ever sliced to the real name length.
 
+	// POSIX semantics is what allows the replacement to happen while readers still
+	// hold the destination open, which is the whole point of publishing by rename:
+	// without it the kernel refuses the rename outright, even for a reader that
+	// shares deletion. Filesystems that predate the information class reject it, so
+	// fall back to the original one, where an open destination is simply refused.
 	var iosbSet windows.IO_STATUS_BLOCK
+	info.Flags = windows.FILE_RENAME_REPLACE_IF_EXISTS | windows.FILE_RENAME_POSIX_SEMANTICS
 	errSet := windows.NtSetInformationFile(
 		handle,
 		&iosbSet,
 		&buf[0],
 		uint32(infoSize), //#nosec G115 // infoSize is small and fits in 32 bits.
-		windows.FileRenameInformation,
+		fileRenameInformationEx,
 	)
 
-	for range 100 {
-		if errSet == nil {
-			break
-		}
-		if errors.Is(errSet, windows.STATUS_STOPPED_ON_SYMLINK) || errors.Is(errSet, windows.STATUS_REPARSE_POINT_ENCOUNTERED) {
-			return ErrPathEscapes
-		}
-		if !errors.Is(errSet, windows.STATUS_ACCESS_DENIED) && !errors.Is(errSet, windows.STATUS_SHARING_VIOLATION) {
-			var status windows.NTStatus
-			if errors.As(errSet, &status) {
-				return status.Errno()
-			}
-			return errSet
-		}
-		s.mu.Unlock()
-		time.Sleep(10 * time.Millisecond)
-		s.mu.Lock()
+	if isUnsupportedInfoClass(errSet) {
+		info.Flags = windows.FILE_RENAME_REPLACE_IF_EXISTS
 		errSet = windows.NtSetInformationFile(
 			handle,
 			&iosbSet,
@@ -393,36 +474,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		)
 	}
 
-	if errSet != nil {
-		var status windows.NTStatus
-		if errors.As(errSet, &status) {
-			return status.Errno()
-		}
-		return errSet
-	}
-
-	// Stamp EA attributes on the renamed target node through the open handle.
-	eaBuf, err := encodeLxEa(0, 0, stampedFileMode())
-	if err != nil {
-		return err
-	}
-
-	var iosbEa windows.IO_STATUS_BLOCK
-	errEa := windows.NtSetEaFile(
-		handle,
-		&iosbEa,
-		&eaBuf[0],
-		uint32(len(eaBuf)), //#nosec G115 // length of small EA buffer; always fits in 32 bits.
-	)
-	if errEa != nil {
-		var status windows.NTStatus
-		if errors.As(errEa, &status) {
-			return status.Errno()
-		}
-		return errEa
-	}
-
-	return nil
+	return mapNtStatus(errSet)
 }
 
 // mapNtStatus translates an NT status into a Go error, recognising the
@@ -498,6 +550,16 @@ func encodeLxEa(uid, gid uint32, mode uint32) ([]byte, error) {
 		{Name: "$LXMOD", Value: modeBytes[:]},
 	}
 	return winio.EncodeExtendedAttributes(eas)
+}
+
+// isUnsupportedInfoClass reports whether err says the filesystem does not implement
+// the information class at all, as opposed to refusing this particular operation.
+// Only then is retrying with an older class worthwhile.
+func isUnsupportedInfoClass(err error) bool {
+	return errors.Is(err, windows.STATUS_INVALID_PARAMETER) ||
+		errors.Is(err, windows.STATUS_NOT_SUPPORTED) ||
+		errors.Is(err, windows.STATUS_INVALID_INFO_CLASS) ||
+		errors.Is(err, windows.STATUS_NOT_IMPLEMENTED)
 }
 
 func fallbackCreate(root *os.Root, rel string, isDir bool) error {

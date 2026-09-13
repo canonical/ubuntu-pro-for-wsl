@@ -84,14 +84,34 @@ type metadata struct {
 // untouched: cloud-init data is consumed exactly once, at the instance's first boot, so there is
 // nothing to gain from reading it back and rewriting it. The watermark is the whole adoption
 // policy: an unstamped node is foreign by definition, whatever its name.
+//
+// That policy holds only while the watermark can be read. Where the filesystem cannot carry
+// extended attributes every node looks unstamped, so purging on that basis would delete the
+// user's per-distro data on every startup. Adoption is therefore unconditional there, and the
+// condition is reported instead of acted upon.
 func (c CloudInit) startupPurge(ctx context.Context) error {
+	unverifiable := c.dir.IsDegraded()
+	if unverifiable {
+		log.Errorf(ctx, "cloud-init: filesystem cannot carry the ownership watermark, so foreign nodes are indistinguishable from ours: adopting the whole sub-tree unverified")
+	}
+
 	isOurs := func(rel string) bool {
 		// Directories are never adopted: this sub-tree legitimately holds files only.
+		// That judgement is structural, so it still holds without the watermark.
 		if _, err := c.dir.ReadDir(rel); err == nil {
 			return false
 		}
+		if unverifiable {
+			return true
+		}
 		owned, err := c.dir.IsOwned(rel)
 		if err != nil {
+			// The filesystem may have degraded between the check above and this call.
+			// Deleting on an unverifiable answer is the one outcome we cannot undo.
+			if c.dir.IsDegraded() {
+				log.Errorf(ctx, "cloud-init: ownership of %q became unverifiable mid-purge, adopting it unverified: %v", rel, err)
+				return true
+			}
 			log.Warningf(ctx, "cloud-init: could not check ownership of %q: %v", rel, err)
 			return false
 		}

@@ -524,6 +524,8 @@ func TestStartupPurge(t *testing.T) {
 		seed func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState)
 		// notOwned, when non-nil, forces the ownership predicate.
 		notOwned *bool
+		// degraded marks the filesystem as unable to carry the watermark, after seeding.
+		degraded bool
 		// check runs after New succeeds.
 		check func(t *testing.T, c *securefiles.Custodian, cloudInitDir string, state *startupPurgeState)
 	}{
@@ -550,6 +552,38 @@ func TestStartupPurge(t *testing.T) {
 				gotAgent, err := os.ReadFile(filepath.Join(cloudInitDir, "agent.yaml"))
 				require.NoError(t, err)
 				require.Contains(t, string(gotAgent), "token")
+			},
+		},
+		"Keeps per-distro data when the watermark cannot be read": {
+			degraded: true,
+			seed: func(t *testing.T, c *securefiles.Custodian, state *startupPurgeState) {
+				t.Helper()
+				// Written raw, the way createNode's fallback leaves them when the
+				// filesystem cannot carry the stamp: this is the data a user already
+				// has on such a profile, and it must survive the next startup.
+				require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), "CoolDistro.user-data"), []byte("distro-user-data"), 0600))
+				require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), "CoolDistro.meta-data"), []byte("instance-id: inst-123\n"), 0600))
+			},
+			check: func(t *testing.T, _ *securefiles.Custodian, cloudInitDir string, state *startupPurgeState) {
+				t.Helper()
+
+				// Without extended attributes every node reads as unstamped. Purging on
+				// that basis would destroy the user's provisioning data on every startup.
+				gotUserData, err := os.ReadFile(filepath.Join(cloudInitDir, "CoolDistro.user-data"))
+				require.NoError(t, err, "per-distro user-data must survive an unverifiable filesystem")
+				require.Equal(t, "distro-user-data", string(gotUserData))
+				require.FileExists(t, filepath.Join(cloudInitDir, "CoolDistro.meta-data"),
+					"per-distro meta-data must survive an unverifiable filesystem")
+
+				// The condition is reported rather than acted upon, so it is diagnosable.
+				foundError := false
+				for _, entry := range state.hook.AllEntries() {
+					if entry.Level == logrus.ErrorLevel && strings.Contains(entry.Message, "cannot carry the ownership watermark") {
+						foundError = true
+						break
+					}
+				}
+				require.True(t, foundError, "expected an error-level log naming the unverifiable filesystem")
 			},
 		},
 		"Removes an unstamped unrecognised file": {
@@ -699,6 +733,10 @@ func TestStartupPurge(t *testing.T) {
 			if tc.seed != nil {
 				tc.seed(t, custodian, state)
 			}
+			// Degrade after seeding: the data must predate the loss of the watermark,
+			// exactly as it does when a healthy profile is later moved to a filesystem
+			// without extended attributes.
+			custodian.SetMockDegraded(tc.degraded)
 
 			ctx := context.Background()
 			conf := &mockConfig{proToken: "token"}
