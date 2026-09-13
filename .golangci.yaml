@@ -31,11 +31,30 @@ linters:
     - usestdlibvars
     - whitespace
   settings:
-    # Forbid the usage of deprecated ioutil and debug prints
+    # Forbid the usage of deprecated ioutil, debug prints, and raw filesystem mutation.
+    # Filesystem mutations must go through the securefiles custodian; the allowlist below names
+    # the packages that legitimately write outside the public boundary (private state stores,
+    # the Landscape installer's temporary/virtual-disk paths, the teardown command, lockfiles,
+    # and test files). The agent command package is allowlisted because it sets up the private
+    # log there; the sweep test in cmd/ubuntu-pro-agent/agent is what covers it.
     forbidigo:
       forbid:
         - pattern: ioutil\.
+          msg: Use the standard library replacements for ioutil.
         - pattern: ^print.*$
+          msg: Avoid bare print statements; use logging.
+        - pattern: ^os\.Create$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.OpenFile$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.WriteFile$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.Mkdir(All)?$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.Remove(All)?$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.Rename$
+          msg: Use the securefiles custodian for filesystem mutations.
     # Never have naked return ever
     nakedret:
       max-func-lines: 1
@@ -73,6 +92,41 @@ linters:
       # mTLS uses TLS 1.2 intentionally to support Windows 10 hosts.
       - path: '(common[\/]certs[\/](certs|certs_test)|wsl-pro-service[\/]internal[\/]daemon[\/]daemon|wsl-pro-service[\/]internal[\/]testutils[\/]mock_agent|windows-agent[\/]internal[\/]proservices[\/]proservices_test)\.go$'
         text: G402
+      # Allow raw filesystem mutation only in the custodian implementation, private state
+      # stores, Landscape installer paths outside the boundary, the teardown command,
+      # lockfiles, test utilities, and test files.
+      - path: .*internal[\/]securefiles[\/].*
+        linters: [forbidigo]
+      - path: .*internal[\/]config[\/].*
+        linters: [forbidigo]
+      - path: .*internal[\/]distros[\/]database[\/].*
+        linters: [forbidigo]
+      - path: .*internal[\/]distros[\/]worker[\/].*
+        linters: [forbidigo]
+      - path: .*internal[\/]proservices[\/]landscape[\/]distroinstall[\/].*
+        linters: [forbidigo]
+      - path: .*internal[\/]proservices[\/]landscape[\/]executor\.go$
+        linters: [forbidigo]
+      - path: .*cmd[\/]ubuntu-pro-agent[\/]agent[\/].*
+        linters: [forbidigo]
+      - path: .*common[\/]testutils[\/].*
+        linters: [forbidigo]
+      - path: .*common[\/]wsltestutils[\/].*
+        linters: [forbidigo]
+      - path: (.+)_test\.go$
+        linters: [forbidigo]
+      # wsl-pro-service writes the landscape-client configuration inside the WSL distro
+      # instance, not on the Windows host's public directory, so the securefiles custodian
+      # boundary does not apply there.
+      - path: .*wsl-pro-service[\/]internal[\/]system[\/].*
+        linters: [forbidigo]
+      # wsl-pro-service test helpers construct synthetic distro filesystems; they are not
+      # host-side public-directory writes and therefore fall outside the custodian boundary.
+      - path: .*wsl-pro-service[\/]internal[\/]testutils[\/].*
+        linters: [forbidigo]
+      # Mocks are test doubles that run outside the agent's public-directory boundary.
+      - path: .*mocks[\/].*
+        linters: [forbidigo]
     paths:
       - third_party$
       - builtin$

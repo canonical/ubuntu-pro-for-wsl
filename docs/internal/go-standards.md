@@ -69,7 +69,7 @@ func normalizeLandscapeConfig(ctx context.Context, s *System, iniFile *ini.File)
 
 - Use `decoreate.OnError` to add context to errors returned from functions at a single location.
 - Prefer `errors.New` for static sentinel errors and declare them as `var ErrSomething = errors.New("...")`.
-- Use `%w` only when callers are expected to match the underlying error later with `errors.Is` or `errors.As`.
+- Return errors wrapped with `%v`; only use `%w` only when callers must match it with `errors.Is`/`errors.As`.
 - If the underlying error is only being included for human consumption, use `%v` instead of `%w`.
 - Prefer one meaningful layer of context at the abstraction boundary that changes what the operation means to the caller.
 - When a caller needs to match a domain-specific condition and still retain extra detail, prefer `errors.Join` with a sentinel error.
@@ -103,8 +103,20 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 
 ## Testing
 
-- Prefer table-driven tests keyed by name in a map/dict (`map[string]struct{...}`), iterated as `for name, tc := range tests { ... }`.
-- Use sub-tests for each case: `t.Run(name, func(t *testing.T) { ... })` 
+- Prefer table-driven tests keyed by name in a map (`testcases := map[string]struct{...} { ...}`),
+  where each element holds a particular test case arguments ordered to facilitate grasping the
+  differences between sub-tests, preserving the test body similar in implementation. Iterate over
+  that map as `for name, tc := range testscases { ... }` and define sub-tests for each case:
+  `t.Run(name, func(t *testing.T) { ... })`.
+- Table-driven testing exemption is allowed when no more than one case exists or is foreseeable or
+  sub-test candidates are drastically different in implementation. When the behaviour under test has
+  no injectable failure mode — nothing can break, no invalid input reachable, no error the code can
+  return — or when only a single code path can be exercised, write the single success case as a
+  plain test. Do not manufacture a one-entry table, and do not widen visibility or add seams that
+  exist only to fabricate a failure. Delete cases whose failure mode a redesign has removed, rather
+  than keeping them alive against a contrived error.
+- If a test function cannot have sub-tests, it must have a comment explaining what it does and why
+  it's useful to prevent regression.
 - Strive to call `t.Parallel()` inside the sub-tests, comment in the test if parallelization is not possible.
 - Keep test cases deterministic and self-contained; avoid hidden shared mutable state between cases.
 - Prefix assertion messages with "Setup: " when a setup step fails before the actual test assertion.
@@ -152,7 +164,6 @@ Key rules to know before writing code:
 - Bare `print`/`println` are forbidden — use the project logger (`forbidigo`).
 - All exported symbols must have doc comments ending with a period (`godot`).
 - Error type names must end in `Error` or implement `error` as `*T` (`errname`).
-- Use `%w` only when callers will match with `errors.Is`/`errors.As`; use `%v` otherwise (`errorlint`).
 - Test helpers must call `t.Helper()` (`thelper`).
 - Parallel sub-tests must call `t.Parallel()` (`tparallel`).
 - Use the correct `testify` assertion variant (`testifylint`).
