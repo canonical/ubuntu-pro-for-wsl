@@ -14,7 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"unsafe"
 
 	"github.com/Microsoft/go-winio"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
@@ -102,22 +101,11 @@ func TestWindowsEaWatermark(t *testing.T) {
 	}
 }
 
-var procNtSetEaFile = windows.NewLazySystemDLL("ntdll.dll").NewProc("NtSetEaFile")
-
 // setEaFile replaces the extended attributes of the node behind h with the
 // encoded EA list, simulating WSL taking ownership of a node.
 func setEaFile(h windows.Handle, eaBuf []byte) error {
 	var iosb windows.IO_STATUS_BLOCK
-	r1, _, _ := procNtSetEaFile.Call(
-		uintptr(h),
-		uintptr(unsafe.Pointer(&iosb)),     //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(len(eaBuf)),
-	)
-	if r1 != 0 {
-		return windows.NTStatus(r1) //#nosec G115 // NTSTATUS codes are 32-bit values.
-	}
-	return nil
+	return windows.NtSetEaFile(h, &iosb, &eaBuf[0], uint32(len(eaBuf)) /* #nosec G115 */)
 }
 
 // openForEaWrite opens path with the sharing and access flags needed to write
