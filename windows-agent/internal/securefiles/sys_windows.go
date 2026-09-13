@@ -4,6 +4,7 @@ package securefiles
 
 import (
 	"encoding/binary"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -23,55 +24,11 @@ type platformSys struct {
 	mockOwned  *bool
 }
 
-var (
-	modntdll                 = windows.NewLazySystemDLL("ntdll.dll")
-	procNtCreateFile         = modntdll.NewProc("NtCreateFile")
-	procNtSetInformationFile = modntdll.NewProc("NtSetInformationFile")
-	procNtSetEaFile          = modntdll.NewProc("NtSetEaFile")
-	procNtQueryEaFile        = modntdll.NewProc("NtQueryEaFile")
-)
-
-const (
-	fileCreate                = 0x00000002
-	fileOpen                  = 0x00000001
-	fileOpenIf                = 0x00000003
-	fileDirectoryFile         = 0x00000001
-	fileNonDirectoryFile      = 0x00000040
-	fileSynchronousIoNonAlert = 0x00000020
-
-	fileAddFile           = 0x0002
-	fileAddSubdirectory   = 0x0004
-	fileRenameInformation = 10
-)
-
-type unicodeString struct {
-	Length        uint16
-	MaximumLength uint16
-	Buffer        *uint16
-}
-
-type objectAttributes struct {
-	Length                   uint32
-	RootDirectory            windows.Handle
-	ObjectName               *unicodeString
-	Attributes               uint32
-	SecurityDescriptor       uintptr
-	SecurityQualityOfService uintptr
-}
-
 type fileRenameInfoStruct struct {
 	ReplaceIfExists uint8
 	RootDirectory   windows.Handle
 	FileNameLength  uint32
 	FileName        [1]uint16
-}
-
-type fileFullEaInformation struct {
-	NextEntryOffset uint32
-	Flags           uint8
-	EaNameLength    uint8
-	EaValueLength   uint16
-	EaName          [1]byte
 }
 
 // testNtSetEaFileResult, when non-nil, overrides the return value of NtSetEaFile in tests.
@@ -121,7 +78,7 @@ func (s *platformSys) ensureRoot(basePath string) error {
 
 	parentHandle, err := windows.CreateFile(
 		parentPath16,
-		windows.GENERIC_READ|fileAddFile|fileAddSubdirectory|windows.FILE_LIST_DIRECTORY,
+		windows.GENERIC_READ|windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA|windows.FILE_LIST_DIRECTORY,
 		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
 		nil,
 		windows.OPEN_EXISTING,
@@ -138,22 +95,16 @@ func (s *platformSys) ensureRoot(basePath string) error {
 		return err
 	}
 
-	baseName16, err := windows.UTF16FromString(baseName)
+	uString, err := windows.NewNTUnicodeString(baseName)
 	if err != nil {
 		return err
 	}
 
-	uString := unicodeString{
-		Length:        uint16((len(baseName16) - 1) * 2), //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		MaximumLength: uint16(len(baseName16) * 2),       //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		Buffer:        &baseName16[0],
-	}
-
-	oa := objectAttributes{
-		Length:        uint32(unsafe.Sizeof(objectAttributes{})),
+	oa := windows.OBJECT_ATTRIBUTES{
+		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
 		RootDirectory: parentHandle,
-		ObjectName:    &uString,
-		Attributes:    0x00000040,
+		ObjectName:    uString,
+		Attributes:    windows.OBJ_CASE_INSENSITIVE,
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
@@ -162,25 +113,23 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	desiredAccess := uint32(windows.GENERIC_READ | windows.GENERIC_WRITE | windows.DELETE | windows.SYNCHRONIZE | windows.FILE_WRITE_EA)
 	fileAttributes := uint32(windows.FILE_ATTRIBUTE_DIRECTORY)
 	shareAccess := uint32(windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE | windows.FILE_SHARE_DELETE)
-	createOptions := uint32(fileSynchronousIoNonAlert | fileDirectoryFile)
+	createOptions := uint32(windows.FILE_SYNCHRONOUS_IO_NONALERT | windows.FILE_DIRECTORY_FILE)
+	disposition := uint32(windows.FILE_OPEN_IF)
 
-	disposition := uint32(fileOpenIf)
-
-	r1, _, _ := procNtCreateFile.Call(
-		uintptr(unsafe.Pointer(&handle)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(desiredAccess),
-		uintptr(unsafe.Pointer(&oa)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&iosb)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		0,
-		uintptr(fileAttributes),
-		uintptr(shareAccess),
-		uintptr(disposition),
-		uintptr(createOptions),
+	err = windows.NtCreateFile(
+		&handle,
+		desiredAccess,
+		&oa,
+		&iosb,
+		nil,
+		fileAttributes,
+		shareAccess,
+		disposition,
+		createOptions,
 		uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(len(eaBuf)),
+		uint32(len(eaBuf)),                 //#nosec G115 // length of small EA buffer; always fits in 32 bits.
 	)
-
-	if r1 != 0 {
+	if err != nil {
 		s.degraded = true
 		return os.MkdirAll(basePath, DirMode)
 	}
@@ -189,18 +138,18 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	// NtCreateFile does not apply the eaBuf parameter. Stamp EA via NtSetEaFile.
 	if iosb.Information == 1 /* FILE_OPENED */ {
 		var iosbSet windows.IO_STATUS_BLOCK
-		var r1Set uintptr
+		var errSet error
 		if testNtSetEaFileResult != nil {
-			r1Set = uintptr(*testNtSetEaFileResult)
+			errSet = windows.NTStatus(*testNtSetEaFileResult)
 		} else {
-			r1Set, _, _ = procNtSetEaFile.Call(
-				uintptr(handle),
-				uintptr(unsafe.Pointer(&iosbSet)),  //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-				uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-				uintptr(len(eaBuf)),
+			errSet = windows.NtSetEaFile(
+				handle,
+				&iosbSet,
+				&eaBuf[0],
+				uint32(len(eaBuf)), //#nosec G115 // length of small EA buffer; always fits in 32 bits.
 			)
 		}
-		if r1Set != 0 {
+		if errSet != nil {
 			s.degraded = true
 		}
 	}
@@ -249,42 +198,41 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 		return true, nil
 	}
 
-	rel16, err := windows.UTF16FromString(rel)
+	uString, err := windows.NewNTUnicodeString(rel)
 	if err != nil {
 		return false, err
 	}
-	uString := unicodeString{
-		Length:        uint16((len(rel16) - 1) * 2), //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		MaximumLength: uint16(len(rel16) * 2),       //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		Buffer:        &rel16[0],
-	}
-	oa := objectAttributes{
-		Length:        uint32(unsafe.Sizeof(objectAttributes{})),
+	oa := windows.OBJECT_ATTRIBUTES{
+		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
 		RootDirectory: s.rootHandle,
-		ObjectName:    &uString,
-		Attributes:    0x00000040,
+		ObjectName:    uString,
+		Attributes:    windows.OBJ_CASE_INSENSITIVE,
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
 	var h windows.Handle
-	r1, _, _ := procNtCreateFile.Call(
-		uintptr(unsafe.Pointer(&h)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(windows.GENERIC_READ|windows.SYNCHRONIZE),
-		uintptr(unsafe.Pointer(&oa)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&iosb)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
+	err = windows.NtCreateFile(
+		&h,
+		windows.GENERIC_READ|windows.SYNCHRONIZE,
+		&oa,
+		&iosb,
+		nil,
 		0,
-		0,
-		uintptr(windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE),
-		uintptr(fileOpen),
-		uintptr(fileSynchronousIoNonAlert|fileNonDirectoryFile),
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
+		windows.FILE_OPEN,
+		windows.FILE_SYNCHRONOUS_IO_NONALERT|windows.FILE_NON_DIRECTORY_FILE,
 		0,
 		0,
 	)
-	if r1 != 0 {
-		if windows.NTStatus(r1) == windows.STATUS_STOPPED_ON_SYMLINK { //#nosec G115 // NTSTATUS codes are 32-bit values.
+	if err != nil {
+		if errors.Is(err, windows.STATUS_STOPPED_ON_SYMLINK) {
 			return false, ErrPathEscapes
 		}
-		return false, windows.NTStatus(r1).Errno() //#nosec G115 // NTSTATUS codes are 32-bit values.
+		var status windows.NTStatus
+		if errors.As(err, &status) {
+			return false, status.Errno()
+		}
+		return false, err
 	}
 	defer closeHandle(h)
 
@@ -319,22 +267,16 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 		return err
 	}
 
-	path16, err := windows.UTF16FromString(relativePath)
+	uString, err := windows.NewNTUnicodeString(relativePath)
 	if err != nil {
 		return err
 	}
 
-	uString := unicodeString{
-		Length:        uint16((len(path16) - 1) * 2), //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		MaximumLength: uint16(len(path16) * 2),       //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		Buffer:        &path16[0],
-	}
-
-	oa := objectAttributes{
-		Length:        uint32(unsafe.Sizeof(objectAttributes{})),
+	oa := windows.OBJECT_ATTRIBUTES{
+		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
 		RootDirectory: s.rootHandle,
-		ObjectName:    &uString,
-		Attributes:    0x00000040,
+		ObjectName:    uString,
+		Attributes:    windows.OBJ_CASE_INSENSITIVE,
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
@@ -343,45 +285,48 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	desiredAccess := uint32(windows.GENERIC_READ | windows.GENERIC_WRITE | windows.DELETE | windows.SYNCHRONIZE)
 	fileAttributes := uint32(windows.FILE_ATTRIBUTE_NORMAL)
 	shareAccess := uint32(windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE | windows.FILE_SHARE_DELETE)
-	createDisposition := uint32(fileCreate)
-	createOptions := uint32(fileSynchronousIoNonAlert)
+	createDisposition := uint32(windows.FILE_CREATE)
+	createOptions := uint32(windows.FILE_SYNCHRONOUS_IO_NONALERT)
 
 	if isDir {
-		createOptions |= fileDirectoryFile
+		createOptions |= windows.FILE_DIRECTORY_FILE
 		fileAttributes = windows.FILE_ATTRIBUTE_DIRECTORY
 	} else {
-		createOptions |= fileNonDirectoryFile
+		createOptions |= windows.FILE_NON_DIRECTORY_FILE
 	}
 
-	var r1 uintptr
+	var ntErr error
 	if testNtCreateFileResult != nil {
-		r1 = uintptr(*testNtCreateFileResult)
+		ntErr = windows.NTStatus(*testNtCreateFileResult)
 	} else {
-		r1, _, _ = procNtCreateFile.Call(
-			uintptr(unsafe.Pointer(&handle)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			uintptr(desiredAccess),
-			uintptr(unsafe.Pointer(&oa)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			uintptr(unsafe.Pointer(&iosb)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			0,
-			uintptr(fileAttributes),
-			uintptr(shareAccess),
-			uintptr(createDisposition),
-			uintptr(createOptions),
+		ntErr = windows.NtCreateFile(
+			&handle,
+			desiredAccess,
+			&oa,
+			&iosb,
+			nil,
+			fileAttributes,
+			shareAccess,
+			createDisposition,
+			createOptions,
 			uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			uintptr(len(eaBuf)),
+			uint32(len(eaBuf)),                 //#nosec G115 // length of small EA buffer; always fits in 32 bits.
 		)
 	}
 
-	if r1 != 0 {
-		ntStatus := windows.NTStatus(r1) //#nosec G115 // NTSTATUS codes are 32-bit values.
-		if ntStatus == windows.STATUS_STOPPED_ON_SYMLINK {
+	if ntErr != nil {
+		if errors.Is(ntErr, windows.STATUS_STOPPED_ON_SYMLINK) {
 			return ErrPathEscapes
 		}
-		if ntStatus == windows.STATUS_EAS_NOT_SUPPORTED || ntStatus == windows.STATUS_NOT_SUPPORTED || ntStatus == windows.STATUS_INVALID_PARAMETER {
+		if errors.Is(ntErr, windows.STATUS_EAS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_INVALID_PARAMETER) {
 			s.degraded = true
 			return fallbackCreate(s.root, relativePath, isDir)
 		}
-		return ntStatus.Errno()
+		var status windows.NTStatus
+		if errors.As(ntErr, &status) {
+			return status.Errno()
+		}
+		return ntErr
 	}
 
 	closeHandle(handle)
@@ -396,22 +341,16 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		return s.root.Rename(oldRel, newRel)
 	}
 
-	oldRel16, err := windows.UTF16FromString(oldRel)
+	oldUString, err := windows.NewNTUnicodeString(oldRel)
 	if err != nil {
 		return err
 	}
 
-	uString := unicodeString{
-		Length:        uint16((len(oldRel16) - 1) * 2), //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		MaximumLength: uint16(len(oldRel16) * 2),       //#nosec G115 // UNICODE_STRING length of a short relative path; always fits in 16 bits.
-		Buffer:        &oldRel16[0],
-	}
-
-	oa := objectAttributes{
-		Length:        uint32(unsafe.Sizeof(objectAttributes{})),
+	oa := windows.OBJECT_ATTRIBUTES{
+		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
 		RootDirectory: s.rootHandle,
-		ObjectName:    &uString,
-		Attributes:    0x00000040,
+		ObjectName:    oldUString,
+		Attributes:    windows.OBJ_CASE_INSENSITIVE,
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
@@ -420,21 +359,21 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	desiredAccess := uint32(windows.GENERIC_READ | windows.GENERIC_WRITE | windows.DELETE | windows.SYNCHRONIZE)
 	shareAccess := uint32(windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE | windows.FILE_SHARE_DELETE)
 
-	r1, _, _ := procNtCreateFile.Call(
-		uintptr(unsafe.Pointer(&handle)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(desiredAccess),
-		uintptr(unsafe.Pointer(&oa)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&iosb)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
+	err = windows.NtCreateFile(
+		&handle,
+		desiredAccess,
+		&oa,
+		&iosb,
+		nil,
 		0,
-		0,
-		uintptr(shareAccess),
-		uintptr(fileOpen),
-		uintptr(fileSynchronousIoNonAlert),
+		shareAccess,
+		windows.FILE_OPEN,
+		windows.FILE_SYNCHRONOUS_IO_NONALERT,
 		0,
 		0,
 	)
-	if r1 != 0 {
-		return mapNtStatus(r1)
+	if err != nil {
+		return mapNtStatus(err)
 	}
 	defer closeHandle(handle)
 
@@ -455,39 +394,46 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	copy((*[1 << 20]byte)(unsafe.Pointer(&info.FileName[0]))[:nameBytesLen], (*[1 << 20]byte)(unsafe.Pointer(&newRel16[0]))[:nameBytesLen]) //#nosec G103 // fixed-size overlay over the rename-info buffer, only ever sliced to the real name length.
 
 	var iosbSet windows.IO_STATUS_BLOCK
-	r1Set, _, _ := procNtSetInformationFile.Call(
-		uintptr(handle),
-		uintptr(unsafe.Pointer(&iosbSet)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&buf[0])),  //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		infoSize,
-		uintptr(fileRenameInformation),
+	errSet := windows.NtSetInformationFile(
+		handle,
+		&iosbSet,
+		&buf[0],
+		uint32(infoSize), //#nosec G115 // infoSize is small and fits in 32 bits.
+		windows.FileRenameInformation,
 	)
 
 	for range 100 {
-		if r1Set == 0 {
+		if errSet == nil {
 			break
 		}
-		status := windows.NTStatus(r1Set) //#nosec G115 // NTSTATUS codes are 32-bit values.
-		if status == windows.STATUS_STOPPED_ON_SYMLINK {
+		if errors.Is(errSet, windows.STATUS_STOPPED_ON_SYMLINK) {
 			return ErrPathEscapes
 		}
-		if status != windows.STATUS_ACCESS_DENIED && status != windows.STATUS_SHARING_VIOLATION {
-			return status.Errno()
+		if !errors.Is(errSet, windows.STATUS_ACCESS_DENIED) && !errors.Is(errSet, windows.STATUS_SHARING_VIOLATION) {
+			var status windows.NTStatus
+			if errors.As(errSet, &status) {
+				return status.Errno()
+			}
+			return errSet
 		}
 		s.mu.Unlock()
 		time.Sleep(10 * time.Millisecond)
 		s.mu.Lock()
-		r1Set, _, _ = procNtSetInformationFile.Call(
-			uintptr(handle),
-			uintptr(unsafe.Pointer(&iosbSet)), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			uintptr(unsafe.Pointer(&buf[0])),  //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-			infoSize,
-			uintptr(fileRenameInformation),
+		errSet = windows.NtSetInformationFile(
+			handle,
+			&iosbSet,
+			&buf[0],
+			uint32(infoSize), //#nosec G115 // infoSize is small and fits in 32 bits.
+			windows.FileRenameInformation,
 		)
 	}
 
-	if r1Set != 0 {
-		return windows.NTStatus(r1Set).Errno() //#nosec G115 // NTSTATUS codes are 32-bit values.
+	if errSet != nil {
+		var status windows.NTStatus
+		if errors.As(errSet, &status) {
+			return status.Errno()
+		}
+		return errSet
 	}
 
 	// Stamp EA attributes on the renamed target node through the open handle.
@@ -497,14 +443,18 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	}
 
 	var iosbEa windows.IO_STATUS_BLOCK
-	r1Ea, _, _ := procNtSetEaFile.Call(
-		uintptr(handle),
-		uintptr(unsafe.Pointer(&iosbEa)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(len(eaBuf)),
+	errEa := windows.NtSetEaFile(
+		handle,
+		&iosbEa,
+		&eaBuf[0],
+		uint32(len(eaBuf)), //#nosec G115 // length of small EA buffer; always fits in 32 bits.
 	)
-	if r1Ea != 0 {
-		return windows.NTStatus(r1Ea).Errno() //#nosec G115 // NTSTATUS codes are 32-bit values.
+	if errEa != nil {
+		var status windows.NTStatus
+		if errors.As(errEa, &status) {
+			return status.Errno()
+		}
+		return errEa
 	}
 
 	return nil
@@ -513,11 +463,18 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 // mapNtStatus translates an NT status into a Go error, recognising the
 // reparse-blocked signal a rooted, OBJ_DONT_REPARSE syscall produces when a
 // symlink component crosses the custodian root.
-func mapNtStatus(r1 uintptr) error {
-	if windows.NTStatus(r1) == windows.STATUS_STOPPED_ON_SYMLINK { //#nosec G115 // NTSTATUS codes are 32-bit values.
+func mapNtStatus(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, windows.STATUS_STOPPED_ON_SYMLINK) {
 		return ErrPathEscapes
 	}
-	return windows.NTStatus(r1).Errno() //#nosec G115 // NTSTATUS codes are 32-bit values.
+	var ntstatus windows.NTStatus
+	if errors.As(err, &ntstatus) {
+		return ntstatus.Errno()
+	}
+	return err
 }
 
 // closeHandle closes a Windows handle and discards its error, used in cleanup paths where propagation is not useful.
@@ -530,30 +487,24 @@ func closeHandle(h windows.Handle) {
 func ntQueryLxEa(h windows.Handle) (uid, gid, mode uint32, err error) {
 	var iosb windows.IO_STATUS_BLOCK
 	buf := make([]byte, 2048)
-	r1, _, _ := procNtQueryEaFile.Call(
-		uintptr(h),
-		uintptr(unsafe.Pointer(&iosb)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&buf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(len(buf)),
-		0, // ReturnSingleEntry = FALSE
-		0,
-		0,
-		0,
-		1, // RestartScan = TRUE
-	)
-	if r1 != 0 {
-		return 0, 0, 0, windows.NTStatus(r1).Errno() //#nosec G115 // NTSTATUS codes are 32-bit values.
+	if err := windows.NtQueryEaFile(h, &iosb, &buf[0], uint32(len(buf)) /* #nosec G115 */, false, nil, 0, nil, true); err != nil {
+		var status windows.NTStatus
+		if errors.As(err, &status) {
+			return 0, 0, 0, status.Errno()
+		}
+		return 0, 0, 0, err
+	}
+
+	eas, err := winio.DecodeExtendedAttributes(buf[:iosb.Information])
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
 	var found struct{ uid, gid, mode bool }
-	offset := uint32(0)
-	for {
-		entry := (*fileFullEaInformation)(unsafe.Pointer(&buf[offset])) //#nosec G103 // reinterpreting the kernel-filled EA buffer as its documented header; reads stay within the buffer.
-		nameBytes := buf[offset+8 : offset+8+uint32(entry.EaNameLength)]
-		valOffset := offset + 8 + uint32(entry.EaNameLength) + 1
-		if entry.EaValueLength == 4 {
-			val := binary.LittleEndian.Uint32(buf[valOffset : valOffset+4])
-			switch string(nameBytes) {
+	for _, ea := range eas {
+		if len(ea.Value) == 4 {
+			val := binary.LittleEndian.Uint32(ea.Value)
+			switch ea.Name {
 			case "$LXUID":
 				uid, found.uid = val, true
 			case "$LXGID":
@@ -562,10 +513,6 @@ func ntQueryLxEa(h windows.Handle) (uid, gid, mode uint32, err error) {
 				mode, found.mode = val, true
 			}
 		}
-		if entry.NextEntryOffset == 0 {
-			break
-		}
-		offset += entry.NextEntryOffset
 	}
 
 	if !found.uid || !found.gid || !found.mode {

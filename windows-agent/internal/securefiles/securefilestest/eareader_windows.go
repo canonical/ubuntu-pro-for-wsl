@@ -6,21 +6,12 @@ package securefilestest
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
-	"unsafe"
 
+	"github.com/Microsoft/go-winio"
 	"golang.org/x/sys/windows"
 )
-
-var procNtQueryEaFile = windows.NewLazySystemDLL("ntdll.dll").NewProc("NtQueryEaFile")
-
-type fileFullEaInformation struct {
-	NextEntryOffset uint32
-	Flags           uint8
-	EaNameLength    uint8
-	EaValueLength   uint16
-	EaName          [1]byte
-}
 
 // ReadLxAttributes reads the $LXUID, $LXGID and $LXMOD extended attributes of the
 // node at path and returns their values. The node must exist and be readable.
@@ -69,38 +60,24 @@ func ntQueryAllEa(handle windows.Handle) (map[string]uint32, error) {
 	var iosb windows.IO_STATUS_BLOCK
 	buf := make([]byte, 2048)
 
-	r1, _, _ := procNtQueryEaFile.Call(
-		uintptr(handle),
-		uintptr(unsafe.Pointer(&iosb)),   //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&buf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(len(buf)),
-		0, // ReturnSingleEntry = FALSE
-		0,
-		0,
-		0,
-		1, // RestartScan = TRUE
-	)
+	if err := windows.NtQueryEaFile(handle, &iosb, &buf[0], uint32(len(buf)) /* #nosec G115 */, false, nil, 0, nil, true); err != nil {
+		var status windows.NTStatus
+		if errors.As(err, &status) {
+			return nil, status
+		}
+		return nil, err
+	}
 
-	if r1 != 0 {
-		return nil, windows.NTStatus(r1) //#nosec G115 // NTSTATUS codes are 32-bit values.
+	decoded, err := winio.DecodeExtendedAttributes(buf[:iosb.Information])
+	if err != nil {
+		return nil, err
 	}
 
 	result := make(map[string]uint32)
-	offset := uint32(0)
-	for {
-		entry := (*fileFullEaInformation)(unsafe.Pointer(&buf[offset])) //#nosec G103 // reinterpreting the kernel-filled EA buffer as its documented header; reads stay within the buffer.
-		nameBytes := buf[offset+8 : offset+8+uint32(entry.EaNameLength)]
-		name := string(nameBytes)
-		valOffset := offset + 8 + uint32(entry.EaNameLength) + 1
-		if entry.EaValueLength == 4 {
-			val := binary.LittleEndian.Uint32(buf[valOffset : valOffset+4])
-			result[name] = val
+	for _, ea := range decoded {
+		if len(ea.Value) == 4 {
+			result[ea.Name] = binary.LittleEndian.Uint32(ea.Value)
 		}
-
-		if entry.NextEntryOffset == 0 {
-			break
-		}
-		offset += entry.NextEntryOffset
 	}
 
 	return result, nil
