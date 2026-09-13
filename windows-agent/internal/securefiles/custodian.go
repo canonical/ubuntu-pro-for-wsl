@@ -26,6 +26,9 @@ const (
 var (
 	// ErrPathEscapes is returned when a requested relative path leaves the custodian's sub-tree.
 	ErrPathEscapes = errors.New("path escapes sub-tree")
+	// ErrNotOwned is returned when an operation requires an already-owned node,
+	// but the source node lacks the custodian's watermark.
+	ErrNotOwned = errors.New("node is not owned by custodian")
 )
 
 // Custodian scopes filesystem operations to a sub-tree and stamps nodes with their projected ownership.
@@ -128,8 +131,15 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 		return nil, err
 	}
 
-	// Ensure the sub-directory exists (create if missing)
-	if err := c.sys.createNode(rel, true); err != nil && !errors.Is(err, os.ErrExist) {
+	// Create the sub-directory, stamped in the same syscall. A sub-tree root left by
+	// an earlier run is adopted instead, and stamped in place: ADR 2.01 requires
+	// first-level sub-tree roots to carry the stamp even when pre-existing, because it
+	// is what revokes unprivileged creation and deletion inside them.
+	err = c.sys.createNode(rel, true)
+	if errors.Is(err, os.ErrExist) {
+		err = c.sys.stampSubdir(rel)
+	}
+	if err != nil {
 		return nil, mapEscape(err)
 	}
 
@@ -139,11 +149,11 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	if err != nil {
 		return nil, mapEscape(err)
 	}
-	subSys, err := newPlatformSys(filepath.Join(c.BasePath(), rel))
-	if err != nil {
-		subRoot.Close()
-		return nil, err
-	}
+
+	// The child is derived from the parent's handle, never from its absolute path:
+	// re-resolving the path here would walk components outside the parent's
+	// containment, following any reparse point planted along the way.
+	subSys := newSubPlatformSys(c.sys.isDegraded())
 	if err := subSys.setRoot(subRoot); err != nil {
 		subRoot.Close()
 		subSys.Close()
