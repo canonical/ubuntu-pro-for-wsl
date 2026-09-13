@@ -11,15 +11,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"unsafe"
 
 	"github.com/Microsoft/go-winio"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles/securefilestest"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 )
-
-var procNtSetEaFile = windows.NewLazySystemDLL("ntdll.dll").NewProc("NtSetEaFile")
 
 func TestReadLxAttributes(t *testing.T) {
 	dir := t.TempDir()
@@ -105,11 +102,6 @@ func writeWithEas(t *testing.T, path string, eas []winio.ExtendedAttribute) {
 	defer func() { _ = windows.CloseHandle(h) }()
 
 	var iosb windows.IO_STATUS_BLOCK
-	r1, _, _ := procNtSetEaFile.Call(
-		uintptr(h),
-		uintptr(unsafe.Pointer(&iosb)),     //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uintptr(len(eaBuf)),
-	)
-	require.Zero(t, r1, "NtSetEaFile failed with status %#x", r1)
+	err = windows.NtSetEaFile(h, &iosb, &eaBuf[0], uint32(len(eaBuf)) /* #nosec G115 */)
+	require.NoError(t, err)
 }
