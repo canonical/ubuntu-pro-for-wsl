@@ -107,7 +107,7 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 - Prefer table-driven tests keyed by name in a map (`testcases := map[string]struct{...} { ...}`),
   where each element holds a particular test case arguments ordered to facilitate grasping the
   differences between sub-tests, preserving the test body similar in implementation. Iterate over
-  that map as `for name, tc := range testscases { ... }` and define sub-tests for each case:
+  that map as `for name, tc := range testcases { ... }` and define sub-tests for each case:
   `t.Run(name, func(t *testing.T) { ... })`.
 - Table-driven testing exemption is allowed when no more than one case exists or is foreseeable or
   sub-test candidates are drastically different in implementation. When the behaviour under test has
