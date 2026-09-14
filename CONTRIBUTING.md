@@ -13,7 +13,7 @@ that respect by addressing your issues, assessing proposed changes and
 finalising your pull requests, as helpfully and efficiently as possible.
 
 These are mostly guidelines, not rules. Use your best judgement and feel free to
-propose changes to this document in a pull request.
+propose changes to this document in a Pull Request (PR).
 
 <!-- Include end contributing intro -->
 
@@ -48,7 +48,7 @@ You only need to sign this once and if you have previously signed the
 agreement when contributing to other Canonical projects you will not need to
 sign it again.
 
-An automated test is executed on PRs to check if it has been accepted.
+An automated test is executed on PRs to check if it(your signed agreement) has been accepted.
 
 Please refer to the licences for Ubuntu WSL and Pro for WSL below.
 
@@ -168,7 +168,7 @@ Note that you'll need to [create a self-signing certificate](https://learn.micro
 
 The documentation for the Ubuntu WSL distro and Pro for WSL is maintained [here](https://github.com/canonical/ubuntu-pro-for-wsl/tree/main/docs).
 
-You can contribute to the documentation in various different ways. If you are not a developer but want to help make the product better then helping us to improve the documentation is a way to achieve that.
+You can contribute to the documentation in various different ways. If you are not a developer but want to help make the product better, then helping us to improve the documentation is a way to achieve that.
 
 At the top of each page in the documentation, you will find a **feedback** button.
 Clicking this button will open an Issue submission page in the GitHub repo.
