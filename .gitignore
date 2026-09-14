@@ -45,6 +45,7 @@ out/
 # Stuff we're not yet ready to commit.
 .opencode/
 openspec/
+.cm/
 .github/prompts/
 .github/skills/
 **/*.pfx

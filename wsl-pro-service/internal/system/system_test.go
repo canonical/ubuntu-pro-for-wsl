@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"unicode/utf16"
 
@@ -355,33 +357,119 @@ func TestProStatus(t *testing.T) {
 	}
 }
 
+type proAttachSpyBackend struct {
+	system.Backend
+	proExecCalled bool
+	proArgs       []string
+	fileExisted   bool
+	filePerm      os.FileMode
+	fileContent   []byte
+}
+
+func (b *proAttachSpyBackend) ProExecutable(ctx context.Context, args ...string) *exec.Cmd {
+	b.proExecCalled = true
+	b.proArgs = args
+	for i, arg := range args {
+		if arg == "--attach-config" && i+1 < len(args) {
+			path := args[i+1]
+			if info, err := os.Stat(path); err == nil {
+				b.fileExisted = true
+				b.filePerm = info.Mode().Perm()
+				data, _ := os.ReadFile(path)
+				b.fileContent = data
+			}
+		}
+	}
+	return b.Backend.ProExecutable(ctx, args...)
+}
+
 func TestProAttach(t *testing.T) {
-	t.Parallel()
+	// Not calling t.Parallel() on the parent because subtests use t.Setenv to simulate temp file failure.
 
 	testCases := map[string]struct {
-		proErr bool
-
-		wantErr bool
+		proErr         bool
+		invalidTmpDir  bool
+		writeErr       bool
+		wantErr        bool
+		wantExecCalled bool
 	}{
-		"success":                     {},
-		"error on 'pro attach' error": {proErr: true, wantErr: true},
+		"success creates 0600 temp file and passes --attach-config": {
+			wantExecCalled: true,
+		},
+		"error on 'pro attach' error cleans up temp file": {
+			proErr:         true,
+			wantErr:        true,
+			wantExecCalled: true,
+		},
+		"error when temp file creation fails without executing pro": {
+			invalidTmpDir:  true,
+			wantErr:        true,
+			wantExecCalled: false,
+		},
+		"error when writing attach config file fails": {
+			writeErr:       true,
+			wantErr:        true,
+			wantExecCalled: false,
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			_, mock := testutils.MockSystem(t)
+			if tc.invalidTmpDir {
+				// t.Setenv cannot be called with t.Parallel()
+				t.Setenv("TMPDIR", "/nonexistent/directory/that/does/not/exist")
+			} else if tc.writeErr {
+				// Setting RLIMIT_FSIZE process-wide cannot be run in parallel with other subtests
+				var origLimit syscall.Rlimit
+				require.NoError(t, syscall.Getrlimit(syscall.RLIMIT_FSIZE, &origLimit), "Setup: could not read rlimit")
 
-			system, mock := testutils.MockSystem(t)
+				rLimit := syscall.Rlimit{Cur: 0, Max: origLimit.Max}
+				require.NoError(t, syscall.Setrlimit(syscall.RLIMIT_FSIZE, &rLimit), "Setup: could not set rlimit")
+				t.Cleanup(func() {
+					_ = syscall.Setrlimit(syscall.RLIMIT_FSIZE, &origLimit)
+				})
+			} else {
+				t.Parallel()
+			}
 			if tc.proErr {
 				mock.SetControlArg(testutils.ProAttachErr)
 			}
 
-			err := system.ProAttach(context.Background(), "1000")
+			spy := &proAttachSpyBackend{Backend: mock}
+			sys := system.New(system.WithTestBackend(spy))
+
+			const testToken = "test-token-12345"
+			err := sys.ProAttach(context.Background(), testToken)
 			if tc.wantErr {
 				require.Error(t, err, "Expected ProAttach to return an error")
-				return
+			} else {
+				require.NoError(t, err, "Expected ProAttach to return no errors")
 			}
-			require.NoError(t, err, "Expected ProAttach to return no errors")
+
+			require.Equal(t, tc.wantExecCalled, spy.proExecCalled, "ProExecutable execution mismatch")
+
+			if tc.wantExecCalled {
+				// Verify flags passed to ProExecutable
+				require.Contains(t, spy.proArgs, "attach")
+				require.Contains(t, spy.proArgs, "--attach-config")
+				require.Contains(t, spy.proArgs, "--format=json")
+				require.NotContains(t, spy.proArgs, testToken, "Token should not be passed as a positional argument")
+
+				// Find config path from arguments
+				var configPath string
+				for i, arg := range spy.proArgs {
+					if arg == "--attach-config" && i+1 < len(spy.proArgs) {
+						configPath = spy.proArgs[i+1]
+						break
+					}
+				}
+				require.NotEmpty(t, configPath, "Config path argument should not be empty")
+				require.True(t, spy.fileExisted, "Temporary attach config file should have existed during ProExecutable execution")
+				require.Equal(t, os.FileMode(0600), spy.filePerm, "Temporary config file permissions should be 0600")
+				require.Contains(t, string(spy.fileContent), testToken, "Config file should contain token")
+				require.NoFileExists(t, configPath, "Temporary attach config file should be removed after execution")
+			}
 		})
 	}
 }
