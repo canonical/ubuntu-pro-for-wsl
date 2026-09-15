@@ -20,6 +20,20 @@ func OpenRefusingStamp(basePath string, status uint32) (*Custodian, error) {
 	})
 }
 
+// OpenRefusingCreation opens a custodian whose root creation fails with status, standing
+// in for a pre-existing directory whose ACL denies the access the stamp needs. Only a
+// filesystem that cannot carry extended attributes may be adopted unstamped (ADR 2.02);
+// anything else has to reach the caller.
+func OpenRefusingCreation(basePath string, status uint32) (*Custodian, error) {
+	return open(basePath, func(p string) (*platformSys, error) {
+		nt := realNtCalls()
+		nt.createFile = func(*windows.Handle, uint32, *windows.OBJECT_ATTRIBUTES, *windows.IO_STATUS_BLOCK, uint32, uint32, uint32, uint32, []byte) error {
+			return windows.NTStatus(status)
+		}
+		return newPlatformSysWith(p, nt)
+	})
+}
+
 // FailStamping makes every later extended-attribute write on this custodian fail.
 func (c *Custodian) FailStamping(status uint32) {
 	if c.sys == nil {

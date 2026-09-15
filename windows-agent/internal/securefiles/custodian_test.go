@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
-	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 )
@@ -213,7 +212,7 @@ func TestCustodian(t *testing.T) {
 
 			if tc.neverOpened {
 				require.False(t, c.IsDegraded(), "a custodian with no platform must not claim to be degraded")
-				require.NotPanics(t, c.LogDegradedOnce, "logging must tolerate a custodian with no platform")
+				require.NoError(t, c.CheckProjection(), "a custodian with no platform has nothing to report")
 			}
 
 			if tc.closeTwice {
@@ -431,52 +430,51 @@ func TestOpenErrors(t *testing.T) {
 	}
 }
 
-func TestDegradedModeOperationsAndLogging(t *testing.T) {
-	dir := t.TempDir()
+// TestDegradedCustodianServesAndReports pins ADR 2.02: a filesystem that cannot carry
+// the watermark degrades the custodian loudly but never closes it. Nodes keep being
+// written and read, and the finding is held for CheckProjection rather than logged,
+// because the custodian is opened before the agent has a log to write to. What the
+// ownership predicate makes of an unverifiable node is pinned per platform, in
+// watermark_windows_test.go and watermark_linux_test.go.
+// Not parallel, and neither are its cases: the assertion that the custodian stays
+// silent reads the global logrus hook, which any test running beside it would fill.
+func TestDegradedCustodianServesAndReports(t *testing.T) {
+	testCases := map[string]struct {
+		// degraded marks the filesystem as unable to carry the watermark.
+		degraded bool
 
-	hook := test.NewGlobal()
-	defer hook.Reset()
-
-	c, err := securefiles.Open(dir)
-	require.NoError(t, err)
-	defer c.Close()
-
-	c.SetDegraded(true)
-	require.True(t, c.IsDegraded())
-
-	// Test creation and requests serve in degraded mode
-	require.NoError(t, os.Mkdir(filepath.Join(dir, "degraded_dir"), 0o700))
-
-	err = c.WriteFile("degraded_dir/degraded_file.txt", []byte("degraded content"))
-	require.NoError(t, err)
-
-	content, err := os.ReadFile(filepath.Join(dir, "degraded_dir", "degraded_file.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "degraded content", string(content))
-
-	// Degradation does not make the predicate claim ownership: without the watermark
-	// the answer is unknowable, and it is the caller that decides what to do with an
-	// unverifiable sub-tree (see cloudinit.startupPurge). The error is deliberately
-	// not asserted here: Windows fails the EA query outright while Linux reports a
-	// missing xattr, and the platform files pin each shape.
-	owned, _ := c.IsOwned("degraded_dir/degraded_file.txt")
-	require.False(t, owned, "Degraded custodian must not claim ownership it cannot verify")
-
-	// Verify logging on Open when degraded
-	c2, err := securefiles.Open(dir)
-	require.NoError(t, err)
-	defer c2.Close()
-	c2.SetDegraded(true)
-
-	// Simulate log on startup/init
-	c2.LogDegradedOnce()
-
-	foundError := false
-	for _, entry := range hook.AllEntries() {
-		if entry.Level == logrus.ErrorLevel {
-			foundError = true
-			break
-		}
+		wantGaps error
+	}{
+		"a healthy sub-tree serves and reports nothing": {},
+		"a degraded sub-tree serves and reports the gap": {
+			degraded: true,
+			wantGaps: securefiles.ErrDegraded,
+		},
 	}
-	require.True(t, foundError, "Expected error level log message in degraded mode")
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			hook := test.NewGlobal()
+			defer hook.Reset()
+
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			c.SetDegraded(tc.degraded)
+			require.Equal(t, tc.degraded, c.IsDegraded(), "unexpected degraded state")
+
+			// Serving is the claim; what a write publishes is pinned in TestWriteFile.
+			require.NoError(t, c.WriteFile("served.txt", []byte("content")), "a degraded sub-tree must still serve")
+
+			require.Empty(t, hook.AllEntries(), "the custodian must not log; it reports through CheckProjection")
+
+			if tc.wantGaps == nil {
+				require.NoError(t, c.CheckProjection(), "a healthy sub-tree has nothing to report")
+				return
+			}
+			require.ErrorIs(t, c.CheckProjection(), tc.wantGaps, "a degraded sub-tree must be reported")
+		})
+	}
 }

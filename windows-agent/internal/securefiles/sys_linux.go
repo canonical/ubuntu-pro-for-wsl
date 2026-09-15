@@ -16,10 +16,11 @@ import (
 // shared between goroutines, and degraded in particular is read to decide whether a node
 // can be verified at all.
 type platformSys struct {
-	mu       sync.Mutex
-	xattr    xattrCalls
-	root     *os.Root
-	degraded bool
+	mu    sync.Mutex
+	xattr xattrCalls
+	root  *os.Root
+	// deg is shared with every sub-custodian derived from this one.
+	deg *degradation
 }
 
 // watermarkXattr is the user namespace extended attribute used to stamp files
@@ -66,7 +67,16 @@ func newPlatformSysWith(basePath string, xattr xattrCalls) (*platformSys, error)
 	}
 	defer func() { _ = f.Close() }()
 
-	return &platformSys{xattr: xattr, degraded: !xattrsSupported(xattr, int(f.Fd()))}, nil //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+	deg := &degradation{}
+	// The probe is weaker than the operation it predicts: it lists attributes on the
+	// directory, while stamping sets one on a file. A filesystem can pass this and still
+	// refuse the stamp later, which is why createNode records its own cause rather than
+	// trusting this answer.
+	if err := probeXattrs(xattr, int(f.Fd())); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+		deg.note(err)
+	}
+
+	return &platformSys{xattr: xattr, deg: deg}, nil
 }
 
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
@@ -74,8 +84,8 @@ func newPlatformSysWith(basePath string, xattr xattrCalls) (*platformSys, error)
 // parent's root, and re-resolving its absolute path here would step outside the
 // containment the parent established. Degradation is inherited because it describes the
 // filesystem, not the node.
-func newSubPlatformSys(degraded bool) *platformSys {
-	return &platformSys{degraded: degraded, xattr: realXattrCalls()}
+func newSubPlatformSys(parent *platformSys) *platformSys {
+	return &platformSys{deg: parent.deg, xattr: parent.xattr}
 }
 
 // stampSubdir is a no-op: the Linux watermark is only ever applied to regular files, so
@@ -109,13 +119,13 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 		return err
 	}
 
-	if !s.degraded {
+	if !s.isDegraded() {
 		if err := stampNode(s.xattr, f); err != nil {
 			closeErr := f.Close()
 			if isXattrUnsupported(err) {
 				// Filesystem does not support xattrs: mirror Windows degraded mode by
 				// failing open rather than refusing to operate.
-				s.degraded = true
+				s.deg.note(fmt.Errorf("could not stamp %s: %w", rel, err))
 				return closeErr
 			}
 			return errors.Join(err, closeErr, s.root.Remove(rel))
@@ -129,7 +139,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.degraded {
+	if !s.isDegraded() {
 		f, err := s.root.Open(oldRel)
 		if err != nil {
 			return err
@@ -154,10 +164,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 }
 
 func (s *platformSys) isDegraded() bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.degraded
+	return s.deg.cause() != nil
 }
 
 // isOwned reports whether the node carries the custodian's watermark and still
@@ -179,21 +186,28 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	return ownedByWatermark(s.xattr, int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 }
 
-// xattrsSupported reports whether the filesystem behind fd can carry the watermark at
-// all. Probing once, while the root is being established, is what lets every later read
-// be a pure query: a predicate that discovered the answer mid-scan would have to mutate
-// shared state from a read path, and would report a node as unverifiable for a reason
-// that has nothing to do with that node. Listing is used rather than a write so the probe
-// leaves no trace of its own.
-func xattrsSupported(xattr xattrCalls, fd int) bool {
-	_, err := xattr.list(fd, nil)
-	return !isXattrUnsupported(err)
+// probeXattrs reports why the filesystem behind fd cannot carry the watermark, or nil.
+// Probing once, while the root is established, keeps every later read a pure query: a
+// predicate discovering it mid-scan would mutate shared state from a read path, and would
+// call a node unverifiable for a reason unrelated to it. Listing leaves no trace, which is
+// also its limit: it asks a directory whether attributes can be listed, while stamping
+// asks a file to store one.
+func probeXattrs(xattr xattrCalls, fd int) error {
+	if _, err := xattr.list(fd, nil); isXattrUnsupported(err) {
+		return fmt.Errorf("the filesystem cannot carry extended attributes: %w", err)
+	}
+	return nil
 }
 
 // remoteVolume always reports a local volume: the custodian's projection concerns are
 // Windows-specific, and the Linux build exists to keep the cross-platform tests honest.
 func remoteVolume(string) (remote bool, kind string) {
 	return false, ""
+}
+
+// resolvedBasePath mirrors the Windows helper; there is nothing to resolve here.
+func (s *platformSys) resolvedBasePath() string {
+	return ""
 }
 
 // ownedByWatermark reports whether the open node still carries the watermark recorded

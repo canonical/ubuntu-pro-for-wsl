@@ -90,16 +90,15 @@ type metadata struct {
 	InstanceID string `yaml:"instance-id"`
 }
 
-// startupPurge removes every node in the sub-tree that does not carry the agent's watermark and
-// regenerates the agent's own data file from the current configuration. Stamped nodes are left
-// untouched: cloud-init data is consumed exactly once, at the instance's first boot, so there is
-// nothing to gain from reading it back and rewriting it. The watermark is the whole adoption
-// policy: an unstamped node is foreign by definition, whatever its name.
+// startupPurge removes every node in the sub-tree that does not carry the agent's watermark
+// and regenerates the agent's own data file. Stamped nodes are left alone: cloud-init data is
+// consumed once, at first boot. The watermark is the whole adoption policy — an unstamped node
+// is foreign whatever its name.
 //
-// That policy holds only while the watermark can be read. Where the filesystem cannot carry
-// extended attributes every node looks unstamped, so purging on that basis would delete the
-// user's per-distro data on every startup. Adoption is therefore unconditional there, and the
-// condition is reported instead of acted upon.
+// That holds only while the watermark can be read. Where the filesystem cannot carry extended
+// attributes every node looks unstamped, so purging on that basis would delete the user's
+// per-distro data every startup. Adoption is unconditional there, and the condition reported
+// instead of acted upon.
 func (c CloudInit) startupPurge(ctx context.Context) error {
 	unverifiable := c.dir.IsDegraded()
 	if unverifiable {

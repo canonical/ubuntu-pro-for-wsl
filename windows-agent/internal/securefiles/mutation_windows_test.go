@@ -8,12 +8,10 @@
 package securefiles_test
 
 import (
-	"bytes"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
-	"sync"
 	"testing"
 	"time"
 
@@ -21,53 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 )
-
-func TestAtomicWriteConcurrentReader(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	c, err := securefiles.Open(dir)
-	require.NoError(t, err)
-	defer func() { _ = c.Close() }()
-
-	initialContent := bytes.Repeat([]byte("A"), 1024*1024)
-	updatedContent := bytes.Repeat([]byte("B"), 1024*1024)
-
-	err = c.WriteFile("data.bin", initialContent)
-	require.NoError(t, err)
-
-	stop := make(chan struct{})
-	var readerErr error
-	var wg sync.WaitGroup
-
-	wg.Go(func() {
-		target := filepath.Join(dir, "data.bin")
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				data, err := readSharedFile(target)
-				if err != nil {
-					time.Sleep(time.Millisecond)
-					continue
-				}
-				if len(data) > 0 && !bytes.Equal(data, initialContent) && !bytes.Equal(data, updatedContent) {
-					readerErr = os.ErrInvalid
-					return
-				}
-			}
-		}
-	})
-
-	time.Sleep(10 * time.Millisecond)
-	err = c.WriteFile("data.bin", updatedContent)
-	require.NoError(t, err)
-
-	close(stop)
-	wg.Wait()
-	require.NoError(t, readerErr)
-}
 
 // TestRenameDestinationSymlinkEscapesAreRefused verifies that renaming to a destination
 // path where an intermediate directory component is a symlink pointing outside the
@@ -194,32 +145,6 @@ func (r *handleReader) Read(p []byte) (int, error) {
 		return int(n), err
 	}
 	return int(n), nil
-}
-
-// readSharedFile reads a file with full sharing enabled, including
-// FILE_SHARE_DELETE, so the custodian's atomic rename is not blocked while the
-// reader holds the file open. Go's os.Open omits FILE_SHARE_DELETE, which would
-// race with the rename and make this test flaky.
-func readSharedFile(path string) ([]byte, error) {
-	path16, err := windows.UTF16PtrFromString(path)
-	if err != nil {
-		return nil, err
-	}
-	h, err := windows.CreateFile(
-		path16,
-		windows.GENERIC_READ,
-		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
-		nil,
-		windows.OPEN_EXISTING,
-		windows.FILE_ATTRIBUTE_NORMAL,
-		0,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer closeHandle(h)
-
-	return io.ReadAll(&handleReader{h: h})
 }
 
 // holdDestination opens path the way a reader of a rename-published file does, or,

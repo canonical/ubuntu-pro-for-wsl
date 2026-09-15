@@ -171,6 +171,16 @@ func (a *App) serve(ctx context.Context, opt options) error {
 	}
 	a.proServices = &proservices
 
+	// Reported here, not when the log was opened: the sub-trees the components use are
+	// created by proservices.New, and a filesystem that cannot carry the watermark may
+	// only prove it when one of them is first stamped. The record is shared across the
+	// tree, so asking the root now covers every sub-tree it handed out. ADR 2.02 keeps
+	// the agent serving through this, which is exactly why it must be said out loud
+	// every startup: nothing else will reveal that the public directory is unsecured.
+	if gaps := a.publicDir.CheckProjection(); gaps != nil {
+		log.Errorf(ctx, "The public directory is not fully secured: %v", gaps)
+	}
+
 	a.daemon = daemon.New(ctx, proservices.RegisterGRPCServices, a.publicDir)
 
 	close(a.ready)
@@ -284,11 +294,28 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 	}
 
 	// Rotate the current log to log.old in place using the custodian.
-	if err := c.Rename("log", "log.old"); err != nil && !errors.Is(err, os.ErrNotExist) {
+	//
+	// Append rather than replace: if the rotation failed, the existing log is the only
+	// copy there is, and discarding it would destroy the very record needed to find out
+	// why the rotation failed.
+	mode := securefiles.Append
+
+	switch err := c.Rename("log", "log.old"); {
+	case err == nil, errors.Is(err, os.ErrNotExist):
+		// Nothing is left under the name, so the log below is created and stamped.
+	case errors.Is(err, securefiles.ErrNotOwned):
+		// A log left by a version predating the custodian, or planted from an instance.
+		// It cannot be rotated, and appending would keep the agent writing into a node
+		// instances can read and write while the projection check reports the sub-tree
+		// healthy. ADR 2.01 replaces what the custodian cannot vouch for, and nothing
+		// here is worth preserving: whatever can write that node can forge what it says.
+		log.Warningf(ctx, "Replacing a log file this agent does not own: %v", err)
+		mode = securefiles.Replace
+	default:
 		log.Warningf(ctx, "Could not rotate log to log.old: %v", err)
 	}
 
-	f, err := c.CreateFile("log")
+	f, err := c.CreateFile("log", mode)
 	if err != nil {
 		return noop, fmt.Errorf("could not open log file: %v", err)
 	}
