@@ -95,7 +95,7 @@
     "statusBarReportBugTooltip": "Einen Fehler melden",
     "statusBarAgentRunningTooltip": "Ubuntu Pro-Agent wird ausgeführt",
     "statusBarAgentConnectingTooltip": "Verbindung zum Ubuntu Pro-Agenten wird hergestellt ...",
-    "statusBarAgentDownTooltip": "Der Ubuntu Pro-Agent ist getrennt. Drücken, um den Agenten zu starten.",
+    "statusBarAgentDownTooltip": "Ubuntu Pro-Agent ist getrennt. Drücken, um den Agenten zu starten.",
     "landscapeFQDNLabel": "Landscape FQDN",
     "landscapeDetails": "Details",
     "landscapeProceedAnywayHint": "Fahren Sie fort, und die Versuche, den Landscape-Server zu erreichen, werden im Hintergrund fortgesetzt.",
