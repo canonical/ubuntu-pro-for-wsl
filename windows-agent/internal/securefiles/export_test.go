@@ -5,19 +5,26 @@
 
 package securefiles
 
-// SetDegraded forces the custodian into degraded mode, standing in for a filesystem that
-// cannot carry the watermark. Tests that must degrade a custodian *after* seeding it use
-// this: the data has to predate the loss of the attribute, exactly as it does when a
-// healthy profile is later moved to a filesystem without extended attributes.
+import "errors"
+
+// ErrForcedDegradation is the cause SetDegraded records, so that a test can tell a
+// degradation it forced from one the code discovered for itself.
+var ErrForcedDegradation = errors.New("the filesystem was made to refuse the watermark by a test")
+
+// SetDegraded forces the custodian's whole tree into degraded mode, standing in for a
+// filesystem that cannot carry the watermark. Tests that must degrade a custodian *after*
+// seeding it use this: the data has to predate the loss of the attribute, exactly as it
+// does when a healthy profile is later moved to a filesystem without extended attributes.
 func (c *Custodian) SetDegraded(degraded bool) {
 	if c.sys == nil {
 		return
 	}
-	c.sys.mu.Lock()
-	defer c.sys.mu.Unlock()
-	c.sys.degraded = degraded
-}
+	c.sys.deg.mu.Lock()
+	defer c.sys.deg.mu.Unlock()
 
-// LogDegradedOnce exposes the once-only degraded report, which production reaches only
-// through Open and therefore need not export.
-func (c *Custodian) LogDegradedOnce() { c.logDegradedOnce() }
+	if !degraded {
+		c.sys.deg.first = nil
+		return
+	}
+	c.sys.deg.first = ErrForcedDegradation
+}
