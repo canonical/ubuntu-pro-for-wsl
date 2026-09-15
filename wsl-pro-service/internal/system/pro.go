@@ -3,9 +3,12 @@ package system
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/ubuntu/decorate"
+	"go.yaml.in/yaml/v3"
 )
 
 // ProStatus returns whether this distro is pro-attached.
@@ -32,14 +35,37 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 func (s *System) ProAttach(ctx context.Context, token string) (err error) {
 	defer decorate.OnError(&err, "pro attach")
 
+	// We pass the token via an ephemeral YAML config file passed to --attach-config.
+	// We rely on systemd's PrivateTmp=yes configured in wsl-pro.service to ensure /tmp
+	// is isolated in a private filesystem namespace, safe from other processes.
+	type attachConfig struct {
+		Token string `yaml:"token"`
+	}
+
+	cfgData, err := yaml.Marshal(attachConfig{Token: token})
+	if err != nil {
+		return fmt.Errorf("could not serialize attach config: %v", err)
+	}
+
+	tmpFile, err := os.CreateTemp("", "pro-attach-*.yaml")
+	if err != nil {
+		return fmt.Errorf("could not create temporary attach config file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	_, err = tmpFile.Write(cfgData)
+	if err = errors.Join(err, tmpFile.Close()); err != nil {
+		return fmt.Errorf("could not write attach config file: %v", err)
+	}
+
 	/*
 		We don't parse the json from `pro attach` because stdout is polluted:
-		$ pro attach token --format json
+		$ pro attach --attach-config <file> --format json
 		Unable to determine current instance-id
 		{"_schema_version": "0.1", "errors": [], "failed_services": [], "needs_reboot": false, "processed_services": [], "result": "success", "warnings": []}
 	*/
 
-	cmd := s.backend.ProExecutable(ctx, "attach", token, "--format=json")
+	cmd := s.backend.ProExecutable(ctx, "attach", "--attach-config", tmpFile.Name(), "--format=json")
 	if _, err := runCommand(cmd); err != nil {
 		return err
 	}

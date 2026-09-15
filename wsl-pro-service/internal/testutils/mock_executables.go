@@ -18,6 +18,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/exp/slices"
 )
 
@@ -296,16 +297,65 @@ func ProMock(t *testing.T) {
 			return exitOk
 
 		case "attach":
-			if envExists(ProAttachErr) {
-				fmt.Fprintln(os.Stdout, `{"message": "This error is produced by a mock instructed to fail on pro attach", "message_code": "mock_error"}`)
-				return exitError
+			// We require --attach-config <path> and --format=json. Positional token is not accepted.
+			var configPath string
+			hasFormatJSON := false
+			for i := 1; i < len(argv); i++ {
+				switch argv[i] {
+				case "--format=json":
+					hasFormatJSON = true
+				case "--attach-config":
+					if i+1 >= len(argv) {
+						fmt.Fprintln(os.Stderr, "Flag --attach-config requires an argument")
+						return exitBadUsage
+					}
+					configPath = argv[i+1]
+					i++
+				default:
+					if strings.HasPrefix(argv[i], "--attach-config=") {
+						configPath = strings.TrimPrefix(argv[i], "--attach-config=")
+					} else {
+						// Positional token or unexpected argument
+						fmt.Fprintf(os.Stderr, "Unexpected argument %q for attach\n", argv[i])
+						return exitBadUsage
+					}
+				}
 			}
 
-			// Proving that this executable has run
+			if !hasFormatJSON || configPath == "" {
+				fmt.Fprintln(os.Stderr, "Attach requires --attach-config and --format=json")
+				return exitBadUsage
+			}
+
 			root := os.Getenv(FileSystemRoot)
 			if root == "" {
 				fmt.Fprintf(os.Stderr, "Missing environment variable %s\n", FileSystemRoot)
 				return exitBadUsage
+			}
+
+			// Validate config file exists and contains valid YAML with non-empty token
+			cfgFile := configPath
+			if !filepath.IsAbs(cfgFile) {
+				cfgFile = filepath.Join(root, cfgFile)
+			}
+			//#nosec G703 // We control the inputs because this mock is only executed in tests.
+			cfgBytes, err := os.ReadFile(cfgFile)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Could not read attach config file %q: %v\n", cfgFile, err)
+				return exitBadUsage
+			}
+
+			var payload struct {
+				Token string `yaml:"token"`
+			}
+			if err := yaml.Unmarshal(cfgBytes, &payload); err != nil || payload.Token == "" {
+				fmt.Fprintf(os.Stderr, "Invalid attach config YAML in %q: missing or invalid token\n", cfgFile)
+				return exitBadUsage
+			}
+
+			if envExists(ProAttachErr) {
+				fmt.Fprintln(os.Stdout, `{"message": "This error is produced by a mock instructed to fail on pro attach", "message_code": "mock_error"}`)
+				return exitError
 			}
 
 			p := filepath.Join(root, ".pro-attached")
