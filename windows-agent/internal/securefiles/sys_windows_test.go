@@ -17,14 +17,11 @@ import (
 )
 
 // TestWindowsStamping pins what carries the $LXUID/$LXGID/$LXMOD stamp, which is what
-// projects a node as root-owned inside an instance. Files are stamped as they are
-// created, and survive being published by rename. Directories are the one place ADR 2.01
-// allows stamping in place rather than replacing: the public root and the first-level
-// sub-tree roots are adopted when an earlier run left them behind, and a directory stamp
-// is what revokes unprivileged creation and deletion inside them, so an adopted
-// directory left unstamped would leave the whole sub-tree writable from an instance.
-// What the ownership predicate makes of these attributes is unit-tested in
-// watermark_windows_test.go.
+// projects a node as root-owned inside an instance. Files are stamped as they are created
+// and survive being published by rename. Directories are the one place ADR 2.01 allows
+// stamping in place: the public root and first-level sub-tree roots are adopted when an
+// earlier run left them behind, and their stamp is what revokes unprivileged creation and
+// deletion inside them. What the predicate makes of these is in watermark_windows_test.go.
 func TestWindowsStamping(t *testing.T) {
 	t.Parallel()
 

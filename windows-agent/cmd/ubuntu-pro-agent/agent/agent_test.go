@@ -410,6 +410,7 @@ func TestLogs(t *testing.T) {
 	fooContent := "foo"
 	emptyContent := ""
 	oldContent := "Old log content"
+	preciousContent := "PRECIOUS"
 
 	tests := map[string]struct {
 		existingLogContent string
@@ -418,16 +419,41 @@ func TestLogs(t *testing.T) {
 		usageErrorReturn bool
 		logDirError      bool
 
+		// blockRotation holds a file open inside log.old so that discarding it, and
+		// then rotating onto it, fail for a reason that has nothing to do with
+		// ownership. Only Windows refuses to remove a directory whose child is open,
+		// so the case bites there alone.
+		blockRotation bool
+
 		wantOldLogFileContent *string
+		// wantLogContent requires the surviving log to still carry this text, which is
+		// what reserves replacement for logs the agent cannot vouch for: a rotation that
+		// failed for any other reason leaves the only copy there is.
+		wantLogContent *string
+		// wantLogOwned requires the log the agent ends up writing to be one the
+		// custodian stamped, whatever it found in its place.
+		wantLogOwned bool
 	}{
 		"Run and exit successfully despite logs not being written":  {logDirError: true},
 		"Existing log file has been renamed to old":                 {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
 		"Existing empty log file has been renamed to old":           {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
 		"Ignore obstructing rotated log directory and still rotate": {existingLogContent: "OLD_IS_DIRECTORY", wantOldLogFileContent: &oldContent},
+		// A log left by a version that predates the custodian carries no stamp, so it
+		// cannot be rotated and must not be adopted: appending to it would keep the
+		// agent writing into a node instances can read and write.
+		"Unstamped log from an earlier version is replaced": {existingLogContent: "LEGACY_UNSTAMPED", wantLogOwned: true},
+		"Owned log survives a rotation blocked for another reason": {
+			existingLogContent: preciousContent, blockRotation: true,
+			wantLogOwned: true, wantLogContent: &preciousContent,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Not parallel because we modify the environment
+
+			if tc.blockRotation && runtime.GOOS != "windows" {
+				t.Skip("only Windows refuses to remove a directory whose child is held open")
+			}
 
 			home := t.TempDir()
 			appData := filepath.Join(home, "AppData/Local")
@@ -452,6 +478,13 @@ func TestLogs(t *testing.T) {
 					require.NoError(t, seedCust.WriteFile("log", []byte("Old log content")), "Setup: creating pre-existing log file")
 					require.NoError(t, seedCust.Close())
 					tc.existingLogContent = oldContent
+				case "LEGACY_UNSTAMPED":
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian to create the public dir")
+					require.NoError(t, seedCust.Close())
+					// Planted behind the custodian's back, as an older agent would have.
+					require.NoError(t, os.WriteFile(logFile, []byte("legacy"), 0600),
+						"Setup: could not plant the unstamped log")
 				case "-":
 					tc.existingLogContent = ""
 					fallthrough
@@ -460,6 +493,15 @@ func TestLogs(t *testing.T) {
 					require.NoError(t, err, "Setup: open custodian for fake log")
 					require.NoError(t, seedCust.WriteFile("log", []byte(tc.existingLogContent)), "Setup: creating pre-existing log file")
 					require.NoError(t, seedCust.Close())
+				}
+
+				if tc.blockRotation {
+					obstruction := filepath.Join(oldLogFile, "keep.txt")
+					require.NoError(t, os.MkdirAll(oldLogFile, 0700), "Setup: could not create the obstructing log.old")
+					require.NoError(t, os.WriteFile(obstruction, []byte("x"), 0600), "Setup: could not fill log.old")
+					held, err := os.Open(obstruction)
+					require.NoError(t, err, "Setup: could not hold the obstruction open")
+					t.Cleanup(func() { _ = held.Close() })
 				}
 
 				if tc.logDirError {
@@ -522,6 +564,23 @@ func TestLogs(t *testing.T) {
 			if logFile == "" {
 				return
 			}
+			if tc.wantLogOwned {
+				checkCust, err := securefiles.Open(publicDir)
+				require.NoError(t, err, "Setup: could not open custodian to verify ownership")
+				defer func() { _ = checkCust.Close() }()
+
+				owned, err := checkCust.IsOwned("log")
+				require.NoError(t, err, "the log the agent writes to must be verifiable")
+				require.True(t, owned, "the agent must not write its log into a node it does not own")
+			}
+
+			if tc.wantLogContent != nil {
+				content, err := os.ReadFile(logFile)
+				require.NoError(t, err, "the log must be readable")
+				require.Contains(t, string(content), *tc.wantLogContent,
+					"a rotation that failed for a reason other than ownership must not discard the only copy")
+			}
+
 			if tc.wantOldLogFileContent != nil {
 				require.FileExists(t, oldLogFile, "Old log file should exist")
 				content, err := os.ReadFile(oldLogFile)

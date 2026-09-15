@@ -5,6 +5,7 @@ package securefiles
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,7 +22,8 @@ type platformSys struct {
 	root       *os.Root
 	rootFile   *os.File
 	rootHandle windows.Handle
-	degraded   bool
+	// deg is shared with every sub-custodian derived from this one.
+	deg *degradation
 
 	// rootID identifies the directory ensureRoot created and stamped, so that the
 	// separate reopen in setRoot can be checked against it. Unset for sub-custodians,
@@ -105,6 +107,7 @@ func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 	s := &platformSys{
 		rootHandle: windows.InvalidHandle,
 		nt:         nt,
+		deg:        &degradation{},
 	}
 
 	if err := s.ensureRoot(basePath); err != nil {
@@ -119,26 +122,25 @@ func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 // reached through the parent's root handle, and re-resolving its absolute path here would
 // step outside the containment the parent established. Degradation is inherited because
 // it describes the filesystem, not the node.
-func newSubPlatformSys(degraded bool) *platformSys {
+func newSubPlatformSys(parent *platformSys) *platformSys {
 	return &platformSys{
 		rootHandle: windows.InvalidHandle,
-		degraded:   degraded,
-		nt:         realNtCalls(),
+		deg:        parent.deg,
+		nt:         parent.nt,
 	}
 }
 
-// stampSubdir stamps an already-existing sub-directory in place, for the case where the
-// custodian adopts one left by an earlier run. ADR 2.01 requires first-level sub-tree
-// roots to carry the stamp: on a stamped directory Linux checks the current ownership and
-// mode on every operation, so the stamp revokes unprivileged creation and deletion inside
-// it. The node is opened relative to the root handle and without following reparse points,
-// so adoption cannot be redirected outside the sub-tree. A filesystem that refuses the
-// attribute degrades the custodian rather than failing the call, per ADR 2.02.
+// stampSubdir stamps an already-existing sub-directory in place, when the custodian adopts
+// one left by an earlier run. ADR 2.01 requires first-level sub-tree roots to carry the
+// stamp: Linux checks a directory's ownership and mode on every operation, so the stamp
+// revokes unprivileged creation and deletion inside it. The node is opened relative to the
+// root handle without following reparse points, so adoption cannot be redirected outside
+// the sub-tree.
 func (s *platformSys) stampSubdir(rel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.degraded {
+	if s.isDegraded() {
 		return nil
 	}
 
@@ -155,7 +157,10 @@ func (s *platformSys) stampSubdir(rel string) error {
 	defer closeHandle(handle)
 
 	if err := s.nt.setEaFile(handle, eaBuf); err != nil {
-		s.degraded = true
+		if !eaUnsupported(err) {
+			return mapNtStatus(err)
+		}
+		s.deg.note(fmt.Errorf("could not stamp the sub-directory %s: %w", rel, err))
 	}
 
 	return nil
@@ -170,20 +175,16 @@ func (s *platformSys) setRoot(root *os.Root) error {
 		return err
 	}
 
-	// ensureRoot created and stamped the root through a handle and then closed it, so
-	// this is a second, independent resolution of the same path. os.Root does not
-	// protect its own root: containment applies to names opened through it, not to the
-	// root itself. Between the two resolutions the parent directory — which ADR 2.01
-	// concedes stays writable from inside an instance — can be made to point somewhere
-	// else, and every later operation would be rooted there instead. Identity is what
-	// ties the two resolutions to one node.
+	// A second, independent resolution of the path ensureRoot already created, stamped
+	// and closed. os.Root contains the names opened through it, not its own root, and
+	// the parent directory stays writable from inside an instance (ADR 2.01), so between
+	// the two resolutions it can be made to point elsewhere. Identity ties them to one node.
 	//
-	// The concession to filesystems that supply no identity is made once, when the root
-	// is first resolved: if there was never an identity to record, there is nothing to
-	// compare and the custodian proceeds rather than refusing to serve. Once one has
-	// been recorded the concession is spent, and a reopened handle that cannot identify
-	// itself is a failed verification, not an absent one — otherwise a swap onto a
-	// filesystem that exposes no identity would walk straight past this check.
+	// A filesystem that supplies no identity is conceded once, at the first resolution:
+	// nothing was recorded, so there is nothing to compare. Once one has been recorded
+	// the concession is spent, and a reopened handle that cannot identify itself is a
+	// failed verification rather than an absent one — otherwise a swap onto a filesystem
+	// exposing no identity would walk past this check.
 	if s.rootIDKnown {
 		id, ok := s.nt.identity(windows.Handle(f.Fd()))
 		if !ok || id != s.rootID {
@@ -244,33 +245,22 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	createOptions := uint32(windows.FILE_SYNCHRONOUS_IO_NONALERT | windows.FILE_DIRECTORY_FILE)
 	disposition := uint32(windows.FILE_OPEN_IF)
 
-	err = windows.NtCreateFile(
-		&handle,
-		desiredAccess,
-		oa,
-		&iosb,
-		nil,
-		fileAttributes,
-		shareAccess,
-		disposition,
-		createOptions,
-		uintptr(unsafe.Pointer(&eaBuf[0])), //#nosec G103 // NT syscall argument: pointer to live Go memory; the call is synchronous and kernel writes stay within the value.
-		uint32(len(eaBuf)),                 //#nosec G115 // length of small EA buffer; always fits in 32 bits.
-	)
+	err = s.nt.createFile(&handle, desiredAccess, oa, &iosb, fileAttributes, shareAccess, disposition, createOptions, eaBuf)
 	if err != nil {
-		// OBJ_DONT_REPARSE is what made this call fail rather than quietly follow a
-		// junction or symlink standing where the root should be. The fallback below would
-		// undo that in one line: os.MkdirAll succeeds on an existing directory link, and
-		// this path records no identity, so setRoot would have nothing to compare and the
-		// custodian would serve every later operation from outside basePath without a
-		// word. A redirected root is a refusal, not a degradation.
-		if escapes := mapNtStatus(err); errors.Is(escapes, ErrPathEscapes) {
-			return escapes
+		// Only a filesystem that cannot carry extended attributes may be adopted unstamped
+		// (ADR 2.02). Anything else refusing this call — an ACL, a filter driver, a
+		// sharing violation — leaves a directory that could have been stamped, and the
+		// fallback hides all of them, because os.MkdirAll succeeds on a directory already
+		// there: the custodian would serve an unstamped root reporting nothing wrong.
+		//
+		// A root behind a junction or symlink takes the same road out, and must:
+		// OBJ_DONT_REPARSE is what failed this call rather than follow the link, and the
+		// fallback would undo that in one line, leaving setRoot no identity to compare.
+		if !eaUnsupported(err) {
+			return mapNtStatus(err)
 		}
 
-		// What remains is a filesystem that will not carry the stamp at creation time.
-		// That one degrades loudly and keeps serving, per ADR 2.02.
-		s.degraded = true
+		s.deg.note(fmt.Errorf("could not create the root with its ownership stamp: %w", err))
 		return os.MkdirAll(basePath, DirMode)
 	}
 
@@ -278,7 +268,11 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	// NtCreateFile does not apply the eaBuf parameter. Stamp EA via NtSetEaFile.
 	if iosb.Information == 1 /* FILE_OPENED */ {
 		if err := s.nt.setEaFile(handle, eaBuf); err != nil {
-			s.degraded = true
+			if !eaUnsupported(err) {
+				closeHandle(handle)
+				return mapNtStatus(err)
+			}
+			s.deg.note(fmt.Errorf("could not stamp the pre-existing root: %w", err))
 		}
 	}
 
@@ -302,19 +296,15 @@ func (s *platformSys) Close() error {
 }
 
 func (s *platformSys) isDegraded() bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.degraded
+	return s.deg.cause() != nil
 }
 
 // isOwned reports whether the node at rel carries the agent's watermark: the
-// $LXUID/$LXGID/$LXMOD stamp queried through NtQueryEaFile for exactly the
-// values the custodian writes. It never answers on behalf of a filesystem that
-// cannot carry extended attributes: there the query simply fails, and ownership
-// is unknowable rather than true. Callers must consult isDegraded first and
-// decide what an unverifiable sub-tree means for them, because reading an
-// unknowable answer as either "ours" or "foreign" is a policy choice, not a
-// fact this predicate can supply.
+// $LXUID/$LXGID/$LXMOD stamp queried through NtQueryEaFile, for exactly the values the
+// custodian writes. It never answers on behalf of a filesystem that cannot carry them:
+// there the query fails and ownership is unknowable rather than true. Callers consult
+// isDegraded first and decide what an unverifiable sub-tree means, because reading an
+// unknowable answer as "ours" or "foreign" is policy, not a fact this predicate has.
 func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -341,7 +331,7 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 		mode = uint32(040700)
 	}
 
-	if s.degraded {
+	if s.isDegraded() {
 		return fallbackCreate(s.root, relativePath, isDir)
 	}
 
@@ -376,8 +366,8 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	if ntErr != nil {
 		// A filesystem that will not take the attribute buffer degrades and falls back;
 		// every other failure, a redirected path above all, is reported as it is.
-		if errors.Is(ntErr, windows.STATUS_EAS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_INVALID_PARAMETER) {
-			s.degraded = true
+		if eaUnsupported(ntErr) {
+			s.deg.note(fmt.Errorf("could not create %s with its ownership stamp: %w", relativePath, ntErr))
 			return fallbackCreate(s.root, relativePath, isDir)
 		}
 		return mapNtStatus(ntErr)
@@ -428,7 +418,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.degraded {
+	if s.isDegraded() {
 		return s.root.Rename(oldRel, newRel)
 	}
 
@@ -441,7 +431,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	// Ensure the source node is already owned. Stamping in place after rename is
 	// rejected because it leaves a window where unstamped content is published
 	// and cannot revoke descriptors already open on the source.
-	if !s.degraded {
+	if !s.isDegraded() {
 		uid, gid, mode, err := ntQueryLxEa(handle)
 		if err != nil || uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
 			return ErrNotOwned
@@ -494,6 +484,25 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	return mapNtStatus(errSet)
 }
 
+// eaUnsupported reports whether a status means the filesystem cannot carry extended
+// attributes at all, rather than this write having been refused. Only the first is what
+// ADR 2.02 keeps serving through; calling a refusal "degraded" claims the machine cannot
+// be secured when something merely stopped us securing it.
+//
+// Measured against a volume that cannot store them, not assumed: creating a node with an
+// attribute buffer answers STATUS_EAS_NOT_SUPPORTED, setting one on a node already there
+// answers STATUS_INVALID_DEVICE_REQUEST. Adoption only ever sees the second, and a
+// sub-tree left by an earlier run is always adopted.
+//
+// STATUS_INVALID_PARAMETER is excluded on purpose: no such volume returns it, but our own
+// buffer or flags would if they ever became wrong, and absorbing that would fail open on
+// every machine at once. A malformed buffer answers STATUS_EA_LIST_INCONSISTENT.
+func eaUnsupported(err error) bool {
+	return errors.Is(err, windows.STATUS_EAS_NOT_SUPPORTED) ||
+		errors.Is(err, windows.STATUS_INVALID_DEVICE_REQUEST) ||
+		errors.Is(err, windows.STATUS_NOT_SUPPORTED)
+}
+
 // mapNtStatus translates an NT status into a Go error, recognising the
 // reparse-blocked signal a rooted, OBJ_DONT_REPARSE syscall produces when a
 // symlink component crosses the custodian root.
@@ -544,14 +553,16 @@ func closeHandle(h windows.Handle) {
 	_ = windows.CloseHandle(h)
 }
 
-// remoteVolume reports whether path lives on a volume this machine does not own, and
-// names the kind for the log. A UNC path is classified by its prefix rather than by
-// GetDriveType: for an unreachable server that call blocks on name resolution for
-// seconds and then answers DRIVE_NO_ROOT_DIR anyway, which is neither fast nor
-// informative at startup. Drive letters are cheap to classify, so they go through the
-// API, which is what identifies a mapped network drive.
+// remoteVolume reports whether path lives on a volume this machine does not own, and names
+// the kind. A UNC path is classified by its prefix, not GetDriveType: for an unreachable
+// server that call blocks on name resolution for seconds and then answers
+// DRIVE_NO_ROOT_DIR anyway. Drive letters are cheap, so they go through the API, which is
+// what identifies a mapped network drive.
+//
+// The path must already be resolved: a directory in the profile can be a link to a share,
+// where the name says "C:" while the bytes live on a server.
 func remoteVolume(path string) (remote bool, kind string) {
-	vol := filepath.VolumeName(path)
+	vol := filepath.VolumeName(stripNTPrefix(path))
 	if strings.HasPrefix(vol, `\\`) {
 		return true, "a UNC path"
 	}
@@ -568,6 +579,36 @@ func remoteVolume(path string) (remote bool, kind string) {
 	}
 
 	return false, ""
+}
+
+// stripNTPrefix turns the NT forms that GetFinalPathNameByHandle returns into the ones
+// filepath understands: \\?\C:\dir stays a drive, and \\?\UNC\server\share becomes the
+// UNC path it denotes, so a redirected directory is classified by where it really is.
+func stripNTPrefix(path string) string {
+	const dos, unc = `\\?\`, `\\?\UNC\`
+	if strings.HasPrefix(path, unc) {
+		return `\\` + path[len(unc):]
+	}
+	return strings.TrimPrefix(path, dos)
+}
+
+// resolvedBasePath returns the sub-tree root as the filesystem finally names it, following
+// any links in the path the custodian was handed. It answers "" when the answer is
+// unavailable, which leaves the caller with the name it already had.
+func (s *platformSys) resolvedBasePath() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.rootHandle == 0 {
+		return ""
+	}
+
+	buf := make([]uint16, windows.MAX_LONG_PATH)
+	n, err := windows.GetFinalPathNameByHandle(s.rootHandle, &buf[0], uint32(len(buf)), 0) //#nosec G115 // fixed-size path buffer; always fits in 32 bits.
+	if err != nil || n == 0 {
+		return ""
+	}
+	return windows.UTF16ToString(buf[:n])
 }
 
 // ntQueryLxEa reads the $LXUID, $LXGID and $LXMOD extended attributes of the
