@@ -76,6 +76,14 @@ become managed on first `wsl-pro-service` connection.
 A named Ubuntu on WSL system registered with WSL — a materialized instance of a *Distro* package,
 whether or not the *Windows Agent* manages it.
 
+### Ephemeral PKI
+
+The short-lived certificate authority the *Windows Agent* mints at every startup, together with the two
+identities it signs: the agent's own, and the one shared by the *GUI* and every distro instance. Never
+persisted as a whole and never reused — discarded on shutdown and regenerated on the next start, per ADR
+3.03. Only the authority's certificate and the shared clients' certificate and key are published to the
+*Public Directory*; the agent's identity and the authority's private key stay in memory.
+
 ### GUI
 
 The `ubuntupro.exe` graphical app on the Windows host: the end-user configuration surface. Starts the
@@ -160,17 +168,26 @@ How commands reach a distro instance over its *control stream*.
 
 The property of a node under the *Public Directory* whereby the WSL 9P server translates its NT
 Extended Attributes (`$LXUID`, `$LXGID`, `$LXMOD`) into Linux-visible ownership/mode, appearing
-root-owned (`uid=0`, `gid=0`) with mode `0600` (files) or `0700` (directories). Denies all access to
-unprivileged Linux processes, preserving confidentiality, integrity, and availability within any
-distro instance.
+root-owned (`uid=0`, `gid=0`) with mode `0600` (files) or `0700` (directories). Established
+atomically at the node's creation; the public root and first-level sub-tree roots are stamped in place
+when pre-existing (stamping a directory node revokes unprivileged creation and deletion inside it
+because Linux checks the directory's current ownership and mode on every operation), while everything
+beneath them is replaced rather than repaired, since repair of an individual file cannot revoke
+descriptors already open on it. Denies all access to unprivileged Linux processes,
+preserving confidentiality, integrity, and availability within any distro instance.
 
 ### `securefiles`
 
 The internal Windows Agent component (`windows-agent/internal/securefiles`), sole custodian of the
-*Public Directory*. Constructed once with the base path; exposes creation primitives (`MkdirAll`,
-`WriteFile`, `Create`) that stamp every node with the correct NT Extended Attributes (`$LXUID=0`,
-`$LXGID=0`, `$LXMOD`) before content is written. No other agent component creates nodes there
-directly.
+*Public Directory*. Holds the directory as a rooted filesystem and mediates every mutation of it -
+creation, atomic replacement, renaming and removal - so no other agent component touches it. Hands
+out sub-scoped custodians, one per sub-tree, so a consumer can neither name nor write anything
+outside its own; chooses file and directory modes itself rather than accepting them; and stamps the public
+root and first-level sub-tree roots in place when pre-existing, replacing everything beneath them rather
+than repairing it (stale certificate files are removed at startup before the fresh set is written).
+Atomic replacement writes to a temporary sibling and renames it into place, so directory watchers observe
+a rename, not a creation; consumers whose readers watch for a creation event (the GUI's startup monitor
+waits for one on the address file) must publish through direct creation instead.
 
 ### Task
 

@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"os"
-	"path/filepath"
 	"strings"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -24,26 +22,35 @@ type Config interface {
 	LandscapeClientConfig() (string, config.Source, error)
 }
 
+// Custodian is the part of a securefiles custodian this package depends on: a contained
+// sub-tree it can write to, ask about ownership, and sweep. It is declared here, by the
+// consumer, so the security component needs no test seam of its own to let these tests
+// reproduce a filesystem that cannot carry the watermark.
+type Custodian interface {
+	IsDegraded() bool
+	IsOwned(relPath string) (bool, error)
+	Purge(isAllowed func(relPath string, isDir bool) bool) ([]string, error)
+	Remove(relPath string) error
+	WriteFile(relPath string, data []byte) error
+}
+
 // CloudInit contains necessary data to drop cloud-init user data files for WSL's data source to pick them up.
 type CloudInit struct {
-	dataDir string
-	conf    Config
+	dir  Custodian
+	conf Config
 }
 
 // New creates a CloudInit object and attaches it to the configuration notifier.
-func New(ctx context.Context, conf Config, publicDir string) (CloudInit, error) {
+// The custodian must already be scoped to the cloud-init sub-tree; the writer only addresses files by leaf name.
+func New(ctx context.Context, conf Config, dir Custodian) (CloudInit, error) {
 	c := CloudInit{
-		dataDir: filepath.Join(publicDir, ".cloud-init"),
-		conf:    conf,
+		dir:  dir,
+		conf: conf,
 	}
 
-	// c.writeAgentData() is no longer guaranteed to create the cloud-init directory,
-	// so let's check now if we have permission to do so.
-	if err := os.MkdirAll(c.dataDir, 0700); err != nil {
-		return CloudInit{}, fmt.Errorf("could not create cloud-init directory: %v", err)
-	}
-
-	if err := c.writeAgentData(); err != nil {
+	// Purge every node that does not carry the agent's watermark and regenerate the agent's own
+	// cloud-init file. Stamped nodes are simply left alone.
+	if err := c.startupPurge(ctx); err != nil {
 		return CloudInit{}, err
 	}
 
@@ -68,20 +75,84 @@ func (c CloudInit) writeAgentData() (err error) {
 
 	// Nothing to write, we don't want an empty agent.yaml confusing the real cloud-init.
 	if cloudInit == nil {
-		return removeFileInDir(c.dataDir, "agent.yaml")
-	}
-
-	err = writeFileInDir(c.dataDir, "agent.yaml", cloudInit)
-	if err != nil {
+		err := c.dir.Remove("agent.yaml")
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
 		return err
 	}
 
-	return nil
+	return c.dir.WriteFile("agent.yaml", cloudInit)
 }
 
 // metadata is a struct that serializes the instance ID as yaml.
 type metadata struct {
 	InstanceID string `yaml:"instance-id"`
+}
+
+// startupPurge removes every node in the sub-tree that does not carry the agent's watermark and
+// regenerates the agent's own data file from the current configuration. Stamped nodes are left
+// untouched: cloud-init data is consumed exactly once, at the instance's first boot, so there is
+// nothing to gain from reading it back and rewriting it. The watermark is the whole adoption
+// policy: an unstamped node is foreign by definition, whatever its name.
+//
+// That policy holds only while the watermark can be read. Where the filesystem cannot carry
+// extended attributes every node looks unstamped, so purging on that basis would delete the
+// user's per-distro data on every startup. Adoption is therefore unconditional there, and the
+// condition is reported instead of acted upon.
+func (c CloudInit) startupPurge(ctx context.Context) error {
+	unverifiable := c.dir.IsDegraded()
+	if unverifiable {
+		log.Errorf(ctx, "cloud-init: filesystem cannot carry the ownership watermark, so foreign nodes are indistinguishable from ours: adopting the whole sub-tree unverified")
+	}
+
+	isOurs := func(rel string, isDir bool) bool {
+		// Directories are never adopted: this sub-tree legitimately holds files only.
+		// That judgement is structural, so it still holds without the watermark.
+		if isDir {
+			return false
+		}
+		if unverifiable {
+			return true
+		}
+		owned, err := c.dir.IsOwned(rel)
+		if err != nil {
+			// The filesystem may have degraded between the check above and this call.
+			// Deleting on an unverifiable answer is the one outcome we cannot undo.
+			if c.dir.IsDegraded() {
+				log.Errorf(ctx, "cloud-init: ownership of %q became unverifiable mid-purge, adopting it unverified: %v", rel, err)
+				return true
+			}
+			log.Warningf(ctx, "cloud-init: could not check ownership of %q: %v", rel, err)
+			return false
+		}
+		return owned
+	}
+
+	// A node judged foreign but left behind is reported, not fatal. Refusing to start
+	// leaves it exactly where it is, still there to be consumed by cloud-init at the
+	// instance's first boot, and takes the agent down with it: the component that would
+	// have removed the node on a later run is the only thing lost. ADR 2.02 makes the
+	// same trade for the stamping failure this descends from.
+	removed, err := c.dir.Purge(isOurs)
+	if err != nil {
+		log.Errorf(ctx, "cloud-init: could not remove every unrecognised node from the sub-tree, and they stay readable by every instance: %v", err)
+	}
+
+	for _, rel := range removed {
+		if strings.HasPrefix(rel, ".tmp-") || rel == "agent.yaml" {
+			// Leftover temporaries and the agent's own file are expected churn.
+			continue
+		}
+		if strings.HasSuffix(rel, ".user-data") || strings.HasSuffix(rel, ".meta-data") {
+			// A node named like per-distro data but not stamped by us smells like tampering.
+			log.Errorf(ctx, "cloud-init: removed per-distro node %q that is not stamped as agent-owned", rel)
+			continue
+		}
+		log.Warningf(ctx, "cloud-init: removed unrecognised node from sub-tree: %s", rel)
+	}
+
+	return c.writeAgentData()
 }
 
 // WriteDistroData writes cloud-init data to be used for a particular distro instance.
@@ -95,47 +166,13 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string, instance
 		if err != nil {
 			return fmt.Errorf("could not marshal metadata: %v", err)
 		}
-		if err = writeFileInDir(c.dataDir, distroName+".meta-data", md); err != nil {
+		if err := c.dir.WriteFile(distroName+".meta-data", md); err != nil {
 			return fmt.Errorf("could not create instance metadata file: %v", err)
 		}
 	}
 
-	if err := writeFileInDir(c.dataDir, distroName+".user-data", []byte(cloudInit)); err != nil {
+	if err := c.dir.WriteFile(distroName+".user-data", []byte(cloudInit)); err != nil {
 		return fmt.Errorf("could not create distro-specific cloud-init file: %v", err)
-	}
-
-	return nil
-}
-
-// removeFileInDir attempts to remove the file 'dir/file' if it exists. Missing file is not an error.
-func removeFileInDir(dir, file string) error {
-	err := os.Remove(filepath.Join(dir, file))
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	return nil
-}
-
-// writeFileInDir:
-// 1. Creates the directory if it did not exist.
-// 2. Creates the file using the temp-then-move pattern. This avoids read/write races.
-func writeFileInDir(dir string, file string, contents []byte) error {
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return fmt.Errorf("could not create directory: %v", err)
-	}
-
-	path := filepath.Join(dir, file)
-	tmp := path + ".tmp"
-
-	if err := os.WriteFile(tmp, contents, 0600); err != nil {
-		return fmt.Errorf("could not write: %v", err)
-	}
-
-	if err := os.Rename(tmp, path); err != nil {
-		if r := os.Remove(tmp); r != nil {
-			log.Warningf(context.Background(), "could not remove temporary file: %v", r)
-		}
-		return err // Error message already says 'cannot rename'
 	}
 
 	return nil
@@ -147,10 +184,7 @@ func writeFileInDir(dir string, file string, contents []byte) error {
 func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 	defer decorate.OnError(&err, "could not remove distro-specific cloud-init file")
 
-	path := filepath.Join(c.dataDir, distroName+".user-data")
-
-	err = os.Remove(path)
-	if errors.Is(err, fs.ErrNotExist) {
+	if err := c.dir.Remove(distroName + ".user-data"); errors.Is(err, fs.ErrNotExist) {
 		return nil
 	} else if err != nil {
 		return err
@@ -159,7 +193,7 @@ func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 }
 
 func marshalConfig(conf Config) ([]byte, error) {
-	contents := make(map[string]interface{})
+	contents := make(map[string]any)
 
 	if err := ubuntuProModule(conf, contents); err != nil {
 		return nil, err
@@ -192,7 +226,7 @@ func marshalConfig(conf Config) ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-func ubuntuProModule(c Config, out map[string]interface{}) error {
+func ubuntuProModule(c Config, out map[string]any) error {
 	token, src, err := c.Subscription()
 	if err != nil {
 		return err
@@ -209,7 +243,7 @@ func ubuntuProModule(c Config, out map[string]interface{}) error {
 	return nil
 }
 
-func landscapeModule(c Config, out map[string]interface{}) error {
+func landscapeModule(c Config, out map[string]any) error {
 	conf, src, err := c.LandscapeClientConfig()
 	if err != nil {
 		return err
