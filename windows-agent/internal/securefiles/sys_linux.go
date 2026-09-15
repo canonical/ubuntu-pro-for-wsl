@@ -20,6 +20,8 @@ type platformSys struct {
 	xattr    xattrCalls
 	root     *os.Root
 	degraded bool
+	// degradedCause records what first prevented stamping, for CheckProjection to relay.
+	degradedCause string
 }
 
 // watermarkXattr is the user namespace extended attribute used to stamp files
@@ -115,7 +117,7 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 			if isXattrUnsupported(err) {
 				// Filesystem does not support xattrs: mirror Windows degraded mode by
 				// failing open rather than refusing to operate.
-				s.degraded = true
+				s.degrade(fmt.Sprintf("could not stamp %s: %v", rel, err))
 				return closeErr
 			}
 			return errors.Join(err, closeErr, s.root.Remove(rel))
@@ -160,6 +162,13 @@ func (s *platformSys) isDegraded() bool {
 	return s.degraded
 }
 
+// cause returns what first prevented stamping, or "" if nothing recorded it.
+func (s *platformSys) cause() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.degradedCause
+}
+
 // isOwned reports whether the node carries the custodian's watermark and still
 // has the same owner, group, and mode recorded at creation time. It never
 // answers on behalf of a filesystem that cannot carry xattrs: there the query
@@ -194,6 +203,11 @@ func xattrsSupported(xattr xattrCalls, fd int) bool {
 // Windows-specific, and the Linux build exists to keep the cross-platform tests honest.
 func remoteVolume(string) (remote bool, kind string) {
 	return false, ""
+}
+
+// resolvedBasePath mirrors the Windows helper; there is nothing to resolve here.
+func (s *platformSys) resolvedBasePath() string {
+	return ""
 }
 
 // ownedByWatermark reports whether the open node still carries the watermark recorded

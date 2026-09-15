@@ -52,6 +52,11 @@ func TestXattrDegradedTransitions(t *testing.T) {
 		wantErr      bool
 		wantOwned    bool
 		wantDegraded bool
+		// wantCause is what CheckProjection must relay about the transition. A sub-tree born on a
+		// filesystem without attributes records nothing: it never crossed over, and
+		// CheckProjection reports the condition itself rather than an event that
+		// explains it.
+		wantCause string
 	}{
 		"a filesystem without xattrs is degraded from the start": {
 			probeErr:     unix.ENOTSUP,
@@ -61,6 +66,9 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			setErr:       unix.ENOTSUP,
 			op:           "write",
 			wantDegraded: true,
+			// The node named is the atomic temporary WriteFile stamps before publishing,
+			// so the cause asserted here is the reason rather than the transient name.
+			wantCause: "operation not supported",
 		},
 		"write fails when stamping fails for another reason": {
 			setErr:  unix.EPERM,
@@ -140,6 +148,11 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			}
 			require.Equal(t, tc.wantOwned, owned)
 			require.Equal(t, tc.wantDegraded, c.IsDegraded())
+			if tc.wantCause == "" {
+				require.Empty(t, c.degradedCause(), "nothing new should have been recorded")
+			} else {
+				require.Contains(t, c.degradedCause(), tc.wantCause, "unexpected recorded cause")
+			}
 		})
 	}
 }

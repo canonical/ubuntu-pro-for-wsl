@@ -5,6 +5,7 @@ package securefiles
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,6 +23,8 @@ type platformSys struct {
 	rootFile   *os.File
 	rootHandle windows.Handle
 	degraded   bool
+	// degradedCause records what first prevented stamping, for CheckProjection to relay.
+	degradedCause string
 
 	// rootID identifies the directory ensureRoot created and stamped, so that the
 	// separate reopen in setRoot can be checked against it. Unset for sub-custodians,
@@ -155,7 +158,10 @@ func (s *platformSys) stampSubdir(rel string) error {
 	defer closeHandle(handle)
 
 	if err := s.nt.setEaFile(handle, eaBuf); err != nil {
-		s.degraded = true
+		if !eaUnsupported(err) {
+			return mapNtStatus(err)
+		}
+		s.degrade(fmt.Sprintf("could not stamp the sub-directory %s: %v", rel, err))
 	}
 
 	return nil
@@ -270,7 +276,7 @@ func (s *platformSys) ensureRoot(basePath string) error {
 
 		// What remains is a filesystem that will not carry the stamp at creation time.
 		// That one degrades loudly and keeps serving, per ADR 2.02.
-		s.degraded = true
+		s.degrade(fmt.Sprintf("could not create the root with its ownership stamp: %v", err))
 		return os.MkdirAll(basePath, DirMode)
 	}
 
@@ -278,7 +284,11 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	// NtCreateFile does not apply the eaBuf parameter. Stamp EA via NtSetEaFile.
 	if iosb.Information == 1 /* FILE_OPENED */ {
 		if err := s.nt.setEaFile(handle, eaBuf); err != nil {
-			s.degraded = true
+			if !eaUnsupported(err) {
+				closeHandle(handle)
+				return mapNtStatus(err)
+			}
+			s.degrade(fmt.Sprintf("could not stamp the pre-existing root: %v", err))
 		}
 	}
 
@@ -305,6 +315,13 @@ func (s *platformSys) isDegraded() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.degraded
+}
+
+// cause returns what first prevented stamping, or "" if nothing recorded it.
+func (s *platformSys) cause() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.degradedCause
 }
 
 // isOwned reports whether the node at rel carries the agent's watermark: the
@@ -376,8 +393,8 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	if ntErr != nil {
 		// A filesystem that will not take the attribute buffer degrades and falls back;
 		// every other failure, a redirected path above all, is reported as it is.
-		if errors.Is(ntErr, windows.STATUS_EAS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_NOT_SUPPORTED) || errors.Is(ntErr, windows.STATUS_INVALID_PARAMETER) {
-			s.degraded = true
+		if eaUnsupported(ntErr) {
+			s.degrade(fmt.Sprintf("could not create %s with its ownership stamp: %v", relativePath, ntErr))
 			return fallbackCreate(s.root, relativePath, isDir)
 		}
 		return mapNtStatus(ntErr)
@@ -497,6 +514,17 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 // mapNtStatus translates an NT status into a Go error, recognising the
 // reparse-blocked signal a rooted, OBJ_DONT_REPARSE syscall produces when a
 // symlink component crosses the custodian root.
+// eaUnsupported reports whether a status means the filesystem cannot carry extended
+// attributes at all, rather than this particular write having been refused. Only the
+// former is the condition ADR 2.02 keeps serving through: a refusal is an anomaly on a
+// filesystem that is otherwise perfectly capable, and saying "degraded" about it would
+// claim the machine cannot be secured when in truth something stopped us securing it.
+func eaUnsupported(err error) bool {
+	return errors.Is(err, windows.STATUS_EAS_NOT_SUPPORTED) ||
+		errors.Is(err, windows.STATUS_NOT_SUPPORTED) ||
+		errors.Is(err, windows.STATUS_INVALID_PARAMETER)
+}
+
 func mapNtStatus(err error) error {
 	if err == nil {
 		return nil
@@ -550,8 +578,11 @@ func closeHandle(h windows.Handle) {
 // seconds and then answers DRIVE_NO_ROOT_DIR anyway, which is neither fast nor
 // informative at startup. Drive letters are cheap to classify, so they go through the
 // API, which is what identifies a mapped network drive.
+//
+// The path given must already be resolved: a directory in the profile can be a link to a
+// share, in which case the name says "C:" while the bytes live on a server.
 func remoteVolume(path string) (remote bool, kind string) {
-	vol := filepath.VolumeName(path)
+	vol := filepath.VolumeName(stripNTPrefix(path))
 	if strings.HasPrefix(vol, `\\`) {
 		return true, "a UNC path"
 	}
@@ -568,6 +599,36 @@ func remoteVolume(path string) (remote bool, kind string) {
 	}
 
 	return false, ""
+}
+
+// stripNTPrefix turns the NT forms that GetFinalPathNameByHandle returns into the ones
+// filepath understands: \\?\C:\dir stays a drive, and \\?\UNC\server\share becomes the
+// UNC path it denotes, so a redirected directory is classified by where it really is.
+func stripNTPrefix(path string) string {
+	const dos, unc = `\\?\`, `\\?\UNC\`
+	if strings.HasPrefix(path, unc) {
+		return `\\` + path[len(unc):]
+	}
+	return strings.TrimPrefix(path, dos)
+}
+
+// resolvedBasePath returns the sub-tree root as the filesystem finally names it, following
+// any links in the path the custodian was handed. It answers "" when the answer is
+// unavailable, which leaves the caller with the name it already had.
+func (s *platformSys) resolvedBasePath() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.rootHandle == 0 {
+		return ""
+	}
+
+	buf := make([]uint16, windows.MAX_LONG_PATH)
+	n, err := windows.GetFinalPathNameByHandle(s.rootHandle, &buf[0], uint32(len(buf)), 0) //#nosec G115 // fixed-size path buffer; always fits in 32 bits.
+	if err != nil || n == 0 {
+		return ""
+	}
+	return windows.UTF16ToString(buf[:n])
 }
 
 // ntQueryLxEa reads the $LXUID, $LXGID and $LXMOD extended attributes of the

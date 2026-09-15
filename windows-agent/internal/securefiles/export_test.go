@@ -17,7 +17,3 @@ func (c *Custodian) SetDegraded(degraded bool) {
 	defer c.sys.mu.Unlock()
 	c.sys.degraded = degraded
 }
-
-// LogDegradedOnce exposes the once-only degraded report, which production reaches only
-// through Open and therefore need not export.
-func (c *Custodian) LogDegradedOnce() { c.logDegradedOnce() }

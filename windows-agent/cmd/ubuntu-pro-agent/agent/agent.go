@@ -288,7 +288,10 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 		log.Warningf(ctx, "Could not rotate log to log.old: %v", err)
 	}
 
-	f, err := c.CreateFile("log")
+	// Append rather than replace: if the rotation above failed, the existing log is the
+	// only copy there is, and discarding it would destroy the very record needed to find
+	// out why the rotation failed.
+	f, err := c.CreateFile("log", securefiles.Append)
 	if err != nil {
 		return noop, fmt.Errorf("could not open log file: %v", err)
 	}
@@ -300,6 +303,14 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 	fmt.Fprintf(f, "\n======= STARTUP =======\n")
 	log.Infof(ctx, "Version: %s", consts.Version)
 	log.Debug(ctx, "Debug mode is enabled")
+
+	// The custodian was opened before this file existed, so it has been holding its
+	// findings until there was somewhere durable to put them. ADR 2.02 keeps the agent
+	// serving through them, which is exactly why they must be said out loud every
+	// startup: nothing else will reveal that the public directory is unsecured.
+	if gaps := c.CheckProjection(); gaps != nil {
+		log.Errorf(ctx, "The public directory is not fully secured: %v", gaps)
+	}
 
 	return func() {
 		_ = f.Close()

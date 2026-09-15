@@ -32,6 +32,13 @@ var (
 	// ErrRootReplaced is returned when the directory opened as the custodian's root is
 	// not the one it created and stamped, meaning the path was redirected in between.
 	ErrRootReplaced = errors.New("root directory was replaced between creation and open")
+
+	// ErrDegraded is reported by CheckProjection when the sub-tree cannot be stamped at all.
+	ErrDegraded = errors.New("sub-tree cannot be stamped")
+	// ErrRemoteVolume is reported by CheckProjection when the sub-tree lives on a volume
+	// this machine does not own. Stamping succeeds there and the attribute is stored
+	// faithfully, but the projection does not honour it, so the guarantee does not hold.
+	ErrRemoteVolume = errors.New("sub-tree is on a remote volume")
 )
 
 // Custodian scopes filesystem operations to a sub-tree and stamps nodes with their projected ownership.
@@ -77,11 +84,47 @@ func (c *Custodian) IsDegraded() bool {
 	return false
 }
 
-// logDegradedOnce logs an error once if the custodian is degraded.
-func (c *Custodian) logDegradedOnce() {
+// CheckProjection reports every condition under which the sub-tree keeps serving without
+// the Secure Projection it promises, per ADR 2.02. It returns nil when the projection
+// holds, and otherwise an error joining each condition that applies.
+//
+// The custodian reports rather than logs, because it cannot know where its findings
+// should go: the agent must open its public directory before it has a log file to put
+// inside it, so anything written here would reach only the launcher's transient console.
+// The caller decides when it has somewhere durable to say this, and how loudly.
+//
+// This checks rather than recalls: classifying the volume queries the operating system,
+// which on an unreachable network path blocks for seconds. Call it at startup, not on a
+// path that serves requests.
+func (c *Custodian) CheckProjection() error {
+	var errs []error
+
 	if c.IsDegraded() {
-		log.Errorf(context.Background(), "securefiles: underlying filesystem at %s does not support extended attributes; operating in degraded mode without secure projection", c.basePath)
+		degraded := fmt.Errorf("%w: %s cannot carry the ownership watermark, so what instances see is not projected as root-owned", ErrDegraded, c.BasePath())
+		if cause := c.degradedCause(); cause != "" {
+			degraded = fmt.Errorf("%w (%s)", degraded, cause)
+		}
+		errs = append(errs, degraded)
 	}
+
+	// Classify where the sub-tree really is, not where it was named: a directory in the
+	// profile can be a link to a share, and then the name says "C:" while the bytes do not.
+	where := c.basePath
+	if resolved := c.resolvedBasePath(); resolved != "" {
+		where = resolved
+	}
+
+	if remote, kind := remoteVolume(where); remote {
+		// Name the resolved location too when it differs, or the report reads as a
+		// contradiction: a path beginning "C:" is not obviously on a UNC path.
+		location := kind
+		if where != c.basePath {
+			location = fmt.Sprintf("%s, resolving to %s", kind, where)
+		}
+		errs = append(errs, fmt.Errorf("%w: %s is on %s; the ownership stamp is stored there but the projection inside instances does not honour it, so nodes are exposed to unprivileged processes even though stamping succeeds", ErrRemoteVolume, c.basePath, location))
+	}
+
+	return errors.Join(errs...)
 }
 
 // BasePath returns the absolute path of the custodian's sub-tree root.
@@ -172,29 +215,57 @@ func (c *Custodian) IsOwned(name string) (bool, error) {
 	return owned, mapEscape(err)
 }
 
-// CreateFile creates or replaces a file in the custodian sub-tree, returning it
-// open for writing. The semantics are fresh-start: any pre-existing node is
-// discarded and the returned file is a newly stamped, empty node. This is what
-// log rotation wants: the new log must never read as an adopted previous file.
-func (c *Custodian) CreateFile(name string) (*os.File, error) {
+// CreateMode selects what CreateFile does with a node that is already in place.
+// The zero value replaces it, which is what most callers want: a node the custodian
+// hands out should be one it created and stamped, not one it inherited.
+type CreateMode int
+
+const (
+	// Replace discards any pre-existing node, so the returned file is a freshly
+	// stamped, empty one.
+	Replace CreateMode = iota
+	// Append keeps what is already there and positions writes at the end, creating
+	// and stamping the node only when it is absent. A caller that rotated a file away
+	// and cannot tell whether the rotation succeeded needs this: replacing would
+	// destroy the only remaining copy.
+	Append
+)
+
+// CreateFile creates a file in the custodian sub-tree and returns it open for writing.
+// Without a mode it replaces whatever is there; pass Append to add to it instead.
+func (c *Custodian) CreateFile(name string, mode ...CreateMode) (*os.File, error) {
 	targetRel, err := c.resolve(name)
 	if err != nil {
 		return nil, err
 	}
 
-	// Fresh-start: discard any pre-existing node so the returned file is a
-	// freshly stamped node rather than an adopted one.
-	if _, err := c.root.Stat(targetRel); err == nil {
-		if err := c.root.Remove(targetRel); err != nil {
+	flags := os.O_WRONLY
+	if len(mode) > 0 && mode[0] == Append {
+		// Adopt what is there, and create only when nothing is.
+		flags |= os.O_APPEND
+		if _, err := c.root.Stat(targetRel); err != nil {
+			if !errors.Is(err, fs.ErrNotExist) {
+				return nil, mapEscape(err)
+			}
+			if err := c.sys.createNode(targetRel, false); err != nil {
+				return nil, mapEscape(err)
+			}
+		}
+	} else {
+		// Unlink to revoke any descriptor already open on the node, then create a fresh
+		// one. Truncating would not do: the file object survives it, so a process that
+		// opened the node while it was still unstamped would follow it into its replaced
+		// life and read whatever is written next. Unlinking is the revocation; creating
+		// is the cheap part.
+		if err := c.root.Remove(targetRel); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return nil, mapEscape(err)
+		}
+		if err := c.sys.createNode(targetRel, false); err != nil {
 			return nil, mapEscape(err)
 		}
 	}
 
-	if err := c.sys.createNode(targetRel, false); err != nil {
-		return nil, mapEscape(err)
-	}
-
-	f, err := c.root.OpenFile(targetRel, os.O_WRONLY, 0)
+	f, err := c.root.OpenFile(targetRel, flags, 0)
 	if err != nil {
 		return nil, mapEscape(err)
 	}
@@ -329,26 +400,38 @@ func open(basePath string, newSys func(string) (*platformSys, error)) (*Custodia
 		sys:      sys,
 	}
 
-	c.logDegradedOnce()
-	c.logRemoteVolume()
-
 	return c, nil
 }
 
-// logRemoteVolume reports, at error level, that the sub-tree lives on a volume this
-// machine does not own. Stamping can still succeed there, so the custodian does not
-// degrade and IsDegraded keeps reporting healthy; but the stamp is written on the remote
-// filesystem, and what instances see is a projection of that share rather than of a local
-// volume. A custodian that looks healthy is therefore not evidence that the sub-tree is
-// secured, which is precisely the case an operator cannot diagnose from the outside.
-// Following ADR 2.02, the condition is reported and nothing is refused.
-func (c *Custodian) logRemoteVolume() {
-	remote, kind := remoteVolume(c.basePath)
-	if !remote {
+// degrade records that the sub-tree can no longer be stamped, together with what
+// revealed it. Nothing is logged: the custodian has no logger and no opinion on where
+// this belongs. The first cause is kept, since it is the one that explains the rest.
+// The caller must already hold s.mu.
+func (s *platformSys) degrade(cause string) {
+	if s.degraded {
 		return
 	}
 
-	log.Errorf(context.Background(), "securefiles: %s is on %s; the ownership stamp is written on the remote filesystem, so the sub-tree may not be projected as root-owned inside instances even though stamping succeeds", c.basePath, kind)
+	s.degraded = true
+	s.degradedCause = cause
+}
+
+// degradedCause returns what first prevented stamping, or "" when the sub-tree was
+// already unable to stamp before this custodian touched it.
+func (c *Custodian) degradedCause() string {
+	if c.sys == nil {
+		return ""
+	}
+	return c.sys.cause()
+}
+
+// resolvedBasePath returns the sub-tree root as the filesystem finally names it, or ""
+// when no platform is attached to answer.
+func (c *Custodian) resolvedBasePath() string {
+	if c.sys == nil {
+		return ""
+	}
+	return c.sys.resolvedBasePath()
 }
 
 // resolve validates name lexically and returns its cleaned form relative to

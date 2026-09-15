@@ -9,11 +9,9 @@ package securefiles
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
@@ -22,16 +20,31 @@ import (
 // TestOpenStampingFailureDegrades pins ADR 2.02 at construction: a filesystem that
 // refuses the attribute write must leave a degraded custodian that still works, reported
 // loudly, never a failure to start. Both roots reach the same stamping call: one adopted
-// from a pre-existing directory, one created by ensureRoot itself.
+// from a pre-existing directory, one created by ensureRoot itself. A refusal on a capable
+// filesystem is not degradation and must reach the caller instead.
 func TestOpenStampingFailureDegrades(t *testing.T) {
 	testCases := map[string]struct {
 		// preCreate leaves the root on disk before Open, so it is adopted rather than created.
 		preCreate bool
+		// failStatus makes the attribute write fail with this NT status.
+		failStatus windows.NTStatus
 
+		wantOpenErr  bool
 		wantDegraded bool
 	}{
-		"a pre-existing root, stamped separately": {preCreate: true, wantDegraded: true},
-		"a root created by ensureRoot itself":     {},
+		"a pre-existing root on a filesystem without attribute support": {
+			preCreate:    true,
+			failStatus:   windows.STATUS_EAS_NOT_SUPPORTED,
+			wantDegraded: true,
+		},
+		// The root exists and can hold attributes, but the write was refused. Adopting it
+		// as "degraded" would hand the distro an unowned sub-tree and call that expected.
+		"a pre-existing root whose stamp is refused": {
+			preCreate:   true,
+			failStatus:  windows.STATUS_ACCESS_DENIED,
+			wantOpenErr: true,
+		},
+		"a root created by ensureRoot itself": {failStatus: windows.STATUS_ACCESS_DENIED},
 	}
 
 	for name, tc := range testCases {
@@ -44,16 +57,30 @@ func TestOpenStampingFailureDegrades(t *testing.T) {
 			hook := test.NewGlobal()
 			defer hook.Reset()
 
-			cust, err := OpenRefusingStamp(rootDir, uint32(windows.STATUS_ACCESS_DENIED))
-			require.NoError(t, err, "stamping must never fail closed")
+			cust, err := OpenRefusingStamp(rootDir, uint32(tc.failStatus))
+			if tc.wantOpenErr {
+				require.Error(t, err, "a refused stamp on a capable filesystem must reach the caller")
+				return
+			}
+			require.NoError(t, err, "an unsupported filesystem must never fail closed")
 			defer cust.Close()
 
 			// A root ensureRoot creates carries its stamp in the NtCreateFile call itself
 			// (ADR 2.01), so it never reaches the attribute write this seam refuses. Only
 			// an adopted root is stamped separately, and only it can degrade here.
 			require.Equal(t, tc.wantDegraded, cust.IsDegraded(), "unexpected degraded state")
-			require.Equal(t, tc.wantDegraded, loggedAt(hook, logrus.ErrorLevel, ""),
-				"the condition must be reported exactly when it occurs")
+
+			// Nothing is written anywhere: the agent has no log yet, so the finding is
+			// held in the custodian until the caller asks for it.
+			require.Empty(t, hook.AllEntries(), "the custodian must not log; it reports through CheckProjection")
+
+			if tc.wantDegraded {
+				require.ErrorIs(t, cust.CheckProjection(), ErrDegraded, "CheckProjection must name the degradation")
+				require.Contains(t, cust.CheckProjection().Error(), "could not stamp the pre-existing root",
+					"CheckProjection must carry what revealed it")
+				return
+			}
+			require.NoError(t, cust.CheckProjection(), "a stamped root has nothing to report")
 		})
 	}
 }
@@ -411,16 +438,40 @@ func TestIdentityOf(t *testing.T) {
 
 // TestStampSubdirDegrades covers the two ways stampSubdir declines to stamp: it is a
 // no-op once the filesystem is known not to carry the attribute, and a refusal of the
-// attribute write degrades the custodian instead of failing the call, per ADR 2.02.
+// attribute write degrades the custodian instead of failing the call, per ADR 2.02 -
+// but only when the filesystem cannot carry attributes at all. A write refused on a
+// capable filesystem is an anomaly, and is reported rather than recorded as degradation.
 func TestStampSubdirDegrades(t *testing.T) {
 	testCases := map[string]struct {
 		alreadyDegraded bool
-		denyEaWrite     bool
+		// failStatus makes the attribute write fail with this NT status.
+		failStatus windows.NTStatus
 
+		wantErr      bool
 		wantDegraded bool
+		// wantCause is what CheckProjection must relay about the transition. A custodian already
+		// degraded before the call records nothing new: the first cause is the one that
+		// explains the rest, and later failures are its consequences.
+		wantCause string
 	}{
 		"a degraded filesystem is not stamped again": {alreadyDegraded: true, wantDegraded: true},
-		"a refused attribute write degrades":         {denyEaWrite: true, wantDegraded: true},
+		"a filesystem without attribute support degrades": {
+			failStatus:   windows.STATUS_EAS_NOT_SUPPORTED,
+			wantDegraded: true,
+			wantCause:    "could not stamp the sub-directory sub",
+		},
+		"a filesystem that rejects the buffer degrades": {
+			failStatus:   windows.STATUS_INVALID_PARAMETER,
+			wantDegraded: true,
+			wantCause:    "could not stamp the sub-directory sub",
+		},
+		// Something stopped us securing a filesystem that is perfectly able to be
+		// secured - a filter driver, an ACL. Calling that "degraded" would tell the
+		// distro to expect unowned nodes forever, on evidence of one refused write.
+		"a refused write on a capable filesystem is an error, not degradation": {
+			failStatus: windows.STATUS_ACCESS_DENIED,
+			wantErr:    true,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -435,12 +486,23 @@ func TestStampSubdirDegrades(t *testing.T) {
 			if tc.alreadyDegraded {
 				cust.SetDegraded(true)
 			}
-			if tc.denyEaWrite {
-				cust.FailStamping(uint32(windows.STATUS_ACCESS_DENIED))
+			if tc.failStatus != 0 {
+				cust.FailStamping(uint32(tc.failStatus))
 			}
 
-			require.NoError(t, cust.sys.stampSubdir("sub"), "stamping must never fail closed")
+			err = cust.sys.stampSubdir("sub")
+			if tc.wantErr {
+				require.Error(t, err, "a refusal must be reported, not swallowed")
+			} else {
+				require.NoError(t, err, "an unsupported filesystem must never fail closed")
+			}
+
 			require.Equal(t, tc.wantDegraded, cust.IsDegraded(), "unexpected degraded state")
+			if tc.wantCause == "" {
+				require.Empty(t, cust.degradedCause(), "nothing new should have been recorded")
+			} else {
+				require.Contains(t, cust.degradedCause(), tc.wantCause, "unexpected recorded cause")
+			}
 		})
 	}
 }
@@ -475,40 +537,74 @@ func TestEnsureRootRejectsUnusableBasePath(t *testing.T) {
 // is reported at error level, and that a local one stays quiet. The stamp is written on
 // the remote filesystem, so a healthy-looking custodian is not evidence that instances see
 // a root-owned sub-tree; ADR 2.02 requires the condition to be reported, not refused.
-func TestLogRemoteVolume(t *testing.T) {
+func TestCheckProjection(t *testing.T) {
 	testCases := map[string]struct {
 		basePath string
+		degraded bool
+		cause    string
 
-		wantReported bool
+		// wantErrs lists every condition CheckProjection must name. Empty means a
+		// healthy sub-tree, for which it says nothing at all.
+		wantErrs []error
+		wantText string
 	}{
-		"a sub-tree on a UNC path":    {basePath: `\\server\share\publicdir`, wantReported: true},
-		"a sub-tree on a local drive": {basePath: `C:\Users\someone\.ubuntupro`},
+		"a healthy sub-tree on a local drive": {basePath: `C:\Users\someone\.ubuntupro`},
+		"a sub-tree on a UNC path": {
+			basePath: `\\server\share\publicdir`,
+			wantErrs: []error{ErrRemoteVolume},
+			wantText: "a UNC path",
+		},
+		// What GetFinalPathNameByHandle hands back for a directory reached through a link
+		// into a share: the name the caller used says "C:", so only the resolved form
+		// reveals that the sub-tree is not on this machine.
+		"a sub-tree resolved to a redirected share": {
+			basePath: `\\?\UNC\server\share\publicdir`,
+			wantErrs: []error{ErrRemoteVolume},
+			wantText: "a UNC path",
+		},
+		"a sub-tree resolved to a local drive": {
+			basePath: `\\?\C:\Users\someone\.ubuntupro`,
+		},
+		"a sub-tree that cannot be stamped": {
+			basePath: `C:\Users\someone\.ubuntupro`,
+			degraded: true,
+			cause:    "could not stamp the pre-existing root: access denied",
+			wantErrs: []error{ErrDegraded},
+			wantText: "access denied",
+		},
+		// Both conditions hold at once and neither hides the other: an operator reading
+		// one line must learn everything that is wrong with the sub-tree.
+		"a sub-tree that is both remote and unstampable": {
+			basePath: `\\server\share\publicdir`,
+			degraded: true,
+			wantErrs: []error{ErrDegraded, ErrRemoteVolume},
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			hook := test.NewGlobal()
-			defer hook.Reset()
-
 			c := &Custodian{basePath: tc.basePath}
-			c.logRemoteVolume()
+			if tc.degraded {
+				c.sys = &platformSys{degraded: true, degradedCause: tc.cause}
+			}
 
-			require.Equal(t, tc.wantReported, loggedAt(hook, logrus.ErrorLevel, "a UNC path"),
-				"unexpected reporting of the backing volume")
+			gaps := c.CheckProjection()
+			if len(tc.wantErrs) == 0 {
+				require.NoError(t, gaps, "a healthy sub-tree is not a condition worth reporting")
+				return
+			}
+
+			for _, want := range tc.wantErrs {
+				require.ErrorIs(t, gaps, want, "CheckProjection must name every condition that applies")
+			}
+			if tc.wantText != "" {
+				require.Contains(t, gaps.Error(), tc.wantText, "CheckProjection must carry what was found")
+			}
 		})
 	}
 }
 
 // loggedAt reports whether the hook captured an entry at level whose message contains
-// substr. An empty substr matches any message at that level.
-func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
-	for _, entry := range hook.AllEntries() {
-		if entry.Level == level && strings.Contains(entry.Message, substr) {
-			return true
-		}
-	}
-	return false
-}
 
 // TestEnsureRootRefusesARedirectedRoot pins that a directory link standing where the root
 // should be is refused rather than followed. OBJ_DONT_REPARSE makes the creation fail on
