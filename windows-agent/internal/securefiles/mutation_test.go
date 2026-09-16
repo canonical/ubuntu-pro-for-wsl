@@ -272,57 +272,6 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 	}
 }
 
-// TestSubTreeDegradationReachesTheRoot pins that the loss of the watermark is a fact
-// about the tree, not about whichever custodian happened to notice it. Carrying the
-// attribute is a property of the volume, and no sub-tree can be on another volume: the
-// root refuses reparse points and a sub-tree root is opened from the parent's own handle.
-// A sub-custodian discovering the loss is therefore the tree discovering it, and the root
-// is what the agent reports from.
-func TestSubTreeDegradationReachesTheRoot(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		// degradeChild degrades the sub-custodian rather than the root, standing in for a
-		// sub-tree whose first stamped write is the one that fails.
-		degradeChild bool
-	}{
-		"the root notices first":   {},
-		"a sub-tree notices first": {degradeChild: true},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			dir := t.TempDir()
-			root, err := securefiles.Open(dir)
-			require.NoError(t, err, "Setup: could not open custodian")
-			defer func() { _ = root.Close() }()
-
-			child, err := root.Subdir(".cloud-init")
-			require.NoError(t, err, "Setup: could not create the sub-tree")
-			defer func() { _ = child.Close() }()
-
-			require.NoError(t, root.CheckProjection(), "Setup: the tree must start healthy")
-
-			degraded := root
-			if tc.degradeChild {
-				degraded = child
-			}
-			degraded.SetDegraded(true)
-
-			// Whichever one noticed, both must answer the same: the agent reports from the
-			// root, long after the sub-trees have been handed to the components that use them.
-			require.True(t, root.IsDegraded(), "the root must know what its sub-tree discovered")
-			require.True(t, child.IsDegraded(), "the sub-tree must know what the root discovered")
-
-			gaps := root.CheckProjection()
-			require.ErrorIs(t, gaps, securefiles.ErrDegraded, "the root must report the gap")
-			require.ErrorIs(t, gaps, securefiles.ErrForcedDegradation, "the report must carry the cause that revealed it")
-		})
-	}
-}
-
 // TestRename covers publishing by rename. The source must already carry the ownership
 // stamp: a node created outside the custodian may still be held open by whoever made it,
 // and stamping it after publication would hand that descriptor a root-owned node, which
@@ -359,10 +308,6 @@ func TestRename(t *testing.T) {
 			c, err := securefiles.Open(dir)
 			require.NoError(t, err, "Setup: could not open custodian")
 			defer func() { _ = c.Close() }()
-
-			if tc.plantUnowned && c.IsDegraded() {
-				t.Skip("a filesystem that cannot carry the stamp has no ownership to verify")
-			}
 
 			if !tc.noSource {
 				if tc.plantUnowned {

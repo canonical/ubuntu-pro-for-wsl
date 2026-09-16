@@ -13,14 +13,11 @@ import (
 )
 
 // platformSys guards its fields for the same reason the Windows one does: a custodian is
-// shared between goroutines, and degraded in particular is read to decide whether a node
-// can be verified at all.
+// shared between goroutines.
 type platformSys struct {
 	mu    sync.Mutex
 	xattr xattrCalls
 	root  *os.Root
-	// deg is shared with every sub-custodian derived from this one.
-	deg *degradation
 }
 
 // watermarkXattr is the user namespace extended attribute used to stamp files
@@ -67,25 +64,24 @@ func newPlatformSysWith(basePath string, xattr xattrCalls) (*platformSys, error)
 	}
 	defer func() { _ = f.Close() }()
 
-	deg := &degradation{}
-	// The probe is weaker than the operation it predicts: it lists attributes on the
-	// directory, while stamping sets one on a file. A filesystem can pass this and still
-	// refuse the stamp later, which is why createNode records its own cause rather than
-	// trusting this answer.
+	// Refused here rather than carried: a sub-tree no instance sees as root-owned would
+	// publish the agent's credentials to every unprivileged process in every instance.
+	// The probe is weaker than the operation it predicts — it lists attributes on the
+	// directory, while stamping sets one on a file — so createNode refuses on its own
+	// evidence too.
 	if err := probeXattrs(xattr, int(f.Fd())); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
-		deg.note(err)
+		return nil, err
 	}
 
-	return &platformSys{xattr: xattr, deg: deg}, nil
+	return &platformSys{xattr: xattr}, nil
 }
 
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
 // already created. It does no path walk of its own: the node is reached through the
 // parent's root, and re-resolving its absolute path here would step outside the
-// containment the parent established. Degradation is inherited because it describes the
-// filesystem, not the node.
+// containment the parent established.
 func newSubPlatformSys(parent *platformSys) *platformSys {
-	return &platformSys{deg: parent.deg, xattr: parent.xattr}
+	return &platformSys{xattr: parent.xattr}
 }
 
 // stampSubdir is a no-op: the Linux watermark is only ever applied to regular files, so
@@ -119,17 +115,12 @@ func (s *platformSys) createNode(rel string, isDir bool) error {
 		return err
 	}
 
-	if !s.isDegraded() {
-		if err := stampNode(s.xattr, f); err != nil {
-			closeErr := f.Close()
-			if isXattrUnsupported(err) {
-				// Filesystem does not support xattrs: mirror Windows degraded mode by
-				// failing open rather than refusing to operate.
-				s.deg.note(fmt.Errorf("could not stamp %s: %w", rel, err))
-				return closeErr
-			}
-			return errors.Join(err, closeErr, s.root.Remove(rel))
+	if err := stampNode(s.xattr, f); err != nil {
+		closeErr := f.Close()
+		if isXattrUnsupported(err) {
+			return errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoWatermarkSupport), closeErr, s.root.Remove(rel))
 		}
+		return errors.Join(err, closeErr, s.root.Remove(rel))
 	}
 
 	return f.Close()
@@ -139,40 +130,33 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.isDegraded() {
-		f, err := s.root.Open(oldRel)
+	f, err := s.root.Open(oldRel)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	st, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	// On Linux directories are not stamped; only regular files carry the watermark.
+	if !st.IsDir() {
+		owned, err := ownedByWatermark(s.xattr, int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 		if err != nil {
 			return err
 		}
-		defer func() { _ = f.Close() }()
-		st, err := f.Stat()
-		if err != nil {
-			return err
-		}
-		// On Linux directories are not stamped; only regular files carry the watermark.
-		if !st.IsDir() {
-			owned, err := ownedByWatermark(s.xattr, int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
-			if err != nil {
-				return err
-			}
-			if !owned {
-				return ErrNotOwned
-			}
+		if !owned {
+			return ErrNotOwned
 		}
 	}
-	return s.root.Rename(oldRel, newRel)
-}
 
-func (s *platformSys) isDegraded() bool {
-	return s.deg.cause() != nil
+	return s.root.Rename(oldRel, newRel)
 }
 
 // isOwned reports whether the node carries the custodian's watermark and still
 // has the same owner, group, and mode recorded at creation time. It never
-// answers on behalf of a filesystem that cannot carry xattrs: there the query
-// fails and ownership is unknowable rather than true, mirroring the Windows
-// predicate. Callers must consult isDegraded first and decide what an
-// unverifiable sub-tree means for them.
+// answers on behalf of a filesystem that cannot carry xattrs: Open refuses those, so
+// a query failing here is an answer about this node.
 func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -187,14 +171,12 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 }
 
 // probeXattrs reports why the filesystem behind fd cannot carry the watermark, or nil.
-// Probing once, while the root is established, keeps every later read a pure query: a
-// predicate discovering it mid-scan would mutate shared state from a read path, and would
-// call a node unverifiable for a reason unrelated to it. Listing leaves no trace, which is
-// also its limit: it asks a directory whether attributes can be listed, while stamping
-// asks a file to store one.
+// Listing leaves no trace of its own, which is also its limit: it asks a directory whether
+// attributes can be listed, while stamping asks a file to store one, so it is the first
+// refusal rather than the only one.
 func probeXattrs(xattr xattrCalls, fd int) error {
 	if _, err := xattr.list(fd, nil); isXattrUnsupported(err) {
-		return fmt.Errorf("the filesystem cannot carry extended attributes: %w", err)
+		return fmt.Errorf("%w: %w", ErrNoWatermarkSupport, err)
 	}
 	return nil
 }
@@ -230,10 +212,9 @@ func ownedByWatermark(xattr xattrCalls, fd int) (bool, error) {
 			return false, nil
 		}
 		if isXattrUnsupported(err) {
-			// Whether the filesystem carries xattrs was settled when the root was
-			// established, so this is not the place to decide it: report that the node
-			// cannot be verified and leave the custodian's state alone.
-			return false, fmt.Errorf("filesystem cannot carry the ownership watermark: %v", err)
+			// Settled when the root was established, so reaching this means the node
+			// moved under us. Wrapped, not reworded, so a caller can recognise it.
+			return false, fmt.Errorf("%w: %w", ErrNoWatermarkSupport, err)
 		}
 		return false, err
 	}

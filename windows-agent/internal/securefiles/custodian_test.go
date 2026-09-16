@@ -1,8 +1,7 @@
-// Cross-platform contract tests for the custodian: containment, fresh-start
-// creation, modes, error paths and constructor behavior must hold on every
-// platform, independent of how ownership is stamped (Windows EAs, the Linux
-// xattr watermark, or the attribute-less fallback). The platform mechanisms
-// themselves are verified in the tagged files of this package.
+// Cross-platform contract tests for the custodian: containment, fresh-start creation,
+// modes, error paths and constructor behavior must hold on every platform, independent
+// of how ownership is stamped (Windows EAs or the Linux xattr watermark). The platform
+// mechanisms themselves are verified in the tagged files of this package.
 
 package securefiles_test
 
@@ -14,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
-	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -211,7 +209,6 @@ func TestCustodian(t *testing.T) {
 			}
 
 			if tc.neverOpened {
-				require.False(t, c.IsDegraded(), "a custodian with no platform must not claim to be degraded")
 				require.NoError(t, c.CheckProjection(), "a custodian with no platform has nothing to report")
 			}
 
@@ -245,10 +242,6 @@ func TestCustodianErrors(t *testing.T) {
 		// The case is skipped on Windows (the read-only attribute on directories
 		// does not block child removal) and when running as root.
 		readOnlyRoot bool
-
-		// onlyStampedPlatforms skips the case on platforms without a watermark,
-		// where the fallback predicate recognises every node without error.
-		onlyStampedPlatforms bool
 
 		// wantEscape requires the operation to fail with ErrPathEscapes;
 		// otherwise any error is accepted unless noErr is set.
@@ -297,7 +290,6 @@ func TestCustodianErrors(t *testing.T) {
 		},
 		"IsOwned on a missing node fails": {
 			op: "isowned", path: "missing.txt",
-			onlyStampedPlatforms: true,
 		},
 
 		"Purge on a closed custodian fails":   {op: "purge", closeFirst: true},
@@ -321,9 +313,6 @@ func TestCustodianErrors(t *testing.T) {
 
 			if tc.readOnlyRoot && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
 				t.Skip("read-only directory semantics require a non-root Unix user")
-			}
-			if tc.onlyStampedPlatforms && runtime.GOOS != "windows" && runtime.GOOS != "linux" {
-				t.Skip("platforms without a watermark recognise every node")
 			}
 
 			dir := t.TempDir()
@@ -426,55 +415,6 @@ func TestOpenErrors(t *testing.T) {
 			c, err := securefiles.Open(base)
 			require.Error(t, err)
 			require.Nil(t, c)
-		})
-	}
-}
-
-// TestDegradedCustodianServesAndReports pins ADR 2.02: a filesystem that cannot carry
-// the watermark degrades the custodian loudly but never closes it. Nodes keep being
-// written and read, and the finding is held for CheckProjection rather than logged,
-// because the custodian is opened before the agent has a log to write to. What the
-// ownership predicate makes of an unverifiable node is pinned per platform, in
-// watermark_windows_test.go and watermark_linux_test.go.
-// Not parallel, and neither are its cases: the assertion that the custodian stays
-// silent reads the global logrus hook, which any test running beside it would fill.
-func TestDegradedCustodianServesAndReports(t *testing.T) {
-	testCases := map[string]struct {
-		// degraded marks the filesystem as unable to carry the watermark.
-		degraded bool
-
-		wantGaps error
-	}{
-		"a healthy sub-tree serves and reports nothing": {},
-		"a degraded sub-tree serves and reports the gap": {
-			degraded: true,
-			wantGaps: securefiles.ErrDegraded,
-		},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			dir := t.TempDir()
-			hook := test.NewGlobal()
-			defer hook.Reset()
-
-			c, err := securefiles.Open(dir)
-			require.NoError(t, err, "Setup: could not open custodian")
-			defer func() { _ = c.Close() }()
-
-			c.SetDegraded(tc.degraded)
-			require.Equal(t, tc.degraded, c.IsDegraded(), "unexpected degraded state")
-
-			// Serving is the claim; what a write publishes is pinned in TestWriteFile.
-			require.NoError(t, c.WriteFile("served.txt", []byte("content")), "a degraded sub-tree must still serve")
-
-			require.Empty(t, hook.AllEntries(), "the custodian must not log; it reports through CheckProjection")
-
-			if tc.wantGaps == nil {
-				require.NoError(t, c.CheckProjection(), "a healthy sub-tree has nothing to report")
-				return
-			}
-			require.ErrorIs(t, c.CheckProjection(), tc.wantGaps, "a degraded sub-tree must be reported")
 		})
 	}
 }

@@ -125,20 +125,26 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
     tamperable by the WSL user (accepted limitation); an adopted root is stamped without first
     establishing that the custodian wrote it, and directories nested under it survive unstamped.
 
-### 2.02 - Stamping failure degrades loudly rather than blocking the agent
+### 2.02 - A sub-tree that cannot be stamped is refused, not served
 
-* **Problem/Context**: Where `%UserProfile%` is redirected to a filesystem that cannot carry
-  Extended Attributes, stamping fails and the Public Directory cannot be secured at all.
-* **Decision**: Proceed with unstamped nodes and report the degraded state at error level on every
-  startup rather than refusing to serve. The path is a fixed contract with wsl-pro-service, so
-  relocating is not an option, and this is a hardening feature: failing closed would break users who
-  work today to protect them from an exposure they already have.
+* **Problem/Context**: Where the Public Directory cannot carry Extended Attributes, nothing in it is
+  projected as root-owned, so the Pro token and Landscape registration key it holds are readable and
+  writable by every unprivileged process in every instance.
+* **Decision**: Refuse to open the sub-tree and fail with that reason, rather than serving it
+  unstamped. Serving is publishing the credentials the system exists to protect, which is worse than
+  not serving. The statuses that mean this are measured, not assumed: creation answers
+  `STATUS_EAS_NOT_SUPPORTED`, adoption answers `STATUS_INVALID_DEVICE_REQUEST`, and
+  `STATUS_INVALID_PARAMETER` is excluded because our own wrong call would produce it. Every other
+  failure was already reported, so this removes the single exception rather than adding a rule.
 * **Consequences**:
-  - Positive: No regression for affected users; the condition is visible rather than silent; nothing
-    is made worse than the pre-existing behaviour.
-  - Negative: The security property is best-effort on those machines, where the shared client key
-    stays readable by any process in any instance; fail-closed remains the intended end state once
-    field data shows whether the condition ever occurs, so this record is provisional.
+  - Positive: The guarantee holds wherever the agent runs at all, so consumers can rely on it without
+    a channel for asking whether it held; the failure names its cause and is one support question
+    from a root cause; the fail-open path and its state are gone, which is where most of this
+    component's defects were found.
+  - Negative: A user whose profile cannot carry the attributes loses the agent entirely rather than
+    partially, and the population is unmeasured; the reachable case needs a profile on a filesystem
+    Windows does not support for profiles, since NTFS and ReFS both carry them.
+
 
 ## 3. Integration
 

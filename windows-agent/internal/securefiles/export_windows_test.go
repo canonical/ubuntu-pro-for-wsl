@@ -10,8 +10,7 @@ package securefiles
 import "golang.org/x/sys/windows"
 
 // OpenRefusingStamp opens a custodian on a platform whose extended-attribute writes fail
-// from the outset, standing in for a volume that refuses them. It drives the transition
-// ADR 2.02 governs: stamping refused, degrade loudly, never fail closed.
+// from the outset, standing in for a volume that refuses them.
 func OpenRefusingStamp(basePath string, status uint32) (*Custodian, error) {
 	return open(basePath, func(p string) (*platformSys, error) {
 		nt := realNtCalls()
@@ -21,9 +20,7 @@ func OpenRefusingStamp(basePath string, status uint32) (*Custodian, error) {
 }
 
 // OpenRefusingCreation opens a custodian whose root creation fails with status, standing
-// in for a pre-existing directory whose ACL denies the access the stamp needs. Only a
-// filesystem that cannot carry extended attributes may be adopted unstamped (ADR 2.02);
-// anything else has to reach the caller.
+// in for a volume or an ACL that refuses the node the stamp needs.
 func OpenRefusingCreation(basePath string, status uint32) (*Custodian, error) {
 	return open(basePath, func(p string) (*platformSys, error) {
 		nt := realNtCalls()

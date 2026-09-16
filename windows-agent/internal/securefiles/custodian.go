@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 )
@@ -34,11 +33,14 @@ var (
 	// not the one it created and stamped, meaning the path was redirected in between.
 	ErrRootReplaced = errors.New("root directory was replaced between creation and open")
 
-	// ErrDegraded is reported by CheckProjection when the sub-tree cannot be stamped at all.
-	ErrDegraded = errors.New("sub-tree cannot be stamped")
+	// ErrNoWatermarkSupport reports a filesystem that cannot carry the ownership
+	// watermark. Nothing on it can be projected as root-owned inside an instance, so the
+	// custodian refuses rather than publishing the agent's credentials unprotected.
+	ErrNoWatermarkSupport = errors.New("filesystem cannot carry the ownership watermark")
 	// ErrRemoteVolume is reported by CheckProjection when the sub-tree lives on a volume
 	// this machine does not own. Stamping succeeds there and the attribute is stored
-	// faithfully, but the projection does not honour it, so the guarantee does not hold.
+	// faithfully; what cannot be verified from here is what an instance makes of it,
+	// which is why this is reported rather than refused like ErrNoWatermarkSupport.
 	ErrRemoteVolume = errors.New("sub-tree is on a remote volume")
 )
 
@@ -77,16 +79,11 @@ func (c *Custodian) Close() error {
 	return errors.Join(errs...)
 }
 
-// IsDegraded reports whether the custodian is operating in degraded mode.
-func (c *Custodian) IsDegraded() bool {
-	if c.sys != nil {
-		return c.sys.isDegraded()
-	}
-	return false
-}
-
 // CheckProjection reports every condition under which the sub-tree keeps serving without
-// the Secure Projection it promises (ADR 2.02), joining each that applies, or nil.
+// the Secure Projection it promises, joining each that applies, or nil. A sub-tree that
+// cannot be stamped never gets this far: Open refuses it (ADR 2.02). What remains is the
+// condition no check on this machine can refuse, because the stamp is stored faithfully
+// and only the projection inside an instance ignores it.
 //
 // It reports rather than logs because it cannot know where its findings belong: the agent
 // opens its public directory before it has a log file to put inside it. The caller decides
@@ -97,11 +94,6 @@ func (c *Custodian) IsDegraded() bool {
 // path that serves requests.
 func (c *Custodian) CheckProjection() error {
 	var errs []error
-
-	if cause := c.degradationCause(); cause != nil {
-		errs = append(errs, fmt.Errorf("%w: %s cannot carry the ownership watermark, so what instances see is not projected as root-owned: %w",
-			ErrDegraded, c.BasePath(), cause))
-	}
 
 	// Classify where the sub-tree really is, not where it was named: a directory in the
 	// profile can be a link to a share, and then the name says "C:" while the bytes do not.
@@ -117,7 +109,7 @@ func (c *Custodian) CheckProjection() error {
 		if where != c.basePath {
 			location = fmt.Sprintf("%s, resolving to %s", kind, where)
 		}
-		errs = append(errs, fmt.Errorf("%w: %s is on %s; the ownership stamp is stored there but the projection inside instances does not honour it, so nodes are exposed to unprivileged processes even though stamping succeeds", ErrRemoteVolume, c.basePath, location))
+		errs = append(errs, fmt.Errorf("%w: %s is on %s; the ownership stamp is stored there faithfully, but the projection may not honour it", ErrRemoteVolume, c.basePath, location))
 	}
 
 	return errors.Join(errs...)
@@ -160,9 +152,8 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	// The child is derived from the parent's handle, never from its absolute path:
 	// re-resolving the path here would walk components outside the parent's
 	// containment, following any reparse point planted along the way.
-	// The child shares the parent's degradation record and its syscall table: the record
-	// because the loss of the watermark is a fact about the volume they both sit on, the
-	// table so that what a test substitutes on a parent still holds for its sub-trees.
+	// The child shares the parent's syscall table, so that what a test substitutes on a
+	// parent still holds for the sub-trees it hands out.
 	subSys := newSubPlatformSys(c.sys)
 	if err := subSys.setRoot(subRoot); err != nil {
 		subRoot.Close()
@@ -398,47 +389,6 @@ func open(basePath string, newSys func(string) (*platformSys, error)) (*Custodia
 	}
 
 	return c, nil
-}
-
-// degradation is the tree-wide record of what first proved that the filesystem cannot
-// carry the watermark. The root and every sub-custodian share one: carrying extended
-// attributes is a property of the volume, and no sub-tree can be on another volume,
-// because the root refuses reparse points and a sub-tree root is opened from the parent's
-// own handle rather than re-resolved by path. A sub-tree discovering the loss is the tree
-// discovering it.
-//
-// A nil cause means healthy: degraded without a reason cannot be represented.
-type degradation struct {
-	mu    sync.Mutex
-	first error
-}
-
-// note keeps the first cause and ignores the rest: later failures are the same fact
-// about the volume, observed again somewhere else.
-func (d *degradation) note(err error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	if d.first == nil {
-		d.first = err
-	}
-}
-
-// cause returns what first prevented stamping, or nil while the sub-tree is healthy.
-func (d *degradation) cause() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	return d.first
-}
-
-// degradationCause returns what first prevented stamping anywhere in this custodian's
-// tree, or nil while it is healthy.
-func (c *Custodian) degradationCause() error {
-	if c.sys == nil {
-		return nil
-	}
-	return c.sys.deg.cause()
 }
 
 // resolvedBasePath returns the sub-tree root as the filesystem finally names it, or ""
