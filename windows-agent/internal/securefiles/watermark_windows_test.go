@@ -35,8 +35,6 @@ func TestWindowsEaWatermark(t *testing.T) {
 		// rewriteEa replaces the node's attributes after it is written, standing in for
 		// an instance taking ownership, or for a stamp that decodes but proves nothing.
 		rewriteEa []winio.ExtendedAttribute
-		// degraded marks the filesystem as unable to carry the stamp before the query.
-		degraded  bool
 		wantOwned bool
 		wantErr   bool
 	}{
@@ -67,13 +65,6 @@ func TestWindowsEaWatermark(t *testing.T) {
 				{Name: "$LXMOD", Value: []byte{0, 0}},
 			},
 		},
-
-		// Degradation is not an answer about ownership. A filesystem that cannot carry
-		// the attributes leaves every node unverifiable, so the predicate keeps reporting
-		// the query failure instead of adopting the node: deciding that an unverifiable
-		// sub-tree is "ours" is the caller's policy, and pinning it here keeps that policy
-		// from drifting back into the platform layer.
-		"an unstamped node, degraded": {raw: true, degraded: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -105,10 +96,6 @@ func TestWindowsEaWatermark(t *testing.T) {
 				require.NoError(t, err, "Setup: could not encode the attributes")
 				require.NoError(t, setEaFile(h, buf), "Setup: could not rewrite the attributes")
 				closeHandle(h)
-			}
-
-			if tc.degraded {
-				c.SetDegraded(true)
 			}
 
 			owned, err := c.IsOwned(node)

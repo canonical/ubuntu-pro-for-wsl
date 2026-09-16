@@ -79,8 +79,6 @@ func TestWindowsStamping(t *testing.T) {
 				stamped = filepath.Join(rootDir, tc.renameTo)
 			}
 
-			require.False(t, cust.IsDegraded(), "stamping a usable filesystem must not degrade the custodian")
-
 			uid, gid, mode, err := securefilestest.ReadLxAttributes(stamped)
 			require.NoError(t, err, "the node must carry the stamp")
 			require.Equal(t, uint32(0), uid, "the stamp must claim root as owner")

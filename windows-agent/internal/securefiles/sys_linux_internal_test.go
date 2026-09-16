@@ -1,9 +1,8 @@
 //go:build linux
 
-// Unit tests for the Linux watermark internals: the error classifiers that
-// distinguish "watermark missing" (not owned) from "xattrs unsupported"
-// (degraded, fail-open), and the degraded-mode transitions driven through the
-// swappable syscall hooks (mirroring sys_windows.go's testNtSetEaFileResult).
+// Unit tests for the Linux watermark internals: the error classifiers that distinguish
+// "watermark missing" (not owned) from "xattrs unsupported" (refused, ADR 2.02), driven
+// through the swappable syscall hooks that stand in for filesystems this machine lacks.
 
 package securefiles
 
@@ -30,52 +29,44 @@ func TestXattrErrorClassification(t *testing.T) {
 	require.False(t, isXattrMissing(nil))
 }
 
-// TestXattrDegradedTransitions drives the failure paths of the xattr watermark by
-// swapping the syscall hooks. Whether the filesystem carries xattrs is settled once, when
-// the root is established, so a read never changes it: the predicate reports that a node
-// cannot be verified and leaves the decision to the caller. It is intentionally not
-// parallel: the hooks are package-level state.
-func TestXattrDegradedTransitions(t *testing.T) {
+// TestXattrFailures pins that a filesystem which cannot carry the watermark is refused
+// rather than served. The agent's credentials live in this sub-tree, so a sub-tree no
+// instance sees as root-owned would publish them to every unprivileged process; refusing
+// is the only answer that does not. Failures with any other cause are reported as they are.
+func TestXattrFailures(t *testing.T) {
 	testCases := map[string]struct {
-		// probeErr makes the support probe fail, before the root is established.
+		// probeErr fails the support probe, before the root is established.
 		probeErr error
-		// setErr and getErr make the respective syscall fail with the given error.
+		// setErr and getErr fail the respective syscall once the root is up.
 		setErr error
 		getErr error
 
-		// precreate writes a stamped file before enabling the hooks.
+		// precreate writes a stamped file before the hooks are installed.
 		precreate bool
 
 		// op is the operation under test: "write", "isowned", "rename", or "" for none.
 		op string
 
-		wantErr      bool
-		wantOwned    bool
-		wantDegraded bool
-		// wantCause is what CheckProjection must relay. A sub-tree born on a filesystem
-		// without attributes names the probe that found out, so that every degradation
-		// carries a reason and "degraded for no stated reason" cannot be represented.
-		wantCause string
+		wantOpenErr bool
+		wantErr     bool
 	}{
-		"a filesystem without xattrs is degraded from the start": {
-			probeErr:     unix.ENOTSUP,
-			wantDegraded: true,
-			wantCause:    "the filesystem cannot carry extended attributes",
+		"a filesystem without xattrs is refused at Open": {
+			probeErr:    unix.ENOTSUP,
+			wantOpenErr: true,
 		},
-		"write degrades and falls back when xattrs are unsupported": {
-			setErr:       unix.ENOTSUP,
-			op:           "write",
-			wantDegraded: true,
-			// The node named is the atomic temporary WriteFile stamps before publishing,
-			// so the cause asserted here is the reason rather than the transient name.
-			wantCause: "operation not supported",
+		// The probe lists attributes on a directory while stamping stores one on a file,
+		// so a filesystem can pass the first and refuse the second. The write refuses too.
+		"a write the filesystem cannot stamp fails": {
+			setErr:  unix.ENOTSUP,
+			op:      "write",
+			wantErr: true,
 		},
-		"write fails when stamping fails for another reason": {
+		"a write that fails to stamp for another reason fails": {
 			setErr:  unix.EPERM,
 			op:      "write",
 			wantErr: true,
 		},
-		"isOwned reports an unverifiable node without degrading": {
+		"isOwned reports a node whose watermark cannot be read": {
 			getErr:    unix.ENOTSUP,
 			precreate: true,
 			op:        "isowned",
@@ -87,8 +78,8 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			op:        "isowned",
 			wantErr:   true,
 		},
-		// Rename verifies ownership through the same reader, so a filesystem that cannot
-		// answer stops the rename rather than letting it proceed unverified.
+		// Rename verifies ownership through the same reader, so a node that cannot answer
+		// stops the rename rather than being published unverified.
 		"rename fails when reading the watermark fails": {
 			getErr:    unix.EPERM,
 			precreate: true,
@@ -108,6 +99,11 @@ func TestXattrDegradedTransitions(t *testing.T) {
 
 			dir := t.TempDir()
 			c, err := OpenWithXattrs(dir, openCalls)
+			if tc.wantOpenErr {
+				require.ErrorIs(t, err, ErrNoWatermarkSupport, "a filesystem that cannot carry the watermark must be refused")
+				require.Nil(t, c, "no custodian may be handed out for a sub-tree that cannot be secured")
+				return
+			}
 			require.NoError(t, err, "Setup: could not open custodian")
 			defer func() { _ = c.Close() }()
 
@@ -125,16 +121,11 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			c.FailXattr(opCalls)
 
 			var opErr error
-			owned := false
 			switch tc.op {
-			case "":
 			case "write":
 				opErr = c.WriteFile("f.txt", []byte("x"))
-				if opErr == nil {
-					owned, opErr = c.IsOwned("f.txt")
-				}
 			case "isowned":
-				owned, opErr = c.IsOwned("f.txt")
+				_, opErr = c.IsOwned("f.txt")
 			case "rename":
 				opErr = c.Rename("f.txt", "moved.txt")
 			default:
@@ -142,17 +133,10 @@ func TestXattrDegradedTransitions(t *testing.T) {
 			}
 
 			if tc.wantErr {
-				require.Error(t, opErr)
-			} else {
-				require.NoError(t, opErr)
+				require.Error(t, opErr, "the operation must not succeed unstamped")
+				return
 			}
-			require.Equal(t, tc.wantOwned, owned)
-			require.Equal(t, tc.wantDegraded, c.IsDegraded())
-			if tc.wantCause == "" {
-				require.NoError(t, c.degradationCause(), "nothing new should have been recorded")
-			} else {
-				require.ErrorContains(t, c.degradationCause(), tc.wantCause, "unexpected recorded cause")
-			}
+			require.NoError(t, opErr)
 		})
 	}
 }
