@@ -172,11 +172,10 @@ func (a *App) serve(ctx context.Context, opt options) error {
 	a.proServices = &proservices
 
 	// Reported here, not when the log was opened: the sub-trees the components use are
-	// created by proservices.New, and a filesystem that cannot carry the watermark may
-	// only prove it when one of them is first stamped. The record is shared across the
-	// tree, so asking the root now covers every sub-tree it handed out. ADR 2.02 keeps
-	// the agent serving through this, which is exactly why it must be said out loud
-	// every startup: nothing else will reveal that the public directory is unsecured.
+	// created by proservices.New. A sub-tree that cannot be stamped has already refused
+	// to open by now (ADR 2.02), so what is left to report is the condition no check on
+	// this machine can refuse: a volume that stores the stamp faithfully while the
+	// projection inside instances ignores it. Nothing else will reveal that.
 	if gaps := a.publicDir.CheckProjection(); gaps != nil {
 		log.Errorf(ctx, "The public directory is not fully secured: %v", gaps)
 	}

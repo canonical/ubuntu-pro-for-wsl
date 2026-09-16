@@ -22,8 +22,6 @@ type platformSys struct {
 	root       *os.Root
 	rootFile   *os.File
 	rootHandle windows.Handle
-	// deg is shared with every sub-custodian derived from this one.
-	deg *degradation
 
 	// rootID identifies the directory ensureRoot created and stamped, so that the
 	// separate reopen in setRoot can be checked against it. Unset for sub-custodians,
@@ -107,7 +105,6 @@ func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 	s := &platformSys{
 		rootHandle: windows.InvalidHandle,
 		nt:         nt,
-		deg:        &degradation{},
 	}
 
 	if err := s.ensureRoot(basePath); err != nil {
@@ -120,12 +117,11 @@ func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
 // already created and stamped. It deliberately does no path walk of its own: the node is
 // reached through the parent's root handle, and re-resolving its absolute path here would
-// step outside the containment the parent established. Degradation is inherited because
-// it describes the filesystem, not the node.
+// step outside the containment the parent established. The syscall surface is shared so a
+// seam installed on the parent reaches the sub-tree it hands out.
 func newSubPlatformSys(parent *platformSys) *platformSys {
 	return &platformSys{
 		rootHandle: windows.InvalidHandle,
-		deg:        parent.deg,
 		nt:         parent.nt,
 	}
 }
@@ -140,10 +136,6 @@ func (s *platformSys) stampSubdir(rel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.isDegraded() {
-		return nil
-	}
-
 	eaBuf, err := encodeLxEa(0, 0, 040700)
 	if err != nil {
 		return err
@@ -157,10 +149,7 @@ func (s *platformSys) stampSubdir(rel string) error {
 	defer closeHandle(handle)
 
 	if err := s.nt.setEaFile(handle, eaBuf); err != nil {
-		if !eaUnsupported(err) {
-			return mapNtStatus(err)
-		}
-		s.deg.note(fmt.Errorf("could not stamp the sub-directory %s: %w", rel, err))
+		return fmt.Errorf("could not stamp the sub-directory %s: %w", rel, mapNtStatus(err))
 	}
 
 	return nil
@@ -247,32 +236,20 @@ func (s *platformSys) ensureRoot(basePath string) error {
 
 	err = s.nt.createFile(&handle, desiredAccess, oa, &iosb, fileAttributes, shareAccess, disposition, createOptions, eaBuf)
 	if err != nil {
-		// Only a filesystem that cannot carry extended attributes may be adopted unstamped
-		// (ADR 2.02). Anything else refusing this call — an ACL, a filter driver, a
-		// sharing violation — leaves a directory that could have been stamped, and the
-		// fallback hides all of them, because os.MkdirAll succeeds on a directory already
-		// there: the custodian would serve an unstamped root reporting nothing wrong.
-		//
-		// A root behind a junction or symlink takes the same road out, and must:
-		// OBJ_DONT_REPARSE is what failed this call rather than follow the link, and the
-		// fallback would undo that in one line, leaving setRoot no identity to compare.
-		if !eaUnsupported(err) {
-			return mapNtStatus(err)
-		}
-
-		s.deg.note(fmt.Errorf("could not create the root with its ownership stamp: %w", err))
-		return os.MkdirAll(basePath, DirMode)
+		// A root that cannot be stamped is refused, not adopted. Everything it would hold
+		// is a credential the agent manages, and a sub-tree no instance sees as root-owned
+		// publishes those to every unprivileged process in every instance. Refusing is
+		// also what keeps a redirected root refused: OBJ_DONT_REPARSE is what failed this
+		// call rather than follow a link standing where the root should be.
+		return mapNtStatus(err)
 	}
 
 	// If opening a pre-existing root directory (iosb.Information == 1 -> FILE_OPENED),
 	// NtCreateFile does not apply the eaBuf parameter. Stamp EA via NtSetEaFile.
 	if iosb.Information == 1 /* FILE_OPENED */ {
 		if err := s.nt.setEaFile(handle, eaBuf); err != nil {
-			if !eaUnsupported(err) {
-				closeHandle(handle)
-				return mapNtStatus(err)
-			}
-			s.deg.note(fmt.Errorf("could not stamp the pre-existing root: %w", err))
+			closeHandle(handle)
+			return fmt.Errorf("could not stamp the pre-existing root: %w", mapNtStatus(err))
 		}
 	}
 
@@ -295,16 +272,11 @@ func (s *platformSys) Close() error {
 	return nil
 }
 
-func (s *platformSys) isDegraded() bool {
-	return s.deg.cause() != nil
-}
-
 // isOwned reports whether the node at rel carries the agent's watermark: the
 // $LXUID/$LXGID/$LXMOD stamp queried through NtQueryEaFile, for exactly the values the
-// custodian writes. It never answers on behalf of a filesystem that cannot carry them:
-// there the query fails and ownership is unknowable rather than true. Callers consult
-// isDegraded first and decide what an unverifiable sub-tree means, because reading an
-// unknowable answer as "ours" or "foreign" is policy, not a fact this predicate has.
+// custodian writes. A node whose watermark cannot be read is not owned: the query failing
+// is an answer about that node, and a filesystem that cannot carry watermarks at all never
+// reaches here, because Open refuses it.
 func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -329,10 +301,6 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	mode := stampedFileMode()
 	if isDir {
 		mode = uint32(040700)
-	}
-
-	if s.isDegraded() {
-		return fallbackCreate(s.root, relativePath, isDir)
 	}
 
 	eaBuf, err := encodeLxEa(0, 0, mode)
@@ -364,12 +332,6 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	ntErr := s.nt.createFile(&handle, desiredAccess, oa, &iosb, fileAttributes, shareAccess, createDisposition, createOptions, eaBuf)
 
 	if ntErr != nil {
-		// A filesystem that will not take the attribute buffer degrades and falls back;
-		// every other failure, a redirected path above all, is reported as it is.
-		if eaUnsupported(ntErr) {
-			s.deg.note(fmt.Errorf("could not create %s with its ownership stamp: %w", relativePath, ntErr))
-			return fallbackCreate(s.root, relativePath, isDir)
-		}
 		return mapNtStatus(ntErr)
 	}
 
@@ -418,10 +380,6 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.isDegraded() {
-		return s.root.Rename(oldRel, newRel)
-	}
-
 	handle, err := s.openExisting(oldRel, windows.GENERIC_READ|windows.GENERIC_WRITE|windows.DELETE, 0, 0)
 	if err != nil {
 		return err
@@ -431,11 +389,9 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	// Ensure the source node is already owned. Stamping in place after rename is
 	// rejected because it leaves a window where unstamped content is published
 	// and cannot revoke descriptors already open on the source.
-	if !s.isDegraded() {
-		uid, gid, mode, err := ntQueryLxEa(handle)
-		if err != nil || uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
-			return ErrNotOwned
-		}
+	uid, gid, mode, err := ntQueryLxEa(handle)
+	if err != nil || uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
+		return ErrNotOwned
 	}
 
 	// Resolve the destination parent directory handle safely without following reparse points.
@@ -484,34 +440,29 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	return mapNtStatus(errSet)
 }
 
-// eaUnsupported reports whether a status means the filesystem cannot carry extended
-// attributes at all, rather than this write having been refused. Only the first is what
-// ADR 2.02 keeps serving through; calling a refusal "degraded" claims the machine cannot
-// be secured when something merely stopped us securing it.
+// mapNtStatus translates an NT status into a Go error, recognising the two conditions the
+// custodian names for itself: a rooted, OBJ_DONT_REPARSE syscall blocked by a symlink
+// crossing the custodian root, and a filesystem that cannot carry the watermark at all.
 //
-// Measured against a volume that cannot store them, not assumed: creating a node with an
-// attribute buffer answers STATUS_EAS_NOT_SUPPORTED, setting one on a node already there
-// answers STATUS_INVALID_DEVICE_REQUEST. Adoption only ever sees the second, and a
-// sub-tree left by an earlier run is always adopted.
-//
-// STATUS_INVALID_PARAMETER is excluded on purpose: no such volume returns it, but our own
-// buffer or flags would if they ever became wrong, and absorbing that would fail open on
-// every machine at once. A malformed buffer answers STATUS_EA_LIST_INCONSISTENT.
-func eaUnsupported(err error) bool {
-	return errors.Is(err, windows.STATUS_EAS_NOT_SUPPORTED) ||
-		errors.Is(err, windows.STATUS_INVALID_DEVICE_REQUEST) ||
-		errors.Is(err, windows.STATUS_NOT_SUPPORTED)
-}
-
-// mapNtStatus translates an NT status into a Go error, recognising the
-// reparse-blocked signal a rooted, OBJ_DONT_REPARSE syscall produces when a
-// symlink component crosses the custodian root.
+// The statuses for the second were measured against a volume that cannot store extended
+// attributes, not assumed: creating a node with an attribute buffer answers
+// STATUS_EAS_NOT_SUPPORTED, while setting one on a node already there answers
+// STATUS_INVALID_DEVICE_REQUEST. Adoption only ever sees the second, and a sub-tree left
+// by an earlier run is always adopted. STATUS_INVALID_PARAMETER is excluded on purpose: no
+// such volume returns it, but our own buffer or flags would if they ever became wrong, and
+// reading that as a property of the filesystem would blame the machine for our mistake. A
+// malformed buffer answers STATUS_EA_LIST_INCONSISTENT.
 func mapNtStatus(err error) error {
 	if err == nil {
 		return nil
 	}
 	if errors.Is(err, windows.STATUS_STOPPED_ON_SYMLINK) || errors.Is(err, windows.STATUS_REPARSE_POINT_ENCOUNTERED) {
 		return ErrPathEscapes
+	}
+	if errors.Is(err, windows.STATUS_EAS_NOT_SUPPORTED) ||
+		errors.Is(err, windows.STATUS_INVALID_DEVICE_REQUEST) ||
+		errors.Is(err, windows.STATUS_NOT_SUPPORTED) {
+		return fmt.Errorf("%w: %w", ErrNoWatermarkSupport, err)
 	}
 	var ntstatus windows.NTStatus
 	if errors.As(err, &ntstatus) {
@@ -672,17 +623,6 @@ func isUnsupportedInfoClass(err error) bool {
 		errors.Is(err, windows.STATUS_NOT_SUPPORTED) ||
 		errors.Is(err, windows.STATUS_INVALID_INFO_CLASS) ||
 		errors.Is(err, windows.STATUS_NOT_IMPLEMENTED)
-}
-
-func fallbackCreate(root *os.Root, rel string, isDir bool) error {
-	if isDir {
-		return root.Mkdir(rel, DirMode)
-	}
-	f, err := root.OpenFile(rel, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FileMode)
-	if err != nil {
-		return err
-	}
-	return f.Close()
 }
 
 // stampedFileMode returns the Extended Attribute file mode including the file type bits.

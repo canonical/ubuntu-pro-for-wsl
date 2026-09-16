@@ -27,8 +27,6 @@ func TestLinuxXattrWatermark(t *testing.T) {
 		dir bool
 		// chmod widens the mode after the write, invalidating the watermark.
 		chmod bool
-		// degraded marks the filesystem as unable to carry the watermark before the query.
-		degraded bool
 
 		wantOwned bool
 	}{
@@ -36,8 +34,6 @@ func TestLinuxXattrWatermark(t *testing.T) {
 		"a node written behind its back": {raw: true},
 		"a directory":                    {dir: true},
 		"a node whose mode was changed":  {chmod: true},
-		"a stamped node, degraded":       {degraded: true, wantOwned: true},
-		"an unstamped node, degraded":    {raw: true, degraded: true},
 	}
 
 	for name, tc := range testCases {
@@ -62,14 +58,6 @@ func TestLinuxXattrWatermark(t *testing.T) {
 			if tc.chmod {
 				//nolint:gosec // G302 - the test intentionally widens the mode to invalidate the watermark.
 				require.NoError(t, os.Chmod(filepath.Join(dir, node), 0644), "Setup: could not change the mode")
-			}
-
-			// Degradation is not an answer about ownership, mirroring the Windows
-			// predicate: a filesystem that cannot carry the watermark leaves every node
-			// judged on what it still carries, and deciding what that means is the
-			// caller's policy, not this predicate's.
-			if tc.degraded {
-				c.SetDegraded(true)
 			}
 
 			owned, err := c.IsOwned(node)
