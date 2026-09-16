@@ -113,8 +113,8 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   call-site convention. Pre-existing directory roots are adopted and stamped in place, since that
   revokes unprivileged creation and deletion inside them; files are replaced rather than repaired,
   since stamping cannot revoke descriptors already open; directories nested under an adopted root
-  are left alone, so a collision is reported rather than silently deleted. A plain `os` fallback on
-  non-Windows keeps the cross-platform build and test working.
+  are left alone, so a collision is reported rather than silently deleted. A user-xattr watermark
+  on non-Windows mirrors the ownership checks for cross-platform build and test coverage.
 * **Consequences**:
   - Positive: Confidentiality/integrity/availability hold inside every instance; a node the
     custodian creates is never visible unstamped; `common/certs` stays a pure in-memory generator,
