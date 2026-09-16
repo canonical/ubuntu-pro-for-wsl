@@ -302,12 +302,9 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 	switch err := c.Rename("log", "log.old"); {
 	case err == nil, errors.Is(err, os.ErrNotExist):
 		// Nothing is left under the name, so the log below is created and stamped.
-	case errors.Is(err, securefiles.ErrNotOwned):
-		// A log left by a version predating the custodian, or planted from an instance.
-		// It cannot be rotated, and appending would keep the agent writing into a node
-		// instances can read and write while the projection check reports the sub-tree
-		// healthy. ADR 2.01 replaces what the custodian cannot vouch for, and nothing
-		// here is worth preserving: whatever can write that node can forge what it says.
+	case errors.Is(err, securefiles.ErrNotOwned), errors.Is(err, securefiles.ErrPathEscapes):
+		// A log left by a version predating the custodian, planted from an instance,
+		// or represented by a reparse point is not safe to append to.
 		log.Warningf(ctx, "Replacing a log file this agent does not own: %v", err)
 		mode = securefiles.Replace
 	default:
