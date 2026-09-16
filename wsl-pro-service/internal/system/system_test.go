@@ -384,7 +384,7 @@ func (b *proAttachSpyBackend) ProExecutable(ctx context.Context, args ...string)
 }
 
 func TestProAttach(t *testing.T) {
-	// Not calling t.Parallel() on the parent because subtests use t.Setenv to simulate temp file failure.
+	// Not calling t.Parallel() on the parent because subtests modify shared state (temporary directory and rlimit).
 
 	testCases := map[string]struct {
 		proErr         bool
@@ -417,8 +417,7 @@ func TestProAttach(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			_, mock := testutils.MockSystem(t)
 			if tc.invalidTmpDir {
-				// t.Setenv cannot be called with t.Parallel()
-				t.Setenv("TMPDIR", "/nonexistent/directory/that/does/not/exist")
+				system.SetProAttachTmpDirForTest(t, "/nonexistent/directory/that/does/not/exist")
 			} else if tc.writeErr {
 				// Setting RLIMIT_FSIZE process-wide cannot be run in parallel with other subtests
 				var origLimit syscall.Rlimit

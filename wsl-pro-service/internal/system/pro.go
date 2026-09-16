@@ -31,6 +31,10 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 	return attachedStatus.Attached, nil
 }
 
+// By default we rely on systemd to make this /tmp folder private. For tests we keep our options
+// open via export_test SetProAttachTmpDirForTest() seam.
+var proAttachTmpDir = "/tmp"
+
 // ProAttach attaches the current distro to Ubuntu Pro.
 func (s *System) ProAttach(ctx context.Context, token string) (err error) {
 	defer decorate.OnError(&err, "pro attach")
@@ -47,10 +51,16 @@ func (s *System) ProAttach(ctx context.Context, token string) (err error) {
 		return fmt.Errorf("could not serialize attach config: %v", err)
 	}
 
-	tmpFile, err := os.CreateTemp("", "pro-attach-*.yaml")
+	tmpFile, err := os.CreateTemp(proAttachTmpDir, "pro-attach-*.yaml")
 	if err != nil {
 		return fmt.Errorf("could not create temporary attach config file: %v", err)
 	}
+	// Even if we fail to remove the temporary file, we are backed by systemd PrivateTmp
+	// configuration, that ensures that directory is private to our namespace and will be
+	// cleaned up automatically anyways. Logging this error could be an alternative but we don't
+	// log anything else in this file and leaking it's path in the journal might be even more
+	// undesirable than preserving it. Returning that error is not an option because it would
+	// mean returning errors even when we succeeded in attching to Pro.
 	defer os.Remove(tmpFile.Name())
 
 	_, err = tmpFile.Write(cfgData)

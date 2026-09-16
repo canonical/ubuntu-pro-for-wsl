@@ -327,6 +327,7 @@ func ProMock(t *testing.T) {
 				return exitBadUsage
 			}
 
+			// Proving that this executable has run
 			root := os.Getenv(FileSystemRoot)
 			if root == "" {
 				fmt.Fprintf(os.Stderr, "Missing environment variable %s\n", FileSystemRoot)

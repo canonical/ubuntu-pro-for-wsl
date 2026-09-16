@@ -1,5 +1,7 @@
 package system
 
+import "testing"
+
 const LandscapeConfigPath = landscapeConfigPath
 
 func (s *System) CmdExeCache() *string {
@@ -17,3 +19,13 @@ var ErrOddByteCount = errOddByteCount
 // surrogate pair doesn't meet the expected byte range, exported just for testing as it's only an
 // implementation detail.
 var ErrInvalidSurrogatePair = errInvalidSurrogatePair
+
+// SetProAttachTmpDirForTest overrides the directory used by ProAttach for creating the temporary attach config file.
+func SetProAttachTmpDirForTest(t *testing.T, dir string) {
+	t.Helper()
+	orig := proAttachTmpDir
+	proAttachTmpDir = dir
+	t.Cleanup(func() {
+		proAttachTmpDir = orig
+	})
+}
