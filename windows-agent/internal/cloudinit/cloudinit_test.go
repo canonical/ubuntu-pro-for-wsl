@@ -526,8 +526,6 @@ func TestStartupPurge(t *testing.T) {
 		seedDirs        []string
 		seedDangling    string
 		seedUnremovable string
-		// degraded marks the filesystem as unable to carry the watermark, after seeding.
-		degraded bool
 
 		// wantFiles must still hold exactly this content; wantGone must be absent
 		// entirely, whatever their shape; wantDirs must still be directories.
@@ -547,16 +545,6 @@ func TestStartupPurge(t *testing.T) {
 			seedStamped: map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
 			wantFiles:   map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
 		},
-		// Without extended attributes every node reads as unstamped. Purging on that
-		// basis would destroy the user's provisioning data on every startup.
-		"Keeps per-distro data when the watermark cannot be read": {
-			seedRaw:         map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
-			degraded:        true,
-			wantFiles:       map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
-			wantLogLevel:    logrus.ErrorLevel,
-			wantLogContains: "cannot carry the ownership watermark",
-		},
-
 		"Removes an unstamped unrecognised file": {
 			seedRaw:         map[string]string{"stale.txt": "planted"},
 			wantGone:        []string{"stale.txt"},
@@ -575,14 +563,6 @@ func TestStartupPurge(t *testing.T) {
 			wantGone:    []string{"LoneDistro.user-data"},
 		},
 
-		// Adoption without the watermark is unconditional for files, because nothing can
-		// distinguish ours from foreign. A directory is foreign by shape, so losing the
-		// watermark must not turn this sub-tree into somewhere directories survive.
-		"Purges a directory even when the watermark cannot be read": {
-			seedDirs: []string{"DirDistro.user-data"},
-			degraded: true,
-			wantGone: []string{"DirDistro.user-data"},
-		},
 		"Purges a directory named like a distro file": {
 			seedDirs: []string{"DirDistro.meta-data"},
 			wantGone: []string{"DirDistro.meta-data"},
@@ -652,16 +632,7 @@ func TestStartupPurge(t *testing.T) {
 				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
 			}
 
-			// Degrade after seeding: the data must predate the loss of the watermark,
-			// exactly as it does when a healthy profile is later moved to a filesystem
-			// without extended attributes. Only the report is overridden; every other
-			// call still reaches the real sub-tree on disk.
-			var dir cloudinit.Custodian = custodian
-			if tc.degraded {
-				dir = degradedCustodian{Custodian: custodian}
-			}
-
-			_, err = cloudinit.New(context.Background(), &mockConfig{proToken: "token"}, dir)
+			_, err = cloudinit.New(context.Background(), &mockConfig{proToken: "token"}, custodian)
 			require.NoError(t, err, "Setup: cloudinit.New should succeed")
 
 			// The agent's own file is published whatever else happened, which is also
@@ -703,12 +674,6 @@ func TestStartupPurge(t *testing.T) {
 	}
 }
 
-// degradedCustodian is a real custodian that reports a filesystem unable to carry the
-// watermark. Everything else is delegated, so the sub-tree under test is genuine.
-type degradedCustodian struct {
-	cloudinit.Custodian
-}
-
 // loggedAt reports whether the hook captured an entry at the given level containing substr.
 func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
 	for _, entry := range hook.AllEntries() {
@@ -718,5 +683,3 @@ func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
 	}
 	return false
 }
-
-func (degradedCustodian) IsDegraded() bool { return true }

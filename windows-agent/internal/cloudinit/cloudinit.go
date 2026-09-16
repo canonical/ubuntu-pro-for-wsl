@@ -23,11 +23,9 @@ type Config interface {
 }
 
 // Custodian is the part of a securefiles custodian this package depends on: a contained
-// sub-tree it can write to, ask about ownership, and sweep. It is declared here, by the
-// consumer, so the security component needs no test seam of its own to let these tests
-// reproduce a filesystem that cannot carry the watermark.
+// sub-tree it can write to, ask about ownership, and sweep. Declared here, by the consumer,
+// so this package names what it needs rather than depending on everything a custodian is.
 type Custodian interface {
-	IsDegraded() bool
 	IsOwned(relPath string) (bool, error)
 	Purge(isAllowed func(relPath string, isDir bool) bool) ([]string, error)
 	Remove(relPath string) error
@@ -93,35 +91,17 @@ type metadata struct {
 // startupPurge removes every node in the sub-tree that does not carry the agent's watermark
 // and regenerates the agent's own data file. Stamped nodes are left alone: cloud-init data is
 // consumed once, at first boot. The watermark is the whole adoption policy — an unstamped node
-// is foreign whatever its name.
-//
-// That holds only while the watermark can be read. Where the filesystem cannot carry extended
-// attributes every node looks unstamped, so purging on that basis would delete the user's
-// per-distro data every startup. Adoption is unconditional there, and the condition reported
-// instead of acted upon.
+// is foreign whatever its name, and the custodian refuses to open a sub-tree where that
+// question cannot be answered, so an unreadable watermark here is about the node.
 func (c CloudInit) startupPurge(ctx context.Context) error {
-	unverifiable := c.dir.IsDegraded()
-	if unverifiable {
-		log.Errorf(ctx, "cloud-init: filesystem cannot carry the ownership watermark, so foreign nodes are indistinguishable from ours: adopting the whole sub-tree unverified")
-	}
-
 	isOurs := func(rel string, isDir bool) bool {
 		// Directories are never adopted: this sub-tree legitimately holds files only.
 		// That judgement is structural, so it still holds without the watermark.
 		if isDir {
 			return false
 		}
-		if unverifiable {
-			return true
-		}
 		owned, err := c.dir.IsOwned(rel)
 		if err != nil {
-			// The filesystem may have degraded between the check above and this call.
-			// Deleting on an unverifiable answer is the one outcome we cannot undo.
-			if c.dir.IsDegraded() {
-				log.Errorf(ctx, "cloud-init: ownership of %q became unverifiable mid-purge, adopting it unverified: %v", rel, err)
-				return true
-			}
 			log.Warningf(ctx, "cloud-init: could not check ownership of %q: %v", rel, err)
 			return false
 		}
@@ -131,8 +111,7 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 	// A node judged foreign but left behind is reported, not fatal. Refusing to start
 	// leaves it exactly where it is, still there to be consumed by cloud-init at the
 	// instance's first boot, and takes the agent down with it: the component that would
-	// have removed the node on a later run is the only thing lost. ADR 2.02 makes the
-	// same trade for the stamping failure this descends from.
+	// have removed the node on a later run is the only thing lost.
 	removed, err := c.dir.Purge(isOurs)
 	if err != nil {
 		log.Errorf(ctx, "cloud-init: could not remove every unrecognised node from the sub-tree, and they stay readable by every instance: %v", err)

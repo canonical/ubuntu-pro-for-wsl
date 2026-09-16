@@ -68,19 +68,14 @@ func TestRenameOverOpenDestination(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// degraded renames through the standard library, as on a filesystem that
-		// cannot carry the stamp.
-		degraded bool
 		// politeReader holds the destination open sharing deletion, as any reader of
 		// a file published by rename must.
 		politeReader bool
 
 		wantErr bool
 	}{
-		"stamped rename replaces a destination held by a polite reader":  {politeReader: true},
-		"degraded rename replaces a destination held by a polite reader": {degraded: true, politeReader: true},
-		"stamped rename is refused by a reader withholding deletion":     {wantErr: true},
-		"degraded rename is refused by a reader withholding deletion":    {degraded: true, wantErr: true},
+		"a rename replaces a destination held by a polite reader": {politeReader: true},
+		"a rename is refused by a reader withholding deletion":    {wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -92,11 +87,8 @@ func TestRenameOverOpenDestination(t *testing.T) {
 			require.NoError(t, err, "Setup: could not open custodian")
 			defer func() { _ = c.Close() }()
 
-			// Seed while healthy so the source carries the stamp the non-degraded path
-			// requires, then switch the filesystem behaviour under test.
 			require.NoError(t, c.WriteFile("source.txt", []byte("new")), "Setup: could not seed source")
 			require.NoError(t, c.WriteFile("target.txt", []byte("old")), "Setup: could not seed target")
-			c.SetDegraded(tc.degraded)
 
 			holder, err := holdDestination(filepath.Join(dir, "target.txt"), tc.politeReader)
 			require.NoError(t, err, "Setup: could not hold the destination open")
