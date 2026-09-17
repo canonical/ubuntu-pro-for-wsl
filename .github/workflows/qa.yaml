@@ -311,7 +311,7 @@ jobs:
           name: unified-coverage
           path: ${{ env.coverage_dir }}
       - name: "TiCS: Linux"
-        uses: tiobe/tics-github-action@v3
+        uses: tiobe/tics-github-action@v4
         with:
           mode: ${{ needs.codecoverage.outputs.tics-mode }}
           project: ubuntu-pro-for-wsl-linux
@@ -359,7 +359,7 @@ jobs:
           name: unified-coverage
           path: ${{ env.coverage_dir }}
       - name: "TiCS: Windows"
-        uses: tiobe/tics-github-action@v3
+        uses: tiobe/tics-github-action@v4
         with:
           mode: ${{ needs.codecoverage.outputs.tics-mode }}
           project: ubuntu-pro-for-wsl-windows
