@@ -102,18 +102,49 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 
 ### 2.01 - Secure the Public Directory via WSL 9P Extended Attributes
 
-* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init data) to
-  the Public Directory, projected into every instance via 9P/DrvFs; by default 9P maps files to the
-  unprivileged WSL user, exposing private keys and letting any process tamper with them.
-* **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
-  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation, so 9P projects it as
-  root-owned. Centralized in the `securefiles` custodian component, with a plain `os` fallback (no EA
-  stamping) on non-Windows for cross-platform build/test.
+* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init data)
+  to the Public Directory, projected into every instance via 9P/DrvFs; by default 9P maps files to
+  the unprivileged WSL user, exposing private keys and letting any process tamper with them.
+* **Decision**: Stamp every node under the Public Directory with NT Extended Attributes ($LXUID=0,
+  $LXGID=0, $LXMOD — directories 040700, files 0100600) in the same syscall that creates it —
+  creating first and stamping after leaves a window in which an unprivileged process keeps a
+  readable descriptor across the ownership change. The `securefiles` custodian owns the directory
+  and hands out sub-scoped custodians instead of paths, so containment is structural rather than a
+  call-site convention. Pre-existing directory roots are adopted and stamped in place, since that
+  revokes unprivileged creation and deletion inside them; files are replaced rather than repaired,
+  since stamping cannot revoke descriptors already open; directories nested under an adopted root
+  are left alone, so a collision is reported rather than silently deleted. A user-xattr watermark
+  on non-Windows mirrors the ownership checks for cross-platform build and test coverage.
 * **Consequences**:
-  - Positive: Confidentiality/integrity/availability hold inside every instance; attributes are
-    stamped before content is written; `common/certs` stays a pure in-memory generator.
-  - Negative: Depends on WSL 9P EA behavior via github.com/Microsoft/go-winio; the parent directory
-    remains tamperable by the WSL user (accepted limitation).
+  - Positive: Confidentiality/integrity/availability hold inside every instance; a node the
+    custodian creates is never visible unstamped; `common/certs` stays a pure in-memory generator,
+    so the guarantee is structural rather than call-site wiring; consumers cannot reach a sibling's
+    sub-tree.
+  - Negative: Depends on undocumented WSL 9P behaviour and on NT calls via golang.org/x/sys/windows,
+    with github.com/Microsoft/go-winio to encode the attribute buffer; the parent directory remains
+    tamperable by the WSL user (accepted limitation); an adopted root is stamped without first
+    establishing that the custodian wrote it, and directories nested under it survive unstamped.
+
+### 2.02 - A sub-tree that cannot be stamped is refused, not served
+
+* **Problem/Context**: Where the Public Directory cannot carry Extended Attributes, nothing in it is
+  projected as root-owned, so the Pro token and Landscape registration key it holds are readable and
+  writable by every unprivileged process in every instance.
+* **Decision**: Refuse to open the sub-tree and fail with that reason, rather than serving it
+  unstamped. Serving is publishing the credentials the system exists to protect, which is worse than
+  not serving. The statuses that mean this are measured, not assumed: creation answers
+  `STATUS_EAS_NOT_SUPPORTED`, adoption answers `STATUS_INVALID_DEVICE_REQUEST`, and
+  `STATUS_INVALID_PARAMETER` is excluded because our own wrong call would produce it. Every other
+  failure was already reported, so this removes the single exception rather than adding a rule.
+* **Consequences**:
+  - Positive: The guarantee holds wherever the agent runs at all, so consumers can rely on it without
+    a channel for asking whether it held; the failure names its cause and is one support question
+    from a root cause; the fail-open path and its state are gone, which is where most of this
+    component's defects were found.
+  - Negative: A user whose profile cannot carry the attributes loses the agent entirely rather than
+    partially, and the population is unmeasured; the reachable case needs a profile on a filesystem
+    Windows does not support for profiles, since NTFS and ReFS both carry them.
+
 
 ## 3. Integration
 
@@ -158,7 +189,8 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   restart; clients re-read material on every (re)connection and pin the fixed server name "UP4W".
 * **Consequences**:
   - Positive: No external PKI, zero user setup; compromise window bounded by process lifetime + cert
-    expiry; reuses ADR-2.01 secure projection.
+    expiry; reuses ADR-2.01 secure projection; no private key belonging to the agent or the CA is ever
+    at rest, so the trust boundary protects three files instead of five.
   - Negative: Every restart rotates the PKI, invalidating existing connections until instances re-read
     it; all clients share one TLS identity, so the agent can't cryptographically distinguish
     instances (WSL name is self-asserted; accepted as one trust domain per Windows user); the fixed

@@ -3,9 +3,9 @@ package daemontestutils
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sync/atomic"
-
-	"golang.org/x/exp/maps" // When migrate to Go 1.23 use "maps" instead.
 )
 
 // NetMonitoringMockAPI implements the NetworkAdapterRepository interface for testing purposes.
@@ -32,13 +32,13 @@ func (m *NetMonitoringMockAPI) ListDevices() ([]string, error) {
 	}
 	if !m.listDevicesCalledFirstTime.Load() {
 		m.listDevicesCalledFirstTime.Store(true)
-		return maps.Keys(m.Before), nil
+		return slices.Collect(maps.Keys(m.Before)), nil
 	}
 	// After the first call only.
 	if m.ErrorOnListDevicesAfterFirstCall != nil {
 		return nil, m.ErrorOnListDevicesAfterFirstCall
 	}
-	return maps.Keys(m.After), nil
+	return slices.Collect(maps.Keys(m.After)), nil
 }
 
 // GetDeviceConnectionName returns the connection name of the network adapter with the given GUID.
