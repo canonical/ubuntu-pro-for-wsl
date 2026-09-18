@@ -290,7 +290,7 @@ exclude_patterns = [
 html_css_files = [
         "css/pro_block.css",
         "css/dropdown.css",
-        "css/mermaid-custom.css"
+        "css/mermaid-custom.css",
         "https://assets.ubuntu.com/v1/d86746ef-cookie_banner.css",
         ]
 
