@@ -23,15 +23,46 @@ production in an enterprise environment.
 
 ## In this documentation
 
-|                    |                                                                     |
-|--------------------|---------------------------------------------------------------------|
-|**Get started** | [Set up a development environment on Windows with Ubuntu on WSL](/tutorials/develop-with-ubuntu-wsl/) |
-|**Install Ubuntu** | [Install Ubuntu on WSL](/howto/install-ubuntu-wsl2.md) • [Available releases](/reference/distributions/) • [Upgrade your installation](/howto/upgrade-ubuntu) |
-|**Configuration** | [Instance configuration methods](/reference/instance_configuration/) • [Automate configuration with cloud-init](/howto/cloud-init/) |
-|**Security** | [Enable Pro](/howto/set-up-up4w) • [Security overview](/explanation/security-overview/) • [Firewall requirements](/reference/firewall_requirements/) |
-|**Deployment** | [Deployment guides](/howto/index-remote-deployment/) • [Custom images](/howto/custom-ubuntu-distro/) • [Reference architecture](/explanation/ref-arch-explanation)
-|**GPU and graphics** | [Enable GPU acceleration with CUDA](/howto/gpu-cuda/) • [Create data visualisations](/howto/data-science-and-engineering/) |
-|**DevOps** |  [GitHub actions for WSL](/reference/actions/) • [Run a WSL GitHub workflow on Azure](/howto/run-workflows-azure/) |
+::::{domain}
+
+:::{slice} Get started
+{doc}`Set up a development environment on Windows with Ubuntu on WSL <tutorials/develop-with-ubuntu-wsl>`
+:::
+
+:::{slice} Install Ubuntu
+{doc}`Install Ubuntu on WSL <howto/install-ubuntu-wsl2>`
+{doc}`Available releases <reference/distributions>`
+{doc}`Upgrade your installation <howto/upgrade-ubuntu>`
+:::
+
+:::{slice} Configuration
+{doc}`Instance configuration methods <reference/instance_configuration>`
+{doc}`Automate configuration with cloud-init <howto/cloud-init>`
+:::
+
+:::{slice} Security
+{doc}`Enable Pro <howto/set-up-up4w>`
+{doc}`Security overview <explanation/security-overview>`
+{doc}`Firewall requirements <reference/firewall_requirements>`
+:::
+
+:::{slice} Deployment
+{doc}`Deployment guides <howto/index-remote-deployment>`
+{doc}`Custom images <howto/custom-ubuntu-distro>`
+{doc}`Reference architecture <explanation/ref-arch-explanation>`
+:::
+
+:::{slice} GPU and graphics
+{doc}`Enable GPU acceleration with CUDA <howto/gpu-cuda>`
+{doc}`Create data visualisations <howto/data-science-and-engineering>`
+:::
+
+:::{slice} DevOps
+{doc}`GitHub actions for WSL <reference/actions>`
+{doc}`Run a WSL GitHub workflow on Azure <howto/run-workflows-azure>`
+:::
+
+::::
 
 ## How the documentation is organised
 
