@@ -20,6 +20,7 @@ sphinx-roles~=0.1
 sphinx-terminal~=1.0
 sphinx-ubuntu-images~=0.1
 sphinx-youtube-links~=0.1
+sphinx-structured-toc~=0.1
 
 # Other dependencies
 packaging~=26.1
