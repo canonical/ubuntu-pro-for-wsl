@@ -49,5 +49,28 @@
     "updatingSubscriptionInfo": "サブスクリプション情報を更新中です。",
     "purchaseStatusSuccess": "Ubuntu Proにご登録いただきありがとうございます。",
     "purchaseStatusAlreadyPurchased": "すでにProに登録済みです。",
-    "purchaseStatusUserGaveUp": "購入の試行はキャンセルされました。"
+    "purchaseStatusUserGaveUp": "購入の試行はキャンセルされました。",
+    "landscapeSkip": "今はスキップ",
+    "landscapeSkipDescription": "Landscapeはこのアプリからいつでも設定できます",
+    "landscapeSkipRegister": "Landscapeに登録する",
+    "landscapeHeading": "Ubuntu WSLインスタンスをリモートで管理するには、Landscapeへの接続を設定してください。{landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "手動設定",
+    "statusBarAgentDownTooltip": "Ubuntu Proエージェントの接続が切断されています。クリックするとエージェントを起動します。",
+    "statusBarAgentConnectingTooltip": "Ubuntu Proエージェントに接続中…",
+    "statusBarAgentRunningTooltip": "Ubuntu Proエージェントは実行中です",
+    "statusBarReportBugTooltip": "バグを報告",
+    "buttonBack": "戻る",
+    "buttonSkip": "スキップ",
+    "landscapeUnknownErrorContent": "以下の詳細を含めて、この問題を報告してください。",
+    "landscapeUnknownError": "Landscapeへの接続中に不明なエラーが発生しました",
+    "landscapeWSLUnavailableContent": "LandscapeサーバーではWSL機能が無効になっています。システム管理者にお問い合わせください。",
+    "landscapeWSLUnavailable": "LandscapeのWSL機能が無効になっています",
+    "landscapeUnreachableContent": "Landscapeサーバーに接続できませんでした。"
 }
