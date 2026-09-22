@@ -3,5 +3,51 @@
     "appTitle": "WSL向けUbuntu Pro",
     "tokenErrorEmpty": "トークンは空にできません",
     "tokenErrorInvalid": "無効なトークン",
-    "tokenValid": "有効なトークン"
+    "tokenValid": "有効なトークン",
+    "tokenInputTitle": "このマシンを接続する",
+    "tokenInputDescription": "{proLink} またはシステム管理者から取得したトークンを入力してください",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "トークン",
+    "attach": "接続",
+    "applyProToken": "Proトークンを適用",
+    "applyingProToken": "トークン {token} を適用中",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro バックグラウンドエージェント",
+    "agentStateStarting": "Ubuntu Pro バックグラウンドエージェントを起動中です。",
+    "agentStatePingNonResponsive": "Ubuntu Pro バックグラウンドエージェントが応答していません。",
+    "agentStateInvalid": "Ubuntu Pro バックグラウンドエージェントの初期化を待機中です。",
+    "agentStateCannotStart": "Ubuntu Pro バックグラウンドエージェントを起動できません。",
+    "agentStateUnknownEnv": "Ubuntu Pro バックグラウンドエージェントの状態を確認できません。環境設定を確認してください。",
+    "agentStateQuerying": "Ubuntu Pro バックグラウンドエージェントの状態を確認中です。",
+    "agentStateUnreachable": "Ubuntu Pro バックグラウンドエージェントの復旧を試みています。",
+    "proHeading": "Ubuntuの開発元による、Windowsでも使えるオープンソースソフトウェアのセキュリティ機能です。{aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Ubuntu Proを入手",
+    "learnMore": "詳細を見る",
+    "ubuntuProEnabled": "このマシンでは Ubuntu Pro が有効になっています。",
+    "ubuntuProEnabledInfo": "すべてのUbuntu WSLインスタンスが、Ubuntu Proのセキュリティ機能を利用できます。",
+    "manageUbuntuPro": "Ubuntu Pro サブスクリプションを管理",
+    "detachPro": "Ubuntu Pro を切断",
+    "updatingSubscriptionInfo": "サブスクリプション情報を更新中です。",
+    "purchaseStatusSuccess": "Ubuntu Proにご登録いただきありがとうございます。",
+    "purchaseStatusAlreadyPurchased": "すでにProに登録済みです。",
+    "purchaseStatusUserGaveUp": "購入の試行はキャンセルされました。"
 }
