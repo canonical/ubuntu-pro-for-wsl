@@ -1,5 +1,3 @@
-//go:build windows
-
 package daemon
 
 import (
@@ -14,4 +12,8 @@ import (
 // ownershipOf always fails on Windows: ownership cannot be proven, so validation must refuse.
 func ownershipOf(info fs.FileInfo) (uid, gid uint32, err error) {
 	return 0, 0, errors.New("ownership metadata is not available on Windows")
+}
+
+func openRootOS(path string) (rootFs, error) {
+	return nil, errors.New("openRootOS is not implemented on Windows")
 }
