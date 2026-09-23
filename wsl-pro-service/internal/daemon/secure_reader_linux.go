@@ -30,15 +30,51 @@ type openat2Root struct {
 	path string
 }
 
+// OpenHow policies for opening directory and file nodes securely under openat2.
+// Both policies strictly forbid symlink traversal, path escapes, and mount-point crossing.
+var (
+	confinedDirOpenHow = unix.OpenHow{
+		Flags:   unix.O_RDONLY | unix.O_DIRECTORY | unix.O_CLOEXEC,
+		Resolve: unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_BENEATH | unix.RESOLVE_NO_XDEV,
+	}
+	confinedFileOpenHow = unix.OpenHow{
+		Flags:   unix.O_RDONLY | unix.O_CLOEXEC,
+		Resolve: unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_BENEATH | unix.RESOLVE_NO_XDEV,
+	}
+)
+
 // openRootOS is the production openRoot seam used by defaultSecureReader on Unix.
 // It opens the named directory with O_NOFOLLOW and O_DIRECTORY, ensuring it is a real
 // directory and not a symlink.
 func openRootOS(path string) (rootFs, error) {
-	fd, err := unix.Open(path, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	clean := filepath.Clean(path)
+	parent := filepath.Dir(clean)
+	base := filepath.Base(clean)
+
+	// If it has no parent
+	if parent == clean || clean == "/" {
+		how := unix.OpenHow{
+			Flags:   confinedDirOpenHow.Flags,
+			Resolve: unix.RESOLVE_NO_SYMLINKS,
+		}
+		fd, err := unix.Openat2(unix.AT_FDCWD, clean, &how)
+		if err != nil {
+			return nil, err
+		}
+		return &openat2Root{fd: fd, path: clean}, nil
+	}
+
+	parentFd, err := unix.Open(parent, unix.O_PATH|unix.O_DIRECTORY|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, err
 	}
-	return &openat2Root{fd: fd, path: path}, nil
+	defer unix.Close(parentFd)
+
+	fd, err := unix.Openat2(parentFd, base, &confinedDirOpenHow)
+	if err != nil {
+		return nil, err
+	}
+	return &openat2Root{fd: fd, path: clean}, nil
 }
 
 func (r *openat2Root) Close() error {
@@ -73,11 +109,7 @@ func (r *openat2Root) Lstat(name string) (fs.FileInfo, error) {
 
 	parentFd := r.fd
 	if dir != "." {
-		how := &unix.OpenHow{
-			Flags:   unix.O_PATH | unix.O_DIRECTORY | unix.O_CLOEXEC,
-			Resolve: unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_BENEATH,
-		}
-		fd, err := unix.Openat2(r.fd, dir, how)
+		fd, err := unix.Openat2(r.fd, dir, &confinedDirOpenHow)
 		if err != nil {
 			return nil, err
 		}
@@ -101,12 +133,7 @@ func (r *openat2Root) Open(name string) (io.ReadCloser, error) {
 	}
 
 	clean := filepath.Clean(name)
-	how := &unix.OpenHow{
-		Flags:   unix.O_RDONLY | unix.O_CLOEXEC,
-		Resolve: unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_BENEATH,
-	}
-
-	fd, err := unix.Openat2(r.fd, clean, how)
+	fd, err := unix.Openat2(r.fd, clean, &confinedFileOpenHow)
 	if err != nil {
 		return nil, err
 	}
