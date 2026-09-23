@@ -29,61 +29,49 @@ func TestDefaultValidate(t *testing.T) {
 
 	testCases := map[string]struct {
 		stat    daemon.FileStat
-		path    string
 		wantErr string
 	}{
 		"Valid directory": {
 			stat: secureDirInfo("dir"),
-			path: "/dir",
 		},
 		"Valid regular file": {
 			stat: secureFileInfo("file"),
-			path: "/file",
 		},
 		"Invalid UID on file": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o600, UID: 99999, GID: expectedGID},
-			path:    "/file",
-			wantErr: fmt.Sprintf(`refused "/file": not strictly owned by root (uid 99999, gid %d)`, expectedGID),
+			wantErr: fmt.Sprintf(`not strictly owned by root (uid 99999, gid %d)`, expectedGID),
 		},
 		"Invalid GID on file": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o600, UID: expectedUID, GID: 99999},
-			path:    "/file",
-			wantErr: fmt.Sprintf(`refused "/file": not strictly owned by root (uid %d, gid 99999)`, expectedUID),
+			wantErr: fmt.Sprintf(`not strictly owned by root (uid %d, gid 99999)`, expectedUID),
 		},
 		"Invalid directory mode": {
 			stat:    daemon.FileStat{Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
-			path:    "/dir",
-			wantErr: `refused directory "/dir": not strictly owned by root (mode 0755)`,
+			wantErr: `directory not strictly owned by root (mode 0755)`,
 		},
 		"Invalid file mode": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o644, UID: expectedUID, GID: expectedGID},
-			path:    "/file",
-			wantErr: `refused file "/file": not strictly owned by root (mode 0644)`,
+			wantErr: `file not strictly owned by root (mode 0644)`,
 		},
 		"Refuses file with setuid bit": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | unix.S_ISUID | 0o600, UID: expectedUID, GID: expectedGID},
-			path:    "/file",
-			wantErr: `refused "/file": special permission bits (setuid/setgid/sticky) are not permitted`,
+			wantErr: `special permission bits (setuid/setgid/sticky) are not permitted`,
 		},
 		"Refuses file with setgid bit": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | unix.S_ISGID | 0o600, UID: expectedUID, GID: expectedGID},
-			path:    "/file",
-			wantErr: `refused "/file": special permission bits (setuid/setgid/sticky) are not permitted`,
+			wantErr: `special permission bits (setuid/setgid/sticky) are not permitted`,
 		},
 		"Refuses directory with sticky bit": {
 			stat:    daemon.FileStat{Mode: unix.S_IFDIR | unix.S_ISVTX | 0o700, UID: expectedUID, GID: expectedGID},
-			path:    "/dir",
-			wantErr: `refused "/dir": special permission bits (setuid/setgid/sticky) are not permitted`,
+			wantErr: `special permission bits (setuid/setgid/sticky) are not permitted`,
 		},
 		"Refuses symlink": {
 			stat:    daemon.FileStat{Mode: unix.S_IFLNK | 0o777, UID: expectedUID, GID: expectedGID},
-			path:    "/link",
-			wantErr: `refused "/link": symlinks are not permitted`,
+			wantErr: `symlinks are not permitted`,
 		},
 		"Refuses FIFO": {
 			stat:    daemon.FileStat{Mode: unix.S_IFIFO | 0o600, UID: expectedUID, GID: expectedGID},
-			path:    "/fifo",
-			wantErr: fmt.Sprintf(`refused "/fifo": irregular file type (mode 0%o)`, unix.S_IFIFO|0o600),
+			wantErr: fmt.Sprintf(`irregular file type (mode 0%o)`, unix.S_IFIFO|0o600),
 		},
 	}
 
@@ -91,7 +79,7 @@ func TestDefaultValidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := daemon.DefaultValidate(tc.path, tc.stat)
+			err := daemon.DefaultValidate(tc.stat)
 			if tc.wantErr != "" {
 				require.EqualError(t, err, tc.wantErr, "DefaultValidate should return expected error")
 			} else {

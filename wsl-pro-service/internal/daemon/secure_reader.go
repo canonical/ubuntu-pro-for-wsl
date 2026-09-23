@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -46,8 +47,8 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 	// which is pinned to the same descriptor subsequent operations will target.
 	if stat, err := root.Lstat("."); err != nil {
 		return nil, fmt.Errorf("could not stat root %q: %v", rootDir, err)
-	} else if err := defaultValidate(rootDir, stat); err != nil {
-		return nil, err
+	} else if err := defaultValidate(stat); err != nil {
+		return nil, fmt.Errorf("refused %q: %v", rootDir, err)
 	}
 
 	// Open the file descriptor first and hold it open.
@@ -66,8 +67,8 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 		if err != nil {
 			return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, current), err)
 		}
-		if err := defaultValidate(filepath.Join(rootDir, current), stat); err != nil {
-			return nil, err
+		if err := defaultValidate(stat); err != nil {
+			return nil, fmt.Errorf("refused %q: %v", filepath.Join(rootDir, current), err)
 		}
 	}
 
@@ -77,8 +78,8 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 	if err != nil {
 		return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, targetPath), err)
 	}
-	if err := defaultValidate(filepath.Join(rootDir, targetPath), targetStat); err != nil {
-		return nil, err
+	if err := defaultValidate(targetStat); err != nil {
+		return nil, fmt.Errorf("refused %q: %v", filepath.Join(rootDir, targetPath), err)
 	}
 
 	// Only then read the file contents.
@@ -127,31 +128,31 @@ var (
 	expectedGID uint32
 )
 
-func defaultValidate(path string, stat fileStat) error {
+func defaultValidate(stat fileStat) error {
 	if stat.UID != expectedUID || stat.GID != expectedGID {
-		return fmt.Errorf("refused %q: not strictly owned by root (uid %d, gid %d)", path, stat.UID, stat.GID)
+		return fmt.Errorf("not strictly owned by root (uid %d, gid %d)", stat.UID, stat.GID)
 	}
 
 	if stat.Mode&modeSpecialBits != 0 {
-		return fmt.Errorf("refused %q: special permission bits (setuid/setgid/sticky) are not permitted", path)
+		return errors.New("special permission bits (setuid/setgid/sticky) are not permitted")
 	}
 
 	perm := stat.Mode & modePermMask
 	switch stat.Mode & modeTypeMask {
 	case modeDir:
 		if perm != 0o700 {
-			return fmt.Errorf("refused directory %q: not strictly owned by root (mode 0%o)", path, perm)
+			return fmt.Errorf("directory not strictly owned by root (mode 0%o)", perm)
 		}
 		return nil
 	case modeReg:
 		if perm != 0o600 {
-			return fmt.Errorf("refused file %q: not strictly owned by root (mode 0%o)", path, perm)
+			return fmt.Errorf("file not strictly owned by root (mode 0%o)", perm)
 		}
 		return nil
 	case modeSymlink:
-		return fmt.Errorf("refused %q: symlinks are not permitted", path)
+		return errors.New("symlinks are not permitted")
 	default:
-		return fmt.Errorf("refused %q: irregular file type (mode 0%o)", path, stat.Mode)
+		return fmt.Errorf("irregular file type (mode 0%o)", stat.Mode)
 	}
 }
 
