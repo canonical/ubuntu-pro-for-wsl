@@ -92,4 +92,4 @@ Wsl-pro supports ubuntu-bug reporting to Launchpad with an apport hook but we ar
 
 - [Project Documentation](https://ubuntu.com/wsl/docs/stable/)
 - [Ubuntu Pro for WSL SRU exception](https://wiki.ubuntu.com/UbuntuProForWSLUpdates)
-- [Ubuntu Pro tools SRU exception](https://wiki.ubuntu.com/UbuntuAdvantageToolsUpdates)
+- [Ubuntu Pro client SRU exception](https://ubuntu.com/project/docs/SRU/reference/exception-UbuntuAdvantageTools-Updates/)
