@@ -144,11 +144,12 @@ func (r *openat2Root) Lstat(name string) (fileStat, error) {
 
 type openat2File struct {
 	*os.File
+	fd int
 }
 
 func (f *openat2File) Stat() (fileStat, error) {
 	var stat unix.Stat_t
-	if err := unix.Fstat(int(f.Fd()), &stat); err != nil {
+	if err := unix.Fstat(f.fd, &stat); err != nil {
 		return fileStat{}, err
 	}
 	return fileStat{Name: filepath.Base(f.Name()), Mode: stat.Mode, UID: stat.Uid, GID: stat.Gid}, nil
@@ -168,5 +169,5 @@ func (r *openat2Root) Open(name string) (confinedFile, error) {
 		return nil, err
 	}
 	// #nosec G115 // If err is nil, openat2 returned a positive descriptor, no risk of overflows.
-	return &openat2File{File: os.NewFile(uintptr(fd), clean)}, nil
+	return &openat2File{File: os.NewFile(uintptr(fd), clean), fd: fd}, nil
 }
