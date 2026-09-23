@@ -41,6 +41,9 @@
             <desktop:ExecutionAlias Alias="ubuntu-pro-agent.exe" />
           </uap3:AppExecutionAlias>
         </uap3:Extension>
+        <desktop6:Extension Category="windows.service" Executable="service\ubuntu-pro-for-wsl-service.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop6:Service Name="Ubuntu Pro For WSL Service" StartupType="manual" StartAccount="localSystem" Arguments="service" />
+        </desktop6:Extension>
         <desktop:Extension Category="windows.fullTrustProcess" Executable="agent\ubuntu-pro-agent-launcher.exe">
           <desktop:FullTrustProcess>
             <desktop:ParameterGroup GroupId="agent" Parameters="" />
@@ -60,6 +63,8 @@
   <Capabilities>
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="packagedServices" />
+    <rescap:Capability Name="localSystemServices" />
     <rescap:Capability Name="unvirtualizedResources" />
   </Capabilities>
 </Package>

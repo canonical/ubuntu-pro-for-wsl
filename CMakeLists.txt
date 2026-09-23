@@ -14,6 +14,7 @@ endif()
 add_subdirectory(storeapi/dll)
 add_subdirectory(storeapi/test EXCLUDE_FROM_ALL)
 add_subdirectory(launcher)
+add_subdirectory(windows-service)
 
 enable_testing()
 
