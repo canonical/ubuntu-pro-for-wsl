@@ -3,5 +3,74 @@
     "appTitle": "WSL向けUbuntu Pro",
     "tokenErrorEmpty": "トークンは空にできません",
     "tokenErrorInvalid": "無効なトークン",
-    "tokenValid": "有効なトークン"
+    "tokenValid": "有効なトークン",
+    "tokenInputTitle": "このマシンを接続する",
+    "tokenInputDescription": "{proLink} またはシステム管理者から取得したトークンを入力してください",
+    "@tokenInputDescription": {
+        "placeholders": {
+            "proLink": {
+                "type": "String"
+            }
+        }
+    },
+    "tokenInputHint": "トークン",
+    "attach": "接続",
+    "applyProToken": "Proトークンを適用",
+    "applyingProToken": "トークン {token} を適用中",
+    "@applyingProToken": {
+        "placeholders": {
+            "token": {
+                "type": "String"
+            }
+        }
+    },
+    "agent": "Ubuntu Pro バックグラウンドエージェント",
+    "agentStateStarting": "Ubuntu Pro バックグラウンドエージェントを起動中です。",
+    "agentStatePingNonResponsive": "Ubuntu Pro バックグラウンドエージェントが応答していません。",
+    "agentStateInvalid": "Ubuntu Pro バックグラウンドエージェントの初期化を待機中です。",
+    "agentStateCannotStart": "Ubuntu Pro バックグラウンドエージェントを起動できません。",
+    "agentStateUnknownEnv": "Ubuntu Pro バックグラウンドエージェントの状態を確認できません。環境設定を確認してください。",
+    "agentStateQuerying": "Ubuntu Pro バックグラウンドエージェントの状態を確認中です。",
+    "agentStateUnreachable": "Ubuntu Pro バックグラウンドエージェントの復旧を試みています。",
+    "proHeading": "Ubuntuの開発元による、Windowsでも使えるオープンソースソフトウェアのセキュリティ機能です。{aboutLink}",
+    "@proHeading": {
+        "placeholders": {
+            "aboutLink": {
+                "type": "String"
+            }
+        }
+    },
+    "getUbuntuPro": "Ubuntu Proを入手",
+    "learnMore": "詳細を見る",
+    "ubuntuProEnabled": "このマシンでは Ubuntu Pro が有効になっています。",
+    "ubuntuProEnabledInfo": "すべてのUbuntu WSLインスタンスが、Ubuntu Proのセキュリティ機能を利用できます。",
+    "manageUbuntuPro": "Ubuntu Pro サブスクリプションを管理",
+    "detachPro": "Ubuntu Pro を切断",
+    "updatingSubscriptionInfo": "サブスクリプション情報を更新中です。",
+    "purchaseStatusSuccess": "Ubuntu Proにご登録いただきありがとうございます。",
+    "purchaseStatusAlreadyPurchased": "すでにProに登録済みです。",
+    "purchaseStatusUserGaveUp": "購入の試行はキャンセルされました。",
+    "landscapeSkip": "今はスキップ",
+    "landscapeSkipDescription": "Landscapeはこのアプリからいつでも設定できます",
+    "landscapeSkipRegister": "Landscapeに登録する",
+    "landscapeHeading": "Ubuntu WSLインスタンスをリモートで管理するには、Landscapeへの接続を設定してください。{landscapeLink}",
+    "@landscapeHeading": {
+        "placeholders": {
+            "landscapeLink": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeSetupManual": "手動設定",
+    "statusBarAgentDownTooltip": "Ubuntu Proエージェントの接続が切断されています。クリックするとエージェントを起動します。",
+    "statusBarAgentConnectingTooltip": "Ubuntu Proエージェントに接続中…",
+    "statusBarAgentRunningTooltip": "Ubuntu Proエージェントは実行中です",
+    "statusBarReportBugTooltip": "バグを報告",
+    "buttonBack": "戻る",
+    "buttonSkip": "スキップ",
+    "landscapeUnknownErrorContent": "以下の詳細を含めて、この問題を報告してください。",
+    "landscapeUnknownError": "Landscapeへの接続中に不明なエラーが発生しました",
+    "landscapeWSLUnavailableContent": "LandscapeサーバーではWSL機能が無効になっています。システム管理者にお問い合わせください。",
+    "landscapeWSLUnavailable": "LandscapeのWSL機能が無効になっています",
+    "landscapeUnreachableContent": "Landscapeサーバーに接続できませんでした。"
 }
