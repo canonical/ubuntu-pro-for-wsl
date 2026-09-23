@@ -3,7 +3,6 @@ package daemon
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +12,97 @@ import (
 // targetPath is interpreted relative to rootDir.
 type SecureReader interface {
 	ReadFile(rootDir, targetPath string) ([]byte, error)
+}
+
+// defaultSecureReader validates the path hierarchy, ownership, and permissions of
+// agent-written files inside the Public Directory before reading them.
+type defaultSecureReader struct {
+	// openRoot is the seam used to construct the confined root filesystem. Production
+	// wires this to openRootOS; tests substitute a closure to simulate openRoot
+	// failures without touching the filesystem.
+	openRoot func(path string) (rootFs, error)
+}
+
+func newDefaultSecureReader() *defaultSecureReader {
+	return &defaultSecureReader{openRoot: openRootOS}
+}
+
+// ReadFile validates the path within rootDir and reads the contents of targetPath,
+// which must be relative to rootDir.
+//
+// It ensures that:
+//  1. rootDir itself is a root-owned 0700 directory (and not a symlink).
+//  2. targetPath is a local path confined to rootDir; no component can escape the root
+//     via ".." or symlinks.
+//  3. Every directory along targetPath is root-owned with mode 0700.
+//  4. The target file is root-owned with mode 0600.
+func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, error) {
+	if fi, err := os.Lstat(rootDir); err != nil {
+		return nil, fmt.Errorf("could not stat %q: %w", rootDir, err)
+	} else if fi.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("refused %q: root is a symlink", rootDir)
+	}
+
+	root, err := r.openRoot(rootDir)
+	if err != nil {
+		return nil, fmt.Errorf("could not open root %q: %w", rootDir, err)
+	}
+	defer root.Close()
+
+	// Validate the root directory itself: Lstat(".") sees the directory actually opened,
+	// which is pinned to the same descriptor subsequent operations will target.
+	if stat, err := root.Lstat("."); err != nil {
+		return nil, fmt.Errorf("could not stat root %q: %v", rootDir, err)
+	} else if err := defaultValidate(rootDir, stat); err != nil {
+		return nil, err
+	}
+
+	// Open the file descriptor first and hold it open.
+	targetFile, err := root.Open(targetPath)
+	if err != nil {
+		return nil, fmt.Errorf("could not read %q: %w", filepath.Join(rootDir, targetPath), err)
+	}
+	defer targetFile.Close()
+
+	// Validate each component from the root down to the target.
+	segments := strings.Split(filepath.Clean(targetPath), string(filepath.Separator))
+	current := ""
+	for _, seg := range segments {
+		current = filepath.Join(current, seg)
+		stat, err := root.Lstat(current)
+		if err != nil {
+			return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, current), err)
+		}
+		if err := defaultValidate(filepath.Join(rootDir, current), stat); err != nil {
+			return nil, err
+		}
+	}
+
+	// Validate the open target file descriptor itself to ensure it points to a compliant inode
+	// and was not substituted by an attacker prior to validation.
+	fileStat, err := targetFile.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, targetPath), err)
+	}
+	if err := defaultValidate(filepath.Join(rootDir, targetPath), fileStat); err != nil {
+		return nil, err
+	}
+
+	// Only then read the file contents.
+	data, err := io.ReadAll(targetFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read %q: %v", filepath.Join(rootDir, targetPath), err)
+	}
+
+	return data, nil
+}
+
+// confinedFile represents an open file within rootFs that can report its own descriptor metadata.
+type confinedFile interface {
+	io.ReadCloser
+
+	// Stat returns the file attributes of the open descriptor.
+	Stat() (fileStat, error)
 }
 
 // rootFs defines the operations required by defaultSecureReader for reading files
@@ -31,121 +121,69 @@ type rootFs interface {
 	io.Closer
 
 	// Lstat stats a root-relative path without following symlinks.
-	Lstat(name string) (fs.FileInfo, error)
+	Lstat(name string) (fileStat, error)
 	// Open opens a root-relative file for reading without following symlinks.
-	Open(name string) (io.ReadCloser, error)
-}
-
-// defaultSecureReader validates the path hierarchy, ownership, and permissions of
-// agent-written files inside the Public Directory before reading them.
-type defaultSecureReader struct {
-	// openRoot is the seam used to construct the confined root filesystem. Production
-	// wires this to openRootOS; tests substitute a closure to simulate openRoot
-	// failures without touching the filesystem.
-	openRoot func(path string) (rootFs, error)
-}
-
-func newDefaultSecureReader() *defaultSecureReader {
-	return &defaultSecureReader{openRoot: openRootOS}
+	Open(name string) (confinedFile, error)
 }
 
 // defaultValidate validates that a file or directory is strictly owned by root (UID 0, GID 0)
 // with strict permissions (0700 for directories, 0600 for regular files), as mandated by the
 // Secure Projection contract. Refusals report only the actual state observed.
-func defaultValidate(path string, info fs.FileInfo) error {
-	uid, gid, err := ownershipOf(info)
-	if err != nil {
-		return fmt.Errorf("could not obtain ownership metadata for %q: %w", path, err)
+var (
+	expectedUID uint32
+	expectedGID uint32
+)
+
+func defaultValidate(path string, stat fileStat) error {
+	if stat.UID != expectedUID || stat.GID != expectedGID {
+		return fmt.Errorf("refused %q: not strictly owned by root (uid %d, gid %d)", path, stat.UID, stat.GID)
 	}
 
-	if uid != 0 || gid != 0 {
-		return fmt.Errorf("refused %q: not strictly owned by root (uid %d, gid %d)", path, uid, gid)
+	if stat.Mode&modeSpecialBits != 0 {
+		return fmt.Errorf("refused %q: special permission bits (setuid/setgid/sticky) are not permitted", path)
 	}
 
-	perm := info.Mode().Perm()
-	if info.IsDir() {
-		if perm != 0700 {
+	perm := stat.Mode & modePermMask
+	switch stat.Mode & modeTypeMask {
+	case modeDir:
+		if perm != 0o700 {
 			return fmt.Errorf("refused directory %q: not strictly owned by root (mode 0%o)", path, perm)
 		}
 		return nil
-	}
-
-	if perm != 0600 {
-		return fmt.Errorf("refused file %q: not strictly owned by root (mode 0%o)", path, perm)
-	}
-
-	return nil
-}
-
-func validateNode(path string, fi fs.FileInfo) error {
-	// Reject symlinks unconditionally.
-	if fi.Mode()&fs.ModeSymlink != 0 {
+	case modeReg:
+		if perm != 0o600 {
+			return fmt.Errorf("refused file %q: not strictly owned by root (mode 0%o)", path, perm)
+		}
+		return nil
+	case modeSymlink:
 		return fmt.Errorf("refused %q: symlinks are not permitted", path)
+	default:
+		return fmt.Errorf("refused %q: irregular file type (mode 0%o)", path, stat.Mode)
 	}
-
-	// Ensure regular file or directory.
-	if !fi.IsDir() && !fi.Mode().IsRegular() {
-		return fmt.Errorf("refused %q: irregular file type (mode %v)", path, fi.Mode())
-	}
-
-	return defaultValidate(path, fi)
 }
 
-// ReadFile validates the path within rootDir and reads the contents of targetPath,
-// which must be relative to rootDir.
-//
-// It ensures that:
-//  1. rootDir itself is a root-owned 0700 directory (and not a symlink).
-//  2. targetPath is a local path confined to rootDir; no component can escape the root
-//     via ".." or symlinks.
-//  3. Every directory along targetPath is root-owned with mode 0700.
-//  4. The target file is root-owned with mode 0600.
-func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, error) {
-	if fi, err := os.Lstat(rootDir); err != nil {
-		return nil, fmt.Errorf("could not stat %q: %w", rootDir, err)
-	} else if fi.Mode()&fs.ModeSymlink != 0 {
-		return nil, fmt.Errorf("refused %q: root is a symlink", rootDir)
-	}
+// Standard POSIX file type, mode, and permission constants.
+const (
+	modeTypeMask    uint32 = 0o170000
+	modeDir         uint32 = 0o040000
+	modeReg         uint32 = 0o100000
+	modeSymlink     uint32 = 0o120000
+	modeSpecialBits uint32 = 0o007000 // S_ISUID (04000) | S_ISGID (02000) | S_ISVTX (01000)
+	modePermMask    uint32 = 0o000777
+)
 
-	root, err := r.openRoot(rootDir)
-	if err != nil {
-		return nil, fmt.Errorf("could not open root %q: %w", rootDir, err)
-	}
-	defer root.Close()
+// fileStat holds the file attributes needed for secure validation.
+type fileStat struct {
+	Name string
+	Mode uint32
+	UID  uint32
+	GID  uint32
+}
 
-	// Validate the root directory itself: Lstat(".") sees the directory actually opened,
-	// which is pinned to the same descriptor subsequent operations will target.
-	if fi, err := root.Lstat("."); err != nil {
-		return nil, fmt.Errorf("could not stat root %q: %w", rootDir, err)
-	} else if err := validateNode(rootDir, fi); err != nil {
-		return nil, err
-	}
+func (s fileStat) IsDir() bool {
+	return s.Mode&modeTypeMask == modeDir
+}
 
-	// Open the file descriptor first and hold it open.
-	targetFile, err := root.Open(targetPath)
-	if err != nil {
-		return nil, fmt.Errorf("could not read %q: %w", filepath.Join(rootDir, targetPath), err)
-	}
-	defer targetFile.Close()
-	// Validate each component from the root down to the target.
-	segments := strings.Split(filepath.Clean(targetPath), string(filepath.Separator))
-	current := ""
-	for _, seg := range segments {
-		current = filepath.Join(current, seg)
-		fi, err := root.Lstat(current)
-		if err != nil {
-			return nil, fmt.Errorf("could not stat %q: %w", filepath.Join(rootDir, current), err)
-		}
-		if err := validateNode(filepath.Join(rootDir, current), fi); err != nil {
-			return nil, err
-		}
-	}
-
-	// Only then read the file contents.
-	data, err := io.ReadAll(targetFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not read %q: %w", filepath.Join(rootDir, targetPath), err)
-	}
-
-	return data, nil
+func (s fileStat) IsSymlink() bool {
+	return s.Mode&modeTypeMask == modeSymlink
 }

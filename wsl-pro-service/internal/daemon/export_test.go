@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"io/fs"
 	"time"
 )
 
@@ -26,6 +25,12 @@ func NewRetryConfig(minWait, maxWait time.Duration, maxRetries uint8) RetryConfi
 // RootFs is an exported interface alias for testing.
 type RootFs = rootFs
 
+// ConfinedFile is an exported interface alias for testing.
+type ConfinedFile = confinedFile
+
+// FileStat is an exported struct alias for testing.
+type FileStat = fileStat
+
 // DefaultSecureReader is an exported struct alias for testing.
 type DefaultSecureReader = defaultSecureReader
 
@@ -45,8 +50,8 @@ func OpenRoot(path string) (RootFs, error) {
 }
 
 // DefaultValidate validates file attributes for testing.
-func DefaultValidate(path string, info fs.FileInfo) error {
-	return defaultValidate(path, info)
+func DefaultValidate(path string, stat FileStat) error {
+	return defaultValidate(path, stat)
 }
 
 // WithTestSecureReader overrides the SecureReader used by the daemon. It is exported from
