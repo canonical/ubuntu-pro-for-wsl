@@ -4,7 +4,8 @@
 
 - Prefer small, explicit functions over clever abstractions.
 - Document exported symbols with complete sentences, starting with its name.
-- Subjects first, details last: the most important definitions at the top of the file - public types, constructor methods, public API - helpers and private code at the bottom.
+- Subjects first, details last: the most important definitions at the top of the file - public
+  types, constructor methods, public API - helpers and private code at the bottom.
 - Validate required inputs and dependencies early, then return immediately on invalid state.
 - Strive for making invalid states non-representable to avoid spreading validation everywhere.
 - Keep control flow flat: prefer guard clauses and early returns over nested `else` blocks.
@@ -18,7 +19,8 @@
 - Prefer package-level sentinel errors only for conditions callers need to branch on.
 - Keep comments for non-obvious invariants, edge cases, or intent; avoid comments that restate the code.
 - Avoid unnecessary helper extraction. A short local block is usually better than a helper that obscures the main path.
-- At a given layer, either log an error or return it with context. Avoid duplicating the same failure message in both places unless each layer adds distinct operational value.
+- At a given layer, either log an error or return it with context. Avoid duplicating the same
+  failure message in both places unless each layer adds distinct operational value.
 - Keep empty lines separating logical blocks, making lines closely related standing out as a group.
 
 ### Example of good code style
@@ -70,7 +72,7 @@ func normalizeLandscapeConfig(ctx context.Context, s *System, iniFile *ini.File)
 
 - Use `decorate.OnError` to add context to errors returned from functions at a single location.
 - Prefer `errors.New` for static sentinel errors and declare them as `var ErrSomething = errors.New("...")`.
-- Return errors wrapped with `%v`; only use `%w` when callers must match it with `errors.Is`/`errors.As`.
+- Use `%w` only when callers are expected to match the underlying error later with `errors.Is` or `errors.As`.
 - If the underlying error is only being included for human consumption, use `%v` instead of `%w`.
 - Prefer one meaningful layer of context at the abstraction boundary that changes what the operation means to the caller.
 - When a caller needs to match a domain-specific condition and still retain extra detail, prefer `errors.Join` with a sentinel error.
@@ -104,11 +106,9 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
 
 ## Testing
 
-- Prefer table-driven tests keyed by name in a map (`testcases := map[string]struct{...} { ...}`),
-  where each element holds a particular test case arguments ordered to facilitate grasping the
-  differences between sub-tests, preserving the test body similar in implementation. Iterate over
-  that map as `for name, tc := range testcases { ... }` and define sub-tests for each case:
-  `t.Run(name, func(t *testing.T) { ... })`.
+- Prefer table-driven tests keyed by name in a map/dict (`map[string]struct{...}`), iterated as
+  `for name, tc := range tests { ... }`.
+- Use sub-tests for each case: `t.Run(name, func(t *testing.T) { ... })` 
 - Table-driven testing exemption is allowed when no more than one case exists or is foreseeable or
   sub-test candidates are drastically different in implementation. When the behaviour under test has
   no injectable failure mode — nothing can break, no invalid input reachable, no error the code can
@@ -129,23 +129,57 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
   - `LoadWithUpdateFromGoldenYAML` for structured/YAML expectations.
 - Update golden files intentionally with `TESTS_UPDATE_GOLDEN=yes`, then commit the updated golden artifacts in the same PR.
 - Prefer explicit, stable assertions over ad hoc string-contains checks.
+- Avoid using test-specific package `init()` functions to inject behaviours or configuration values
+  through test seams. Do so only when tests can only work under the injected behaviour, it's needed
+  globally and replacing the affected component is not a suitable alternative.
 
 ### Example of good test
 
 ```go
 tests := map[string]struct {
-    input string
-    want  string
+    input   string
+    want    string
+    wantErr bool
 }{
     "simple case": {input: "x", want: "y"},
+    "error case":  {input: "z", wantErr: true},
 }
 
 for name, tc := range tests {
     t.Run(name, func(t *testing.T) {
-        got := run(tc.input)
+        // Case-specific setup steps.
+        got, err := pkg.FunctionUnderTest(tc.input)
+        if tc.wantErr {
+            require.Error(t, err, "reason why errors are expected")
+            return
+        }
+        require.NoError(t, err, "reason why errors are unexpected")
         want := testutils.LoadWithUpdateFromGolden(t, got)
         require.Equal(t, want, got)
     })
+}
+```
+
+### Example of acceptable use of package init():
+
+```go
+// package p has some validation depending on this list (a configuration value that must not be
+// changed in production).
+var allowedFsNames = []string{"9p", "virtiofs"}
+
+// In a separate purpose-specific file package p exports a hook to extend the list only for testing.
+import "testdetection"
+
+func ExtendAllowedFsNamesForTesting(fsname string) {
+    testdetection.MustBeTesting() // panic if not under testing.
+    allowedFsNames = append(allowedFsNames, fsname)
+}
+
+// testutils init allows tests of higher level clients of p to run on ext4:
+// - CI wouldn't run otherwise;
+// - package p's correct design doesn't expose an object or interface that can be mocked otherwise.
+func init() {
+    p.ExtendAllowedFsNamesForTesting("ext4")
 }
 ```
 
@@ -167,6 +201,7 @@ Key rules to know before writing code:
 - Bare `print`/`println` are forbidden — use the project logger (`forbidigo`).
 - All exported symbols must have doc comments ending with a period (`godot`).
 - Error type names must end in `Error` or implement `error` as `*T` (`errname`).
+- Use `%w` only when callers will match with `errors.Is`/`errors.As`; use `%v` otherwise (`errorlint`).
 - Test helpers must call `t.Helper()` (`thelper`).
 - Parallel sub-tests must call `t.Parallel()` (`tparallel`).
 - Use the correct `testify` assertion variant (`testifylint`).

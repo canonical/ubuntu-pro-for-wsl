@@ -100,30 +100,29 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 
 ## 2. Security
 
-### 2.01 - Secure the Public Directory via WSL 9P Extended Attributes
+### 2.01 - Secure the Public Directory via WSL extended attributes and instance-side validation
 
-* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init data)
-  to the Public Directory, projected into every instance via 9P/DrvFs; by default 9P maps files to
-  the unprivileged WSL user, exposing private keys and letting any process tamper with them.
-* **Decision**: Stamp every node under the Public Directory with NT Extended Attributes ($LXUID=0,
-  $LXGID=0, $LXMOD — directories 040700, files 0100600) in the same syscall that creates it —
-  creating first and stamping after leaves a window in which an unprivileged process keeps a
-  readable descriptor across the ownership change. The `securefiles` custodian owns the directory
-  and hands out sub-scoped custodians instead of paths, so containment is structural rather than a
-  call-site convention. Pre-existing directory roots are adopted and stamped in place, since that
-  revokes unprivileged creation and deletion inside them; files are replaced rather than repaired,
-  since stamping cannot revoke descriptors already open; directories nested under an adopted root
-  are left alone, so a collision is reported rather than silently deleted. A user-xattr watermark
-  on non-Windows mirrors the ownership checks for cross-platform build and test coverage.
+* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init
+  data) to the Public Directory, projected into every instance via 9p or `virtiofs`; by default the
+  projection maps files to the unprivileged Linux default user, any unprivileged process inside any
+  WSL instance can manipulate them.
+* **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
+  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation so the projection
+  maps it to root, centralized in the agent's `securefiles` custodian with a plain OS fallback on
+  non-Windows. wsl-pro-service validates, before consuming any projected artifact, that every
+  component from the root down is root-owned with strict modes and no symlinks, and that the
+  opened root directory sits on a `9p` or `virtiofs` mount — pinned race-free via the root `fd`'s
+  `mnt_id` against `/proc/self/mountinfo`, because `statfs` magic numbers cannot distinguish
+  `virtiofs` from attacker-controlled FUSE (both report `FUSE_SUPER_MAGIC`) — failing loudly with
+  `SystemError` when any invariant is broken.
 * **Consequences**:
-  - Positive: Confidentiality/integrity/availability hold inside every instance; a node the
-    custodian creates is never visible unstamped; `common/certs` stays a pure in-memory generator,
-    so the guarantee is structural rather than call-site wiring; consumers cannot reach a sibling's
-    sub-tree.
-  - Negative: Depends on undocumented WSL 9P behaviour and on NT calls via golang.org/x/sys/windows,
-    with github.com/Microsoft/go-winio to encode the attribute buffer; the parent directory remains
-    tamperable by the WSL user (accepted limitation); an adopted root is stamped without first
-    establishing that the custodian wrote it, and directories nested under it survive unstamped.
+  - Positive: attributes are stamped before content is written; instance-side defense-in-depth
+    rejects compromised or improperly projected artifacts with `SystemError` before use; the
+    filesystem check is race-free because the root `fd` pins the mount and `/proc/self/mountinfo` is
+    kernel-reported truth; `virtiofs` hosts are supported without `cgo` or `unsafe`.
+  - Negative: depends on WSL EA projection behavior via `github.com/Microsoft/go-winio`; relies on
+    `/proc` being mounted and on non-root users being unable to mount `9p` or `virtiofs`; the parent
+    directory remains tamperable by the WSL user (accepted limitation).
 
 ### 2.02 - A sub-tree that cannot be stamped is refused, not served
 
@@ -189,8 +188,7 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   restart; clients re-read material on every (re)connection and pin the fixed server name "UP4W".
 * **Consequences**:
   - Positive: No external PKI, zero user setup; compromise window bounded by process lifetime + cert
-    expiry; reuses ADR-2.01 secure projection; no private key belonging to the agent or the CA is ever
-    at rest, so the trust boundary protects three files instead of five.
+    expiry; reuses ADR-2.01 secure projection.
   - Negative: Every restart rotates the PKI, invalidating existing connections until instances re-read
     it; all clients share one TLS identity, so the agent can't cryptographically distinguish
     instances (WSL name is self-asserted; accepted as one trust domain per Windows user); the fixed
