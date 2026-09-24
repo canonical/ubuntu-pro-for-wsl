@@ -100,20 +100,29 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 
 ## 2. Security
 
-### 2.01 - Secure the Public Directory via WSL 9P Extended Attributes
+### 2.01 - Secure the Public Directory via WSL extended attributes and instance-side validation
 
-* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init data) to
-  the Public Directory, projected into every instance via 9P/DrvFs; by default 9P maps files to the
-  unprivileged WSL user, exposing private keys and letting any process tamper with them.
+* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init
+  data) to the Public Directory, projected into every instance via 9p or `virtiofs`; by default the
+  projection maps files to the unprivileged Linux default user, any unprivileged process inside any
+  WSL instance can manipulate them.
 * **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
-  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation, so 9P projects it as
-  root-owned. Centralized in the `securefiles` custodian component, with a plain `os` fallback (no EA
-  stamping) on non-Windows for cross-platform build/test.
+  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation so the projection
+  maps it to root, centralized in the agent's `securefiles` custodian with a plain OS fallback on
+  non-Windows. wsl-pro-service validates, before consuming any projected artifact, that every
+  component from the root down is root-owned with strict modes and no symlinks, and that the
+  opened root directory sits on a `9p` or `virtiofs` mount — pinned race-free via the root `fd`'s
+  `mnt_id` against `/proc/self/mountinfo`, because `statfs` magic numbers cannot distinguish
+  `virtiofs` from attacker-controlled FUSE (both report `FUSE_SUPER_MAGIC`) — failing loudly with
+   `SystemError` when any invariant is broken.
 * **Consequences**:
-  - Positive: Confidentiality/integrity/availability hold inside every instance; attributes are
-    stamped before content is written; `common/certs` stays a pure in-memory generator.
-  - Negative: Depends on WSL 9P EA behavior via github.com/Microsoft/go-winio; the parent directory
-    remains tamperable by the WSL user (accepted limitation).
+  - Positive: attributes are stamped before content is written; instance-side defense-in-depth
+    rejects compromised or improperly projected artifacts with `SystemError` before use; the
+    filesystem check is race-free because the root `fd` pins the mount and `/proc/self/mountinfo` is
+    kernel-reported truth; `virtiofs` hosts are supported without `cgo` or `unsafe`.
+  - Negative: depends on WSL EA projection behavior via `github.com/Microsoft/go-winio`; relies on
+    `/proc` being mounted and on non-root users being unable to mount `9p` or `virtiofs`; the parent
+    directory remains tamperable by the WSL user (accepted limitation).
 
 ## 3. Integration
 
