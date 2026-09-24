@@ -511,19 +511,19 @@ func TestOpenRootOS_ConfinesPathResolution(t *testing.T) {
 
 			switch {
 			case tc.wantLstatErr:
-				_, err = root.Lstat(path)
+				_, err := root.Lstat(path)
 				require.Error(t, err, "root.Lstat should fail for path escaping root")
 			case tc.wantLstatLink:
 				fi, err := root.Lstat(path)
 				require.NoError(t, err, "root.Lstat should not fail for symlink within root")
 				require.True(t, fi.IsSymlink(), "Lstat must report the symlink itself, not its target")
 			default:
-				_, err = root.Lstat(path)
+				_, err := root.Lstat(path)
 				require.NoError(t, err, "root.Lstat should not fail for path within root")
 			}
 
 			if tc.wantOpenErr {
-				_, err = root.Open(path)
+				_, err := root.Open(path)
 				require.Error(t, err, "root.Open should fail for path escaping root or traversing symlink")
 			} else {
 				rc, err := root.Open(path)
