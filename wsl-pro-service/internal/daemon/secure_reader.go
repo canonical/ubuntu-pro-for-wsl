@@ -138,7 +138,8 @@ func defaultValidate(stat fileStat) error {
 	}
 
 	perm := stat.Mode & modePermMask
-	switch stat.Mode & modeTypeMask {
+	fileType := stat.Mode & modeTypeMask
+	switch fileType {
 	case modeDir:
 		if perm != 0o700 {
 			return fmt.Errorf("directory not strictly owned by root (mode 0%o)", perm)
@@ -168,16 +169,7 @@ const (
 
 // fileStat holds the file attributes needed for secure validation.
 type fileStat struct {
-	Name string
 	Mode uint32
 	UID  uint32
 	GID  uint32
-}
-
-func (s fileStat) IsDir() bool {
-	return s.Mode&modeTypeMask == modeDir
-}
-
-func (s fileStat) IsSymlink() bool {
-	return s.Mode&modeTypeMask == modeSymlink
 }
