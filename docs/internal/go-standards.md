@@ -134,7 +134,7 @@ for name, tc := range tests {
     t.Run(name, func(t *testing.T) {
         // Case-specific setup steps.
         got, err := pkg.FunctionUnderTest(tc.input)
-        if tc.wantErr(){
+        if tc.wantErr {
             require.Error(t, err, "reason why errors are expected")
             return
         }
