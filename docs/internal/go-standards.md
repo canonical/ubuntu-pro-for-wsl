@@ -114,23 +114,55 @@ func (s System) ProStatus(ctx context.Context) (attached bool, err error) {
   - `LoadWithUpdateFromGoldenYAML` for structured/YAML expectations.
 - Update golden files intentionally with `TESTS_UPDATE_GOLDEN=yes`, then commit the updated golden artifacts in the same PR.
 - Prefer explicit, stable assertions over ad hoc string-contains checks.
+- Avoid using test-specific package `init()` functions to inject behaviours or configuration values
+  through test seams. Do so only when tests can only work under the injected behaviour, it's needed
+  globally and replacing the affected component is not a suitable alternative.
 
 ### Example of good test
 
 ```go
 tests := map[string]struct {
-    input string
-    want  string
+    input   string
+    want    string
+    wantErr bool
 }{
     "simple case": {input: "x", want: "y"},
+    "error case":  {input: "z", wantErr: true},
 }
 
 for name, tc := range tests {
     t.Run(name, func(t *testing.T) {
-        got := run(tc.input)
+        // Case-specific setup steps.
+        got, err := pkg.FunctionUnderTest(tc.input)
+        if tc.wantErr(){
+            require.Error(t, err, "reason why errors are expected")
+            return
+        }
         want := testutils.LoadWithUpdateFromGolden(t, got)
         require.Equal(t, want, got)
     })
+}
+```
+
+### Example of acceptable use of package init():
+
+```go
+// package p has some validation depending on this list (an immutable configuration value in code):
+var allowedFsNames = []string{"9p", "virtiofs"}
+
+// In a separate purpose-specific file package A exports a hook to extend the list only for testing.
+import "testdetection"
+
+func ExtendAllowedFsNamesForTesting(fsname string){
+    testdetection.MustBeTesting() // panic if not under testing.
+    allowedFsNames = append(allowedFsNames, fsname)
+}
+
+// testutils init allows tests of higher level clients of A to run on ext4:
+// - CI wouldn't run otherwise;
+// - package p's correct design doesn't expose an object or interface that can be mocked otherwise.
+func init() {
+    p.ExtendAllowedFsNamesForTesting("ext4")
 }
 ```
 
