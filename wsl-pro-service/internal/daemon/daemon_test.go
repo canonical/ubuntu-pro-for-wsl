@@ -137,7 +137,7 @@ func TestServe(t *testing.T) {
 			}
 
 			if tc.breakPortFile {
-				require.NoError(t, os.RemoveAll(publicDir), "Setup: could not remove port file")
+				require.NoError(t, os.Remove(filepath.Join(publicDir, common.ListeningPortFileName)), "Setup: could not remove port file")
 			}
 
 			if tc.breakLandscapeConf {
