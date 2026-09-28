@@ -3,7 +3,6 @@ package daemon
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -37,12 +36,6 @@ func newDefaultSecureReader() *defaultSecureReader {
 //  3. Every directory along targetPath is root-owned with mode 0700.
 //  4. The target file is root-owned with mode 0600.
 func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, error) {
-	if fi, err := os.Lstat(rootDir); err != nil {
-		return nil, fmt.Errorf("could not stat %q: %w", rootDir, err)
-	} else if fi.Mode()&os.ModeSymlink != 0 {
-		return nil, fmt.Errorf("refused %q: root is a symlink", rootDir)
-	}
-
 	root, err := r.openRoot(rootDir)
 	if err != nil {
 		return nil, fmt.Errorf("could not open root %q: %w", rootDir, err)
@@ -80,11 +73,11 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 
 	// Validate the open target file descriptor itself to ensure it points to a compliant inode
 	// and was not substituted by an attacker prior to validation.
-	fileStat, err := targetFile.Stat()
+	targetStat, err := targetFile.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, targetPath), err)
 	}
-	if err := defaultValidate(filepath.Join(rootDir, targetPath), fileStat); err != nil {
+	if err := defaultValidate(filepath.Join(rootDir, targetPath), targetStat); err != nil {
 		return nil, err
 	}
 

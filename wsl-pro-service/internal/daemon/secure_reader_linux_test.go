@@ -272,19 +272,19 @@ func TestDefaultSecureReader(t *testing.T) {
 	}
 }
 
-// TestDefaultSecureReader_RealFS exercises the inline os.Lstat(rootDir) check that runs
-// before the openRoot seam. Unprivileged tests cannot reach the success path through the
-// reader (validateNode refuses non-root ownership), so we cover the refusal paths here.
+// TestDefaultSecureReader_RealFS exercises atomic root opening against real filesystem paths,
+// validating that openRootOS rejects symlinks and missing directories directly at the syscall layer.
 func TestDefaultSecureReader_RealFS(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		symlink bool
-		missing bool
-		wantErr string
+		symlink        bool
+		missing        bool
+		wantErr        string
+		wantIsNotExist bool
 	}{
-		"Refuses a symlink rootDir": {symlink: true, wantErr: "root is a symlink"},
-		"Fails on missing rootDir":  {missing: true, wantErr: "could not stat"},
+		"Refuses a symlink rootDir": {symlink: true, wantErr: "could not open root"},
+		"Fails on missing rootDir":  {missing: true, wantErr: "could not open root", wantIsNotExist: true},
 	}
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
@@ -308,6 +308,9 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 			_, err := reader.ReadFile(rootDir, filePath)
 			if len(tc.wantErr) > 0 {
 				require.ErrorContains(t, err, tc.wantErr, "reader.ReadFile should have failed")
+				if tc.wantIsNotExist {
+					require.ErrorIs(t, err, os.ErrNotExist, "missing root error should match os.ErrNotExist")
+				}
 				return
 			}
 			require.NoError(t, err, "reader.ReadFile should not have failed.")
