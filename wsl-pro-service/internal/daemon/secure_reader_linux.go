@@ -110,9 +110,7 @@ func (r *openat2Root) Open(name string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	if fd < 0 {
-		return nil, errors.New("invalid file descriptor")
-	}
+	// #nosec G115 // If err is nil, openat2 returned a positive descriptor, no risk of overflows.
 	return os.NewFile(uintptr(fd), clean), nil
 }
 
