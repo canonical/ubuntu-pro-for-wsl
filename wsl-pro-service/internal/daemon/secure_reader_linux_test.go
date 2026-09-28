@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"testing/iotest"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
 	"github.com/stretchr/testify/require"
@@ -126,6 +127,12 @@ func TestDefaultSecureReader(t *testing.T) {
 			targetPath:  "file.txt",
 			wantErr:     "could not open root",
 		},
+		"Rejected when stating the root directory fails": {
+			root:       &mockRootFs{rootLstatErr: errors.New("disk failure")},
+			targetPath: "file.txt",
+			wantErr:    "could not stat root",
+			wantClosed: true,
+		},
 		"Rejected when the root directory has insecure permissions": {
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
@@ -137,7 +144,12 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when stating a component fails": {
-			root:       &mockRootFs{lstatErr: errors.New("disk failure")},
+			root: &mockRootFs{
+				infos: map[string]daemon.FileStat{
+					"sub/file.txt": secureFileInfo("file.txt"),
+				},
+				lstatErr: errors.New("disk failure"),
+			},
 			targetPath: "sub/file.txt",
 			wantErr:    "could not stat",
 			wantClosed: true,
@@ -223,6 +235,15 @@ func TestDefaultSecureReader(t *testing.T) {
 			},
 			targetPath: "file.txt",
 			wantErr:    "could not stat",
+			wantClosed: true,
+		},
+		"Rejected when reading the target file contents fails": {
+			root: &mockRootFs{
+				infos:   map[string]daemon.FileStat{"file.txt": secureFileInfo("file.txt")},
+				readErr: errors.New("read error"),
+			},
+			targetPath: "file.txt",
+			wantErr:    "could not read",
 			wantClosed: true,
 		},
 	}
@@ -318,7 +339,9 @@ func TestOpenRootOS(t *testing.T) {
 		missingParent    bool
 		fileAsRoot       bool
 		mountPointAsRoot bool
+		untrustedFS      bool
 		filesystemRoot   bool
+		statRootSelf     bool
 		missingPath      bool
 		nested           bool
 		isDir            bool
@@ -326,15 +349,17 @@ func TestOpenRootOS(t *testing.T) {
 		wantErr     bool
 		wantContent string
 	}{
-		"Fails on non-existent directory":        {missingDir: true, wantErr: true},
-		"Fails on non-existent parent directory": {missingParent: true, wantErr: true},
-		"Fails on file instead of directory":     {fileAsRoot: true, wantErr: true},
-		"Fails on mount point directory":         {mountPointAsRoot: true, wantErr: true},
-		"Opens filesystem root":                  {filesystemRoot: true, isDir: true},
-		"Reads regular file":                     {wantContent: "hello real fs"},
-		"Reads nested file in subdirectory":      {nested: true, wantContent: "world real fs"},
-		"Stats directory":                        {isDir: true},
-		"Fails on missing path":                  {missingPath: true, wantErr: true},
+		"Fails on non-existent directory":         {missingDir: true, wantErr: true},
+		"Fails on non-existent parent directory":  {missingParent: true, wantErr: true},
+		"Fails on file instead of directory":      {fileAsRoot: true, wantErr: true},
+		"Fails on mount point directory":          {mountPointAsRoot: true, wantErr: true},
+		"Fails on untrusted filesystem directory": {untrustedFS: true, wantErr: true},
+		"Opens filesystem root":                   {filesystemRoot: true, isDir: true},
+		"Stats root directory itself":             {statRootSelf: true, isDir: true},
+		"Reads regular file":                      {wantContent: "hello real fs"},
+		"Reads nested file in subdirectory":       {nested: true, wantContent: "world real fs"},
+		"Stats directory":                         {isDir: true},
+		"Fails on missing path":                   {missingPath: true, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -360,11 +385,18 @@ func TestOpenRootOS(t *testing.T) {
 			if tc.mountPointAsRoot {
 				rootDir = "/proc"
 			}
+			if tc.untrustedFS {
+				rootDir = "/sys/kernel"
+			}
 			if tc.filesystemRoot {
 				rootDir = "/"
 			}
 
 			root, err := daemon.OpenRoot(rootDir)
+			if tc.untrustedFS {
+				require.ErrorContains(t, err, "refusing untrusted filesystem type", "OpenRoot should reject untrusted filesystem")
+				return
+			}
 			if tc.missingDir || tc.missingParent || tc.fileAsRoot || tc.mountPointAsRoot {
 				require.Error(t, err, "OpenRoot should have failed on invalid root target")
 				return
@@ -381,6 +413,9 @@ func TestOpenRootOS(t *testing.T) {
 			}
 			if tc.filesystemRoot {
 				target = "etc"
+			}
+			if tc.statRootSelf {
+				target = "."
 			}
 			if tc.missingPath {
 				target = "missing.txt"
@@ -406,10 +441,14 @@ func TestOpenRootOS(t *testing.T) {
 			st, err := rc.Stat()
 			require.NoError(t, err, "rc.Stat should succeed on open file")
 			require.False(t, st.IsDir(), "rc.Stat should report regular file")
+			require.Equal(t, filepath.Base(target), st.Name, "rc.Stat should report matching base name")
 			data, err := io.ReadAll(rc)
 			require.NoError(t, err, "reading opened file contents should succeed")
 			require.NoError(t, rc.Close(), "closing opened file should succeed")
 			require.Equal(t, tc.wantContent, string(data), "opened file contents should match expected data")
+
+			_, err = rc.Stat()
+			require.Error(t, err, "rc.Stat should fail after file descriptor is closed")
 		})
 	}
 }
@@ -544,8 +583,9 @@ func TestOpenRootOS_CloserLifecycle(t *testing.T) {
 
 			if tc.closedRoot {
 				require.NoError(t, root.Close(), "Close should succeed")
+				require.NoError(t, root.Close(), "Subsequent Close should be idempotent and return nil")
 			} else if tc.invalidRootFd {
-				root = daemon.NewOpenat2RootForTest(-999, dir)
+				root = daemon.NewOpenat2RootForTest(999999, dir)
 			} else {
 				t.Cleanup(func() { _ = root.Close() })
 			}
@@ -568,6 +608,20 @@ func TestOpenRootOS_CloserLifecycle(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOpenRootOS_CurrentDirUnreadable(t *testing.T) {
+	dir := t.TempDir()
+	orig, err := os.Getwd()
+	require.NoError(t, err, "Setup: could not get current working directory")
+	require.NoError(t, os.Chdir(dir), "Setup: could not change to temporary directory")
+	defer func() { _ = os.Chdir(orig) }()
+
+	require.NoError(t, os.Chmod(dir, 0o300), "Setup: could not remove read permission from directory") //nolint:gosec // test exercises restricted directory permissions
+	defer func() { _ = os.Chmod(dir, 0o755) }()                                                        //nolint:gosec // test cleanup restores directory permissions
+
+	_, err = daemon.OpenRoot(".")
+	require.Error(t, err, "OpenRoot on unreadable current directory should fail")
 }
 
 // TestOpenRootOS_RealSpecialFiles asserts that Lstat on openat2Root correctly detects non-regular
@@ -642,28 +696,34 @@ type mockRootFs struct {
 	infos    map[string]daemon.FileStat // per relative path metadata
 	contents map[string]string          // per relative path file contents
 
-	lstatErr    error                      // error returned by Lstat regardless of path
-	openErr     error                      // error returned by Open regardless of path
-	openFiles   map[string]daemon.FileStat // override descriptor stat to simulate inode swap
-	fileStatErr error                      // error returned by file Stat()
-	closed      bool
+	rootLstatErr error                      // error returned by Lstat on root "."
+	lstatErr     error                      // error returned by Lstat on path components
+	openErr      error                      // error returned by Open regardless of path
+	readErr      error                      // error returned when reading the target file
+	openFiles    map[string]daemon.FileStat // override descriptor stat to simulate inode swap
+	fileStatErr  error                      // error returned by file Stat()
+	closed       bool
 }
 
 func (m *mockRootFs) Lstat(name string) (daemon.FileStat, error) {
-	if m.lstatErr != nil {
-		return daemon.FileStat{}, m.lstatErr
-	}
+	clean := filepath.Clean(name)
 	// Lstat(".") is the call the reader uses to validate the root itself; the mock
 	// returns a default root FileStat when "." is not explicitly configured, matching
 	// what a real os.Root.Lstat(".") reports on a directory with mode 0700 owned by
 	// the test user.
-	if filepath.Clean(name) == "." {
+	if clean == "." {
+		if m.rootLstatErr != nil {
+			return daemon.FileStat{}, m.rootLstatErr
+		}
 		if fi, ok := m.infos["."]; ok {
 			return fi, nil
 		}
 		return secureRootInfo(), nil
 	}
-	fi, ok := m.infos[filepath.Clean(name)]
+	if m.lstatErr != nil {
+		return daemon.FileStat{}, m.lstatErr
+	}
+	fi, ok := m.infos[clean]
 	if !ok {
 		return daemon.FileStat{}, errors.New("no metadata configured for " + name)
 	}
@@ -681,7 +741,9 @@ func (m *mockRootFs) Open(name string) (daemon.ConfinedFile, error) {
 	}
 	content, hasContent := m.contents[clean]
 	var rc io.ReadCloser
-	if !hasContent {
+	if m.readErr != nil {
+		rc = io.NopCloser(iotest.ErrReader(m.readErr))
+	} else if !hasContent {
 		rc = io.NopCloser(bytes.NewReader(nil))
 	} else {
 		rc = io.NopCloser(bytes.NewReader([]byte(content)))
