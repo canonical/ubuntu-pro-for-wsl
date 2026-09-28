@@ -50,8 +50,8 @@ func OpenRoot(path string) (RootFs, error) {
 }
 
 // DefaultValidate validates file attributes for testing.
-func DefaultValidate(path string, stat FileStat) error {
-	return defaultValidate(path, stat)
+func DefaultValidate(stat FileStat) error {
+	return defaultValidate(stat)
 }
 
 // WithTestSecureReader overrides the SecureReader used by the daemon. It is exported from
