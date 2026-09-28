@@ -277,21 +277,27 @@ func TestOpenRootOS(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		missingDir  bool
-		fileAsRoot  bool
-		missingPath bool
-		nested      bool
-		isDir       bool
+		missingDir       bool
+		missingParent    bool
+		fileAsRoot       bool
+		mountPointAsRoot bool
+		filesystemRoot   bool
+		missingPath      bool
+		nested           bool
+		isDir            bool
 
 		wantErr     bool
 		wantContent string
 	}{
-		"Fails on non-existent directory":    {missingDir: true, wantErr: true},
-		"Fails on file instead of directory": {fileAsRoot: true, wantErr: true},
-		"Reads regular file":                 {wantContent: "hello real fs"},
-		"Reads nested file in subdirectory":  {nested: true, wantContent: "world real fs"},
-		"Stats directory":                    {isDir: true},
-		"Fails on missing path":              {missingPath: true, wantErr: true},
+		"Fails on non-existent directory":        {missingDir: true, wantErr: true},
+		"Fails on non-existent parent directory": {missingParent: true, wantErr: true},
+		"Fails on file instead of directory":     {fileAsRoot: true, wantErr: true},
+		"Fails on mount point directory":         {mountPointAsRoot: true, wantErr: true},
+		"Opens filesystem root":                  {filesystemRoot: true, isDir: true},
+		"Reads regular file":                     {wantContent: "hello real fs"},
+		"Reads nested file in subdirectory":      {nested: true, wantContent: "world real fs"},
+		"Stats directory":                        {isDir: true},
+		"Fails on missing path":                  {missingPath: true, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -308,12 +314,21 @@ func TestOpenRootOS(t *testing.T) {
 			if tc.missingDir {
 				rootDir = filepath.Join(t.TempDir(), "does-not-exist")
 			}
+			if tc.missingParent {
+				rootDir = "/nonexistent-parent/does-not-exist"
+			}
 			if tc.fileAsRoot {
 				rootDir = filepath.Join(dir, "hello.txt")
 			}
+			if tc.mountPointAsRoot {
+				rootDir = "/proc"
+			}
+			if tc.filesystemRoot {
+				rootDir = "/"
+			}
 
 			root, err := daemon.OpenRoot(rootDir)
-			if tc.missingDir || tc.fileAsRoot {
+			if tc.missingDir || tc.missingParent || tc.fileAsRoot || tc.mountPointAsRoot {
 				require.Error(t, err, "OpenRoot should have failed on invalid root target")
 				return
 			}
@@ -326,6 +341,9 @@ func TestOpenRootOS(t *testing.T) {
 			}
 			if tc.isDir {
 				target = "sub"
+			}
+			if tc.filesystemRoot {
+				target = "etc"
 			}
 			if tc.missingPath {
 				target = "missing.txt"
