@@ -73,7 +73,7 @@ func TestFstypeForMountID(t *testing.T) {
 	t.Parallel()
 
 	mountinfo := "36 35 98:0 / /mnt2 rw,noatime master:1 - ext3 /dev/root rw,errors=continue\n" +
-		"31 30 0:32 / /mnt/c rw,relatime - 9p C:\\ rw,dirsync,aname=drvfs\040path=C:\\;mfsymlinks\n" +
+		"31 30 0:32 / /mnt/c rw,relatime - 9p C:\\ rw,dirsync,aname=drvfs\\040path=C:\\;mfsymlinks\n" +
 		"32 31 0:33 / /home/user/mount rw,nosuid,nodev,relatime user_id=1000 - fuse.sshfs sshfs#user@host rw\n" +
 		"38 37 0:39 / /mnt/d rw,relatime - virtiofs D:\\ rw\n"
 
