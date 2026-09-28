@@ -35,7 +35,8 @@ type FileStat = fileStat
 type DefaultSecureReader = defaultSecureReader
 
 // NewDefaultSecureReader creates a defaultSecureReader with the given openRoot seam for
-// testing. Passing nil wires the production openRootOS seam (real os.OpenRoot).
+// testing. Passing nil wires the production openRootOS seam (openat2-confined root with
+// a mountinfo-based filesystem check).
 func NewDefaultSecureReader(openRoot func(string) (RootFs, error)) *DefaultSecureReader {
 	if openRoot == nil {
 		openRoot = openRootOS
@@ -43,8 +44,8 @@ func NewDefaultSecureReader(openRoot func(string) (RootFs, error)) *DefaultSecur
 	return &defaultSecureReader{openRoot: openRoot}
 }
 
-// OpenRoot is the production openRoot seam, exported so tests can drive real os.OpenRoot
-// without going through the reader's validation.
+// OpenRoot is the production openRoot seam, exported so tests can drive the real
+// openRootOS without going through the reader's validation.
 func OpenRoot(path string) (RootFs, error) {
 	return openRootOS(path)
 }
