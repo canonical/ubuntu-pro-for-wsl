@@ -55,11 +55,17 @@ These naming conventions are summarised in the table below:
 | App name             | AppxPackage name                       | Distro name      | Executable name     |
 | -------------------- | -------------------------------------- | ---------------- | ------------------- |
 | `Ubuntu`             | `CanonicalGroupLimited.Ubuntu`         | `Ubuntu`         | `ubuntu.exe`        |
-| `Ubuntu (Preview)`   | `CanonicalGroupLimited.UbuntuPreview`  | `Ubuntu-Preview` | `ubuntupreview.exe` |
 | `Ubuntu XX.YY.Z LTS` | `CanonicalGroupLimited.UbuntuXX.YYLTS` | `Ubuntu-XX.YY`   | `ubuntuXXYY.exe`    |
+| `Ubuntu (Preview)`[^1]   | `CanonicalGroupLimited.UbuntuPreview`  | `Ubuntu-Preview` | `ubuntupreview.exe` |
 
 ```{admonition} The WSL kernel
 :class: important
 The kernel used in WSL environments is maintained by Microsoft.
 Bug reports and support requests for the WSL kernel should be directed to the [official repository for the WSL kernel](https://github.com/microsoft/WSL2-Linux-Kernel).
 ```
+
+[^1]: Ubuntu (Preview) has been deprecated. If you log in with an account that
+    previously installed Ubuntu 22.04, you’ll only find an old version. For
+more information, read the post [What happened to
+Ubuntu(Preview)?](https://discourse.ubuntu.com/t/what-happened-to-ubuntu-preview/86714)
+on the Ubuntu Discourse.
