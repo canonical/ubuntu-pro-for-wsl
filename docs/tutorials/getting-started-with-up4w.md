@@ -89,11 +89,11 @@ If this returns `True` then the file exists and can be removed with:
 (tut::get-ubuntu)=
 ### Install Ubuntu
 
-Ubuntu 24.04 LTS is recommended for this tutorial and can be installed 
+Ubuntu 26.04 LTS is recommended for this tutorial and can be installed 
 with the following command in PowerShell:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04
+> wsl --install Ubuntu-26.04
 ```
 
 For other installation options refer to our [install Ubuntu on WSL guide](https://ubuntu.com/wsl/docs/stable/howto/install-ubuntu-wsl2/).
@@ -165,11 +165,11 @@ Pro for WSL will automatically forward the subscription to the Ubuntu Pro client
 
 All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subscription.
 
-In PowerShell, run the following command to launch the Ubuntu-24.04 instance
+In PowerShell, run the following command to launch the Ubuntu-26.04 instance
 you installed previously, entering a username and password when prompted.
 
 ```{code-block} text
-> wsl ~ -d Ubuntu-24.04
+> wsl ~ -d Ubuntu-26.04
 ```
 
 You will now be logged in to the Ubuntu instance and can check that Pro for WSL has Pro-attached this instance with:

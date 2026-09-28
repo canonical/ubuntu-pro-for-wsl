@@ -21,11 +21,11 @@ Interim releases of Ubuntu are currently not supported on WSL.
 
 These are the releases of Ubuntu that we support for WSL and that are available on the Microsoft Store:
 
-- **Ubuntu** ships the latest stable LTS (Long Term Support) release of Ubuntu. When new LTS versions are released, this release of Ubuntu can be upgraded once the first point release is available.
+- **Ubuntu** ships the latest stable LTS (Long Term Support) release of Ubuntu. When new LTS versions are released, this release of Ubuntu can be upgraded once the first point release is available. The current release is Ubuntu 26.04 LTS.
 - **Numbered releases** --- for example, Ubuntu 22.04 LTS --- refer to specific LTS releases that receive standard support for five years. For more information on LTS releases, support and timelines, visit the [Ubuntu releases page](https://wiki.ubuntu.com/Releases). Numbered releases can also be upgraded once the first point release is available.
 
 ```{tip}
-Ubuntu 24.04 LTS is available in the [new WSL distro
+Ubuntu LTS releases from 20.04 and later are available in the [new WSL distro
 format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available), which can be
 installed directly from [ubuntu.com/wsl](https://ubuntu.com/desktop/wsl)
 without the Microsoft Store.

@@ -47,7 +47,7 @@ export LANDSCAPE_USER_PASSWORD=mib
 export LANDSCAPE_URL=https://landscape.mib.com
 
 # The URL of the custom rootfs to be deployed
-export ROOTFS_URL="http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz"
+export ROOTFS_URL="http://landscape.mib.com:9009/ubuntu-26.04-custom.tar.gz"
 
 # The list of IDs of the different Windows machines on which we are going to deploy WSL instances
 export PARENT_COMPUTER_IDS=(26 30 31)
@@ -69,7 +69,7 @@ $LANDSCAPE_USER_PASSWORD="mib"
 $LANDSCAPE_URL="https://landscape.mib.com"
 
 # The URL of the custom rootfs to be deployed
-$ROOTFS_URL="http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz"
+$ROOTFS_URL="http://landscape.mib.com:9009/ubuntu-26.04-custom.tar.gz"
 
 # The list of IDs of the different Windows machines on which we are going to deploy WSL instances
 $PARENT_COMPUTER_IDS=@(26, 30, 31)
@@ -97,7 +97,7 @@ Landscape REST API.
 ```{admonition} Image server
 :class: tip
 
-In our example, a [custom image](howto::custom-distro) `ubuntu-24.04-custom.tar.gz` is served from
+In our example, a [custom image](howto::custom-distro) `ubuntu-26.04-custom.tar.gz` is served from
 the same address as the Landscape server at port 9009. In practice, that URL could point to any
 address in an intranet or the internet that's accessible from the client computers.
 
@@ -194,7 +194,7 @@ $JWT = ConvertTo-SecureString -AsPlainText -Force $( $LOGIN_RESPONSE.Content | C
 Build the payload with information about the WSL instance to be deployed. In this case it would look like:
 
 ```json
-{"rootfs_url": "http://landscape.mib.com:9009/ubuntu-24.04-custom.tar.gz", "computer_name": "Carbonizer", "cloud_init": "<base64 encoded material>"}
+{"rootfs_url": "http://landscape.mib.com:9009/ubuntu-26.04-custom.tar.gz", "computer_name": "Carbonizer", "cloud_init": "<base64 encoded material>"}
 ```
 
 `````{tabs}

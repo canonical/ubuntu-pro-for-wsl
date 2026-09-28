@@ -58,7 +58,7 @@ completing this step. You might be prompted to restart your computer.
 Normally, the CUDA toolkit for Linux comes packaged with the device driver for the GPU. On WSL 2, the CUDA driver used is part of the Windows driver installed on the system, and, therefore, care must be taken **not** to install this Linux driver.
 ```
 
-The following commands will install the WSL-specific CUDA toolkit version 13.2 on Ubuntu 24.04 AMD64 architecture. Be aware that older versions of CUDA (<=10) don’t support WSL 2. Also notice that attempting to install the CUDA toolkit packages straight from the Ubuntu repository (`cuda`, `cuda-13`, or `cuda-drivers`) will attempt to install the Linux NVIDIA graphics driver, which is not what you want on WSL 2.
+The following commands will install the WSL-specific CUDA toolkit version 13.2 on Ubuntu 26.04 AMD64 architecture. Be aware that older versions of CUDA (<=10) don’t support WSL 2. Also notice that attempting to install the CUDA toolkit packages straight from the Ubuntu repository (`cuda`, `cuda-13`, or `cuda-drivers`) will attempt to install the Linux NVIDIA graphics driver, which is not what you want on WSL 2.
 
 Navigate to the [CUDA Downloads page](https://developer.nvidia.com/cuda-downloads) and select the appropriate options for your system. In this case, we will select:
 

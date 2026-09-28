@@ -23,8 +23,8 @@ It is an industry standard and can now also be used to automatically set up {ter
 
 * Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
-The guide assumes that you are using Ubuntu 24.04,
-but Ubuntu 22.04 can also be used.
+The guide assumes that you are using Ubuntu 26.04,
+but Ubuntu 22.04 or later can be used.
 
 In the latest versions of WSL, installing a {term}`distro` also launches the instance
 and prompts the user through setup. Cloud-init will not provision an instance
@@ -48,7 +48,7 @@ echo $env:USERPROFILE
 
 Inside your Windows user home directory, create a new folder named
 `.cloud-init`, ensuring there is `.` at the start of the directory name. Inside
-the new directory, create an empty file named `Ubuntu-24.04.user-data`. The
+the new directory, create an empty file named `Ubuntu-26.04.user-data`. The
 name of this file name has to match the name of the distro instance that will
 be created in the next step.
 
@@ -90,15 +90,15 @@ application.
 
 > See more: [WSL data source reference](https://cloudinit.readthedocs.io/en/latest/reference/datasources/wsl.html).
 
-## Install and launch a new Ubuntu-24.04 instance
+## Install and launch a new Ubuntu-26.04 instance
 
 In PowerShell, run:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04
+> wsl --install Ubuntu-26.04
 ```
 
-This command installs and launches an Ubuntu-24.04 instance.
+This command installs and launches an Ubuntu-26.04 instance.
 This instance will then be configured automatically by cloud-init.
 The process can take several minutes, depending on your computer and network speeds.
 
@@ -114,7 +114,7 @@ Installation successful!
 To run a command as administrator (user "root"), use "sudo <command>".
 See "man sudo_root" for details.
 
-Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.6.36.3-microsoft-standard-WSL2 x86_64)
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 6.6.114.1-microsoft-standard-WSL2 x86_64)
 
  * Documentation:  https://help.ubuntu.com
  * Management:     https://landscape.canonical.com
@@ -202,11 +202,11 @@ Verified:
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
 
-ginac-tools/noble,now 1.8.7-1 amd64 [installed]
-libginac11/noble,now 1.8.7-1 amd64 [installed,automatic]
-octave-common/noble,now 8.4.0-1 all [installed,automatic]
-octave-doc/noble,now 8.4.0-1 all [installed,automatic]
-octave/noble,now 8.4.0-1 amd64 [installed]
+ginac-tools/resolute,now 1.8.10-1 amd64 [installed]
+libginac13/resolute,now 1.8.10-1 amd64 [installed,automatic]
+octave-common/resolute,now 11.1.0-3 all [installed,automatic]
+octave-doc/resolute,now 11.1.0-3 all [installed,automatic]
+octave/resolute,now 11.1.0-3 amd64 [installed]
 ```
 
 5. Lastly, verify that the commands requested were also run. In this case we set up `vcpkg` from git, as recommended by its

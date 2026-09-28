@@ -41,34 +41,34 @@ You need WSL installed and configured to follow this guide.
 Installation instructions are provided in the [official Microsoft
 documentation](https://learn.microsoft.com/en-us/windows/wsl/install).
 
-### Any existing instance of Ubuntu-24.04 should be removed
+### Any existing instance of Ubuntu-26.04 should be removed
 
-You will be remotely deploying Ubuntu-24.04 on a Windows machine using Landscape.
+You will be remotely deploying Ubuntu-26.04 on a Windows machine using Landscape.
 
-Uninstall any pre-existing instance of Ubuntu-24.04 on the machine before
+Uninstall any pre-existing instance of Ubuntu-26.04 on the machine before
 following the guide.
 
-To check if an Ubuntu-24.04 instance exists, run the following in PowerShell:
+To check if an Ubuntu-26.04 instance exists, run the following in PowerShell:
 
 ```{code-block} text
 > wsl -l -v
 ```
 
-Confirm that there is no Ubuntu-24.04 instance before continuing.
+Confirm that there is no Ubuntu-26.04 instance before continuing.
 If one does exist, back it up and uninstall it.
 
-````{dropdown} Backing up and uninstalling an existing Ubuntu-24.04 instance
-If you have an existing Ubuntu-24.04 instance, run the following commands:
+````{dropdown} Backing up and uninstalling an existing Ubuntu-26.04 instance
+If you have an existing Ubuntu-26.04 instance, run the following commands:
 
 ```{code-block} text
-> wsl --terminate Ubuntu-24.04
+> wsl --terminate Ubuntu-26.04
 > mkdir backup
-> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
-> wsl --unregister Ubuntu-24.04
+> wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.tar.gz
+> wsl --unregister Ubuntu-26.04
 
 ```
 
-This stops any running instance of Ubuntu-24.04, creates a backup folder,
+This stops any running instance of Ubuntu-26.04, creates a backup folder,
 generates a compressed backup of the distro, and uninstalls the instance.
 
 Instructions for restoring the backup can be found at the end of the guide.
@@ -141,7 +141,7 @@ Complete the fields as follows:
 | Name                | WSL-CUDA                               |
 | Description         | CUDA-enabled WSL instances             |
 | Access group        | Global access                          |
-| RootFS image        | Ubuntu 24.04 LTS                       |
+| RootFS image        | Ubuntu 26.04 LTS                       |
 | Cloud-init          | Plain text                             |
 
 Copy and paste this {term}`cloud-init` configuration:
@@ -183,7 +183,7 @@ runcmd:
 Search for the "wsl-target" tag and select it, then confirm that you want to
 add the WSL profile.
 
-Go to {guilabel}`Activities` and confirm that the "Create instance Ubuntu-24.04" activity is queued.
+Go to {guilabel}`Activities` and confirm that the "Create instance Ubuntu-26.04" activity is queued.
 
 This means that an instance of Ubuntu is in the process of being deployed to
 the Windows host.
@@ -197,12 +197,12 @@ On the Windows host machine, list the installed WSL distros:
 > wsl -l -v
 ```
 
-The output should now confirm that Ubuntu-24.04 is "installing" or "running".
+The output should now confirm that Ubuntu-26.04 is "installing" or "running".
 
 Installing the CUDA toolkit can take some time. After a few minutes you should
-be able to list the distros again and confirm that Ubuntu-24.04 is "stopped".
+be able to list the distros again and confirm that Ubuntu-26.04 is "stopped".
 
-When the Ubuntu-24.04 instance has launched, confirm that the correct default user "u" has been set from the prompt:
+When the Ubuntu-26.04 instance has launched, confirm that the correct default user "u" has been set from the prompt:
 
 ```{code-block} text
 :class: no-copy
@@ -248,14 +248,14 @@ Finally, run `pro status`, to confirm that Pro for WSL has automatically Pro-att
 Terminate the new instance and uninstall it from PowerShell:
 
 ```{code-block} text
-> wsl --terminate Ubuntu-24.04
-> wsl --unregister Ubuntu-24.04
+> wsl --terminate Ubuntu-26.04
+> wsl --unregister Ubuntu-26.04
 ```
 
 Restore the backup:
 
 ```{code-block} text
-> wsl --import Ubuntu-24.04 <directory-to-install-filesystem> .\backup\Ubuntu-24.04.tar.gz
+> wsl --import Ubuntu-26.04 <directory-to-install-filesystem> .\backup\Ubuntu-26.04.tar.gz
 ```
 
 This will restore your data and install the filesystem to the path you specify.

@@ -11,7 +11,7 @@ myst:
 ## What you will learn
 
 * How to install and enable WSL on Windows
-* How to install Ubuntu 24.04 LTS using the terminal or the Microsoft Store
+* How to install Ubuntu 26.04 LTS using the terminal or the Microsoft Store
 * How to start Ubuntu instances after they have been installed
 
 ## What you will need
@@ -74,25 +74,28 @@ In a PowerShell terminal, run `wsl --list --online` to see a list of all availab
 The following is a list of valid distributions that can be installed.
 Install using 'wsl --install <Distro>'.
 
-  NAME                                   FRIENDLY NAME
-  AlmaLinux-8                            AlmaLinux OS 8
-  ...                                    ...
-  Ubuntu                                 Ubuntu
-  Ubuntu-24.04                           Ubuntu 24.04 LTS
-  archlinux                              Arch Linux
-  kali-linux                             Kali Linux Rolling
-  ...                                    ...
-  Ubuntu-18.04                           Ubuntu 18.04 LTS
-  Ubuntu-20.04                           Ubuntu 20.04 LTS
-  Ubuntu-22.04                           Ubuntu 22.04 LTS
-...
+  NAME                            FRIENDLY NAME
+  Ubuntu                          Ubuntu
+  Ubuntu-26.04                    Ubuntu 26.04 LTS
+  Ubuntu-24.04                    Ubuntu 24.04 LTS
+  Ubuntu-22.04                    Ubuntu 22.04 LTS
+  ...
+  ...
+  archlinux                       Arch Linux
+  FedoraLinux-44                  Fedora Linux 44
+  FedoraLinux-43                  Fedora Linux 43
+  eLxr                            eLxr 12.12.0.0 GNU/Linux
+  OracleLinux_7_9                 Oracle Linux 7.9
+  OracleLinux_8_10                Oracle Linux 8.10
+  OracleLinux_9_5                 Oracle Linux 9.5
+  SUSE-Linux-Enterprise-15-SP6    SUSE Linux Enterprise 15 SP6
 
 ```
 
 Install a specific Ubuntu distro using a NAME from the output:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04
+> wsl --install Ubuntu-26.04
 ```
 
 ```{admonition} Using the new WSL distro format
@@ -109,8 +112,8 @@ requires WSL 2.4.10 or higher.
 Ubuntu images for WSL can be downloaded directly from
 [releases.ubuntu.com](https://releases.ubuntu.com).
 
-To download Ubuntu 24.04 LTS (Noble Numbat), go to
-[releases.ubuntu.com/noble](https://releases.ubuntu.com/noble) and select the WSL
+To download Ubuntu 26.04 LTS (Resolute Raccoon), go to
+[releases.ubuntu.com/resolute](https://releases.ubuntu.com/resolute) and select the WSL
 image.
 
 The image has a `.wsl` extension and can be installed in two ways:
