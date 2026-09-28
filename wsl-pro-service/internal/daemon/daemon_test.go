@@ -179,10 +179,10 @@ func TestServe(t *testing.T) {
 				mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
 					return nil, fmt.Errorf("refused %q: not strictly owned by root (uid 1000, gid 1000)", targetPath)
 				})
-				opts = append(opts, daemon.WithSecureReader(mockReader))
+				opts = append(opts, daemon.WithTestSecureReader(mockReader))
 			} else {
 				mockReader := testutils.NewMockSecureReader(nil)
-				opts = append(opts, daemon.WithSecureReader(mockReader))
+				opts = append(opts, daemon.WithTestSecureReader(mockReader))
 			}
 
 			d, err := daemon.New(ctx, system, opts...)
@@ -279,7 +279,7 @@ func TestServe_FailsOnInsecureClientKey(t *testing.T) {
 		return os.ReadFile(filepath.Join(rootDir, targetPath))
 	})
 
-	d, err := daemon.New(ctx, system, daemon.WithSecureReader(mockReader))
+	d, err := daemon.New(ctx, system, daemon.WithTestSecureReader(mockReader))
 	require.NoError(t, err)
 
 	serveExit := make(chan error, 1)
@@ -317,7 +317,7 @@ func TestServe_FailsOnMissingClientKeyIsNotSystemError(t *testing.T) {
 		return os.ReadFile(filepath.Join(rootDir, targetPath))
 	})
 
-	d, err := daemon.New(ctx, system, daemon.WithSecureReader(mockReader))
+	d, err := daemon.New(ctx, system, daemon.WithTestSecureReader(mockReader))
 	require.NoError(t, err)
 
 	serveExit := make(chan error, 1)
@@ -382,7 +382,7 @@ func TestServeAndQuit(t *testing.T) {
 
 			d, err := daemon.New(ctx, system,
 				daemon.WithSystemdNotifier(systemd.notify),
-				daemon.WithSecureReader(mockReader),
+				daemon.WithTestSecureReader(mockReader),
 			)
 			require.NoError(t, err, "New should return no error")
 
@@ -538,7 +538,7 @@ func TestReconnection(t *testing.T) {
 
 			d, err := daemon.New(ctx, system,
 				daemon.WithSystemdNotifier(systemd.notify),
-				daemon.WithSecureReader(mockReader),
+				daemon.WithTestSecureReader(mockReader),
 			)
 			require.NoError(t, err, "New should return no error")
 

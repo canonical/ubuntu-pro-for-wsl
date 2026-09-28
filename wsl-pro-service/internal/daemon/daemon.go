@@ -19,7 +19,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/i18n"
-	"github.com/canonical/ubuntu-pro-for-wsl/common/testdetection"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/system"
 	"github.com/coreos/go-systemd/daemon"
@@ -113,20 +112,6 @@ func New(ctx context.Context, s *system.System, args ...Option) (*Daemon, error)
 		gracefulCtx:    gCtx,
 		gracefulCancel: gCancel,
 	}, nil
-}
-
-// WithSecureReader overrides the SecureReader used to ingest files written by the Windows agent.
-// It exists so tests can substitute a fake reader; production code must rely on the default
-// reader, which enforces the Secure Projection ownership and permission invariants.
-// It panics when called outside test binaries.
-func WithSecureReader(r SecureReader) Option {
-	testdetection.MustBeTesting()
-
-	return func(o *options) {
-		if r != nil {
-			o.reader = r
-		}
-	}
 }
 
 // Serve serves on the streams, automatically reconnecting when the connection drops.
