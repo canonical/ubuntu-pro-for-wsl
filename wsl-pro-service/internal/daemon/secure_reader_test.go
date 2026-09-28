@@ -350,8 +350,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			reader := daemon.NewDefaultSecureReader(tc.mockFS)
 			got, err := reader.ReadFile(tc.rootDir, tc.targetPath)
 			if tc.wantErr != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.wantErr)
+				require.ErrorContains(t, err, tc.wantErr)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.wantContent, string(got))
@@ -385,8 +384,7 @@ func TestDefaultSecureReader_RealFS_RefusesNonRootOwnership(t *testing.T) {
 	require.NoError(t, os.WriteFile(filePath, []byte("hello"), 0o600))
 
 	_, err := reader.ReadFile(rootDir, "hello.txt")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "not strictly owned by root",
+	require.ErrorContains(t, err, "not strictly owned by root",
 		"real FS should refuse a non-root-owned root directory (and its contents)")
 
 	// A nested file: the intermediate directory is also correctly permissioned,
@@ -397,8 +395,7 @@ func TestDefaultSecureReader_RealFS_RefusesNonRootOwnership(t *testing.T) {
 	require.NoError(t, os.WriteFile(nestedPath, []byte("world"), 0o600))
 
 	_, err = reader.ReadFile(rootDir, "sub/nested.txt")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "not strictly owned by root")
+	require.ErrorContains(t, err, "not strictly owned by root")
 }
 
 func TestRealOSFs_OpenRoot_AndAdapter(t *testing.T) {
