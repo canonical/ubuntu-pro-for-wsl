@@ -39,7 +39,7 @@ var (
 		Resolve: unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_BENEATH | unix.RESOLVE_NO_XDEV,
 	}
 	confinedFileOpenHow = unix.OpenHow{
-		Flags:   unix.O_RDONLY | unix.O_CLOEXEC,
+		Flags:   unix.O_RDONLY | unix.O_NONBLOCK | unix.O_CLOEXEC,
 		Resolve: unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_BENEATH | unix.RESOLVE_NO_XDEV,
 	}
 )

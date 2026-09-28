@@ -65,7 +65,7 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 		current = filepath.Join(current, seg)
 		stat, err := root.Lstat(current)
 		if err != nil {
-			return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, current), err)
+			return nil, fmt.Errorf("could not stat %q: %w", filepath.Join(rootDir, current), err)
 		}
 		if err := defaultValidate(stat); err != nil {
 			return nil, fmt.Errorf("refused %q: %v", filepath.Join(rootDir, current), err)
