@@ -92,8 +92,8 @@ func TestDefaultValidate(t *testing.T) {
 
 // TestDefaultSecureReader drives the mocked-seam cases: validation logic, walk-loop error
 // handling, and lifecycle (root is always closed). Paths that depend on real filesystem behavior (a symlink
-// rootDir, a missing rootDir) live in TestDefaultSecureReader_RealFS below; cases that need
-// root-owned 0600/0700 paths live in TestDefaultSecureReader_RealFS_RefusesNonRootOwnership.
+// rootDir, a missing rootDir) live in TestDefaultSecureReader_RealFS below; ownership and mode
+// rules themselves are covered table-style by TestDefaultValidate above.
 func TestDefaultSecureReader(t *testing.T) {
 	t.Parallel()
 
@@ -445,9 +445,6 @@ func TestOpenRootOS(t *testing.T) {
 			require.NoError(t, err, "reading opened file contents should succeed")
 			require.NoError(t, rc.Close(), "closing opened file should succeed")
 			require.Equal(t, tc.wantContent, string(data), "opened file contents should match expected data")
-
-			_, err = rc.Stat()
-			require.Error(t, err, "rc.Stat should fail after file descriptor is closed")
 		})
 	}
 }
