@@ -119,8 +119,7 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   - Positive: attributes are stamped before content is written; instance-side defense-in-depth
     rejects compromised or improperly projected artifacts with `SystemError` before use; the
     filesystem check is race-free because the root `fd` pins the mount and `/proc/self/mountinfo` is
-    kernel-reported truth; `virtiofs` hosts are supported with pure Go (no new `syscalls`, no `cgo`, no
-    unsafe).
+    kernel-reported truth; `virtiofs` hosts are supported without `cgo` or `unsafe`.
   - Negative: depends on WSL EA projection behavior via `github.com/Microsoft/go-winio`; relies on
     `/proc` being mounted and on non-root users being unable to mount `9p` or `virtiofs`; the parent
     directory remains tamperable by the WSL user (accepted limitation).
