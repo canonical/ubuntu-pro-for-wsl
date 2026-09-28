@@ -36,7 +36,6 @@ The team applies the following quality criteria:
 
 - All changes are thoroughly reviewed and approved by core team members before integration.
 - Each change is thoroughly tested at the unit, integration and system levels. All the tests pass in all supported architectures.
-- Releases are reviewed as part of the [SRU exception](https://wiki.ubuntu.com/UbuntuProForWSLUpdates).
 
 The test plan is **completely automated** and runs **every time a change is merged**, as well as **during packaging**. This covers integration and end-to-end tests. Integration tests run on each LTS affected by the SRU to ensure compatibility.
 
@@ -91,5 +90,4 @@ Wsl-pro supports ubuntu-bug reporting to Launchpad with an apport hook but we ar
 ## References
 
 - [Project Documentation](https://ubuntu.com/wsl/docs/stable/)
-- [Ubuntu Pro for WSL SRU exception](https://wiki.ubuntu.com/UbuntuProForWSLUpdates)
-- [Ubuntu Pro tools SRU exception](https://wiki.ubuntu.com/UbuntuAdvantageToolsUpdates)
+- [Ubuntu Pro client SRU exception](https://ubuntu.com/project/docs/SRU/reference/exception-UbuntuAdvantageTools-Updates/)
