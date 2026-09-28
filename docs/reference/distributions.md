@@ -26,9 +26,9 @@ These are the releases of Ubuntu that we support for WSL and that are available 
 
 ```{tip}
 Ubuntu LTS releases from 20.04 and later are available in the [new WSL distro
-format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available), which can be
-installed directly from [ubuntu.com/wsl](https://ubuntu.com/desktop/wsl)
-without the Microsoft Store.
+format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available). The latest
+LTS release can be installed directly from
+[ubuntu.com/wsl](https://ubuntu.com/desktop/wsl) without the Microsoft Store.
 ```
 
 (naming)=
