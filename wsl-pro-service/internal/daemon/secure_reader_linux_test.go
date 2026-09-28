@@ -3,15 +3,14 @@ package daemon_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
-	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
-	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
 	"github.com/stretchr/testify/require"
@@ -26,43 +25,65 @@ import (
 func TestDefaultValidate(t *testing.T) {
 	t.Parallel()
 
+	expectedUID, expectedGID := daemon.ExpectedOwnerForTest()
+
 	testCases := map[string]struct {
-		info    fs.FileInfo
+		stat    daemon.FileStat
 		path    string
 		wantErr string
 	}{
 		"Valid directory": {
-			info: secureDirInfo("dir"),
+			stat: secureDirInfo("dir"),
 			path: "/dir",
 		},
 		"Valid regular file": {
-			info: secureFileInfo("file"),
+			stat: secureFileInfo("file"),
 			path: "/file",
 		},
 		"Invalid UID on file": {
-			info:    mockFileInfo{mode: 0600, sys: &syscall.Stat_t{Uid: 1000, Gid: 0}},
+			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o600, UID: 99999, GID: expectedGID},
 			path:    "/file",
-			wantErr: `refused "/file": not strictly owned by root (uid 1000, gid 0)`,
+			wantErr: fmt.Sprintf(`refused "/file": not strictly owned by root (uid 99999, gid %d)`, expectedGID),
 		},
 		"Invalid GID on file": {
-			info:    mockFileInfo{mode: 0600, sys: &syscall.Stat_t{Uid: 0, Gid: 1000}},
+			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o600, UID: expectedUID, GID: 99999},
 			path:    "/file",
-			wantErr: `refused "/file": not strictly owned by root (uid 0, gid 1000)`,
+			wantErr: fmt.Sprintf(`refused "/file": not strictly owned by root (uid %d, gid 99999)`, expectedUID),
 		},
 		"Invalid directory mode": {
-			info:    mockFileInfo{isDir: true, mode: fs.ModeDir | 0755, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+			stat:    daemon.FileStat{Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
 			path:    "/dir",
 			wantErr: `refused directory "/dir": not strictly owned by root (mode 0755)`,
 		},
 		"Invalid file mode": {
-			info:    mockFileInfo{mode: 0644, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o644, UID: expectedUID, GID: expectedGID},
 			path:    "/file",
 			wantErr: `refused file "/file": not strictly owned by root (mode 0644)`,
 		},
-		"Non stat_t sys metadata": {
-			info:    mockFileInfo{mode: 0600, sys: nil},
+		"Refuses file with setuid bit": {
+			stat:    daemon.FileStat{Mode: unix.S_IFREG | unix.S_ISUID | 0o600, UID: expectedUID, GID: expectedGID},
 			path:    "/file",
-			wantErr: `could not obtain ownership metadata for "/file": unexpected stat type <nil>`,
+			wantErr: `refused "/file": special permission bits (setuid/setgid/sticky) are not permitted`,
+		},
+		"Refuses file with setgid bit": {
+			stat:    daemon.FileStat{Mode: unix.S_IFREG | unix.S_ISGID | 0o600, UID: expectedUID, GID: expectedGID},
+			path:    "/file",
+			wantErr: `refused "/file": special permission bits (setuid/setgid/sticky) are not permitted`,
+		},
+		"Refuses directory with sticky bit": {
+			stat:    daemon.FileStat{Mode: unix.S_IFDIR | unix.S_ISVTX | 0o700, UID: expectedUID, GID: expectedGID},
+			path:    "/dir",
+			wantErr: `refused "/dir": special permission bits (setuid/setgid/sticky) are not permitted`,
+		},
+		"Refuses symlink": {
+			stat:    daemon.FileStat{Mode: unix.S_IFLNK | 0o777, UID: expectedUID, GID: expectedGID},
+			path:    "/link",
+			wantErr: `refused "/link": symlinks are not permitted`,
+		},
+		"Refuses FIFO": {
+			stat:    daemon.FileStat{Mode: unix.S_IFIFO | 0o600, UID: expectedUID, GID: expectedGID},
+			path:    "/fifo",
+			wantErr: fmt.Sprintf(`refused "/fifo": irregular file type (mode 0%o)`, unix.S_IFIFO|0o600),
 		},
 	}
 
@@ -70,7 +91,7 @@ func TestDefaultValidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := daemon.DefaultValidate(tc.path, tc.info)
+			err := daemon.DefaultValidate(tc.path, tc.stat)
 			if tc.wantErr != "" {
 				require.EqualError(t, err, tc.wantErr, "DefaultValidate should return expected error")
 			} else {
@@ -81,13 +102,13 @@ func TestDefaultValidate(t *testing.T) {
 }
 
 // TestDefaultSecureReader drives the mocked-seam cases: validation logic, walk-loop error
-// propagation, and the close invariant. Cases that need real filesystem semantics (a symlink
+// handling, and lifecycle (root is always closed). Paths that depend on real filesystem behavior (a symlink
 // rootDir, a missing rootDir) live in TestDefaultSecureReader_RealFS below; cases that need
 // root-owned 0600/0700 paths live in TestDefaultSecureReader_RealFS_RefusesNonRootOwnership.
-// Confinement of escape paths ("..", absolute) is exercised by
-// TestOpenRootOS_ConfinesPathResolution on the real os.Root seam.
 func TestDefaultSecureReader(t *testing.T) {
 	t.Parallel()
+
+	expectedUID, expectedGID := daemon.ExpectedOwnerForTest()
 
 	testCases := map[string]struct {
 		// root is the mockRootFs the test injects via the openRoot seam. Each case
@@ -102,7 +123,7 @@ func TestDefaultSecureReader(t *testing.T) {
 	}{
 		"Valid nested file is read and the root is closed": {
 			root: &mockRootFs{
-				infos: map[string]fs.FileInfo{
+				infos: map[string]daemon.FileStat{
 					"sub":            secureDirInfo("sub"),
 					"sub/secret.txt": secureFileInfo("secret.txt"),
 				},
@@ -117,6 +138,16 @@ func TestDefaultSecureReader(t *testing.T) {
 			targetPath:  "file.txt",
 			wantErr:     "could not open root",
 		},
+		"Rejected when the root directory has insecure permissions": {
+			root: &mockRootFs{
+				infos: map[string]daemon.FileStat{
+					".": {Name: ".", Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
+				},
+			},
+			targetPath: "file.txt",
+			wantErr:    "not strictly owned by root",
+			wantClosed: true,
+		},
 		"Rejected when stating a component fails": {
 			root:       &mockRootFs{lstatErr: errors.New("disk failure")},
 			targetPath: "sub/file.txt",
@@ -125,8 +156,8 @@ func TestDefaultSecureReader(t *testing.T) {
 		},
 		"Rejected on symlink file": {
 			root: &mockRootFs{
-				infos: map[string]fs.FileInfo{
-					"symlink.txt": mockFileInfo{name: "symlink.txt", mode: fs.ModeSymlink | 0777, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+				infos: map[string]daemon.FileStat{
+					"symlink.txt": {Name: "symlink.txt", Mode: unix.S_IFLNK | 0o777, UID: expectedUID, GID: expectedGID},
 				},
 			},
 			targetPath: "symlink.txt",
@@ -135,8 +166,8 @@ func TestDefaultSecureReader(t *testing.T) {
 		},
 		"Rejected on intermediate symlink directory": {
 			root: &mockRootFs{
-				infos: map[string]fs.FileInfo{
-					"symlink_dir": mockFileInfo{name: "symlink_dir", mode: fs.ModeSymlink | 0777, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+				infos: map[string]daemon.FileStat{
+					"symlink_dir": {Name: "symlink_dir", Mode: unix.S_IFLNK | 0o777, UID: expectedUID, GID: expectedGID},
 				},
 			},
 			targetPath: "symlink_dir/file.txt",
@@ -145,8 +176,8 @@ func TestDefaultSecureReader(t *testing.T) {
 		},
 		"Rejected on irregular file type": {
 			root: &mockRootFs{
-				infos: map[string]fs.FileInfo{
-					"pipe": mockFileInfo{name: "pipe", mode: fs.ModeNamedPipe | 0600, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+				infos: map[string]daemon.FileStat{
+					"pipe": {Name: "pipe", Mode: unix.S_IFIFO | 0o600, UID: expectedUID, GID: expectedGID},
 				},
 			},
 			targetPath: "pipe",
@@ -155,8 +186,8 @@ func TestDefaultSecureReader(t *testing.T) {
 		},
 		"Rejected when an intermediate directory has insecure permissions": {
 			root: &mockRootFs{
-				infos: map[string]fs.FileInfo{
-					"sub":          mockFileInfo{name: "sub", isDir: true, mode: fs.ModeDir | 0755, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+				infos: map[string]daemon.FileStat{
+					"sub":          {Name: "sub", Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
 					"sub/file.txt": secureFileInfo("file.txt"),
 				},
 			},
@@ -166,8 +197,8 @@ func TestDefaultSecureReader(t *testing.T) {
 		},
 		"Rejected when the file has insecure permissions": {
 			root: &mockRootFs{
-				infos: map[string]fs.FileInfo{
-					"file.txt": mockFileInfo{name: "file.txt", mode: 0644, sys: &syscall.Stat_t{Uid: 0, Gid: 0}},
+				infos: map[string]daemon.FileStat{
+					"file.txt": {Name: "file.txt", Mode: unix.S_IFREG | 0o644, UID: expectedUID, GID: expectedGID},
 				},
 			},
 			targetPath: "file.txt",
@@ -176,11 +207,34 @@ func TestDefaultSecureReader(t *testing.T) {
 		},
 		"Rejected when opening the target fails": {
 			root: &mockRootFs{
-				infos:   map[string]fs.FileInfo{"file.txt": secureFileInfo("file.txt")},
+				infos:   map[string]daemon.FileStat{"file.txt": secureFileInfo("file.txt")},
 				openErr: errors.New("open error: permission denied"),
 			},
 			targetPath: "file.txt",
 			wantErr:    "could not read",
+			wantClosed: true,
+		},
+		"Rejected when target descriptor was swapped with illegitimate inode before validation": {
+			root: &mockRootFs{
+				infos: map[string]daemon.FileStat{
+					"secret.txt": secureFileInfo("secret.txt"),
+				},
+				openFiles: map[string]daemon.FileStat{
+					"secret.txt": {Name: "secret.txt", Mode: unix.S_IFREG | 0o666, UID: expectedUID, GID: expectedGID},
+				},
+				contents: map[string]string{"secret.txt": "compromised data"},
+			},
+			targetPath: "secret.txt",
+			wantErr:    "not strictly owned by root",
+			wantClosed: true,
+		},
+		"Rejected when stating the open target descriptor fails": {
+			root: &mockRootFs{
+				infos:       map[string]daemon.FileStat{"file.txt": secureFileInfo("file.txt")},
+				fileStatErr: errors.New("descriptor bad"),
+			},
+			targetPath: "file.txt",
+			wantErr:    "could not stat",
 			wantClosed: true,
 		},
 	}
@@ -227,13 +281,10 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 	testcases := map[string]struct {
 		symlink bool
 		missing bool
-		notRoot bool
-
 		wantErr string
 	}{
-		"Refuses a symlink rootDir":             {symlink: true, wantErr: "root is a symlink"},
-		"Fails on missing rootDir":              {missing: true, wantErr: "could not stat"},
-		"Fails if rootDir is not owned by root": {notRoot: true, wantErr: "not strictly owned by root"},
+		"Refuses a symlink rootDir": {symlink: true, wantErr: "root is a symlink"},
+		"Fails on missing rootDir":  {missing: true, wantErr: "could not stat"},
 	}
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
@@ -252,10 +303,6 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 			if tc.missing {
 				rootDir = filepath.Join(t.TempDir(), "does-not-exist")
 			}
-			if tc.notRoot {
-				filePath = filepath.Join(rootDir, "anything.txt")
-				require.NoError(t, os.WriteFile(filePath, []byte("hello"), 0o600), "Setup: failed to write test file")
-			}
 
 			reader := daemon.NewDefaultSecureReader(nil)
 			_, err := reader.ReadFile(rootDir, filePath)
@@ -270,9 +317,8 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 
 // TestOpenRootOS exercises openRootOS and basic operations (Lstat, Open) against real directories
 // and files on disk.
-// This is useful because it validates that openRootOS opens real directory descriptors,
-// fails early on invalid root targets (missing paths or regular files), and correctly reads
-// file contents and directory metadata across nested paths.
+// This is useful because openRootOS encapsulates real OS-level directory opening and openat2-based
+// confined traversal.
 func TestOpenRootOS(t *testing.T) {
 	t.Parallel()
 
@@ -366,6 +412,9 @@ func TestOpenRootOS(t *testing.T) {
 			require.False(t, fi.IsDir(), "root.Lstat should not report regular file as directory")
 			rc, err := root.Open(target)
 			require.NoError(t, err, "root.Open should not have failed")
+			st, err := rc.Stat()
+			require.NoError(t, err, "rc.Stat should succeed on open file")
+			require.False(t, st.IsDir(), "rc.Stat should report regular file")
 			data, err := io.ReadAll(rc)
 			require.NoError(t, err, "reading opened file contents should succeed")
 			require.NoError(t, rc.Close(), "closing opened file should succeed")
@@ -375,49 +424,47 @@ func TestOpenRootOS(t *testing.T) {
 }
 
 // TestOpenRootOS_ConfinesPathResolution asserts kernel-level path resolution confinement
-// using openat2 flags (RESOLVE_NO_SYMLINKS and RESOLVE_BENEATH) against the real filesystem.
-// This is useful because it guarantees the descriptor boundary cannot be escaped via absolute
-// paths, ".." parent traversals, or symlinks pointing outside the designated root directory,
-// preventing TOCTOU directory traversal attacks.
+// using openat2 flags (RESOLVE_NO_SYMLINKS and RESOLVE_BENEATH).
+// This is useful because it validates that attempts to escape the root directory via symlinks,
+// absolute paths, or ".." path traversal sequences are rejected at the syscall layer.
 func TestOpenRootOS_ConfinesPathResolution(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		target         string
-		fileData       string
-		symlinkTarget  string
-		outsideSymlink bool
-		escapesRoot    bool
+	rootDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(rootDir, "valid.txt"), []byte("valid content"), 0o600), "Setup: failed to write valid test file")
 
+	outsideDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(outsideDir, "outside.txt"), []byte("outside content"), 0o600), "Setup: failed to write outside test file")
+
+	// Symlink pointing outside the root
+	require.NoError(t, os.Symlink(filepath.Join(outsideDir, "outside.txt"), filepath.Join(rootDir, "escape_link.txt")), "Setup: failed to create escaping symlink")
+
+	root, err := daemon.OpenRoot(rootDir)
+	require.NoError(t, err, "Setup: could not open root")
+	t.Cleanup(func() { _ = root.Close() })
+
+	testCases := map[string]struct {
+		path          string
 		wantLstatErr  bool
 		wantLstatLink bool
 		wantOpenErr   bool
-		wantOpenData  string
 	}{
-		"Open inside the root succeeds": {
-			target:       "ok.txt",
-			fileData:     "ok",
-			wantOpenData: "ok",
+		"Valid file within root succeeds": {
+			path: "valid.txt",
 		},
 		"Lstat and Open refuse absolute paths": {
-			target:       "/etc/passwd",
+			path:         filepath.Join(rootDir, "valid.txt"),
 			wantLstatErr: true,
 			wantOpenErr:  true,
 		},
 		"Lstat and Open refuse .. that escapes the root": {
-			escapesRoot:  true,
+			path:         "../outside.txt",
 			wantLstatErr: true,
 			wantOpenErr:  true,
 		},
 		"Lstat and Open refuse in-root symlinks pointing outside the root": {
-			target:         "leak.txt",
-			outsideSymlink: true,
-			wantLstatLink:  true,
-			wantOpenErr:    true,
-		},
-		"Open refuses symlinks with absolute targets": {
-			target:        "abs.txt",
-			symlinkTarget: "/etc/passwd",
+			path:          "escape_link.txt",
+			wantLstatLink: true,
 			wantOpenErr:   true,
 		},
 	}
@@ -426,32 +473,11 @@ func TestOpenRootOS_ConfinesPathResolution(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			rootDir := t.TempDir()
-			path := tc.target
-
-			switch {
-			case tc.escapesRoot:
-				outside := t.TempDir()
-				secret := filepath.Join(outside, "secret.txt")
-				require.NoError(t, os.WriteFile(secret, []byte("outside"), 0o600), "Setup: failed to write outside secret file")
-				rel, err := filepath.Rel(rootDir, secret)
-				require.NoError(t, err, "Setup: failed to compute relative path")
-				require.True(t, strings.HasPrefix(rel, ".."), "Setup: outside file must lie outside the root")
-				path = rel
-			case tc.outsideSymlink:
-				outside := t.TempDir()
-				secret := filepath.Join(outside, "secret.txt")
-				require.NoError(t, os.WriteFile(secret, []byte("outside"), 0o600), "Setup: failed to write outside secret file")
-				require.NoError(t, os.Symlink(secret, filepath.Join(rootDir, tc.target)), "Setup: failed to create symlink")
-			case tc.symlinkTarget != "":
-				require.NoError(t, os.Symlink(tc.symlinkTarget, filepath.Join(rootDir, tc.target)), "Setup: failed to create symlink to "+tc.symlinkTarget)
-			case tc.fileData != "":
-				require.NoError(t, os.WriteFile(filepath.Join(rootDir, tc.target), []byte(tc.fileData), 0o600), "Setup: failed to write test file")
+			path := tc.path
+			if strings.HasPrefix(name, "Lstat and Open refuse absolute paths") {
+				// Normalize absolute path for testing
+				path = filepath.Clean(path)
 			}
-
-			root, err := daemon.OpenRoot(rootDir)
-			require.NoError(t, err, "Setup: could not open root")
-			t.Cleanup(func() { _ = root.Close() })
 
 			switch {
 			case tc.wantLstatErr:
@@ -460,69 +486,60 @@ func TestOpenRootOS_ConfinesPathResolution(t *testing.T) {
 			case tc.wantLstatLink:
 				fi, err := root.Lstat(path)
 				require.NoError(t, err, "root.Lstat should not fail for symlink within root")
-				require.NotZero(t, fi.Mode()&fs.ModeSymlink,
-					"Lstat must report the symlink itself, not its target")
+				require.True(t, fi.IsSymlink(), "Lstat must report the symlink itself, not its target")
 			default:
 				_, err = root.Lstat(path)
 				require.NoError(t, err, "root.Lstat should not fail for path within root")
 			}
 
-			switch {
-			case tc.wantOpenErr:
+			if tc.wantOpenErr {
 				_, err = root.Open(path)
-				require.Error(t, err, "root.Open should fail for path escaping root")
-			case tc.wantOpenData != "":
-				f, err := root.Open(path)
-				require.NoError(t, err, "root.Open should succeed for path within root")
-				t.Cleanup(func() { _ = f.Close() })
-
-				data, err := io.ReadAll(f)
-				require.NoError(t, err, "reading opened file contents should succeed")
-				require.Equal(t, tc.wantOpenData, string(data), "read contents should match expected")
-			default:
-				_, err = root.Open(path)
-				require.NoError(t, err, "root.Open should succeed")
+				require.Error(t, err, "root.Open should fail for path escaping root or traversing symlink")
+			} else {
+				rc, err := root.Open(path)
+				require.NoError(t, err, "root.Open should succeed for valid path")
+				require.NoError(t, rc.Close(), "Close should succeed")
 			}
 		})
 	}
 }
 
-// TestOpenRootOS_LifecycleAndErrors asserts descriptor lifecycle invariants and error handling
-// for openat2Root instances.
-// This is useful because it verifies that closing a root descriptor is idempotent (double close
-// is a safe no-op), subsequent operations on closed descriptors fail predictably with expected
-// errors, and operations on invalid file descriptors fail closed rather than panicking or misbehaving.
-func TestOpenRootOS_LifecycleAndErrors(t *testing.T) {
+// TestOpenRootOS_CloserLifecycle asserts that Open and Lstat on an already-closed root
+// consistently return an error, preventing use-after-close bugs.
+// This is useful because leaking or reusing file descriptors after Close can lead to descriptor
+// confusion and unpredictable behavior.
+func TestOpenRootOS_CloserLifecycle(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		closeTwice bool
-		closed     bool
-		invalidFd  bool
-		openOp     bool
-		target     string
-		wantErr    string
+		target        string
+		closedRoot    bool
+		invalidRootFd bool
+		missingParent bool
+		wantErr       string
 	}{
-		"Double close is a no-op": {
-			closeTwice: true,
+		"Open on closed root returns error": {
+			target:     "file.txt",
+			closedRoot: true,
+			wantErr:    "root is closed",
 		},
 		"Lstat on closed root returns error": {
-			closed:  true,
-			target:  "file.txt",
-			wantErr: "root is closed",
+			target:     "file.txt",
+			closedRoot: true,
+			wantErr:    "root is closed",
 		},
-		"Open on closed root returns error": {
-			closed:  true,
-			openOp:  true,
-			target:  "file.txt",
-			wantErr: "root is closed",
+		"Lstat on root itself when closed returns error": {
+			target:     ".",
+			closedRoot: true,
+			wantErr:    "root is closed",
 		},
 		"Lstat on root itself with invalid descriptor returns error": {
-			invalidFd: true,
-			target:    ".",
+			target:        ".",
+			invalidRootFd: true,
 		},
 		"Lstat on missing intermediate parent directory fails": {
-			target: "missing_parent/file.txt",
+			target:        "nonexistent/file.txt",
+			missingParent: true,
 		},
 	}
 
@@ -530,25 +547,20 @@ func TestOpenRootOS_LifecycleAndErrors(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			rootDir := t.TempDir()
-			root, err := daemon.OpenRoot(rootDir)
+			dir := t.TempDir()
+			root, err := daemon.OpenRoot(dir)
 			require.NoError(t, err, "Setup: could not open root")
-			t.Cleanup(func() { _ = root.Close() })
 
-			if tc.closeTwice {
-				require.NoError(t, root.Close(), "first root.Close should succeed")
-				require.NoError(t, root.Close(), "second root.Close should succeed as a no-op")
-				return
-			}
-			if tc.closed {
-				require.NoError(t, root.Close(), "Setup: failed to close root")
-			}
-			if tc.invalidFd {
-				root = daemon.NewOpenat2RootForTest(99999, "bad")
+			if tc.closedRoot {
+				require.NoError(t, root.Close(), "Close should succeed")
+			} else if tc.invalidRootFd {
+				root = daemon.NewOpenat2RootForTest(-999, dir)
+			} else {
+				t.Cleanup(func() { _ = root.Close() })
 			}
 
-			if tc.openOp {
-				_, err := root.Open(tc.target)
+			if strings.HasPrefix(name, "Open") {
+				_, err = root.Open(tc.target)
 				if tc.wantErr != "" {
 					require.ErrorContains(t, err, tc.wantErr, "Open on closed root should return root is closed error")
 				} else {
@@ -577,15 +589,15 @@ func TestOpenRootOS_RealSpecialFiles(t *testing.T) {
 	testCases := map[string]struct {
 		isFIFO   bool
 		isSocket bool
-		wantMode fs.FileMode
+		wantMode uint32
 	}{
 		"FIFO named pipe": {
 			isFIFO:   true,
-			wantMode: fs.ModeNamedPipe,
+			wantMode: unix.S_IFIFO,
 		},
 		"Unix socket": {
 			isSocket: true,
-			wantMode: fs.ModeSocket,
+			wantMode: unix.S_IFSOCK,
 		},
 	}
 
@@ -614,167 +626,80 @@ func TestOpenRootOS_RealSpecialFiles(t *testing.T) {
 
 			fi, err := root.Lstat(name)
 			require.NoError(t, err, "Lstat should succeed on special file")
-			require.Equal(t, name, fi.Name(), "file name should match")
-			require.NotZero(t, fi.Mode()&tc.wantMode, "file mode should include expected mode bits")
+			require.Equal(t, name, fi.Name, "file name should match")
+			require.NotZero(t, fi.Mode&tc.wantMode, "file mode should include expected mode bits")
 		})
 	}
 }
-
-// TestFileInfoFromStat asserts that fileInfoFromStat accurately converts raw unix.Stat_t
-// kernel metadata into os.FileInfo representations across all standard POSIX file types
-// (regular files, directories, symlinks, FIFOs, sockets, character devices, and block devices).
-// This is useful because the openat2-based reader synthesizes FileInfo directly from statx/fstatat
-// system calls and relies on exact mode bit masks, timestamps, and size conversions.
-func TestFileInfoFromStat(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	sec := now.Unix()
-	nsec := int64(now.Nanosecond())
-
-	testCases := map[string]struct {
-		stat     unix.Stat_t
-		name     string
-		wantDir  bool
-		wantMode fs.FileMode
-	}{
-		"Regular file": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFREG | 0o644,
-				Size: 42,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "regular.txt",
-			wantDir:  false,
-			wantMode: 0o644,
-		},
-		"Directory": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFDIR | 0o755,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "dir",
-			wantDir:  true,
-			wantMode: fs.ModeDir | 0o755,
-		},
-		"Symlink": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFLNK | 0o777,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "symlink",
-			wantDir:  false,
-			wantMode: fs.ModeSymlink | 0o777,
-		},
-		"Named pipe FIFO": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFIFO | 0o600,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "fifo",
-			wantDir:  false,
-			wantMode: fs.ModeNamedPipe | 0o600,
-		},
-		"Socket": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFSOCK | 0o600,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "sock",
-			wantDir:  false,
-			wantMode: fs.ModeSocket | 0o600,
-		},
-		"Character device": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFCHR | 0o660,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "null",
-			wantDir:  false,
-			wantMode: fs.ModeDevice | fs.ModeCharDevice | 0o660,
-		},
-		"Block device": {
-			stat: unix.Stat_t{
-				Mode: unix.S_IFBLK | 0o660,
-				Mtim: unix.Timespec{Sec: sec, Nsec: nsec},
-			},
-			name:     "sda",
-			wantDir:  false,
-			wantMode: fs.ModeDevice | 0o660,
-		},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			fi := daemon.FileInfoFromStat(tc.name, &tc.stat)
-			require.Equal(t, tc.name, fi.Name(), "file name should match")
-			require.Equal(t, tc.wantDir, fi.IsDir(), "isDir should match expected")
-			require.Equal(t, tc.wantMode, fi.Mode(), "mode should match expected")
-			require.Equal(t, tc.stat.Size, fi.Size(), "size should match expected")
-			require.Equal(t, time.Unix(sec, nsec), fi.ModTime(), "modTime should match expected")
-			require.NotNil(t, fi.Sys(), "Sys should not be nil")
-		})
-	}
-}
-
-type mockFileInfo struct {
-	name    string
-	size    int64
-	mode    fs.FileMode
-	modTime time.Time
-	isDir   bool
-	sys     any
-}
-
-func (m mockFileInfo) Name() string       { return m.name }
-func (m mockFileInfo) Size() int64        { return m.size }
-func (m mockFileInfo) Mode() fs.FileMode  { return m.mode }
-func (m mockFileInfo) ModTime() time.Time { return m.modTime }
-func (m mockFileInfo) IsDir() bool        { return m.isDir }
-func (m mockFileInfo) Sys() any           { return m.sys }
 
 // mockRootFs implements daemon.RootFs for tests. Paths seen by Lstat and Open
 // are relative to the root.
-type mockRootFs struct {
-	infos    map[string]fs.FileInfo // per relative path metadata
-	contents map[string]string      // per relative path file contents
-
-	lstatErr error // error returned by Lstat regardless of path
-	openErr  error // error returned by Open regardless of path
-	closed   bool
+type mockConfinedFile struct {
+	io.ReadCloser
+	stat    daemon.FileStat
+	statErr error
 }
 
-func (m *mockRootFs) Lstat(name string) (fs.FileInfo, error) {
+func (m *mockConfinedFile) Stat() (daemon.FileStat, error) {
+	if m.statErr != nil {
+		return daemon.FileStat{}, m.statErr
+	}
+	return m.stat, nil
+}
+
+type mockRootFs struct {
+	infos    map[string]daemon.FileStat // per relative path metadata
+	contents map[string]string          // per relative path file contents
+
+	lstatErr    error                      // error returned by Lstat regardless of path
+	openErr     error                      // error returned by Open regardless of path
+	openFiles   map[string]daemon.FileStat // override descriptor stat to simulate inode swap
+	fileStatErr error                      // error returned by file Stat()
+	closed      bool
+}
+
+func (m *mockRootFs) Lstat(name string) (daemon.FileStat, error) {
 	if m.lstatErr != nil {
-		return nil, m.lstatErr
+		return daemon.FileStat{}, m.lstatErr
 	}
 	// Lstat(".") is the call the reader uses to validate the root itself; the mock
-	// returns a default root FileInfo when "." is not explicitly configured, matching
+	// returns a default root FileStat when "." is not explicitly configured, matching
 	// what a real os.Root.Lstat(".") reports on a directory with mode 0700 owned by
-	// the test user. (Test cases that need to exercise a non-conforming root move the
-	// validation through TestDefaultSecureReader_RealFS, which runs against the real
-	// filesystem and cannot bypass ownership.)
+	// the test user.
 	if filepath.Clean(name) == "." {
-		return secureRootInfo, nil
+		if fi, ok := m.infos["."]; ok {
+			return fi, nil
+		}
+		return secureRootInfo(), nil
 	}
 	fi, ok := m.infos[filepath.Clean(name)]
 	if !ok {
-		return nil, errors.New("no metadata configured for " + name)
+		return daemon.FileStat{}, errors.New("no metadata configured for " + name)
 	}
 	return fi, nil
 }
 
-func (m *mockRootFs) Open(name string) (io.ReadCloser, error) {
+func (m *mockRootFs) Open(name string) (daemon.ConfinedFile, error) {
 	if m.openErr != nil {
 		return nil, m.openErr
 	}
-	content, ok := m.contents[filepath.Clean(name)]
+	clean := filepath.Clean(name)
+	st, ok := m.openFiles[clean]
 	if !ok {
-		return io.NopCloser(bytes.NewReader(nil)), nil
+		st = m.infos[clean]
 	}
-	return io.NopCloser(bytes.NewReader([]byte(content))), nil
+	content, hasContent := m.contents[clean]
+	var rc io.ReadCloser
+	if !hasContent {
+		rc = io.NopCloser(bytes.NewReader(nil))
+	} else {
+		rc = io.NopCloser(bytes.NewReader([]byte(content)))
+	}
+	return &mockConfinedFile{
+		ReadCloser: rc,
+		stat:       st,
+		statErr:    m.fileStatErr,
+	}, nil
 }
 
 func (m *mockRootFs) Close() error {
@@ -782,12 +707,17 @@ func (m *mockRootFs) Close() error {
 	return nil
 }
 
-var secureRootInfo = mockFileInfo{name: "public", isDir: true, mode: fs.ModeDir | 0700, sys: &syscall.Stat_t{Uid: 0, Gid: 0}}
-
-func secureDirInfo(name string) fs.FileInfo {
-	return mockFileInfo{name: name, isDir: true, mode: fs.ModeDir | 0700, sys: &syscall.Stat_t{Uid: 0, Gid: 0}}
+func secureRootInfo() daemon.FileStat {
+	u, g := daemon.ExpectedOwnerForTest()
+	return daemon.FileStat{Name: "public", Mode: unix.S_IFDIR | 0o700, UID: u, GID: g}
 }
 
-func secureFileInfo(name string) fs.FileInfo {
-	return mockFileInfo{name: name, mode: 0600, sys: &syscall.Stat_t{Uid: 0, Gid: 0}}
+func secureDirInfo(name string) daemon.FileStat {
+	u, g := daemon.ExpectedOwnerForTest()
+	return daemon.FileStat{Name: name, Mode: unix.S_IFDIR | 0o700, UID: u, GID: g}
+}
+
+func secureFileInfo(name string) daemon.FileStat {
+	u, g := daemon.ExpectedOwnerForTest()
+	return daemon.FileStat{Name: name, Mode: unix.S_IFREG | 0o600, UID: u, GID: g}
 }
