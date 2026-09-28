@@ -312,18 +312,12 @@ func (d *Daemon) newTLSConfigFromDir(certsDir string) (conf *tls.Config, err err
 
 	certPEM, err := d.reader.ReadFile(d.publicDirPath, filepath.Join(certsDir, common.ClientsCertFilePrefix+common.CertificateSuffix))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		return nil, streams.NewSystemError("%w", err)
+		return nil, err
 	}
 
 	keyPEM, err := d.reader.ReadFile(d.publicDirPath, filepath.Join(certsDir, common.ClientsCertFilePrefix+common.KeySuffix))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		return nil, streams.NewSystemError("%w", err)
+		return nil, err
 	}
 
 	cert, err := tls.X509KeyPair(certPEM, keyPEM)
@@ -335,10 +329,7 @@ func (d *Daemon) newTLSConfigFromDir(certsDir string) (conf *tls.Config, err err
 	caFilePath := filepath.Join(certsDir, common.RootCACertFileName)
 	caBytes, err := d.reader.ReadFile(d.publicDirPath, caFilePath)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		return nil, streams.NewSystemError("%w", err)
+		return nil, err
 	}
 	if ok := ca.AppendCertsFromPEM(caBytes); !ok {
 		return nil, fmt.Errorf("failed to parse %q", caFilePath)
@@ -357,10 +348,7 @@ func (d *Daemon) address(ctx context.Context, system *system.System) (string, er
 	// Parse the port from the file written by the windows agent.
 	addr, err := d.reader.ReadFile(d.publicDirPath, common.ListeningPortFileName)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return "", err
-		}
-		return "", streams.NewSystemError("%w", err)
+		return "", fmt.Errorf("could not read agent port file at %q: %w", d.publicDirPath, err)
 	}
 
 	port, err := splitPort(string(addr))

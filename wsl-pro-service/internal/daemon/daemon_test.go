@@ -3,7 +3,6 @@ package daemon_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -109,9 +108,10 @@ func TestServe(t *testing.T) {
 		"No connection because cannot read root CA certificate file": {missingCaCert: true, wantConnected: false},
 
 		// Errors
-		"Error because the context is pre-cancelled":                                {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
-		"Error because the notifier returns an error":                               {notifierErr: true, wantErr: true},
-		"Error because WindowsHostAddress returns an error":                         {breakWindowsHostAddress: true, wantErr: true},
+		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
+		"Error because the notifier returns an error":       {notifierErr: true, wantErr: true},
+		"Error because WindowsHostAddress returns an error": {breakWindowsHostAddress: true, wantErr: true},
+		// The reader returns refusals as SystemError (see refuseViolation), so Serve terminates instead of retrying a security-contract violation.
 		"Error and immediate termination because projected attributes are insecure": {insecureAttributes: true, wantErr: true, wantSystemError: true},
 	}
 
@@ -177,7 +177,7 @@ func TestServe(t *testing.T) {
 			opts = append(opts, daemon.WithSystemdNotifier(systemd.notify))
 			if tc.insecureAttributes {
 				mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
-					return nil, fmt.Errorf("refused %q: not strictly owned by root (uid 1000, gid 1000)", targetPath)
+					return nil, streams.NewSystemError(`refused %q: not strictly owned by root (uid 1000, gid 1000)`, targetPath)
 				})
 				opts = append(opts, daemon.WithTestSecureReader(mockReader))
 			} else {
@@ -259,123 +259,111 @@ func TestServe(t *testing.T) {
 	}
 }
 
-func TestServe_FailsOnInsecureClientKey(t *testing.T) {
+// TestServe_ClientKeyErrorClassification asserts how the daemon classifies client
+// key failures. A refused key is a security-contract violation: the secure reader
+// returns it as a streams.SystemError, serveOnce bubbles it up and Serve terminates
+// immediately. A missing key is transient (the agent has not written it yet): it is
+// a plain error, serveOnce reports failure without exiting, and the retry loop
+// publishes "Not connected: waiting to retry". Bound the waits so that a regression
+// (e.g. a classification flip) fails fast instead of hanging until the test binary
+// times out.
+func TestServe_ClientKeyErrorClassification(t *testing.T) {
 	t.Parallel()
-
-	// An insecure client key is a non-transient error: connect() wraps it in a
-	// streams.SystemError, serveOnce bubbles it up, and retryConfig.Run returns
-	// it immediately without entering a backoff delay. The deadline therefore
-	// only elapses on a regression (e.g. the error is no longer classified as a
-	// SystemError and Serve enters the retry backoff instead). Bounding the wait
-	// makes that regression fail fast with a clear message, and cancelling the
-	// daemon through ctx lets the serveExit goroutine drain before the test ends.
-	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
-	defer cancel()
-
-	system, mock := testutils.MockSystem(t)
-	publicDir := mock.DefaultPublicDir()
-	agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
-	defer agent.Stop()
 
 	keyPath := filepath.Join(common.CertificatesDir, common.ClientsCertFilePrefix+common.KeySuffix)
 
-	mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
-		if targetPath == keyPath {
-			return nil, fmt.Errorf("refused %q: not strictly owned by root (uid 1000, gid 1000)", targetPath)
-		}
-		return os.ReadFile(filepath.Join(rootDir, targetPath))
-	})
-
-	d, err := daemon.New(ctx, system, daemon.WithTestSecureReader(mockReader))
-	require.NoError(t, err)
-
-	serveExit := make(chan error, 1)
-	go func() { serveExit <- d.Serve(&mockService{}) }()
-
-	select {
-	case err := <-serveExit:
-		require.Error(t, err)
-		require.ErrorIs(t, err, streams.SystemError{}, "insecure client key must cause immediate SystemError termination")
-		require.Contains(t, err.Error(), "not strictly owned by root")
-	case <-ctx.Done():
-		t.Fatalf("Serve did not terminate with a SystemError within 10s: %v", ctx.Err())
+	testCases := map[string]struct {
+		failWith        error
+		wantSystemError bool
+	}{
+		// The reader returns refusals as streams.SystemError (see refuseViolation).
+		"Refused insecure client key terminates": {
+			failWith:        streams.NewSystemError(`refused %q: not strictly owned by root (uid 1000, gid 1000)`, keyPath),
+			wantSystemError: true,
+		},
+		"Missing client key is retried": {
+			failWith: os.ErrNotExist,
+		},
 	}
-}
 
-func TestServe_FailsOnMissingClientKeyIsNotSystemError(t *testing.T) {
-	t.Parallel()
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	// Bound the two state waits below so that a regression that stops Serve from
-	// reaching the retry path (or from exiting after Quit) fails fast instead of
-	// hanging until the whole test binary times out. The happy paths complete in
-	// a single connection attempt, so the deadline is a fail-safe, not a delay.
-	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
-	defer cancel()
+			ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+			defer cancel()
 
-	system, mock := testutils.MockSystem(t)
-	publicDir := mock.DefaultPublicDir()
-	agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
-	defer agent.Stop()
+			system, mock := testutils.MockSystem(t)
+			publicDir := mock.DefaultPublicDir()
+			agent := testutils.NewMockWindowsAgent(t, ctx, publicDir)
+			defer agent.Stop()
 
-	keyPath := filepath.Join(common.CertificatesDir, common.ClientsCertFilePrefix+common.KeySuffix)
+			mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
+				if targetPath == keyPath {
+					return nil, tc.failWith
+				}
+				return os.ReadFile(filepath.Join(rootDir, targetPath))
+			})
 
-	mockReader := testutils.NewMockSecureReader(func(rootDir, targetPath string) ([]byte, error) {
-		if targetPath == keyPath {
-			return nil, os.ErrNotExist
-		}
-		return os.ReadFile(filepath.Join(rootDir, targetPath))
-	})
-
-	// Missing file is transient (agent not started yet): connect() returns a
-	// non-SystemError, serveOnce reports success=false and the retry loop enters
-	// onWait, which publishes "Not connected: waiting to retry" through the
-	// systemd notifier. Intercept that status with a channel so the test waits
-	// on the observable consequence of the missing key (rather than a fixed
-	// wall-clock window).
-	retrying := make(chan struct{}, 1)
-	notifier := func(_ bool, state string) (bool, error) {
-		if strings.Contains(state, "Not connected: waiting to retry") {
-			select {
-			case retrying <- struct{}{}:
-			default:
+			// Either failure is transient from the daemon's perspective: serveOnce
+			// reports success=false and the retry loop enters onWait, which publishes
+			// "Not connected: waiting to retry" through the systemd notifier.
+			// Intercept that status with a channel so the test waits on the
+			// observable consequence of the reader error (rather than a fixed
+			// wall-clock window). The only way Serve can exit at this point is a
+			// bug (e.g. the reader error being misclassified as a SystemError),
+			// which surfaces as an early receive below.
+			retrying := make(chan struct{}, 1)
+			notifier := func(_ bool, state string) (bool, error) {
+				if strings.Contains(state, "Not connected: waiting to retry") {
+					select {
+					case retrying <- struct{}{}:
+					default:
+					}
+				}
+				return false, nil
 			}
-		}
-		return false, nil
-	}
 
-	d, err := daemon.New(ctx, system,
-		daemon.WithSystemdNotifier(notifier),
-		daemon.WithTestSecureReader(mockReader),
-	)
-	require.NoError(t, err)
+			d, err := daemon.New(ctx, system,
+				daemon.WithSystemdNotifier(notifier),
+				daemon.WithTestSecureReader(mockReader),
+			)
+			require.NoError(t, err)
 
-	serveExit := make(chan error, 1)
-	go func() { serveExit <- d.Serve(&mockService{}) }()
+			serveExit := make(chan error, 1)
+			go func() { serveExit <- d.Serve(&mockService{}) }()
 
-	// Once the daemon publishes "not connected: waiting to retry", it has
-	// classified the missing key as transient and is back in the retry loop.
-	// Reaching the retry state is the deterministic, observable consequence of
-	// the missing key. The only way Serve can exit at this point instead is a
-	// bug (e.g. the missing key being misclassified as a SystemError), which
-	// surfaces as an early receive below.
-	select {
-	case <-retrying:
-		// Expected: the daemon is waiting to retry.
-	case err := <-serveExit:
-		require.Failf(t, "Serve should not have exited for missing key (transient)", "got %v", err)
-	case <-ctx.Done():
-		t.Fatalf("daemon did not reach the retry path within 10s: %v", ctx.Err())
-	}
+			if tc.wantSystemError {
+				// A violation breaks the retry loop: Serve exits with it on the first attempt.
+				select {
+				case err := <-serveExit:
+					require.ErrorIs(t, err, streams.SystemError{}, "a refused key must terminate with a SystemError")
+				case <-ctx.Done():
+					t.Fatalf("Serve did not terminate on the refused key within 10s: %v", ctx.Err())
+				}
+				return
+			}
 
-	// Quit cancels the daemon's graceful context and blocks until Serve returns.
-	// A missing key must never surface as a SystemError.
-	d.Quit(ctx, false)
+			select {
+			case <-retrying:
+				// Expected: the daemon is waiting to retry.
+			case err := <-serveExit:
+				require.Failf(t, "Serve should not have exited on a missing key", "got %v", err)
+			case <-ctx.Done():
+				t.Fatalf("daemon did not reach the retry path within 10s: %v", ctx.Err())
+			}
 
-	select {
-	case err := <-serveExit:
-		require.NotErrorIs(t, err, streams.SystemError{}, "missing key should not be a SystemError")
-	case <-ctx.Done():
-		t.Fatalf("Serve did not exit after Quit within deadline: %v", ctx.Err())
+			// Quit cancels the daemon's graceful context and blocks until Serve returns.
+			// A missing key must never surface as a SystemError.
+			d.Quit(ctx, false)
+
+			select {
+			case err := <-serveExit:
+				require.NotErrorIs(t, err, streams.SystemError{}, "a missing key should not be a SystemError")
+			case <-ctx.Done():
+				t.Fatalf("Serve did not exit after Quit within deadline: %v", ctx.Err())
+			}
+		})
 	}
 }
 

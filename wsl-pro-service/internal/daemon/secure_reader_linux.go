@@ -67,18 +67,25 @@ func openRootOS(path string) (rootFs, error) {
 
 	fd, err := unix.Open(clean, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_CLOEXEC|unix.O_NOFOLLOW, 0)
 	if err != nil {
+		// A symlink or non-directory root violates the Public Directory
+		// invariant and will not be fixed by retrying. ENOENT is different:
+		// the agent may not have created the directory yet.
+		if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) {
+			return nil, refuseViolation("refusing invalid root %q: %v", clean, err)
+		}
 		return nil, err
 	}
 
 	fstype, mountPoint, err := mountFSType(fd)
 	if err != nil {
 		_ = unix.Close(fd)
-		return nil, fmt.Errorf("could not determine the filesystem of root %q: %v", clean, err)
+		// Failing closed on an undeterminable filesystem is not fixed by retrying.
+		return nil, refuseViolation("could not determine the filesystem of root %q: %v", clean, err)
 	}
 
 	if !allowedFSNames[fstype] {
 		_ = unix.Close(fd)
-		return nil, fmt.Errorf("refusing untrusted filesystem %q at %q for root %q", fstype, mountPoint, clean)
+		return nil, refuseViolation("refusing untrusted filesystem %q at %q for root %q", fstype, mountPoint, clean)
 	}
 
 	return &openat2Root{fd: fd}, nil
@@ -162,6 +169,15 @@ func (r *openat2Root) Close() error {
 	return nil
 }
 
+// refusePathResolution classifies and reports errors caused by the confined path policy, rather
+// than by an unavailable filesystem object. These errors cannot be fixed by retrying the same path.
+func refusePathResolution(name string, err error) error {
+	if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) || errors.Is(err, unix.EXDEV) {
+		return refuseViolation("refusing path %q: %v", name, err)
+	}
+	return err
+}
+
 func (r *openat2Root) Lstat(name string) (fileStat, error) {
 	if r.fd < 0 {
 		return fileStat{}, errors.New("root is closed")
@@ -177,7 +193,7 @@ func (r *openat2Root) Lstat(name string) (fileStat, error) {
 	}
 
 	if !filepath.IsLocal(name) {
-		return fileStat{}, fmt.Errorf("path %q is not local to root", name)
+		return fileStat{}, refuseViolation("path %q is not local to root", name)
 	}
 
 	dir := filepath.Dir(clean)
@@ -187,7 +203,7 @@ func (r *openat2Root) Lstat(name string) (fileStat, error) {
 	if dir != "." {
 		fd, err := unix.Openat2(r.fd, dir, &confinedDirOpenHow)
 		if err != nil {
-			return fileStat{}, err
+			return fileStat{}, refusePathResolution(dir, err)
 		}
 		defer unix.Close(fd)
 		parentFd = fd
@@ -218,13 +234,15 @@ func (r *openat2Root) Open(name string) (confinedFile, error) {
 		return nil, errors.New("root is closed")
 	}
 	if !filepath.IsLocal(name) {
-		return nil, fmt.Errorf("path %q is not local to root", name)
+		return nil, refuseViolation("path %q is not local to root", name)
 	}
 
 	clean := filepath.Clean(name)
 	fd, err := unix.Openat2(r.fd, clean, &confinedFileOpenHow)
 	if err != nil {
-		return nil, err
+		// Classify confinement refusals before ReadFile wraps the error so Serve
+		// does not retry an invalid Public Directory path.
+		return nil, refusePathResolution(clean, err)
 	}
 	// #nosec G115 // If err is nil, openat2 returned a positive descriptor, no risk of overflows.
 	return &openat2File{File: os.NewFile(uintptr(fd), clean), fd: fd}, nil

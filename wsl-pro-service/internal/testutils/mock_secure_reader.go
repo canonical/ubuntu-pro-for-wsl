@@ -17,6 +17,11 @@ func (m *MockSecureReader) ReadFile(rootDir, targetPath string) ([]byte, error) 
 
 // NewMockSecureReader creates a MockSecureReader with the given behavior.
 // A nil fn makes ReadFile delegate to os.ReadFile on the joined path, bypassing validation.
+//
+// The fn must reproduce the real reader's error taxonomy: security-contract
+// violations are streams.SystemError (breaking the connection retry loop),
+// transient failures are plain errors (retried). A mock that diverges makes
+// Serve-level tests assert fiction.
 func NewMockSecureReader(fn func(rootDir, targetPath string) ([]byte, error)) *MockSecureReader {
 	if fn == nil {
 		fn = func(rootDir, targetPath string) ([]byte, error) {

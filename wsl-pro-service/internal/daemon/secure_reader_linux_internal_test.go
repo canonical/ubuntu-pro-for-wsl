@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/unix"
 )
@@ -184,6 +185,8 @@ func TestOpenRootOS_RefusesUntrustedFilesystemReal(t *testing.T) {
 	require.Nil(t, root, "no root should be returned on refusal")
 	require.ErrorContains(t, err, `refusing untrusted filesystem "sysfs"`, "refusal should name the observed filesystem")
 
+	// A mount-contract violation must break the connection retry loop, not be retried.
+	require.ErrorIs(t, err, streams.SystemError{}, "fstype refusal must be a SystemError")
 	// The refusal must not be mistaken for the agent not having written its files yet.
 	require.False(t, os.IsNotExist(err), "refusal must not alias os.ErrNotExist")
 }

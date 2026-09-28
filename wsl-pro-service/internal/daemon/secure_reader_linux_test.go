@@ -14,6 +14,7 @@ import (
 	"testing/iotest"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/daemon"
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/unix"
 )
@@ -105,10 +106,11 @@ func TestDefaultSecureReader(t *testing.T) {
 		root        *mockRootFs
 		openRootErr error
 
-		targetPath  string
-		wantErr     string
-		wantContent string // expected string for the success-path case; empty otherwise
-		wantClosed  bool
+		targetPath      string
+		wantErr         string
+		wantSystemError bool   // true when the failure is a violation that breaks the retry loop
+		wantContent     string // expected string for the success-path case; empty otherwise
+		wantClosed      bool
 	}{
 		"Valid nested file is read and the root is closed": {
 			root: &mockRootFs{
@@ -123,17 +125,20 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed:  true,
 		},
 		"Rejected when opening the root fails": {
-			openRootErr: errors.New("permission denied"),
-			targetPath:  "file.txt",
-			wantErr:     "could not open root",
+			wantSystemError: false,
+			openRootErr:     errors.New("permission denied"),
+			targetPath:      "file.txt",
+			wantErr:         "could not open root",
 		},
 		"Rejected when stating the root directory fails": {
-			root:       &mockRootFs{rootLstatErr: errors.New("disk failure")},
-			targetPath: "file.txt",
-			wantErr:    "could not stat root",
-			wantClosed: true,
+			wantSystemError: false,
+			root:            &mockRootFs{rootLstatErr: errors.New("disk failure")},
+			targetPath:      "file.txt",
+			wantErr:         "could not stat root",
+			wantClosed:      true,
 		},
 		"Rejected when the root directory has insecure permissions": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					".": {Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
@@ -144,6 +149,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when stating a component fails": {
+			wantSystemError: false,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"sub/file.txt": secureFileInfo(),
@@ -155,6 +161,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected on symlink file": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"symlink.txt": {Mode: unix.S_IFLNK | 0o777, UID: expectedUID, GID: expectedGID},
@@ -165,6 +172,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected on intermediate symlink directory": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"symlink_dir": {Mode: unix.S_IFLNK | 0o777, UID: expectedUID, GID: expectedGID},
@@ -175,6 +183,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected on irregular file type": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"pipe": {Mode: unix.S_IFIFO | 0o600, UID: expectedUID, GID: expectedGID},
@@ -185,6 +194,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when an intermediate directory has insecure permissions": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"sub":          {Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
@@ -196,6 +206,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when the file has insecure permissions": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"file.txt": {Mode: unix.S_IFREG | 0o644, UID: expectedUID, GID: expectedGID},
@@ -206,6 +217,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when opening the target fails": {
+			wantSystemError: false,
 			root: &mockRootFs{
 				infos:   map[string]daemon.FileStat{"file.txt": secureFileInfo()},
 				openErr: errors.New("open error: permission denied"),
@@ -215,6 +227,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when target descriptor was swapped with illegitimate inode before validation": {
+			wantSystemError: true,
 			root: &mockRootFs{
 				infos: map[string]daemon.FileStat{
 					"secret.txt": secureFileInfo(),
@@ -229,6 +242,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when stating the open target descriptor fails": {
+			wantSystemError: false,
 			root: &mockRootFs{
 				infos:       map[string]daemon.FileStat{"file.txt": secureFileInfo()},
 				fileStatErr: errors.New("descriptor bad"),
@@ -238,6 +252,7 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantClosed: true,
 		},
 		"Rejected when reading the target file contents fails": {
+			wantSystemError: false,
 			root: &mockRootFs{
 				infos:   map[string]daemon.FileStat{"file.txt": secureFileInfo()},
 				readErr: errors.New("read error"),
@@ -268,6 +283,11 @@ func TestDefaultSecureReader(t *testing.T) {
 			got, err := reader.ReadFile(rootDir, tc.targetPath)
 			if tc.wantErr != "" {
 				require.ErrorContains(t, err, tc.wantErr, "reader.ReadFile should fail with expected error")
+				if tc.wantSystemError {
+					require.ErrorIs(t, err, streams.SystemError{}, "violations must break the connection retry loop")
+				} else {
+					require.NotErrorIs(t, err, streams.SystemError{}, "transient failures must be retried, not terminate the daemon")
+				}
 			} else {
 				require.NoError(t, err, "reader.ReadFile should succeed on valid input")
 				require.Equal(t, tc.wantContent, string(got), "read content does not match expected")
@@ -287,13 +307,19 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		symlink        bool
-		missing        bool
-		wantErr        string
-		wantIsNotExist bool
+		symlink         bool
+		file            bool
+		missing         bool
+		wantErr         string
+		wantIsNotExist  bool
+		wantSystemError bool
 	}{
-		"Refuses a symlink rootDir": {symlink: true, wantErr: "could not open root"},
-		"Fails on missing rootDir":  {missing: true, wantErr: "could not open root", wantIsNotExist: true},
+		// A symlinked root violates the Public Directory invariant and cannot be
+		// fixed by retrying. A missing root remains transient because the agent may
+		// not have created the directory yet.
+		"Refuses a symlink rootDir":       {symlink: true, wantErr: "could not open root", wantSystemError: true},
+		"Refuses a non-directory rootDir": {file: true, wantErr: "could not open root", wantSystemError: true},
+		"Fails on missing rootDir":        {missing: true, wantErr: "could not open root", wantIsNotExist: true},
 	}
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
@@ -309,6 +335,10 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 				require.NoError(t, os.Symlink(rootDir, link), "Setup: failed to create root symlink")
 				rootDir = link
 			}
+			if tc.file {
+				rootDir = filepath.Join(t.TempDir(), "not-a-directory")
+				require.NoError(t, os.WriteFile(rootDir, []byte("not a directory"), 0o600))
+			}
 			if tc.missing {
 				rootDir = filepath.Join(t.TempDir(), "does-not-exist")
 			}
@@ -319,6 +349,11 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 				require.ErrorContains(t, err, tc.wantErr, "reader.ReadFile should have failed")
 				if tc.wantIsNotExist {
 					require.ErrorIs(t, err, os.ErrNotExist, "missing root error should match os.ErrNotExist")
+				}
+				if tc.wantSystemError {
+					require.ErrorIs(t, err, streams.SystemError{}, "invalid root directories must terminate the retry loop")
+				} else {
+					require.NotErrorIs(t, err, streams.SystemError{}, "missing root directories must remain retryable")
 				}
 				return
 			}
@@ -393,11 +428,12 @@ func TestOpenRootOS(t *testing.T) {
 			}
 
 			root, err := daemon.OpenRoot(rootDir)
-			if tc.untrustedFS {
+			if tc.untrustedFS || tc.mountPointAsRoot {
 				require.ErrorContains(t, err, "refusing untrusted filesystem", "OpenRoot should reject untrusted filesystem")
+				require.ErrorIs(t, err, streams.SystemError{}, "mount-contract violations must break the connection retry loop")
 				return
 			}
-			if tc.missingDir || tc.missingParent || tc.fileAsRoot || tc.mountPointAsRoot {
+			if tc.missingDir || tc.missingParent || tc.fileAsRoot {
 				require.Error(t, err, "OpenRoot should have failed on invalid root target")
 				return
 			}
@@ -470,28 +506,32 @@ func TestOpenRootOS_ConfinesPathResolution(t *testing.T) {
 	t.Cleanup(func() { _ = root.Close() })
 
 	testCases := map[string]struct {
-		path          string
-		wantLstatErr  bool
-		wantLstatLink bool
-		wantOpenErr   bool
+		path            string
+		wantLstatErr    bool
+		wantLstatLink   bool
+		wantOpenErr     bool
+		wantSystemError bool
 	}{
 		"Valid file within root succeeds": {
 			path: "valid.txt",
 		},
 		"Lstat and Open refuse absolute paths": {
-			path:         filepath.Join(rootDir, "valid.txt"),
-			wantLstatErr: true,
-			wantOpenErr:  true,
+			path:            filepath.Join(rootDir, "valid.txt"),
+			wantLstatErr:    true,
+			wantOpenErr:     true,
+			wantSystemError: true,
 		},
 		"Lstat and Open refuse .. that escapes the root": {
-			path:         "../outside.txt",
-			wantLstatErr: true,
-			wantOpenErr:  true,
+			path:            "../outside.txt",
+			wantLstatErr:    true,
+			wantOpenErr:     true,
+			wantSystemError: true,
 		},
 		"Lstat and Open refuse in-root symlinks pointing outside the root": {
-			path:          "escape_link.txt",
-			wantLstatLink: true,
-			wantOpenErr:   true,
+			path:            "escape_link.txt",
+			wantLstatLink:   true,
+			wantOpenErr:     true,
+			wantSystemError: true,
 		},
 	}
 
@@ -505,22 +545,29 @@ func TestOpenRootOS_ConfinesPathResolution(t *testing.T) {
 				path = filepath.Clean(path)
 			}
 
+			var lstatErr error
 			switch {
 			case tc.wantLstatErr:
-				_, err := root.Lstat(path)
-				require.Error(t, err, "root.Lstat should fail for path escaping root")
+				_, lstatErr = root.Lstat(path)
+				require.Error(t, lstatErr, "root.Lstat should fail for path escaping root")
+				if tc.wantSystemError {
+					require.ErrorIs(t, lstatErr, streams.SystemError{}, "path-policy Lstat refusals must be SystemError")
+				}
 			case tc.wantLstatLink:
 				fi, err := root.Lstat(path)
 				require.NoError(t, err, "root.Lstat should not fail for symlink within root")
 				require.Equal(t, uint32(unix.S_IFLNK), fi.Mode&unix.S_IFMT, "Lstat must report the symlink itself, not its target")
 			default:
-				_, err := root.Lstat(path)
-				require.NoError(t, err, "root.Lstat should not fail for path within root")
+				_, lstatErr = root.Lstat(path)
+				require.NoError(t, lstatErr, "root.Lstat should not fail for path within root")
 			}
 
 			if tc.wantOpenErr {
 				_, err := root.Open(path)
 				require.Error(t, err, "root.Open should fail for path escaping root or traversing symlink")
+				if tc.wantSystemError {
+					require.ErrorIs(t, err, streams.SystemError{}, "confined symlink refusal must be a SystemError")
+				}
 			} else {
 				rc, err := root.Open(path)
 				require.NoError(t, err, "root.Open should succeed for valid path")

@@ -6,6 +6,8 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+
+	"github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service/internal/streams"
 )
 
 // SecureReader defines the interface for reading files after enforcing security invariants.
@@ -48,7 +50,7 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 	if stat, err := root.Lstat("."); err != nil {
 		return nil, fmt.Errorf("could not stat root %q: %v", rootDir, err)
 	} else if err := defaultValidate(stat); err != nil {
-		return nil, fmt.Errorf("refused %q: %v", rootDir, err)
+		return nil, refuseViolation("refused %q: %v", rootDir, err)
 	}
 
 	// Open the file descriptor first and hold it open.
@@ -68,7 +70,7 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 			return nil, fmt.Errorf("could not stat %q: %w", filepath.Join(rootDir, current), err)
 		}
 		if err := defaultValidate(stat); err != nil {
-			return nil, fmt.Errorf("refused %q: %v", filepath.Join(rootDir, current), err)
+			return nil, refuseViolation("refused %q: %v", filepath.Join(rootDir, current), err)
 		}
 	}
 
@@ -79,7 +81,7 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 		return nil, fmt.Errorf("could not stat %q: %v", filepath.Join(rootDir, targetPath), err)
 	}
 	if err := defaultValidate(targetStat); err != nil {
-		return nil, fmt.Errorf("refused %q: %v", filepath.Join(rootDir, targetPath), err)
+		return nil, refuseViolation("refused %q: %v", filepath.Join(rootDir, targetPath), err)
 	}
 
 	// Only then read the file contents.
@@ -105,6 +107,10 @@ type confinedFile interface {
 // Paths passed to rootFs methods are interpreted relative to the root and may not
 // escape it nor be symlinks.
 //
+// Implementations classify failures on behalf of their callers: violations of the
+// security contract (untrusted mount, refused attributes) are returned via calls to
+// refuseViolation() while ordinary I/O failures are returned unwrapped.
+//
 // Why Lstat is load-bearing: the read walk calls Lstat on every component from the root
 // to the target, including the root itself via Lstat("."). Lstat is the only stat flavor
 // that returns the symlink itself rather than following it; replacing it with Stat would
@@ -118,6 +124,14 @@ type rootFs interface {
 	Lstat(name string) (fileStat, error)
 	// Open opens a root-relative file for reading without following symlinks.
 	Open(name string) (confinedFile, error)
+}
+
+// refuseViolation reports a security-contract violation, as opposed to an ordinary
+// I/O failure: the returned error breaks the connection retry loop instead of
+// being retried, and must only be used for conditions that retrying cannot fix.
+// See streams.SystemError and ADR 2.01 for the taxonomy.
+func refuseViolation(format string, args ...any) error {
+	return streams.NewSystemError(format, args...)
 }
 
 // defaultValidate validates that a file or directory is strictly owned by root (UID 0, GID 0)
