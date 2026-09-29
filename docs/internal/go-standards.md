@@ -138,6 +138,7 @@ for name, tc := range tests {
             require.Error(t, err, "reason why errors are expected")
             return
         }
+        require.NoError(t, err, "reason why errors are unexpected")
         want := testutils.LoadWithUpdateFromGolden(t, got)
         require.Equal(t, want, got)
     })
