@@ -80,7 +80,6 @@ Install using 'wsl --install <Distro>'.
   Ubuntu-24.04                    Ubuntu 24.04 LTS
   Ubuntu-22.04                    Ubuntu 22.04 LTS
   ...
-  ...
   archlinux                       Arch Linux
   FedoraLinux-44                  Fedora Linux 44
   FedoraLinux-43                  Fedora Linux 43
