@@ -64,8 +64,7 @@ The kernel used in WSL environments is maintained by Microsoft.
 Bug reports and support requests for the WSL kernel should be directed to the [official repository for the WSL kernel](https://github.com/microsoft/WSL2-Linux-Kernel).
 ```
 
-[^1]: Ubuntu (Preview) has been deprecated. If you log in with an account that
-    previously installed Ubuntu 22.04, you’ll only find an old version. For
+[^1]: Ubuntu (Preview) has been deprecated and no longer available in Microsoft Store for new installations. For
 more information, read the post [What happened to
 Ubuntu(Preview)?](https://discourse.ubuntu.com/t/what-happened-to-ubuntu-preview/86714)
 on the Ubuntu Discourse.
