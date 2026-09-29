@@ -35,8 +35,8 @@ WSL will be used to extract the rootfs, edit the configuration files and manage 
 
 ## Download an Ubuntu release for WSL
 
-First, get Ubuntu 24.04 LTS (Noble Numbat) by visiting
-[releases.ubuntu.com/noble](https://releases.ubuntu.com/noble) and downloading
+First, get Ubuntu 26.04 LTS (Resolute Raccoon) by visiting
+[releases.ubuntu.com/resolute](https://releases.ubuntu.com/resolute) and downloading
 the WSL image.
 
 The downloaded file should have a `.wsl` extension.
@@ -49,7 +49,7 @@ For the next step, it is assumed that this file is located in the default
 Open a PowerShell terminal and run an instance of Ubuntu on WSL, for example:
 
 ```{code-block} text
-> wsl ~ -d Ubuntu-24.04
+> wsl ~ -d Ubuntu-26.04
 ```
 
 From this Ubuntu environment, move the tarball from the Downloads directory
@@ -57,7 +57,7 @@ into the Ubuntu instance, and change the extension from `.wsl` to `.tar`, using
 this command:
 
 ```{code-block} text
-$ mv /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.04.3-wsl-amd64.tar
+$ mv /mnt/c/Users/<username>/Downloads/ubuntu-26.04.1-wsl-amd64.wsl ./ubuntu-26.04.1-wsl-amd64.tar
 ```
 
 ```{admonition} Additional step if the WSL image has a .gz extension
@@ -65,7 +65,7 @@ $ mv /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl ./ubuntu-24.
 If the image you downloaded has a filename that ends in `.wsl.gz`, rather than
 `.wsl`, run the following command before changing the extension to `.tar`:
 
-    $ gunzip /mnt/c/Users/<username>/Downloads/ubuntu-24.04.3-wsl-amd64.wsl.gz
+    $ gunzip /mnt/c/Users/<username>/Downloads/ubuntu-26.04.1-wsl-amd64.wsl.gz
 ```
 
 In the home directory (`~`), create a directory to store the rootfs of your
@@ -80,7 +80,7 @@ Extract the rootfs into that new directory:
 
 ```{code-block} text
 :caption: ~
-$ sudo tar -xpf ubuntu-24.04.3-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
+$ sudo tar -xpf ubuntu-26.04.1-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
 ```
 
 ```{tip}
@@ -114,7 +114,7 @@ Change the name of your distro and the name of its icon:
 [oobe]
 command = /usr/lib/wsl/wsl-setup
 defaultUid = 1000
-- defaultName = Ubuntu-24.04
+- defaultName = Ubuntu-26.04
 + defaultName = my-new-ubuntu
 
 [shortcut]

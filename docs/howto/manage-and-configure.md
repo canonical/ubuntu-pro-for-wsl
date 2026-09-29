@@ -39,7 +39,7 @@ Using a VHD has the advantage of not requiring a compression/decompression step.
 ````{tab-item} Using tarballs
 :sync: tarballs
 
-To backup an Ubuntu-24.04 instance, first make a `backup` folder:
+To backup an Ubuntu-26.04 instance, first make a `backup` folder:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
@@ -50,14 +50,14 @@ Then create a compressed version of the Ubuntu instance in that backup directory
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
-> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.tar.gz
+> wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.tar.gz
 ```
 
 ````
 
 ````{tab-item} Using VHD
 :sync: vhd
-To backup an Ubuntu-24.04 instance, first make a `backup` folder:
+To backup an Ubuntu-26.04 instance, first make a `backup` folder:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
@@ -68,7 +68,7 @@ Then create a `.vhdx` of the Ubuntu instance in that backup directory:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
-> wsl --export Ubuntu-24.04 .\backup\Ubuntu-24.04.vhdx --format vhd
+> wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.vhdx --format vhd
 ```
 ````
 `````
@@ -87,7 +87,7 @@ remove it from WSL and delete all associated data.
 Remove the instance with the following command:
 
 ```{code-block} text
-> wsl --unregister Ubuntu-24.04
+> wsl --unregister Ubuntu-26.04
 ```
 
 (howto::restoring)=
@@ -99,42 +99,42 @@ Remove the instance with the following command:
 ````{tab-item} Using tarballs
 :sync: tarballs
 
-To restore the Ubuntu-24.04 instance that you have previously backed up as a tarball:
+To restore the Ubuntu-26.04 instance that you have previously backed up as a tarball:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
-> wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.tar.gz
+> wsl --import Ubuntu-26.04 .\backup\Ubuntu2604\ .\backup\Ubuntu-26.04.tar.gz
 ```
 ````
 
 ````{tab-item} Using VHD
 :sync: vhd
-To restore the Ubuntu-24.04 instance that you have previously backed up as a VHD,
+To restore the Ubuntu-26.04 instance that you have previously backed up as a VHD,
 create a copy of the VHD:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
-> wsl --import Ubuntu-24.04 .\backup\Ubuntu2404\ .\backup\Ubuntu-24.04.vhdx --vhd
+> wsl --import Ubuntu-26.04 .\backup\Ubuntu2604\ .\backup\Ubuntu-26.04.vhdx --vhd
 ```
 
 A quicker option is to import the already filled, ready-to-use, virtual hard drive:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
-wsl --import-in-place Ubuntu-24.04 .\backup\Ubuntu-24.04.vhdx
+wsl --import-in-place Ubuntu-26.04 .\backup\Ubuntu-26.04.vhdx
 ```
 ````
 `````
 
 ### Using the restored backup
 
-After restoring your backup of Ubuntu-24.04, it can be launched as normal.
+After restoring your backup of Ubuntu-26.04, it can be launched as normal.
 The instance should be restored with your previous configuration intact.
 
 To log in as a user `k`, created with the original instance, run: 
 
 ```{code-block} text
-> wsl -d Ubuntu-24.04 -u k
+> wsl -d Ubuntu-26.04 -u k
 ```
 
 Alternatively, add the following to `/etc/wsl.conf` in the instance:
@@ -162,11 +162,11 @@ tarball:
 
 ```{code-block} text
 :caption: C:\Users\\\<username>
-> wsl --import ubuntu2404b .\backup\Ubuntu2404b\ .\backup\Ubuntu-24.04.tar.gz
-> wsl --import ubuntu2404c .\backup\Ubuntu2404c\ .\backup\Ubuntu-24.04.tar.gz
+> wsl --import ubuntu2604b .\backup\Ubuntu2604b\ .\backup\Ubuntu-26.04.tar.gz
+> wsl --import ubuntu2604c .\backup\Ubuntu2604c\ .\backup\Ubuntu-26.04.tar.gz
 ```
 
-This will create two additional instances of Ubuntu 24.04 with unique names
+This will create two additional instances of Ubuntu 26.04 with unique names
 that can be launched and configured independently.
 
 In PowerShell, running `wsl -l -v` will output the new instances in your list of installed instances:
@@ -174,15 +174,15 @@ In PowerShell, running `wsl -l -v` will output the new instances in your list of
 ```{code-block} text
 :class: no-copy
 NAME            STATE         VERSION
-Ubuntu-24.04    Stopped       2
-ubuntu2404b     Stopped       2
-ubuntu2404c     Stopped       2
+Ubuntu-26.04    Stopped       2
+ubuntu2604b     Stopped       2
+ubuntu2604c     Stopped       2
 ```
 
 To launch the first derived instance and log in as the user `k` run:
 
 ```{code-block} text
-> wsl -d ubuntu2404b -u k
+> wsl -d ubuntu2604b -u k
 ```
 
 (howto::renaming)=
@@ -218,7 +218,7 @@ The `--name` flag can be used with {term}`wsl.exe` to customize
 the name of an instance during installation:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04 --name UbuntuWebDev
+> wsl --install Ubuntu-26.04 --name UbuntuWebDev
 ```
 
 Then launch the instance as normal:

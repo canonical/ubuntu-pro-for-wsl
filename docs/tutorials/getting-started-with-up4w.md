@@ -89,11 +89,11 @@ If this returns `True` then the file exists and can be removed with:
 (tut::get-ubuntu)=
 ### Install Ubuntu
 
-Ubuntu 24.04 LTS is recommended for this tutorial and can be installed 
+Ubuntu 26.04 LTS is recommended for this tutorial and can be installed 
 with the following command in PowerShell:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04
+> wsl --install Ubuntu-26.04
 ```
 
 For other installation options refer to our [install Ubuntu on WSL guide](https://ubuntu.com/wsl/docs/stable/howto/install-ubuntu-wsl2/).
@@ -165,11 +165,11 @@ Pro for WSL will automatically forward the subscription to the Ubuntu Pro client
 
 All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subscription.
 
-In PowerShell, run the following command to launch the Ubuntu-24.04 instance
+In PowerShell, run the following command to launch the Ubuntu-26.04 instance
 you installed previously, entering a username and password when prompted.
 
 ```{code-block} text
-> wsl ~ -d Ubuntu-24.04
+> wsl ~ -d Ubuntu-26.04
 ```
 
 You will now be logged in to the Ubuntu instance and can check that Pro for WSL has Pro-attached this instance with:
@@ -201,15 +201,15 @@ Running `sudo apt update` will produce output like the following:
 
 ```{code-block} text
 :class: no-copy
-Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
-Hit:2 http://ppa.launchpad.net/ubuntu-wsl-dev/ppa/ubuntu noble InRelease
-Hit:3 http://security.ubuntu.com/ubuntu noble-security InRelease
-Hit:4 http://archive.ubuntu.com/ubuntu noble-updates InRelease
-Hit:5 http://ppa.launchpad.net/landscape/self-hosted-beta/ubuntu noble InRelease
-Hit:6 https://esm.ubuntu.com/apps/ubuntu noble-apps-security InRelease
-Hit:7 http://archive.ubuntu.com/ubuntu noble-backports InRelease
-Hit:8 http://ppa.launchpad.net/cloud-init-dev/proposed/ubuntu noble InRelease
-Hit:9 https://esm.ubuntu.com/infra/ubuntu noble-infra-security InRelease
+Hit:1 http://archive.ubuntu.com/ubuntu resolute InRelease
+Hit:2 http://ppa.launchpad.net/ubuntu-wsl-dev/ppa/ubuntu resolute InRelease
+Hit:3 http://security.ubuntu.com/ubuntu resolute-security InRelease
+Hit:4 http://archive.ubuntu.com/ubuntu resolute-updates InRelease
+Hit:5 http://ppa.launchpad.net/landscape/self-hosted-beta/ubuntu resolute InRelease
+Hit:6 https://esm.ubuntu.com/apps/ubuntu resolute-apps-security InRelease
+Hit:7 http://archive.ubuntu.com/ubuntu resolute-backports InRelease
+Hit:8 http://ppa.launchpad.net/cloud-init-dev/proposed/ubuntu resolute InRelease
+Hit:9 https://esm.ubuntu.com/infra/ubuntu resolute-infra-security InRelease
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done

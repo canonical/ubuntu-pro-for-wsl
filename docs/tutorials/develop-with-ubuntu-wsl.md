@@ -82,21 +82,21 @@ For a list of distributions that you can install on WSL, run:
 > wsl --list --online
 ```
 
-For this tutorial, install Ubuntu 24.04 LTS by running the following command in
+For this tutorial, install Ubuntu 26.04 LTS by running the following command in
 PowerShell:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04
+> wsl --install Ubuntu-26.04
 ```
 
 :::{dropdown} Installing multiple instances of the same Ubuntu release
 :icon: light-bulb
 
-If you already have an `Ubuntu-24.04` instance and you don't want to change or
+If you already have an `Ubuntu-26.04` instance and you don't want to change or
 remove it, you can install a second instance by giving it a unique name:
 
 ```{code-block} text
-> wsl --install Ubuntu-24.04 --name Ubuntu-tutorial
+> wsl --install Ubuntu-26.04 --name Ubuntu-tutorial
 ```
 
 You can then run that instance with:
@@ -106,7 +106,7 @@ You can then run that instance with:
 ```
 
 If using a distribution with a custom name when following this tutorial, don't
-forget to substitute your custom name for `Ubuntu-24.04` in the commands.
+forget to substitute your custom name for `Ubuntu-26.04` in the commands.
 :::
 
 After an Ubuntu distribution is installed, you are prompted to create a
@@ -155,11 +155,11 @@ Use `wsl -l -v` to list all of your installed distros.
 :class: no-copy
   NAME            STATE           VERSION
   Ubuntu-22.04    Stopped         2
-* Ubuntu-24.04    Stopped         2
+* Ubuntu-26.04    Stopped         2
 ```
 
 This shows that both distros are stopped, that each uses WSL 2, and that
-Ubuntu-24.04 is the default distro.
+Ubuntu-26.04 is the default distro.
 
 ```{admonition} What is WSL 2?
 :class: note
@@ -180,7 +180,7 @@ The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
 directory, which is commonly symbolised by ~. The `-d` flag is added to specify the
 distro.
 
-We only need an Ubuntu-24.04 instance for this tutorial.
+We only need an Ubuntu-26.04 instance for this tutorial.
 
 To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 
@@ -224,7 +224,7 @@ Once installed, you can test the development environment by creating an example 
 
 ## Install Node.js and create a new project
 
-Open an Ubuntu terminal using the `wsl ~ -d Ubuntu-24.04` command.
+Open an Ubuntu terminal using the `wsl ~ -d Ubuntu-26.04` command.
 
 Ensure the packages in Ubuntu are up-to-date with the following command:
 
