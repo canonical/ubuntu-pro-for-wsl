@@ -49,11 +49,11 @@ func TestDefaultValidate(t *testing.T) {
 		},
 		"Invalid directory mode": {
 			stat:    daemon.FileStat{Mode: unix.S_IFDIR | 0o755, UID: expectedUID, GID: expectedGID},
-			wantErr: `directory not strictly owned by root (mode 0755)`,
+			wantErr: `directory mode is not 0700 (mode 0755)`,
 		},
 		"Invalid file mode": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | 0o644, UID: expectedUID, GID: expectedGID},
-			wantErr: `file not strictly owned by root (mode 0644)`,
+			wantErr: `file mode is not 0600 (mode 0644)`,
 		},
 		"Refuses file with setuid bit": {
 			stat:    daemon.FileStat{Mode: unix.S_IFREG | unix.S_ISUID | 0o600, UID: expectedUID, GID: expectedGID},
@@ -145,7 +145,7 @@ func TestDefaultSecureReader(t *testing.T) {
 				},
 			},
 			targetPath: "file.txt",
-			wantErr:    "not strictly owned by root",
+			wantErr:    "directory mode is not 0700",
 			wantClosed: true,
 		},
 		"Rejected when stating a component fails": {
@@ -202,7 +202,7 @@ func TestDefaultSecureReader(t *testing.T) {
 				},
 			},
 			targetPath: "sub/file.txt",
-			wantErr:    "not strictly owned by root",
+			wantErr:    "directory mode is not 0700",
 			wantClosed: true,
 		},
 		"Rejected when the file has insecure permissions": {
@@ -213,7 +213,7 @@ func TestDefaultSecureReader(t *testing.T) {
 				},
 			},
 			targetPath: "file.txt",
-			wantErr:    "not strictly owned by root",
+			wantErr:    "file mode is not 0600",
 			wantClosed: true,
 		},
 		"Rejected when the target is a directory": {
@@ -249,7 +249,7 @@ func TestDefaultSecureReader(t *testing.T) {
 				contents: map[string]string{"secret.txt": "compromised data"},
 			},
 			targetPath: "secret.txt",
-			wantErr:    "not strictly owned by root",
+			wantErr:    "file mode is not 0600",
 			wantClosed: true,
 		},
 		"Rejected when stating the open target descriptor fails": {

@@ -305,14 +305,6 @@ func TestServe_ClientKeyErrorClassification(t *testing.T) {
 				return os.ReadFile(filepath.Join(rootDir, targetPath))
 			})
 
-			// Either failure is transient from the daemon's perspective: serveOnce
-			// reports success=false and the retry loop enters onWait, which publishes
-			// "Not connected: waiting to retry" through the systemd notifier.
-			// Intercept that status with a channel so the test waits on the
-			// observable consequence of the reader error (rather than a fixed
-			// wall-clock window). The only way Serve can exit at this point is a
-			// bug (e.g. the reader error being misclassified as a SystemError),
-			// which surfaces as an early receive below.
 			retrying := make(chan struct{}, 1)
 			notifier := func(_ bool, state string) (bool, error) {
 				if strings.Contains(state, "Not connected: waiting to retry") {
@@ -344,6 +336,10 @@ func TestServe_ClientKeyErrorClassification(t *testing.T) {
 				return
 			}
 
+			// The missing-key case is transient: serveOnce reports success=false
+			// and the retry loop enters onWait, which publishes "Not connected:
+			// waiting to retry" through the systemd notifier. Intercept that status
+			// so the test waits on the observable retry rather than a fixed delay.
 			select {
 			case <-retrying:
 				// Expected: the daemon is waiting to retry.

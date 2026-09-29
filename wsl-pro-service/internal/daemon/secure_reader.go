@@ -159,12 +159,12 @@ func defaultValidate(stat fileStat) error {
 	switch fileType {
 	case modeDir:
 		if perm != 0o700 {
-			return fmt.Errorf("directory not strictly owned by root (mode 0%o)", perm)
+			return fmt.Errorf("directory mode is not 0700 (mode 0%o)", perm)
 		}
 		return nil
 	case modeReg:
 		if perm != 0o600 {
-			return fmt.Errorf("file not strictly owned by root (mode 0%o)", perm)
+			return fmt.Errorf("file mode is not 0600 (mode 0%o)", perm)
 		}
 		return nil
 	case modeSymlink:
