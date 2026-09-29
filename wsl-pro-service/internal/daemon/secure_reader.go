@@ -83,6 +83,9 @@ func (r *defaultSecureReader) ReadFile(rootDir, targetPath string) ([]byte, erro
 	if err := defaultValidate(targetStat); err != nil {
 		return nil, refuseViolation("refused %q: %v", filepath.Join(rootDir, targetPath), err)
 	}
+	if targetStat.Mode&modeTypeMask != modeReg {
+		return nil, refuseViolation("refused %q: target is not a regular file", filepath.Join(rootDir, targetPath))
+	}
 
 	// Only then read the file contents.
 	data, err := io.ReadAll(targetFile)

@@ -216,6 +216,17 @@ func TestDefaultSecureReader(t *testing.T) {
 			wantErr:    "not strictly owned by root",
 			wantClosed: true,
 		},
+		"Rejected when the target is a directory": {
+			wantSystemError: true,
+			root: &mockRootFs{
+				infos: map[string]daemon.FileStat{
+					"directory": secureDirInfo(),
+				},
+			},
+			targetPath: "directory",
+			wantErr:    "target is not a regular file",
+			wantClosed: true,
+		},
 		"Rejected when opening the target fails": {
 			wantSystemError: false,
 			root: &mockRootFs{
