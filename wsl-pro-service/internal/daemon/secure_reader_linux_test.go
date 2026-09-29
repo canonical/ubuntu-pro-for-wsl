@@ -320,6 +320,7 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 	testcases := map[string]struct {
 		symlink         bool
 		file            bool
+		socket          bool
 		missing         bool
 		wantErr         string
 		wantIsNotExist  bool
@@ -330,6 +331,7 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 		// not have created the directory yet.
 		"Refuses a symlink rootDir":       {symlink: true, wantErr: "could not open root", wantSystemError: true},
 		"Refuses a non-directory rootDir": {file: true, wantErr: "could not open root", wantSystemError: true},
+		"Refuses a Unix socket target":    {socket: true, wantErr: "refusing path", wantSystemError: true},
 		"Fails on missing rootDir":        {missing: true, wantErr: "could not open root", wantIsNotExist: true},
 	}
 	for name, tc := range testcases {
@@ -349,6 +351,12 @@ func TestDefaultSecureReader_RealFS(t *testing.T) {
 			if tc.file {
 				rootDir = filepath.Join(t.TempDir(), "not-a-directory")
 				require.NoError(t, os.WriteFile(rootDir, []byte("not a directory"), 0o600))
+			}
+			if tc.socket {
+				filePath = "test.sock"
+				listener, err := net.Listen("unix", filepath.Join(rootDir, filePath))
+				require.NoError(t, err, "Setup: could not create Unix socket")
+				t.Cleanup(func() { require.NoError(t, listener.Close(), "Cleanup: could not close Unix socket") })
 			}
 			if tc.missing {
 				rootDir = filepath.Join(t.TempDir(), "does-not-exist")

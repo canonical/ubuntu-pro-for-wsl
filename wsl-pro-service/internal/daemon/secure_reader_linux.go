@@ -70,7 +70,7 @@ func openRootOS(path string) (rootFs, error) {
 		// A symlink or non-directory root violates the Public Directory
 		// invariant and will not be fixed by retrying. ENOENT is different:
 		// the agent may not have created the directory yet.
-		if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) {
+		if isPathResolutionViolation(err) {
 			return nil, refuseViolation("refusing invalid root %q: %v", clean, err)
 		}
 		return nil, err
@@ -169,10 +169,24 @@ func (r *openat2Root) Close() error {
 	return nil
 }
 
+// isPathResolutionViolation identifies path or node types that violate the secure
+// projection contract before the target descriptor can be inspected.
+func isPathResolutionViolation(err error) bool {
+	// ELOOP, ENOTDIR, and EXDEV are path-confinement refusals. ENXIO is
+	// returned when openat2 attempts to open a pathname-backed Unix socket
+	// (and can also identify another unsupported special node); ENODEV is
+	// the corresponding failure for a device node without a backing device.
+	return errors.Is(err, unix.ELOOP) ||
+		errors.Is(err, unix.ENOTDIR) ||
+		errors.Is(err, unix.EXDEV) ||
+		errors.Is(err, unix.ENXIO) ||
+		errors.Is(err, unix.ENODEV)
+}
+
 // refusePathResolution classifies and reports errors caused by the confined path policy, rather
 // than by an unavailable filesystem object. These errors cannot be fixed by retrying the same path.
 func refusePathResolution(name string, err error) error {
-	if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) || errors.Is(err, unix.EXDEV) {
+	if isPathResolutionViolation(err) {
 		return refuseViolation("refusing path %q: %v", name, err)
 	}
 	return err
