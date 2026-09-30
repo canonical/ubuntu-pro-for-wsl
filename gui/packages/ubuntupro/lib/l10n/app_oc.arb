@@ -34,5 +34,10 @@
     "buttonNext": "Seguent",
     "buttonSkip": "Sautar",
     "buttonBack": "Retorn",
-    "ubuntuProEnabled": "Ubuntu Pro es activat sus aquesta maquina"
+    "ubuntuProEnabled": "Ubuntu Pro es activat sus aquesta maquina",
+    "learnMore": "Ne saber mai",
+    "landscapeAccountNameLabel": "Nom del compte",
+    "landscapeDetails": "Detalhs",
+    "statusBarReportBugTooltip": "Senhalar una anomalia",
+    "getUbuntuPro": "Obténer Ubuntu Pro"
 }
