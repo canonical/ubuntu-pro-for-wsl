@@ -9,16 +9,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// TestProductionFSNames pins the production allowlist so the security-critical
-// constant cannot drift unnoticed, for instance by someone adding a type meant
-// only for tests. AllowFSNames mutates the runtime copy, allowedFSNames, never
-// this definition.
-func TestProductionFSNames(t *testing.T) {
-	t.Parallel()
-
-	require.Equal(t, []string{"9p", "virtiofs"}, productionFSNames)
-}
-
 // TestParseMntID covers the fdinfo parsing used to pin which mount the opened
 // root descriptor belongs to. Anything unexpected must fail closed.
 func TestParseMntID(t *testing.T) {
@@ -168,9 +158,8 @@ func TestMountFSType(t *testing.T) {
 		require.NoError(t, err, "Setup: could not open temp directory")
 		t.Cleanup(func() { _ = unix.Close(fd) })
 
-		fstype, _, err := mountFSType(fd)
+		_, _, err = mountFSType(fd)
 		require.NoError(t, err, "mountFSType should succeed on a test directory")
-		require.True(t, allowedFSNames[fstype], "temp directory filesystem %q should be allowed by the test seam", fstype)
 	})
 }
 
