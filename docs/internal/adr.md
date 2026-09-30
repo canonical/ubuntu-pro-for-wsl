@@ -114,7 +114,7 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   opened root directory sits on a `9p` or `virtiofs` mount — pinned race-free via the root `fd`'s
   `mnt_id` against `/proc/self/mountinfo`, because `statfs` magic numbers cannot distinguish
   `virtiofs` from attacker-controlled FUSE (both report `FUSE_SUPER_MAGIC`) — failing loudly with
-   `SystemError` when any invariant is broken.
+  `SystemError` when any invariant is broken.
 * **Consequences**:
   - Positive: attributes are stamped before content is written; instance-side defense-in-depth
     rejects compromised or improperly projected artifacts with `SystemError` before use; the
