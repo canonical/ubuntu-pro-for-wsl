@@ -16,6 +16,12 @@ import (
 	"github.com/ubuntu/decorate"
 )
 
+type daemonConfig struct {
+	Verbosity       int
+	EventLogEnabled bool `mapstructure:"event-log-enabled"`
+	FileLogEnabled  bool `mapstructure:"file-log-enabled"`
+}
+
 func initViperConfig(name string, cmd *cobra.Command, vip *viper.Viper) (err error) {
 	defer decorate.OnError(&err, "can't load configuration")
 
@@ -67,6 +73,26 @@ func installVerbosityFlag(cmd *cobra.Command, viper *viper.Viper) *int {
 // installConfigFlag adds the --config flag to allow for custom config paths.
 func installConfigFlag(cmd *cobra.Command) *string {
 	return cmd.PersistentFlags().StringP("config", "c", "", i18n.G("configuration file path"))
+}
+
+// installEventLogEnabledFlag adds the --event-log-enabled flag to allow for disabling event logging.
+// Event logging is enabled by default.
+func installEventLogEnabledFlag(cmd *cobra.Command, viper *viper.Viper) *bool {
+	r := cmd.PersistentFlags().BoolP("event-log-enabled", "e", true, i18n.G("whether to enable logging to the Windows event logger"))
+	if err := viper.BindPFlag("event-log-enabled", cmd.PersistentFlags().Lookup("event-log-enabled")); err != nil {
+		log.Warning(context.Background(), err)
+	}
+	return r
+}
+
+// installFileLogEnabledFlag adds the --file-log-enabled flag to allow for enabling file logging.
+// File logging is disabled by default.
+func installFileLogEnabledFlag(cmd *cobra.Command, viper *viper.Viper) *bool {
+	r := cmd.PersistentFlags().BoolP("file-log-enabled", "f", false, i18n.G("whether to enable logging to a log file"))
+	if err := viper.BindPFlag("file-log-enabled", cmd.PersistentFlags().Lookup("file-log-enabled")); err != nil {
+		log.Warning(context.Background(), err)
+	}
+	return r
 }
 
 // SetVerboseMode change ErrorFormat and logs between very, middly and non verbose.
