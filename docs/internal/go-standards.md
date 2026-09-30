@@ -148,18 +148,19 @@ for name, tc := range tests {
 ### Example of acceptable use of package init():
 
 ```go
-// package p has some validation depending on this list (an immutable configuration value in code):
+// package p has some validation depending on this list (a configuration value that must not be
+// changed in production).
 var allowedFsNames = []string{"9p", "virtiofs"}
 
-// In a separate purpose-specific file package A exports a hook to extend the list only for testing.
+// In a separate purpose-specific file package p exports a hook to extend the list only for testing.
 import "testdetection"
 
-func ExtendAllowedFsNamesForTesting(fsname string){
+func ExtendAllowedFsNamesForTesting(fsname string) {
     testdetection.MustBeTesting() // panic if not under testing.
     allowedFsNames = append(allowedFsNames, fsname)
 }
 
-// testutils init allows tests of higher level clients of A to run on ext4:
+// testutils init allows tests of higher level clients of p to run on ext4:
 // - CI wouldn't run otherwise;
 // - package p's correct design doesn't expose an object or interface that can be mocked otherwise.
 func init() {
