@@ -255,7 +255,8 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 		"directory open": {
 			seedDir: true,
 			call: func(s *platformSys) error {
-				h, err := s.openDirNoReparse(bad)
+				h, err := s.openExisting(bad, windows.GENERIC_READ|windows.FILE_LIST_DIRECTORY,
+					windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
 				if err == nil {
 					closeHandle(h)
 				}
