@@ -91,6 +91,22 @@ func (s *platformSys) stampSubdir(string) error {
 	return nil
 }
 
+// isReparsePoint reports whether the node standing at rel is a symbolic link, the only
+// reparse kind a Linux filesystem carries. The no-follow open refuses links regardless
+// of where they point, answering ELOOP, while a link escaping the root answers the
+// os.Root path-escaping error before the no-follow flag is consulted; both mean a link.
+// Any real node answers for itself.
+func (s *platformSys) isReparsePoint(rel string) (bool, error) {
+	f, err := s.root.OpenFile(rel, os.O_RDONLY|unix.O_NOFOLLOW, 0)
+	if err == nil {
+		return false, f.Close()
+	}
+	if errors.Is(err, unix.ELOOP) || isEscapeError(err) {
+		return true, nil
+	}
+	return false, err
+}
+
 // setRoot anchors the platform operations on the custodian's root: every node
 // operation goes through it, so containment is enforced per syscall.
 func (s *platformSys) setRoot(root *os.Root) error {
@@ -110,7 +126,25 @@ func (s *platformSys) createNode(rel string, isDir bool) (*os.File, error) {
 	defer s.mu.Unlock()
 
 	if isDir {
-		return nil, s.root.Mkdir(rel, DirMode)
+		err := s.root.Mkdir(rel, DirMode)
+		if errors.Is(err, os.ErrExist) {
+			// An existing node is adopted only when it is a real directory: a link
+			// standing at the name is reported instead of resolved, and deciding what
+			// to do about a link is the caller's policy. The node is answered as
+			// ErrExist and the caller adopts by handoff, mirroring Windows.
+			d, oerr := s.root.OpenFile(rel, os.O_RDONLY|unix.O_NOFOLLOW, 0)
+			if oerr != nil {
+				return nil, oerr
+			}
+			return nil, errors.Join(d.Close(), os.ErrExist)
+		}
+		if err != nil {
+			return nil, err
+		}
+		// A fresh Mkdir is trusted after this: os.Root resolves no leaf symlink here
+		// (measured: Mkdir over one answers ErrExist without creating the target), and
+		// TestSubdirReplacesAPlantedReparsePoint pins the promise on every platform.
+		return nil, nil
 	}
 
 	f, err := s.root.OpenFile(rel, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FileMode)
