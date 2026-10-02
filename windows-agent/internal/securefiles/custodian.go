@@ -134,9 +134,32 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	// an earlier run is adopted instead, and stamped in place: ADR 2.01 requires
 	// first-level sub-tree roots to carry the stamp even when pre-existing, because it
 	// is what revokes unprivileged creation and deletion inside them.
-	_, err = c.sys.createNode(rel, true)
-	if errors.Is(err, os.ErrExist) {
-		err = c.sys.stampSubdir(rel)
+	adopted := false
+	create := func() error {
+		_, err := c.sys.createNode(rel, true)
+		if errors.Is(err, os.ErrExist) {
+			adopted = true
+			return c.sys.stampSubdir(rel)
+		}
+		return err
+	}
+	err = create()
+	if err != nil || adopted {
+		// A reparse point standing at a sub-tree root is never adopted data: nothing
+		// unprivileged can write inside a stamped tree (ADR 2.01), so a link there was
+		// planted before the tree was stamped, and following it reaches only what the
+		// planter chose. Refusing it fails every start until a privileged user removes
+		// it by hand, so the link is removed and the directory created in its place.
+		// The obstruction is recognized by attribute rather than by the create error,
+		// which is a name collision for some link kinds and an escape refusal for
+		// others. (Where the tree root itself is a link, refusing stays the answer:
+		// Open runs before there is a stamped tree to vouch for the neighborhood.)
+		reparse, rerr := c.sys.isReparsePoint(rel)
+		if rerr == nil && reparse {
+			if rmErr := c.root.Remove(rel); rmErr == nil {
+				err = create()
+			}
+		}
 	}
 	if err != nil {
 		return nil, mapEscape(err)

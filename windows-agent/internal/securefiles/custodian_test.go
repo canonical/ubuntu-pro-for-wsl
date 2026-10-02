@@ -408,6 +408,82 @@ func TestCustodianErrors(t *testing.T) {
 	}
 }
 
+// TestSubdirReplacesAPlantedReparsePoint verifies that a link planted where a sub-tree
+// root must live does not block the agent forever: the link is removed and the directory
+// created in its place, serving the child custodian, while the link target is untouched.
+// The refusal pinned in TestEnsureRootRefusesARedirectedRoot stays for the tree root,
+// the one place where a link cannot be told from a deliberate redirection.
+func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// linkTargetOutsideDir makes the planted link point at the outside directory;
+		// otherwise it points at the outside sentinel file.
+		linkTargetOutsideDir bool
+
+		// linkInTree plants the link pointing at a missing sibling inside the tree.
+		linkInTree bool
+	}{
+		"a link to a directory outside the tree": {linkTargetOutsideDir: true},
+		"a link to a file outside the tree":      {},
+
+		// A link inside the tree is the subtle one: os.Root resolves it, so a
+		// fresh-looking creation may have gone through the link instead of creating
+		// the directory itself.
+		"a link to a directory inside the tree": {linkInTree: true},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			base := t.TempDir()
+			outside := filepath.Join(base, "outside")
+			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+			sentinel := filepath.Join(outside, "precious")
+			require.NoError(t, os.WriteFile(sentinel, []byte("PRECIOUS"), 0600), "Setup: could not write the sentinel")
+
+			// Pre-plant before the first start: the public directory and the link exist
+			// before the custodian does, the state an unprivileged instance user reaches
+			// on a fresh install.
+			root := filepath.Join(base, "root")
+			require.NoError(t, os.MkdirAll(root, 0700), "Setup: could not create the future tree root")
+			switch {
+			case tc.linkTargetOutsideDir:
+				require.NoError(t, os.Symlink(outside, filepath.Join(root, "sub")), "Setup: could not plant the link")
+			case tc.linkInTree:
+				require.NoError(t, os.Symlink(filepath.Join(root, "sibling"), filepath.Join(root, "sub")), "Setup: could not plant the link")
+			default:
+				require.NoError(t, os.Symlink(sentinel, filepath.Join(root, "sub")), "Setup: could not plant the link")
+			}
+
+			c, err := securefiles.Open(root)
+			require.NoError(t, err, "the tree itself is still adoptable and stampable")
+			defer func() { _ = c.Close() }()
+
+			sub, err := c.Subdir("sub")
+			require.NoError(t, err, "a planted link must not block the sub-tree forever")
+			defer func() { _ = sub.Close() }()
+
+			// The link target is untouched, ...
+			data, err := os.ReadFile(sentinel)
+			require.NoError(t, err)
+			require.Equal(t, "PRECIOUS", string(data), "nothing may be written through the link")
+
+			// ... the sub-tree root is a real directory again, ...
+			fi, err := os.Lstat(filepath.Join(root, "sub"))
+			require.NoError(t, err)
+			require.True(t, fi.IsDir(), "the planted link must be replaced by the directory")
+			require.Zero(t, fi.Mode()&os.ModeSymlink, "the planted link must be gone")
+
+			// ... and it serves the child custodian with stamped content.
+			require.NoError(t, sub.WriteFile("data.txt", []byte("data")))
+			owned, err := sub.IsOwned("data.txt")
+			require.NoError(t, err)
+			require.True(t, owned, "content in the replaced sub-tree must carry the watermark")
+		})
+	}
+}
+
 func TestOpenErrors(t *testing.T) {
 	t.Parallel()
 

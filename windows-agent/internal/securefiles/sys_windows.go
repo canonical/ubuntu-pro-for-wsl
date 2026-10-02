@@ -141,8 +141,11 @@ func (s *platformSys) stampSubdir(rel string) error {
 		return err
 	}
 
+	// The node itself is opened, never the target of a link: adoption stamps what
+	// stands at the name, and a link standing there is the caller's removal case, not
+	// a target to stamp through.
 	handle, err := s.openExisting(rel, windows.GENERIC_WRITE|windows.FILE_WRITE_EA,
-		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
+		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT)
 	if err != nil {
 		return err
 	}
@@ -378,6 +381,32 @@ func (s *platformSys) openExisting(rel string, access, attributes, options uint3
 	}
 
 	return h, nil
+}
+
+// isReparsePoint reports whether the node standing at rel is a reparse point of any
+// kind. The node itself is opened, never its target, so every link kind is classified
+// uniformly: the create call ahead of it answers a name collision for some and an
+// escape refusal for others.
+func (s *platformSys) isReparsePoint(rel string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	handle, err := s.openExisting(rel, windows.FILE_READ_ATTRIBUTES, 0, windows.FILE_OPEN_REPARSE_POINT)
+	if err != nil {
+		return false, err
+	}
+	defer closeHandle(handle)
+
+	var info struct {
+		FileAttributes uint32
+		ReparseTag     uint32
+	}
+	if err := windows.GetFileInformationByHandleEx(handle, windows.FileAttributeTagInfo,
+		(*byte)(unsafe.Pointer(&info)), //#nosec G103 // the API writes the documented struct into this buffer.
+		uint32(unsafe.Sizeof(info))); err != nil {
+		return false, err
+	}
+	return info.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0, nil
 }
 
 func (s *platformSys) openDirNoReparse(relDir string) (windows.Handle, error) {
