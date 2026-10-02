@@ -41,22 +41,15 @@ func newTLSCertificates(certsDir *securefiles.Custodian, opts ...newTLSCertifica
 		return nil, err
 	}
 
-	// Clean any stale certificate material from a previous run. We only remove
-	// the sub-tree contents, not the sub-tree itself, so that a directory sitting
-	// at the path of a file we need to write remains a legitimate error condition.
-	entries, err := certsDir.ReadDir(".")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read certificates directory: %v", err)
-	}
-	for _, entry := range entries {
-		// Leave directories untouched: a directory occupying the path of a file we
-		// need to write must surface as an error, not be silently removed.
-		if entry.IsDir() {
-			continue
-		}
-		if err := certsDir.Remove(entry.Name()); err != nil {
-			return nil, fmt.Errorf("failed to clean certificates directory: %v", err)
-		}
+	// Clean the sub-tree wholesale. The PKI is regenerated on every start and handed to
+	// the instances over gRPC, so nothing here is worth keeping, not for one start, and
+	// a directory standing at a certificate's path is not adoptable data either: nothing
+	// unprivileged can write inside a stamped tree, and leaving it would turn a plant
+	// into a start failure on every start, like any other planted obstruction. Only a
+	// node that resists removal (an open handle, an unwritable parent) still fails the
+	// start, because the agent then cannot publish its credentials.
+	if err := certsDir.PurgeAll(); err != nil {
+		return nil, fmt.Errorf("failed to clean certificates directory: %v", err)
 	}
 
 	for name, data := range pki.PEMFiles {
