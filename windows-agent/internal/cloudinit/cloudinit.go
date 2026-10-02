@@ -93,6 +93,14 @@ type metadata struct {
 // consumed once, at first boot. The watermark is the whole adoption policy — an unstamped node
 // is foreign whatever its name, and the custodian refuses to open a sub-tree where that
 // question cannot be answered, so an unreadable watermark here is about the node.
+//
+// A node whose watermark cannot be read at all — a link, or a node an antivirus or endpoint
+// product holds open — is judged foreign and removed. That is the deliberate choice, and it
+// errs against our own data: an unreadable watermark is exactly what planted tampering looks
+// like, and a per-distro file deleted on a transient lock costs one first-boot retry, while a
+// tampering artifact that survived every purge would stay readable by every instance. The
+// query opens with full sharing, so only a genuinely exclusive hold can land here, and the
+// removal is logged so an operator can see it.
 func (c CloudInit) startupPurge(ctx context.Context) error {
 	isOurs := func(rel string, isDir bool) bool {
 		// Directories are never adopted: this sub-tree legitimately holds files only.
