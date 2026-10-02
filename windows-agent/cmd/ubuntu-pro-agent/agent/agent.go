@@ -203,6 +203,13 @@ func (a *App) Quit() {
 	if a.daemon == nil {
 		return
 	}
+	// The services go first: daemon.Quit drains in-flight requests with a graceful
+	// gRPC stop, and the streaming handlers it would wait for only terminate when
+	// the services stop them. Tearing the daemon down first therefore deadlocked
+	// the agent on Ctrl-C whenever a stream was active (UDENG-1182), and this order
+	// is the fix that shipped. The price is that a request still in flight when its
+	// custodian closes fails cleanly with a handle error instead of being served -
+	// cosmetic at shutdown, and far cheaper than a hang.
 	a.proServices.Stop(context.Background())
 	a.daemon.Quit(context.Background(), false)
 }
