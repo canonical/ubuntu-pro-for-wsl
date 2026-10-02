@@ -400,8 +400,10 @@ func (c *Custodian) Purge(isAllowed func(relPath string, isDir bool) bool) ([]st
 				failures = append(failures, fmt.Errorf("failed to purge %q: %v", name, err))
 				continue
 			}
+			// The names travel back to the caller, which knows what each one was and
+			// logs the removal at its own severity: a bare list from here would log
+			// every removal twice, once blind.
 			removed = append(removed, name)
-			log.Infof(context.Background(), "securefiles: purged unrecognised node or leftover temporary: %s", name)
 		}
 	}
 

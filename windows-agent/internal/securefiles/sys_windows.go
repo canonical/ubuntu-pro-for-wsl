@@ -157,7 +157,7 @@ func (s *platformSys) stampSubdir(rel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	eaBuf, err := encodeLxEa(0, 0, 040700)
+	eaBuf, err := encodeLxEa(0, 0, stampedDirMode())
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	}
 	defer closeHandle(parentHandle)
 
-	eaBuf, err := encodeLxEa(0, 0, 040700)
+	eaBuf, err := encodeLxEa(0, 0, stampedDirMode())
 	if err != nil {
 		return err
 	}
@@ -356,7 +356,7 @@ func (s *platformSys) createNode(relativePath string, isDir bool) (*os.File, err
 
 	mode := stampedFileMode()
 	if isDir {
-		mode = uint32(040700)
+		mode = stampedDirMode()
 	}
 
 	eaBuf, err := encodeLxEa(0, 0, mode)
@@ -491,11 +491,6 @@ func (s *platformSys) isReparsePoint(rel string) (bool, error) {
 	return info.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0, nil
 }
 
-func (s *platformSys) openDirNoReparse(relDir string) (windows.Handle, error) {
-	return s.openExisting(relDir, windows.GENERIC_READ|windows.FILE_LIST_DIRECTORY,
-		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
-}
-
 func (s *platformSys) renameNode(oldRel, newRel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -516,7 +511,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		// treating the node as unverifiable rather than as owned.
 		return fmt.Errorf("could not query the watermark of %s: %w", oldRel, errors.Join(err, ErrNotOwned))
 	}
-	if uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
+	if uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != stampedDirMode()) {
 		return ErrNotOwned
 	}
 
@@ -526,7 +521,8 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 
 	targetParentHandle := s.rootHandle
 	if dirPart != "." && dirPart != "" {
-		parentH, err := s.openDirNoReparse(dirPart)
+		parentH, err := s.openExisting(dirPart, windows.GENERIC_READ|windows.FILE_LIST_DIRECTORY,
+			windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
 		if err != nil {
 			return err
 		}
@@ -763,6 +759,12 @@ func isUnsupportedInfoClass(err error) bool {
 // stampedFileMode returns the Extended Attribute file mode including the file type bits.
 func stampedFileMode() uint32 {
 	return 0100000 | uint32(FileMode)
+}
+
+// stampedDirMode returns the Extended Attribute directory mode including the file type
+// bits: a directory carries no descriptor, so only the mode distinguishes its stamp.
+func stampedDirMode() uint32 {
+	return 040700
 }
 
 // relativeAttributes names rel underneath root. Every NT open in this file goes through
