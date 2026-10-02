@@ -31,12 +31,13 @@ linters:
     - usestdlibvars
     - whitespace
   settings:
-    # Forbid the usage of deprecated ioutil, debug prints, and raw filesystem mutation.
-    # Filesystem mutations must go through the securefiles custodian; the allowlist below names
-    # the packages that legitimately write outside the public boundary (private state stores,
-    # the Landscape installer's temporary/virtual-disk paths, the teardown command,
-    # and test files). Legitimate raw mutations in cmd/ubuntu-pro-agent/agent (such as root/private
-    # directory bootstrapping and lockfiles) use targeted //nolint:forbidigo annotations.
+    # Forbid the usage of deprecated ioutil, debug prints, and raw filesystem access.
+    # Filesystem access must go through the securefiles custodian; the allowlist below names
+    # the packages that legitimately touch the filesystem outside the public boundary (private
+    # state stores, the Landscape installer's temporary/virtual-disk paths, the teardown command,
+    # build-time tooling, and test files). Legitimate raw calls in cmd/ubuntu-pro-agent/agent
+    # (such as root/private directory bootstrapping and lockfiles) use targeted
+    # //nolint:forbidigo annotations.
     forbidigo:
       forbid:
         - pattern: ioutil\.
@@ -55,6 +56,18 @@ linters:
           msg: Use the securefiles custodian for filesystem mutations.
         - pattern: ^os\.Rename$
           msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.Open$
+          msg: Use the securefiles custodian for filesystem access.
+        - pattern: ^os\.ReadFile$
+          msg: Use the securefiles custodian for filesystem access.
+        - pattern: ^os\.ReadDir$
+          msg: Use the securefiles custodian for filesystem access.
+        - pattern: ^os\.Truncate$
+          msg: Use the securefiles custodian for filesystem access.
+        - pattern: ^os\.CreateTemp$
+          msg: Use the securefiles custodian for filesystem access.
+        - pattern: ^os\.OpenRoot$
+          msg: Use the securefiles custodian for filesystem access.
     # Never have naked return ever
     nakedret:
       max-func-lines: 1
@@ -106,6 +119,14 @@ linters:
       - path: .*internal[\/]proservices[\/]landscape[\/]distroinstall[\/].*
         linters: [forbidigo]
       - path: .*internal[\/]proservices[\/]landscape[\/]executor\.go$
+        linters: [forbidigo]
+      # The generate tooling is build-time codegen; it reads sources and templates and
+      # never touches the public directory.
+      - path: .*generate[\/]internal[\/].*
+        linters: [forbidigo]
+      # The instance-side daemon is the sanctioned consumer of the public directory
+      # through the 9P projection; the custodian boundary governs the Windows host side.
+      - path: .*wsl-pro-service[\/]internal[\/]daemon[\/].*
         linters: [forbidigo]
       - path: .*common[\/]testutils[\/].*
         linters: [forbidigo]
