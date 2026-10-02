@@ -296,7 +296,15 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 	//
 	// Append rather than replace when the rotation failed: the existing log is then the
 	// only copy there is, and discarding it would destroy the very record needed to
-	// find out why the rotation failed.
+	// find out why the rotation failed. That argument only holds for a log this agent
+	// owns, though: appending to a node the agent does not own would keep it writing
+	// into a node instances can read and write (ADR 2.01). So a foreign log is replaced
+	// whatever blocked the rotation, mirroring the not-owned rotation outcome below.
+	//
+	// Deciding here and appending below is not a check-then-act race: inside a stamped
+	// tree no unprivileged process can create or replace a node, and swapping the whole
+	// tree through its writable parent does not redirect the pinned root handle (a
+	// swapped-in tree is refused at the next reopen instead).
 	useAppend := true
 
 	switch err := c.Rename("log", "log.old"); {
@@ -308,7 +316,15 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 		log.Warningf(ctx, "Replacing a log file this agent does not own: %v", err)
 		useAppend = false
 	default:
-		log.Warningf(ctx, "Could not rotate log to log.old: %v", err)
+		// The rotation failed for another reason and the log may still be in place.
+		// Only an owned log is worth preserving through an append.
+		owned, oerr := c.IsOwned("log")
+		if oerr != nil || !owned {
+			log.Warningf(ctx, "Replacing a log file this agent does not own after a failed rotation: %v", errors.Join(err, oerr))
+			useAppend = false
+		} else {
+			log.Warningf(ctx, "Could not rotate log to log.old: %v", err)
+		}
 	}
 
 	var (

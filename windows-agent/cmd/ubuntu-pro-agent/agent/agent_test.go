@@ -446,6 +446,14 @@ func TestLogs(t *testing.T) {
 			existingLogContent: preciousContent, blockRotation: true,
 			wantLogOwned: true, wantLogContent: &preciousContent,
 		},
+		// The hole the rotation policy exists to close: a log this agent does not own,
+		// combined with a rotation that fails for a reason other than ownership, must
+		// not be adopted by append. The agent replaces it instead, keeping the invariant
+		// that it only ever writes into nodes it stamped.
+		"Unstamped log is replaced even when a rotation is blocked for another reason": {
+			existingLogContent: "LEGACY_UNSTAMPED", blockRotation: true,
+			wantLogOwned: true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
