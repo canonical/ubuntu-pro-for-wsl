@@ -307,8 +307,16 @@ func TestCustodianErrors(t *testing.T) {
 			op: "isowned", path: "missing.txt",
 		},
 
-		"Purge on a closed custodian fails":   {op: "purge", closeFirst: true},
-		"ReadDir on a closed custodian fails": {op: "readdir", path: "x", closeFirst: true},
+		"Purge on a closed custodian fails":    {op: "purge", closeFirst: true},
+		"PurgeAll on a closed custodian fails": {op: "purgeall", closeFirst: true},
+		"ReadDir on a closed custodian fails":  {op: "readdir", path: "x", closeFirst: true},
+
+		"PurgeAll fails when a node cannot be removed": {
+			op:            "purgeall",
+			seedFiles:     map[string]string{"junk.txt": "junk"},
+			readOnlyRoot:  true,
+			wantSurvivors: []string{"junk.txt"},
+		},
 
 		// A node the policy rejected but that could not be removed is the one outcome a
 		// purge must not report as success: the caller would carry on believing the
@@ -386,6 +394,8 @@ func TestCustodianErrors(t *testing.T) {
 				_, opErr = c.ReadDir(tc.path)
 			case "purge":
 				removed, opErr = c.Purge(func(string, bool) bool { return false })
+			case "purgeall":
+				opErr = c.PurgeAll()
 			default:
 				t.Fatalf("unknown op %q", tc.op)
 			}
@@ -482,6 +492,34 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 			require.True(t, owned, "content in the replaced sub-tree must carry the watermark")
 		})
 	}
+}
+
+// TestPurgeAll verifies that the wholesale wipe removes every node in the sub-tree,
+// whatever it is, and leaves the custodian working from its root.
+func TestPurgeAll(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err)
+	defer func() { _ = c.Close() }()
+
+	require.NoError(t, c.WriteFile("data.txt", []byte("data")))
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "subdir"), 0700))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "subdir", "child"), []byte("x"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ".tmp-leftover"), []byte("x"), 0600))
+
+	require.NoError(t, c.PurgeAll())
+
+	entries, err := c.ReadDir(".")
+	require.NoError(t, err)
+	require.Empty(t, entries, "every node in the sub-tree must be removed")
+
+	// The sub-tree root itself is kept: the custodian still works from it.
+	require.NoError(t, c.WriteFile("again.txt", []byte("data")))
+	owned, err := c.IsOwned("again.txt")
+	require.NoError(t, err)
+	require.True(t, owned, "content written after the wipe must carry the watermark")
 }
 
 func TestOpenErrors(t *testing.T) {

@@ -331,6 +331,42 @@ func (c *Custodian) Rename(oldName, newName string) error {
 	return mapEscape(c.sys.renameNode(oldRel, newRel))
 }
 
+// PurgeAll removes every node in the sub-tree, whatever it is. It is for sub-trees
+// whose contents are wholly the agent's to discard: an ephemeral credential store
+// regenerated on every start, a cache. Where contents can still be data someone else
+// needs, the caller decides what to keep and uses Purge with a predicate instead, and
+// inspects what it removed: PurgeAll's caller has no use for the names, so they are
+// only logged.
+//
+// The sub-tree root itself is never removed: the custodian keeps working from it, and
+// it is the one node whose removal no caller of this method can mean.
+func (c *Custodian) PurgeAll() error {
+	f, err := c.root.Open(".")
+	if err != nil {
+		return err
+	}
+	entries, err := f.ReadDir(-1)
+	f.Close()
+	if err != nil {
+		return err
+	}
+
+	var failures []error
+	for _, entry := range entries {
+		name := entry.Name()
+		if err := c.root.RemoveAll(name); err != nil {
+			// One node that resists removal must not shield the rest of the sub-tree
+			// from being purged, so the sweep continues and the failures are reported
+			// together at the end.
+			failures = append(failures, fmt.Errorf("failed to purge %q: %v", name, err))
+			continue
+		}
+		log.Infof(context.Background(), "securefiles: purged node: %s", name)
+	}
+
+	return errors.Join(failures...)
+}
+
 // Purge removes every unrecognised node and leftover temporary in the sub-tree, keeping
 // what isAllowed accepts, and returns the relative names it removed.
 //

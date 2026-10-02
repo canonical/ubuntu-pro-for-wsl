@@ -24,7 +24,8 @@ func TestNewTLSCertificates(t *testing.T) {
 		// directory should be, so sub-scoping the custodian must fail.
 		breakCertificatesDir bool
 		// breakPublishableFile places a directory where a certificate file should
-		// be written, so the custodian write must fail.
+		// be written. Nothing in the sub-tree is adoptable data, so it is wiped with
+		// the rest instead of failing the start.
 		breakPublishableFile bool
 		// leaveStaleFile seeds leftover certificate material from a previous run.
 		leaveStaleFile bool
@@ -32,9 +33,9 @@ func TestNewTLSCertificates(t *testing.T) {
 		wantErr bool
 	}{
 		"Success removes stale certificate files": {leaveStaleFile: true},
+		"Success wipes an obstructing directory":  {breakPublishableFile: true},
 
 		"Error when the certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
-		"Error when a publishable file cannot be written":         {breakPublishableFile: true, wantErr: true},
 	}
 
 	for name, tc := range testcases {
