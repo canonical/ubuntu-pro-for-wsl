@@ -17,10 +17,24 @@ import (
 )
 
 type platformSys struct {
-	mu         sync.Mutex
-	nt         ntCalls
-	root       *os.Root
-	rootFile   *os.File
+	mu   sync.Mutex
+	nt   ntCalls
+	root *os.Root
+
+	// rootHandle is the tree root held for the custodian's lifetime without sharing
+	// deletion, so nothing else can rename or remove the tree while the custodian
+	// serves: a rename and a removal alike must first open the root with DELETE
+	// access, and the kernel refuses such an open while any held handle declines to
+	// share deletion. The veto is share arbitration rather than an ACL, so it binds
+	// every issuer the same way - a Windows caller or the 9p server that performs an
+	// instance's mv - and no right the same user holds over the parent overrides it:
+	// measured against a held root, a WSL-issued mv and rm -rf are refused. It is
+	// taken at the stamping open for path-resolved roots (ensureRoot) and beside the
+	// verified node for parent-derived ones (setRoot). POSIX cannot refuse a rename
+	// because a descriptor is open, so Linux has no equivalent, and the runtime
+	// root-swap window there is closed by the instance-side validation instead
+	// (ADR 2.01). It is also the base every relative open resolves against. Invalid
+	// until the hold is taken.
 	rootHandle windows.Handle
 
 	// rootID identifies the directory ensureRoot created and stamped, so that the
@@ -162,13 +176,8 @@ func (s *platformSys) stampSubdir(rel string) error {
 // calls from the os.Root, so EA-stamped creation is rooted at the same
 // directory that provides structural containment.
 func (s *platformSys) setRoot(root *os.Root) error {
-	f, err := root.Open(".")
-	if err != nil {
-		return err
-	}
-
 	// A second, independent resolution of the path ensureRoot already created, stamped
-	// and closed. os.Root contains the names opened through it, not its own root, and
+	// and held. os.Root contains the names opened through it, not its own root, and
 	// the parent directory stays writable from inside an instance (ADR 2.01), so between
 	// the two resolutions it can be made to point elsewhere. Identity ties them to one node.
 	//
@@ -177,6 +186,13 @@ func (s *platformSys) setRoot(root *os.Root) error {
 	// the concession is spent, and a reopened handle that cannot identify itself is a
 	// failed verification rather than an absent one — otherwise a swap onto a filesystem
 	// exposing no identity would walk past this check.
+	//
+	// The resolution is transient: the held rootHandle comes from the stamping open, so
+	// this open is only verification and is closed as soon as it has answered.
+	f, err := root.Open(".")
+	if err != nil {
+		return err
+	}
 	if s.rootIDKnown {
 		id, ok := s.nt.identity(windows.Handle(f.Fd()))
 		if !ok || id != s.rootID {
@@ -184,10 +200,18 @@ func (s *platformSys) setRoot(root *os.Root) error {
 		}
 	}
 
-	s.root = root
-	s.rootFile = f
-	s.rootHandle = windows.Handle(f.Fd())
+	// A custodian derived from a parent (a sub-tree root) never went through
+	// ensureRoot, so it takes its hold here, beside the node just verified.
+	if s.rootHandle == windows.InvalidHandle {
+		if err := s.holdNode(windows.Handle(f.Fd())); err != nil {
+			return errors.Join(err, f.Close())
+		}
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
 
+	s.root = root
 	return nil
 }
 
@@ -231,9 +255,15 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	var iosb windows.IO_STATUS_BLOCK
 	var handle windows.Handle
 
-	desiredAccess := uint32(windows.GENERIC_READ | windows.GENERIC_WRITE | windows.DELETE | windows.SYNCHRONIZE | windows.FILE_WRITE_EA)
+	// The handle must not hold DELETE access itself: sharing is checked in both
+	// directions, so a later open that does not share deletion (os.OpenRoot, for one)
+	// would be refused against this handle for as long as it lives. The veto lives in
+	// the share mode alone.
+	desiredAccess := uint32(windows.GENERIC_READ | windows.GENERIC_WRITE | windows.SYNCHRONIZE | windows.FILE_WRITE_EA)
 	fileAttributes := uint32(windows.FILE_ATTRIBUTE_DIRECTORY)
-	shareAccess := uint32(windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE | windows.FILE_SHARE_DELETE)
+	// The same open that stamps the root holds it: without sharing deletion, nothing
+	// else can rename or remove the tree from this syscall on. See rootHandle.
+	shareAccess := uint32(windows.FILE_SHARE_READ | windows.FILE_SHARE_WRITE)
 	createOptions := uint32(windows.FILE_SYNCHRONOUS_IO_NONALERT | windows.FILE_DIRECTORY_FILE)
 	disposition := uint32(windows.FILE_OPEN_IF)
 
@@ -259,17 +289,22 @@ func (s *platformSys) ensureRoot(basePath string) error {
 	// Record what was created, so the reopen in setRoot can be tied back to it.
 	s.rootID, s.rootIDKnown = s.nt.identity(handle)
 
-	closeHandle(handle)
+	// The stamping open is the hold: it stays open for the custodian's lifetime and
+	// doubles as the base every relative open resolves against.
+	s.rootHandle = handle
 	return nil
 }
 
 func (s *platformSys) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.rootFile != nil {
-		err := s.rootFile.Close()
-		s.rootFile = nil
+	if s.rootHandle != windows.InvalidHandle {
+		closeHandle(s.rootHandle)
 		s.rootHandle = windows.InvalidHandle
+	}
+	if s.root != nil {
+		err := s.root.Close()
+		s.root = nil
 		return err
 	}
 	return nil
@@ -381,6 +416,41 @@ func (s *platformSys) openExisting(rel string, access, attributes, options uint3
 	}
 
 	return h, nil
+}
+
+// holdNode takes the rootHandle hold beside the node an already-open handle stands for,
+// for custodians whose root was never resolved by a path: a sub-custodian reaches its
+// root through the parent, so its hold is taken relative to the verified node instead of
+// at a stamping open. The veto semantics are the rootHandle field's.
+//
+// An empty relative name opens the base itself: NtCreateFile resolves it against the
+// RootDirectory of the OBJECT_ATTRIBUTES, which is the verified node.
+func (s *platformSys) holdNode(base windows.Handle) error {
+	oa, err := relativeAttributes(base, "")
+	if err != nil {
+		return err
+	}
+
+	var iosb windows.IO_STATUS_BLOCK
+	var h windows.Handle
+	if err := windows.NtCreateFile(
+		&h,
+		windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE,
+		oa,
+		&iosb,
+		nil,
+		windows.FILE_ATTRIBUTE_DIRECTORY,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE,
+		windows.FILE_OPEN,
+		windows.FILE_DIRECTORY_FILE|windows.FILE_SYNCHRONOUS_IO_NONALERT,
+		0,
+		0,
+	); err != nil {
+		return mapNtStatus(err)
+	}
+
+	s.rootHandle = h
+	return nil
 }
 
 // isReparsePoint reports whether the node standing at rel is a reparse point of any
