@@ -265,7 +265,7 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 		},
 		"rename source": {
 			seedFile: true,
-			call:     func(s *platformSys) error { return s.renameNode(bad, "moved.txt") },
+			call:     func(s *platformSys) error { return s.renameNode(bad, "moved.txt", nil) },
 			after: func(t *testing.T, dir string) {
 				t.Helper()
 				require.FileExists(t, filepath.Join(dir, "good"), "a truncated path must not move the shorter node")
@@ -330,7 +330,7 @@ func TestRenameNode(t *testing.T) {
 				cust.withoutRenameInfoEx()
 			}
 
-			err = cust.sys.renameNode("src.txt", tc.to)
+			err = cust.sys.renameNode("src.txt", tc.to, nil)
 			if tc.wantErr {
 				require.Error(t, err, "the rename should have been refused")
 				require.FileExists(t, filepath.Join(dir, "src.txt"), "the source must survive a refused rename")

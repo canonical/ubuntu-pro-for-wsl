@@ -193,7 +193,16 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	}, nil
 }
 
+// betweenCreateAndWrite is a seam internal tests use to act inside the window
+// between the temporary's creation and the write that fills it, where a tamperer
+// would act. It is nil in production.
+var betweenCreateAndWrite func()
+
 // WriteFile atomically writes data to a file relative to the custodian's sub-tree.
+// The bytes travel through the descriptor the temporary was created with, and the
+// publish verifies that the temporary's name still holds that node: no second name
+// resolution sits between the stamp and either the write or the publish, so a name
+// swapped in the window cannot redirect either into another stamped node.
 func (c *Custodian) WriteFile(name string, data []byte) error {
 	targetRel, err := c.resolve(name)
 	if err != nil {
@@ -206,21 +215,27 @@ func (c *Custodian) WriteFile(name string, data []byte) error {
 	if err != nil {
 		return mapEscape(err)
 	}
-	// The temporary's handle stays open until after the publish, pinning the name to
-	// the node this custodian stamped for the whole write-and-rename; the rename below
-	// re-verifies ownership on its own handle regardless.
+	// The temporary's handle stays open until after the publish, so the node cannot
+	// be reclaimed while the write is in flight. It does not pin the name: the handle
+	// shares deletion, so a name planted or swapped in this window is answered by the
+	// checks below, not by the handle.
 	defer func() {
 		_ = tmp.Close()
 		_ = c.root.Remove(tmpRel)
 	}()
 
-	// The temp node exists (createNode made it), so WriteFile only truncates and
-	// writes: the mode and the stamp from createNode are preserved.
-	if err := c.root.WriteFile(tmpRel, data, FileMode); err != nil {
+	if betweenCreateAndWrite != nil {
+		betweenCreateAndWrite()
+	}
+
+	// The write goes through the descriptor createNode returned, never through the
+	// temporary's name. The fresh node is empty, so there is nothing to truncate, and
+	// its mode and stamp are already in place.
+	if _, err := tmp.Write(data); err != nil {
 		return mapEscape(err)
 	}
 
-	return mapEscape(c.sys.renameNode(tmpRel, targetRel))
+	return mapEscape(c.sys.renameNode(tmpRel, targetRel, tmp))
 }
 
 // IsOwned reports whether the named node was created by a custodian (carries the
@@ -332,7 +347,7 @@ func (c *Custodian) Rename(oldName, newName string) error {
 	if err != nil {
 		return err
 	}
-	return mapEscape(c.sys.renameNode(oldRel, newRel))
+	return mapEscape(c.sys.renameNode(oldRel, newRel, nil))
 }
 
 // PurgeAll removes every node in the sub-tree, whatever it is. It is for sub-trees
