@@ -175,8 +175,9 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	// The child is derived from the parent's handle, never from its absolute path:
 	// re-resolving the path here would walk components outside the parent's
 	// containment, following any reparse point planted along the way.
-	// The child shares the parent's syscall table, so that what a test substitutes on a
-	// parent still holds for the sub-trees it hands out.
+	// The child inherits the parent's syscall table as it stands at the handout: a seam
+	// installed on the parent before this call governs the sub-tree too; one installed
+	// after does not reach an already-handed-out child.
 	subSys := newSubPlatformSys(c.sys)
 	if err := subSys.setRoot(subRoot); err != nil {
 		subRoot.Close()

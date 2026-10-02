@@ -131,8 +131,9 @@ func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
 // already created and stamped. It deliberately does no path walk of its own: the node is
 // reached through the parent's root handle, and re-resolving its absolute path here would
-// step outside the containment the parent established. The syscall surface is shared so a
-// seam installed on the parent reaches the sub-tree it hands out.
+// step outside the containment the parent established. The syscall surface is inherited
+// as it stands at the handout: a seam installed on the parent before Subdir governs the
+// sub-tree too; one installed after does not reach an already-handed-out child.
 func newSubPlatformSys(parent *platformSys) *platformSys {
 	return &platformSys{
 		rootHandle: windows.InvalidHandle,
