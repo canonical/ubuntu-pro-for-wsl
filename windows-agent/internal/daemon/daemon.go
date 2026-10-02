@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"path/filepath"
 	"strings"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -290,7 +291,8 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 			return fmt.Errorf("when writing the address file: %v", err)
 		}
 
-		log.Debugf(ctx, "Daemon: address file written to %s", d.addressFile.BasePath())
+		log.Debugf(ctx, "Daemon: address file written to %s",
+			filepath.Join(d.addressFile.BasePath(), common.ListeningPortFileName))
 		log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 		return nil
 	}()
