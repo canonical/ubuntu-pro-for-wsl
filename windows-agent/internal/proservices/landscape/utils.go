@@ -153,6 +153,7 @@ func transportCredentials(ctx context.Context, sslPublicKeyPath string) (cred cr
 	}
 
 	log.Infof(ctx, "Landscape: loading server's SSL public key %s", sslPublicKeyPath)
+	//nolint:forbidigo // The path comes from the Landscape client configuration, outside the public directory boundary.
 	cert, err := os.ReadFile(sslPublicKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not load SSL public key file: %v", err)
