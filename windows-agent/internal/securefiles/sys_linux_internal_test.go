@@ -98,7 +98,7 @@ func TestXattrFailures(t *testing.T) {
 			}
 
 			dir := t.TempDir()
-			c, err := OpenWithXattrs(dir, openCalls)
+			c, err := openWithXattrs(dir, openCalls)
 			if tc.wantOpenErr {
 				require.ErrorIs(t, err, ErrNoWatermarkSupport, "a filesystem that cannot carry the watermark must be refused")
 				require.Nil(t, c, "no custodian may be handed out for a sub-tree that cannot be secured")
@@ -118,7 +118,7 @@ func TestXattrFailures(t *testing.T) {
 			if tc.getErr != nil {
 				opCalls.get = func(int, string, []byte) (int, error) { return 0, tc.getErr }
 			}
-			c.FailXattr(opCalls)
+			c.failXattr(opCalls)
 
 			var opErr error
 			switch tc.op {
@@ -221,4 +221,21 @@ func TestRenameChecksOwnershipOnLinux(t *testing.T) {
 			require.NoError(t, err, "the rename should have been allowed")
 		})
 	}
+}
+
+// openWithXattrs opens a custodian over the given xattr surface, so a filesystem that
+// refuses or mishandles extended attributes can be stood in for.
+func openWithXattrs(basePath string, xattr xattrCalls) (*Custodian, error) {
+	return open(basePath, func(p string) (*platformSys, error) { return newPlatformSysWith(p, xattr) })
+}
+
+// failXattr replaces the xattr surface of an already-open custodian, for the cases where
+// the failure has to begin after the sub-tree has been seeded.
+func (c *Custodian) failXattr(xattr xattrCalls) {
+	if c.sys == nil {
+		return
+	}
+	c.sys.mu.Lock()
+	defer c.sys.mu.Unlock()
+	c.sys.xattr = xattr
 }
