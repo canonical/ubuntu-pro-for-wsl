@@ -56,6 +56,12 @@ linters:
           msg: Use the securefiles custodian for filesystem mutations.
         - pattern: ^os\.Rename$
           msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.(Chmod|Chown|Lchown|Chtimes)$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.(Link|Symlink)$
+          msg: Use the securefiles custodian for filesystem mutations.
+        - pattern: ^os\.MkdirTemp$
+          msg: Use the securefiles custodian for filesystem mutations.
         - pattern: ^os\.Open$
           msg: Use the securefiles custodian for filesystem access.
         - pattern: ^os\.ReadFile$

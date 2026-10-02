@@ -491,7 +491,7 @@ func (s *platformSys) isReparsePoint(rel string) (bool, error) {
 	return info.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0, nil
 }
 
-func (s *platformSys) renameNode(oldRel, newRel string) error {
+func (s *platformSys) renameNode(oldRel, newRel string, expect *os.File) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -513,6 +513,14 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	}
 	if uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != stampedDirMode()) {
 		return ErrNotOwned
+	}
+
+	// A caller that wrote through its own descriptor can name the node it expects to
+	// publish. Ownership alone would let a name swapped in the write-publish window
+	// move some other stamped node into the destination; the identity is what makes
+	// the publish answer for exactly the bytes the caller wrote.
+	if expect != nil && !sameNode(handle, windows.Handle(expect.Fd())) {
+		return fmt.Errorf("%s no longer holds the node the write went to: %w", oldRel, ErrNotOwned)
 	}
 
 	// Resolve the destination parent directory handle safely without following reparse points.
@@ -560,6 +568,22 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	}
 
 	return mapNtStatus(errSet)
+}
+
+// sameNode answers whether two open handles reach the same file: the same volume and
+// the same file index. An identity that cannot be read is not an identity, so a query
+// failure answers no rather than guessing.
+func sameNode(a, b windows.Handle) bool {
+	var ia, ib windows.ByHandleFileInformation
+	if err := windows.GetFileInformationByHandle(a, &ia); err != nil {
+		return false
+	}
+	if err := windows.GetFileInformationByHandle(b, &ib); err != nil {
+		return false
+	}
+	return ia.VolumeSerialNumber == ib.VolumeSerialNumber &&
+		ia.FileIndexHigh == ib.FileIndexHigh &&
+		ia.FileIndexLow == ib.FileIndexLow
 }
 
 // mapNtStatus translates an NT status into a Go error, recognising the two conditions the
