@@ -235,6 +235,10 @@ func TestCustodianErrors(t *testing.T) {
 		// seedNonEmptyDir creates a directory containing one file before the operation.
 		seedNonEmptyDir string
 
+		// seedSymlink plants a symlink pointing outside the sub-tree, skipped when the
+		// environment cannot create one.
+		seedSymlink string
+
 		// closeFirst closes the custodian before running the operation.
 		closeFirst bool
 
@@ -252,8 +256,19 @@ func TestCustodianErrors(t *testing.T) {
 		wantSurvivors []string
 	}{
 		"CreateFile rejects a path escape": {op: "create", path: "../out.txt", wantEscape: true},
+		"AppendFile rejects a path escape": {op: "appendfile", path: "../out.txt", wantEscape: true},
 		"IsOwned rejects a path escape":    {op: "isowned", path: "../out.txt", wantEscape: true},
 		"ReadDir rejects a path escape":    {op: "readdir", path: "../out", wantEscape: true},
+
+		// A node the adoption path cannot even stat must be refused rather than
+		// created over: appending only makes sense on a node that is verifiably there.
+		"AppendFile through a plain file fails": {
+			op: "appendfile", path: "file/child",
+			seedFiles: map[string]string{"file": "x"},
+		},
+		"AppendFile over a reparse point is refused": {
+			op: "appendfile", seedSymlink: "link",
+		},
 
 		"WriteFile through a plain file fails": {
 			op: "write", path: "file/child",
@@ -323,6 +338,11 @@ func TestCustodianErrors(t *testing.T) {
 			for name, content := range tc.seedFiles {
 				require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0600))
 			}
+			if tc.seedSymlink != "" {
+				if err := os.Symlink(t.TempDir(), filepath.Join(dir, tc.seedSymlink)); err != nil {
+					t.Skip("symlink creation not permitted in this environment")
+				}
+			}
 			if tc.seedNonEmptyDir != "" {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, tc.seedNonEmptyDir), 0750))
 				require.NoError(t, os.WriteFile(filepath.Join(dir, tc.seedNonEmptyDir, "child"), []byte("x"), 0600))
@@ -344,6 +364,12 @@ func TestCustodianErrors(t *testing.T) {
 				opErr = c.WriteFile(tc.path, []byte("data"))
 			case "create":
 				f, err := c.CreateFile(tc.path)
+				if err == nil {
+					_ = f.Close()
+				}
+				opErr = err
+			case "appendfile":
+				f, err := c.AppendFile(tc.path)
 				if err == nil {
 					_ = f.Close()
 				}

@@ -102,28 +102,31 @@ func (s *platformSys) Close() error {
 	return nil
 }
 
-func (s *platformSys) createNode(rel string, isDir bool) error {
+// createNode creates and stamps a node relative to the custodian's root and returns it
+// open, mirroring the Windows contract: the stamp rides on creation, a directory has no
+// descriptor to hand out, and the caller owns the returned file.
+func (s *platformSys) createNode(rel string, isDir bool) (*os.File, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if isDir {
-		return s.root.Mkdir(rel, DirMode)
+		return nil, s.root.Mkdir(rel, DirMode)
 	}
 
 	f, err := s.root.OpenFile(rel, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FileMode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := stampNode(s.xattr, f); err != nil {
 		closeErr := f.Close()
 		if isXattrUnsupported(err) {
-			return errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoWatermarkSupport), closeErr, s.root.Remove(rel))
+			return nil, errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoWatermarkSupport), closeErr, s.root.Remove(rel))
 		}
-		return errors.Join(err, closeErr, s.root.Remove(rel))
+		return nil, errors.Join(err, closeErr, s.root.Remove(rel))
 	}
 
-	return f.Close()
+	return f, nil
 }
 
 func (s *platformSys) renameNode(oldRel, newRel string) error {
