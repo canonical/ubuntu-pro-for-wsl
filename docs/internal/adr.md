@@ -122,7 +122,12 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
     kernel-reported truth; `virtiofs` hosts are supported without `cgo` or `unsafe`.
   - Negative: depends on WSL EA projection behavior via `github.com/Microsoft/go-winio`; relies on
     `/proc` being mounted and on non-root users being unable to mount `9p` or `virtiofs`; the parent
-    directory remains tamperable by the WSL user (accepted limitation).
+    directory remains tamperable by the WSL user (accepted limitation). While the custodian is open,
+    its root is held without sharing deletion, so on Windows a rename or removal of the tree root is
+    refused by share arbitration — the veto binds every issuer alike, Windows callers and the 9p
+    server that performs an instance's `mv`, and no right the same user holds over the parent
+    overrides it. POSIX cannot refuse a rename because a descriptor is open, so on Linux the runtime
+    root-swap window remains open, and the instance-side validation above is its only closure.
 
 ### 2.02 - A sub-tree that cannot be stamped is refused, not served
 
