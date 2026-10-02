@@ -655,6 +655,33 @@ func (c *Custodian) failCreation(status uint32) {
 	}
 }
 
+// TestRenameSurfacesAQueryFailure pins that a watermark the custodian cannot read is
+// not answered as not-owned: the filesystem error must ride along the sentinel, so a
+// log caller sees why the verification failed and keeps its replace-on-unverifiable
+// policy instead of mistaking a broken query for a foreign node.
+func TestRenameSurfacesAQueryFailure(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	rootDir := filepath.Join(dir, ".ubuntupro")
+	cust, err := Open(rootDir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer cust.Close()
+
+	const node = "log"
+	require.NoError(t, cust.WriteFile(node, []byte("x")), "Setup: could not create the node")
+
+	cust.sys.mu.Lock()
+	cust.sys.nt.queryEaFile = func(windows.Handle, []byte) (int, error) {
+		return 0, windows.STATUS_ACCESS_DENIED
+	}
+	cust.sys.mu.Unlock()
+
+	err = cust.Rename(node, "log.old")
+	require.ErrorIs(t, err, ErrNotOwned, "an unverifiable node must keep the not-owned identity")
+	require.ErrorContains(t, err, "could not query the watermark", "the cause must ride along the sentinel")
+}
+
 // withoutRenameInfoEx makes the first rename attempt report the information class as
 // unimplemented, as a volume predating FILE_RENAME_INFORMATION_EX does.
 func (c *Custodian) withoutRenameInfoEx() {
