@@ -23,7 +23,9 @@ type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) *gr
 
 // Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
-	addressFile *securefiles.Custodian
+	// publicDir is the whole public directory custodian; the daemon only uses it to
+	// create, remove and name the address file inside it.
+	publicDir *securefiles.Custodian
 
 	// serving signals that Serve has been called once. This channel is closed when Serve is called.
 	serving chan struct{}
@@ -45,11 +47,11 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, c *sec
 	log.Debug(ctx, "Building new daemon")
 
 	return &Daemon{
-		addressFile: c,
-		registerer:  registerGRPCServices,
-		quit:        make(chan quitRequest, 1),
-		serving:     make(chan struct{}),
-		stopped:     make(chan struct{}, 1),
+		publicDir:  c,
+		registerer: registerGRPCServices,
+		quit:       make(chan quitRequest, 1),
+		serving:    make(chan struct{}),
+		stopped:    make(chan struct{}, 1),
 	}
 }
 
@@ -116,7 +118,7 @@ var errRestartDaemon = errors.New("Daemon: Restart requested")
 func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
-		if err := d.addressFile.Remove(common.ListeningPortFileName); err != nil {
+		if err := d.publicDir.Remove(common.ListeningPortFileName); err != nil {
 			log.Warningf(ctx, "Daemon: could not remove address file: %v", err)
 		}
 		d.stopped <- struct{}{}
@@ -282,7 +284,7 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 		// CreateFile (not WriteFile) so the node appears via a direct create:
 		// the GUI's startup monitor waits for a create event on this file, and a
 		// temp-then-rename write is reported as a rename, which such watchers never see.
-		f, err := d.addressFile.CreateFile(common.ListeningPortFileName)
+		f, err := d.publicDir.CreateFile(common.ListeningPortFileName)
 		if err != nil {
 			return fmt.Errorf("could not create the address file: %v", err)
 		}
@@ -292,7 +294,7 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 		}
 
 		log.Debugf(ctx, "Daemon: address file written to %s",
-			filepath.Join(d.addressFile.BasePath(), common.ListeningPortFileName))
+			filepath.Join(d.publicDir.BasePath(), common.ListeningPortFileName))
 		log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 		return nil
 	}()
