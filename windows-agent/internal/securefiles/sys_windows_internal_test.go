@@ -201,6 +201,9 @@ func TestSetRootVerifiesIdentity(t *testing.T) {
 			err = sys.setRoot(root)
 			if tc.wantErr != nil {
 				require.ErrorIs(t, err, tc.wantErr, "a redirected root must be refused")
+				// The hold taken at ensureRoot lives until Close, whatever the
+				// verification answered.
+				require.NoError(t, sys.Close())
 				return
 			}
 			require.NoError(t, err, "setRoot should accept the root")

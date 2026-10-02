@@ -10,11 +10,19 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
+	"syscall"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/stretchr/testify/require"
 )
+
+// errSharingViolation is the errno the kernel answers when an open conflicts with a held
+// handle that declines to share deletion - the shape of the root veto, and the expected
+// answer for a rename or removal issued behind the custodian's back. It is spelled as
+// the raw errno because ERROR_SHARING_VIOLATION only exists in the windows-only
+// packages a cross-platform test file cannot import.
+const errSharingViolation = syscall.Errno(32)
 
 func TestCustodian(t *testing.T) {
 	t.Parallel()
@@ -520,6 +528,44 @@ func TestPurgeAll(t *testing.T) {
 	owned, err := c.IsOwned("again.txt")
 	require.NoError(t, err)
 	require.True(t, owned, "content written after the wipe must carry the watermark")
+}
+
+// TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen pins the share-arbitration
+// veto the custodian holds on its root: on Windows, nothing else can rename or remove
+// the tree while the custodian serves, because every such operation must first open the
+// root with DELETE access and the held root declines to share deletion. This is what
+// keeps the runtime root-swap of ADR 2.01's accepted limitation from reaching the
+// canonical path while the agent runs. POSIX cannot refuse a rename because a descriptor
+// is open, so Linux pins the asymmetry instead: the rename succeeds, and the runtime
+// window there is closed by the instance-side validation.
+func TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen(t *testing.T) {
+	t.Parallel()
+
+	tree := filepath.Join(t.TempDir(), "tree")
+	c, err := securefiles.Open(tree)
+	require.NoError(t, err)
+
+	if runtime.GOOS == "windows" {
+		err = os.Rename(tree, tree+".moved")
+		require.ErrorIs(t, err, errSharingViolation,
+			"the held root must veto a rename issued behind the custodian's back, got: %v", err)
+
+		err = os.Remove(tree)
+		require.ErrorIs(t, err, errSharingViolation,
+			"the held root must veto a removal issued behind the custodian's back, got: %v", err)
+
+		require.NoError(t, c.Close())
+
+		// With the veto released, a plain mover succeeds again.
+		require.NoError(t, os.Rename(tree, tree+".moved"))
+		require.NoError(t, os.Rename(tree+".moved", tree))
+		return
+	}
+
+	// Linux: POSIX rename semantics cannot be vetoed by an open descriptor.
+	require.NoError(t, os.Rename(tree, tree+".moved"))
+	require.NoError(t, os.Rename(tree+".moved", tree))
+	require.NoError(t, c.Close())
 }
 
 func TestOpenErrors(t *testing.T) {
