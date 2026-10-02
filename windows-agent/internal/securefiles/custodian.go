@@ -255,7 +255,10 @@ func (c *Custodian) CreateFile(name string) (*os.File, error) {
 	// life and read whatever is written next. Unlinking is the revocation; creating
 	// is the cheap part. FILE_SUPERSEDE would collapse the two steps into one
 	// syscall, but a holder sharing delete follows the node into its replaced life
-	// and reads the replacement's writes, which is what unlinking prevents.
+	// and reads the replacement's writes, which is what unlinking prevents. Measured
+	// against a local volume: a supersede succeeds against a holder opened with
+	// FILE_SHARE_DELETE, and that holder then reads the new node's content; a holder
+	// without delete sharing is refused, as our own replacement is.
 	if err := c.root.Remove(targetRel); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, mapEscape(err)
 	}
