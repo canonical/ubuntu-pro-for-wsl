@@ -294,10 +294,10 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 
 	// Rotate the current log to log.old in place using the custodian.
 	//
-	// Append rather than replace: if the rotation failed, the existing log is the only
-	// copy there is, and discarding it would destroy the very record needed to find out
-	// why the rotation failed.
-	mode := securefiles.Append
+	// Append rather than replace when the rotation failed: the existing log is then the
+	// only copy there is, and discarding it would destroy the very record needed to
+	// find out why the rotation failed.
+	useAppend := true
 
 	switch err := c.Rename("log", "log.old"); {
 	case err == nil, errors.Is(err, os.ErrNotExist):
@@ -306,12 +306,20 @@ func (a *App) setUpLogger(ctx context.Context, c *securefiles.Custodian) (func()
 		// A log left by a version predating the custodian, planted from an instance,
 		// or represented by a reparse point is not safe to append to.
 		log.Warningf(ctx, "Replacing a log file this agent does not own: %v", err)
-		mode = securefiles.Replace
+		useAppend = false
 	default:
 		log.Warningf(ctx, "Could not rotate log to log.old: %v", err)
 	}
 
-	f, err := c.CreateFile("log", mode)
+	var (
+		f   *os.File
+		err error
+	)
+	if useAppend {
+		f, err = c.AppendFile("log")
+	} else {
+		f, err = c.CreateFile("log")
+	}
 	if err != nil {
 		return noop, fmt.Errorf("could not open log file: %v", err)
 	}

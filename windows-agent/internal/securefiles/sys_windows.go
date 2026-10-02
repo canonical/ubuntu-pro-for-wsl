@@ -294,7 +294,13 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	return uid == 0 && gid == 0 && mode == stampedFileMode(), nil
 }
 
-func (s *platformSys) createNode(relativePath string, isDir bool) error {
+// createNode creates and stamps a node relative to the custodian's root and returns it
+// open. The stamp rides on the creating syscall, so a directory (which has no descriptor
+// to hand out and returns nil) is stamped the moment it exists, and a file's descriptor
+// is the very node the stamp was applied to: no name resolution happens between the
+// stamp and the caller's writes, so ownership cannot be swapped out from under the
+// descriptor. The caller owns the returned file.
+func (s *platformSys) createNode(relativePath string, isDir bool) (*os.File, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -305,12 +311,12 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 
 	eaBuf, err := encodeLxEa(0, 0, mode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	oa, err := relativeAttributes(s.rootHandle, relativePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var iosb windows.IO_STATUS_BLOCK
@@ -332,11 +338,14 @@ func (s *platformSys) createNode(relativePath string, isDir bool) error {
 	ntErr := s.nt.createFile(&handle, desiredAccess, oa, &iosb, fileAttributes, shareAccess, createDisposition, createOptions, eaBuf)
 
 	if ntErr != nil {
-		return mapNtStatus(ntErr)
+		return nil, mapNtStatus(ntErr)
 	}
 
-	closeHandle(handle)
-	return nil
+	if isDir {
+		closeHandle(handle)
+		return nil, nil
+	}
+	return os.NewFile(uintptr(handle), relativePath), nil
 }
 
 // openExisting opens an existing node relative to the custodian's root handle. Every NT open

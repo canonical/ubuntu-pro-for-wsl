@@ -134,7 +134,7 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	// an earlier run is adopted instead, and stamped in place: ADR 2.01 requires
 	// first-level sub-tree roots to carry the stamp even when pre-existing, because it
 	// is what revokes unprivileged creation and deletion inside them.
-	err = c.sys.createNode(rel, true)
+	_, err = c.sys.createNode(rel, true)
 	if errors.Is(err, os.ErrExist) {
 		err = c.sys.stampSubdir(rel)
 	}
@@ -178,10 +178,15 @@ func (c *Custodian) WriteFile(name string, data []byte) error {
 
 	tmpRel := tempName(targetRel)
 
-	if err := c.sys.createNode(tmpRel, false); err != nil {
+	tmp, err := c.sys.createNode(tmpRel, false)
+	if err != nil {
 		return mapEscape(err)
 	}
+	// The temporary's handle stays open until after the publish, pinning the name to
+	// the node this custodian stamped for the whole write-and-rename; the rename below
+	// re-verifies ownership on its own handle regardless.
 	defer func() {
+		_ = tmp.Close()
 		_ = c.root.Remove(tmpRel)
 	}()
 
@@ -205,61 +210,56 @@ func (c *Custodian) IsOwned(name string) (bool, error) {
 	return owned, mapEscape(err)
 }
 
-// CreateMode selects what CreateFile does with a node that is already in place.
-// The zero value replaces it, which is what most callers want: a node the custodian
-// hands out should be one it created and stamped, not one it inherited.
-type CreateMode int
-
-const (
-	// Replace discards any pre-existing node, so the returned file is a freshly
-	// stamped, empty one.
-	Replace CreateMode = iota
-	// Append keeps what is already there and positions writes at the end, creating
-	// and stamping the node only when it is absent. A caller that rotated a file away
-	// and cannot tell whether the rotation succeeded needs this: replacing would
-	// destroy the only remaining copy.
-	Append
-)
-
-// CreateFile creates a file in the custodian sub-tree and returns it open for writing.
-// Without a mode it replaces whatever is there; pass Append to add to it instead.
-func (c *Custodian) CreateFile(name string, mode ...CreateMode) (*os.File, error) {
+// CreateFile creates a file in the custodian sub-tree and returns it open for writing,
+// replacing whatever node is there. The returned descriptor is the very node the
+// custodian created and stamped: there is no second name resolution between the stamp
+// and the caller's writes, so ownership cannot be swapped out from under the descriptor.
+// A node another process still holds open is refused rather than truncated, so its
+// descriptor can never follow the node into its replaced life.
+//
+// A caller that rotated a file away and cannot tell whether the rotation succeeded
+// needs AppendFile instead: replacing would destroy the only remaining copy.
+func (c *Custodian) CreateFile(name string) (*os.File, error) {
 	targetRel, err := c.resolve(name)
 	if err != nil {
 		return nil, err
 	}
 
-	flags := os.O_WRONLY
-	if len(mode) > 0 && mode[0] == Append {
-		// Adopt what is there, and create only when nothing is.
-		flags |= os.O_APPEND
-		if _, err := c.root.Stat(targetRel); err != nil {
-			if !errors.Is(err, fs.ErrNotExist) {
-				return nil, mapEscape(err)
-			}
-			if err := c.sys.createNode(targetRel, false); err != nil {
-				return nil, mapEscape(err)
-			}
-		}
-	} else {
-		// Unlink to revoke any descriptor already open on the node, then create a fresh
-		// one. Truncating would not do: the file object survives it, so a process that
-		// opened the node while it was still unstamped would follow it into its replaced
-		// life and read whatever is written next. Unlinking is the revocation; creating
-		// is the cheap part.
-		if err := c.root.Remove(targetRel); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return nil, mapEscape(err)
-		}
-		if err := c.sys.createNode(targetRel, false); err != nil {
-			return nil, mapEscape(err)
-		}
-	}
-
-	f, err := c.root.OpenFile(targetRel, flags, 0)
-	if err != nil {
+	// Unlink to revoke any descriptor already open on the node, then create a fresh
+	// one. Truncating would not do: the file object survives it, so a process that
+	// opened the node while it was still unstamped would follow it into its replaced
+	// life and read whatever is written next. Unlinking is the revocation; creating
+	// is the cheap part. FILE_SUPERSEDE would collapse the two steps into one
+	// syscall, but a holder sharing delete follows the node into its replaced life
+	// and reads the replacement's writes, which is what unlinking prevents.
+	if err := c.root.Remove(targetRel); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, mapEscape(err)
 	}
-	return f, nil
+	return c.sys.createNode(targetRel, false)
+}
+
+// AppendFile opens the named file for writing at its end, creating and stamping it only
+// when it is absent. A node already in place is adopted as it is, whatever owns it:
+// this mode exists for a caller that rotated a file away and cannot tell whether the
+// rotation succeeded, where the file left behind may be the only remaining copy. The
+// adoption policy belongs to the caller: one that must never write into a node it does
+// not own checks IsOwned before appending, and replaces instead.
+func (c *Custodian) AppendFile(name string) (*os.File, error) {
+	targetRel, err := c.resolve(name)
+	if err != nil {
+		return nil, err
+	}
+
+	_, statErr := c.root.Stat(targetRel)
+	switch {
+	case errors.Is(statErr, fs.ErrNotExist):
+		return c.sys.createNode(targetRel, false)
+	case statErr != nil:
+		return nil, mapEscape(statErr)
+	}
+
+	f, err := c.root.OpenFile(targetRel, os.O_WRONLY|os.O_APPEND, 0)
+	return f, mapEscape(err)
 }
 
 // Remove deletes the named node relative to the custodian's sub-tree.

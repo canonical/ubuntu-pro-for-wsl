@@ -156,12 +156,12 @@ func TestCreateFileModes(t *testing.T) {
 					"Setup: could not plant the unstamped file")
 			}
 
-			var modes []securefiles.CreateMode
+			var f *os.File
 			if tc.append {
-				modes = append(modes, securefiles.Append)
+				f, err = c.AppendFile(target)
+			} else {
+				f, err = c.CreateFile(target)
 			}
-
-			f, err := c.CreateFile(target, modes...)
 			if tc.wantErr != nil {
 				require.ErrorIs(t, err, tc.wantErr, "unexpected error creating %s", target)
 				return
@@ -194,9 +194,10 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		mode []securefiles.CreateMode
 		// viaWriteFile publishes through WriteFile instead of CreateFile.
 		viaWriteFile bool
+		// append targets AppendFile instead of CreateFile.
+		append bool
 
 		// wantHeldContent is what a descriptor opened before the call reads afterwards.
 		wantHeldContent string
@@ -220,7 +221,7 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 		// Appending deliberately keeps the same node, so the descriptor follows it. That
 		// is the whole point of the mode, and the reason it is only for the agent's log.
 		"appending keeps the descriptor on the same node": {
-			mode:            []securefiles.CreateMode{securefiles.Append},
+			append:          true,
 			wantHeldContent: "OLDNEW",
 		},
 	}
@@ -254,7 +255,12 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 				return
 			}
 
-			f, err := c.CreateFile("target.txt", tc.mode...)
+			var f *os.File
+			if tc.append {
+				f, err = c.AppendFile("target.txt")
+			} else {
+				f, err = c.CreateFile("target.txt")
+			}
 			if tc.refusedOnWindows && runtime.GOOS == "windows" {
 				require.Error(t, err, "Windows must refuse to unlink a node held open without delete sharing")
 				return

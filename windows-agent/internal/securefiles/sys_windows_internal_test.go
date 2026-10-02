@@ -68,13 +68,20 @@ func TestCreateNode(t *testing.T) {
 
 			const node = "node"
 			if tc.seedExisting {
-				require.NoError(t, cust.sys.createNode(node, tc.isDir), "Setup: could not seed the existing node")
+				seed, err := cust.sys.createNode(node, tc.isDir)
+				require.NoError(t, err, "Setup: could not seed the existing node")
+				if seed != nil {
+					require.NoError(t, seed.Close(), "Setup: could not close the seeded node")
+				}
 			}
 			if tc.failCreation != 0 {
 				cust.FailCreation(tc.failCreation)
 			}
 
-			err = cust.sys.createNode(node, tc.isDir)
+			created, err := cust.sys.createNode(node, tc.isDir)
+			if created != nil {
+				defer func() { _ = created.Close() }()
+			}
 			if tc.wantErr {
 				require.Error(t, err, "the creation should have been refused")
 			} else {
@@ -230,7 +237,13 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 			},
 		},
 		"node creation": {
-			call: func(s *platformSys) error { return s.createNode(bad, false) },
+			call: func(s *platformSys) error {
+				f, err := s.createNode(bad, false)
+				if f != nil {
+					_ = f.Close()
+				}
+				return err
+			},
 			after: func(t *testing.T, dir string) {
 				t.Helper()
 				require.NoFileExists(t, filepath.Join(dir, "good"), "a truncated path must not create the shorter node")
