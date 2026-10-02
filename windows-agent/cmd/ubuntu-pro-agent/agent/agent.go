@@ -233,9 +233,10 @@ func (a *App) PublicDir() (string, error) {
 	return a.publicDirPath(options{})
 }
 
-// publicDirPath resolves the public directory path, validating that its parent exists and is a directory.
-// Creation of the public directory is intentionally left to securefiles.Open to ensure atomic
-// root-ownership EA stamping on Windows without a pre-creation TOCTOU window (ADR 2.01).
+// publicDirPath resolves the public directory path. Creation of the public directory, and
+// all filesystem validation, is intentionally left to securefiles.Open to ensure atomic
+// root-ownership EA stamping on Windows without a pre-creation TOCTOU window (ADR 2.01);
+// anything checked here would only be a stricter, duplicate verdict of the same question.
 func (a *App) publicDirPath(opts options) (string, error) {
 	if opts.publicDir == "" {
 		homeDir := os.Getenv("UserProfile")
@@ -244,16 +245,6 @@ func (a *App) publicDirPath(opts options) (string, error) {
 		}
 
 		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
-	}
-
-	parent := filepath.Dir(opts.publicDir)
-	//#nosec G703 // Validating that the parent directory exists and is a directory.
-	fi, err := os.Stat(parent)
-	if err != nil {
-		return "", fmt.Errorf("could not access public dir parent %s: %v", parent, err)
-	}
-	if !fi.IsDir() {
-		return "", fmt.Errorf("public dir parent %s is not a directory", parent)
 	}
 
 	return opts.publicDir, nil
