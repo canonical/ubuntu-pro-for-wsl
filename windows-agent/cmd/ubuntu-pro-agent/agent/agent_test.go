@@ -799,6 +799,44 @@ func TestWithWslSystemMock(t *testing.T) {
 	daemontestutils.MockWslSystemCmd(t)
 }
 
+// TestAgentStartsDespiteAPlantedCloudInitLink reproduces the pre-plant DoS: an
+// unprivileged instance user creates the public directory first and puts a link where
+// the cloud-init custodian directory must live. The agent must start anyway, with the
+// link replaced by the real directory; refusing, as the tree root does, would fail
+// every start until a privileged user removed the link by hand.
+func TestAgentStartsDespiteAPlantedCloudInitLink(t *testing.T) {
+	publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
+	privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
+
+	outside := filepath.Join(t.TempDir(), "outside")
+	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+	require.NoError(t, os.MkdirAll(publicDir, 0700), "Setup: could not create the public directory")
+	if err := os.Symlink(outside, filepath.Join(publicDir, ".cloud-init")); err != nil {
+		t.Skip("symlink creation not permitted in this environment")
+	}
+
+	a := agent.NewForTesting(t, publicDir, privateDir)
+	a.SetArgs()
+
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- a.Run()
+		close(runErr)
+	}()
+
+	a.WaitReady()
+	a.Quit()
+	err := <-runErr
+	if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
+		require.NoError(t, err, "Agent should start and shut down cleanly")
+	}
+
+	fi, err := os.Lstat(filepath.Join(publicDir, ".cloud-init"))
+	require.NoError(t, err)
+	require.True(t, fi.IsDir(), "the planted link must be replaced by the cloud-init directory")
+	require.Zero(t, fi.Mode()&os.ModeSymlink, "the planted link must be gone")
+}
+
 func TestAgentPreservesCloudInitUserDataOnStartup(t *testing.T) {
 	publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
 	privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")

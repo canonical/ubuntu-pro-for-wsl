@@ -144,6 +144,28 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
     partially, and the population is unmeasured; the reachable case needs a profile on a filesystem
     Windows does not support for profiles, since NTFS and ReFS both carry them.
 
+### 2.03 - A link standing at a sub-tree root is replaced, not adopted or refused
+
+* **Problem/Context**: An unprivileged instance user can create the Public Directory before the
+  agent's first start and put a symbolic link where a sub-tree root must live. The tree root is
+  then adopted and stamped (2.02 does not apply: it can be stamped), but every start fails at the
+  sub-tree until a privileged user removes the link by hand. The create call answers a name
+  collision for some link kinds and an escape refusal for others, so the failure is also cryptic.
+* **Decision**: A `reparse` point standing where a sub-tree root must live is removed and the
+  directory created in its place. It cannot be adopted data: nothing unprivileged can write inside
+  a stamped tree (2.01), so a link there was planted before the tree was stamped, and following it
+  reaches only what the planter chose. Where the tree root itself is a link, refusing stays the
+  answer: Open runs before there is a stamped tree to vouch for the neighborhood, and a link there
+  cannot be told from a deliberate user redirection of the directory. Adoption opens the node
+  itself, never the target of a link.
+* **Consequences**:
+  - Positive: The plant stops being a permanent denial of service requiring root intervention; the
+    agent heals it on the first start it survives. A link can no longer cause a stamp to be written
+    through it, because nothing is stamped through a link at all.
+  - Negative: A planted link is destroyed rather than reported; the agent chooses to heal quietly
+    where it could fail loudly, so an operator investigating a plant sees the healed state, not the
+    plant. The asymmetry with the tree root is deliberate and test-pinned in both directions.
+
 
 ## 3. Integration
 
