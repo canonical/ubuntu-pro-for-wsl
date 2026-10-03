@@ -4,6 +4,7 @@ package daemontestutils
 import (
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"slices"
 	"strings"
@@ -16,7 +17,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/maps"
 )
 
 // MockWslSystemCmd mocks commands running inside the WSL system distro.
@@ -122,6 +122,35 @@ func NetDevicesMockAPIWithAddedWSL(returnAfter <-chan error) netmonitoring.Devic
 			uuid.New().String(): "Ethernet adapter vEthernet (WSL (Hyper-V firewall))",
 			uuid.New().String(): "vSwitch (WSL (Hyper-V firewall))",
 			"Descriptions":      "yet_another_new",
+		}
+		maps.Copy(after, before)
+
+		return &NetMonitoringMockAPI{
+			Before: before,
+			After:  after,
+			WaitForDeviceChangesImpl: func() error {
+				// Introduces some asynchrony to the test.
+				if returnAfter != nil {
+					return <-returnAfter
+				}
+				return nil
+			},
+		}, nil
+	}
+}
+
+// NetDevicesMockAPIWithAddedNonWSL returns a NetAdaptersAPIProvider function with a new
+// non-WSL adapter added to the future list of adapters, so the daemon's network watcher
+// sees a change it must ignore (and keep monitoring).
+func NetDevicesMockAPIWithAddedNonWSL(returnAfter <-chan error) netmonitoring.DevicesAPIProvider {
+	return func() (netmonitoring.DevicesAPI, error) {
+		before := map[string]string{
+			uuid.New().String(): "Wireless LAN adapter Wi-Fi",
+			uuid.New().String(): "Ethernet adapter Ethernet",
+		}
+
+		after := map[string]string{
+			uuid.New().String(): "Ethernet adapter vSwitch (External)",
 		}
 		maps.Copy(after, before)
 
