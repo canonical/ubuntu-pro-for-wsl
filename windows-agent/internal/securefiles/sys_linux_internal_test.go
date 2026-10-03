@@ -262,3 +262,80 @@ func (c *Custodian) failXattr(xattr xattrCalls) {
 	defer c.sys.mu.Unlock()
 	c.sys.xattr = xattr
 }
+
+// TestNewPlatformSysRefusesARedirectedRoot pins the containment the Windows
+// TestEnsureRootRefusesARedirectedRoot pins: a link standing where the tree root should
+// be is refused rather than followed, so the custodian can never be rooted outside the
+// path it was given. Open runs before there is a stamped tree to vouch for the
+// neighborhood, so a link here is never adopted data.
+func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
+	testCases := map[string]struct {
+		// redirect puts a symlink where the root would be created.
+		redirect bool
+		// wantFile plants a regular file where the root would be created instead.
+		wantFile bool
+
+		wantErr error
+	}{
+		"a root the custodian creates itself": {},
+
+		"a directory link standing in for the root": {redirect: true, wantErr: ErrPathEscapes},
+		"a file standing in for the root":           {wantFile: true},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			base := t.TempDir()
+			outside := filepath.Join(base, "outside")
+			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+
+			rootPath := filepath.Join(base, "root")
+			switch {
+			case tc.redirect:
+				require.NoError(t, os.Symlink(outside, rootPath), "Setup: could not plant the link")
+			case tc.wantFile:
+				require.NoError(t, os.WriteFile(rootPath, []byte("x"), 0600), "Setup: could not plant the file")
+			}
+
+			sys, err := newPlatformSysWith(rootPath, realXattrCalls())
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr, "a redirected root must be refused")
+				require.Nil(t, sys, "a refused root must not yield a usable platform")
+
+				entries, err := os.ReadDir(outside)
+				require.NoError(t, err, "Setup: could not list the link target")
+				require.Empty(t, entries, "nothing may be created through the link")
+				return
+			}
+			if tc.wantFile {
+				require.Error(t, err, "a non-directory standing in for the root must be refused")
+				require.Nil(t, sys, "a refused root must not yield a usable platform")
+				return
+			}
+			require.NoError(t, err, "the custodian should have established its root")
+			require.NoError(t, sys.Close())
+		})
+	}
+}
+
+// TestSetRootRefusesARerootedTree pins the tie between the two resolutions: open()
+// re-resolves the path the constructor established, and the parent directory stays
+// writable, so a tree swapped in between must be recognized as not the one the
+// constructor vouched for.
+func TestSetRootRefusesARerootedTree(t *testing.T) {
+	base := t.TempDir()
+	rootPath := filepath.Join(base, "tree")
+	sys, err := newPlatformSysWith(rootPath, realXattrCalls())
+	require.NoError(t, err, "Setup: could not establish the tree root")
+
+	// Swap the tree: the original directory moves away, and a fresh one stands at
+	// the same path. The identity the constructor recorded no longer answers there.
+	require.NoError(t, os.Rename(rootPath, filepath.Join(base, "moved")), "Setup: could not move the tree away")
+	require.NoError(t, os.Mkdir(rootPath, 0700), "Setup: could not plant the impostor")
+
+	root, err := os.OpenRoot(rootPath)
+	require.NoError(t, err, "Setup: could not open the impostor root")
+	defer func() { _ = root.Close() }()
+
+	err = sys.setRoot(root)
+	require.ErrorIs(t, err, ErrRootReplaced, "a tree swapped in between the resolutions must be refused")
+}
