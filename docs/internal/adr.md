@@ -108,13 +108,14 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   WSL instance can manipulate them.
 * **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
   ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation so the projection
-  maps it to root, centralized in the agent's `securefiles` custodian with a plain OS fallback on
-  non-Windows. wsl-pro-service validates, before consuming any projected artifact, that every
-  component from the root down is root-owned with strict modes and no symlinks, and that the
-  opened root directory sits on a `9p` or `virtiofs` mount — pinned race-free via the root `fd`'s
-  `mnt_id` against `/proc/self/mountinfo`, because `statfs` magic numbers cannot distinguish
-  `virtiofs` from attacker-controlled FUSE (both report `FUSE_SUPER_MAGIC`) — failing loudly with
-  `SystemError` when any invariant is broken.
+  maps it to root, centralized in the agent's `securefiles` custodian; its non-Windows build stamps
+  the same ownership facts as a user-namespace extended attribute and refuses the tree when it
+  cannot (2.02), so there is no plain-OS fallback anywhere. wsl-pro-service validates, before
+  consuming any projected artifact, that every component from the root down is root-owned with
+  strict modes and no symlinks, and that the opened root directory sits on a `9p` or `virtiofs`
+  mount — pinned race-free via the root `fd`'s `mnt_id` against `/proc/self/mountinfo`, because
+  `statfs` magic numbers cannot distinguish `virtiofs` from attacker-controlled FUSE (both report
+  `FUSE_SUPER_MAGIC`) — failing loudly with `SystemError` when any invariant is broken.
 * **Consequences**:
   - Positive: attributes are stamped before content is written; instance-side defense-in-depth
     rejects compromised or improperly projected artifacts with `SystemError` before use; the
