@@ -41,14 +41,14 @@ index-gpu-and-graphics
 
 ```
 
-## Contributing
+## Developing Ubuntu Pro for WSL
 
-Contribute to the development of Ubuntu on WSL.
+Set up and use a development environment for Ubuntu Pro for WSL.
 
 ```{toctree}
 :titlesonly:
 
-index-contributing
+index-dev-guides
 
 ```
 

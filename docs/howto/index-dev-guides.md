@@ -1,20 +1,11 @@
-(index-contributing)=
+(index-dev-guides)=
 
-# Contributing
+# Developing Ubuntu Pro for WSL
 
-These how-to guides help you contribute to Ubuntu on WSL.
-
-## General guidelines for contributors
-
-If you are interested in contributing to code or docs, please read our
-guidelines.
-
-```{toctree}
-:titlesonly:
-:maxdepth: 1
-
-General contribution guidelines <contributing>
-```
+These how-to guides help you set up and use a development environment for
+Ubuntu Pro for WSL. For general contribution guidelines, including how to
+contribute to the code and the documentation, see
+[Contributing](/contributing/index).
 
 (howto::dev-contrib)=
 ## Guides for developing Ubuntu Pro for WSL
