@@ -180,10 +180,40 @@ func (s *System) WslDistroName(ctx context.Context) (name string, err error) {
 func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error) {
 	defer decorate.OnError(&err, "could not locate Windows' user profile directory")
 
+	// Try the environment variable first, less likely to fail and it's faster.
+	path, envErr := s.userProfileViaEnvVar(ctx)
+	if envErr == nil {
+		return path, nil
+	}
+
+	// Fallback to the more expensive and risky cmd.exe method.
+	path, cmdErr := s.userProfileViaCmdExe(ctx)
+	if cmdErr != nil {
+		return "", errors.Join(envErr, cmdErr)
+	}
+
+	// We intentionally discard envErr on success.
+	return path, nil
+}
+
+// userProfileViaEnvVar obtains the Windows user profile directory from the
+// WSL2_USER_PROFILE environment variable, as set by recent WSL versions.
+func (s *System) userProfileViaEnvVar(ctx context.Context) (string, error) {
+	windir := os.Getenv("WSL2_USER_PROFILE")
+	if len(windir) == 0 {
+		return "", errors.New("WSL2_USER_PROFILE environment variable is not set")
+	}
+
+	return s.translateDirToLinux(ctx, windir)
+}
+
+// userProfileViaCmdExe obtains the Windows user profile directory by asking
+// cmd.exe to expand %UserProfile%.
+func (s *System) userProfileViaCmdExe(ctx context.Context) (string, error) {
 	// Find folder where windows is mounted on
 	cmdExe, err := s.findCmdExe()
 	if err != nil {
-		return wslPath, err
+		return "", err
 	}
 
 	// Using the 'echo.' syntax instead of 'echo ' because if %USERPROFILE% was set to empty string it would cause the output to be 'ECHO is on'.
@@ -198,32 +228,36 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	err = cmd.Run()
 	if err != nil {
 		decodedStderr, derr := decodeUtf16LeStrict(stderr)
-		return wslPath, fmt.Errorf("%s: error: %v.\n\tStderr: %s", cmd.Path, errors.Join(err, derr), decodedStderr)
+		return "", fmt.Errorf("%s: error: %v.\n\tStderr: %s", cmd.Path, errors.Join(err, derr), decodedStderr)
 	}
 
 	trimmed, err := decodeUtf16LeStrict(stdout)
 	if err != nil {
-		return wslPath, fmt.Errorf("could not decode %s output: %v", cmd.Path, err)
+		return "", fmt.Errorf("could not decode %s output: %v", cmd.Path, err)
 	}
 	if len(trimmed) == 0 {
-		return wslPath, errors.New("%UserProfile% value is empty")
+		return "", errors.New("%UserProfile% value is empty")
 	}
-	// We have the path from Windows' perspective ( C:\Users\... )
-	// It must be converted to linux ( /mnt/c/Users/... )
 
-	cmd = s.backend.WslpathExecutable(ctx, "-ua", trimmed)
-	winHomeLinux, err := runCommand(cmd)
+	return s.translateDirToLinux(ctx, trimmed)
+}
+
+// translateDirToLinux converts a Windows path ( C:\Users\... ) into its WSL
+// counterpart ( /mnt/c/Users/... ) and validates that it is an existing directory.
+func (s *System) translateDirToLinux(ctx context.Context, winDir string) (wslPath string, err error) {
+	cmd := s.backend.WslpathExecutable(ctx, "-ua", winDir)
+	linuxDir, err := runCommand(cmd)
 	if err != nil {
-		return wslPath, err
+		return "", err
 	}
 
-	wslPath = s.Path(string(winHomeLinux))
+	wslPath = s.Path(string(linuxDir))
 
 	// wslpath can return invalid paths, so we make sure that it exists
-	if s, err := os.Stat(wslPath); err != nil {
+	if info, err := os.Stat(wslPath); err != nil {
 		// Stat errors contain the path and the error description
 		return wslPath, err
-	} else if !s.IsDir() {
+	} else if !info.IsDir() {
 		return wslPath, fmt.Errorf("%q is not a directory", wslPath)
 	}
 

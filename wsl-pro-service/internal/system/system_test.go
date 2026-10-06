@@ -288,6 +288,77 @@ func TestUserProfileDir(t *testing.T) {
 	}
 }
 
+// TestUserProfileDirViaEnvVar tests the WSL2_USER_PROFILE environment variable
+// code path of UserProfileDir.
+//
+// It cannot run in parallel because t.Setenv cannot be used in parallel tests.
+func TestUserProfileDirViaEnvVar(t *testing.T) {
+	// The Windows user profile path, as expanded by the mocked cmd.exe.
+	const userProfileWinPath = `D:\Users\TestUser\`
+
+	testCases := map[string]struct {
+		envVar string
+
+		cmdExeErr bool
+
+		// Removes the user profile directory from the mock filesystem.
+		removeDir bool
+
+		// Replaces the user profile directory in the mock filesystem with a file.
+		replaceDirWithFile bool
+
+		wantErr     bool
+		errContains []string
+	}{
+		"Success reading from WSL2_USER_PROFILE": {envVar: userProfileWinPath},
+
+		// C:\Bogus\ is not in the set of paths the mock wslpath knows how to
+		// translate, so the env var path fails and the fallback kicks in.
+		"Falls back to cmd.exe when wslpath cannot translate the env var": {envVar: `C:\Bogus\`},
+
+		"Error when the translated path does not exist": {envVar: userProfileWinPath, removeDir: true, wantErr: true, errContains: []string{"no such file or directory"}},
+		"Error when the translated path is a file":      {envVar: userProfileWinPath, replaceDirWithFile: true, wantErr: true, errContains: []string{"is not a directory"}},
+		"Error when env var and cmd.exe both fail":      {envVar: `C:\Bogus\`, cmdExeErr: true, wantErr: true, errContains: []string{"Mock not implemented", "exit status 99"}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			system, mock := testutils.MockSystem(t)
+
+			if tc.cmdExeErr {
+				mock.SetControlArg(testutils.CmdExeErr)
+			}
+			if tc.removeDir {
+				dir := mock.Path("/mnt/d/Users/TestUser")
+				require.NoError(t, os.RemoveAll(dir), "Setup: could not remove the user profile directory")
+			}
+			if tc.replaceDirWithFile {
+				dir := mock.Path("/mnt/d/Users/TestUser")
+				require.NoError(t, os.RemoveAll(dir), "Setup: could not remove the user profile directory")
+				//#nosec G306 // We control this path, no risk of leaking permissions.
+				require.NoError(t, os.WriteFile(dir, []byte("I am a file"), 0600), "Setup: could not create the file")
+			}
+
+			if tc.envVar != "" {
+				t.Setenv("WSL2_USER_PROFILE", tc.envVar)
+			}
+
+			got, err := system.UserProfileDir(context.Background())
+			if tc.wantErr {
+				require.Error(t, err, "Expected UserProfileDir to return an error, but returned %q instead", got)
+				for _, want := range tc.errContains {
+					require.ErrorContains(t, err, want)
+				}
+				return
+			}
+			require.NoError(t, err, "Expected UserProfileDir to return no errors")
+
+			wantSuffix := `/mnt/d/Users/TestUser`
+			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by UserProfileDir.\nWant suffix: %s\nGot: %s", wantSuffix, got)
+		})
+	}
+}
+
 func overrideProcMount(t *testing.T, mock *testutils.SystemMock) {
 	t.Helper()
 
