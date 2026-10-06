@@ -40,9 +40,11 @@ func (b realBackend) LandscapeConfigExecutable(ctx context.Context, args ...stri
 	return exec.CommandContext(ctx, "landscape-config", args...)
 }
 
-// ProExecutable returns the full command to run the wslpath executable with the provided arguments.
+// WslpathExecutable returns the full command to run the wslpath executable with the provided arguments.
 func (b realBackend) WslpathExecutable(ctx context.Context, args ...string) *exec.Cmd {
 	//#nosec G204 // We control the input variables, there is no risk of command injection.
+	//#nosec G702 // False positive: the arguments are paths passed to wslpath for translation,
+	// not executed by a shell, and they come from the local system (env vars, cmd.exe output).
 	return exec.CommandContext(ctx, "wslpath", args...)
 }
 
