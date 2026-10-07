@@ -163,7 +163,9 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   reaches only what the planter chose. Where the tree root itself is a link, refusing stays the
   answer: Open runs before there is a stamped tree to vouch for the neighborhood, and a link there
   cannot be told from a deliberate user redirection of the directory. Adoption opens the node
-  itself, never the target of a link.
+  itself, never the target of a link, and only after the attribute check has answered: a check
+  that cannot answer, or a link that cannot be removed, refuses the sub-tree rather than opening
+  a root through something unchecked.
 * **Consequences**:
   - Positive: The plant stops being a permanent denial of service requiring root intervention; the
     agent heals it on the first start it survives. A link can no longer cause a stamp to be written

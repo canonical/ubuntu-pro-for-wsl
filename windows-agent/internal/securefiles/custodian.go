@@ -134,30 +134,33 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	// an earlier run is adopted instead, and stamped in place: ADR 2.01 requires
 	// first-level sub-tree roots to carry the stamp even when pre-existing, because it
 	// is what revokes unprivileged creation and deletion inside them.
-	adopted := false
-	create := func() error {
-		_, err := c.sys.createNode(rel, true)
-		if errors.Is(err, os.ErrExist) {
-			adopted = true
-			return c.sys.stampSubdir(rel)
-		}
-		return err
-	}
-	err = create()
-	if err != nil || adopted {
-		// A reparse point standing at a sub-tree root is never adopted data: nothing
-		// unprivileged can write inside a stamped tree (ADR 2.01), so a link there was
-		// planted before the tree was stamped, and following it reaches only what the
-		// planter chose. Refusing it fails every start until a privileged user removes
-		// it by hand, so the link is removed and the directory created in its place.
-		// The obstruction is recognized by attribute rather than by the create error,
-		// which is a name collision for some link kinds and an escape refusal for
-		// others. (Where the tree root itself is a link, refusing stays the answer:
-		// Open runs before there is a stamped tree to vouch for the neighborhood.)
-		reparse, rerr := c.sys.isReparsePoint(rel)
-		if rerr == nil && reparse {
-			if rmErr := c.root.Remove(rel); rmErr == nil {
-				err = create()
+	_, err = c.sys.createNode(rel, true)
+	if errors.Is(err, os.ErrExist) || errors.Is(err, ErrPathEscapes) || isEscapeError(err) {
+		// The create cannot tell what stands at the name: a link answers a name
+		// collision for some kinds and an escape refusal for others, and a real
+		// directory answers a collision too. It is recognized by attribute instead
+		// (ADR 2.03): a reparse point standing at a sub-tree root is never adopted
+		// data — nothing unprivileged can write inside a stamped tree (ADR 2.01), so
+		// a link there was planted before the tree was stamped, and following it
+		// reaches only what the planter chose — so it is removed and the directory
+		// created in its place. A real directory is adopted and stamped in place.
+		// (Where the tree root itself is a link, refusing stays the answer: Open
+		// runs before there is a stamped tree to vouch for the neighborhood.)
+		// What the check cannot answer, and a link that cannot be removed, refuse
+		// the sub-tree: the nested root below must never be opened through
+		// something unchecked, so nothing is stamped before the attribute answers.
+		var reparse bool
+		reparse, err = c.sys.isReparsePoint(rel)
+		if err == nil {
+			if reparse {
+				err = c.root.Remove(rel)
+				if err == nil {
+					_, err = c.sys.createNode(rel, true)
+				} else {
+					err = fmt.Errorf("could not remove the link at %s: %w", rel, err)
+				}
+			} else {
+				err = c.sys.stampSubdir(rel)
 			}
 		}
 	}
