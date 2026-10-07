@@ -543,7 +543,9 @@ func (s *platformSys) renameNode(oldRel, newRel string, expect *os.File) error {
 		return err
 	}
 
-	nameBytesLen := (len(leaf16) - 1) * 2
+	name := leaf16[:len(leaf16)-1] // drop the NUL terminator
+
+	nameBytesLen := len(name) * 2
 	infoSize := unsafe.Sizeof(fileRenameInfoStruct{}) + uintptr(nameBytesLen) - 2 //#nosec G115 // byte length of a short relative path; far below uintptr range.
 
 	buf := make([]byte, infoSize)
@@ -551,7 +553,7 @@ func (s *platformSys) renameNode(oldRel, newRel string, expect *os.File) error {
 	info.RootDirectory = targetParentHandle
 	info.FileNameLength = uint32(nameBytesLen) //#nosec G115 // rename target byte length; a short relative path, always fits in 32 bits.
 
-	copy((*[1 << 20]byte)(unsafe.Pointer(&info.FileName[0]))[:nameBytesLen], (*[1 << 20]byte)(unsafe.Pointer(&leaf16[0]))[:nameBytesLen]) //#nosec G103 // fixed-size overlay over the rename-info buffer, only ever sliced to the real name length.
+	copy(unsafe.Slice(&info.FileName[0], len(name)), name) //#nosec G103 // FileName declares only its first element; the slice overlays the buffer's tail, which was sized to hold the name.
 
 	// POSIX semantics is what allows the replacement to happen while readers still
 	// hold the destination open, which is the whole point of publishing by rename:
