@@ -164,16 +164,20 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string, instance
 	return nil
 }
 
-// RemoveDistroData removes cloud-init user data to be used for a distro in particular.
+// RemoveDistroData removes the cloud-init data files written for a particular distro:
+// the user-data and the meta-data.
 //
-// No error is returned if the data did not exist.
+// The meta-data carries only the installation request ID of an installation that is
+// over, and a leftover would hand its stale instance-id to a same-named instance
+// installed later outside Landscape. No error is returned if any of the files did not
+// exist.
 func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 	defer decorate.OnError(&err, "could not remove distro-specific cloud-init file")
 
-	if err := c.dir.Remove(distroName + ".user-data"); errors.Is(err, fs.ErrNotExist) {
-		return nil
-	} else if err != nil {
-		return err
+	for _, suffix := range []string{".user-data", ".meta-data"} {
+		if err := c.dir.Remove(distroName + suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
 	}
 	return nil
 }

@@ -337,6 +337,7 @@ func TestRemoveDistroData(t *testing.T) {
 			custodian := newCloudInitCustodian(t)
 			dir := custodian.BasePath()
 			path := filepath.Join(dir, distroName+".user-data")
+			metadataPath := filepath.Join(dir, distroName+".meta-data")
 
 			ci, err := cloudinit.New(ctx, &mockConfig{}, custodian)
 			require.NoError(t, err, "Setup: cloud-init New should return no errors")
@@ -351,6 +352,7 @@ func TestRemoveDistroData(t *testing.T) {
 				require.NoError(t, os.MkdirAll(dir, 0700), "Setup: could not set up directory")
 				if !tc.fileDoesNotExist {
 					require.NoError(t, os.WriteFile(path, []byte("hello, world!"), 0600), "Setup: could not set up directory")
+					require.NoError(t, os.WriteFile(metadataPath, []byte("instance-id: inst-123\n"), 0600), "Setup: could not set up directory")
 				}
 			}
 
@@ -362,6 +364,7 @@ func TestRemoveDistroData(t *testing.T) {
 			}
 			require.NoError(t, err, "RemoveDistroData should return no errors")
 			require.NoFileExists(t, path, "RemoveDistroData should remove the distro cloud-init data file")
+			require.NoFileExists(t, metadataPath, "RemoveDistroData should remove the distro instance metadata file")
 		})
 	}
 }
