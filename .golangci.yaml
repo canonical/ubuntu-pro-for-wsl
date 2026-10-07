@@ -114,17 +114,17 @@ linters:
       # Allow raw filesystem mutation only in the custodian implementation, private state
       # stores, Landscape installer paths outside the boundary, the teardown command,
       # lockfiles, test utilities, and test files.
-      - path: .*internal[\/]securefiles[\/].*
+      - path: .*windows-agent[\/]internal[\/]securefiles[\/].*
         linters: [forbidigo]
-      - path: .*internal[\/]config[\/].*
+      - path: .*windows-agent[\/]internal[\/]config[\/].*
         linters: [forbidigo]
-      - path: .*internal[\/]distros[\/]database[\/].*
+      - path: .*windows-agent[\/]internal[\/]distros[\/]database[\/].*
         linters: [forbidigo]
-      - path: .*internal[\/]distros[\/]worker[\/].*
+      - path: .*windows-agent[\/]internal[\/]distros[\/]worker[\/].*
         linters: [forbidigo]
-      - path: .*internal[\/]proservices[\/]landscape[\/]distroinstall[\/].*
+      - path: .*windows-agent[\/]internal[\/]proservices[\/]landscape[\/]distroinstall[\/].*
         linters: [forbidigo]
-      - path: .*internal[\/]proservices[\/]landscape[\/]executor\.go$
+      - path: .*windows-agent[\/]internal[\/]proservices[\/]landscape[\/]executor\.go$
         linters: [forbidigo]
       # The generate tooling is build-time codegen; it reads sources and templates and
       # never touches the public directory.
