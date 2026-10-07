@@ -699,7 +699,7 @@ func (s *platformSys) resolvedBasePath() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.rootHandle == 0 {
+	if s.rootHandle == windows.InvalidHandle {
 		return ""
 	}
 
