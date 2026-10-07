@@ -1,10 +1,10 @@
 {
     "landscapeFilePicker": "Vybrať súbor...",
     "ubuntuProEnabledInfo": "Všetky inštancie Ubuntu WSL majú prístup k bezpečnostným funkciám Ubuntu Pro.",
-    "purchaseStatusNetwork": "Sieťový problém zabránil dokončeniu nákupu. Skúste to znova po pripojení.",
+    "purchaseStatusNetwork": "Sieťový problém zabránil pokračovaniu v nákupe. Skúste to znova po pripojení.",
     "landscapeSkipDescription": "Konfiguráciu Landscape môžete kedykoľvek neskôr vykonať v tejto aplikácii",
     "statusBarAgentConnectingTooltip": "Pripájanie sa k agentovi Ubuntu Pro...",
-    "agentStateUnknownEnv": "Stav pozadia agenta Ubuntu Pro sa nedá overiť. Skontrolujte nastavenia prostredia.",
+    "agentStateUnknownEnv": "Stav agenta Ubuntu Pro na pozadí sa nedá overiť. Skontrolujte nastavenia prostredia.",
     "proHeading": "Bezpečnosť softvéru s otvoreným zdrojovým kódom od vydavateľov Ubuntu, teraz dostupná na systéme Windows. {aboutLink}",
     "@proHeading": {
         "placeholders": {
@@ -13,7 +13,7 @@
             }
         }
     },
-    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialené správu vašich inštancií Ubuntu WSL. {landscapeLink}",
+    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialenú správu vašich inštancií Ubuntu WSL. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -66,13 +66,13 @@
             }
         }
     },
-    "agent": "Pozadie agenta Ubuntu Pro",
-    "agentStateStarting": "Pozadie agenta Ubuntu Pro sa spúšťa.",
-    "agentStatePingNonResponsive": "Pozadie agenta Ubuntu Pro neodpovedá.",
-    "agentStateInvalid": "Čaká sa na inicializáciu pozadia agenta Ubuntu Pro.",
-    "agentStateCannotStart": "Pozadie agenta Ubuntu Pro sa nedá spustiť.",
-    "agentStateQuerying": "Kontroluje sa stav pozadia agenta Ubuntu Pro.",
-    "agentStateUnreachable": "Pokúša sa obnoviť pozadie agenta Ubuntu Pro.",
+    "agent": "Agent Ubuntu Pro na pozadí",
+    "agentStateStarting": "Agent Ubuntu Pro na pozadí sa spúšťa.",
+    "agentStatePingNonResponsive": "Agent Ubuntu Pro na pozadí neodpovedá.",
+    "agentStateInvalid": "Čaká sa na inicializáciu agenta Ubuntu Pro na pozadí.",
+    "agentStateCannotStart": "Agent Ubuntu Pro na pozadí sa nedá spustiť.",
+    "agentStateQuerying": "Kontroluje sa stav agenta Ubuntu Pro na pozadí.",
+    "agentStateUnreachable": "Pokúša sa obnoviť agenta Ubuntu Pro na pozadí.",
     "landscapeFileLabel": "Cesta k konfiguračnému súboru",
     "landscapeFileTooLarge": "Konfiguračný súbor je príliš veľký",
     "landscapeFileEmptyPath": "Musí byť zadaná cesta",
@@ -103,7 +103,7 @@
     "landscapeEditYourConfig": "Upraviť vašu konfiguráciu",
     "landscapeProceedAnyway": "Pokračovať napriek tomu",
     "landscapeInvalidConfig": "Neplatná konfigurácia Landscape",
-    "landscapeInvalidConfigContent": "Server zamietol odoslanú konfiguráciu. Overte si prosím nastavenia.",
+    "landscapeInvalidConfigContent": "Server zamietol odoslanú konfiguráciu. Prosím, overte svoje nastavenia.",
     "landscapeUnchangedConfig": "Nezmenená konfigurácia",
     "landscapeUnreachable": "Landscape je nedostupný",
     "landscapeUnreachableContent": "Nepodarilo sa pripojiť k serveru Landscape.",
