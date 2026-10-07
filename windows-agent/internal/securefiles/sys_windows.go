@@ -324,9 +324,10 @@ func (s *platformSys) Close() error {
 
 // isOwned reports whether the node at rel carries the agent's watermark: the
 // $LXUID/$LXGID/$LXMOD stamp queried through NtQueryEaFile, for exactly the values the
-// custodian writes. A node whose watermark cannot be read is not owned: the query failing
-// is an answer about that node, and a filesystem that cannot carry watermarks at all never
-// reaches here, because Open refuses it.
+// custodian writes. A node without attributes carries no stamp: that is a verdict about
+// the node, not a failure to read one, and is answered as not owned. Any other query
+// failure cannot answer and returns the error; a filesystem that cannot carry watermarks
+// at all never reaches here, because Open refuses it.
 func (s *platformSys) isOwned(rel string) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -727,6 +728,12 @@ func ntQueryLxEa(nt ntCalls, h windows.Handle) (uid, gid, mode uint32, err error
 	if err != nil {
 		var status windows.NTStatus
 		if errors.As(err, &status) {
+			// Windows has no empty-list answer: a node without attributes fails the
+			// query itself. That is the no-stamp verdict about the node, not a failure
+			// of it, and is answered as such; any other status cannot answer.
+			if status == windows.STATUS_NO_EAS_ON_FILE {
+				return 0, 0, 0, nil
+			}
 			return 0, 0, 0, status.Errno()
 		}
 		return 0, 0, 0, err

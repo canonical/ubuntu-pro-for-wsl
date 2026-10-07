@@ -26,7 +26,8 @@ func TestWindowsEaWatermark(t *testing.T) {
 
 	testCases := map[string]struct {
 		// raw writes the node behind the custodian's back, so it carries no attributes
-		// at all. Windows has no empty-list answer, so the query itself fails.
+		// at all. Windows has no empty-list answer: the query itself fails, and the
+		// predicate reads that failure as the no-stamp verdict.
 		raw bool
 		// subdir creates the node as a sub-tree root. Sub-tree roots are stamped 040700 —
 		// verified in sys_windows_test.go — yet must never be adopted here: the predicate
@@ -40,7 +41,7 @@ func TestWindowsEaWatermark(t *testing.T) {
 	}{
 		"a node the custodian wrote": {wantOwned: true},
 
-		"a node written behind its back": {raw: true, wantErr: true},
+		"a node written behind its back": {raw: true, wantOwned: false},
 
 		// Note the mechanism divergence with Linux, where directories are never stamped
 		// and IsOwned reports (false, nil): here the predicate opens with
@@ -102,7 +103,7 @@ func TestWindowsEaWatermark(t *testing.T) {
 			if tc.wantErr {
 				require.Error(t, err, "the predicate should have reported an unreadable stamp")
 			} else {
-				require.NoError(t, err, "the stamp should have decoded cleanly")
+				require.NoError(t, err, "the stamp should have answered cleanly")
 			}
 			require.Equal(t, tc.wantOwned, owned, "unexpected ownership answer")
 		})
