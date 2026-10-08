@@ -10,6 +10,6 @@ require (
 )
 
 require (
-	github.com/sirupsen/logrus v1.10.1 // indirect
+	github.com/sirupsen/logrus v1.10.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 )
