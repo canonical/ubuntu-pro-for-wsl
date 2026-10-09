@@ -201,7 +201,7 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 func (s *System) userProfileViaEnvVar(ctx context.Context) (string, error) {
 	windir := os.Getenv("WSL2_USER_PROFILE")
 	if len(windir) == 0 {
-		return "", errors.New("WSL2_USER_PROFILE environment variable is not set")
+		return "", errors.New("WSL2_USER_PROFILE environment variable is unset or blank")
 	}
 
 	return s.translateDirToLinux(ctx, windir)
