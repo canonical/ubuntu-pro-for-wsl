@@ -2,12 +2,10 @@ package daemon_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -15,7 +13,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -74,7 +71,7 @@ func TestStartQuit(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			addrDir := t.TempDir()
+			addrDir := shortSocketDir(t)
 
 			if tc.preexistingPortFile {
 				err := os.MkdirAll(addrDir, 0600)
@@ -89,7 +86,8 @@ func TestStartQuit(t *testing.T) {
 				return daemon.GRPCServers{UI: grpc.NewServer(), WSL: server}
 			}
 
-			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
+			socketDir := shortSocketDir(t)
+			d := daemon.New(ctx, registerer, addrDir, socketDir)
 
 			serveErr := make(chan error)
 			go func() {
@@ -114,14 +112,10 @@ func TestStartQuit(t *testing.T) {
 				require.NoError(t, err, "Address file should be readable")
 			}
 
-			// Now we know the TCP server has started.
-
-			address := string(addrContents)
-			t.Logf("Address is %q", address)
-
-			_, port, err := net.SplitHostPort(address)
-			_, err = net.LookupPort("tcp4", port)
-			require.NoError(t, err, "Port should be valid")
+			// The WSL server now uses the public Unix domain socket.
+			address := filepath.Join(addrDir, common.AgentSocketFileName)
+			t.Logf("Socket address is %q", address)
+			require.Equal(t, address, string(addrContents), "Address file should contain the WSL socket path")
 
 			// We start a connection but don't close it yet, so as to test graceful vs. forceful Quit
 			closeHangingConn := grpcPersistentCall(t, address)
@@ -166,6 +160,7 @@ func TestStartQuit(t *testing.T) {
 			require.NoError(t, <-serveErr, "Serve should return no error when stopped normally")
 			requireCannotDialGRPC(t, address, "No new connection should be allowed when the server is no longer running")
 			daemontestutils.RequireWaitPathDoesNotExist(t, addrPath, "Address file should have been removed after quitting the server")
+			daemontestutils.RequireWaitPathDoesNotExist(t, address, "WSL socket should have been removed after quitting the server")
 		})
 	}
 }
@@ -189,7 +184,7 @@ func TestCanServeOnlyOnce(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			addrDir := t.TempDir()
+			addrDir := shortSocketDir(t)
 
 			registerer := func(context.Context, bool) daemon.GRPCServers {
 				server := grpc.NewServer()
@@ -232,155 +227,11 @@ func TestCanServeOnlyOnce(t *testing.T) {
 	}
 }
 
-func TestServeWSLIP(t *testing.T) {
-	t.Parallel()
-
-	registerer := func(context.Context, bool) daemon.GRPCServers {
-		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
-	}
-
-	testcases := map[string]struct {
-		netmode      string
-		withAdapters daemontestutils.MockIPAdaptersState
-		subscribeErr error
-
-		wantErr bool
-	}{
-		"Success":                       {withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
-		"With a single Hyper-V Adapter": {withAdapters: daemontestutils.SingleHyperVAdapterInList},
-		"With mirrored networking mode": {netmode: "mirrored", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
-		"With no access to the system distro but net mode is the default (NAT)": {netmode: "error", withAdapters: daemontestutils.MultipleHyperVAdaptersInList},
-
-		"When the networking mode is unknown":            {netmode: "unknown"},
-		"Wwhen the list of adapters is empty":            {withAdapters: daemontestutils.EmptyList},
-		"When listing adapters requires too much memory": {withAdapters: daemontestutils.RequiresTooMuchMem},
-		"When there is no Hyper-V adapter the list":      {withAdapters: daemontestutils.NoHyperVAdapterInList},
-		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
-
-		"Error when the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error"), wantErr: true},
-	}
-
-	for name, tc := range testcases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			addrDir := t.TempDir()
-			// Very lenient timeout because we either expect Serve to fail immediately or we stop it manually.
-			// As the last resource, the test will fail due to the context timeout (otherwise it would hang indefinitely).
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-			defer cancel()
-
-			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
-			defer d.Quit(ctx, false)
-
-			if tc.netmode == "" {
-				tc.netmode = "nat"
-			}
-			mock := daemontestutils.NewHostIPConfigMock(tc.withAdapters)
-
-			serveErr := make(chan error)
-			go func() {
-				serveErr <- d.Serve(ctx, daemon.WithWslNetworkingMode(tc.netmode), daemon.WithMockedGetAdapterAddresses(mock),
-					daemon.WithNetDevicesAPIProvider(
-						func() (netmonitoring.DevicesAPI, error) {
-							if tc.subscribeErr != nil {
-								return nil, tc.subscribeErr
-							}
-							return &daemontestutils.NetMonitoringMockAPI{}, nil
-						},
-					))
-				close(serveErr)
-			}()
-
-			if tc.wantErr {
-				require.Error(t, <-serveErr, "Serve should fail when the WSL IP cannot be found")
-				return
-			}
-
-			serverStopped := make(chan struct{})
-			go func() {
-				time.Sleep(500 * time.Millisecond)
-				d.Quit(ctx, false)
-				close(serverStopped)
-			}()
-			<-serverStopped
-
-			err := <-serveErr
-			if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
-				// We stopped the server manually, so we expect this error, although it's possible that there is not even an error at this point.
-				err = nil
-			}
-			require.NoError(t, err, "Serve should return no error when stopped normally")
-
-			select {
-			case <-ctx.Done():
-				// Most likely, Serve did not fail and instead started serving,
-				// only to be stopped by the test timeout.
-				require.Fail(t, "Serve should have failed immediately")
-			default:
-			}
-		})
-	}
-}
-
-// TestAddingWSLAdapterRestarts simulates the appearance of the WSL adapter after the daemon is running.
-func TestAddingWSLAdapterRestarts(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	addrDir := t.TempDir()
-
-	registerer := func(context.Context, bool) daemon.GRPCServers {
-		server := grpc.NewServer()
-		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: server}
-	}
-
-	d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
-
-	systemNotification := make(chan error)
-	defer close(systemNotification)
-
-	mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
-
-	serveErr := make(chan error, 1)
-	go func() {
-		serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
-			daemon.WithNetDevicesAPIProvider(daemontestutils.NetDevicesMockAPIWithAddedWSL(systemNotification)),
-		)
-		close(serveErr)
-	}()
-
-	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
-
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
-	addrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
-
-	// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
-	systemNotification <- nil
-
-	// d.Serve() shouldn't have exitted with an error yet at this point.
-	select {
-	case err := <-serveErr:
-		require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
-	case <-time.After(200 * time.Millisecond):
-		// proceed.
-	}
-
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
-	// Contents could be the same without our control, thus best to check the file time.
-	newAddrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
-	require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
-}
-
 func TestServeError(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	addrDir := t.TempDir()
+	addrDir := shortSocketDir(t)
 
 	registerer := func(context.Context, bool) daemon.GRPCServers {
 		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
@@ -400,7 +251,7 @@ func TestQuitBeforeServe(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	addrDir := t.TempDir()
+	addrDir := shortSocketDir(t)
 
 	registerer := func(context.Context, bool) daemon.GRPCServers {
 		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
@@ -448,7 +299,7 @@ func TestWaitReady(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			addrDir := t.TempDir()
+			addrDir := shortSocketDir(t)
 
 			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 			serverErr := make(chan error)
@@ -490,7 +341,9 @@ func TestWaitReady(t *testing.T) {
 func grpcPersistentCall(t *testing.T, addr string) (drop func() codes.Code) {
 	t.Helper()
 
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("passthrough:///unix", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, "unix", addr)
+	}))
 	require.NoErrorf(t, err, "Could not create a GRPC client.")
 
 	c := grpctestservice.NewTestServiceClient(conn)
@@ -529,7 +382,9 @@ func requireCannotDialGRPC(t *testing.T, addr string, msg string) {
 	t.Helper()
 
 	// Try to connect. Non-blocking call so no error is wanted.
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("passthrough:///unix", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, "unix", addr)
+	}))
 	require.NoErrorf(t, err, "error dialing GRPC server.\nMessage: %s", msg)
 	defer conn.Close()
 	conn.Connect()

@@ -19,6 +19,9 @@ const (
 	// UISocketFileName is the Unix domain socket used by the Windows GUI service.
 	UISocketFileName = "windows-agent.sock"
 
+	// AgentSocketFileName is the Unix domain socket used by WSL clients.
+	AgentSocketFileName = "agent.sock"
+
 	// MsStoreProductID is the ID of the product in the Microsoft Store.
 	MsStoreProductID = "9PBDP6SFLM8G"
 

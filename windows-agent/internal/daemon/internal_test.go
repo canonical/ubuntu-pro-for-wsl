@@ -49,7 +49,7 @@ func TestRestart(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			addrDir := t.TempDir()
+			addrDir := shortSocketDir(t)
 
 			registerer := func(context.Context, bool) GRPCServers {
 				server := grpc.NewServer()

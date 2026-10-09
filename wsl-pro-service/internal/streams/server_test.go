@@ -3,6 +3,7 @@ package streams_test
 import (
 	"context"
 	"errors"
+	"net"
 	"sync"
 	"testing"
 	"time"
@@ -23,7 +24,9 @@ func TestServe(t *testing.T) {
 	agent := testutils.NewMockWindowsAgent(t, ctx, t.TempDir())
 	defer agent.Stop()
 
-	conn, err := grpc.NewClient(agent.Listener.Addr().String(),
+	conn, err := grpc.NewClient("passthrough:///unix", grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, "unix", agent.Listener.Addr().String())
+	}),
 		grpc.WithTransportCredentials(agent.ClientCredentials))
 	require.NoError(t, err, "Setup: could not create a client to the mock windows agent")
 	defer conn.Close()
@@ -95,7 +98,9 @@ func TestStop(t *testing.T) {
 	agent := testutils.NewMockWindowsAgent(t, ctx, t.TempDir())
 	defer agent.Stop()
 
-	conn, err := grpc.NewClient(agent.Listener.Addr().String(),
+	conn, err := grpc.NewClient("passthrough:///unix", grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, "unix", agent.Listener.Addr().String())
+	}),
 		grpc.WithTransportCredentials(agent.ClientCredentials))
 	require.NoError(t, err, "Setup: could not create a client to the mock windows agent")
 	defer conn.Close()

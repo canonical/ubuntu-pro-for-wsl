@@ -581,13 +581,14 @@ func WslPathMock(t *testing.T) {
 				fmt.Fprintf(os.Stderr, "Could not get current working directory: %v", err)
 			}
 
+			pathArg := strings.Trim(argv[1], "'\"")
 			stdout, ok := map[string]string{
 				windowsUserProfileDir:                   linuxUserProfileDir,
 				`D:\Users\TestUser\certificate`:         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
 				"D:/Users/TestUser/certificate":         filepath.Join(defaultWindowsMount, "Users/TestUser/certificate"),
 				"/idempotent/path/to/linux/certificate": "/idempotent/path/to/linux/certificate",
 				"":                                      cwd,
-			}[argv[1]]
+			}[pathArg]
 
 			if !ok {
 				fmt.Fprintf(os.Stderr, "Mock not implemented for args %q\n", argv)
@@ -683,10 +684,13 @@ func mockMain(t *testing.T, f func(argv []string) exitCode) {
 func MockFilesystemRoot(t *testing.T) (rootDir string) {
 	t.Helper()
 
-	rootDir = t.TempDir()
+	var err error
+	rootDir, err = os.MkdirTemp("", "up4w-")
+	require.NoError(t, err, "could not create mock filesystem root")
+	t.Cleanup(func() { _ = os.RemoveAll(rootDir) })
 
 	// Mock /etc/
-	err := os.MkdirAll(filepath.Join(rootDir, "etc"), 0750)
+	err = os.MkdirAll(filepath.Join(rootDir, "etc"), 0750)
 	require.NoError(t, err, "Setup: could not create mock /etc/")
 
 	err = os.WriteFile(filepath.Join(rootDir, "etc/os-release"), defaultOsReleaseContents, 0600)
