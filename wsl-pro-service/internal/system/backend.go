@@ -50,10 +50,10 @@ func (b realBackend) LandscapeConfigExecutable(ctx context.Context, args ...stri
 func (b realBackend) WslpathExecutable(ctx context.Context, args ...string) *exec.Cmd {
 	lastIdx := len(args) - 1
 	sanitizedArgs := append(args[:lastIdx], "--", strings.TrimSpace(args[lastIdx]))
-	//#nosec G204,G702 // We control the input variables, there is litle risk of command injection
-	//provided the caller puts any untrusted input as the last argument, thanks to the
-	//sanitization done above, enforcing the last argument to be treated as a path string, no
-	//matter which shape it has.
+	//#nosec G204,G702 // We control the input variables, there is little risk of command injection
+	// provided the caller puts any untrusted input as the last argument, thanks to the
+	// sanitization done above, enforcing the last argument to be treated as a path string, no
+	// matter which shape it has.
 	return exec.CommandContext(ctx, "/usr/bin/wslpath", sanitizedArgs...)
 }
 
