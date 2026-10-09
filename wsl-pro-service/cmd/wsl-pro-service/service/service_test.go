@@ -206,13 +206,16 @@ func TestAppCanQuitWithoutExecute(t *testing.T) {
 }
 
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
-	// Trigger the error while resolving the shared Windows public directory.
+	// Trigger the error with a broken wslinfo binary
 	t.Parallel()
 
 	sys, mock := testutils.MockSystem(t)
-	mock.SetControlArg(testutils.WslpathErr)
+	mock.SetControlArg(testutils.WslInfoErr)
 
 	a := service.New(service.WithSystem(sys))
+
+	agent := testutils.NewMockWindowsAgent(t, context.Background(), mock.DefaultPublicDir())
+	defer agent.Stop()
 
 	a.SetArgs()
 

@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
@@ -31,7 +32,6 @@ type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) GRP
 type Daemon struct {
 	listeningPortFilePath string
 	uiSocketPath          string
-	wslSocketPath         string
 
 	// serving signals that Serve has been called once. This channel is closed when Serve is called.
 	serving chan struct{}
@@ -61,7 +61,6 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDi
 	return &Daemon{
 		listeningPortFilePath: listeningPortFilePath,
 		uiSocketPath:          filepath.Join(privateDir, common.UISocketFileName),
-		wslSocketPath:         filepath.Join(addrDir, common.AgentSocketFileName),
 		registerer:            registerGRPCServices,
 		quit:                  make(chan quitRequest, 1),
 		serving:               make(chan struct{}),
@@ -137,9 +136,6 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 		}
 		if err := os.Remove(d.uiSocketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 			log.Warningf(ctx, "Daemon: could not remove UI socket: %v", err)
-		}
-		if err := os.Remove(d.wslSocketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			log.Warningf(ctx, "Daemon: could not remove WSL socket: %v", err)
 		}
 		d.stopped <- struct{}{}
 	}()
@@ -255,51 +251,69 @@ const (
 // serve implements the actual serving of the daemon, creating a new gRPC server and listening
 // on a new goroutine that reports its running status via the returned error channel.
 // Call the returned stopCallback to stop the server either gracefully or forcefully.
-func (d *Daemon) serve(ctx context.Context, _ options) (<-chan error, stopFunc) {
+func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFunc) {
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
-	var wslLis, uiLis net.Listener
+	var tcpLis, uiLis net.Listener
+	wslNetAvailable := true
+
+	// Set up the TCP listener used by WSL instances.
 	err := func() (err error) {
 		defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
-		var cfg net.ListenConfig
-		// The WSL and UI services use separate Unix sockets. The WSL socket is
-		// public so that instances can reach it through the mounted Windows
-		// user-profile directory; the UI socket remains private.
-		for _, socket := range []struct {
-			path string
-			name string
-			out  *net.Listener
-		}{
-			{d.wslSocketPath, "WSL", &wslLis},
-			{d.uiSocketPath, "UI", &uiLis},
-		} {
-			if removeErr := os.Remove(socket.path); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
-				return fmt.Errorf("can't remove stale %s socket: %v", socket.name, removeErr)
+		wslIP, err := getWslIP(ctx, opts)
+		if err != nil {
+			wslNetAvailable = false
+			wslIP = net.IPv4(127, 0, 0, 1)
+
+			log.Warningf(ctx, "Daemon: could not get the WSL adapter IP: %v. Starting network monitoring", err)
+			n, err := subscribe(ctx, func(added []string) bool {
+				for _, adapter := range added {
+					if strings.Contains(adapter, "(WSL") {
+						log.Warningf(ctx, "Daemon: new adapter detected: %s", adapter)
+						d.restart(ctx)
+						return false
+					}
+				}
+				return true
+			}, opts)
+			if err != nil {
+				return fmt.Errorf("Daemon: could not start network monitoring: %v", err)
 			}
-			lis, listenErr := cfg.Listen(ctx, "unix", socket.path)
-			if listenErr != nil {
-				return fmt.Errorf("can't listen on %s socket: %v", socket.name, listenErr)
-			}
-			*socket.out = lis
+			d.netSubs = n
 		}
 
-		// Keep the address file as the agent readiness signal. Its contents are
-		// now the WSL socket path rather than a TCP host and port.
-		if err := os.WriteFile(d.listeningPortFilePath, []byte(d.wslSocketPath), 0600); err != nil {
+		var cfg net.ListenConfig
+		tcpLis, err = cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
+		if err != nil {
+			return fmt.Errorf("can't listen on TCP: %v", err)
+		}
+
+		// The UI endpoint is deliberately independent of the WSL TCP endpoint.
+		// Remove a stale socket left behind by an unclean agent shutdown.
+		if removeErr := os.Remove(d.uiSocketPath); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+			return fmt.Errorf("can't remove stale UI socket: %v", removeErr)
+		}
+		uiLis, err = cfg.Listen(ctx, "unix", d.uiSocketPath)
+		if err != nil {
+			return fmt.Errorf("can't listen on UI socket: %v", err)
+		}
+
+		addr := tcpLis.Addr().String()
+		if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
 			return err
 		}
 
 		log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
-		log.Infof(ctx, "Daemon: serving WSL gRPC requests on %s", d.wslSocketPath)
+		log.Infof(ctx, "Daemon: serving WSL gRPC requests on %s", addr)
 		log.Infof(ctx, "Daemon: serving UI gRPC requests on %s", d.uiSocketPath)
 		return nil
 	}()
 
 	errCh := make(chan error, 2)
 	if err != nil {
-		if wslLis != nil {
-			_ = wslLis.Close()
+		if tcpLis != nil {
+			_ = tcpLis.Close()
 		}
 		if uiLis != nil {
 			_ = uiLis.Close()
@@ -309,12 +323,23 @@ func (d *Daemon) serve(ctx context.Context, _ options) (<-chan error, stopFunc) 
 		return errCh, func(context.Context, bool) {}
 	}
 
-	servers := d.registerer(ctx, true)
+	servers := d.registerer(ctx, wslNetAvailable)
 	listeners := []struct {
 		server   *grpc.Server
 		listener net.Listener
 		name     string
-	}{{servers.UI, uiLis, "UI"}, {servers.WSL, wslLis, "WSL"}}
+	}{{servers.UI, uiLis, "UI"}}
+	if servers.WSL != nil {
+		listeners = append(listeners, struct {
+			server   *grpc.Server
+			listener net.Listener
+			name     string
+		}{servers.WSL, tcpLis, "WSL"})
+	} else {
+		// There is no WSL service when the WSL network is unavailable. The
+		// address file is still written as the startup readiness signal.
+		_ = tcpLis.Close()
+	}
 
 	var stopAll func(bool)
 	var stopOnce sync.Once
@@ -341,6 +366,7 @@ func (d *Daemon) serve(ctx context.Context, _ options) (<-chan error, stopFunc) 
 				serveErr = fmt.Errorf("gRPC %s serve error: %v", entry.name, serveErr)
 			}
 			errCh <- serveErr
+			// If one listener exits unexpectedly, do not leave the other one running.
 			if serveErr != nil {
 				stopAll(true)
 			}

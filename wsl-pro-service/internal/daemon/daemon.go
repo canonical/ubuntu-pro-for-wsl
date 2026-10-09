@@ -10,7 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -280,26 +280,13 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 		distroName = ""
 	}
 
-	log.Infof(ctx, "Daemon: starting connection to Windows Agent via Unix socket %s", addr)
+	log.Infof(ctx, "Daemon: starting connection to Windows Agent via %s", addr)
 
 	tlsConfig, err := newTLSConfigFromDir(d.certsPath)
 	if err != nil {
 		return nil, err
 	}
-	// WSL/Windows AF_UNIX interop requires the WSL client to bind its own
-	// socket before connecting to the Windows socket. Keep the client socket
-	// beside the agent socket so both paths are on the shared DrvFS mount.
-	clientSocketPath := filepath.Join(filepath.Dir(addr), fmt.Sprintf(".wsl-pro-service-%s-%d.sock", socketName(distroName), os.Getpid()))
-	_ = os.Remove(clientSocketPath)
-	conn, err := grpc.NewClient("passthrough:///unix",
-		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
-			dialer := &net.Dialer{LocalAddr: &net.UnixAddr{Name: clientSocketPath, Net: "unix"}}
-			connection, dialErr := dialer.DialContext(ctx, "unix", addr)
-			if dialErr != nil {
-				return nil, dialErr
-			}
-			return &cleanupUnixConn{Conn: connection, path: clientSocketPath}, nil
-		}),
+	conn, err := grpc.NewClient(addr,
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
 			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
 		)), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
@@ -308,38 +295,6 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	}
 
 	return streams.NewServer(ctx, d.system, conn), nil
-}
-
-func socketName(name string) string {
-	var b strings.Builder
-	for _, r := range name {
-		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '-' || r == '_' {
-			b.WriteRune(r)
-		} else {
-			b.WriteByte('_')
-		}
-	}
-	if b.Len() == 0 {
-		return "unknown"
-	}
-	return b.String()
-}
-
-type cleanupUnixConn struct {
-	net.Conn
-	path string
-}
-
-func (c *cleanupUnixConn) Close() error {
-	err := c.Conn.Close()
-	removeErr := os.Remove(c.path)
-	if err != nil {
-		return err
-	}
-	if !errors.Is(removeErr, os.ErrNotExist) {
-		return removeErr
-	}
-	return nil
 }
 
 // newTLSConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.
@@ -369,15 +324,53 @@ func newTLSConfigFromDir(certsPath string) (conf *tls.Config, err error) {
 	}, nil
 }
 
-// address returns the WSL-facing Unix socket path under the shared public directory.
-// The address file is retained as a readiness signal; its contents are not used
-// to construct a network address anymore.
-func (d *Daemon) address(_ context.Context, _ *system.System) (string, error) {
-	if _, err := os.ReadFile(d.addressPath); err != nil {
-		return "", fmt.Errorf("could not read agent address file %q: %v", d.addressPath, err)
+// address fetches the address of the control stream from the Windows filesystem.
+func (d *Daemon) address(ctx context.Context, system *system.System) (string, error) {
+	// Parse the port from the file written by the windows agent.
+	addr, err := os.ReadFile(d.addressPath)
+	if err != nil {
+		return "", fmt.Errorf("could not read agent port file %q: %v", d.addressPath, err)
 	}
 
-	return filepath.Join(filepath.Dir(d.addressPath), common.AgentSocketFileName), nil
+	port, err := splitPort(string(addr))
+	if err != nil {
+		return "", err
+	}
+
+	windowsLocalhost, err := system.WindowsHostAddress(ctx)
+	if err != nil {
+		return "", streams.NewSystemError("%w", err)
+	}
+
+	// Join the address and port, and validate it.
+	address := net.JoinHostPort(windowsLocalhost.String(), fmt.Sprint(port))
+
+	return address, nil
+}
+
+// splitPort splits the port from the address, and validates that the port is a strictly positive integer.
+func splitPort(addr string) (p int, err error) {
+	defer decorate.OnError(&err, "could not parse port from %q", addr)
+
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 0, fmt.Errorf("could not split address: %v", err)
+	}
+
+	p, err = strconv.Atoi(port)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse port as an integer: %v", err)
+	}
+
+	if p == 0 {
+		return 0, errors.New("port cannot be zero")
+	}
+
+	if p < 0 {
+		return 0, errors.New("port cannot be negative")
+	}
+
+	return p, nil
 }
 
 // Type retryConfig holds the exponential back-off state so that logic can be tested independently of the

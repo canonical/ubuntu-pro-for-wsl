@@ -35,8 +35,8 @@ type MockWindowsAgent struct {
 	Stopped chan struct{}
 }
 
-// NewMockWindowsAgent creates a new windows-agent mock. It starts a gRPC service
-// on the public Unix socket and writes the readiness file.
+// NewMockWindowsAgent creates a new windows-agent mock. It starts a GRPC service that will perform
+// the port dance and stay connected. It'll write the port file as well.
 // For simplicity's sake, it only suports one WSL distro at a time.
 //
 // You can stop it manually, otherwise it'll stop during cleanup.
@@ -46,10 +46,8 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	t.Helper()
 
 	var cfg net.ListenConfig
-	socketPath := filepath.Join(publicDir, common.AgentSocketFileName)
-	_ = os.Remove(socketPath)
-	lis, err := cfg.Listen(ctx, "unix", socketPath)
-	require.NoError(t, err, "Setup: could not listen to agent socket")
+	lis, err := cfg.Listen(ctx, "tcp4", "localhost:0")
+	require.NoError(t, err, "Setup: could not listen to agent address")
 
 	clientCreds, serverCreds := agentTLSCreds(t, filepath.Join(publicDir, common.CertificatesDir))
 
@@ -65,7 +63,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	t.Cleanup(m.Stop)
 
 	addrFile := filepath.Join(publicDir, common.ListeningPortFileName)
-	err = os.WriteFile(addrFile, []byte(socketPath), 0600)
+	err = os.WriteFile(addrFile, []byte(lis.Addr().String()), 0600)
 	if err != nil {
 		close(m.Started)
 		close(m.Stopped)
@@ -73,7 +71,7 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 	}
 
 	go func() {
-		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on Unix socket %s", socketPath)
+		log.Infof(ctx, "MockWindowsAgent: Windows-agent mock serving on %s", lis.Addr().String())
 
 		close(m.Started)
 		defer close(m.Stopped)
@@ -84,9 +82,6 @@ func NewMockWindowsAgent(t *testing.T, ctx context.Context, publicDir string) *M
 
 		if err := os.RemoveAll(addrFile); err != nil {
 			log.Infof(ctx, "MockWindowsAgent: Remove address file returned an error: %v", err)
-		}
-		if err := os.RemoveAll(socketPath); err != nil {
-			log.Infof(ctx, "MockWindowsAgent: Remove socket returned an error: %v", err)
 		}
 	}()
 

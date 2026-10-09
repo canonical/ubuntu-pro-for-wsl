@@ -64,14 +64,19 @@ func TestServe(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		precancelContext   bool
-		dontServe          bool
-		missingCertsDir    bool
-		missingCaCert      bool
-		breakLandscapeConf bool
+		precancelContext        bool
+		breakWindowsHostAddress bool
+		dontServe               bool
+		missingCertsDir         bool
+		missingCaCert           bool
+		breakLandscapeConf      bool
 
-		// Break the shared public directory/address readiness signal.
-		breakAddressFile bool
+		// Break the port file in various ways
+		breakPortFile         bool
+		portFileEmpty         bool
+		portFilePortNotNumber bool
+		portFileZeroPort      bool
+		portFileNegativePort  bool
 
 		// Return values for the mock SystemdSdNotifier
 		notifierReturn bool
@@ -90,14 +95,19 @@ func TestServe(t *testing.T) {
 		// keeps retrying the connection
 		//
 		// We instead check that a connection was/wasn't made with the agent, and that systemd was notified
-		"No connection because the address file does not exist":      {breakAddressFile: true, wantConnected: false},
+		"No connection because the port file does not exist":         {breakPortFile: true, wantConnected: false},
+		"No connection because the port file is empty":               {portFileEmpty: true, wantConnected: false},
+		"No connection because the port file has a bad port":         {portFilePortNotNumber: true, wantConnected: false},
+		"No connection because the port file has port 0":             {portFileZeroPort: true, wantConnected: false},
+		"No connection because the port file has a negative port":    {portFileNegativePort: true, wantConnected: false},
 		"No connection because there is no server":                   {dontServe: true},
 		"No connection because there are no certificates":            {missingCertsDir: true, wantConnected: false},
 		"No connection because cannot read root CA certificate file": {missingCaCert: true, wantConnected: false},
 
 		// Errors
-		"Error because the context is pre-cancelled":  {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
-		"Error because the notifier returns an error": {notifierErr: true, wantErr: true},
+		"Error because the context is pre-cancelled":        {precancelContext: true, wantSystemdNotReady: true, wantErr: true},
+		"Error because the notifier returns an error":       {notifierErr: true, wantErr: true},
+		"Error because WindowsHostAddress returns an error": {breakWindowsHostAddress: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -121,7 +131,7 @@ func TestServe(t *testing.T) {
 				require.NoError(t, os.RemoveAll(filepath.Join(publicDir, common.CertificatesDir, common.RootCACertFileName)), "Setup: could not remove the root CA certificate file")
 			}
 
-			if tc.breakAddressFile {
+			if tc.breakPortFile {
 				require.NoError(t, os.RemoveAll(publicDir), "Setup: could not remove port file")
 			}
 
@@ -130,10 +140,27 @@ func TestServe(t *testing.T) {
 				require.NoError(t, os.MkdirAll(system.Path("/etc/landscape/client.conf"), 0750), "Setup: couldn't create a directory to break Landscape client conf for tests")
 			}
 
-			addressFile := filepath.Join(publicDir, common.ListeningPortFileName)
+			if tc.breakWindowsHostAddress {
+				mock.SetControlArg(testutils.WslInfoErr)
+			}
+
+			portFile := filepath.Join(publicDir, common.ListeningPortFileName)
+			if tc.portFileEmpty {
+				require.NoError(t, os.WriteFile(portFile, []byte{}, 0600), "Setup: could not overwrite port file")
+			}
+			if tc.portFilePortNotNumber {
+				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:portyMcPortface"), 0600), "Setup: could not overwrite port file")
+			}
+			if tc.portFileZeroPort {
+				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:0"), 0600), "Setup: could not overwrite port file")
+			}
+			if tc.portFileNegativePort {
+				require.NoError(t, os.WriteFile(portFile, []byte("127.0.0.1:-5"), 0600), "Setup: could not overwrite port file")
+			}
 			if tc.dontServe {
+				addr := agent.Listener.Addr().String()
 				agent.Stop()
-				require.NoError(t, os.WriteFile(addressFile, []byte("ready"), 0600), "Setup: could not overwrite port file")
+				require.NoError(t, os.WriteFile(portFile, []byte(addr), 0600), "Setup: could not overwrite port file")
 			}
 
 			systemd := &SystemdSdNotifierMock{

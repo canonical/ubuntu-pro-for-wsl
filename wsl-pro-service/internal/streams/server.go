@@ -128,7 +128,7 @@ func (s *Server) Serve(service CommandService) error {
 	// Notify Agent that we are ready
 	info, err := s.system.Info(s.ctx)
 	if err != nil {
-		return NewSystemError("could not serve: %w", err)
+		return NewSystemError("could not serve: %v", err)
 	}
 	log.Debugf(s.ctx, "Server: sending preface messages from instance %s", info.GetWslName())
 

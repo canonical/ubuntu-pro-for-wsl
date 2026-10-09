@@ -1,9 +1,3 @@
-wsl-pro-service (0.2.0ubuntu) UNRELEASED; urgency=medium
-
-  * Migrate to Unix Domain Sockets
-
- -- Carlos Nihelton <cnihelton@ubuntu.com>  Fri, 09 Oct 2026 16:46:25 -0300
-
 wsl-pro-service (0.1.19ubuntu) resolute; urgency=medium
 
   * Packaging fixes to prevent lintian errors, including compliance with DEP17

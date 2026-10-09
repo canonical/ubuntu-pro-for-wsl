@@ -51,11 +51,7 @@ Future<Either<AgentAddrFileError, (String, int)>> readAgentPortFromFile(
 
     final address = parseAddress(lines[0]);
     if (address == null) {
-      // New agents publish the WSL Unix socket path in this file. The monitor
-      // only uses the file as a readiness signal, so port zero is a sentinel.
-      if (lines[0].endsWith(kAgentSocketName)) {
-        return Right((lines[0], 0));
-      }
+      // error: format error
       return const Left(AgentAddrFileError.formatError);
     }
 

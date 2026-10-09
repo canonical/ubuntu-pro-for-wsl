@@ -285,9 +285,8 @@ func (s *System) findCmdExe() (cmdExe string, err error) {
 			continue // Not enough fields
 		}
 
-		// Windows drives use 9p on older WSL versions and virtiofs on
-		// newer WSL versions.
-		if fields[2] != "9p" && fields[2] != "virtiofs" {
+		// Filesystem type
+		if fields[2] != "9p" {
 			continue
 		}
 
