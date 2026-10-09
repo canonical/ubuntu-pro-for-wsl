@@ -1040,7 +1040,7 @@ func TestRealBackend(t *testing.T) {
 
 	wpath := b.WslpathExecutable(ctx, "arg1", "arg2")
 	assertBasePath(t, "wslpath", wpath.Path, "WslpathExecutable did not return the expected command")
-	assert.Equal(t, []string{"wslpath", "arg1", "arg2"}, wpath.Args, "WslpathExecutable did not return the expected arguments")
+	assert.Equal(t, []string{"/usr/bin/wslpath", "arg1", "--", "arg2"}, wpath.Args, "WslpathExecutable did not return the expected arguments")
 
 	winfo := b.WslinfoExecutable(ctx, "arg1", "arg2")
 	assertBasePath(t, "wslinfo", winfo.Path, "WslinfoExecutable did not return the expected command")
