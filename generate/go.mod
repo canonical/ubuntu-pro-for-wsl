@@ -36,7 +36,7 @@ require (
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19 // indirect
 	github.com/ubuntu/gowsl v0.0.0-20251112191800-0ef2623cc8fb // indirect
 	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
