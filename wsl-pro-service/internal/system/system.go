@@ -197,7 +197,7 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	}
 
 	// We intentionally discard the previous error on success (only set if the UserProfile was
-	// set but translating that path failed).)
+	// set but translating that path failed).
 	return wslPath, nil
 }
 
