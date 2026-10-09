@@ -119,6 +119,9 @@ func (a App) UsageError() bool {
 // Quit gracefully shutdown the service.
 func (a *App) Quit() {
 	a.WaitReady()
+	if a.daemon == nil {
+		return
+	}
 	a.daemon.Quit(context.Background(), false)
 }
 

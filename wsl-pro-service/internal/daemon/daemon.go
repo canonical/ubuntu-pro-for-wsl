@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -285,9 +286,19 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	if err != nil {
 		return nil, err
 	}
+	// WSL/Windows AF_UNIX interop requires the WSL client to bind its own
+	// socket before connecting to the Windows socket. Keep the client socket
+	// beside the agent socket so both paths are on the shared DrvFS mount.
+	clientSocketPath := filepath.Join(filepath.Dir(addr), fmt.Sprintf(".wsl-pro-service-%s-%d.sock", socketName(distroName), os.Getpid()))
+	_ = os.Remove(clientSocketPath)
 	conn, err := grpc.NewClient("passthrough:///unix",
 		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, "unix", addr)
+			dialer := &net.Dialer{LocalAddr: &net.UnixAddr{Name: clientSocketPath, Net: "unix"}}
+			connection, dialErr := dialer.DialContext(ctx, "unix", addr)
+			if dialErr != nil {
+				return nil, dialErr
+			}
+			return &cleanupUnixConn{Conn: connection, path: clientSocketPath}, nil
 		}),
 		grpc.WithStreamInterceptor(interceptorschain.StreamClient(
 			log.StreamClientInterceptor(logrus.StandardLogger(), log.WithClientID(distroName)),
@@ -297,6 +308,38 @@ func (d *Daemon) connect(ctx context.Context) (server *streams.Server, err error
 	}
 
 	return streams.NewServer(ctx, d.system, conn), nil
+}
+
+func socketName(name string) string {
+	var b strings.Builder
+	for _, r := range name {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '-' || r == '_' {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte('_')
+		}
+	}
+	if b.Len() == 0 {
+		return "unknown"
+	}
+	return b.String()
+}
+
+type cleanupUnixConn struct {
+	net.Conn
+	path string
+}
+
+func (c *cleanupUnixConn) Close() error {
+	err := c.Conn.Close()
+	removeErr := os.Remove(c.path)
+	if err != nil {
+		return err
+	}
+	if !errors.Is(removeErr, os.ErrNotExist) {
+		return removeErr
+	}
+	return nil
 }
 
 // newTLSConfigFromDir loads certificates from the provided certs path and returns a matching tls.Config.

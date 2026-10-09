@@ -225,6 +225,7 @@ func TestUserProfileDir(t *testing.T) {
 		"Success with cached cmd.exe path": {cachedCmdExe: true},
 
 		"Success with a single 9P filesystem mount":        {overrideProcMount: true},
+		"Success with a virtiofs filesystem mount":         {overrideProcMount: true},
 		"Success with multiple 9P filesystem mounts":       {overrideProcMount: true},
 		"Success with multiple types of filesystem mounts": {overrideProcMount: true},
 
