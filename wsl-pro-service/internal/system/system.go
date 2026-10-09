@@ -199,12 +199,12 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 // userProfileViaEnvVar obtains the Windows user profile directory from the
 // WSL2_USER_PROFILE environment variable, as set by recent WSL versions.
 func (s *System) userProfileViaEnvVar(ctx context.Context) (string, error) {
-	windir := os.Getenv("WSL2_USER_PROFILE")
-	if len(windir) == 0 {
+	winProfiledir := os.Getenv("WSL2_USER_PROFILE")
+	if len(winProfiledir) == 0 {
 		return "", errors.New("WSL2_USER_PROFILE environment variable is unset or blank")
 	}
 
-	return s.translateDirToLinux(ctx, windir)
+	return s.translateDirToLinux(ctx, winProfiledir)
 }
 
 // userProfileViaCmdExe obtains the Windows user profile directory by asking

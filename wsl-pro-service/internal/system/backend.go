@@ -41,11 +41,15 @@ func (b realBackend) LandscapeConfigExecutable(ctx context.Context, args ...stri
 }
 
 // WslpathExecutable returns the full command to run the wslpath executable with the provided arguments.
+// Callers should ensure that any untrusted input is passed as the last argument, as it will be sanitized to prevent command injection.
 func (b realBackend) WslpathExecutable(ctx context.Context, args ...string) *exec.Cmd {
-	//#nosec G204 // We control the input variables, there is no risk of command injection.
-	//#nosec G702 // False positive: the arguments are paths passed to wslpath for translation,
-	// not executed by a shell, and they come from the local system (env vars, cmd.exe output).
-	return exec.CommandContext(ctx, "wslpath", args...)
+	lastIdx := len(args) - 1
+	sanitizedArgs := append(args[:lastIdx], "--", strings.TrimSpace(args[lastIdx]))
+	//#nosec G204,G702 // We control the input variables, there is litle risk of command injection
+	//provided the caller puts any untrusted input as the last argument, thanks to the
+	//sanitization done above, enforcing the last argument to be treated as a path string, no
+	//matter which shape it has.
+	return exec.CommandContext(ctx, "/usr/bin/wslpath", sanitizedArgs...)
 }
 
 // WslinfoExecutable returns the full command to run the wslinfo executable with the provided arguments.
