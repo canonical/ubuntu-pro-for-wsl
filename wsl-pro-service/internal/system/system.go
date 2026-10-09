@@ -256,9 +256,9 @@ func (s *System) translateDirToLinux(ctx context.Context, winDir string) (wslPat
 	// wslpath can return invalid paths, so we make sure that it exists
 	if info, err := os.Stat(wslPath); err != nil {
 		// Stat errors contain the path and the error description
-		return wslPath, err
+		return "", err
 	} else if !info.IsDir() {
-		return wslPath, fmt.Errorf("%q is not a directory", wslPath)
+		return "", fmt.Errorf("%q is not a directory", wslPath)
 	}
 
 	return wslPath, nil
