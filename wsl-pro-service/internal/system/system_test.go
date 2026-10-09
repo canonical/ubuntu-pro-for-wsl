@@ -290,9 +290,9 @@ func TestUserProfileDir(t *testing.T) {
 
 // TestUserProfileDirViaEnvVar tests the WSL2_USER_PROFILE environment variable
 // code path of UserProfileDir.
-//
-// It cannot run in parallel because t.Setenv cannot be used in parallel tests.
 func TestUserProfileDirViaEnvVar(t *testing.T) {
+	t.Parallel()
+
 	// The Windows user profile path, as expanded by the mocked cmd.exe.
 	const userProfileWinPath = `D:\Users\TestUser\`
 
@@ -323,6 +323,8 @@ func TestUserProfileDirViaEnvVar(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			system, mock := testutils.MockSystem(t)
 
 			if tc.cmdExeErr {
@@ -340,7 +342,8 @@ func TestUserProfileDirViaEnvVar(t *testing.T) {
 			}
 
 			if tc.envVar != "" {
-				t.Setenv("WSL2_USER_PROFILE", tc.envVar)
+				mock.UserProfileDirEnv = tc.envVar
+				mock.UserProfileDirEnvEnabled = true
 			}
 
 			got, err := system.UserProfileDir(context.Background())
