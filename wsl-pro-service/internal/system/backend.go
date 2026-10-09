@@ -29,6 +29,11 @@ func (b realBackend) GetenvWslDistroName() string {
 	return os.Getenv("WSL2_DISTRO_NAME")
 }
 
+// GetenvUserProfileDir obtains the value of environment variable WSL2_USER_PROFILE.
+func (b realBackend) GetenvUserProfileDir() string {
+	return os.Getenv("WSL2_USER_PROFILE")
+}
+
 // ProExecutable returns the full command to run the pro executable with the provided arguments.
 func (b realBackend) ProExecutable(ctx context.Context, args ...string) *exec.Cmd {
 	//#nosec G204 // We control the input variables, there is no risk of command injection.
