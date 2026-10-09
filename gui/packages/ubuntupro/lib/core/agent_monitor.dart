@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:ubuntu_logger/ubuntu_logger.dart';
 
+import '../constants.dart';
 import 'agent_api_client.dart';
 import 'agent_api_paths.dart';
 
@@ -42,9 +43,9 @@ enum AgentState {
   }
 }
 
-/// A Function that knows how to create an AgentApiClient from a host and a port.
+/// A Function that knows how to create an AgentApiClient from a Unix socket path.
 typedef ApiClientFactory = AgentApiClient Function(
-  String host,
+  String socketPath,
   int port,
   Directory certsDir,
 );
@@ -61,13 +62,15 @@ class AgentStartupMonitor {
     required this.agentLauncher,
     required this.clientFactory,
     AgentApiCallback? onClient,
-  }) : _addrFilePath = absPathUnderAgentPublicDir(addrFileName) {
+  })  : _addrFilePath = absPathUnderAgentPublicDir(addrFileName),
+        _socketPath = absPathUnderAgentPrivateDir(kAgentSocketName) {
     if (onClient != null) {
       addNewClientListener(onClient);
     }
   }
 
   final String? _addrFilePath;
+  final String? _socketPath;
 
   /// To launch the agent if it's down.
   final AgentLauncher agentLauncher;
@@ -169,16 +172,21 @@ class AgentStartupMonitor {
     }
   }
 
-  Future<AgentState> _onAddress((String, int) address) async {
-    final (host, port) = address;
+  Future<AgentState> _onAddress((String, int) _) async {
+    // The address file remains the agent readiness signal, but UI RPCs use the
+    // private Unix domain socket instead of the TCP address stored in it.
+    if (_socketPath == null) {
+      return AgentState.unknownEnv;
+    }
+    _log.info('Connecting to the agent at $_socketPath');
     final dir = Directory(p.join(p.dirname(_addrFilePath!), 'certs'));
 
     if (_agentApiClient != null) {
-      await _agentApiClient!.connectTo(host, port, dir);
+      await _agentApiClient!.connectTo(_socketPath, 0, dir);
       return AgentState.ok;
     }
 
-    final client = clientFactory(host, port, dir);
+    final client = clientFactory(_socketPath, 0, dir);
     if (await client.ping()) {
       _agentApiClient = client;
       for (final cb in _onClient) {

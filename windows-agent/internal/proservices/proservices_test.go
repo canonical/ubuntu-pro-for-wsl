@@ -114,7 +114,7 @@ func checkFileExists(path string) func() bool {
 func TestRegisterGRPCServices(t *testing.T) {
 	t.Parallel()
 
-	defaultServices := []string{"agentapi.UI", "agentapi.WSLInstance"}
+	defaultServices := []string{"agentapi.UI"}
 
 	testCases := map[string]struct {
 		insecureClient bool
@@ -142,7 +142,8 @@ func TestRegisterGRPCServices(t *testing.T) {
 			require.NoError(t, err, "Setup: New should return no error")
 			defer s.Stop(ctx)
 
-			server := s.RegisterGRPCServices(context.Background(), !tc.withoutWSLNet)
+			servers := s.RegisterGRPCServices(context.Background(), !tc.withoutWSLNet)
+			server := servers.UI
 			info := server.GetServiceInfo()
 
 			for _, service := range tc.wantServices {
@@ -248,7 +249,7 @@ func TestOnNewInstanceCreatesTask(t *testing.T) {
 				require.NoError(t, err, "Setup: could not write UbuntuProToken to the registry mock")
 			}
 
-			server := s.RegisterGRPCServices(ctx, true)
+			server := s.RegisterGRPCServices(ctx, true).WSL
 
 			var cfg net.ListenConfig
 			lis, err := cfg.Listen(ctx, "tcp", "localhost:0")

@@ -1,4 +1,4 @@
-// Package daemon is handling the TCP connection and connecting a GRPC service to it.
+// Package daemon handles the TCP and Unix socket connections for the gRPC services.
 package daemon
 
 import (
@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -18,12 +19,19 @@ import (
 	"google.golang.org/grpc"
 )
 
-// GRPCServiceRegisterer is a function that the daemon will call everytime we want to build a new GRPC object.
-type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) *grpc.Server
+// GRPCServers are the independent listeners served by the daemon.
+type GRPCServers = struct {
+	UI  *grpc.Server
+	WSL *grpc.Server
+}
+
+// GRPCServiceRegisterer is a function that the daemon will call every time we want to build new GRPC objects.
+type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) GRPCServers
 
 // Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
 	listeningPortFilePath string
+	uiSocketPath          string
 
 	// serving signals that Serve has been called once. This channel is closed when Serve is called.
 	serving chan struct{}
@@ -41,13 +49,18 @@ type Daemon struct {
 
 // New returns an new, initialized daemon server that is ready to register GRPC services.
 // It hooks up to windows service management handler.
-func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDir string) *Daemon {
+func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, addrDir string, privateDirs ...string) *Daemon {
 	log.Debug(ctx, "Building new daemon")
 
+	privateDir := addrDir
+	if len(privateDirs) > 0 && privateDirs[0] != "" {
+		privateDir = privateDirs[0]
+	}
 	listeningPortFilePath := filepath.Join(addrDir, common.ListeningPortFileName)
 
 	return &Daemon{
 		listeningPortFilePath: listeningPortFilePath,
+		uiSocketPath:          filepath.Join(privateDir, common.UISocketFileName),
 		registerer:            registerGRPCServices,
 		quit:                  make(chan quitRequest, 1),
 		serving:               make(chan struct{}),
@@ -76,7 +89,7 @@ func (d *Daemon) WaitReady() {
 // Option represents an optional function to override getWslIP default values.
 type Option func(*options)
 
-// Serve listens on a tcp socket and starts serving GRPC requests on it.
+// Serve listens on TCP and Unix sockets and starts serving gRPC requests on them.
 // Before serving, it writes a file on disk on which port it's listening on for client
 // to be able to reach our server.
 // This file is removed once the server stops listening.
@@ -118,8 +131,11 @@ var errRestartDaemon = errors.New("Daemon: Restart requested")
 func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
-		if err := os.Remove(d.listeningPortFilePath); err != nil {
+		if err := os.Remove(d.listeningPortFilePath); err != nil && !errors.Is(err, os.ErrNotExist) {
 			log.Warningf(ctx, "Daemon: could not remove address file: %v", err)
+		}
+		if err := os.Remove(d.uiSocketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			log.Warningf(ctx, "Daemon: could not remove UI socket: %v", err)
 		}
 		d.stopped <- struct{}{}
 	}()
@@ -238,14 +254,13 @@ const (
 func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFunc) {
 	log.Debug(ctx, "Daemon: starting to serve requests")
 
-	var lis net.Listener
+	var tcpLis, uiLis net.Listener
 	wslNetAvailable := true
 
-	// Setting up the listener.
+	// Set up the TCP listener used by WSL instances.
 	err := func() (err error) {
 		defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
 
-		wslNetAvailable = true
 		wslIP, err := getWslIP(ctx, opts)
 		if err != nil {
 			wslNetAvailable = false
@@ -260,11 +275,8 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 						return false
 					}
 				}
-
-				// Not found yet, let's keep monitoring.
 				return true
 			}, opts)
-
 			if err != nil {
 				return fmt.Errorf("Daemon: could not start network monitoring: %v", err)
 			}
@@ -272,65 +284,109 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 		}
 
 		var cfg net.ListenConfig
-		lis, err = cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
+		tcpLis, err = cfg.Listen(ctx, "tcp", fmt.Sprintf("%s:0", wslIP))
 		if err != nil {
-			return fmt.Errorf("can't listen: %v", err)
+			return fmt.Errorf("can't listen on TCP: %v", err)
 		}
 
-		addr := lis.Addr().String()
+		// The UI endpoint is deliberately independent of the WSL TCP endpoint.
+		// Remove a stale socket left behind by an unclean agent shutdown.
+		if removeErr := os.Remove(d.uiSocketPath); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+			return fmt.Errorf("can't remove stale UI socket: %v", removeErr)
+		}
+		uiLis, err = cfg.Listen(ctx, "unix", d.uiSocketPath)
+		if err != nil {
+			return fmt.Errorf("can't listen on UI socket: %v", err)
+		}
 
-		// Write a file on disk to signal selected ports to clients.
-		// We write it here to signal error when calling service.Start().
+		addr := tcpLis.Addr().String()
 		if err := os.WriteFile(d.listeningPortFilePath, []byte(addr), 0600); err != nil {
 			return err
 		}
 
 		log.Debugf(ctx, "Daemon: address file written to %s", d.listeningPortFilePath)
-		log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
+		log.Infof(ctx, "Daemon: serving WSL gRPC requests on %s", addr)
+		log.Infof(ctx, "Daemon: serving UI gRPC requests on %s", d.uiSocketPath)
 		return nil
 	}()
 
-	// We may need to write to the channel before readers know about it.
-	errCh := make(chan error, 1)
+	errCh := make(chan error, 2)
 	if err != nil {
+		if tcpLis != nil {
+			_ = tcpLis.Close()
+		}
+		if uiLis != nil {
+			_ = uiLis.Close()
+		}
 		errCh <- err
-		// Since the channel is buffered, readers will find the written error.
 		close(errCh)
-		// There is no gRPC Server to stop, thus return a no-op stopFunc.
-		return errCh, func(ctx context.Context, force bool) {}
+		return errCh, func(context.Context, bool) {}
 	}
 
-	grpcServer := d.registerer(ctx, wslNetAvailable)
+	servers := d.registerer(ctx, wslNetAvailable)
+	listeners := []struct {
+		server   *grpc.Server
+		listener net.Listener
+		name     string
+	}{{servers.UI, uiLis, "UI"}}
+	if servers.WSL != nil {
+		listeners = append(listeners, struct {
+			server   *grpc.Server
+			listener net.Listener
+			name     string
+		}{servers.WSL, tcpLis, "WSL"})
+	} else {
+		// There is no WSL service when the WSL network is unavailable. The
+		// address file is still written as the startup readiness signal.
+		_ = tcpLis.Close()
+	}
 
+	var stopAll func(bool)
+	var stopOnce sync.Once
+	stopAll = func(force bool) {
+		stopOnce.Do(func() {
+			for _, entry := range listeners {
+				if force {
+					entry.server.Stop()
+				} else {
+					entry.server.GracefulStop()
+				}
+			}
+		})
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(listeners))
+	for _, entry := range listeners {
+		entry := entry
+		go func() {
+			defer wg.Done()
+			serveErr := entry.server.Serve(entry.listener)
+			if serveErr != nil {
+				serveErr = fmt.Errorf("gRPC %s serve error: %v", entry.name, serveErr)
+			}
+			errCh <- serveErr
+			// If one listener exits unexpectedly, do not leave the other one running.
+			if serveErr != nil {
+				stopAll(true)
+			}
+		}()
+	}
 	go func() {
-		// If we get here, we're the only writer to this channel, thus we are responsible for closing it.
-		defer close(errCh)
-		err := grpcServer.Serve(lis)
-		if err != nil {
-			err = fmt.Errorf("gRPC serve error: %v", err)
-		}
-
-		errCh <- err
+		wg.Wait()
+		close(errCh)
 	}()
 
-	return errCh, newStopFunc(grpcServer)
-}
-
-type stopFunc func(ctx context.Context, force bool)
-
-// newStopFunc returns a closure capable of stopping the gRPCServer gracefully or forcefully.
-// It must be called from the same goroutine that started the server.
-func newStopFunc(grpcServer *grpc.Server) stopFunc {
-	return func(ctx context.Context, force bool) {
+	return errCh, func(ctx context.Context, force bool) {
 		log.Info(ctx, "Stopping daemon requested.")
-
 		if force {
-			grpcServer.Stop()
+			stopAll(true)
 			return
 		}
-
 		log.Info(ctx, i18n.G("Daemon: waiting for active requests to close."))
-		grpcServer.GracefulStop()
+		stopAll(false)
 		log.Debug(ctx, i18n.G("Daemon: all connections have now ended."))
 	}
 }
+
+type stopFunc func(ctx context.Context, force bool)

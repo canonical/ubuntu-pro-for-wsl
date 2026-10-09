@@ -16,6 +16,9 @@ const (
 	// ListeningPortFileName corresponds to the base name of the file hosting the addressing of our GRPC server.
 	ListeningPortFileName = ".address"
 
+	// UISocketFileName is the Unix domain socket used by the Windows GUI service.
+	UISocketFileName = "windows-agent.sock"
+
 	// MsStoreProductID is the ID of the product in the Microsoft Store.
 	MsStoreProductID = "9PBDP6SFLM8G"
 

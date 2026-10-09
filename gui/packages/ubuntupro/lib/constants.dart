@@ -1,6 +1,12 @@
 /// The name of the agent's public directory.
 const kAgentPublicDir = '.ubuntupro';
 
+/// The name of the agent's private data directory under LOCALAPPDATA.
+const kAgentPrivateDir = 'Ubuntu Pro';
+
+/// The Unix domain socket used by the GUI service.
+const kAgentSocketName = 'windows-agent.sock';
+
 /// The name of the file where the Agent's drop its service connection information.
 const kAddrFileName = '.address';
 

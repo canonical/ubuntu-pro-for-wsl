@@ -2,8 +2,10 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -13,6 +15,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
+
+var socketDirCounterInternal atomic.Uint64
+
+func shortSocketDir(t *testing.T) string {
+	t.Helper()
+	dir := filepath.Join(os.TempDir(), fmt.Sprintf("up4w-uds-i-%d-%d", os.Getpid(), socketDirCounterInternal.Add(1)))
+	require.NoError(t, os.MkdirAll(dir, 0700))
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+	return dir
+}
 
 func TestRestart(t *testing.T) {
 	t.Parallel()
@@ -39,13 +51,13 @@ func TestRestart(t *testing.T) {
 			defer cancel()
 			addrDir := t.TempDir()
 
-			registerer := func(context.Context, bool) *grpc.Server {
+			registerer := func(context.Context, bool) GRPCServers {
 				server := grpc.NewServer()
 				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-				return server
+				return GRPCServers{UI: grpc.NewServer(), WSL: server}
 			}
 
-			d := New(ctx, registerer, addrDir)
+			d := New(ctx, registerer, addrDir, shortSocketDir(t))
 
 			serveErr := make(chan error)
 

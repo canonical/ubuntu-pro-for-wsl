@@ -126,7 +126,7 @@ func New(o ...option) *App {
 	return &a
 }
 
-// serve creates new GRPC services and listen on a TCP socket. This call is blocking until we quit it.
+// serve creates new gRPC services and listens on TCP and a Unix socket. This call is blocking until we quit it.
 func (a *App) serve(ctx context.Context, opt options) error {
 	publicDir, err := a.publicDir(opt)
 	if err != nil {
@@ -155,7 +155,7 @@ func (a *App) serve(ctx context.Context, opt options) error {
 	}
 	a.proServices = &proservices
 
-	a.daemon = daemon.New(ctx, proservices.RegisterGRPCServices, publicDir)
+	a.daemon = daemon.New(ctx, proservices.RegisterGRPCServices, publicDir, privateDir)
 
 	close(a.ready)
 

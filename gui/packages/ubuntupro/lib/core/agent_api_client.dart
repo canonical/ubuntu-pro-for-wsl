@@ -17,13 +17,7 @@ class AgentApiClient {
     int port,
     Directory certsDir, [
     this.stubFactory = UIClient.new,
-  ]) : _channel = ClientChannel(
-          host,
-          port: port,
-          options: ChannelOptions(
-            credentials: credentialsfromDirectory(certsDir),
-          ),
-        ) {
+  ]) : _channel = _newChannel(host, port, certsDir) {
     _client = stubFactory.call(_channel);
   }
 
@@ -39,13 +33,20 @@ class AgentApiClient {
   /// Changes the endpoint this API client is connected to.
   Future<bool> connectTo(String host, int port, Directory certsDir) {
     _channel.shutdown();
-    _channel = ClientChannel(
-      host,
-      port: port,
-      options: ChannelOptions(credentials: credentialsfromDirectory(certsDir)),
-    );
+    _channel = _newChannel(host, port, certsDir);
     _client = stubFactory.call(_channel);
     return ping();
+  }
+
+  static ClientChannel _newChannel(String host, int port, Directory certsDir) {
+    // The UI endpoint is always a Unix domain socket. The port is retained in
+    // the compatibility API because startup discovery still reads the legacy
+    // TCP address file, but it is never used for UI RPCs.
+    return ClientChannel(
+      InternetAddress(host, type: InternetAddressType.unix),
+      port: 0,
+      options: ChannelOptions(credentials: credentialsfromDirectory(certsDir)),
+    );
   }
 
   /// Dispatches a applyProToken request with the supplied Pro [token].
@@ -61,8 +62,8 @@ class AgentApiClient {
     return _client.applyLandscapeConfig(request);
   }
 
-  /// Attempts to ping the Agent Service at the supplied endpoint
-  /// ([host] and [port]). Returns true on success.
+  /// Attempts to ping the Agent Service at the supplied Unix socket path.
+  /// [port] is retained for compatibility and ignored.
   Future<bool> ping() => _client
       .ping(Empty())
       .then((_) => true)

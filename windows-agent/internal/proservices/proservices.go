@@ -198,24 +198,37 @@ func (m Manager) Stop(ctx context.Context) {
 	}
 }
 
-// RegisterGRPCServices returns a new grpc Server with the 2 api services attached to it.
-// It also gets the correct middlewares hooked in.
-// If WSL network is not available, the WSLInstance service is not registered.
-func (m Manager) RegisterGRPCServices(ctx context.Context, isWslNetAvailable bool) *grpc.Server {
+// GRPCServers contains the independent servers exposed to the UI and to WSL
+// instances. Keeping them separate ensures that the UI socket cannot be used to
+// access the WSL instance service.
+type GRPCServers = struct {
+	UI  *grpc.Server
+	WSL *grpc.Server
+}
+
+// RegisterGRPCServices returns separate gRPC servers for the UI and WSL clients.
+// Both servers use the same mTLS credentials and interceptors. If WSL network is
+// not available, the WSLInstance server is nil.
+func (m Manager) RegisterGRPCServices(ctx context.Context, isWslNetAvailable bool) GRPCServers {
 	log.Debug(ctx, "Registering GRPC services")
 
-	// This is never nil because grpc.NewServer() never returns nil.
-	grpcServer := grpc.NewServer(grpc.StreamInterceptor(
-		interceptorschain.StreamServer(
-			log.StreamServerInterceptor(logrus.StandardLogger()),
-			logconnections.StreamServerInterceptor(),
-		)), grpc.Creds(m.creds))
-	agent_api.RegisterUIServer(grpcServer, m.uiService)
-
-	if isWslNetAvailable {
-		agent_api.RegisterWSLInstanceServer(grpcServer, m.wslInstanceService)
+	newServer := func() *grpc.Server {
+		return grpc.NewServer(grpc.StreamInterceptor(
+			interceptorschain.StreamServer(
+				log.StreamServerInterceptor(logrus.StandardLogger()),
+				logconnections.StreamServerInterceptor(),
+			)), grpc.Creds(m.creds))
 	}
-	return grpcServer
+
+	uiServer := newServer()
+	agent_api.RegisterUIServer(uiServer, m.uiService)
+	servers := GRPCServers{UI: uiServer}
+	if isWslNetAvailable {
+		wslServer := newServer()
+		agent_api.RegisterWSLInstanceServer(wslServer, m.wslInstanceService)
+		servers.WSL = wslServer
+	}
+	return servers
 }
 
 // InitWSLAPI initializes the GoWSL underlying component to prevent access errors due bad interaction

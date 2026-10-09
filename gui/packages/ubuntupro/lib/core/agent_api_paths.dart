@@ -18,6 +18,17 @@ String? absPathUnderAgentPublicDir(String filename) {
   return null;
 }
 
+/// Provides the absolute path of [filename] under the agent's private data directory.
+String? absPathUnderAgentPrivateDir(String filename) {
+  final localAppData = Environment.instance['LOCALAPPDATA'] ??
+      Environment.instance['LocalAppData'];
+  if (localAppData != null) {
+    return p.join(localAppData, kAgentPrivateDir, filename);
+  }
+
+  return null;
+}
+
 enum AgentAddrFileError { nonexistent, isEmpty, formatError, accessDenied }
 
 /// Reads the agent host and port from the addr file located at the full path [filepath].

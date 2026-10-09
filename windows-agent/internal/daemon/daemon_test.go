@@ -3,10 +3,12 @@ package daemon_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -23,6 +25,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var socketDirCounter atomic.Uint64
+
+func shortSocketDir(t *testing.T) string {
+	t.Helper()
+	dir := filepath.Join(os.TempDir(), fmt.Sprintf("up4w-uds-%d-%d", os.Getpid(), socketDirCounter.Add(1)))
+	require.NoError(t, os.MkdirAll(dir, 0700))
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+	return dir
+}
+
 func init() {
 	// Ensures we use the networking-related mocks in all daemon tests unless otherwise locally specified.
 	daemontestutils.DefaultNetworkDetectionToMock()
@@ -31,9 +43,9 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	var regCount int
-	countRegistrations := func(context.Context, bool) *grpc.Server {
+	countRegistrations := func(context.Context, bool) daemon.GRPCServers {
 		regCount++
-		return nil
+		return daemon.GRPCServers{}
 	}
 
 	_ = daemon.New(context.Background(), countRegistrations, t.TempDir())
@@ -71,13 +83,13 @@ func TestStartQuit(t *testing.T) {
 				require.NoError(t, err, "Setup: failed to create pre-existing port file")
 			}
 
-			registerer := func(context.Context, bool) *grpc.Server {
+			registerer := func(context.Context, bool) daemon.GRPCServers {
 				server := grpc.NewServer()
 				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-				return server
+				return daemon.GRPCServers{UI: grpc.NewServer(), WSL: server}
 			}
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 
 			serveErr := make(chan error)
 			go func() {
@@ -179,13 +191,13 @@ func TestCanServeOnlyOnce(t *testing.T) {
 			defer cancel()
 			addrDir := t.TempDir()
 
-			registerer := func(context.Context, bool) *grpc.Server {
+			registerer := func(context.Context, bool) daemon.GRPCServers {
 				server := grpc.NewServer()
 				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-				return server
+				return daemon.GRPCServers{UI: grpc.NewServer(), WSL: server}
 			}
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 			firstServeErr := make(chan error)
 			go func() {
 				firstServeErr <- d.Serve(ctx)
@@ -223,8 +235,8 @@ func TestCanServeOnlyOnce(t *testing.T) {
 func TestServeWSLIP(t *testing.T) {
 	t.Parallel()
 
-	registerer := func(context.Context, bool) *grpc.Server {
-		return grpc.NewServer()
+	registerer := func(context.Context, bool) daemon.GRPCServers {
+		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
 	}
 
 	testcases := map[string]struct {
@@ -258,7 +270,7 @@ func TestServeWSLIP(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 			defer d.Quit(ctx, false)
 
 			if tc.netmode == "" {
@@ -319,13 +331,13 @@ func TestAddingWSLAdapterRestarts(t *testing.T) {
 	defer cancel()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context, bool) *grpc.Server {
+	registerer := func(context.Context, bool) daemon.GRPCServers {
 		server := grpc.NewServer()
 		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-		return server
+		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: server}
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 
 	systemNotification := make(chan error)
 	defer close(systemNotification)
@@ -370,11 +382,11 @@ func TestServeError(t *testing.T) {
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context, bool) *grpc.Server {
-		return grpc.NewServer()
+	registerer := func(context.Context, bool) daemon.GRPCServers {
+		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 	defer d.Quit(ctx, false)
 
 	// Remove parent directory to prevent listening port file to be written
@@ -390,11 +402,11 @@ func TestQuitBeforeServe(t *testing.T) {
 	ctx := context.Background()
 	addrDir := t.TempDir()
 
-	registerer := func(context.Context, bool) *grpc.Server {
-		return grpc.NewServer()
+	registerer := func(context.Context, bool) daemon.GRPCServers {
+		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 	d.Quit(ctx, false)
 
 	serverErr := make(chan error)
@@ -416,8 +428,8 @@ func TestQuitBeforeServe(t *testing.T) {
 func TestWaitReady(t *testing.T) {
 	t.Parallel()
 
-	registerer := func(context.Context, bool) *grpc.Server {
-		return grpc.NewServer()
+	registerer := func(context.Context, bool) daemon.GRPCServers {
+		return daemon.GRPCServers{UI: grpc.NewServer(), WSL: grpc.NewServer()}
 	}
 
 	testcases := map[string]struct {
@@ -438,7 +450,7 @@ func TestWaitReady(t *testing.T) {
 			defer cancel()
 			addrDir := t.TempDir()
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, addrDir, shortSocketDir(t))
 			serverErr := make(chan error)
 			if !tc.skipServe {
 				go func() {
