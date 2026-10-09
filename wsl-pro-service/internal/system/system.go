@@ -41,6 +41,7 @@ type Backend interface {
 	Path(p ...string) string
 	Hostname() (string, error)
 	GetenvWslDistroName() string
+	GetenvUserProfileDir() string
 	LookupGroup(string) (*user.Group, error)
 
 	ProExecutable(ctx context.Context, args ...string) *exec.Cmd
@@ -181,35 +182,28 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	defer decorate.OnError(&err, "could not locate Windows' user profile directory")
 
 	// Try the environment variable first, less likely to fail and it's faster.
-	path, envErr := s.userProfileViaEnvVar(ctx)
-	if envErr == nil {
-		return path, nil
+	winProfiledir := s.backend.GetenvUserProfileDir()
+	if len(winProfiledir) != 0 {
+		wslPath, err = s.translateDirToLinux(ctx, winProfiledir)
+		if err == nil {
+			return wslPath, nil
+		}
 	}
 
 	// Fallback to the more expensive and risky cmd.exe method.
-	path, cmdErr := s.userProfileViaCmdExe(ctx)
+	wslPath, cmdErr := s.getCmdExeUserProfileDir(ctx)
 	if cmdErr != nil {
-		return "", errors.Join(envErr, cmdErr)
+		return "", errors.Join(err, cmdErr)
 	}
 
-	// We intentionally discard envErr on success.
-	return path, nil
+	// We intentionally discard the previous error on success (only set if the UserProfile was
+	// set but translating that path failed).)
+	return wslPath, nil
 }
 
-// userProfileViaEnvVar obtains the Windows user profile directory from the
-// WSL2_USER_PROFILE environment variable, as set by recent WSL versions.
-func (s *System) userProfileViaEnvVar(ctx context.Context) (string, error) {
-	winProfiledir := os.Getenv("WSL2_USER_PROFILE")
-	if len(winProfiledir) == 0 {
-		return "", errors.New("WSL2_USER_PROFILE environment variable is unset or blank")
-	}
-
-	return s.translateDirToLinux(ctx, winProfiledir)
-}
-
-// userProfileViaCmdExe obtains the Windows user profile directory by asking
+// getCmdExeUserProfileDir obtains the Windows user profile directory by asking
 // cmd.exe to expand %UserProfile%.
-func (s *System) userProfileViaCmdExe(ctx context.Context) (string, error) {
+func (s *System) getCmdExeUserProfileDir(ctx context.Context) (string, error) {
 	// Find folder where windows is mounted on
 	cmdExe, err := s.findCmdExe()
 	if err != nil {
