@@ -30,6 +30,10 @@ const (
 
 	// MultipleHyperVAdaptersInList is a state that causes the GetAdaptersAddresses to return a list with multiple Hyper-V adapters, one of which is the WSL one.
 	MultipleHyperVAdaptersInList
+
+	// HyperVAdapterNonLocalIP is a state that causes the GetAdaptersAddresses to return a WSL adapter
+	// whose IP is not assigned to any local interface, so listening on it always fails.
+	HyperVAdapterNonLocalIP
 )
 
 // NewHostIPConfigMock initializes a mockIPConfig object with the state provided so it can be used instead of the real GetAdaptersAddresses Win32 API.
@@ -86,6 +90,17 @@ func NewHostIPConfigMock(state MockIPAdaptersState) MockIPConfig {
 				friendlyName: "Ethernet adapter vEthernet (WSL (Hyper-V firewall))",
 				desc:         "Hyper-V Virtual Ethernet Adapter #2",
 				ip:           localIP,
+			},
+		)
+	case HyperVAdapterNonLocalIP:
+		m.addrs = append(
+			adaptersList,
+			MockIPAddrsTemplate{
+				friendlyName: "Ethernet adapter vEthernet (WSL)",
+				desc:         "Hyper-V Virtual Ethernet Adapter",
+				// 192.0.2.1 is TEST-NET-1, reserved for documentation (RFC 5737) and
+				// never assigned to a local interface, so listening on it always fails.
+				ip: net.IPv4(192, 0, 2, 1),
 			},
 		)
 	}

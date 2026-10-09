@@ -100,20 +100,80 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
 
 ## 2. Security
 
-### 2.01 - Secure the Public Directory via WSL 9P Extended Attributes
+### 2.01 - Secure the Public Directory via WSL extended attributes and instance-side validation
 
-* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init data) to
-  the Public Directory, projected into every instance via 9P/DrvFs; by default 9P maps files to the
-  unprivileged WSL user, exposing private keys and letting any process tamper with them.
+* **Problem/Context**: The agent writes runtime state (gRPC address, TLS material, cloud-init
+  data) to the Public Directory, projected into every instance via 9p or `virtiofs`; by default the
+  projection maps files to the unprivileged Linux default user, any unprivileged process inside any
+  WSL instance can manipulate them.
 * **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
-  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation, so 9P projects it as
-  root-owned. Centralized in the `securefiles` custodian component, with a plain `os` fallback (no EA
-  stamping) on non-Windows for cross-platform build/test.
+  ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation so the projection
+  maps it to root, centralized in the agent's `securefiles` custodian; its non-Windows build stamps
+  the same ownership facts as a user-namespace extended attribute and refuses the tree when it
+  cannot (2.02), so there is no plain-OS fallback anywhere. wsl-pro-service validates, before
+  consuming any projected artifact, that every component from the root down is root-owned with
+  strict modes and no symlinks, and that the opened root directory sits on a `9p` or `virtiofs`
+  mount — pinned race-free via the root `fd`'s `mnt_id` against `/proc/self/mountinfo`, because
+  `statfs` magic numbers cannot distinguish `virtiofs` from attacker-controlled FUSE (both report
+  `FUSE_SUPER_MAGIC`) — failing loudly with `SystemError` when any invariant is broken.
 * **Consequences**:
-  - Positive: Confidentiality/integrity/availability hold inside every instance; attributes are
-    stamped before content is written; `common/certs` stays a pure in-memory generator.
-  - Negative: Depends on WSL 9P EA behavior via github.com/Microsoft/go-winio; the parent directory
-    remains tamperable by the WSL user (accepted limitation).
+  - Positive: attributes are stamped before content is written; instance-side defense-in-depth
+    rejects compromised or improperly projected artifacts with `SystemError` before use; the
+    filesystem check is race-free because the root `fd` pins the mount and `/proc/self/mountinfo` is
+    kernel-reported truth; `virtiofs` hosts are supported without `cgo` or `unsafe`.
+  - Negative: depends on WSL EA projection behavior via `github.com/Microsoft/go-winio`; relies on
+    `/proc` being mounted and on non-root users being unable to mount `9p` or `virtiofs`; the parent
+    directory remains tamperable by the WSL user (accepted limitation). While the custodian is open,
+    its root is held without sharing deletion, so on Windows a rename or removal of the tree root is
+    refused by share arbitration — the veto binds every issuer alike, Windows callers and the 9p
+    server that performs an instance's `mv`, and no right the same user holds over the parent
+    overrides it. POSIX cannot refuse a rename because a descriptor is open, so on Linux the runtime
+    root-swap window remains open, and the instance-side validation above is its only closure.
+
+### 2.02 - A sub-tree that cannot be stamped is refused, not served
+
+* **Problem/Context**: Where the Public Directory cannot carry Extended Attributes, nothing in it is
+  projected as root-owned, so the Pro token and Landscape registration key it holds are readable and
+  writable by every unprivileged process in every instance.
+* **Decision**: Refuse to open the sub-tree and fail with that reason, rather than serving it
+  unstamped. Serving is publishing the credentials the system exists to protect, which is worse than
+  not serving. The statuses that mean this are measured, not assumed: creation answers
+  `STATUS_EAS_NOT_SUPPORTED`, adoption answers `STATUS_INVALID_DEVICE_REQUEST`, and
+  `STATUS_INVALID_PARAMETER` is excluded because our own wrong call would produce it. Every other
+  failure was already reported, so this removes the single exception rather than adding a rule.
+* **Consequences**:
+  - Positive: The guarantee holds wherever the agent runs at all, so consumers can rely on it without
+    a channel for asking whether it held; the failure names its cause and is one support question
+    from a root cause; the fail-open path and its state are gone, which is where most of this
+    component's defects were found.
+  - Negative: A user whose profile cannot carry the attributes loses the agent entirely rather than
+    partially, and the population is unmeasured; the reachable case needs a profile on a filesystem
+    Windows does not support for profiles, since NTFS and ReFS both carry them.
+
+### 2.03 - A link standing at a sub-tree root is replaced, not adopted or refused
+
+* **Problem/Context**: An unprivileged instance user can create the Public Directory before the
+  agent's first start and put a symbolic link where a sub-tree root must live. The tree root is
+  then adopted and stamped (2.02 does not apply: it can be stamped), but every start fails at the
+  sub-tree until a privileged user removes the link by hand. The create call answers a name
+  collision for some link kinds and an escape refusal for others, so the failure is also cryptic.
+* **Decision**: A `reparse` point standing where a sub-tree root must live is removed and the
+  directory created in its place. It cannot be adopted data: nothing unprivileged can write inside
+  a stamped tree (2.01), so a link there was planted before the tree was stamped, and following it
+  reaches only what the planter chose. Where the tree root itself is a link, refusing stays the
+  answer: Open runs before there is a stamped tree to vouch for the neighborhood, and a link there
+  cannot be told from a deliberate user redirection of the directory. Adoption opens the node
+  itself, never the target of a link, and only after the attribute check has answered: a check
+  that cannot answer, or a link that cannot be removed, refuses the sub-tree rather than opening
+  a root through something unchecked.
+* **Consequences**:
+  - Positive: The plant stops being a permanent denial of service requiring root intervention; the
+    agent heals it on the first start it survives. A link can no longer cause a stamp to be written
+    through it, because nothing is stamped through a link at all.
+  - Negative: A planted link is destroyed rather than reported; the agent chooses to heal quietly
+    where it could fail loudly, so an operator investigating a plant sees the healed state, not the
+    plant. The asymmetry with the tree root is deliberate and test-pinned in both directions.
+
 
 ## 3. Integration
 
