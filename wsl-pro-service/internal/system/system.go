@@ -182,9 +182,9 @@ func (s *System) UserProfileDir(ctx context.Context) (wslPath string, err error)
 	defer decorate.OnError(&err, "could not locate Windows' user profile directory")
 
 	// Try the environment variable first, less likely to fail and it's faster.
-	winProfiledir := s.backend.GetenvUserProfileDir()
-	if len(winProfiledir) != 0 {
-		wslPath, err = s.translateDirToLinux(ctx, winProfiledir)
+	winProfileDir := s.backend.GetenvUserProfileDir()
+	if len(winProfileDir) != 0 {
+		wslPath, err = s.translateDirToLinux(ctx, winProfileDir)
 		if err == nil {
 			return wslPath, nil
 		}
