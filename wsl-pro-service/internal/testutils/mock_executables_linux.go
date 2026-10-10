@@ -40,7 +40,11 @@ func (m *SystemMock) CmdExe(ctx context.Context, path string, args ...string) *e
 		if _, ok := m.controlArgs[CmdExeEncodingErr]; ok {
 			// For this case we'll avoid piping to iconv because we want to output
 			// another encoding (UTF-8 here, but could be anything else).
-			return exitOk, "", "I am UTF-8 🦄 !"
+			// The message must have an even number of bytes: together with the
+			// trailing CRLF and the echo's own newline, the output has an odd
+			// number of bytes, so that a strict UTF-16LE decoding attempt fails
+			// instead of silently producing garbage.
+			return exitOk, "", "I am UTF8 🦄 !"
 		}
 
 		if _, ok := m.controlArgs[EmptyUserprofileEnvVar]; ok {
