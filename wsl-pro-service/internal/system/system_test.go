@@ -232,7 +232,7 @@ func TestUserProfileDir(t *testing.T) {
 		// Replaces the user profile directory in the mock filesystem with a file.
 		replaceDirWithFile bool
 
-		// Whether UserProfileDir is expected to invoke the cmd.exe fallback.
+		// Whether UserProfileDir is expected to leave cmd.exe in its cache.
 		wantCmdExeCache bool
 
 		wantErr     bool
@@ -341,22 +341,30 @@ func TestUserProfileDir(t *testing.T) {
 
 			got, err := system.UserProfileDir(context.Background())
 
-			if tc.cachedCmdExe {
-				require.Equal(t, cmdExePath, *system.CmdExeCache(), "Unexpected path for cached cmd.exe")
-			} else if tc.wantCmdExeCache {
-				require.Equal(t, cmdExePath, *system.CmdExeCache(), "Expected the cmd.exe fallback to be used")
-			} else {
-				require.Empty(t, *system.CmdExeCache(), "Expected the environment-variable path to be used without invoking cmd.exe")
-			}
-
 			if tc.wantErr {
 				require.Error(t, err, "Expected UserProfileDir to return an error, but returned %q instead", got)
+				require.Empty(t, got, "Expected UserProfileDir to return an empty path on error")
 				for _, want := range tc.errContains {
 					require.ErrorContains(t, err, want)
 				}
+
+				// A populated cache proves that cmd.exe was found before the
+				// later command or profile-directory error occurred.
+				if tc.wantCmdExeCache {
+					require.Equal(t, cmdExePath, *system.CmdExeCache(), "Expected cached cmd.exe path")
+				}
 				return
 			}
+
 			require.NoError(t, err, "Expected UserProfileDir to return no errors")
+			if tc.wantCmdExeCache {
+				// A populated cache proves that the cmd.exe fallback was used.
+				require.Equal(t, cmdExePath, *system.CmdExeCache(), "Expected cached cmd.exe path")
+			} else {
+				// An empty cache on a successful call proves that the
+				// environment-variable path returned before the fallback.
+				require.Empty(t, *system.CmdExeCache(), "Expected the environment-variable path to return without invoking cmd.exe")
+			}
 
 			wantSuffix := `/mnt/d/Users/TestUser`
 			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by UserProfileDir.\nWant suffix: %s\nGot: %s", wantSuffix, got)
