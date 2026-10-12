@@ -19,7 +19,16 @@
 "tutorials/deployment" "howto/deploy-with-landscape-web-portal"
 # change in diataxis names
 "guides/index" "howto/index"
-"guides/contributing" "howto/contributing"
+"guides/contributing" "contributing/index"
+"howto/contributing" "contributing/index"
+"howto/index-contributing" "contributing/index"
+# dev guides merged into the contributing docs
+"howto/02-install" "contributing/code"
+"howto/03-restart" "contributing/code"
+"howto/06-access-the-logs" "contributing/code"
+"howto/07-toggle-features" "contributing/code"
+"howto/reset-factory" "contributing/code"
+"howto/index-dev-guides" "contributing/code"
 "guides/install-ubuntu-wsl2" "howto/install-ubuntu-wsl2"
 "guides/run-workflows-azure" "howto/run-workflows-azure"
 "explanations/index" "explanation/index"

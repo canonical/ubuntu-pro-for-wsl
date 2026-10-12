@@ -41,17 +41,6 @@ index-gpu-and-graphics
 
 ```
 
-## Developing Ubuntu Pro for WSL
-
-Set up and use a development environment for Ubuntu Pro for WSL.
-
-```{toctree}
-:titlesonly:
-
-index-dev-guides
-
-```
-
 ## Testing
 
 Automate the testing of applications for Ubuntu on WSL with GitHub workflows.
