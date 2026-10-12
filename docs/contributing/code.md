@@ -7,16 +7,25 @@ myst:
 
 # Contributing to the code
 
-Currently, we anticipate that most contributions will be for the Pro for WSL application.
-Information helpful for the development of this application is included below.
+We anticipate that most code contributions will be for the Pro for WSL
+application. Information helpful for the development of this application is
+included below.
 
-## Prequisite: a Windows machine
+## Prerequisite: a Windows machine
 
 To test and debug Ubuntu on WSL and Pro for WSL you will need a Windows
 machine with WSL installed.
 
 It is possible to run Ubuntu on WSL in a VM with nested visualisation but we do
 not recommend this as a testing environment.
+
+## Additional dependencies for Ubuntu Pro for WSL
+
+* Ubuntu 26.04 LTS installed in WSL
+* Visual Studio Community 2019 or above
+* Go
+* Flutter
+* An Ubuntu Pro token
 
 ## The test suite for Ubuntu Pro for WSL
 
@@ -25,14 +34,6 @@ The source code includes a comprehensive test suite made of unit and integration
 Each module has its own package tests and you can also find the integration tests at the appropriate end-to-end (e2e) directory.
 
 The test suite must pass before merging the PR to our main branch. Any new feature, change or fix must be covered by corresponding tests.
-
-## Additional dependencies for Ubuntu Pro for WSL
-
-* Ubuntu 24.04 LTS
-* Visual Studio Community 2019 or above
-* Go
-* Flutter
-* An Ubuntu Pro token
 
 ## Building and running the binaries for Ubuntu Pro for WSL
 
@@ -48,8 +49,6 @@ You'll need to [create a self-signing certificate](https://learn.microsoft.com/e
 ## Install individual components of Ubuntu Pro for WSL for development
 
 This guide will show you how to install Pro for WSL for local development and testing.
-
-<br/>
 
 **Requirements:**
 
