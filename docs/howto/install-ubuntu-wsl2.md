@@ -100,7 +100,7 @@ Install a specific Ubuntu distro using a NAME from the output:
 ```{admonition} Using the new WSL distro format
 :class: tip
 
-At time of writing, Ubuntu 24.04 LTS and later versions are downloaded in [WSL's
+At time of writing, Ubuntu 20.04 LTS and later versions are downloaded in [WSL's
 new tar-based format](https://ubuntu.com/blog/ubuntu-wsl-new-format-available).
 Earlier Ubuntu versions are currently downloaded in the old format. The new format
 requires WSL 2.4.10 or higher.
