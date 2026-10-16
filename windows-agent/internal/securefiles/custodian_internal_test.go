@@ -75,3 +75,46 @@ func TestWriteFilePublishesTheNodeItWrote(t *testing.T) {
 	require.NoFileExists(t, filepath.Join(c.BasePath(), "target.txt"),
 		"a refused publish must not have replaced the destination")
 }
+
+// TestSubdirRefusesAReplacedRoot pins the identity tie Subdir rests on, the
+// same tie Open performs for its own root: the nested root OpenRoot anchors
+// on the node the heal verified, not a name resolved twice. A tamperer that
+// swaps the node between the verification and the re-resolution — here by the
+// child platform layer answering a different identity than the parent's for
+// the same node — must leave the sub-tree refused, never a child custodian
+// rooted at a node nobody verified. The child layer's identity seam is the
+// same window an attacker has: one resolution answers the heal's node, the
+// next answers whatever took its name.
+func TestSubdirRefusesAReplacedRoot(t *testing.T) {
+	t.Parallel()
+
+	c, err := openFake(t, func(dir string) *fakeSys {
+		return &fakeSys{
+			dir: dir,
+			// The heal's side of the tie: the parent answers the node the
+			// verification opened, as the real layers do.
+			createStampedFn: func(rel string, isDir bool) (*os.File, error) {
+				require.True(t, isDir, "the heal creates a directory")
+				require.NoError(t, os.Mkdir(filepath.Join(dir, rel), DirMode), "Setup: could not create the sub-tree")
+				return nil, nil
+			},
+			// The tamper: the child layer answers the child-root's node as
+			// another node entirely, which is what a swap under the name
+			// looks like from the two ends of the tie.
+			subFn: func() platformSys {
+				return &fakeSys{
+					dir: dir,
+					identityFn: func(*os.File) (fileIdentity, bool) {
+						return fileIdentity{volume: 1, file: [16]byte{1}}, true
+					},
+				}
+			},
+		}
+	})
+	require.NoError(t, err, "Setup: could not open the custodian over the fake")
+	t.Cleanup(func() { _ = c.Close() })
+
+	sub, err := c.Subdir("sub")
+	require.ErrorIs(t, err, ErrRootReplaced, "a root replaced between the two resolutions must be refused")
+	require.Nil(t, sub, "a refused sub-tree must not yield a custodian")
+}

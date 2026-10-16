@@ -198,13 +198,6 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 		return nil, mapEscape(err)
 	}
 
-	// Open a nested root at the sub-directory so the child custodian is itself
-	// structurally contained and syscalls are rooted at its handle.
-	subRoot, err := c.root.OpenRoot(rel)
-	if err != nil {
-		return nil, mapEscape(err)
-	}
-
 	// The child is derived from the parent's handle, never from its absolute path:
 	// re-resolving the path here would walk components outside the parent's
 	// containment, following any reparse point planted along the way. The
@@ -214,6 +207,51 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 	// sub-tree root never resolves a path of its own, so the child records no
 	// identity to tie a later verification to.
 	subSys := c.sys.sub()
+
+	// Tie the nested root to the node the heal verified, the same
+	// identity tie Open rests on: the open below resolves without
+	// following, so a link standing at the name — planted in the
+	// window since the heal — answers here. The re-resolution
+	// OpenRoot performs can follow one, so the node it anchors on is
+	// verified by identity instead of trusted by name. The child's
+	// own platform layer answers for the node its root holds, the
+	// same layer that answers every later question in the sub-tree. A
+	// filesystem that supplies no usable identity skips the
+	// comparison, the same rule Open follows.
+	anchor, err := c.sys.openNode(rel, openDir)
+	if err != nil {
+		return nil, mapEscape(err)
+	}
+	want, known := c.sys.identity(anchor)
+	if err := anchor.Close(); err != nil {
+		return nil, err
+	}
+
+	// Open a nested root at the sub-directory so the child custodian is itself
+	// structurally contained and syscalls are rooted at its handle.
+	subRoot, err := c.root.OpenRoot(rel)
+	if err != nil {
+		return nil, mapEscape(err)
+	}
+	if known {
+		// The child answers through its own root, never through a name
+		// it resolves: the observation binds to the node the child holds,
+		// so a swap under the name shows as the mismatch it is.
+		anchor, err := subRoot.Open(".")
+		if err != nil {
+			subRoot.Close()
+			return nil, err
+		}
+		got, have := subSys.identity(anchor)
+		if err := anchor.Close(); err != nil {
+			subRoot.Close()
+			return nil, err
+		}
+		if !have || got != want {
+			subRoot.Close()
+			return nil, ErrRootReplaced
+		}
+	}
 	if err := subSys.attach(subRoot); err != nil {
 		subRoot.Close()
 		return nil, err
