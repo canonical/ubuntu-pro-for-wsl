@@ -94,22 +94,33 @@ func TestRemoteVolumeClassification(t *testing.T) {
 
 	testCases := map[string]struct {
 		path string
-
+		// driveType is what the seam answers for the volume root. Zero, the
+		// default, wires the real query: only a machine with a mapped drive
+		// can answer DRIVE_REMOTE, so the mapped verdict is pinned by the fake.
+		driveType  uint32
 		wantRemote bool
-		wantKind   string
+		wantKind   volumeKind
 	}{
-		"a local drive":                 {path: `C:\Users\someone\.ubuntupro`},
+		"a local drive":                 {path: `C:\Users\someone\.ubuntupro`, driveType: windows.DRIVE_FIXED},
 		"a relative path has no volume": {path: `.ubuntupro`},
-		"a UNC path":                    {path: `\\server\share\Users\someone\.ubuntupro`, wantRemote: true, wantKind: "a UNC path"},
-		"an unreachable UNC path":       {path: `\\no-such-host-xyz\share\.ubuntupro`, wantRemote: true, wantKind: "a UNC path"},
+		"a UNC path":                    {path: `\\server\share\Users\someone\.ubuntupro`, wantRemote: true, wantKind: volumeUNC},
+		"an unreachable UNC path":       {path: `\\no-such-host-xyz\share\.ubuntupro`, wantRemote: true, wantKind: volumeUNC},
+		"a mapped network drive":        {path: `C:\Users\someone\.ubuntupro`, driveType: windows.DRIVE_REMOTE, wantRemote: true, wantKind: volumeMappedDrive},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			nt := realNtCalls()
+			if tc.driveType != 0 {
+				nt.getDriveType = func(*uint16) uint32 { return tc.driveType }
+			}
+			sys := newWindowsSysWith(t.TempDir(), nt)
+			t.Cleanup(func() { _ = sys.release() })
+
 			start := time.Now()
-			remote, kind := remoteVolume(tc.path)
+			remote, kind := sys.remoteVolume(tc.path)
 			elapsed := time.Since(start)
 
 			require.Equal(t, tc.wantRemote, remote, "volume should be classified as remote=%v", tc.wantRemote)

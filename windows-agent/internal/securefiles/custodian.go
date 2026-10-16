@@ -102,19 +102,24 @@ func (c *Custodian) Close() error {
 func (c *Custodian) CheckProjection() error {
 	// Classify where the sub-tree really is, not where it was named: a directory in the
 	// profile can be a link to a share, and then the name says "C:" while the bytes do not.
+	// A custodian with no platform attached is classified by its name alone, which is
+	// all a name can answer for anyway.
 	where := c.basePath
 	if resolved := c.resolvedBasePath(); resolved != "" {
 		where = resolved
 	}
 
-	remote, kind := remoteVolume(where)
+	remote, kind := lexicalRemoteVolume(where)
+	if c.sys != nil {
+		remote, kind = c.sys.remoteVolume(where)
+	}
 	if !remote {
 		return nil
 	}
 
 	// Name the resolved location too when it differs, or the report reads as a
 	// contradiction: a path beginning "C:" is not obviously on a UNC path.
-	location := kind
+	location := kind.String()
 	if where != c.basePath {
 		location = fmt.Sprintf("%s, resolving to %s", kind, where)
 	}
@@ -502,7 +507,7 @@ func (c *Custodian) Purge(isAllowed func(relPath string, isDir bool) bool) ([]st
 	for _, entry := range entries {
 		name := entry.Name()
 
-		if strings.HasPrefix(name, ".tmp-") || !isAllowed(name, entry.IsDir()) {
+		if strings.HasPrefix(name, tmpPrefix) || !isAllowed(name, entry.IsDir()) {
 			if err := c.root.RemoveAll(name); err != nil {
 				// One node that resists removal must not shield the rest of the sub-tree
 				// from being purged, so the sweep continues and the failures are
@@ -695,6 +700,22 @@ func stripNTPrefix(path string) string {
 	return strings.TrimPrefix(path, dos)
 }
 
+// tmpPrefix names every node the custodian creates as a publish temporary:
+// tempName mints the names and Purge sweeps leftovers by it. One constant,
+// because the sweep's correctness is the mint's convention.
+const tmpPrefix = ".tmp-"
+
+// lexicalRemoteVolume answers the remote-volume verdict that needs no
+// operating system: a UNC prefix is remote, whatever platform carries it. The
+// platforms that can know more (Windows: mapped drive letters) build on it,
+// and so does a custodian that has no platform attached to ask.
+func lexicalRemoteVolume(path string) (remote bool, kind volumeKind) {
+	if remoteUNC(path) {
+		return true, volumeUNC
+	}
+	return false, 0
+}
+
 // tempName answers a fresh temporary's name beside its target: the same
 // directory, so the publish is a same-directory rename on any filesystem,
 // and a random suffix from crypto/rand, so a name cannot be predicted and
@@ -706,6 +727,6 @@ func tempName(targetName string) string {
 	var b [8]byte
 	_, _ = rand.Read(b[:])
 	dir, base := filepath.Split(targetName)
-	tmpBase := fmt.Sprintf(".tmp-%s-%s", base, hex.EncodeToString(b[:]))
+	tmpBase := fmt.Sprintf(tmpPrefix+"%s-%s", base, hex.EncodeToString(b[:]))
 	return filepath.Join(dir, tmpBase)
 }

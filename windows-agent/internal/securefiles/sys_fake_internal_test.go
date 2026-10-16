@@ -476,8 +476,9 @@ type fakeSys struct {
 	isRenameClassUnsupportedFn func(err error) bool
 	isHeldNodeFn               func(err error) bool
 
-	isLinkFn    func(rel string) (bool, error)
-	finalPathFn func() string
+	isLinkFn       func(rel string) (bool, error)
+	finalPathFn    func() string
+	remoteVolumeFn func(string) (bool, volumeKind)
 }
 
 func (s *fakeSys) establishRoot() (fileIdentity, bool, error) {
@@ -576,4 +577,14 @@ func (s *fakeSys) finalPath() string {
 		return s.finalPathFn()
 	}
 	return s.dir
+}
+
+// remoteVolume answers the lexical verdict the contract fixes: a UNC prefix
+// is remote whatever the platform, and nothing else is answerable without
+// platform state the fake does not carry.
+func (s *fakeSys) remoteVolume(path string) (bool, volumeKind) {
+	if s.remoteVolumeFn != nil {
+		return s.remoteVolumeFn(path)
+	}
+	return lexicalRemoteVolume(path)
 }

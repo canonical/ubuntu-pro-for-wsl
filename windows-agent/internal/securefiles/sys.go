@@ -1,6 +1,9 @@
 package securefiles
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 // stamp is the ownership mark the custodian writes on every node it creates:
 // the owner the node projects as inside an instance (root) and the strict
@@ -42,6 +45,28 @@ const (
 	openAppend
 	openDir
 )
+
+// volumeKind names the kind of remote volume a classification can answer,
+// and the report prose CheckProjection prints for each. Platforms answer one
+// of these, never an arbitrary string.
+type volumeKind int
+
+const (
+	volumeUNC volumeKind = iota
+	volumeMappedDrive
+)
+
+// String returns the volume kind as the report reads it: "the sub-tree is on
+// <kind>".
+func (k volumeKind) String() string {
+	switch k {
+	case volumeUNC:
+		return "a UNC path"
+	case volumeMappedDrive:
+		return "a mapped network drive"
+	}
+	return fmt.Sprintf("unknown volume kind %d", int(k))
+}
 
 // platformSys is the custodian's OS layer: one method per mechanism, no
 // policy. Every decision that can be made without knowing the mechanism lives
@@ -135,4 +160,10 @@ type platformSys interface {
 	// it, following any links in the path the custodian was handed, or ""
 	// when the answer is unavailable.
 	finalPath() string
+
+	// remoteVolume answers whether the path lives on a volume this machine
+	// does not own, and names the kind. The UNC verdict is lexical and
+	// platform-deterministic; the drive-letter query is the platform's,
+	// because only it knows what a mapped letter resolves to.
+	remoteVolume(path string) (remote bool, kind volumeKind)
 }

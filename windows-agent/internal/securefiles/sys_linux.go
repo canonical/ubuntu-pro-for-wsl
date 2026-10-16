@@ -369,11 +369,8 @@ func (s *doubleSys) finalPath() string {
 // does: the verdict needs no operating system, and the custodian's contract
 // is platform-deterministic. Everything else reports a local volume: the
 // custodian's remaining projection concerns are Windows-specific.
-func remoteVolume(path string) (remote bool, kind string) {
-	if remoteUNC(path) {
-		return true, "a UNC path"
-	}
-	return false, ""
+func (s *doubleSys) remoteVolume(path string) (bool, volumeKind) {
+	return lexicalRemoteVolume(path)
 }
 
 // stampNode writes the stamp on the open node: the owner, group and mode, each

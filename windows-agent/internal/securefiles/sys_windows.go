@@ -76,6 +76,10 @@ type ntCalls struct {
 	// root the kernel resolves into a share, a condition no CI machine can
 	// produce.
 	finalPath func(h windows.Handle, buf *uint16, maxLen uint32) (uint32, error)
+	// getDriveType classifies a volume root the way GetDriveType does. It is
+	// a seam so the tests can pin the mapped-network-drive verdict, a machine
+	// state no CI machine has.
+	getDriveType func(root *uint16) uint32
 }
 
 // fileIDInfo mirrors FILE_ID_INFO, which golang.org/x/sys/windows does not
@@ -113,6 +117,9 @@ func realNtCalls() ntCalls {
 		},
 		finalPath: func(h windows.Handle, buf *uint16, maxLen uint32) (uint32, error) {
 			return windows.GetFinalPathNameByHandle(h, buf, maxLen, 0)
+		},
+		getDriveType: func(root *uint16) uint32 {
+			return windows.GetDriveType(root)
 		},
 	}
 }
@@ -738,24 +745,25 @@ func closeHandle(h windows.Handle) {
 // cheap, so they go through the API, which is what identifies a mapped network
 // drive. The path must already be resolved: a directory in the profile can be
 // a link to a share, where the name says "C:" while the bytes live on a server.
-func remoteVolume(path string) (remote bool, kind string) {
-	if remoteUNC(path) {
-		return true, "a UNC path"
+func (s *windowsSys) remoteVolume(path string) (remote bool, kind volumeKind) {
+	remote, kind = lexicalRemoteVolume(path)
+	if remote {
+		return remote, kind
 	}
 	vol := filepath.VolumeName(stripNTPrefix(path))
 	if vol == "" {
-		return false, ""
+		return false, 0
 	}
 
 	root, err := windows.UTF16PtrFromString(vol + `\`)
 	if err != nil {
-		return false, ""
+		return false, 0
 	}
-	if windows.GetDriveType(root) == windows.DRIVE_REMOTE {
-		return true, "a mapped network drive"
+	if s.nt.getDriveType(root) == windows.DRIVE_REMOTE {
+		return true, volumeMappedDrive
 	}
 
-	return false, ""
+	return false, 0
 }
 
 // dirStamp is the stamp an adopted sub-tree root carries: a directory,
