@@ -185,20 +185,41 @@ func TestOpenNodeBackstopAnswersTheContractError(t *testing.T) {
 func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
 	t.Parallel()
 
-	base := t.TempDir()
-	outside := filepath.Join(base, "outside")
-	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+	testCases := map[string]struct {
+		// absolute is whether the link target is planted as an absolute path.
+		// A relative one stays inside the parent directory, which os.Root
+		// would follow; only the O_NOFOLLOW on the leaf open refuses it.
+		absolute bool
+	}{
+		"an escaping absolute link": {absolute: true},
+		"a relative in-tree link":   {},
+	}
 
-	rootPath := filepath.Join(base, "root")
-	require.NoError(t, os.Symlink(outside, rootPath), "Setup: could not plant the link")
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	sys := newDoubleSysWith(rootPath, realStampCalls())
-	_, _, err := sys.establishRoot()
-	require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
+			base := t.TempDir()
+			outside := filepath.Join(base, "outside")
+			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
 
-	entries, err := os.ReadDir(outside)
-	require.NoError(t, err, "Setup: could not list the link target")
-	require.Empty(t, entries, "nothing may be created through the link")
+			target := "outside"
+			if tc.absolute {
+				target = outside
+			}
+
+			rootPath := filepath.Join(base, "root")
+			require.NoError(t, os.Symlink(target, rootPath), "Setup: could not plant the link")
+
+			sys := newDoubleSysWith(rootPath, realStampCalls())
+			_, _, err := sys.establishRoot()
+			require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
+
+			entries, err := os.ReadDir(outside)
+			require.NoError(t, err, "Setup: could not list the link target")
+			require.Empty(t, entries, "nothing may be created through the link")
+		})
+	}
 }
 func TestStampsRefuseUnstampableTrees(t *testing.T) {
 	t.Parallel()

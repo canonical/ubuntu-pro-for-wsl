@@ -99,31 +99,44 @@ func (s *doubleSys) sub() platformSys {
 
 // establishRoot creates or adopts the tree root, stamped either way, and
 // answers the identity it established so open() can tie its second resolution
-// to this one. The root is reached through a contained open a link standing at
-// the leaf cannot redirect: open() runs before there is a stamped tree to
-// vouch for the neighborhood, so a link there is never adopted data. POSIX
+// to this one. The leaf open carries O_NOFOLLOW, so a link standing at the
+// root name is refused however it points — the categorical verdict the
+// Windows layer answers through OBJ_DONT_REPARSE — rather than followed to a
+// target the parent directory cannot vouch for: open() runs before there is a
+// stamped tree to do that, so a link there is never adopted data. os.Root
+// cannot carry the flag for us: it follows an in-tree link whatever the open
+// asked for. POSIX
 // cannot refuse a rename because a descriptor is open, so the double holds no
 // root: the runtime root-swap window stays closed by instance-side validation
 // instead (ADR 2.01).
 func (s *doubleSys) establishRoot() (id fileIdentity, known bool, err error) {
-	parent, err := os.OpenRoot(filepath.Dir(s.basePath))
-	if err != nil {
-		return fileIdentity{}, false, err
-	}
-	defer func() { _ = parent.Close() }()
-
+	dir := filepath.Dir(s.basePath)
 	leaf := filepath.Base(s.basePath)
-	if err := parent.Mkdir(leaf, DirMode); err != nil && !errors.Is(err, os.ErrExist) {
+	if err := os.Mkdir(filepath.Join(dir, leaf), DirMode); err != nil && !errors.Is(err, os.ErrExist) {
 		return fileIdentity{}, false, err
 	}
 
-	f, err := parent.Open(leaf)
+	// The leaf open is issued directly rather than through an os.Root: Root
+	// opens every leaf with O_NOFOLLOW and then follows the link anyway when
+	// its target stays inside the tree, so the flag cannot reach the kernel
+	// through it. The direct openat keeps the refusal categorical, as
+	// OBJ_DONT_REPARSE does on Windows. O_NOFOLLOW without O_DIRECTORY, so the
+	// link answers ELOOP and a non-directory standing at the name keeps its
+	// own verdict below.
+	parentFD, err := unix.Open(dir, os.O_RDONLY|unix.O_DIRECTORY|unix.O_CLOEXEC, 0)
 	if err != nil {
-		if isEscapeError(err) || errors.Is(err, unix.ELOOP) {
+		return fileIdentity{}, false, fmt.Errorf("could not open the parent of the tree root %s: %v", s.basePath, err)
+	}
+	defer func() { _ = unix.Close(parentFD) }()
+
+	fd, err := unix.Openat(parentFD, leaf, os.O_RDONLY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	if err != nil {
+		if errors.Is(err, unix.ELOOP) {
 			return fileIdentity{}, false, fmt.Errorf("the tree root %s is a link: %w", s.basePath, ErrPathEscapes)
 		}
 		return fileIdentity{}, false, fmt.Errorf("could not establish the tree root %s: %v", s.basePath, err)
 	}
+	f := os.NewFile(uintptr(fd), s.basePath) //#nosec G115 // a file descriptor is a small non-negative int; int->uintptr only widens.
 	defer func() { _ = f.Close() }()
 
 	st, err := f.Stat()
