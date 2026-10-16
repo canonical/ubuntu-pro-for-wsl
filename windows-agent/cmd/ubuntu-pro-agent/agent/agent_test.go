@@ -793,90 +793,90 @@ func TestWithWslSystemMock(t *testing.T) {
 	daemontestutils.MockWslSystemCmd(t)
 }
 
-// TestAgentStartsDespiteAPlantedCloudInitLink reproduces the pre-plant DoS: an
-// unprivileged instance user creates the public directory first and puts a link where
-// the cloud-init custodian directory must live. The agent must start anyway, with the
-// link replaced by the real directory; refusing, as the tree root does, would fail
-// every start until a privileged user removed the link by hand.
-func TestAgentStartsDespiteAPlantedCloudInitLink(t *testing.T) {
-	publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
-	privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
-
-	outside := filepath.Join(t.TempDir(), "outside")
-	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
-	require.NoError(t, os.MkdirAll(publicDir, 0700), "Setup: could not create the public directory")
-	if err := os.Symlink(outside, filepath.Join(publicDir, ".cloud-init")); err != nil {
-		t.Skip("symlink creation not permitted in this environment")
+// TestAgentStartup drives a full agent run over a seeded public directory, one
+// startup property per row, each end to end through the real daemon and services.
+// Not parallel: each row starts an agent with its own gRPC listener, and the
+// shutdown races they exercise are timing-sensitive enough without company.
+func TestAgentStartup(t *testing.T) {
+	testCases := map[string]struct {
+		seed   func(t *testing.T, publicDir string)
+		verify func(t *testing.T, publicDir string)
+	}{
+		// Reproduces the pre-plant DoS: an unprivileged instance user creates the
+		// public directory first and puts a link where the cloud-init custodian
+		// directory must live. The agent must start anyway, with the link replaced
+		// by the real directory; refusing, as the tree root does, would fail every
+		// start until a privileged user removed the link by hand.
+		"A planted cloud-init link is replaced and the agent starts": {
+			seed: func(t *testing.T, publicDir string) {
+				t.Helper()
+				outside := filepath.Join(t.TempDir(), "outside")
+				require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+				require.NoError(t, os.MkdirAll(publicDir, 0700), "Setup: could not create the public directory")
+				if err := os.Symlink(outside, filepath.Join(publicDir, ".cloud-init")); err != nil {
+					t.Skip("symlink creation not permitted in this environment")
+				}
+			},
+			verify: func(t *testing.T, publicDir string) {
+				t.Helper()
+				fi, err := os.Lstat(filepath.Join(publicDir, ".cloud-init"))
+				require.NoError(t, err)
+				require.True(t, fi.IsDir(), "the planted link must be replaced by the cloud-init directory")
+				require.Zero(t, fi.Mode()&os.ModeSymlink, "the planted link must be gone")
+			},
+		},
+		// Stamped per-distro data is seeded through a custodian, so the files carry
+		// the agent's stamp on platforms that stamp: the startup purge only ever
+		// re-blesses agent-owned nodes and removes everything else.
+		"Stamped per-distro cloud-init data survives the startup purge": {
+			seed: func(t *testing.T, publicDir string) {
+				t.Helper()
+				cloudInitDir := filepath.Join(publicDir, ".cloud-init")
+				seed, err := securefiles.Open(cloudInitDir)
+				require.NoError(t, err, "Setup: could not open the cloud-init custodian")
+				require.NoError(t, seed.WriteFile("Noble.user-data", []byte("user-data-content")), "Setup: could not seed the user data")
+				require.NoError(t, seed.WriteFile("Noble.meta-data", []byte("instance-id: test-id")), "Setup: could not seed the meta data")
+				require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
+			},
+			verify: func(t *testing.T, publicDir string) {
+				t.Helper()
+				cloudInitDir := filepath.Join(publicDir, ".cloud-init")
+				userData, err := os.ReadFile(filepath.Join(cloudInitDir, "Noble.user-data"))
+				require.NoError(t, err, "the per-distro user data must survive startup")
+				require.Equal(t, []byte("user-data-content"), userData, "the per-distro user data must survive unchanged")
+				metaData, err := os.ReadFile(filepath.Join(cloudInitDir, "Noble.meta-data"))
+				require.NoError(t, err, "the per-distro meta data must survive startup")
+				require.Contains(t, string(metaData), "instance-id: test-id", "the per-distro meta data must survive startup")
+			},
+		},
 	}
 
-	a := agent.NewForTesting(t, publicDir, privateDir)
-	a.SetArgs()
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
+			privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
+			tc.seed(t, publicDir)
 
-	runErr := make(chan error, 1)
-	go func() {
-		runErr <- a.Run()
-		close(runErr)
-	}()
+			a := agent.NewForTesting(t, publicDir, privateDir)
+			a.SetArgs()
 
-	a.WaitReady()
-	a.Quit()
-	err := <-runErr
-	// grpc's "server has been stopped" error is unexported, so the race between
-	// a clean return and the stopped error is only observable through its text.
-	if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
-		require.NoError(t, err, "Agent should start and shut down cleanly")
+			runErr := make(chan error, 1)
+			go func() {
+				runErr <- a.Run()
+				close(runErr)
+			}()
+
+			a.WaitReady()
+			a.Quit()
+			err := <-runErr
+			// grpc's "server has been stopped" error is unexported, so the race
+			// between a clean return and the stopped error is only observable
+			// through its text.
+			if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
+				require.NoError(t, err, "Agent should start and shut down cleanly")
+			}
+
+			tc.verify(t, publicDir)
+		})
 	}
-
-	fi, err := os.Lstat(filepath.Join(publicDir, ".cloud-init"))
-	require.NoError(t, err)
-	require.True(t, fi.IsDir(), "the planted link must be replaced by the cloud-init directory")
-	require.Zero(t, fi.Mode()&os.ModeSymlink, "the planted link must be gone")
-}
-
-func TestAgentPreservesCloudInitUserDataOnStartup(t *testing.T) {
-	publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
-	privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
-
-	// Seed cloud-init per-distro data through a custodian, so the files carry the agent's
-	// stamp on platforms that stamp: the startup purge only ever re-blesses agent-owned
-	// nodes and removes everything else.
-	cloudInitDir := filepath.Join(publicDir, ".cloud-init")
-	userDataPath := filepath.Join(cloudInitDir, "Noble.user-data")
-	metaDataPath := filepath.Join(cloudInitDir, "Noble.meta-data")
-
-	seed, err := securefiles.Open(cloudInitDir)
-	require.NoError(t, err, "Setup: could not open the cloud-init custodian")
-	require.NoError(t, seed.WriteFile("Noble.user-data", []byte("user-data-content")), "Setup: could not seed the user data")
-	require.NoError(t, seed.WriteFile("Noble.meta-data", []byte("instance-id: test-id")), "Setup: could not seed the meta data")
-	require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
-
-	a := agent.NewForTesting(t, publicDir, privateDir)
-	a.SetArgs()
-
-	runErr := make(chan error, 1)
-	go func() {
-		runErr <- a.Run()
-		close(runErr)
-	}()
-
-	a.WaitReady()
-	a.Quit()
-	err = <-runErr
-	// grpc's "server has been stopped" error is unexported, so the race between
-	// a clean return and the stopped error is only observable through its text.
-	if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
-		require.NoError(t, err, "Agent should start and shut down cleanly")
-	}
-
-	// Verify cloud-init user-data and meta-data survived startup purge and were recreated with same content
-	require.FileExists(t, userDataPath)
-	require.FileExists(t, metaDataPath)
-
-	userData, err := os.ReadFile(userDataPath)
-	require.NoError(t, err)
-	require.Equal(t, []byte("user-data-content"), userData)
-
-	metaData, err := os.ReadFile(metaDataPath)
-	require.NoError(t, err)
-	require.Contains(t, string(metaData), "instance-id: test-id")
 }
