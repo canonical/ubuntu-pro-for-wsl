@@ -210,7 +210,13 @@ func TestWslDistroName(t *testing.T) {
 func TestUserProfileDir(t *testing.T) {
 	t.Parallel()
 
+	// The Windows user profile path, as expanded by the mocked cmd.exe.
+	const userProfileWinPath = `D:\Users\TestUser\`
+	const invalidUserProfileWinPath = `C:\Bogus\`
+
 	testCases := map[string]struct {
+		envVar string
+
 		cachedCmdExe           bool
 		cmdExeNotExist         bool
 		cmdExeErr              bool
@@ -220,22 +226,71 @@ func TestUserProfileDir(t *testing.T) {
 		wslpathBadOutput       bool
 		overrideProcMount      bool
 
-		wantErr bool
+		// Removes the user profile directory from the mock filesystem.
+		removeDir bool
+
+		// Replaces the user profile directory in the mock filesystem with a file.
+		replaceDirWithFile bool
+
+		// Whether UserProfileDir is expected to leave cmd.exe in its cache.
+		wantCmdExeCache bool
+
+		wantErr     bool
+		errContains []string
 	}{
-		"Success with cached cmd.exe path": {cachedCmdExe: true},
+		"Success with cached cmd.exe path": {cachedCmdExe: true, wantCmdExeCache: true},
 
-		"Success with a single 9P filesystem mount":        {overrideProcMount: true},
-		"Success with multiple 9P filesystem mounts":       {overrideProcMount: true},
-		"Success with multiple types of filesystem mounts": {overrideProcMount: true},
+		"Success with a single 9P filesystem mount":        {overrideProcMount: true, wantCmdExeCache: true},
+		"Success with multiple 9P filesystem mounts":       {overrideProcMount: true, wantCmdExeCache: true},
+		"Success with multiple types of filesystem mounts": {overrideProcMount: true, wantCmdExeCache: true},
 
-		"Error finding cmd.exe because there is no /proc/mounts":               {wantErr: true, overrideProcMount: true},
-		"Error finding cmd.exe because there is no Windows FS in /proc/mounts": {wantErr: true, overrideProcMount: true},
-		"Error when cmd.exe does not exist":                                    {cmdExeNotExist: true, overrideProcMount: true, wantErr: true},
-		"Error on cmd.exe error":                                               {cmdExeErr: true, wantErr: true},
-		"Error on cmd.exe output encoding wrong":                               {cmdEncodingErr: true, wantErr: true},
-		"Error when UserProfile env var is empty":                              {emptyUserprofileEnvVar: true, wantErr: true},
-		"Error on wslpath error":                                               {wslpathErr: true, wantErr: true},
-		"Error when wslpath returns a bad path":                                {wslpathBadOutput: true, wantErr: true},
+		"Error finding cmd.exe because there is no /proc/mounts": {
+			wantErr: true, overrideProcMount: true,
+		},
+		"Error finding cmd.exe because there is no Windows FS in /proc/mounts": {
+			wantErr: true, overrideProcMount: true,
+		},
+		"Error when cmd.exe does not exist": {
+			cmdExeNotExist: true, overrideProcMount: true, wantErr: true,
+		},
+		"Error on cmd.exe error": {
+			cmdExeErr: true, wantCmdExeCache: true, wantErr: true,
+		},
+		"Error on cmd.exe output encoding wrong": {
+			cmdEncodingErr: true, wantCmdExeCache: true, wantErr: true,
+		},
+		"Error when UserProfile env var is empty": {
+			emptyUserprofileEnvVar: true, wantCmdExeCache: true, wantErr: true,
+		},
+		"Error on wslpath error": {
+			wslpathErr: true, wantCmdExeCache: true, wantErr: true,
+		},
+		"Error when wslpath returns a bad path": {
+			wslpathBadOutput: true, wantCmdExeCache: true, wantErr: true,
+		},
+
+		"Success reading from WSL2_USER_PROFILE": {
+			envVar: userProfileWinPath,
+		},
+
+		// C:\Bogus\ is not in the set of paths the mock wslpath knows how to
+		// translate, so the env var path fails and the fallback kicks in.
+		"Falls back to cmd.exe when wslpath cannot translate the env var": {
+			envVar: invalidUserProfileWinPath, wantCmdExeCache: true,
+		},
+
+		"Error when the translated path does not exist": {
+			envVar: userProfileWinPath, removeDir: true, wantCmdExeCache: true,
+			wantErr: true, errContains: []string{"no such file or directory"},
+		},
+		"Error when the translated path is a file": {
+			envVar: userProfileWinPath, replaceDirWithFile: true, wantCmdExeCache: true,
+			wantErr: true, errContains: []string{"is not a directory"},
+		},
+		"Error when env var and cmd.exe both fail": {
+			envVar: invalidUserProfileWinPath, cmdExeErr: true, wantCmdExeCache: true,
+			wantErr: true, errContains: []string{"Mock not implemented", "exit status 99"},
+		},
 	}
 
 	for name, tc := range testCases {
@@ -243,6 +298,11 @@ func TestUserProfileDir(t *testing.T) {
 			t.Parallel()
 
 			system, mock := testutils.MockSystem(t)
+
+			if tc.envVar != "" {
+				mock.UserProfileDirEnv = tc.envVar
+				mock.UserProfileDirEnvEnabled = true
+			}
 			if tc.cmdExeErr {
 				mock.SetControlArg(testutils.CmdExeErr)
 			}
@@ -268,20 +328,44 @@ func TestUserProfileDir(t *testing.T) {
 				*system.CmdExeCache() = cmdExePath
 			}
 			if tc.cmdExeNotExist {
-				os.RemoveAll(cmdExePath)
+				require.NoError(t, os.RemoveAll(cmdExePath))
+			}
+			if tc.removeDir || tc.replaceDirWithFile {
+				dir := mock.Path("/mnt/d/Users/TestUser")
+				require.NoError(t, os.RemoveAll(dir), "Setup: could not remove the user profile directory")
+				if tc.replaceDirWithFile {
+					//#nosec G306 // We control this path, no risk of leaking permissions.
+					require.NoError(t, os.WriteFile(dir, []byte("I am a file"), 0600), "Setup: could not create the file")
+				}
 			}
 
 			got, err := system.UserProfileDir(context.Background())
+
 			if tc.wantErr {
-				require.Error(t, err, "Expected UserProfile to return an error, but returned %s intead", got)
+				require.Error(t, err, "Expected UserProfileDir to return an error, but returned %q instead", got)
+				require.Empty(t, got, "Expected UserProfileDir to return an empty path on error")
+				for _, want := range tc.errContains {
+					require.ErrorContains(t, err, want)
+				}
+
+				// A populated cache proves that cmd.exe was found before the
+				// later command or profile-directory error occurred.
+				if tc.wantCmdExeCache {
+					require.Equal(t, cmdExePath, *system.CmdExeCache(), "Expected cached cmd.exe path")
+				}
 				return
 			}
-			require.NoError(t, err, "Expected UserProfile to return no errors")
 
-			// Validating CMD path
-			require.Equal(t, cmdExePath, *system.CmdExeCache(), "Unexpected path for cmd.exe")
+			require.NoError(t, err, "Expected UserProfileDir to return no errors")
+			if tc.wantCmdExeCache {
+				// A populated cache proves that the cmd.exe fallback was used.
+				require.Equal(t, cmdExePath, *system.CmdExeCache(), "Expected cached cmd.exe path")
+			} else {
+				// An empty cache on a successful call proves that the
+				// environment-variable path returned before the fallback.
+				require.Empty(t, *system.CmdExeCache(), "Expected the environment-variable path to return without invoking cmd.exe")
+			}
 
-			// Validating UserProfile
 			wantSuffix := `/mnt/d/Users/TestUser`
 			require.True(t, strings.HasSuffix(got, wantSuffix), "Unexpected value returned by UserProfileDir.\nWant suffix: %s\nGot: %s", wantSuffix, got)
 		})
@@ -969,7 +1053,7 @@ func TestRealBackend(t *testing.T) {
 
 	wpath := b.WslpathExecutable(ctx, "arg1", "arg2")
 	assertBasePath(t, "wslpath", wpath.Path, "WslpathExecutable did not return the expected command")
-	assert.Equal(t, []string{"wslpath", "arg1", "arg2"}, wpath.Args, "WslpathExecutable did not return the expected arguments")
+	assert.Equal(t, []string{"/usr/bin/wslpath", "arg1", "--", "arg2"}, wpath.Args, "WslpathExecutable did not return the expected arguments")
 
 	winfo := b.WslinfoExecutable(ctx, "arg1", "arg2")
 	assertBasePath(t, "wslinfo", winfo.Path, "WslinfoExecutable did not return the expected command")

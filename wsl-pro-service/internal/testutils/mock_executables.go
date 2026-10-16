@@ -38,6 +38,13 @@ type SystemMock struct {
 	// string when false
 	WslDistroNameEnvEnabled bool
 
+	// UserProfileDirEnv is the value that the mocked WSL2_USER_PROFILE environment variable will display
+	UserProfileDirEnv string
+
+	// UserProfileDirEnvEnabled sets the mocked WSL2_USER_PROFILE to $UserProfileDirEnv when true, and
+	// to an empty string when false
+	UserProfileDirEnvEnabled bool
+
 	// LookupGroupError makes the LookupGroup function fail.
 	LandscapeGroupGID string
 
@@ -175,6 +182,14 @@ func (m SystemMock) Hostname() (string, error) {
 func (m *SystemMock) GetenvWslDistroName() string {
 	if m.WslDistroNameEnvEnabled {
 		return m.WslDistroName
+	}
+	return ""
+}
+
+// GetenvUserProfileDir mocks os.GetEnv("WSL2_USER_PROFILE").
+func (m *SystemMock) GetenvUserProfileDir() string {
+	if m.UserProfileDirEnvEnabled {
+		return m.UserProfileDirEnv
 	}
 	return ""
 }
