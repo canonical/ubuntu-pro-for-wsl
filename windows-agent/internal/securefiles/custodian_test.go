@@ -18,7 +18,7 @@ import (
 )
 
 // errSharingViolation is the errno the kernel answers when an open conflicts with a held
-// handle that declines to share deletion - the shape of the root veto, and the expected
+// handle that declines to share deletion — the shape of the root veto, and the expected
 // answer for a rename or removal issued behind the custodian's back. It is spelled as
 // the raw errno because ERROR_SHARING_VIOLATION only exists in the windows-only
 // packages a cross-platform test file cannot import.

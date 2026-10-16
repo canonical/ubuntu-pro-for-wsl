@@ -1,6 +1,7 @@
-// Package securefiles implements a file system custodian component that enforces to all files and
-// directories it creates under its root directory: all nodes have specific NT File Extended
-// Attributes (EAs) stamped causing their projections via 9P inside WSL look as owned by root.
+// Package securefiles implements a file system custodian component that enforces an ownership
+// policy on all files and directories it creates under its root directory: all nodes are stamped
+// with specific NT File Extended Attributes (EAs), causing their projections via 9P inside WSL to
+// look as if owned by root.
 package securefiles
 
 import (
