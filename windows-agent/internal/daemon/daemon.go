@@ -62,12 +62,21 @@ type options struct {
 	wslCmdEnv             []string
 	getAdaptersAddresses  getAdaptersAddressesFunc
 	netMonitoringProvider netmonitoring.DevicesAPIProvider
+
+	// publicationInterval is how often the daemon re-attempts publishing the
+	// address file when the startup attempt lost to a holder.
+	publicationInterval time.Duration
 }
+
+// defaultPublicationInterval trades recovery latency after a hold lifts against
+// a create-and-write per tick that is as cheap as it is idempotent.
+const defaultPublicationInterval = time.Second
 
 var defaultOptions = options{
 	wslCmd:                []string{"wsl.exe"},
 	getAdaptersAddresses:  getWindowsAdaptersAddresses,
 	netMonitoringProvider: netmonitoring.DefaultAPIProvider,
+	publicationInterval:   defaultPublicationInterval,
 }
 
 // WaitReady blocks until the daemon is ready to serve, i.e. until Serve has been called.
@@ -245,6 +254,11 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 	var lis net.Listener
 	wslNetAvailable := true
 
+	// pubStop and pubDone carry the publication watchdog that serve starts when
+	// a holder outlasted the startup attempt: closing pubStop ends the retries,
+	// and pubDone closes once the last attempt has settled.
+	var pubStop, pubDone chan struct{}
+
 	// Setting up the listener.
 	err := func() (err error) {
 		defer decorate.OnError(&err, i18n.G("Daemon: error while serving"))
@@ -291,11 +305,13 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 			log.Debugf(ctx, "Daemon: address file written to %s",
 				filepath.Join(d.publicDir.BasePath(), common.ListeningPortFileName))
 		case errors.Is(err, securefiles.ErrNodeHeld):
-			// The previous node stands as it was, so the instances keep a
-			// working address until the next serving round rewrites it. The
-			// daemon does not go down for a holder that no reader in the
-			// agent's family can be.
-			log.Errorf(ctx, "Daemon: another process holds the address file open; serving without updating it: %v", err)
+			// The previous node stands as it was, and it names the previous
+			// round's closed listener. The daemon does not go down for a holder
+			// that no reader in the agent's family can be: it keeps serving and
+			// re-publishes until the hold lifts, restoring the address file to
+			// the current listener.
+			log.Errorf(ctx, "Daemon: another process holds the address file open; retrying while serving: %v", err)
+			pubStop, pubDone = rePublishAddressFile(ctx, d, addr, opts.publicationInterval)
 		default:
 			return err
 		}
@@ -331,7 +347,17 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 		errCh <- err
 	}()
 
-	return errCh, newStopFunc(grpcServer)
+	stop := newStopFunc(grpcServer)
+	return errCh, func(ctx context.Context, force bool) {
+		// End the publication watchdog and wait for it: the round-end removal of
+		// the address file happens after this function returns, and a late
+		// publication must not resurrect a dead listener's address.
+		if pubStop != nil {
+			close(pubStop)
+			<-pubDone
+		}
+		stop(ctx, force)
+	}
 }
 
 // publishAddressFile publishes the listening address to the address file, briefly
@@ -347,8 +373,8 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 // and it is transient. What is not transient is out of the agent's threat model
 // altogether: a same-user host process able to hold this node can hold any other, or
 // kill the agent. So the attempt is retried briefly, and the verdict — held, or the
-// failure it is — travels to the caller, which decides what serving without a fresh
-// address means.
+// failure it is — travels to the caller, which answers a hold by retrying for the
+// rest of the serving round, and a real failure by not serving at all.
 func (d *Daemon) publishAddressFile(ctx context.Context, addr string) error {
 	const attempts = 4
 	for attempt := 0; ; attempt++ {
@@ -362,6 +388,43 @@ func (d *Daemon) publishAddressFile(ctx context.Context, addr string) error {
 		case <-time.After(time.Duration(attempt+1) * 250 * time.Millisecond):
 		}
 	}
+}
+
+// rePublishAddressFile keeps retrying the address file publication until it
+// succeeds or the serving round ends, reporting both ends through the channels
+// it returns: closing pubStop ends the retries, and pubDone closes when the
+// last attempt has settled.
+//
+// Only a hold justifies retrying: the write is idempotent — CreateFile replaces
+// an unheld node — so a success ends the loop, while any other failure is real
+// and reaches the log once, as the startup attempt already does.
+func rePublishAddressFile(ctx context.Context, d *Daemon, addr string, interval time.Duration) (pubStop, pubDone chan struct{}) {
+	pubStop = make(chan struct{})
+	pubDone = make(chan struct{})
+	go func() {
+		defer close(pubDone)
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-pubStop:
+				return
+			case <-ticker.C:
+				err := d.writeAddressOnce(addr)
+				switch {
+				case err == nil:
+					log.Debugf(ctx, "Daemon: address file published after the hold lifted")
+					return
+				case errors.Is(err, securefiles.ErrNodeHeld):
+					// Still held; try again on the next tick.
+				default:
+					log.Errorf(ctx, "Daemon: gave up publishing the address file: %v", err)
+					return
+				}
+			}
+		}
+	}()
+	return pubStop, pubDone
 }
 
 // writeAddressOnce performs one address file publication attempt.
