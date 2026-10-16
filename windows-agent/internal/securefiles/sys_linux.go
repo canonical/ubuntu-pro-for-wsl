@@ -36,10 +36,10 @@ type doubleSys struct {
 	// at, recorded so finalPath can answer it.
 	//
 	// rootFD is the root's own descriptor, opened beside the os.Root: os.Root
-	// cannot be asked for its handle, and openNode needs one to openat against
-	// with O_NOFOLLOW — the one open os.Root itself cannot perform, because it
-	// resolves an in-tree link instead of refusing it. Held for the
-	// custodian's lifetime, closed in release.
+	// cannot be asked for its handle, and openNode needs one to resolve
+	// against with openat2 — the one open os.Root itself cannot perform,
+	// because it resolves an in-tree link instead of refusing one. Held for
+	// the custodian's lifetime, closed in release.
 	root     *os.Root
 	rootFD   int
 	basePath string
@@ -274,18 +274,31 @@ func (s *doubleSys) openNode(rel string, profile openProfile) (*os.File, error) 
 		flags = os.O_RDONLY | unix.O_DIRECTORY
 	}
 
-	fd, err := unix.Openat(s.rootFD, rel, flags|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	// openat2 builds the refusal into the resolution: RESOLVE_NO_SYMLINKS
+	// refuses a link at any component of the name, intermediate or leaf — the
+	// categorical verdict the Windows open gives through OBJ_DONT_REPARSE,
+	// where openat's O_NOFOLLOW guarded the final component alone.
+	// RESOLVE_BENEATH backstops the lexical checks: an absolute component or
+	// an escaping ".." answers EXDEV instead of resolving out of the tree.
+	// No fallback on a kernel without openat2 — the open fails loudly rather
+	// than following anything.
+	fd, err := unix.Openat2(s.rootFD, rel, &unix.OpenHow{
+		Flags:   uint64(flags | unix.O_NOFOLLOW | unix.O_CLOEXEC), //#nosec G115 // flags are the small non-negative O_* constants assembled above; the conversion cannot overflow.
+		Resolve: unix.RESOLVE_BENEATH | unix.RESOLVE_NO_SYMLINKS,
+	})
 	if err != nil {
 		return nil, classifyOpenErr(err)
 	}
 	return os.NewFile(uintptr(fd), rel), nil //#nosec G115 // a file descriptor is a small non-negative int; int->uintptr only widens.
 }
 
-// classifyOpenErr turns an openat refusal into the custodian's answers: a
-// link standing at the name (ELOOP, or the ENOTDIR O_DIRECTORY answers for a
-// link) is the escape sentinel; anything else is the filesystem error it is.
+// classifyOpenErr turns an open refusal into the custodian's answers: a link
+// at any component of the name (ELOOP), a missing directory where one was
+// needed (ENOTDIR), and RESOLVE_BENEATH's backstop for what the lexical
+// checks should never let reach the kernel (EXDEV) are the escape sentinel;
+// anything else is the filesystem error it is.
 func classifyOpenErr(err error) error {
-	if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) {
+	if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) || errors.Is(err, unix.EXDEV) {
 		return ErrPathEscapes
 	}
 	return err

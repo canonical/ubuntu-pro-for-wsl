@@ -467,3 +467,74 @@ func TestAppendAndReadDirRefuseLinks(t *testing.T) {
 	_, err = c.ReadDir("dir-link")
 	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the listing must refuse a link standing at the name, not list through it")
 }
+
+// TestIntermediateLinksAreRefused pins the containment half of the link rule:
+// a link standing at an intermediate component of a name is refused exactly
+// like a leaf link is. The leaf pins asked "is the node at the name a link";
+// the open the double used answered that for the final component alone, so a
+// link earlier in the name was followed — out of the tree too, after the
+// lexical checks had passed. Both platforms refuse the intermediate link now,
+// the double through openat2's resolve flags, Windows through
+// OBJ_DONT_REPARSE, and neither shows the refusal the difference between an
+// escaping target and an in-tree one.
+func TestIntermediateLinksAreRefused(t *testing.T) {
+	t.Parallel()
+
+	// plant puts the two intermediate-position links into a fresh tree: one
+	// escaping it, one whose target is a real directory inside it.
+	plant := func(t *testing.T, dir string) {
+		t.Helper()
+		require.NoError(t, os.MkdirAll(filepath.Join(dir, "outside", "deeper"), 0700), "Setup: could not create the outside node")
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "outside", "deeper", "entry.txt"), []byte("x"), 0600), "Setup: could not fill the outside tree")
+		require.NoError(t, os.Symlink(filepath.Join(dir, "outside"), filepath.Join(dir, "escape-link")), "Setup: could not plant the escaping link")
+		require.NoError(t, os.MkdirAll(filepath.Join(dir, "realdir", "deeper"), 0700), "Setup: could not create the in-tree target")
+		require.NoError(t, os.Symlink("realdir", filepath.Join(dir, "in-link")), "Setup: could not plant the in-tree link")
+	}
+
+	testCases := map[string]struct {
+		// op hands the custodian a name that resolves through one of the
+		// planted links, the way a caller would.
+		op func(c *securefiles.Custodian) error
+	}{
+		"the ownership check refuses an escaping link": {
+			op: func(c *securefiles.Custodian) error {
+				_, err := c.IsOwned("escape-link/deeper/entry.txt")
+				return err
+			},
+		},
+		"the listing refuses an escaping link": {
+			op: func(c *securefiles.Custodian) error {
+				_, err := c.ReadDir("escape-link/deeper")
+				return err
+			},
+		},
+		"the append refuses an escaping link": {
+			op: func(c *securefiles.Custodian) error {
+				f, err := c.AppendFile("escape-link/deeper/entry.txt")
+				if err == nil {
+					_ = f.Close()
+				}
+				return err
+			},
+		},
+		"the ownership check refuses an in-tree link too": {
+			op: func(c *securefiles.Custodian) error {
+				_, err := c.IsOwned("in-link/deeper")
+				return err
+			},
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+			plant(t, dir)
+
+			require.ErrorIs(t, tc.op(c), securefiles.ErrPathEscapes, "resolving through a link at an intermediate component must be refused")
+		})
+	}
+}

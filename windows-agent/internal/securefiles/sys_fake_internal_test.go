@@ -11,6 +11,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -551,15 +552,22 @@ func (s *fakeSys) openNode(rel string, profile openProfile) (*os.File, error) {
 	if s.openNodeFn != nil {
 		return s.openNodeFn(rel, profile)
 	}
-	// The default is the contract, not a shortcut: a link standing at the name
-	// answers ErrPathEscapes, never its target. The lstat-then-open pair is
-	// good enough for a stand-in; the real platforms refuse in the open itself.
-	fi, err := os.Lstat(filepath.Join(s.dir, rel))
-	if err != nil {
-		return nil, err
-	}
-	if fi.Mode()&os.ModeSymlink != 0 {
-		return nil, ErrPathEscapes
+	// The default is the contract, not a shortcut: a link standing at any
+	// component of the name answers ErrPathEscapes, never its target — the
+	// Windows open refuses every reparse point in the name, the double's
+	// openat2 every symlink, so the stand-in refuses the same verdict by
+	// lstat before it opens. The walk's own errors stay raw: the stand-in
+	// classifies no errnos, the real opens do.
+	p := s.dir
+	for _, part := range strings.Split(rel, "/") {
+		p = filepath.Join(p, part)
+		fi, err := os.Lstat(p)
+		if err != nil {
+			return nil, err
+		}
+		if fi.Mode()&os.ModeSymlink != 0 {
+			return nil, ErrPathEscapes
+		}
 	}
 	return os.Open(filepath.Join(s.dir, rel))
 }

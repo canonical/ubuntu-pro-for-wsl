@@ -95,30 +95,86 @@ func TestRenameChecksOwnership(t *testing.T) {
 	}
 }
 
-// TestOpenNodeRefusesALink pins the refusal of a link standing at the node
-// name: the O_NOFOLLOW open fails with ELOOP, which the layer reports as the
-// escape sentinel, so a link an instance user planted in the stamped tree is
-// never followed to a stamp outside it, and never published through. The
-// redirected tree ROOT is pinned by TestNewPlatformSysRefusesARedirectedRoot;
-// this is the node level of the same containment.
+// TestOpenNodeRefusesALink pins the refusal of a link standing at a node
+// name: the open fails with ELOOP, which the layer reports as the escape
+// sentinel, so a link an instance user planted in the stamped tree is never
+// followed to a stamp outside it, and never published through. The redirected
+// tree ROOT is pinned by TestNewPlatformSysRefusesARedirectedRoot; this is
+// the node level of the same containment. The table covers both positions a
+// link can stand at — the leaf and an intermediate component — through the
+// operations that resolve names. Each subtest plants its own tree, so the
+// rows stay self-contained and parallel.
 func TestOpenNodeRefusesALink(t *testing.T) {
 	t.Parallel()
 
+	testCases := map[string]struct {
+		// op resolves a name the way a caller would; the name goes through
+		// the planted link, at the leaf or at an intermediate component.
+		op func(c *Custodian) error
+	}{
+		"the ownership check refuses a leaf link": {
+			op: func(c *Custodian) error {
+				_, err := c.IsOwned("link")
+				return err
+			},
+		},
+		"the rename refuses a leaf link": {
+			op: func(c *Custodian) error {
+				return c.Rename("link", "dst")
+			},
+		},
+		"the ownership check refuses an intermediate link": {
+			op: func(c *Custodian) error {
+				_, err := c.IsOwned("link/node")
+				return err
+			},
+		},
+		"the listing refuses an intermediate link": {
+			op: func(c *Custodian) error {
+				_, err := c.ReadDir("link/deeper")
+				return err
+			},
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			outside := filepath.Join(dir, "outside")
+			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+
+			c, err := Open(dir)
+			require.NoError(t, err, "Setup: could not open the custodian")
+			defer func() { _ = c.Close() }()
+
+			require.NoError(t, os.Symlink(outside, filepath.Join(dir, "link")), "Setup: could not plant the link")
+
+			require.ErrorIs(t, tc.op(c), ErrPathEscapes, "resolving through the link must be refused, not followed")
+		})
+	}
+}
+
+// TestOpenNodeBackstopAnswersTheContractError pins the one refusal the
+// custodian's own lexical checks should never let reach the layer: an
+// escaping "..". RESOLVE_BENEATH answers EXDEV, and the classification must
+// turn it into the escape sentinel — a raw EXDEV is an errno no caller
+// matches, so resolve() regressing must still fail closed with the contract
+// error.
+func TestOpenNodeBackstopAnswersTheContractError(t *testing.T) {
+	t.Parallel()
+
 	dir := t.TempDir()
-	outside := filepath.Join(dir, "outside")
-	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+	root, err := os.OpenRoot(dir)
+	require.NoError(t, err, "Setup: could not open the root")
+	defer func() { _ = root.Close() }()
 
-	c, err := Open(dir)
-	require.NoError(t, err, "Setup: could not open the custodian")
-	defer func() { _ = c.Close() }()
+	s := newPlatformSys(dir)
+	require.NoError(t, s.attach(root), "Setup: could not attach the layer")
+	defer func() { _ = s.release() }()
 
-	require.NoError(t, os.Symlink(outside, filepath.Join(dir, "link")), "Setup: could not plant the link")
-
-	_, err = c.IsOwned("link")
-	require.ErrorIs(t, err, ErrPathEscapes, "the ownership check must refuse the link, not follow it")
-
-	err = c.Rename("link", "dst")
-	require.ErrorIs(t, err, ErrPathEscapes, "the rename must refuse the link, not publish through it")
+	_, err = s.openNode("..", openRead)
+	require.ErrorIs(t, err, ErrPathEscapes, "RESOLVE_BENEATH's backstop must answer the escape sentinel, not a raw EXDEV")
 }
 
 // TestNewPlatformSysRefusesARedirectedRoot pins the containment Open rests on:
