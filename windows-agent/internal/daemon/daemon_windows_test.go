@@ -160,3 +160,49 @@ func TestReleasingTheHoldRestoresConnectivity(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 	require.NoFileExists(t, addrPath, "no late publication may resurrect the address file")
 }
+
+// TestServeErrorDrainsThePublicationWatchdog pins that the watchdog cannot
+// outlive the round it serves: a serving goroutine that exits on its own —
+// here, a gRPC server stopped before Serve — ends the round through the errCh
+// branch of tryServingOnce, and the stop callback that branch owes is what
+// cancels and drains the watchdog. Without it, the watchdog survives the
+// round-end removal and, once the hold lifts, republishes the stopped
+// listener's address over the held node. Windows-only because the hold is.
+func TestServeErrorDrainsThePublicationWatchdog(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	addrDir := t.TempDir()
+	c, err := securefiles.Open(addrDir)
+	require.NoError(t, err, "Setup: could not create custodian")
+	defer func() { _ = c.Close() }()
+
+	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+	require.NoError(t, c.WriteFile(common.ListeningPortFileName, []byte("old-address")),
+		"Setup: could not seed the address file")
+	holder, err := os.Open(addrPath)
+	require.NoError(t, err, "Setup: could not hold the address file open")
+
+	registerer := func(context.Context, bool) *grpc.Server {
+		// A server stopped before Serve: the serving goroutine exits on its
+		// own, mid-round, after the publication watchdog has started.
+		server := grpc.NewServer()
+		server.Stop()
+		return server
+	}
+
+	d := daemon.New(ctx, registerer, c)
+	err = d.Serve(ctx, daemon.WithPublicationInterval(100*time.Millisecond))
+	require.Error(t, err, "a server stopped before Serve must end the round with an error")
+	require.ErrorContains(t, err, "gRPC serve error")
+
+	// The round is over and the held node stands as it was: the round-end
+	// removal answers ErrNodeHeld against the holder. The hold now lifts. A
+	// watchdog that survived the round would republish the stopped listener's
+	// address on its next tick; a drained one cannot.
+	require.NoError(t, holder.Close(), "Setup: could not lift the hold")
+	time.Sleep(500 * time.Millisecond)
+	got, err := os.ReadFile(addrPath)
+	require.NoError(t, err, "the held node must still stand")
+	require.Equal(t, "old-address", string(got), "no publication may follow the round that owned it")
+}

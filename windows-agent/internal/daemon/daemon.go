@@ -149,6 +149,14 @@ func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 		stop(context.Background(), true)
 		return errors.Join(ctx.Err(), <-errCh)
 	case err := <-errCh:
+		// The serving goroutine ended the round on its own. The stop callback
+		// is still owed, once: it is what cancels and drains the publication
+		// watchdog, which would otherwise keep retrying after the round and
+		// could publish the stopped listener's address after the removal
+		// below. The server is already stopped, so the stop itself is a
+		// formality; the branches are mutually exclusive, so the callback
+		// runs exactly once per round either way.
+		stop(context.Background(), true)
 		return err
 	case quitReq = <-d.quit:
 		// proceed.
