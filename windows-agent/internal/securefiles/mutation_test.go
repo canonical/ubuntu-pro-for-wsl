@@ -266,7 +266,8 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 				f, err = c.CreateFile("target.txt")
 			}
 			if tc.refusedOnWindows && runtime.GOOS == "windows" {
-				require.Error(t, err, "Windows must refuse to unlink a node held open without delete sharing")
+				require.ErrorIs(t, err, securefiles.ErrNodeHeld,
+					"Windows must refuse to unlink a node held open without delete sharing, naming the holder's refusal")
 				return
 			}
 			require.NoError(t, err, "creating over a node held open must succeed")

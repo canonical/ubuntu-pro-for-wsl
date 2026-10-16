@@ -30,6 +30,14 @@ var (
 	// not the one it created and stamped, meaning the path was redirected in between.
 	ErrRootReplaced = errors.New("root directory was replaced between creation and open")
 
+	// ErrNodeHeld is returned when an operation needed to remove a node, but another
+	// process holds it open without sharing deletion. The node itself is intact —
+	// the refusal is about the holder, not the node — so a caller that can wait may
+	// retry. Every reader in the agent's family shares deletion (the GUI by contract,
+	// the WSL 9p server because it must, to implement POSIX unlink-while-open), so a
+	// hold that outlasts a moment is software outside the family: an antivirus scan,
+	// an indexer, a backup agent, all transient.
+	ErrNodeHeld = errors.New("node is held open by another process")
 	// ErrNoWatermarkSupport reports a filesystem that cannot carry the ownership
 	// watermark. Nothing on it can be projected as root-owned inside an instance, so the
 	// custodian refuses rather than publishing the agent's credentials unprotected.
@@ -267,7 +275,8 @@ func (c *Custodian) IsOwned(name string) (bool, error) {
 // custodian created and stamped: there is no second name resolution between the stamp
 // and the caller's writes, so ownership cannot be swapped out from under the descriptor.
 // A node another process still holds open is refused rather than truncated, so its
-// descriptor can never follow the node into its replaced life.
+// descriptor can never follow the node into its replaced life; a holder that does not
+// share deletion answers ErrNodeHeld, and the caller decides whether to wait it out.
 //
 // A caller that rotated a file away and cannot tell whether the rotation succeeded
 // needs AppendFile instead: replacing would destroy the only remaining copy.
@@ -288,6 +297,11 @@ func (c *Custodian) CreateFile(name string) (*os.File, error) {
 	// FILE_SHARE_DELETE, and that holder then reads the new node's content; a holder
 	// without delete sharing is refused, as our own replacement is.
 	if err := c.root.Remove(targetRel); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		if c.sys.isHeldNode(err) {
+			// The node stands as it was: nothing was replaced, so no holder can read
+			// anything written after this refusal. Waiting is the caller's decision.
+			return nil, errors.Join(ErrNodeHeld, err)
+		}
 		return nil, mapEscape(err)
 	}
 	return c.sys.createStamped(targetRel, false)

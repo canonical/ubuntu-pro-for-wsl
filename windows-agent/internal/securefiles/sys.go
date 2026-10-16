@@ -122,6 +122,11 @@ type platformSys interface {
 	// False everywhere but Windows.
 	isRenameClassUnsupported(err error) bool
 
+	// isHeldNode answers whether err says a removal was refused because another
+	// process holds the node open without sharing deletion. False everywhere
+	// but Windows: POSIX cannot refuse an unlink because a descriptor is open.
+	isHeldNode(err error) bool
+
 	// isLink answers whether a reparse point stands at rel, opening the point
 	// itself, never its target, so every link kind is classified uniformly.
 	isLink(rel string) (bool, error)

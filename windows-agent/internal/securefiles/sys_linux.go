@@ -337,6 +337,13 @@ func (s *doubleSys) isRenameClassUnsupported(err error) bool {
 	return false
 }
 
+// isHeldNode answers false: POSIX cannot refuse an unlink because a descriptor
+// is open, so the double never sees the refusal the sentinel names.
+func (s *doubleSys) isHeldNode(err error) bool {
+	_ = err
+	return false
+}
+
 // isLink answers whether a symbolic link — the only reparse kind a non-
 // Windows filesystem carries — stands at rel, opening the link itself, never
 // its target.

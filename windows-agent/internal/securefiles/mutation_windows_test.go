@@ -128,6 +128,41 @@ func holdDestination(path string, shareDelete bool) (windows.Handle, error) {
 	)
 }
 
+// TestCreateFileAnswersAHeldNodeWithTheSentinel pins the real classification
+// the sentinel rests on: a host-side process holding the node without sharing
+// deletion (an ordinary os.Open shares read and write only) makes the
+// replacement answer ErrNodeHeld, and the hold lifting lets the replacement
+// through. This is the mechanism the daemon's address-file retry waits on.
+func TestCreateFileAnswersAHeldNodeWithTheSentinel(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
+
+	require.NoError(t, c.WriteFile("target.txt", []byte("OLD")), "Setup: could not seed the node")
+
+	holder, err := os.Open(filepath.Join(dir, "target.txt"))
+	require.NoError(t, err, "Setup: could not hold the node open")
+	defer func() { _ = holder.Close() }()
+
+	_, err = c.CreateFile("target.txt")
+	require.ErrorIs(t, err, securefiles.ErrNodeHeld, "a holder without delete sharing must answer the held sentinel")
+
+	require.NoError(t, holder.Close(), "Setup: could not lift the hold")
+
+	f, err := c.CreateFile("target.txt")
+	require.NoError(t, err, "the replacement must go through once the hold is lifted")
+	_, err = f.WriteString("NEW")
+	require.NoError(t, err, "the write must succeed")
+	require.NoError(t, f.Close(), "the replacement must close cleanly")
+
+	got, err := os.ReadFile(filepath.Join(dir, "target.txt"))
+	require.NoError(t, err)
+	require.Equal(t, "NEW", string(got), "the node must hold the replacement's content")
+}
+
 // TestNodeLevelLinksAreRefused pins the node-level refusal against a real
 // symlink on the real filesystem: a link standing at a node name is never
 // followed, whatever operation asks. The status-to-sentinel translation is

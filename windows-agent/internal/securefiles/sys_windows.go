@@ -523,6 +523,17 @@ func (s *windowsSys) isRenameClassUnsupported(err error) bool {
 	return isUnsupportedInfoClass(err)
 }
 
+// isHeldNode answers whether err says the removal was refused because another
+// process holds the node open without sharing deletion: the DELETE-access open
+// a removal needs was refused by share arbitration. Measured holders that do
+// not share deletion are host-side processes opening with plain read sharing,
+// such as Go's os.Open; the WSL 9p server opens with full sharing (it must, to
+// implement POSIX unlink-while-open), so an instance holding the node never
+// lands here.
+func (s *windowsSys) isHeldNode(err error) bool {
+	return errors.Is(err, windows.ERROR_SHARING_VIOLATION)
+}
+
 // isUnsupportedInfoClass reports whether err says the filesystem does not
 // implement the information class at all, as opposed to refusing this
 // particular operation. Only then is retrying with an older class

@@ -5,8 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -22,7 +25,9 @@ type GRPCServiceRegisterer func(ctx context.Context, isWslNetAvailable bool) *gr
 
 // Daemon is a daemon for windows agents with grpc support.
 type Daemon struct {
-	addressFile *securefiles.Custodian
+	// publicDir is the whole public directory custodian; the daemon only uses it to
+	// create, remove and name the address file inside it.
+	publicDir *securefiles.Custodian
 
 	// serving signals that Serve has been called once. This channel is closed when Serve is called.
 	serving chan struct{}
@@ -44,11 +49,11 @@ func New(ctx context.Context, registerGRPCServices GRPCServiceRegisterer, c *sec
 	log.Debug(ctx, "Building new daemon")
 
 	return &Daemon{
-		addressFile: c,
-		registerer:  registerGRPCServices,
-		quit:        make(chan quitRequest, 1),
-		serving:     make(chan struct{}),
-		stopped:     make(chan struct{}, 1),
+		publicDir:  c,
+		registerer: registerGRPCServices,
+		quit:       make(chan quitRequest, 1),
+		serving:    make(chan struct{}),
+		stopped:    make(chan struct{}, 1),
 	}
 }
 
@@ -115,7 +120,9 @@ var errRestartDaemon = errors.New("Daemon: Restart requested")
 func (d *Daemon) tryServingOnce(ctx context.Context, opts options) error {
 	defer func() {
 		// let the world know we're currently stopped (probably not in definitive)
-		if err := d.addressFile.Remove(common.ListeningPortFileName); err != nil {
+		if err := d.publicDir.Remove(common.ListeningPortFileName); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			// An absent file is the desired end state, not a failure: a serving
+			// round whose publication never went through has nothing to remove.
 			log.Warningf(ctx, "Daemon: could not remove address file: %v", err)
 		}
 		d.stopped <- struct{}{}
@@ -278,19 +285,21 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 
 		// Write a file on disk to signal selected ports to clients.
 		// We write it here to signal error when calling service.Start().
-		// CreateFile (not WriteFile) so the node appears via a direct create:
-		// the GUI's startup monitor waits for a create event on this file, and a
-		// temp-then-rename write is reported as a rename, which such watchers never see.
-		f, err := d.addressFile.CreateFile(common.ListeningPortFileName)
-		if err != nil {
-			return fmt.Errorf("could not create the address file: %v", err)
-		}
-		_, err = f.WriteString(addr)
-		if err = errors.Join(err, f.Close()); err != nil {
-			return fmt.Errorf("when writing the address file: %v", err)
+		err = d.publishAddressFile(ctx, addr)
+		switch {
+		case err == nil:
+			log.Debugf(ctx, "Daemon: address file written to %s",
+				filepath.Join(d.publicDir.BasePath(), common.ListeningPortFileName))
+		case errors.Is(err, securefiles.ErrNodeHeld):
+			// The previous node stands as it was, so the instances keep a
+			// working address until the next serving round rewrites it. The
+			// daemon does not go down for a holder that no reader in the
+			// agent's family can be.
+			log.Errorf(ctx, "Daemon: another process holds the address file open; serving without updating it: %v", err)
+		default:
+			return err
 		}
 
-		log.Debugf(ctx, "Daemon: address file written to %s", d.addressFile.BasePath())
 		log.Infof(ctx, "Daemon: serving gRPC requests on %s", addr)
 		return nil
 	}()
@@ -298,6 +307,10 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 	// We may need to write to the channel before readers know about it.
 	errCh := make(chan error, 1)
 	if err != nil {
+		// The listener is ours to close: no gRPC server was ever handed it.
+		if lis != nil {
+			_ = lis.Close()
+		}
 		errCh <- err
 		// Since the channel is buffered, readers will find the written error.
 		close(errCh)
@@ -319,6 +332,51 @@ func (d *Daemon) serve(ctx context.Context, opts options) (<-chan error, stopFun
 	}()
 
 	return errCh, newStopFunc(grpcServer)
+}
+
+// publishAddressFile publishes the listening address to the address file, briefly
+// outwaiting a holder of the previous node that does not share deletion.
+//
+// The node appears via a direct create (the custodian's CreateFile, not its
+// temp-then-rename WriteFile): the GUI's startup monitor waits for a create event on
+// this file, and a rename is reported as a rename, which such watchers never see.
+//
+// A hold that outlasts the budget is not a reader in the agent's family — the GUI
+// shares deletion by contract and the WSL 9p server because it must, to implement
+// POSIX unlink-while-open — but outside software, an antivirus scan or an indexer,
+// and it is transient. What is not transient is out of the agent's threat model
+// altogether: a same-user host process able to hold this node can hold any other, or
+// kill the agent. So the attempt is retried briefly, and the verdict — held, or the
+// failure it is — travels to the caller, which decides what serving without a fresh
+// address means.
+func (d *Daemon) publishAddressFile(ctx context.Context, addr string) error {
+	const attempts = 4
+	for attempt := 0; ; attempt++ {
+		err := d.writeAddressOnce(addr)
+		if err == nil || !errors.Is(err, securefiles.ErrNodeHeld) || attempt == attempts-1 {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(time.Duration(attempt+1) * 250 * time.Millisecond):
+		}
+	}
+}
+
+// writeAddressOnce performs one address file publication attempt.
+func (d *Daemon) writeAddressOnce(addr string) error {
+	f, err := d.publicDir.CreateFile(common.ListeningPortFileName)
+	if err != nil {
+		// Wrapped with %w, never %v: the caller's decision to keep serving
+		// rests on recognising ErrNodeHeld through this chain.
+		return fmt.Errorf("could not create the address file: %w", err)
+	}
+	_, werr := f.WriteString(addr)
+	if err := errors.Join(werr, f.Close()); err != nil {
+		return fmt.Errorf("when writing the address file: %v", err)
+	}
+	return nil
 }
 
 type stopFunc func(ctx context.Context, force bool)

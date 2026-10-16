@@ -225,6 +225,53 @@ func TestRenameRefusesUnownedNodes(t *testing.T) {
 	}
 }
 
+// TestCreateFileReportsAHeldNode pins the refusal's identity: a removal the
+// platform classifies as a holder's refusal answers ErrNodeHeld — the verdict
+// a caller waits out and retries — while the same removal without that
+// classification stays the filesystem error it was, never the sentinel. The
+// classification itself is the platform's; the Windows real-filesystem test
+// pins it against a holder that shares no deletion.
+func TestCreateFileReportsAHeldNode(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		held bool
+	}{
+		"a removal refused by a holder answers ErrNodeHeld":   {held: true},
+		"a removal refused for another reason stays as it is": {held: false},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			c, err := openFake(t, func(dir string) *fakeSys {
+				// A non-empty directory at the target name makes the removal
+				// fail whatever privileges the test runs with; what the case
+				// varies is only how the platform classifies that failure.
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, "target", "occupied"), 0700),
+					"Setup: could not plant the node to be removed")
+				return &fakeSys{
+					dir: dir,
+					isHeldNodeFn: func(error) bool {
+						return tc.held
+					},
+				}
+			})
+			require.NoError(t, err, "Setup: could not open the custodian over the fake")
+			t.Cleanup(func() { _ = c.Close() })
+
+			_, err = c.CreateFile("target")
+			if tc.held {
+				require.ErrorIs(t, err, ErrNodeHeld, "a holder's refusal must carry the held identity")
+				return
+			}
+			require.Error(t, err, "the removal must still fail")
+			require.NotErrorIs(t, err, ErrNodeHeld, "an unclassified refusal must not wear the held identity")
+		})
+	}
+}
+
 // TestIsOwnedAnswersNotOwnedForDirectories pins the predicate's one shape:
 // a directory is never owned, whatever stands in it — the predicate accepts
 // only the file stamp, and the stamp of a sub-tree root is for the
@@ -427,8 +474,10 @@ type fakeSys struct {
 	readStampFn                func(*os.File) (stamp, bool, error)
 	renameReplaceFn            func(f *os.File, oldRel, newRel string, posix bool) error
 	isRenameClassUnsupportedFn func(err error) bool
-	isLinkFn                   func(rel string) (bool, error)
-	finalPathFn                func() string
+	isHeldNodeFn               func(err error) bool
+
+	isLinkFn    func(rel string) (bool, error)
+	finalPathFn func() string
 }
 
 func (s *fakeSys) establishRoot() (fileIdentity, bool, error) {
@@ -504,6 +553,13 @@ func (s *fakeSys) renameReplace(f *os.File, oldRel, newRel string, posix bool) e
 func (s *fakeSys) isRenameClassUnsupported(err error) bool {
 	if s.isRenameClassUnsupportedFn != nil {
 		return s.isRenameClassUnsupportedFn(err)
+	}
+	return false
+}
+
+func (s *fakeSys) isHeldNode(err error) bool {
+	if s.isHeldNodeFn != nil {
+		return s.isHeldNodeFn(err)
 	}
 	return false
 }
