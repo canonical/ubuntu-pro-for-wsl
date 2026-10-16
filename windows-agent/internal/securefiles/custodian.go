@@ -351,7 +351,21 @@ func (c *Custodian) AppendFile(name string) (*os.File, error) {
 	_, statErr := c.root.Stat(targetRel)
 	switch {
 	case errors.Is(statErr, fs.ErrNotExist):
-		return c.sys.createStamped(targetRel, false)
+		f, err := c.sys.createStamped(targetRel, false)
+		if err != nil {
+			return nil, err
+		}
+		// The create answers a handle free to write anywhere in the file;
+		// the append contract is the descriptor that cannot. The node was
+		// just created stamped, so reopening it through the append profile
+		// costs nothing but the middle: a link planted in the window is
+		// refused by the open, and a node swapped in answers the same
+		// adoption the branch below gives it.
+		if err := f.Close(); err != nil {
+			return nil, err
+		}
+		f, err = c.sys.openNode(targetRel, openAppend)
+		return f, mapEscape(err)
 	case statErr != nil:
 		return nil, mapEscape(statErr)
 	}

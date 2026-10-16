@@ -87,6 +87,10 @@ func TestCreateFileModes(t *testing.T) {
 		seedRaw     string
 		// append selects the mode under test. Omitted, CreateFile replaces.
 		append bool
+		// seekPastEnd seeks the descriptor past the freshly created file's
+		// end before writing, pinning that the append lands at the end
+		// regardless of where the descriptor was left.
+		seekPastEnd bool
 
 		wantContent string
 		// wantOwned is only asserted when checkOwned is set. An unstamped node is
@@ -129,6 +133,19 @@ func TestCreateFileModes(t *testing.T) {
 			checkOwned:  true,
 			wantOwned:   false,
 		},
+		// The append contract is the descriptor's, on the kernel's authority, in
+		// both branches: on a freshly created file a seek past the end must not
+		// move the write away from it. The absent-file branch once answered a
+		// create handle free to write anywhere in the file, which a seek past
+		// the end of the empty file exposes: the write lands at the seek, not
+		// the end.
+		"an append handle created fresh writes at the end after seeking": {
+			append:      true,
+			seekPastEnd: true,
+			wantContent: "written",
+			checkOwned:  true,
+			wantOwned:   true,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -157,6 +174,10 @@ func TestCreateFileModes(t *testing.T) {
 			}
 			require.NoError(t, err, "creating %s must succeed", target)
 
+			if tc.seekPastEnd {
+				_, err = f.Seek(1, io.SeekStart)
+				require.NoError(t, err, "Setup: could not seek past the end of the empty file")
+			}
 			_, err = f.Write([]byte("written"))
 			require.NoError(t, err, "the write must succeed")
 			require.NoError(t, f.Close(), "the file must close cleanly")
@@ -187,6 +208,10 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 		viaWriteFile bool
 		// append targets AppendFile instead of CreateFile.
 		append bool
+		// seekToMiddle seeks to the file's middle before writing, pinning
+		// that the append lands at the end regardless of the descriptor's
+		// position.
+		seekToMiddle bool
 
 		// wantHeldContent is what a descriptor opened before the call reads afterwards.
 		wantHeldContent string

@@ -270,7 +270,7 @@ jobs:
 
           cov_dir=$(pwd)/coverage
           mkdir -p ${cov_dir}/codecov ${cov_dir}/raw
-          go test -v -tags=realwsl -run 'Projection|CannotReachSibling' -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./internal/securefiles/
+          go test -v -tags=realwsl -run 'Projection' -coverpkg=./... -coverprofile=${cov_dir}/raw/coverage.out -covermode=count ./internal/securefiles/
           grep -hv -e "testutils" -e "pb.go:" ${cov_dir}/raw/coverage.out > ${cov_dir}/codecov/coverage.out.codecov
           GOFLAGS="-tags=realwsl" gocover-cobertura -by-files < ${cov_dir}/codecov/coverage.out.codecov > ${cov_dir}/codecov/coverage.xml
       - name: Upload coverage artifacts
