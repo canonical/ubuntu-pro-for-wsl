@@ -91,9 +91,10 @@ func TestCreateFileModes(t *testing.T) {
 
 		wantErr     error
 		wantContent string
-		// wantOwned is only asserted when checkOwned is set: an unstamped node has no
-		// portable answer, since Windows fails the attribute query outright while Linux
-		// reports a missing one. TestIsOwned pins each shape per platform.
+		// wantOwned is only asserted when checkOwned is set. An unstamped node is
+		// answered as not owned on every platform: Windows answers its failed attribute
+		// query when the failure says the file carries no attributes at all, Linux its
+		// missing attribute.
 		checkOwned bool
 		wantOwned  bool
 	}{
@@ -127,6 +128,8 @@ func TestCreateFileModes(t *testing.T) {
 			seedRaw:     "from a previous run",
 			append:      true,
 			wantContent: "from a previous runwritten",
+			checkOwned:  true,
+			wantOwned:   false,
 		},
 		"a name that leaves the sub-tree is refused": {
 			name:    "../escape.txt",

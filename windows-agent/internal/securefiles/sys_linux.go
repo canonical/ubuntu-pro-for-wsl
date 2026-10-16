@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"golang.org/x/sys/unix"
@@ -18,6 +19,14 @@ type platformSys struct {
 	mu    sync.Mutex
 	xattr xattrCalls
 	root  *os.Root
+	// rootDev and rootIno record the identity of the tree root as established at
+	// construction. setRoot compares them against the root open() re-resolved, so a
+	// link planted in the window between the two resolutions refuses the custodian
+	// instead of redirecting it, the same tie Windows keeps with its recorded identity.
+	// A construction that could not record one concedes once, at the first resolution.
+	rootDev     uint64
+	rootIno     uint64
+	rootIDKnown bool
 }
 
 // watermarkXattr is the user namespace extended attribute used to stamp files
@@ -54,15 +63,45 @@ func newPlatformSys(basePath string) (*platformSys, error) {
 
 // newPlatformSysWith is newPlatformSys with the xattr surface supplied rather than assumed.
 func newPlatformSysWith(basePath string, xattr xattrCalls) (*platformSys, error) {
-	if err := os.MkdirAll(basePath, DirMode); err != nil {
+	basePath = filepath.Clean(basePath)
+	// The parents are the agent's own directories and are established the ordinary
+	// way, exactly as the Windows ensureRoot does with its parent handle. The tree
+	// root itself is another matter: established relative to its parent without
+	// following the leaf, because a link standing where the root should be redirects
+	// the whole tree, and Open runs before there is a stamped tree to vouch for the
+	// neighborhood. Windows refuses such a leaf by attribute (OBJ_DONT_REPARSE
+	// answers ErrPathEscapes); the no-follow open here is its Linux counterpart.
+	if err := os.MkdirAll(filepath.Dir(basePath), DirMode); err != nil {
 		return nil, err
 	}
 
-	f, err := os.Open(basePath)
+	parent, err := os.OpenRoot(filepath.Dir(basePath))
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = parent.Close() }()
+
+	leaf := filepath.Base(basePath)
+	if err := parent.Mkdir(leaf, DirMode); err != nil && !errors.Is(err, os.ErrExist) {
+		return nil, err
+	}
+
+	// A pre-existing node is adopted only when it is a real directory: this open
+	// refuses a link standing at the leaf instead of resolving to its target, and
+	// that refusal is the escape verdict.
+	f, err := parent.Open(leaf)
+	if err != nil {
+		return nil, refusedRootError(basePath, err)
+	}
 	defer func() { _ = f.Close() }()
+
+	var st unix.Stat_t
+	if err := unix.Fstat(int(f.Fd()), &st); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+		return nil, err
+	}
+	if st.Mode&unix.S_IFMT != unix.S_IFDIR {
+		return nil, fmt.Errorf("the tree root %s is not a directory", basePath)
+	}
 
 	// Refused here rather than carried: a sub-tree no instance sees as root-owned would
 	// publish the agent's credentials to every unprivileged process in every instance.
@@ -73,7 +112,22 @@ func newPlatformSysWith(basePath string, xattr xattrCalls) (*platformSys, error)
 		return nil, err
 	}
 
-	return &platformSys{xattr: xattr}, nil
+	return &platformSys{
+		xattr:       xattr,
+		rootDev:     st.Dev,
+		rootIno:     st.Ino,
+		rootIDKnown: true,
+	}, nil
+}
+
+// refusedRootError classifies the refusal of the tree root's leaf: a link standing
+// there is the escape verdict, the same one Windows answers by attribute. Anything
+// else is reported as the filesystem said it.
+func refusedRootError(basePath string, err error) error {
+	if isEscapeError(err) || errors.Is(err, unix.ELOOP) {
+		return fmt.Errorf("the tree root %s is a link: %w", basePath, ErrPathEscapes)
+	}
+	return fmt.Errorf("could not establish the tree root %s: %w", basePath, err)
 }
 
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
@@ -110,6 +164,27 @@ func (s *platformSys) isReparsePoint(rel string) (bool, error) {
 // setRoot anchors the platform operations on the custodian's root: every node
 // operation goes through it, so containment is enforced per syscall.
 func (s *platformSys) setRoot(root *os.Root) error {
+	// A second, independent resolution of the path the constructor already
+	// established and held. The parent directory stays writable from inside an
+	// instance (ADR 2.01), so between the two resolutions it can be made to point
+	// elsewhere: the recorded identity ties them to one node, and a mismatch is a
+	// failed verification rather than a redirect to serve. A construction that
+	// could not record an identity (a sub-tree derived from a parent, or a test
+	// build) is conceded once: nothing was recorded, so there is nothing to compare.
+	f, err := root.Open(".")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+
+	var st unix.Stat_t
+	if err := unix.Fstat(int(f.Fd()), &st); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+		return err
+	}
+	if s.rootIDKnown && (st.Dev != s.rootDev || st.Ino != s.rootIno) {
+		return ErrRootReplaced
+	}
+
 	s.root = root
 	return nil
 }

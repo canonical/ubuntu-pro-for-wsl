@@ -429,8 +429,10 @@ func TestCustodianErrors(t *testing.T) {
 // TestSubdirReplacesAPlantedReparsePoint verifies that a link planted where a sub-tree
 // root must live does not block the agent forever: the link is removed and the directory
 // created in its place, serving the child custodian, while the link target is untouched.
-// The refusal pinned in TestEnsureRootRefusesARedirectedRoot stays for the tree root,
-// the one place where a link cannot be told from a deliberate redirection.
+// A link that cannot be removed is the refusal case: the sub-tree is refused rather than
+// opened through something unchecked. The tree-root refusal pinned in
+// TestEnsureRootRefusesARedirectedRoot stays where it is, the one place where a link
+// cannot be told from a deliberate redirection.
 func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 	t.Parallel()
 
@@ -441,6 +443,10 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 
 		// linkInTree plants the link pointing at a missing sibling inside the tree.
 		linkInTree bool
+
+		// cannotRemove makes the planted link unremovable, so the heal cannot run:
+		// the sub-tree must be refused, not opened through something unchecked.
+		cannotRemove bool
 	}{
 		"a link to a directory outside the tree": {linkTargetOutsideDir: true},
 		"a link to a file outside the tree":      {},
@@ -449,6 +455,8 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 		// fresh-looking creation may have gone through the link instead of creating
 		// the directory itself.
 		"a link to a directory inside the tree": {linkInTree: true},
+
+		"a link that cannot be removed is refused": {cannotRemove: true},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -478,7 +486,38 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 			require.NoError(t, err, "the tree itself is still adoptable and stampable")
 			defer func() { _ = c.Close() }()
 
+			if tc.cannotRemove {
+				// Make the link unremovable: on Windows a reparse point held open
+				// without delete-sharing refuses its own removal; on the other
+				// platforms a non-root Unix user cannot remove a link from a tree
+				// root they cannot write.
+				switch runtime.GOOS {
+				case "windows":
+					holdReparsePointOpen(t, filepath.Join(root, "sub"))
+				default:
+					if os.Geteuid() == 0 {
+						t.Skip("read-only directory semantics require a non-root Unix user")
+					}
+					//nolint:gosec // G302 - test setup removes directory write permission.
+					require.NoError(t, os.Chmod(root, 0500), "Setup: could not make the tree root read-only")
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					t.Cleanup(func() { _ = os.Chmod(root, 0700) })
+				}
+			}
+
 			sub, err := c.Subdir("sub")
+			if tc.cannotRemove {
+				require.Error(t, err, "a link that cannot be removed must refuse the sub-tree")
+				require.Nil(t, sub, "a refused sub-tree must not yield a custodian")
+
+				fi, err := os.Lstat(filepath.Join(root, "sub"))
+				require.NoError(t, err, "the planted link must still stand at the name")
+				require.NotZero(t, fi.Mode()&os.ModeSymlink, "the planted link must not have been replaced")
+				data, err := os.ReadFile(sentinel)
+				require.NoError(t, err)
+				require.Equal(t, "PRECIOUS", string(data), "nothing may be written through the link")
+				return
+			}
 			require.NoError(t, err, "a planted link must not block the sub-tree forever")
 			defer func() { _ = sub.Close() }()
 
