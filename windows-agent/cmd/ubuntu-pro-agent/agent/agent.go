@@ -212,8 +212,10 @@ func (a *App) Quit() {
 	// the services stop them. Tearing the daemon down first therefore deadlocked
 	// the agent on Ctrl-C whenever a stream was active (UDENG-1182), and this order
 	// is the fix that shipped. The price is that a request still in flight when its
-	// custodian closes fails cleanly with a handle error instead of being served -
-	// cosmetic at shutdown, and far cheaper than a hang.
+	// custodian closes fails with a handle error instead of being served — its
+	// data is lost rather than published, a provisioning write among them; the
+	// instance regenerates what it can on its next provisioning. Far cheaper than
+	// a hang, and the trade the fixed ordering chose.
 	a.proServices.Stop(context.Background())
 	a.daemon.Quit(context.Background(), false)
 }
