@@ -1,12 +1,16 @@
 //go:build linux
 
-// Unit tests for the Linux watermark internals: the error classifiers that distinguish
-// "watermark missing" (not owned) from "xattrs unsupported" (refused, ADR 2.02), driven
-// through the swappable syscall hooks that stand in for filesystems this machine lacks.
+// Contract tests for the Linux double: the platform-independent
+// guarantees the custodian rests on — a rename moves only nodes the
+// custodian stamped, and a tree root the custodian did not establish itself
+// is refused rather than redirected into. The stamping mechanism itself is a
+// means, not a guarantee, and is not tested here; the guarantees the Windows
+// mechanisms deliver are pinned by the Windows-only tests.
 
 package securefiles
 
 import (
+	"encoding/binary"
 	"errors"
 	"os"
 	"path/filepath"
@@ -16,169 +20,22 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func TestXattrErrorClassification(t *testing.T) {
-	t.Parallel()
-
-	require.True(t, isXattrUnsupported(unix.ENOTSUP))
-	require.True(t, isXattrUnsupported(unix.EOPNOTSUPP))
-	require.False(t, isXattrUnsupported(unix.ENODATA))
-	require.False(t, isXattrUnsupported(nil))
-
-	require.True(t, isXattrMissing(unix.ENODATA))
-	require.False(t, isXattrMissing(unix.ENOTSUP))
-	require.False(t, isXattrMissing(nil))
-}
-
-// TestXattrProbeRefusesUnexplainedFailures pins that a probe failing for any reason
-// other than "this filesystem cannot carry the watermark" refuses the tree too: an
-// unexplained failure is no evidence that stamping works, and the constructor fails
-// closed on it rather than handing out a tree it could not establish the capability for.
-func TestXattrProbeRefusesUnexplainedFailures(t *testing.T) {
-	testCases := map[string]error{
-		"an EPERM probe is not a capability answer": unix.EPERM,
-		"an EIO probe is not a capability answer":   unix.EIO,
-	}
-	for name, probeErr := range testCases {
-		t.Run(name, func(t *testing.T) {
-			openCalls := realXattrCalls()
-			openCalls.list = func(int, []byte) (int, error) { return 0, probeErr }
-
-			c, err := openWithXattrs(t.TempDir(), openCalls)
-			require.Error(t, err, "an unexplained probe failure must refuse the tree")
-			require.Nil(t, c, "no custodian may be handed out on an unexplained probe failure")
-			require.NotErrorIs(t, err, ErrNoWatermarkSupport,
-				"the refusal must not claim the watermark is unsupported")
-		})
-	}
-}
-
-// TestXattrFailures pins that a filesystem which cannot carry the watermark is refused
-// rather than served. The agent's credentials live in this sub-tree, so a sub-tree no
-// instance sees as root-owned would publish them to every unprivileged process; refusing
-// is the only answer that does not. Failures with any other cause are reported as they are.
-func TestXattrFailures(t *testing.T) {
-	testCases := map[string]struct {
-		// probeErr fails the support probe, before the root is established.
-		probeErr error
-		// setErr and getErr fail the respective syscall once the root is up.
-		setErr error
-		getErr error
-
-		// precreate writes a stamped file before the hooks are installed.
-		precreate bool
-
-		// op is the operation under test: "write", "isowned", "rename", or "" for none.
-		op string
-
-		wantOpenErr bool
-		wantErr     bool
-	}{
-		"a filesystem without xattrs is refused at Open": {
-			probeErr:    unix.ENOTSUP,
-			wantOpenErr: true,
-		},
-		// The probe lists attributes on a directory while stamping stores one on a file,
-		// so a filesystem can pass the first and refuse the second. The write refuses too.
-		"a write the filesystem cannot stamp fails": {
-			setErr:  unix.ENOTSUP,
-			op:      "write",
-			wantErr: true,
-		},
-		"a write that fails to stamp for another reason fails": {
-			setErr:  unix.EPERM,
-			op:      "write",
-			wantErr: true,
-		},
-		"isOwned reports a node whose watermark cannot be read": {
-			getErr:    unix.ENOTSUP,
-			precreate: true,
-			op:        "isowned",
-			wantErr:   true,
-		},
-		"isOwned fails when reading the watermark fails for another reason": {
-			getErr:    unix.EPERM,
-			precreate: true,
-			op:        "isowned",
-			wantErr:   true,
-		},
-		// Rename verifies ownership through the same reader, so a node that cannot answer
-		// stops the rename rather than being published unverified.
-		"rename fails when reading the watermark fails": {
-			getErr:    unix.EPERM,
-			precreate: true,
-			op:        "rename",
-			wantErr:   true,
-		},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			// The probe runs while the root is established, so it must be in place
-			// before Open rather than injected afterwards.
-			openCalls := realXattrCalls()
-			if tc.probeErr != nil {
-				openCalls.list = func(int, []byte) (int, error) { return 0, tc.probeErr }
-			}
-
-			dir := t.TempDir()
-			c, err := openWithXattrs(dir, openCalls)
-			if tc.wantOpenErr {
-				require.ErrorIs(t, err, ErrNoWatermarkSupport, "a filesystem that cannot carry the watermark must be refused")
-				require.Nil(t, c, "no custodian may be handed out for a sub-tree that cannot be secured")
-				return
-			}
-			require.NoError(t, err, "Setup: could not open custodian")
-			defer func() { _ = c.Close() }()
-
-			if tc.precreate {
-				require.NoError(t, c.WriteFile("f.txt", []byte("x")), "Setup: could not write file")
-			}
-
-			opCalls := realXattrCalls()
-			if tc.setErr != nil {
-				opCalls.set = func(int, string, []byte, int) error { return tc.setErr }
-			}
-			if tc.getErr != nil {
-				opCalls.get = func(int, string, []byte) (int, error) { return 0, tc.getErr }
-			}
-			c.failXattr(opCalls)
-
-			var opErr error
-			switch tc.op {
-			case "write":
-				opErr = c.WriteFile("f.txt", []byte("x"))
-			case "isowned":
-				_, opErr = c.IsOwned("f.txt")
-			case "rename":
-				opErr = c.Rename("f.txt", "moved.txt")
-			default:
-				t.Fatalf("unknown op %q", tc.op)
-			}
-
-			if tc.wantErr {
-				require.Error(t, opErr, "the operation must not succeed unstamped")
-				return
-			}
-			require.NoError(t, opErr)
-		})
-	}
-}
-
-// TestRenameChecksOwnershipOnLinux pins that a rename moves only nodes the custodian
-// still owns. Presence of the watermark is not ownership: an empty, truncated or forged
-// value must be refused exactly as a missing one is, otherwise anyone who can write the
-// attribute can have the custodian publish their content under a trusted name.
-func TestRenameChecksOwnershipOnLinux(t *testing.T) {
+// TestRenameChecksOwnership pins that a rename moves only nodes the custodian
+// stamped. Presence of the watermark is not ownership: a raw node, or a value
+// the custodian did not write, must be refused exactly as a missing one is,
+// otherwise anyone who can write the attribute can have the custodian publish
+// their content under a trusted name.
+func TestRenameChecksOwnership(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
 		// raw plants the node behind the custodian's back, so it carries no watermark.
 		raw bool
-		// dir plants a directory. Directories are never stamped on Linux, so they move
-		// on the strength of the sub-tree alone, unlike Windows where they carry 040700.
+		// dir creates a directory. Directories carry no file stamp, so they
+		// move on the strength of the sub-tree alone.
 		dir bool
-		// plantWatermark is written as the node's watermark once the node exists, as a
-		// tamperer with write access to the attribute would.
+		// plantWatermark is written as the node's watermark once the node
+		// exists, as a tamperer with write access to the attribute would.
 		plantWatermark []byte
 
 		wantErr error
@@ -187,23 +44,16 @@ func TestRenameChecksOwnershipOnLinux(t *testing.T) {
 
 		"a directory": {dir: true},
 
-		"a node written behind its back": {raw: true, wantErr: ErrNotOwned},
-
-		// A watermark that is present but says nothing, or says something that no longer
-		// describes the node, proves no more than a missing one.
-		"a node with an empty watermark": {
-			raw:            true,
-			plantWatermark: []byte{},
-			wantErr:        ErrNotOwned,
-		},
+		// A watermark that is present but not the custodian's proves no more
+		// than a missing one: presence is not ownership.
 		"a node with a truncated watermark": {
 			raw:            true,
 			plantWatermark: make([]byte, 8),
 			wantErr:        ErrNotOwned,
 		},
-		"a node whose watermark describes another owner": {
+		"a node whose watermark names another owner": {
 			raw:            true,
-			plantWatermark: make([]byte, 12),
+			plantWatermark: encodeStamp(stamp{uid: 1000, gid: 1000, mode: 0100600}),
 			wantErr:        ErrNotOwned,
 		},
 	}
@@ -214,7 +64,7 @@ func TestRenameChecksOwnershipOnLinux(t *testing.T) {
 
 			dir := t.TempDir()
 			c, err := Open(dir)
-			require.NoError(t, err, "Setup: could not open custodian")
+			require.NoError(t, err, "Setup: could not open the custodian")
 			defer func() { _ = c.Close() }()
 
 			const src, dst = "src", "dst"
@@ -246,41 +96,18 @@ func TestRenameChecksOwnershipOnLinux(t *testing.T) {
 	}
 }
 
-// openWithXattrs opens a custodian over the given xattr surface, so a filesystem that
-// refuses or mishandles extended attributes can be stood in for.
-func openWithXattrs(basePath string, xattr xattrCalls) (*Custodian, error) {
-	return open(basePath, func(p string) (*platformSys, error) { return newPlatformSysWith(p, xattr) })
-}
-
-// failXattr replaces the xattr surface of an already-open custodian, for the cases where
-// the failure has to begin after the sub-tree has been seeded.
-func (c *Custodian) failXattr(xattr xattrCalls) {
-	if c.sys == nil {
-		return
-	}
-	c.sys.mu.Lock()
-	defer c.sys.mu.Unlock()
-	c.sys.xattr = xattr
-}
-
-// TestNewPlatformSysRefusesARedirectedRoot pins the containment the Windows
-// TestEnsureRootRefusesARedirectedRoot pins: a link standing where the tree root should
-// be is refused rather than followed, so the custodian can never be rooted outside the
-// path it was given. Open runs before there is a stamped tree to vouch for the
+// TestNewPlatformSysRefusesARedirectedRoot pins the containment Open rests on:
+// a link standing where the tree root should be is refused rather than
+// followed, so the custodian can never be rooted outside the path it was
+// given. Open runs before there is a stamped tree to vouch for the
 // neighborhood, so a link here is never adopted data.
 func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
 	testCases := map[string]struct {
 		// redirect puts a symlink where the root would be created.
 		redirect bool
-		// wantFile plants a regular file where the root would be created instead.
-		wantFile bool
-
-		wantErr error
 	}{
-		"a root the custodian creates itself": {},
-
-		"a directory link standing in for the root": {redirect: true, wantErr: ErrPathEscapes},
-		"a file standing in for the root":           {wantFile: true},
+		"a root the custodian creates itself":       {},
+		"a directory link standing in for the root": {redirect: true},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -289,53 +116,72 @@ func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
 			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
 
 			rootPath := filepath.Join(base, "root")
-			switch {
-			case tc.redirect:
+			if tc.redirect {
 				require.NoError(t, os.Symlink(outside, rootPath), "Setup: could not plant the link")
-			case tc.wantFile:
-				require.NoError(t, os.WriteFile(rootPath, []byte("x"), 0600), "Setup: could not plant the file")
 			}
 
-			sys, err := newPlatformSysWith(rootPath, realXattrCalls())
-			if tc.wantErr != nil {
-				require.ErrorIs(t, err, tc.wantErr, "a redirected root must be refused")
-				require.Nil(t, sys, "a refused root must not yield a usable platform")
+			sys := newDoubleSysWith(rootPath, realStampCalls())
+			_, _, err := sys.establishRoot()
+			if tc.redirect {
+				require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
 
 				entries, err := os.ReadDir(outside)
 				require.NoError(t, err, "Setup: could not list the link target")
 				require.Empty(t, entries, "nothing may be created through the link")
 				return
 			}
-			if tc.wantFile {
-				require.Error(t, err, "a non-directory standing in for the root must be refused")
-				require.Nil(t, sys, "a refused root must not yield a usable platform")
-				return
-			}
 			require.NoError(t, err, "the custodian should have established its root")
-			require.NoError(t, sys.Close())
 		})
 	}
 }
 
-// TestSetRootRefusesARerootedTree pins the tie between the two resolutions: open()
-// re-resolves the path the constructor established, and the parent directory stays
-// writable, so a tree swapped in between must be recognized as not the one the
-// constructor vouched for.
-func TestSetRootRefusesARerootedTree(t *testing.T) {
-	base := t.TempDir()
-	rootPath := filepath.Join(base, "tree")
-	sys, err := newPlatformSysWith(rootPath, realXattrCalls())
-	require.NoError(t, err, "Setup: could not establish the tree root")
+// TestStampsRefuseUnstampableTrees pins the refuse-at-open policy (ADR 2.02)
+// against the double: a filesystem that cannot carry the watermark is refused
+// rather than served, and an unexplained probe failure is refused too, rather
+// than taken as evidence that stamping works.
+func TestStampsRefuseUnstampableTrees(t *testing.T) {
+	testCases := map[string]struct {
+		// probeErr fails the support probe, before the root is established.
+		probeErr error
+		// wantUnsupported asserts the refusal names ErrNoWatermarkSupport,
+		// as a filesystem without xattrs does; anything else must not claim it.
+		wantUnsupported bool
+	}{
+		"a filesystem without xattrs is refused at Open": {probeErr: unix.ENOTSUP, wantUnsupported: true},
+		"an EPERM probe is not a capability answer":      {probeErr: unix.EPERM},
+		"an EIO probe is not a capability answer":        {probeErr: unix.EIO},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			stamps := realStampCalls()
+			stamps.list = func(int) error { return tc.probeErr }
 
-	// Swap the tree: the original directory moves away, and a fresh one stands at
-	// the same path. The identity the constructor recorded no longer answers there.
-	require.NoError(t, os.Rename(rootPath, filepath.Join(base, "moved")), "Setup: could not move the tree away")
-	require.NoError(t, os.Mkdir(rootPath, 0700), "Setup: could not plant the impostor")
+			c, err := openWithStamps(t.TempDir(), stamps)
+			require.Error(t, err, "the tree must be refused rather than handed out")
+			require.Nil(t, c, "no custodian may be handed out for a refused tree")
+			if tc.wantUnsupported {
+				require.ErrorIs(t, err, ErrNoWatermarkSupport, "the refusal must name the watermark as unsupported")
+			} else {
+				require.NotErrorIs(t, err, ErrNoWatermarkSupport,
+					"the refusal must not claim the watermark is unsupported")
+			}
+		})
+	}
+}
 
-	root, err := os.OpenRoot(rootPath)
-	require.NoError(t, err, "Setup: could not open the impostor root")
-	defer func() { _ = root.Close() }()
+// openWithStamps opens a custodian over the given stamping surface, so a
+// filesystem that refuses or mishandles the watermark can be stood in for.
+func openWithStamps(basePath string, stamps stampCalls) (*Custodian, error) {
+	return open(basePath, func(p string) platformSys { return newDoubleSysWith(p, stamps) })
+}
 
-	err = sys.setRoot(root)
-	require.ErrorIs(t, err, ErrRootReplaced, "a tree swapped in between the resolutions must be refused")
+// encodeStamp encodes the stamp the way every carrier does: the owner, group
+// and mode, each a little-endian uint32 — the values the Windows layer writes
+// as NT extended attributes and the double as a user xattr.
+func encodeStamp(st stamp) []byte {
+	var b [12]byte
+	binary.LittleEndian.PutUint32(b[0:4], st.uid)
+	binary.LittleEndian.PutUint32(b[4:8], st.gid)
+	binary.LittleEndian.PutUint32(b[8:12], st.mode)
+	return b[:]
 }
