@@ -366,17 +366,50 @@ func (s *windowsSys) stampDir(rel string) error {
 // openNode opens the node standing at rel with the profile's access, never the
 // target of a reparse point: OBJ_DONT_REPARSE answers a link standing there
 // with ErrPathEscapes. openRename adds the access the publish path needs, so
-// that the verification and the rename answer for the same node.
+// that the verification and the rename answer for the same node. The append
+// profile asks for FILE_APPEND_DATA without FILE_WRITE_DATA, so the kernel
+// itself routes every write on the descriptor to the node's end — a handle
+// cannot seek-and-overwrite, whatever the holder tries. The directory profile
+// asks for listing rights on a directory and nothing else.
 func (s *windowsSys) openNode(rel string, profile openProfile) (*os.File, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	access := uint32(windows.GENERIC_READ)
-	if profile == openRename {
-		access |= windows.GENERIC_WRITE | windows.DELETE
+	var (
+		access     uint32
+		attributes uint32
+		options    uint32
+	)
+	switch profile {
+	case openRead:
+		access = windows.GENERIC_READ
+	case openRename:
+		access = windows.GENERIC_READ | windows.GENERIC_WRITE | windows.DELETE
+	case openAppend:
+		// No FILE_WRITE_DATA: append rights alone make the kernel perform
+		// every write at the end of the file, the access-right equivalent of
+		// POSIX O_APPEND. And FILE_APPEND_DATA on a directory is the right to
+		// create a subdirectory, not a refusal, so a non-directory node must
+		// be demanded explicitly: a directory standing at the name — a real
+		// one, or a link's target — answers STATUS_FILE_IS_A_DIRECTORY.
+		access = windows.GENERIC_READ | windows.FILE_APPEND_DATA
+		options = windows.FILE_NON_DIRECTORY_FILE
+	case openDir:
+		access = windows.FILE_LIST_DIRECTORY
+		// No FILE_ATTRIBUTE_DIRECTORY: attributes are for creation, and an
+		// open answers ERROR_INVALID_NAME for them. FILE_DIRECTORY_FILE in
+		// the options is what asks for a directory.
+		options = windows.FILE_DIRECTORY_FILE
 	}
 
-	h, err := s.openExisting(rel, access, 0, 0)
+	// The NT object manager has no "." name: an empty relative name opens
+	// the base the OBJECT_ATTRIBUTES anchors on (the same rule holdNode
+	// uses), so the tree root itself is named the way it resolves.
+	if rel == "." {
+		rel = ""
+	}
+
+	h, err := s.openExisting(rel, access, attributes, options)
 	if err != nil {
 		return nil, err
 	}

@@ -31,12 +31,16 @@ type fileIdentity struct {
 // answers questions about the node, openRename is the profile the
 // publish-by-rename path needs, where the platform renames through the
 // descriptor, so that the verification and the rename answer for the same
-// node.
+// node; openAppend is the append-only profile, whose writes go to the end of
+// the node on the kernel's own authority; openDir lists a directory. Every
+// profile opens the node itself, never the target of a link.
 type openProfile int
 
 const (
 	openRead openProfile = iota
 	openRename
+	openAppend
+	openDir
 )
 
 // platformSys is the custodian's OS layer: one method per mechanism, no
@@ -96,7 +100,10 @@ type platformSys interface {
 
 	// openNode opens the node standing at rel with the profile's access,
 	// never the target of a reparse point: a link standing there answers
-	// ErrPathEscapes.
+	// ErrPathEscapes. The append profile opens without write-the-middle
+	// rights, so a descriptor on it can only ever append; the directory
+	// profile answers for a directory. A node that is not the kind the
+	// profile expects answers the platform's refusal for that mismatch.
 	openNode(rel string, profile openProfile) (*os.File, error)
 
 	// readStamp reads the ownership stamp of an open node. ok=false is the

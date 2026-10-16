@@ -299,6 +299,11 @@ func (c *Custodian) CreateFile(name string) (*os.File, error) {
 // rotation succeeded, where the file left behind may be the only remaining copy. The
 // adoption policy belongs to the caller: one that must never write into a node it does
 // not own checks IsOwned before appending, and replaces instead.
+//
+// The append is a property of the descriptor, not the writer: every write on it goes
+// to the node's end on the kernel's own authority, and a link standing at the name is
+// refused like everywhere else — the append answers for the node at the name, never
+// for a link's target.
 func (c *Custodian) AppendFile(name string) (*os.File, error) {
 	targetRel, err := c.resolve(name)
 	if err != nil {
@@ -313,7 +318,7 @@ func (c *Custodian) AppendFile(name string) (*os.File, error) {
 		return nil, mapEscape(statErr)
 	}
 
-	f, err := c.root.OpenFile(targetRel, os.O_WRONLY|os.O_APPEND, 0)
+	f, err := c.sys.openNode(targetRel, openAppend)
 	return f, mapEscape(err)
 }
 
@@ -336,12 +341,17 @@ func (c *Custodian) RemoveAll(name string) error {
 }
 
 // ReadDir lists the named directory relative to the custodian's sub-tree.
+// The listing answers for the directory standing at the name — a link there
+// is refused, like everywhere else — and the entry names say nothing about
+// who planted them: a listing is a question about the world as it stands,
+// and the ownership predicate (IsOwned) is the one to ask about each node
+// the caller means to act on.
 func (c *Custodian) ReadDir(name string) ([]os.DirEntry, error) {
 	rel, err := c.resolve(name)
 	if err != nil {
 		return nil, err
 	}
-	f, err := c.root.Open(rel)
+	f, err := c.sys.openNode(rel, openDir)
 	if err != nil {
 		return nil, mapEscape(err)
 	}

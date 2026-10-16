@@ -449,3 +449,35 @@ func TestRemove(t *testing.T) {
 		})
 	}
 }
+
+// TestAppendAndReadDirRefuseLinks pins that the link rule has no exceptions
+// left: a link standing at a name the custodian is asked to append to, or to
+// list, is refused exactly as every other open is. The link resolving inside
+// the sub-tree does not help it — the operations answer for the node at the
+// name, never for a link's target.
+func TestAppendAndReadDirRefuseLinks(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
+
+	// An in-tree node the link points at: legal target, planted link.
+	require.NoError(t, c.WriteFile("inside.txt", []byte("inside")), "Setup: could not seed an in-tree node")
+	require.NoError(t, os.Symlink("inside.txt", filepath.Join(dir, "log-link")), "Setup: could not plant the file link")
+
+	_, err = c.AppendFile("log-link")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the append must refuse a link standing at the name, not write through it")
+	got, err := os.ReadFile(filepath.Join(dir, "inside.txt"))
+	require.NoError(t, err, "Setup: the target must still be readable")
+	require.Equal(t, "inside", string(got), "no refused append may reach the link's target")
+
+	// A link standing at a directory name is refused the same way.
+	require.NoError(t, os.Mkdir(filepath.Join(dir, "realdir"), 0700), "Setup: could not create the directory")
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "realdir", "entry.txt"), []byte("x"), 0600), "Setup: could not fill the directory")
+	require.NoError(t, os.Symlink("realdir", filepath.Join(dir, "dir-link")), "Setup: could not plant the directory link")
+
+	_, err = c.ReadDir("dir-link")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the listing must refuse a link standing at the name, not list through it")
+}

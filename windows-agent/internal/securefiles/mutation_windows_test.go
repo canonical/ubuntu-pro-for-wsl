@@ -127,3 +127,43 @@ func holdDestination(path string, shareDelete bool) (windows.Handle, error) {
 		0,
 	)
 }
+
+// TestNodeLevelLinksAreRefused pins the node-level refusal against a real
+// symlink on the real filesystem: a link standing at a node name is never
+// followed, whatever operation asks. The status-to-sentinel translation is
+// pinned by TestMapNtStatus, and the tree-root level by the establishRoot
+// tests; this is the ordinary-node level of the same containment, exercised
+// end to end through the public operations.
+func TestNodeLevelLinksAreRefused(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
+
+	// A link planted inside the tree, pointing outside it. It cannot be
+	// planted through the custodian; planting it behind its back is exactly
+	// what the refusal answers for.
+	target := filepath.Join(filepath.Dir(dir), "outside-secret.txt")
+	require.NoError(t, os.WriteFile(target, []byte("secret"), 0600), "Setup: could not create the link target")
+	t.Cleanup(func() { _ = os.Remove(target) })
+	require.NoError(t, os.Symlink(target, filepath.Join(dir, "link")), "Setup: could not plant the link")
+	// And one pointing inside, for the in-tree flavor of the same refusal.
+	require.NoError(t, c.WriteFile("inside.txt", []byte("inside")), "Setup: could not seed an in-tree node")
+	require.NoError(t, os.Symlink("inside.txt", filepath.Join(dir, "inlink")), "Setup: could not plant the in-tree link")
+
+	_, err = c.IsOwned("link")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the ownership predicate must refuse a link standing at the name, not follow it")
+
+	_, err = c.IsOwned("inlink")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "an in-tree link is refused as surely as an escaping one: the predicate answers for the node, not the target")
+
+	err = c.Rename("link", "renamed")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the rename must refuse a link standing at the source name, not publish through it")
+
+	// The link target is untouched by every refusal above.
+	got, err := os.ReadFile(target)
+	require.NoError(t, err, "the link target must still be readable under its own name")
+	require.Equal(t, "secret", string(got), "no refusal may reach through the link to its target")
+}

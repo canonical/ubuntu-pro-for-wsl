@@ -34,7 +34,14 @@ type doubleSys struct {
 	// root anchors every node operation: containment is enforced per syscall
 	// by the os.Root itself. basePath is the path the layer was constructed
 	// at, recorded so finalPath can answer it.
+	//
+	// rootFD is the root's own descriptor, opened beside the os.Root: os.Root
+	// cannot be asked for its handle, and openNode needs one to openat against
+	// with O_NOFOLLOW — the one open os.Root itself cannot perform, because it
+	// resolves an in-tree link instead of refusing it. Held for the
+	// custodian's lifetime, closed in release.
 	root     *os.Root
+	rootFD   int
 	basePath string
 }
 
@@ -78,14 +85,14 @@ func newPlatformSys(basePath string) platformSys {
 // newDoubleSysWith is newPlatformSys with the stamping surface supplied
 // rather than assumed.
 func newDoubleSysWith(basePath string, stamps stampCalls) platformSys {
-	return &doubleSys{basePath: basePath, stamps: stamps}
+	return &doubleSys{basePath: basePath, stamps: stamps, rootFD: -1}
 }
 
 // sub returns the layer for a sub-custodian: the same stamping surface as the
 // parent's, as it stands at the handout, and no path of its own to resolve —
 // a sub-tree root is reached through the parent's containment.
 func (s *doubleSys) sub() platformSys {
-	return &doubleSys{basePath: s.basePath, stamps: s.stamps}
+	return &doubleSys{basePath: s.basePath, stamps: s.stamps, rootFD: -1}
 }
 
 // establishRoot creates or adopts the tree root, stamped either way, and
@@ -155,16 +162,37 @@ func (s *doubleSys) identity(f *os.File) (fileIdentity, bool) {
 }
 
 // attach anchors the double's operations on the root the custodian opened and
-// verified. Construction-time only: this runs while the custodian is still
-// being built, before it is reachable from any other goroutine.
+// verified, opening its own descriptor beside the os.Root's (see rootFD).
+// Construction-time only: this runs while the custodian is still being built,
+// before it is reachable from any other goroutine.
 func (s *doubleSys) attach(root *os.Root) error {
 	s.root = root
+	// Open the root through the os.Root itself: "." resolves to the tree
+	// root, and the returned descriptor is one openat can be issued against.
+	f, err := root.Open(".")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	fd, err := unix.Dup(int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+	if err != nil {
+		return err
+	}
+	if err := unix.SetNonblock(fd, false); err != nil {
+		_ = unix.Close(fd)
+		return err
+	}
+	s.rootFD = fd
 	return nil
 }
 
-// release releases everything the double holds. The custodian closes the
-// os.Root itself, and the double holds nothing else.
+// release releases everything the double holds: the root descriptor beside
+// the os.Root, which the custodian closes itself.
 func (s *doubleSys) release() error {
+	if s.rootFD >= 0 {
+		_ = unix.Close(s.rootFD)
+		s.rootFD = -1
+	}
 	return nil
 }
 
@@ -223,21 +251,42 @@ func (s *doubleSys) stampDir(string) error {
 	return nil
 }
 
-// openNode opens the node standing at rel with the profile's access, never
-// the target of a link: O_NOFOLLOW answers ELOOP, and a link escaping the
-// root is answered by the containment error before the flag is consulted.
-// Both mean a link, and both answer ErrPathEscapes. POSIX renames by name
-// rather than through the descriptor, so both profiles open the same.
+// openNode opens the node standing at rel with the profile's access, never the
+// target of a link: O_NOFOLLOW answers ELOOP, and a link escaping the root
+// is answered by the containment error before the flag is consulted.
+// Both mean a link, and both answer ErrPathEscapes.
+//
+// os.Root cannot be asked not to follow a link resolving inside the tree — it
+// resolves one itself — so the double performs its own openat against the
+// root's descriptor, the same way os.Root would, with O_NOFOLLOW added.
 func (s *doubleSys) openNode(rel string, profile openProfile) (*os.File, error) {
-	_ = profile // read and rename are the same open on POSIX
-	f, err := s.root.OpenFile(rel, os.O_RDONLY|unix.O_NOFOLLOW, 0)
-	if err != nil {
-		if errors.Is(err, unix.ELOOP) || isEscapeError(err) {
-			return nil, ErrPathEscapes
-		}
-		return nil, err
+	var flags int
+	switch profile {
+	case openRead, openRename:
+		// Rename also moves directories, and they carry no file stamp: the
+		// policy decides about them from the Stat, not the kind.
+		flags = os.O_RDONLY
+	case openAppend:
+		flags = os.O_WRONLY | os.O_APPEND
+	case openDir:
+		flags = os.O_RDONLY | unix.O_DIRECTORY
 	}
-	return f, nil
+
+	fd, err := unix.Openat(s.rootFD, rel, flags|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return nil, classifyOpenErr(err)
+	}
+	return os.NewFile(uintptr(fd), rel), nil //#nosec G115 // a file descriptor is a small non-negative int; int->uintptr only widens.
+}
+
+// classifyOpenErr turns an openat refusal into the custodian's answers: a
+// link standing at the name (ELOOP, or the ENOTDIR O_DIRECTORY answers for a
+// link) is the escape sentinel; anything else is the filesystem error it is.
+func classifyOpenErr(err error) error {
+	if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) {
+		return ErrPathEscapes
+	}
+	return err
 }
 
 // readStamp reads the ownership stamp of an open node. A missing attribute is
