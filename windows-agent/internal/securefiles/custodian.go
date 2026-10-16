@@ -4,7 +4,6 @@
 package securefiles
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -13,8 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
 )
 
 // DirMode and FileMode are the permissions applied to directories and files managed by the custodian.
@@ -417,40 +414,44 @@ func (c *Custodian) renameNode(oldRel, newRel string, expect *os.File) error {
 	return mapEscape(err)
 }
 
-// PurgeAll removes every node in the sub-tree, whatever it is. It is for sub-trees
-// whose contents are wholly the agent's to discard: an ephemeral credential store
-// regenerated on every start, a cache. Where contents can still be data someone else
-// needs, the caller decides what to keep and uses Purge with a predicate instead, and
-// inspects what it removed: PurgeAll's caller has no use for the names, so they are
-// only logged.
+// PurgeAll removes every node in the sub-tree, whatever it is, and returns
+// the relative names it removed. It is for sub-trees whose contents are
+// wholly the agent's to discard: an ephemeral credential store regenerated
+// on every start, a cache. Where contents can still be data someone else
+// needs, the caller decides what to keep and uses Purge with a predicate
+// instead, and inspects what it removed. The names travel back to the
+// caller, which knows what each one was and says it at its own severity: a
+// log from here would say every removal once, blind.
 //
-// The sub-tree root itself is never removed: the custodian keeps working from it, and
-// it is the one node whose removal no caller of this method can mean.
-func (c *Custodian) PurgeAll() error {
+// The sub-tree root itself is never removed: the custodian keeps working
+// from it, and it is the one node whose removal no caller of this method can
+// mean.
+func (c *Custodian) PurgeAll() ([]string, error) {
 	f, err := c.root.Open(".")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	entries, err := f.ReadDir(-1)
 	f.Close()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var removed []string
 	var failures []error
 	for _, entry := range entries {
 		name := entry.Name()
 		if err := c.root.RemoveAll(name); err != nil {
-			// One node that resists removal must not shield the rest of the sub-tree
-			// from being purged, so the sweep continues and the failures are reported
-			// together at the end.
+			// One node that resists removal must not shield the rest of the
+			// sub-tree from being purged, so the sweep continues and the
+			// failures are reported together at the end.
 			failures = append(failures, fmt.Errorf("failed to purge %q: %v", name, err))
 			continue
 		}
-		log.Infof(context.Background(), "securefiles: purged node: %s", name)
+		removed = append(removed, name)
 	}
 
-	return errors.Join(failures...)
+	return removed, errors.Join(failures...)
 }
 
 // Purge removes every unrecognised node and leftover temporary in the sub-tree, keeping

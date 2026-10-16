@@ -393,7 +393,7 @@ func TestCustodianErrors(t *testing.T) {
 			case "purge":
 				removed, opErr = c.Purge(func(string, bool) bool { return false })
 			case "purgeall":
-				opErr = c.PurgeAll()
+				_, opErr = c.PurgeAll()
 			default:
 				t.Fatalf("unknown op %q", tc.op)
 			}
@@ -704,7 +704,10 @@ func TestPurgeAll(t *testing.T) {
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "subdir", "child"), []byte("x"), 0600))
 	require.NoError(t, os.WriteFile(filepath.Join(dir, ".tmp-leftover"), []byte("x"), 0600))
 
-	require.NoError(t, c.PurgeAll())
+	removed, err := c.PurgeAll()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"data.txt", "subdir", ".tmp-leftover"}, removed,
+		"the wholesale wipe must name every node it removed")
 
 	entries, err := c.ReadDir(".")
 	require.NoError(t, err)

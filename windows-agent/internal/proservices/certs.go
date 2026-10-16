@@ -48,7 +48,7 @@ func newTLSCertificates(certsDir *securefiles.Custodian, opts ...newTLSCertifica
 	// into a start failure on every start, like any other planted obstruction. Only a
 	// node that resists removal (an open handle, an unwritable parent) still fails the
 	// start, because the agent then cannot publish its credentials.
-	if err := certsDir.PurgeAll(); err != nil {
+	if _, err := certsDir.PurgeAll(); err != nil {
 		return nil, fmt.Errorf("failed to clean certificates directory: %v", err)
 	}
 
