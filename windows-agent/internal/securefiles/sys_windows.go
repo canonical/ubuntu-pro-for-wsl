@@ -626,7 +626,9 @@ func (s *windowsSys) holdNode(base windows.Handle) error {
 		return mapNtStatus(err)
 	}
 
+	s.mu.Lock()
 	s.rootHandle = h
+	s.mu.Unlock()
 	return nil
 }
 
