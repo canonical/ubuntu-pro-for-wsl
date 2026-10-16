@@ -185,16 +185,19 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string, instance
 // The meta-data carries only the installation request ID of an installation that is
 // over, and a leftover would hand its stale instance-id to a same-named instance
 // installed later outside Landscape. No error is returned if any of the files did not
-// exist.
+// exist. Both files are attempted whatever the first answers: a failure on one —
+// a Windows reader withholding delete sharing, say — must not leave the other
+// behind, its leftover being exactly the stale identity above.
 func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 	defer decorate.OnError(&err, "could not remove distro-specific cloud-init file")
 
+	var errs []error
 	for _, suffix := range []string{".user-data", ".meta-data"} {
 		if err := c.dir.Remove(distroName + suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func marshalConfig(conf Config) ([]byte, error) {

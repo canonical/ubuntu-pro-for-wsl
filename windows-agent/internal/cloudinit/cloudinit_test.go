@@ -347,6 +347,10 @@ func TestRemoveDistroData(t *testing.T) {
 			if tc.wantErr {
 				require.Error(t, err, "RemoveDistroData should return an error")
 				require.FileExists(t, path, "RemoveDistroData should not have removed the distro cloud-init data file")
+				// The failing removal must not shield the other file: its
+				// leftover is the stale instance-id this function exists to
+				// prevent.
+				require.NoFileExists(t, metadataPath, "the failed removal must not shield the meta data")
 				return
 			}
 			require.NoError(t, err, "RemoveDistroData should return no errors")
