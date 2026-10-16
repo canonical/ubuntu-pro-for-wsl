@@ -483,7 +483,7 @@ func (c mockConfig) LandscapeClientConfig() (string, config.Source, error) {
 // hook or answer another's log assertions.
 func TestStartupPurge(t *testing.T) {
 	testCases := map[string]struct {
-		// seedStamped are written through the custodian, so they carry the watermark.
+		// seedStamped are written through the custodian, so they carry the stamp.
 		seedStamped map[string]string
 		// seedRaw are written behind the custodian's back, so they carry none: what a
 		// crash, a pre-custodian agent, or a stamp-less filesystem leaves behind.
@@ -529,7 +529,7 @@ func TestStartupPurge(t *testing.T) {
 			wantLogContains: "ForeignDistro.user-data",
 		},
 		// The first start after upgrading to the custodian finds a sub-tree where
-		// nothing carries the watermark: a migration, not an attack, so it is said
+		// nothing carries the stamp: a migration, not an attack, so it is said
 		// once at warning level, never once per node at error level.
 		"Sweeps a pre-stamp sub-tree as a migration": {
 			seedRaw:         map[string]string{"ForeignDistro.user-data": "planted", "ForeignDistro.meta-data": "planted"},

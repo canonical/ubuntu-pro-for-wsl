@@ -509,7 +509,7 @@ func TestSubdirFailsWhenTheHoldIsRefused(t *testing.T) {
 	require.Error(t, err, "a sub-tree whose hold is refused must not be handed out")
 }
 
-// TestReadStampSurfacesWhatItCannotAnswer pins that a watermark the kernel
+// TestReadStampSurfacesWhatItCannotAnswer pins that a stamp the kernel
 // cannot hand back readable — malformed, as a corrupt or tampered EA list can
 // read, or a query that fails with anything other than the no-attributes
 // status — is not a verdict about the node: the failure surfaces rather than
@@ -573,14 +573,14 @@ func TestMapNtStatus(t *testing.T) {
 	}
 
 	for _, st := range []windows.NTStatus{windows.STATUS_EAS_NOT_SUPPORTED, windows.STATUS_INVALID_DEVICE_REQUEST, windows.STATUS_NOT_SUPPORTED} {
-		require.ErrorIs(t, mapNtStatus(st), ErrNoWatermarkSupport,
-			"a volume that cannot carry the watermark answers the refusal sentinel")
+		require.ErrorIs(t, mapNtStatus(st), ErrNoStampSupport,
+			"a volume that cannot carry the stamp answers the refusal sentinel")
 	}
 
 	// STATUS_INVALID_PARAMETER is excluded on purpose: no such volume returns
 	// it, but our own wrong buffer or flags would, and reading that as a
 	// property of the filesystem would blame the machine for our mistake.
-	require.NotErrorIs(t, mapNtStatus(windows.STATUS_INVALID_PARAMETER), ErrNoWatermarkSupport,
+	require.NotErrorIs(t, mapNtStatus(windows.STATUS_INVALID_PARAMETER), ErrNoStampSupport,
 		"a rejected buffer must stay our own failure, loud and unmapped")
 
 	// Anything else is translated to its errno, not swallowed and not

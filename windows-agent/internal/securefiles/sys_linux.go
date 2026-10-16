@@ -27,7 +27,7 @@ type doubleSys struct {
 	// stamps is the stamping surface: the xattr syscalls in production, a
 	// configurable stand-in under test. A field of the layer rather than a
 	// package-level variable so no process-wide switch exists that could turn
-	// watermarking off for every custodian at once; set once at construction
+	// stamping off for every custodian at once; set once at construction
 	// and never reassigned by production.
 	stamps stampCalls
 
@@ -73,7 +73,7 @@ func realStampCalls() stampCalls {
 // every node it creates with: the same stamp values the Windows layer writes
 // as NT extended attributes, carried by the only channel a plain filesystem
 // offers off Windows. No shipped binary runs the double, so the name carries
-// no compatibility weight; the internal test that plants raw watermarks uses
+// no compatibility weight; the internal test that plants raw stamps uses
 // this constant, not its own copy.
 const stampXattr = "user.com.canonical.up4w"
 
@@ -142,9 +142,9 @@ func (s *doubleSys) establishRoot() (id fileIdentity, known bool, err error) {
 	// closed on it.
 	if err := s.stamps.list(int(f.Fd())); err != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 		if isXattrUnsupported(err) {
-			return fileIdentity{}, false, fmt.Errorf("%w: %v", ErrNoWatermarkSupport, err)
+			return fileIdentity{}, false, fmt.Errorf("%w: %v", ErrNoStampSupport, err)
 		}
-		return fileIdentity{}, false, fmt.Errorf("could not establish watermark support: %v", err)
+		return fileIdentity{}, false, fmt.Errorf("could not establish stamp support: %v", err)
 	}
 
 	id, identified := identityOf(st)
@@ -236,14 +236,14 @@ func (s *doubleSys) createStamped(rel string, dir bool) (*os.File, error) {
 
 	if err := stampNode(s.stamps, f, fileStamp()); err != nil {
 		if isXattrUnsupported(err) {
-			return nil, errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoWatermarkSupport), f.Close(), s.root.Remove(rel))
+			return nil, errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoStampSupport), f.Close(), s.root.Remove(rel))
 		}
 		return nil, errors.Join(err, f.Close(), s.root.Remove(rel))
 	}
 	return f, nil
 }
 
-// stampDir is a no-op: directories carry no watermark on the double. The
+// stampDir is a no-op: directories carry no stamp on the double. The
 // stamp's purpose is the projection — mapping a first-level sub-tree root to
 // root inside an instance — and nothing off Windows projects a directory, so
 // a stamp would be inert. The consequence is adopted deliberately: a
@@ -307,7 +307,7 @@ func (s *doubleSys) readStamp(f *os.File) (st stamp, ok bool, err error) {
 			// Settled when the root was established, so reaching this means
 			// the node moved under us. Wrapped, not reworded, so a caller can
 			// recognise it.
-			return stamp{}, false, fmt.Errorf("%w: %v", ErrNoWatermarkSupport, err)
+			return stamp{}, false, fmt.Errorf("%w: %v", ErrNoStampSupport, err)
 		}
 		return stamp{}, false, err
 	}

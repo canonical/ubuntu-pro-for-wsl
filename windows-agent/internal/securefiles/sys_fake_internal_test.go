@@ -145,15 +145,15 @@ func TestRenameFallsBackToTheDegradedClass(t *testing.T) {
 	}
 }
 
-// TestUnreadableWatermarkSurfacesItsFailure pins what a watermark that cannot
+// TestUnreadableStampSurfacesItsFailure pins what a stamp that cannot
 // be read is: not an answer about the node. The ownership predicate surfaces
 // the filesystem error rather than turning it into a verdict, and the rename
 // refuses with the not-owned identity on top of it — the caller keeps treating
 // the node as unverifiable rather than as owned.
-func TestUnreadableWatermarkSurfacesItsFailure(t *testing.T) {
+func TestUnreadableStampSurfacesItsFailure(t *testing.T) {
 	t.Parallel()
 
-	queryFailure := errors.New("the watermark could not be read")
+	queryFailure := errors.New("the stamp could not be read")
 
 	testCases := map[string]struct {
 		// run asks about the node "f" through one of the two verdicts.
@@ -188,7 +188,7 @@ func TestUnreadableWatermarkSurfacesItsFailure(t *testing.T) {
 
 			err = tc.run(c)
 			if tc.wantNotOwned {
-				require.ErrorIs(t, err, ErrNotOwned, "an unreadable watermark is not an answer, so the node is not owned")
+				require.ErrorIs(t, err, ErrNotOwned, "an unreadable stamp is not an answer, so the node is not owned")
 			}
 			require.ErrorIs(t, err, queryFailure, "the filesystem failure must surface, not hide")
 		})

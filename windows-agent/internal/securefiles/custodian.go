@@ -24,7 +24,7 @@ var (
 	// ErrPathEscapes is returned when a requested relative path leaves the custodian's sub-tree.
 	ErrPathEscapes = errors.New("path escapes sub-tree")
 	// ErrNotOwned is returned when an operation requires an already-owned node,
-	// but the source node lacks the custodian's watermark.
+	// but the source node lacks the custodian's stamp.
 	ErrNotOwned = errors.New("node is not owned by custodian")
 	// ErrRootReplaced is returned when the directory opened as the custodian's root is
 	// not the one it created and stamped, meaning the path was redirected in between.
@@ -38,14 +38,14 @@ var (
 	// hold that outlasts a moment is software outside the family: an antivirus scan,
 	// an indexer, a backup agent, all transient.
 	ErrNodeHeld = errors.New("node is held open by another process")
-	// ErrNoWatermarkSupport reports a filesystem that cannot carry the ownership
-	// watermark. Nothing on it can be projected as root-owned inside an instance, so the
+	// ErrNoStampSupport reports a filesystem that cannot carry the ownership
+	// stamp. Nothing on it can be projected as root-owned inside an instance, so the
 	// custodian refuses rather than publishing the agent's credentials unprotected.
-	ErrNoWatermarkSupport = errors.New("filesystem cannot carry the ownership watermark")
+	ErrNoStampSupport = errors.New("filesystem cannot carry the ownership stamp")
 	// ErrRemoteVolume is reported by CheckProjection when the sub-tree lives on a volume
 	// this machine does not own. Stamping succeeds there and the attribute is stored
 	// faithfully; what cannot be verified from here is what an instance makes of it,
-	// which is why this is reported rather than refused like ErrNoWatermarkSupport.
+	// which is why this is reported rather than refused like ErrNoStampSupport.
 	ErrRemoteVolume = errors.New("sub-tree is on a remote volume")
 )
 
@@ -245,7 +245,7 @@ func (c *Custodian) WriteFile(name string, data []byte) error {
 }
 
 // IsOwned reports whether the named node was created by a custodian (carries the
-// platform watermark) and is unaltered since.
+// platform stamp) and is unaltered since.
 func (c *Custodian) IsOwned(name string) (bool, error) {
 	rel, err := c.resolve(name)
 	if err != nil {
@@ -418,11 +418,11 @@ func (c *Custodian) renameNode(oldRel, newRel string, expect *os.File) error {
 	if !st.IsDir() {
 		s, ok, err := c.sys.readStamp(f)
 		if err != nil {
-			// A watermark that cannot be read is not an answer about the node:
+			// A stamp that cannot be read is not an answer about the node:
 			// surface the filesystem error, but keep the not-owned identity so
 			// the caller keeps treating the node as unverifiable rather than as
 			// owned.
-			return fmt.Errorf("could not query the watermark of %s: %w", oldRel, errors.Join(err, ErrNotOwned))
+			return fmt.Errorf("could not query the stamp of %s: %w", oldRel, errors.Join(err, ErrNotOwned))
 		}
 		if !ok || s != fileStamp() {
 			return ErrNotOwned

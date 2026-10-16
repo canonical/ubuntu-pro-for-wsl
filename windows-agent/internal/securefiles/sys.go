@@ -83,7 +83,7 @@ type platformSys interface {
 	// refuse a rename because a descriptor is open, and the runtime root-swap
 	// window stays closed by instance-side validation instead, ADR 2.01). A
 	// root it cannot stamp is refused, not served unstamped
-	// (ErrNoWatermarkSupport); one a link stands in for is refused rather than
+	// (ErrNoStampSupport); one a link stands in for is refused rather than
 	// followed (ErrPathEscapes). It answers the identity it established, and
 	// whether the filesystem supplied a usable one.
 	establishRoot() (id fileIdentity, known bool, err error)

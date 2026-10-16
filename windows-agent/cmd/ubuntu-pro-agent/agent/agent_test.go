@@ -838,7 +838,7 @@ func TestAgentPreservesCloudInitUserDataOnStartup(t *testing.T) {
 	privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
 
 	// Seed cloud-init per-distro data through a custodian, so the files carry the agent's
-	// watermark on platforms that stamp: the startup purge only ever re-blesses agent-owned
+	// stamp on platforms that stamp: the startup purge only ever re-blesses agent-owned
 	// nodes and removes everything else.
 	cloudInitDir := filepath.Join(publicDir, ".cloud-init")
 	userDataPath := filepath.Join(cloudInitDir, "Noble.user-data")

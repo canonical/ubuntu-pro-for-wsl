@@ -1,7 +1,7 @@
 // Cross-platform contract tests for the custodian: containment, fresh-start creation,
 // modes, error paths, purge policy and constructor behavior must hold on every
 // platform, independent of how ownership is stamped (Windows EAs or the Linux xattr
-// watermark). The platform mechanisms themselves are verified in the tagged files of
+// stamp). The platform mechanisms themselves are verified in the tagged files of
 // this package.
 
 package securefiles_test
@@ -451,7 +451,7 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 			require.NoError(t, sub.WriteFile("data.txt", []byte("data")))
 			owned, err := sub.IsOwned("data.txt")
 			require.NoError(t, err)
-			require.True(t, owned, "content in the replaced sub-tree must carry the watermark")
+			require.True(t, owned, "content in the replaced sub-tree must carry the stamp")
 		})
 	}
 }
@@ -657,7 +657,7 @@ func TestPurgeAll(t *testing.T) {
 	require.NoError(t, c.WriteFile("again.txt", []byte("data")))
 	owned, err := c.IsOwned("again.txt")
 	require.NoError(t, err)
-	require.True(t, owned, "content written after the wipe must carry the watermark")
+	require.True(t, owned, "content written after the wipe must carry the stamp")
 }
 
 // TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen pins the root veto:

@@ -82,7 +82,7 @@ func TestCreateFileModes(t *testing.T) {
 
 	testCases := map[string]struct {
 		// seedStamped writes the file through the custodian first; seedRaw plants it
-		// behind the custodian's back, so it carries no watermark.
+		// behind the custodian's back, so it carries no stamp.
 		seedStamped string
 		seedRaw     string
 		// append selects the mode under test. Omitted, CreateFile replaces.

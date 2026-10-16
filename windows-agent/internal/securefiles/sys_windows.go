@@ -666,7 +666,7 @@ func (s *windowsSys) openExisting(rel string, access, attributes, options uint32
 // mapNtStatus translates an NT status into a Go error, recognising the two
 // conditions the custodian names for itself: a rooted, OBJ_DONT_REPARSE
 // syscall blocked by a symlink crossing the custodian root, and a filesystem
-// that cannot carry the watermark at all. The statuses for the second were
+// that cannot carry the stamp at all. The statuses for the second were
 // measured against a volume that cannot store extended attributes, not
 // assumed: creating a node with an attribute buffer answers
 // STATUS_EAS_NOT_SUPPORTED, while setting one on a node already there answers
@@ -687,7 +687,7 @@ func mapNtStatus(err error) error {
 		errors.Is(err, windows.STATUS_NOT_SUPPORTED) {
 		// The status underneath is for the human reading the refusal; no
 		// caller matches it, only the sentinel.
-		return fmt.Errorf("%w: %v", ErrNoWatermarkSupport, err)
+		return fmt.Errorf("%w: %v", ErrNoStampSupport, err)
 	}
 	if ntstatus, ok := errors.AsType[windows.NTStatus](err); ok {
 		return ntstatus.Errno()

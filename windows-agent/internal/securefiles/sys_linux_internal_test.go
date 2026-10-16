@@ -21,7 +21,7 @@ import (
 )
 
 // TestRenameChecksOwnership pins that a rename moves only nodes the custodian
-// stamped. Presence of the watermark is not ownership: a raw node, or a value
+// stamped. Presence of the stamp is not ownership: a raw node, or a value
 // the custodian did not write, must be refused exactly as a missing one is,
 // otherwise anyone who can write the attribute can have the custodian publish
 // their content under a trusted name. The owned happy path itself is pinned
@@ -30,14 +30,14 @@ func TestRenameChecksOwnership(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// raw plants the node behind the custodian's back, so it carries no watermark.
+		// raw plants the node behind the custodian's back, so it carries no stamp.
 		raw bool
 		// dir creates a directory. Directories carry no file stamp, so they
 		// move on the strength of the sub-tree alone.
 		dir bool
-		// plantWatermark is written as the node's watermark once the node
+		// plantStamp is written as the node's stamp once the node
 		// exists, as a tamperer with write access to the attribute would.
-		plantWatermark []byte
+		plantStamp []byte
 
 		wantErr error
 	}{
@@ -45,17 +45,17 @@ func TestRenameChecksOwnership(t *testing.T) {
 		// moves on the strength of the sub-tree alone.
 		"a directory": {dir: true},
 
-		// A watermark that is present but not the custodian's proves no more
+		// A stamp that is present but not the custodian's proves no more
 		// than a missing one: presence is not ownership.
-		"a node with a truncated watermark": {
-			raw:            true,
-			plantWatermark: make([]byte, 8),
-			wantErr:        ErrNotOwned,
+		"a node with a truncated stamp": {
+			raw:        true,
+			plantStamp: make([]byte, 8),
+			wantErr:    ErrNotOwned,
 		},
-		"a node whose watermark names another owner": {
-			raw:            true,
-			plantWatermark: encodeStamp(stamp{uid: 1000, gid: 1000, mode: 0100600}),
-			wantErr:        ErrNotOwned,
+		"a node whose stamp names another owner": {
+			raw:        true,
+			plantStamp: encodeStamp(stamp{uid: 1000, gid: 1000, mode: 0100600}),
+			wantErr:    ErrNotOwned,
 		},
 	}
 
@@ -78,11 +78,11 @@ func TestRenameChecksOwnership(t *testing.T) {
 					"Setup: could not plant the node")
 			}
 
-			if tc.plantWatermark != nil {
+			if tc.plantStamp != nil {
 				f, err := os.Open(filepath.Join(dir, src))
 				require.NoError(t, err, "Setup: could not open the node")
-				err = unix.Fsetxattr(int(f.Fd()), stampXattr, tc.plantWatermark, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
-				require.NoError(t, errors.Join(err, f.Close()), "Setup: could not plant the watermark")
+				err = unix.Fsetxattr(int(f.Fd()), stampXattr, tc.plantStamp, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+				require.NoError(t, errors.Join(err, f.Close()), "Setup: could not plant the stamp")
 			}
 
 			err = c.Rename(src, dst)
@@ -150,7 +150,7 @@ func TestStampsRefuseUnstampableTrees(t *testing.T) {
 	testCases := map[string]struct {
 		// probeErr fails the support probe, before the root is established.
 		probeErr error
-		// wantUnsupported asserts the refusal names ErrNoWatermarkSupport,
+		// wantUnsupported asserts the refusal names ErrNoStampSupport,
 		// as a filesystem without xattrs does; anything else must not claim it.
 		wantUnsupported bool
 	}{
@@ -168,18 +168,18 @@ func TestStampsRefuseUnstampableTrees(t *testing.T) {
 			require.Error(t, err, "the tree must be refused rather than handed out")
 			require.Nil(t, c, "no custodian may be handed out for a refused tree")
 			if tc.wantUnsupported {
-				require.ErrorIs(t, err, ErrNoWatermarkSupport, "the refusal must name the watermark as unsupported")
+				require.ErrorIs(t, err, ErrNoStampSupport, "the refusal must name the stamp as unsupported")
 			} else {
-				require.NotErrorIs(t, err, ErrNoWatermarkSupport,
-					"the refusal must not claim the watermark is unsupported")
+				require.NotErrorIs(t, err, ErrNoStampSupport,
+					"the refusal must not claim the stamp is unsupported")
 			}
 		})
 	}
 }
 
 // TestStampRefusalsAreClassified pins what a stamping failure means on the
-// create path: a failure that says the filesystem cannot carry the watermark
-// is reclassified to ErrNoWatermarkSupport, while any other failure surfaces
+// create path: a failure that says the filesystem cannot carry the stamp
+// is reclassified to ErrNoStampSupport, while any other failure surfaces
 // as itself — the caller must not have to guess which is which. Both carry
 // the same cleanup: the fresh node does not stay behind unstamped. The
 // support probe that refuses an unsupported filesystem at Open is pinned by
@@ -192,7 +192,7 @@ func TestStampRefusalsAreClassified(t *testing.T) {
 		setErr error
 
 		// wantUnsupported asserts the failure is answered as a filesystem
-		// that cannot carry the watermark; anything else must surface as
+		// that cannot carry the stamp; anything else must surface as
 		// itself.
 		wantUnsupported bool
 	}{
@@ -214,9 +214,9 @@ func TestStampRefusalsAreClassified(t *testing.T) {
 			err = c.WriteFile("f", []byte("x"))
 			require.Error(t, err, "a node that cannot be stamped must not be served")
 			if tc.wantUnsupported {
-				require.ErrorIs(t, err, ErrNoWatermarkSupport, "the refusal must name the watermark as unsupported")
+				require.ErrorIs(t, err, ErrNoStampSupport, "the refusal must name the stamp as unsupported")
 			} else {
-				require.NotErrorIs(t, err, ErrNoWatermarkSupport, "the failure must surface as itself")
+				require.NotErrorIs(t, err, ErrNoStampSupport, "the failure must surface as itself")
 			}
 
 			// The cleanup the refusal owes, on both classifications.
@@ -227,7 +227,7 @@ func TestStampRefusalsAreClassified(t *testing.T) {
 
 // TestStampReadFailuresAreClassified pins the read side of the same boundary:
 // a stamp that cannot be read is not a verdict about the node, so the failure
-// surfaces; one that says the filesystem cannot carry the watermark is
+// surfaces; one that says the filesystem cannot carry the stamp is
 // reclassified so a caller can recognise it, and reaching the read at all
 // means the support probe settled at Open. The no-stamp verdict ENODATA
 // answers is pinned by the tampered-node cases of TestRenameChecksOwnership.
@@ -266,16 +266,16 @@ func TestStampReadFailuresAreClassified(t *testing.T) {
 			_, err = c.IsOwned("f")
 			require.Error(t, err, "a stamp that cannot be read is not a verdict about the node")
 			if tc.wantUnsupported {
-				require.ErrorIs(t, err, ErrNoWatermarkSupport, "the failure must be recognisable as unsupported")
+				require.ErrorIs(t, err, ErrNoStampSupport, "the failure must be recognisable as unsupported")
 			} else {
-				require.NotErrorIs(t, err, ErrNoWatermarkSupport, "the failure must surface as itself")
+				require.NotErrorIs(t, err, ErrNoStampSupport, "the failure must surface as itself")
 			}
 		})
 	}
 }
 
 // openWithStamps opens a custodian over the given stamping surface, so a
-// filesystem that refuses or mishandles the watermark can be stood in for.
+// filesystem that refuses or mishandles the stamp can be stood in for.
 func openWithStamps(basePath string, stamps stampCalls) (*Custodian, error) {
 	return open(basePath, func(p string) platformSys { return newDoubleSysWith(p, stamps) })
 }

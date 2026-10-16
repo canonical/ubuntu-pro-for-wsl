@@ -46,7 +46,7 @@ func New(ctx context.Context, conf Config, dir Custodian) (CloudInit, error) {
 		conf: conf,
 	}
 
-	// Purge every node that does not carry the agent's watermark and regenerate the agent's own
+	// Purge every node that does not carry the agent's stamp and regenerate the agent's own
 	// cloud-init file. Stamped nodes are simply left alone.
 	if err := c.startupPurge(ctx); err != nil {
 		return CloudInit{}, err
@@ -88,15 +88,15 @@ type metadata struct {
 	InstanceID string `yaml:"instance-id"`
 }
 
-// startupPurge removes every node in the sub-tree that does not carry the agent's watermark
+// startupPurge removes every node in the sub-tree that does not carry the agent's stamp
 // and regenerates the agent's own data file. Stamped nodes are left alone: cloud-init data is
-// consumed once, at first boot. The watermark is the whole adoption policy — an unstamped node
+// consumed once, at first boot. The stamp is the whole adoption policy — an unstamped node
 // is foreign whatever its name, and the custodian refuses to open a sub-tree where that
-// question cannot be answered, so an unreadable watermark here is about the node.
+// question cannot be answered, so an unreadable stamp here is about the node.
 //
-// A node whose watermark cannot be read at all — a link, or a node an antivirus or endpoint
+// A node whose stamp cannot be read at all — a link, or a node an antivirus or endpoint
 // product holds open — is judged foreign and removed. That is the deliberate choice, and it
-// errs against our own data: an unreadable watermark is exactly what planted tampering looks
+// errs against our own data: an unreadable stamp is exactly what planted tampering looks
 // like, and a per-distro file deleted on a transient lock costs one first-boot retry, while a
 // tampering artifact that survived every purge would stay readable by every instance. The
 // query opens with full sharing, so only a genuinely exclusive hold can land here, and the
@@ -105,7 +105,7 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 	ownedSeen := false
 	isOurs := func(rel string, isDir bool) bool {
 		// Directories are never adopted: this sub-tree legitimately holds files only.
-		// That judgement is structural, so it still holds without the watermark.
+		// That judgement is structural, so it still holds without the stamp.
 		if isDir {
 			return false
 		}
@@ -128,7 +128,7 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 	}
 
 	// The first start after upgrading to the custodian finds a sub-tree where nothing
-	// carries the watermark — every node predates the stamp — and purges it all. That
+	// carries the stamp — every node predates the stamping — and purges it all. That
 	// is a migration, not an attack, so it is said once at warning level rather than
 	// once per node at error level. A sub-tree that holds both stamped and unstamped
 	// nodes is not a migration: the stamp was there when the unstamped ones appeared.
