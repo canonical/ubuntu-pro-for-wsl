@@ -1,0 +1,826 @@
+// Package securefiles implements a file system custodian component that enforces an ownership
+// policy on all files and directories it creates under its root directory: all nodes are stamped
+// with specific NT File Extended Attributes (EAs), causing their projections via 9P inside WSL to
+// look as if owned by root.
+package securefiles
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+// DirMode and FileMode are the permissions applied to directories and files managed by the custodian.
+const (
+	DirMode  fs.FileMode = 0700
+	FileMode fs.FileMode = 0600
+)
+
+var (
+	// ErrPathEscapes is returned when a requested relative path leaves the custodian's sub-tree.
+	ErrPathEscapes = errors.New("path escapes sub-tree")
+	// ErrNotOwned is returned when an operation requires an already-owned node,
+	// but the source node lacks the custodian's stamp.
+	ErrNotOwned = errors.New("node is not owned by custodian")
+	// ErrRootReplaced is returned when the directory opened as the custodian's root is
+	// not the one it created and stamped, meaning the path was redirected in between.
+	ErrRootReplaced = errors.New("root directory was replaced between creation and open")
+
+	// ErrNodeHeld is returned when an operation needed to remove a node, but another
+	// process holds it open without sharing deletion. The node itself is intact —
+	// the refusal is about the holder, not the node — so a caller that can wait may
+	// retry. Every reader in the agent's family shares deletion (the GUI by contract,
+	// the WSL 9p server because it must, to implement POSIX unlink-while-open), so a
+	// hold that outlasts a moment is software outside the family: an antivirus scan,
+	// an indexer, a backup agent, all transient.
+	ErrNodeHeld = errors.New("node is held open by another process")
+	// ErrNoStampSupport reports a filesystem that cannot carry the ownership
+	// stamp. Nothing on it can be projected as root-owned inside an instance, so the
+	// custodian refuses rather than publishing the agent's credentials unprotected.
+	ErrNoStampSupport = errors.New("filesystem cannot carry the ownership stamp")
+	// ErrRemoteVolume is reported by CheckProjection when the sub-tree lives on a volume
+	// this machine does not own. Stamping succeeds there and the attribute is stored
+	// faithfully; what cannot be verified from here is what an instance makes of it,
+	// which is why this is reported rather than refused like ErrNoStampSupport.
+	ErrRemoteVolume = errors.New("sub-tree is on a remote volume")
+)
+
+// Custodian scopes filesystem operations to a sub-tree and stamps nodes with their projected ownership.
+// The whole sub-tree is held as an os.Root, so a name can never leave it: absolute paths, volume names,
+// ".." escapes and symlinks whose target points outside are rejected by the standard library rather than
+// by hand-written path checks. A sub-custodian owns a nested os.Root opened at its own directory, so it
+// is structurally incapable of naming a sibling's subtree.
+//
+// Operations on one custodian are atomic at syscall granularity, nothing
+// more: concurrent operations on overlapping names can interleave between a
+// verification and the act it authorizes, and only the write-publish path
+// carries a handle tying its rename to the verified node. Close is the one
+// operation with a cross-call contract, documented on the method.
+type Custodian struct {
+	root     *os.Root
+	basePath string
+	relPath  string
+
+	// sys is the custodian's OS layer: the mechanisms every decision below
+	// executes by. One method per mechanism, no policy — see sys.go.
+	sys platformSys
+}
+
+// Open returns a custodian for the base path, creating and stamping it first if it does not exist.
+// Pre-existing content is adopted: a consumer with data that must survive a
+// restart (such as per-distro cloud-init files) can read it before rewriting its nodes.
+func Open(basePath string) (*Custodian, error) {
+	return open(basePath, newPlatformSys)
+}
+
+// Close releases any resources held by the custodian: the OS layer's
+// resources first (Windows holds the tree root without sharing deletion),
+// then the root itself, whose containment governed everything above.
+//
+// Close may be called while operations are still in flight. An operation
+// already under way drains before the platform's descriptor or handle
+// closes, and every operation started after Close answers an error; the
+// order matters, because a descriptor closed before an open consumes it
+// could have its number reused for a foreign directory. Every layer in the
+// package implements the same semantics: the Windows layer and the Linux
+// double guard their root handle and descriptor behind a mutex held through
+// the syscall, and os.Root refcounts its own descriptor.
+func (c *Custodian) Close() error {
+	var err error
+	if c.sys != nil {
+		err = c.sys.release()
+	}
+	if c.root != nil {
+		err = errors.Join(err, c.root.Close())
+	}
+	return err
+}
+
+// CheckProjection is the public surface of the one security condition the package's refuse-at-open
+// strategy structurally cannot catch: the package can't see it, can't fix it, and can't decide
+// where to say it, so it can only hand the verdict to the upper level.
+//
+// It reports the condition under which the sub-tree keeps serving without the Secure Projection it
+// promises, or nil. A sub-tree that cannot be stamped never gets this far: Open refuses it (ADR
+// 2.02). What remains is the condition no check on this machine can refuse, because the stamp is
+// stored faithfully and only the projection inside an instance ignores it.
+//
+// It reports rather than logs because it cannot know where its findings belong: the agent opens its
+// public directory before it has a log file to put inside it. The caller decides when it has
+// somewhere durable to say this, and how loudly. It checks rather than recalls: classifying the
+// volume queries the operating system, which blocks for seconds on an unreachable network path.
+// Call it at startup, not on a path that serves requests.
+func (c *Custodian) CheckProjection() error {
+	// Classify where the sub-tree really is, not where it was named: a directory in the
+	// profile can be a link to a share, and then the name says "C:" while the bytes do not.
+	// A custodian with no platform attached is classified by its name alone, which is
+	// all a name can answer for anyway.
+	where := c.basePath
+	if resolved := c.resolvedBasePath(); resolved != "" {
+		where = resolved
+	}
+
+	remote, kind := lexicalRemoteVolume(where)
+	if c.sys != nil {
+		remote, kind = c.sys.remoteVolume(where)
+	}
+	if !remote {
+		return nil
+	}
+
+	// Name the resolved location too when it differs, or the report reads as a
+	// contradiction: a path beginning "C:" is not obviously on a UNC path.
+	location := kind.String()
+	if where != c.basePath {
+		location = fmt.Sprintf("%s, resolving to %s", kind, where)
+	}
+	return fmt.Errorf("%w: %s is on %s; the ownership stamp is stored there faithfully, but the projection may not honour it", ErrRemoteVolume, c.basePath, location)
+}
+
+// BasePath returns the absolute path of the custodian's sub-tree root.
+func (c *Custodian) BasePath() string {
+	if c.relPath == "" {
+		return c.basePath
+	}
+	return filepath.Join(c.basePath, c.relPath)
+}
+
+// Subdir returns a new custodian scoped to subDir inside this custodian's sub-tree.
+func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
+	rel, err := c.resolve(subDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the sub-directory, stamped in the same syscall. A sub-tree root left by
+	// an earlier run is adopted instead, and stamped in place: ADR 2.01 requires
+	// first-level sub-tree roots to carry the stamp even when pre-existing, because it
+	// is what revokes unprivileged creation and deletion inside them.
+	_, err = c.sys.createStamped(rel, true)
+	if errors.Is(err, os.ErrExist) || errors.Is(err, ErrPathEscapes) || isEscapeError(err) {
+		// The create cannot tell what stands at the name: a link answers a name
+		// collision for some kinds and an escape refusal for others, and a real
+		// directory answers a collision too. It is recognised by attribute instead
+		// (ADR 2.03): a reparse point standing at a sub-tree root is never adopted
+		// data — nothing unprivileged can write inside a stamped tree (ADR 2.01), so
+		// a link there was planted before the tree was stamped, and following it
+		// reaches only what the planter chose — so it is removed and the directory
+		// created in its place. A real directory is adopted and stamped in place.
+		// (Where the tree root itself is a link, refusing stays the answer: Open
+		// runs before there is a stamped tree to vouch for the neighborhood.)
+		// What the check cannot answer, and a link that cannot be removed, refuse
+		// the sub-tree: the nested root below must never be opened through
+		// something unchecked, so nothing is stamped before the attribute answers.
+		// Concurrent Subdir calls on the same name can race these steps; the
+		// outcomes fail closed — a spurious removal complaint or the create's
+		// collision — never a serve through something unchecked.
+		var reparse bool
+		reparse, err = c.sys.isLink(rel)
+		if err == nil {
+			if reparse {
+				err = c.root.Remove(rel)
+				if err == nil {
+					_, err = c.sys.createStamped(rel, true)
+				} else {
+					err = fmt.Errorf("could not remove the link at %s: %v", rel, err)
+				}
+			} else {
+				err = c.sys.stampDir(rel)
+			}
+		}
+	}
+	if err != nil {
+		return nil, mapEscape(err)
+	}
+
+	// The child is derived from the parent's handle, never from its absolute path:
+	// re-resolving the path here would walk components outside the parent's
+	// containment, following any reparse point planted along the way. The
+	// child inherits the parent's OS surface as it stands at the handout: a
+	// seam installed on the parent before this call governs the sub-tree too;
+	// one installed after does not reach an already-handed-out child. A
+	// sub-tree root never resolves a path of its own, so the child records no
+	// identity to tie a later verification to.
+	subSys := c.sys.sub()
+
+	// Tie the nested root to the node the heal verified, the same
+	// identity tie Open rests on: the open below resolves without
+	// following, so a link standing at the name — planted in the
+	// window since the heal — answers here. The re-resolution
+	// OpenRoot performs can follow one, so the node it anchors on is
+	// verified by identity instead of trusted by name. The child's
+	// own platform layer answers for the node its root holds, the
+	// same layer that answers every later question in the sub-tree. A
+	// filesystem that supplies no usable identity skips the
+	// comparison, the same rule Open follows.
+	anchor, err := c.sys.openNode(rel, openDir)
+	if err != nil {
+		return nil, mapEscape(err)
+	}
+	want, known := c.sys.identity(anchor)
+	if err := anchor.Close(); err != nil {
+		return nil, err
+	}
+
+	// Open a nested root at the sub-directory so the child custodian is itself
+	// structurally contained and syscalls are rooted at its handle.
+	subRoot, err := c.root.OpenRoot(rel)
+	if err != nil {
+		return nil, mapEscape(err)
+	}
+	if known {
+		// The child answers through its own root, never through a name
+		// it resolves: the observation binds to the node the child holds,
+		// so a swap under the name shows as the mismatch it is.
+		anchor, err := subRoot.Open(".")
+		if err != nil {
+			subRoot.Close()
+			return nil, err
+		}
+		got, have := subSys.identity(anchor)
+		if err := anchor.Close(); err != nil {
+			subRoot.Close()
+			return nil, err
+		}
+		if !have || got != want {
+			subRoot.Close()
+			return nil, ErrRootReplaced
+		}
+	}
+	if err := subSys.attach(subRoot); err != nil {
+		subRoot.Close()
+		return nil, err
+	}
+
+	return &Custodian{
+		root:     subRoot,
+		basePath: c.basePath,
+		relPath:  filepath.Join(c.relPath, subDir),
+		sys:      subSys,
+	}, nil
+}
+
+// WriteFile atomically writes data to a file relative to the custodian's sub-tree.
+// The bytes travel through the descriptor the temporary was created with, and the
+// publish verifies that the temporary's name still holds that node: no second name
+// resolution sits between the stamp and either the write or the publish, so a name
+// swapped in the window cannot redirect either into another stamped node.
+func (c *Custodian) WriteFile(name string, data []byte) error {
+	targetRel, err := c.resolve(name)
+	if err != nil {
+		return err
+	}
+
+	tmpRel := tempName(targetRel)
+
+	tmp, err := c.sys.createStamped(tmpRel, false)
+	if err != nil {
+		return mapEscape(err)
+	}
+	// The temporary's handle stays open until after the publish, so the node cannot
+	// be reclaimed while the write is in flight. It does not pin the name: the handle
+	// shares deletion, so a name planted or swapped in this window is answered by the
+	// checks below, not by the handle.
+	//
+	// The cleanup's errors are dropped on purpose, each for its own reason. After a
+	// successful publish the temporary's name no longer exists, so the Remove answers
+	// ErrNotExist — the success showing through, not a failure; and a Close cannot
+	// unpublish what the rename already made visible, since the bytes travel through
+	// the descriptor, not the name. On a failed publish the caller already holds the
+	// decisive error: joining a leftover temporary's cleanup onto it would dress a
+	// pollution complaint up as part of the verdict, and nothing the caller could do
+	// about it either way.
+	defer func() {
+		_ = tmp.Close()
+		_ = c.root.Remove(tmpRel)
+	}()
+
+	// The write goes through the descriptor createNode returned, never through the
+	// temporary's name. The fresh node is empty, so there is nothing to truncate, and
+	// its mode and stamp are already in place.
+	if _, err := tmp.Write(data); err != nil {
+		return mapEscape(err)
+	}
+
+	return mapEscape(c.renameNode(tmpRel, targetRel, tmp))
+}
+
+// IsOwned reports whether the named node was created by a custodian (carries the
+// platform stamp) and is unaltered since.
+func (c *Custodian) IsOwned(name string) (bool, error) {
+	rel, err := c.resolve(name)
+	if err != nil {
+		return false, err
+	}
+
+	f, err := c.sys.openNode(rel, openRead)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	st, err := f.Stat()
+	if err != nil {
+		return false, err
+	}
+	// A directory is never owned: the predicate accepts only the file stamp,
+	// so an adopted sub-tree root answers the same everywhere.
+	if st.IsDir() {
+		return false, nil
+	}
+
+	s, ok, err := c.sys.readStamp(f)
+	if err != nil {
+		return false, err
+	}
+	return ok && s == fileStamp(), nil
+}
+
+// CreateFile creates a file in the custodian sub-tree and returns it open for writing,
+// replacing whatever node is there. The returned descriptor is the very node the
+// custodian created and stamped: there is no second name resolution between the stamp
+// and the caller's writes, so ownership cannot be swapped out from under the descriptor.
+// A node another process still holds open is refused rather than truncated, so its
+// descriptor can never follow the node into its replaced life; a holder that does not
+// share deletion answers ErrNodeHeld, and the caller decides whether to wait it out.
+//
+// A caller that rotated a file away and cannot tell whether the rotation succeeded
+// needs AppendFile instead: replacing would destroy the only remaining copy.
+func (c *Custodian) CreateFile(name string) (*os.File, error) {
+	targetRel, err := c.resolve(name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unlink to revoke any descriptor already open on the node, then create a fresh
+	// one. Truncating would not do: the file object survives it, so a process that
+	// opened the node while it was still unstamped would follow it into its replaced
+	// life and read whatever is written next. Unlinking is the revocation; creating
+	// is the cheap part. FILE_SUPERSEDE would collapse the two steps into one
+	// syscall, but a holder sharing delete follows the node into its replaced life
+	// and reads the replacement's writes, which is what unlinking prevents. Measured
+	// against a local volume: a supersede succeeds against a holder opened with
+	// FILE_SHARE_DELETE, and that holder then reads the new node's content; a holder
+	// without delete sharing is refused, as our own replacement is.
+	if err := c.root.Remove(targetRel); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		if c.sys.isHeldNode(err) {
+			// The node stands as it was: nothing was replaced, so no holder can read
+			// anything written after this refusal. Waiting is the caller's decision.
+			return nil, errors.Join(ErrNodeHeld, err)
+		}
+		return nil, mapEscape(err)
+	}
+	return c.sys.createStamped(targetRel, false)
+}
+
+// AppendFile opens the named file for writing at its end, creating and stamping it only
+// when it is absent. A node already in place is adopted as it is, whatever owns it:
+// this mode exists for a caller that rotated a file away and cannot tell whether the
+// rotation succeeded, where the file left behind may be the only remaining copy. The
+// adoption policy belongs to the caller: one that must never write into a node it does
+// not own checks IsOwned before appending, and replaces instead.
+//
+// The append is a property of the descriptor, not the writer: every write on it goes
+// to the node's end on the kernel's own authority, and a link standing at the name is
+// refused like everywhere else — the append answers for the node at the name, never
+// for a link's target.
+func (c *Custodian) AppendFile(name string) (*os.File, error) {
+	targetRel, err := c.resolve(name)
+	if err != nil {
+		return nil, err
+	}
+
+	_, statErr := c.root.Stat(targetRel)
+	switch {
+	case errors.Is(statErr, fs.ErrNotExist):
+		f, err := c.sys.createStamped(targetRel, false)
+		if err != nil {
+			return nil, err
+		}
+		// The create answers a handle free to write anywhere in the file;
+		// the append contract is the descriptor that cannot. The node was
+		// just created stamped, so reopening it through the append profile
+		// costs nothing but the middle: a link planted in the window is
+		// refused by the open, and a node swapped in answers the same
+		// adoption the branch below gives it.
+		if err := f.Close(); err != nil {
+			return nil, err
+		}
+		f, err = c.sys.openNode(targetRel, openAppend)
+		return f, mapEscape(err)
+	case statErr != nil:
+		return nil, mapEscape(statErr)
+	}
+
+	f, err := c.sys.openNode(targetRel, openAppend)
+	return f, mapEscape(err)
+}
+
+// Remove deletes the named node relative to the custodian's sub-tree.
+//
+// Removal resolves through the os.Root, the package's one tier that follows
+// an in-tree link standing at an intermediate component of the name. The
+// leaf is never followed — a link there is removed, not traversed — and
+// RemoveAll, Purge and PurgeAll resolve the same way; every non-removal
+// operation refuses a link at any component through the platform layer
+// instead. What keeps a followed intermediate from redirecting a removal is
+// the ADR 2.01 premise plus the heal and the purge clearing first-level
+// plants: nothing unprivileged writes inside a stamped tree, so no link
+// stands inside one after it is stamped.
+func (c *Custodian) Remove(name string) error {
+	rel, err := c.resolve(name)
+	if err != nil {
+		return err
+	}
+	return mapEscape(c.root.Remove(rel))
+}
+
+// RemoveAll deletes the named node and any subtree rooted at it.
+func (c *Custodian) RemoveAll(name string) error {
+	rel, err := c.resolve(name)
+	if err != nil {
+		return err
+	}
+	return mapEscape(c.root.RemoveAll(rel))
+}
+
+// ReadDir lists the named directory relative to the custodian's sub-tree.
+// The listing answers for the directory standing at the name — a link there
+// is refused, like everywhere else — and the entry names say nothing about
+// who planted them: a listing is a question about the world as it stands,
+// and the ownership predicate (IsOwned) is the one to ask about each node
+// the caller means to act on.
+func (c *Custodian) ReadDir(name string) ([]os.DirEntry, error) {
+	rel, err := c.resolve(name)
+	if err != nil {
+		return nil, err
+	}
+	f, err := c.sys.openNode(rel, openDir)
+	if err != nil {
+		return nil, mapEscape(err)
+	}
+	defer f.Close()
+	return f.ReadDir(-1)
+}
+
+// Rename atomically replaces newName with oldName, both relative to the
+// custodian's sub-tree.
+func (c *Custodian) Rename(oldName, newName string) error {
+	oldRel, err := c.resolve(oldName)
+	if err != nil {
+		return err
+	}
+	newRel, err := c.resolve(newName)
+	if err != nil {
+		return err
+	}
+	return c.renameNode(oldRel, newRel, nil)
+}
+
+// renameNode moves only nodes the custodian can vouch for: the stamp it wrote
+// on the source, or any directory (directories carry no file stamp, so they
+// move on the strength of the sub-tree alone). A caller that wrote through its
+// own descriptor can name the node it expects to publish, which is what makes
+// the publish answer for exactly the bytes the caller wrote: ownership alone
+// would let a name swapped in the write-publish window move some other
+// stamped node into the destination.
+//
+// The rename itself goes through the platform layer, POSIX semantics first:
+// a reader still holding the destination open must not refuse it, which is
+// the whole point of publishing by rename. Volumes that predate the POSIX
+// class refuse that one, and the degraded class is the fallback.
+func (c *Custodian) renameNode(oldRel, newRel string, expect *os.File) error {
+	f, err := c.sys.openNode(oldRel, openRename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	st, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	if !st.IsDir() {
+		s, ok, err := c.sys.readStamp(f)
+		if err != nil {
+			// A stamp that cannot be read is not an answer about the node:
+			// surface the filesystem error, but keep the not-owned identity so
+			// the caller keeps treating the node as unverifiable rather than as
+			// owned.
+			return fmt.Errorf("could not query the stamp of %s: %w", oldRel, errors.Join(err, ErrNotOwned))
+		}
+		if !ok || s != fileStamp() {
+			return ErrNotOwned
+		}
+	}
+
+	if expect != nil {
+		es, err := expect.Stat()
+		if err != nil || !os.SameFile(st, es) {
+			return fmt.Errorf("%s no longer holds the node the write went to: %w", oldRel, ErrNotOwned)
+		}
+	}
+
+	err = c.sys.renameReplace(f, oldRel, newRel, true)
+	if c.sys.isRenameClassUnsupported(err) {
+		err = c.sys.renameReplace(f, oldRel, newRel, false)
+	}
+	return mapEscape(err)
+}
+
+// PurgeAll removes every node in the sub-tree, whatever it is, and returns
+// the relative names it removed. It is for sub-trees whose contents are
+// wholly the agent's to discard: an ephemeral credential store regenerated
+// on every start, a cache. Where contents can still be data someone else
+// needs, the caller decides what to keep and uses Purge with a predicate
+// instead, and inspects what it removed. The names travel back to the
+// caller, which knows what each one was and says it at its own severity: a
+// log from here would say every removal once, blind.
+//
+// The sub-tree root itself is never removed: the custodian keeps working
+// from it, and it is the one node whose removal no caller of this method can
+// mean.
+func (c *Custodian) PurgeAll() ([]string, error) {
+	f, err := c.root.Open(".")
+	if err != nil {
+		return nil, err
+	}
+	entries, err := f.ReadDir(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var removed []string
+	var failures []error
+	for _, entry := range entries {
+		name := entry.Name()
+		if err := c.root.RemoveAll(name); err != nil {
+			// One node that resists removal must not shield the rest of the
+			// sub-tree from being purged, so the sweep continues and the
+			// failures are reported together at the end.
+			failures = append(failures, fmt.Errorf("failed to purge %q: %v", name, err))
+			continue
+		}
+		removed = append(removed, name)
+	}
+
+	return removed, errors.Join(failures...)
+}
+
+// Purge removes every unrecognised node and leftover temporary in the sub-tree, keeping
+// what isAllowed accepts, and returns the relative names it removed.
+//
+// isAllowed is told whether the node is a directory because the listing already
+// established it; a policy given only the name would have to open every entry. That answer
+// is the one the listing saw, so a node changing type afterwards is judged on the older
+// reading — harmless here, where a directory only ever means "not ours".
+func (c *Custodian) Purge(isAllowed func(relPath string, isDir bool) bool) ([]string, error) {
+	f, err := c.root.Open(".")
+	if err != nil {
+		return nil, err
+	}
+	entries, err := f.ReadDir(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var removed []string
+	var failures []error
+
+	for _, entry := range entries {
+		name := entry.Name()
+
+		if strings.HasPrefix(name, tmpPrefix) || !isAllowed(name, entry.IsDir()) {
+			if err := c.root.RemoveAll(name); err != nil {
+				// One node that resists removal must not shield the rest of the sub-tree
+				// from being purged, so the sweep continues and the failures are
+				// reported together at the end.
+				failures = append(failures, fmt.Errorf("failed to purge %q: %v", name, err))
+				continue
+			}
+			// The names travel back to the caller, which knows what each one was and
+			// logs the removal at its own severity: a bare list from here would log
+			// every removal twice, once blind.
+			removed = append(removed, name)
+		}
+	}
+
+	return removed, errors.Join(failures...)
+}
+
+// open builds a custodian over the platform layer newSys returns. Production
+// always passes newPlatformSys; the parameter exists so that the tests in this
+// package can supply a platform whose every mechanism is a configurable
+// stand-in, which is how the decisions below are tested on any platform. It
+// is unexported and has no exported caller, so a shipped binary offers no way
+// to substitute the platform layer.
+func open(basePath string, newSys func(string) platformSys) (*Custodian, error) {
+	absPath, err := filepath.Abs(basePath)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base path: %v", err)
+	}
+
+	// Ensure the parent directory exists: the parents are the agent's own
+	// directories, established the ordinary way. The tree root itself is the
+	// platform's to establish: created or adopted, stamped either way, and
+	// held where the platform can hold it.
+	parent := filepath.Dir(absPath)
+	if err := os.MkdirAll(parent, DirMode); err != nil {
+		return nil, fmt.Errorf("failed to create parent directory %s: %v", parent, err)
+	}
+
+	sys := newSys(absPath)
+	id, known, err := sys.establishRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	root, err := os.OpenRoot(absPath)
+	if err != nil {
+		_ = sys.release()
+		return nil, fmt.Errorf("failed to open root for %s: %v", absPath, err)
+	}
+
+	// A second, independent resolution of the path the platform just
+	// established and (where it can) held. os.Root contains the names opened
+	// through it, not its own root, and the parent directory stays writable
+	// from inside an instance (ADR 2.01), so between the two resolutions it
+	// can be made to point elsewhere. Identity ties them to one node: a
+	// mismatch is a failed verification rather than a redirect to serve.
+	// The tie sees a swap made between the two resolutions, not one already
+	// standing: both travel the parent path by name, so a link planted in an
+	// ancestor and left there redirects both consistently. The leaf is the
+	// platform's to refuse (establishRoot's no-follow open); the ancestors of
+	// the parent are resolved by name, on both platforms.
+	//
+	// A platform that could not identify the root is conceded once, at the
+	// first resolution: nothing was recorded, so there is nothing to compare.
+	// Once one has been recorded the concession is spent, and a reopened
+	// handle that cannot identify itself is a failed verification rather than
+	// an absent one — otherwise a swap onto a filesystem exposing no identity
+	// would walk past this check. The resolution is transient: where the
+	// platform holds the root, the hold comes from the stamping open, so this
+	// open is only verification and is closed as soon as it has answered.
+	f, err := root.Open(".")
+	if err != nil {
+		_ = root.Close()
+		_ = sys.release()
+		return nil, fmt.Errorf("failed to open root for %s: %v", absPath, err)
+	}
+	rid, identified := sys.identity(f)
+	closeErr := f.Close()
+	if closeErr != nil {
+		_ = root.Close()
+		_ = sys.release()
+		return nil, closeErr
+	}
+	if known && (!identified || rid != id) {
+		_ = root.Close()
+		_ = sys.release()
+		return nil, ErrRootReplaced
+	}
+
+	// The operation base is derived from the root the verification just
+	// answered for: where the platform holds the root, the hold is taken
+	// here, beside the verified node.
+	if err := sys.attach(root); err != nil {
+		_ = root.Close()
+		_ = sys.release()
+		return nil, fmt.Errorf("failed to attach the OS layer to %s: %w", absPath, err)
+	}
+
+	return &Custodian{
+		root:     root,
+		basePath: absPath,
+		relPath:  "",
+		sys:      sys,
+	}, nil
+}
+
+// resolvedBasePath returns the sub-tree root as the filesystem finally names
+// it, following any links in the path the custodian was handed, or "" when no
+// platform is attached to answer.
+func (c *Custodian) resolvedBasePath() string {
+	if c.sys == nil {
+		return ""
+	}
+	return c.sys.finalPath()
+}
+
+// resolve validates name lexically and returns its cleaned form relative to this
+// custodian's sub-tree. Only plain relative paths are dealt in: anything absolute,
+// drive-qualified, or escaping via ".." with either separator is rejected here, so the
+// platform layer never evaluates such a name — on Windows one reaching the NT syscalls
+// would fail with an opaque status instead of the sentinel. Physical containment is
+// enforced per operation by os.Root, whose resolution leaves no check-then-act gap.
+func (c *Custodian) resolve(name string) (string, error) {
+	if isBackslashDotDot(name) || isAnchored(name) {
+		return "", ErrPathEscapes
+	}
+	rel := filepath.Clean(name)
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", ErrPathEscapes
+	}
+	return rel, nil
+}
+
+// isAnchored reports whether name is absolute or drive-qualified under either
+// platform's rules: os.Root only enforces anchoring natively for the host
+// platform, but the custodian contract is platform-deterministic.
+func isAnchored(name string) bool {
+	if strings.HasPrefix(name, "/") || strings.HasPrefix(name, `\`) {
+		return true
+	}
+	// Drive-qualified ("C:\foo") or drive-relative ("C:foo") Windows path.
+	return len(name) >= 2 && name[1] == ':'
+}
+
+// mapEscape translates the os.Root containment error into the public sentinel.
+func mapEscape(err error) error {
+	if isEscapeError(err) {
+		return ErrPathEscapes
+	}
+	return err
+}
+
+// isBackslashDotDot reports whether name contains a ".." component written with
+// the Windows separator, which os.Root only treats as an escape on Windows. On
+// other platforms "..\x" is an ordinary literal filename, so it is rejected
+// explicitly to keep the escape contract uniform.
+func isBackslashDotDot(name string) bool {
+	for part := range strings.SplitSeq(name, `\`) {
+		if part == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+// isEscapeError reports whether err is the os.Root path-escaping error. The
+// standard library does not export a sentinel for it, so it is recognised by
+// its fixed message, wrapped in an *os.PathError or an *os.LinkError
+// (rename operations return the latter).
+func isEscapeError(err error) bool {
+	const escapeMsg = "path escapes from parent"
+	if e, ok := errors.AsType[*os.PathError](err); ok && e.Err != nil && e.Err.Error() == escapeMsg {
+		return true
+	}
+	e, ok := errors.AsType[*os.LinkError](err)
+	return ok && e.Err != nil && e.Err.Error() == escapeMsg
+}
+
+// remoteUNC reports whether path names a \\server\share volume, plainly or in the NT
+// form GetFinalPathNameByHandle returns for a directory reached through a link into a
+// share. The verdict is lexical, so it is platform-independent.
+func remoteUNC(path string) bool {
+	return strings.HasPrefix(stripNTPrefix(path), `\\`)
+}
+
+// stripNTPrefix turns the NT forms that GetFinalPathNameByHandle returns into the ones
+// filepath understands: \\?\C:\dir stays a drive, and \\?\UNC\server\share becomes the
+// UNC path it denotes, so a redirected directory is classified by where it really is.
+func stripNTPrefix(path string) string {
+	const dos, unc = `\\?\`, `\\?\UNC\`
+	if strings.HasPrefix(path, unc) {
+		return `\\` + path[len(unc):]
+	}
+	return strings.TrimPrefix(path, dos)
+}
+
+// tmpPrefix names every node the custodian creates as a publish temporary:
+// tempName mints the names and Purge sweeps leftovers by it. One constant,
+// because the sweep's correctness is the mint's convention.
+const tmpPrefix = ".tmp-"
+
+// lexicalRemoteVolume answers the remote-volume verdict that needs no
+// operating system: a UNC prefix is remote, whatever platform carries it. The
+// platforms that can know more (Windows: mapped drive letters) build on it,
+// and so does a custodian that has no platform attached to ask.
+func lexicalRemoteVolume(path string) (remote bool, kind volumeKind) {
+	if remoteUNC(path) {
+		return true, volumeUNC
+	}
+	return false, 0
+}
+
+// tempName answers a fresh temporary's name beside its target: the same
+// directory, so the publish is a same-directory rename on any filesystem,
+// and a random suffix from crypto/rand, so a name cannot be predicted and
+// raced against the creation. It is hand-rolled because no stdlib API fits
+// the contract: os.CreateTemp creates the node itself, unstamped and by
+// path outside the containment — the stamp must ride the creating syscall
+// (createStamped), and there is no root-scoped temporary creation at all.
+func tempName(targetName string) string {
+	var b [8]byte
+	_, _ = rand.Read(b[:])
+	dir, base := filepath.Split(targetName)
+	tmpBase := fmt.Sprintf(tmpPrefix+"%s-%s", base, hex.EncodeToString(b[:]))
+	return filepath.Join(dir, tmpBase)
+}
