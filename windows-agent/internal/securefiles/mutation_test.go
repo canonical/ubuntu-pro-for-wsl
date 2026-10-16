@@ -470,13 +470,15 @@ func TestAppendAndReadDirRefuseLinks(t *testing.T) {
 
 // TestIntermediateLinksAreRefused pins the containment half of the link rule:
 // a link standing at an intermediate component of a name is refused exactly
-// like a leaf link is. The leaf pins asked "is the node at the name a link";
-// the open the double used answered that for the final component alone, so a
-// link earlier in the name was followed — out of the tree too, after the
-// lexical checks had passed. Both platforms refuse the intermediate link now,
-// the double through openat2's resolve flags, Windows through
-// OBJ_DONT_REPARSE, and neither shows the refusal the difference between an
-// escaping target and an in-tree one.
+// like a leaf link is, by every operation that resolves a name — the reads,
+// the append, the create family, and both sides of a rename. The leaf pins
+// asked "is the node at the name a link"; the name-based operations the double
+// once resolved through os.Root followed an in-tree link instead of refusing
+// it, silently — the create landed in the link's target, the rename published
+// through it. Both platforms refuse the intermediate link now, the double
+// through openat2's resolve flags, Windows through OBJ_DONT_REPARSE, and
+// neither shows the refusal the difference between an escaping target and an
+// in-tree one.
 func TestIntermediateLinksAreRefused(t *testing.T) {
 	t.Parallel()
 
@@ -521,6 +523,28 @@ func TestIntermediateLinksAreRefused(t *testing.T) {
 			op: func(c *securefiles.Custodian) error {
 				_, err := c.IsOwned("in-link/deeper")
 				return err
+			},
+		},
+		"the atomic write refuses an in-tree link": {
+			op: func(c *securefiles.Custodian) error {
+				return c.WriteFile("in-link/deeper/new.txt", []byte("x"))
+			},
+		},
+		"the create refuses an in-tree link": {
+			op: func(c *securefiles.Custodian) error {
+				f, err := c.CreateFile("in-link/deeper/new.txt")
+				if err == nil {
+					_ = f.Close()
+				}
+				return err
+			},
+		},
+		"the rename refuses an in-tree link as its destination": {
+			op: func(c *securefiles.Custodian) error {
+				if err := c.WriteFile("src.txt", []byte("x")); err != nil {
+					return err
+				}
+				return c.Rename("src.txt", "in-link/moved.txt")
 			},
 		},
 	}

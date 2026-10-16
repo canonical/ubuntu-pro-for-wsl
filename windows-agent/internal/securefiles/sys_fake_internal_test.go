@@ -559,7 +559,10 @@ func (s *fakeSys) openNode(rel string, profile openProfile) (*os.File, error) {
 	// lstat before it opens. The walk's own errors stay raw: the stand-in
 	// classifies no errnos, the real opens do.
 	p := s.dir
-	for _, part := range strings.Split(rel, "/") {
+	for _, part := range strings.Split(filepath.ToSlash(rel), "/") {
+		if part == "" {
+			continue
+		}
 		p = filepath.Join(p, part)
 		fi, err := os.Lstat(p)
 		if err != nil {

@@ -32,26 +32,25 @@ type doubleSys struct {
 	// and never reassigned by production.
 	stamps stampCalls
 
-	// root anchors every node operation: containment is enforced per syscall
-	// by the os.Root itself. basePath is the path the layer was constructed
-	// at, recorded so finalPath can answer it.
+	// basePath is the path the layer was constructed at, recorded so
+	// finalPath can answer it.
 	//
-	// rootFD is the root's own descriptor, opened beside the os.Root: os.Root
-	// cannot be asked for its handle, and openNode needs one to resolve
-	// against with openat2 — the one open os.Root itself cannot perform,
-	// because it resolves an in-tree link instead of refusing one. Held for
-	// the custodian's lifetime, closed in release. release may run while
-	// served operations still read the descriptor, so mu guards the pair: an
-	// in-flight open drains before the close, and every open after answers
+	// rootFD is the root's own descriptor, dup'd out of the os.Root the layer
+	// is attached to: os.Root cannot be asked for its handle, and every
+	// openat2 resolution needs one to be issued against — the categorical
+	// no-symlink open os.Root itself cannot perform, because it resolves an
+	// in-tree link instead of refusing one. Held for the custodian's
+	// lifetime, closed in release. release may run while served operations
+	// still read the descriptor, so mu guards the pair: an in-flight
+	// operation drains before the close, and every operation after answers
 	// the closed descriptor instead of racing it. The lock is held through
-	// the Openat2 itself — an atomic would order the field's reads, but the
-	// hazard is the descriptor's lifetime: closed before an open uses it, its
-	// number is back in the allocator's pool, and the next open in the
-	// process, whoever's it is, could hand Openat2 a foreign directory as
-	// the containment root. The Windows layer guards its root handle the
-	// same way, for the same reason.
+	// the openat2 calls themselves — an atomic would order the field's
+	// reads, but the hazard is the descriptor's lifetime: closed before an
+	// operation uses it, its number is back in the allocator's pool, and
+	// the next open in the process, whoever's it is, could hand openat2 a
+	// foreign directory as the containment root. The Windows layer guards
+	// its root handle the same way, for the same reason.
 	mu       sync.Mutex
-	root     *os.Root
 	rootFD   int
 	basePath string
 }
@@ -192,9 +191,9 @@ func (s *doubleSys) identity(f *os.File) (fileIdentity, bool) {
 // Construction-time only: this runs while the custodian is still being built,
 // before it is reachable from any other goroutine.
 func (s *doubleSys) attach(root *os.Root) error {
-	s.root = root
 	// Open the root through the os.Root itself: "." resolves to the tree
-	// root, and the returned descriptor is one openat can be issued against.
+	// root, and the returned descriptor is the anchor every openat2
+	// resolution is issued against.
 	f, err := root.Open(".")
 	if err != nil {
 		return err
@@ -248,9 +247,24 @@ func identityOf(fi os.FileInfo) (fileIdentity, bool) {
 // os.ErrExist, and the adoption decision is the caller's (Subdir), not the
 // create's.
 func (s *doubleSys) createStamped(rel string, dir bool) (*os.File, error) {
+	// Held through the openat2 below for the same reason as openNode's: the
+	// descriptor it resolves against must outlive the syscall.
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if dir {
-		if err := s.root.Mkdir(rel, DirMode); err != nil {
+		// Mkdirat on a pinned parent: the directory is created at the leaf of
+		// a resolution that refused every link, the way the Windows create
+		// does through OBJ_DONT_REPARSE. A link standing at the leaf answers
+		// EEXIST — the adoption offer the caller decides about — instead of
+		// being resolved through.
+		pfd, leaf, err := s.openParent(rel)
+		if err != nil {
 			return nil, err
+		}
+		defer func() { _ = unix.Close(pfd) }()
+		if err := unix.Mkdirat(pfd, leaf, uint32(DirMode)); err != nil { //#nosec G115 // DirMode is the small non-negative permission constant; the conversion cannot overflow.
+			return nil, classifyOpenErr(err)
 		}
 		// The one place ADR 2.01 allows stamping in place — adoption — is the
 		// caller's decision, answered by ErrExist above; a fresh directory
@@ -258,18 +272,57 @@ func (s *doubleSys) createStamped(rel string, dir bool) (*os.File, error) {
 		return nil, nil
 	}
 
-	f, err := s.root.OpenFile(rel, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FileMode)
+	// The file create resolves the whole name under the same flags the open
+	// uses: a link at any component refuses, and O_EXCL turns a leaf that
+	// already exists — link or not — into EEXIST rather than a write to it.
+	fd, err := unix.Openat2(s.rootFD, rel, &unix.OpenHow{
+		Flags:   uint64(os.O_CREATE | os.O_EXCL | os.O_WRONLY | unix.O_CLOEXEC), //#nosec G115 // open flags are small non-negative constants; int->uint64 only widens.
+		Mode:    uint64(FileMode),                                               //#nosec G115 // the file mode is a small non-negative constant; int->uint64 only widens.
+		Resolve: unix.RESOLVE_BENEATH | unix.RESOLVE_NO_SYMLINKS,
+	})
 	if err != nil {
-		return nil, err
+		return nil, classifyOpenErr(err)
 	}
+	f := os.NewFile(uintptr(fd), rel) //#nosec G115 // a file descriptor is a small non-negative int; int->uintptr only widens.
 
 	if err := stampNode(s.stamps, f, fileStamp()); err != nil {
-		if isXattrUnsupported(err) {
-			return nil, errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoStampSupport), f.Close(), s.root.Remove(rel))
+		// The cleanup unlinks the node the create left behind through the
+		// pinned parent, so even it never resolves through a link. Its own
+		// failure — the filesystem refusing the removal of a node it just let
+		// us create — is a condition CI cannot produce; the join keeps it with
+		// the decisive stamp error either way.
+		unlinkStamped := func() error {
+			pfd, leaf, err := s.openParent(rel)
+			if err != nil {
+				return err
+			}
+			defer func() { _ = unix.Close(pfd) }()
+			return unix.Unlinkat(pfd, leaf, 0)
 		}
-		return nil, errors.Join(err, f.Close(), s.root.Remove(rel))
+		if isXattrUnsupported(err) {
+			return nil, errors.Join(fmt.Errorf("could not stamp %s: %w", rel, ErrNoStampSupport), f.Close(), unlinkStamped())
+		}
+		return nil, errors.Join(err, f.Close(), unlinkStamped())
 	}
 	return f, nil
+}
+
+// openParent resolves every component of rel but the leaf with the same
+// categorical refusal the open uses, answering a directory descriptor pinned
+// on the verified parent. The name-based operations — creation and rename —
+// have no resolve flags of their own, so their containment lives on the
+// parent they are issued against; the leaf they act on answers EEXIST or its
+// own errno, never a resolution through a link. The caller holds mu: the
+// resolution must drain before release closes the descriptor it starts from.
+func (s *doubleSys) openParent(rel string) (fd int, leaf string, err error) {
+	fd, err = unix.Openat2(s.rootFD, filepath.Dir(rel), &unix.OpenHow{
+		Flags:   uint64(os.O_RDONLY | unix.O_DIRECTORY | unix.O_CLOEXEC), //#nosec G115 // open flags are small non-negative constants; int->uint64 only widens.
+		Resolve: unix.RESOLVE_BENEATH | unix.RESOLVE_NO_SYMLINKS,
+	})
+	if err != nil {
+		return 0, "", classifyOpenErr(err)
+	}
+	return fd, filepath.Base(rel), nil
 }
 
 // stampDir is a no-op: directories carry no stamp on the double. The
@@ -377,7 +430,27 @@ func (s *doubleSys) readStamp(f *os.File) (st stamp, ok bool, err error) {
 func (s *doubleSys) renameReplace(f *os.File, oldRel, newRel string, posix bool) error {
 	_ = f     // POSIX renames by name, never through the descriptor
 	_ = posix // POSIX semantics are native; there is no degraded class
-	return s.root.Rename(oldRel, newRel)
+	// Held through the openat2 calls below for the same reason as openNode's.
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// renameat between pinned parents: the move is issued against
+	// resolutions that refused every link, the way the Windows rename is
+	// through OBJ_DONT_REPARSE, instead of re-resolving both names from the
+	// root the way os.Root.Rename does — following an in-tree link on either
+	// side. The leaf itself is a directory entry to move, never a target to
+	// resolve: a link standing at the source name moves as a link, and the
+	// destination leaf is replaced, both exactly as the policy expects.
+	srcFD, srcLeaf, err := s.openParent(oldRel)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = unix.Close(srcFD) }()
+	dstFD, dstLeaf, err := s.openParent(newRel)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = unix.Close(dstFD) }()
+	return classifyOpenErr(unix.Renameat(srcFD, srcLeaf, dstFD, dstLeaf))
 }
 
 // isRenameClassUnsupported answers false everywhere but Windows: POSIX rename
@@ -394,17 +467,30 @@ func (s *doubleSys) isHeldNode(err error) bool {
 }
 
 // isLink answers whether a symbolic link — the only reparse kind a non-
-// Windows filesystem carries — stands at rel, opening the link itself, never
-// its target.
+// Windows filesystem carries — stands at rel, classified by the node's own
+// mode, never by resolving it: an open follows a relative in-tree link to
+// its target and answers ENOENT for a dangling one, so neither form would
+// classify the link. The walk to the leaf is the open's own pinned-parent
+// resolution, refusing a link at any earlier component the same way, so the
+// question is answered for the whole name or not at all — the not-at-all
+// case answers the walk's own refusal, which the caller treats as a
+// question it could not ask.
 func (s *doubleSys) isLink(rel string) (bool, error) {
-	f, err := s.root.OpenFile(rel, os.O_RDONLY|unix.O_NOFOLLOW, 0)
-	if err == nil {
-		return false, f.Close()
+	// Held through the openat2 below for the same reason as openNode's.
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	pfd, leaf, err := s.openParent(rel)
+	if err != nil {
+		return false, err
 	}
-	if errors.Is(err, unix.ELOOP) || isEscapeError(err) {
-		return true, nil
+	defer func() { _ = unix.Close(pfd) }()
+
+	var st unix.Stat_t
+	if err := unix.Fstatat(pfd, leaf, &st, unix.AT_SYMLINK_NOFOLLOW); err != nil {
+		return false, classifyOpenErr(err)
 	}
-	return false, err
+	return st.Mode&unix.S_IFMT == unix.S_IFLNK, nil
 }
 
 // finalPath answers the path the double was constructed at: POSIX keeps no

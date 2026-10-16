@@ -359,9 +359,33 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 		// linkInTree plants the link pointing at a missing sibling inside the tree.
 		linkInTree bool
 
+		// linkRelativeInTree plants a relative link to an existing sibling
+		// directory inside the tree: the form an open resolves through, so
+		// only a mode-based classification can call it a link.
+		linkRelativeInTree bool
+
+		// linkRelativeDangling plants a relative link whose target does not
+		// exist: the form an open answers ENOENT for, which is not a verdict
+		// about the link.
+		linkRelativeDangling bool
+
 		// cannotRemove makes the planted link unremovable, so the heal cannot run:
 		// the sub-tree must be refused, not opened through something unchecked.
 		cannotRemove bool
+
+		// linkAtIntermediate plants the link under the name "in-link" and asks
+		// for a sub-tree whose name resolves through it, so the link stands at
+		// an intermediate component rather than the leaf.
+		linkAtIntermediate bool
+
+		// intermediateInTree makes that link point at an existing sibling
+		// directory inside the tree — the form the classification could once
+		// resolve through, adopting the target as the sub-tree root.
+		intermediateInTree bool
+
+		// subName is the name handed to Subdir; empty means "sub", the leaf
+		// the single-component rows plant their link at.
+		subName string
 	}{
 		"a link to a directory outside the tree": {linkTargetOutsideDir: true},
 		"a link to a file outside the tree":      {},
@@ -371,7 +395,27 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 		// the directory itself.
 		"a link to a directory inside the tree": {linkInTree: true},
 
+		// The relative forms are the subtlest: an open follows the one and
+		// answers ENOENT for the other, so both would slip past an open-based
+		// classification — one adopting the link's target, one refusing the
+		// sub-tree — where the attribute check heals both.
+		"a relative link to a directory inside the tree": {linkRelativeInTree: true},
+		"a relative dangling link":                       {linkRelativeDangling: true},
+
 		"a link that cannot be removed is refused": {cannotRemove: true},
+
+		// A link standing at an intermediate component of the asked name is a
+		// question about the whole name, not just the leaf: the refusal must
+		// come from the walk itself, whichever side the link points to.
+		"an intermediate link escaping the tree refuses the sub-tree": {
+			linkAtIntermediate: true,
+			subName:            "in-link/sub",
+		},
+		"an intermediate in-tree link refuses the sub-tree": {
+			linkAtIntermediate: true,
+			intermediateInTree: true,
+			subName:            "in-link/deeper",
+		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -389,10 +433,20 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 			root := filepath.Join(base, "root")
 			require.NoError(t, os.MkdirAll(root, 0700), "Setup: could not create the future tree root")
 			switch {
+			case tc.linkAtIntermediate && tc.intermediateInTree:
+				require.NoError(t, os.MkdirAll(filepath.Join(root, "sibling"), 0700), "Setup: could not create the in-tree target")
+				require.NoError(t, os.Symlink("sibling", filepath.Join(root, "in-link")), "Setup: could not plant the in-tree link")
+			case tc.linkAtIntermediate:
+				require.NoError(t, os.Symlink(outside, filepath.Join(root, "in-link")), "Setup: could not plant the escaping link")
 			case tc.linkTargetOutsideDir:
 				require.NoError(t, os.Symlink(outside, filepath.Join(root, "sub")), "Setup: could not plant the link")
 			case tc.linkInTree:
 				require.NoError(t, os.Symlink(filepath.Join(root, "sibling"), filepath.Join(root, "sub")), "Setup: could not plant the link")
+			case tc.linkRelativeInTree:
+				require.NoError(t, os.MkdirAll(filepath.Join(root, "sibling"), 0700), "Setup: could not create the in-tree target")
+				require.NoError(t, os.Symlink("sibling", filepath.Join(root, "sub")), "Setup: could not plant the relative link")
+			case tc.linkRelativeDangling:
+				require.NoError(t, os.Symlink("nowhere", filepath.Join(root, "sub")), "Setup: could not plant the dangling link")
 			default:
 				require.NoError(t, os.Symlink(sentinel, filepath.Join(root, "sub")), "Setup: could not plant the link")
 			}
@@ -420,17 +474,39 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 				}
 			}
 
-			sub, err := c.Subdir("sub")
-			if tc.cannotRemove {
-				require.Error(t, err, "a link that cannot be removed must refuse the sub-tree")
+			subDir := tc.subName
+			if subDir == "" {
+				subDir = "sub"
+			}
+			sub, err := c.Subdir(subDir)
+			if tc.cannotRemove || tc.linkAtIntermediate {
+				if tc.linkAtIntermediate {
+					// The refusal is the walk's own: resolving through a link
+					// is never the answer, never an open through it.
+					require.ErrorIs(t, err, securefiles.ErrPathEscapes, "a name resolving through a link must refuse the sub-tree")
+				} else {
+					require.Error(t, err, "a link that cannot be removed must refuse the sub-tree")
+				}
 				require.Nil(t, sub, "a refused sub-tree must not yield a custodian")
 
-				fi, err := os.Lstat(filepath.Join(root, "sub"))
+				linkPath := filepath.Join(root, "sub")
+				if tc.linkAtIntermediate {
+					linkPath = filepath.Join(root, "in-link")
+				}
+				fi, err := os.Lstat(linkPath)
 				require.NoError(t, err, "the planted link must still stand at the name")
 				require.NotZero(t, fi.Mode()&os.ModeSymlink, "the planted link must not have been replaced")
 				data, err := os.ReadFile(sentinel)
 				require.NoError(t, err)
 				require.Equal(t, "PRECIOUS", string(data), "nothing may be written through the link")
+
+				if tc.intermediateInTree {
+					// Nothing was created through the link either: the target
+					// gains no "deeper" directory, which is what resolving
+					// through the link would have produced.
+					_, err := os.Lstat(filepath.Join(root, "sibling", "deeper"))
+					require.ErrorIs(t, err, os.ErrNotExist, "no sub-tree may be created inside a link's target")
+				}
 				return
 			}
 			require.NoError(t, err, "a planted link must not block the sub-tree forever")

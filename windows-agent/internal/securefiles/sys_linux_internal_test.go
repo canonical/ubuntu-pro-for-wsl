@@ -12,6 +12,7 @@ package securefiles
 import (
 	"encoding/binary"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -175,6 +176,27 @@ func TestOpenNodeBackstopAnswersTheContractError(t *testing.T) {
 
 	_, err = s.openNode("..", openRead)
 	require.ErrorIs(t, err, ErrPathEscapes, "RESOLVE_BENEATH's backstop must answer the escape sentinel, not a raw EXDEV")
+}
+
+// TestIsLinkAnswersAMissingLeafWithItsOwnError pins the classification's
+// refusal shape: a name whose leaf does not exist answers the filesystem's
+// missing-node error, unclassified — not a link verdict, and not an escape.
+// The caller treats an unanswerable classification as a refused sub-tree, so
+// the error it sees must be the honest one it can branch on.
+func TestIsLinkAnswersAMissingLeafWithItsOwnError(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	root, err := os.OpenRoot(dir)
+	require.NoError(t, err, "Setup: could not open the root")
+	defer func() { _ = root.Close() }()
+
+	s := newPlatformSys(dir)
+	require.NoError(t, s.attach(root), "Setup: could not attach the layer")
+	defer func() { _ = s.release() }()
+
+	_, err = s.isLink("gone")
+	require.ErrorIs(t, err, fs.ErrNotExist, "a missing leaf answers the missing-node error, not a classification")
 }
 
 // TestNewPlatformSysRefusesARedirectedRoot pins the containment Open rests on:
