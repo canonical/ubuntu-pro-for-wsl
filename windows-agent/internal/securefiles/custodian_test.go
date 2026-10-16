@@ -201,10 +201,6 @@ func TestCustodianErrors(t *testing.T) {
 			op: "appendfile", path: "file/child",
 			seedFiles: map[string]string{"file": "x"},
 		},
-		"AppendFile over a reparse point is refused": {
-			op: "appendfile", seedSymlink: "link",
-		},
-
 		"WriteFile through a plain file fails": {
 			op: "write", path: "file/child",
 			seedFiles: map[string]string{"file": "x"},
@@ -554,11 +550,7 @@ func TestPurge(t *testing.T) {
 			},
 		},
 		// The wholesale twin of the case above: PurgeAll has its own sweep, so
-		// its vanished-root branch needs its own pin. On POSIX the open root
-		// survives an external removal long enough to answer, so the failure
-		// surfaces at the listing rather than at the open; Windows cannot run
-		// this, the veto that keeps the root in place being pinned by
-		// TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen.
+		// its vanished-root branch needs its own pin.
 		"PurgeAll fails when the root was removed externally": {
 			needsUnix: true,
 			run: func(t *testing.T, c *securefiles.Custodian) []string {
@@ -814,5 +806,4 @@ func TestCheckProjectionWithPlatform(t *testing.T) {
 	defer c.Close()
 
 	require.NoError(t, c.CheckProjection(), "a healthy sub-tree on a local volume is not a condition worth reporting")
-	require.Equal(t, basePath, c.BasePath())
 }

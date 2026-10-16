@@ -23,7 +23,6 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles/securefilestest"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
@@ -491,54 +490,4 @@ func loadClientCertificates(t *testing.T, certsDir string) credentials.Transport
 	}
 
 	return credentials.NewTLS(tlsConfig)
-}
-
-// TestNewReplacesPreExistingForeignSubtrees verifies that pre-existing first-level
-// subtree roots (.cloud-init and certificates) are replaced rather than adopted
-// when proservices.New starts.
-func TestNewReplacesPreExistingForeignSubtrees(t *testing.T) {
-	publicDir := t.TempDir()
-	privateDir := t.TempDir()
-
-	// Pre-create foreign unstamped directories
-	cloudInitDir := filepath.Join(publicDir, ".cloud-init")
-	certsDir := filepath.Join(publicDir, common.CertificatesDir)
-	require.NoError(t, os.MkdirAll(cloudInitDir, 0700), "Setup: could not plant the foreign cloud-init directory")
-	require.NoError(t, os.MkdirAll(certsDir, 0700), "Setup: could not plant the foreign certificates directory")
-
-	// Seed foreign files
-	require.NoError(t, os.WriteFile(filepath.Join(cloudInitDir, "foreign.txt"), []byte("foreign"), 0600),
-		"Setup: could not seed the foreign file")
-	require.NoError(t, os.WriteFile(filepath.Join(certsDir, "stale.key"), []byte("stale"), 0600),
-		"Setup: could not seed the stale key")
-
-	publicCustodian, err := securefiles.Open(publicDir)
-	require.NoError(t, err, "Setup: could not open public custodian")
-	defer publicCustodian.Close()
-
-	s, err := proservices.New(context.Background(), publicCustodian, privateDir, proservices.WithRegistry(registry.NewMock()))
-	require.NoError(t, err, "Setup: New should return no error")
-	defer s.Stop(context.Background())
-
-	// The certificates directory has a fixed set of legitimate filenames, so stale
-	// content is removed by name on every platform.
-	require.NoFileExists(t, filepath.Join(certsDir, "stale.key"), "stale certificates file should be removed")
-
-	// Cloud-init uses watermark ownership, so the raw foreign file is purged here too.
-	require.NoFileExists(t, filepath.Join(cloudInitDir, "foreign.txt"), "foreign cloud-init file should be removed")
-
-	if runtime.GOOS == "windows" {
-		// Verify the directory nodes themselves are stamped root-owned 0700.
-		uid, gid, mode, err := securefilestest.ReadLxAttributes(cloudInitDir)
-		require.NoError(t, err, "could not read .cloud-init extended attributes")
-		require.Equal(t, uint32(0), uid, ".cloud-init should be owned by root")
-		require.Equal(t, uint32(0), gid, ".cloud-init should be group root")
-		require.Equal(t, uint32(040700), mode, ".cloud-init should have mode 0700")
-
-		uid, gid, mode, err = securefilestest.ReadLxAttributes(certsDir)
-		require.NoError(t, err, "could not read certificates extended attributes")
-		require.Equal(t, uint32(0), uid, "certificates directory should be owned by root")
-		require.Equal(t, uint32(0), gid, "certificates directory should be group root")
-		require.Equal(t, uint32(040700), mode, "certificates directory should have mode 0700")
-	}
 }

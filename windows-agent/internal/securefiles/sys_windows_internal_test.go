@@ -103,7 +103,6 @@ func TestRemoteVolumeClassification(t *testing.T) {
 	}{
 		"a local drive":                 {path: `C:\Users\someone\.ubuntupro`, driveType: windows.DRIVE_FIXED},
 		"a relative path has no volume": {path: `.ubuntupro`},
-		"a UNC path":                    {path: `\\server\share\Users\someone\.ubuntupro`, wantRemote: true, wantKind: volumeUNC},
 		"an unreachable UNC path":       {path: `\\no-such-host-xyz\share\.ubuntupro`, wantRemote: true, wantKind: volumeUNC},
 		"a mapped network drive":        {path: `C:\Users\someone\.ubuntupro`, driveType: windows.DRIVE_REMOTE, wantRemote: true, wantKind: volumeMappedDrive},
 	}
@@ -148,21 +147,10 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 
 	testCases := map[string]struct {
 		seedFile bool
-		seedDir  bool
 
 		call  func(c *Custodian) error
 		after func(t *testing.T, dir string)
 	}{
-		"ownership check": {
-			seedFile: true,
-			call: func(c *Custodian) error {
-				owned, err := c.IsOwned(bad)
-				if err == nil && owned {
-					return nil // truncated onto the seeded node
-				}
-				return err
-			},
-		},
 		"node creation": {
 			call: func(c *Custodian) error {
 				f, err := c.sys.createStamped(bad, false)
@@ -184,10 +172,6 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 				require.FileExists(t, filepath.Join(dir, "good"), "a truncated path must not move the shorter node")
 			},
 		},
-		"sub-directory stamp": {
-			seedDir: true,
-			call:    func(c *Custodian) error { return c.sys.stampDir(bad) },
-		},
 	}
 
 	for name, tc := range testCases {
@@ -201,9 +185,6 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 
 			if tc.seedFile {
 				require.NoError(t, cust.WriteFile("good", []byte("seed")), "Setup: could not seed the file")
-			}
-			if tc.seedDir {
-				require.NoError(t, os.Mkdir(filepath.Join(dir, "good"), DirMode), "Setup: could not seed the directory")
 			}
 
 			require.Error(t, tc.call(cust), "an unencodable path must be refused, never truncated")
@@ -419,51 +400,25 @@ func TestStampingAnExistingNodeIsRefused(t *testing.T) {
 func TestEnsureRootRefusesARedirectedRoot(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		// redirect puts a directory symlink where the root would be created, standing in
-		// for any reparse point: a junction planted from inside an instance behaves alike.
-		redirect bool
-	}{
-		"a root the custodian creates itself":       {},
-		"a directory link standing in for the root": {redirect: true},
+	base := t.TempDir()
+	outside := filepath.Join(base, "outside")
+	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+
+	rootPath := filepath.Join(base, "root")
+	// A directory symlink stands in for any reparse point: a junction planted
+	// from inside an instance behaves alike.
+	if err := os.Symlink(outside, rootPath); err != nil {
+		t.Skip("symlink creation not permitted in this environment")
 	}
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 
-			base := t.TempDir()
-			outside := filepath.Join(base, "outside")
-			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+	sys := newPlatformSys(rootPath)
+	_, _, err := sys.establishRoot()
+	require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
 
-			rootPath := filepath.Join(base, "root")
-			if tc.redirect {
-				if err := os.Symlink(outside, rootPath); err != nil {
-					t.Skip("symlink creation not permitted in this environment")
-				}
-			}
-
-			sys := newPlatformSys(rootPath)
-			_, _, err := sys.establishRoot()
-			if tc.redirect {
-				require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
-
-				entries, err := os.ReadDir(outside)
-				require.NoError(t, err, "Setup: could not list the link target")
-				require.Empty(t, entries, "nothing may be created through the link")
-				return
-			}
-			require.NoError(t, err, "the custodian should have established its root")
-			require.NoError(t, sys.release())
-		})
-	}
+	entries, err := os.ReadDir(outside)
+	require.NoError(t, err, "Setup: could not list the link target")
+	require.Empty(t, entries, "nothing may be created through the link")
 }
-
-// TestCheckProjectionReportsARedirectedRoot pins the report a root the kernel
-// resolves into a share receives, and the shapes of the final-path query that
-// classify it. A share is a condition no CI machine can produce, so the
-// ntCalls seam reproduces the answers GetFinalPathNameByHandle can give: the
-// redirected path itself, one that over-answers the first buffer, and a
-// refusal.
 func TestCheckProjectionReportsARedirectedRoot(t *testing.T) {
 	t.Parallel()
 

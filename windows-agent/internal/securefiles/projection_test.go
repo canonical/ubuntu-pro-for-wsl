@@ -28,7 +28,7 @@ import (
 // machine-heavy setup. Real-WSL e2e tests guard the projection contract
 // itself, not execution speed.
 func TestProjectionRootOwnedInDistro(t *testing.T) {
-	distroName, _ := requireRealWsl2Instance(t)
+	distroName := requireRealWsl2Instance(t)
 
 	// Two public directories side by side, the same host path, the same
 	// instance: one the custodian serves, one it never touched.
@@ -114,7 +114,7 @@ func TestProjectionRootOwnedInDistro(t *testing.T) {
 	require.NoError(t, err, "an unprivileged process must be able to overwrite an unstamped node — the exploit the stamp closes: output: %s", out)
 }
 
-func requireRealWsl2Instance(t *testing.T) (string, string) {
+func requireRealWsl2Instance(t *testing.T) string {
 	t.Helper()
 
 	rootFsPath := os.Getenv("UP4W_TEST_ROOTFS")
@@ -124,9 +124,9 @@ func requireRealWsl2Instance(t *testing.T) (string, string) {
 	defer cancel()
 
 	distroName := wsltestutils.RandomDistroName(t)
-	guid := wsltestutils.PowershellInstallDistro(t, ctx, distroName, rootFsPath)
+	wsltestutils.PowershellInstallDistro(t, ctx, distroName, rootFsPath)
 
-	return distroName, guid
+	return distroName
 }
 
 // wslPath asks the distro instance to translate a Windows path: the automount

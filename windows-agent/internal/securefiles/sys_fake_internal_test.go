@@ -490,10 +490,9 @@ type fakeSys struct {
 	renameReplaceFn            func(f *os.File, oldRel, newRel string, posix bool) error
 	isRenameClassUnsupportedFn func(err error) bool
 	isHeldNodeFn               func(err error) bool
-
-	isLinkFn       func(rel string) (bool, error)
-	finalPathFn    func() string
-	remoteVolumeFn func(string) (bool, volumeKind)
+	isLinkFn                   func(rel string) (bool, error)
+	finalPathFn                func() string
+	remoteVolumeFn             func(string) (bool, volumeKind)
 }
 
 // establishRoot defaults to an established root, so open() can hand out a

@@ -790,23 +790,11 @@ func encodeLxEa(st stamp) []byte {
 	return buf
 }
 
-// stampedFileMode returns the Extended Attribute file mode including the file type bits.
-func stampedFileMode() uint32 {
-	return 0100000 | uint32(FileMode)
-}
-
-// stampedDirMode returns the Extended Attribute directory mode including the file type
-// bits: a directory carries no descriptor, so only the mode distinguishes its stamp.
-func stampedDirMode() uint32 {
-	return 040700
-}
-
 // relativeAttributes builds the OBJECT_ATTRIBUTES that open the relative
 // name rel against the root handle: the kernel resolves rel inside the tree
 // the handle stands for, never from the drive root or the current directory.
 // Every NT open in this file goes through it, and OBJ_DONT_REPARSE is set
 // here, so none can follow a reparse point planted inside the sub-tree.
-
 func relativeAttributes(root windows.Handle, rel string) (*windows.OBJECT_ATTRIBUTES, error) {
 	name, err := windows.NewNTUnicodeString(rel)
 	if err != nil {

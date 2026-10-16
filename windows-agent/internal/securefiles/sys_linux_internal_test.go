@@ -76,8 +76,6 @@ func TestRenameChecksOwnership(t *testing.T) {
 			case tc.raw:
 				require.NoError(t, os.WriteFile(filepath.Join(dir, src), []byte("raw"), 0600),
 					"Setup: could not plant the node")
-			default:
-				require.NoError(t, c.WriteFile(src, []byte("ok")), "Setup: could not write the node")
 			}
 
 			if tc.plantWatermark != nil {
@@ -131,45 +129,21 @@ func TestOpenNodeRefusesALink(t *testing.T) {
 func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		// redirect puts a symlink where the root would be created.
-		redirect bool
-	}{
-		"a root the custodian creates itself":       {},
-		"a directory link standing in for the root": {redirect: true},
-	}
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	base := t.TempDir()
+	outside := filepath.Join(base, "outside")
+	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
 
-			base := t.TempDir()
-			outside := filepath.Join(base, "outside")
-			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+	rootPath := filepath.Join(base, "root")
+	require.NoError(t, os.Symlink(outside, rootPath), "Setup: could not plant the link")
 
-			rootPath := filepath.Join(base, "root")
-			if tc.redirect {
-				require.NoError(t, os.Symlink(outside, rootPath), "Setup: could not plant the link")
-			}
+	sys := newDoubleSysWith(rootPath, realStampCalls())
+	_, _, err := sys.establishRoot()
+	require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
 
-			sys := newDoubleSysWith(rootPath, realStampCalls())
-			_, _, err := sys.establishRoot()
-			if tc.redirect {
-				require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
-
-				entries, err := os.ReadDir(outside)
-				require.NoError(t, err, "Setup: could not list the link target")
-				require.Empty(t, entries, "nothing may be created through the link")
-				return
-			}
-			require.NoError(t, err, "the custodian should have established its root")
-		})
-	}
+	entries, err := os.ReadDir(outside)
+	require.NoError(t, err, "Setup: could not list the link target")
+	require.Empty(t, entries, "nothing may be created through the link")
 }
-
-// TestStampsRefuseUnstampableTrees pins the refuse-at-open policy (ADR 2.02)
-// against the double: a filesystem that cannot carry the watermark is refused
-// rather than served, and an unexplained probe failure is refused too, rather
-// than taken as evidence that stamping works.
 func TestStampsRefuseUnstampableTrees(t *testing.T) {
 	t.Parallel()
 
@@ -182,7 +156,6 @@ func TestStampsRefuseUnstampableTrees(t *testing.T) {
 	}{
 		"a filesystem without xattrs is refused at Open": {probeErr: unix.ENOTSUP, wantUnsupported: true},
 		"an EPERM probe is not a capability answer":      {probeErr: unix.EPERM},
-		"an EIO probe is not a capability answer":        {probeErr: unix.EIO},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {

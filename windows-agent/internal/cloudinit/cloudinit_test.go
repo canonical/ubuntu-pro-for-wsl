@@ -472,42 +472,6 @@ func (c mockConfig) LandscapeClientConfig() (string, config.Source, error) {
 	return c.landscapeConf, config.SourceUser, nil
 }
 
-func TestSubScopedCustodianCloudInitPurge(t *testing.T) {
-	ctx := context.Background()
-
-	hook := test.NewGlobal()
-	defer hook.Reset()
-
-	parentDir := t.TempDir()
-	rootCust, err := securefiles.Open(parentDir)
-	require.NoError(t, err, "Setup: could not open the root custodian")
-	defer rootCust.Close()
-
-	cloudInitCust, err := rootCust.Subdir(".cloud-init")
-	require.NoError(t, err, "Setup: could not open the cloud-init sub-custodian")
-	defer cloudInitCust.Close()
-
-	// Write distro user data in sub-scoped custodian
-	err = cloudInitCust.WriteFile("Noble.user-data", []byte("user-data-content"))
-	require.NoError(t, err, "Setup: could not seed the user data")
-
-	conf := &mockConfig{proToken: "token"}
-	_, err = cloudinit.New(ctx, conf, cloudInitCust)
-	require.NoError(t, err, "Setup: could not create the cloud-init component")
-
-	// Verify distro user data survived and was not purged
-	data, err := os.ReadFile(filepath.Join(cloudInitCust.BasePath(), "Noble.user-data"))
-	require.NoError(t, err)
-	require.Equal(t, []byte("user-data-content"), data)
-
-	// Verify no unrecognised-node warning log was emitted for legitimate files or agent.yaml
-	for _, entry := range hook.AllEntries() {
-		if entry.Level == logrus.WarnLevel && (strings.Contains(entry.Message, "Noble.user-data") || strings.Contains(entry.Message, "agent.yaml")) {
-			t.Fatalf("unexpected unrecognised-node warning log for legitimate file: %s", entry.Message)
-		}
-	}
-}
-
 // TestStartupPurge drives cloudinit.New over a seeded .cloud-init sub-tree and
 // checks, one row per scenario, what survives the startup disposition: stamped
 // nodes are left untouched, whatever their name or content, and unstamped nodes

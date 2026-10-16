@@ -3,7 +3,10 @@
 // Windows production-mechanism tests over real extended attributes: what the
 // custodian stamps with $LXUID/$LXGID/$LXMOD and when (TestWindowsStamping),
 // and what the ownership predicate makes of what it stamped (TestIsOwned).
-// The stamping is read through the independent securefilestest instrument;
+// The stamping is read through readLxAttributes below, an instrument that shares
+// nothing with the custodian but winio's decoder: this external test package
+// cannot reach the custodian's own stamp reading, so a stamping bug cannot
+// certify itself;
 // the predicate verdicts themselves are single-sourced in custodian.go and
 // tested cross-platform over the fake platformSys — this file pins the real
 // EA shapes those verdicts rest on: a stamp that decodes but proves nothing
@@ -13,13 +16,15 @@
 package securefiles_test
 
 import (
+	"encoding/binary"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/Microsoft/go-winio"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
-	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles/securefilestest"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 )
@@ -87,7 +92,7 @@ func TestWindowsStamping(t *testing.T) {
 				stamped = filepath.Join(rootDir, tc.renameTo)
 			}
 
-			uid, gid, mode, err := securefilestest.ReadLxAttributes(stamped)
+			uid, gid, mode, err := readLxAttributes(stamped)
 			require.NoError(t, err, "the node must carry the stamp")
 			require.Equal(t, uint32(0), uid, "the stamp must claim root as owner")
 			require.Equal(t, uint32(0), gid, "the stamp must claim root as group")
@@ -189,4 +194,170 @@ func openForEaWrite(path string) (windows.Handle, error) {
 		windows.FILE_ATTRIBUTE_NORMAL,
 		0,
 	)
+}
+
+// readLxAttributes reads the $LXUID, $LXGID and $LXMOD extended attributes of
+// the node at path and returns their values. The node must exist and be
+// readable. It is the independent instrument the stamping tests read through:
+// it goes to the raw attribute buffer via winio's decoder, never through the
+// custodian's stamp reading, which this external test package cannot reach.
+func readLxAttributes(path string) (uid, gid, mode uint32, err error) {
+	path16, err := windows.UTF16PtrFromString(path)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("could not convert path to UTF-16: %v", err)
+	}
+
+	h, err := windows.CreateFile(
+		path16,
+		windows.GENERIC_READ,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
+		nil,
+		windows.OPEN_EXISTING,
+		windows.FILE_FLAG_BACKUP_SEMANTICS,
+		0,
+	)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("could not open %q: %v", path, err)
+	}
+	defer func() { _ = windows.CloseHandle(h) }()
+
+	eas, err := ntQueryAllEa(h)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("could not query EAs for %q: %v", path, err)
+	}
+
+	uid, ok := eas["$LXUID"]
+	if !ok {
+		return 0, 0, 0, fmt.Errorf("missing $LXUID extended attribute on %q", path)
+	}
+	gid, ok = eas["$LXGID"]
+	if !ok {
+		return 0, 0, 0, fmt.Errorf("missing $LXGID extended attribute on %q", path)
+	}
+	mode, ok = eas["$LXMOD"]
+	if !ok {
+		return 0, 0, 0, fmt.Errorf("missing $LXMOD extended attribute on %q", path)
+	}
+
+	return uid, gid, mode, nil
+}
+
+func ntQueryAllEa(handle windows.Handle) (map[string]uint32, error) {
+	var iosb windows.IO_STATUS_BLOCK
+	buf := make([]byte, 2048)
+
+	if err := windows.NtQueryEaFile(handle, &iosb, &buf[0], uint32(len(buf)) /* #nosec G115 */, false, nil, 0, nil, true); err != nil {
+		if status, ok := errors.AsType[windows.NTStatus](err); ok {
+			return nil, status
+		}
+		return nil, err
+	}
+
+	decoded, err := winio.DecodeExtendedAttributes(buf[:iosb.Information])
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]uint32)
+	for _, ea := range decoded {
+		if len(ea.Value) == 4 {
+			result[ea.Name] = binary.LittleEndian.Uint32(ea.Value)
+		}
+	}
+
+	return result, nil
+}
+
+// TestReadLxAttributes pins the reader's contract: every failure mode of the
+// EA reading pipeline (unconvertible path, unopenable node, failed EA query,
+// incomplete or wrongly-shaped stamp) must surface as an error rather than
+// fabricated ownership metadata. It is deliberately serial: its subtests reuse
+// one node name and sweep it between cases, so running them in parallel would
+// race on the shared fixture.
+func TestReadLxAttributes(t *testing.T) {
+	dir := t.TempDir()
+
+	// A complete, well-formed stamp round-trips.
+	stamped := filepath.Join(dir, "stamped.txt")
+	writeWithEas(t, stamped, []winio.ExtendedAttribute{
+		{Name: "$LXUID", Value: []byte{0, 0, 0, 0}},
+		{Name: "$LXGID", Value: []byte{0, 0, 0, 0}},
+		{Name: "$LXMOD", Value: []byte{0x80, 0x81, 0x00, 0x00}}, // 0100600 = 0x8180, little-endian
+	})
+	uid, gid, mode, err := readLxAttributes(stamped)
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), uid)
+	require.Equal(t, uint32(0), gid)
+	require.Equal(t, uint32(0100600), mode)
+
+	t.Run("path with a NUL byte cannot be converted", func(t *testing.T) {
+		_, _, _, err := readLxAttributes("bad\x00path")
+		require.Error(t, err)
+	})
+
+	t.Run("missing node cannot be opened", func(t *testing.T) {
+		_, _, _, err := readLxAttributes(filepath.Join(dir, "nonexistent"))
+		require.Error(t, err)
+	})
+
+	t.Run("EA-less node fails the query outright", func(t *testing.T) {
+		raw := filepath.Join(dir, "raw.txt")
+		require.NoError(t, os.WriteFile(raw, []byte("raw"), 0600))
+		_, _, _, err := readLxAttributes(raw)
+		require.Error(t, err, "Windows has no empty-list answer to the EA query")
+	})
+
+	partialSets := map[string][]winio.ExtendedAttribute{
+		"only $LXMOD and $LXGID, missing $LXUID": {
+			{Name: "$LXGID", Value: []byte{0, 0, 0, 0}},
+			{Name: "$LXMOD", Value: []byte{0, 0, 0, 0}},
+		},
+		"only $LXUID, missing $LXGID": {
+			{Name: "$LXUID", Value: []byte{0, 0, 0, 0}},
+		},
+		"$LXUID and $LXGID, missing $LXMOD": {
+			{Name: "$LXUID", Value: []byte{0, 0, 0, 0}},
+			{Name: "$LXGID", Value: []byte{0, 0, 0, 0}},
+		},
+		"wrongly-sized $LXMOD is skipped, missing $LXMOD": {
+			{Name: "$LXUID", Value: []byte{0, 0, 0, 0}},
+			{Name: "$LXGID", Value: []byte{0, 0, 0, 0}},
+			{Name: "$LXMOD", Value: []byte{0, 0}},
+		},
+	}
+	for name, eas := range partialSets {
+		t.Run(name, func(t *testing.T) {
+			node := filepath.Join(dir, "partial.txt")
+			writeWithEas(t, node, eas)
+			_, _, _, err := readLxAttributes(node)
+			require.Error(t, err, "incomplete stamps must error rather than fabricate values")
+			require.NoError(t, os.Remove(node))
+		})
+	}
+}
+
+// writeWithEas creates path with the given extended attributes planted raw.
+func writeWithEas(t *testing.T, path string, eas []winio.ExtendedAttribute) {
+	t.Helper()
+
+	require.NoError(t, os.WriteFile(path, []byte("x"), 0600))
+
+	eaBuf, err := winio.EncodeExtendedAttributes(eas)
+	require.NoError(t, err)
+
+	h, err := windows.CreateFile(
+		windows.StringToUTF16Ptr(path),
+		windows.GENERIC_READ|windows.GENERIC_WRITE,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
+		nil,
+		windows.OPEN_EXISTING,
+		windows.FILE_ATTRIBUTE_NORMAL,
+		0,
+	)
+	require.NoError(t, err)
+	defer func() { _ = windows.CloseHandle(h) }()
+
+	var iosb windows.IO_STATUS_BLOCK
+	err = windows.NtSetEaFile(h, &iosb, &eaBuf[0], uint32(len(eaBuf)) /* #nosec G115 */)
+	require.NoError(t, err)
 }
