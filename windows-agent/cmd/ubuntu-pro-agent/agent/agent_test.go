@@ -296,6 +296,10 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		invalidLocalAppData bool
 		invalidUserProfile  bool
 
+		// userProfileIsFile points %UserProfile% at a plain file: the public dir parent
+		// exists but is not a directory, so securefiles.Open must refuse it.
+		userProfileIsFile bool
+
 		cloudInitIsFile bool
 	}{
 		"Invalid private directory": {invalidPrivateDir: true},
@@ -303,6 +307,7 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 		"Invalid LocalAppData":      {invalidLocalAppData: true},
 		"Invalid UserProfile":       {invalidUserProfile: true},
 
+		"Public dir parent obstructed by a file":    {userProfileIsFile: true},
 		"Cloud-init directory obstructed by a file": {cloudInitIsFile: true},
 	}
 
@@ -318,6 +323,11 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			if tc.invalidUserProfile {
 				t.Setenv("UserProfile", "")
+			} else if tc.userProfileIsFile {
+				badDir := filepath.Join(t.TempDir(), "file")
+				err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
+				require.NoError(t, err, "Setup: could not obstruct the public dir parent")
+				t.Setenv("UserProfile", badDir)
 			} else {
 				publicDir = t.TempDir()
 			}
@@ -362,14 +372,11 @@ func TestPublicDir(t *testing.T) {
 
 	testCases := map[string]struct {
 		emptyEnv bool
-		badPath  bool
-
-		wantErr bool
+		wantErr  bool
 	}{
 		"Success providing a public directory": {},
 
-		"Error when %UserProfile% is empty":                  {emptyEnv: true, wantErr: true},
-		"Error when %UserProfile% points to an invalid path": {badPath: true, wantErr: true},
+		"Error when %UserProfile% is empty": {emptyEnv: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -377,11 +384,6 @@ func TestPublicDir(t *testing.T) {
 			dir := t.TempDir()
 			if tc.emptyEnv {
 				t.Setenv("UserProfile", "")
-			} else if tc.badPath {
-				badPath := filepath.Join(dir, "bad_dir")
-				err := os.WriteFile(badPath, []byte("test file"), 0600)
-				require.NoError(t, err, "Setup: could not write file to interfere with PublicDir")
-				t.Setenv("UserProfile", badPath)
 			} else {
 				t.Setenv("UserProfile", dir)
 			}

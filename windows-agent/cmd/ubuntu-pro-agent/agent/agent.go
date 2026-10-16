@@ -116,7 +116,11 @@ func New(o ...option) *App {
 				close(a.ready)
 				return fmt.Errorf("could not create public dir: %v", err)
 			}
-			defer c.Close()
+			defer func() {
+				if err := c.Close(); err != nil {
+					log.Warningf(ctx, "Could not close the public directory custodian: %v", err)
+				}
+			}()
 			a.publicDir = c
 
 			cleanup, err = a.setUpLogger(ctx, c)
@@ -203,6 +207,13 @@ func (a *App) Quit() {
 	if a.daemon == nil {
 		return
 	}
+	// The services go first: daemon.Quit drains in-flight requests with a graceful
+	// gRPC stop, and the streaming handlers it would wait for only terminate when
+	// the services stop them. Tearing the daemon down first therefore deadlocked
+	// the agent on Ctrl-C whenever a stream was active (UDENG-1182), and this order
+	// is the fix that shipped. The price is that a request still in flight when its
+	// custodian closes fails cleanly with a handle error instead of being served -
+	// cosmetic at shutdown, and far cheaper than a hang.
 	a.proServices.Stop(context.Background())
 	a.daemon.Quit(context.Background(), false)
 }
@@ -233,9 +244,10 @@ func (a *App) PublicDir() (string, error) {
 	return a.publicDirPath(options{})
 }
 
-// publicDirPath resolves the public directory path, validating that its parent exists and is a directory.
-// Creation of the public directory is intentionally left to securefiles.Open to ensure atomic
-// root-ownership EA stamping on Windows without a pre-creation TOCTOU window (ADR 2.01).
+// publicDirPath resolves the public directory path. Creation of the public directory, and
+// all filesystem validation, is intentionally left to securefiles.Open to ensure atomic
+// root-ownership EA stamping on Windows without a pre-creation TOCTOU window (ADR 2.01);
+// anything checked here would only be a stricter, duplicate verdict of the same question.
 func (a *App) publicDirPath(opts options) (string, error) {
 	if opts.publicDir == "" {
 		homeDir := os.Getenv("UserProfile")
@@ -244,16 +256,6 @@ func (a *App) publicDirPath(opts options) (string, error) {
 		}
 
 		opts.publicDir = filepath.Join(homeDir, common.UserProfileDir)
-	}
-
-	parent := filepath.Dir(opts.publicDir)
-	//#nosec G703 // Validating that the parent directory exists and is a directory.
-	fi, err := os.Stat(parent)
-	if err != nil {
-		return "", fmt.Errorf("could not access public dir parent %s: %v", parent, err)
-	}
-	if !fi.IsDir() {
-		return "", fmt.Errorf("public dir parent %s is not a directory", parent)
 	}
 
 	return opts.publicDir, nil
