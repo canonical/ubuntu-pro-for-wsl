@@ -75,6 +75,15 @@ func Open(basePath string) (*Custodian, error) {
 // Close releases any resources held by the custodian: the OS layer's
 // resources first (Windows holds the tree root without sharing deletion),
 // then the root itself, whose containment governed everything above.
+//
+// Close may be called while operations are still in flight. An operation
+// already under way drains before the platform's descriptor or handle
+// closes, and every operation started after Close answers an error; the
+// order matters, because a descriptor closed before an open consumes it
+// could have its number reused for a foreign directory. Every layer in the
+// package implements the same semantics: the Windows layer and the Linux
+// double guard their root handle and descriptor behind a mutex held through
+// the syscall, and os.Root refcounts its own descriptor.
 func (c *Custodian) Close() error {
 	var err error
 	if c.sys != nil {
