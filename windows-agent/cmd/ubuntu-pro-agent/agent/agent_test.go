@@ -179,7 +179,7 @@ func TestConfigUnmarshalError(t *testing.T) {
 	err := a.Run()
 	out := getStdout()
 	require.Error(t, err, "Run should return an error, stdout: %v", out)
-	require.Contains(t, err.Error(), "unable to decode configuration")
+	require.ErrorContains(t, err, "unable to decode configuration")
 }
 
 func TestConfigArg(t *testing.T) {

@@ -172,7 +172,7 @@ func TestNew(t *testing.T) {
 			if tc.wantErr {
 				require.Error(t, err, "New should return an error")
 				if tc.wantErrContains != "" {
-					require.Contains(t, err.Error(), tc.wantErrContains)
+					require.ErrorContains(t, err, tc.wantErrContains)
 				}
 				return
 			}

@@ -89,7 +89,7 @@ func TestNew(t *testing.T) {
 			if tc.wantErr {
 				require.Error(t, err, "Cloud-init creation should have returned an error")
 				if tc.wantErrContains != "" {
-					require.Contains(t, err.Error(), tc.wantErrContains)
+					require.ErrorContains(t, err, tc.wantErrContains)
 				}
 				return
 			}
