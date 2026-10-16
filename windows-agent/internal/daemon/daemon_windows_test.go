@@ -73,11 +73,15 @@ func TestReleasingTheHoldRestoresConnectivity(t *testing.T) {
 	require.Equal(t, "old-address", string(got), "while held, the file must keep the previous address")
 
 	// The hold lifts; the next tick must republish the current listener.
+	// An empty read is the publication in progress — it creates the node
+	// before writing the address into it — not a completed one, so it keeps
+	// polling: an empty address would only fail the gRPC check below,
+	// intermittently.
 	require.NoError(t, holder.Close(), "Setup: could not lift the hold")
 	addr := ""
 	require.Eventually(t, func() bool {
 		got, err := os.ReadFile(addrPath)
-		if err != nil || string(got) == "old-address" {
+		if err != nil || len(got) == 0 || string(got) == "old-address" {
 			return false
 		}
 		addr = string(got)

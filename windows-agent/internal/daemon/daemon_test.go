@@ -3,6 +3,7 @@ package daemon_test
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
@@ -82,16 +83,24 @@ func TestStartQuit(t *testing.T) {
 			var addrContents []byte
 			var err error
 
+			// The publication creates the node before it writes the address
+			// into it, so both waits answer for content, not existence: an
+			// empty read is a publication in progress, not a completed one.
 			if tc.preexistingPortFile {
 				require.Eventually(t, func() bool {
 					addrContents, err = os.ReadFile(addrPath)
 					require.NoError(t, err, "Address file should be readable")
-					return string(addrContents) != "# Old port file"
-				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
+					return len(addrContents) > 0 && string(addrContents) != "# Old port file"
+				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after the daemon starts serving")
 			} else {
-				daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
-				addrContents, err = os.ReadFile(addrPath)
-				require.NoError(t, err, "Address file should be readable")
+				require.Eventually(t, func() bool {
+					addrContents, err = os.ReadFile(addrPath)
+					if err != nil {
+						require.ErrorIs(t, err, fs.ErrNotExist, "Address file should be readable")
+						return false
+					}
+					return len(addrContents) > 0
+				}, 5*time.Second, 100*time.Millisecond, "Serve should create an address file")
 			}
 
 			// Now we know the TCP server has started.
@@ -360,7 +369,15 @@ func TestAddingWSLAdapterRestarts(t *testing.T) {
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
 
-			daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
+			// The publication creates the node before it writes the address
+			// into it, so the wait must answer for content, not existence: an
+			// mtime captured on the empty node predates the write that
+			// completes the same publication, and the no-rewrite check below
+			// would read that write as a rewrite.
+			require.Eventually(t, func() bool {
+				got, err := os.ReadFile(addrPath)
+				return err == nil && len(got) > 0
+			}, 5*time.Second, 100*time.Millisecond, "Serve should create an address file")
 			addrSt, err := os.Stat(addrPath)
 			require.NoError(t, err, "Address file should be readable")
 
