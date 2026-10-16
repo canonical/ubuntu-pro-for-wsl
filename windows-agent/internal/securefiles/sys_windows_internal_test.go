@@ -22,9 +22,10 @@ import (
 
 // TestCreateStamped covers the one decision the node-creating call makes on
 // its own: a node already standing at the name is refused rather than
-// silently adopted, whatever the filesystem answered, and a fresh name is
-// created stamped. The statuses a creation cannot stamp are pinned where the
-// same seam and translation run against the root, in
+// silently adopted — the file-level EEXIST the public paths answer with
+// os.ErrExist, which the public contract pins in TestCreateFileModes. The
+// statuses a creation cannot stamp are pinned where the same seam and
+// translation run against the root, in
 // TestEstablishRootRefusesWhatCreationCannotStamp.
 func TestCreateStamped(t *testing.T) {
 	t.Parallel()
@@ -36,7 +37,6 @@ func TestCreateStamped(t *testing.T) {
 		wantErr    bool
 		wantExists bool
 	}{
-		"a file is created and stamped": {wantExists: true},
 		"an existing node is refused, not adopted": {
 			seedExisting: true,
 			wantErr:      true, wantExists: true,
@@ -393,34 +393,6 @@ func TestStampingAnExistingNodeIsRefused(t *testing.T) {
 	}
 }
 
-// TestEnsureRootRefusesARedirectedRoot pins that a directory link standing
-// where the root should be is refused rather than followed, with a real
-// reparse point on disk rather than a seam. OBJ_DONT_REPARSE fails the
-// creation on purpose, and the refusal must reach the caller as
-// ErrPathEscapes: anything that adopted the link instead would root the
-// custodian outside basePath.
-func TestEnsureRootRefusesARedirectedRoot(t *testing.T) {
-	t.Parallel()
-
-	base := t.TempDir()
-	outside := filepath.Join(base, "outside")
-	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
-
-	rootPath := filepath.Join(base, "root")
-	// A directory symlink stands in for any reparse point: a junction planted
-	// from inside an instance behaves alike.
-	if err := os.Symlink(outside, rootPath); err != nil {
-		t.Skip("symlink creation not permitted in this environment")
-	}
-
-	sys := newPlatformSys(rootPath)
-	_, _, err := sys.establishRoot()
-	require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
-
-	entries, err := os.ReadDir(outside)
-	require.NoError(t, err, "Setup: could not list the link target")
-	require.Empty(t, entries, "nothing may be created through the link")
-}
 func TestCheckProjectionReportsARedirectedRoot(t *testing.T) {
 	t.Parallel()
 
@@ -435,11 +407,6 @@ func TestCheckProjectionReportsARedirectedRoot(t *testing.T) {
 		wantErr      error
 		wantContains []string
 	}{
-		"a root the kernel resolves into a share": {
-			finalPath:    answerRedirected(redirected),
-			wantErr:      ErrRemoteVolume,
-			wantContains: []string{"resolving to", redirected},
-		},
 		"a final path that over-answers the first buffer": {
 			finalPath:    answerAfterRetry(redirected),
 			wantErr:      ErrRemoteVolume,

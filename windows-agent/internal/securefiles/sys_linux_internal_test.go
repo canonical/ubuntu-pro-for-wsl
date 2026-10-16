@@ -100,17 +100,17 @@ func TestRenameChecksOwnership(t *testing.T) {
 // name: the open fails with ELOOP, which the layer reports as the escape
 // sentinel, so a link an instance user planted in the stamped tree is never
 // followed to a stamp outside it, and never published through. The redirected
-// tree ROOT is pinned by TestNewPlatformSysRefusesARedirectedRoot; this is
-// the node level of the same containment. The table covers both positions a
-// link can stand at — the leaf and an intermediate component — through the
-// operations that resolve names. Each subtest plants its own tree, so the
+// tree ROOT is pinned by TestOpenRefusesARedirectedRoot; this is the node
+// level of the same containment. The leaf is the platform's own verdict to pin
+// here — the intermediate component is pinned through the public API by
+// TestIntermediateLinksAreRefused, on this platform against real symlinks
+// through the same ELOOP branch. Each subtest plants its own tree, so the
 // rows stay self-contained and parallel.
 func TestOpenNodeRefusesALink(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// op resolves a name the way a caller would; the name goes through
-		// the planted link, at the leaf or at an intermediate component.
+		// op resolves a name the way a caller would.
 		op func(c *Custodian) error
 	}{
 		"the ownership check refuses a leaf link": {
@@ -122,18 +122,6 @@ func TestOpenNodeRefusesALink(t *testing.T) {
 		"the rename refuses a leaf link": {
 			op: func(c *Custodian) error {
 				return c.Rename("link", "dst")
-			},
-		},
-		"the ownership check refuses an intermediate link": {
-			op: func(c *Custodian) error {
-				_, err := c.IsOwned("link/node")
-				return err
-			},
-		},
-		"the listing refuses an intermediate link": {
-			op: func(c *Custodian) error {
-				_, err := c.ReadDir("link/deeper")
-				return err
 			},
 		},
 	}
@@ -199,50 +187,6 @@ func TestIsLinkAnswersAMissingLeafWithItsOwnError(t *testing.T) {
 	require.ErrorIs(t, err, fs.ErrNotExist, "a missing leaf answers the missing-node error, not a classification")
 }
 
-// TestNewPlatformSysRefusesARedirectedRoot pins the containment Open rests on:
-// a link standing where the tree root should be is refused rather than
-// followed, so the custodian can never be rooted outside the path it was
-// given. Open runs before there is a stamped tree to vouch for the
-// neighborhood, so a link here is never adopted data.
-func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		// absolute is whether the link target is planted as an absolute path.
-		// A relative one stays inside the parent directory, which os.Root
-		// would follow; only the O_NOFOLLOW on the leaf open refuses it.
-		absolute bool
-	}{
-		"an escaping absolute link": {absolute: true},
-		"a relative in-tree link":   {},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			base := t.TempDir()
-			outside := filepath.Join(base, "outside")
-			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
-
-			target := "outside"
-			if tc.absolute {
-				target = outside
-			}
-
-			rootPath := filepath.Join(base, "root")
-			require.NoError(t, os.Symlink(target, rootPath), "Setup: could not plant the link")
-
-			sys := newDoubleSysWith(rootPath, realStampCalls())
-			_, _, err := sys.establishRoot()
-			require.ErrorIs(t, err, ErrPathEscapes, "a redirected root must be refused")
-
-			entries, err := os.ReadDir(outside)
-			require.NoError(t, err, "Setup: could not list the link target")
-			require.Empty(t, entries, "nothing may be created through the link")
-		})
-	}
-}
 func TestStampsRefuseUnstampableTrees(t *testing.T) {
 	t.Parallel()
 

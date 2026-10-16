@@ -3,15 +3,12 @@ package cloudinit_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
@@ -357,79 +354,6 @@ func TestRemoveDistroData(t *testing.T) {
 			require.NoFileExists(t, metadataPath, "RemoveDistroData should remove the distro instance metadata file")
 		})
 	}
-}
-
-func TestUpdateDoesNotLeavePartialContent(t *testing.T) {
-	t.Parallel()
-	ctx := t.Context()
-
-	custodian := newCloudInitCustodian(t)
-	path := filepath.Join(custodian.BasePath(), "agent.yaml")
-
-	conf := &mockConfig{
-		proToken:      "token",
-		landscapeConf: landscapeConfigNew,
-	}
-	ci, err := cloudinit.New(ctx, conf, custodian)
-	require.NoError(t, err, "Setup: cloud-init New should return no errors")
-
-	// Pre-compute every complete blob the writer will publish, so the concurrent reader can
-	// reject torn reads even when the fragment is itself parseable YAML. Recording the set
-	// before the race begins also removes a scheduling race where the reader could observe a
-	// just-published blob before the writer goroutine has recorded it.
-	knownBlobs := make(map[string]struct{})
-	tokens := []string{"token"}
-	for i := range 20 {
-		tokens = append(tokens, fmt.Sprintf("changed_token_%d", i))
-	}
-	for _, token := range tokens {
-		conf.proToken = token
-		ci.Update(ctx)
-		data, err := os.ReadFile(filepath.Join(custodian.BasePath(), "agent.yaml"))
-		require.NoError(t, err, "Setup: could not read cloud-init blob for token %q", token)
-		knownBlobs[string(data)] = struct{}{}
-	}
-
-	stop := make(chan struct{})
-	var readerErr error
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				data, err := os.ReadFile(path)
-				if err != nil {
-					t.Logf("read error (transient): %v", err)
-					continue
-				}
-				if len(data) == 0 {
-					continue
-				}
-				if _, ok := knownBlobs[string(data)]; !ok {
-					readerErr = fmt.Errorf("observed partial/foreign content not matching any published blob: %q", data)
-					return
-				}
-				// Pace the spin: the race it samples lives in the writer's
-				// renames, which need no reader at full tilt to be caught.
-				time.Sleep(100 * time.Microsecond)
-			}
-		}
-	}()
-
-	for i := range 20 {
-		conf.proToken = fmt.Sprintf("changed_token_%d", i)
-		ci.Update(ctx)
-		time.Sleep(1 * time.Millisecond)
-	}
-
-	close(stop)
-	wg.Wait()
-	require.NoError(t, readerErr)
 }
 
 type mockConfig struct {

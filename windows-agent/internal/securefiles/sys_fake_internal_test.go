@@ -279,24 +279,6 @@ func TestCreateFileReportsAHeldNode(t *testing.T) {
 	}
 }
 
-// TestIsOwnedAnswersNotOwnedForDirectories pins the predicate's one shape:
-// a directory is never owned, whatever stands in it — the predicate accepts
-// only the file stamp, and the stamp of a sub-tree root is for the
-// projection, not for adoption.
-func TestIsOwnedAnswersNotOwnedForDirectories(t *testing.T) {
-	t.Parallel()
-
-	c, err := openFake(t, func(dir string) *fakeSys {
-		return &fakeSys{dir: dir}
-	})
-	require.NoError(t, err, "Setup: could not open the custodian over the fake")
-	t.Cleanup(func() { _ = c.Close() })
-
-	owned, err := c.IsOwned(".")
-	require.NoError(t, err, "a directory is a verdict, not a failure")
-	require.False(t, owned, "a directory is never owned")
-}
-
 // The cases below cover the construction and policy plumbing only a fake
 // platform can fail: the fake's mechanism refuses where no real filesystem
 // on a CI machine can, and each case also asserts the cleanup the refusal
@@ -485,15 +467,12 @@ type fakeSys struct {
 	releaseFn                  func() error
 	identityFn                 func(*os.File) (fileIdentity, bool)
 	createStampedFn            func(rel string, dir bool) (*os.File, error)
-	stampDirFn                 func(rel string) error
 	openNodeFn                 func(rel string, profile openProfile) (*os.File, error)
 	readStampFn                func(*os.File) (stamp, bool, error)
 	renameReplaceFn            func(f *os.File, oldRel, newRel string, posix bool) error
 	isRenameClassUnsupportedFn func(err error) bool
 	isHeldNodeFn               func(err error) bool
-	isLinkFn                   func(rel string) (bool, error)
 	finalPathFn                func() string
-	remoteVolumeFn             func(string) (bool, volumeKind)
 }
 
 // establishRoot defaults to an established root, so open() can hand out a
@@ -542,9 +521,9 @@ func (s *fakeSys) createStamped(rel string, dir bool) (*os.File, error) {
 }
 
 func (s *fakeSys) stampDir(rel string) error {
-	if s.stampDirFn != nil {
-		return s.stampDirFn(rel)
-	}
+	// No configurable seam: the heal never reaches the fake's stampDir —
+	// no createStampedFn answers os.ErrExist to trigger it — and the default
+	// answers the contract, so the cases never had a reason to force it.
 	panic("fakeSys.stampDir is not configured by the case")
 }
 
@@ -604,9 +583,6 @@ func (s *fakeSys) isHeldNode(err error) bool {
 }
 
 func (s *fakeSys) isLink(rel string) (bool, error) {
-	if s.isLinkFn != nil {
-		return s.isLinkFn(rel)
-	}
 	panic("fakeSys.isLink is not configured by the case")
 }
 
@@ -621,8 +597,5 @@ func (s *fakeSys) finalPath() string {
 // is remote whatever the platform, and nothing else is answerable without
 // platform state the fake does not carry.
 func (s *fakeSys) remoteVolume(path string) (bool, volumeKind) {
-	if s.remoteVolumeFn != nil {
-		return s.remoteVolumeFn(path)
-	}
 	return lexicalRemoteVolume(path)
 }

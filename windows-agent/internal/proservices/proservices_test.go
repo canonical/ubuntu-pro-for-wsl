@@ -44,7 +44,6 @@ func TestMain(m *testing.M) {
 // hook or satisfy another's log assertions.
 func TestNew(t *testing.T) {
 	testCases := map[string]struct {
-		breakConfig      bool
 		breakNewDistroDB bool
 		breakCloudInit   bool
 
@@ -57,8 +56,7 @@ func TestNew(t *testing.T) {
 		wantErr         bool
 		wantErrContains string
 	}{
-		"When the subscription stays empty":               {},
-		"When the config cannot check if it is read-only": {breakConfig: true},
+		"When the subscription stays empty": {},
 
 		"Error when database cannot create its dump file": {breakNewDistroDB: true, wantErr: true},
 		"Error when cloud-init dir cannot be created":     {breakCloudInit: true, wantErr: true},

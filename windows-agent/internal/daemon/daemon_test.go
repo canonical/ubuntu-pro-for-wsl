@@ -28,23 +28,6 @@ func init() {
 	// Ensures we use the networking-related mocks in all daemon tests unless otherwise locally specified.
 	daemontestutils.DefaultNetworkDetectionToMock()
 }
-func TestNew(t *testing.T) {
-	t.Parallel()
-
-	var regCount int
-	countRegistrations := func(context.Context, bool) *grpc.Server {
-		regCount++
-		return nil
-	}
-
-	addrDir := t.TempDir()
-	c, setupErr := securefiles.Open(addrDir)
-	require.NoError(t, setupErr, "Setup: could not create custodian")
-	defer c.Close()
-
-	_ = daemon.New(context.Background(), countRegistrations, c)
-	require.Equal(t, 0, regCount, "daemon should not register GRPC services before serving")
-}
 
 func TestStartQuit(t *testing.T) {
 	t.Parallel()

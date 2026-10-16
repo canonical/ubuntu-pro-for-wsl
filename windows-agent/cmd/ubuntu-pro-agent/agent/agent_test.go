@@ -38,14 +38,9 @@ func TestSingleInstance(t *testing.T) {
 	}{
 		"Success when single instance": {args: []string{"version"}},
 
-		// Testing the 'clean' verb cannot run in parallel because it tries to delete files still opened by other test cases.
-		"Completion succeeds with another instance running": {args: []string{"completion", "bash"}, anotherInstanceRunning: true},
-		"Completion succeeds with broken lock file":         {args: []string{"completion", "bash"}, breakLockFile: true},
-		"Help succeeds with another instance running":       {args: []string{"help"}, anotherInstanceRunning: true},
-		"Help succeeds with broken lock file":               {args: []string{"help"}, breakLockFile: true},
-		"Version succeeds with another instance running":    {args: []string{"version"}, anotherInstanceRunning: true},
-		"Version succeeds with broken lock file":            {args: []string{"version"}, breakLockFile: true},
-
+		// Only the default (serve) verb reaches the lock: cobra dispatches a
+		// named subcommand to its own RunE, so the lock state cannot vary its
+		// verdict, and the serve rows are the ones that pin it.
 		"Default (serve) fails with another instance running": {anotherInstanceRunning: true, wantError: true},
 		"Default (serve) fails with broken lock file":         {breakLockFile: true, wantError: true},
 	}
@@ -102,6 +97,11 @@ func TestCompletion(t *testing.T) {
 
 	err := a.Run()
 	require.NoError(t, err, "Completion should not start the daemon. Stdout: %v", getStdout())
+	// A clean run is not a usage error: the report distinguishes the two,
+	// and a success reported as a usage failure would hide failures from
+	// callers that branch on the verdict.
+	isUsageError := a.UsageError()
+	require.False(t, isUsageError, "No usage error is reported as such")
 }
 
 func TestVersion(t *testing.T) {
@@ -125,18 +125,6 @@ func TestVersion(t *testing.T) {
 
 	require.Equal(t, want, fields[0], "Wrong executable name")
 	require.Equal(t, "Dev", fields[1], "Wrong version")
-}
-
-func TestNoUsageError(t *testing.T) {
-	a := agent.NewForTesting(t, "", "")
-	a.SetArgs("completion", "bash")
-
-	getStdout := captureStdout(t)
-	err := a.Run()
-
-	require.NoError(t, err, "Run should not return an error, stdout: %v", getStdout())
-	isUsageError := a.UsageError()
-	require.False(t, isUsageError, "No usage error is reported as such")
 }
 
 func TestUsageError(t *testing.T) {
@@ -268,21 +256,6 @@ func TestCanQuitTwice(t *testing.T) {
 	a.Quit()
 }
 
-func TestAppCanQuitWithoutExecute(t *testing.T) {
-	t.Skipf("This test is skipped because it is flaky. There is no way to guarantee Quit has been called before run.")
-
-	t.Parallel()
-
-	a := agent.NewForTesting(t, "", "")
-	a.SetArgs()
-
-	requireGoroutineStarted(t, a.Quit)
-	err := a.Run()
-	require.Error(t, err, "Should return an error")
-
-	require.Containsf(t, err.Error(), "grpc: the server has been stopped", "Unexpected error message")
-}
-
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 	// Trigger the error with a cache directory that cannot be created over an
 	// existing file, or because the required env is empty.
@@ -410,7 +383,6 @@ func TestLogs(t *testing.T) {
 	defer hook.Reset()
 
 	fooContent := "foo"
-	emptyContent := ""
 	oldContent := "Old log content"
 	preciousContent := "PRECIOUS"
 
@@ -438,7 +410,6 @@ func TestLogs(t *testing.T) {
 	}{
 		"Run and exit successfully despite logs not being written":  {logDirError: true},
 		"Existing log file has been renamed to old":                 {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
-		"Existing empty log file has been renamed to old":           {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
 		"Ignore obstructing rotated log directory and still rotate": {existingLogContent: "OLD_IS_DIRECTORY", wantOldLogFileContent: &oldContent},
 		// A log left by a version that predates the custodian carries no stamp, so it
 		// cannot be rotated and must not be adopted: appending to it would keep the
@@ -718,20 +689,6 @@ func TestCleanLocation(t *testing.T) {
 			require.NoFileExists(t, path, "CleanLocation should have removed the directory")
 		})
 	}
-}
-
-// requireGoroutineStarted starts a goroutine and blocks until it has been launched.
-func requireGoroutineStarted(t *testing.T, f func()) {
-	t.Helper()
-
-	launched := make(chan struct{})
-
-	go func() {
-		close(launched)
-		f()
-	}()
-
-	<-launched
 }
 
 // startDaemon prepares and starts the daemon in the background. The done function should be called

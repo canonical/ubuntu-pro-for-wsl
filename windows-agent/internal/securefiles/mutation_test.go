@@ -208,11 +208,6 @@ func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
 		viaWriteFile bool
 		// append targets AppendFile instead of CreateFile.
 		append bool
-		// seekToMiddle seeks to the file's middle before writing, pinning
-		// that the append lands at the end regardless of the descriptor's
-		// position.
-		seekToMiddle bool
-
 		// wantHeldContent is what a descriptor opened before the call reads afterwards.
 		wantHeldContent string
 		// refusedOnWindows marks the cases Windows answers by refusing instead: it will

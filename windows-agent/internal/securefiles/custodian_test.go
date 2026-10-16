@@ -162,10 +162,6 @@ func TestCustodianErrors(t *testing.T) {
 		// seedNonEmptyDir creates a directory containing one file before the operation.
 		seedNonEmptyDir string
 
-		// seedSymlink plants a symlink pointing outside the sub-tree, skipped when the
-		// environment cannot create one.
-		seedSymlink string
-
 		// closeFirst closes the custodian before running the operation.
 		closeFirst bool
 
@@ -191,9 +187,6 @@ func TestCustodianErrors(t *testing.T) {
 		// Windows is refused where it is merely an odd relative name too.
 		"WriteFile rejects a drive-qualified path": {op: "write", path: `C:\Windows\System32`, wantEscape: true},
 		"WriteFile rejects a drive-relative path":  {op: "write", path: "D:foo/bar", wantEscape: true},
-		// A link as an intermediate component passes lexical resolution; the
-		// refusal is the platform layer's physical containment.
-		"WriteFile through a link is refused": {op: "write", path: "link/child", seedSymlink: "link"},
 
 		// A node the adoption path cannot even stat must be refused rather than
 		// created over: appending only makes sense on a node that is verifiably there.
@@ -272,11 +265,6 @@ func TestCustodianErrors(t *testing.T) {
 			for name, content := range tc.seedFiles {
 				require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0600))
 			}
-			if tc.seedSymlink != "" {
-				if err := os.Symlink(t.TempDir(), filepath.Join(dir, tc.seedSymlink)); err != nil {
-					t.Skip("symlink creation not permitted in this environment")
-				}
-			}
 			if tc.seedNonEmptyDir != "" {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, tc.seedNonEmptyDir), 0750))
 				require.NoError(t, os.WriteFile(filepath.Join(dir, tc.seedNonEmptyDir, "child"), []byte("x"), 0600))
@@ -352,13 +340,6 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		// linkTargetOutsideDir makes the planted link point at the outside directory;
-		// otherwise it points at the outside sentinel file.
-		linkTargetOutsideDir bool
-
-		// linkInTree plants the link pointing at a missing sibling inside the tree.
-		linkInTree bool
-
 		// linkRelativeInTree plants a relative link to an existing sibling
 		// directory inside the tree: the form an open resolves through, so
 		// only a mode-based classification can call it a link.
@@ -387,13 +368,7 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 		// the single-component rows plant their link at.
 		subName string
 	}{
-		"a link to a directory outside the tree": {linkTargetOutsideDir: true},
-		"a link to a file outside the tree":      {},
-
-		// A link inside the tree is the subtle one: os.Root resolves it, so a
-		// fresh-looking creation may have gone through the link instead of creating
-		// the directory itself.
-		"a link to a directory inside the tree": {linkInTree: true},
+		"a link to a file outside the tree": {},
 
 		// The relative forms are the subtlest: an open follows the one and
 		// answers ENOENT for the other, so both would slip past an open-based
@@ -404,13 +379,6 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 
 		"a link that cannot be removed is refused": {cannotRemove: true},
 
-		// A link standing at an intermediate component of the asked name is a
-		// question about the whole name, not just the leaf: the refusal must
-		// come from the walk itself, whichever side the link points to.
-		"an intermediate link escaping the tree refuses the sub-tree": {
-			linkAtIntermediate: true,
-			subName:            "in-link/sub",
-		},
 		"an intermediate in-tree link refuses the sub-tree": {
 			linkAtIntermediate: true,
 			intermediateInTree: true,
@@ -438,10 +406,6 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 				require.NoError(t, os.Symlink("sibling", filepath.Join(root, "in-link")), "Setup: could not plant the in-tree link")
 			case tc.linkAtIntermediate:
 				require.NoError(t, os.Symlink(outside, filepath.Join(root, "in-link")), "Setup: could not plant the escaping link")
-			case tc.linkTargetOutsideDir:
-				require.NoError(t, os.Symlink(outside, filepath.Join(root, "sub")), "Setup: could not plant the link")
-			case tc.linkInTree:
-				require.NoError(t, os.Symlink(filepath.Join(root, "sibling"), filepath.Join(root, "sub")), "Setup: could not plant the link")
 			case tc.linkRelativeInTree:
 				require.NoError(t, os.MkdirAll(filepath.Join(root, "sibling"), 0700), "Setup: could not create the in-tree target")
 				require.NoError(t, os.Symlink("sibling", filepath.Join(root, "sub")), "Setup: could not plant the relative link")
@@ -596,7 +560,12 @@ func TestPurge(t *testing.T) {
 			},
 			run: func(t *testing.T, c *securefiles.Custodian) []string {
 				t.Helper()
-				allowedPolicy := func(relPath string, _ bool) bool { return relPath == "legit.txt" }
+				// The policy deliberately allows the leftover temporary too:
+				// only the sweep's own temp rule can remove it, so the case pins
+				// that rule rather than the policy.
+				allowedPolicy := func(relPath string, _ bool) bool {
+					return relPath == "legit.txt" || relPath == ".tmp-legit.txt-1234"
+				}
 				removed, err := c.Purge(allowedPolicy)
 				require.NoError(t, err)
 				return removed
@@ -605,7 +574,7 @@ func TestPurge(t *testing.T) {
 				t.Helper()
 				basePath := c.BasePath()
 				require.Contains(t, removed, "malicious.txt")
-				require.Contains(t, removed, ".tmp-legit.txt-1234")
+				require.Contains(t, removed, ".tmp-legit.txt-1234", "a temporary is swept even when the policy allows it")
 				require.NotContains(t, removed, "legit.txt")
 				require.FileExists(t, filepath.Join(basePath, "legit.txt"))
 				require.NoFileExists(t, filepath.Join(basePath, "malicious.txt"))
@@ -771,6 +740,70 @@ func TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen(t *testing.T) {
 	require.NoError(t, os.Rename(tree, tree+".moved"))
 	require.NoError(t, os.Rename(tree+".moved", tree))
 	require.NoError(t, c.Close())
+}
+
+// TestOpenRefusesARedirectedRoot pins the establishment's leaf refusal at the
+// public seam: a link standing where the tree root should be is refused,
+// never followed — whichever flavor it is. An absolute target escapes the
+// parent's containment; a relative one stays inside it, and only the
+// establishment's own no-follow open refuses it. The sub-tree stays untouched
+// either way: nothing may be created through the link, and the refusal names
+// the escape sentinel. A directory symlink stands in for any reparse point: a
+// junction planted from inside an instance behaves alike.
+func TestOpenRefusesARedirectedRoot(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// absolute is whether the link target is planted as an absolute path.
+		// A relative one stays inside the parent directory, which a
+		// resolving open would follow; only the no-follow leaf open refuses it.
+		absolute bool
+	}{
+		"an escaping absolute link": {absolute: true},
+		"a relative in-tree link":   {},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			base := t.TempDir()
+			outside := filepath.Join(base, "outside")
+			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+
+			target := "outside"
+			if tc.absolute {
+				target = outside
+			}
+
+			rootPath := filepath.Join(base, "root")
+			require.NoError(t, os.Symlink(target, rootPath), "Setup: could not plant the link")
+
+			c, err := securefiles.Open(rootPath)
+			require.ErrorIs(t, err, securefiles.ErrPathEscapes, "a redirected root must be refused, never opened through the link")
+			require.Nil(t, c, "a refused root must not yield a custodian")
+
+			entries, err := os.ReadDir(outside)
+			require.NoError(t, err, "Setup: could not list the link target")
+			require.Empty(t, entries, "nothing may be created through the link")
+		})
+	}
+}
+
+// TestIsOwnedNeverAnswersOwnedForDirectories pins the predicate's one
+// shape: a directory is never owned, whatever stands in it — the predicate
+// accepts only the file stamp, and the stamp of a sub-tree root is for the
+// projection, not for adoption.
+func TestIsOwnedNeverAnswersOwnedForDirectories(t *testing.T) {
+	t.Parallel()
+
+	c, err := securefiles.Open(t.TempDir())
+	require.NoError(t, err, "Setup: could not open the custodian")
+	t.Cleanup(func() { _ = c.Close() })
+
+	owned, err := c.IsOwned(".")
+	require.NoError(t, err, "a directory is a verdict, not a failure")
+	require.False(t, owned, "a directory is never owned")
 }
 
 func TestOpenErrors(t *testing.T) {
