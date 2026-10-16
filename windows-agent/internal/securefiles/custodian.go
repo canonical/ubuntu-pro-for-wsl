@@ -674,12 +674,11 @@ func isBackslashDotDot(name string) bool {
 // (rename operations return the latter).
 func isEscapeError(err error) bool {
 	const escapeMsg = "path escapes from parent"
-	var pathErr *os.PathError
-	if errors.As(err, &pathErr) && pathErr.Err != nil && pathErr.Err.Error() == escapeMsg {
+	if e, ok := errors.AsType[*os.PathError](err); ok && e.Err != nil && e.Err.Error() == escapeMsg {
 		return true
 	}
-	var linkErr *os.LinkError
-	return errors.As(err, &linkErr) && linkErr.Err != nil && linkErr.Err.Error() == escapeMsg
+	e, ok := errors.AsType[*os.LinkError](err)
+	return ok && e.Err != nil && e.Err.Error() == escapeMsg
 }
 
 // remoteUNC reports whether path names a \\server\share volume, plainly or in the NT
