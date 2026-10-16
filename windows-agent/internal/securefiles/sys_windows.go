@@ -490,7 +490,7 @@ func (s *windowsSys) renameReplace(f *os.File, oldRel, newRel string, posix bool
 	name := leaf16[:len(leaf16)-1] // drop the NUL terminator
 
 	nameBytesLen := len(name) * 2
-	infoSize := unsafe.Sizeof(fileRenameInfoStruct{}) + uintptr(nameBytesLen) - 2 //#nosec G115 // byte length of a short relative path; far below uintptr range.
+	infoSize := unsafe.Sizeof(fileRenameInfoStruct{}) + uintptr(nameBytesLen) - 2
 
 	buf := make([]byte, infoSize)
 	info := (*fileRenameInfoStruct)(unsafe.Pointer(&buf[0])) //#nosec G103 // reinterpreting the rename-info buffer as its documented header; the buffer is sized to hold it.
@@ -802,7 +802,7 @@ func relativeAttributes(root windows.Handle, rel string) (*windows.OBJECT_ATTRIB
 	}
 
 	return &windows.OBJECT_ATTRIBUTES{
-		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})), //#nosec G115 // the size of a fixed struct always fits in 32 bits.
+		Length:        uint32(unsafe.Sizeof(windows.OBJECT_ATTRIBUTES{})),
 		RootDirectory: root,
 		ObjectName:    name,
 		Attributes:    windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE,
