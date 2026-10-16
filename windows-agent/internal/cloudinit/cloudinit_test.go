@@ -337,6 +337,7 @@ func TestRemoveDistroData(t *testing.T) {
 			custodian := newCloudInitCustodian(t)
 			dir := custodian.BasePath()
 			path := filepath.Join(dir, distroName+".user-data")
+			metadataPath := filepath.Join(dir, distroName+".meta-data")
 
 			ci, err := cloudinit.New(ctx, &mockConfig{}, custodian)
 			require.NoError(t, err, "Setup: cloud-init New should return no errors")
@@ -351,6 +352,7 @@ func TestRemoveDistroData(t *testing.T) {
 				require.NoError(t, os.MkdirAll(dir, 0700), "Setup: could not set up directory")
 				if !tc.fileDoesNotExist {
 					require.NoError(t, os.WriteFile(path, []byte("hello, world!"), 0600), "Setup: could not set up directory")
+					require.NoError(t, os.WriteFile(metadataPath, []byte("instance-id: inst-123\n"), 0600), "Setup: could not set up directory")
 				}
 			}
 
@@ -362,6 +364,7 @@ func TestRemoveDistroData(t *testing.T) {
 			}
 			require.NoError(t, err, "RemoveDistroData should return no errors")
 			require.NoFileExists(t, path, "RemoveDistroData should remove the distro cloud-init data file")
+			require.NoFileExists(t, metadataPath, "RemoveDistroData should remove the distro instance metadata file")
 		})
 	}
 }
@@ -553,11 +556,24 @@ func TestStartupPurge(t *testing.T) {
 			wantLogLevel:    logrus.WarnLevel,
 			wantLogContains: "stale.txt",
 		},
-		"Removes a per-distro node that is not owned": {
+		// A planted node in a tree that also holds stamped ones is tampering:
+		// the stamp was there when the foreign node appeared.
+		"Removes a per-distro node that is not owned in a stamped tree": {
+			seedStamped:     map[string]string{"OtherDistro.user-data": "ours"},
 			seedRaw:         map[string]string{"ForeignDistro.user-data": "planted"},
 			wantGone:        []string{"ForeignDistro.user-data"},
 			wantLogLevel:    logrus.ErrorLevel,
 			wantLogContains: "ForeignDistro.user-data",
+		},
+		// The first start after upgrading to the custodian finds a sub-tree where
+		// nothing carries the watermark: a migration, not an attack, so it is said
+		// once at warning level, never once per node at error level.
+		"Sweeps a pre-stamp sub-tree as a migration": {
+			seedRaw:         map[string]string{"ForeignDistro.user-data": "planted", "ForeignDistro.meta-data": "planted"},
+			wantGone:        []string{"ForeignDistro.user-data", "ForeignDistro.meta-data"},
+			wantLogLevel:    logrus.WarnLevel,
+			wantLogContains: "pre-stamp",
+			quietAbout:      []string{"ForeignDistro.user-data"},
 		},
 		"Preserves a lone meta-data file": {
 			seedStamped: map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},

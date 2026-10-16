@@ -93,7 +93,16 @@ type metadata struct {
 // consumed once, at first boot. The watermark is the whole adoption policy — an unstamped node
 // is foreign whatever its name, and the custodian refuses to open a sub-tree where that
 // question cannot be answered, so an unreadable watermark here is about the node.
+//
+// A node whose watermark cannot be read at all — a link, or a node an antivirus or endpoint
+// product holds open — is judged foreign and removed. That is the deliberate choice, and it
+// errs against our own data: an unreadable watermark is exactly what planted tampering looks
+// like, and a per-distro file deleted on a transient lock costs one first-boot retry, while a
+// tampering artifact that survived every purge would stay readable by every instance. The
+// query opens with full sharing, so only a genuinely exclusive hold can land here, and the
+// removal is logged so an operator can see it.
 func (c CloudInit) startupPurge(ctx context.Context) error {
+	ownedSeen := false
 	isOurs := func(rel string, isDir bool) bool {
 		// Directories are never adopted: this sub-tree legitimately holds files only.
 		// That judgement is structural, so it still holds without the watermark.
@@ -105,6 +114,7 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 			log.Warningf(ctx, "cloud-init: could not check ownership of %q: %v", rel, err)
 			return false
 		}
+		ownedSeen = ownedSeen || owned
 		return owned
 	}
 
@@ -117,9 +127,22 @@ func (c CloudInit) startupPurge(ctx context.Context) error {
 		log.Errorf(ctx, "cloud-init: could not remove every unrecognised node from the sub-tree, and they stay readable by every instance: %v", err)
 	}
 
+	// The first start after upgrading to the custodian finds a sub-tree where nothing
+	// carries the watermark — every node predates the stamp — and purges it all. That
+	// is a migration, not an attack, so it is said once at warning level rather than
+	// once per node at error level. A sub-tree that holds both stamped and unstamped
+	// nodes is not a migration: the stamp was there when the unstamped ones appeared.
+	if len(removed) > 0 && !ownedSeen {
+		log.Warningf(ctx, "cloud-init: removed %d pre-stamp node(s) from the sub-tree; per-distro data for distros that had not yet first-booted will be regenerated on their next provisioning", len(removed))
+	}
+
 	for _, rel := range removed {
 		if strings.HasPrefix(rel, ".tmp-") || rel == "agent.yaml" {
 			// Leftover temporaries and the agent's own file are expected churn.
+			continue
+		}
+		if !ownedSeen && (strings.HasSuffix(rel, ".user-data") || strings.HasSuffix(rel, ".meta-data")) {
+			// Part of the pre-stamp migration above; already reported once.
 			continue
 		}
 		if strings.HasSuffix(rel, ".user-data") || strings.HasSuffix(rel, ".meta-data") {
@@ -156,16 +179,20 @@ func (c CloudInit) WriteDistroData(distroName string, cloudInit string, instance
 	return nil
 }
 
-// RemoveDistroData removes cloud-init user data to be used for a distro in particular.
+// RemoveDistroData removes the cloud-init data files written for a particular distro:
+// the user-data and the meta-data.
 //
-// No error is returned if the data did not exist.
+// The meta-data carries only the installation request ID of an installation that is
+// over, and a leftover would hand its stale instance-id to a same-named instance
+// installed later outside Landscape. No error is returned if any of the files did not
+// exist.
 func (c CloudInit) RemoveDistroData(distroName string) (err error) {
 	defer decorate.OnError(&err, "could not remove distro-specific cloud-init file")
 
-	if err := c.dir.Remove(distroName + ".user-data"); errors.Is(err, fs.ErrNotExist) {
-		return nil
-	} else if err != nil {
-		return err
+	for _, suffix := range []string{".user-data", ".meta-data"} {
+		if err := c.dir.Remove(distroName + suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
 	}
 	return nil
 }
