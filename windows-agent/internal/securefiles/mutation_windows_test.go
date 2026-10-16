@@ -20,41 +20,6 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// TestRenameDestinationSymlinkEscapesAreRefused verifies that renaming to a destination
-// path where an intermediate directory component is a symlink pointing outside the
-// custodian sub-tree is refused with ErrPathEscapes, preventing the source node from
-// escaping the custodian.
-func TestRenameDestinationSymlinkEscapesAreRefused(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	c, err := securefiles.Open(dir)
-	require.NoError(t, err)
-	defer func() { _ = c.Close() }()
-
-	err = c.WriteFile("owned.txt", []byte("secret content"))
-	require.NoError(t, err)
-
-	outsideDir := t.TempDir()
-	symlinkPath := filepath.Join(dir, "link")
-	err = os.Symlink(outsideDir, symlinkPath)
-	if err != nil {
-		t.Skip("symlink creation not permitted in this environment")
-	}
-
-	err = c.Rename("owned.txt", "link/outside.txt")
-	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "renaming into an intermediate symlink escaping the subtree must fail")
-
-	// Ensure the file did not escape to the outside directory.
-	_, err = os.Stat(filepath.Join(outsideDir, "outside.txt"))
-	require.True(t, os.IsNotExist(err), "file must not have escaped to outside directory")
-
-	// Ensure the source file was not lost.
-	data, err := os.ReadFile(filepath.Join(dir, "owned.txt"))
-	require.NoError(t, err)
-	require.Equal(t, []byte("secret content"), data)
-}
-
 // TestRenameOverOpenDestination pins the publishing guarantee: a rename that replaces
 // a file readers still hold open must go through, because that is the whole reason the
 // custodian publishes by rename rather than by writing in place. It only holds with

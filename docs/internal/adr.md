@@ -108,9 +108,10 @@ Numbered sequentially, grouped by section. 'Who' and 'when' are captured by Git.
   WSL instance can manipulate them.
 * **Decision**: Stamp every node created under the Public Directory with NT Extended Attributes
   ($LXUID=0, $LXGID=0, $LXMOD — directories 040700, files 0100600) at creation so the projection
-  maps it to root, centralized in the agent's `securefiles` custodian with a plain OS fallback on
-  non-Windows. wsl-pro-service validates, before consuming any projected artifact, that every
-  component from the root down is root-owned with strict modes and no symlinks, and that the
+  maps it to root, centralized in the agent's `securefiles` custodian; the Linux build runs a
+  contract test double with persistence because tests depend on that, while security is only
+  implemented on Windows. wsl-pro-service validates, before consuming any projected artifact, that
+  every component from the root down is root-owned with strict modes and no symlinks, and that the
   opened root directory sits on a `9p` or `virtiofs` mount — pinned race-free via the root `fd`'s
   `mnt_id` against `/proc/self/mountinfo`, because `statfs` magic numbers cannot distinguish
   `virtiofs` from attacker-controlled FUSE (both report `FUSE_SUPER_MAGIC`) — failing loudly with

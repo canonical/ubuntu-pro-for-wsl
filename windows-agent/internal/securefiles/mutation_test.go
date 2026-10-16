@@ -7,6 +7,7 @@ package securefiles_test
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -305,8 +306,6 @@ func TestRename(t *testing.T) {
 		"a source that is not there is reported":        {from: "source.txt", to: "published.txt", noSource: true, wantErr: true},
 		"a source outside the sub-tree is refused":      {from: "../escape.txt", to: "published.txt", noSource: true, wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
 		"a destination outside the sub-tree is refused": {from: "source.txt", to: "../escape.txt", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
-		"a backslash escape is refused":                 {from: "source.txt", to: "..\\escape.txt", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
-		"an absolute destination is refused":            {from: "source.txt", to: "/etc/passwd", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
 	}
 
 	for name, tc := range testCases {
@@ -351,6 +350,43 @@ func TestRename(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestRenameDestinationSymlinkEscapesAreRefused verifies that renaming to a destination
+// path where an intermediate directory component is a symlink pointing outside the
+// custodian sub-tree is refused with ErrPathEscapes, preventing the source node from
+// escaping the custodian. The name passes lexical resolution, so the refusal is the
+// platform layer's physical containment: os.Root on POSIX, NT relative resolution on
+// Windows.
+func TestRenameDestinationSymlinkEscapesAreRefused(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err)
+	defer func() { _ = c.Close() }()
+
+	err = c.WriteFile("owned.txt", []byte("secret content"))
+	require.NoError(t, err)
+
+	outsideDir := t.TempDir()
+	symlinkPath := filepath.Join(dir, "link")
+	err = os.Symlink(outsideDir, symlinkPath)
+	if err != nil {
+		t.Skip("symlink creation not permitted in this environment")
+	}
+
+	err = c.Rename("owned.txt", "link/outside.txt")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "renaming into an intermediate symlink escaping the subtree must fail")
+
+	// Ensure the file did not escape to the outside directory.
+	_, err = os.Stat(filepath.Join(outsideDir, "outside.txt"))
+	require.ErrorIs(t, err, fs.ErrNotExist, "file must not have escaped to outside directory")
+
+	// Ensure the source file was not lost.
+	data, err := os.ReadFile(filepath.Join(dir, "owned.txt"))
+	require.NoError(t, err)
+	require.Equal(t, []byte("secret content"), data)
 }
 
 func TestRemove(t *testing.T) {

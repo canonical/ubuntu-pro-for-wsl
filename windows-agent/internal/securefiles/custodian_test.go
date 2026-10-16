@@ -1,7 +1,8 @@
 // Cross-platform contract tests for the custodian: containment, fresh-start creation,
-// modes, error paths and constructor behavior must hold on every platform, independent
-// of how ownership is stamped (Windows EAs or the Linux xattr watermark). The platform
-// mechanisms themselves are verified in the tagged files of this package.
+// modes, error paths, purge policy and constructor behavior must hold on every
+// platform, independent of how ownership is stamped (Windows EAs or the Linux xattr
+// watermark). The platform mechanisms themselves are verified in the tagged files of
+// this package.
 
 package securefiles_test
 
@@ -325,17 +326,6 @@ func TestCustodianErrors(t *testing.T) {
 			readOnlyRoot:  true,
 			wantSurvivors: []string{"junk.txt"},
 		},
-
-		// A node the policy rejected but that could not be removed is the one outcome a
-		// purge must not report as success: the caller would carry on believing the
-		// sub-tree holds nothing foreign, while the node stays readable by every
-		// instance. The failure is surfaced and the node is left where it is.
-		"Purge fails when a rejected node cannot be removed": {
-			op:            "purge",
-			seedFiles:     map[string]string{"junk.txt": "junk"},
-			readOnlyRoot:  true,
-			wantSurvivors: []string{"junk.txt"},
-		},
 	}
 
 	for name, tc := range testCases {
@@ -541,6 +531,164 @@ func TestSubdirReplacesAPlantedReparsePoint(t *testing.T) {
 	}
 }
 
+// TestPurge pins the caller-policy sweep: what the policy rejects is removed
+// and reported, the sweep carries past a node it cannot remove while the
+// failure is surfaced, a vanished root is a failure rather than a success,
+// and a sub-custodian's sweep is scoped to its own sub-tree.
+func TestPurge(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// needsNonRootUnix skips the case unless a non-root Unix user runs it:
+		// the read-only directory semantics the refusal needs do not exist on
+		// Windows, and root ignores them.
+		needsNonRootUnix bool
+		// needsUnix skips the case unless a Unix host runs it: the custodian
+		// holds an open handle on the root, so Windows cannot remove it
+		// externally.
+		needsUnix bool
+
+		makeSub bool
+		preseed func(t *testing.T, c *securefiles.Custodian)
+		run     func(t *testing.T, c *securefiles.Custodian) []string
+		check   func(t *testing.T, c *securefiles.Custodian, removed []string)
+	}{
+		// A node that resists removal must not become a shelter for the rest: the sweep
+		// carries on, the failure is reported, and only the stuck node is left behind.
+		"Purge continues past a node it cannot remove": {
+			needsNonRootUnix: true,
+			preseed: func(t *testing.T, c *securefiles.Custodian) {
+				t.Helper()
+				basePath := c.BasePath()
+
+				// An unremovable node: a directory whose read-only child cannot be unlinked.
+				keep := filepath.Join(basePath, "stuck", "keep")
+				require.NoError(t, os.MkdirAll(keep, 0700), "Setup: could not create the obstructing tree")
+				require.NoError(t, os.WriteFile(filepath.Join(keep, "child"), []byte("x"), 0600), "Setup: could not fill it")
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(keep, 0500), "Setup: could not make it read-only")
+				//nolint:gosec // G302 - test teardown restores directory permissions.
+				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
+
+				require.NoError(t, os.WriteFile(filepath.Join(basePath, "removable.txt"), []byte("x"), 0600), "Setup: could not seed the removable node")
+			},
+			run: func(t *testing.T, c *securefiles.Custodian) []string {
+				t.Helper()
+				removed, err := c.Purge(func(string, bool) bool { return false })
+				require.Error(t, err, "an unremovable node must be reported")
+				return removed
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, removed []string) {
+				t.Helper()
+				require.Equal(t, []string{"removable.txt"}, removed, "the sweep must continue past the stuck node")
+				require.DirExists(t, filepath.Join(c.BasePath(), "stuck"), "the stuck node stays where it is")
+				require.NoFileExists(t, filepath.Join(c.BasePath(), "removable.txt"), "the removable node must still be purged")
+			},
+		},
+		"Purge removes unrecognised nodes and temp files while keeping allowed ones": {
+			preseed: func(t *testing.T, c *securefiles.Custodian) {
+				t.Helper()
+				basePath := c.BasePath()
+				require.NoError(t, c.WriteFile("legit.txt", []byte("valid")))
+				require.NoError(t, os.WriteFile(filepath.Join(basePath, "malicious.txt"), []byte("bad"), 0600))
+				require.NoError(t, os.WriteFile(filepath.Join(basePath, ".tmp-legit.txt-1234"), []byte("tmp"), 0600))
+			},
+			run: func(t *testing.T, c *securefiles.Custodian) []string {
+				t.Helper()
+				allowedPolicy := func(relPath string, _ bool) bool { return relPath == "legit.txt" }
+				removed, err := c.Purge(allowedPolicy)
+				require.NoError(t, err)
+				return removed
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, removed []string) {
+				t.Helper()
+				basePath := c.BasePath()
+				require.Contains(t, removed, "malicious.txt")
+				require.Contains(t, removed, ".tmp-legit.txt-1234")
+				require.NotContains(t, removed, "legit.txt")
+				require.FileExists(t, filepath.Join(basePath, "legit.txt"))
+				require.NoFileExists(t, filepath.Join(basePath, "malicious.txt"))
+				require.NoFileExists(t, filepath.Join(basePath, ".tmp-legit.txt-1234"))
+			},
+		},
+		"Purge fails when the root was removed externally": {
+			needsUnix: true,
+			run: func(t *testing.T, c *securefiles.Custodian) []string {
+				t.Helper()
+				require.NoError(t, os.RemoveAll(c.BasePath()))
+				_, err := c.Purge(func(string, bool) bool { return false })
+				require.Error(t, err, "purging a vanished root must error rather than report success")
+				return nil
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, removed []string) {
+				t.Helper()
+			},
+		},
+		"Purge on a nested custodian is scoped to its sub-tree": {
+			makeSub: true,
+			preseed: func(t *testing.T, c *securefiles.Custodian) {
+				t.Helper()
+				require.NoError(t, c.WriteFile("keep.txt", []byte("keep")))
+				require.NoError(t, c.WriteFile("remove.txt", []byte("remove")))
+			},
+			run: func(t *testing.T, c *securefiles.Custodian) []string {
+				t.Helper()
+				isAllowed := func(relPath string, _ bool) bool { return relPath == "keep.txt" }
+				removed, err := c.Purge(isAllowed)
+				require.NoError(t, err)
+				return removed
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, removed []string) {
+				t.Helper()
+				basePath := c.BasePath()
+				require.Equal(t, []string{"remove.txt"}, removed)
+				require.FileExists(t, filepath.Join(basePath, "keep.txt"))
+				require.NoFileExists(t, filepath.Join(basePath, "remove.txt"))
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if tc.needsNonRootUnix && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
+				t.Skip("read-only directory semantics require a non-root Unix user")
+			}
+			if tc.needsUnix && runtime.GOOS == "windows" {
+				t.Skip("the custodian holds an open handle on the root, so Windows cannot remove it externally")
+			}
+
+			parent := t.TempDir()
+
+			var c *securefiles.Custodian
+			if tc.makeSub {
+				root, err := securefiles.Open(parent)
+				require.NoError(t, err)
+				t.Cleanup(func() { _ = root.Close() })
+				c, err = root.Subdir("sub")
+				require.NoError(t, err)
+			} else {
+				var err error
+				c, err = securefiles.Open(parent)
+				require.NoError(t, err)
+			}
+			defer func() { _ = c.Close() }()
+
+			if tc.preseed != nil {
+				tc.preseed(t, c)
+			}
+
+			var removed []string
+			if tc.run != nil {
+				removed = tc.run(t, c)
+			}
+
+			tc.check(t, c, removed)
+		})
+	}
+}
+
 // TestPurgeAll verifies that the wholesale wipe removes every node in the sub-tree,
 // whatever it is, and leaves the custodian working from its root.
 func TestPurgeAll(t *testing.T) {
@@ -642,4 +790,79 @@ func TestOpenErrors(t *testing.T) {
 			require.Nil(t, c)
 		})
 	}
+}
+
+// TestCheckProjection pins what the custodian reports about its own sub-tree, and that a
+// healthy one reports nothing. A volume this machine does not own stores the stamp
+// faithfully, so a custodian that looks healthy from Windows is not evidence that
+// instances see a root-owned sub-tree; ADR 2.02 requires the condition to be named
+// rather than refused. The paths are names a test machine does not have: the custodian
+// is constructed over them without establishing anything.
+func TestCheckProjection(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		basePath string
+
+		// wantErrs lists every condition CheckProjection must name. Empty means a
+		// healthy sub-tree, for which it says nothing at all.
+		wantErrs []error
+		wantText string
+	}{
+		"a healthy sub-tree on a local drive": {basePath: `C:\Users\someone\.ubuntupro`},
+		"a sub-tree on a UNC path": {
+			basePath: `\\server\share\publicdir`,
+			wantErrs: []error{securefiles.ErrRemoteVolume},
+			wantText: "a UNC path",
+		},
+		// What GetFinalPathNameByHandle hands back for a directory reached through a link
+		// into a share: the name the caller used says "C:", so only the resolved form
+		// reveals that the sub-tree is not on this machine.
+		"a sub-tree resolved to a redirected share": {
+			basePath: `\\?\UNC\server\share\publicdir`,
+			wantErrs: []error{securefiles.ErrRemoteVolume},
+			wantText: "a UNC path",
+		},
+		"a sub-tree resolved to a local drive": {
+			basePath: `\\?\C:\Users\someone\.ubuntupro`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			c := securefiles.NewCustodianAtBasePath(tc.basePath)
+
+			gaps := c.CheckProjection()
+			if len(tc.wantErrs) == 0 {
+				require.NoError(t, gaps, "a healthy sub-tree is not a condition worth reporting")
+				return
+			}
+
+			for _, want := range tc.wantErrs {
+				require.ErrorIs(t, gaps, want, "CheckProjection must name every condition that applies")
+			}
+			if tc.wantText != "" {
+				require.ErrorContains(t, gaps, tc.wantText, "CheckProjection must carry what was found")
+			}
+		})
+	}
+}
+
+// TestCheckProjectionWithPlatform exercises the resolution step on a custodian that
+// actually carries a platform: the sub-tree is classified by where it resolves, not
+// where it was named, and a platform-backed root resolves to itself here.
+func TestCheckProjectionWithPlatform(t *testing.T) {
+	t.Parallel()
+
+	basePath, err := filepath.Abs(t.TempDir())
+	require.NoError(t, err, "Setup: could not resolve the temporary directory")
+
+	c, err := securefiles.Open(basePath)
+	require.NoError(t, err)
+	defer c.Close()
+
+	require.NoError(t, c.CheckProjection(), "a healthy sub-tree on a local volume is not a condition worth reporting")
+	require.Equal(t, basePath, c.BasePath())
 }
