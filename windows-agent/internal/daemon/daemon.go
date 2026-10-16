@@ -403,9 +403,14 @@ func (d *Daemon) publishAddressFile(ctx context.Context, addr string) error {
 // it returns: closing pubStop ends the retries, and pubDone closes when the
 // last attempt has settled.
 //
-// Only a hold justifies retrying: the write is idempotent — CreateFile replaces
-// an unheld node — so a success ends the loop, while any other failure is real
-// and reaches the log once, as the startup attempt already does.
+// Only a hold justifies logging above the debug level: the write is idempotent
+// — CreateFile replaces an unheld node — so a success ends the loop, while any
+// other failure is real but not final. A failure the startup attempt already
+// answered by not serving, this loop answers by serving through the stale
+// address until the filesystem answers again: the daemon is up, instances
+// drain to the old file, and giving up after one bad tick would leave it
+// unreachable forever with no second chance. Every failure retries on the next
+// tick, held or real.
 func rePublishAddressFile(ctx context.Context, d *Daemon, addr string, interval time.Duration) (pubStop, pubDone chan struct{}) {
 	pubStop = make(chan struct{})
 	pubDone = make(chan struct{})
@@ -426,8 +431,9 @@ func rePublishAddressFile(ctx context.Context, d *Daemon, addr string, interval 
 				case errors.Is(err, securefiles.ErrNodeHeld):
 					// Still held; try again on the next tick.
 				default:
-					log.Errorf(ctx, "Daemon: gave up publishing the address file: %v", err)
-					return
+					// A real failure, but not a verdict to stop on: the
+					// round is still serving, and the next tick asks again.
+					log.Debugf(ctx, "Daemon: address file publication failed: %v", err)
 				}
 			}
 		}
