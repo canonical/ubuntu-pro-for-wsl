@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"syscall"
 
 	"golang.org/x/sys/unix"
@@ -39,7 +40,17 @@ type doubleSys struct {
 	// cannot be asked for its handle, and openNode needs one to resolve
 	// against with openat2 — the one open os.Root itself cannot perform,
 	// because it resolves an in-tree link instead of refusing one. Held for
-	// the custodian's lifetime, closed in release.
+	// the custodian's lifetime, closed in release. release may run while
+	// served operations still read the descriptor, so mu guards the pair: an
+	// in-flight open drains before the close, and every open after answers
+	// the closed descriptor instead of racing it. The lock is held through
+	// the Openat2 itself — an atomic would order the field's reads, but the
+	// hazard is the descriptor's lifetime: closed before an open uses it, its
+	// number is back in the allocator's pool, and the next open in the
+	// process, whoever's it is, could hand Openat2 a foreign directory as
+	// the containment root. The Windows layer guards its root handle the
+	// same way, for the same reason.
+	mu       sync.Mutex
 	root     *os.Root
 	rootFD   int
 	basePath string
@@ -202,8 +213,13 @@ func (s *doubleSys) attach(root *os.Root) error {
 }
 
 // release releases everything the double holds: the root descriptor beside
-// the os.Root, which the custodian closes itself.
+// the os.Root, which the custodian closes itself. Served operations read the
+// descriptor and Close writes it, so the mutex guards the pair: an in-flight
+// operation drains before the descriptor closes, and every operation after
+// answers the closed descriptor instead of racing the close.
 func (s *doubleSys) release() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.rootFD >= 0 {
 		_ = unix.Close(s.rootFD)
 		s.rootFD = -1
@@ -275,6 +291,11 @@ func (s *doubleSys) stampDir(string) error {
 // resolves one itself — so the double performs its own openat against the
 // root's descriptor, the same way os.Root would, with O_NOFOLLOW added.
 func (s *doubleSys) openNode(rel string, profile openProfile) (*os.File, error) {
+	// Held through the Openat2 below: the descriptor it resolves against must
+	// outlive the syscall, or its number can be reused under us.
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	var flags int
 	switch profile {
 	case openRead, openRename:

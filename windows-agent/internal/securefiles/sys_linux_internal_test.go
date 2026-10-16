@@ -367,3 +367,45 @@ func encodeStamp(st stamp) []byte {
 	binary.LittleEndian.PutUint32(b[8:12], st.mode)
 	return b[:]
 }
+
+// TestReleaseDrainsInFlightOpens pins the descriptor guard: the agent closes
+// custodians while requests are still in flight, so the layer must serialize
+// descriptor use against release — an in-flight open drains before the close,
+// and every open after answers the closed descriptor instead of racing it.
+// Under -race, an unsynchronized close against a concurrent Openat2 fails
+// here; without the guard the closed descriptor's number could also be
+// reused for a foreign directory between the close and the syscall, pointing
+// the next open's containment at whatever won the number.
+func TestReleaseDrainsInFlightOpens(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	s := newDoubleSysWith(dir, realStampCalls())
+	root, err := os.OpenRoot(dir)
+	require.NoError(t, err, "Setup: could not open the root")
+	defer func() { _ = root.Close() }()
+	require.NoError(t, s.attach(root), "Setup: could not attach the layer")
+	f, err := s.createStamped("node.txt", false)
+	require.NoError(t, err, "Setup: could not seed a node")
+	require.NoError(t, f.Close(), "Setup: could not close the seeded node")
+	defer func() { _ = s.release() }()
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			f, err := s.openNode("node.txt", openRead)
+			if err != nil {
+				// The layer is released: every open after answers the closed
+				// descriptor, and the loop's job is done.
+				return
+			}
+			_ = f.Close()
+		}
+	}()
+
+	// Release under the in-flight open: the mutex decides whether this is a
+	// drain or a race.
+	require.NoError(t, s.release(), "release should succeed under an in-flight open")
+	<-done
+}
