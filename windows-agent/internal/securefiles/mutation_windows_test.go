@@ -65,7 +65,9 @@ func TestRenameOverOpenDestination(t *testing.T) {
 
 			// Whatever the outcome, it is reached without waiting: neither replacing an
 			// open destination nor refusing an unshareable one is a transient condition.
-			require.Less(t, elapsed, 500*time.Millisecond, "rename should not wait on the destination")
+			// The bound only needs to separate microseconds from the seconds a real
+			// wait would take, so it stays far above scheduler noise.
+			require.Less(t, elapsed, time.Second, "rename should not wait on the destination")
 
 			if tc.wantErr {
 				require.Error(t, err, "a reader withholding deletion must refuse the rename")

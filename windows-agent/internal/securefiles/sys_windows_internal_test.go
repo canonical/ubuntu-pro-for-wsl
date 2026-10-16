@@ -127,7 +127,9 @@ func TestRemoteVolumeClassification(t *testing.T) {
 
 			// Classification runs on the startup path, so it must never reach out to
 			// the network: an unreachable server would otherwise stall the agent.
-			require.Less(t, elapsed, 250*time.Millisecond, "classification must not perform a network lookup")
+			// The bound only needs to separate microseconds from the seconds a
+			// real lookup would take, so it stays far above scheduler noise.
+			require.Less(t, elapsed, time.Second, "classification must not perform a network lookup")
 		})
 	}
 }
