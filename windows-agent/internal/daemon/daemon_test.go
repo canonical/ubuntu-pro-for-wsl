@@ -83,25 +83,21 @@ func TestStartQuit(t *testing.T) {
 			var addrContents []byte
 			var err error
 
-			// The publication creates the node before it writes the address
-			// into it, so both waits answer for content, not existence: an
-			// empty read is a publication in progress, not a completed one.
-			if tc.preexistingPortFile {
-				require.Eventually(t, func() bool {
-					addrContents, err = os.ReadFile(addrPath)
-					require.NoError(t, err, "Address file should be readable")
-					return len(addrContents) > 0 && string(addrContents) != "# Old port file"
-				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after the daemon starts serving")
-			} else {
-				require.Eventually(t, func() bool {
-					addrContents, err = os.ReadFile(addrPath)
-					if err != nil {
-						require.ErrorIs(t, err, fs.ErrNotExist, "Address file should be readable")
-						return false
-					}
-					return len(addrContents) > 0
-				}, 5*time.Second, 100*time.Millisecond, "Serve should create an address file")
-			}
+			// The publication replaces the node wholesale — CreateFile removes
+			// the old one before creating its replacement — and writes the
+			// address after the create, so every wait here answers for
+			// content: a missing file is the replacement in progress, an
+			// empty read is the write pending, and neither is a completed
+			// publication. The stale-content check is inert without a
+			// pre-existing file, so one wait serves both setups.
+			require.Eventually(t, func() bool {
+				addrContents, err = os.ReadFile(addrPath)
+				if err != nil {
+					require.ErrorIs(t, err, fs.ErrNotExist, "Address file should be readable")
+					return false
+				}
+				return len(addrContents) > 0 && string(addrContents) != "# Old port file"
+			}, 5*time.Second, 100*time.Millisecond, "the address file must hold the published address once Serve starts")
 
 			// Now we know the TCP server has started.
 
@@ -407,8 +403,19 @@ func TestAddingWSLAdapterRestarts(t *testing.T) {
 				return
 			}
 
-			daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
-			// Contents could be the same without our control, thus best to check the file time.
+			// The restart's publication removes the old node before creating
+			// its replacement, so neither the old file standing nor a missing
+			// one is an answer: the wait ends only on a modification time
+			// after the first publication's. Contents could be the same
+			// without our control, thus the file time.
+			require.Eventually(t, func() bool {
+				st, err := os.Stat(addrPath)
+				if err != nil {
+					require.ErrorIs(t, err, fs.ErrNotExist, "Address file should be readable")
+					return false
+				}
+				return st.ModTime().After(addrSt.ModTime())
+			}, 5*time.Second, 100*time.Millisecond, "Restart should have overwritten the address file")
 			newAddrSt, err := os.Stat(addrPath)
 			require.NoError(t, err, "Address file should be readable")
 			require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
