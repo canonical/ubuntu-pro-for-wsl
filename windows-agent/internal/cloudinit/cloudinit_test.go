@@ -361,7 +361,7 @@ func TestRemoveDistroData(t *testing.T) {
 
 func TestUpdateDoesNotLeavePartialContent(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 
 	custodian := newCloudInitCustodian(t)
 	path := filepath.Join(custodian.BasePath(), "agent.yaml")
@@ -606,7 +606,7 @@ func TestStartupPurge(t *testing.T) {
 				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
 			}
 
-			_, err = cloudinit.New(context.Background(), &mockConfig{proToken: "token"}, custodian)
+			_, err = cloudinit.New(t.Context(), &mockConfig{proToken: "token"}, custodian)
 			require.NoError(t, err, "Setup: cloudinit.New should succeed")
 
 			// The agent's own file is published whatever else happened, which is also

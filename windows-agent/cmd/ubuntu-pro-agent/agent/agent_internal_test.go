@@ -5,7 +5,6 @@
 package agent
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,7 +39,7 @@ func TestServeErrors(t *testing.T) {
 			}
 
 			a := New()
-			err := a.serve(context.Background(), opt)
+			err := a.serve(t.Context(), opt)
 			require.Error(t, err)
 		})
 	}
