@@ -188,10 +188,7 @@ func (s *windowsSys) establishRoot() (id fileIdentity, known bool, err error) {
 	}
 	defer closeHandle(parentHandle)
 
-	eaBuf, err := encodeLxEa(dirStamp())
-	if err != nil {
-		return fileIdentity{}, false, err
-	}
+	eaBuf := encodeLxEa(dirStamp())
 
 	oa, err := relativeAttributes(parentHandle, baseName)
 	if err != nil {
@@ -305,10 +302,7 @@ func (s *windowsSys) createStamped(rel string, dir bool) (*os.File, error) {
 		st = dirStamp()
 	}
 
-	eaBuf, err := encodeLxEa(st)
-	if err != nil {
-		return nil, err
-	}
+	eaBuf := encodeLxEa(st)
 
 	oa, err := relativeAttributes(s.rootHandle, rel)
 	if err != nil {
@@ -352,10 +346,7 @@ func (s *windowsSys) stampDir(rel string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	eaBuf, err := encodeLxEa(dirStamp())
-	if err != nil {
-		return err
-	}
+	eaBuf := encodeLxEa(dirStamp())
 
 	handle, err := s.openExisting(rel, windows.GENERIC_WRITE|windows.FILE_WRITE_EA,
 		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT)
@@ -774,10 +765,14 @@ func dirStamp() stamp {
 	return stamp{uid: 0, gid: 0, mode: 040700}
 }
 
-// encodeLxEa encodes the stamp as the $LXUID/$LXGID/$LXMOD extended
-// attributes the 9p projection reads: the values are what map a node to
-// root inside an instance.
-func encodeLxEa(st stamp) ([]byte, error) {
+// encodeLxEa encodes the stamp as the three WSL projection attributes the
+// instances read. It cannot fail: the names are fixed constants an EA name
+// always carries, and the values are 4 bytes each, far under any EA size
+// limit, so the winio encoder's size rejections are unreachable by
+// construction. Should a future change make that untrue — a longer name, a
+// variable-size value — the panic fires in tests, and reintroducing an error
+// return is the compiler-guided decision it deserves to be.
+func encodeLxEa(st stamp) []byte {
 	var uidBytes, gidBytes, modeBytes [4]byte
 	binary.LittleEndian.PutUint32(uidBytes[:], st.uid)
 	binary.LittleEndian.PutUint32(gidBytes[:], st.gid)
@@ -788,7 +783,11 @@ func encodeLxEa(st stamp) ([]byte, error) {
 		{Name: "$LXGID", Value: gidBytes[:]},
 		{Name: "$LXMOD", Value: modeBytes[:]},
 	}
-	return winio.EncodeExtendedAttributes(eas)
+	buf, err := winio.EncodeExtendedAttributes(eas)
+	if err != nil {
+		panic("encodeLxEa: " + err.Error()) // unreachable: fixed names, 4-byte values
+	}
+	return buf
 }
 
 // stampedFileMode returns the Extended Attribute file mode including the file type bits.

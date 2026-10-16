@@ -63,17 +63,19 @@ type stampCalls struct {
 // the previous run stamped.
 func realStampCalls() stampCalls {
 	return stampCalls{
-		set:  func(fd int, data []byte) error { return unix.Fsetxattr(fd, watermarkXattr, data, 0) },
-		get:  func(fd int, buf []byte) (int, error) { return unix.Fgetxattr(fd, watermarkXattr, buf) },
+		set:  func(fd int, data []byte) error { return unix.Fsetxattr(fd, stampXattr, data, 0) },
+		get:  func(fd int, buf []byte) (int, error) { return unix.Fgetxattr(fd, stampXattr, buf) },
 		list: func(fd int) error { _, err := unix.Flistxattr(fd, nil); return err },
 	}
 }
 
-// watermarkXattr is the user-namespace extended attribute the double stamps
+// stampXattr is the user-namespace extended attribute the double stamps
 // every node it creates with: the same stamp values the Windows layer writes
 // as NT extended attributes, carried by the only channel a plain filesystem
-// offers off Windows.
-const watermarkXattr = "user.com.canonical.up4w"
+// offers off Windows. No shipped binary runs the double, so the name carries
+// no compatibility weight; the internal test that plants raw watermarks uses
+// this constant, not its own copy.
+const stampXattr = "user.com.canonical.up4w"
 
 // newPlatformSys returns the double for the path open() was handed. The
 // double establishes nothing here: establishRoot does, once open() has created

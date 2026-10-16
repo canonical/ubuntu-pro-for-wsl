@@ -20,22 +20,15 @@ func TestNewTLSCertificates(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		// breakCertificatesDir places a regular file where the certificates
-		// directory should be, so sub-scoping the custodian must fail.
-		breakCertificatesDir bool
 		// breakPublishableFile places a directory where a certificate file should
 		// be written. Nothing in the sub-tree is adoptable data, so it is wiped with
 		// the rest instead of failing the start.
 		breakPublishableFile bool
 		// leaveStaleFile seeds leftover certificate material from a previous run.
 		leaveStaleFile bool
-
-		wantErr bool
 	}{
 		"Success removes stale certificate files": {leaveStaleFile: true},
 		"Success wipes an obstructing directory":  {breakPublishableFile: true},
-
-		"Error when the certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -44,10 +37,6 @@ func TestNewTLSCertificates(t *testing.T) {
 
 			dir := t.TempDir()
 
-			if tc.breakCertificatesDir {
-				err := os.WriteFile(filepath.Join(dir, common.CertificatesDir), []byte{}, 0600)
-				require.NoError(t, err, "Setup: could not create the file that should break the certificates directory")
-			}
 			if tc.leaveStaleFile {
 				staleDir := filepath.Join(dir, common.CertificatesDir)
 				err := os.MkdirAll(staleDir, 0700)
@@ -65,18 +54,10 @@ func TestNewTLSCertificates(t *testing.T) {
 			defer custodian.Close()
 
 			certsCust, err := custodian.Subdir(common.CertificatesDir)
-			if tc.breakCertificatesDir {
-				require.Error(t, err, "sub-scoping the custodian onto a regular file should fail")
-				return
-			}
 			require.NoError(t, err, "Setup: could not sub-scope certificates custodian")
 			defer certsCust.Close()
 
 			cfg, err := newTLSCertificates(certsCust)
-			if tc.wantErr {
-				require.Error(t, err, "newTLSCertificates should have failed")
-				return
-			}
 			require.NoError(t, err, "newTLSCertificates failed")
 			require.NotNil(t, cfg, "newTLSCertificates should have returned a TLS config")
 

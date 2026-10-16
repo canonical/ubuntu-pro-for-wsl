@@ -24,7 +24,8 @@ import (
 // stamped. Presence of the watermark is not ownership: a raw node, or a value
 // the custodian did not write, must be refused exactly as a missing one is,
 // otherwise anyone who can write the attribute can have the custodian publish
-// their content under a trusted name.
+// their content under a trusted name. The owned happy path itself is pinned
+// cross-platform by TestRename.
 func TestRenameChecksOwnership(t *testing.T) {
 	t.Parallel()
 
@@ -40,8 +41,8 @@ func TestRenameChecksOwnership(t *testing.T) {
 
 		wantErr error
 	}{
-		"a node the custodian wrote": {},
-
+		// A directory is the other allowance: it carries no file stamp, so it
+		// moves on the strength of the sub-tree alone.
 		"a directory": {dir: true},
 
 		// A watermark that is present but not the custodian's proves no more
@@ -82,7 +83,7 @@ func TestRenameChecksOwnership(t *testing.T) {
 			if tc.plantWatermark != nil {
 				f, err := os.Open(filepath.Join(dir, src))
 				require.NoError(t, err, "Setup: could not open the node")
-				err = unix.Fsetxattr(int(f.Fd()), watermarkXattr, tc.plantWatermark, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+				err = unix.Fsetxattr(int(f.Fd()), stampXattr, tc.plantWatermark, 0) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 				require.NoError(t, errors.Join(err, f.Close()), "Setup: could not plant the watermark")
 			}
 
@@ -96,12 +97,40 @@ func TestRenameChecksOwnership(t *testing.T) {
 	}
 }
 
+// TestOpenNodeRefusesALink pins the refusal of a link standing at the node
+// name: the O_NOFOLLOW open fails with ELOOP, which the layer reports as the
+// escape sentinel, so a link an instance user planted in the stamped tree is
+// never followed to a stamp outside it, and never published through. The
+// redirected tree ROOT is pinned by TestNewPlatformSysRefusesARedirectedRoot;
+// this is the node level of the same containment.
+func TestOpenNodeRefusesALink(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	outside := filepath.Join(dir, "outside")
+	require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+
+	c, err := Open(dir)
+	require.NoError(t, err, "Setup: could not open the custodian")
+	defer func() { _ = c.Close() }()
+
+	require.NoError(t, os.Symlink(outside, filepath.Join(dir, "link")), "Setup: could not plant the link")
+
+	_, err = c.IsOwned("link")
+	require.ErrorIs(t, err, ErrPathEscapes, "the ownership check must refuse the link, not follow it")
+
+	err = c.Rename("link", "dst")
+	require.ErrorIs(t, err, ErrPathEscapes, "the rename must refuse the link, not publish through it")
+}
+
 // TestNewPlatformSysRefusesARedirectedRoot pins the containment Open rests on:
 // a link standing where the tree root should be is refused rather than
 // followed, so the custodian can never be rooted outside the path it was
 // given. Open runs before there is a stamped tree to vouch for the
 // neighborhood, so a link here is never adopted data.
 func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		// redirect puts a symlink where the root would be created.
 		redirect bool
@@ -111,6 +140,8 @@ func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			base := t.TempDir()
 			outside := filepath.Join(base, "outside")
 			require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
@@ -140,6 +171,8 @@ func TestNewPlatformSysRefusesARedirectedRoot(t *testing.T) {
 // rather than served, and an unexplained probe failure is refused too, rather
 // than taken as evidence that stamping works.
 func TestStampsRefuseUnstampableTrees(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		// probeErr fails the support probe, before the root is established.
 		probeErr error
@@ -153,6 +186,8 @@ func TestStampsRefuseUnstampableTrees(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			stamps := realStampCalls()
 			stamps.list = func(int) error { return tc.probeErr }
 
@@ -164,6 +199,103 @@ func TestStampsRefuseUnstampableTrees(t *testing.T) {
 			} else {
 				require.NotErrorIs(t, err, ErrNoWatermarkSupport,
 					"the refusal must not claim the watermark is unsupported")
+			}
+		})
+	}
+}
+
+// TestStampRefusalsAreClassified pins what a stamping failure means on the
+// create path: a failure that says the filesystem cannot carry the watermark
+// is reclassified to ErrNoWatermarkSupport, while any other failure surfaces
+// as itself — the caller must not have to guess which is which. Both carry
+// the same cleanup: the fresh node does not stay behind unstamped. The
+// support probe that refuses an unsupported filesystem at Open is pinned by
+// TestStampsRefuseUnstampableTrees; reaching the stamp here means the probe
+// settled and the filesystem changed its mind under us.
+func TestStampRefusalsAreClassified(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		setErr error
+
+		// wantUnsupported asserts the failure is answered as a filesystem
+		// that cannot carry the watermark; anything else must surface as
+		// itself.
+		wantUnsupported bool
+	}{
+		"a filesystem without xattr support is named as such": {setErr: unix.ENOTSUP, wantUnsupported: true},
+		"a failing filesystem surfaces its own error":         {setErr: unix.EIO},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			stamps := realStampCalls()
+			stamps.set = func(int, []byte) error { return tc.setErr }
+			dir := t.TempDir()
+
+			c, err := openWithStamps(dir, stamps)
+			require.NoError(t, err, "Setup: the tree must establish; only the node stamping fails")
+			defer func() { _ = c.Close() }()
+
+			err = c.WriteFile("f", []byte("x"))
+			require.Error(t, err, "a node that cannot be stamped must not be served")
+			if tc.wantUnsupported {
+				require.ErrorIs(t, err, ErrNoWatermarkSupport, "the refusal must name the watermark as unsupported")
+			} else {
+				require.NotErrorIs(t, err, ErrNoWatermarkSupport, "the failure must surface as itself")
+			}
+
+			// The cleanup the refusal owes, on both classifications.
+			require.NoFileExists(t, filepath.Join(dir, "f"), "the refused node must not stay behind unstamped")
+		})
+	}
+}
+
+// TestStampReadFailuresAreClassified pins the read side of the same boundary:
+// a stamp that cannot be read is not a verdict about the node, so the failure
+// surfaces; one that says the filesystem cannot carry the watermark is
+// reclassified so a caller can recognise it, and reaching the read at all
+// means the support probe settled at Open. The no-stamp verdict ENODATA
+// answers is pinned by the tampered-node cases of TestRenameChecksOwnership.
+func TestStampReadFailuresAreClassified(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		getErr error
+
+		wantUnsupported bool
+	}{
+		"an unsupported get is reclassified": {getErr: unix.ENOTSUP, wantUnsupported: true},
+		"a failing get surfaces as itself":   {getErr: unix.EIO},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// The node is stamped by a healthy custodian first, because the
+			// write verifies its own stamp and would refuse just as rightly
+			// as the read below does. The tree survives the custodian — the
+			// stamp is on disk — so the failing one adopts it.
+			dir := t.TempDir()
+			seed, err := openWithStamps(dir, realStampCalls())
+			require.NoError(t, err, "Setup: could not open the seeding custodian")
+			require.NoError(t, seed.WriteFile("f", []byte("x")), "Setup: could not write the stamped node")
+			require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
+
+			stamps := realStampCalls()
+			stamps.get = func(int, []byte) (int, error) { return 0, tc.getErr }
+
+			c, err := openWithStamps(dir, stamps)
+			require.NoError(t, err, "Setup: the tree must adopt")
+			defer func() { _ = c.Close() }()
+
+			_, err = c.IsOwned("f")
+			require.Error(t, err, "a stamp that cannot be read is not a verdict about the node")
+			if tc.wantUnsupported {
+				require.ErrorIs(t, err, ErrNoWatermarkSupport, "the failure must be recognisable as unsupported")
+			} else {
+				require.NotErrorIs(t, err, ErrNoWatermarkSupport, "the failure must surface as itself")
 			}
 		})
 	}

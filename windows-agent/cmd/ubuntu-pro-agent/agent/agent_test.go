@@ -829,6 +829,8 @@ func TestAgentStartsDespiteAPlantedCloudInitLink(t *testing.T) {
 	a.WaitReady()
 	a.Quit()
 	err := <-runErr
+	// grpc's "server has been stopped" error is unexported, so the race between
+	// a clean return and the stopped error is only observable through its text.
 	if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
 		require.NoError(t, err, "Agent should start and shut down cleanly")
 	}
@@ -851,10 +853,10 @@ func TestAgentPreservesCloudInitUserDataOnStartup(t *testing.T) {
 	metaDataPath := filepath.Join(cloudInitDir, "Noble.meta-data")
 
 	seed, err := securefiles.Open(cloudInitDir)
-	require.NoError(t, err)
-	require.NoError(t, seed.WriteFile("Noble.user-data", []byte("user-data-content")))
-	require.NoError(t, seed.WriteFile("Noble.meta-data", []byte("instance-id: test-id")))
-	require.NoError(t, seed.Close())
+	require.NoError(t, err, "Setup: could not open the cloud-init custodian")
+	require.NoError(t, seed.WriteFile("Noble.user-data", []byte("user-data-content")), "Setup: could not seed the user data")
+	require.NoError(t, seed.WriteFile("Noble.meta-data", []byte("instance-id: test-id")), "Setup: could not seed the meta data")
+	require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
 
 	a := agent.NewForTesting(t, publicDir, privateDir)
 	a.SetArgs()
@@ -868,6 +870,8 @@ func TestAgentPreservesCloudInitUserDataOnStartup(t *testing.T) {
 	a.WaitReady()
 	a.Quit()
 	err = <-runErr
+	// grpc's "server has been stopped" error is unexported, so the race between
+	// a clean return and the stopped error is only observable through its text.
 	if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
 		require.NoError(t, err, "Agent should start and shut down cleanly")
 	}

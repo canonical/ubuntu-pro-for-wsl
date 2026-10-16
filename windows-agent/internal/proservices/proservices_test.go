@@ -503,12 +503,14 @@ func TestNewReplacesPreExistingForeignSubtrees(t *testing.T) {
 	// Pre-create foreign unstamped directories
 	cloudInitDir := filepath.Join(publicDir, ".cloud-init")
 	certsDir := filepath.Join(publicDir, common.CertificatesDir)
-	require.NoError(t, os.MkdirAll(cloudInitDir, 0700))
-	require.NoError(t, os.MkdirAll(certsDir, 0700))
+	require.NoError(t, os.MkdirAll(cloudInitDir, 0700), "Setup: could not plant the foreign cloud-init directory")
+	require.NoError(t, os.MkdirAll(certsDir, 0700), "Setup: could not plant the foreign certificates directory")
 
 	// Seed foreign files
-	require.NoError(t, os.WriteFile(filepath.Join(cloudInitDir, "foreign.txt"), []byte("foreign"), 0600))
-	require.NoError(t, os.WriteFile(filepath.Join(certsDir, "stale.key"), []byte("stale"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cloudInitDir, "foreign.txt"), []byte("foreign"), 0600),
+		"Setup: could not seed the foreign file")
+	require.NoError(t, os.WriteFile(filepath.Join(certsDir, "stale.key"), []byte("stale"), 0600),
+		"Setup: could not seed the stale key")
 
 	publicCustodian, err := securefiles.Open(publicDir)
 	require.NoError(t, err, "Setup: could not open public custodian")

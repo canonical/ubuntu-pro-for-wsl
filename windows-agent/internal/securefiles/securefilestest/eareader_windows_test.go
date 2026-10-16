@@ -18,6 +18,10 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// TestReadLxAttributes is deliberately serial: its subtests reuse one node
+// name and sweep it between cases, so running them in parallel would race on
+// the shared fixture. No subtest could be made self-contained without
+// reinventing the seed each case shares.
 func TestReadLxAttributes(t *testing.T) {
 	dir := t.TempDir()
 

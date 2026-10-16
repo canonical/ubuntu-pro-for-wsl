@@ -302,37 +302,22 @@ func TestIdentityOf(t *testing.T) {
 	}
 }
 
-// TestEnsureRootRejectsUnusableBasePath pins that a base path the platform
-// cannot establish is reported at construction, where it can still be acted
-// on.
+// TestEnsureRootRejectsUnusableBasePath pins that a base path the NT layer
+// cannot encode is reported at construction, where it can still be acted on.
+// The other unusable shapes — a parent that is a file — are pinned
+// cross-platform by TestOpenErrors.
 func TestEnsureRootRejectsUnusableBasePath(t *testing.T) {
 	t.Parallel()
 
-	tmp := t.TempDir()
-	blocker := filepath.Join(tmp, "file")
-	require.NoError(t, os.WriteFile(blocker, []byte("x"), FileMode), "Setup: could not seed the blocking file")
-
-	testCases := map[string]struct {
-		basePath string
-	}{
-		"a parent that is a file, not a directory": {basePath: filepath.Join(blocker, "child", "root")},
-		"a leaf name the NT layer cannot encode":   {basePath: filepath.Join(tmp, "bad\x00name")},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			_, err := Open(tc.basePath)
-			require.Error(t, err, "an unusable base path must be refused")
-		})
-	}
+	_, err := Open(filepath.Join(t.TempDir(), "bad\x00name"))
+	require.Error(t, err, "an unusable base path must be refused")
 }
 
 // TestEstablishRootRefusesWhatCreationCannotStamp pins that a root whose
-// creation the volume refuses — for the measured statuses a volume without
-// attribute support answers with — is refused rather than served. Everything
-// the sub-tree holds is a credential the agent manages, so serving it
+// creation the volume refuses is refused rather than served, however the
+// volume phrases the refusal — which statuses classify as what is pinned by
+// TestMapNtStatus.
+// Everything the sub-tree holds is a credential the agent manages, so serving it
 // unstamped would publish those to every unprivileged process in every
 // instance. The refusal policy itself is tested cross-platform, over the fake
 // platformSys; this is the statuses through the real create call.
@@ -346,13 +331,8 @@ func TestEstablishRootRefusesWhatCreationCannotStamp(t *testing.T) {
 		// The old fallback found it in place and succeeded, which is what hid the refusal.
 		preCreate bool
 	}{
-		"a filesystem without attribute support":          {failStatus: windows.STATUS_EAS_NOT_SUPPORTED},
-		"a filesystem that cannot store the attribute":    {failStatus: windows.STATUS_INVALID_DEVICE_REQUEST},
-		"an unsupported operation":                        {failStatus: windows.STATUS_NOT_SUPPORTED},
-		"a refused creation":                              {failStatus: windows.STATUS_ACCESS_DENIED},
-		"a rejected buffer":                               {failStatus: windows.STATUS_INVALID_PARAMETER},
-		"a filesystem without attribute support, adopted": {failStatus: windows.STATUS_EAS_NOT_SUPPORTED, preCreate: true},
-		"a refused creation over an existing directory":   {failStatus: windows.STATUS_ACCESS_DENIED, preCreate: true},
+		"a filesystem without attribute support":        {failStatus: windows.STATUS_EAS_NOT_SUPPORTED},
+		"a refused creation over an existing directory": {failStatus: windows.STATUS_ACCESS_DENIED, preCreate: true},
 	}
 
 	for name, tc := range testCases {
@@ -378,6 +358,8 @@ func TestEstablishRootRefusesWhatCreationCannotStamp(t *testing.T) {
 // is the path NtCreateFile's EA buffer cannot reach, so neither is covered by
 // refusing creation. A node adopted unstamped is a node no instance sees as
 // root-owned, so the adoption has to fail rather than hand back a custodian.
+// One status per place is enough: which statuses classify as what is pinned
+// by TestMapNtStatus.
 func TestStampingAnExistingNodeIsRefused(t *testing.T) {
 	t.Parallel()
 
@@ -387,12 +369,8 @@ func TestStampingAnExistingNodeIsRefused(t *testing.T) {
 		// subdir adopts a first-level sub-tree root instead of the custodian root.
 		subdir bool
 	}{
-		"a root on a filesystem without attribute support":     {failStatus: windows.STATUS_EAS_NOT_SUPPORTED},
-		"a root on a filesystem that cannot store it":          {failStatus: windows.STATUS_INVALID_DEVICE_REQUEST},
-		"a root whose stamp is refused":                        {failStatus: windows.STATUS_ACCESS_DENIED},
-		"a sub-tree on a filesystem without attribute support": {failStatus: windows.STATUS_EAS_NOT_SUPPORTED, subdir: true},
-		"a sub-tree on a filesystem that cannot store it":      {failStatus: windows.STATUS_INVALID_DEVICE_REQUEST, subdir: true},
-		"a sub-tree whose stamp is refused":                    {failStatus: windows.STATUS_ACCESS_DENIED, subdir: true},
+		"a root on a filesystem without attribute support": {failStatus: windows.STATUS_EAS_NOT_SUPPORTED},
+		"a sub-tree whose stamp is refused":                {failStatus: windows.STATUS_ACCESS_DENIED, subdir: true},
 	}
 
 	for name, tc := range testCases {
@@ -576,45 +554,59 @@ func TestSubdirFailsWhenTheHoldIsRefused(t *testing.T) {
 	require.Error(t, err, "a sub-tree whose hold is refused must not be handed out")
 }
 
-// TestReadStampSurfacesAnUndecodableStamp pins that a stamp the kernel hands
-// back malformed — a name length beyond the buffer, as a corrupt or tampered
-// EA list can read — is not a verdict about the node: the decode failure
-// surfaces rather than being answered as not owned.
-func TestReadStampSurfacesAnUndecodableStamp(t *testing.T) {
+// TestReadStampSurfacesWhatItCannotAnswer pins that a watermark the kernel
+// cannot hand back readable — malformed, as a corrupt or tampered EA list can
+// read, or a query that fails with anything other than the no-attributes
+// status — is not a verdict about the node: the failure surfaces rather than
+// being answered as a foreign node.
+func TestReadStampSurfacesWhatItCannotAnswer(t *testing.T) {
 	t.Parallel()
 
 	// A name length far beyond the buffer, in the fixed header's place.
 	garbage := make([]byte, 8)
 	garbage[5] = 200
 
-	// The node is stamped by a healthy custodian first, because the write
-	// itself verifies its own stamp: the garbage query would refuse it just
-	// as rightly as the read below does. The tree survives the custodian —
-	// the stamp is on disk — so the faked one adopts it.
-	dir := t.TempDir()
-	seed, err := Open(dir)
-	require.NoError(t, err, "Setup: could not open the seeding custodian")
-	require.NoError(t, seed.WriteFile("f", []byte("x")), "Setup: could not write the stamped node")
-	require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
-
-	nt := realNtCalls()
-	nt.queryEaFile = func(_ windows.Handle, buf []byte) (int, error) {
-		return copy(buf, garbage), nil
+	testCases := map[string]struct {
+		queryEaFile func(_ windows.Handle, buf []byte) (int, error)
+	}{
+		"a stamp that cannot be decoded": {
+			queryEaFile: func(_ windows.Handle, buf []byte) (int, error) {
+				return copy(buf, garbage), nil
+			},
+		},
+		"a query that fails": {
+			queryEaFile: func(_ windows.Handle, _ []byte) (int, error) {
+				return 0, windows.STATUS_ACCESS_DENIED
+			},
+		},
 	}
-	cust, err := open(dir, func(p string) platformSys { return newWindowsSysWith(p, nt) })
-	require.NoError(t, err, "Setup: could not open the custodian")
-	defer cust.Close()
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	_, err = cust.IsOwned("f")
-	require.Error(t, err, "a stamp that cannot be decoded is not a verdict about the node")
-	require.NotErrorIs(t, err, ErrNotOwned, "the refusal must not mistake a broken decode for a foreign node")
+			// The node is stamped by a healthy custodian first, because the write
+			// itself verifies its own stamp: a failing query would refuse it just
+			// as rightly as the read below does. The tree survives the custodian —
+			// the stamp is on disk — so the faked one adopts it.
+			dir := t.TempDir()
+			seed, err := Open(dir)
+			require.NoError(t, err, "Setup: could not open the seeding custodian")
+			require.NoError(t, seed.WriteFile("f", []byte("x")), "Setup: could not write the stamped node")
+			require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
+
+			nt := realNtCalls()
+			nt.queryEaFile = tc.queryEaFile
+			cust, err := open(dir, func(p string) platformSys { return newWindowsSysWith(p, nt) })
+			require.NoError(t, err, "Setup: could not open the custodian")
+			defer cust.Close()
+
+			_, err = cust.IsOwned("f")
+			require.Error(t, err, "a stamp that cannot be read is not a verdict about the node")
+			require.NotErrorIs(t, err, ErrNotOwned, "the failure must not be answered as a foreign node")
+		})
+	}
 }
 
-// TestMapNtStatus pins the whole translation table: the two conditions the
-// custodian names for itself, the deliberate exclusion of
-// STATUS_INVALID_PARAMETER, and the passthrough of everything else. The
-// statuses for the watermark column are measured against a volume without
-// attribute support, not assumed.
 func TestMapNtStatus(t *testing.T) {
 	t.Parallel()
 

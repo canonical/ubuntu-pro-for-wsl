@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -351,8 +352,8 @@ func TestRemoveDistroData(t *testing.T) {
 				}
 				require.NoError(t, os.MkdirAll(dir, 0700), "Setup: could not set up directory")
 				if !tc.fileDoesNotExist {
-					require.NoError(t, os.WriteFile(path, []byte("hello, world!"), 0600), "Setup: could not set up directory")
-					require.NoError(t, os.WriteFile(metadataPath, []byte("instance-id: inst-123\n"), 0600), "Setup: could not set up directory")
+					require.NoError(t, os.WriteFile(path, []byte("hello, world!"), 0600), "Setup: could not plant the user data")
+					require.NoError(t, os.WriteFile(metadataPath, []byte("instance-id: inst-123\n"), 0600), "Setup: could not plant the meta data")
 				}
 			}
 
@@ -479,20 +480,20 @@ func TestSubScopedCustodianCloudInitPurge(t *testing.T) {
 
 	parentDir := t.TempDir()
 	rootCust, err := securefiles.Open(parentDir)
-	require.NoError(t, err)
+	require.NoError(t, err, "Setup: could not open the root custodian")
 	defer rootCust.Close()
 
 	cloudInitCust, err := rootCust.Subdir(".cloud-init")
-	require.NoError(t, err)
+	require.NoError(t, err, "Setup: could not open the cloud-init sub-custodian")
 	defer cloudInitCust.Close()
 
 	// Write distro user data in sub-scoped custodian
 	err = cloudInitCust.WriteFile("Noble.user-data", []byte("user-data-content"))
-	require.NoError(t, err)
+	require.NoError(t, err, "Setup: could not seed the user data")
 
 	conf := &mockConfig{proToken: "token"}
-	ci, err := cloudinit.New(ctx, conf, cloudInitCust)
-	require.NoError(t, err)
+	_, err = cloudinit.New(ctx, conf, cloudInitCust)
+	require.NoError(t, err, "Setup: could not create the cloud-init component")
 
 	// Verify distro user data survived and was not purged
 	data, err := os.ReadFile(filepath.Join(cloudInitCust.BasePath(), "Noble.user-data"))
@@ -505,8 +506,6 @@ func TestSubScopedCustodianCloudInitPurge(t *testing.T) {
 			t.Fatalf("unexpected unrecognised-node warning log for legitimate file: %s", entry.Message)
 		}
 	}
-
-	_ = ci
 }
 
 // TestStartupPurge drives cloudinit.New over a seeded .cloud-init sub-tree and
@@ -664,7 +663,7 @@ func TestStartupPurge(t *testing.T) {
 			}
 			for _, name := range tc.wantGone {
 				_, err := os.Lstat(filepath.Join(cloudInitDir, name))
-				require.True(t, os.IsNotExist(err), "%s should not have survived startup", name)
+				require.ErrorIs(t, err, fs.ErrNotExist, "%s should not have survived startup", name)
 			}
 			for _, name := range tc.wantDirs {
 				require.DirExists(t, filepath.Join(cloudInitDir, name), "%s should still be there", name)

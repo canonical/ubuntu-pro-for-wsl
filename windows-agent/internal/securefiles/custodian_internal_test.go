@@ -47,14 +47,19 @@ func TestWriteFilePublishesTheNodeItWrote(t *testing.T) {
 				require.NoError(t, err, "the swap must be able to reach the parked node")
 				return fresh, nil
 			},
+			// Every node answers as the custodian's own, so the ownership
+			// check alone would let the publish through — the refusal under
+			// test can only be the descriptor identity, which is the promise.
+			readStampFn: func(*os.File) (stamp, bool, error) {
+				return fileStamp(), true, nil
+			},
 		}
 	})
 	require.NoError(t, err, "Setup: could not open the custodian over the fake")
 	t.Cleanup(func() { _ = c.Close() })
 
-	// The victim is planted stamped: the fake answers for the stamp, so the
-	// ownership check alone would let the publish through — the refusal under
-	// test can only be the descriptor identity, which is the promise.
+	// The victim is planted stamped (the configured readStamp answers for
+	// every node), so only the descriptor identity can refuse the publish.
 	require.NoError(t, os.WriteFile(filepath.Join(c.BasePath(), "victim.txt"), []byte("victim"), 0600),
 		"Setup: could not plant the victim")
 

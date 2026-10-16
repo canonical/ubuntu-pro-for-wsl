@@ -87,10 +87,7 @@ func TestCreateFileModes(t *testing.T) {
 		seedRaw     string
 		// append selects the mode under test. Omitted, CreateFile replaces.
 		append bool
-		// name overrides the node to create, to reach outside the sub-tree.
-		name string
 
-		wantErr     error
 		wantContent string
 		// wantOwned is only asserted when checkOwned is set. An unstamped node is
 		// answered as not owned on every platform: Windows answers its failed attribute
@@ -132,11 +129,6 @@ func TestCreateFileModes(t *testing.T) {
 			checkOwned:  true,
 			wantOwned:   false,
 		},
-		"a name that leaves the sub-tree is refused": {
-			name:    "../escape.txt",
-			append:  true,
-			wantErr: securefiles.ErrPathEscapes,
-		},
 	}
 
 	for name, tc := range testCases {
@@ -148,10 +140,7 @@ func TestCreateFileModes(t *testing.T) {
 			require.NoError(t, err, "Setup: could not open custodian")
 			defer func() { _ = c.Close() }()
 
-			target := "log"
-			if tc.name != "" {
-				target = tc.name
-			}
+			const target = "log"
 			if tc.seedStamped != "" {
 				require.NoError(t, c.WriteFile(target, []byte(tc.seedStamped)), "Setup: could not seed the stamped file")
 			}
@@ -165,10 +154,6 @@ func TestCreateFileModes(t *testing.T) {
 				f, err = c.AppendFile(target)
 			} else {
 				f, err = c.CreateFile(target)
-			}
-			if tc.wantErr != nil {
-				require.ErrorIs(t, err, tc.wantErr, "unexpected error creating %s", target)
-				return
 			}
 			require.NoError(t, err, "creating %s must succeed", target)
 

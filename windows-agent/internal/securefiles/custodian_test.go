@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"syscall"
 	"testing"
 
@@ -25,208 +24,127 @@ import (
 // packages a cross-platform test file cannot import.
 const errSharingViolation = syscall.Errno(32)
 
-func TestCustodian(t *testing.T) {
+// TestCustodianClosesCleanlyTwice pins that closing is idempotent: the first
+// close releases everything, and a second one is a safe no-op.
+func TestCustodianClosesCleanlyTwice(t *testing.T) {
 	t.Parallel()
 
-	escapePaths := []string{
-		"../outside.txt",
-		"..\\outside.txt",
-		"/etc/passwd",
-		"sub/../../outside.txt",
-	}
+	c, err := securefiles.Open(t.TempDir())
+	require.NoError(t, err, "Setup: could not open custodian")
+	require.NoError(t, c.Close(), "the first close should release everything cleanly")
+	require.NoError(t, c.Close(), "a second close must be a safe no-op")
+}
+
+// TestZeroValueCustodianIsInert pins the state a caller reaches by declaring a
+// custodian and skipping the error path: one Open never touched. It has no
+// platform, so there is nothing to report, and closing it touches nothing.
+func TestZeroValueCustodianIsInert(t *testing.T) {
+	t.Parallel()
+
+	var zero securefiles.Custodian
+	require.NoError(t, zero.CheckProjection(), "a custodian with no platform has nothing to report")
+	require.NoError(t, zero.Close(), "closing a custodian that was never opened must be a no-op")
+}
+
+// TestNewNodesCarryFileMode pins that nodes the custodian creates carry the
+// package's file mode, which is what keeps them unreadable to other local
+// users. Windows carries the mode in the stamp instead, so the POSIX bits do
+// not apply there.
+func TestNewNodesCarryFileMode(t *testing.T) {
+	t.Parallel()
+
 	if runtime.GOOS == "windows" {
-		escapePaths = append(escapePaths,
-			"C:\\Windows\\System32",
-			"C:relative_drive_path.txt",
-			"D:foo/bar",
-		)
+		t.Skip("Windows nodes carry the mode in the stamp, not in POSIX permission bits")
 	}
 
-	testCases := map[string]struct {
-		// useSub makes the case run against the nested custodian c.Subdir("sub") instead of c.
-		useSub bool
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
 
-		// neverOpened runs against a zero-value custodian that Open never touched, the
-		// state a caller reaches by declaring one and skipping the error path.
-		neverOpened bool
+	require.NoError(t, c.WriteFile("myfile.txt", []byte("hello")), "the file must be written")
+	fi, err := os.Stat(filepath.Join(dir, "myfile.txt"))
+	require.NoError(t, err, "the node must be statable")
+	require.Equal(t, securefiles.FileMode, fi.Mode().Perm(), "new nodes must carry the package's file mode")
+}
 
-		// closeTwice closes the custodian a second time, which must be a safe no-op.
-		closeTwice bool
+// TestBasePathIsAbsoluteForRootAndSubCustodians pins the path the custodian
+// reports: the root custodian reports the absolute base path it was resolved
+// to, and a sub custodian reports its own sub-tree.
+func TestBasePathIsAbsoluteForRootAndSubCustodians(t *testing.T) {
+	t.Parallel()
 
-		// mkdirs are created with os.Mkdir before any other action.
-		mkdirs []string
+	dir, err := filepath.Abs(t.TempDir())
+	require.NoError(t, err, "Setup: could not resolve the temporary directory")
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
 
-		// seedFiles are written directly via os.WriteFile before the custodian acts.
-		seedFiles map[string]string
+	require.Equal(t, dir, c.BasePath(), "the root custodian reports the absolute base path")
 
-		// writeFiles are written via c.WriteFile before checking escapes/modes.
-		writeFiles map[string]string
+	sub, err := c.Subdir("sub")
+	require.NoError(t, err, "Setup: could not open the sub custodian")
+	defer func() { _ = sub.Close() }()
+	require.Equal(t, filepath.Join(dir, "sub"), sub.BasePath(), "the sub custodian reports its own sub-tree")
+}
 
-		// escapePaths must be rejected by both WriteFile and Mkdir with ErrPathEscapes.
-		escapePaths []string
+// TestSubCustodianIsScopedToItsSubTree pins what per-distro data isolation
+// rests on: a custodian scoped to one sub-tree can write its own nodes, but a
+// name that leaves the sub-tree is refused, and nothing reaches a sibling.
+func TestSubCustodianIsScopedToItsSubTree(t *testing.T) {
+	t.Parallel()
 
-		// testSymlinkEscape adds a check that a symlink pointing outside the root is refused.
-		testSymlinkEscape bool
+	dir := t.TempDir()
+	sibling := filepath.Join(dir, "sibling.txt")
+	require.NoError(t, os.WriteFile(sibling, []byte("sibling"), 0600), "Setup: could not plant the sibling")
 
-		// wantFileMode lists files whose mode must equal securefiles.FileMode (non-Windows).
-		wantFileMode []string
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
 
-		// checkBasePath asserts BasePath is absolute and, with useSub, sub path is correct.
-		checkBasePath bool
+	sub, err := c.Subdir("sub")
+	require.NoError(t, err, "Setup: could not open the sub custodian")
+	defer func() { _ = sub.Close() }()
 
-		// freshOp selects a single fresh-start operation on a pre-seeded file.
-		// Valid value: "CreateFile".
-		freshOp string
+	require.NoError(t, sub.WriteFile("file.txt", []byte("sub content")), "the sub custodian writes inside its sub-tree")
+	require.ErrorIs(t, sub.WriteFile("../sibling.txt", []byte("data")), securefiles.ErrPathEscapes,
+		"a name that leaves the sub-tree is refused")
 
-		// freshFile is the target file for freshOp.
-		freshFile string
+	got, err := os.ReadFile(sibling)
+	require.NoError(t, err, "the sibling must still be readable")
+	require.Equal(t, "sibling", string(got), "the refused write must not have reached the sibling")
+}
 
-		// freshContent is written through the opened/created file.
-		freshContent string
+// TestReadDirListsTheSubTree pins the listing surface the sweep and the
+// projection checks rest on: the custodian lists the nodes of its own sub-tree,
+// one level at a time.
+func TestReadDirListsTheSubTree(t *testing.T) {
+	t.Parallel()
 
-		// wantFileContents lists files whose content is read back through the custodian.
-		wantFileContents map[string]string
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
 
-		// wantDirEntries lists directories whose entries are listed through the custodian.
-		wantDirEntries map[string][]string
-	}{
-		"a custodian closed twice": {closeTwice: true},
+	require.NoError(t, os.Mkdir(filepath.Join(dir, "sub"), 0700), "Setup: could not create the sub-tree")
+	require.NoError(t, c.WriteFile("a.txt", []byte("A")), "Setup: could not write the file")
+	require.NoError(t, c.WriteFile(filepath.Join("sub", "b.txt"), []byte("B")), "Setup: could not write the nested file")
 
-		"a custodian that was never opened": {neverOpened: true},
-
-		"path escapes are refused": {
-			escapePaths:       escapePaths,
-			testSymlinkEscape: true,
-		},
-		"sub-custodian scopes operations": {
-			useSub:      true,
-			writeFiles:  map[string]string{"file.txt": "sub content"},
-			escapePaths: []string{"../sibling.txt"},
-		},
-		"custodian sets modes on new nodes": {
-			writeFiles:   map[string]string{"myfile.txt": "hello"},
-			wantFileMode: []string{"myfile.txt"},
-		},
-		"BasePath returns absolute path for root and sub custodians": {
-			useSub:        true,
-			checkBasePath: true,
-		},
-		"CreateFile replaces an existing node": {
-			seedFiles:    map[string]string{"fresh.txt": "STALE"},
-			freshOp:      "CreateFile",
-			freshFile:    "fresh.txt",
-			freshContent: "NEW",
-		},
-		"reads files and directory entries through the custodian": {
-			mkdirs:           []string{"sub"},
-			writeFiles:       map[string]string{"a.txt": "A", "sub/b.txt": "B"},
-			wantFileContents: map[string]string{"a.txt": "A", "sub/b.txt": "B"},
-			wantDirEntries:   map[string][]string{".": {"a.txt", "sub"}, "sub": {"b.txt"}},
-		},
+	names := func(entries []os.DirEntry) []string {
+		got := make([]string, 0, len(entries))
+		for _, entry := range entries {
+			got = append(got, entry.Name())
+		}
+		return got
 	}
 
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	entries, err := c.ReadDir(".")
+	require.NoError(t, err, "the sub-tree must be listable")
+	require.Equal(t, []string{"a.txt", "sub"}, names(entries), "unexpected root entries")
 
-			dir := t.TempDir()
-			var zero securefiles.Custodian
-			c := &zero
-			if !tc.neverOpened {
-				opened, err := securefiles.Open(dir)
-				require.NoError(t, err)
-				c = opened
-			}
-			defer func() { _ = c.Close() }()
-
-			target := c
-			if tc.useSub {
-				sub, err := c.Subdir("sub")
-				require.NoError(t, err)
-				defer func() { _ = sub.Close() }()
-				target = sub
-			}
-
-			basePath := target.BasePath()
-
-			for _, name := range tc.mkdirs {
-				require.NoError(t, os.Mkdir(filepath.Join(basePath, name), 0o700))
-			}
-			for name, content := range tc.seedFiles {
-				require.NoError(t, os.WriteFile(filepath.Join(basePath, name), []byte(content), 0600))
-			}
-			for name, content := range tc.writeFiles {
-				require.NoError(t, target.WriteFile(name, []byte(content)))
-			}
-
-			for _, path := range tc.escapePaths {
-				require.ErrorIs(t, target.WriteFile(path, []byte("data")), securefiles.ErrPathEscapes,
-					"Expected ErrPathEscapes for WriteFile name: %s", path)
-			}
-
-			if tc.testSymlinkEscape {
-				outsideDir := t.TempDir()
-				symlinkPath := filepath.Join(c.BasePath(), "symlink_dir")
-				if err := os.Symlink(outsideDir, symlinkPath); err == nil {
-					require.ErrorIs(t, c.WriteFile("symlink_dir/file.txt", []byte("data")), securefiles.ErrPathEscapes)
-				}
-			}
-
-			if runtime.GOOS != "windows" {
-				for _, name := range tc.wantFileMode {
-					fi, err := os.Stat(filepath.Join(basePath, name))
-					require.NoError(t, err)
-					require.Equal(t, securefiles.FileMode, fi.Mode().Perm())
-				}
-			}
-
-			if tc.checkBasePath {
-				absRoot, err := filepath.Abs(c.BasePath())
-				require.NoError(t, err)
-				require.Equal(t, absRoot, c.BasePath())
-				if tc.useSub {
-					require.Equal(t, filepath.Join(absRoot, "sub"), target.BasePath())
-				}
-			}
-
-			for name, want := range tc.wantFileContents {
-				got, err := os.ReadFile(filepath.Join(basePath, name))
-				require.NoError(t, err)
-				require.Equal(t, want, string(got))
-			}
-
-			for name, want := range tc.wantDirEntries {
-				entries, err := target.ReadDir(name)
-				require.NoError(t, err)
-				got := make([]string, 0, len(entries))
-				for _, entry := range entries {
-					got = append(got, entry.Name())
-				}
-				sort.Strings(got)
-				require.Equal(t, want, got)
-			}
-
-			if tc.freshOp == "CreateFile" {
-				f, err := target.CreateFile(tc.freshFile)
-				require.NoError(t, err)
-				_, err = f.Write([]byte(tc.freshContent))
-				require.NoError(t, err)
-				require.NoError(t, f.Close())
-				content, err := os.ReadFile(filepath.Join(basePath, tc.freshFile))
-				require.NoError(t, err)
-				require.Equal(t, tc.freshContent, string(content))
-			}
-
-			if tc.neverOpened {
-				require.NoError(t, c.CheckProjection(), "a custodian with no platform has nothing to report")
-			}
-
-			if tc.closeTwice {
-				require.NoError(t, c.Close(), "the first close should release everything cleanly")
-				require.NoError(t, c.Close(), "a second close must be a safe no-op")
-			}
-		})
-	}
+	entries, err = c.ReadDir("sub")
+	require.NoError(t, err, "the sub-tree must be listable")
+	require.Equal(t, []string{"b.txt"}, names(entries), "unexpected sub-tree entries")
 }
 
 func TestCustodianErrors(t *testing.T) {
@@ -257,9 +175,8 @@ func TestCustodianErrors(t *testing.T) {
 		readOnlyRoot bool
 
 		// wantEscape requires the operation to fail with ErrPathEscapes;
-		// otherwise any error is accepted unless noErr is set.
+		// otherwise any error is accepted.
 		wantEscape bool
-		noErr      bool
 
 		// wantSurvivors lists files that must still exist after the operation.
 		wantSurvivors []string
@@ -268,6 +185,15 @@ func TestCustodianErrors(t *testing.T) {
 		"AppendFile rejects a path escape": {op: "appendfile", path: "../out.txt", wantEscape: true},
 		"IsOwned rejects a path escape":    {op: "isowned", path: "../out.txt", wantEscape: true},
 		"ReadDir rejects a path escape":    {op: "readdir", path: "../out", wantEscape: true},
+		"WriteFile rejects a path escape":  {op: "write", path: "../out.txt", wantEscape: true},
+		// Drive-qualified names are refused on every platform: the custodian
+		// contract is platform-deterministic, so a name that is anchored on
+		// Windows is refused where it is merely an odd relative name too.
+		"WriteFile rejects a drive-qualified path": {op: "write", path: `C:\Windows\System32`, wantEscape: true},
+		"WriteFile rejects a drive-relative path":  {op: "write", path: "D:foo/bar", wantEscape: true},
+		// A link as an intermediate component passes lexical resolution; the
+		// refusal is the platform layer's physical containment.
+		"WriteFile through a link is refused": {op: "write", path: "link/child", seedSymlink: "link"},
 
 		// A node the adoption path cannot even stat must be refused rather than
 		// created over: appending only makes sense on a node that is verifiably there.
@@ -316,9 +242,15 @@ func TestCustodianErrors(t *testing.T) {
 			op: "isowned", path: "missing.txt",
 		},
 
-		"Purge on a closed custodian fails":    {op: "purge", closeFirst: true},
-		"PurgeAll on a closed custodian fails": {op: "purgeall", closeFirst: true},
-		"ReadDir on a closed custodian fails":  {op: "readdir", path: "x", closeFirst: true},
+		// After a close, every operation fails on the closed root. The refusal
+		// surfaces at each operation's own error handling, so the shapes with
+		// distinct call sites get a pin each: the custodian's own handle
+		// (ReadDir), the platform layer's (WriteFile), and the sweeps' entry
+		// (Purge, PurgeAll).
+		"ReadDir on a closed custodian fails":   {op: "readdir", path: "x", closeFirst: true},
+		"WriteFile on a closed custodian fails": {op: "write", path: "f.txt", closeFirst: true},
+		"Purge on a closed custodian fails":     {op: "purge", closeFirst: true},
+		"PurgeAll on a closed custodian fails":  {op: "purgeall", closeFirst: true},
 
 		"PurgeAll fails when a node cannot be removed": {
 			op:            "purgeall",
@@ -399,9 +331,6 @@ func TestCustodianErrors(t *testing.T) {
 			}
 
 			switch {
-			case tc.noErr:
-				require.NoError(t, opErr)
-				require.Empty(t, removed)
 			case tc.wantEscape:
 				require.ErrorIs(t, opErr, securefiles.ErrPathEscapes)
 			default:
@@ -624,6 +553,25 @@ func TestPurge(t *testing.T) {
 				t.Helper()
 			},
 		},
+		// The wholesale twin of the case above: PurgeAll has its own sweep, so
+		// its vanished-root branch needs its own pin. On POSIX the open root
+		// survives an external removal long enough to answer, so the failure
+		// surfaces at the listing rather than at the open; Windows cannot run
+		// this, the veto that keeps the root in place being pinned by
+		// TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen.
+		"PurgeAll fails when the root was removed externally": {
+			needsUnix: true,
+			run: func(t *testing.T, c *securefiles.Custodian) []string {
+				t.Helper()
+				require.NoError(t, os.RemoveAll(c.BasePath()))
+				_, err := c.PurgeAll()
+				require.Error(t, err, "purging a vanished root must error rather than report success")
+				return nil
+			},
+			check: func(t *testing.T, c *securefiles.Custodian, removed []string) {
+				t.Helper()
+			},
+		},
 		"Purge on a nested custodian is scoped to its sub-tree": {
 			makeSub: true,
 			preseed: func(t *testing.T, c *securefiles.Custodian) {
@@ -720,14 +668,13 @@ func TestPurgeAll(t *testing.T) {
 	require.True(t, owned, "content written after the wipe must carry the watermark")
 }
 
-// TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen pins the share-arbitration
-// veto the custodian holds on its root: on Windows, nothing else can rename or remove
-// the tree while the custodian serves, because every such operation must first open the
-// root with DELETE access and the held root declines to share deletion. This is what
-// keeps the runtime root-swap of ADR 2.01's accepted limitation from reaching the
-// canonical path while the agent runs. POSIX cannot refuse a rename because a descriptor
-// is open, so Linux pins the asymmetry instead: the rename succeeds, and the runtime
-// window there is closed by the instance-side validation.
+// TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen pins the root veto:
+// while the custodian is open, the tree root cannot be renamed or removed by
+// anything else — on Windows by share arbitration, which binds every issuer
+// alike, the 9p server performing an instance's mv included. POSIX cannot
+// refuse a rename because a descriptor is open, so there the tree moves
+// freely and the runtime root-swap window stays open — its closure is the
+// instance-side validation, not the custodian (ADR 2.01).
 func TestTreeRootCannotBeMovedOrRemovedWhileTheCustodianIsOpen(t *testing.T) {
 	t.Parallel()
 

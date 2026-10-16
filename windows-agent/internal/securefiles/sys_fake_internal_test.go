@@ -111,6 +111,12 @@ func TestRenameFallsBackToTheDegradedClass(t *testing.T) {
 					"Setup: could not plant the node")
 				return &fakeSys{
 					dir: dir,
+					// The planted node reads as the custodian's own, so the
+					// ownership check passes and the case observes the class
+					// fallback alone.
+					readStampFn: func(*os.File) (stamp, bool, error) {
+						return fileStamp(), true, nil
+					},
 					renameReplaceFn: func(_ *os.File, _, _ string, posix bool) error {
 						calls = append(calls, posix)
 						if len(calls) == 1 {
@@ -298,8 +304,9 @@ func TestIsOwnedAnswersNotOwnedForDirectories(t *testing.T) {
 
 // TestOpenRefusesAnUnopenableRoot pins the refusal of a root the platform
 // established but the custodian cannot open — here a plain file standing at
-// the base path — and that whatever the platform held before the refusal is
-// released.
+// the base path, the shape TestOpenErrors pins through the public Open — and
+// that whatever the platform held before the refusal is released, which is
+// the part only the fake can observe.
 func TestOpenRefusesAnUnopenableRoot(t *testing.T) {
 	t.Parallel()
 
@@ -454,10 +461,18 @@ func openFake(t *testing.T, configure func(dir string) *fakeSys) (*Custodian, er
 
 // fakeSys is a platformSys whose every mechanism is a configurable stand-in,
 // so the custodian's policy can be exercised without the real filesystem
-// being able to produce the condition under test. The defaults answer what
-// open() needs to hand out a custodian; an operation the case does not
-// configure answers a panic naming the method, so a forgotten wire fails the
-// test loudly rather than silently.
+// being able to produce the condition under test.
+//
+// The defaults are split by when they run. The construction-time mechanisms
+// (establishRoot, identity, sub, attach, release) answer what open() needs to
+// hand out a custodian — a root established, an identity that matches, no
+// hold to take — because every case needs that plumbing and no verdict rests
+// on it. Every other mechanism the case does not configure answers a panic
+// naming the method, so a forgotten wire fails the test loudly rather than
+// silently. openNode is the one exception with a working default: most cases
+// need a real node opened, and the default honours the contract's rule for it
+// — a link standing at the name is refused, never followed — so a case riding
+// the default cannot pass a policy that follows one.
 type fakeSys struct {
 	// dir is the tree the fake stands in for, so a case can answer with real
 	// files where the policy reads through the node it was handed.
@@ -481,6 +496,9 @@ type fakeSys struct {
 	remoteVolumeFn func(string) (bool, volumeKind)
 }
 
+// establishRoot defaults to an established root, so open() can hand out a
+// custodian: the real tree at dir stands in for the one the default claims to
+// have created. See the fakeSys doc for the split between defaults and panics.
 func (s *fakeSys) establishRoot() (fileIdentity, bool, error) {
 	if s.establishRootFn != nil {
 		return s.establishRootFn()
@@ -534,6 +552,16 @@ func (s *fakeSys) openNode(rel string, profile openProfile) (*os.File, error) {
 	if s.openNodeFn != nil {
 		return s.openNodeFn(rel, profile)
 	}
+	// The default is the contract, not a shortcut: a link standing at the name
+	// answers ErrPathEscapes, never its target. The lstat-then-open pair is
+	// good enough for a stand-in; the real platforms refuse in the open itself.
+	fi, err := os.Lstat(filepath.Join(s.dir, rel))
+	if err != nil {
+		return nil, err
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return nil, ErrPathEscapes
+	}
 	return os.Open(filepath.Join(s.dir, rel))
 }
 
@@ -541,7 +569,7 @@ func (s *fakeSys) readStamp(f *os.File) (stamp, bool, error) {
 	if s.readStampFn != nil {
 		return s.readStampFn(f)
 	}
-	return fileStamp(), true, nil
+	panic("fakeSys.readStamp is not configured by the case")
 }
 
 func (s *fakeSys) renameReplace(f *os.File, oldRel, newRel string, posix bool) error {
