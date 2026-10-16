@@ -40,12 +40,10 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+// The subtests run serially and install their own log hook: they all capture the
+// shared global logrus logger, and parallel hooks would let one case remove another's
+// hook or satisfy another's log assertions.
 func TestNew(t *testing.T) {
-	t.Parallel()
-
-	hook := test.NewGlobal()
-	t.Cleanup(hook.Reset)
-
 	testCases := map[string]struct {
 		breakConfig      bool
 		breakNewDistroDB bool
@@ -74,7 +72,9 @@ func TestNew(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			hook := test.NewGlobal()
+			t.Cleanup(hook.Reset)
+
 			ctx := t.Context()
 
 			if (tc.breakCertificates || tc.staleDistroData) && (runtime.GOOS == "windows" || os.Geteuid() == 0) {

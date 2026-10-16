@@ -75,7 +75,7 @@ func TestCreateNode(t *testing.T) {
 				}
 			}
 			if tc.failCreation != 0 {
-				cust.FailCreation(tc.failCreation)
+				cust.failCreation(tc.failCreation)
 			}
 
 			created, err := cust.sys.createNode(node, tc.isDir)
@@ -264,7 +264,7 @@ func TestNTPathEncodingIsRefused(t *testing.T) {
 		},
 		"rename source": {
 			seedFile: true,
-			call:     func(s *platformSys) error { return s.renameNode(bad, "moved.txt") },
+			call:     func(s *platformSys) error { return s.renameNode(bad, "moved.txt", nil) },
 			after: func(t *testing.T, dir string) {
 				t.Helper()
 				require.FileExists(t, filepath.Join(dir, "good"), "a truncated path must not move the shorter node")
@@ -326,10 +326,10 @@ func TestRenameNode(t *testing.T) {
 
 			require.NoError(t, cust.WriteFile("src.txt", []byte("payload")), "Setup: could not seed the source")
 			if tc.withoutRenameInfoEx {
-				cust.WithoutRenameInfoEx()
+				cust.withoutRenameInfoEx()
 			}
 
-			err = cust.sys.renameNode("src.txt", tc.to)
+			err = cust.sys.renameNode("src.txt", tc.to, nil)
 			if tc.wantErr {
 				require.Error(t, err, "the rename should have been refused")
 				require.FileExists(t, filepath.Join(dir, "src.txt"), "the source must survive a refused rename")
@@ -494,7 +494,7 @@ func TestOpenRefusesAnUnstampableRoot(t *testing.T) {
 				require.NoError(t, os.MkdirAll(rootDir, DirMode), "Setup: could not pre-create the root")
 			}
 
-			cust, err := OpenRefusingCreation(rootDir, uint32(tc.failStatus))
+			cust, err := openRefusingCreation(rootDir, uint32(tc.failStatus))
 			require.Error(t, err, "a root that cannot be stamped must not be served")
 			require.Nil(t, cust, "no custodian may be handed out for a refused root")
 		})
@@ -536,7 +536,7 @@ func TestStampingAnExistingNodeIsRefused(t *testing.T) {
 				// in the creation itself and never reaches NtSetEaFile.
 				require.NoError(t, os.MkdirAll(rootDir, DirMode), "Setup: could not pre-create the root")
 
-				cust, err := OpenRefusingStamp(rootDir, uint32(tc.failStatus))
+				cust, err := openRefusingStamp(rootDir, uint32(tc.failStatus))
 				require.Error(t, err, "a root that cannot be stamped must not be served")
 				require.Nil(t, cust, "no custodian may be handed out for a refused root")
 				return
@@ -552,7 +552,7 @@ func TestStampingAnExistingNodeIsRefused(t *testing.T) {
 			require.NoError(t, err, "Setup: could not create the sub-tree")
 			require.NoError(t, sub.Close(), "Setup: could not close the sub-tree")
 
-			cust.FailStamping(uint32(tc.failStatus))
+			cust.failStamping(uint32(tc.failStatus))
 
 			sub, err = cust.Subdir("sub")
 			require.Error(t, err, "a sub-tree that cannot be stamped must not be served")
@@ -608,5 +608,93 @@ func TestEnsureRootRefusesARedirectedRoot(t *testing.T) {
 			require.NoError(t, err, "the custodian should have established its root")
 			require.NoError(t, sys.Close())
 		})
+	}
+}
+
+// openRefusingStamp opens a custodian on a platform whose extended-attribute writes fail
+// from the outset, standing in for a volume that refuses them.
+func openRefusingStamp(basePath string, status uint32) (*Custodian, error) {
+	return open(basePath, func(p string) (*platformSys, error) {
+		nt := realNtCalls()
+		nt.setEaFile = func(windows.Handle, []byte) error { return windows.NTStatus(status) }
+		return newPlatformSysWith(p, nt)
+	})
+}
+
+// openRefusingCreation opens a custodian whose root creation fails with status, standing
+// in for a volume or an ACL that refuses the node the stamp needs.
+func openRefusingCreation(basePath string, status uint32) (*Custodian, error) {
+	return open(basePath, func(p string) (*platformSys, error) {
+		nt := realNtCalls()
+		nt.createFile = func(*windows.Handle, uint32, *windows.OBJECT_ATTRIBUTES, *windows.IO_STATUS_BLOCK, uint32, uint32, uint32, uint32, []byte) error {
+			return windows.NTStatus(status)
+		}
+		return newPlatformSysWith(p, nt)
+	})
+}
+
+// failStamping makes every later extended-attribute write on this custodian fail.
+func (c *Custodian) failStamping(status uint32) {
+	if c.sys == nil {
+		return
+	}
+	c.sys.mu.Lock()
+	defer c.sys.mu.Unlock()
+	c.sys.nt.setEaFile = func(windows.Handle, []byte) error { return windows.NTStatus(status) }
+}
+
+// failCreation makes node creation on this custodian fail with status.
+func (c *Custodian) failCreation(status uint32) {
+	if c.sys == nil {
+		return
+	}
+	c.sys.mu.Lock()
+	defer c.sys.mu.Unlock()
+	c.sys.nt.createFile = func(*windows.Handle, uint32, *windows.OBJECT_ATTRIBUTES, *windows.IO_STATUS_BLOCK, uint32, uint32, uint32, uint32, []byte) error {
+		return windows.NTStatus(status)
+	}
+}
+
+// TestRenameSurfacesAQueryFailure pins that a watermark the custodian cannot read is
+// not answered as not-owned: the filesystem error must ride along the sentinel, so a
+// log caller sees why the verification failed and keeps its replace-on-unverifiable
+// policy instead of mistaking a broken query for a foreign node.
+func TestRenameSurfacesAQueryFailure(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	rootDir := filepath.Join(dir, ".ubuntupro")
+	cust, err := Open(rootDir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer cust.Close()
+
+	const node = "log"
+	require.NoError(t, cust.WriteFile(node, []byte("x")), "Setup: could not create the node")
+
+	cust.sys.mu.Lock()
+	cust.sys.nt.queryEaFile = func(windows.Handle, []byte) (int, error) {
+		return 0, windows.STATUS_ACCESS_DENIED
+	}
+	cust.sys.mu.Unlock()
+
+	err = cust.Rename(node, "log.old")
+	require.ErrorIs(t, err, ErrNotOwned, "an unverifiable node must keep the not-owned identity")
+	require.ErrorContains(t, err, "could not query the watermark", "the cause must ride along the sentinel")
+}
+
+// withoutRenameInfoEx makes the first rename attempt report the information class as
+// unimplemented, as a volume predating FILE_RENAME_INFORMATION_EX does.
+func (c *Custodian) withoutRenameInfoEx() {
+	if c.sys == nil {
+		return
+	}
+	c.sys.mu.Lock()
+	defer c.sys.mu.Unlock()
+	passthrough := c.sys.nt.setInformationFile
+	c.sys.nt.setInformationFile = func(h windows.Handle, iosb *windows.IO_STATUS_BLOCK, buf []byte, class uint32) error {
+		if class == fileRenameInformationEx {
+			return windows.STATUS_NOT_IMPLEMENTED
+		}
+		return passthrough(h, iosb, buf, class)
 	}
 }

@@ -511,9 +511,11 @@ func TestSubScopedCustodianCloudInitPurge(t *testing.T) {
 // nodes are left untouched, whatever their name or content, and unstamped nodes
 // are purged (a per-distro-looking one at error level, as it smells like
 // tampering). The agent's own file is always regenerated afterwards.
+//
+// The subtests run serially: each installs a hook on the shared global logrus
+// logger, and parallel add/reset of that hook would let one case remove another's
+// hook or answer another's log assertions.
 func TestStartupPurge(t *testing.T) {
-	t.Parallel()
-
 	testCases := map[string]struct {
 		// seedStamped are written through the custodian, so they carry the watermark.
 		seedStamped map[string]string
@@ -592,8 +594,6 @@ func TestStartupPurge(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			if tc.seedUnremovable != "" && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
 				t.Skip("read-only directory semantics require a non-root Unix user")
 			}

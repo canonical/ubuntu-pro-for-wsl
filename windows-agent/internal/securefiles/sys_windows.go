@@ -70,6 +70,7 @@ const fileRenameInformationEx = 65
 // implement.
 type ntCalls struct {
 	setEaFile          func(h windows.Handle, ea []byte) error
+	queryEaFile        func(h windows.Handle, buf []byte) (int, error)
 	createFile         func(handle *windows.Handle, access uint32, oa *windows.OBJECT_ATTRIBUTES, iosb *windows.IO_STATUS_BLOCK, attrs, share, disp, opts uint32, ea []byte) error
 	setInformationFile func(h windows.Handle, iosb *windows.IO_STATUS_BLOCK, buf []byte, class uint32) error
 	identity           func(h windows.Handle) (fileIdentity, bool)
@@ -95,6 +96,11 @@ func realNtCalls() ntCalls {
 		setEaFile: func(h windows.Handle, ea []byte) error {
 			var iosb windows.IO_STATUS_BLOCK
 			return windows.NtSetEaFile(h, &iosb, &ea[0], uint32(len(ea))) //#nosec G115 // length of a small EA buffer; always fits in 32 bits.
+		},
+		queryEaFile: func(h windows.Handle, buf []byte) (int, error) {
+			var iosb windows.IO_STATUS_BLOCK
+			err := windows.NtQueryEaFile(h, &iosb, &buf[0], uint32(len(buf)), false, nil, 0, nil, true) //#nosec G115 // length of a small EA buffer; always fits in 32 bits.
+			return int(iosb.Information), err                                                           //#nosec G115 // a successful query fills at most len(buf); int is Go's natural slice length.
 		},
 		createFile: func(handle *windows.Handle, access uint32, oa *windows.OBJECT_ATTRIBUTES, iosb *windows.IO_STATUS_BLOCK, attrs, share, disp, opts uint32, ea []byte) error {
 			return windows.NtCreateFile(
@@ -131,8 +137,9 @@ func newPlatformSysWith(basePath string, nt ntCalls) (*platformSys, error) {
 // newSubPlatformSys returns a platformSys for a sub-directory the parent custodian has
 // already created and stamped. It deliberately does no path walk of its own: the node is
 // reached through the parent's root handle, and re-resolving its absolute path here would
-// step outside the containment the parent established. The syscall surface is shared so a
-// seam installed on the parent reaches the sub-tree it hands out.
+// step outside the containment the parent established. The syscall surface is inherited
+// as it stands at the handout: a seam installed on the parent before Subdir governs the
+// sub-tree too; one installed after does not reach an already-handed-out child.
 func newSubPlatformSys(parent *platformSys) *platformSys {
 	return &platformSys{
 		rootHandle: windows.InvalidHandle,
@@ -175,6 +182,11 @@ func (s *platformSys) stampSubdir(rel string) error {
 // setRoot derives the root directory handle used for relative NtCreateFile
 // calls from the os.Root, so EA-stamped creation is rooted at the same
 // directory that provides structural containment.
+//
+// Construction-time only: this runs while the custodian is still being built,
+// before it is reachable from any other goroutine, so the fields it writes
+// need no mutex. Moving it behind a serving custodian would race every
+// operation reading s.rootHandle and must take s.mu.
 func (s *platformSys) setRoot(root *os.Root) error {
 	// A second, independent resolution of the path ensureRoot already created, stamped
 	// and held. os.Root contains the names opened through it, not its own root, and
@@ -325,7 +337,7 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	}
 	defer closeHandle(h)
 
-	uid, gid, mode, err := ntQueryLxEa(h)
+	uid, gid, mode, err := ntQueryLxEa(s.nt, h)
 	if err != nil {
 		return false, err
 	}
@@ -484,7 +496,7 @@ func (s *platformSys) openDirNoReparse(relDir string) (windows.Handle, error) {
 		windows.FILE_ATTRIBUTE_DIRECTORY, windows.FILE_DIRECTORY_FILE)
 }
 
-func (s *platformSys) renameNode(oldRel, newRel string) error {
+func (s *platformSys) renameNode(oldRel, newRel string, expect *os.File) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -497,9 +509,23 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	// Ensure the source node is already owned. Stamping in place after rename is
 	// rejected because it leaves a window where unstamped content is published
 	// and cannot revoke descriptors already open on the source.
-	uid, gid, mode, err := ntQueryLxEa(handle)
-	if err != nil || uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
+	uid, gid, mode, err := ntQueryLxEa(s.nt, handle)
+	if err != nil {
+		// A watermark that cannot be read is not an answer about the node: surface
+		// the filesystem error, but keep the not-owned identity so the caller keeps
+		// treating the node as unverifiable rather than as owned.
+		return fmt.Errorf("could not query the watermark of %s: %w", oldRel, errors.Join(err, ErrNotOwned))
+	}
+	if uid != 0 || gid != 0 || (mode != stampedFileMode() && mode != 040700) {
 		return ErrNotOwned
+	}
+
+	// A caller that wrote through its own descriptor can name the node it expects to
+	// publish. Ownership alone would let a name swapped in the write-publish window
+	// move some other stamped node into the destination; the identity is what makes
+	// the publish answer for exactly the bytes the caller wrote.
+	if expect != nil && !sameNode(handle, windows.Handle(expect.Fd())) {
+		return fmt.Errorf("%s no longer holds the node the write went to: %w", oldRel, ErrNotOwned)
 	}
 
 	// Resolve the destination parent directory handle safely without following reparse points.
@@ -521,7 +547,9 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		return err
 	}
 
-	nameBytesLen := (len(leaf16) - 1) * 2
+	name := leaf16[:len(leaf16)-1] // drop the NUL terminator
+
+	nameBytesLen := len(name) * 2
 	infoSize := unsafe.Sizeof(fileRenameInfoStruct{}) + uintptr(nameBytesLen) - 2 //#nosec G115 // byte length of a short relative path; far below uintptr range.
 
 	buf := make([]byte, infoSize)
@@ -529,7 +557,7 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	info.RootDirectory = targetParentHandle
 	info.FileNameLength = uint32(nameBytesLen) //#nosec G115 // rename target byte length; a short relative path, always fits in 32 bits.
 
-	copy((*[1 << 20]byte)(unsafe.Pointer(&info.FileName[0]))[:nameBytesLen], (*[1 << 20]byte)(unsafe.Pointer(&leaf16[0]))[:nameBytesLen]) //#nosec G103 // fixed-size overlay over the rename-info buffer, only ever sliced to the real name length.
+	copy(unsafe.Slice(&info.FileName[0], len(name)), name) //#nosec G103 // FileName declares only its first element; the slice overlays the buffer's tail, which was sized to hold the name.
 
 	// POSIX semantics is what allows the replacement to happen while readers still
 	// hold the destination open, which is the whole point of publishing by rename:
@@ -546,6 +574,22 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 	}
 
 	return mapNtStatus(errSet)
+}
+
+// sameNode answers whether two open handles reach the same file: the same volume and
+// the same file index. An identity that cannot be read is not an identity, so a query
+// failure answers no rather than guessing.
+func sameNode(a, b windows.Handle) bool {
+	var ia, ib windows.ByHandleFileInformation
+	if err := windows.GetFileInformationByHandle(a, &ia); err != nil {
+		return false
+	}
+	if err := windows.GetFileInformationByHandle(b, &ib); err != nil {
+		return false
+	}
+	return ia.VolumeSerialNumber == ib.VolumeSerialNumber &&
+		ia.FileIndexHigh == ib.FileIndexHigh &&
+		ia.FileIndexLow == ib.FileIndexLow
 }
 
 // mapNtStatus translates an NT status into a Go error, recognising the two conditions the
@@ -662,20 +706,29 @@ func (s *platformSys) resolvedBasePath() string {
 		return ""
 	}
 
+	// MAX_LONG_PATH covers every path the kernel forms, so the retry below is a
+	// safety net for volumes that over-answer, not the expected route: falling back
+	// to "" would silently hide a remote base from CheckProjection.
 	buf := make([]uint16, windows.MAX_LONG_PATH)
-	n, err := windows.GetFinalPathNameByHandle(s.rootHandle, &buf[0], uint32(len(buf)), 0) //#nosec G115 // fixed-size path buffer; always fits in 32 bits.
-	if err != nil || n == 0 {
-		return ""
+	for {
+		n, err := windows.GetFinalPathNameByHandle(s.rootHandle, &buf[0], uint32(len(buf)), 0) //#nosec G115 // buffer length; always fits in 32 bits.
+		if errors.Is(err, windows.ERROR_INSUFFICIENT_BUFFER) && n > uint32(len(buf)) {         //#nosec G115 // the failure names the size needed; always fits.
+			buf = make([]uint16, n)
+			continue
+		}
+		if err != nil || n == 0 {
+			return ""
+		}
+		return windows.UTF16ToString(buf[:n])
 	}
-	return windows.UTF16ToString(buf[:n])
 }
 
 // ntQueryLxEa reads the $LXUID, $LXGID and $LXMOD extended attributes of the
 // node behind h.
-func ntQueryLxEa(h windows.Handle) (uid, gid, mode uint32, err error) {
-	var iosb windows.IO_STATUS_BLOCK
+func ntQueryLxEa(nt ntCalls, h windows.Handle) (uid, gid, mode uint32, err error) {
 	buf := make([]byte, 2048)
-	if err := windows.NtQueryEaFile(h, &iosb, &buf[0], uint32(len(buf)) /* #nosec G115 */, false, nil, 0, nil, true); err != nil {
+	n, err := nt.queryEaFile(h, buf)
+	if err != nil {
 		var status windows.NTStatus
 		if errors.As(err, &status) {
 			return 0, 0, 0, status.Errno()
@@ -683,7 +736,7 @@ func ntQueryLxEa(h windows.Handle) (uid, gid, mode uint32, err error) {
 		return 0, 0, 0, err
 	}
 
-	eas, err := winio.DecodeExtendedAttributes(buf[:iosb.Information])
+	eas, err := winio.DecodeExtendedAttributes(buf[:n])
 	if err != nil {
 		return 0, 0, 0, err
 	}

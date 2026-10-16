@@ -163,7 +163,7 @@ func (s *platformSys) createNode(rel string, isDir bool) (*os.File, error) {
 	return f, nil
 }
 
-func (s *platformSys) renameNode(oldRel, newRel string) error {
+func (s *platformSys) renameNode(oldRel, newRel string, expect *os.File) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -187,7 +187,26 @@ func (s *platformSys) renameNode(oldRel, newRel string) error {
 		}
 	}
 
+	// A caller that wrote through its own descriptor can name the node it expects to
+	// publish. Ownership alone would let a name swapped in the write-publish window
+	// move some other stamped node into the destination; the identity is what makes
+	// the publish answer for exactly the bytes the caller wrote.
+	if expect != nil && !sameNode(f, expect) {
+		return fmt.Errorf("%s no longer holds the node the write went to: %w", oldRel, ErrNotOwned)
+	}
+
 	return s.root.Rename(oldRel, newRel)
+}
+
+// sameNode answers whether two open files are the same node: the same device and
+// the same inode. An identity that cannot be read is not an identity, so a query
+// failure answers no rather than guessing.
+func sameNode(a, b *os.File) bool {
+	var sa, sb unix.Stat_t
+	if unix.Fstat(int(a.Fd()), &sa) != nil || unix.Fstat(int(b.Fd()), &sb) != nil { //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
+		return false
+	}
+	return sa.Dev == sb.Dev && sa.Ino == sb.Ino
 }
 
 // isOwned reports whether the node carries the custodian's watermark and still
@@ -207,13 +226,20 @@ func (s *platformSys) isOwned(rel string) (bool, error) {
 	return ownedByWatermark(s.xattr, int(f.Fd())) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 }
 
-// probeXattrs reports why the filesystem behind fd cannot carry the watermark, or nil.
+// probeXattrs reports why the filesystem behind fd cannot carry the watermark, or nil
+// when its support was established.
 // Listing leaves no trace of its own, which is also its limit: it asks a directory whether
 // attributes can be listed, while stamping asks a file to store one, so it is the first
 // refusal rather than the only one.
 func probeXattrs(xattr xattrCalls, fd int) error {
-	if _, err := xattr.list(fd, nil); isXattrUnsupported(err) {
+	_, err := xattr.list(fd, nil)
+	if isXattrUnsupported(err) {
 		return fmt.Errorf("%w: %w", ErrNoWatermarkSupport, err)
+	}
+	// Anything else is a refusal too: an unexplained probe failure is no evidence
+	// that stamping works, and the constructor fails closed on it.
+	if err != nil {
+		return fmt.Errorf("could not establish watermark support: %w", err)
 	}
 	return nil
 }

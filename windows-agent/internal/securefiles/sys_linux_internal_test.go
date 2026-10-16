@@ -29,6 +29,29 @@ func TestXattrErrorClassification(t *testing.T) {
 	require.False(t, isXattrMissing(nil))
 }
 
+// TestXattrProbeRefusesUnexplainedFailures pins that a probe failing for any reason
+// other than "this filesystem cannot carry the watermark" refuses the tree too: an
+// unexplained failure is no evidence that stamping works, and the constructor fails
+// closed on it rather than handing out a tree it could not establish the capability for.
+func TestXattrProbeRefusesUnexplainedFailures(t *testing.T) {
+	testCases := map[string]error{
+		"an EPERM probe is not a capability answer": unix.EPERM,
+		"an EIO probe is not a capability answer":   unix.EIO,
+	}
+	for name, probeErr := range testCases {
+		t.Run(name, func(t *testing.T) {
+			openCalls := realXattrCalls()
+			openCalls.list = func(int, []byte) (int, error) { return 0, probeErr }
+
+			c, err := openWithXattrs(t.TempDir(), openCalls)
+			require.Error(t, err, "an unexplained probe failure must refuse the tree")
+			require.Nil(t, c, "no custodian may be handed out on an unexplained probe failure")
+			require.NotErrorIs(t, err, ErrNoWatermarkSupport,
+				"the refusal must not claim the watermark is unsupported")
+		})
+	}
+}
+
 // TestXattrFailures pins that a filesystem which cannot carry the watermark is refused
 // rather than served. The agent's credentials live in this sub-tree, so a sub-tree no
 // instance sees as root-owned would publish them to every unprivileged process; refusing
@@ -222,3 +245,20 @@ func TestRenameChecksOwnershipOnLinux(t *testing.T) {
 		})
 	}
 }
+// openWithXattrs opens a custodian over the given xattr surface, so a filesystem that
+// refuses or mishandles extended attributes can be stood in for.
+func openWithXattrs(basePath string, xattr xattrCalls) (*Custodian, error) {
+	return open(basePath, func(p string) (*platformSys, error) { return newPlatformSysWith(p, xattr) })
+}
+
+// failXattr replaces the xattr surface of an already-open custodian, for the cases where
+// the failure has to begin after the sub-tree has been seeded.
+func (c *Custodian) failXattr(xattr xattrCalls) {
+	if c.sys == nil {
+		return
+	}
+	c.sys.mu.Lock()
+	defer c.sys.mu.Unlock()
+	c.sys.xattr = xattr
+}
+
