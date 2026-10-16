@@ -239,6 +239,15 @@ func (c *Custodian) WriteFile(name string, data []byte) error {
 	// be reclaimed while the write is in flight. It does not pin the name: the handle
 	// shares deletion, so a name planted or swapped in this window is answered by the
 	// checks below, not by the handle.
+	//
+	// The cleanup's errors are dropped on purpose, each for its own reason. After a
+	// successful publish the temporary's name no longer exists, so the Remove answers
+	// ErrNotExist — the success showing through, not a failure; and a Close cannot
+	// unpublish what the rename already made visible, since the bytes travel through
+	// the descriptor, not the name. On a failed publish the caller already holds the
+	// decisive error: joining a leftover temporary's cleanup onto it would dress a
+	// pollution complaint up as part of the verdict, and nothing the caller could do
+	// about it either way.
 	defer func() {
 		_ = tmp.Close()
 		_ = c.root.Remove(tmpRel)
