@@ -174,6 +174,9 @@ func (s *windowsSys) establishRoot() (id fileIdentity, known bool, err error) {
 		return fileIdentity{}, false, err
 	}
 
+	// Opened by name, without OBJ_DONT_REPARSE: a reparse point standing at
+	// an intermediate component of the parent path is followed, and the leaf's
+	// refusal is the relative open's to deliver below.
 	parentHandle, err := windows.CreateFile(
 		parentPath16,
 		windows.GENERIC_READ|windows.FILE_WRITE_DATA|windows.FILE_APPEND_DATA|windows.FILE_LIST_DIRECTORY,

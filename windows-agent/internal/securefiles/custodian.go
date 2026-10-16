@@ -55,6 +55,12 @@ var (
 // ".." escapes and symlinks whose target points outside are rejected by the standard library rather than
 // by hand-written path checks. A sub-custodian owns a nested os.Root opened at its own directory, so it
 // is structurally incapable of naming a sibling's subtree.
+//
+// Operations on one custodian are atomic at syscall granularity, nothing
+// more: concurrent operations on overlapping names can interleave between a
+// verification and the act it authorizes, and only the write-publish path
+// carries a handle tying its rename to the verified node. Close is the one
+// operation with a cross-call contract, documented on the method.
 type Custodian struct {
 	root     *os.Root
 	basePath string
@@ -170,6 +176,9 @@ func (c *Custodian) Subdir(subDir string) (*Custodian, error) {
 		// What the check cannot answer, and a link that cannot be removed, refuse
 		// the sub-tree: the nested root below must never be opened through
 		// something unchecked, so nothing is stamped before the attribute answers.
+		// Concurrent Subdir calls on the same name can race these steps; the
+		// outcomes fail closed — a spurious removal complaint or the create's
+		// collision — never a serve through something unchecked.
 		var reparse bool
 		reparse, err = c.sys.isLink(rel)
 		if err == nil {
@@ -375,6 +384,16 @@ func (c *Custodian) AppendFile(name string) (*os.File, error) {
 }
 
 // Remove deletes the named node relative to the custodian's sub-tree.
+//
+// Removal resolves through the os.Root, the package's one tier that follows
+// an in-tree link standing at an intermediate component of the name. The
+// leaf is never followed — a link there is removed, not traversed — and
+// RemoveAll, Purge and PurgeAll resolve the same way; every non-removal
+// operation refuses a link at any component through the platform layer
+// instead. What keeps a followed intermediate from redirecting a removal is
+// the ADR 2.01 premise plus the heal and the purge clearing first-level
+// plants: nothing unprivileged writes inside a stamped tree, so no link
+// stands inside one after it is stamped.
 func (c *Custodian) Remove(name string) error {
 	rel, err := c.resolve(name)
 	if err != nil {
@@ -597,6 +616,11 @@ func open(basePath string, newSys func(string) platformSys) (*Custodian, error) 
 	// from inside an instance (ADR 2.01), so between the two resolutions it
 	// can be made to point elsewhere. Identity ties them to one node: a
 	// mismatch is a failed verification rather than a redirect to serve.
+	// The tie sees a swap made between the two resolutions, not one already
+	// standing: both travel the parent path by name, so a link planted in an
+	// ancestor and left there redirects both consistently. The leaf is the
+	// platform's to refuse (establishRoot's no-follow open); the ancestors of
+	// the parent are resolved by name, on both platforms.
 	//
 	// A platform that could not identify the root is conceded once, at the
 	// first resolution: nothing was recorded, so there is nothing to compare.

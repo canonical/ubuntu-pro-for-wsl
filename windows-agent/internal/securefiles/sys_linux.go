@@ -203,6 +203,9 @@ func (s *doubleSys) attach(root *os.Root) error {
 	if err != nil {
 		return err
 	}
+	// The dup shares its open file description with the os.Root's descriptor,
+	// so this flag write lands on both; a no-op today, since the Root opens
+	// "." blocking, but stated so the shared description is not a surprise.
 	if err := unix.SetNonblock(fd, false); err != nil {
 		_ = unix.Close(fd)
 		return err
@@ -367,6 +370,10 @@ func (s *doubleSys) openNode(rel string, profile openProfile) (*os.File, error) 
 	// where openat's O_NOFOLLOW guarded the final component alone.
 	// RESOLVE_BENEATH backstops the lexical checks: an absolute component or
 	// an escaping ".." answers EXDEV instead of resolving out of the tree.
+	// Mounts are a channel the flags do not close: RESOLVE_BENEATH and
+	// RESOLVE_NO_SYMLINKS say nothing about bind mounts or automounts inside
+	// the tree, which OBJ_DONT_REPARSE refuses along with every other reparse
+	// kind; planting one takes privileges the threat model withholds.
 	// No fallback on a kernel without openat2 — the open fails loudly rather
 	// than following anything.
 	fd, err := unix.Openat2(s.rootFD, rel, &unix.OpenHow{
@@ -395,8 +402,10 @@ func classifyOpenErr(err error) error {
 // the verdict "this node carries none", not a failure to read one; any other
 // failure cannot answer and is returned as the error.
 func (s *doubleSys) readStamp(f *os.File) (st stamp, ok bool, err error) {
-	// Oversized against the stamp so a tamperer's value of any shape is read
-	// whole and judged, not answered by a buffer-size error.
+	// Oversized against the stamp, so a tamperer's value of a plausible shape
+	// is read whole and judged by its content, not its size. A value longer
+	// than the buffer answers ERANGE — an error, not a verdict — which fails
+	// closed with the caller's unreadable-stamp handling.
 	buf := make([]byte, 32)
 	n, err := s.stamps.get(int(f.Fd()), buf) //#nosec G115 // a file descriptor is a small non-negative int; uintptr->int is the os.File.Fd contract.
 	if err != nil {
@@ -495,7 +504,9 @@ func (s *doubleSys) isLink(rel string) (bool, error) {
 
 // finalPath answers the path the double was constructed at: POSIX keeps no
 // second, final name for a directory, so that is as resolved as this platform
-// gets.
+// gets. For a sub-custodian that is the tree root's name — sub copies the
+// parent's basePath — where the Windows layer answers the held node's own
+// path, which is what a projection verdict asked about a sub-tree would see.
 func (s *doubleSys) finalPath() string {
 	return s.basePath
 }

@@ -32,11 +32,14 @@ type fileIdentity struct {
 
 // openProfile is the access a caller needs the node opened with: openRead
 // answers questions about the node, openRename is the profile the
-// publish-by-rename path needs, where the platform renames through the
-// descriptor, so that the verification and the rename answer for the same
-// node; openAppend is the append-only profile, whose writes go to the end of
-// the node on the kernel's own authority; openDir lists a directory. Every
-// profile opens the node itself, never the target of a link.
+// publish-by-rename path needs, where the rename must answer for the node
+// the verification read — Windows renames through the descriptor, so the
+// answer travels with the node itself, while POSIX renames by name, so the
+// answer rests on the name still holding the node (ADR 2.01: nothing
+// unprivileged writes inside a stamped tree); openAppend is the append-only
+// profile, whose writes go to the end of the node on the kernel's own
+// authority; openDir lists a directory. Every profile opens the node itself,
+// never the target of a link.
 type openProfile int
 
 const (
