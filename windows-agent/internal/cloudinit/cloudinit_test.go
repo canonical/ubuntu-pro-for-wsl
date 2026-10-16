@@ -40,17 +40,6 @@ url = www.example.com/new/rickroll
 hostagent_uid = landscapeUID1234
 `
 
-func newCloudInitCustodian(t *testing.T) *securefiles.Custodian {
-	t.Helper()
-	publicDir := t.TempDir()
-	c, err := securefiles.Open(filepath.Join(publicDir, ".cloud-init"))
-	require.NoError(t, err, "Setup: could not open cloud-init custodian")
-	// The custodian holds an open handle on its root directory, which on Windows blocks
-	// removing that directory: it must be closed before the TempDir cleanup runs.
-	t.Cleanup(func() { _ = c.Close() })
-	return c
-}
-
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -382,7 +371,7 @@ func TestUpdateDoesNotLeavePartialContent(t *testing.T) {
 		landscapeConf: landscapeConfigNew,
 	}
 	ci, err := cloudinit.New(ctx, conf, custodian)
-	require.NoError(t, err)
+	require.NoError(t, err, "Setup: cloud-init New should return no errors")
 
 	// Pre-compute every complete blob the writer will publish, so the concurrent reader can
 	// reject torn reads even when the fragment is itself parseable YAML. Recording the set
@@ -425,6 +414,9 @@ func TestUpdateDoesNotLeavePartialContent(t *testing.T) {
 					readerErr = fmt.Errorf("observed partial/foreign content not matching any published blob: %q", data)
 					return
 				}
+				// Pace the spin: the race it samples lives in the writer's
+				// renames, which need no reader at full tilt to be caught.
+				time.Sleep(100 * time.Microsecond)
 			}
 		}
 	}()
@@ -538,6 +530,9 @@ func TestStartupPurge(t *testing.T) {
 			wantLogContains: "pre-stamp",
 			quietAbout:      []string{"ForeignDistro.user-data"},
 		},
+		// The absence pin can only pass — nothing seeds LoneDistro.user-data — but it
+		// stays, so the row keeps saying its contract: user-data is not conjured for a
+		// distro that never had one.
 		"Preserves a lone meta-data file": {
 			seedStamped: map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},
 			wantFiles:   map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},
@@ -653,7 +648,20 @@ func TestStartupPurge(t *testing.T) {
 	}
 }
 
+func newCloudInitCustodian(t *testing.T) *securefiles.Custodian {
+	t.Helper()
+	publicDir := t.TempDir()
+	c, err := securefiles.Open(filepath.Join(publicDir, ".cloud-init"))
+	require.NoError(t, err, "Setup: could not open cloud-init custodian")
+	// The custodian holds an open handle on its root directory, which on Windows blocks
+	// removing that directory: it must be closed before the TempDir cleanup runs.
+	t.Cleanup(func() { _ = c.Close() })
+	return c
+}
+
 // loggedAt reports whether the hook captured an entry at the given level containing substr.
+// The level is matched exactly, unlike the quiet check, which reads entries at every
+// level: churn said too loudly is still churn, whatever level it arrived at.
 func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
 	for _, entry := range hook.AllEntries() {
 		if entry.Level == level && strings.Contains(entry.Message, substr) {
