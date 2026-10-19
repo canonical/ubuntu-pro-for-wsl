@@ -22,7 +22,7 @@ not recommend this as a testing environment.
 ## Additional dependencies for Ubuntu Pro for WSL
 
 * Ubuntu 26.04 LTS installed in WSL
-* Visual Studio Community 2019 or above
+* Visual Studio Community 2022 or above
 * Go
 * Flutter
 * An Ubuntu Pro token
