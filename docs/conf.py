@@ -344,13 +344,5 @@ if "discourse_prefix" not in html_context and "discourse" in html_context:
 #     "snap": ("https://snapcraft.io/docs/", None),
 # }
 
-# Define a selector that only adds copy buttons to code blocks without the class `no-copy`
-copybutton_selector = "div:not(.no-copy) > div.highlight > pre"
-
-# TODO: deprecate in favor of terminal extension
-# Define prompts to be excluded from copying when a copy button is used
-copybutton_prompt_text = r"^.*?[\$>]\s+"
-copybutton_prompt_is_regexp = True
-
 # Enables GitHub-compatible syntax for diagrams
 myst_fence_as_directive = ["mermaid"]
