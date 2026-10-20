@@ -123,7 +123,10 @@ instances, you can still [pro-attach Ubuntu instances
 manually](https://documentation.ubuntu.com/pro-client/en/latest/howtoguides/how_to_attach/)
 without the app:
 
-```{code-block} text
+```{terminal}
+:prompt: $
+:copy:
+
 pro attach <token>
 ```
 

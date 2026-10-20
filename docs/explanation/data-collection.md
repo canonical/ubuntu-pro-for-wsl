@@ -39,8 +39,11 @@ During the consent prompt of the initial Ubuntu setup, you can view an example r
 
 Running the following command from within your WSL instance will generate a new report without writing it to disk or uploading it:
 
-```{code-block} text
-$ ubuntu-insights collect --dry-run
+```{terminal}
+:prompt: $
+:copy:
+
+ubuntu-insights collect --dry-run
 ```
 
 You may also navigate to `~/.cache/ubuntu-insights` within your WSL instance to see what has already been collected and what has been uploaded.
@@ -65,14 +68,20 @@ If this value is set, Ubuntu will refer to it instead of prompting for your cons
 
 To get the value:
 
-```{code-block} powershell
-> Get-ItemPropertyValue -Path "HKCU:\Software\Canonical\Ubuntu" -Name UbuntuInsightsConsent
+```{terminal}
+:prompt: PS>
+:copy:
+
+Get-ItemPropertyValue -Path "HKCU:\Software\Canonical\Ubuntu" -Name UbuntuInsightsConsent
 ```
 
 Advanced users may manually change the DWORD value of this registry key to either `0` or `1` to opt in or out respectively. For example, to opt in by default:
 
-```{code-block} powershell
-> Set-ItemProperty -Path "HKCU:\Software\Canonical\Ubuntu" -Name UbuntuInsightsConsent -Value 1
+```{terminal}
+:prompt: PS>
+:copy:
+
+Set-ItemProperty -Path "HKCU:\Software\Canonical\Ubuntu" -Name UbuntuInsightsConsent -Value 1
 ```
 
 ```{note}
@@ -91,14 +100,20 @@ In this case, any additional users in a multi-user Ubuntu instance without a con
 
 To see your current consent state for an individual Ubuntu instance, run the following command:
 
-```{code-block} text
-$ ubuntu-insights consent linux wsl_setup ubuntu_release_upgrader
+```{terminal}
+:prompt: $
+:copy:
+
+ubuntu-insights consent linux wsl_setup ubuntu_release_upgrader
 ```
 
 To change your consent state for an individual Ubuntu instance after initial setup, run the following command, replacing the placeholder with your desired state:
 
-```{code-block} text
-$ ubuntu-insights consent linux wsl_setup ubuntu_release_upgrader --state=<true, false>
+```{terminal}
+:prompt: $
+:copy:
+
+ubuntu-insights consent linux wsl_setup ubuntu_release_upgrader --state=<true, false>
 ```
 
 ```{note}

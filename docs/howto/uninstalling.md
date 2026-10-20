@@ -20,16 +20,22 @@ application, right-click on it and select **Uninstall**.
 
 If you installed the app using WinGet, you can instead run the following command in PowerShell:
 
-```{code-block} text
-> winget uninstall Canonical.UbuntuProforWSL
+```{terminal}
+:prompt: PS>
+:copy:
+
+winget uninstall Canonical.UbuntuProforWSL
 ```
 
 ### Remove Pro for WSL data
 
 Remove `.ubuntupro` from your Windows user profile directory.
 
-```{code-block} powershell
-> Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
+```{terminal}
+:prompt: PS>
+:copy:
+
+Remove-Item -Recurse -Force C:\Users\<username>\.ubuntupro
 ```
 
 ### Remove registry key
@@ -37,8 +43,11 @@ Remove `.ubuntupro` from your Windows user profile directory.
 If you or your organisation used the Windows Registry to store any configuration data, such as
 a Pro token, remove the matching registry key:
 
-```{code-block} powershell
-> Remove-Item -Recurse -Force HKCU:\Software\Canonical\UbuntuPro
+```{terminal}
+:prompt: PS>
+:copy:
+
+Remove-Item -Recurse -Force HKCU:\Software\Canonical\UbuntuPro
 ```
 
 (howto::uninstall-ubuntu-wsl)=
@@ -48,8 +57,11 @@ a Pro token, remove the matching registry key:
 
 In PowerShell, run the following command to stop WSL:
 
-```{code-block} text
-> wsl --shutdown
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --shutdown
 ```
 
 ### Uninstall Ubuntu distros
@@ -58,8 +70,11 @@ The method to uninstall an Ubuntu distro depends on the installation format.
 
 For installations that use the modern tar-based installation format, run:
 
-```{code-block} text
-> wsl --unregister <distro>
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --unregister <distro>
 ```
 
 If a distribution was installed in the {term}`legacy format <legacy distro>`, go to `Settings > Apps >
@@ -72,8 +87,11 @@ recommending the {term}`modern tar-based format <modern distro>`.
 
 If you don't know the format of an installed distro, run:
 
-```{code-block} powershell
-> Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss"
+```{terminal}
+:prompt: PS>
+:copy:
+
+Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss"
 ```
 
 Distros installed using the tar-based format include the property `modern` with
@@ -85,8 +103,11 @@ value `1`.
 
 Only uninstall WSL if you no longer need WSL on your Windows machine:
 
-```{code-block} text
-> wsl --uninstall
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --uninstall
 ```
 
 ```{note}

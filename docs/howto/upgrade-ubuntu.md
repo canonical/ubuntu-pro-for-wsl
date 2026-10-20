@@ -23,9 +23,18 @@ For a list of the available Ubuntu LTS releases, run `wsl --list --online`.
 
 To upgrade an instance of Ubuntu on WSL, run:
 
-```{code-block} text
-$ sudo apt update && sudo apt full-upgrade -y
-$ sudo do-release-upgrade
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt update && sudo apt full-upgrade -y
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo do-release-upgrade
 ```
 
 When new LTS versions are released, the Ubuntu instance can be upgraded once
@@ -36,7 +45,7 @@ This upgrade behaviour is determined by the `Prompt` setting in
 
 ```{code-block} text
 :caption: /etc/update-manager/release-upgrades
-:class: no-copy
+:class: no-copybutton
 Prompt=lts
 ```
 
@@ -57,7 +66,7 @@ release, including interim releases**, change the `Prompt` setting as follows:
 
 ```{code-block} diff
 :caption: /etc/update-manager/release-upgrades
-:class: no-copy
+:class: no-copybutton
 -Prompt=lts
 +Prompt=normal
 ```

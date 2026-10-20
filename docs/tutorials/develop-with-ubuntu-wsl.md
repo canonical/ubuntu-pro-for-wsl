@@ -37,8 +37,11 @@ You can check if WSL is already installed by trying to display its version infor
 
 Open PowerShell and run the following command:
 
-```{code-block} text
-> wsl --version
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --version
 ```
 
 If WSL **is not** installed, press <kbd>Ctrl</kbd>+<kbd>C</kbd> to cancel, and then
@@ -51,8 +54,11 @@ When WSL **is** already installed, follow our steps to [install Ubuntu](tut::dev
 
 In PowerShell, run the following command to install and enable WSL:
 
-```{code-block} text
-> wsl --install
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install
 ```
 
 You may need to reboot your machine for the changes to take effect.
@@ -64,30 +70,36 @@ You may also be prompted to grant permissions during the installation process.
 
 To check if you have any Ubuntu distributions installed on WSL, run:
 
-```{code-block} text
-> wsl --list
-```
+```{terminal}
+:prompt: PS>
+:copy:
 
-Ubuntu is the default distribution for WSL. It may be listed in the output
-of the command if it was included with your WSL installation:
+wsl --list
 
-```{code-block} text
-:class: no-copy
 Ubuntu (Default)
 ```
 
 For a list of distributions that you can install on WSL, run:
 
-```{code-block} text
-> wsl --list --online
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --list --online
 ```
 
 For this tutorial, install Ubuntu 26.04 LTS by running the following command in
 PowerShell:
 
-```{code-block} text
-> wsl --install Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-26.04
 ```
+
+After an Ubuntu distribution is installed, you are prompted to create a
+username and password. An Ubuntu {term}`session` will then start automatically.
 
 :::{dropdown} Installing multiple instances of the same Ubuntu release
 :icon: light-bulb
@@ -95,22 +107,26 @@ PowerShell:
 If you already have an `Ubuntu-26.04` instance and you don't want to change or
 remove it, you can install a second instance by giving it a unique name:
 
-```{code-block} text
-> wsl --install Ubuntu-26.04 --name Ubuntu-tutorial
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-26.04 --name Ubuntu-tutorial
 ```
 
 You can then run that instance with:
 
-```{code-block} text
-> wsl -d Ubuntu-tutorial
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -d Ubuntu-tutorial
 ```
 
 If using a distribution with a custom name when following this tutorial, don't
 forget to substitute your custom name for `Ubuntu-26.04` in the commands.
 :::
 
-After an Ubuntu distribution is installed, you are prompted to create a
-username and password. An Ubuntu {term}`session` will then start automatically.
 
 Changing from PowerShell to Ubuntu is indicated by a change in the terminal
 prompt, for example:
@@ -118,14 +134,14 @@ prompt, for example:
 **PowerShell prompt**
 
 ```{code-block} text
-:class: no-copy
+:class: no-copybutton
 PS C:\Users\windows-username>
 ```
 
 **Ubuntu prompt**:
 
 ```{code-block} text
-:class: no-copy
+:class: no-copybutton
 ubuntu-username@hostname:~$
 ```
 
@@ -145,14 +161,21 @@ our [dedicated installation guide](../howto/install-ubuntu-wsl2.md).
 You can install multiple versions of Ubuntu on WSL. Each Ubuntu instance can
 then be used as a separate, self-contained development environment.
 
-```{code-block} text
-> wsl --install Ubuntu-22.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-22.04
 ```
 
 Use `wsl -l -v` to list all of your installed distros.
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -l -v
+
   NAME            STATE           VERSION
   Ubuntu-22.04    Stopped         2
 * Ubuntu-26.04    Stopped         2
@@ -172,8 +195,11 @@ Read more about the [differences between WSL versions](explanation::wsl-version)
 
 You can open a specific instance from PowerShell using its NAME:
 
-```{code-block} text
-> wsl ~ -d Ubuntu-22.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl ~ -d Ubuntu-22.04
 ```
 
 The `~` is passed to the `wsl command` to start the instance in the Ubuntu home
@@ -184,8 +210,11 @@ We only need an Ubuntu-26.04 instance for this tutorial.
 
 To remove the Ubuntu-22.04 instance, run the following command in PowerShell:
 
-```{code-block} text
-> wsl --unregister Ubuntu-22.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --unregister Ubuntu-22.04
 ```
 
 ```{admonition} Windows terminal integration
@@ -228,39 +257,55 @@ Open an Ubuntu terminal using the `wsl ~ -d Ubuntu-26.04` command.
 
 Ensure the packages in Ubuntu are up-to-date with the following command:
 
-```{code-block} text
-$ sudo apt update && sudo apt upgrade -y
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt update && sudo apt upgrade -y
 ```
 
 Next, install Node.js and npm:
 
-```{code-block} text
-$ sudo apt-get install nodejs
-$ sudo apt install npm
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt-get install nodejs
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt install npm
 ```
 
 Create a directory for your server.
 
-```{code-block} text
-$ mkdir serverexample/
+```{terminal}
+:prompt: $
+:copy:
+
+mkdir serverexample/
 ```
 
 Change into that directory:
 
-```{code-block} text
-$ cd serverexample/
+```{terminal}
+:prompt: $
+:copy:
+
+cd serverexample/
 ```
 
 Then open the current directory (`.`) in Visual Studio Code:
 
-```{code-block} text
-$ code .
-```
+```{terminal}
+:prompt: $
+:copy:
 
-The first time you run `code` from Ubuntu, it will trigger a download of the necessary dependencies:
+code .
 
-```{code-block} text
-:class: no-copy
 Installing VS Code Server for x64...
 Downloading:
 ```
@@ -272,7 +317,7 @@ Once complete, your native version of Visual Studio Code will open the folder.
 In Visual Studio Code, create a new `package.json` file and add the following text:
 
 ```{code-block} json
-:caption: serverexample/package.json
+:caption: ~/serverexample/package.json
 {
     "name": "Demo",
     "version": "1.0.0",
@@ -294,22 +339,26 @@ Save the file and then --- in the same folder --- create a new one called `index
 Add the following text, then save and close:
 
 ```{code-block} html
-:caption: serverexample/index.html
+:caption: ~/serverexample/index.html
 <h1>Hello World</h1>
 ```
 
 Return to your Ubuntu terminal (or use Visual Studio Code's integrated terminal) and run the following command from within the project directory to install a server defined by the specification detailed in `package.json`:
 
-```{code-block} text
-:caption: ~/serverexample
-$ npm install
+```{terminal}
+:prompt: ~/serverexample$
+:copy:
+
+npm install
 ```
 
 Still inside the project directory, start the web server:
 
-```{code-block} text
-:caption: ~/serverexample
-$ npm start
+```{terminal}
+:prompt: ~/serverexample$
+:copy:
+
+npm start
 ```
 
 You can now navigate to `localhost:10001` in your native Windows web browser by using <kbd>CTRL</kbd>+<kbd>LeftClick</kbd> on the link in the terminal.

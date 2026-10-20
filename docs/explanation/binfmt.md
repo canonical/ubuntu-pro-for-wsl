@@ -66,8 +66,11 @@ ConditionVirtualization=!wsl
 
 And then run the command:
 
-```{code-block} text
-$ sudo systemctl daemon-reload
+```{terminal}
+:prompt: $
+:copy:
+
+sudo systemctl daemon-reload
 ```
 
 That creates a file at `/etc/systemd/system/<UNIT_NAME>/override.conf` with the contents above,

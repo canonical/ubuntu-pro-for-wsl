@@ -41,7 +41,10 @@ Locate your Windows user home directory, which is typically `C:\Users\<username>
 ````{tip}
 If you want to find your home directory, run the following in PowerShell:
 
-```text
+```{terminal}
+:prompt: PS>
+:copy:
+
 echo $env:USERPROFILE
 ```
 ````
@@ -94,8 +97,11 @@ application.
 
 In PowerShell, run:
 
-```{code-block} text
-> wsl --install Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-26.04
 ```
 
 This command installs and launches an Ubuntu-26.04 instance.
@@ -107,8 +113,9 @@ The process can take several minutes, depending on your computer and network spe
 When the setup is complete, the WSL instance's shell will be logged in as the user `jdoe`.
 You should see the standard welcome text:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 Installing, this may take a few minutes...
 Installation successful!
 To run a command as administrator (user "root"), use "sudo <command>".
@@ -137,40 +144,55 @@ Once logged into the new distro instance's shell, verify that:
 
 1. The default user matches what was configured:
 
-```{code-block} text
-jdoe@<hostname>:~$ whoami
+```{terminal}
+:user: jdoe
+:host: <hostname>
+:copy:
+
+whoami
 ```
 
 This should be verified with the output:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 jdoe
 ```
 
 2. The supplied cloud-config user data was approved by cloud-init validation.
 
-```{code-block} text
-jdoe@<hostname>:~$ sudo cloud-init schema --system
+```{terminal}
+:user: jdoe
+:host: <hostname>
+:copy:
+
+sudo cloud-init schema --system
 ```
 
 Verified with the output:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 Valid schema user-data
 ```
 
 3. The locale is set
 
-```{code-block} text
-jdoe@<hostname>:~$ locale
+```{terminal}
+:user: jdoe
+:host: <hostname>
+:copy:
+
+locale
 ```
 
 Verified with:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 LANG=pt_BR
 LANGUAGE=
 LC_CTYPE="pt_BR"
@@ -186,19 +208,22 @@ LC_TELEPHONE="pt_BR"
 LC_MEASUREMENT="pt_BR"
 LC_IDENTIFICATION="pt_BR"
 LC_ALL=
-
 ```
 
 4. The packages were installed and the commands that they provide are available.
 
-```{code-block} text
-jdoe@<hostname>:~$ apt list --installed | egrep 'ginac|octave'
+```{terminal}
+:user: jdoe
+:host: <hostname>
+:copy:
+
+apt list --installed | egrep 'ginac|octave'
 ```
 
 Verified:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
 
@@ -212,14 +237,19 @@ octave/resolute,now 11.1.0-3 amd64 [installed]
 5. Lastly, verify that the commands requested were also run. In this case we set up `vcpkg` from git, as recommended by its
    documentation (there is no deb or {term}`snap <snaps>` available for that program):
 
-```{code-block} text
-jdoe@<hostname>:~$ /opt/vcpkg/vcpkg version
+```{terminal}
+:user: jdoe
+:host: <hostname>
+:copy:
+
+/opt/vcpkg/vcpkg version
 ```
 
 This should be verified with:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 vcpkg package management program version 2024-01-11-710a3116bbd615864eef5f9010af178034cb9b44
 
 See LICENSE.txt for license information.

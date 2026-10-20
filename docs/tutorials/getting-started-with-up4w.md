@@ -62,8 +62,11 @@ one instance of Ubuntu on WSL.
 
 To install and enable WSL on Windows, run the following command in PowerShell:
 
-```{code-block} text
-> wsl --install
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install
 ```
 
 You may need to reboot the Windows machine for the changes to take effect.
@@ -76,14 +79,20 @@ For more information about `.wslconfig`, refer to the [WSL documentation from Mi
 
 To check if the file exists run the following in PowerShell:
 
-```{code-block} text
-> Test-Path -Path "~\.wslconfig"
+```{terminal}
+:prompt: PS>
+:copy:
+
+Test-Path -Path "~\.wslconfig"
 ```
 
 If this returns `True` then the file exists and can be removed with:
 
-```{code-block} text
-> Remove-Item ~\.wslconfig
+```{terminal}
+:prompt: PS>
+:copy:
+
+Remove-Item ~\.wslconfig
 ```
 
 (tut::get-ubuntu)=
@@ -92,16 +101,22 @@ If this returns `True` then the file exists and can be removed with:
 Ubuntu 26.04 LTS is recommended for this tutorial and can be installed 
 with the following command in PowerShell:
 
-```{code-block} text
-> wsl --install Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-26.04
 ```
 
 For other installation options refer to our [install Ubuntu on WSL guide](https://ubuntu.com/wsl/docs/stable/howto/install-ubuntu-wsl2/).
 
 To confirm the installation, and that the installed distro is using WSL 2, run:
 
-```{code-block} text
-> wsl -l -v
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -l -v
 ```
 
 ```{admonition} You must use WSL 2
@@ -168,20 +183,27 @@ All Ubuntu WSL instances will now be automatically added to your Ubuntu Pro subs
 In PowerShell, run the following command to launch the Ubuntu-26.04 instance
 you installed previously, entering a username and password when prompted.
 
-```{code-block} text
-> wsl ~ -d Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl ~ -d Ubuntu-26.04
 ```
 
 You will now be logged in to the Ubuntu instance and can check that Pro for WSL has Pro-attached this instance with:
 
-```{code-block} text
-$ pro status
+```{terminal}
+:prompt: $
+:copy:
+
+pro status
 ```
 
 The output should indicate that services like ESM are enabled, with account and subscription information also shown:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 SERVICE          ENTITLED  STATUS       DESCRIPTION
 esm-apps         yes       enabled      Expanded Security Maintenance for Applications
 esm-infra        yes       enabled      Expanded Security Maintenance for Infrastructure
@@ -199,8 +221,16 @@ Subscription: Ubuntu Pro - free personal subscription
 Packages can also be accessed from all the enabled services.
 Running `sudo apt update` will produce output like the following:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt update
+```
+
+```{terminal}
+:output-only:
+
 Hit:1 http://archive.ubuntu.com/ubuntu resolute InRelease
 Hit:2 http://ppa.launchpad.net/ubuntu-wsl-dev/ppa/ubuntu resolute InRelease
 Hit:3 http://security.ubuntu.com/ubuntu resolute-security InRelease
@@ -220,8 +250,11 @@ Now let's check that a different version of Ubuntu will also Pro-attach automati
 
 Install an older LTS release --- Ubuntu 22.04 --- from PowerShell:
 
-```{code-block} text
-> wsl --install Ubuntu-22.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-22.04
 ```
 
 After this instance has installed and launched, enter a username and password, then run `pro status`.

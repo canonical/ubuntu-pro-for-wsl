@@ -50,8 +50,11 @@ following the guide.
 
 To check if an Ubuntu-26.04 instance exists, run the following in PowerShell:
 
-```{code-block} text
-> wsl -l -v
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -l -v
 ```
 
 Confirm that there is no Ubuntu-26.04 instance before continuing.
@@ -60,11 +63,32 @@ If one does exist, back it up and uninstall it.
 ````{dropdown} Backing up and uninstalling an existing Ubuntu-26.04 instance
 If you have an existing Ubuntu-26.04 instance, run the following commands:
 
-```{code-block} text
-> wsl --terminate Ubuntu-26.04
-> mkdir backup
-> wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.tar.gz
-> wsl --unregister Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --terminate Ubuntu-26.04
+```
+
+```{terminal}
+:prompt: PS>
+:copy:
+
+mkdir backup
+```
+
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.tar.gz
+```
+
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --unregister Ubuntu-26.04
 
 ```
 
@@ -193,8 +217,11 @@ the Windows host.
 
 On the Windows host machine, list the installed WSL distros:
 
-```{code-block} text
-> wsl -l -v
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -l -v
 ```
 
 The output should now confirm that Ubuntu-26.04 is "installing" or "running".
@@ -204,20 +231,22 @@ be able to list the distros again and confirm that Ubuntu-26.04 is "stopped".
 
 When the Ubuntu-26.04 instance has launched, confirm that the correct default user "u" has been set from the prompt:
 
-```{code-block} text
-:class: no-copy
-u@<hostname>:~$
+```{terminal}
+:prompt: u@<hostname>:~$
 ```
 
 Next, confirm that CUDA has been installed successfully:
 
-```{code-block} text
-$ apt policy cuda-toolkit-12-6
+```{terminal}
+:prompt: $
+:copy:
+
+apt policy cuda-toolkit-12-6
 ```
 
+```{terminal}
+:output-only:
 
-```{code-block} text
-:class: no-copy
 cuda-toolkit-12-6
   Installed: 12.6.3-1
   Candidate: 12.6.3-1
@@ -227,12 +256,16 @@ cuda-toolkit-12-6
 
 Then confirm that your GPU is being detected correctly:
 
-```{code-block} text
-$ nvidia-smi
+```{terminal}
+:prompt: $
+:copy:
+
+nvidia-smi
 ```
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 +---------------------------------------------------------------------------+
 | NVIDIA-SMI 535.157        Driver Version 538.18       CUDA Version: 12.2  |
 |...                                                                        |
@@ -247,15 +280,27 @@ Finally, run `pro status`, to confirm that Pro for WSL has automatically Pro-att
 
 Terminate the new instance and uninstall it from PowerShell:
 
-```{code-block} text
-> wsl --terminate Ubuntu-26.04
-> wsl --unregister Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --terminate Ubuntu-26.04
+```
+
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --unregister Ubuntu-26.04
 ```
 
 Restore the backup:
 
-```{code-block} text
-> wsl --import Ubuntu-26.04 <directory-to-install-filesystem> .\backup\Ubuntu-26.04.tar.gz
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --import Ubuntu-26.04 <directory-to-install-filesystem> .\backup\Ubuntu-26.04.tar.gz
 ```
 
 This will restore your data and install the filesystem to the path you specify.

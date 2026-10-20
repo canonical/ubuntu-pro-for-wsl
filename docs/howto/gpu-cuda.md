@@ -74,22 +74,41 @@ the version to suit your specific needs.
 
 For our example, the commands shown on the website are:
 
-```{code-block} text
-$ wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+```{terminal}
+:prompt: $
+:copy:
 
-$ sudo dpkg -i cuda-keyring_1.1-1_all.deb
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+```
 
-$ sudo apt-get update
+```{terminal}
+:prompt: $
+:copy:
 
-$ sudo apt-get -y install cuda-toolkit-13-2
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt-get update
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt-get -y install cuda-toolkit-13-2
 ```
 
 Run the commands shown on the website in your Ubuntu instance to execute the installation.
 A successful installation will show a lot of text, ending in a pattern similar to the following
 (the exact details may depend on your system and the CUDA version being installed):
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 done.
 Setting up default-jre-headless (2:1.21-75+exp1) ...
 Setting up openjdk-21-jre:amd64 (21.0.10+7-1~24.04) ...
@@ -109,28 +128,54 @@ NVIDIA provides an open source repository on GitHub with samples for CUDA Develo
 
 Let’s say you have a `~/Dev/` directory where you usually put your working projects. Navigate inside the directory and `git clone` the [cuda-samples repository](https://github.com/nvidia/cuda-samples):
 
-```{code-block} text
-$ cd ~/Dev
+```{terminal}
+:prompt: $
+:copy:
 
-$ git clone https://github.com/nvidia/cuda-samples
+cd ~/Dev
+```
+
+```{terminal}
+:prompt: ~/Dev$
+:copy:
+
+git clone https://github.com/nvidia/cuda-samples
 ```
 
 To build the application, you'll need `cmake`. Install it and then go to the cloned repository directory and run it:
 
-```{code-block} text
-$ sudo apt install cmake
+```{terminal}
+:prompt: ~/Dev$
+:copy:
 
-$ cd ~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery
+sudo apt install cmake
+```
 
-$ cmake -S . -B build
+```{terminal}
+:prompt: ~/Dev$
+:copy:
 
-$ cmake --build build
+cd ~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery
+```
+
+```{terminal}
+:prompt: ~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$
+:copy:
+
+cmake -S . -B build
+```
+
+```{terminal}
+:prompt: ~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$
+:copy:
+
+cmake --build build
 ```
 
 A successful build will look like the following:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
 
 g@mib01:~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$ cmake -S . -B build
 -- The C compiler identification is GNU 13.3.0
@@ -174,14 +219,17 @@ g@mib01:~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$
 
 Once complete, run the application with:
 
-```{code-block} text
-$ ./build/deviceQuery
+```{terminal}
+:prompt: ~/Dev/cuda-samples/Samples/1_Utilities/deviceQuery$
+:copy:
+
+./build/deviceQuery
 ```
 
 You should see a similar output to the following, detailing the functionality of your CUDA setup (the exact results depend on your hardware setup):
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
 
 ./build/deviceQuery Starting...
 

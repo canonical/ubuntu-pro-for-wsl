@@ -41,16 +41,20 @@ Using a VHD has the advantage of not requiring a compression/decompression step.
 
 To backup an Ubuntu-26.04 instance, first make a `backup` folder:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> mkdir backup
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+mkdir backup
 ```
 
 Then create a compressed version of the Ubuntu instance in that backup directory:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.tar.gz
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.tar.gz
 ```
 
 ````
@@ -59,16 +63,20 @@ Then create a compressed version of the Ubuntu instance in that backup directory
 :sync: vhd
 To backup an Ubuntu-26.04 instance, first make a `backup` folder:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> mkdir backup
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+mkdir backup
 ```
 
 Then create a `.vhdx` of the Ubuntu instance in that backup directory:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.vhdx --format vhd
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+wsl --export Ubuntu-26.04 .\backup\Ubuntu-26.04.vhdx --format vhd
 ```
 ````
 `````
@@ -86,8 +94,11 @@ remove it from WSL and delete all associated data.
 
 Remove the instance with the following command:
 
-```{code-block} text
-> wsl --unregister Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --unregister Ubuntu-26.04
 ```
 
 (howto::restoring)=
@@ -101,9 +112,11 @@ Remove the instance with the following command:
 
 To restore the Ubuntu-26.04 instance that you have previously backed up as a tarball:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> wsl --import Ubuntu-26.04 .\backup\Ubuntu2604\ .\backup\Ubuntu-26.04.tar.gz
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+wsl --import Ubuntu-26.04 .\backup\Ubuntu2604\ .\backup\Ubuntu-26.04.tar.gz
 ```
 ````
 
@@ -112,15 +125,19 @@ To restore the Ubuntu-26.04 instance that you have previously backed up as a tar
 To restore the Ubuntu-26.04 instance that you have previously backed up as a VHD,
 create a copy of the VHD:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> wsl --import Ubuntu-26.04 .\backup\Ubuntu2604\ .\backup\Ubuntu-26.04.vhdx --vhd
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+wsl --import Ubuntu-26.04 .\backup\Ubuntu2604\ .\backup\Ubuntu-26.04.vhdx --vhd
 ```
 
 A quicker option is to import the already filled, ready-to-use, virtual hard drive:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
 wsl --import-in-place Ubuntu-26.04 .\backup\Ubuntu-26.04.vhdx
 ```
 ````
@@ -133,8 +150,11 @@ The instance should be restored with your previous configuration intact.
 
 To log in as a user `k`, created with the original instance, run: 
 
-```{code-block} text
-> wsl -d Ubuntu-26.04 -u k
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -d Ubuntu-26.04 -u k
 ```
 
 Alternatively, add the following to `/etc/wsl.conf` in the instance:
@@ -160,19 +180,31 @@ It is possible to create multiple instances from a base instance. For example,
 to create multiple new instances from an instance that has been backed up as a
 tarball:
 
-```{code-block} text
-:caption: C:\Users\\\<username>
-> wsl --import ubuntu2604b .\backup\Ubuntu2604b\ .\backup\Ubuntu-26.04.tar.gz
-> wsl --import ubuntu2604c .\backup\Ubuntu2604c\ .\backup\Ubuntu-26.04.tar.gz
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+wsl --import ubuntu2604b .\backup\Ubuntu2604b\ .\backup\Ubuntu-26.04.tar.gz
+```
+
+```{terminal}
+:prompt: PS C:\Users\<username>>
+:copy:
+
+wsl --import ubuntu2604c .\backup\Ubuntu2604c\ .\backup\Ubuntu-26.04.tar.gz
 ```
 
 This will create two additional instances of Ubuntu 26.04 with unique names
 that can be launched and configured independently.
 
-In PowerShell, running `wsl -l -v` will output the new instances in your list of installed instances:
+Running `wsl -l -v` will output the new instances in your list of installed instances:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -l -v
+
 NAME            STATE         VERSION
 Ubuntu-26.04    Stopped       2
 ubuntu2604b     Stopped       2
@@ -181,8 +213,11 @@ ubuntu2604c     Stopped       2
 
 To launch the first derived instance and log in as the user `k` run:
 
-```{code-block} text
-> wsl -d ubuntu2604b -u k
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -d ubuntu2604b -u k
 ```
 
 (howto::renaming)=
@@ -190,8 +225,11 @@ To launch the first derived instance and log in as the user `k` run:
 
 Stop all WSL instances:
 
-```{code-block} text
-> wsl --shutdown
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --shutdown
 ```
 
 Open the {term}`registry <Windows registry>` editor and find:
@@ -207,8 +245,11 @@ Select any ID then change the value for `DistributionName` to rename that instan
 
 To confirm that the instance has been renamed, run
 
-```{code-block} text
-> wsl -l -v
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -l -v
 ```
 
 (howto::new-instance-name)=
@@ -217,14 +258,20 @@ To confirm that the instance has been renamed, run
 The `--name` flag can be used with {term}`wsl.exe` to customize
 the name of an instance during installation:
 
-```{code-block} text
-> wsl --install Ubuntu-26.04 --name UbuntuWebDev
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-26.04 --name UbuntuWebDev
 ```
 
 Then launch the instance as normal:
 
-```{code-block} text
-> wsl -d UbuntuWebDev
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl -d UbuntuWebDev
 ```
 
 (howto::auto-config-instances)=
@@ -245,7 +292,7 @@ first create a `.user-data` file that matches the instances that will be install
 and configured:
 
 ```{code-block} text
-:class: no-copy
+:class: no-copybutton
 C:\Users\<user>
 └── .cloud-init
     ├── Ubuntu-22.04.user-data
@@ -260,7 +307,7 @@ as long as you are installing instances of the distribution that have been assig
 Extending the previous example, you can add instance configurations for specific projects:
 
 ```{code-block} text
-:class: no-copy
+:class: no-copybutton
 C:\Users\<user>
 └── .cloud-init
     ├── Ubuntu-22.04.user-data
@@ -276,9 +323,18 @@ For details on the contents of cloud-init configuration files, read our dedicate
 
 Install instances of the Ubuntu-24.04 distribution that will have your unique configurations applied using the `--name` flag:
 
-```{code-block} text
-> wsl --install Ubuntu-24.04 --name UbuntuWebDev
-> wsl --install Ubuntu-24.04 --name UbuntuDataScience
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-24.04 --name UbuntuWebDev
+```
+
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-24.04 --name UbuntuDataScience
 ```
 
 For guidance on assigning unique names to instances, go to [the section on

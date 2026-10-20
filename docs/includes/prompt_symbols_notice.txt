@@ -6,9 +6,10 @@
 Prompt symbols on this page are used to distinguish between commands that
 you run in PowerShell and commands that you run in Ubuntu:
 
-* `>`: PowerShell
+* `PS>`: PowerShell
 * `$`: Ubuntu
 
-When you copy any command, the prompt symbol will not be copied.
+When you copy a command, only the command is copied — the prompt symbol and
+any output are not included.
 ```
 <!-- Include end prompt symbols -->
