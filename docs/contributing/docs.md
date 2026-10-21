@@ -8,7 +8,7 @@ myst:
 # Contributing to the documentation
 
 You can submit issues about the documentation by selecting the
-{guilabel}`feedback` button at the top of any documentation page. Clicking this
+{guilabel}`Give feedback` button at the top of any documentation page. Clicking this
 button opens an Issue submission page in the GitHub repo. A template will
 automatically be loaded that you can modify before submitting the Issue.
 
