@@ -19,7 +19,11 @@ the [fork-and-pull](contribute::pull-requests) method.
 ## Working on a documentation change
 
 If making significant changes to the documentation you should work on your own
-fork. After cloning the fork, change into the `/docs/` directory.
+fork of the GitHub repository:
+
+- [github.com/canonical/ubuntu-pro-for-wsl](https://github.com/canonical/ubuntu-pro-for-wsl)
+
+After cloning the fork, change into the `/docs/` directory.
 
 A makefile is used to preview and test the documentation locally.
 To view all of the possible commands, run:

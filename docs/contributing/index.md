@@ -36,28 +36,11 @@ contributing to other Canonical projects you will not need to sign it again.
 
 An automated test is executed on PRs to check if it has been accepted.
 
-Please refer to the licences for the Ubuntu distro and Windows application
-below:
+Please refer to the
+[licence](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/LICENSE)
+for more information.
 
-- [Ubuntu on WSL distro](https://github.com/ubuntu/WSL/blob/main/LICENSE)
-- [Pro for WSL app](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/LICENSE)
-
-## Where to find the code and the documentation
-
-Currently, there are two repositories maintained by Canonical that relate to Ubuntu on WSL.
-Microsoft maintains a separate repository for the WSL technology itself.
-
-### Code for the distro and the app are in different repositories
-
-The source code for the Ubuntu on WSL **distribution** and the Pro for WSL
-**Windows application** can be found on GitHub:
-
-- Distribution: [Ubuntu on WSL repo](https://github.com/ubuntu/WSL)
-- Windows application: [Pro for WSL repo](https://github.com/canonical/ubuntu-pro-for-wsl)
-
-The documentation for both is in the application repo.
-
-### Issues with WSL itself should be directed to Microsoft
+## Issues with WSL itself should be directed to Microsoft
 
 We accept any contributions relating to Ubuntu WSL and Pro for WSL. However, we
 do not directly maintain WSL itself, which is a Microsoft product. If you have

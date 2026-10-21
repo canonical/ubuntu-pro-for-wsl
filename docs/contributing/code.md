@@ -7,9 +7,15 @@ myst:
 
 # Contributing to the code
 
-We anticipate that most code contributions will be for the Pro for WSL
-application. Information helpful for the development of this application is
-included below.
+We anticipate that most code contributions will be for the Ubuntu Pro for WSL
+application.
+
+The source for the Pro for WSL code can be found on GitHub:
+
+- [github.com/canonical/ubuntu-pro-for-wsl](https://github.com/canonical/ubuntu-pro-for-wsl)
+
+Information helpful for the development of this Windows application is included
+below.
 
 ## Prerequisite: a Windows machine
 
