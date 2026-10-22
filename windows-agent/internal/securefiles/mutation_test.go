@@ -1,0 +1,584 @@
+// Cross-platform mutation semantics: atomic writes leave no temporaries and
+// tolerate leftover ones, and Remove/Rename/RemoveAll obey containment. The
+// Windows-specific sharing-semantics race lives in mutation_windows_test.go.
+
+package securefiles_test
+
+import (
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
+	"github.com/stretchr/testify/require"
+)
+
+func TestWriteFile(t *testing.T) {
+	t.Parallel()
+
+	const leftoverTemp = ".tmp-target.txt-12345678"
+
+	testCases := map[string]struct {
+		plantLeftoverTemp bool
+		writes            int
+	}{
+		"a write publishes its content":                 {writes: 1},
+		"repeated writes publish the last one":          {writes: 50},
+		"a write succeeds despite a leftover temporary": {plantLeftoverTemp: true, writes: 1},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			var wantTemps []string
+			if tc.plantLeftoverTemp {
+				require.NoError(t, os.WriteFile(filepath.Join(dir, leftoverTemp), []byte("leftover"), 0600),
+					"Setup: could not plant the leftover temporary")
+				wantTemps = append(wantTemps, leftoverTemp)
+			}
+
+			var want string
+			for i := range tc.writes {
+				want = fmt.Sprintf("write %d", i)
+				require.NoError(t, c.WriteFile("target.txt", []byte(want)), "every write must succeed")
+			}
+
+			got, err := os.ReadFile(filepath.Join(dir, "target.txt"))
+			require.NoError(t, err, "the published node must be readable")
+			require.Equal(t, want, string(got), "the published node must hold the last write")
+
+			entries, err := os.ReadDir(dir)
+			require.NoError(t, err, "the sub-tree must be listable")
+
+			var gotTemps []string
+			for _, entry := range entries {
+				if strings.HasPrefix(entry.Name(), ".tmp-") {
+					gotTemps = append(gotTemps, entry.Name())
+				}
+			}
+			// A write cleans up after itself, but it is not a sweep: a temporary left by
+			// something else stays until Purge, so only what was planted may remain.
+			require.ElementsMatch(t, wantTemps, gotTemps, "a write must not leave its own temporary behind")
+		})
+	}
+}
+
+// TestCreateFileModes covers the choice the agent's log depends on: the rotation that
+// precedes it can fail, and the file it would have moved away is then the only copy of
+// the record needed to explain why. Appending keeps it; replacing does not.
+func TestCreateFileModes(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// seedStamped writes the file through the custodian first; seedRaw plants it
+		// behind the custodian's back, so it carries no stamp.
+		seedStamped string
+		seedRaw     string
+		// append selects the mode under test. Omitted, CreateFile replaces.
+		append bool
+		// seekPastEnd seeks the descriptor past the freshly created file's
+		// end before writing, pinning that the append lands at the end
+		// regardless of where the descriptor was left.
+		seekPastEnd bool
+
+		wantContent string
+		// wantOwned is only asserted when checkOwned is set. An unstamped node is
+		// answered as not owned on every platform: Windows answers its failed attribute
+		// query when the failure says the file carries no attributes at all, Linux its
+		// missing attribute.
+		checkOwned bool
+		wantOwned  bool
+	}{
+		"replacing an absent file creates and stamps it": {
+			wantContent: "written",
+			checkOwned:  true,
+			wantOwned:   true,
+		},
+		"replacing an existing file discards its content": {
+			seedStamped: "earlier",
+			wantContent: "written",
+			checkOwned:  true,
+			wantOwned:   true,
+		},
+		"appending to an absent file creates and stamps it": {
+			append:      true,
+			wantContent: "written",
+			checkOwned:  true,
+			wantOwned:   true,
+		},
+		"appending to an existing file keeps its content": {
+			seedStamped: "earlier",
+			append:      true,
+			wantContent: "earlierwritten",
+			checkOwned:  true,
+			wantOwned:   true,
+		},
+		// The rotation failed and the old log is still in place, unstamped because a
+		// previous agent wrote it. Discarding it here would destroy the evidence.
+		"appending to an unstamped file adopts it rather than discarding it": {
+			seedRaw:     "from a previous run",
+			append:      true,
+			wantContent: "from a previous runwritten",
+			checkOwned:  true,
+			wantOwned:   false,
+		},
+		// The append contract is the descriptor's, on the kernel's authority, in
+		// both branches: on a freshly created file a seek past the end must not
+		// move the write away from it. The absent-file branch once answered a
+		// create handle free to write anywhere in the file, which a seek past
+		// the end of the empty file exposes: the write lands at the seek, not
+		// the end.
+		"an append handle created fresh writes at the end after seeking": {
+			append:      true,
+			seekPastEnd: true,
+			wantContent: "written",
+			checkOwned:  true,
+			wantOwned:   true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			const target = "log"
+			if tc.seedStamped != "" {
+				require.NoError(t, c.WriteFile(target, []byte(tc.seedStamped)), "Setup: could not seed the stamped file")
+			}
+			if tc.seedRaw != "" {
+				require.NoError(t, os.WriteFile(filepath.Join(dir, target), []byte(tc.seedRaw), 0600),
+					"Setup: could not plant the unstamped file")
+			}
+
+			var f *os.File
+			if tc.append {
+				f, err = c.AppendFile(target)
+			} else {
+				f, err = c.CreateFile(target)
+			}
+			require.NoError(t, err, "creating %s must succeed", target)
+
+			if tc.seekPastEnd {
+				_, err = f.Seek(1, io.SeekStart)
+				require.NoError(t, err, "Setup: could not seek past the end of the empty file")
+			}
+			_, err = f.Write([]byte("written"))
+			require.NoError(t, err, "the write must succeed")
+			require.NoError(t, f.Close(), "the file must close cleanly")
+
+			got, err := os.ReadFile(filepath.Join(dir, target))
+			require.NoError(t, err, "the node must be readable")
+			require.Equal(t, tc.wantContent, string(got), "unexpected content for the chosen mode")
+
+			if tc.checkOwned {
+				owned, err := c.IsOwned(target)
+				require.NoError(t, err, "ownership of the node must be answerable")
+				require.Equal(t, tc.wantOwned, owned, "unexpected ownership")
+			}
+		})
+	}
+}
+
+// TestCreateFileRevokesOpenDescriptors pins why replacement unlinks rather than truncates.
+// The node under test is one that was visible unstamped, so an unprivileged process in a
+// distro may already hold it open. Truncating leaves that process attached to the file
+// object and reading whatever is written next; unlinking leaves it holding the old node,
+// which is what ADR 2.01 means by replacing rather than repairing.
+func TestCreateFileRevokesOpenDescriptors(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		// viaWriteFile publishes through WriteFile instead of CreateFile.
+		viaWriteFile bool
+		// append targets AppendFile instead of CreateFile.
+		append bool
+		// wantHeldContent is what a descriptor opened before the call reads afterwards.
+		wantHeldContent string
+		// refusedOnWindows marks the cases Windows answers by refusing instead: it will
+		// not unlink a node another handle holds without delete sharing. Refusing is a
+		// safe answer to the same question, because nothing was replaced and so nothing
+		// written afterwards can reach the holder.
+		refusedOnWindows bool
+	}{
+		"replacing leaves an open descriptor on the old node": {wantHeldContent: "OLD", refusedOnWindows: true},
+		// WriteFile publishes by rename onto the name, which likewise never writes
+		// through the old node. This is also what makes a torn read impossible: a reader
+		// holding the file sees one whole version or the other, never a blend. Windows
+		// refuses it for the same reason as above, which is what the polite and impolite
+		// readers of TestRenameOverOpenDestination pin.
+		"publishing by rename leaves an open descriptor on the old node": {
+			viaWriteFile:     true,
+			wantHeldContent:  "OLD",
+			refusedOnWindows: true,
+		},
+		// Appending deliberately keeps the same node, so the descriptor follows it. That
+		// is the whole point of the mode, and the reason it is only for the agent's log.
+		"appending keeps the descriptor on the same node": {
+			append:          true,
+			wantHeldContent: "OLDNEW",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			require.NoError(t, c.WriteFile("target.txt", []byte("OLD")), "Setup: could not seed the node")
+
+			held, err := os.Open(filepath.Join(dir, "target.txt"))
+			require.NoError(t, err, "Setup: could not hold the node open")
+			defer func() { _ = held.Close() }()
+
+			if tc.viaWriteFile {
+				err := c.WriteFile("target.txt", []byte("NEW"))
+				if tc.refusedOnWindows && runtime.GOOS == "windows" {
+					require.Error(t, err, "Windows must refuse to replace a node held open without delete sharing")
+					return
+				}
+				require.NoError(t, err, "publishing must succeed")
+				got, err := io.ReadAll(held)
+				require.NoError(t, err, "the held descriptor must still be readable")
+				require.Equal(t, tc.wantHeldContent, string(got),
+					"a descriptor opened before the call must not read content written after it")
+				return
+			}
+
+			var f *os.File
+			if tc.append {
+				f, err = c.AppendFile("target.txt")
+			} else {
+				f, err = c.CreateFile("target.txt")
+			}
+			if tc.refusedOnWindows && runtime.GOOS == "windows" {
+				require.ErrorIs(t, err, securefiles.ErrNodeHeld,
+					"Windows must refuse to unlink a node held open without delete sharing, naming the holder's refusal")
+				return
+			}
+			require.NoError(t, err, "creating over a node held open must succeed")
+			_, err = f.Write([]byte("NEW"))
+			require.NoError(t, err, "the write must succeed")
+			require.NoError(t, f.Close(), "the new node must close cleanly")
+
+			got, err := io.ReadAll(held)
+			require.NoError(t, err, "the held descriptor must still be readable")
+			require.Equal(t, tc.wantHeldContent, string(got),
+				"a descriptor opened before the call must not read content written after it")
+		})
+	}
+}
+
+// TestRename covers publishing by rename. The source must already carry the ownership
+// stamp: a node created outside the custodian may still be held open by whoever made it,
+// and stamping it after publication would hand that descriptor a root-owned node, which
+// ADR 2.01 forbids.
+func TestRename(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		from string
+		to   string
+		// noSource leaves the source out: either it is deliberately absent, or its path
+		// lies outside the sub-tree and so cannot be created through the custodian at all.
+		noSource bool
+		// plantUnowned writes the source behind the custodian's back, so it carries no stamp.
+		plantUnowned bool
+
+		wantErr   bool
+		wantErrIs error
+	}{
+		"an owned node is published":                    {from: "source.txt", to: "published.txt"},
+		"a node the custodian does not own is refused":  {from: "source.txt", to: "published.txt", plantUnowned: true, wantErr: true, wantErrIs: securefiles.ErrNotOwned},
+		"a source that is not there is reported":        {from: "source.txt", to: "published.txt", noSource: true, wantErr: true},
+		"a source outside the sub-tree is refused":      {from: "../escape.txt", to: "published.txt", noSource: true, wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
+		"a destination outside the sub-tree is refused": {from: "source.txt", to: "../escape.txt", wantErr: true, wantErrIs: securefiles.ErrPathEscapes},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			if !tc.noSource {
+				if tc.plantUnowned {
+					require.NoError(t, os.WriteFile(filepath.Join(dir, tc.from), []byte("payload"), 0600),
+						"Setup: could not plant the unstamped node")
+				} else {
+					require.NoError(t, c.WriteFile(tc.from, []byte("payload")), "Setup: could not seed the source")
+				}
+			}
+
+			err = c.Rename(tc.from, tc.to)
+
+			if !tc.wantErr {
+				require.NoError(t, err, "the rename should have succeeded")
+				require.NoFileExists(t, filepath.Join(dir, tc.from), "the source must be gone once published")
+
+				got, err := os.ReadFile(filepath.Join(dir, tc.to))
+				require.NoError(t, err, "the published node must be readable")
+				require.Equal(t, "payload", string(got), "the rename must carry the content over")
+				return
+			}
+
+			if tc.wantErrIs != nil {
+				require.ErrorIs(t, err, tc.wantErrIs, "unexpected error kind")
+			} else {
+				require.Error(t, err, "the rename should have been reported as failed")
+			}
+
+			require.NoFileExists(t, filepath.Join(dir, tc.to), "nothing may be published by a failed rename")
+			if !tc.noSource {
+				require.FileExists(t, filepath.Join(dir, tc.from), "the refused source must stay where it was")
+			}
+		})
+	}
+}
+
+// TestRenameDestinationSymlinkEscapesAreRefused verifies that renaming to a destination
+// path where an intermediate directory component is a symlink pointing outside the
+// custodian sub-tree is refused with ErrPathEscapes, preventing the source node from
+// escaping the custodian. The name passes lexical resolution, so the refusal is the
+// platform layer's physical containment: os.Root on POSIX, NT relative resolution on
+// Windows.
+func TestRenameDestinationSymlinkEscapesAreRefused(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err)
+	defer func() { _ = c.Close() }()
+
+	err = c.WriteFile("owned.txt", []byte("secret content"))
+	require.NoError(t, err)
+
+	outsideDir := t.TempDir()
+	symlinkPath := filepath.Join(dir, "link")
+	err = os.Symlink(outsideDir, symlinkPath)
+	if err != nil {
+		t.Skip("symlink creation not permitted in this environment")
+	}
+
+	err = c.Rename("owned.txt", "link/outside.txt")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "renaming into an intermediate symlink escaping the subtree must fail")
+
+	// Ensure the file did not escape to the outside directory.
+	_, err = os.Stat(filepath.Join(outsideDir, "outside.txt"))
+	require.ErrorIs(t, err, fs.ErrNotExist, "file must not have escaped to outside directory")
+
+	// Ensure the source file was not lost.
+	data, err := os.ReadFile(filepath.Join(dir, "owned.txt"))
+	require.NoError(t, err)
+	require.Equal(t, []byte("secret content"), data)
+}
+
+func TestRemove(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		path string
+		// recursive selects RemoveAll over Remove.
+		recursive bool
+		// seedFile and seedTree say what to create first; an escaping path gets neither,
+		// because the custodian refuses to create it just as it refuses to remove it.
+		seedFile bool
+		seedTree bool
+
+		wantErrIs error
+	}{
+		"a file is removed":                           {path: "victim.txt", seedFile: true},
+		"a populated sub-tree is removed recursively": {path: "tree", recursive: true, seedTree: true},
+		"a path outside the sub-tree is refused":      {path: "../escape.txt", wantErrIs: securefiles.ErrPathEscapes},
+		"a backslash escape is refused":               {path: "..\\escape.txt", wantErrIs: securefiles.ErrPathEscapes},
+		"an absolute path is refused":                 {path: "/etc/passwd", wantErrIs: securefiles.ErrPathEscapes},
+		"a recursive escape is refused":               {path: "../escape.txt", recursive: true, wantErrIs: securefiles.ErrPathEscapes},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+
+			switch {
+			case tc.seedTree:
+				sub, err := c.Subdir(tc.path)
+				require.NoError(t, err, "Setup: could not create the sub-tree")
+				require.NoError(t, sub.WriteFile("nested.txt", []byte("nested")), "Setup: could not fill the sub-tree")
+				// The nested custodian holds an open handle on the sub-tree: on Windows it
+				// cannot be removed until that handle is closed, so close it here to keep
+				// the test portable.
+				require.NoError(t, sub.Close(), "Setup: could not close the nested custodian")
+			case tc.seedFile:
+				require.NoError(t, c.WriteFile(tc.path, []byte("payload")), "Setup: could not seed the node")
+			}
+
+			if tc.recursive {
+				err = c.RemoveAll(tc.path)
+			} else {
+				err = c.Remove(tc.path)
+			}
+
+			if tc.wantErrIs != nil {
+				require.ErrorIs(t, err, tc.wantErrIs, "unexpected error kind")
+				return
+			}
+
+			require.NoError(t, err, "the removal should have succeeded")
+			require.NoFileExists(t, filepath.Join(dir, tc.path), "the node must be gone")
+		})
+	}
+}
+
+// TestAppendAndReadDirRefuseLinks pins that the link rule has no exceptions
+// left: a link standing at a name the custodian is asked to append to, or to
+// list, is refused exactly as every other open is. The link resolving inside
+// the sub-tree does not help it — the operations answer for the node at the
+// name, never for a link's target.
+func TestAppendAndReadDirRefuseLinks(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	c, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer func() { _ = c.Close() }()
+
+	// An in-tree node the link points at: legal target, planted link.
+	require.NoError(t, c.WriteFile("inside.txt", []byte("inside")), "Setup: could not seed an in-tree node")
+	require.NoError(t, os.Symlink("inside.txt", filepath.Join(dir, "log-link")), "Setup: could not plant the file link")
+
+	_, err = c.AppendFile("log-link")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the append must refuse a link standing at the name, not write through it")
+	got, err := os.ReadFile(filepath.Join(dir, "inside.txt"))
+	require.NoError(t, err, "Setup: the target must still be readable")
+	require.Equal(t, "inside", string(got), "no refused append may reach the link's target")
+
+	// A link standing at a directory name is refused the same way.
+	require.NoError(t, os.Mkdir(filepath.Join(dir, "realdir"), 0700), "Setup: could not create the directory")
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "realdir", "entry.txt"), []byte("x"), 0600), "Setup: could not fill the directory")
+	require.NoError(t, os.Symlink("realdir", filepath.Join(dir, "dir-link")), "Setup: could not plant the directory link")
+
+	_, err = c.ReadDir("dir-link")
+	require.ErrorIs(t, err, securefiles.ErrPathEscapes, "the listing must refuse a link standing at the name, not list through it")
+}
+
+// TestIntermediateLinksAreRefused pins the containment half of the link rule:
+// a link standing at an intermediate component of a name is refused exactly
+// like a leaf link is, by every operation that resolves a name — the reads,
+// the append, the create family, and both sides of a rename. The leaf pins
+// asked "is the node at the name a link"; the name-based operations the double
+// once resolved through os.Root followed an in-tree link instead of refusing
+// it, silently — the create landed in the link's target, the rename published
+// through it. Both platforms refuse the intermediate link now, the double
+// through openat2's resolve flags, Windows through OBJ_DONT_REPARSE, and
+// neither shows the refusal the difference between an escaping target and an
+// in-tree one.
+func TestIntermediateLinksAreRefused(t *testing.T) {
+	t.Parallel()
+
+	// plant puts the two intermediate-position links into a fresh tree: one
+	// escaping it, one whose target is a real directory inside it.
+	plant := func(t *testing.T, dir string) {
+		t.Helper()
+		require.NoError(t, os.MkdirAll(filepath.Join(dir, "outside", "deeper"), 0700), "Setup: could not create the outside node")
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "outside", "deeper", "entry.txt"), []byte("x"), 0600), "Setup: could not fill the outside tree")
+		require.NoError(t, os.Symlink(filepath.Join(dir, "outside"), filepath.Join(dir, "escape-link")), "Setup: could not plant the escaping link")
+		require.NoError(t, os.MkdirAll(filepath.Join(dir, "realdir", "deeper"), 0700), "Setup: could not create the in-tree target")
+		require.NoError(t, os.Symlink("realdir", filepath.Join(dir, "in-link")), "Setup: could not plant the in-tree link")
+	}
+
+	testCases := map[string]struct {
+		// op hands the custodian a name that resolves through one of the
+		// planted links, the way a caller would.
+		op func(c *securefiles.Custodian) error
+	}{
+		"the ownership check refuses an escaping link": {
+			op: func(c *securefiles.Custodian) error {
+				_, err := c.IsOwned("escape-link/deeper/entry.txt")
+				return err
+			},
+		},
+		"the listing refuses an escaping link": {
+			op: func(c *securefiles.Custodian) error {
+				_, err := c.ReadDir("escape-link/deeper")
+				return err
+			},
+		},
+		"the append refuses an escaping link": {
+			op: func(c *securefiles.Custodian) error {
+				f, err := c.AppendFile("escape-link/deeper/entry.txt")
+				if err == nil {
+					_ = f.Close()
+				}
+				return err
+			},
+		},
+		"the ownership check refuses an in-tree link too": {
+			op: func(c *securefiles.Custodian) error {
+				_, err := c.IsOwned("in-link/deeper")
+				return err
+			},
+		},
+		"the atomic write refuses an in-tree link": {
+			op: func(c *securefiles.Custodian) error {
+				return c.WriteFile("in-link/deeper/new.txt", []byte("x"))
+			},
+		},
+		"the create refuses an in-tree link": {
+			op: func(c *securefiles.Custodian) error {
+				f, err := c.CreateFile("in-link/deeper/new.txt")
+				if err == nil {
+					_ = f.Close()
+				}
+				return err
+			},
+		},
+		"the rename refuses an in-tree link as its destination": {
+			op: func(c *securefiles.Custodian) error {
+				if err := c.WriteFile("src.txt", []byte("x")); err != nil {
+					return err
+				}
+				return c.Rename("src.txt", "in-link/moved.txt")
+			},
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			dir := t.TempDir()
+			c, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer func() { _ = c.Close() }()
+			plant(t, dir)
+
+			require.ErrorIs(t, tc.op(c), securefiles.ErrPathEscapes, "resolving through a link at an intermediate component must be refused")
+		})
+	}
+}

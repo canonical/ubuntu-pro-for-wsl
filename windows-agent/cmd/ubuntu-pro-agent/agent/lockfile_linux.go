@@ -15,6 +15,7 @@ import (
 func createLockFile(path string) (f *os.File, err error) {
 	defer decorate.OnError(&err, "could not create lock file %s: %v", path, err)
 
+	//nolint:forbidigo // Establishing process mutual exclusion via flock in the private directory requires os.OpenFile.
 	f, err = os.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err

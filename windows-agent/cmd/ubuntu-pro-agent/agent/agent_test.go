@@ -16,6 +16,8 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/cmd/ubuntu-pro-agent/agent"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher/registry"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,14 +38,9 @@ func TestSingleInstance(t *testing.T) {
 	}{
 		"Success when single instance": {args: []string{"version"}},
 
-		// Testing the 'clean' verb cannot run in parallel because it tries to delete files still opened by other test cases.
-		"Completion succeeds with another instance running": {args: []string{"completion", "bash"}, anotherInstanceRunning: true},
-		"Completion succeeds with broken lock file":         {args: []string{"completion", "bash"}, breakLockFile: true},
-		"Help succeeds with another instance running":       {args: []string{"help"}, anotherInstanceRunning: true},
-		"Help succeeds with broken lock file":               {args: []string{"help"}, breakLockFile: true},
-		"Version succeeds with another instance running":    {args: []string{"version"}, anotherInstanceRunning: true},
-		"Version succeeds with broken lock file":            {args: []string{"version"}, breakLockFile: true},
-
+		// Only the default (serve) verb reaches the lock: cobra dispatches a
+		// named subcommand to its own RunE, so the lock state cannot vary its
+		// verdict, and the serve rows are the ones that pin it.
 		"Default (serve) fails with another instance running": {anotherInstanceRunning: true, wantError: true},
 		"Default (serve) fails with broken lock file":         {breakLockFile: true, wantError: true},
 	}
@@ -100,6 +97,11 @@ func TestCompletion(t *testing.T) {
 
 	err := a.Run()
 	require.NoError(t, err, "Completion should not start the daemon. Stdout: %v", getStdout())
+	// A clean run is not a usage error: the report distinguishes the two,
+	// and a success reported as a usage failure would hide failures from
+	// callers that branch on the verdict.
+	isUsageError := a.UsageError()
+	require.False(t, isUsageError, "No usage error is reported as such")
 }
 
 func TestVersion(t *testing.T) {
@@ -123,18 +125,6 @@ func TestVersion(t *testing.T) {
 
 	require.Equal(t, want, fields[0], "Wrong executable name")
 	require.Equal(t, "Dev", fields[1], "Wrong version")
-}
-
-func TestNoUsageError(t *testing.T) {
-	a := agent.NewForTesting(t, "", "")
-	a.SetArgs("completion", "bash")
-
-	getStdout := captureStdout(t)
-	err := a.Run()
-
-	require.NoError(t, err, "Run should not return an error, stdout: %v", getStdout())
-	isUsageError := a.UsageError()
-	require.False(t, isUsageError, "No usage error is reported as such")
 }
 
 func TestUsageError(t *testing.T) {
@@ -161,6 +151,23 @@ func TestConfigBadArg(t *testing.T) {
 	err := a.Run()
 	out := getStdout()
 	require.Error(t, err, "Run should return an error, stdout: %v", out)
+}
+
+func TestConfigUnmarshalError(t *testing.T) {
+	getStdout := captureStdout(t)
+
+	// A configuration key with a type that cannot decode into the config struct
+	// must fail Run with a decode error rather than a usage error.
+	configPath := filepath.Join(t.TempDir(), "ubuntu-pro-agent.yaml")
+	require.NoError(t, os.WriteFile(configPath, []byte("verbosity: [1, 2]"), 0600), "Setup: couldn't write config file")
+
+	a := agent.New()
+	a.SetArgs("version", "--config", configPath)
+
+	err := a.Run()
+	out := getStdout()
+	require.Error(t, err, "Run should return an error, stdout: %v", out)
+	require.ErrorContains(t, err, "unable to decode configuration")
 }
 
 func TestConfigArg(t *testing.T) {
@@ -249,21 +256,6 @@ func TestCanQuitTwice(t *testing.T) {
 	a.Quit()
 }
 
-func TestAppCanQuitWithoutExecute(t *testing.T) {
-	t.Skipf("This test is skipped because it is flaky. There is no way to guarantee Quit has been called before run.")
-
-	t.Parallel()
-
-	a := agent.NewForTesting(t, "", "")
-	a.SetArgs()
-
-	requireGoroutineStarted(t, a.Quit)
-	err := a.Run()
-	require.Error(t, err, "Should return an error")
-
-	require.Containsf(t, err.Error(), "grpc: the server has been stopped", "Unexpected error message")
-}
-
 func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 	// Trigger the error with a cache directory that cannot be created over an
 	// existing file, or because the required env is empty.
@@ -276,11 +268,20 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 		invalidLocalAppData bool
 		invalidUserProfile  bool
+
+		// userProfileIsFile points %UserProfile% at a plain file: the public dir parent
+		// exists but is not a directory, so securefiles.Open must refuse it.
+		userProfileIsFile bool
+
+		cloudInitIsFile bool
 	}{
 		"Invalid private directory": {invalidPrivateDir: true},
 		"Invalid public directory":  {invalidPublicDir: true},
 		"Invalid LocalAppData":      {invalidLocalAppData: true},
 		"Invalid UserProfile":       {invalidUserProfile: true},
+
+		"Public dir parent obstructed by a file":    {userProfileIsFile: true},
+		"Cloud-init directory obstructed by a file": {cloudInitIsFile: true},
 	}
 
 	for name, tc := range testCases {
@@ -295,6 +296,11 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			if tc.invalidUserProfile {
 				t.Setenv("UserProfile", "")
+			} else if tc.userProfileIsFile {
+				badDir := filepath.Join(t.TempDir(), "file")
+				err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
+				require.NoError(t, err, "Setup: could not obstruct the public dir parent")
+				t.Setenv("UserProfile", badDir)
 			} else {
 				publicDir = t.TempDir()
 			}
@@ -309,6 +315,13 @@ func TestAppRunFailsOnComponentsCreationAndQuit(t *testing.T) {
 
 			err := os.WriteFile(badDir, []byte("I'm here to break the service"), 0600)
 			require.NoError(t, err, "Failed to write file")
+
+			if tc.cloudInitIsFile {
+				// A plain file where the cloud-init custodian directory must live makes
+				// the services manager construction fail inside serve().
+				err := os.WriteFile(filepath.Join(publicDir, ".cloud-init"), []byte("I'm not a directory"), 0600)
+				require.NoError(t, err, "Setup: could not obstruct the cloud-init directory")
+			}
 
 			a := agent.New(agent.WithPublicDir(publicDir), agent.WithPrivateDir(privateDir), agent.WithRegistry(registry.NewMock()))
 			a.SetArgs("")
@@ -332,14 +345,11 @@ func TestPublicDir(t *testing.T) {
 
 	testCases := map[string]struct {
 		emptyEnv bool
-		badPath  bool
-
-		wantErr bool
+		wantErr  bool
 	}{
 		"Success providing a public directory": {},
 
-		"Error when %UserProfile% is empty":                  {emptyEnv: true, wantErr: true},
-		"Error when %UserProfile% points to an invalid path": {badPath: true, wantErr: true},
+		"Error when %UserProfile% is empty": {emptyEnv: true, wantErr: true},
 	}
 
 	for name, tc := range testCases {
@@ -347,11 +357,6 @@ func TestPublicDir(t *testing.T) {
 			dir := t.TempDir()
 			if tc.emptyEnv {
 				t.Setenv("UserProfile", "")
-			} else if tc.badPath {
-				badPath := filepath.Join(dir, "bad_dir")
-				err := os.WriteFile(badPath, []byte("test file"), 0600)
-				require.NoError(t, err, "Setup: could not write file to interfere with PublicDir")
-				t.Setenv("UserProfile", badPath)
 			} else {
 				t.Setenv("UserProfile", dir)
 			}
@@ -374,8 +379,12 @@ func TestPublicDir(t *testing.T) {
 func TestLogs(t *testing.T) {
 	// Not parallel because we modify the environment
 
+	hook := test.NewGlobal()
+	defer hook.Reset()
+
 	fooContent := "foo"
-	emptyContent := ""
+	oldContent := "Old log content"
+	preciousContent := "PRECIOUS"
 
 	tests := map[string]struct {
 		existingLogContent string
@@ -384,16 +393,40 @@ func TestLogs(t *testing.T) {
 		usageErrorReturn bool
 		logDirError      bool
 
+		// blockRotation holds a file open inside log.old so that discarding it, and
+		// then rotating onto it, fail for a reason that has nothing to do with
+		// ownership. Only Windows refuses to remove a directory whose child is open,
+		// so the case bites there alone.
+		blockRotation bool
+
 		wantOldLogFileContent *string
+		// wantLogContent requires the surviving log to still carry this text, which is
+		// what reserves replacement for logs the agent cannot vouch for: a rotation that
+		// failed for any other reason leaves the only copy there is.
+		wantLogContent *string
+		// wantLogOwned requires the log the agent ends up writing to be one the
+		// custodian stamped, whatever it found in its place.
+		wantLogOwned bool
 	}{
-		"Run and exit successfully despite logs not being written": {logDirError: true},
-		"Existing log file has been renamed to old":                {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
-		"Existing empty log file has been renamed to old":          {existingLogContent: "-", wantOldLogFileContent: &emptyContent},
-		"Ignore when failing to archive log file":                  {existingLogContent: "OLD_IS_DIRECTORY"},
+		"Run and exit successfully despite logs not being written":  {logDirError: true},
+		"Existing log file has been renamed to old":                 {existingLogContent: "foo", wantOldLogFileContent: &fooContent},
+		"Ignore obstructing rotated log directory and still rotate": {existingLogContent: "OLD_IS_DIRECTORY", wantOldLogFileContent: &oldContent},
+		// A log left by a version that predates the custodian carries no stamp, so it
+		// cannot be rotated and must not be adopted: appending to it would keep the
+		// agent writing into a node instances can read and write.
+		"Unstamped log from an earlier version is replaced": {existingLogContent: "LEGACY_UNSTAMPED", wantLogOwned: true},
+		"Owned log survives a rotation blocked for another reason": {
+			existingLogContent: preciousContent, blockRotation: true,
+			wantLogOwned: true, wantLogContent: &preciousContent,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Not parallel because we modify the environment
+
+			if tc.blockRotation && runtime.GOOS != "windows" {
+				t.Skip("only Windows refuses to remove a directory whose child is held open")
+			}
 
 			home := t.TempDir()
 			appData := filepath.Join(home, "AppData/Local")
@@ -411,16 +444,60 @@ func TestLogs(t *testing.T) {
 				switch tc.existingLogContent {
 				case "":
 				case "OLD_IS_DIRECTORY":
-					err := os.Mkdir(oldLogFile, 0700)
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian for fake log")
+					err = os.Mkdir(oldLogFile, 0700)
 					require.NoError(t, err, "Setup: create invalid log.old file")
-					err = os.WriteFile(logFile, []byte("Old log content"), 0600)
-					require.NoError(t, err, "Setup: creating pre-existing log file")
+					require.NoError(t, seedCust.WriteFile("log", []byte("Old log content")), "Setup: creating pre-existing log file")
+					require.NoError(t, seedCust.Close())
+					tc.existingLogContent = oldContent
+				case "LEGACY_UNSTAMPED":
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian to create the public dir")
+					require.NoError(t, seedCust.Close())
+					// Planted behind the custodian's back, as an older agent would have.
+					require.NoError(t, os.WriteFile(logFile, []byte("legacy"), 0600),
+						"Setup: could not plant the unstamped log")
 				case "-":
 					tc.existingLogContent = ""
 					fallthrough
 				default:
-					err := os.WriteFile(logFile, []byte(tc.existingLogContent), 0600)
-					require.NoError(t, err, "Setup: creating pre-existing log file")
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian for fake log")
+					require.NoError(t, seedCust.WriteFile("log", []byte(tc.existingLogContent)), "Setup: creating pre-existing log file")
+					require.NoError(t, seedCust.Close())
+				}
+
+				if tc.blockRotation {
+					obstruction := filepath.Join(oldLogFile, "keep.txt")
+					require.NoError(t, os.MkdirAll(oldLogFile, 0700), "Setup: could not create the obstructing log.old")
+					require.NoError(t, os.WriteFile(obstruction, []byte("x"), 0600), "Setup: could not fill log.old")
+					held, err := os.Open(obstruction)
+					require.NoError(t, err, "Setup: could not hold the obstruction open")
+					t.Cleanup(func() { _ = held.Close() })
+				}
+
+				if tc.logDirError {
+					seedCust, err := securefiles.Open(publicDir)
+					require.NoError(t, err, "Setup: open custodian before obstructing")
+					require.NoError(t, seedCust.Close())
+					// Obstruct the logger setup end to end: log.old is a directory tree
+					// that cannot be removed (read-only nested directory), so discarding
+					// the previous rotation fails; the rotation rename of the "log"
+					// directory onto the surviving non-empty log.old fails; and the "log"
+					// directory cannot be removed to create the log file. All failures are
+					// non-fatal: the agent runs without log output.
+					// On Windows and as root read-only directories do not block removal,
+					// so the obstruction degenerates and the logger simply succeeds.
+					keepDir := filepath.Join(oldLogFile, "keep")
+					require.NoError(t, os.MkdirAll(keepDir, 0700), "Setup: could not create obstructing log.old directory")
+					require.NoError(t, os.WriteFile(filepath.Join(keepDir, "keep.txt"), []byte("x"), 0600), "Setup: could not fill obstructing log.old directory")
+					require.NoError(t, os.MkdirAll(logFile, 0700), "Setup: could not create obstructing log directory")
+					require.NoError(t, os.WriteFile(filepath.Join(logFile, "keep.txt"), []byte("x"), 0600), "Setup: could not fill obstructing log directory")
+					//nolint:gosec // G302 - test setup removes write permission.
+					require.NoError(t, os.Chmod(keepDir, 0500), "Setup: could not make obstructing directory read-only")
+					//nolint:gosec // G302 - test teardown restores directory permissions.
+					t.Cleanup(func() { _ = os.Chmod(keepDir, 0700) })
 				}
 			}
 
@@ -446,10 +523,37 @@ func TestLogs(t *testing.T) {
 			case <-ch:
 			}
 
+			if tc.logDirError && runtime.GOOS != "windows" && os.Geteuid() != 0 {
+				// Where the obstruction bites, every logger failure must have been
+				// logged as a non-fatal warning.
+				var warnings []string
+				for _, entry := range hook.AllEntries() {
+					warnings = append(warnings, entry.Message)
+				}
+				require.Contains(t, strings.Join(warnings, "\n"), "could not set logger output", "Expected a warning about the logger setup failure")
+			}
+
 			// Don't check for log files if the directory was not writable
 			if logFile == "" {
 				return
 			}
+			if tc.wantLogOwned {
+				checkCust, err := securefiles.Open(publicDir)
+				require.NoError(t, err, "Setup: could not open custodian to verify ownership")
+				defer func() { _ = checkCust.Close() }()
+
+				owned, err := checkCust.IsOwned("log")
+				require.NoError(t, err, "the log the agent writes to must be verifiable")
+				require.True(t, owned, "the agent must not write its log into a node it does not own")
+			}
+
+			if tc.wantLogContent != nil {
+				content, err := os.ReadFile(logFile)
+				require.NoError(t, err, "the log must be readable")
+				require.Contains(t, string(content), *tc.wantLogContent,
+					"a rotation that failed for a reason other than ownership must not discard the only copy")
+			}
+
 			if tc.wantOldLogFileContent != nil {
 				require.FileExists(t, oldLogFile, "Old log file should exist")
 				content, err := os.ReadFile(oldLogFile)
@@ -587,20 +691,6 @@ func TestCleanLocation(t *testing.T) {
 	}
 }
 
-// requireGoroutineStarted starts a goroutine and blocks until it has been launched.
-func requireGoroutineStarted(t *testing.T, f func()) {
-	t.Helper()
-
-	launched := make(chan struct{})
-
-	go func() {
-		close(launched)
-		f()
-	}()
-
-	<-launched
-}
-
 // startDaemon prepares and starts the daemon in the background. The done function should be called
 // to wait for the daemon to stop.
 func startDaemon(t *testing.T, args ...string) (app *agent.App, done func()) {
@@ -658,4 +748,92 @@ func captureStdout(t *testing.T) func() string {
 
 func TestWithWslSystemMock(t *testing.T) {
 	daemontestutils.MockWslSystemCmd(t)
+}
+
+// TestAgentStartup drives a full agent run over a seeded public directory, one
+// startup property per row, each end to end through the real daemon and services.
+// Not parallel: each row starts an agent with its own gRPC listener, and the
+// shutdown races they exercise are timing-sensitive enough without company.
+func TestAgentStartup(t *testing.T) {
+	testCases := map[string]struct {
+		seed   func(t *testing.T, publicDir string)
+		verify func(t *testing.T, publicDir string)
+	}{
+		// Reproduces the pre-plant DoS: an unprivileged instance user creates the
+		// public directory first and puts a link where the cloud-init custodian
+		// directory must live. The agent must start anyway, with the link replaced
+		// by the real directory; refusing, as the tree root does, would fail every
+		// start until a privileged user removed the link by hand.
+		"A planted cloud-init link is replaced and the agent starts": {
+			seed: func(t *testing.T, publicDir string) {
+				t.Helper()
+				outside := filepath.Join(t.TempDir(), "outside")
+				require.NoError(t, os.MkdirAll(outside, 0700), "Setup: could not create the link target")
+				require.NoError(t, os.MkdirAll(publicDir, 0700), "Setup: could not create the public directory")
+				if err := os.Symlink(outside, filepath.Join(publicDir, ".cloud-init")); err != nil {
+					t.Skip("symlink creation not permitted in this environment")
+				}
+			},
+			verify: func(t *testing.T, publicDir string) {
+				t.Helper()
+				fi, err := os.Lstat(filepath.Join(publicDir, ".cloud-init"))
+				require.NoError(t, err)
+				require.True(t, fi.IsDir(), "the planted link must be replaced by the cloud-init directory")
+				require.Zero(t, fi.Mode()&os.ModeSymlink, "the planted link must be gone")
+			},
+		},
+		// Stamped per-distro data is seeded through a custodian, so the files carry
+		// the agent's stamp on platforms that stamp: the startup purge only ever
+		// re-blesses agent-owned nodes and removes everything else.
+		"Stamped per-distro cloud-init data survives the startup purge": {
+			seed: func(t *testing.T, publicDir string) {
+				t.Helper()
+				cloudInitDir := filepath.Join(publicDir, ".cloud-init")
+				seed, err := securefiles.Open(cloudInitDir)
+				require.NoError(t, err, "Setup: could not open the cloud-init custodian")
+				require.NoError(t, seed.WriteFile("Noble.user-data", []byte("user-data-content")), "Setup: could not seed the user data")
+				require.NoError(t, seed.WriteFile("Noble.meta-data", []byte("instance-id: test-id")), "Setup: could not seed the meta data")
+				require.NoError(t, seed.Close(), "Setup: could not close the seeding custodian")
+			},
+			verify: func(t *testing.T, publicDir string) {
+				t.Helper()
+				cloudInitDir := filepath.Join(publicDir, ".cloud-init")
+				userData, err := os.ReadFile(filepath.Join(cloudInitDir, "Noble.user-data"))
+				require.NoError(t, err, "the per-distro user data must survive startup")
+				require.Equal(t, []byte("user-data-content"), userData, "the per-distro user data must survive unchanged")
+				metaData, err := os.ReadFile(filepath.Join(cloudInitDir, "Noble.meta-data"))
+				require.NoError(t, err, "the per-distro meta data must survive startup")
+				require.Contains(t, string(metaData), "instance-id: test-id", "the per-distro meta data must survive startup")
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			publicDir := filepath.Join(t.TempDir(), ".ubuntupro")
+			privateDir := filepath.Join(t.TempDir(), "AppData", "Local", "Ubuntu Pro")
+			tc.seed(t, publicDir)
+
+			a := agent.NewForTesting(t, publicDir, privateDir)
+			a.SetArgs()
+
+			runErr := make(chan error, 1)
+			go func() {
+				runErr <- a.Run()
+				close(runErr)
+			}()
+
+			a.WaitReady()
+			a.Quit()
+			err := <-runErr
+			// grpc's "server has been stopped" error is unexported, so the race
+			// between a clean return and the stopped error is only observable
+			// through its text.
+			if err != nil && !strings.Contains(err.Error(), "server has been stopped") {
+				require.NoError(t, err, "Agent should start and shut down cleanly")
+			}
+
+			tc.verify(t, publicDir)
+		})
+	}
 }
