@@ -80,7 +80,7 @@ that warmly welcomes community contributions, suggestions, fixes and
 constructive feedback.
 
 * [Code of conduct](https://ubuntu.com/community/ethos/code-of-conduct)
-* [Contribution guidelines](/howto/contributing)
+* [Contribution guidelines](/contributing/index)
 
 Thinking about using Ubuntu on WSL for your next project? Get in touch!
 
@@ -93,4 +93,11 @@ Tutorials </tutorials/index>
 How-to guides </howto/index>
 Reference </reference/index>
 Explanation </explanation/index>
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 2
+
+Contributing <contributing/index.md>
 ```

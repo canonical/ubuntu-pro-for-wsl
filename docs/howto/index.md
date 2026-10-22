@@ -41,17 +41,6 @@ index-gpu-and-graphics
 
 ```
 
-## Contributing
-
-Contribute to the development of Ubuntu on WSL.
-
-```{toctree}
-:titlesonly:
-
-index-contributing
-
-```
-
 ## Testing
 
 Automate the testing of applications for Ubuntu on WSL with GitHub workflows.
