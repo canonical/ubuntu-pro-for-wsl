@@ -28,7 +28,10 @@ After cloning the fork, change into the `/docs/` directory.
 A makefile is used to preview and test the documentation locally.
 To view all of the possible commands, run:
 
-```text
+```{terminal}
+:prompt: ~/ubuntu-pro-for-wsl/docs$
+:copy:
+
 make
 ```
 
@@ -60,79 +63,89 @@ Your PR will generate a preview build of the documentation on Read the Docs.
 This preview appears as a check in the CI. Click on the check to open the
 preview.
 
-## Note on using code blocks
+## Note on using terminal blocks
 
-In the Ubuntu WSL docs, code blocks are used to document:
+In the Ubuntu WSL docs, terminal blocks are used to document:
 
 - Ubuntu terminal commands
 - PowerShell terminal commands
 - Terminal outputs
-- Code and config files
 
-We follow specific conventions when including code blocks so that they
-are readable and functional.
+Terminal blocks are distinct from typical markdown code blocks and are
+described in this section.
 
-### Include prompts when documenting terminal commands
+### Use the `{terminal}` directive for commands
 
-It is common that Ubuntu and PowerShell terminal commands are included in the
-same page. We use prompts to ensure that the reader can distinguish between
-them.
+Use the MyST `{terminal}` directive for any block that represents a command
+typed at a prompt, whether or not it also shows output.
 
-Here are some examples:
+A basic example:
 
-- PowerShell prompt symbol: `>`
-- PowerShell prompt symbol with path: `C:\Users\username>`
-- PowerShell prompt symbol with path and PowerShell prefix: `PS C:\Users\username>`
-- Ubuntu prompt symbol: `$`
-- Ubuntu prompt symbol with user and host: `<username>@<host>:~$`
+````text
+```{terminal}
+:prompt: $
+:copy:
 
-Whether to include the path or username@host depends on whether it is useful in
-the context of the documentation being written. For example, if demonstrating
-the use of multiple WSL instances, including the user and host can make it
-easier to tell the instances apart.
+sudo apt update
+```
+````
 
-### Exclude prompts from clipboard when using copy button
+In this example, you can see three elements specified, in order:
 
-The WSL docs automatically strips prompts when a user clicks the **copy**
-button on a code block. This is to prevent errors when a reader pastes the full
-content of a copy block into their terminal.
+1. The prompt symbol to be used
+1. A copy button that only copies the command
+1. The command itself
 
-We use a solution based on regular expressions, which identifies the first
-instance of a prompt symbol followed by whitespace on a particular line before
-removing the text before that symbol.
+These docs use two types of prompts frequently:
 
-There may be edge-cases when this creates problems; for example, you should
-include whitespace after a prompt but if you don't it may not be removed during
-copying.
+* PowerShell: `:prompt: PS>`
+* Ubuntu/Bash: `:prompt: $`
 
-Always test code blocks when you include them to ensure that the correct text
-is captured during the copy operation. If you encounter a problem or edge-case
-contact the maintainers or file an issue.
+Use a directory-aware prompt, such as `:prompt: ~/project$`, when the working
+directory is useful information; for example, when there are a series of
+commands which must be run in a specific directory or multiple specific
+directories.
 
-### Separate input from output and remove copy button from output blocks
+If you want a block that contains more than one command, split it into
+consecutive `{terminal}` blocks. These will render as a single block, with each
+command on its own line with its own prompt and copy button.
 
-Terminal commands are separated from the output that they generate. Explanatory
-text can be included to explain to the reader what is being presented:
+### Handling input and output
 
-- "Run the following command..."
-- "This will generate the following output..."
+The `{terminal}` directive can show a command's output directly below it in the
+same block. After the command, any content that follows the first blank line is
+treated as output. Again, only the command remains copyable.
 
-Copy buttons are not included in output blocks. This is to prevent an output
-being confused for an input. There are also few reasons why someone would copy
-an output from documentation.
+```{terminal}
+:prompt: $
+:copy:
 
-To exclude a copy button from an output block the `no-copy` CSS class must be
-included within the code block:
+pro status
 
-```text
-:class: no-copy
+STATUS
+Attached: no
 ```
 
-:::{note}
-A code-block must be labelled with the [code-block
-directive](https://mystmd.org/guide/directives#directive-code) for this to
-work.
-:::
+In situations where you only want to include output, use `:output-only:`, and
+don't add a copy button:
+
+````text
+```{terminal}
+:output-only:
+
+<output text>
+```
+````
+
+Standalone output blocks can be useful when you want to give a preamble
+that deals with the output specifically:
+
+> In the logs, you should see the name of the packages, for example...
+
+### Code and config files stay as plain code blocks
+
+File content, scripts, and code examples should use regular, fenced code blocks,
+not `{terminal}`.
 
 ## The Open Documentation Academy
 
