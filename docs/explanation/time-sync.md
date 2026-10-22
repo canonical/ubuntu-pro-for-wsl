@@ -62,8 +62,11 @@ further configuration. So, on Ubuntu 26.04 LTS and later you don't have to do an
 opt into the implicit time synchronization provided by Hyper-V. If you want to disable `chrony`
 completely, run the following command:
 
-```{code-block} text
-$ systemctl disable chrony.service
+```{terminal}
+:prompt: $
+:copy:
+
+systemctl disable chrony.service
 ```
 
 On the other hand, if you want `chrony` to fix your clock inside WSL instances, then you need to
@@ -76,8 +79,11 @@ SYNC_IN_CONTAINER="yes"
 
 Then restart the systemd unit to apply the changes:
 
-```{code-block} text
-$ systemctl restart chrony.service
+```{terminal}
+:prompt: $
+:copy:
+
+systemctl restart chrony.service
 ```
 
 With that, you tell `chrony` to not worry about being inside a container (WSL instances are
@@ -106,8 +112,11 @@ Ubuntu 24.04 LTS and previous releases have the `systemd-timesyncd.service` unit
 If the default time synchronization suits your needs, you should disable that unit to avoid
 conflicts with the Hyper-V implicit time synchronization. 
 
-```{code-block} text
-$ systemctl disable systemd-timesyncd.service
+```{terminal}
+:prompt: $
+:copy:
+
+systemctl disable systemd-timesyncd.service
 ```
 
 To change which NTP servers `systemd-timesyncd` synchronizes with, edit the file

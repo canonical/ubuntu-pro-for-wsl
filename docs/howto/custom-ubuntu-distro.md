@@ -48,39 +48,54 @@ For the next step, it is assumed that this file is located in the default
 
 Open a PowerShell terminal and run an instance of Ubuntu on WSL, for example:
 
-```{code-block} text
-> wsl ~ -d Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl ~ -d Ubuntu-26.04
 ```
 
 From this Ubuntu environment, move the tarball from the Downloads directory
 into the Ubuntu instance, and change the extension from `.wsl` to `.tar`, using
 this command:
 
-```{code-block} text
-$ mv /mnt/c/Users/<username>/Downloads/ubuntu-26.04.1-wsl-amd64.wsl ./ubuntu-26.04.1-wsl-amd64.tar
+```{terminal}
+:prompt: $
+:copy:
+
+mv /mnt/c/Users/<username>/Downloads/ubuntu-26.04.1-wsl-amd64.wsl ./ubuntu-26.04.1-wsl-amd64.tar
 ```
 
-```{admonition} Additional step if the WSL image has a .gz extension
+````{admonition} Additional step if the WSL image has a .gz extension
 :class: tip
 If the image you downloaded has a filename that ends in `.wsl.gz`, rather than
 `.wsl`, run the following command before changing the extension to `.tar`:
 
-    $ gunzip /mnt/c/Users/<username>/Downloads/ubuntu-26.04.1-wsl-amd64.wsl.gz
+```{terminal}
+:prompt: $
+:copy:
+
+gunzip /mnt/c/Users/<username>/Downloads/ubuntu-26.04.1-wsl-amd64.wsl.gz
 ```
+````
 
 In the home directory (`~`), create a directory to store the rootfs of your
 custom distro:
 
-```{code-block} text
-:caption: ~
-$ mkdir myNewUbuntu
+```{terminal}
+:prompt: $
+:copy:
+
+mkdir myNewUbuntu
 ```
 
 Extract the rootfs into that new directory:
 
-```{code-block} text
-:caption: ~
-$ sudo tar -xpf ubuntu-26.04.1-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
+```{terminal}
+:prompt: $
+:copy:
+
+sudo tar -xpf ubuntu-26.04.1-wsl-amd64.tar -C myNewUbuntu --numeric-owner --absolute-names
 ```
 
 ```{tip}
@@ -102,8 +117,11 @@ There are two configuration files for the WSL distro that you are customising:
 
 Open the configuration file:
 
-```{code-block} text
-$ sudo vim ~/myNewUbuntu/etc/wsl-distribution.conf
+```{terminal}
+:prompt: $
+:copy:
+
+sudo vim ~/myNewUbuntu/etc/wsl-distribution.conf
 ```
 
 Change the name of your distro and the name of its icon:
@@ -132,23 +150,38 @@ Note the following options, which will be configured later:
 
 A quick way to test modifying the distro icon is to use `imagemagick`:
 
-```{code-block} text
-$ sudo apt update
-$ sudo apt install imagemagick
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt update
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt install imagemagick
 ```
 
 Once installed, create a grayscale icon using its `convert` command:
 
-```{code-block} text
-$ convert ~/myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray ~/myNewUbuntu/usr/share/wsl/myIcon.ico
+```{terminal}
+:prompt: $
+:copy:
+
+convert ~/myNewUbuntu/usr/share/wsl/input.ico -colorspace Gray ~/myNewUbuntu/usr/share/wsl/myIcon.ico
 ```
 
 ### Boot configuration file
 
 You can also customise which settings are applied to the distro on boot:
 
-```{code-block} text
-$ sudo vim ~/myNewUbuntu/etc/wsl.conf
+```{terminal}
+:prompt: $
+:copy:
+
+sudo vim ~/myNewUbuntu/etc/wsl.conf
 ```
 
 For the purpose of this guide, we will keep the default boot settings.
@@ -221,24 +254,47 @@ using the `apt` package manager for Ubuntu.
 From the home directory (`~`) of your Ubuntu instance, mount the necessary file
 systems:
 
-```{code-block} text
-:caption: ~
-$ sudo mount -t proc /proc myNewUbuntu/proc
-$ sudo mount --rbind --make-rslave /sys myNewUbuntu/sys
-$ sudo mount --rbind --make-rslave /dev myNewUbuntu/dev
-$ sudo mount --rbind --make-rslave /run myNewUbuntu/run
+```{terminal}
+:prompt: $
+:copy:
+
+sudo mount -t proc /proc myNewUbuntu/proc
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo mount --rbind --make-rslave /sys myNewUbuntu/sys
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo mount --rbind --make-rslave /dev myNewUbuntu/dev
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo mount --rbind --make-rslave /run myNewUbuntu/run
 ```
 
 Then `chroot` into the root directory of your custom distro and open a bash shell:
 
-```{code-block} text
-$ sudo chroot ~/myNewUbuntu /bin/bash
+```{terminal}
+:prompt: $
+:copy:
+
+sudo chroot ~/myNewUbuntu /bin/bash
 ```
 
 If successful, you will see a prompt for the root user:
 
 ```{code-block} text
-:class: no-copy
+:class: no-copybutton
 root@<hostname>:/#
 ```
 
@@ -246,25 +302,72 @@ You can now manage packages for your custom distro. For example, `btop` is a
 terminal-based resource monitor that is not installed on Ubuntu by default. To
 make it available in your custom distro, run the following as the root user:
 
-```{code-block} text
+```{terminal}
+:user: root
+:host: <hostname>
+:dir: /
+:copy:
+
 apt update
+```
+
+```{terminal}
+:user: root
+:host: <hostname>
+:dir: /
+:copy:
+
 apt upgrade -y
+```
+
+```{terminal}
+:user: root
+:host: <hostname>
+:dir: /
+:copy:
+
 apt install btop
 ```
 
 When you're finished managing packages, exit the `chroot` environment:
 
-```{code-block} text
+```{terminal}
+:user: root
+:host: <hostname>
+:dir: /
+:copy:
+
 exit
 ```
 
 After exiting the `chroot` environment it's useful to cleanup the mount points.
 
-```{code-block} text
-$ sudo umount -R myNewUbuntu/proc
-$ sudo umount -R myNewUbuntu/sys
-$ sudo umount -R myNewUbuntu/dev
-$ sudo umount -R myNewUbuntu/run
+```{terminal}
+:prompt: $
+:copy:
+
+sudo umount -R myNewUbuntu/proc
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo umount -R myNewUbuntu/sys
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo umount -R myNewUbuntu/dev
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo umount -R myNewUbuntu/run
 ```
 
 ## Create the final distro file
@@ -273,30 +376,46 @@ Next, you will create the installable version of your custom distro.
 
 Change into the distro directory:
 
-```{code-block} text
-$ cd ~/myNewUbuntu
+```{terminal}
+:prompt: $
+:copy:
+
+cd ~/myNewUbuntu
 ```
 
 Inside that directory, compress the rootfs, outputting the tarball to the parent directory:
 
-```{code-block} text
-:caption: ~/myNewUbuntu
-$ sudo tar --numeric-owner --absolute-names --one-file-system -czvf ../myNewUbuntu.tar .
+```{terminal}
+:prompt: $
+:copy:
+
+sudo tar --numeric-owner --absolute-names --one-file-system -czvf ../myNewUbuntu.tar .
 ```
 
 Then `cd` into the home directory and change the file extension of the distro
 file:
 
-```{code-block} text
-$ cd ~
-$ mv myNewUbuntu.tar myNewUbuntu.wsl
+```{terminal}
+:prompt: $
+:copy:
+
+cd ~
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+mv myNewUbuntu.tar myNewUbuntu.wsl
 ```
 
 Finally, move the distro to a Windows directory:
 
-```{code-block} text
-:caption: ~
-$ sudo mv myNewUbuntu.wsl /mnt/c/Users/<username>/Downloads/
+```{terminal}
+:prompt: $
+:copy:
+
+sudo mv myNewUbuntu.wsl /mnt/c/Users/<username>/Downloads/
 ```
 
 ## Test your custom Ubuntu distro

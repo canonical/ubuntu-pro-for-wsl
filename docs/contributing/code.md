@@ -80,8 +80,11 @@ This is the Windows-side agent that manages the distros.
 
 1. Uninstall Pro for WSL if you had installed previously:
 
-    ```{code-block} powershell
-    > Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage
+    ```{terminal}
+    :prompt: PS>
+    :copy:
+
+    Get-AppxPackage -Name CanonicalGroupLimited.UbuntuPro | Remove-AppxPackage
     ```
 
 2. Follow the download steps to download UbuntuProForWSL
@@ -97,28 +100,40 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
 
 1. Uninstall the WSL-Pro-Service from your distro if you had it installed previously:
 
-    ```{code-block} text
-    $ sudo apt remove wsl-pro-service
+    ```{terminal}
+    :prompt: $
+    :copy:
+
+    sudo apt remove wsl-pro-service
     ```
 
 2. Follow the download steps to download the WSL-Pro-Service.
 3. Unzip the artifact.
 4. Navigate to the unzipped directory containing the .deb file. Here is a possible path:
 
-    ```{code-block} text
-    $ cd /mnt/c/Users/<username>/Downloads/wsl-pro-service_*
+    ```{terminal}
+    :prompt: $
+    :copy:
+
+    cd /mnt/c/Users/<username>/Downloads/wsl-pro-service_*
     ```
 
 5. Install the deb package.
 
-    ```{code-block} text
-    $ sudo apt install ./wsl-pro-service_*.deb
+    ```{terminal}
+    :prompt: $
+    :copy:
+
+    sudo apt install ./wsl-pro-service_*.deb
     ```
 
 6. Ensure it works via systemd:
 
-    ```{code-block} text
-    $ systemctl status wsl-pro.service
+    ```{terminal}
+    :prompt: $
+    :copy:
+
+    systemctl status wsl-pro.service
     ```
 
 ## Restart Ubuntu Pro for WSL during development
@@ -133,18 +148,35 @@ This is the simple one. If you're not in a hurry to see the configuration update
 
 1. Stop the agent:
 
-    ```powershell
+    ```{terminal}
+    :prompt: PS>
+    :copy:
+
     Get-Process -Name Ubuntu-Pro-Agent | Stop-Process
     ```
 
 2. Stop the distro, or distros you installed WSL-Pro-Service in:
 
-    ```powershell
-    wsl --terminate DISTRO_NAME_1
-    wsl --terminate DISTRO_NAME_2
-    # etc.
+    ```{terminal}
+    :prompt: PS>
+    :copy:
 
-    # Alternatively, stop all distros:
+    wsl --terminate DISTRO_NAME_1
+    ```
+
+    ```{terminal}
+    :prompt: PS>
+    :copy:
+
+    wsl --terminate DISTRO_NAME_2
+    ```
+
+    Alternatively, stop all distros:
+
+    ```{terminal}
+    :prompt: PS>
+    :copy:
+
     wsl --shutdown
     ```
 
@@ -163,7 +195,10 @@ At some point you may want to read the Ubuntu Pro for WSL logs, most likely for 
 
 To access the logs of a specific distribution's WSL-Pro-Service, you must first launch the distribution and then query the journal:
 
-```bash
+```{terminal}
+:prompt: $
+:copy:
+
 journalctl -u wsl-pro.service
 ```
 
@@ -221,16 +256,29 @@ and related buttons will be visible.
 You can reset Ubuntu Pro for WSL to factory settings following these steps:
 
 1. Shut down WSL
-   ```powershell
+
+   ```{terminal}
+   :prompt: PS>
+   :copy:
+
    wsl --shutdown
    ```
+
 2. Uninstall the package and shut down WSL:
 
-    ```powershell
-    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage`
+    ```{terminal}
+    :prompt: PS>
+    :copy:
+
+    Get-AppxPackage -Name "CanonicalGroupLimited.UbuntuPro" | Remove-AppxPackage
     ```
+
 3. Remove the public directory:
-    ```powershell
+
+    ```{terminal}
+    :prompt: PS>
+    :copy:
+
     Remove-Item -Recurse -Force "${env:UserProfile}\.ubuntupro\"
     ```
 4. Remove the registry key:

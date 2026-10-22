@@ -19,15 +19,27 @@ We will use it to calculate and draw a beautiful Julia fractal. The goal here is
 
 From an Ubuntu WSL terminal prompt run:
 
-```{code-block} text
-$ sudo apt update
-$ sudo apt install -y octave
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt update
+```
+
+```{terminal}
+:prompt: $
+:copy:
+
+sudo apt install -y octave
 ```
 
 Then start the application:
 
-```{code-block} text
-$ octave --gui &
+```{terminal}
+:prompt: $
+:copy:
+
+octave --gui &
 ```
 
 Do not forget the ampersand `&` at the end of the line, so the application is started in the background and we can continue using the same terminal window.

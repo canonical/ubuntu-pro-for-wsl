@@ -36,15 +36,21 @@ To verify Pro-attachment a new Ubuntu instance needs to be created.
 Running the following command in PowerShell will create a new Ubuntu-26.04 instance
 and prompt you to create a username and password for the machine:
 
-```{code-block} text
-> wsl ~ -d Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl ~ -d Ubuntu-26.04
 ```
 
 You will now be logged in to the new instance shell and can
 check that Pro for WSL has Pro-attached this instance with:
 
-```{code-block} text
-$ pro status
+```{terminal}
+:prompt: $
+:copy:
+
+pro status
 ```
 
 The output will confirm the following:
@@ -54,8 +60,9 @@ The output will confirm the following:
 - Verification of Pro-attachment
 
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:output-only:
+
 SERVICE          ENTITLED  STATUS       DESCRIPTION
 esm-apps         yes       enabled      Expanded Security Maintenance for Applications
 esm-infra        yes       enabled      Expanded Security Maintenance for Infrastructure
@@ -74,8 +81,11 @@ Each new Ubuntu WSL instance that is created should automatically now be Pro-att
 
 To find other useful Ubuntu pro commands run:
 
-```{code-block} text
-$ pro --help
+```{terminal}
+:prompt: $
+:copy:
+
+pro --help
 ```
 
 (howto::verify-landscape)=

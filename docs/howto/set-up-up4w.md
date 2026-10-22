@@ -42,8 +42,11 @@ Open the store page and install the app.
 ````{tab-item} WinGet
 Run the following command in PowerShell to install the app:
 
-```{code-block} text
-> winget install --source winget Canonical.UbuntuProforWSL
+```{terminal}
+:prompt: PS>
+:copy:
+
+winget install --source winget Canonical.UbuntuProforWSL
 ```
 ````
 ``````

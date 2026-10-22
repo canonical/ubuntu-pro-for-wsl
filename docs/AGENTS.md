@@ -128,7 +128,8 @@ When adding a page, include it in the nearest `index.md` `toctree`. Update the t
 #### Code and formatting
 
 - Use triple-backtick MyST directive fences, matching the syntax already used in this project
-- Use `{terminal}` for command sessions that show input and output; use `text` or another appropriate language fence for input-only commands, code, configuration, and logs
+- Use `{terminal}` for any block that represents a command typed at a prompt, whether or not it shows output; use `text`, `ini`, `yaml`, or another appropriate language fence only for file content, configuration, logs, and scripts meant to be saved rather than typed interactively
+- In `{terminal}` blocks, set `:prompt: PS>` for PowerShell and `:prompt: $` for Ubuntu/bash (use a directory-aware prompt such as `:prompt: ~/project$` when the working directory is meaningful to the example); add `:copy:` so only the command is copyable; use `:output-only:` for blocks that show command output with no prompt; split a block containing multiple commands into consecutive `{terminal}` blocks, which merge visually
 - Put inline commands, file paths, option names, and literal values in backticks
 - Use admonitions sparingly
 - Include `includes/pro_content_notice.txt` with the existing `{include}` pattern on pages that document Ubuntu Pro features, and `includes/dev_docs_notice.txt` on developer doc pages

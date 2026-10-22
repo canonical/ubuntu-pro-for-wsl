@@ -30,8 +30,11 @@ your Windows machine.
 
 Open PowerShell and run:
 
-```{code-block} text
-> wsl --install
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install
 ```
 
 You may be prompted to grant permission to continue the installation.
@@ -69,8 +72,16 @@ Read more about the [differences between WSL versions](explanation::wsl-version)
 
 In a PowerShell terminal, run `wsl --list --online` to see a list of all available {term}`distros <distro>` and versions:
 
-```{code-block} text
-:class: no-copy
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --list --online
+```
+
+```{terminal}
+:output-only:
+
 The following is a list of valid distributions that can be installed.
 Install using 'wsl --install <Distro>'.
 
@@ -88,13 +99,15 @@ Install using 'wsl --install <Distro>'.
   OracleLinux_8_10                Oracle Linux 8.10
   OracleLinux_9_5                 Oracle Linux 9.5
   SUSE-Linux-Enterprise-15-SP6    SUSE Linux Enterprise 15 SP6
-
 ```
 
 Install a specific Ubuntu distro using a NAME from the output:
 
-```{code-block} text
-> wsl --install Ubuntu-26.04
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl --install Ubuntu-26.04
 ```
 
 ```{admonition} Using the new WSL distro format
@@ -169,9 +182,8 @@ Run `wsl -d <Distro>` to start an Ubuntu session in that directory. The prompt
 will indicate that the Windows `C:` drive is mounted to Ubuntu and that you are
 in the Windows home directory:
 
-```{code-block} text
-:class: no-copy
-<ubuntu-username>@<hostname>:/mnt/c/Users/<windows-username>$
+```{terminal}
+:prompt: <ubuntu-username>@<hostname>:/mnt/c/Users/<windows-username>$
 ```
 
 ### Start Ubuntu in the Ubuntu home directory from the terminal
@@ -179,24 +191,32 @@ in the Windows home directory:
 When in a directory in the mounted `C:` drive, you can change to the Ubuntu
 home directory with:
 
-```{code-block} text
-:caption: /mnt/c/Users/\<windows-username\>
-$ cd ~
+```{terminal}
+:prompt: <ubuntu-username>@<hostname>:/mnt/c/Users/<windows-username>$
+:copy:
+
+cd ~
 ```
 
 To skip this step, and start an instance from PowerShell with Ubuntu home as
 the working directory, run:
 
-```{code-block} text
-> wsl ~ -d Ubuntu
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl ~ -d Ubuntu
 ```
 
 :::{tip}
 
 For the **default WSL distro**, this command can be shortened further to:
 
-```{code-block} text
-> wsl ~
+```{terminal}
+:prompt: PS>
+:copy:
+
+wsl ~
 ```
 
 The default distro for WSL is Ubuntu, although [this can be
