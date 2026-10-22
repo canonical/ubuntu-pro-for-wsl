@@ -133,16 +133,14 @@ prompt, for example:
 
 **PowerShell prompt**
 
-```{code-block} text
-:class: no-copybutton
-PS C:\Users\windows-username>
+```{terminal}
+:prompt: PS C:\Users\windows-username>
 ```
 
 **Ubuntu prompt**:
 
-```{code-block} text
-:class: no-copybutton
-ubuntu-username@hostname:~$
+```{terminal}
+:prompt: ubuntu-username@hostname:~$
 ```
 
 To exit the Ubuntu terminal at any time, type the `exit` command and execute it
