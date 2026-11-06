@@ -282,13 +282,13 @@ type errorCount struct {
 	other           int
 }
 
-// isSaturated returns true if the  error counts reached their maximum allowance, false otherwise.
+// isSaturated returns true if the error counts reached their maximum allowance, false otherwise.
 func (errc errorCount) isSaturated() bool {
 	// Just hardcoding the maximum counts for now. We might want to adjust this to become a constructor parameter.
-	// This should result in a maximum wait time of around 63s plus the time it takes to
-	// execute a coonection, which is typically 15s per attempt, 6 attempts in the worse case,
-	// total of 2 minutes, in theory, as gRPC hsa its own backoff mhechanism with bultin jitter.
-	return errc.noConfig > 0 || errc.serverRejection > 0 || errc.nameResolution > 6
+	// This should result in a maximum wait time of around 4 minutes plus the time it takes to
+	// execute a connection, which is typically 15s per attempt, 9 attempts in the worst case,
+	// total of around 6.5 minutes, in theory, as gRPC has its own backoff mechanism with builtin jitter.
+	return errc.noConfig > 0 || errc.serverRejection > 0 || errc.nameResolution > 8
 }
 
 // String returns a string representation of the error counts.
