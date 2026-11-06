@@ -1,11 +1,11 @@
 {
     "landscapeFilePicker": "Vybrať súbor...",
     "ubuntuProEnabledInfo": "Všetky inštancie Ubuntu WSL majú prístup k bezpečnostným funkciám Ubuntu Pro.",
-    "purchaseStatusNetwork": "Sieťový problém zabránil pokračovaniu v nákupe. Skúste to znova po pripojení.",
-    "landscapeSkipDescription": "Konfiguráciu Landscape môžete kedykoľvek neskôr vykonať v tejto aplikácii",
-    "statusBarAgentConnectingTooltip": "Pripájanie sa k agentovi Ubuntu Pro...",
+    "purchaseStatusNetwork": "Problém so sieťou zabránil nákupu. Skúste to znova po pripojení.",
+    "landscapeSkipDescription": "Konfiguráciu Landscape môžete neskôr vykonať v tejto aplikácii",
+    "statusBarAgentConnectingTooltip": "Pripájanie k agentovi Ubuntu Pro...",
     "agentStateUnknownEnv": "Stav agenta Ubuntu Pro na pozadí sa nedá overiť. Skontrolujte nastavenia prostredia.",
-    "proHeading": "Bezpečnosť softvéru s otvoreným zdrojovým kódom od vydavateľov Ubuntu, teraz dostupná na systéme Windows. {aboutLink}",
+    "proHeading": "Bezpečnosť softvéru s otvoreným zdrojovým kódom od vydavateľov Ubuntu, teraz dostupná vo Windows. {aboutLink}",
     "@proHeading": {
         "placeholders": {
             "aboutLink": {
@@ -13,7 +13,7 @@
             }
         }
     },
-    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialenú správu vašich inštancií Ubuntu WSL. {landscapeLink}",
+    "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialenú správu inštancií Ubuntu WSL. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {
             "landscapeLink": {
@@ -21,7 +21,7 @@
             }
         }
     },
-    "tokenInputDescription": "Zadajte token z {proLink} alebo od vášho systémového administrátora",
+    "tokenInputDescription": "Zadajte token z {proLink} alebo od systémového administrátora",
     "@tokenInputDescription": {
         "placeholders": {
             "proLink": {
@@ -42,23 +42,23 @@
     "ubuntuProEnabled": "Ubuntu Pro je na tomto zariadení povolené",
     "manageUbuntuPro": "Spravovať predplatné Ubuntu Pro",
     "detachPro": "Odpojiť Ubuntu Pro",
-    "updatingSubscriptionInfo": "Aktualizujú sa informácie o predplatnom.",
+    "updatingSubscriptionInfo": "Aktualizácia informácií o predplatnom.",
     "purchaseStatusSuccess": "Ďakujeme za predplatné Ubuntu Pro.",
     "purchaseStatusUserGaveUp": "Pokus o nákup bol zrušený.",
-    "purchaseStatusServer": "Niečo sa pokazilo v Microsoft Store. Skúste to znova neskôr.",
-    "purchaseStatusUnknown": "Neznáma chyba pri pokuse o nákup predplatného. Zvážte reštart tejto aplikácie.",
+    "purchaseStatusServer": "V Microsoft Store sa vyskytla chyba. Skúste to znova neskôr.",
+    "purchaseStatusUnknown": "Neznáma chyba pri nákupe predplatného. Skúste reštartovať aplikáciu.",
     "landscapeSkipRegister": "Registrovať sa v Landscape",
     "landscapeFQDNLabel": "FQDN Landscape",
-    "landscapeFQDNError": "Neplatné FQDN. Očakáva sa plne kvalifikovaný názov domény alebo IP adresa.",
-    "landscapeFQDNSaaSError": "FQDN by nemalo byť landscape.canonical.com.",
+    "landscapeFQDNError": "Neplatné FQDN. Zadajte plne kvalifikovaný názov domény alebo IP adresu.",
+    "landscapeFQDNSaaSError": "FQDN nesmie byť landscape.canonical.com.",
     "getUbuntuPro": "Získať Ubuntu Pro",
     "landscapeSetupCustom": "Pokročilá konfigurácia",
     "landscapeSetupManualHint": "Registrovať sa na serveri Landscape",
     "landscapeSetupCustomHint": "Načítať vlastný konfiguračný súbor klienta Landscape",
-    "applyProToken": "Použiť Pro token",
+    "applyProToken": "Použiť token Pro",
     "landscapeSetupManual": "Ručná konfigurácia",
     "purchaseStatusAlreadyPurchased": "Už máte predplatné Pro.",
-    "applyingProToken": "Používa sa token {token}",
+    "applyingProToken": "Aplikuje sa token {token}",
     "@applyingProToken": {
         "placeholders": {
             "token": {
@@ -72,24 +72,24 @@
     "agentStateInvalid": "Čaká sa na inicializáciu agenta Ubuntu Pro na pozadí.",
     "agentStateCannotStart": "Agent Ubuntu Pro na pozadí sa nedá spustiť.",
     "agentStateQuerying": "Kontroluje sa stav agenta Ubuntu Pro na pozadí.",
-    "agentStateUnreachable": "Pokúša sa obnoviť agenta Ubuntu Pro na pozadí.",
+    "agentStateUnreachable": "Obnovuje sa agent Ubuntu Pro na pozadí.",
     "landscapeFileLabel": "Cesta k konfiguračnému súboru",
     "landscapeFileTooLarge": "Konfiguračný súbor je príliš veľký",
-    "landscapeFileEmptyPath": "Musí byť zadaná cesta",
+    "landscapeFileEmptyPath": "Je potrebné zadať cestu",
     "landscapeFileEmptyContents": "Súbor nesmie byť prázdny",
-    "landscapeFileNotFound": "Súbor sa nenašiel",
-    "landscapeFileInvalidFormat": "Súbor je v nesprávnom formáte",
-    "landscapeKeyLabel": "Registračný kľúč (voliteľné)",
-    "landscapeSSLKeyLabel": "Verejný SSL kľúč servera (voliteľné)",
+    "landscapeFileNotFound": "Súbor nenájdený",
+    "landscapeFileInvalidFormat": "Nesprávny formát súboru",
+    "landscapeKeyLabel": "Registračný kľúč (voliteľný)",
+    "landscapeSSLKeyLabel": "Verejný SSL kľúč servera (voliteľný)",
     "landscapeFileIsDir": "Súbor nemôže byť adresár",
     "buttonNext": "Ďalej",
     "buttonSkip": "Preskočiť",
     "buttonBack": "Späť",
     "statusBarReportBugTooltip": "Nahlásiť chybu",
     "statusBarAgentRunningTooltip": "Agent Ubuntu Pro beží",
-    "statusBarAgentDownTooltip": "Agent Ubuntu Pro je odpojený. Stlačením spustite agenta.",
+    "statusBarAgentDownTooltip": "Agent Ubuntu Pro je odpojený. Stlačením ho spustite.",
     "landscapeRegister": "Registrovať",
-    "landscapeApplyError": "Chyba pri pokuse o aplikovanie konfigurácie:\n\t{message}",
+    "landscapeApplyError": "Chyba pri aplikovaní konfigurácie:\n\t{message}",
     "@landscapeApplyError": {
         "placeholders": {
             "message": {
@@ -98,19 +98,19 @@
         }
     },
     "landscapeDetails": "Podrobnosti",
-    "landscapeProceedAnywayHint": "Pokračujte a pokusy o dosiahnutie servera Landscape budú pokračovať na pozadí.",
+    "landscapeProceedAnywayHint": "Pokračujte, pokusy o pripojenie k serveru Landscape budú pokračovať na pozadí.",
     "landscapeChangeLaterHint": "Konfiguráciu môžete kedykoľvek zmeniť.",
-    "landscapeEditYourConfig": "Upraviť vašu konfiguráciu",
+    "landscapeEditYourConfig": "Upraviť konfiguráciu",
     "landscapeProceedAnyway": "Pokračovať napriek tomu",
     "landscapeInvalidConfig": "Neplatná konfigurácia Landscape",
-    "landscapeInvalidConfigContent": "Server zamietol odoslanú konfiguráciu. Prosím, overte svoje nastavenia.",
+    "landscapeInvalidConfigContent": "Server zamietol konfiguráciu. Overte svoje nastavenia.",
     "landscapeUnchangedConfig": "Nezmenená konfigurácia",
     "landscapeUnreachable": "Landscape je nedostupný",
     "landscapeUnreachableContent": "Nepodarilo sa pripojiť k serveru Landscape.",
     "landscapeWSLUnavailable": "Funkcie Landscape WSL sú zakázané",
-    "landscapeWSLUnavailableContent": "Funkcie WSL sú zakázané na serveri Landscape. Kontaktujte prosím svojho systémového administrátora.",
+    "landscapeWSLUnavailableContent": "Funkcie WSL sú na serveri Landscape zakázané. Kontaktujte systémového administrátora.",
     "landscapeUnknownError": "Neznáma chyba pri pripájaní k Landscape",
-    "landscapeUnknownErrorContent": "Prosím, nahláste túto udalosť vrátane nižšie uvedených podrobností.",
+    "landscapeUnknownErrorContent": "Nahláste túto udalosť vrátane nižšie uvedených podrobností.",
     "landscapeAccountNameLabel": "Názov účtu",
     "landscapeAccountNameError": "Názov účtu nemôže byť prázdny alebo \"{reservedAccount}\".",
     "@landscapeAccountNameError": {
